@@ -1,7 +1,7 @@
 ---
 identity:
   atom_id: CA-M-1020
-  ref_id: CA-M-1020@1-draft
+  ref_id: CA-M-1020
 context:
   role: method
   form: Eng Standard
@@ -13,12 +13,12 @@ context:
       <+ Authoring <+ Code Authoring <+ Python Code
 state:
   version: 1
-  status: draft
+  status: active
   updated_at: '2026-11-13T16:30:09.035081+00:00'
 destination:
   file:
-    name: CA-M-1020@1-draft-PROGRAMMATIC-ENG_STANDARD--reuse-built-in-python-capabilities.md
-    path: .caprmedio_caprmedio/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/05_method/000_draft
+    name: CA-M-1020-PROGRAMMATIC-ENG_STANDARD--reuse-built-in-python-capabilities.md
+    path: .caprmedio_caprmedio/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/05_method
 ---
 ## Summary
 
