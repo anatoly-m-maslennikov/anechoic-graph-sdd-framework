@@ -27,7 +27,6 @@ Declare WORKBENCH
 
 ## Claim
 
-
 ### Prose Claim
 
 The receiving Scope Unit is WORKBENCH. The admitted HAS_ACTIVE_SUBJECT targets are exactly the declared entities or instances at these addresses:
@@ -51,26 +50,3 @@ The receiving Scope Unit is WORKBENCH. The admitted HAS_ACTIVE_SUBJECT targets a
 - `PROJECT STRUCTURE//CAPRMEDIO <+ Scope Unit//WORKBENCH_BACKEND`;
 - `PROJECT STRUCTURE//CAPRMEDIO <+ Scope Unit//WORKBENCH_FRONTEND`;
 - `PROJECT STRUCTURE//CAPRMEDIO <+ Aspects <+ Engineering <+ Development <+ Architecture <+ Component Structure`;
-
-
-### Formal Claim
-
-```CFEL
-# instances
-Scope Unit//WORKBENCH.ID == "CA-SU-43";
-
-Scope Unit//WORKBENCH.Name == "WORKBENCH";
-
-Scope Unit//WORKBENCH.Label == "APP";
-
-Scope Unit//WORKBENCH.order.ordered == false;
-
-Scope Unit//WORKBENCH ((IS_CONTAINED_BY)) Scope Unit//APPS;
-
-Atom/(.Header.Context.Container.scope_unit in ("CA-SU-43"))/(.Header.Context.Role in (Delivery)).Header.Context.Form :: Solution;
-Atom/(.Header.Context.Container.scope_unit in ("CA-SU-43"))/(.Header.Context.Role in (Method)).Header.Context.Form :: Direct Policy;
-Atom/(.Header.Context.Container.scope_unit in ("CA-SU-43"))/(.Header.Context.Role in (Requirement)).Header.Context.Form :: Direct Policy;
-Atom/(.Header.Context.Container.scope_unit in ("CA-SU-43"))/(.Header.Context.Role in (Requirement)).Header.Context.Form :: Rule;
-Atom/(.Header.Context.Container.scope_unit in ("CA-SU-43"))/(.Header.Context.Role in (Requirement)).Header.Context.Form :: Solution;
-Atom/(.Header.Context.Container.scope_unit in ("CA-SU-43"))/(.Header.Context.Role in (Concern)).Header.Context.Form :: Problem;
-```

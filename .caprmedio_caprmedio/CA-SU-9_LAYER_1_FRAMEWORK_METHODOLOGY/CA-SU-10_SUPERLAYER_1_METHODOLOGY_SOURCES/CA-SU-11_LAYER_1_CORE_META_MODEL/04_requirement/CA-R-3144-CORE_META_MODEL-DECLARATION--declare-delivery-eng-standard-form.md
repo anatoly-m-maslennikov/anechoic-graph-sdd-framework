@@ -35,11 +35,11 @@ Declare Delivery Eng Standard Form
 from caprmedio.formal_claims import declare_entity
 from caprmedio.model import Delivery
 
-class EngStandard(Delivery):
+class DeliveryEngStandard(Delivery):
     pass
 
 declare_entity(
-    entity_class=EngStandard,
+    entity_class=DeliveryEngStandard,
     entity_name='Eng Standard',
     qualification_property_path='Atom.Header.Context.Form',
 )

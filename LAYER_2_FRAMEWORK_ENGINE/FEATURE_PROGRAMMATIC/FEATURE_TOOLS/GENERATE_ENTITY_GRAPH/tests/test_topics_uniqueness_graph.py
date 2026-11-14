@@ -36,6 +36,29 @@ def carrier(code, label="python", subject="Atom.Header.Context.Topics.Dependenci
 
 
 class TopicsUniquenessGraphTests(unittest.TestCase):
+    def test_class_dependent_property_constraint_matches_formal_claim(self):
+        code = '''from caprmedio.formal_claims import declare_entity
+class Atom:
+    pass
+declare_entity(entity_name="Atom", entity_class=Atom,
+               dependent_property_cardinality=2,
+               allowed_dependent_property_names=("Header", "Content"))
+'''
+        rows, diagnostics = extract_claim_constraints(carrier(code, subject="Atom"))
+        self.assertEqual([], diagnostics)
+        actual, = [row for row in rows if row.get("selection") == "immediate_dependents"]
+        legacy, diagnostics = extract_claim_constraints(
+            carrier("Atom.*[string,in(Header,Content)]{::2};", label="CFEL", subject="Atom"))
+        self.assertEqual([], diagnostics)
+        expected, = [row for row in legacy if row.get("selection") == "immediate_dependents"]
+        for key in ("property_selector", "selection", "name_format", "occurrence_cardinality",
+                    "effective_occurrence_cardinality", "occurrence_conflict"):
+            self.assertEqual(expected[key], actual[key], key)
+        self.assertEqual(("Header", "Content"), actual["allowed_names"])
+        graph = compose_contract_graph([carrier(code, subject="Atom")])
+        entry, = [e for n in graph["entities"] for e in n["own"] if e["source"]["atom_id"] == "CA-R-2708"]
+        self.assertIn(actual, entry["clauses"])
+
     def test_reviewed_check_keeps_property_bounds_and_provenance(self):
         row = carrier(CLAIM)
         clauses, diagnostics = extract_claim_constraints(row)

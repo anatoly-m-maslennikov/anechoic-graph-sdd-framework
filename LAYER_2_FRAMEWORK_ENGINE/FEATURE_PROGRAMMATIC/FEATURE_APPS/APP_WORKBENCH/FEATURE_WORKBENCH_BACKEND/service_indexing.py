@@ -22,8 +22,9 @@ class ServiceIndexing:
             self._watch_ready.set()
             while not self._stop.is_set():
                 batch = self._watcher.changes(timeout=0.1)
-                if batch:
-                    self._record_watcher_changes(batch)
+                atom_changes = self._control_changes(batch)
+                if atom_changes:
+                    self._record_watcher_changes(atom_changes)
                 if batch and not self._journal_only(batch):
                     with self._refresh_lock:
                         trace_paths = {
@@ -32,12 +33,7 @@ class ServiceIndexing:
                         }
                         if trace_paths:
                             self._refresh_spec_traces(sorted(trace_paths))
-                        changed = [
-                            event for event in batch if any(
-                                path is not None and (self._root / path).is_relative_to(self._reader.control_root)
-                                for path in (event["old_path"], event["new_path"])
-                            ) and self._watcher_needs_refresh(event)
-                        ]
+                        changed = [event for event in atom_changes if self._watcher_needs_refresh(event)]
                         if changed:
                             self._refresh([self._watcher_projection_event(event) for event in changed])
                 self._prune_watcher_changes()
@@ -52,6 +48,22 @@ class ServiceIndexing:
             if self._watcher is not None:
                 self._watcher.close()
                 self._watcher = None
+
+    def _control_changes(self, batch: list[Change]) -> list[Change]:
+        control = self._reader.control_root.relative_to(self._root)
+        changes = []
+        for event in batch:
+            old, new = event["old_path"], event["new_path"]
+            old_inside = old is not None and Path(old).is_relative_to(control)
+            new_inside = new is not None and Path(new).is_relative_to(control)
+            if old_inside and new_inside:
+                changes.append(event)
+            elif old_inside:
+                changes.append({"operation": "remove", "old_path": old, "new_path": None})
+            elif new_inside:
+                changes.append({"operation": event["operation"] if old is None else "create",
+                                "old_path": None, "new_path": new})
+        return changes
 
     def _watcher_needs_refresh(self, event: Change) -> bool:
         for relative in (event["old_path"], event["new_path"]):

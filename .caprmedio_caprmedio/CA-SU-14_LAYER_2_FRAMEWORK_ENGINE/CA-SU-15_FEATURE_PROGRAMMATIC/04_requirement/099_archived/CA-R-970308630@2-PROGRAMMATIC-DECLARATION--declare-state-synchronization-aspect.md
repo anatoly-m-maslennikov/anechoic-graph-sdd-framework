@@ -18,7 +18,7 @@ state:
 destination:
   file:
     name: CA-R-970308630@2-PROGRAMMATIC-DECLARATION--declare-state-synchronization-aspect.md
-    path: .caprmedio_caprmedio/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/04_requirement/archived
+    path: .caprmedio_caprmedio/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/04_requirement/099_archived
 author: Anatoly Maslennikov
 ---
 

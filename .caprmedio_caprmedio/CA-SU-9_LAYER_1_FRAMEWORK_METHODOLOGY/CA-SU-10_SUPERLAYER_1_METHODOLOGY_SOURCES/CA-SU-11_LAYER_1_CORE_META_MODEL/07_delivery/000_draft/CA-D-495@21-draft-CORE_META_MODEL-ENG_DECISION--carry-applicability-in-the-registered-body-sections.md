@@ -20,7 +20,7 @@ current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Carry applicability in the registered body sections
 
@@ -29,6 +29,8 @@ Carry applicability in the registered body sections
 Applicability restrictions carried by Markdown Atoms.
 
 ## Claim
+
+### Prose Claim
 
 For RMED, carry any separate applicability boundary once in atom.content.claim_scope under ## Claim scope, before ## Claim. Its count is zero or one; require it when the full-applicability omission condition does not hold. Claim, Semantics and Details are read within that boundary. Do not repeat the same boundary as an independently maintained frontmatter, Claim or Details value.
 

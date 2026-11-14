@@ -12,7 +12,7 @@ topics:
   - CAPRMEDIO_MODEL <+ Atom.Content
   - CAPRMEDIO_MODEL <+ Atom.Content.Summary
   - CAPRMEDIO_MODEL <+ Atom.Header.State.Status
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
   - CAPRMEDIO_MODEL <+ Carrier/File
 tier: 4
 relations:

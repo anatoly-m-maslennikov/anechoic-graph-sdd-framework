@@ -26,7 +26,7 @@ llm_session_ids:
 current_scope_unit: TOOL_WORKFLOWS
 claim_target_scope_unit: TOOL_WORKFLOWS
 ---
-# Summary
+## Summary
 
 Promote drafts to active Atoms
 
@@ -35,6 +35,8 @@ Promote drafts to active Atoms
 Independently admitted promotion of one explicitly selected CAPRMEDIO Markdown Draft per Action.
 
 ## Claim
+
+### Prose Claim
 
 the `ATOM_PROMOTE` Tool **must** provide canonical promotion of CAPRMEDIO Markdown Drafts into active Atom authority. promotion is **not** archival **or** upgrade.
 

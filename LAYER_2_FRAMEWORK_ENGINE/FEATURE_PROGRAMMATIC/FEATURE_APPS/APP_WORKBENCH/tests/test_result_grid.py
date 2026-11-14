@@ -1,5 +1,3 @@
-# CA-E-784@6
-# CA-E-788@5
 # CA-M-493@1
 from __future__ import annotations
 

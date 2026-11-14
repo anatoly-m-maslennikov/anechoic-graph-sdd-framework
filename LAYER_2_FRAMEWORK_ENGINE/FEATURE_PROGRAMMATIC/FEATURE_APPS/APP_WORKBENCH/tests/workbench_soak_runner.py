@@ -1,4 +1,3 @@
-# CA-M-508@7
 # CA-E-799@5
 # CA-E-800@6
 """In-container short resource guard and opt-in 30-minute same-owner soak."""

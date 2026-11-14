@@ -6,19 +6,18 @@ container:
 role: Delivery
 form: Eng Decision
 topics:
-  main_subject: "Subject/CAPRMEDIO/Graph/Node/Aspect/Engineering/Operation/Data Handling/Serialization"
+  main_subject: Subject/CAPRMEDIO/Graph/Node/Aspect/Engineering/Operation/Data Handling/Serialization
   dependencies:
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Governing Configuration
   - Subject/CAPRMEDIO/Carrier
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Implementation
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Delivery
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Code
+    Authoring <+ Python Code
 tier: 5
 relations:
   delivery_for:
   - CA-R-1936
-  depends_on:
-  - CA-M-383
-  - CA-D-250
-  - CA-E-254
 status: Active
 version: 15
 updated_at: 2026-11-02 19:46:47 +0400

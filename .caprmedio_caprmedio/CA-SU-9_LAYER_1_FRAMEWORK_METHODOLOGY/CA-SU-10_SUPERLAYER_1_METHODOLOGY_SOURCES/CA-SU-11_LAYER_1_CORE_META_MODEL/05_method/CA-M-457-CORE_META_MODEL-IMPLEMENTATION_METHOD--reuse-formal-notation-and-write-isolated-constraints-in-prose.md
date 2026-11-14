@@ -6,7 +6,7 @@ container:
 role: Method
 form: Implementation Method
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL
+  main_subject: CAPRMEDIO_MODEL <+ Atom.Content.Claim
 tier: 3
 status: Active
 version: 2
@@ -26,13 +26,6 @@ Reuse formal notation and write isolated constraints in prose
 
 ### Prose Claim
 
-
-- Use admitted CFEL when it expresses the constraint.
-- Use short Claim prose only when CFEL cannot express the constraint without a single-use extension.
-- Do not invent syntax for one constraint.
-- State IS_PROPERTY_OF acyclicity in prose, including no self-loop.
-- Repetitive prose or Semantics is not required.
-
-## Details
-
-Authoring a constraint does not establish its implementation or verification.
+- Use Python to express a Formal Claim.
+- Use short prose for a constraint that needs no formal expression. State the acyclicity of IS_PROPERTY_OF in prose, including the ban on self-loops.
+- Reuse the declared vocabulary.

@@ -1,5 +1,3 @@
-# CA-R-2903@8
-# CA-M-534@1
 
 """Two-day Workbench query-attempt log without result data."""
 

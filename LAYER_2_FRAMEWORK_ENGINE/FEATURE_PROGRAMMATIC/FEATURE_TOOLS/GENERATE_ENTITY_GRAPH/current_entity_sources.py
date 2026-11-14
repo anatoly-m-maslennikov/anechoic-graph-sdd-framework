@@ -4,7 +4,7 @@ import hashlib
 import json
 import os
 import re
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import Any
 
@@ -203,12 +203,16 @@ def current_model_carriers(carriers: list[dict[str, Any]]) -> list[dict[str, Any
     return selected
 
 
-def read_current_model_carriers(source_root: Path, repository: Path) -> list[dict[str, Any]]:
+def read_current_model_carriers(
+    source_root: Path, repository: Path, *, include_source: Callable[[Path], bool] | None = None,
+) -> list[dict[str, Any]]:
     """Read the Current model frontier without treating Rules as model targets."""
 
     source_root, repository = source_root.absolute(), repository.absolute()
     carriers = []
     for path in _source_paths(source_root, repository):
+        if include_source is not None and not include_source(path):
+            continue
         match = _CANONICAL_ROLE.match(path.name)
         if match is not None and match.group("role") != "R":
             continue

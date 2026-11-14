@@ -1,6 +1,6 @@
 ---
 subjects:
-  active: CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  active: CAPRMEDIO_MODEL <+ Relation
 version: 35
 updated_at: 2026-11-03 22:25:59 +0400
 relations: {}

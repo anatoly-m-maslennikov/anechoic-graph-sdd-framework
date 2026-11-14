@@ -6,13 +6,13 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Format/datetime
+  main_subject: CAPRMEDIO_MODEL <+ Format/datetime
   dependencies:
-  - CAPRMEDIO_MODEL <+ CFEL <+ Format
+  - CAPRMEDIO_MODEL <+ Format
 tier: 1
 status: active
-version: 8
-updated_at: '2026-11-13T05:16:34.014125+00:00'
+version: 9
+updated_at: '2026-11-13T22:57:39.635646+00:00'
 carrier_destination:
   file:
     name: CA-R-2254-CORE_META_MODEL-DECLARATION--define-datetime-value-format.md
@@ -38,9 +38,13 @@ representation.
 ### Formal Claim
 
 ```python
-# model
-composition(container='CFEL', parts=('Format/datetime',))
-relation(source='Format/datetime', name='NARROWER_THAN', target='Format')
+from caprmedio.formal_claims import declare_entity
+from caprmedio.model import ValueFormat
+
+class DateTimeValueFormat(ValueFormat):
+    pass
+
+declare_entity(entity_name='datetime', entity_class=DateTimeValueFormat)
 ```
 
 ## Semantics

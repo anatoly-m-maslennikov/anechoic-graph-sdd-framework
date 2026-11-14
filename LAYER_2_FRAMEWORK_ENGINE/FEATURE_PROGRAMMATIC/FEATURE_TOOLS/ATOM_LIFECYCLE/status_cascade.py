@@ -64,7 +64,7 @@ def _relocation_headers(selection, model, pin, source, destination, pins):
     for child in descendants.values():
         relative = child.path.relative_to(source)
         target = destination / relative
-        raw = render_carrier(child.raw, {'destination': _destination_field(selection, target)})
+        raw = render_carrier(child.raw, {'destination': _destination_field(selection, target)}, model=model)
         validate_candidate(selection, model, raw, target, authored=False)
         rewrites[relative] = (child.sha256, raw)
         moved[child.atom_id] = _rebind(child, target, raw, child.status)

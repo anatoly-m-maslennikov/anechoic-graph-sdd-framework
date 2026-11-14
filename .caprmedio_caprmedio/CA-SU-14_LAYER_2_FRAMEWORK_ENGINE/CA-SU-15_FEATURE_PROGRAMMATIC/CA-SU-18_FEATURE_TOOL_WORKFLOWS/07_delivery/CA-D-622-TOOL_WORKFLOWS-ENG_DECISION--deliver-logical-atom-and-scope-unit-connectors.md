@@ -22,8 +22,6 @@ relations:
   - CA-R-865
   - CA-R-866
   - CA-R-868
-  depends_on:
-  - CA-M-372
 status: Active
 version: 14
 updated_at: 2026-11-02 19:44:26 +0400
@@ -35,7 +33,7 @@ current_scope_unit: TOOL_WORKFLOWS
 claim_target_scope_unit: TOOL_WORKFLOWS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Deliver logical Atom and Scope Unit connectors
 
@@ -46,6 +44,8 @@ Workflow admission owns identity, Version/time, lifecycle and complete schema de
 The required logical connector request/result contract under registered TOOL_WORKFLOWS, with the current file/TOML adapters as delivery bindings. It defines no new Scope Unit, executable path or admitted runtime/MCP route.
 
 ## Claim
+
+### Prose Claim
 
 Find, Read, Create and Modify workflows use the coherent connector operations query, read, create and modify independently. Workflow admission owns identity, schema, lifecycle and Version decisions; Atom removal is Archive only, implemented through explicit admitted mechanical changes rather than a connector delete/archive verb. A replaceable backend must preserve the logical contract without exposing storage location as identity.
 

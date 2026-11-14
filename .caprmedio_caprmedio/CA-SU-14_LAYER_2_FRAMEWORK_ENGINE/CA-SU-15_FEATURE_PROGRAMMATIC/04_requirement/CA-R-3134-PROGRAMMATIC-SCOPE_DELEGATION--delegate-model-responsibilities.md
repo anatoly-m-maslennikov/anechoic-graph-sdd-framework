@@ -11,9 +11,9 @@ context:
   topics:
     main_subject: CAPRMEDIO_STRUCTURE <+ Scope Unit//MODEL
 state:
-  version: 1
+  version: 2
   status: active
-  updated_at: '2026-11-13T15:13:43.154028+00:00'
+  updated_at: '2026-11-13T17:43:08.763166+00:00'
 destination:
   file:
     name: CA-R-3134-PROGRAMMATIC-SCOPE_DELEGATION--delegate-model-responsibilities.md
@@ -27,10 +27,13 @@ Delegate MODEL responsibilities
 
 ### Prose Claim
 
-The receiving Scope Unit is MODEL. The admitted HAS_ACTIVE_SUBJECT targets are exactly the declared instances at these addresses:
+The receiving Scope Unit is MODEL. Its admitted Main Subjects are these declared Scope Unit instances:
 
 - `CAPRMEDIO_STRUCTURE <+ Scope Unit//MODEL`.
-- `CAPRMEDIO_STRUCTURE <+ Scope Unit//FORMAL_MODEL_ENGINE`.
+- `CAPRMEDIO_STRUCTURE <+ Scope Unit//FORMAL_MODEL_GENERATOR`.
 - `CAPRMEDIO_STRUCTURE <+ Scope Unit//GENERATED_MODEL`.
+- `CAPRMEDIO_STRUCTURE <+ Scope Unit//MODEL_VALIDATION`.
 
-Own the shared programmatic Model. FORMAL_MODEL_ENGINE validates the Model Declarations and builds GENERATED_MODEL from their Python Formal Claims.
+FORMAL_MODEL_GENERATOR validates the complete selected set of Python Model Declarations and builds GENERATED_MODEL. GENERATED_MODEL holds the generated Python classes and objects. MODEL_VALIDATION provides the shared API that Tools and Apps use to validate proposed instances before writing.
+
+Named instance checks are authored in their Declarations and made available to MODEL_VALIDATION through a separate checks module outside GENERATED_MODEL.

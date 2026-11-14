@@ -23,6 +23,10 @@ current_scope_unit: caprmedio
 local_tier: Standard
 global_tier: 2
 author: Anatoly Maslennikov
+destination:
+  file:
+    name: CA-C-514-PROBLEM--repair-the-n13-unit-gate-failures.md
+    path: .caprmedio_caprmedio/01_concern
 ---
 # Summary
 

@@ -28,7 +28,7 @@ claim_target_scope_unit: FRAMEWORK_DELIVERY
 author: Anatoly Maslennikov
 ---
 
-# Summary
+## Summary
 
 Serialize one actual public PR identity
 
@@ -37,6 +37,8 @@ Serialize one actual public PR identity
 the PR result of one public-release remote action.
 
 ## Claim
+
+### Prose Claim
 
 public PR evidence **must** retain one actual HTTPS PR URL, positive PR number, open Draft state, `amm/dev` head, `main` base, and repository-relative Tool-call result reference.
 

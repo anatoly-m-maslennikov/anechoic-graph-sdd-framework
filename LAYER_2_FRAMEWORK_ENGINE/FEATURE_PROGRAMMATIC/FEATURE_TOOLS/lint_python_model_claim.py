@@ -21,7 +21,7 @@ import sys
 from collections.abc import Collection, Mapping
 
 from markdown_it import MarkdownIt
-from python_model_claim import PythonModelClaimError, parse_python_model_claim
+from python_model_claim import PythonModelClaimError, parse_structured_python_model_claim
 from subject_notation import (Name, Path as SubjectPath, Qualification, RelationChain, SelectionGroup, SelectionSuffix,
                               namespace_local_expression, parse_subject_expression, render_subject)
 
@@ -220,7 +220,6 @@ def lint_python_model_claim(text: str, *, declared_addresses: Collection[str],
                             first_line: int = 1,
                             relation_aliases: Mapping[str, str] | None = None,
                             python_class_bindings: Mapping[str, Collection[str]] | None = None,
-                            operator_catalog: Mapping[str, Collection[str]] | None = None,
                             require_declared_aliases: bool = False,
                             address_bindings: Mapping[str, str] | None = None,
                             relation_declaration: str | None = None) -> tuple[str, ...]:
@@ -369,8 +368,10 @@ def lint_python_model_claim(text: str, *, declared_addresses: Collection[str],
             return True
         return validate_reference(address)
     try:
-        parse_python_model_claim(text, validate_reference=validate_reference,
-                                 validate_relation_endpoint=validate_relation_endpoint)
+        parse_structured_python_model_claim(
+            text, validate_reference=validate_reference,
+            validate_relation_endpoint=validate_relation_endpoint,
+        )
     except PythonModelClaimError as error:
         message = str(error)
         match = re.match(r"line (\d+), column (\d+): (.*)", message, re.DOTALL)
@@ -389,11 +390,6 @@ def lint_python_model_claim(text: str, *, declared_addresses: Collection[str],
         helper = call.func.id
         args = {kw.arg: ast.literal_eval(kw.value) for kw in call.keywords}
         name = args["name"] if helper == "relation" else None
-        if helper == "deliver":
-            symbols = (operator_catalog or {}).get("Delivery", ())
-            if not isinstance(symbols, (list, tuple)) or tuple(symbols) != (">>",):
-                return (f"{path}:{first_line + call.lineno - 1}:{call.col_offset + 1}: missing or ambiguous Delivery operator: >>",)
-            continue
         symbol = {"composition": "<+", "classify": ">|", "order_before": ";>"}.get(helper)
         if helper == "classify" and args.get("notation") == "relation":
             name, symbol = "HAS_CLASSIFICATION", None
@@ -463,18 +459,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--addresses", required=True, type=Path, help="JSON address array or Model catalog")
     parser.add_argument("--relations", required=True, type=Path, help="JSON array or Workbench relation registry")
     parser.add_argument("--relation-alias", action="append", default=[], metavar="TOKEN=NAME")
-    parser.add_argument("--operators", type=Path, help="JSON operator descriptor-to-symbols catalog")
     args = parser.parse_args(argv)
     try:
         addresses, class_bindings = _address_catalog(args.addresses)
         relations = _names(args.relations, registry=True)
-        operators = json.loads(args.operators.read_text(encoding="utf-8")) if args.operators else {}
-        if not isinstance(operators, dict) or any(
-            not isinstance(name, str) or not isinstance(symbols, list)
-            or any(not isinstance(symbol, str) for symbol in symbols)
-            for name, symbols in operators.items()
-        ):
-            raise ValueError("invalid operator catalog")
         aliases = {}
         for entry in args.relation_alias:
             token, separator, name = entry.partition("=")
@@ -486,8 +474,7 @@ def main(argv: list[str] | None = None) -> int:
             for block, first_line in _blocks(path):
                 diagnostics.extend(lint_python_model_claim(block, declared_addresses=addresses,
                                    relation_names=relations, path=str(path), first_line=first_line,
-                                   relation_aliases=aliases, python_class_bindings=class_bindings,
-                                   operator_catalog=operators))
+                                   relation_aliases=aliases, python_class_bindings=class_bindings))
     except (OSError, ValueError, json.JSONDecodeError) as error:
         print(error, file=sys.stderr)
         return 2

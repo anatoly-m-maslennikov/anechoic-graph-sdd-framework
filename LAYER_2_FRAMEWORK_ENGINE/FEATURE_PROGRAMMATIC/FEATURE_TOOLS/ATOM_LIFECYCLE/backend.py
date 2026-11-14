@@ -18,6 +18,7 @@ from contextlib import contextmanager, nullcontext
 import fcntl
 import os
 import stat
+import sys
 
 from project_runtime import owned_temporary_root
 from VALIDATE_ATOMS.validate_atoms_workers.read_io import open_regular
@@ -146,6 +147,8 @@ def _batch_run(selection, model, targets, action):
                 {'code': 'invalid_input', 'field': field, 'message': detail.get('error')}
                 for field, detail in outcome.get('requested_input', {}).items()
             ] or [{'code': 'backend_failure', 'message': 'Lifecycle operation failed.'}]
+            diagnostic = errors[0].get('message') or errors[0].get('code') or 'Lifecycle operation failed.'
+            print(f"Lifecycle batch stopped: {diagnostic}", file=sys.stderr)
             return result(effects=effects, errors=errors, warnings=warnings,
                           target_results=target_results, remaining_targets=targets[index + 1:])
     return result(effects=effects, warnings=warnings, target_results=target_results, remaining_targets=[])

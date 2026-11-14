@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL
+  main_subject: CAPRMEDIO_MODEL <+ Carrier
 tier: 3
 status: Active
 version: 2
@@ -26,10 +26,6 @@ Deliver Objects to Carriers
 
 ### Prose Claim
 
-
-- `>>` delivers an Object to the referenced Carrier or Carrier part.
-- A selection delivers its selected Objects.
-- A bare qualified address refers to its declared target.
-- `!(selectors)` excludes those branches from a selection.
-- Relative exclusions use the selection's base.
-- `=` states an equality condition.
+- Deliver each selected Object to the declared Carrier or Carrier part.
+- A qualified address resolves to its declared target.
+- Resolve relative exclusions from the base selection before delivery.

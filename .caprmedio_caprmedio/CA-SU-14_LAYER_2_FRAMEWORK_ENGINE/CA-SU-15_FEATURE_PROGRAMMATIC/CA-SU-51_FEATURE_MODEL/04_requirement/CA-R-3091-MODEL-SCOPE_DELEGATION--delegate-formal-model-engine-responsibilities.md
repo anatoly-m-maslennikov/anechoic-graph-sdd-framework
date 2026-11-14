@@ -9,11 +9,11 @@ context:
   container:
     scope_unit: CA-SU-51
   topics:
-    main_subject: CAPRMEDIO_STRUCTURE <+ Scope Unit//FORMAL_MODEL_ENGINE
+    main_subject: CAPRMEDIO_STRUCTURE <+ Scope Unit//FORMAL_MODEL_GENERATOR
 state:
-  version: 3
+  version: 4
   status: active
-  updated_at: '2026-11-13T15:38:20.545921+00:00'
+  updated_at: '2026-11-13T17:43:54.842725+00:00'
 destination:
   file:
     name: CA-R-3091-MODEL-SCOPE_DELEGATION--delegate-formal-model-engine-responsibilities.md
@@ -27,14 +27,8 @@ Delegate formal Model engine responsibilities
 
 ### Prose Claim
 
-The receiving Scope Unit is FORMAL_MODEL_ENGINE. The admitted HAS_ACTIVE_SUBJECT target is exactly the declared instance at this address:
+The receiving Scope Unit is FORMAL_MODEL_GENERATOR. Its admitted Main Subject is the declared instance `CAPRMEDIO_STRUCTURE <+ Scope Unit//FORMAL_MODEL_GENERATOR`.
 
-- `CAPRMEDIO_STRUCTURE <+ Scope Unit//FORMAL_MODEL_ENGINE`.
+Read the Python Formal Claims in the selected CAPRMEDIO_MODEL Declarations. Check their syntax and references and validate the complete Model, including inheritance and Relation contracts. Generate the Python classes and objects in GENERATED_MODEL. Resolve NARROWER_THAN as Python class inheritance.
 
-Existing global default admissions remain unchanged. No additional Role/Form pairs are granted.
-
-- Read the Model Declarations and check their Python Formal Claims for syntax and references.
-- Validate the complete Model, including inheritance and Relation contracts.
-- Build GENERATED_MODEL from the verified Python Formal Claims. The Formal Claims are the Model rules.
-
-The first build uses Declarations in `CAPRMEDIO_MODEL`. Resolve `NARROWER_THAN` as Python class inheritance during the build.
+MODEL_VALIDATION owns instance validation at runtime.

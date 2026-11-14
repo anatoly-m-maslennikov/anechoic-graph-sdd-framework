@@ -20,7 +20,7 @@ carrier_destination:
 current_scope_unit: ATOM_ACTIONS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Find and replace logical Atom Properties
 
@@ -29,6 +29,8 @@ Find and replace logical Atom Properties
 The Atom Find and Update interface. Target Atoms belong to the explicitly selected Scope and lifecycle frontier, not necessarily to the Tool's own Scope Unit.
 
 ## Claim
+
+### Prose Claim
 
 Find and replace **must** target admitted logical Atom Properties, including Markdown content sections, rather than unrestricted file text.
 

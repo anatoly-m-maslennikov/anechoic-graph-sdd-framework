@@ -28,7 +28,7 @@ carrier_destination:
 current_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Register RMED_ATOMS_BASE_REVISE discovery binding
 
@@ -37,6 +37,8 @@ Register RMED_ATOMS_BASE_REVISE discovery binding
 the TOOLS capability for Tool/RMED_ATOMS_BASE_REVISE/Carrier.
 
 ## Claim
+
+### Prose Claim
 
 the RMED_ATOMS_BASE_REVISE discovery binding **must** be carried **in** the following TOML table **in** this Atom's Details.
 

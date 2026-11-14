@@ -13,10 +13,8 @@ topics:
   - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Operations/Type:
     Action'
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Implementation
+  - CAPRMEDIO_MODEL <+ Scope Unit
 tier: 3
-relations:
-  depends_on:
-  - CA-D-442
 status: Active
 version: 11
 updated_at: 2026-11-02 19:44:26 +0400

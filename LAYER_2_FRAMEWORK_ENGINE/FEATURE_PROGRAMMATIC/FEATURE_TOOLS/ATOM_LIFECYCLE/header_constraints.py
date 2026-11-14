@@ -7,7 +7,9 @@ Compile explicit property, direct-value and child cardinality and literal value 
 from dataclasses import dataclass
 import re
 
-from FEATURE_WORKBENCH_BACKEND.declaration_cfel import formal_claim_blocks, model_statements
+from FEATURE_FORMAL_MODEL_ENGINE.model_catalog import _native_block
+from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim
+from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_field_validation import _bounds
 from carrier_aliases import matches_named_value
 from header_groups import GROUP_FIELDS, ROLE_FIELDS, header_value, path_value
 
@@ -15,17 +17,6 @@ _PATH = r'[A-Za-z][A-Za-z0-9_ ]*(?:\.[A-Za-z][A-Za-z0-9_ ]*)*'
 _SELECTED = r'(?:"[^"\r\n]+"|[A-Za-z][A-Za-z0-9 &_-]*)'
 _SELECTOR = (rf'(?:/\(\s*\.Header\.(?:Context\.)?(Role|Form)\s*'
              rf'((?::=|:)\s*{_SELECTED}|in\s*\(\s*{_SELECTED}\s*\))\s*\))?')
-_PROPERTY = re.compile(rf'^Atom{_SELECTOR}\.Header\.({_PATH})\s*\{{::\s*([01])\s*\}}\s*::')
-_DOMAIN = re.compile(rf'^Atom{_SELECTOR}\.Header\.({_PATH})(?:\s*\{{::\s*[01]\s*\}})?\s*::\s*\[\s*in\s*\(([^()]*)\)\s*\]')
-_NAME = re.compile(r'^(?:"[^"\r\n]+"|[A-Za-z][A-Za-z0-9 &_-]*)$')
-_LITERAL = re.compile(rf'^Atom{_SELECTOR}\.Header\.({_PATH})\s*::?\s*({_NAME.pattern[1:-1]})$')
-_CHILDREN = re.compile(rf'^Atom{_SELECTOR}\.Header\.({_PATH})\.\*\s*\[\s*in\s*\(([^()]*)\)\s*\]'
-                       r'\s*\{::\s*(\d+)(?:\.\.(\d+))?\s*\}$')
-_VALUE_CARDINALITY = re.compile(
-    rf'^Atom{_SELECTOR}\.Header\.({_PATH}(?:\.\*)?)\s*'
-    r'(?:\{::\s*(?:0|1|0\s*\.\.\s*1)\s*\})?\s*::\s*'
-    r'\[[^\[\]]*\]\s*\{::\s*(\d+)(?:(?:\s*\.\.\s*(\d+))|(\+))?\s*\}\s*$'
-)
 
 
 def _path(value):
@@ -78,42 +69,57 @@ def _selected(value):
     return text.strip().strip('"')
 
 
-def compile_header_constraints(rows):  # noqa: C901
+def _native_header_target(args, source):
+    if args.get('relation_name') != 'IS_PROPERTY_OF':
+        return None
+    base, name = args.get('base_path'), args.get('entity_name')
+    if not isinstance(base, str) or not isinstance(name, str):
+        return None
+    match = re.fullmatch(rf'Atom{_SELECTOR}\.Header(?:\.({_PATH}))?', base)
+    if match is None:
+        return None
+    selector, selected, rest = match.groups()
+    selector, selected = (selector.lower(), _selected(selected)) if selector else ('', '')
+    roles = args.get('applies_to_entity_classes', ())
+    if roles:
+        if len(roles) != 1 or selector and (selector != 'role' or selected != roles[0]):
+            raise ValueError(f'{source}: unsupported Header Entity selector')
+        selector, selected = 'role', roles[0]
+    return _path('.'.join(part for part in (rest, name) if part)), selector, selected
+
+
+def _native_header_records(code, source):
+    declaration = parse_native_model_claim(code)
+    if declaration is None or declaration['kind'] != 'entity':
+        return set()
+    args = declaration['arguments']
+    target = _native_header_target(args, source)
+    if target is None:
+        return set()
+    path, selector, selected = target
+    records = set()
+    if (occurrence := args.get('property_occurrence_cardinality')) in (0, 1):
+        records.add(('property', path, selector, selected, str(occurrence), source))
+    if (cardinality := args.get('value_cardinality')) is not None:
+        records.add(('value', path, selector, selected, _bounds(cardinality), source))
+    if (children := args.get('allowed_dependent_property_names')):
+        low, high = _bounds(args['dependent_property_cardinality'])
+        if high is not None:
+            names = tuple(sorted(_path(child) for child in children))
+            records.add(('children', path, selector, selected, (low, high, *names), source))
+    if (cardinality := args.get('dependent_property_value_cardinality')) is not None:
+        records.add(('value', path + '.*', selector, selected, _bounds(cardinality), source))
+    if path not in {'role', 'form', 'status'}:
+        for value in args.get('allowed_values', ()):
+            records.add(('domain', path, selector, selected, value, source))
+    return records
+
+
+def compile_header_constraints(rows):
     records = set()
     for row in rows:
-        for block in formal_claim_blocks(row['_content_bytes'].decode('utf-8'), model_class_bindings=row.get('_model_class_bindings')):
-            for statement in model_statements(block):
-                if match := _PROPERTY.match(statement):
-                    selector, selected, path, count = match.groups()
-                    records.add(('property', _path(path), selector.lower() if selector else '',
-                                 _selected(selected), count, row['id']))
-                if match := _VALUE_CARDINALITY.fullmatch(statement):
-                    selector, selected, path, lower, upper, unbounded = match.groups()
-                    lower, upper = int(lower), None if unbounded else int(upper or lower)
-                    if upper is not None and upper < lower:
-                        raise ValueError(f"{row['id']}: invalid Header value cardinality")
-                    records.add(('value', _path(path), selector.lower() if selector else '',
-                                 _selected(selected), (lower, upper), row['id']))
-                if match := _DOMAIN.match(statement):
-                    selector, selected, path, values = match.groups()
-                    literals = [v.strip() for v in values.split(',')]
-                    if literals and all(_NAME.fullmatch(v) for v in literals):
-                        for literal in literals:
-                            records.add(('domain', _path(path), selector.lower() if selector else '',
-                                         _selected(selected), literal.strip('"'), row['id']))
-                elif match := _LITERAL.fullmatch(statement):
-                    selector, selected, path, literal = match.groups()
-                    logical = _path(path)
-                    if logical not in {'role', 'form', 'status'}:
-                        records.add(('domain', logical, selector.lower() if selector else '',
-                                     _selected(selected), literal.strip('"'), row['id']))
-                elif match := _CHILDREN.fullmatch(statement):
-                    selector, selected, path, names, low, high = match.groups()
-                    values = [name.strip() for name in names.split(',')]
-                    if values and all(_NAME.fullmatch(name) for name in values):
-                        bounds = (int(low), int(high or low), *(sorted(_path(name.strip('"')) for name in values)))
-                        records.add(('children', _path(path), selector.lower() if selector else '',
-                                     _selected(selected), bounds, row['id']))
+        for block in _native_block(row['_content_bytes'].decode('utf-8')):
+            records.update(_native_header_records(block, row['id']))
     keys = ('kind', 'path', 'selector', 'selected', 'value', 'source')
     return [dict(zip(keys, item)) for item in sorted(records, key=repr)]
 

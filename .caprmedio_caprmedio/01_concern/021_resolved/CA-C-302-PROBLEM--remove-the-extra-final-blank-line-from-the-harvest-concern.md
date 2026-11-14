@@ -23,6 +23,8 @@ carrier_destination:
   file:
     name: CA-C-302-PROBLEM--remove-the-extra-final-blank-line-from-the-harvest-concern.md
     path: .caprmedio_caprmedio/01_concern/021_resolved
+container:
+  scope_unit: CA-SU-00
 ---
 # Summary
 

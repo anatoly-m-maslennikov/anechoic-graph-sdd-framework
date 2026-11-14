@@ -35,11 +35,11 @@ Declare Delivery Spec Policy Form
 from caprmedio.formal_claims import declare_entity
 from caprmedio.model import Delivery
 
-class SpecPolicy(Delivery):
+class DeliverySpecPolicy(Delivery):
     pass
 
 declare_entity(
-    entity_class=SpecPolicy,
+    entity_class=DeliverySpecPolicy,
     entity_name='Spec Policy',
     qualification_property_path='Atom.Header.Context.Form',
 )

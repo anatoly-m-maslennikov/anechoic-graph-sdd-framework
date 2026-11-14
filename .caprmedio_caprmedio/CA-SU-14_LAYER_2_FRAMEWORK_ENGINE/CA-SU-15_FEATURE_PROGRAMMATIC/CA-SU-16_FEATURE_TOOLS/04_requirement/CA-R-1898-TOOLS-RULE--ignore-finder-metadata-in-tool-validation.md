@@ -23,7 +23,7 @@ carrier_destination:
 current_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Ignore Finder metadata in Tool validation
 
@@ -32,6 +32,8 @@ Ignore Finder metadata in Tool validation
 Tool selection, persistent inventories, digests, package and Projection checks, and runtime control-directory checks at any depth.
 
 ## Claim
+
+### Prose Claim
 
 Tool validation **must** ignore files named `.DS_Store` so their presence, absence **or** contents do **not** change validation results.
 

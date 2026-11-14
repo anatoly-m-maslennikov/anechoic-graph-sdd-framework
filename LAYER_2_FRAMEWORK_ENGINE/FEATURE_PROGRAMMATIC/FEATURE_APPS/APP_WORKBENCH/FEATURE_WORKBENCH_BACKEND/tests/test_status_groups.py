@@ -9,13 +9,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests"))
 
 import test_source_reader as fixtures
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.content_schema import compile_content_schema
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.content_schema import DeclarationSource, compile_content_schema
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.relation_registry import RelationRegistry
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.relations import _atom_facts
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_reader import SourceReader
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workbench_schema_asset import (
     compile_schema, compile_status_groups, load_image_schema, schema_asset,
 )
+from python_model_claim import parse_structured_python_model_claim
 
 
 class StatusGroupTests(unittest.TestCase):
@@ -47,9 +48,14 @@ class StatusGroupTests(unittest.TestCase):
         self.assertNotIn('CA-R-820', {row['id'] for row in rows})
 
     def test_formal_mapping_round_trips_and_keeps_latest_references(self):
-        statements = [('Atom/(.Header.Context.Role := Plan)/(.Header.State.Status := Backlog)'
-                       '.Header.State.Status >| Status Group == Backlog', None)]
-        groups = compile_status_groups(statements)
+        declarations = parse_structured_python_model_claim('''
+classify(
+    address="Atom/(.Header.Context.Role := Plan)/(.Header.State.Status := Backlog).Header.State.Status",
+    axis="Status Group", value="Backlog",
+)
+''')
+        source = DeclarationSource('CA-R-1539', 1, 'status.md')
+        groups = compile_status_groups([(declaration, source) for declaration in declarations])
         self.assertEqual((("Plan", "Backlog", "Backlog"),), groups)
         with tempfile.TemporaryDirectory() as directory:
             asset = Path(directory) / 'schema.json'

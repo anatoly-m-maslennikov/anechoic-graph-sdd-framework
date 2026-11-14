@@ -26,10 +26,9 @@ Declare APPS
 
 ## Claim
 
-
 ### Prose Claim
 
-Existing default admissions, including Scope Delegation, remain unchanged. These permissions apply only to local Atoms whose Header.Container-derived IS_CONTAINED_BY target is `PROJECT STRUCTURE//CAPRMEDIO <+ Scope Unit//APPS`.
+These permissions apply only to local Atoms whose Header.Container-derived IS_CONTAINED_BY target is `PROJECT STRUCTURE//CAPRMEDIO <+ Scope Unit//APPS`.
 
 Eligible HAS_ACTIVE_SUBJECT targets are exactly the declared model entities or declared instances resolved at these addresses:
 
@@ -45,24 +44,3 @@ Eligible HAS_ACTIVE_SUBJECT targets are exactly the declared model entities or d
 - `PROJECT STRUCTURE//CAPRMEDIO <+ Aspects <+ Engineering <+ Operation <+ Execution Control <+ Recovery`
 
 The selection contains exact objects only, not strings, type members, or descendants; an unresolved address grants no admission.
-
-### Formal Claim
-
-```CFEL
-# instances
-Scope Unit//APPS.ID == "CA-SU-20";
-
-Scope Unit//APPS.Name == "APPS";
-
-Scope Unit//APPS.Label == "FEATURE";
-
-Scope Unit//APPS.order.ordered == false;
-
-Scope Unit//APPS ((IS_CONTAINED_BY)) Scope Unit//PROGRAMMATIC;
-
-Atom/(.Header.Context.Container.scope_unit in ("CA-SU-20"))/(.Header.Context.Role in (Requirement)).Header.Context.Form :: Solution;
-Atom/(.Header.Context.Container.scope_unit in ("CA-SU-20"))/(.Header.Context.Role in (Method)).Header.Context.Form :: Approach Policy;
-Atom/(.Header.Context.Container.scope_unit in ("CA-SU-20"))/(.Header.Context.Role in (Requirement)).Header.Context.Form :: Rule;
-Atom/(.Header.Context.Container.scope_unit in ("CA-SU-20"))/(.Header.Context.Role in (Concern)).Header.Context.Form :: Problem;
-Atom/(.Header.Context.Container.scope_unit in ("CA-SU-20"))/(.Header.Context.Role in (Concern)).Header.Context.Form :: Question;
-```

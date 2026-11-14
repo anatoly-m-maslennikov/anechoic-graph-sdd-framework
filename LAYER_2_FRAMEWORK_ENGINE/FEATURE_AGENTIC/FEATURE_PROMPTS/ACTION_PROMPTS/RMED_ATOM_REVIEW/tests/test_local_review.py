@@ -57,6 +57,31 @@ def part6(group):
 
 
 class LocalReview(unittest.TestCase):
+    def test_contract7_uses_writing_and_rejects_legacy_precheck(self):
+        packet = packet6()
+        packet['review_constraints']['report_contract'] = 7
+        ctx = contract.ReviewContext(packet)
+        parts = [part6(g) for g in contract.LOCAL_GROUPS]
+        for row in parts:
+            row.update(contract_version=7, context_sha256=ctx.sha256)
+            if row['evaluator'] == 'cce':
+                row['evaluator'] = 'writing'
+                row['checks'][0]['id'] = 'writing'
+        merged = contract.merge_evaluations(parts, context=ctx)
+        self.assertEqual(merged['result'], 'passed')
+        self.assertEqual(merged['checks'][0]['id'], 'writing')
+        self.assertEqual(set(contract.summarize_evaluations([merged], context=ctx)['check_counts']),
+                         {'writing', 'properties', 'scope', 'claim', 'details', 'summary'})
+        for key, value in (('operator_precheck', ['must']), ('operator_registry', 'MOCK-M-003@1')):
+            bad = deepcopy(packet)
+            bad['review_constraints'][key] = value
+            with self.assertRaisesRegex(ValueError, 'excludes the retired operator precheck'):
+                contract.ReviewContext(bad)
+        parts[0]['evaluator'] = 'cce'
+        parts[0]['checks'][0]['id'] = 'cce'
+        with self.assertRaises(ValueError):
+            contract.merge_evaluations(parts, context=ctx)
+
     def test_bound_operator_precheck_rejects_skipped_rendering(self):
         packet = prechecked_packet()
         ctx = contract.ReviewContext(packet)

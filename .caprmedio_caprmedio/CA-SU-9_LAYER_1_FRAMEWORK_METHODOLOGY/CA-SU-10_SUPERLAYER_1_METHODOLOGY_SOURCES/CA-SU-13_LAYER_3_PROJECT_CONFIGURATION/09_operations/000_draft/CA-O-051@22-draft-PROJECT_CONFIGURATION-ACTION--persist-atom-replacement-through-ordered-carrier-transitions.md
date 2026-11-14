@@ -15,10 +15,8 @@ topics:
   - Subject/CAPRMEDIO/Carrier/File
   - Subject/CAPRMEDIO/Graph/Node/Project Model/History/Journal
   - Subject/CAPRMEDIO/Carrier/File.Filename
+  - CAPRMEDIO_MODEL <+ Relation
 tier: 3
-relations:
-  depends_on:
-  - CA-R-807
 status: draft
 version: 22
 updated_at: '2026-11-13T08:54:51.061268+00:00'

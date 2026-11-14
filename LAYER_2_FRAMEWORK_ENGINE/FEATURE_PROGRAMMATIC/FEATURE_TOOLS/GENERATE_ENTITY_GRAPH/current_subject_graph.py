@@ -57,9 +57,10 @@ def _cardinality(value: notation.Cardinality | None) -> Record | None:
 
 
 class _SubjectFacts:
-    def __init__(self) -> None:
+    def __init__(self, *, native_class_narrowing: bool = False) -> None:
         self.nodes: dict[str, Record] = {}
         self.facts: list[Record] = []
+        self.native_class_narrowing = native_class_narrowing
 
     def node(self, identity: str, **metadata: Any) -> str:
         self.nodes.setdefault(identity, {"identity": identity}).update(metadata)
@@ -127,7 +128,14 @@ class _SubjectFacts:
             child = self.operand(value, index, step)
             if step.operator not in _KINDS:
                 raise ValueError("Unsupported Subject path operator")
-            self.fact(_KINDS[step.operator], child, current)
+            kind = _KINDS[step.operator]
+            if (isinstance(value.head, notation.Name) and value.head.value == "CAPRMEDIO_STRUCTURE"
+                    and step.operator == "/"):
+                kind = "IS_CONTAINED_BY"
+            elif (self.native_class_narrowing and isinstance(value.head, notation.Name)
+                  and value.head.value == "Node" and step.operator == "//"):
+                kind = "NARROWER_THAN"
+            self.fact(kind, child, current)
             current = child
         if value.value_format is not None:
             self.nodes[current]["value_format"] = value.value_format.value
@@ -155,12 +163,12 @@ class _SubjectFacts:
                   reverse_cardinality=_cardinality(backward))
 
 
-def subject_facts(subject: str) -> tuple[list[Record], list[Record], str]:
+def subject_facts(subject: str, *, native_class_narrowing: bool = False) -> tuple[list[Record], list[Record], str]:
     """Project typed syntax to direct facts; never infer identities from role order."""
     expression = notation.parse_subject_expression(subject, subject_profile="approved").expression
     if _has_selection(expression):
         raise ValueError("Complex Subject selection cannot be projected as individual entities")
-    projection = _SubjectFacts()
+    projection = _SubjectFacts(native_class_narrowing=native_class_narrowing)
     if isinstance(expression, notation.Path):
         target = projection.path(expression)
     else:
@@ -206,11 +214,12 @@ def _occurrences(carrier: Record, diagnostics: list[str]) -> list[Record]:
 
 
 def _add_path(
-    occurrence: Record, nodes: dict[str, Record], edges: dict[str, Record], diagnostics: list[str]
+    occurrence: Record, nodes: dict[str, Record], edges: dict[str, Record], diagnostics: list[str],
+    *, native_class_narrowing: bool = False,
 ) -> None:
     subject, origin = occurrence["subject"], occurrence["id"]
     try:
-        supplied_nodes, facts, target = subject_facts(subject)
+        supplied_nodes, facts, target = subject_facts(subject, native_class_narrowing=native_class_narrowing)
     except (notation.SubjectNotationError, ValueError) as error:
         raise ValueError(f"{origin}: Subject projection failed: {error}") from error
     for supplied in supplied_nodes:
@@ -244,10 +253,26 @@ def compose_current_graph(
     nodes: dict[str, Record] = {}
     edges: dict[str, Record] = {}
     diagnostics: list[str] = []
+    from cfel_claim_constraints import extract_claim_constraints
+    from model_class_subject import model_class_target
+    native_subjects = set()
+    for carrier in carriers:
+        if not _is_declaration(carrier):
+            continue
+        constraints, _ = extract_claim_constraints(carrier)
+        for clause in constraints:
+            if clause.get("kind") != "native_class":
+                continue
+            subjects = carrier.get("subjects") or {}
+            subject = carrier_read_view({"subjects": subjects})["subjects"].get("governs")
+            if isinstance(subject, str) and model_class_target(subject, clause.get("entity_name")):
+                native_subjects.add((carrier["source"]["path"], subject))
     occurrences = [row for carrier in carriers for row in _occurrences(carrier, diagnostics)]
     for occurrence in occurrences:
         try:
-            _add_path(occurrence, nodes, edges, diagnostics)
+            _add_path(occurrence, nodes, edges, diagnostics,
+                      native_class_narrowing=(occurrence["role"] == "governs" and
+                                              (occurrence["source"]["path"], occurrence["subject"]) in native_subjects))
         except ValueError as error:
             if not unsupported_as_diagnostics:
                 raise
@@ -434,13 +459,13 @@ def compose_narrowing_graph(carriers: list[Record]) -> tuple[Record, Record]:
             return True
         if isinstance(expression.head, notation.Name) and expression.head.value in _NAMESPACE_ROOTS and not expression.steps:
             return True
-        if _target_kind(expression) in {"property", "instance"}:
+        if _target_kind(expression) in {"property", "instance"} and not native_class:
             return True
-        if _target_kind(expression) != "primary_node":
+        if _target_kind(expression) != "primary_node" and not native_class:
             diagnostics.append(f"{source_name(carrier)}: Subject `{subject}` does not declare one Primary Node.")
             return False
         try:
-            _, facts, target = subject_facts(subject)
+            _, facts, target = subject_facts(subject, native_class_narrowing=native_class)
         except (notation.SubjectNotationError, ValueError) as error:
             diagnostics.append(f"{source_name(carrier)}: Subject facts unavailable: {error}.")
             return False
@@ -476,14 +501,16 @@ def compose_narrowing_graph(carriers: list[Record]) -> tuple[Record, Record]:
             if isinstance(expression, notation.RelationChain) and add_cfel_component_endpoint(carrier, expression):
                 owners.append(carrier)
                 continue
-            if add_path(carrier, subject, native_class=bool(native)):
+            from model_class_subject import model_class_target
+            native_class = bool(native and model_class_target(subject, native[0].get("entity_name"), require_namespace=False))
+            if add_path(carrier, subject, native_class=native_class):
                 owners.append(carrier)
                 try:
                     expression = notation.parse_subject_expression(subject, subject_profile="approved").expression
                     expression = namespace_local_expression(expression) or expression
-                    if isinstance(expression, notation.Path) and _target_kind(expression) == "primary_node":
+                    if isinstance(expression, notation.Path) and (_target_kind(expression) == "primary_node" or native_class):
                         target = notation.render_subject(expression)
-                        if native:
+                        if native_class:
                             native_classes.append((carrier, target, native[0]))
                         else:
                             declaration_targets.append((carrier, target))
@@ -737,6 +764,14 @@ def _enhanced_categories(
                 continue
             assert isinstance(expression, notation.Path)
             target = _model_target(expression)
+            if kind == "instance" and target.startswith("Node/") and "//" in target:
+                from cfel_claim_constraints import extract_claim_constraints
+                from model_class_subject import model_class_target
+                clauses, _ = extract_claim_constraints(carrier)
+                if any(clause.get("kind") == "native_class" and
+                       model_class_target(occurrence["subject"], clause.get("entity_name")) == target
+                       for clause in clauses):
+                    kind = "primary_node"
         else:
             continue
         bucket = {

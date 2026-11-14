@@ -25,7 +25,7 @@ current_scope_unit: TOOL_WORKFLOWS
 claim_target_scope_unit: TOOL_WORKFLOWS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Archive active Atoms
 
@@ -34,6 +34,8 @@ Archive active Atoms
 The ATOM_ARCHIVE shortcut withdrawing exact selected active Markdown Atom authority under the Atom's applicable qualified status model and transition rules.
 
 ## Claim
+
+### Prose Claim
 
 the ATOM_ARCHIVE Tool **must** provide withdrawal of active Markdown Atom authority while preserving its historical evidence:
 

@@ -1,0 +1,56 @@
+"""Resolve unique declared and inherited Model class Property addresses."""
+
+from lint_python_model_claim import _canonical_address
+from model_class_subject import model_class_target
+
+
+def _class_roots(parsed):
+    roots, bases = {}, {}
+    for _, subject, declaration in parsed:
+        args = declaration["arguments"]
+        if declaration["kind"] != "entity" or "entity_class" not in args:
+            continue
+        root = model_class_target(subject, args["entity_name"])
+        if root:
+            name = args["entity_class"]
+            roots.setdefault(name, []).append(_canonical_address(root))
+            for item in declaration["classes"]:
+                if item["name"] == name:
+                    bases[name] = item["bases"]
+    return {name: paths[0] for name, paths in roots.items() if len(paths) == 1}, bases
+
+
+def _ancestors(name, roots, bases):
+    pending, seen = list(bases.get(name, ())), set()
+    while pending:
+        current = pending.pop()
+        if current == "object" or current in seen:
+            continue
+        if current not in roots or current not in bases:
+            return None
+        seen.add(current)
+        pending.extend(bases[current])
+    return seen
+
+
+def class_property_aliases(parsed):
+    canonical = {_canonical_address(subject) for _, subject, _ in parsed}
+    roots, bases = _class_roots(parsed)
+    properties = {name: {address[len(root):]: address for address in canonical
+                         if address.startswith(root + ".")}
+                  for name, root in roots.items()}
+    aliases = set()
+    for name in roots:
+        direct = properties[name]
+        ancestors = _ancestors(name, roots, bases)
+        inherited = {}
+        if ancestors is not None:
+            for ancestor in ancestors:
+                for suffix, address in properties[ancestor].items():
+                    inherited.setdefault(suffix, set()).add(address)
+        for suffix in direct.keys() | inherited.keys():
+            if suffix in direct or len(inherited[suffix]) == 1:
+                alias = name + suffix
+                if alias not in canonical:
+                    aliases.add(alias)
+    return aliases

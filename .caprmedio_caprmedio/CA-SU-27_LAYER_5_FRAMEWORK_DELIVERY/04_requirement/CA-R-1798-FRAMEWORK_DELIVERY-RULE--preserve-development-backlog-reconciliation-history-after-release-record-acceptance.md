@@ -7,11 +7,9 @@ role: Requirement
 form: Rule
 topics:
   main_subject: CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering
+  dependencies:
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Role
 tier: 4
-relations:
-  depends_on:
-  - CA-O-058
-  - CA-R-1702
 status: Active
 version: 17
 updated_at: 2026-11-09 15:54:30 +0400

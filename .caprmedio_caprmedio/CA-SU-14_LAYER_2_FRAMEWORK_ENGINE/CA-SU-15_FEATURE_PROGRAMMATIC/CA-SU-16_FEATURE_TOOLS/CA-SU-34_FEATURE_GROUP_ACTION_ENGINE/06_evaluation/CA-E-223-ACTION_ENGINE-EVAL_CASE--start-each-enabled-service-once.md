@@ -25,7 +25,7 @@ current_scope_unit: ACTION_ENGINE
 claim_target_scope_unit: ACTION_ENGINE
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Start each enabled service once
 
@@ -34,6 +34,8 @@ Start each enabled service once
 Evaluation of one background-service lifecycle action and its recorded outcome.
 
 ## Claim
+
+### Prose Claim
 
 ## Claim checked
 

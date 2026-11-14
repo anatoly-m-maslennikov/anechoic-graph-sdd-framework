@@ -22,7 +22,7 @@ current_scope_unit: TOOL_WORKFLOWS
 claim_target_scope_unit: TOOL_WORKFLOWS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Edit one explicit Atom section
 
@@ -31,6 +31,8 @@ Edit one explicit Atom section
 Logical edits of one explicitly selected section in one Atom.
 
 ## Claim
+
+### Prose Claim
 
 The section-edit family **must** support add, replace, remove, rename-title and reorder through **`=1`** explicit section operation per Atom Action. Bind the exact Atom identity, expected Version or source pin, section and requested change before preview. The storage connector resolves the section in the captured complete source; missing or ambiguous selection, stale source, invalid structure or missing permission **must** fail before the effect.
 

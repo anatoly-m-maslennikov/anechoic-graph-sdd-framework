@@ -9,7 +9,7 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Projection
   dependencies:
   - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Requirement)/(.Header.Context.Form := Declaration)
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//NARROWER
+  - CAPRMEDIO_MODEL <+ Relation//NARROWER
 tier: 3
 status: Draft
 version: 1

@@ -4,7 +4,7 @@ import sys
 from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'tests'))
-from test_incremental_indexing import APP_ROOT  # noqa: F401,E402
+import test_incremental_indexing as indexing  # noqa: E402
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_placement_audit import expected_carrier, affected_descendants
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.markdown_content import parse_content
 
@@ -55,6 +55,35 @@ class Tests(unittest.TestCase):
         assert expected_carrier(child, scopes, {'CA-P-1': parent}.get, LocalRules()) == (
             'CA-P-2-TASK--a-short-summary.md', 'engine/03_plan/CA-P-1-EPIC--a-short-summary')
         assert expected_carrier(child, scopes, {}.get, LocalRules()) == (None, None)
+
+    def test_nested_plan_uses_declared_atom_parent_in_audit_table(self):
+        fixture = indexing.IncrementalIndexingTests()
+        self.addCleanup(fixture.doCleanups)
+        fixture.setUp()
+        fixture.service._reader._audit_model = SimpleNamespace(
+            schema=SimpleNamespace(placement=indexing.fixture_rules()), issues=lambda row: [],
+        )
+        parent = indexing.source_path(fixture.declarations, "ENGINE", "03_plan", "done/CA-P-1-EPIC--parent.md")
+        child_dir = parent.with_suffix("") / "done"
+        correct = child_dir / "CA-P-2-WORK_REPORT--correct.md"
+        misplaced = parent.parent / "CA-P-3-WORK_REPORT--misplaced.md"
+        for path, reference, form, container, summary in (
+            (parent, "CA-P-1", "Epic", "scope_unit: ENGINE", "Parent"),
+            (correct, "CA-P-2", "Work Report", "atom: CA-P-1", "Correct"),
+            (misplaced, "CA-P-3", "Work Report", "atom: CA-P-1", "Misplaced"),
+        ):
+            relative = path.parent.relative_to(fixture.root).as_posix()
+            indexing.write_atom(path, reference, status="Done", body=f"## Summary\n\n{summary}\n",
+                                extra=f"container:\n  {container}\ndestination:\n  file:\n"
+                                f"    name: {path.name}\n    path: {relative}\n")
+            path.write_text(path.read_text().replace('role: "Requirement"', 'role: "Plan"')
+                            .replace('form: "Definition"', f'form: "{form}"'))
+        fixture.service._refresh()
+        self.assertTrue(fixture.service.wait_for_audits(10))
+        self.assertEqual([[misplaced.name, child_dir.relative_to(fixture.root).as_posix()]], fixture.store.run(
+            "SELECT filename, expected FROM atom_declared_carrier_issues "
+            "WHERE property = 'file.path' AND reference IN ('CA-P-2', 'CA-P-3')"
+        )["rows"])
 
 
     def test_descendants_include_previous_and_next_paths_and_scope_declarations(self):

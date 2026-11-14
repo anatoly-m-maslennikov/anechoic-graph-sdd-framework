@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_CONTAINED_BY
+  main_subject: CAPRMEDIO_MODEL <+ Relation//IS_CONTAINED_BY
 tier: 3
 status: Active
 version: 5
@@ -26,7 +26,7 @@ Define composition and its inverse
 
 ### Prose Claim
 
-IS_CONTAINED_BY relates a contained declared Entity or instance to its immediate Container. The Target has classification `Container = yes`. Containment does not imply narrowing or inheritance. CONTAINS is its derived inverse: its Host and Target are the direct Target and Host, respectively. Store the direct fact once.
+IS_CONTAINED_BY relates a contained declared Entity or instance to its immediate Container. Containment does not imply narrowing or inheritance. CONTAINS is its derived inverse: its Host and Target are the direct Target and Host, respectively. Store the direct fact once.
 ### Formal Claim
 
 ```python

@@ -32,7 +32,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Place Artifact query Tool and golden test
 
@@ -42,6 +42,8 @@ Delivery placement only; no implementation or registration is performed by
 this Atom.
 
 ## Claim
+
+### Prose Claim
 
 FIND_AND_FETCH_ARTIFACTS **must** be delivered at
 `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FIND_AND_FETCH_ARTIFACTS/`

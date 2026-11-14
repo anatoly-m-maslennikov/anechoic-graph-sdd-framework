@@ -22,7 +22,7 @@ current_scope_unit: TOOL_WORKFLOWS
 claim_target_scope_unit: TOOL_WORKFLOWS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Apply one explicit Atom Property edit
 
@@ -31,6 +31,8 @@ Apply one explicit Atom Property edit
 Explicit Property and list-entry edits within one Atom Action.
 
 ## Claim
+
+### Prose Claim
 
 For the Project Configuration Atom Lifecycle Workflows, identity, Version, Updated At and history follow those Workflows and CA-R-1432 and CA-R-1788. CA-E-521 checks those effects. Differing statements in this Atom on those matters apply only to other operations.
 

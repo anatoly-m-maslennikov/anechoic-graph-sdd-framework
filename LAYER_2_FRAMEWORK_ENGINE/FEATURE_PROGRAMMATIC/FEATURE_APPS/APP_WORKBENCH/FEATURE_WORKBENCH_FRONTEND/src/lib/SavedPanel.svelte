@@ -1,4 +1,3 @@
-<!-- CA-R-2776@10 -->
 <!-- CA-D-674@26 -->
 <script lang="ts">
   import type { QueryLogItem, SavedItem } from './types';

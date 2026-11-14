@@ -28,7 +28,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Check Atom validator projected-source bindings
 
@@ -37,6 +37,8 @@ Check Atom validator projected-source bindings
 `VALIDATE_ATOMS` projected-Carrier source bindings.
 
 ## Claim
+
+### Prose Claim
 
 the `VALIDATE_ATOMS` projected-Carrier check **must** implement CA-D-305-CORE_META_MODEL-CORE-DELIVERY--carry-projected-atoms-without-new-identity source binding faithfully.
 

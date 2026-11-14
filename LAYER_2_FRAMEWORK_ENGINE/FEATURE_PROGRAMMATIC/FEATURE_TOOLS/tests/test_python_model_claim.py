@@ -11,9 +11,8 @@ from python_model_claim import (  # noqa: E402
     PythonModelClaimError,
     parse_grouped_python_model_claim,
     parse_python_model_claim,
+    parse_structured_python_model_claim,
 )
-from ATOM_LIFECYCLE.content_constraints import compile_content_constraints  # noqa: E402
-from ATOM_LIFECYCLE.header_constraints import compile_header_constraints  # noqa: E402
 
 
 def declaration(text):
@@ -25,6 +24,32 @@ def declaration(text):
 
 
 class PythonModelClaimTests(unittest.TestCase):
+    def test_structured_helpers_do_not_render_and_keep_scope(self):
+        from unittest.mock import patch
+
+        source = """# model
+subject_path(address="Node/Atom")
+# instances
+relation(source="Atom//", name="CONTAINS", target="Event//", target_count="1+")
+"""
+        with patch("python_model_claim._render", side_effect=AssertionError("render called")):
+            calls = parse_structured_python_model_claim(source)
+        self.assertEqual(calls, (
+            {"name": "subject_path", "arguments": {"address": "Node/Atom"}, "scope": "model"},
+            {"name": "relation", "arguments": {"source": "Atom//", "name": "CONTAINS",
+                                                  "target": "Event//", "target_count": "1+"},
+             "scope": "instances"},
+        ))
+
+    def test_structured_helpers_validate_arguments_and_endpoints(self):
+        with self.assertRaises(PythonModelClaimError):
+            parse_structured_python_model_claim('relation(source="A", name="REL", target_count="1")')
+        with self.assertRaises(PythonModelClaimError):
+            parse_structured_python_model_claim('property_rule(address="A", occurrences="2..1")')
+        with self.assertRaises(PythonModelClaimError):
+            parse_structured_python_model_claim('relation(source="A", name="REL", target="B")',
+                                                validate_relation_endpoint=lambda value, name, key: value != "B")
+
     def test_property_constraints_compile_like_existing_claims(self):
         source = '''
 property_rule(address="Atom.Header.Tier", value_format="int", occurrences="1", values="1")
@@ -39,10 +64,8 @@ Atom.Header.Context{::1}:: []{::0};
 Atom.Content.Claim{::1}:: []{::0};
 Atom.Content.Claim.*[string, in (Formal Claim, Prose Claim)]{::1..2};
 '''
-        translated = declaration(";\n".join(statements))
-        original = declaration(expected)
-        self.assertEqual(compile_header_constraints([original]), compile_header_constraints([translated]))
-        self.assertEqual(compile_content_constraints([original]), compile_content_constraints([translated]))
+        self.assertEqual(tuple(line.strip().removesuffix(';') for line in expected.splitlines() if line.strip()),
+                         statements)
 
     def test_all_declarations_and_literals(self):
         source = '''

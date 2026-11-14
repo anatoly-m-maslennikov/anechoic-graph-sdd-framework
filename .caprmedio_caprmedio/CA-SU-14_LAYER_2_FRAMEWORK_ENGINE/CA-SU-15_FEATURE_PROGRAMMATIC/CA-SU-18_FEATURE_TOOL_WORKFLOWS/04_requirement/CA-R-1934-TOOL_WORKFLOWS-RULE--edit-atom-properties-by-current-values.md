@@ -22,7 +22,7 @@ current_scope_unit: TOOL_WORKFLOWS
 claim_target_scope_unit: TOOL_WORKFLOWS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Edit Atom Properties by current values
 
@@ -31,6 +31,8 @@ Edit Atom Properties by current values
 Logical Property and list-entry edits of one explicitly selected Atom.
 
 ## Claim
+
+### Prose Claim
 
 Atom Modify **must** support explicit Property add, replace and remove, subject to the applicable complete-Atom schema and Property authority. Each edit binds its Atom identity and expected Version or source pin, explicit Property, operation and proposed value where required. Unknown or ambiguous Properties, stale sources, unapproved effects and invalid resulting values **must** fail closed.
 

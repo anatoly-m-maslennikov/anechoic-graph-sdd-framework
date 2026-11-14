@@ -12,8 +12,8 @@ topics:
   - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
   - CAPRMEDIO_MODEL <+ Entity
   - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//GOVERNS
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//DEPENDS_ON
+  - CAPRMEDIO_MODEL <+ Relation//GOVERNS
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics.Dependencies
 tier: 1
 status: Active
 version: 34

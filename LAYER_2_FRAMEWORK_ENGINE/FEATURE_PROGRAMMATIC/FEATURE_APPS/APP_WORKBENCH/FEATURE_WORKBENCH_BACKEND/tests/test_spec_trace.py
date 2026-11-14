@@ -1,4 +1,6 @@
 from pathlib import Path
+from contextlib import redirect_stderr
+from io import StringIO
 from tempfile import TemporaryDirectory
 import unittest
 
@@ -8,6 +10,33 @@ from FEATURE_WORKBENCH_BACKEND.spec_trace import PILOT, SpecTraceStore
 
 
 class SpecTraceTests(unittest.TestCase):
+    def test_sidecar_edits_replace_only_the_owner_pins(self):
+        root = Path(self.enterContext(TemporaryDirectory()))
+        package = root / PILOT / 'example'
+        package.mkdir(parents=True)
+        (package / 'unit.py').write_text('pass')
+        module_trace = package / 'unit.py.spec_trace.md'
+        module_trace.write_text('## Implements\n- CA-R-123@1\n')
+        package_trace = package / 'example.p.spec_trace.md'
+        package_trace.write_text('## Applies\n- CA-M-9@1\n')
+        connection = self.enterContext(duckdb.connect(':memory:'))
+        store = SpecTraceStore(connection, root)
+        store.initialize()
+        store.refresh()
+        pins = 'SELECT atom_id, version FROM implementation_rmedo ORDER BY atom_id'
+
+        module_trace.write_text('## Implements\n- CA-R-123@2\n')
+        package_trace.write_text('## Applies\n- CA-M-9@2\n')
+        store.refresh([package_trace])
+        self.assertEqual(connection.execute(pins).fetchall(), [('CA-M-9', 2), ('CA-R-123', 1)])
+
+        package_trace.write_text('## Applies\n- CA-M-9@3\n- invalid\n')
+        stderr = StringIO()
+        with redirect_stderr(stderr):
+            store.refresh([package_trace])
+        self.assertIn(f'{package_trace}:3:', stderr.getvalue())
+        self.assertEqual(connection.execute(pins).fetchall(), [('CA-R-123', 1)])
+
     def test_incremental_trace_and_directory_changes(self):
         tmp_path = Path(self.enterContext(TemporaryDirectory()))
         pilot = tmp_path / PILOT

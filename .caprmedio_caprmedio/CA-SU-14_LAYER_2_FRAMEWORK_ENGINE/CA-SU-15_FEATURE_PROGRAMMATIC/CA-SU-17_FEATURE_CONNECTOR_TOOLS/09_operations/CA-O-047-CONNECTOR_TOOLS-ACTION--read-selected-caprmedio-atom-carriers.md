@@ -14,11 +14,6 @@ topics:
   - Subject/CAPRMEDIO/Carrier
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Scope Unit
 tier: 3
-relations:
-  depends_on:
-  - CA-R-1936
-  - CA-M-376
-  - CA-D-625
 status: Active
 version: 14
 updated_at: 2026-10-27 19:59:44 +0400

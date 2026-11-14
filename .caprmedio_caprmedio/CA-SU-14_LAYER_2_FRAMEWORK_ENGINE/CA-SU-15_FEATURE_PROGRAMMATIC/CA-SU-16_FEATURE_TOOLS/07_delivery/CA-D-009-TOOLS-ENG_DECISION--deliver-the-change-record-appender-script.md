@@ -35,7 +35,7 @@ cce_form: serialization
 llm_session_ids:
 - codex:01a02650-eff7-7453-8c37-0699b36773c6
 ---
-# Summary
+## Summary
 
 Deliver the change-record appender script
 
@@ -44,6 +44,8 @@ Deliver the change-record appender script
 The canonical APPEND_CHANGE_RECORDS executable Carrier, its CLI and Project-bound MCP transport, and shared Journal append/read serialization.
 
 ## Claim
+
+### Prose Claim
 
 APPEND_CHANGE_RECORDS **must** be delivered through the canonical source script `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/APPEND_CHANGE_RECORDS/append_change_records.py` **and** its content-identical Carrier **in** the selected `.caprmedio_runtime/tools` release.
 

@@ -6,17 +6,19 @@ container:
 role: Method
 form: Implementation Method
 topics:
-  main_subject: "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled English"
+  main_subject: CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring
+    <+ Controlled English
   dependencies:
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled English"
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled
+    English
   - CAPRMEDIO_MODEL <+ Atom
 tier: 6
 relations:
   child_of:
   - CA-M-122
-status: Active
-version: 31
-updated_at: 2026-11-02 18:35:20 +0400
+status: active
+version: 32
+updated_at: '2026-11-13T18:59:01.003298+00:00'
 carrier_destination:
   file:
     name: CA-M-127-CORE_META_MODEL-IMPLEMENTATION_METHOD--evaluate-set-valued-property-membership.md
@@ -33,7 +35,7 @@ Evaluate Set-valued Property Membership
 ### Prose Claim
 
 
-evaluation of **in** **or** **not in** for one set-valued governed property.
+evaluation of **in** **or** **not in** for one set-valued governed property in historical CCE material. This Method does not govern new Atom prose.
 
 
 **to** evaluate **in** **or** **not in** for one set-valued governed property, the Resolver **must** evaluate **in** as true exactly **when** **`>=1`** property member **`=`** one listed value **and** **must** evaluate **not in** as true exactly **when** no property member **`=`** **any** listed value.

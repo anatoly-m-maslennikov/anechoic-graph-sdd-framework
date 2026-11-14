@@ -9,8 +9,6 @@ topics:
   main_subject: Subject/CAPRMEDIO/Graph/Node/Aspect/Engineering/Delivery
 tier: 3
 relations:
-  depends_on:
-  - CA-D-417
   delivery_for:
   - CA-M-087
   - CA-M-182

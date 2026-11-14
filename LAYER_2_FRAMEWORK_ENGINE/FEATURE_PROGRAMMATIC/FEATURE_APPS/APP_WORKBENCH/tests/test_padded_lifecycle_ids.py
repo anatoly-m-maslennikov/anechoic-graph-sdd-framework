@@ -1,5 +1,4 @@
 import unittest
-# CA-E-827@1
 from pathlib import Path
 import sys
 import threading

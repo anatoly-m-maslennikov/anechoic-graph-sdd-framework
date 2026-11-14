@@ -20,6 +20,10 @@ llm_session_ids:
 current_scope_unit: FRAMEWORK_METHODOLOGY
 author: Anatoly Maslennikov
 claim_target_scope_unit: METHODOLOGY_SOURCES
+destination:
+  file:
+    name: CA-R-1172-FRAMEWORK_METHODOLOGY-GOAL-METHODOLOGY_SOURCES--make-the-caprmedio-governing-model-recursively-self-applicable.md
+    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/04_requirement
 ---
 ## Summary
 Make the CAPRMEDIO Governing Model Recursively Self-Applicable

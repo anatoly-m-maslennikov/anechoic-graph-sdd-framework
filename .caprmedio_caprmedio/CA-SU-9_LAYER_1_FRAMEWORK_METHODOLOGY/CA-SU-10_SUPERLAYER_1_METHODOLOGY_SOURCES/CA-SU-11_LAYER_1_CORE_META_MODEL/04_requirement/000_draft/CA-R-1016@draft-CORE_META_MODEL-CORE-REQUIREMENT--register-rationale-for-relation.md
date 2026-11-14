@@ -17,7 +17,7 @@ local_tier: "Core"
 author: "Anatoly Maslennikov"
 global_tier: 9
 ---
-# Summary
+## Summary
 
 Register rationale_for relation
 
@@ -26,6 +26,8 @@ Register rationale_for relation
 Rationale For Relation.
 
 ## Claim
+
+### Prose Claim
 
 `rationale_for` **must** be registered as a direct relation owned by a Rationale Analysis Atom **and** directed **to** **`=1`** (Requirement, Method, Evaluation, **or** Delivery) Atom that it explains.
 

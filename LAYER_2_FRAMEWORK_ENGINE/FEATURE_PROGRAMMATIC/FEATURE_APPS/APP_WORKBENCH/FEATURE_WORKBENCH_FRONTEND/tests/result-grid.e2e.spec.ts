@@ -1,5 +1,3 @@
-// CA-E-783@6
-// CA-E-786@6
 import { expect, test, type Page } from '@playwright/test';
 
 const url = process.env.WORKBENCH_E2E_URL!;

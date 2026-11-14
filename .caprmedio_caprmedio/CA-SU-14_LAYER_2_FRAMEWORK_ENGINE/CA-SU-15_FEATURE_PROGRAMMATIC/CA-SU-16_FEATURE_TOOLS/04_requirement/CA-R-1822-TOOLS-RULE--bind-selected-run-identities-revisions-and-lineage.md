@@ -26,7 +26,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Bind selected Run identities, revisions and lineage
 
@@ -36,6 +36,8 @@ Actual Run provenance produced through shared RUN_SUPPORT for the selected
 scope. Definition Atoms and their execution records remain distinct.
 
 ## Claim
+
+### Prose Claim
 
 RUN_SUPPORT **must** retain distinct actual Workflow Run, Step Run, and Action
 Run identities with their exact admitted definition bindings and actual

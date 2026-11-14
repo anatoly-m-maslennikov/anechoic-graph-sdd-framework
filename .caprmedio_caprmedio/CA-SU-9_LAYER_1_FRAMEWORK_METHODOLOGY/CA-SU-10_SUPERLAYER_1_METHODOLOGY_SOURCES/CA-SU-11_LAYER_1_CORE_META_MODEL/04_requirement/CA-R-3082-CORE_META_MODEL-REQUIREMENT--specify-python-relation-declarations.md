@@ -11,9 +11,9 @@ context:
   topics:
     main_subject: CAPRMEDIO_MODEL <+ Atom.Content.Claim.Formal Claim
 state:
-  version: 2
+  version: 3
   status: active
-  updated_at: '2026-11-12T22:56:29.522383+00:00'
+  updated_at: '2026-11-14T07:29:18.360406+00:00'
 destination:
   file:
     name: CA-R-3082-CORE_META_MODEL-REQUIREMENT--specify-python-relation-declarations.md
@@ -27,11 +27,10 @@ Specify Python relation declarations
 
 ### Prose Claim
 
-- Declare the canonical Relation name, endpoint domains, and any written aliases with `declare_relation`.
+- Use `declare_relation` to specify the canonical name, the eligible Model kinds and levels at each endpoint, and any aliases. A matching endpoint pair admits the direct Relation.
 - Use `endpoint_pairs` when each source domain admits a specific target domain. Give each pair a `source_endpoint` and a `target_endpoint`. The inverse reverses each pair.
-- Declare an inverse alias against its canonical Relation. Its source and target slots swap, including their cardinality bounds. Expose the reverse link as a Derived Relation from the same fact.
-- Give each endpoint a Model or instance level where the Relation permits that level. An Entity's Model and instance permissions resolve separately.
-- Declare direction-specific permissions and apply the appropriate source and target bounds. Unlisted Relations are forbidden where the Entity declares a closed whitelist.
+- Declare an inverse alias against its canonical Relation. Its source and target slots swap. An explicitly admitted reverse view derives from the direct fact.
+- Specify each endpoint's Model or instance level. Put cardinality and other conditions in the relevant Entity Declarations. Apply those constraints within the Relation's endpoint domain.
 - Declare the inheritable contracts on `NARROWER_THAN`. Python class bases establish the narrowing path. Resolve schema rules through the class MRO and explicit MODEL overrides.
 
 - A canonical Relation declaration has Direct classification by default.

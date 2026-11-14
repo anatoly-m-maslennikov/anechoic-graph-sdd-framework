@@ -12,10 +12,6 @@ tier: 3
 relations:
   is_decomposition_of:
   - CA-P-2613
-  depends_on:
-  - CA-C-585
-  - CA-C-583
-  - CA-P-2629
   relates_to:
   - CA-R-1840
   - CA-R-1841

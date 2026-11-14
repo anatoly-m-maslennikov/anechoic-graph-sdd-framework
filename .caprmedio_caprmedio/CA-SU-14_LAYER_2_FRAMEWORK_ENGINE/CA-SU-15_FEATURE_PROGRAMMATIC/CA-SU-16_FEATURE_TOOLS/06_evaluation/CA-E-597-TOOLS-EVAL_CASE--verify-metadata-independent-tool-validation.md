@@ -27,7 +27,7 @@ carrier_destination:
 current_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Verify metadata-independent Tool validation
 
@@ -36,6 +36,8 @@ Verify metadata-independent Tool validation
 The persistent inventories and runtime message directories checked under CA-R-1898.
 
 ## Claim
+
+### Prose Claim
 
 The QA case **must** obtain the same validation result for otherwise identical fixtures with **and** without `.DS_Store`, while preserving failures for real invalid files.
 

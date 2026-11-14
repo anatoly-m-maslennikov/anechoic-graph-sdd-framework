@@ -27,6 +27,8 @@ carrier_destination:
   file:
     name: CA-C-319-PROBLEM--complete-p1297-native-remainder-binding.md
     path: .caprmedio_caprmedio/01_concern/021_resolved
+container:
+  scope_unit: CA-SU-00
 ---
 # Summary
 

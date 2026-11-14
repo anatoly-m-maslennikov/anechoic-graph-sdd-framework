@@ -23,7 +23,7 @@ current_scope_unit: CONNECTOR_TOOLS
 claim_target_scope_unit: CONNECTOR_TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Query declared Scope Units
 
@@ -32,6 +32,8 @@ Query declared Scope Units
 The read-only Query connector operation for declared Scope Units in one explicitly bound Project and source view.
 
 ## Claim
+
+### Prose Claim
 
 the Scope Unit Query result **must** contain **every** **and** **only** matching declared Scope Unit **in** the caller's explicit logical frontier, with stable canonical identities, requested matching facts, actual source-state evidence **and** truthful coverage. an empty match set is a valid complete result; one **or** several matches require no different operation. Query returns matching facts, **not** full declarations, **and** grants no effect permission.
 

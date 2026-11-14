@@ -19,7 +19,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Define the bounded query-filter contract
 
@@ -30,6 +30,8 @@ its own selector namespace, source domain, request/result representation,
 coverage, and diagnostic carrier.
 
 ## Claim
+
+### Prose Claim
 
 Every Tool that uses QUERY_FILTER **must** accept only the closed literal
 comparison grammar with exact typed equality, inequality, `NOT`, `IN`, and

@@ -5,34 +5,61 @@ import unittest
 TOOLS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS))
 sys.path.insert(0, str(TOOLS.parent / 'FEATURE_APPS/APP_WORKBENCH'))
-from ATOM_LIFECYCLE.role_form_schema import compile_role_form  # noqa: E402
+from ATOM_LIFECYCLE.role_form_schema import compile_role_form, load_role_form  # noqa: E402
+
+
+def row(source, claim):
+    return {'id': source, '_content_bytes': f'## Claim\n### Formal Claim\n```python\n{claim}\n```\n'.encode()}
+
+
+def role(name, cls):
+    return (f'from caprmedio.formal_claims import declare_entity\n'
+            f'class {cls}:\n    pass\n'
+            f'declare_entity(entity_name={name!r}, entity_class={cls}, '
+            f'qualification_property_path="Atom.Header.Context.Role")')
+
+
+def form(name, cls, base, extra=''):
+    return (f'from caprmedio.formal_claims import declare_entity\n'
+            f'from caprmedio.model import {base}\nclass {cls}({base}):\n    pass\n'
+            f'declare_entity(entity_name={name!r}, entity_class={cls}, '
+            f'qualification_property_path="Atom.Header.Context.Form"{extra})')
 
 
 class RoleFormCompilationTests(unittest.TestCase):
-    def test_grouped_paths_match_flat_declarations(self):
-        flat = '''## Claim
+    def test_native_roles_qualified_forms_and_cross_role_constraints(self):
+        sources = [row('R1', role('Analysis and Advisory', 'AnalysisAndAdvisory')),
+                   row('R2', role('Method', 'Method')),
+                   row('R3', form('Decision', 'MethodDecision', 'Method')),
+                   row('R4', form('Report', 'Report', 'AnalysisAndAdvisory',
+                                  ', form_roles=("Analysis and Advisory",)'))]
+        result = compile_role_form(sources)
+        self.assertEqual({('role', 'Analysis and Advisory', ''), ('role', 'Method', ''),
+                          ('qualified', 'Decision', 'Method'), ('form', 'Report', ''),
+                          ('constraint', 'Report', 'Analysis and Advisory')},
+                         {(item['kind'], item['value'], item['role']) for item in result})
+        schema = load_role_form(result, {'R1', 'R2', 'R3', 'R4'})
+        schema.validate('Method', 'Decision')
+        with self.assertRaisesRegex(ValueError, 'not permitted'):
+            schema.validate('Analysis and Advisory', 'Decision')
 
-### Formal Claim
+    def test_property_form_roles_and_unknown_role_base(self):
+        claim = ('from caprmedio.formal_claims import declare_entity\n'
+                 'declare_entity(entity_name="Form", relation_name="IS_PROPERTY_OF", '
+                 'base_path="Atom.Header.Context", allowed_values=("Scope Delegation",), '
+                 'form_roles=("Method",))')
+        records = compile_role_form([row('R1', claim)])
+        self.assertEqual({'form', 'constraint'}, {item['kind'] for item in records})
+        with self.assertRaisesRegex(ValueError, 'declared Role base class'):
+            compile_role_form([row('R2', form('Decision', 'MethodDecision', 'Method'))])
 
-```CFEL
-Atom.Header.Role :: Method;
-Atom.Header.Form :: Decision;
-Atom/(.Header.Role in (Method)).Header.Form :: Solution;
-FOR EACH $a[<Atom>, (.Header.Form = Decision)]: (
-    $a.Header.Role :: [in (Method, Evaluation)]{::1};
-)
-```
-'''
-        grouped = flat.replace('.Header.Role', '.Header.Context.Role').replace(
-            '.Header.Form', '.Header.Context.Form')
-        def compile_text(value):
-            return compile_role_form([{'id': 'CA-R-1', '_content_bytes': value.encode()}])
-        self.assertEqual(compile_text(flat), compile_text(grouped))
-        self.assertEqual({('role', 'Method', ''), ('form', 'Decision', ''),
-                          ('qualified', 'Solution', 'Method'),
-                          ('constraint', 'Decision', 'Method'),
-                          ('constraint', 'Decision', 'Evaluation')},
-                         {(x['kind'], x['value'], x['role']) for x in compile_text(grouped)})
+    def test_form_inherits_role_through_another_declared_class(self):
+        parent = ('from caprmedio.formal_claims import declare_entity\n'
+                  'from caprmedio.model import Method\nclass Intermediate(Method):\n    pass\n'
+                  'declare_entity(entity_name="Intermediate", entity_class=Intermediate)')
+        records = compile_role_form([row('R1', role('Method', 'Method')), row('R2', parent),
+                                     row('R3', form('Decision', 'MethodDecision', 'Intermediate'))])
+        self.assertIn({'kind': 'qualified', 'value': 'Decision', 'role': 'Method', 'source': 'R3'}, records)
 
 
 if __name__ == '__main__':

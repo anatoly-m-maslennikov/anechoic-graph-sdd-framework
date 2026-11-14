@@ -6,11 +6,11 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Format//markdown
+  main_subject: CAPRMEDIO_MODEL <+ Format//markdown
 tier: 3
 status: active
-version: 5
-updated_at: '2026-11-13T05:17:03.034051+00:00'
+version: 6
+updated_at: '2026-11-13T22:57:39.635646+00:00'
 carrier_destination:
   file:
     name: CA-R-2547-CORE_META_MODEL-DECLARATION--define-markdown-value-format.md
@@ -32,6 +32,7 @@ The markdown Format admits Markdown source. A section value preserves its markup
 ### Formal Claim
 
 ```python
-# model
-relation(source='Format//markdown', name='INSTANCE_OF', target='Format')
+from caprmedio.formal_claims import declare_entity
+
+declare_entity(entity_name='markdown')
 ```

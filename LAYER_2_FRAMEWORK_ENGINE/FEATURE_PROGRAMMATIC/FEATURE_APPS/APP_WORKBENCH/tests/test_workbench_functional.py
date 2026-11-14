@@ -1,6 +1,3 @@
-# CA-E-681@7
-# CA-E-675@14
-# CA-E-676@15
 # CA-E-677@30
 from __future__ import annotations
 
@@ -209,8 +206,8 @@ class WorkbenchFunctionalTests(unittest.TestCase):
 
     def test_draft_and_loaded_archive_and_inverses_change_counterpart_hash(self) -> None:
         declarations = (
-            ("inverse.md", "CA-R-510", "IS_CONTAINED_BY", "## Claim\n\n### Formal Claim\n\n```CFEL\nRelation//IS_CONTAINED_BY ((HAS_INVERSE)) Relation//CONTAINS;\n```\n"),
-            ("reverse.md", "CA-R-511", "CONTAINS", "## Claim\n\n### Formal Claim\n\n```CFEL\nRelation//CONTAINS <((HAS_INVERSE)) Relation//IS_CONTAINED_BY;\n```\n"),
+            ("inverse.md", "CA-R-510", "IS_CONTAINED_BY", "## Claim\n\n### Formal Claim\n\n```python\nrelation(source=\"Relation//IS_CONTAINED_BY\", name=\"HAS_INVERSE\", target=\"Relation//CONTAINS\")\n```\n"),
+            ("reverse.md", "CA-R-511", "CONTAINS", "## Claim\n\n### Formal Claim\n\n```python\nrelation(source=\"Relation//CONTAINS\", name=\"HAS_INVERSE\", target=\"Relation//IS_CONTAINED_BY\", reverse=True)\n```\n"),
         )
         for name, atom_id, relation, body in declarations:
             self.atom(name, atom_id, body=body, subjects=f"{{active: 'CAPRMEDIO_MODEL <+ CFEL <+ Relation//{relation}'}}")

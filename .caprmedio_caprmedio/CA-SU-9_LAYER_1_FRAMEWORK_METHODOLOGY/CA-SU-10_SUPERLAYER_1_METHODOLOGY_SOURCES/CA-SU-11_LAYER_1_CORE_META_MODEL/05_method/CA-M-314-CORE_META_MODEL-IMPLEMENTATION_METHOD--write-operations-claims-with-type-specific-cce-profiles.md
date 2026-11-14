@@ -9,16 +9,20 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations).Header.Context.Form
   dependencies:
   - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Action)
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow)
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow) >{1+} Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Step)
-  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled English
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form
+    := Action)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form
+    := Workflow)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form
+    := Workflow) >{1+} Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form
+    := Step)
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled
+    English
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role:=Operations)/Workflow
 tier: 6
 relations:
   child_of:
   - CA-M-307
-  depends_on:
-  - CA-M-305
 status: Active
 version: 27
 updated_at: 2026-11-11 14:09:10 +0400

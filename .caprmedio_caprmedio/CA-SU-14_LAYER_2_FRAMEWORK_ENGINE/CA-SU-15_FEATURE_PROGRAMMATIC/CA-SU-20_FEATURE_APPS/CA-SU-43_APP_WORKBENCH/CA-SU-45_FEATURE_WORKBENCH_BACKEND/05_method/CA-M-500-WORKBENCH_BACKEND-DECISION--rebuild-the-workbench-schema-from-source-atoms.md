@@ -18,8 +18,8 @@ relations:
   - CA-R-2726
 state:
   status: active
-  version: 13
-  updated_at: '2026-11-12T17:24:17.731604+00:00'
+  version: 14
+  updated_at: '2026-11-13T19:29:13.475916+00:00'
 destination:
   file:
     name: CA-M-500-WORKBENCH_BACKEND-DECISION--rebuild-the-workbench-schema-from-source-atoms.md
@@ -47,4 +47,4 @@ Generate `workbench_schema.json` in refresh mode and carry it unchanged from the
 In refresh mode, use the Current Declaration inputs selected under CA-M-1011, including its first-refresh bootstrap. Regenerate the rebuildable query model and schema asset from Current Declarations, including Role and Form applicability, Content wildcards and more specific Content rules. Resolve applicable explicit property declarations, including inherited declarations, and retain exact provenance. Bracketed formats and conditions and wildcard constraints do not create named properties; observed headings and finite name lists are not declaration substitutes. A declared Content column remains in the schema when its current values are empty. This model supports queryable Content across Concern, Analysis & Advisory, Plan, Requirement, Method, Evaluation, Delivery and Operations without a fixed RMEDO or Claim-heading whitelist. Do not relabel other Roles’ bodies as Claims. Keep source files that can be parsed as separate Atom rows. Report schema violations and duplicate logical revisions through the audit tables. For model compilation, select eligible declarations and resolve competing declarations separately. Rereading data does not reload or compile the declared schema.
 
 
-Generate declaration-derived model facts only from CFEL-labelled code blocks in `Content.Claim.Formal Claim`. Ignore `#` comments outside quoted strings, including section markers such as `# model`; comments are not declarations or parsing gates. Prose Claim, Semantics, Details, examples and Header Topics do not supply model facts. Source identity, lifecycle and provenance metadata may select and bind inputs. Mode 2 still observes factual Header data as separately admitted; that is not a substitute for declaration-derived model facts.
+Generate declaration-derived model facts only from code blocks in `Content.Claim.Formal Claim` that the build-time compiler accepts. Comments outside strings do not supply model facts or decide whether a block is a declaration. Prose Claim, Semantics, Details, examples and Header Topics do not supply model facts. Source identity, lifecycle and provenance metadata may select and bind inputs. Mode 2 still observes factual Header data as separately admitted; that is not a substitute for declaration-derived model facts.

@@ -23,7 +23,7 @@ current_scope_unit: CONNECTOR_TOOLS
 claim_target_scope_unit: CONNECTOR_TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Deliver declared Scope Unit query data
 
@@ -32,6 +32,8 @@ Deliver declared Scope Unit query data
 The operation-specific inner request/result representation for Scope Unit Query, refining CA-D-625-CONNECTOR_TOOLS-ENG_DECISION--deliver-coherent-connector-interface.
 
 ## Claim
+
+### Prose Claim
 
 Scope Unit Query data **must** use the common closed interface with the concrete logical refinements below. this representation admits no physical backend selector **or** second outer transport.
 

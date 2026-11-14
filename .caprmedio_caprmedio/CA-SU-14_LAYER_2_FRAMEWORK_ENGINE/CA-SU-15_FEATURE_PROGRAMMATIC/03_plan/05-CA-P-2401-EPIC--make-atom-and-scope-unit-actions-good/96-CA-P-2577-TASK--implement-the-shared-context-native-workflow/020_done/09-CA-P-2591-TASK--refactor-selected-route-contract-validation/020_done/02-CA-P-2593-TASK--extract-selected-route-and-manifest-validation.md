@@ -12,8 +12,6 @@ tier: 3
 relations:
   is_decomposition_of:
   - CA-P-2591
-  depends_on:
-  - CA-P-2592
   relates_to:
   - CA-P-2577
   - CA-E-539

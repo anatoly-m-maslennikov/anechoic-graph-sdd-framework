@@ -7,7 +7,7 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Scope Unit.order.ordered
   dependencies:
   - CAPRMEDIO_MODEL <+ Scope Unit.order
-  - CAPRMEDIO_MODEL <+ CFEL <+ Format/bool
+  - CAPRMEDIO_MODEL <+ Format/bool
 tier: 3
 status: active
 version: 2

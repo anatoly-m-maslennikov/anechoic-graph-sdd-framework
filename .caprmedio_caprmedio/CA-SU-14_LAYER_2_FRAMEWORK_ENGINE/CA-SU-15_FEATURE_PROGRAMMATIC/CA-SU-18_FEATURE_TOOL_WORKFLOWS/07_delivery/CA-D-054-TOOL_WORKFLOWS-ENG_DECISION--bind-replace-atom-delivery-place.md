@@ -24,7 +24,7 @@ llm_session_ids:
 - codex:01a02650-eff7-7453-8c37-0699b36773c6
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Bind REPLACE_ATOM Delivery place
 
@@ -33,6 +33,8 @@ Bind REPLACE_ATOM Delivery place
 Bind the rebuilt REPLACE_ATOM operation's source authority under TOOL_WORKFLOWS while retaining its existing executable Delivery location. This carrier does not establish a new transport or runtime admission.
 
 ## Claim
+
+### Prose Claim
 
 TOOL_WORKFLOWS owns the current REPLACE_ATOM contracts flattened into its role directories at `.caprmedio_caprmedio/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-18_FEATURE_TOOL_WORKFLOWS/`. The explicit executable binding remains `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/REPLACE_ATOM/replace_atom.py`; its Delivery directory remains `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/REPLACE_ATOM/`.
 

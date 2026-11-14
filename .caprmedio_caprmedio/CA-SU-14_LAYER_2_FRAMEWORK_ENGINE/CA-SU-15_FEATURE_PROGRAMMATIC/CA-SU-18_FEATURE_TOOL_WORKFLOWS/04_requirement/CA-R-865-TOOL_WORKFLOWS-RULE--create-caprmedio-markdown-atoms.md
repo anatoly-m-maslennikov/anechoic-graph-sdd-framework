@@ -24,7 +24,7 @@ current_scope_unit: TOOL_WORKFLOWS
 claim_target_scope_unit: TOOL_WORKFLOWS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Create CAPRMEDIO Markdown Atoms
 
@@ -33,6 +33,8 @@ Create CAPRMEDIO Markdown Atoms
 ATOM_CREATE admission and creation of complete new Markdown Atom Carriers within configured Project control-root Content Role locations.
 
 ## Claim
+
+### Prose Claim
 
 the ATOM_CREATE Tool **must** provide admission **and** creation of complete new Markdown Atom Carriers within configured Project control-root Content Role locations:
 

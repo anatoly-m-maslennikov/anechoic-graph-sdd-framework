@@ -21,7 +21,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Return observable query result and limit evidence
 
@@ -30,6 +30,8 @@ Return observable query result and limit evidence
 The query result envelope.
 
 ## Claim
+
+### Prose Claim
 
 FIND_AND_FETCH_JOURNAL_EVENTS **must** return the snapshot token, result selection, pagination state, coverage state, and recoverable diagnostics sufficient to distinguish complete, partial, invalid, and blocked outcomes.
 

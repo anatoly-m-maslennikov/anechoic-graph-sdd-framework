@@ -17,7 +17,7 @@ topics:
   - CAPRMEDIO_MODEL <+ Actor
   - CAPRMEDIO_MODEL <+ Entity
   - CAPRMEDIO_MODEL <+ Projection
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
   - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Terms Graph)'
 tier: 2
 relations:

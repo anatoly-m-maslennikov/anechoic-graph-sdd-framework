@@ -6,11 +6,11 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//NARROWER_THAN
+  main_subject: CAPRMEDIO_MODEL <+ Relation//NARROWER_THAN
 tier: 3
-status: Active
-version: 5
-updated_at: 2026-11-03 20:00:05 +0400
+status: active
+version: 8
+updated_at: '2026-11-13T22:36:02.766934+00:00'
 carrier_destination:
   file:
     name: CA-R-2475-CORE_META_MODEL-DECLARATION--define-narrower-than.md
@@ -30,10 +30,14 @@ NARROWER_THAN relates a narrower MODEL kind to a broader MODEL kind. A Property 
 ### Formal Claim
 
 ```python
-# model
-relation(source='$narrower', name='NARROWER_THAN', target='$broader')
-relation(source='Relation//NARROWER_THAN', name='HAS_INVERSE', target='Relation//HAS_NARROWER')
-set_value(address='alias(Relation//NARROWER_THAN)', value='"/"')
-classify(address='Relation//NARROWER_THAN', axis='Derivation', value='Direct', notation='relation')
+from caprmedio.formal_claims import declare_relation
+
+declare_relation(
+    relation_name='NARROWER_THAN',
+    source_endpoint={'level': 'model_entities'},
+    target_endpoint={'level': 'model_entities'},
+    inverse_alias='HAS_NARROWER',
+    reverse_written_alias='/',
+)
 ```
 

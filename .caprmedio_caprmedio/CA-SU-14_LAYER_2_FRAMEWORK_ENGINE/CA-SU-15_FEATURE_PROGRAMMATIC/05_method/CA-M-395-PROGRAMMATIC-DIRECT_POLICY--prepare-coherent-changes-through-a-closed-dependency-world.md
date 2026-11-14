@@ -16,13 +16,14 @@ context:
     - MODEL//CAPRMEDIO <+ Atom/(.Header.Context.Role := Evaluation)
     - MODEL//CAPRMEDIO <+ Atom/(.Header.Context.Role := Delivery)
     - MODEL//CAPRMEDIO <+ Carrier
+    - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+
+      Code Authoring
+    - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling
+      <+ Configuration
   tier: 5
 relations:
   child_of:
   - CA-M-403
-  depends_on:
-  - CA-M-402
-  - CA-M-284
 state:
   status: Active
   version: 17

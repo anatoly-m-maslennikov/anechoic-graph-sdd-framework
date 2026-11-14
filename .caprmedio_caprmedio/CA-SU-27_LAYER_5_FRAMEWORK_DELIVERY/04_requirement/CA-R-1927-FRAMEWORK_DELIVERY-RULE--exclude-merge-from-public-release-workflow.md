@@ -26,7 +26,7 @@ author: Anatoly Maslennikov
 relations: {}
 ---
 
-# Summary
+## Summary
 
 Exclude merge from public-release Workflow
 
@@ -35,6 +35,8 @@ Exclude merge from public-release Workflow
 one public-release Workflow execution.
 
 ## Claim
+
+### Prose Claim
 
 **the Operator** **must not** merge, approve, retarget, or otherwise adopt the public PR through this Workflow.
 

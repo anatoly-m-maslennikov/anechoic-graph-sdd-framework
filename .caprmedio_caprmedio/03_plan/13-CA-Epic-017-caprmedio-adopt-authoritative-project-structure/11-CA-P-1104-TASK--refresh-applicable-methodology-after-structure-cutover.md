@@ -14,9 +14,6 @@ subjects:
   - Subject/Graph Node/Engineering/Autonomous Confidence Threshold
 version: 7
 updated_at: 2026-10-25 17:32:27 +0400
-relations:
-  depends_on:
-  - CA-P-1101
 status: Active
 current_scope_unit: caprmedio
 content_role: Plan

@@ -22,6 +22,8 @@ carrier_destination:
   file:
     name: CA-C-306-PROBLEM--retain-the-agent-capacity-limit-without-skipping-harvest.md
     path: .caprmedio_caprmedio/01_concern/021_resolved
+container:
+  scope_unit: CA-SU-00
 ---
 # Summary
 

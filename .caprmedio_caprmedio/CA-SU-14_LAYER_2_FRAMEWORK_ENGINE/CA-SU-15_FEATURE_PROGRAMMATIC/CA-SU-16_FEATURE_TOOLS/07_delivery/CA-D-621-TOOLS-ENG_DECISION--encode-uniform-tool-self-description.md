@@ -27,7 +27,7 @@ carrier_destination:
 current_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Encode uniform Tool self-description
 
@@ -36,6 +36,8 @@ Encode uniform Tool self-description
 The dictionary returned by `describe_tool()` for one Tool.
 
 ## Claim
+
+### Prose Claim
 
 The delivered Tool self-description **must** be one JSON dictionary with exactly `schema_version`, `identity`, `binding`, `models`, `callable`, `effect_hints`, `permissions`, `source_pins`, `admission`, `diagnostics`, and `failure_contract`.
 

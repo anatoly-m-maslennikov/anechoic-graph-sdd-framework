@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Demand
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  main_subject: CAPRMEDIO_MODEL <+ Relation
   dependencies:
   - CAPRMEDIO_MODEL <+ Atom.Local Scope Unit
   - CAPRMEDIO_MODEL <+ Atom.Target Scope Unit

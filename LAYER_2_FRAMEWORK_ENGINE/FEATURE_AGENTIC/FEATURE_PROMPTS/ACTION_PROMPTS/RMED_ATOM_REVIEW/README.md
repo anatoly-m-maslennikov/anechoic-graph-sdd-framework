@@ -10,9 +10,12 @@ Implementation is governed by PROMPTS RMED in the existing
 - M: CA-M-317 (semantic assessment separate from heading recognition).
 - E: CA-E-524 (golden implementation scenarios, distinct from methodology checks).
 - D: CA-D-509 (prompt package), CA-D-510 (coverage/correction report encoding).
-- Run evidence: CA-R-1803 and CA-D-511 (shared Journal and full Markdown report).
+- Run evidence: CA-D-511 (shared Journal and full Markdown report).
 
-`source_bindings.json` records their exact source paths, Versions, and digests.
+`source_bindings.json` records current known source bindings and unresolved
+dependencies; unresolved entries block baseline preparation. The caller binds
+additional rules applicable to each candidate. The frozen
+`source_bindings.contract6.historical.json` preserves historical bindings.
 These are implementation specifications, not additional workflow stages.
 
 1. [Gather scope](CA-O-108.prompt.md): save the selected Atom list and collect
@@ -31,8 +34,10 @@ other workers' reports.
 
 ## Checks and results
 
-The six checks are properties, local CCE, one Scope, one Claim, Details
-expansion, and faithful Summary. Reports contain those outcomes and actual
+The six checks are properties, local writing, one Scope, one Claim, Details
+expansion, and faithful Summary. New reports use the `writing` check key; existing
+runs retain their original `cce` key. Supply `check_context` and its stored
+`check_key` to each fresh reviewer, including resumed checks. Reports contain those outcomes and actual
 defect quotes or observed absences, rule references, confidence, and proposed
 fixes. Exclude graphs, Entity completeness, classification, and cross-Atom
 comparisons.

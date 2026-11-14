@@ -24,7 +24,7 @@ author: Anatoly Maslennikov
 relations: {}
 ---
 
-# Summary
+## Summary
 
 Serialize public-release native entrypoint discovery
 
@@ -33,6 +33,8 @@ Serialize public-release native entrypoint discovery
 The native description surface of the public-release Tool.
 
 ## Claim
+
+### Prose Claim
 
 The public-release source **must** expose its stable `PUBLIC_RELEASE` identity and `LAYER_5_FRAMEWORK_DELIVERY/PUBLIC_RELEASE/public_release.py` entrypoint. The direct `public.release` command uses this Project-bound implementation without a closed release-admission record or whole-registry validation gate.
 

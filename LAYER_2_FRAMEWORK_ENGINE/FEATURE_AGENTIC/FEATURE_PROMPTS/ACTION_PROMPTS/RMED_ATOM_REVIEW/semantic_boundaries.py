@@ -33,7 +33,7 @@ def validate_boundaries(part: dict[str, Any], source: str, *, allow_layout_gaps:
     """No semantic success/failure without its unambiguous local input slots."""
     if part['evaluator'] != 'coherence':
         return
-    if part.get('contract_version') == 6 and part.get('review_profile') == 'atom_local':
+    if part.get('contract_version') in (6, 7) and part.get('review_profile') == 'atom_local':
         layout_gaps = [gap for gap in part['coverage_gaps']
                        if isinstance(gap, dict) and gap.get('kind') == 'layout_dependency']
         if layout_gaps and not allow_layout_gaps:

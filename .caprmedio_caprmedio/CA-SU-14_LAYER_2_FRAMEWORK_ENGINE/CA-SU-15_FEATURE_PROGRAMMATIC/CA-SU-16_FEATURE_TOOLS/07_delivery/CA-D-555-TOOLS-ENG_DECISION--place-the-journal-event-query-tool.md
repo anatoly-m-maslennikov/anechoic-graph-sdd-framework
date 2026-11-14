@@ -24,7 +24,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Place the Journal Event query Tool
 
@@ -33,6 +33,8 @@ Place the Journal Event query Tool
 The query Tool location.
 
 ## Claim
+
+### Prose Claim
 
 FIND_AND_FETCH_JOURNAL_EVENTS **must** be delivered under `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FIND_AND_FETCH_JOURNAL_EVENTS/`.
 

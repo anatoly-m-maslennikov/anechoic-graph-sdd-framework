@@ -6,11 +6,11 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Format/scalar
+  main_subject: CAPRMEDIO_MODEL <+ Format/scalar
 tier: 1
 status: active
-version: 7
-updated_at: '2026-11-13T05:17:00.277914+00:00'
+version: 8
+updated_at: '2026-11-13T22:57:39.635646+00:00'
 carrier_destination:
   file:
     name: CA-R-2257-CORE_META_MODEL-DECLARATION--define-scalar-value-format.md
@@ -38,8 +38,11 @@ Specific Formats can restrict this broad domain.
 ### Formal Claim
 
 ```python
-# model
-composition(container='CFEL', parts=('Format/scalar',))
-relation(source='Format/scalar', name='NARROWER_THAN', target='Format')
-```
+from caprmedio.formal_claims import declare_entity
+from caprmedio.model import ValueFormat
 
+class ScalarValueFormat(ValueFormat):
+    pass
+
+declare_entity(entity_name='scalar', entity_class=ScalarValueFormat)
+```

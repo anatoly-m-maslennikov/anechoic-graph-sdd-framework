@@ -23,7 +23,7 @@ version: 29
 updated_at: 2026-11-05 06:15:15 +0400
 carrier_destination:
   file:
-    name: CA-D-467@29-draft-DECISION--store-workflow-graphs-and-steps-in-separate-carriers.md
+    name: CA-D-467@29-draft-CORE_META_MODEL-DECISION--store-workflow-graphs-and-steps-in-separate-carriers.md
     path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/000_draft
 ---
 ## Summary

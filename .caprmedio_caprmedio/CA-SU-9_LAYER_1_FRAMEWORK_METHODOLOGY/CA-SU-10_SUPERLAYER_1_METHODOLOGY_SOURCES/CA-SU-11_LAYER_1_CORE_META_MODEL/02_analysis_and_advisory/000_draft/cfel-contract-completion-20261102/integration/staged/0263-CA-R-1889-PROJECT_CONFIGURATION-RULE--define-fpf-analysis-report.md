@@ -7,17 +7,26 @@ subjects:
   active: Atom/(.Role := Analysis)/(.Form := FPF Analysis Report)
   passive:
   - Atom/(.Role := Analysis)
-  - 'Entity/Object/Continuant/Governing Objects/Atom/Content Role: Analysis/Type: Analysis Report'
+  - 'Entity/Object/Continuant/Governing Objects/Atom/Content Role: Analysis/Type:
+    Analysis Report'
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role:=Analysis and Advisory).Header.State.Status
+  - CAPRMEDIO_MODEL <+ Carrier/File
 version: 17
 relations:
   depends_on:
   - CA-R-1727@30
-  - CA-R-1875
-  - CA-D-479
 tier: 2
 role: Requirement
 form: Rule
 updated_at: 2026-11-02 08:06:47 +0400
+context:
+  topics:
+    dependencies:
+    - Atom/(.Role := Analysis)
+    - 'Entity/Object/Continuant/Governing Objects/Atom/Content Role: Analysis/Type:
+      Analysis Report'
+    - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role:=Analysis and Advisory).Header.State.Status
+    - CAPRMEDIO_MODEL <+ Carrier/File
 ---
 ## Summary
 

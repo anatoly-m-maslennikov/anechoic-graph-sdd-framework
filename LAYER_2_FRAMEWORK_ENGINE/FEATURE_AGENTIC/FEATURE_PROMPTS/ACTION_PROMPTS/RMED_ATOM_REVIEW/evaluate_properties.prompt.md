@@ -58,7 +58,7 @@ Own heading/location findings here; do not count several symptoms of one missing
 
 ### 5) Formatting & Output Contract
 
-Return JSON with `contract_version: 6`, `review_profile: "atom_local"`, evaluator, source, context_sha256, authority_sources, checks, coverage_gaps, mechanical_evidence, result.
+Return JSON with `contract_version: 7`, `review_profile: "atom_local"`, evaluator, source, context_sha256, authority_sources, checks, coverage_gaps, mechanical_evidence, result.
 
 Each check has id, status passed/failed/blocked, candidate-specific evidence strings, bound authority references, findings, obligation_resolutions and positive_observations. Passes require exact {location, excerpt, authority, rule_excerpt} anchors; use supplied body addresses, or frontmatter for Properties. Confirmed defects only enter findings: {kind: violation|omission, location, excerpt, reason, proposed_fix, confidence}. Omissions need obligation_id and a supported missing/local-required obligation resolution. Uncertainty belongs in coverage_gaps, not guessed defects. Each blocked check has its own {check_id, kind, reason}; missing_context also names an unavailable caller preflight context_key. Keep complete raw parts and exact bindings. No Subject inventory is required.
 

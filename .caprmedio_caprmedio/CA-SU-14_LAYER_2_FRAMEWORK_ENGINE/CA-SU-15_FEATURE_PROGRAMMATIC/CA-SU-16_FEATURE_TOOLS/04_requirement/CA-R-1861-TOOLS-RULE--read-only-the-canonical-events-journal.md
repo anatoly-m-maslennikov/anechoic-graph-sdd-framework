@@ -22,7 +22,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Read only the canonical Events Journal
 
@@ -31,6 +31,8 @@ Read only the canonical Events Journal
 The FIND_AND_FETCH_JOURNAL_EVENTS Tool source boundary.
 
 ## Claim
+
+### Prose Claim
 
 FIND_AND_FETCH_JOURNAL_EVENTS **must** query only canonical Event carriers under the selected Project's `.caprmedio_<project name>/_journal/` root.
 

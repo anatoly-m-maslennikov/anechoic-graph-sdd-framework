@@ -16,8 +16,8 @@ topics:
   - CAPRMEDIO_MODEL <+ Scope Unit
   - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Method)/(.Header.Context.Form := Term Definition)
   - CAPRMEDIO_MODEL <+ Term
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//NARROWER_THAN
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation//NARROWER_THAN
+  - CAPRMEDIO_MODEL <+ Relation
   - CAPRMEDIO_MODEL <+ Projection
   - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role: Requirement)/(.Header.Context.Form: Entity Definition)'
   - CAPRMEDIO_MODEL <+ Atom.Content

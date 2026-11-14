@@ -35,11 +35,11 @@ Declare Method Eng Standard Form
 from caprmedio.formal_claims import declare_entity
 from caprmedio.model import Method
 
-class EngStandard(Method):
+class MethodEngStandard(Method):
     pass
 
 declare_entity(
-    entity_class=EngStandard,
+    entity_class=MethodEngStandard,
     entity_name='Eng Standard',
     qualification_property_path='Atom.Header.Context.Form',
 )

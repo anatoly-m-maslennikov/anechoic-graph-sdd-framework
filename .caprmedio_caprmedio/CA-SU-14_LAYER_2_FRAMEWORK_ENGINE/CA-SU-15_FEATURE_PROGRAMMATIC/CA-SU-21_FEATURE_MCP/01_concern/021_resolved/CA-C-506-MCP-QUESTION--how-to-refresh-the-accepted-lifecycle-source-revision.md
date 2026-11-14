@@ -1,5 +1,6 @@
 ---
 atom_id: CA-C-506
+ref_id: CA-C-506
 content_role: Concern
 type: Question
 current_scope_unit: MCP

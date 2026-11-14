@@ -1,6 +1,5 @@
 // @ts-nocheck
 // CA-D-674@26
-// CA-M-470@14
 const empty = () => ({ id: crypto.randomUUID(), title: 'View', sql: '', savedSql: '', cursor: 0, dirty: false });
 
 export function newView(number) {

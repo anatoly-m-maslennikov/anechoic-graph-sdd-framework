@@ -15,11 +15,13 @@ current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 List Logical Content Fields
 
 ## Claim
+
+### Prose Claim
 
 The proposed read-only `content.get_list()` function, applied to an Atom kind, qualified kind, or selected Atom instance, returns registered Markdown Content headings. For a kind it returns allowed registered headings, including applicable inherited and optional headings. For a selected instance it returns only headings actually present.
 

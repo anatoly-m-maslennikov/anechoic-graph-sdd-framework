@@ -26,11 +26,13 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Verify truthful Journal query diagnostics and pagination
 
 ## Claim
+
+### Prose Claim
 
 The Tool reports malformed Events, missing IDs, duplicate fields, incomplete reads, source changes, coverage, and page limits without silently skipping them.
 

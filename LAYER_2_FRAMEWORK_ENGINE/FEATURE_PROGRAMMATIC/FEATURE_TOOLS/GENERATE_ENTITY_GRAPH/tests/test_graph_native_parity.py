@@ -1,6 +1,7 @@
 from pathlib import Path
 import sys
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from contract_graph import compose_contract_graph, render_contract_graph
@@ -11,6 +12,24 @@ def carrier(name, subject, code, label='CFEL', form='Declaration'):
     return {'source':{'atom_id':name,'version':1,'path':name+'.md'},'subjects':{'active':subject,'passive':[]},'read_view':{'content_role':'Requirement','type':form},'body':f'## Claim\n\n### Formal Claim\n\n```{label}\n{code}\n```\n\n## Semantics\n\nA relation.\n'}
 
 class GraphParity(unittest.TestCase):
+    def test_native_special_contracts_do_not_compile_cfel(self):
+        code = '''from dataclasses import dataclass, field
+from caprmedio.formal_claims import Cardinality, declare_entity
+@dataclass
+class Workspace:
+    name: str = field(metadata={"property_occurrence_cardinality": 1, "value_cardinality": 1})
+declare_entity(entity_name="Workspace", entity_class=Workspace, incoming_model_relations=({"source": "View", "relation": "IS_CONTAINED_BY", "source_cardinality": 1, "target_cardinality": Cardinality(minimum=1, maximum=None)},))'''
+        classification = '''from caprmedio.formal_claims import declare_entity
+declare_entity(entity_name="Node", allowed_classification_values={"Container": ("yes", "no")})'''
+        with patch('FEATURE_FORMAL_MODEL_ENGINE.compiler_claim.compiler_model_statements', side_effect=AssertionError('legacy compiler')):
+            fields, errors = extract_claim_constraints(carrier('CA-R-1', 'Workspace', code, 'python'))
+            allowed, more_errors = extract_claim_constraints(carrier('CA-R-2', 'Node', classification, 'python'))
+        self.assertEqual(errors + more_errors, [])
+        self.assertEqual([row['kind'] for row in fields], ['property_constraint', 'relation_cardinality'])
+        self.assertEqual(fields[0]['value_format'], 'string')
+        self.assertEqual(fields[1]['target_cardinality'], {'minimum': 1, 'maximum': None})
+        self.assertEqual([row['value'] for row in allowed], ['yes', 'no'])
+
     def test_typed_step_check_and_relation_permissions_project_together(self):
         step = carrier('CA-R-2465', 'Atom/(.Header.Context.Role:=Operations)/Step', '''from caprmedio.formal_claims import declare_entity
 from caprmedio.model import Operations
@@ -43,30 +62,31 @@ declare_entity(
             rule['relation']: rule['contract']['target_entity_paths'] for rule in rules
         })
 
-    def test_instance_property_old_and_native(self):
-        old=carrier('CA-R-2524','Project','# instances\nProject//$project_3.order.number:: []{::0}')
+    def test_instance_property_native(self):
         native=carrier('CA-R-2524','Project', '''from caprmedio.formal_claims import declare_entity
 from caprmedio.model import ScopeUnit
 class Project(ScopeUnit):
     pass
 declare_entity(entity_class=Project, entity_name="Project", instance_property_constraints={"order.number": {"value_cardinality": 0}})''','python')
-        graphs=[compose_contract_graph([row]) for row in (old,native)]
-        clauses=[next(c for c in g['entities'][0]['own'][0]['instance_clauses'] if c['kind']=='property_constraint') for g in graphs]
-        fields=('selection','name_format','occurrence_cardinality','effective_occurrence_cardinality','value_format','value_cardinality','group')
-        self.assertEqual([clauses[0][k] for k in fields],[clauses[1][k] for k in fields])
-        for c in clauses: self.assertTrue(c['property_selector'].endswith('.order.number'))
-        for graph in graphs:
-            rendered=render_contract_graph(graph)
-            self.assertIn('Instance constraints:',rendered);self.assertIn('order.number` values',rendered);self.assertIn('values count=0',rendered)
+        graph = compose_contract_graph([native])
+        clause = next(c for c in graph['entities'][0]['own'][0]['instance_clauses'] if c['kind'] == 'property_constraint')
+        self.assertEqual(clause['selection'], 'values')
+        self.assertEqual(clause['value_cardinality'], {'minimum': 0, 'maximum': 0})
+        self.assertEqual(clause['group'], 'instances')
+        self.assertTrue(clause['property_selector'].endswith('.order.number'))
+        rendered = render_contract_graph(graph)
+        self.assertIn('Instance constraints:', rendered)
+        self.assertIn('order.number` values', rendered)
+        self.assertIn('values count=0', rendered)
     def test_model_inverse_alias_keeps_derived_reverse_view(self):
         c=carrier('CA-R-2965','CFEL <+ Relation//AFTER','''from caprmedio.formal_claims import declare_relation, Cardinality
 declare_relation(relation_name="AFTER", source_endpoint={"level": "model_entities", "entity_paths": ("Host",)}, target_endpoint={"level": "model_entities", "entity_paths": ("Target",)}, inverse_alias="BEFORE", targets_per_source=Cardinality(minimum=0, maximum=1), sources_per_target=Cardinality(minimum=0, maximum=2))''','python','Relation Declaration')
-        old=carrier('CA-R-2965','CFEL <+ Relation//AFTER','Relation//BEFORE ((IS_INVERSE_ALIAS_FOR)) Relation//AFTER',form='Relation Declaration')
-        old_clauses,old_diag=extract_claim_constraints(old); self.assertFalse(old_diag)
         clauses,diag=extract_claim_constraints(c);self.assertFalse(diag)
         inverse=next(x for x in clauses if x.get('relation')=='IS_INVERSE_ALIAS_FOR')
         self.assertEqual((inverse['source_selector'],inverse['target_selector']),('Relation//BEFORE','Relation//AFTER'))
-        self.assertEqual(tuple(inverse[k] for k in ('source_selector','relation','target_selector','source_cardinality','target_cardinality','written_direction')),tuple(old_clauses[0][k] for k in ('source_selector','relation','target_selector','source_cardinality','target_cardinality','written_direction')))
+        self.assertIsNone(inverse['source_cardinality'])
+        self.assertIsNone(inverse['target_cardinality'])
+        self.assertEqual(inverse['written_direction'], 'forward')
         self.assertFalse(any(x.get('relation')=='HAS_INVERSE' for x in clauses))
         graph=compose_contract_graph([c]);self.assertEqual([r['target'] for r in graph['relations']],['AFTER'])
         alias=graph['relations'][0]['derived_aliases'][0];self.assertEqual((alias['name'],alias['classification'],alias['direct_relation']),('BEFORE','Derived','AFTER'))

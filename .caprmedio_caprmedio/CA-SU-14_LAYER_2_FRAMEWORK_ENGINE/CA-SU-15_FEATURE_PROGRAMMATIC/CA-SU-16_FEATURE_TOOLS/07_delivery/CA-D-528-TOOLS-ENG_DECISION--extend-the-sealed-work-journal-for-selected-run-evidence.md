@@ -30,7 +30,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Extend the sealed Work Journal for selected Run evidence
 
@@ -40,6 +40,8 @@ The backward-compatible selected-Run evidence extension of the existing sealed
 `work_journal.py` append/receipt library. It is not a separate Journal format.
 
 ## Claim
+
+### Prose Claim
 
 The Project Work Journal **must** accept a schema-v5 `workflow_execution`
 event which preserves schema-v4 read support and carries selected-Run evidence

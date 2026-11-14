@@ -6,9 +6,9 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//implementation_of
+  main_subject: CAPRMEDIO_MODEL <+ Relation//implementation_of
   dependencies:
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
 tier: 1
 status: active
 version: 34

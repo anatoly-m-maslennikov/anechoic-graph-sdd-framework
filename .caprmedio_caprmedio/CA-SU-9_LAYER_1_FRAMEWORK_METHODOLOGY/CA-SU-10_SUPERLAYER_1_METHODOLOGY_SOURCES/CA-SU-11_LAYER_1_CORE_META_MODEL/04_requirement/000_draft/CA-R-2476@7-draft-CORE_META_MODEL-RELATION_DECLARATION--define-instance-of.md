@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Relation Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL/CFEL/Relation//INSTANCE_OF
+  main_subject: CAPRMEDIO_MODEL <+ Relation//INSTANCE_OF
 tier: 3
 status: Draft
 version: 7
@@ -33,10 +33,15 @@ For a declared Model entity `x`, `$a[<x>] ((INSTANCE_OF)) x` is a generic exampl
 ### Formal Claim
 
 ```python
-# model
-relation(source='$host', name='INSTANCE_OF', target='$target')
-relation(source='Relation//HAS_INSTANCE', name='IS_INVERSE_ALIAS_FOR', target='Relation//INSTANCE_OF')
-classify(address='Relation//INSTANCE_OF', axis='Derivation', value='Direct', notation='relation')
+from caprmedio.formal_claims import declare_relation
+
+declare_relation(
+    relation_name="INSTANCE_OF",
+    source_endpoint={"level": "instances"},
+    target_endpoint={"level": "model_entities"},
+    inverse_alias="HAS_INSTANCE",
+    written_alias="//",
+)
 ```
 
 ## Semantics

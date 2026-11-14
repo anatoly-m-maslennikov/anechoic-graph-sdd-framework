@@ -143,6 +143,12 @@ class DraftTest(unittest.TestCase):
         self.assertEqual(source_path.read_bytes(), before)
         self.assertIn('Retain me.', (self.root / result['savedDraft']['path']).read_text())
 
+    def test_older_draft_uses_the_newer_current_version_for_allocation(self):
+        original = draft.create_draft(self.selection, Model(), {'sourceCurrent': 'CA-R-1'})['savedDraft']
+        self.source.write_text(self.source.read_text().replace('version: 2', 'version: 10'))
+        plan = draft.prepare_draft(self.selection, Model(), {'sourceCurrent': original['ref_id']})
+        self.assertEqual(plan['version'], 11)
+
     def test_changed_summary_allocates_new_identity(self):
         result = draft.create_draft(self.selection, Model(), {'sourceCurrent': self.selector,
                                                                'changes': {'summary': 'New example'}})

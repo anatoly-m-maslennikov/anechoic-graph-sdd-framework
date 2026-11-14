@@ -6,11 +6,11 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_PROPERTY_OF
+  main_subject: CAPRMEDIO_MODEL <+ Relation//IS_PROPERTY_OF
 tier: 3
 status: active
-version: 6
-updated_at: '2026-11-12T12:33:04.158402+00:00'
+version: 8
+updated_at: '2026-11-14T07:32:51.119753+00:00'
 carrier_destination:
   file:
     name: CA-R-2473-CORE_META_MODEL-DECLARATION--define-property-bearing-and-its-inverse.md
@@ -26,9 +26,7 @@ Define Property bearing and its inverse
 
 ### Prose Claim
 
-IS_PROPERTY_OF directs a Property to exactly one immediate bearer. HAS_PROPERTY is its derived inverse. The bearer relation is acyclic. `Bearer.Property` addresses the Property.
-
-A Property has exactly one immediate bearer; the bearer may be any applicable declared model Entity or instance.
+IS_PROPERTY_OF directs a Property to its immediate bearer. HAS_PROPERTY is its derived inverse. `Bearer.Property` addresses the Property.
 
 Forward `Host ((IS_PROPERTY_OF)) Target` and reverse `Target <((IS_PROPERTY_OF)) Host` are views of the same Relation fact.
 In `X.Y`, Y IS_PROPERTY_OF X; traversal runs from bearer to Property.
@@ -40,12 +38,17 @@ from caprmedio.formal_claims import declare_relation
 
 declare_relation(
     relation_name='IS_PROPERTY_OF',
-    source_endpoint={'level': 'model_entities_or_instances', 'dependency': 'property'},
-    target_endpoint={'level': 'model_entities_or_instances'},
+    endpoint_pairs=(
+        {
+            'source_endpoint': {'level': 'model_entities', 'dependency': 'property'},
+            'target_endpoint': {'level': 'model_entities'},
+        },
+        {
+            'source_endpoint': {'level': 'instances', 'dependency': 'property'},
+            'target_endpoint': {'level': 'instances'},
+        },
+    ),
     inverse_alias='HAS_PROPERTY',
     written_alias='.',
-    targets_per_source=1,
-    acyclic=True,
 )
 ```
-

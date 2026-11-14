@@ -18,6 +18,8 @@ carrier_destination:
   file:
     name: CA-C-589-QUESTION--should-project-wide-results-use-project-rather-than-invented-properties.md
     path: .caprmedio_caprmedio/01_concern/021_resolved
+container:
+  scope_unit: CA-SU-00
 ---
 # Summary
 

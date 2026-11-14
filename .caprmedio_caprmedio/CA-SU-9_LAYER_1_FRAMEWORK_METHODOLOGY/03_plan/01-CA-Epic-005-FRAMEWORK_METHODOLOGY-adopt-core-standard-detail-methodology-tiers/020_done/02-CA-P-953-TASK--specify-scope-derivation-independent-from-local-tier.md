@@ -15,9 +15,6 @@ subjects:
 version: 12
 updated_at: 2026-10-25 17:32:27 +0400
 autonomous_confidence_threshold: 99
-relations:
-  depends_on:
-  - CA-P-952
 status: Done
 current_scope_unit: FRAMEWORK_METHODOLOGY
 content_role: Plan

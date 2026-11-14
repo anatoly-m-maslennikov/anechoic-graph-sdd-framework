@@ -36,11 +36,11 @@ Declare Operations Decision Form
 from caprmedio.formal_claims import declare_entity
 from caprmedio.model import Operations
 
-class Decision(Operations):
+class OperationsDecision(Operations):
     pass
 
 declare_entity(
-    entity_class=Decision,
+    entity_class=OperationsDecision,
     entity_name='Decision',
     qualification_property_path='Atom.Header.Context.Form',
 )

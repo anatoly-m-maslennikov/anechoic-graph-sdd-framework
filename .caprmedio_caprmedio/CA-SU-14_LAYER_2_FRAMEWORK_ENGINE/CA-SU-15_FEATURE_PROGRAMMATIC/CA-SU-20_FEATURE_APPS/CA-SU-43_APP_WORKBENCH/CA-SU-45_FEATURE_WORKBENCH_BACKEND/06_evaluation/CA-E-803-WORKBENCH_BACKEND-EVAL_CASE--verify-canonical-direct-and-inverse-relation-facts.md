@@ -11,7 +11,7 @@ context:
     main_subject: PROJECT STRUCTURE//CAPRMEDIO <+ Aspects <+ Engineering <+ Operation
       <+ Data Handling <+ Schema
     dependencies:
-    - MODEL//CAPRMEDIO <+ CFEL <+ Relation
+    - MODEL//CAPRMEDIO <+ Relation
   tier: 7
 relations:
   evaluation_for:

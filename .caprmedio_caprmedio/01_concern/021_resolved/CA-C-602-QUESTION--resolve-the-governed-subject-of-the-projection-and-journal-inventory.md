@@ -20,6 +20,8 @@ carrier_destination:
   file:
     name: CA-C-602-QUESTION--resolve-the-governed-subject-of-the-projection-and-journal-inventory.md
     path: .caprmedio_caprmedio/01_concern/021_resolved
+container:
+  scope_unit: CA-SU-00
 ---
 # Summary
 

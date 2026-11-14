@@ -23,6 +23,8 @@ carrier_destination:
   file:
     name: CA-C-404-PROBLEM--normalize-the-calibration-review-end-of-file.md
     path: .caprmedio_caprmedio/01_concern/021_resolved
+container:
+  scope_unit: CA-SU-00
 ---
 # Summary
 

@@ -22,7 +22,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Bind Draft Identity Evidence in Lifecycle Request
 
@@ -31,6 +31,8 @@ Bind Draft Identity Evidence in Lifecycle Request
 the selected Atom Lifecycle dispatch request's ordinary target identity and Status boundary.
 
 ## Claim
+
+### Prose Claim
 
 CA-D-531's `request.parameters` **must not** carry `draft_identity_evidence` or any caller-selected Draft-history basis. The dispatcher binds the complete new or current target Carrier descriptor, exact current source/target identity and locator, expected Version/digest where a current target exists, requested result or Status, current qualified Role/Type Status model and revision, and sealed authorization.
 

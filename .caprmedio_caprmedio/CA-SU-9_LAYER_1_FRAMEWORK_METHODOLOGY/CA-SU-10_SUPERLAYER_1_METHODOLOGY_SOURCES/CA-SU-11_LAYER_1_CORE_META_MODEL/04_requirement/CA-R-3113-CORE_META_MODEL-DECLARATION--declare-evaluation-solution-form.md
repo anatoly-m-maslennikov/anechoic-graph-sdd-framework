@@ -36,11 +36,11 @@ Declare Evaluation Solution Form
 from caprmedio.formal_claims import declare_entity
 from caprmedio.model import Evaluation
 
-class Solution(Evaluation):
+class EvaluationSolution(Evaluation):
     pass
 
 declare_entity(
-    entity_class=Solution,
+    entity_class=EvaluationSolution,
     entity_name='Solution',
     qualification_property_path='Atom.Header.Context.Form',
 )

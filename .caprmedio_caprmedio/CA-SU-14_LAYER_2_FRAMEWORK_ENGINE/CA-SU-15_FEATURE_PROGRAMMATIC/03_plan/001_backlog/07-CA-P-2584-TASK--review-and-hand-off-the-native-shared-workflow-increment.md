@@ -16,8 +16,6 @@ subjects:
   governs: Subject/Graph Node/Engineering/Workflow Orchestration/Action Realization
   depends_on: []
 relations:
-  depends_on:
-  - CA-P-2583
   relates_to:
   - CA-O-016
   - CA-O-239

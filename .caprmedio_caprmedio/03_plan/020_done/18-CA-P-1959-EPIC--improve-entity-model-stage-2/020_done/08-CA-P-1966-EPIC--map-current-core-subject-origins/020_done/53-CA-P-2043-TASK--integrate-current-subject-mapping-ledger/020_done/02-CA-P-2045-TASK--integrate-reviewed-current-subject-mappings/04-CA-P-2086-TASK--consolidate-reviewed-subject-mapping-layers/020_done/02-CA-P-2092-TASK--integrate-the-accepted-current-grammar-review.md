@@ -17,9 +17,6 @@ tier: 3
 relations:
   is_decomposition_of:
   - CA-P-2086
-  depends_on:
-  - CA-P-2087
-  - CA-P-2090
 status: Done
 version: 7
 updated_at: 2026-10-25 17:32:27 +0400

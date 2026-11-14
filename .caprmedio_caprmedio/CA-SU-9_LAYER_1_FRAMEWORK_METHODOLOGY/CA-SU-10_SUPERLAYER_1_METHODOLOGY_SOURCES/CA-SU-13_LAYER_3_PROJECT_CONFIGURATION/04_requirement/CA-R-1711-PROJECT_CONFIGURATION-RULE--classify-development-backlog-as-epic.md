@@ -9,10 +9,8 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)
   dependencies:
   - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)
+  - CAPRMEDIO_MODEL <+ Entity
 tier: 2
-relations:
-  depends_on:
-  - CA-R-1708
 status: Active
 version: 31
 updated_at: 2026-11-02 00:18:22 +0400

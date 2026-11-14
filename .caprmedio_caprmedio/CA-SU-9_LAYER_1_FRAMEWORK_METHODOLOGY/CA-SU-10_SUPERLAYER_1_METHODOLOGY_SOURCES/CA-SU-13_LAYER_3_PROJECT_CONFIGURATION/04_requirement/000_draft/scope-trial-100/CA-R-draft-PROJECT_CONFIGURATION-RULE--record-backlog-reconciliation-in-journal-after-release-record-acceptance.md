@@ -4,10 +4,6 @@ subjects:
   depends_on: []
 version: 1
 updated_at: 2026-10-29 20:32:25 +0400
-relations:
-  depends_on:
-  - CA-O-058
-  - CA-R-1702
 atom_id: CA-R-draft
 content_role: Requirement
 current_scope_unit: PROJECT_CONFIGURATION

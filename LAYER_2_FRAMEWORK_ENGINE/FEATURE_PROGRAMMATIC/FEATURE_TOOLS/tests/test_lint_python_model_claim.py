@@ -137,7 +137,7 @@ class LintPythonModelClaimTests(unittest.TestCase):
             with self.subTest(claim=claim):
                 self.assertTrue(lint_python_model_claim(claim, **options))
 
-    def test_helpers_require_relation_registry_and_delivery_operator(self):
+    def test_helpers_check_declared_relations_and_delivery_targets(self):
         addresses = ["Atom", "Atom.Name"]
         def lint(source, names, **kwargs):
             return lint_python_model_claim(source, declared_addresses=addresses, relation_names=names, **kwargs)
@@ -145,29 +145,24 @@ class LintPythonModelClaimTests(unittest.TestCase):
         self.assertIn("HAS_CLASSIFICATION", lint('classify(address="Atom", axis="Role", value="Method")', [])[0])
         self.assertIn("IS_ORDERED_RIGHT_BEFORE", lint('order_before(first="Atom", second="Atom.Name")', [])[0])
         delivery = 'deliver(source="Atom", carrier="Atom.Name")'
-        self.assertIn("missing or ambiguous Delivery operator", lint(delivery, [])[0])
-        self.assertEqual(lint(delivery, [], operator_catalog={"Delivery": [">>"]}), ())
-        for symbols in ([], [">>", ">>"], [">>", "->"], ["->"]):
-            self.assertIn("missing or ambiguous Delivery operator", lint(delivery, [], operator_catalog={"Delivery": symbols})[0])
-        self.assertIn("unknown carrier", lint('deliver(source="Atom", carrier="Missing")', [], operator_catalog={"Delivery": [">>"]})[0])
-        self.assertIn("missing or ambiguous Delivery operator", lint(delivery, ["DELIVERS"], relation_aliases={">>": "DELIVERS"})[0])
+        self.assertEqual(lint(delivery, []), ())
+        self.assertIn("unknown carrier", lint('deliver(source="Atom", carrier="Missing")', [])[0])
         self.assertEqual(lint('relation(source="Atom", name="*")', []), ())
 
-    def test_cli_delivery_operator_catalog(self):
+    def test_cli_delivery_claim_checks_carrier(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            addresses, relations, operators, claim = (root / name for name in ("addresses.json", "relations.json", "operators.json", "claim.py"))
+            addresses, relations, claim = (root / name for name in ("addresses.json", "relations.json", "claim.py"))
             addresses.write_text(json.dumps(["Atom", "Carrier"]))
             relations.write_text("[]")
-            operators.write_text(json.dumps({"Delivery": [">>"]}))
             claim.write_text('deliver(source="Atom", carrier="Carrier")')
-            command = [sys.executable, str(TOOLS / "lint_python_model_claim.py"), str(claim), "--addresses", str(addresses), "--relations", str(relations), "--operators", str(operators)]
+            command = [sys.executable, str(TOOLS / "lint_python_model_claim.py"), str(claim), "--addresses", str(addresses), "--relations", str(relations)]
             result = subprocess.run(command, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
-            operators.write_text(json.dumps({"Delivery": [">>", ">>"]}))
+            claim.write_text('deliver(source="Atom", carrier="Unknown")')
             result = subprocess.run(command, capture_output=True, text=True)
             self.assertEqual(result.returncode, 1)
-            self.assertIn("missing or ambiguous Delivery operator", result.stderr)
+            self.assertIn("unknown carrier", result.stderr)
 
     def test_registry_inverse_alias_must_reference_registered_relation(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -15,11 +15,13 @@ current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Define Requirement Type Requirement
 
 ## Claim
+
+### Prose Claim
 
 Requirement is the Requirement Content Role's Type for a required result or observable runtime behavior.
 

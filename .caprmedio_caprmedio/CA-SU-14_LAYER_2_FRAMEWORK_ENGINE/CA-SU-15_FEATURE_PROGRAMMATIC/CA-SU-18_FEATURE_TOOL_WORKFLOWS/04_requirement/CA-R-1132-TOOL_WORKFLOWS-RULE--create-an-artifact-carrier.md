@@ -26,7 +26,7 @@ current_scope_unit: TOOL_WORKFLOWS
 claim_target_scope_unit: TOOL_WORKFLOWS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Create an artifact carrier
 
@@ -35,6 +35,8 @@ Create an artifact carrier
 Generic Artifact construction orchestration and its boundary with logical CreateAtom.
 
 ## Claim
+
+### Prose Claim
 
 the framework **must** provide one deterministic generic Artifact Workflow that selects the canonical identity **and** filename required by the admitted Artifact Carrier schema **and** creates one Carrier from its structural owner **and** the inputs required by that schema, **without** silently overwriting an existing Carrier.
 

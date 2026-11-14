@@ -17,7 +17,7 @@ After candidate generation, the caller obtains an independent CA-O-067 assessmen
 ### 4) Task-Type Playbooks (select matching TASK_TYPE)
 
 1. Check each local finding against the actual candidate and supplied rule. A false/unsupported report returns blocked for report correction, not an Atom edit.
-2. List the original conditions, permissions, exceptions, required outcomes and Details that must survive. Fix only local Properties, CCE and Scope/Claim/Details/Summary consistency.
+2. List the original conditions, permissions, exceptions, required outcomes and Details that must survive. Fix only local Properties, writing and Scope/Claim/Details/Summary consistency.
    For a confirmed execution-authority finding under CA-R-1799, reword forced
    execution as the intended capability only when the capability and target
    are established and the semantic change is authorized. Preserve safeguards
@@ -46,7 +46,7 @@ Block missing permission, unresolved local coverage, low confidence, no progress
 
 ### 8) Final Validation Checklist (silent)
 
-Read the full candidate against the original. One scoped Claim, faithful Summary, explanatory Details, intact local Properties, CCE, unchanged graph targets and preserved information. Caller runs repair_gate.admit_proposal before independent local evaluation. Its source_mutation_permitted remains false; freshness, authorization, history and independent saved-output verification remain required.
+Read the full candidate against the original. One scoped Claim, faithful Summary, explanatory Details, intact local Properties, writing, unchanged graph targets and preserved information. Caller runs repair_gate.admit_proposal before independent local evaluation. Its source_mutation_permitted remains false; freshness, authorization, history and independent saved-output verification remain required.
 
 ### 9) Answer Template (the assistant will follow for final outputs)
 

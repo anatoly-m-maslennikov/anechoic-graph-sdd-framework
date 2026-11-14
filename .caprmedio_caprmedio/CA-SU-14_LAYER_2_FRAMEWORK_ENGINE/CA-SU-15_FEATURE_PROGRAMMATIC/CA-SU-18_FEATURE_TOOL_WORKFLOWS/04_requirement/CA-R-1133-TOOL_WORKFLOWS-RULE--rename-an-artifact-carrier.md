@@ -22,7 +22,7 @@ current_scope_unit: TOOL_WORKFLOWS
 claim_target_scope_unit: TOOL_WORKFLOWS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Rename an artifact carrier
 
@@ -31,6 +31,8 @@ Rename an artifact carrier
 Generic Artifact rename orchestration and its boundary with logical Atom relocation.
 
 ## Claim
+
+### Prose Claim
 
 the framework **must** provide one deterministic generic Artifact Workflow that plans one artifact carrier rename under the active filename grammar, rejects collisions, plans governed canonical reference rewrites, records the identity mapping, **and** rolls back the complete rename **when** **any** required rewrite fails.
 

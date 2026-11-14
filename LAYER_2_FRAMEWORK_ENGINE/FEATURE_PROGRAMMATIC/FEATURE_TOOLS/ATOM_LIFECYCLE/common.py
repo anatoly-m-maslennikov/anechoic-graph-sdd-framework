@@ -94,10 +94,10 @@ def saved(selection, path, atom_id, ref_id, version, status):
             "path": Path(path).relative_to(selection.root).as_posix()}
 
 
-def validate_candidate(selection, model, raw, path, *, authored=True):
+def validate_candidate(selection, model, raw, path, **options):
     from .validation import validate_candidate as validate
 
-    validate(selection, model, raw, path, authored=authored)
+    validate(selection, model, raw, path, **options)
 
 
 @trace('source.allocate_id')

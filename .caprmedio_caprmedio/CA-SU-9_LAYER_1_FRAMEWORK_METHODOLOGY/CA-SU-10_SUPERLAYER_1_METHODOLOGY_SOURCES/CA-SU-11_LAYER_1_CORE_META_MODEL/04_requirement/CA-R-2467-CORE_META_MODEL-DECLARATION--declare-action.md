@@ -8,9 +8,9 @@ form: Declaration
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/Action
 tier: 3
-status: Active
-version: 4
-updated_at: '2026-11-11 16:04:42 +0400'
+status: active
+version: 5
+updated_at: '2026-11-13T22:58:40.301878+00:00'
 carrier_destination:
   file:
     name: CA-R-2467-CORE_META_MODEL-DECLARATION--declare-action.md
@@ -27,14 +27,19 @@ Declare Action
 
 ### Formal Claim
 
-```CFEL
-# model
-Atom/(.Header.Context.Role in (Operations))/Action;
+```python
+from caprmedio.formal_claims import Cardinality, declare_entity
+from caprmedio.model import Operations
 
-Action ((NARROWER_THAN)) Atom/(.Header.Context.Role in (Operations));
+class Action(Operations):
+    pass
 
-# instances
-Action//$action{::0+}((IS_RUN_BY)) (in (Step, Substep))//$selected
+declare_entity(
+    entity_name='Action', entity_class=Action,
+    instance_relation_constraints={
+        'IS_RUN_BY': {'target_entity_paths': ('Atom/(.Header.Context.Role:=Operations)/Step',), 'targets_per_source': Cardinality(minimum=0, maximum=None)},
+    },
+)
 ```
 
 ## Semantics

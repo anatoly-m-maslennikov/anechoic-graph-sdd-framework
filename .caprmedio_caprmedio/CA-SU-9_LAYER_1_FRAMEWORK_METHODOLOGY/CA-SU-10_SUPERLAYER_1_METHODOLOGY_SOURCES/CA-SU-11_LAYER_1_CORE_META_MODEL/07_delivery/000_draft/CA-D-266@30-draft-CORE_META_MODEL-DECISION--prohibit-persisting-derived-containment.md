@@ -6,9 +6,9 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  main_subject: CAPRMEDIO_MODEL <+ Relation
   dependencies:
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
   - CAPRMEDIO_MODEL <+ Carrier/Directory
 tier: 1
 status: Draft
@@ -16,7 +16,7 @@ version: 30
 updated_at: 2026-11-05 06:15:15 +0400
 carrier_destination:
   file:
-    name: CA-D-266@30-draft-DECISION--prohibit-persisting-derived-containment.md
+    name: CA-D-266@30-draft-CORE_META_MODEL-DECISION--prohibit-persisting-derived-containment.md
     path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/000_draft
 ---
 ## Summary

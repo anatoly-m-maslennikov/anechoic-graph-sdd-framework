@@ -18,8 +18,6 @@ tier: 3
 relations:
   is_decomposition_of:
   - CA-P-2043
-  depends_on:
-  - CA-P-1972
   blocks:
   - CA-P-2045
 status: Done

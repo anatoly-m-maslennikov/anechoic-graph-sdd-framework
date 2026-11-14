@@ -762,8 +762,13 @@ class SourceReader:
         # Other Current rows suppress obsolete copies even when their form changed.
         errors = self._content_schema.validation_errors(row for row in rows if predicate(row))
         references = {row.get("ref") for row in rows if row.get("ref") is not None}
-        return ([row for row in rows if row.get("source_path") not in errors]
-                + [row for row in observed if row.get("ref") not in references])
+        fallback = [
+            row for row in observed
+            if row.get("ref") not in references and predicate(row)
+            and (self.lifecycle_eligible(self.root / row["source_path"])
+                 or not self.archive_reservations(row["id"]))
+        ]
+        return [row for row in rows if row.get("source_path") not in errors] + fallback
     def _cached_row(self, path: Path) -> dict[str, Any] | None:
         return self._cached.get(path, (None, None))[1]
     def _cached_rows(

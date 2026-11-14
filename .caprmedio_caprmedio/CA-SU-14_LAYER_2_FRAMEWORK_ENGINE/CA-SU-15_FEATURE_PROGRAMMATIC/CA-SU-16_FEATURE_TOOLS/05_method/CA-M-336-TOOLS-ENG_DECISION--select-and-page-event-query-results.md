@@ -24,7 +24,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Select and page Event query results
 
@@ -33,6 +33,8 @@ Select and page Event query results
 Result construction.
 
 ## Claim
+
+### Prose Claim
 
 To construct results, the Tool **must** order snapshot matches deterministically, apply the bounded page, and expose IDs, selected fields, or full Events only in the requested mode with truthful coverage metadata.
 

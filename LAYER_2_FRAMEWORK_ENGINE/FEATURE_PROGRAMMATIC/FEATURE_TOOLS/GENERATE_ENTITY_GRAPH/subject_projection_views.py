@@ -53,7 +53,7 @@ def _fence(lines: Sequence[str], label: str = "text") -> list[str]:
     return [f"{marker}{label}", *lines, marker]
 
 
-def _cfel(block: str, label: str = "CFEL") -> str:
+def _formal_fence(block: str, label: str) -> str:
     width = max([3] + [len(match.group(0)) + 1 for match in re.finditer(r"`+", block)])
     marker = "`" * width
     content = block if block.endswith("\n") else block + "\n"
@@ -215,12 +215,12 @@ def _render_property(lines: list[str], property: Mapping[str, Any], level: int) 
     if level == 4:
         claims = _claims(property.get("formal_claims"))
         if claims:
-            lines.append("  - Property Declaration " + ("Formal Claim:" if any(label.casefold() != "cfel" for _, _, label in claims) else "CFEL:"))
+            lines.append("  - Property Declaration Formal Claim:")
             for source, block, label in claims:
                 lines.append(f"    - source: `{source or 'missing source'}`")
-                lines.extend(_cfel(block, label).splitlines())
+                lines.extend(_formal_fence(block, label).splitlines())
         else:
-            lines.append("  - Property Declaration CFEL: [missing CFEL block]")
+            lines.append("  - Property Declaration Formal Claim: [missing Formal Claim block]")
 
 
 def _render_properties(lines: list[str], data: Mapping[str, Any], level: int) -> None:
@@ -250,7 +250,7 @@ def _render_properties(lines: list[str], data: Mapping[str, Any], level: int) ->
 def _render_primary_claims(lines: list[str], data: Mapping[str, Any]) -> None:
     entities = _entities(data)
     by_identity = {str(entity["identity"]): entity for entity in entities}
-    lines.extend(["", "## Primary Declaration CFEL", ""])
+    lines.extend(["", "## Primary Declaration Formal Claims", ""])
     for entity in entities:
         identity = str(entity["identity"])
         lines.extend([f"### `{identity}`", ""])
@@ -260,9 +260,9 @@ def _render_primary_claims(lines: list[str], data: Mapping[str, Any]) -> None:
             lines.append("- own Declaration:")
             for source, block, label in own:
                 lines.append(f"  - source: `{source or 'missing source'}`")
-                lines.extend(_cfel(block, label).splitlines())
+                lines.extend(_formal_fence(block, label).splitlines())
         else:
-            lines.append("- own Declaration: [missing CFEL block]" if declaration_refs else
+            lines.append("- own Declaration: [missing Formal Claim block]" if declaration_refs else
                          "- own Declaration: [missing Current Requirement/Form Declaration]")
         for ancestor in entity.get("ancestors", []):
             ancestor = str(ancestor)
@@ -273,9 +273,9 @@ def _render_primary_claims(lines: list[str], data: Mapping[str, Any]) -> None:
             if claims:
                 for source, block, label in claims:
                     lines.append(f"  - source: `{source or 'missing source'}`")
-                    lines.extend(_cfel(block, label).splitlines())
+                    lines.extend(_formal_fence(block, label).splitlines())
             else:
-                lines.append("  - [missing CFEL block]" if refs else "  - [missing Current Requirement/Form Declaration]")
+                lines.append("  - [missing Formal Claim block]" if refs else "  - [missing Current Requirement/Form Declaration]")
         lines.append("")
 
 

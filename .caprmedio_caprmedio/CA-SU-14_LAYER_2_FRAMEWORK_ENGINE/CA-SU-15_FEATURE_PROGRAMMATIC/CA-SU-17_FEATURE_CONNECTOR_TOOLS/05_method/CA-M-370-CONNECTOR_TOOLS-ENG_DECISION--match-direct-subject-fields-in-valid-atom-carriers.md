@@ -24,7 +24,7 @@ current_scope_unit: CONNECTOR_TOOLS
 claim_target_scope_unit: CONNECTOR_TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Match direct Subject fields in valid Atom carriers
 
@@ -33,6 +33,8 @@ Match direct Subject fields in valid Atom carriers
 Direct Subject-field matching by an explicitly requested connector query.
 
 ## Claim
+
+### Prose Claim
 
 **To** match Subject data, the connector **must** first validate the explicitly supplied query, source view, schema/context, projection, budget and any source-state preconditions under CA-R-1936-CONNECTOR_TOOLS-RULE--use-one-coherent-connector-interface. Read only the selected source data and the direct `subjects.governs` scalar and `subjects.depends_on` entries needed for that query. Apply the supplied field, owner Scope Unit, Content Role, Type and lifecycle predicates conjunctively; do not add default selection policy.
 

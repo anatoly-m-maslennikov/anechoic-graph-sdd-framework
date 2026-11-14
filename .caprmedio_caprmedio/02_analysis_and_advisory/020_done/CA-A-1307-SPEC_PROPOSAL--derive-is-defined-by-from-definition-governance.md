@@ -13,6 +13,10 @@ version: 5
 updated_at: 2026-11-02 15:49:28 +0400
 current_scope_unit: caprmedio
 author: Anatoly Maslennikov
+destination:
+  file:
+    name: CA-A-1307-SPEC_PROPOSAL--derive-is-defined-by-from-definition-governance.md
+    path: .caprmedio_caprmedio/02_analysis_and_advisory/020_done
 ---
 ## Summary
 

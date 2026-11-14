@@ -13,7 +13,7 @@ from test_split_evaluation import context, contract, gap, merge_evaluations, par
 HERE = Path(__file__).resolve().parents[1]
 ROOT = Path(__file__).resolve().parents[6]
 CHECKS = {"properties", "scope", "claim", "details", "cce", "summary"}
-EVALUATORS = {"evaluate_cce", "evaluate_properties", "evaluate_coherence"}
+EVALUATORS = {"evaluate_writing", "evaluate_cce", "evaluate_properties", "evaluate_coherence"}
 SECTIONS = [
     "1) Role & Mission", "2) Operating Principles (guarantee first-try success)",
     "3) Inputs & Interpretation", "4) Task-Type Playbooks (select matching TASK_TYPE)",

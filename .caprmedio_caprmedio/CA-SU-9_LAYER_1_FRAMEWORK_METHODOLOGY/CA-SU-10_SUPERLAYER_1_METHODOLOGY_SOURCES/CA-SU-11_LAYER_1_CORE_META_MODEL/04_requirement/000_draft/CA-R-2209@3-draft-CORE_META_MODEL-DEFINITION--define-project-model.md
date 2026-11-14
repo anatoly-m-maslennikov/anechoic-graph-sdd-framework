@@ -15,7 +15,7 @@ current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Define Project Model
 
@@ -24,6 +24,8 @@ Define Project Model
 Project Model in the Subject model.
 
 ## Claim
+
+### Prose Claim
 
 Project Model **means** the vocabulary grouping that **groups** Subjects for what exists in a project: its Atoms, governing configurations, Scope Units, Actors, history, Projections, Selections, Implementation and actual execution contexts.
 

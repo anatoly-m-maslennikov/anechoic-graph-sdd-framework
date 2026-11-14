@@ -28,7 +28,7 @@ claim_target_scope_unit: FRAMEWORK_DELIVERY
 author: Anatoly Maslennikov
 ---
 
-# Summary
+## Summary
 
 Place the public-release native Tool source
 
@@ -37,6 +37,8 @@ Place the public-release native Tool source
 the authoritative source carrier for the native public-release Tool.
 
 ## Claim
+
+### Prose Claim
 
 the native public-release Tool **must** be carried at `LAYER_5_FRAMEWORK_DELIVERY/PUBLIC_RELEASE/public_release.py` with its package-local tests under `PUBLIC_RELEASE/tests/`.
 

@@ -26,7 +26,7 @@ current_scope_unit: TOOL_WORKFLOWS
 claim_target_scope_unit: TOOL_WORKFLOWS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Deliver lifecycle result carriers
 
@@ -37,6 +37,8 @@ Workflow admission owns identity, Version/time, lifecycle and complete schema de
 The returned lifecycle dispatch record and its handoff to native Tools and shared Run support.
 
 ## Claim
+
+### Prose Claim
 
 The route-specific lifecycle payload in CA-D-527's one result preserves the typed request identity; complete sealed and observed target/predecessor Carrier sets and, for Replace, every successor Carrier set; expected and observed Version/digest; operation/model/currentness selection; authorization; diagnostics; exact native outcome; history/lineage; and known/unknown effects. It supplies those facts to the shared result without creating an outer result, a second Event schema, or an assertion of persistence that did not occur.
 

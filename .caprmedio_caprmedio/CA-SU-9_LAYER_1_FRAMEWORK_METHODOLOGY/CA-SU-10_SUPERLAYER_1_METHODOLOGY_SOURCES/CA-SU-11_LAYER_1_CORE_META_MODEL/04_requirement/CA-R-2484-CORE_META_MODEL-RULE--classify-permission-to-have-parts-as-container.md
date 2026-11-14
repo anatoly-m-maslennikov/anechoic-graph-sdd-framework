@@ -9,8 +9,8 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Node >| Container
 tier: 3
 status: active
-version: 3
-updated_at: '2026-11-13T03:23:30.209307+00:00'
+version: 4
+updated_at: '2026-11-14T07:32:15.679073+00:00'
 carrier_destination:
   file:
     name: CA-R-2484-CORE_META_MODEL-RULE--classify-permission-to-have-parts-as-container.md
@@ -30,7 +30,7 @@ Classify permission to have parts as Container
 Container is a classification whose admitted value cases are yes and no:
 
 
-The yes case permits the Node to be the whole endpoint of CONTAINS, subject to its effective Relation whitelist and cardinalities. It does not by itself require a part. The no case forbids that endpoint role. Whether a part may belong to a whole is distinct from whether that part may itself have parts.
+The yes case permits the Node to be the whole endpoint of CONTAINS, subject to its declared endpoint domain and effective Entity constraints. It does not by itself require a part. The no case forbids that endpoint role. Whether a part may belong to a whole is distinct from whether that part may itself have parts.
 
 Use `Node// >| Container = yes` when selecting eligible whole instances. Container is not a required Boolean Property authored on every instance. This Draft does not assign an implicit default or require a classification annotation for every Node.
 

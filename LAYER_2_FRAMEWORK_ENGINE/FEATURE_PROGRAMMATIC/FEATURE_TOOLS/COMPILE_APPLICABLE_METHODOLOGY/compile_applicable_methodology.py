@@ -25,10 +25,11 @@ from typing import Iterable, Mapping
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from artifact_metadata import SETTINGS_PATH, atom_identifier
-from carrier_aliases import carrier_status_folder
+from carrier_aliases import carrier_status_folder, matches_named_value
 from header_yaml import header_scalar
 from project_selection import ProjectSelectionError, active_selection
 from settings_carrier import read_settings_carrier
+import subject_notation as notation
 
 
 DEFAULT_CONTROL_ROOT = SETTINGS_PATH.parent
@@ -243,6 +244,7 @@ class Candidate:
     extension_id: str | None = None
     extension_revision: str | None = None
     original_relations_sha256: str = ""
+    definition_namespace: str = ""
 
     def frontier_record(self) -> dict[str, object]:
         return {
@@ -265,7 +267,12 @@ class Candidate:
             "output_path": f"{self.output_relative}/{self.role_directory}/{self.basename}",
         }
         if self.definition_term is not None:
-            record["definition_term"] = self.definition_term
+            record["definition_term"] = (
+                f"{self.definition_namespace} <+ Term//{self.definition_term}"
+                if self.definition_namespace else self.definition_term
+            )
+            record["definition_namespace"] = self.definition_namespace
+            record["definition_term_name"] = self.definition_term
             record["definition_subject_path"] = self.definition_subject_path
         return record
 
@@ -489,9 +496,14 @@ def terminal_term(subject_path: str) -> str:
     return parts[-1]
 
 
-def definition_subject(frontmatter: str, path: str) -> tuple[str | None, str | None]:
+def definition_subject(frontmatter: str, path: str) -> tuple[str | None, str | None, str]:
     if (top_scalar(frontmatter, "cce_form") or "").lower() != "definition":
-        return None, None
+        role = top_scalar(frontmatter, "role")
+        if (matches_named_value(role, "Method") or matches_named_value(role, "Requirement")) and matches_named_value(
+            top_scalar(frontmatter, "form"), "Term Definition"
+        ):
+            return term_definition_subject(frontmatter, path, role)
+        return None, None, ""
     block = top_block(frontmatter, "subjects")
     current_kind: str | None = None
     governed: list[str] = []
@@ -513,7 +525,58 @@ def definition_subject(frontmatter: str, path: str) -> tuple[str | None, str | N
             path=path,
             governs_count=len(governed),
         )
-    return terminal_term(governed[0]), governed[0]
+    return terminal_term(governed[0]), governed[0], ""
+
+
+def term_definition_subject(frontmatter: str, path: str, role: str | None) -> tuple[str, str, str]:
+    subject = top_scalar(frontmatter, "topics.main_subject")
+    try:
+        expression = notation.parse_subject_expression(subject or "", subject_profile="approved").expression
+        namespace = ""
+        if isinstance(expression, notation.RelationChain):
+            roots = [notation.render_subject(endpoint) for endpoint in expression.endpoints[:-1]]
+            if any(link.operator != "<+" or link.relation_type is not None
+                   or link.forward_cardinality is not None or link.reverse_cardinality is not None
+                   for link in expression.links):
+                raise notation.SubjectNotationError("invalid-namespace", "Invalid Term namespace")
+            if roots in (["CAPRMEDIO_MODEL"], ["MODEL//CAPRMEDIO"], ["CAPRMEDIO", "MODEL"]):
+                pass
+            elif (len(roots) == 1 and isinstance(expression.endpoints[0].head, notation.Name)
+                  and expression.endpoints[0].head.value == "MODEL"
+                  and len(expression.endpoints[0].steps) == 1
+                  and expression.endpoints[0].steps[0].operator == "//"
+                  and isinstance(expression.endpoints[0].steps[0].operand, notation.Name)
+                  and expression.endpoints[0].value_format is None
+                  and expression.endpoints[0].value_cardinality is None):
+                namespace = roots[0]
+            else:
+                raise notation.SubjectNotationError("invalid-namespace", "Invalid Term namespace")
+            expression = expression.endpoints[-1]
+        steps = expression.steps if isinstance(expression, notation.Path) else ()
+        legacy_prefix = (
+            matches_named_value(role, "Requirement")
+            and isinstance(expression, notation.Path)
+            and isinstance(expression.head, notation.Name) and expression.head.value == "Entity"
+            and [(step.operator, step.operand.value) for step in steps[:-1]
+                 if isinstance(step.operand, notation.Name)]
+            == [("/", "Object"), ("/", "Continuant"), ("/", "Term")]
+            and len(steps) == 4
+        )
+        if (
+            isinstance(expression, notation.Path)
+            and ((isinstance(expression.head, notation.Name) and expression.head.value == "Term" and len(steps) == 1)
+                 or legacy_prefix)
+            and steps[-1].operator == "//" and isinstance(steps[-1].operand, notation.Name)
+            and expression.value_format is None and expression.value_cardinality is None
+        ):
+            term = steps[-1].operand.value
+            return term, subject, namespace
+    except notation.SubjectNotationError:
+        pass
+    raise CompileError(
+        "source-subject-path-invalid", "Term Definition requires a Term//Name main Subject",
+        path=path, subject_path=subject,
+    )
 
 
 def candidate_sort_key(candidate: Candidate) -> tuple[object, ...]:
@@ -598,7 +661,7 @@ def discover_candidates(root: Path, places: MethodologyPaths | None = None) -> t
                 version_raw = top_scalar(frontmatter, "version")
                 if version_raw is None or not re.fullmatch(r"[1-9][0-9]*", version_raw):
                     raise CompileError("source-version-invalid", "Selected Source Atom revision requires a positive integer version", path=relative)
-                defined_term, definition_subject_path = definition_subject(frontmatter, relative)
+                defined_term, definition_subject_path, definition_namespace = definition_subject(frontmatter, relative)
                 candidates.append(Candidate(
                     layer=layer, layer_order=order, role=ROLE_BY_DIRECTORY[role_root.name], role_directory=role_root.name,
                     atom_id=derive_atom_id(path, frontmatter), version=int(version_raw), source_path=relative,
@@ -607,6 +670,7 @@ def discover_candidates(root: Path, places: MethodologyPaths | None = None) -> t
                     replacements=relation_targets(frontmatter, RELATION_KINDS["replacement"]),
                     incompatibilities=relation_targets(frontmatter, RELATION_KINDS["incompatible"]),
                     definition_term=defined_term, definition_subject_path=definition_subject_path,
+                    definition_namespace=definition_namespace,
                     output_relative=places.output.as_posix(), extension_id=extension_id, extension_revision=extension_revision,
                     original_relations_sha256=relations_digest(frontmatter),
                 ))
@@ -676,14 +740,14 @@ def detect_conflicts(candidates: list[Candidate]) -> list[dict[str, object]]:
     alias_index: dict[str, list[Candidate]] = {}
     by_output: dict[tuple[str, str], list[Candidate]] = {}
     by_priority_group: dict[str, list[Candidate]] = {}
-    by_definition_term: dict[str, list[Candidate]] = {}
+    by_definition_term: dict[tuple[str, str], list[Candidate]] = {}
     for candidate in candidates:
         by_identity.setdefault(candidate.atom_id, []).append(candidate)
         by_output.setdefault((candidate.role_directory, candidate.basename), []).append(candidate)
         if candidate.priority_group:
             by_priority_group.setdefault(candidate.priority_group, []).append(candidate)
         if candidate.definition_term:
-            by_definition_term.setdefault(candidate.definition_term, []).append(candidate)
+            by_definition_term.setdefault((candidate.definition_namespace, candidate.definition_term), []).append(candidate)
         for alias in candidate_aliases(candidate):
             alias_index.setdefault(alias, []).append(candidate)
 
@@ -712,7 +776,7 @@ def detect_conflicts(candidates: list[Candidate]) -> list[dict[str, object]]:
         proposal = sorted(group, key=proposal_sort_key)[0]
         conflicts.append(conflict_record("duplicate_selected_atom_identity", group, proposal, atom_id=atom_id))
 
-    for term, group in sorted(by_definition_term.items()):
+    for (namespace, term), group in sorted(by_definition_term.items()):
         if len(group) <= 1:
             continue
         group_paths = {candidate.source_path for candidate in group}
@@ -724,7 +788,9 @@ def detect_conflicts(candidates: list[Candidate]) -> list[dict[str, object]]:
                 "duplicate_governed_term_definition",
                 group,
                 proposal,
-                term=term,
+                term=f"{namespace} <+ Term//{term}" if namespace else term,
+                definition_namespace=namespace,
+                definition_term_name=term,
                 definition_subject_paths={
                     candidate.source_path: candidate.definition_subject_path
                     for candidate in sorted(group, key=candidate_sort_key)

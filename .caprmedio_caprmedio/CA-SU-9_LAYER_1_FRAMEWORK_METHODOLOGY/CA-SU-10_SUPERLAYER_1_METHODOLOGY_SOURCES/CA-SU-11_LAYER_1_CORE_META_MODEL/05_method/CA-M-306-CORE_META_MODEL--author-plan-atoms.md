@@ -12,14 +12,13 @@ topics:
   - CAPRMEDIO_MODEL <+ Atom.Content
   - CAPRMEDIO_MODEL <+ Atom.Content.Summary
   - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics.Main Subject
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_BLOCKED_BY
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_CONTAINED_BY
+  - CAPRMEDIO_MODEL <+ Relation//IS_BLOCKED_BY
+  - CAPRMEDIO_MODEL <+ Relation//IS_CONTAINED_BY
   - CAPRMEDIO_MODEL <+ Scope Unit
   - CAPRMEDIO_MODEL <+ Carrier/File
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role:=Plan).Header.Context.Topics.Main
+    Subject
 tier: 2
-relations:
-  depends_on:
-  - CA-R-1588
 status: Active
 version: 36
 updated_at: 2026-11-08 19:06:46 +0400

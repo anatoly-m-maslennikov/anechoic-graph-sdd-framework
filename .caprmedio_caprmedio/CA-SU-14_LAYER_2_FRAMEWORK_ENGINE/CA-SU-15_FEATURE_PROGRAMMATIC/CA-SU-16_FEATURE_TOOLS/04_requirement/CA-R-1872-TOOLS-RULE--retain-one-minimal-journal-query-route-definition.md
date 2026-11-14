@@ -23,7 +23,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Retain one minimal Journal query route definition
 
@@ -32,6 +32,8 @@ Retain one minimal Journal query route definition
 The source-to-implementation route.
 
 ## Claim
+
+### Prose Claim
 
 FIND_AND_FETCH_JOURNAL_EVENTS **must** retain exactly one Workflow, one query Action, and one query Step as its source route.
 

@@ -17,9 +17,6 @@ tier: 5
 relations:
   method_for:
   - CA-R-1941
-  depends_on:
-  - CA-D-625
-  - CA-D-630
 status: Active
 version: 15
 updated_at: 2026-10-27 19:59:42 +0400
@@ -31,7 +28,7 @@ current_scope_unit: CONNECTOR_TOOLS
 claim_target_scope_unit: CONNECTOR_TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Bind private carrier storage changes
 
@@ -40,6 +37,8 @@ Bind private carrier storage changes
 Construction of the exact private adapter binding for CA-R-1941's one-carrier storage change, without exposing a physical path as the public logical target.
 
 ## Claim
+
+### Prose Claim
 
 **to** construct the binding, the adapter author **must** use the following convention:
 

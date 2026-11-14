@@ -4,7 +4,7 @@ from pathlib import PurePosixPath
 
 
 def _folder(value):
-    if value in ('', '<status folder>'):
+    if value in ('', '<status folder>', '<lowercase status>'):
         return
     if (not isinstance(value, str) or '\\' in value or '\x00' in value
             or PurePosixPath(value).is_absolute() or str(PurePosixPath(value)) != value
@@ -35,7 +35,7 @@ def parse_placement_claim(body):
     return candidates[0]
 
 
-def parse_placement_rules(source):
+def parse_placement_rules(source):  # noqa: C901
     """Return literal placement rules, or None for a different Python Claim."""
     if "placement_rules" not in source:
         return None
@@ -75,8 +75,10 @@ def parse_placement_rules(source):
                     or not isinstance(rule['folder'], str)):
                 raise ValueError('Invalid status placement rule')
             if rule['status'] == '*' and (rule['role'] is not None or rule['base'] != 'container'
-                                          or rule['folder'] != '<status folder>'):
+                                          or rule['folder'] not in ('<status folder>', '<lowercase status>')):
                 raise ValueError('Invalid wildcard placement rule')
+            if rule['folder'] == '<lowercase status>' and rule['status'] != '*':
+                raise ValueError('Lowercase Status folder requires a wildcard placement rule')
             _folder(rule['folder'])
         else:
             raise ValueError('Unknown placement rule kind')

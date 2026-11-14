@@ -8,9 +8,9 @@ form: Implementation Method
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Selection
 tier: 3
-status: Active
-version: 28
-updated_at: 2026-11-02 19:44:26 +0400
+status: active
+version: 29
+updated_at: '2026-11-13T18:59:42.538710+00:00'
 carrier_destination:
   file:
     name: CA-M-121-CORE_META_MODEL-IMPLEMENTATION_METHOD--evaluate-scope-expressions.md
@@ -25,7 +25,7 @@ Evaluate Scope Expressions
 
 ### Prose Claim
 
-evaluation of a Scope Expression.
+evaluation of a historical CCE Scope Expression. This Method applies only to historical CCE material; it does not govern new Atom prose.
 
 **to** evaluate one Scope Expression, the Resolver **must** perform **all** of:
 

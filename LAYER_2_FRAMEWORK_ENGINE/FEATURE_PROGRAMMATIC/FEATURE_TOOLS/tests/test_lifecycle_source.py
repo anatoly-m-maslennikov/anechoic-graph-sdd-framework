@@ -321,6 +321,39 @@ class SourceTest(unittest.TestCase):
                 select_source(self.selection, 'CA-R-10')
             self.assertEqual(1, read.call_count)
 
+    def test_all_revisions_include_drafts_and_published(self):
+        current = self.carrier('CA-R-10-current.md', version=2)
+        archived = self.carrier('CA-R-10@1-archive.md', version=1, status='Archived')
+        draft = self.carrier('CA-R-10@3-draft-example.md', version=3, status='Draft')
+        for indexed in (False, True):
+            context = source_module.bind_query_reader(IndexedReader(self.selection, [('CA-R-10', path) for path in (current, archived, draft)])) if indexed else source_module.bind_query_reader(None)
+            with self.subTest(indexed=indexed), context:
+                pins = source_module.select_all_revisions(self.selection, 'CA-R-10')
+                self.assertEqual({pin.path for pin in pins}, {current, archived, draft})
+                with self.assertRaises(SourceSelectionError):
+                    source_module.select_all_revisions(self.selection, 'CA-R-10@1')
+
+    def test_all_revisions_propagates_unavailable_history(self):
+        indexed = IndexedReader(self.selection, [])
+        with source_module.bind_query_reader(indexed), patch.object(
+                indexed, 'lifecycle_candidates', side_effect=source_module.ArchiveNotLoadedError('history unavailable')):
+            with self.assertRaises(source_module.ArchiveNotLoadedError):
+                source_module.select_all_revisions(self.selection, 'CA-R-10')
+
+    def test_population_check_uses_real_revision_selection(self):
+        from ATOM_LIFECYCLE.atom_population import validate_atom_population
+        from ATOM_LIFECYCLE.common import InputError
+        self.carrier('CA-R-10-current.md', version=2)
+        self.carrier('CA-R-10@1-archive.md', version=1, status='Archived')
+        self.carrier('CA-R-10@3-draft-example.md', version=3, status='Draft')
+        args = dict(atom_id='CA-R-10', version=3, status='Active', summary='Example')
+        with self.assertRaises(InputError):
+            validate_atom_population(self.selection, **args)
+        draft = select_source(self.selection, 'CA-R-10@3-draft')
+        self.assertEqual(len(validate_atom_population(self.selection, **args, replaced=(draft,))), 3)
+        with self.assertRaises(InputError):
+            validate_atom_population(self.selection, **{**args, 'summary': 'Different'}, replaced=(draft,))
+
 
 if __name__ == '__main__':
     unittest.main()

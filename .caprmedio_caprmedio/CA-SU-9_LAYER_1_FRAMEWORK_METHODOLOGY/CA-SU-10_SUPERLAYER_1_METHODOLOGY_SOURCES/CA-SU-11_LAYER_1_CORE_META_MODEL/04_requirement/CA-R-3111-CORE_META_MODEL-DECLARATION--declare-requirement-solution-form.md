@@ -36,11 +36,11 @@ Declare Requirement Solution Form
 from caprmedio.formal_claims import declare_entity
 from caprmedio.model import Requirement
 
-class Solution(Requirement):
+class RequirementSolution(Requirement):
     pass
 
 declare_entity(
-    entity_class=Solution,
+    entity_class=RequirementSolution,
     entity_name='Solution',
     qualification_property_path='Atom.Header.Context.Form',
 )

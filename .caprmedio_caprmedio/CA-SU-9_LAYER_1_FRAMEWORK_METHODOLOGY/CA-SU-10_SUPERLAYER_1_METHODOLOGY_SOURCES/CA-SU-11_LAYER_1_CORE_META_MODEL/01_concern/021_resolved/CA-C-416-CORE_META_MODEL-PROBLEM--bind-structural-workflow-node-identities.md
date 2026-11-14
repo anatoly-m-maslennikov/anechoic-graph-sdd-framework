@@ -26,6 +26,8 @@ carrier_destination:
   file:
     name: CA-C-416-CORE_META_MODEL-PROBLEM--bind-structural-workflow-node-identities.md
     path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/01_concern/021_resolved
+container:
+  scope_unit: CA-SU-11
 ---
 # Summary
 

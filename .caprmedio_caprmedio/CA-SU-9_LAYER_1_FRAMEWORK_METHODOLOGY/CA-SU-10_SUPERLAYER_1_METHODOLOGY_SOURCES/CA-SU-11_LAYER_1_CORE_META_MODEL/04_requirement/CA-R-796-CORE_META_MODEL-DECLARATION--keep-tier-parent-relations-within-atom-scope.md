@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//child_of
+  main_subject: CAPRMEDIO_MODEL <+ Relation//child_of
   dependencies:
   - CAPRMEDIO_MODEL <+ Atom.Header.Context.Tier
   - CAPRMEDIO_MODEL <+ Atom.Local Scope Unit

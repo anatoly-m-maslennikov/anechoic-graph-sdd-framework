@@ -28,7 +28,7 @@ cce_form: delivery
 llm_session_ids:
 - codex:01a02650-eff7-7453-8c37-0699b36773c6
 ---
-# Summary
+## Summary
 
 Deliver ATOM_SEARCH Tool
 
@@ -39,6 +39,8 @@ This primitive uses CA-D-625's coherent logical connector interface. The bound c
 This Delivery carrier records `CONNECTOR_TOOLS` ownership of the rebuilt flat RMEDO contracts and binds the canonical `ATOM_SEARCH` wrapper. Its rebuilt source authority uses the FEATURE's role folders, not an `ATOM_SEARCH` child folder. The existing executable collection remains at `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_SEARCH/`, explicitly bound to `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_SEARCH/atom_search.py`; it is not an independently registered Scope Unit. The new FEATURE Delivery root is future/unmaterialized and does not relocate that collection. It binds the current file adapter and the required logical Find contract; future logical behavior does not establish current implementation readiness. It does not define Core semantics, grammar adoption, migration decisions, source repair, graph publication, or completed live MCP acceptance.
 
 ## Claim
+
+### Prose Claim
 
 the `ATOM_SEARCH` Tool **must** deliver its canonical executable Carrier at `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_SEARCH/atom_search.py`; that Carrier realizes `CA-R-863` through the Action `CA-O-046`.
 

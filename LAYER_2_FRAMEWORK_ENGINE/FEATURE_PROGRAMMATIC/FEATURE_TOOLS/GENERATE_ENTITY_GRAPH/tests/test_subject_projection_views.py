@@ -25,6 +25,12 @@ def claim(*lines):
     return "## Claim\n\n" + "\n".join(lines) + "\n"
 
 
+def native_property(name, base, *arguments):
+    return claim("```python", "from caprmedio.formal_claims import Cardinality, declare_entity",
+                 f"declare_entity(entity_name={name!r}, relation_name='IS_PROPERTY_OF', base_path={base!r},",
+                 *(f"    {argument}," for argument in arguments), ")", "```")
+
+
 def carriers():
     return [
         carrier(
@@ -42,7 +48,9 @@ def carriers():
         ),
         carrier(
             "CA-M-POISON", "Node.Poison",
-            claim("```CFEL", "Node.Poison: Poison;", "```"),
+            claim("### Formal Claim", "", "```python",
+                  "from caprmedio.formal_claims import declare_entity",
+                  "declare_entity(entity_name='Poison', relation_name='IS_PROPERTY_OF', base_path='Node')", "```"),
             role="Method", form="Policy",
         ),
     ]
@@ -106,8 +114,8 @@ class SubjectProjectionViewTests(unittest.TestCase):
     def test_qualified_leaf_and_empty_structural_domain_keep_inherited_format(self):
         data = build_subject_projection_data([
             carrier("CA-R-1", "Node", claim("Node.")),
-            carrier("CA-R-2", "Node.Section", claim("```CFEL", "Node.Section.**: [markdown];", "```")),
-            carrier("CA-R-3", "Node.Section.Group", claim("```CFEL", "Node.Section.Group{:1}: []{:0};", "```")),
+            carrier("CA-R-2", "Node.Section", native_property("Section", "Node", "recursive_dependent_property_cardinality=Cardinality(minimum=0, maximum=None)", "recursive_dependent_property_value_format='markdown'")),
+            carrier("CA-R-3", "Node.Section.Group", native_property("Group", "Node.Section", "property_occurrence_cardinality=1", "value_cardinality=0")),
             carrier("CA-R-4", "Node.Section.Group.Summary", claim("```CFEL", "Node/(.Header.Role in RMED).Section.Group.Summary: {:0..1};", "```")),
         ])
         properties = next(row for row in data["entities"] if row["identity"] == "Node")["direct_properties"]
@@ -122,10 +130,10 @@ class SubjectProjectionViewTests(unittest.TestCase):
     def test_recursive_format_inheritance_keeps_local_count_and_source(self):
         rows = [
             carrier("CA-R-1", "Node", claim("Node.")),
-            carrier("CA-R-2", "Node.Section", claim("```CFEL", "Node.Section.**: [markdown];", "```")),
-            carrier("CA-R-3", "Node.Section.Summary", claim("```CFEL", "Node.Section.Summary: {:0..1};", "```")),
-            carrier("CA-R-4", "Node.Section.Nested.Detail", claim("```CFEL", "Node.Section.Nested.Detail: {:0..1};", "```")),
-            carrier("CA-M-5", "Node.Section", claim("```CFEL", "Node.Section.**: [integer];", "```"), role="Method", form="Policy"),
+            carrier("CA-R-2", "Node.Section", native_property("Section", "Node", "recursive_dependent_property_cardinality=Cardinality(minimum=0, maximum=None)", "recursive_dependent_property_value_format='markdown'")),
+            carrier("CA-R-3", "Node.Section.Summary", native_property("Summary", "Node.Section", "value_cardinality=Cardinality(minimum=0, maximum=1)")),
+            carrier("CA-R-4", "Node.Section.Nested.Detail", native_property("Detail", "Node.Section.Nested", "value_cardinality=Cardinality(minimum=0, maximum=1)")),
+            carrier("CA-M-5", "Node.Section", native_property("Section", "Node", "recursive_dependent_property_cardinality=Cardinality(minimum=0, maximum=None)", "recursive_dependent_property_value_format='int'"), role="Method", form="Policy"),
         ]
         data = build_subject_projection_data(rows)
         properties = next(row for row in data["entities"] if row["identity"] == "Node")["direct_properties"]
@@ -142,8 +150,8 @@ class SubjectProjectionViewTests(unittest.TestCase):
     def test_conflicting_local_and_recursive_formats_are_diagnostic(self):
         data = build_subject_projection_data([
             carrier("CA-R-1", "Node", claim("Node.")),
-            carrier("CA-R-2", "Node.Section", claim("```CFEL", "Node.Section.**: [markdown];", "```")),
-            carrier("CA-R-3", "Node.Section.Summary", claim("```CFEL", "Node.Section.Summary: [integer]{:0..1};", "```")),
+            carrier("CA-R-2", "Node.Section", native_property("Section", "Node", "recursive_dependent_property_cardinality=Cardinality(minimum=0, maximum=None)", "recursive_dependent_property_value_format='markdown'")),
+            carrier("CA-R-3", "Node.Section.Summary", native_property("Summary", "Node.Section", "value_format=int", "value_cardinality=Cardinality(minimum=0, maximum=1)")),
         ])
         document = views.render_primary_projection(data, 3)
         self.assertNotIn("effective value format:", document)
@@ -212,11 +220,11 @@ class SubjectProjectionViewTests(unittest.TestCase):
 
     def test_level_four_copies_formal_claim_blocks_verbatim_without_prose(self):
         document = views.render_primary_projection(projection(), 4)
-        self.assertIn("## Primary Declaration CFEL", document)
+        self.assertIn("## Primary Declaration Formal Claims", document)
         self.assertIn("Node.Status[status]{:1}: [string]{:1+};", document)
         self.assertIn("Node/Child.Status[child]{:0..1}: [integer]{:2};", document)
         self.assertIn("ancestor Declaration `Node`", document)
-        self.assertIn("Property Declaration CFEL", document)
+        self.assertIn("Property Declaration Formal Claim", document)
         self.assertNotIn("Child declaration.", document)
         self.assertNotIn("Semantics", document)
         self.assertNotIn("Details", document)

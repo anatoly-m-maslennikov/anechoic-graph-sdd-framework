@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//evaluation_for
+  main_subject: CAPRMEDIO_MODEL <+ Relation//evaluation_for
   dependencies:
   - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
   - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Requirement)

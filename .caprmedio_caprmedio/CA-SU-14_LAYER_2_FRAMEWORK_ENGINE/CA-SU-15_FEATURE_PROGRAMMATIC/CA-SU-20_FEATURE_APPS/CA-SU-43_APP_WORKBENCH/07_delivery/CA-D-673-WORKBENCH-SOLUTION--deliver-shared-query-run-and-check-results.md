@@ -23,9 +23,9 @@ relations:
   - CA-R-2776
   - CA-R-2902
 state:
-  status: Active
-  version: 18
-  updated_at: 2026-11-10 20:47:54 +0400
+  status: active
+  version: 20
+  updated_at: '2026-11-12T16:59:28.781286+00:00'
 destination:
   file:
     name: CA-D-673-WORKBENCH-SOLUTION--deliver-shared-query-run-and-check-results.md
@@ -34,7 +34,6 @@ current_scope_unit: WORKBENCH
 claim_target_scope_unit: WORKBENCH
 author: Anatoly Maslennikov
 ---
-
 ## Summary
 
 Deliver shared query Run and Check results
@@ -53,7 +52,7 @@ MCP is `/caprmedio/mcp`; the web interface is `/caprmedio/workbench/<project_nam
 
 `result_delivery` is `file` by default, or explicit `inline`. `result_format` is `json_matrix` by default, or `csv` or `toon` for file delivery. A direct file-delivery Run exports the complete accepted materialized result, including any preview cap. It returns execution metadata and the completed file descriptor, without rows or full SQL. Inline delivery returns the requested bounded first page. View Run remains metadata-only; its rows are obtained by an explicit fetch.
 
-`query_page` and `view_fetch` accept the same delivery choices alongside their existing query/View identity, offset and page size. Page size defaults to 100 and accepts 1–1,000 rows; offset is non-negative. Reject invalid sizes, offsets and unknown result IDs explicitly. Run uses that page size only for explicit inline delivery, while direct file delivery exports the accepted result. They export or return only that requested page, retain original ordered column metadata and exact total counts, and never rerun SQL. Inline responses retain positional rows for the browser grid. All responses omit automatic SQL echoes. Existing explicit query_load, View query reads and query_log_get still return requested SQL.
+`query_page` and `view_fetch` accept the same delivery choices alongside their existing query/View identity, offset and page size. Page size defaults to 100 and accepts 1–1,000 rows; offset is non-negative. Reject invalid sizes, offsets and unknown result IDs explicitly. Run uses that page size only for explicit inline delivery, while direct file delivery exports the accepted result. They export or return only that requested page, retain original ordered column metadata and exact total counts, and never rerun SQL. Inline responses retain positional rows for the browser grid. All responses omit automatic SQL echoes, including submitted SQL excerpts in error diagnostics. Existing explicit query_load, View query reads and query_log_get still return requested SQL.
 
 A result-file descriptor is `{path, format, row_count, column_count, offset, has_more}`. `path` is relative to the selected Project root and names a complete file under `.caprmedio_tmp/workbench/query_results`. Resolve it against that same trusted Project root. Use an internally generated unique filename, not SQL or a caller-supplied path. Do not put the file contents into the MCP response. Export metadata does not replace the query ID, total execution counts or ordered column metadata. Page descriptors describe the exported page; total counts describe the materialized execution. Reuse stable cached state for exports.
 
@@ -61,7 +60,7 @@ JSON matrix files are UTF-8 JSON objects with exactly `columns` (ordered names) 
 
 Shared encoding preserves ordinary JSON values. Encode unsafe integers and Decimal values as strings, dates/times as ISO strings, and binary as base64: strings. Unsupported values return a delivery error. An export failure after successful execution keeps the query ID and cached result, reports outcome partial and export_error, and returns no successful path for the failed file. A partial file must not be exposed as a complete artifact. Do not rerun SQL, retry or roll back the successful result.
 
-A Bookmark is permanent saved SQL, distinct from a saved View and the temporary query log. `query_run(save=true)` writes its exact original SQL only after the Run succeeds. A successful save adds saved_query_id, saved_query_url, kind query and optional name, not the full SQL. A later save failure preserves the result and returns outcome partial and save_error, without a saved identity unless known. Failed validation or execution creates no Bookmark.
+A Bookmark is permanent saved SQL, distinct from a saved View and the temporary query log. `query_run(save=true)` writes its exact original SQL only after the Run succeeds. A successful save adds `saved_query_id`, `saved_query_url`, kind query and optional name. Use the bound Project’s Workbench URL derived from the HTTP request or configured for stdio. If neither is available, return the ID, `saved_query_url: null` and `saved_query_url_reason: workbench_url_unknown`. Apply the same URL rule to saved Views. A later save failure preserves the result and returns outcome partial and save_error, without a saved identity unless known. Failed validation or execution creates no Bookmark.
 
 `view_save`, `query_load` and `query_saved_list` retain their current names, ID/URL fields and kind values. View Save snapshots one query with optional name. Load explicitly returns SQL without executing it. Saved List returns recent metadata and bounded previews; it does not automatically return full SQL. Existing kind worksheet and q_/w_ items remain read-only compatibility sources. Do not rename saved entries. New saved IDs remain canonical UUIDv7. Use the existing Project Journal's date-partitioned workbench-saved-items writer and 1,000-row parts. Saved writes finish before their IDs are returned; they do not trigger Atom reindexing.
 
@@ -69,7 +68,7 @@ A Bookmark is permanent saved SQL, distinct from a saved View and the temporary 
 
 `query_schema` returns read-only table/column metadata for atoms, scope_units and change_log, including declared content columns and optional Status completion values. It neither executes user SQL nor accesses saved items.
 
-Keep existing web routes `/run`, `/page`, `/check`, `/view-save`, `/load`, `/saved-list` and `/schema` below the Project page. Source errors go to stderr with their path. Public SQL does not edit source Atoms, Scope Units or source-derived facts. Result tables and exported files are disposable derived data, with separate lifetimes from Bookmarks and query history.
+Expose Project operations under `/caprmedio/{project}/api/{operation}`. Keep the existing Workbench operation URLs as aliases to the same handlers. The Workbench page stays at `/caprmedio/workbench/{project}`. Source errors go to stderr with their path. Public SQL does not edit source Atoms, Scope Units or source-derived facts. Result tables and exported files are disposable derived data, with separate lifetimes from Bookmarks and query history.
 
 ## Details
 

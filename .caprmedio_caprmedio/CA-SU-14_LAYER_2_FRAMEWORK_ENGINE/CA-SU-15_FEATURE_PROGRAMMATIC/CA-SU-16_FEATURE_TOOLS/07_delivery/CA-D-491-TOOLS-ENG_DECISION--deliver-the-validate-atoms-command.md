@@ -26,7 +26,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Deliver the VALIDATE_ATOMS command
 
@@ -35,6 +35,8 @@ Deliver the VALIDATE_ATOMS command
 the `VALIDATE_ATOMS` command Carrier and its delivered test assets in TOOLS.
 
 ## Claim
+
+### Prose Claim
 
 the `VALIDATE_ATOMS` executable Carrier **must** be delivered as `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/VALIDATE_ATOMS/validate_atoms.py`, with its automated tests **in** the adjacent `tests/` directory.
 

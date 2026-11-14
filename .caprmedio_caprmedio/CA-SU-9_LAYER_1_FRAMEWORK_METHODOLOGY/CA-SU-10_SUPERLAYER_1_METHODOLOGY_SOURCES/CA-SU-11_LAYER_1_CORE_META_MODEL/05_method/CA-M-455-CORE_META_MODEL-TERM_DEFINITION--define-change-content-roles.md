@@ -17,7 +17,7 @@ version: 5
 updated_at: 2026-11-04 18:28:33 +0400
 carrier_destination:
   file:
-    name: CA-M-455-TERM_DEFINITION--define-change-content-roles.md
+    name: CA-M-455-CORE_META_MODEL-TERM_DEFINITION--define-change-content-roles.md
     path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
 ---
 ## Summary

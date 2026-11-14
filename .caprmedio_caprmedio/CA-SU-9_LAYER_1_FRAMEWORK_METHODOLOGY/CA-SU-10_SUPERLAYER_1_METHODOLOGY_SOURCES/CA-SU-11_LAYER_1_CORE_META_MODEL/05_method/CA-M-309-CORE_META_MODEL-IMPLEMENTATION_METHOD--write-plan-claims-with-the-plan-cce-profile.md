@@ -9,15 +9,15 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Content
   dependencies:
   - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)/(.Header.Context.Form := Plan)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)/(.Header.Context.Form :=
+    Plan)
   - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Content.Definition of Done
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled English"
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled
+    English
 tier: 6
 relations:
   child_of:
   - CA-M-307
-  depends_on:
-  - CA-M-306
 status: Active
 version: 25
 updated_at: 2026-11-08 19:06:46 +0400

@@ -24,7 +24,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Admit only current authorized selected-operation Runs
 
@@ -35,6 +35,8 @@ requests. It is not a Workflow, source-discovery capability, or autonomous
 dispatcher.
 
 ## Claim
+
+### Prose Claim
 
 RUN_SUPPORT **must** start an actual selected Workflow, Step, or Action Run
 only from one explicit current selected-operation request and one current

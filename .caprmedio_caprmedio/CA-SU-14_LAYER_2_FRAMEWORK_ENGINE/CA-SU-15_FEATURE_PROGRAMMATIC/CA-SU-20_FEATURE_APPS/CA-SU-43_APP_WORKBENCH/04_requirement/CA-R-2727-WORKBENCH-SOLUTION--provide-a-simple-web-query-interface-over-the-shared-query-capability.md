@@ -11,9 +11,9 @@ context:
     main_subject: MODEL//CAPRMEDIO <+ Projection
   tier: 3
 state:
-  status: Active
-  version: 20
-  updated_at: 2026-11-10 20:47:54 +0400
+  status: active
+  version: 22
+  updated_at: '2026-11-12T16:57:49.202245+00:00'
 destination:
   file:
     name: CA-R-2727-WORKBENCH-SOLUTION--provide-a-simple-web-query-interface-over-the-shared-query-capability.md
@@ -22,7 +22,6 @@ current_scope_unit: WORKBENCH
 claim_target_scope_unit: WORKBENCH
 author: Anatoly Maslennikov
 ---
-
 ## Summary
 
 Provide a simple web query interface over the shared query capability
@@ -47,18 +46,15 @@ The web interface **must**:
 - keep the Settings panel hidden initially and lay its controls out vertically as Theme, Interface text zoom, Content text zoom, Interface zoom and Density; apply preferences on page load even while it is hidden.
 - provide independent Interface text zoom and Content text zoom, each with presets 80, 90, 100, 110, 125, 150 and 200 percent. Interface text zoom scales titles, buttons, tabs, labels, Settings and table headers; Content text zoom scales query and result text. Remember both values. Both are text-only and remain independent from density and whole-Interface zoom.
 - provide Interface zoom using the same fixed presets for whole-interface scaling, remember it in browser local storage, and keep it independent from text-only zoom and density. Do not auto-detect screen size or add a separate setting registry.
-- use the Query editor header panel as the single collapse control for the active View. Put pale `Hide editor` text at the right when expanded and `Show editor` when collapsed; do not add a separate Hide editor toolbar button. Keep keyboard activation available. Keep the query text for every open View in browser local storage every 5 seconds and restore it on the next page load.
+- use the Query editor header panel as the single collapse control for the active View. Put pale `Hide editor` text at the right when expanded and `Show editor` when collapsed; do not add a separate Hide editor toolbar button. Keep keyboard activation available. Keep the query text for every open View in browser local storage every 5 seconds and restore it on the next page load. If browser storage is unavailable, keep unsaved edits in memory and warn that reloading or closing may lose them.
 - title the input area Query editor. Show Saved: <ID> at the right of that title, on the same header row, when a saved resource is available.
 - offer Open Saved only in the command palette, without a separate toolbar button or dedicated shortcut. The command opens a modal with an autofocus ID/URL input; native paste with Cmd+V is allowed, Enter opens the saved item without executing its SQL, and Escape or Cancel closes the modal.
 - ask before closing an unsaved tab or window. The standard browser beforeunload warning is allowed; flush the latest local draft on pagehide and beforeunload when possible.
 - show each available hotkey inside its action button or immediately beside it.
 - bind Cmd+Enter to Run and Shift+Cmd+Enter to Check. These shortcuts must invoke different operations on the whole View query; Run & Save uses that same query. Save View saves its query text without execution.
-- show ordinary result rows in navigable pages, exact row and column counts and query errors. Show column names separately from their SQL types, with types in smaller, pale text.
+- show ordinary result rows in navigable pages, exact row and column counts and query errors. Show `Not checked` until the current SQL has a Check verdict, `Valid` with counts when Check accepts it, and `Invalid` with a diagnostic when Check rejects it. Editing the SQL clears the verdict and keeps the existing result rows. Show column names separately from their SQL types, with types in smaller, pale text.
 - use a small reusable component palette for consistent controls and result presentation.
-- open a searchable command palette with Cmd+P from anywhere in Workbench. Expose every current user action, including Settings, moving focus, switching/creating/renaming/closing Views, Run, Check, Run & Save, Save View, Open Saved, Hide/Show editor, result paging, Theme, Interface text zoom, Content text zoom, Interface zoom and Density. Show available shortcuts. Use Arrow Up or Ctrl+P for the previous item, Arrow Down or Ctrl+N for the next item, Enter to choose and Escape to close. Invoke the same handlers and availability rules as the visible controls, without requiring a mouse or memorized action shortcuts.
-- persist current Theme, Interface text zoom, Content text zoom, Interface zoom, Density and workspace preferences in browser local storage and restore them on load.
-- provide SQL autocomplete from read-only query_schema metadata for atoms, scope_units and declared content.* columns, including quoted column names. Schema completion must not query saved SQL files.
-- include optional non-null distinct values for the actual Header Status column returned by query_schema in schema metadata for completion. When a qualified or unqualified condition has a single-quoted prefix such as `"header.state.status" = 'Act`, completion may insert the matching escaped value such as 'Active'; completion never executes SQL or creates a saved record.
+- open a searchable command palette with Cmd+P from anywhere in Workbench. Expose every current user action, including Settings, moving focus, switching/creat…232 tokens truncated…hema in schema metadata for completion. When a qualified or unqualified condition has a single-quoted prefix such as `"header.state.status" = 'Act`, completion may insert the matching escaped value such as 'Active'; completion never executes SQL or creates a saved record.
 - load a Bookmark or View from ?query=<saved_query_id> without executing it, while preserving the existing project_root URL parameter. Open Saved accepts an ID or URL and opens it in the current Workbench browser context. Show a recent combined query/View list from query_saved_list in one Bookmarks and Saved Views tab.
 - keep presentation, formatting, page navigation and UI state in the frontend; SQL filtering, sorting and aggregation remain in the database.
 - use the same query capability as MCP.

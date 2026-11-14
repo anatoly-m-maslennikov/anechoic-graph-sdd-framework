@@ -15,10 +15,6 @@ topics:
   - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Source Selection"
 tier: 1
 relations:
-  depends_on:
-  - CA-R-2748
-  - CA-R-2532
-  - CA-R-1402@27
   child_of:
   - CA-R-3033
 status: Active

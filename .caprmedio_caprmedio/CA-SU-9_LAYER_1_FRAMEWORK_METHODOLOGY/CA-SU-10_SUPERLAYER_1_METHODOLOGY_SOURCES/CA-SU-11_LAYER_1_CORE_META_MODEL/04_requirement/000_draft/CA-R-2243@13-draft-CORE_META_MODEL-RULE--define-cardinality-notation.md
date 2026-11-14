@@ -6,9 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Cardinality
-  dependencies:
-  - CAPRMEDIO_MODEL <+ CFEL
+  main_subject: CAPRMEDIO_MODEL <+ Cardinality
 tier: 1
 status: Draft
 version: 13
@@ -27,44 +25,9 @@ Define Cardinality Notation
 
 ### Prose Claim
 
-
-Cardinality annotations state allowed counts; they do not count a value merely
-because a dependent Property exists. `{::n}` allows exactly n, `{::n+}` at
-least n, and `{::n..m}` the inclusive range for its qualified selection. Bounds
-are non-negative integers with n not greater than m. `{=n}` is a count
-condition/test, `{>n}` is a count condition/test that compares the actual count
-with n using the existing numeric `>`, and `{==n}` a required or derived count
-conclusion; none is an allowed bound. A direct parent-value count excludes
-nested child keys and every descendant value, including every value held by
-nested children.
-
-Property occurrence, value and dependent-name counts are separate:
-
-
-A named applicable Property has at most one occurrence per corresponding bearer. A leaf with a positive applicable value minimum requires an occurrence; a zero minimum by itself does not require presence. Explicit occurrence and other applicable constraints still apply. A present Property has a value; for a structural parent, nonempty child structure is a value even when its direct-value count is zero. `p:: {::0..1}` specifies the direct-value count using its applicable inherited format. Explicit occurrence and value constraints both apply. `p.*[]{::0}` states that p has no declared immediate
-dependents after local and inherited declaration resolution. The value count
-to the right of `[value format]` is per selected existing Property occurrence;
-the name count is the number of selected dependent Property names. A recursive
-name count aggregates selected distinct descendant Property identities under p
-within each selected bearer; it does not count direct values or another
-bearer's descendants.
-
-`Source {::forward}((RELATION)){::reverse} Target` has independent directional
-counts. The first constrains outgoing Relation instances per selected Source;
-the second constrains reverse links per selected Target. Reversing the written
-Relation swaps the slots. Neither count is a Property value count, a distinct
-target count, or Relation arity. An omitted occurrence annotation does not make a Property required; presence follows its applicable value constraints. Other omitted annotations are unspecified.
-
-### Formal Claim
-
-```CFEL
-# model
-p{::occurrence}:: [value format]{::value count};
-
-p.*[immediate name format]{::immediate name count};
-
-p.**[recursive name format]{::recursive name count};
-
-p.*[name format]{::name count}:: [value format]{::value count}
-```
-
+- Allowed bounds use non-negative integers. Both ends of a range are inclusive.
+- Each declared named Property occurs at most once per bearer. A positive applicable direct-value minimum requires a leaf Property. A zero minimum leaves presence optional. Apply explicit occurrence bounds as well.
+- Direct-value counts measure values on one occurrence. A structural Property can have dependents and zero direct values.
+- A dependent Property count measures distinct selected names on the bearer. An immediate count includes one level. A recursive count includes all selected descendants.
+- Each Relation endpoint has an independent count of matching links per selected endpoint. The inverse swaps the two counts.
+- An omitted count is unspecified. A comparison tests the actual count separately from the allowed bound.

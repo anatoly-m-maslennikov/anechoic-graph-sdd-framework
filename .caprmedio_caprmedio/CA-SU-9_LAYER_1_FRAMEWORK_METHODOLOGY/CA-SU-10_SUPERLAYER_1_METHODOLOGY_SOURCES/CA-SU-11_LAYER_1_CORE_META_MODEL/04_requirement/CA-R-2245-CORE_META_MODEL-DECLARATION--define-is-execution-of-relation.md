@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_EXECUTION_OF
+  main_subject: CAPRMEDIO_MODEL <+ Relation//IS_EXECUTION_OF
   dependencies:
   - CAPRMEDIO_MODEL <+ Workflow Run
   - CAPRMEDIO_MODEL <+ Step Run

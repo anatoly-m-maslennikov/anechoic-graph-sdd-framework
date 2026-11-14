@@ -1,4 +1,3 @@
-# CA-R-2953@5
 
 """Validate a read-only grid request and compile native cached-result reads."""
 

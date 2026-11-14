@@ -23,7 +23,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Use shared selected-Run journaling only for actual query invocation
 
@@ -32,6 +32,8 @@ Use shared selected-Run journaling only for actual query invocation
 Query Run evidence.
 
 ## Claim
+
+### Prose Claim
 
 FIND_AND_FETCH_JOURNAL_EVENTS **must** use the shared RunJournal contract for actual invocation and must not create a competing log, fake Run, or preview Event.
 

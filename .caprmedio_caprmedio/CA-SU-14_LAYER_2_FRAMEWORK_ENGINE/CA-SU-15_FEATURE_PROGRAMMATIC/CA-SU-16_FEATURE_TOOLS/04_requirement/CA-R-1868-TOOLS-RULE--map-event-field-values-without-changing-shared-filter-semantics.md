@@ -19,7 +19,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Map Event field values without changing shared filter semantics
 
@@ -28,6 +28,8 @@ Map Event field values without changing shared filter semantics
 The Journal-specific selector value extraction.
 
 ## Claim
+
+### Prose Claim
 
 FIND_AND_FETCH_JOURNAL_EVENTS **must** pass each selected canonical Event field's exact value state to CA-R-1850 without coercion, normalization, or inferred filename value.
 

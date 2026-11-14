@@ -8,8 +8,6 @@ relations:
   method_for:
   - CA-R-940
   - CA-R-941
-  depends_on:
-  - CA-R-1273
 subjects:
   active: CAPRMEDIO_MODEL <+ Atom.Content
   passive:

@@ -23,7 +23,7 @@ current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Carry a formal Graph Rule as YAML with a readable Summary
 
@@ -32,6 +32,8 @@ Carry a formal Graph Rule as YAML with a readable Summary
 The formal YAML Claim of an R Atom of Type Graph Rule.
 
 ## Claim
+
+### Prose Claim
 
 A formal Graph Rule must carry its sole operative mapping inside exactly one fenced yaml block under ## Claim. Its frontmatter contains ordinary Atom metadata only; it must not retain another claim or formal_claim mapping. This fenced block is atom.content.claim. Summary is required; Claim scope, Semantics and Details are optional in the RMED order under CA-D-479.
 

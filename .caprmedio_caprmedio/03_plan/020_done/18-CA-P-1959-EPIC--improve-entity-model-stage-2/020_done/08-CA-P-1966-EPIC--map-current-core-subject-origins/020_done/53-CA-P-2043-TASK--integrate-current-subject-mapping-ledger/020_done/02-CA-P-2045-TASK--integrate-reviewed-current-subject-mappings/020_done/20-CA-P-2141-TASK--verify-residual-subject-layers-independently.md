@@ -18,15 +18,6 @@ tier: 3
 relations:
   is_decomposition_of:
   - CA-P-2045
-  depends_on:
-  - CA-P-2132
-  - CA-P-2133
-  - CA-P-2134
-  - CA-P-2135
-  - CA-P-2136
-  - CA-P-2137
-  - CA-P-2138
-  - CA-P-2139
 status: Done
 version: 6
 updated_at: 2026-10-25 17:32:27 +0400

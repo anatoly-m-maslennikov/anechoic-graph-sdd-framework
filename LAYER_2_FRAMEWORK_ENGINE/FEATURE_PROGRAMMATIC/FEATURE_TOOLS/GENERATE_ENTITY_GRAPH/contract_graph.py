@@ -18,7 +18,6 @@ from cfel_claim_constraints import (
     claim_prose,
     extract_claim_constraints,
     has_prose_claim,
-    python_compiler_expressions,
     section_text,
 )
 from current_subject_graph import (
@@ -436,10 +435,18 @@ def _metadata(entries: list[Record], relation: str) -> list[Record]:
                                  "source": clause["source"]})
         blocks = [(block, _grouped_expressions(block["block"])) for block in entry["cfel_blocks"]]
         for block in entry.get("python_blocks", []):
+            from python_model_claim import parse_structured_python_model_claim
             try:
-                blocks.append((block, python_compiler_expressions(block["block"])))
+                calls = parse_structured_python_model_claim(block["block"])
             except ValueError:
-                continue  # The source-bound diagnostic is recorded by extraction.
+                continue  # Native Declarations are already represented by clauses.
+            for call in calls:
+                args = call["arguments"]
+                if (call["scope"] != "instances" and call["name"] == "classify"
+                        and args.get("address") == f"Relation//{relation}"
+                        and args.get("axis") == "Derivation" and args.get("notation") == "relation"
+                        and args.get("value") in {"Direct", "Derived"}):
+                    rows.append({"kind": "derivation", "value": args["value"], "source": block["source"]})
         for block, expressions in blocks:
             for expression, group in expressions:
                 if group == "instances":
@@ -728,12 +735,14 @@ def compose_contract_graph(carriers: list[Record]) -> Record:
             if len(native_classes) != 1 or model_class_target(subject, native_classes[0].get("entity_name"), require_namespace=False) != identity:
                 gaps.append(_gap(carrier, "Native class requires a matching declared Model Entity Subject.", subject))
                 continue
+            if kind == "instance" and identity.startswith("Node/") and "//" in identity:
+                kind = "primary_node"
+                entry["kind"] = kind
         catalog[(kind, identity)].append(entry)
-        # compose_narrowing_graph has its own bounded admission filter. Pass
-        # only Node/retained-component Declaration carriers so CFEL, Carrier
-        # and Term Definitions remain roots in the full Subject tree. Relation
-        # Definitions belong to the relation catalog, never to a tree.
-        if any(matches_named_value(view.get("type"), name) for name in {"Declaration", "Entity Definition"}):
+        # Named Relations belong to the relation catalog, including legacy Declaration Forms.
+        if kind != "relation" and any(
+            matches_named_value(view.get("type"), name) for name in {"Declaration", "Entity Definition"}
+        ):
             declaration_carriers.append(carrier)
 
     # Resolve explicitly bound Properties after the complete declaration catalog exists.

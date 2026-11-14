@@ -12,9 +12,6 @@ subjects:
 version: 6
 updated_at: 2026-10-25 17:32:27 +0400
 autonomous_confidence_threshold: 99
-relations:
-  depends_on:
-  - CA-P-949
 status: Done
 current_scope_unit: caprmedio
 content_role: Plan

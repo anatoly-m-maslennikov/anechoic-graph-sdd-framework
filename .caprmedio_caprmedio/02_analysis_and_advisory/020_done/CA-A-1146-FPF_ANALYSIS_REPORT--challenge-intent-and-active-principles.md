@@ -12,6 +12,10 @@ current_scope_unit: caprmedio
 local_tier: Standard
 global_tier: 2
 author: Anatoly Maslennikov
+destination:
+  file:
+    name: CA-A-1146-FPF_ANALYSIS_REPORT--challenge-intent-and-active-principles.md
+    path: .caprmedio_caprmedio/02_analysis_and_advisory/020_done
 ---
 # Summary
 

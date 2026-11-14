@@ -22,6 +22,8 @@ carrier_destination:
   file:
     name: CA-C-307-PROBLEM--select-save-target-ids-from-the-carrier-basename.md
     path: .caprmedio_caprmedio/01_concern/021_resolved
+container:
+  scope_unit: CA-SU-00
 ---
 # Summary
 

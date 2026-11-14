@@ -27,7 +27,6 @@ Declare MCP
 
 ## Claim
 
-
 ### Prose Claim
 
 The receiving Scope Unit is MCP. The admitted HAS_ACTIVE_SUBJECT targets are exactly the declared entities or instances at these addresses:
@@ -46,23 +45,3 @@ The receiving Scope Unit is MCP. The admitted HAS_ACTIVE_SUBJECT targets are exa
 
 - `PROJECT STRUCTURE//CAPRMEDIO <+ Aspects <+ Engineering <+ Development <+ Architecture <+ Communication <+ Interface Contracts`;
 - `PROJECT STRUCTURE//CAPRMEDIO <+ Aspects <+ Engineering <+ Operation <+ Execution Control <+ Resource Limits`;
-
-### Formal Claim
-
-```CFEL
-# instances
-Scope Unit//MCP.ID == "CA-SU-21";
-
-Scope Unit//MCP.Name == "MCP";
-
-Scope Unit//MCP.Label == "FEATURE";
-
-Scope Unit//MCP.order.ordered == false;
-
-Scope Unit//MCP ((IS_CONTAINED_BY)) Scope Unit//PROGRAMMATIC;
-
-Atom/(.Header.Context.Container.scope_unit in ("CA-SU-21"))/(.Header.Context.Role in (Method)).Header.Context.Form :: Solution;
-Atom/(.Header.Context.Container.scope_unit in ("CA-SU-21"))/(.Header.Context.Role in (Delivery)).Header.Context.Form :: Solution;
-Atom/(.Header.Context.Container.scope_unit in ("CA-SU-21"))/(.Header.Context.Role in (Requirement)).Header.Context.Form :: Rule;
-Atom/(.Header.Context.Container.scope_unit in ("CA-SU-21"))/(.Header.Context.Role in (Concern)).Header.Context.Form :: Question;
-```

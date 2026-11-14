@@ -58,6 +58,16 @@ def definition_carrier(atom_id: str, term: str, subject_path: str | None = None)
     ).encode()
 
 
+def term_definition_carrier(atom_id: str, subject: str) -> bytes:
+    return (
+        f"---\natom_id: {atom_id}\n"
+        "context:\n  role: Method\n  form: Term Definition\n  topics:\n"
+        f"    main_subject: {json.dumps(subject)}\n"
+        "status: Active\nversion: 1\nrelations: {}\n---\n"
+        f"# {atom_id}\n"
+    ).encode()
+
+
 class CompilerTest(unittest.TestCase):
     def test_definition_subject_accepts_scalar_governs_shorthand(self) -> None:
         frontmatter = (
@@ -68,10 +78,42 @@ class CompilerTest(unittest.TestCase):
             "version: 1\n"
         )
 
-        term, subject_path = module.definition_subject(frontmatter, "CA-R-001.md")
+        term, subject_path, namespace = module.definition_subject(frontmatter, "CA-R-001.md")
 
         self.assertEqual("Evaluation For Relation", term)
         self.assertEqual("Evaluation For Relation", subject_path)
+        self.assertEqual("", namespace)
+
+        hybrid = definition_carrier("CA-R-001", "Evaluation For Relation").replace(
+            b"cce_form: definition\n", b"cce_form: definition\nrole: Requirement\nform: Term Definition\n"
+        )
+        frontmatter, _ = module.split_frontmatter(hybrid, "CA-R-001.md")
+        self.assertEqual(("Evaluation For Relation", "Evaluation For Relation", ""),
+                         module.definition_subject(frontmatter, "CA-R-001.md"))
+
+    def test_current_term_definition_requires_a_flat_term_subject(self) -> None:
+        for subject in ("", "Term", "Entity//Shared Term", "Term//Shared Term/Other",
+                        "CAPRMEDIO_STRUCTURE <+ Term//Shared Term"):
+            with self.subTest(subject=subject):
+                frontmatter, _ = module.split_frontmatter(term_definition_carrier("CA-M-010", subject), "test.md")
+                with self.assertRaises(module.CompileError) as error:
+                    module.definition_subject(frontmatter, "test.md")
+                self.assertEqual("source-subject-path-invalid", error.exception.code)
+
+        self.assertEqual(
+            (None, None, ""),
+            module.definition_subject("role: Requirement\nform: Rule\ntopics:\n  main_subject: Term//Shared Term\n", "test.md"),
+        )
+
+    def test_term_definition_preserves_model_identity(self) -> None:
+        for subject in ("Term//ID", "CAPRMEDIO_MODEL <+ Term//ID", "MODEL//CAPRMEDIO <+ Term//ID",
+                        "CAPRMEDIO <+ MODEL <+ Term//ID"):
+            with self.subTest(subject=subject):
+                frontmatter, _ = module.split_frontmatter(term_definition_carrier("CA-M-010", subject), "test.md")
+                self.assertEqual(("ID", subject, ""), module.definition_subject(frontmatter, "test.md"))
+        subject = "MODEL//Other <+ Term//ID"
+        frontmatter, _ = module.split_frontmatter(term_definition_carrier("CA-M-010", subject), "test.md")
+        self.assertEqual(("ID", subject, "MODEL//Other"), module.definition_subject(frontmatter, "test.md"))
 
     def test_identity_is_independent_of_mutable_filename_tokens(self) -> None:
         for name in (
@@ -339,6 +381,76 @@ class CompilerTest(unittest.TestCase):
         apply_code, applied = self.invoke("--apply")
         self.assertEqual(2, apply_code)
         self.assertFalse(applied["can_apply"])
+
+    def test_current_and_legacy_term_definitions_conflict(self) -> None:
+        current_subject = "CAPRMEDIO_MODEL <+ Term//Shared Term"
+        self.write("001_CORE_META_MODEL", "05_method", "CA-M-010--define.md",
+                   term_definition_carrier("CA-M-010", current_subject))
+        self.write("003_PROJECT_CONFIGURATION", "05_method", "CA-M-011--define.md",
+                   term_definition_carrier("CA-M-011", "Term//Shared Term"))
+        self.write("003_PROJECT_CONFIGURATION", "04_requirement", "CA-R-012--define.md",
+                   definition_carrier("CA-R-012", "Shared Term"))
+        legacy_subject = "CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Term//Shared Term"
+        self.write("001_CORE_META_MODEL", "04_requirement", "CA-R-013--define.md", (
+            "---\natom_id: CA-R-013\nrole: Requirement\nform: Term Definition\n"
+            f"subjects:\n  active: {legacy_subject}\n"
+            "status: Active\nversion: 1\nrelations: {}\n---\n# Define Shared Term\n"
+        ).encode())
+
+        code, report = self.invoke()
+
+        self.assertEqual(2, code)
+        conflict = next(row for row in report["conflicts"] if row["type"] == "duplicate_governed_term_definition")
+        self.assertEqual("Shared Term", conflict["details"]["term"])
+        self.assertCountEqual(
+            [current_subject, "Term//Shared Term", "Shared Term", legacy_subject],
+            conflict["details"]["definition_subject_paths"].values(),
+        )
+        apply_code, applied = self.invoke("--apply")
+        self.assertEqual(2, apply_code)
+        self.assertFalse(applied["can_apply"])
+
+    def test_separate_model_term_definitions_do_not_conflict(self) -> None:
+        self.write("001_CORE_META_MODEL", "05_method", "CA-M-010--define.md",
+                   term_definition_carrier("CA-M-010", "CAPRMEDIO_MODEL <+ Term//ID"))
+        self.write("003_PROJECT_CONFIGURATION", "05_method", "CA-M-011--define.md",
+                   term_definition_carrier("CA-M-011", "MODEL//Other <+ Term//ID"))
+
+        code, report = self.invoke()
+
+        self.assertEqual(0, code)
+        self.assertNotIn("duplicate_governed_term_definition", {row["type"] for row in report["conflicts"]})
+
+    def test_escaped_term_name_does_not_collide_with_model_qualified_term(self) -> None:
+        self.write("001_CORE_META_MODEL", "05_method", "CA-M-010--define.md",
+                   term_definition_carrier("CA-M-010", r"Term//MODEL\/\/Other \<\+ Term\/\/ID"))
+        self.write("003_PROJECT_CONFIGURATION", "05_method", "CA-M-011--define.md",
+                   term_definition_carrier("CA-M-011", "MODEL//Other <+ Term//ID"))
+
+        code, report = self.invoke()
+
+        self.assertEqual(0, code)
+        self.assertNotIn("duplicate_governed_term_definition", {row["type"] for row in report["conflicts"]})
+
+        output = {row["source_atom_id"]: row for row in report["output_plan"]}
+        self.assertEqual(output["CA-M-010"]["definition_term"], output["CA-M-011"]["definition_term"])
+        self.assertEqual(("", "MODEL//Other <+ Term//ID"),
+                         (output["CA-M-010"]["definition_namespace"], output["CA-M-010"]["definition_term_name"]))
+        self.assertEqual(("MODEL//Other", "ID"),
+                         (output["CA-M-011"]["definition_namespace"], output["CA-M-011"]["definition_term_name"]))
+
+        self.write("001_CORE_META_MODEL", "05_method", "CA-M-012--define.md",
+                   term_definition_carrier("CA-M-012", "MODEL//Other <+ Term//ID"))
+        self.write("003_PROJECT_CONFIGURATION", "05_method", "CA-M-013--define.md",
+                   term_definition_carrier("CA-M-013", r"Term//MODEL\/\/Other \<\+ Term\/\/ID"))
+        code, report = self.invoke()
+        self.assertEqual(2, code)
+        conflicts = [row["details"] for row in report["conflicts"] if row["type"] == "duplicate_governed_term_definition"]
+        self.assertEqual(2, len(conflicts))
+        self.assertEqual({"MODEL//Other <+ Term//ID"}, {row["term"] for row in conflicts})
+        self.assertEqual({("", "MODEL//Other <+ Term//ID"), ("MODEL//Other", "ID")},
+                         {(row["definition_namespace"], row["definition_term_name"]) for row in conflicts})
+        self.assertTrue(all(len(row["definition_subject_paths"]) == 2 for row in conflicts))
 
     def test_output_collision_is_reported(self) -> None:
         self.write("001_CORE_META_MODEL", "04_requirement", "SHARED--claim.md", carrier("CA-R-001"))

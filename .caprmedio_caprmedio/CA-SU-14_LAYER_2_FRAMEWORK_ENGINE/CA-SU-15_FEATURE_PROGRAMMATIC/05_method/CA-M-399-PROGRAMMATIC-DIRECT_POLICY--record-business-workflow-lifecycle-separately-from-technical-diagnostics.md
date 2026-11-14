@@ -8,13 +8,15 @@ context:
   role: Method
   form: Direct Policy
   topics:
-    main_subject: PROJECT STRUCTURE//CAPRMEDIO <+ Aspects <+ Engineering <+ Quality <+ Traceability <+ Provenance
+    main_subject: PROJECT STRUCTURE//CAPRMEDIO <+ Aspects <+ Engineering <+ Quality
+      <+ Traceability <+ Provenance
+    dependencies:
+    - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Execution Control
+      <+ Failure Handling
   tier: 5
 relations:
   child_of:
   - CA-M-425
-  depends_on:
-  - CA-M-396
 state:
   status: Active
   version: 20

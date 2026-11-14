@@ -29,6 +29,8 @@ carrier_destination:
   file:
     name: CA-C-477-PROJECT_CONFIGURATION-PROBLEM--repair-release-operation-gate-admission.md
     path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/01_concern/021_resolved
+container:
+  scope_unit: CA-SU-13
 ---
 # Summary
 

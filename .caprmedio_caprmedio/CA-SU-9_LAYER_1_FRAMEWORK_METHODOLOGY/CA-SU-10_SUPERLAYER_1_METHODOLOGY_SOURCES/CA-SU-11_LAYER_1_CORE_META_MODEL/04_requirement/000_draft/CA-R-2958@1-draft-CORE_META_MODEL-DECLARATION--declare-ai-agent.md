@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Node/Continuant/Actor/AI Agent
+  main_subject: CAPRMEDIO_MODEL <+ Node//Continuant//Actor//AI Agent
 tier: 3
 status: Draft
 version: 1

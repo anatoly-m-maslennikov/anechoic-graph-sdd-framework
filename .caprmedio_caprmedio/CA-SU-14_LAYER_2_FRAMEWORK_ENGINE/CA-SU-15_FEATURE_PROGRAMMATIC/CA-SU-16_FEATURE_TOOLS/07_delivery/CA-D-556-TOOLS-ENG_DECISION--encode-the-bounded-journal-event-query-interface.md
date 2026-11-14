@@ -30,7 +30,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Encode the bounded Journal Event query interface
 
@@ -39,6 +39,8 @@ Encode the bounded Journal Event query interface
 The Tool input and result contract.
 
 ## Claim
+
+### Prose Claim
 
 FIND_AND_FETCH_JOURNAL_EVENTS **must** deliver one bounded interface with a
 snapshot token (source root, byte-prefix length/hash, ordered member hashes, and

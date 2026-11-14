@@ -6,13 +6,13 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Format/bool
+  main_subject: CAPRMEDIO_MODEL <+ Format/bool
   dependencies:
-  - CAPRMEDIO_MODEL <+ CFEL <+ Format
+  - CAPRMEDIO_MODEL <+ Format
 tier: 1
 status: active
-version: 8
-updated_at: '2026-11-13T05:16:13.736930+00:00'
+version: 9
+updated_at: '2026-11-13T22:57:39.635646+00:00'
 carrier_destination:
   file:
     name: CA-R-2249-CORE_META_MODEL-DECLARATION--define-bool-value-format.md
@@ -37,9 +37,13 @@ property's cardinality, default, nullability, or carrier representation.
 ### Formal Claim
 
 ```python
-# model
-composition(container='CFEL', parts=('Format/bool',))
-relation(source='Format/bool', name='NARROWER_THAN', target='Format')
+from caprmedio.formal_claims import declare_entity
+from caprmedio.model import ValueFormat
+
+class BooleanValueFormat(ValueFormat):
+    pass
+
+declare_entity(entity_name='bool', entity_class=BooleanValueFormat)
 ```
 
 ## Semantics

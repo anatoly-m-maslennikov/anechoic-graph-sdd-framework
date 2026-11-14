@@ -9,6 +9,7 @@ TOOLS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS))
 from role_directory_rules import compile_role_folders  # noqa: E402
 from ATOM_LIFECYCLE.candidate_schema import compile_candidate_schema, load_candidate_schema  # noqa: E402
+from test_lifecycle_formal_placement import role_source, native_body, status_rule
 
 
 def order(role, number):
@@ -44,29 +45,22 @@ class RoleDirectorySourceTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name)
-        self.orders = [order('Concern', 4), order('"Analysis and Advisory"', 2),
-                       order('Operations', 9), order('Plan', 13)]
-        self.generic = 'Atom.Header.Destination.File.Path == PATH_TEMPLATE("<owning scope unit>/<role folder>/<placement>");'
-        self.status = '''Atom/(.Header.State.Status := Draft).Header.Destination.File.Path == PATH_TEMPLATE("<owning scope unit>/<role folder>/draft");
-Atom/(.Header.State.Status := Archived).Header.Destination.File.Path == PATH_TEMPLATE("<owning scope unit>/<role folder>/archived");
-Atom/(.Header.State.Status >| Status Group = Current).Header.Destination.File.Path == PATH_TEMPLATE("<container>/<lowercase status>");
-Atom/(.Header.State.Status := Active).Header.Destination.File.Path == PATH_TEMPLATE("<container>");'''
+        self.orders = [('Concern', 4), ('Analysis and Advisory', 2), ('Operations', 9), ('Plan', 13)]
+        self.generic = {'kind': 'role_root'}
+        self.status = (status_rule('draft', 'role', 'draft'), status_rule('archived', 'role', 'archived'),
+                       status_rule('*', 'container', '<lowercase status>'), status_rule('active', 'container', ''))
 
     def write_sources(self, *, orders=None, generic=True):
-        declarations = ['Atom.Header.Context.Role :: Concern;',
-                        'Atom.Header.Context.Role :: "Analysis and Advisory";',
-                        'Atom.Header.Context.Role :: Operations;', 'Atom.Header.Context.Role :: Plan;',
-                        'Atom.Header.Form :: Plan;', 'Atom.Header.ID:: [atom id]{::1};',
-                        'Atom.Content.Summary:: {::1};']
         statements = self.orders if orders is None else orders
-        body = '\n'.join(declarations + [statement + ';' for statement in statements])
-        (self.root / 'CA-R-7001.md').write_text(
-            '---\natom_id: CA-R-7001\nrole: Requirement\nform: Declaration\nstatus: Active\nversion: 3\n---\n'
-            '## Claim\n### Formal Claim\n```CFEL\n' + body + '\n```\n')
+        for path in self.root.glob('CA-R-80*.md'):
+            path.unlink()
+        selected = dict(statements)
+        for index, (role, _) in enumerate(self.orders):
+            role_source(self.root, role, selected.get(role), f'CA-R-80{index}')
+        rules = ((self.generic,) if generic else ()) + self.status
         (self.root / 'CA-D-7913.md').write_text(
             '---\natom_id: CA-D-7913\nrole: Delivery\nform: File Layout\nstatus: Active\nversion: 2\n'
-            'topics:\n  main_subject: CAPRMEDIO_MODEL <+ Carrier\n---\n'
-            '## Claim\n### Formal Claim\n```CFEL\n' + (self.generic if generic else '') + '\n' + self.status + '\n```\n')
+            'topics:\n  main_subject: CAPRMEDIO_MODEL <+ Carrier\n---\n' + native_body(rules))
 
     def test_generic_delivery_and_role_orders_compile_from_arbitrary_pins(self):
         self.write_sources()
@@ -82,7 +76,7 @@ Atom/(.Header.State.Status := Active).Header.Destination.File.Path == PATH_TEMPL
         with self.assertRaises(ValueError):
             rules.role_folder('Delivery')
         self.assertFalse(any(folder.startswith('08_') for folder in rules.role_folders.values()))
-        self.assertEqual({('CA-R-7001', 3), ('CA-D-7913', 2)},
+        self.assertEqual({('CA-R-800', 1), ('CA-R-801', 1), ('CA-R-802', 1), ('CA-R-803', 1), ('CA-D-7913', 2)},
                          {(pin['atom_id'], pin['version']) for pin in rules.sources})
 
     def test_missing_role_order_or_generic_delivery_fails(self):

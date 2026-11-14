@@ -15,6 +15,10 @@ version: 25
 updated_at: 2026-11-02 18:35:20 +0400
 current_scope_unit: METHODOLOGY_SOURCES
 claim_target_scope_unit: INSTALLED_EXTENSIONS
+destination:
+  file:
+    name: CA-R-1175-METHODOLOGY_SOURCES-GOAL-INSTALLED_EXTENSIONS--preserve-installed-extension-revisions-as-candidate-inputs.md
+    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/04_requirement
 ---
 ## Summary
 

@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Format
+  main_subject: CAPRMEDIO_MODEL <+ Format
 tier: 1
 status: active
 version: 3

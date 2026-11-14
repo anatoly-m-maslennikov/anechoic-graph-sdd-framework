@@ -1,4 +1,3 @@
-# CA-E-750@4
 # CA-E-675@14
 # CA-E-677@30
 from __future__ import annotations
@@ -129,6 +128,20 @@ class SourceReaderTests(unittest.TestCase):
             for path in self.root.rglob("*")
             if path.is_file()
         }
+
+    def test_model_rows_do_not_restore_an_archived_declaration_from_a_copy(self) -> None:
+        current = self._write_atom("MAIN", "04_requirement", "CA-R-900.md", atom_id="CA-R-900")
+        archived = self._path("MAIN", "04_requirement", "CA-R-900@1.md", "099_archived")
+        current.rename(archived)
+        copied_row = {"id": "CA-R-900", "ref": "CA-R-900", "source_path": "installed/CA-R-900.md"}
+        other_copy = {"id": "CA-R-901", "ref": "CA-R-901", "source_path": "installed/CA-R-901.md"}
+        reader = SourceReader(self.root, include_archived=False)
+        reader.capture()
+
+        rows = reader.model_rows([copied_row, other_copy], lambda row: row["id"] in {"CA-R-900", "CA-R-901"})
+
+        self.assertNotIn(copied_row, rows)
+        self.assertIn(other_copy, rows)
 
     def test_real_root_child_inventory_includes_canonical_roles_and_declarations(self) -> None:
         for index, role in enumerate(ROLES, start=1):

@@ -32,7 +32,8 @@ def model_class_target(subject, entity_name, *, require_namespace=True):
         local = local.endpoints[1]
     if (not isinstance(local, notation.Path) or not isinstance(local.head, notation.Name)
             or local.value_format is not None or local.value_cardinality is not None
-            or any(step.operator != "/" or not isinstance(step.operand, (notation.Name, notation.Qualification)) for step in local.steps)):
+            or any(step.operator not in {"/", "//"} or not isinstance(step.operand, (notation.Name, notation.Qualification)) for step in local.steps)
+            or (any(step.operator == "//" for step in local.steps) and local.head.value != "Node")):
         return None
     terminal = local.steps[-1].operand if local.steps else local.head
     if isinstance(terminal, notation.Qualification):

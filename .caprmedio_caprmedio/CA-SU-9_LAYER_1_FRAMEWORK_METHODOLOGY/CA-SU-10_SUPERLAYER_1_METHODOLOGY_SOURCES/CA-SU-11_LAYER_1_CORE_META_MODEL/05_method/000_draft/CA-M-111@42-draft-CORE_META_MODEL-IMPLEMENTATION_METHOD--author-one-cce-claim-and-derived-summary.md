@@ -12,10 +12,6 @@ topics:
   - Subject/CAPRMEDIO/Graph/Node/Aspect/Engineering/Authoring/Controlled English
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom.Summary
 tier: 3
-relations:
-  depends_on:
-  - CA-R-1624
-  - CA-R-1465
 status: Draft
 version: 42
 updated_at: 2026-10-29 00:04:17 +0400
@@ -23,7 +19,7 @@ current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Author one CCE Claim and derived Summary
 
@@ -32,6 +28,8 @@ Author one CCE Claim and derived Summary
 Authoring a primary contribution, its applicability and derived Summary; RMED uses the unified body layout.
 
 ## Claim
+
+### Prose Claim
 
 **to** author one CCE Claim **and** its derived Summary, an Author **must** use these authoring constraints:
 

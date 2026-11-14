@@ -33,10 +33,3 @@ Delegate responsibility to METHODOLOGY_SOURCES
 
 - METHODOLOGY_SOURCES must make the CAPRMEDIO governing model recursively self-applicable while preserving Operator authority. [CA-R-1172](../CA-R-1172-FRAMEWORK_METHODOLOGY-GOAL-METHODOLOGY_SOURCES--make-the-caprmedio-governing-model-recursively-self-applicable.md)
 - METHODOLOGY_SOURCES must provide the authoritative source Layers from which Applicable Methodology is compiled. [CA-R-1173](../CA-R-1173-FRAMEWORK_METHODOLOGY-GOAL-METHODOLOGY_SOURCES--provide-authoritative-source-layers-for-applicable-methodology.md)
-
-### Formal Claim
-
-```CFEL
-# instances
-Atom//"CA-R-3078" ((HAS_ACTIVE_SUBJECT)) Scope Unit//METHODOLOGY_SOURCES;
-```

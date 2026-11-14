@@ -27,7 +27,7 @@ current_scope_unit: PROJECTION_ACTIONS
 claim_target_scope_unit: PROJECTION_ACTIONS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Bind Entity graph generator authority and delivery places
 
@@ -36,5 +36,7 @@ Bind Entity graph generator authority and delivery places
 PROJECTION_ACTIONS owns generation and optional persistence of non-authoritative graph Projections from selected source frontiers.
 
 ## Claim
+
+### Prose Claim
 
 The Delivery Atom is governed under `.caprmedio_caprmedio/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-16_FEATURE_TOOLS/CA-SU-31_FEATURE_GROUP_SINGLE_ACTIONS/CA-SU-37_FEATURE_GROUP_PROJECTION_ACTIONS/`. The canonical executable Carrier remains at `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/GENERATE_ENTITY_GRAPH/generate_entity_graph.py`. Installed copies **and** mutable execution state remain respectively under `.caprmedio_runtime/tools` **and** `.caprmedio_runtime`; persisted non-authoritative view Projection destinations resolve from an explicit caller path or registered Project setting and must remain beneath `.caprmedio_caprmedio/_projection/`; reject a persistent destination outside that registered root. Native executable Implementation remains at its governed delivery place and can supply actual-state facts without moving into _projection. Runtime technical and business Journals use their configured governed sinks and are preserved during disposable-state cleanup.

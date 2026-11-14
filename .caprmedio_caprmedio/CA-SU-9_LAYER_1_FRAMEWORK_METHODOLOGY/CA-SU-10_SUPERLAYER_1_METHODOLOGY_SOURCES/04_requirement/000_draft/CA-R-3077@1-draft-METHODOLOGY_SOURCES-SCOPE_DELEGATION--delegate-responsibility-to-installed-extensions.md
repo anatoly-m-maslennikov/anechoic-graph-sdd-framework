@@ -32,10 +32,3 @@ Delegate responsibility to INSTALLED_EXTENSIONS
 ### Prose Claim
 
 - INSTALLED_EXTENSIONS must preserve exact installed Extension source revisions and their provenance as immutable candidate inputs to methodology compilation without activating or modifying them. [CA-R-1175](../CA-R-1175-METHODOLOGY_SOURCES-GOAL-INSTALLED_EXTENSIONS--preserve-installed-extension-revisions-as-candidate-inputs.md)
-
-### Formal Claim
-
-```CFEL
-# instances
-Atom//"CA-R-3077" ((HAS_ACTIVE_SUBJECT)) Scope Unit//INSTALLED_EXTENSIONS;
-```

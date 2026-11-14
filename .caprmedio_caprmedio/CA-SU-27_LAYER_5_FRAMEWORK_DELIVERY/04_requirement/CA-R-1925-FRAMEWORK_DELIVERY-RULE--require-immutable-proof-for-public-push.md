@@ -26,7 +26,7 @@ author: Anatoly Maslennikov
 relations: {}
 ---
 
-# Summary
+## Summary
 
 Require immutable proof for public push
 
@@ -35,6 +35,8 @@ Require immutable proof for public push
 one public `amm/dev` push effect.
 
 ## Claim
+
+### Prose Claim
 
 **the Operator** **must** retain an immutable commit identity and remote effect reference for every public push of the selected public source/material bindings.
 

@@ -21,6 +21,8 @@ carrier_destination:
   file:
     name: CA-C-312-PROBLEM--restore-the-missing-next-leaf-version-field.md
     path: .caprmedio_caprmedio/01_concern/021_resolved
+container:
+  scope_unit: CA-SU-00
 ---
 # Summary
 

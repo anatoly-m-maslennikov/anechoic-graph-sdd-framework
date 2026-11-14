@@ -22,7 +22,7 @@ current_scope_unit: TOOL_WORKFLOWS
 claim_target_scope_unit: TOOL_WORKFLOWS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Accept common Atom target selectors
 
@@ -31,6 +31,8 @@ Accept common Atom target selectors
 Independent logical Find, Read and Modify selection of Atom targets.
 
 ## Claim
+
+### Prose Claim
 
 Atom Find **must** accept composable Scope Unit, Content Role, Type and Subject filters, including direct `governs` and `depends_on` matching under the selected exact, prefix, suffix or contains mode. A connector **may** resolve canonical filenames or locations internally; logical operation targets are Atom identities. Find **must** return matching identities and matching facts without granting effect permission.
 

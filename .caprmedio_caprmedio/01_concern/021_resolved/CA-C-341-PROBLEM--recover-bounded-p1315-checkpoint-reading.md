@@ -24,6 +24,8 @@ carrier_destination:
   file:
     name: CA-C-341-PROBLEM--recover-bounded-p1315-checkpoint-reading.md
     path: .caprmedio_caprmedio/01_concern/021_resolved
+container:
+  scope_unit: CA-SU-00
 ---
 # Summary
 

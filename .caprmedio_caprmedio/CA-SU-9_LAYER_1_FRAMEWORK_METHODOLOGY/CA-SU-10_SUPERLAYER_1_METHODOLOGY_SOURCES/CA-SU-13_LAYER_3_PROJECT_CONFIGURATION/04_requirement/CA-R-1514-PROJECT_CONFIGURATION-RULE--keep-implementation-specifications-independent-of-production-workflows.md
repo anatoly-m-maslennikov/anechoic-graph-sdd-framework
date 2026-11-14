@@ -6,7 +6,8 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Architecture <+ Component Structure"
+  main_subject: CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Architecture
+    <+ Component Structure
   dependencies:
   - CAPRMEDIO_MODEL <+ Project
   - CAPRMEDIO_STRUCTURE <+ Scope Unit//PROJECT_CONFIGURATION
@@ -14,13 +15,13 @@ topics:
   - CAPRMEDIO_MODEL <+ Atom.Header.Context.Role
   - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)
   - CAPRMEDIO_MODEL <+ Package/Implementation
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Action)'
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow)'
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form
+    := Action)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form
+    := Workflow)
   - CAPRMEDIO_MODEL <+ Package
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role:=Operations)/Workflow
 tier: 2
-relations:
-  depends_on:
-  - CA-R-1519
 status: Active
 version: 27
 updated_at: 2026-11-02 18:35:20 +0400

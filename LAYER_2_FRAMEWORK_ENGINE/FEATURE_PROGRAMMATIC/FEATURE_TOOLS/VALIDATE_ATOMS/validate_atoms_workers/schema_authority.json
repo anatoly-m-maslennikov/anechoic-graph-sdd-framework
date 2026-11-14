@@ -156,6 +156,11 @@
       "version": 19,
       "sha256": "0eb072584f801e9f0774670b9fb47b776e427488e937e28e74254e21dace7490",
       "source_path": ".caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-383-CORE_META_MODEL-EVALUATION_APPROACH--reject-invalid-subject-expressions.md"
+    },
+    "CA-E-833": {
+      "version": 3,
+      "sha256": "61e0bae35eb6e38f590932b48985dcae14ed51d17254f01f78daa780764f2c03",
+      "source_path": ".caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-833-CORE_META_MODEL-EVAL_POLICY--validate-entity-and-topic-reference-expressions.md"
     }
   }
 }

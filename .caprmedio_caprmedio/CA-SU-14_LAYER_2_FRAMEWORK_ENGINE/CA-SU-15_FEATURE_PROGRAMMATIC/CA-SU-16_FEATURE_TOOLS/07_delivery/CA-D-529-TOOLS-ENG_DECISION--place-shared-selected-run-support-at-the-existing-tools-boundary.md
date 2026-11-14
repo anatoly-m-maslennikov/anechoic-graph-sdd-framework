@@ -30,7 +30,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Place shared selected Run support at the existing TOOLS boundary
 
@@ -41,6 +41,8 @@ dependency. No new Scope Unit, executable Tool, workflow, or Journal is
 declared by this Delivery.
 
 ## Claim
+
+### Prose Claim
 
 Shared selected-Run support **must** be delivered as the non-executable library
 `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/workflow_run_support.py`,

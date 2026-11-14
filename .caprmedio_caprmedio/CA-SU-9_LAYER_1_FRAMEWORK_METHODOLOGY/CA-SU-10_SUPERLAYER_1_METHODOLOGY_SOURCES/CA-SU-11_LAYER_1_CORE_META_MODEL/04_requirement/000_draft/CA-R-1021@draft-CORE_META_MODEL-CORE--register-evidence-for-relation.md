@@ -17,7 +17,7 @@ local_tier: "Core"
 author: "Anatoly Maslennikov"
 global_tier: 9
 ---
-# Summary
+## Summary
 
 Register evidence_for relation
 
@@ -26,6 +26,8 @@ Register evidence_for relation
 `evidence_for` relations.
 
 ## Claim
+
+### Prose Claim
 
 `evidence_for` **must** be registered as a direct relation owned by an Evidence carrier **and** directed **to** one Evaluation **or** Implementation carrier that the Evidence supports.
 

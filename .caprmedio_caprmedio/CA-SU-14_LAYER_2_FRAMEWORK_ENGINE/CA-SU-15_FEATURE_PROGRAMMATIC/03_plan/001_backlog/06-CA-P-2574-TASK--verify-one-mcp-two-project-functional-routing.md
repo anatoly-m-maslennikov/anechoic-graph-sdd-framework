@@ -12,11 +12,6 @@ tier: 3
 relations:
   is_decomposition_of:
   - CA-P-2576
-  depends_on:
-  - CA-P-2569
-  - CA-P-2571
-  - CA-P-2572
-  - CA-P-2573
   relates_to:
   - CA-P-2562
   - CA-M-396

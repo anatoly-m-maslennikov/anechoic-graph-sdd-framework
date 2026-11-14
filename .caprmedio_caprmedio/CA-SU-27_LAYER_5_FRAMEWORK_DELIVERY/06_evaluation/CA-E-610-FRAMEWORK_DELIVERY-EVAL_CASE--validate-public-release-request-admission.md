@@ -30,7 +30,7 @@ claim_target_scope_unit: FRAMEWORK_DELIVERY
 author: Anatoly Maslennikov
 ---
 
-# Summary
+## Summary
 
 Validate public-release request admission
 
@@ -39,6 +39,8 @@ Validate public-release request admission
 one public-release request before execution.
 
 ## Claim
+
+### Prose Claim
 
 **the Operator** **must** verify that missing fields, unknown fields, bad digests, unsafe refs, malformed Run graph, stale preview, and absent or stale authorization all stop before a native binding is invoked.
 

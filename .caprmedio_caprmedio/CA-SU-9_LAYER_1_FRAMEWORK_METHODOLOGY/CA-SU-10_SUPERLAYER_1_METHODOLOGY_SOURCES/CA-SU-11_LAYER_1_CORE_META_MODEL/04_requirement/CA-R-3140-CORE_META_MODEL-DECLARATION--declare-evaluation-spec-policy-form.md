@@ -35,11 +35,11 @@ Declare Evaluation Spec Policy Form
 from caprmedio.formal_claims import declare_entity
 from caprmedio.model import Evaluation
 
-class SpecPolicy(Evaluation):
+class EvaluationSpecPolicy(Evaluation):
     pass
 
 declare_entity(
-    entity_class=SpecPolicy,
+    entity_class=EvaluationSpecPolicy,
     entity_name='Spec Policy',
     qualification_property_path='Atom.Header.Context.Form',
 )

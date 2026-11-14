@@ -17,7 +17,7 @@ local_tier: "Core"
 author: "Anatoly Maslennikov"
 global_tier: 9
 ---
-# Summary
+## Summary
 
 Register method_for relation
 
@@ -26,6 +26,8 @@ Register method_for relation
 Method For Relation.
 
 ## Claim
+
+### Prose Claim
 
 `method_for` **must** be registered as a direct relation owned by a Method Atom **and** directed **to** **`=1`** Requirement Atom that the Method serves.
 

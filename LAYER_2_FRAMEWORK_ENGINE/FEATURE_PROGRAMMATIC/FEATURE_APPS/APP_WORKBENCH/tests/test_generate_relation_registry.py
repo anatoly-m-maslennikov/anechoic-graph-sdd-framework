@@ -1,4 +1,3 @@
-# CA-E-804@5
 
 """Generated relation metadata uses the runtime declaration compiler."""
 
@@ -27,7 +26,7 @@ from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.relations import compile_relation_r
 import APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.relation_registry as compiler  # noqa: E402
 
 
-def declaration(reference: str, name: str, body: str) -> dict:
+def declaration(reference: str, name: str, body: str = "") -> dict:
     return {
         "source_path": f"declarations/{reference}.md",
         "status_group": "Current",
@@ -42,9 +41,8 @@ def declaration(reference: str, name: str, body: str) -> dict:
         "tier": 1,
         "updated_at": None,
         "header_json": {"subjects": {"active": f"CFEL <+ Relation//{name}"}, "relations": {}},
-        "_content_bytes": ("## Claim\n### Formal Claim\n```CFEL\n"
-            f"Relation//{name} ((HAS_CLASSIFICATION)) Derivation == Direct;\n"
-            + body.replace("```CFEL", "").replace("```", "") + "\n```\n").encode("utf-8"),
+        "_content_bytes": ("## Claim\n### Formal Claim\n```python\n"
+            f'subject_path(address="Relation//{name}")\n{body}\n```\n').encode("utf-8"),
         "content_properties_json": [],
         "relation_edges_json": [],
         "hash": None,
@@ -53,24 +51,27 @@ def declaration(reference: str, name: str, body: str) -> dict:
 
 class GeneratedRelationRegistryTests(unittest.TestCase):
     def test_only_literal_formal_claim_input_registers(self) -> None:
-        row = declaration("CA-R-1", "HEADER_ONLY", "")
+        row = declaration("CA-R-1", "HEADER_ONLY")
         row["_content_bytes"] = b"""## Claim
 ### Prose Claim
-Relation//PROSE ((HAS_CLASSIFICATION)) Derivation == Direct;
-```CFEL
-Relation//EXAMPLE ((HAS_CLASSIFICATION)) Derivation == Direct;
+subject_path(address="Relation//PROSE")
+```python
+subject_path(address="Relation//EXAMPLE")
 ```
 ### Formal Claim
+```python
+# subject_path(address="Relation//COMMENT")
+classify(address="Relation//REAL", axis="Derivation", value="Direct", notation="relation")
+relation(source="Relation//ALIAS", name="IS_INVERSE_ALIAS_FOR", target="Relation//CANONICAL")
+subject_path(address="Relation//QUOTED")
+set_value(address="Relation//QUOTED.Description", value="text # Relation//FAKE; still text")
+```
 ```CFEL
-# Relation//COMMENT ((HAS_CLASSIFICATION)) Derivation == Direct;
-Relation//REAL # an intervening comment
- ((HAS_CLASSIFICATION)) Derivation == Direct;
-Relation//ALIAS ((IS_INVERSE_ALIAS_FOR)) Relation//CANONICAL;
-Relation//QUOTED ((HAS_DESCRIPTION)) "text # Relation//FAKE; still text";
+Relation//RETIRED ((HAS_CLASSIFICATION)) Derivation == Direct;
 ```
 ## Details
-```CFEL
-Relation//DETAIL ((HAS_CLASSIFICATION)) Derivation == Direct;
+```python
+subject_path(address="Relation//DETAIL")
 ```
 """
         registry = compile_relation_registry([row])
@@ -78,33 +79,36 @@ Relation//DETAIL ((HAS_CLASSIFICATION)) Derivation == Direct;
         self.assertEqual({"ALIAS": "CANONICAL"}, registry.aliases)
 
     def test_duplicate_reference_uses_first_formal_claim(self) -> None:
-        first = declaration("CA-R-1", "FIRST", "")
-        second = declaration("CA-R-1", "SECOND", "")
+        first = declaration("CA-R-1", "FIRST")
+        second = declaration("CA-R-1", "SECOND")
         second["source_path"] = "other.md"
         self.assertEqual({"FIRST"}, set(compile_relation_registry([first, second]).names))
 
-    def test_conditional_inverse_is_warned_and_skipped(self) -> None:
+    def test_instance_scoped_inverse_metadata_is_warned_and_skipped(self) -> None:
         from contextlib import redirect_stderr
         from io import StringIO
 
-        row = declaration("CA-R-1", "DIRECT", "IF (condition) THEN (\nRelation//DIRECT ((HAS_INVERSE)) Relation//INVERSE;\n);\n")
+        row = declaration(
+            "CA-R-1", "DIRECT",
+            '# instances\nrelation(source="Relation//DIRECT", name="HAS_INVERSE", target="Relation//INVERSE")',
+        )
         errors = StringIO()
         with redirect_stderr(errors):
             registry = compile_relation_registry([row])
         self.assertEqual({"DIRECT"}, set(registry.names))
         self.assertEqual({}, registry.inverse)
-        self.assertIn("conditional/grouped", errors.getvalue())
+        self.assertIn("unsupported Python relation metadata", errors.getvalue())
 
     def test_asset_is_deterministic_and_pins_literal_declaration_inputs(self) -> None:
         direct = declaration(
             "CA-R-1",
             "IS_CONTAINED_BY",
-            "```CFEL\nRelation//IS_CONTAINED_BY ((HAS_INVERSE)) Relation//CONTAINS;\n```\n",
+            'relation(source="Relation//IS_CONTAINED_BY", name="HAS_INVERSE", target="Relation//CONTAINS")',
         )
         inverse = declaration(
             "CA-R-2",
             "CONTAINS",
-            "```CFEL\nRelation//CONTAINS <((HAS_INVERSE)) Relation//IS_CONTAINED_BY;\n```\n",
+            'relation(source="Relation//CONTAINS", name="HAS_INVERSE", target="Relation//IS_CONTAINED_BY", reverse=True)',
         )
 
         first = registry_asset([direct, inverse])
@@ -124,8 +128,8 @@ Relation//DETAIL ((HAS_CLASSIFICATION)) Derivation == Direct;
             self.assertEqual(first, output.read_bytes())
 
     def test_invalid_declaration_identity_is_omitted_before_asset_pinning(self) -> None:
-        valid = declaration("CA-R-1", "DIRECT", "```CFEL\n```\n")
-        invalid = declaration("CA-R-2", "INVERSE", "```CFEL\n```\n")
+        valid = declaration("CA-R-1", "DIRECT")
+        invalid = declaration("CA-R-2", "INVERSE")
         invalid["id"] = None
         invalid["version"] = True
 
@@ -143,7 +147,7 @@ Relation//DETAIL ((HAS_CLASSIFICATION)) Derivation == Direct;
             _source_pin(dict(valid, version=True))
 
     def test_delivered_asset_loads_without_source_comparison(self) -> None:
-        direct = declaration("CA-R-1", "DIRECT", "```CFEL\n```\n")
+        direct = declaration("CA-R-1", "DIRECT")
         compiled = compile_registry([direct])
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "canonical_relation_registry.json"
@@ -159,8 +163,8 @@ Relation//DETAIL ((HAS_CLASSIFICATION)) Derivation == Direct;
 
     def test_asset_source_pins_reuse_the_existing_compilation(self) -> None:
         rows = [
-            declaration("CA-R-1", "DIRECT", "```CFEL\n```\n"),
-            declaration("CA-R-2", "OTHER", "```CFEL\n```\n"),
+            declaration("CA-R-1", "DIRECT"),
+            declaration("CA-R-2", "OTHER"),
         ]
         original = compiler.registry_contribution
         with patch.object(compiler, "registry_contribution", wraps=original) as contribution:

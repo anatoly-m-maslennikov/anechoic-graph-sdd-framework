@@ -18,16 +18,8 @@ from types import MappingProxyType
 import re
 
 from carrier_aliases import canonical_role_name, named_value_token
-from ATOM_LIFECYCLE.status_model import _STATUS_ORDER
 from ATOM_LIFECYCLE.placement_claim import parse_placement_claim
-
-_STATEMENT = re.compile(
-    r'^Atom(?P<selectors>(?:/\(\s*\.Header\.(?:Context\.Role|State\.Status)\s*:=\s*[^()]+\))*)'
-    r'\.Header\.Destination\.File\.Path\s*==\s*PATH_TEMPLATE\("(?P<path>[^"\r\n]+)"\)$')
-_SELECTOR = re.compile(r'/\(\s*\.Header\.(Context\.Role|State\.Status)\s*:=\s*([^()]+?)\s*\)')
-_CURRENT_GROUP = re.compile(
-    r'^Atom/\(\s*\.Header\.State\.Status\s*>\|\s*Status Group\s*=\s*Current\s*\)'
-    r'\.Header\.Destination\.File\.Path\s*==\s*PATH_TEMPLATE\("<container>/(?P<folder><lowercase status>|<status folder>)"\)$')
+from role_directory_rules import role_folders_from_orders
 
 
 def _name(value):
@@ -156,100 +148,53 @@ def load_placement(payload):  # noqa: C901
                           MappingProxyType({role: tuple(values) for role, values in aliases.items()}), tuple(pins))
 
 
-def compile_placement(rows, requirement_rows=(), declared_roles=None, required_statuses=None):  # noqa: C901
-    """Compile the bounded explicit Delivery path statements from staged sources."""
-    from FEATURE_WORKBENCH_BACKEND.declaration_cfel import formal_claim_blocks, model_statements
-    from role_directory_rules import compile_role_folders
+def _declared_orders(requirement_rows):
+    from FEATURE_FORMAL_MODEL_ENGINE.model_catalog import _native_block
+    from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim
 
+    role_orders, status_folders, status_numbers = [], {}, set()
+    for row in requirement_rows:
+        source = row['id']
+        for code in _native_block(row['_content_bytes'].decode('utf-8')):
+            claim = parse_native_model_claim(code)
+            if not claim or claim['kind'] != 'entity':
+                continue
+            args = claim['arguments']
+            if args.get('qualification_property_path') == 'Atom.Header.Context.Role':
+                order = args.get('classifications', {}).get('Role Order Number')
+                if order is not None:
+                    role_orders.append((args['entity_name'], order, source))
+            for name, order in args.get('status_order_numbers', {}).items():
+                status = _name(name)
+                if status in status_folders or order in status_numbers:
+                    raise ValueError(f'{source}: ambiguous Status order binding')
+                status_folders[status] = (f'{order:03d}_{status}', source)
+                status_numbers.add(order)
+    return role_folders_from_orders(role_orders), status_folders
+
+
+def compile_placement(rows, requirement_rows=(), declared_roles=None, required_statuses=None):  # noqa: C901
+    """Compile native Delivery and model placement Declarations."""
     folders, rules, sources = {}, {}, {}
-    order_statements = [(statement, row['id']) for row in requirement_rows
-                        for block in formal_claim_blocks(row['_content_bytes'].decode('utf-8'), model_class_bindings=row.get('_model_class_bindings'))
-                        for statement in model_statements(block)]
-    role_folders = compile_role_folders(order_statements)
-    status_folders, status_numbers = {}, set()
-    for statement, source in order_statements:
-        if 'Status Order Number' not in statement:
-            continue
-        match = _STATUS_ORDER.fullmatch(statement)
-        if match is None:
-            raise ValueError(f'{source}: unsupported Status Order Number declaration')
-        status = _name(match['status'].strip().strip('"'))
-        order = int(match['order'])
-        if status in status_folders or order in status_numbers or order > 999:
-            raise ValueError(f'{source}: ambiguous Status order binding')
-        status_folders[status] = (f'{order:03d}_{status}', source)
-        status_numbers.add(order)
+    role_folders, status_folders = _declared_orders(requirement_rows)
     generic_source = None
     for row in rows:
         body = row['_content_bytes'].decode('utf-8')
-        authored = parse_placement_claim(body)
-        if authored is not None:
-            for rule in authored:
-                source = row['id']
-                if rule['kind'] == 'role_root':
-                    if generic_source is not None:
-                        raise ValueError('Duplicate generic Role placement template')
-                    generic_source = source
-                    sources[source] = row
-                    continue
-                key = (None if rule['role'] is None else _name(rule['role']), rule['status'] if rule['status'] == '*' else _name(rule['status']))
-                if key in rules:
-                    raise ValueError(f'{source}: duplicate placement binding')
-                rules[key] = (rule['base'], rule['folder'], source)
+        for rule in parse_placement_claim(body) or ():
+            source = row['id']
+            if rule['kind'] == 'role_root':
+                if generic_source is not None:
+                    raise ValueError('Duplicate generic Role placement template')
+                generic_source = source
                 sources[source] = row
-            continue
-        for block in formal_claim_blocks(body, model_class_bindings=row.get('_model_class_bindings')):
-            for statement in model_statements(block):
-                if statement == 'Atom.Header.Destination.File.Path == PATH_TEMPLATE("<owning scope unit>/<role folder>/<placement>")':
-                    if generic_source is not None:
-                        raise ValueError('Duplicate generic Role placement template')
-                    generic_source = row['id']
-                    sources[generic_source] = row
-                    continue
-                if statement.startswith('Atom.Header.Destination.File.Path') and 'PATH_TEMPLATE' in statement:
-                    raise ValueError(f"{row['id']}: unsupported generic Role placement template")
-                if not statement.startswith('Atom/') or '.Header.Destination.File.Path' not in statement:
-                    continue
-                source = row['id']
-                if current := _CURRENT_GROUP.fullmatch(statement):
-                    key, value = (None, '*'), ('container', current['folder'])
-                else:
-                    match = _STATEMENT.fullmatch(statement)
-                    if not match:
-                        raise ValueError(f'{source}: unsupported placement statement')
-                    selectors = _SELECTOR.findall(match['selectors'])
-                    if len(dict(selectors)) != len(selectors):
-                        raise ValueError(f'{source}: duplicate placement selector')
-                    selectors = dict(selectors)
-                    role = selectors.get('Context.Role')
-                    status = selectors.get('State.Status')
-                    path = match['path']
-                    if role and not status and path.startswith('<owning scope unit>/') and path.endswith('/<placement>'):
-                        folder = path[len('<owning scope unit>/'):-len('/<placement>')]
-                        normalized_role = _name(role)
-                        if normalized_role in folders:
-                            raise ValueError(f'{source}: duplicate Role folder')
-                        folders[normalized_role] = {'role': role, 'folder': folder, 'source': source}
-                        sources[source] = row
-                        continue
-                    if path.startswith('<owning scope unit>/<role folder>/'):
-                        value = ('role', path[len('<owning scope unit>/<role folder>/'):])
-                    elif path == '<container>':
-                        value = ('container', '')
-                    elif path.startswith('<container>/'):
-                        value = ('container', path[len('<container>/'):])
-                    else:
-                        raise ValueError(f'{source}: unsupported placement path')
-                    if not status:
-                        raise ValueError(f'{source}: Status selector required')
-                    key = (_name(role) if role else None, _name(status))
-                if key in rules:
-                    raise ValueError(f'{source}: duplicate placement binding')
-                rules[key] = (*value, source)
-                sources[source] = row
+                continue
+            role = None if rule['role'] is None else _name(rule['role'])
+            status = '*' if rule['status'] == '*' else _name(rule['status'])
+            if (role, status) in rules:
+                raise ValueError(f'{source}: duplicate placement binding')
+            rules[(role, status)] = (rule['base'], rule['folder'], source)
+            sources[source] = row
     if generic_source is not None:
-        if folders:
-            raise ValueError('Conflicting generic and explicit Role folder declarations')
         if not role_folders or (declared_roles is not None and
                 {_name(role) for role in role_folders} != {_name(role) for role in declared_roles}):
             raise ValueError('Role order declarations are incomplete')

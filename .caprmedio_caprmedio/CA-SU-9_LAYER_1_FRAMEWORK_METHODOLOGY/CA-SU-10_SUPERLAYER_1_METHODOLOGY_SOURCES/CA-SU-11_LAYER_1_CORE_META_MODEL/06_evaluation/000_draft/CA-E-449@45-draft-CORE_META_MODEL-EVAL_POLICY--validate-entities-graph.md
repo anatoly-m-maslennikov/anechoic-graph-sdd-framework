@@ -12,10 +12,10 @@ topics:
   - CAPRMEDIO_MODEL <+ Entity
   - CAPRMEDIO_MODEL <+ Term//Property
   - CAPRMEDIO_MODEL <+ Term
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_PROPERTY_OF
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//HAS_PROPERTY
+  - CAPRMEDIO_MODEL <+ Relation//IS_PROPERTY_OF
+  - CAPRMEDIO_MODEL <+ Relation//HAS_PROPERTY
   - CAPRMEDIO_MODEL <+ CFEL<+Operator//AllowedValue
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
   - CAPRMEDIO_MODEL <+ Atom.Content
   - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
   - CAPRMEDIO_MODEL <+ Term//Artifact

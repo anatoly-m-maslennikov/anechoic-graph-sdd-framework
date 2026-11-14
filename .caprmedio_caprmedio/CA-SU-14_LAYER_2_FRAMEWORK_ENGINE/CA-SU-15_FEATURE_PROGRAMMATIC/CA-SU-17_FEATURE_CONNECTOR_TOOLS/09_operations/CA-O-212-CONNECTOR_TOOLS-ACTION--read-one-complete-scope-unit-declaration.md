@@ -12,12 +12,6 @@ topics:
   - Scope Unit
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Project.Settings
 tier: 3
-relations:
-  depends_on:
-  - CA-R-1938
-  - CA-M-378
-  - CA-E-630
-  - CA-D-627
 status: Active
 version: 14
 updated_at: 2026-11-02 19:44:26 +0400

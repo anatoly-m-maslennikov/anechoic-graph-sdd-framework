@@ -23,7 +23,7 @@ current_scope_unit: TOOL_WORKFLOWS
 claim_target_scope_unit: TOOL_WORKFLOWS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Compose independent Atom Actions
 
@@ -32,6 +32,8 @@ Compose independent Atom Actions
 A Workflow composing explicit actions for several Atom targets.
 
 ## Claim
+
+### Prose Claim
 
 **To** compose Atom operations, the Workflow **must** retain Find, Read and Modify as independently invocable logical operations and execute **`=1`** explicit Atom target per Action:
 

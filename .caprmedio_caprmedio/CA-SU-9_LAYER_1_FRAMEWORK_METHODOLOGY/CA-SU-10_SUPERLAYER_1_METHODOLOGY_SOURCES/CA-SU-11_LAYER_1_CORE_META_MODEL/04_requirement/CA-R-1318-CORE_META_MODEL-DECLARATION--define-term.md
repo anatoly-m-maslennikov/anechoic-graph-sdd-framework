@@ -17,8 +17,8 @@ topics:
   - CAPRMEDIO_MODEL <+ Term//Property
 tier: 1
 status: active
-version: 38
-updated_at: '2026-11-13T05:35:59.629049+00:00'
+version: 39
+updated_at: '2026-11-13T21:35:06.220853+00:00'
 carrier_destination:
   file:
     name: CA-R-1318-CORE_META_MODEL-DECLARATION--define-term.md
@@ -39,14 +39,14 @@ Use the full admitted canonical expression when identifying or comparing an enti
 ### Formal Claim
 
 ```python
-# model
-allowed_children(address='Term', names=('Name',), occurrences='1')
-relation(source='Term.**', source_count='1', name='IS_PROPERTY_OF', target='(Term, Term.**)')
-relation(source='(Term, Term.**)', source_count='0+', name='HAS_PROPERTY', target='Term.**')
-# instances
-subject_path(address='Term//$term')
-relation(source='$term.**', source_count='1', name='IS_PROPERTY_OF', target='($term, $term.**)')
-relation(source='($term, $term.**)', source_count='0+', name='HAS_PROPERTY', target='$term.**')
+from caprmedio.formal_claims import declare_entity
+
+
+class Term:
+    name: str
+
+
+declare_entity(entity_class=Term, entity_name="Term")
 ```
 
 ## Semantics

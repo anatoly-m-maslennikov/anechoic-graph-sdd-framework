@@ -1,9 +1,7 @@
 # CA-E-751@1
 # CA-E-780@4
-# CA-E-676@15
 # CA-E-677@30
 # CA-M-472@1
-# CA-E-674@9
 from __future__ import annotations
 
 from contextlib import redirect_stderr

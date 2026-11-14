@@ -14,9 +14,6 @@ topics:
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Actor
   - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Operations/Type: Action'
 tier: 3
-relations:
-  depends_on:
-  - CA-R-1936
 status: Active
 version: 13
 updated_at: 2026-10-27 20:00:05 +0400
@@ -28,7 +25,7 @@ current_scope_unit: CONNECTOR_TOOLS
 claim_target_scope_unit: CONNECTOR_TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Bound private carrier storage changes
 
@@ -37,6 +34,8 @@ Bound private carrier storage changes
 Private file/folder rename, move and non-Atom cleanup mechanics behind the logical connector interface. The required result is one explicitly approved carrier storage change, with independently verified before/after evidence and no widened effect.
 
 ## Claim
+
+### Prose Claim
 
 a private carrier change **must** be bound **to** one logical request under CA-R-1936 **and** CA-D-625's supported `modify` operation. rename, move **and** remove are private adapter variants, **not** new common verbs **or** public physical-path operations. the owning Workflow supplies domain policy, schema, identity, Version/time, lifecycle **and** authorization; the helper performs **only** the exact selected storage change.
 

@@ -10,11 +10,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 import hashlib
 import json
-import re
 from pathlib import Path
 from typing import Any
 
 from .content_schema import ContentRule, ContentSchema, DeclarationSource, _schema_from_rules
+from .declared_classifications import compile_role_folders, compile_status_groups  # noqa: F401
 from .declared_header_rules import HeaderRule, compile_header_rules
 from .header_columns import HeaderColumn, HeaderSchema, declared_header_schema, infer_header_schema
 from .relations import canonical
@@ -51,25 +51,6 @@ def compile_schema(
         declared_header or declared_header_schema(compile_header_rules(atoms)),
         infer_header_schema(atoms), content, status_groups, role_folders,
     )
-
-
-_STATUS_GROUP = re.compile(
-    r'Atom/\(\.Header\.(?:Context\.)?Role\s*:=\s*([A-Za-z][A-Za-z0-9 _-]*)\)'
-    r'/\(\.Header\.(?:State\.)?Status\s*:=\s*([A-Za-z][A-Za-z0-9 _-]*)\)'
-    r'\.Header\.(?:State\.)?Status\s*>\|\s*Status Group\s*==\s*([A-Za-z][A-Za-z0-9 _-]*)\s*'
-)
-
-
-def compile_status_groups(statements) -> tuple[tuple[str, str, str], ...]:
-    groups = {}
-    for statement, _source in statements:
-        match = _STATUS_GROUP.fullmatch(statement)
-        if match:
-            role, status, group = (part.strip() for part in match.groups())
-            previous = groups.setdefault((role, status), group)
-            if previous != group:
-                raise ValueError(f"conflicting Status Groups for {role}/{status}")
-    return tuple(sorted((role, status, group) for (role, status), group in groups.items()))
 
 
 def schema_asset(

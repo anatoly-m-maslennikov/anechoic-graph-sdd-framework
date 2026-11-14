@@ -15,10 +15,6 @@ author: Anatoly Maslennikov
 current_scope_unit: PROMPTS
 type: Decision
 tier: 1
-subjects:
-  governs: Subject/CAPRMEDIO/Graph/Node/Aspect/Engineering/Operation/Storage/Directory
-    Layout
-  depends_on: []
 ref_id: CA-D-488
 carrier_destination:
   file:

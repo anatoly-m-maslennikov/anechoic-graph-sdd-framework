@@ -27,7 +27,7 @@ current_scope_unit: CONNECTOR_TOOLS
 claim_target_scope_unit: CONNECTOR_TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Read CAPRMEDIO Markdown Atoms
 
@@ -36,6 +36,8 @@ Read CAPRMEDIO Markdown Atoms
 Explicit logical source reads by the ATOM_READ connector, including its Markdown storage binding.
 
 ## Claim
+
+### Prose Claim
 
 The ATOM_READ connector **must** execute `read` for one explicit logical target through CA-R-1936-CONNECTOR_TOOLS-RULE--use-one-coherent-connector-interface and CA-D-625-CONNECTOR_TOOLS-CORE-DELIVERY--deliver-coherent-connector-interface, independently of Find or Modify. Return the complete admitted logical source data and its actual identity, exact Version where applicable, and current source-state token or pin. Explicit admitted projection views may narrow returned data without inventing a different source or lifecycle.
 

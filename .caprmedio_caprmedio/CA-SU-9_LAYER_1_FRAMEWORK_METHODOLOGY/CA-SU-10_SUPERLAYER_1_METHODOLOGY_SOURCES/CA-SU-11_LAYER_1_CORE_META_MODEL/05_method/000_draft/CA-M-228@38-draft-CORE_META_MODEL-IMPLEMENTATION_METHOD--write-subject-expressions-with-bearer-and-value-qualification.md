@@ -8,7 +8,7 @@ form: Implementation Method
 topics:
   main_subject: CAPRMEDIO_MODEL <+ CFEL
   dependencies:
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
 tier: 3
 status: Draft
 version: 38

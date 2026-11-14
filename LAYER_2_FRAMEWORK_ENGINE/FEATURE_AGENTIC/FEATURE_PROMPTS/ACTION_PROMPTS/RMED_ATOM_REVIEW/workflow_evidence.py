@@ -21,7 +21,7 @@ TOOLS = Path(__file__).resolve().parents[5] / 'LAYER_2_FRAMEWORK_ENGINE/FEATURE_
 sys.path.insert(0, str(TOOLS))
 from project_runtime import atomic_tempfile  # noqa: E402 - repository path bootstrap
 from work_journal import append_sealed_events, configured_journal_root  # noqa: E402
-from workflow_progress import report_progress, summarize_progress  # noqa: E402
+from workflow_progress import CHECKS, LEGACY_CHECKS, report_progress, summarize_progress  # noqa: E402
 
 WORKFLOW = 'RMED Atoms Base Revise'
 RUN_ID = re.compile(r'[A-Za-z0-9][A-Za-z0-9_-]{0,127}\Z')
@@ -57,7 +57,7 @@ def render_report(state):
             'source': atom['source'], 'report': state['reports'][i] or {'result': 'pending'},
             'after': state['after'][i], 'history': state['history'][i]})]
     lines += ['## Remaining Work\n', block({
-        'pending': [i for i, row in enumerate(state['reports']) if not report_progress(row)['complete']],
+        'pending': [i for i, row in enumerate(state['reports']) if not report_progress(row, check_key=state.get('check_key', 'cce'))['complete']],
         'gather_blockers': state['gather_blockers'], 'handoffs': state['handoffs'],
         'reason': state.get('reason'), 'recording_blockers': state['recording_blockers']}),
         '## Journal\n', block({'path': state['journal'], 'workflow_run_id': state['workflow_run_id'],
@@ -183,7 +183,7 @@ class RunEvidence:
             now = datetime.now(ZoneInfo(timezone)).isoformat()
             journal = configured_journal_root(self.root).as_posix()
             self.path(journal)
-            state = {'workflow_name': WORKFLOW, 'workflow_run_id': run_id,
+            state = {'workflow_name': WORKFLOW, 'workflow_run_id': run_id, 'check_key': 'writing',
                 'request': request, 'author': author, 'session': session, 'scope': scope,
                 'timezone': timezone, 'definition': definition or {'atom_id': 'CA-O-104'},
                 'started_at': now, 'updated_at': now, 'outcome': 'running',
@@ -220,7 +220,7 @@ class RunEvidence:
             state['after'] = [[] for _ in selection]
             state['history'] = [[] for _ in selection]
             state['gathered'] = True
-            state['progress'] = summarize_progress(state['reports'])
+            state['progress'] = summarize_progress(state['reports'], check_key=state.get('check_key', 'cce'))
             if state['gather_blockers']:
                 state['progress']['complete'] = False
             self._event(state, 'progressed', 'gather', 'blocked' if blockers else 'ready',
@@ -236,12 +236,26 @@ class RunEvidence:
             if self.observe(binding['path']) != binding:
                 raise ValueError('stale source; old report remains historical')
 
+    def check_context(self, run_id, ordinal):
+        """Supply the frozen check key and evidence for a new or resumed dispatch."""
+        with self._lock(run_id):
+            state = self.load(run_id)
+            self._running(state)
+            if type(ordinal) is not int or ordinal < 0 or ordinal >= len(state['reports']):
+                raise ValueError('ordinal outside frozen selection')
+            self._fresh(state, ordinal)
+            return {'workflow_run_id': run_id, 'atom_id': state['selection'][ordinal]['atom_id'],
+                    'source': state['selection'][ordinal]['source'],
+                    'report': deepcopy(state['reports'][ordinal]),
+                    'check_key': state.get('check_key', 'cce'),
+                    'criteria': state['criteria'], 'criteria_sha256': state['criteria_sha256']}
+
     def fix_context(self, run_id, ordinal):
         with self._lock(run_id):
             state = self.load(run_id)
             self._running(state)
             row = state['reports'][ordinal]
-            if not row or report_progress(row)['complete']:
+            if not row or report_progress(row, check_key=state.get('check_key', 'cce'))['complete']:
                 raise ValueError('no pending fix')
             self._fresh(state, ordinal, source=False)
             current_sources = state['after'][ordinal] or [state['selection'][ordinal]['source']]
@@ -251,6 +265,7 @@ class RunEvidence:
             state['fix_admissions'][str(ordinal)] = digest(encoded(row))
             self._save(state)
             return {'source': state['selection'][ordinal]['source'], 'report': row,
+                    'check_key': state.get('check_key', 'cce'),
                     'current_sources': current_sources,
                     'criteria': state['criteria'], 'criteria_sha256': state['criteria_sha256']}
 
@@ -270,12 +285,19 @@ class RunEvidence:
                 ('atom_id', atom['atom_id']), ('criteria_sha256', state['criteria_sha256'])):
                 if report.get(key) != expected:
                     raise ValueError(f'report {key} does not match admitted input')
+            check_key = state.get('check_key', 'cce')
+            if check_key not in ('writing', 'cce'):
+                raise ValueError('unknown run check key')
+            checks = report.get('checks')
+            expected = CHECKS if check_key == 'writing' else LEGACY_CHECKS
+            if not isinstance(checks, dict) or not set(checks) <= set(expected):
+                raise ValueError('report checks do not match the run check key')
             self._fresh(state, ordinal, source=stage == 'check')
             self._preserve_initial_evidence(state, ordinal, previous, report, stage, after_paths)
             if previous:
                 state['history'][ordinal].append(previous)
             state['reports'][ordinal] = deepcopy(report)
-            state['progress'] = summarize_progress(state['reports'])
+            state['progress'] = summarize_progress(state['reports'], check_key=state.get('check_key', 'cce'))
             if state['gather_blockers']:
                 state['progress']['complete'] = False
             details = {'ordinal': ordinal}
@@ -286,7 +308,7 @@ class RunEvidence:
 
     def _preserve_initial_evidence(self, state, ordinal, previous, report, stage, after_paths):
         if stage == 'check' and previous:
-            self._preserve_check(previous, report)
+            self._preserve_check(previous, report, state.get('check_key', 'cce'))
         if stage == 'fix':
             if state['fix_admissions'].get(str(ordinal)) != digest(encoded(previous)):
                 raise ValueError('obtain fresh fix context before applying corrections')
@@ -302,8 +324,8 @@ class RunEvidence:
             state['after'][ordinal] = [self.observe(path) for path in (after_paths or [])]
 
     @staticmethod
-    def _preserve_check(previous, report):
-        if report_progress(previous)['check_complete']:
+    def _preserve_check(previous, report, check_key):
+        if report_progress(previous, check_key=check_key)['check_complete']:
             raise ValueError('initial check already concluded; no recheck')
         for name, result in previous['checks'].items():
             if result['status'] in {'passed', 'failed'} and report['checks'].get(name) != result:

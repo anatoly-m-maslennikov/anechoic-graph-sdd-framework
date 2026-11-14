@@ -24,7 +24,7 @@ current_scope_unit: CONNECTOR_TOOLS
 claim_target_scope_unit: CONNECTOR_TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Construct a complete Scope Unit read adapter
 
@@ -33,6 +33,8 @@ Construct a complete Scope Unit read adapter
 Construction of a storage-independent adapter for one complete Scope Unit declaration Read.
 
 ## Claim
+
+### Prose Claim
 
 **to** construct the Scope Unit Read adapter, the Implementer **must** refine CA-M-376-CONNECTOR_TOOLS-ENG_DECISION--execute-one-explicit-connector-operation:
 

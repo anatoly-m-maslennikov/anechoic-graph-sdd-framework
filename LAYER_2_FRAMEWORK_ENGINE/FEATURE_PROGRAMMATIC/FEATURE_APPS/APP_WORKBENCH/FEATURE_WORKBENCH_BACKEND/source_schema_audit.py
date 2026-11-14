@@ -1,5 +1,4 @@
 # CA-M-549@2
-# CA-R-3066@2
 """Check parsed Atom rows against the installed, current declaration schema."""
 from __future__ import annotations
 

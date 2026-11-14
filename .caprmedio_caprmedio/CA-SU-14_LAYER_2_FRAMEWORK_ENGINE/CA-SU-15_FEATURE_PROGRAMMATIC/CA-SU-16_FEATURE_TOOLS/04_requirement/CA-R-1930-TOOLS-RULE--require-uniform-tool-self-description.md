@@ -24,7 +24,7 @@ carrier_destination:
 current_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Require uniform Tool self-description
 
@@ -33,6 +33,8 @@ Require uniform Tool self-description
 The common machine-readable description exposed by every Tool in TOOLS and its child Scope Units.
 
 ## Claim
+
+### Prose Claim
 
 **every** Tool **must** expose one complete canonical description through the same machine-readable interface, so consumers can discover, validate, register, and invoke new or updated Tools without Tool-specific integration logic.
 

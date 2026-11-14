@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL
+  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
 tier: 3
 status: Draft
 version: 1

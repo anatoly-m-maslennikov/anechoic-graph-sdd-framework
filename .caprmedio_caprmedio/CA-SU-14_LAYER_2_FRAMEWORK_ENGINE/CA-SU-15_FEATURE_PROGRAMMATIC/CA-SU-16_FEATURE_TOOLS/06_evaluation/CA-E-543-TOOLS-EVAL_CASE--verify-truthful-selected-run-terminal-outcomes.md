@@ -27,7 +27,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Verify truthful selected Run terminal outcomes
 
@@ -36,6 +36,8 @@ Verify truthful selected Run terminal outcomes
 Terminal and recording-pending outcome evidence for actual selected Runs.
 
 ## Claim
+
+### Prose Claim
 
 Selected Run outcomes use the admitted Event Type mapping and never hide a
 no-op, cancellation, interruption, failed append, or partial effect.

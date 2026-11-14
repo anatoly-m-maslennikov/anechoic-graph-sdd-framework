@@ -28,11 +28,13 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Verify bounded typed Journal Event filtering
 
 ## Claim
+
+### Prose Claim
 
 The Tool applies CA-R-1850 unchanged to every valid canonical Event selector and rejects only unknown or ambiguous Event selectors at its local boundary.
 

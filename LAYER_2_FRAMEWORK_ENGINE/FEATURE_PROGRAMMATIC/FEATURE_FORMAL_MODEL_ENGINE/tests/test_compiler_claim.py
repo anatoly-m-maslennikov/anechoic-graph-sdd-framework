@@ -39,6 +39,13 @@ def _row(statements):
             "_content_bytes": body.encode(), "content_markdown": body}
 
 
+def _native_row(source, identifier="CA-R-1"):
+    result = _row(())
+    body = f"## Claim\n### Formal Claim\n```python\n{source}\n```\n"
+    return result | {"id": identifier, "ref": identifier, "_content_bytes": body.encode(),
+                     "content_markdown": body}
+
+
 class CompilerClaimTests(unittest.TestCase):
     def test_explicit_atom_dependencies_consumer_keeps_callback_metadata(self):
         claim = """from caprmedio.formal_claims import Cardinality, declare_entity
@@ -168,7 +175,11 @@ declare_entity(entity_name="Semantics", relation_name="IS_PROPERTY_OF", base_pat
                     "Atom/(.Header.Context.Role in RMED).Content.Semantics.*[]{::0}"))
         new = _row(_compile(native))
         self.assertEqual(compile_content_schema([old]), compile_content_schema([new]))
-        self.assertEqual(compile_content_constraints([old]), compile_content_constraints([new]))
+        actual = compile_content_constraints([_native_row(native)])
+        self.assertEqual({('children', 0, 0), ('value', 0, 1)},
+                         {(item['kind'], item['min'], item['max']) for item in actual})
+        self.assertTrue(all(item['path'] == ['semantics'] and item['roles'] ==
+                            ['Delivery', 'Evaluation', 'Method', 'Requirement'] for item in actual))
 
     def test_recursive_content_and_role_scoped_ordering(self):
         native = '''
@@ -198,7 +209,9 @@ declare_entity(entity_name="Content", relation_name="IS_PROPERTY_OF", base_path=
                   f"{legacy_prefix}.Claim ;> {legacy_prefix}.Semantics",
                   f"{legacy_prefix}.Semantics ;> {legacy_prefix}.Details")
         self.assertEqual(compile_content_schema([_row(legacy)]), compile_content_schema([_row(expected)]))
-        self.assertEqual(compile_content_constraints([_row(legacy)]), compile_content_constraints([_row(expected)]))
+        orders = compile_content_constraints([_native_row(native)])
+        self.assertEqual({('summary', 'claim'), ('claim', 'semantics'), ('semantics', 'details')},
+                         {tuple(item['children']) for item in orders if item['kind'] == 'order'})
         with self.assertRaisesRegex(ValueError, "invalid recursive_dependent_property_cardinality cardinality"):
             _compile(native.replace("recursive_dependent_property_cardinality=Cardinality(minimum=0, maximum=None)",
                                     "recursive_dependent_property_cardinality=-1"))
@@ -228,7 +241,10 @@ declare_entity(
                     "Atom/(.Header.Context.Role in RMED).Content.Claim.Prose Claim.*[]{::0}"))
         new = _row(_compile(native))
         self.assertEqual(compile_content_schema([old]), compile_content_schema([new]))
-        self.assertEqual(compile_content_constraints([old]), compile_content_constraints([new]))
+        actual = compile_content_constraints([_native_row(native)])
+        self.assertEqual({('children', 0, 0), ('value', 0, 1)},
+                         {(item['kind'], item['min'], item['max']) for item in actual})
+        self.assertTrue(all(item['path'] == ['claim', 'prose_claim'] for item in actual))
 
     def test_nested_header_constraints_and_wildcard_formats(self):
         native = '''
@@ -242,7 +258,9 @@ declare_entity(entity_name="File", relation_name="IS_PROPERTY_OF", base_path="At
                     "Atom.Header.Destination.File.* :: [string]"))
         new = _row(_compile(native))
         self.assertEqual(header_declaration_rules(old), header_declaration_rules(new))
-        self.assertEqual(compile_header_constraints([old]), compile_header_constraints([new]))
+        records = compile_header_constraints([_native_row(native)])
+        self.assertIn({'kind': 'children', 'path': 'destination.file', 'selector': '', 'selected': '',
+                       'value': (2, 2, 'name', 'path'), 'source': 'CA-R-1'}, records)
 
     def test_header_relations_child_value_cardinality(self):
         native = '''
@@ -259,8 +277,9 @@ declare_entity(entity_name="Relations", relation_name="IS_PROPERTY_OF", base_pat
             "Atom.Header.Relations.* :: [string]{::1+}",
         )
         self.assertEqual(expected, _compile(native))
-        constraints = compile_header_constraints([_row(_compile(native))])
-        self.assertEqual(compile_header_constraints([_row(expected)]), constraints)
+        constraints = compile_header_constraints([_native_row(native)])
+        self.assertIn({'kind': 'value', 'path': 'relations.*', 'selector': '', 'selected': '',
+                       'value': (1, None), 'source': 'CA-R-1'}, constraints)
         validator = load_header_constraints(constraints, {"CA-R-1"})
         valid = {"role": "Requirement", "relations": {"related": ["CA-R-2"]}}
         empty = {"role": "Requirement", "relations": {"related": []}}
@@ -300,7 +319,10 @@ declare_entity(
                     "[in (Work Sequence Number, AI Agent Confidence Threshold)]{::1..2}"))
         new = _row(_compile(native))
         self.assertEqual(header_declaration_rules(old), header_declaration_rules(new))
-        self.assertEqual(compile_header_constraints([old]), compile_header_constraints([new]))
+        records = compile_header_constraints([_native_row(native)])
+        self.assertIn({'kind': 'children', 'path': 'context.plan', 'selector': 'role', 'selected': 'Plan',
+                       'value': (1, 2, 'ai_agent_confidence_threshold', 'work_sequence_number'),
+                       'source': 'CA-R-1'}, records)
         with self.assertRaisesRegex(ValueError, "unsupported Property class selection"):
             _compile(native.replace("(Plan,)", "(Plan, Plan)"))
 
@@ -343,14 +365,15 @@ class Decision(Method):
     pass
 declare_entity(entity_class=Decision, entity_name="Decision", qualification_property_path="Atom.Header.Context.Form")
 '''
-        role_row, form_row = _row(_compile(role)), _row(_compile(form))
+        role_row = _row(_compile(role))
         expected_role = _row(("Atom.Header.Context.Role :: Method",
                               "Atom/(.Header.Context.Role := Method) >| (Role Order Number == 5)"))
-        self.assertEqual(compile_role_form([expected_role]), compile_role_form([role_row]))
+        self.assertIn({"kind": "role", "value": "Method", "role": "", "source": "CA-R-1"},
+                      compile_role_form([_native_row(role)]))
         self.assertEqual(compile_role_folders(declaration_statements(expected_role)),
                          compile_role_folders(declaration_statements(role_row)))
-        self.assertIn({"kind": "qualified", "value": "Decision", "role": "Method", "source": "CA-R-1"},
-                      compile_role_form([form_row]))
+        self.assertIn({"kind": "qualified", "value": "Decision", "role": "Method", "source": "CA-R-2"},
+                      compile_role_form([_native_row(role), _native_row(form, "CA-R-2")]))
 
     def test_relation_registry_keeps_instance_reverse_views(self):
         native = '''
@@ -399,6 +422,40 @@ declare_relation(relation_name="IS_ORDERED_RIGHT_AFTER", inverse_alias="IS_ORDER
         self.assertEqual(frozenset({"IS_ORDERED_RIGHT_AFTER"}), result.names)
         self.assertEqual((("IS_ORDERED_RIGHT_BEFORE", "IS_ORDERED_RIGHT_AFTER"),), result.aliases)
         self.assertEqual((), result.inverses)
+
+    def test_instance_sibling_order_keeps_reverse_alias(self):
+        source = """from caprmedio.formal_claims import declare_relation
+declare_relation(relation_name="IS_ORDERED_RIGHT_AFTER", inverse_alias="IS_ORDERED_RIGHT_BEFORE",
+    source_endpoint={"level": "instances"}, target_endpoint={"level": "instances"},
+    same_immediate_bearer=True)
+"""
+        result = registry_contribution(_row(_compile(source)))
+        self.assertEqual((("IS_ORDERED_RIGHT_BEFORE", "IS_ORDERED_RIGHT_AFTER"),), result.aliases)
+        self.assertEqual((), result.inverses)
+
+        body = "## Claim\n\n### Formal Claim\n\n```python\n" + source + "```\n"
+        row = _row(())
+        row.update(_content_bytes=body.encode(), content_markdown=body)
+        direct = registry_contribution(row)
+        self.assertEqual(result, direct)
+
+    def test_same_level_property_bearing_keeps_instance_inverse(self):
+        source = """from caprmedio.formal_claims import declare_relation
+declare_relation(relation_name="IS_PROPERTY_OF", inverse_alias="HAS_PROPERTY",
+    endpoint_pairs=(
+        {"source_endpoint": {"level": "model_entities"}, "target_endpoint": {"level": "model_entities"}},
+        {"source_endpoint": {"level": "instances"}, "target_endpoint": {"level": "instances"}},
+    ))
+"""
+        result = registry_contribution(_row(_compile(source)))
+        self.assertEqual((("IS_PROPERTY_OF", "HAS_PROPERTY"),), result.inverses)
+        self.assertEqual((), result.aliases)
+
+        body = "## Claim\n\n### Formal Claim\n\n```python\n" + source + "```\n"
+        row = _row(())
+        row.update(_content_bytes=body.encode(), content_markdown=body)
+        direct = registry_contribution(row)
+        self.assertEqual(result, direct)
 
     def test_unsafe_or_unsupported_compiler_values_fail(self):
         native = '''

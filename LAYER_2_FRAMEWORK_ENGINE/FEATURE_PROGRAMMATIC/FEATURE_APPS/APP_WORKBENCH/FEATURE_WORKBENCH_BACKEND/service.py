@@ -1,9 +1,6 @@
 # CA-D-672@24
 # CA-M-1013@1
 # CA-D-718@1
-# CA-R-2728@8
-# CA-R-2729@11
-# CA-R-2950@4
 # CA-R-2952@5
 # CA-M-465@29
 # CA-M-490@3
@@ -17,11 +14,7 @@
 # CA-M-502@2
 # CA-R-2723@7
 # CA-R-2725@6
-# CA-M-549@3
-# CA-O-10025@1
 # CA-M-551@2
-# CA-D-715@3
-# CA-M-463@10
 """One Project's direct file reader, background indexer, and SQL capability."""
 from __future__ import annotations
 from contextlib import contextmanager, nullcontext

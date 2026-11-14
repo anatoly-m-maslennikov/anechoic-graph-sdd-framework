@@ -12,8 +12,6 @@ tier: 3
 relations:
   is_decomposition_of:
   - CA-P-2581
-  depends_on:
-  - CA-P-2598
   relates_to:
   - CA-R-1527
   - CA-R-1843

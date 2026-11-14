@@ -22,11 +22,13 @@ current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Constrain Governing RMED Relation Targets by Numeric Tier and Scope Ancestry
 
 ## Claim
+
+### Prose Claim
 
 ```yaml
 graph_rule_type: endpoint_constraint

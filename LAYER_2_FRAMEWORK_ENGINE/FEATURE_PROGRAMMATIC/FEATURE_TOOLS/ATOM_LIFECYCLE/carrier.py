@@ -122,7 +122,7 @@ def same_authored_carrier(left_raw, right_raw, model):
     return equal_values(left[0], right[0]) and equal_values(left[1], right[1]) and left[2] == right[2]
 
 
-def render_carrier(raw: bytes | None, fields: dict[str, Any], *, body: str | None = None, model=None) -> bytes:
+def render_carrier(raw: bytes | None, fields: dict[str, Any], *, body: str | None = None, model=None) -> bytes:  # noqa: C901
     """Apply supplied logical fields; an omitted body keeps the original bytes.
 
     Field keys use Header names or dotted paths. Existing equivalent aliases are
@@ -145,6 +145,9 @@ def render_carrier(raw: bytes | None, fields: dict[str, Any], *, body: str | Non
     else:
         metadata, prefix, original_body, newline = _source_parts(raw)
     if fields or raw is None:
+        if getattr(schema, 'header_relation_rules', None) is not None and fields.get('relations') == {}:
+            metadata.pop('relations', None)
+            fields = {key: value for key, value in fields.items() if key != 'relations'}
         _apply_fields(metadata, fields)
         if raw is None:
             if not metadata['identity']:
@@ -152,6 +155,10 @@ def render_carrier(raw: bytes | None, fields: dict[str, Any], *, body: str | Non
             metadata = {key: metadata[key] for key in GROUP_ORDER if key in metadata} | {
                 key: value for key, value in metadata.items() if key not in GROUP_ORDER
             }
+        ordering = getattr(schema, 'header_ordering', None)
+        if ordering is not None:
+            from .header_ordering import order_header
+            order_header(metadata, ordering)
         carrier_read_view(metadata)
         try:
             header = yaml.safe_dump(metadata, allow_unicode=True, sort_keys=False, default_flow_style=False)

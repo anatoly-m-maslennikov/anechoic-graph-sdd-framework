@@ -13,6 +13,7 @@ import re
 from pathlib import Path
 
 from ATOM_LIFECYCLE import effects, source
+from ATOM_LIFECYCLE.atom_population import validate_candidate_population
 from ATOM_LIFECYCLE.carrier import logical_view, render_carrier, same_authored_carrier
 from ATOM_LIFECYCLE.common import InputError, SourceChanged, read_target, result, saved, validate_candidate, write_destination
 from ATOM_LIFECYCLE.draft import _summary
@@ -233,11 +234,8 @@ def _promote_draft(selection, model, params, *, staged=None, expected_draft=None
         # A same-identity Draft supersedes its current preceding revision even
         # when no replacement relation is required for the ordinary update.
         if pin.version > 1 and pin.atom_id not in pins:
-            previous = _promotion_predecessor(selection, pin.atom_id, staged)
-            if previous.version != pin.version - 1:
-                raise InputError('target', 'Draft predecessor Version is stale.')
-            pins[pin.atom_id] = previous
-        if pin.atom_id in pins and pins[pin.atom_id].version != pin.version - 1:
+            pins[pin.atom_id] = _promotion_predecessor(selection, pin.atom_id, staged)
+        if pin.atom_id in pins and pins[pin.atom_id].version >= pin.version:
             raise InputError('target', 'Draft predecessor Version is stale.')
         if staged is not None:
             if set(pins) != set(staged) or any(not _same_pin(pins[ref], previous) for ref, previous in staged.items()):
@@ -260,8 +258,11 @@ def _promote_draft(selection, model, params, *, staged=None, expected_draft=None
         destination = _destination(selection, pin, status, model)
         raw = render_carrier(pin.raw, {'status': encode_status(status), 'ref_id': pin.atom_id,
                                        'destination': {'file': {'name': destination.name,
-                                           'path': destination.parent.relative_to(selection.root).as_posix()}}})
+                                           'path': destination.parent.relative_to(selection.root).as_posix()}}}, model=model)
         validate_candidate(selection, model, raw, destination)
+        validate_candidate_population(selection, model, atom_id=pin.atom_id, version=pin.version,
+                                      status=status, summary=_summary(parse_carrier(raw, destination).body),
+                                      replaced=(pin,))
         _check_destination(destination, pins.values(), 'target')
         predecessor = pins.get(pin.atom_id) if pin.version > 1 else None
         if (predecessor is not None and predecessor.status.casefold() != 'archived'
@@ -360,8 +361,10 @@ def update_atom(selection, model, params, *, pending_source=None):  # noqa: C901
         destination = _destination(selection, proposed, status, model)
         candidate = render_carrier(proposed.raw, {'status': encode_status(status), 'ref_id': proposed.atom_id,
             'destination': {'file': {'name': destination.name,
-                'path': destination.parent.relative_to(selection.root).as_posix()}}})
+                'path': destination.parent.relative_to(selection.root).as_posix()}}}, model=model)
         validate_candidate(selection, model, candidate, destination)
+        validate_candidate_population(selection, model, atom_id=proposed.atom_id, version=proposed.version,
+                                      status=status, summary=_summary(parsed.body))
         for target in targets.values():
             if target.status.casefold() != 'archived':
                 _ensure_leaf(selection, model, target, 'relations')
@@ -391,7 +394,7 @@ def update_atom(selection, model, params, *, pending_source=None):  # noqa: C901
         if not _same_pin(checked_draft, proposed):
             raise SourceChanged('Draft changed after creation.')
         _ensure_leaf(selection, model, checked_draft, 'target')
-        if checked_draft.atom_id == old.atom_id and checked_draft.version != old.version + 1:
+        if checked_draft.atom_id == old.atom_id and checked_draft.version <= old.version:
             raise InputError('target', 'Draft predecessor Version is stale.')
         if checked_draft.atom_id != old.atom_id and _current_collision(selection, checked_draft.atom_id):
             raise InputError('target', 'Draft identity already has a Current Atom.')

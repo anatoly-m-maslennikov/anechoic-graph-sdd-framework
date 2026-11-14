@@ -12,8 +12,6 @@ context:
       <+ Architecture <+ Communication
   tier: 4
 relations:
-  depends_on:
-  - CA-R-1096
   IS_REPLACEMENT_FOR:
   - CA-D-640
   - CA-M-401

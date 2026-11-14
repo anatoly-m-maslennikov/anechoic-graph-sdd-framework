@@ -26,7 +26,7 @@ current_scope_unit: CONNECTOR_TOOLS
 claim_target_scope_unit: CONNECTOR_TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Verify complete Scope Unit reads
 
@@ -35,6 +35,8 @@ Verify complete Scope Unit reads
 Future conformance evaluation of CA-R-1938-CONNECTOR_TOOLS-RULE--read-one-complete-scope-unit-declaration, CA-D-627-CONNECTOR_TOOLS-ENG_DECISION--deliver-complete-scope-unit-read-data and CA-O-212-CONNECTOR_TOOLS-ACTION--read-one-complete-scope-unit-declaration.
 
 ## Claim
+
+### Prose Claim
 
 a Scope Unit Read implementation passes **only** **when** independent complete-source observations **and** exact result/error/effect evidence establish full faithful Read of its explicit target **and** no mutation. missing implementation **or** observations is unavailable evidence, **not** a pass.
 

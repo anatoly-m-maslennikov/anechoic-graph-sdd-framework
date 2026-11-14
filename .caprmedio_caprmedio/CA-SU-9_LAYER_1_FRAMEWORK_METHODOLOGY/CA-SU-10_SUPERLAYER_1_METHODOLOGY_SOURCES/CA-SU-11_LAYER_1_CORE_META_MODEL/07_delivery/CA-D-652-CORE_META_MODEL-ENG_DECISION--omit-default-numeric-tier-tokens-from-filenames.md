@@ -15,9 +15,6 @@ tier: 4
 relations:
   delivery_for:
   - CA-R-2706
-  depends_on:
-  - CA-D-651
-  - CA-D-478
 status: Active
 version: 13
 updated_at: 2026-11-02 00:18:22 +0400

@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  main_subject: CAPRMEDIO_MODEL <+ Relation
 tier: 2
 relations:
   child_of:

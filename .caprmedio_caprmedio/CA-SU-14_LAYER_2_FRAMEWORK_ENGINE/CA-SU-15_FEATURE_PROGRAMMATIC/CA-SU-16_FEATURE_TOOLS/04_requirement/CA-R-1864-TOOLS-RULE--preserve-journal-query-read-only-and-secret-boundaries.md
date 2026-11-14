@@ -22,7 +22,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Preserve Journal query read-only and secret boundaries
 
@@ -31,6 +31,8 @@ Preserve Journal query read-only and secret boundaries
 The query authorization boundary.
 
 ## Claim
+
+### Prose Claim
 
 FIND_AND_FETCH_JOURNAL_EVENTS **must not** create mutation authority, read credentials or secrets, or evaluate arbitrary SQL or code.
 

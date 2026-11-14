@@ -10,7 +10,7 @@ topics:
   dependencies:
   - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)/(.Header.Context.Form := Plan)'
   - CAPRMEDIO_MODEL <+ Projection
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
   - CAPRMEDIO_MODEL <+ Carrier
 tier: 1
 status: Active

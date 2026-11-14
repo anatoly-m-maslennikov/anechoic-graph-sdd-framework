@@ -36,11 +36,11 @@ Declare Delivery Solution Form
 from caprmedio.formal_claims import declare_entity
 from caprmedio.model import Delivery
 
-class Solution(Delivery):
+class DeliverySolution(Delivery):
     pass
 
 declare_entity(
-    entity_class=Solution,
+    entity_class=DeliverySolution,
     entity_name='Solution',
     qualification_property_path='Atom.Header.Context.Form',
 )

@@ -6,10 +6,9 @@ HERE = Path(__file__).resolve().parents[1]
 
 
 class RerunPromptGuards(unittest.TestCase):
-    def test_title_and_operator_alias_boundaries(self):
+    def test_title_and_ambiguity_boundaries(self):
         prompt = (HERE / 'evaluate_cce.prompt.md').read_text()
-        for text in ('title-like Summary', 'bound alias rule', 'two plausible readings',
-                     'grammatical referent'):
+        for text in ('title-like Summary', 'two plausible readings', 'grammatical referent'):
             self.assertIn(text, prompt)
 
     def test_summary_omission_is_not_automatically_broadening(self):
@@ -29,10 +28,10 @@ class RerunPromptGuards(unittest.TestCase):
         self.assertIn('does not recheck saved output', prompt)
         self.assertNotIn('closure_freshness.close_batch', prompt)
 
-    def test_new_runs_require_operator_precheck_including_summary(self):
+    def test_new_runs_do_not_require_operator_precheck(self):
         prompt = (HERE / 'evaluate_atom.prompt.md').read_text()
-        self.assertIn('review_constraints.operator_precheck', prompt)
-        self.assertIn('includes Summary', prompt)
+        self.assertIn('do not request the retired CCE', prompt)
+        self.assertIn('persisted historical reports', prompt)
 
     def test_context_and_composite_cases_are_not_automatically_missing(self):
         prompt = (HERE / 'evaluate_coherence.prompt.md').read_text()
@@ -44,7 +43,7 @@ class RerunPromptGuards(unittest.TestCase):
         self.assertIn('lowercase compound suffix', prompt)
         self.assertIn('absence alone proves no spelling violation', prompt)
 
-    def test_prose_cardinality_is_reviewed_without_rewriting_narrative(self):
+    def test_writing_preserves_quantities_without_cce_syntax(self):
         prompt = (HERE / 'evaluate_cce.prompt.md').read_text()
-        self.assertIn('"two IDs" and "one identity"', prompt)
-        self.assertIn('execution frequency as Entity cardinality', prompt)
+        self.assertIn('quantities, and relationships unambiguous', prompt)
+        self.assertIn('prescribed symbolic cardinality syntax', prompt)

@@ -30,7 +30,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Check VALIDATE_ATOMS against its Action
 
@@ -39,6 +39,8 @@ Check VALIDATE_ATOMS against its Action
 the `VALIDATE_ATOMS` implementation against its bound Check Atoms Action.
 
 ## Claim
+
+### Prose Claim
 
 the `VALIDATE_ATOMS` implementation check **must** reject divergence from its bound CA-O-087-CORE_META_MODEL-ACTION--check-atoms.
 

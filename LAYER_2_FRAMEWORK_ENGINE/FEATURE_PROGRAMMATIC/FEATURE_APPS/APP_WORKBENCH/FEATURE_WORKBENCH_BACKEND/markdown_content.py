@@ -9,12 +9,26 @@ from __future__ import annotations
 
 from io import StringIO
 import re
-from typing import Any, Iterable, Mapping
+from typing import Any, Iterable, Iterator, Mapping
 
 from markdown_it import MarkdownIt
 
 
 _MARKDOWN_HEADINGS = MarkdownIt("commonmark").disable("inline")
+
+
+def formal_claim_fences(body: str) -> Iterator[tuple[str, str]]:
+    """Yield language and source for each fence at Claim/Formal Claim."""
+    tokens = MarkdownIt("commonmark").parse(body)
+    headings: list[tuple[int, str]] = []
+    for index, token in enumerate(tokens):
+        if token.type == "heading_open":
+            level = int(token.tag[1:])
+            while headings and headings[-1][0] >= level:
+                headings.pop()
+            headings.append((level, content_key(tokens[index + 1].content)))
+        elif token.type == "fence" and tuple(name for _, name in headings) == ("claim", "formal_claim"):
+            yield token.info.strip().casefold(), token.content
 
 
 def parse_content(

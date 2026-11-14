@@ -35,11 +35,11 @@ Declare Evaluation Eng Standard Form
 from caprmedio.formal_claims import declare_entity
 from caprmedio.model import Evaluation
 
-class EngStandard(Evaluation):
+class EvaluationEngStandard(Evaluation):
     pass
 
 declare_entity(
-    entity_class=EngStandard,
+    entity_class=EvaluationEngStandard,
     entity_name='Eng Standard',
     qualification_property_path='Atom.Header.Context.Form',
 )

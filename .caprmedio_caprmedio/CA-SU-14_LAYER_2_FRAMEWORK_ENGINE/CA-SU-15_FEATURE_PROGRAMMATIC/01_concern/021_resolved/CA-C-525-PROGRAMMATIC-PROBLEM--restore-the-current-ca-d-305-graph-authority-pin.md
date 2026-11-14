@@ -23,6 +23,8 @@ carrier_destination:
   file:
     name: CA-C-525-PROGRAMMATIC-PROBLEM--restore-the-current-ca-d-305-graph-authority-pin.md
     path: .caprmedio_caprmedio/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/01_concern/021_resolved
+container:
+  scope_unit: CA-SU-15
 ---
 # Summary
 

@@ -8,7 +8,7 @@ form: Implementation Method
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Projection/(.Form:=Direct Relation Registry)
   dependencies:
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
   - CAPRMEDIO_MODEL <+ Entity
   - CAPRMEDIO_MODEL <+ Projection/(.Form:=Applicable Methodology)
   - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Requirement)

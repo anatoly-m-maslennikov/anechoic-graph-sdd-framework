@@ -24,7 +24,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Recover selected Run Journal evidence without replaying effects
 
@@ -34,6 +34,8 @@ Durable append and recovery of selected-Run evidence through the existing
 Project Work Journal. It excludes a second execution log or Journal.
 
 ## Claim
+
+### Prose Claim
 
 RUN_SUPPORT may independently append selected-Run observations, retain an append
 diagnostic, and, when supported, retry only the identical pending observation

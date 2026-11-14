@@ -35,16 +35,12 @@ For local admission, the Atom's Container resolves to the receiving Scope Unit. 
 
 ### Formal Claim
 
-```CFEL
-# model
-Atom.Header.Context.Form :: Scope Delegation;
+```python
+from caprmedio.formal_claims import declare_entity
 
-# instances
-FOR EACH $a[<Atom>, (.Header.Context.Form = Scope Delegation)]:
-(
-    $a.Header.Context.Role:: [in (Requirement, Method, Evaluation, Delivery, Operations)]{::1};
-    $a ((HAS_ACTIVE_SUBJECT)) Scope Unit//$unit;
-    $unit {::1}((IS_CONTAINED_BY)) Scope Unit//$parent;
-    $a ((IS_CONTAINED_BY)) $parent;
+declare_entity(
+    entity_name='Form', relation_name='IS_PROPERTY_OF',
+    base_path='Atom.Header.Context', allowed_values=('Scope Delegation',),
+    form_roles=('Requirement', 'Method', 'Evaluation', 'Delivery', 'Operations'),
 )
 ```

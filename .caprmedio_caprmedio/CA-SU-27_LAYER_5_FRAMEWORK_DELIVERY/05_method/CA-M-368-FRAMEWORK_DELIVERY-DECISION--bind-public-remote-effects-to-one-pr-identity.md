@@ -30,7 +30,7 @@ claim_target_scope_unit: FRAMEWORK_DELIVERY
 author: Anatoly Maslennikov
 ---
 
-# Summary
+## Summary
 
 Bind public remote effects to one PR identity
 
@@ -39,6 +39,8 @@ Bind public remote effects to one PR identity
 the selected `amm/dev` push and `main` PR maintenance sequence.
 
 ## Claim
+
+### Prose Claim
 
 **the Operator** **must** use admitted native bindings to prove the immutable pushed commit and retain exactly one matching open PR identity through its create/update and any final refresh.
 

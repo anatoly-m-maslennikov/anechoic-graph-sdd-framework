@@ -28,7 +28,7 @@ claim_target_scope_unit: FRAMEWORK_DELIVERY
 author: Anatoly Maslennikov
 ---
 
-# Summary
+## Summary
 
 Validate unique matching `main` PR
 
@@ -37,6 +37,8 @@ Validate unique matching `main` PR
 one public-release PR discovery and update.
 
 ## Claim
+
+### Prose Claim
 
 **the Operator** **must** verify that zero matching PRs permits creation only after the initial push, one matching PR is reused, and duplicate, retargeted, closed, or URL-changed results stop before further material preparation or remote effects.
 

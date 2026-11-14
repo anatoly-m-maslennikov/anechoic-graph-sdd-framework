@@ -13,11 +13,9 @@ context:
       <+ Data Handling <+ Indexing
     dependencies:
     - MODEL//CAPRMEDIO <+ Projection
-relations:
-  depends_on:
-  - CA-R-2723
-  - CA-M-465
-  - CA-D-673
+    - CAPRMEDIO_MODEL <+ Projection
+    - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Architecture
+      <+ Communication <+ Interface Contracts
 state:
   version: 1
   status: active

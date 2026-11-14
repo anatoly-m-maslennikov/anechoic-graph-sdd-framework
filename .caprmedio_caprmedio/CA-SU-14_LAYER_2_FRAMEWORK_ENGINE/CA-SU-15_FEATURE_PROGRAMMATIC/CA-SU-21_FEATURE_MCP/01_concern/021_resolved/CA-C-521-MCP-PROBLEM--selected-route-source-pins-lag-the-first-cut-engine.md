@@ -30,6 +30,8 @@ carrier_destination:
   file:
     name: CA-C-521-MCP-PROBLEM--selected-route-source-pins-lag-the-first-cut-engine.md
     path: .caprmedio_caprmedio/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-21_FEATURE_MCP/01_concern/021_resolved
+container:
+  scope_unit: CA-SU-21
 ---
 # Summary
 

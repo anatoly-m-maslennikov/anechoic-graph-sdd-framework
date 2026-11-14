@@ -32,7 +32,7 @@ cce_form: evaluation
 llm_session_ids:
 - codex:01a02650-eff7-7453-8c37-0699b36773c6
 ---
-# Summary
+## Summary
 
 Verify search caprmedio atom carriers
 
@@ -43,6 +43,8 @@ This primitive uses CA-D-625's coherent logical connector interface. The bound c
 apply **to** **any** realization of CA-O-046 **before** it is relied on for read-only Atom discovery.
 
 ## Claim
+
+### Prose Claim
 
 CA-O-046 returns every and only matching logical Atom descriptor in the requested scope, without invoking Read or Modify or changing project truth.
 

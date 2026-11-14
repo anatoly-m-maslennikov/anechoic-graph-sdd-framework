@@ -21,7 +21,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Report complete query diagnostics and bounded coverage
 
@@ -30,6 +30,8 @@ Report complete query diagnostics and bounded coverage
 Query failure and coverage reporting.
 
 ## Claim
+
+### Prose Claim
 
 FIND_AND_FETCH_JOURNAL_EVENTS **must** reject and report malformed Events, raw
 duplicate JSON keys before parse, missing IDs, duplicate IDs across the captured

@@ -6,13 +6,11 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Verification"
+  main_subject: CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Verification
+  dependencies:
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role:=Evaluation)
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Verification <+ Coverage
 tier: 2
-relations:
-  depends_on:
-  - CA-R-1503
-  - CA-R-1504
-  - CA-R-1505
 status: Active
 version: 42
 updated_at: 2026-11-02 19:44:26 +0400

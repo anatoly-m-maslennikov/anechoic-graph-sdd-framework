@@ -26,7 +26,7 @@ claim_target_scope_unit: FRAMEWORK_DELIVERY
 author: Anatoly Maslennikov
 ---
 
-# Summary
+## Summary
 
 Validate actual Version History PR link
 
@@ -35,6 +35,8 @@ Validate actual Version History PR link
 one public Version History entry.
 
 ## Claim
+
+### Prose Claim
 
 **the Operator** **must** verify that an existing matching PR is linked before the initial public push, while a newly created PR causes finalization with its returned URL and never accepts a guessed URL or placeholder.
 

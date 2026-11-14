@@ -28,7 +28,7 @@ def _digest(value: Any) -> str:
 
 
 def _resources(packet: dict[str, Any]) -> dict[str, dict[str, Any]]:
-    local = packet.get('review_constraints', {}).get('report_contract') == 6
+    local = packet.get('review_constraints', {}).get('report_contract') in (6, 7)
     resources = packet.get('resources', {} if local else None)
     if (not isinstance(resources, dict) or any(not text(role) or not isinstance(row, dict)
                                              for role, row in resources.items())):
@@ -84,7 +84,7 @@ def _authority_consistency(context: ReviewContext, final_context: ReviewContext,
     if _resources(packet) != _resources(final_packet):
         raise ValueError('authority resources changed between reviews')
     for ctx in (context, final_context):
-        if ((not ctx.preflight and ctx.report_contract != 6) or any(not isinstance(row, dict) or row.get('state') != 'available'
+        if ((not ctx.preflight and ctx.report_contract not in (6, 7)) or any(not isinstance(row, dict) or row.get('state') != 'available'
                                      for row in ctx.preflight.values())):
             raise ValueError('unavailable authority or context')
     if set(context.preflight) != set(final_context.preflight):
@@ -185,13 +185,13 @@ def admit_layout_recoding(evaluation: dict[str, Any], proposal: dict[str, Any], 
     All other gates, findings, semantic judgments and writer obligations remain.
     """
     original_context, output_context = ReviewContext(context), ReviewContext(final_context)
-    if (original_context.report_contract not in (5, 6)
+    if (original_context.report_contract not in (5, 6, 7)
             or output_context.report_contract != original_context.report_contract):
         raise ValueError('layout repair admission requires matching report contracts 5 or 6')
     summarize_evaluations([evaluation], context=original_context,
-                          allow_layout_gaps=original_context.report_contract == 6)
+                          allow_layout_gaps=original_context.report_contract in (6, 7))
     summarize_evaluations([final_evaluation], context=output_context,
-                          allow_layout_gaps=output_context.report_contract == 6)
+                          allow_layout_gaps=output_context.report_contract in (6, 7))
     if (proposal.get('source') != evaluation['source']
             or proposal.get('context_sha256') != original_context.sha256):
         raise ValueError('proposal does not bind original source and evaluation')
@@ -213,7 +213,7 @@ def admit_layout_recoding(evaluation: dict[str, Any], proposal: dict[str, Any], 
         raise ValueError('layout repair cannot defer original findings')
     _resolutions(evaluation, proposal)
     output = _outputs(proposal, allowed)[0]
-    if original_context.report_contract == 6:
+    if original_context.report_contract in (6, 7):
         _local_repair_boundary(proposal, output, original)
     binding = _output_binding(output)
     if final_evaluation['source'] != binding or output_context.candidate_text(binding) != output['text']:

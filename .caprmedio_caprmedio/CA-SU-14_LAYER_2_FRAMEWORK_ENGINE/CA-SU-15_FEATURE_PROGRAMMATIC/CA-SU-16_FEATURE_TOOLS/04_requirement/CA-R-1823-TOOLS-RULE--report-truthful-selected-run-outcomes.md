@@ -26,7 +26,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Report truthful selected Run outcomes
 
@@ -36,6 +36,8 @@ Lifecycle evidence and caller results for actual selected Runs, including
 recording-pending evidence. It does not decide a Workflow's domain result.
 
 ## Claim
+
+### Prose Claim
 
 RUN_SUPPORT **must** expose and persist the actual start, ongoing state, and
 one truthful terminal outcome of every actual selected Run without presenting

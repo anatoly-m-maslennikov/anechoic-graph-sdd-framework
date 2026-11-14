@@ -230,6 +230,7 @@ declare_relation(
         valid = '{"level": "instances"}'
         invalid = (
             'None',
+            '{"level": None}',
             '{"level": "unknown"}',
             '{"level": "instances", "extra": "unexpected"}',
             '{"level": "instances", "entity_paths": "Atom"}',
@@ -244,6 +245,28 @@ declare_relation(
                          f'{other}={valid})')
                 with self.subTest(side=side, endpoint=endpoint), self.assertRaises(NativeModelClaimError):
                     parse_native_model_claim(prefix + claim)
+
+    def test_relation_endpoint_levels_default_independently(self):
+        prefix = 'from caprmedio.formal_claims import declare_relation\n'
+        claim = ("declare_relation(relation_name='R', source_endpoint={'entity_paths': ('Node',)}, "
+                 "target_endpoint={'level': 'instances'})")
+        args = parse_native_model_claim(prefix + claim)["arguments"]
+        self.assertEqual(args["source_endpoint"], {
+            "entity_paths": ("Node",), "level": "model_entities_or_instances",
+        })
+        self.assertEqual(args["target_endpoint"]["level"], "instances")
+
+        claim = ("declare_relation(relation_name='R', endpoint_pairs=("
+                 "{'source_endpoint': {}, 'target_endpoint': {'level': 'model_entities'}},"
+                 "{'source_endpoint': {'level': 'instances'}, 'target_endpoint': {}},))")
+        pairs = parse_native_model_claim(prefix + claim)["arguments"]["endpoint_pairs"]
+        self.assertEqual(pairs[0]["source_endpoint"]["level"], "model_entities_or_instances")
+        self.assertEqual(pairs[0]["target_endpoint"]["level"], "model_entities")
+        self.assertEqual(pairs[1]["source_endpoint"]["level"], "instances")
+        self.assertEqual(pairs[1]["target_endpoint"]["level"], "model_entities_or_instances")
+
+        with self.assertRaises(NativeModelClaimError):
+            parse_native_model_claim(prefix + "declare_relation(relation_name='R', source_endpoint={})")
 
 
 if __name__ == "__main__":

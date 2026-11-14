@@ -30,7 +30,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Bind Journal query source route to one Tool
 
@@ -39,6 +39,8 @@ Bind Journal query source route to one Tool
 The one-route binding.
 
 ## Claim
+
+### Prose Claim
 
 The delivered Journal query Tool **must** bind CA-O-161, CA-O-163, and CA-O-162 as one route without defining a second Workflow, Action, or Journal.
 

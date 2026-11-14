@@ -1,5 +1,3 @@
-# CA-E-784@6
-# CA-E-785@5
 # CA-E-787@6
 """Real HTTP/MCP acceptance checks for cached Workbench grids and retention."""
 

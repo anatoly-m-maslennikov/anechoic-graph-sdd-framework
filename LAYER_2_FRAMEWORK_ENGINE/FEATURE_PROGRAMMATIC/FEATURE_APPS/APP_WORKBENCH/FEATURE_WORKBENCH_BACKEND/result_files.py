@@ -1,5 +1,3 @@
-# CA-R-2729@11
-# CA-M-516@2
 # CA-D-673@18
 """Export already-materialized query rows to disposable Project files."""
 

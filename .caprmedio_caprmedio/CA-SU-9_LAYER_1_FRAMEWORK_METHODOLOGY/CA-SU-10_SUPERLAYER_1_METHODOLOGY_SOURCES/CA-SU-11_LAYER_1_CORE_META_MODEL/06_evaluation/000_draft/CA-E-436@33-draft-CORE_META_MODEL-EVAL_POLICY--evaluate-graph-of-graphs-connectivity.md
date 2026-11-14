@@ -6,7 +6,7 @@ container:
 role: Evaluation
 form: Eval Policy
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  main_subject: CAPRMEDIO_MODEL <+ Relation
   dependencies:
   - CAPRMEDIO_MODEL <+ Project
   - CAPRMEDIO_MODEL <+ Entity

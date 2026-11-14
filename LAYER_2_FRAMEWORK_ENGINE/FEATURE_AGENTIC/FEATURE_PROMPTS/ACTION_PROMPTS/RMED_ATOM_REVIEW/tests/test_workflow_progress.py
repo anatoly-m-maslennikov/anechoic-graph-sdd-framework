@@ -18,6 +18,15 @@ class WorkflowProgress(unittest.TestCase):
     def test_complete_clean_report(self):
         self.assertTrue(report_progress(report())['complete'])
 
+    def test_legacy_and_mixed_reports_are_not_relabelled(self):
+        row = report()
+        row['checks']['cce'] = row['checks'].pop('writing')
+        self.assertTrue(report_progress(row)['complete'])
+        self.assertFalse(report_progress(row, check_key='writing')['complete'])
+        row['checks']['writing'] = {'status': 'passed'}
+        self.assertFalse(report_progress(row)['complete'])
+        self.assertFalse(report_progress(row, check_key='writing')['complete'])
+
     def test_edits_do_not_complete_skipped_checks(self):
         row = report()
         row['checks']['claim']['status'] = 'blocked'

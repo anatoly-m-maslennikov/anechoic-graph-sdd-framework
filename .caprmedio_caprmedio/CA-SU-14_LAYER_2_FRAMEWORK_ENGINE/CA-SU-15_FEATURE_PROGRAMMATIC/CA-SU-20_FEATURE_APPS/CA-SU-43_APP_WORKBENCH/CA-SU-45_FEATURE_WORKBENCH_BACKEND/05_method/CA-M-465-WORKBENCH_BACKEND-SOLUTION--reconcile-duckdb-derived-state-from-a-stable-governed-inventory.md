@@ -12,20 +12,20 @@ context:
       <+ Data Handling <+ Indexing
     dependencies:
     - MODEL//CAPRMEDIO <+ Projection
+    - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling
+      <+ Schema
   tier: 4
 relations:
   method_for:
   - CA-R-2723
   - CA-R-2725
   - CA-R-2950
-  depends_on:
-  - CA-M-509
   IS_REPLACEMENT_FOR:
   - CA-O-241
 state:
   status: active
-  version: 30
-  updated_at: '2026-11-12T17:24:18.418281+00:00'
+  version: 31
+  updated_at: '2026-11-13T19:29:08.684198+00:00'
 destination:
   file:
     name: CA-M-465-WORKBENCH_BACKEND-SOLUTION--reconcile-duckdb-derived-state-from-a-stable-governed-inventory.md
@@ -44,7 +44,7 @@ Reconcile DuckDB derived state from a stable governed inventory.
 
 Index Current, Draft and Backlog carriers into the file-backed Projection at startup. Resolve explicit Archive load requests through the Scope Unit and Role placement rules. Keep a lightweight Archive filename inventory for lifecycle identity and Version reservations, and parse Archive contents only for selected folders or exact lifecycle files. Update files in the loaded Archive scope on source changes. A role-only unnumbered Draft reference is technically unique only as marker plus Project-relative carrier path. Preserve that ID and numbered Current/Draft identity.
 
-Use the existing server's `watchdog` Observer and selected-repository watcher owner, observing only `control_root`, with grouped native callbacks. Preserve initial build, retained-log reread at owner start/full reread, idle 48-hour cleanup on the same owner thread and Observer shutdown. Under the owner lock, persist events before refresh. Normal batches append/INSERT additions only, retain equal duplicates, and never rewrite retained rows except owner-start/full-reread reconciliation or TTL/cap cleanup. Record directory create/move/remove and refresh the index; ignore directory-modification noise and outside paths, and never infer move from add/delete. A mounted parent does not enlarge the boundary; do not add a watcher service, scheduler, retry or recovery, or failure-as-event-row.
+Use the existing server's `watchdog` Observer with grouped native callbacks. Watch the Project control root for Atom changes and the Workbench implementation root for Spec Trace changes. Record only control-root events in `change_log`. Preserve initial build, retained-log reread at owner start/full reread, idle 48-hour cleanup on the same owner thread and Observer shutdown. Under the owner lock, persist events before refresh. Normal batches append/INSERT additions only, retain equal duplicates, and never rewrite retained rows except owner-start/full-reread reconciliation or TTL/cap cleanup. Record directory create/move/remove and refresh the index; ignore directory-modification noise and outside paths, and never infer move from add/delete. A mounted parent does not enlarge the boundary; do not add a watcher service, scheduler, retry or recovery, or failure-as-event-row.
 
 Refresh database and graph under the shared owner lock in one native COMMIT transaction. Queries do not run during refresh. Failed indexing/graph refresh reports stderr and leaves the owner unavailable pending explicit restart: no partial state, candidate swap, rollback or recovery. Unreadable or unparseable ordinary capture is excluded with its supported rows and facts. Keep parseable source rows and report current-schema violations separately. Later actual change is new input. Ambiguous references, relation keys or inverse metadata warn and omit only the affected facts. An invalid Current Scope Unit Declaration stops indexing rather than being skipped. A resource-limit kill is a runtime/capacity failure, not invalid-source evidence.
 

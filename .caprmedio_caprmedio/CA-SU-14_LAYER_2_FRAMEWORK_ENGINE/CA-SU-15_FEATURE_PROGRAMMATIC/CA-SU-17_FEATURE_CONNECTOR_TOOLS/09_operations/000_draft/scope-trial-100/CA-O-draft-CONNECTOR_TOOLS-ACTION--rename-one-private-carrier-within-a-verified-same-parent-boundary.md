@@ -16,12 +16,6 @@ subjects:
   - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Operations/Type: Action'
 version: 1
 updated_at: 2026-10-29 20:32:25 +0400
-relations:
-  depends_on:
-  - CA-R-1941
-  - CA-M-381
-  - CA-D-630
-  - CA-D-625
 tier: 3
 ---
 ## Summary

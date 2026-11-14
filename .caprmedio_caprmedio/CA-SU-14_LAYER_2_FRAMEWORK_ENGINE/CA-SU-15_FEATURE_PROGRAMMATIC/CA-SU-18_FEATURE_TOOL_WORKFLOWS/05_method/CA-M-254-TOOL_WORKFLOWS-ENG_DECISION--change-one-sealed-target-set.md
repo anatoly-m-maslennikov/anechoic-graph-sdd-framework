@@ -28,7 +28,7 @@ current_scope_unit: TOOL_WORKFLOWS
 claim_target_scope_unit: TOOL_WORKFLOWS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Change one sealed target set
 
@@ -37,6 +37,8 @@ Change one sealed target set
 use this Method **when** `BULK_CHANGE` **must** compose registered carrier operations over one sealed target set.
 
 ## Claim
+
+### Prose Claim
 
 1. confirm the logical `BULK_CHANGE` Workflow composition binding under TOOL_WORKFLOWS and resolve its explicit admitted executable binding from current context. The existing code path `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/BULK_CHANGE/` is unchanged by this source-authority split; code topology is not Workflow ownership.
 2. resolve one sealed target set **and** declared registered create, structured patch, relation change, rename, move, lifecycle, **or** replacement operations.

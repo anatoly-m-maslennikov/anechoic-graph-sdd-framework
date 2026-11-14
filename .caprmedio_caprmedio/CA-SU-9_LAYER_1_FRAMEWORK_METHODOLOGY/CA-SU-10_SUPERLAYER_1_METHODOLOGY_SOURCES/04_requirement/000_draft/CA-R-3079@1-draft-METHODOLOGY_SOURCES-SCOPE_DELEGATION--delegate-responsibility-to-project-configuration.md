@@ -31,10 +31,3 @@ Delegate responsibility to PROJECT_CONFIGURATION
 ### Prose Claim
 
 - PROJECT_CONFIGURATION must state Project-owned Customizations and composition decisions that select CORE_META_MODEL and PROJECT_CONFIGURATION for Applicable Methodology compilation. [CA-R-1176](../CA-R-1176-METHODOLOGY_SOURCES-GOAL-PROJECT_CONFIGURATION--select-core-meta-model-and-project-configuration-for-compilation.md)
-
-### Formal Claim
-
-```CFEL
-# instances
-Atom//"CA-R-3079" ((HAS_ACTIVE_SUBJECT)) Scope Unit//PROJECT_CONFIGURATION;
-```

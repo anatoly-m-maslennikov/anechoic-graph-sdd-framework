@@ -9,7 +9,7 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Atom
   dependencies:
   - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//SPECIALIZES
+  - CAPRMEDIO_MODEL <+ Relation//SPECIALIZES
 tier: 3
 status: Draft
 version: 1

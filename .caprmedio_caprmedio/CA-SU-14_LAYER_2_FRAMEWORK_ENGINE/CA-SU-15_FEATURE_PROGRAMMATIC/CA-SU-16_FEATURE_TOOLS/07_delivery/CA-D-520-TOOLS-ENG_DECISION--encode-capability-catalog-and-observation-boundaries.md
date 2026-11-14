@@ -29,7 +29,7 @@ carrier_destination:
 current_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Encode capability catalog and observation boundaries
 
@@ -38,6 +38,8 @@ Encode capability catalog and observation boundaries
 the TOOLS capability for Capability Catalog/Carrier.
 
 ## Claim
+
+### Prose Claim
 
 the Capability Catalog **must** use the following source, binding **and** result Carrier contract.
 

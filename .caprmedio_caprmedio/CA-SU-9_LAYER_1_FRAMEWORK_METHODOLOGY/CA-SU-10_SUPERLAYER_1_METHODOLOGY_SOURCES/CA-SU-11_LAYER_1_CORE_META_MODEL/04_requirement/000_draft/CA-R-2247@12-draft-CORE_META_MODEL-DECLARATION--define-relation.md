@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  main_subject: CAPRMEDIO_MODEL <+ Relation
 tier: 1
 status: Draft
 version: 12

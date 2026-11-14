@@ -16,7 +16,7 @@ topics:
     Operations)/(.Header.Context.Form := Step)
   - CAPRMEDIO_MODEL <+ Actor
   - CAPRMEDIO_MODEL <+ Event Record
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
 tier: 1
 relations:
   child_of:

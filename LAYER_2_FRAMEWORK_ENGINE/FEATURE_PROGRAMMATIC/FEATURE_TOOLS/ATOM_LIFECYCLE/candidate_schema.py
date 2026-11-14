@@ -18,7 +18,9 @@ sys.path.insert(0, str(TOOLS))
 sys.path.insert(0, str(WORKBENCH))
 
 from ATOM_LIFECYCLE.content_constraints import compile_content_constraints, load_content_constraints  # noqa: E402
+from ATOM_LIFECYCLE.atom_population import compile_atom_population_model  # noqa: E402
 from ATOM_LIFECYCLE.header_constraints import compile_header_constraints, load_header_constraints  # noqa: E402
+from ATOM_LIFECYCLE.header_ordering import compile_header_ordering, load_header_ordering  # noqa: E402
 from ATOM_LIFECYCLE.placement_model import compile_placement, load_placement  # noqa: E402
 from ATOM_LIFECYCLE.role_form_schema import compile_role_form, load_role_form  # noqa: E402
 from carrier_aliases import canonical_role_name, carrier_read_view, carrier_status_folder, matches_named_value, named_value_token  # noqa: E402
@@ -31,9 +33,11 @@ from FEATURE_WORKBENCH_BACKEND.workbench_schema_asset import (  # noqa: E402
 )
 
 from ATOM_LIFECYCLE.placement_sources import bootstrap_rows, inventory, read_selected  # noqa: E402
+from ATOM_LIFECYCLE.header_relation_rules import compile_header_relation_rules, load_header_relation_rules  # noqa: E402
 from FEATURE_FORMAL_MODEL_ENGINE.topic_dependencies import (  # noqa: E402
     Atom, DEPENDENCIES_CLAIM_SHA256, dependencies_are_distinct, verify_packaged_dependencies_check,
 )
+from ATOM_LIFECYCLE.work_report_model import compile_work_report_target, verify_work_report_target  # noqa: E402
 
 _DEPENDENCIES_SUBJECT = 'CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics.Dependencies'
 
@@ -46,6 +50,10 @@ class CandidateSchema:
     content_constraints: object
     placement: object = None
     atom_dependencies_check: bool = False
+    work_report_target: dict | None = None
+    header_relation_rules: dict | None = None
+    atom_population_model: bool = False
+    header_ordering: list | None = None
 
     def header(self, mode):
         return self.workbench.header(mode)
@@ -98,7 +106,9 @@ def load_candidate_schema(path: Path):
         required = {
             'schema_version', 'workbench', 'role_form', 'header_constraints', 'content_constraints', 'digest',
         }
-        if not isinstance(payload, dict) or not required <= payload.keys() <= required | {'placement', 'atom_dependencies_check'}:
+        optional = {'placement', 'atom_dependencies_check', 'work_report_target', 'header_relation_rules',
+                    'atom_population_model', 'header_ordering'}
+        if not isinstance(payload, dict) or not required <= payload.keys() <= required | optional:
             raise ValueError('invalid candidate schema shape')
         digest = payload.pop('digest')
         if payload['schema_version'] != 2 or type(payload['schema_version']) is not int:
@@ -116,10 +126,21 @@ def load_candidate_schema(path: Path):
                     or source_pins.count(pin['source']) != 1):
                 raise ValueError('Invalid reviewed Atom Dependencies check')
             verify_packaged_dependencies_check()
+        work_report_target = payload.get('work_report_target')
+        if 'work_report_target' in payload:
+            verify_work_report_target(work_report_target)
+        if 'atom_population_model' in payload and payload['atom_population_model'] is not True:
+            raise ValueError('Invalid Atom population model')
         return CandidateSchema(workbench, load_role_form(payload['role_form'], source_ids),
                                load_header_constraints(payload['header_constraints'], source_ids),
                                load_content_constraints(payload['content_constraints'], source_ids),
-                               load_placement(payload['placement']) if 'placement' in payload else None, check)
+                               load_placement(payload['placement']) if 'placement' in payload else None,
+                               check, work_report_target,
+                               load_header_relation_rules(payload['header_relation_rules'])
+                               if 'header_relation_rules' in payload else None,
+                               payload.get('atom_population_model', False),
+                               load_header_ordering(payload['header_ordering'])
+                               if 'header_ordering' in payload else None)
     except (OSError, KeyError, TypeError, UnicodeError, json.JSONDecodeError) as error:
         raise ValueError(f'invalid candidate schema: {error}') from error
 
@@ -164,7 +185,7 @@ def compile_candidate_schema(root: Path, placement_selection: Path | None = None
     root = Path(root)
     if not root.is_dir():
         raise ValueError(f'{root}: staged model root is not a directory')
-    rows = []
+    rows, relation_rows = [], []
     seen = set()
     for path in sorted(root.rglob('CA-R-*.md')):
         relative = path.relative_to(root)
@@ -174,8 +195,10 @@ def compile_candidate_schema(root: Path, placement_selection: Path | None = None
         carrier = parse_carrier(raw, path)
         view = carrier_read_view(carrier.metadata)
         if (view.get('status') not in ('Active', 'active')
-                or not matches_named_value(view.get('role'), 'Requirement')
-                or not matches_named_value(view.get('form'), 'Declaration')):
+                or not matches_named_value(view.get('role'), 'Requirement')):
+            continue
+        form = view.get('form')
+        if not any(matches_named_value(form, name) for name in ('Declaration', 'Relation Declaration')):
             continue
         atom_id, version = view.get('atom_id'), view.get('version')
         if not isinstance(atom_id, str) or not atom_id.strip() or type(version) is not int or version < 1:
@@ -183,7 +206,8 @@ def compile_candidate_schema(root: Path, placement_selection: Path | None = None
         if atom_id in seen:
             raise ValueError(f'{path}: duplicate declaration ID {atom_id}')
         seen.add(atom_id)
-        rows.append({'source_path': relative.as_posix(), 'status_group': 'Current',
+        selected = rows if matches_named_value(form, 'Declaration') else relation_rows
+        selected.append({'source_path': relative.as_posix(), 'status_group': 'Current',
                      'id': atom_id, 'ref': atom_id, 'version': version,
                      'role': 'Requirement', 'form': 'Declaration',
                      'header_json': carrier.metadata, '_content_bytes': carrier.body.encode('utf-8'),
@@ -199,6 +223,14 @@ def compile_candidate_schema(root: Path, placement_selection: Path | None = None
     payload = {'schema_version': 2, 'workbench': workbench, 'role_form': compile_role_form(rows),
                'header_constraints': compile_header_constraints(rows),
                'content_constraints': compile_content_constraints(rows)}
+    if work_report_target := compile_work_report_target(rows):
+        payload['work_report_target'] = work_report_target
+    if header_relation_rules := compile_header_relation_rules(rows + relation_rows):
+        payload['header_relation_rules'] = header_relation_rules
+    if header_ordering := compile_header_ordering(rows):
+        payload['header_ordering'] = header_ordering
+    if compile_atom_population_model(rows):
+        payload['atom_population_model'] = True
     if dependencies_source is not None:
         pin, = (pin for pin in workbench['sources'] if pin['path'] == dependencies_source)
         payload['atom_dependencies_check'] = {'claim_sha256': DEPENDENCIES_CLAIM_SHA256, 'source': pin}
@@ -214,18 +246,18 @@ def compile_candidate_schema(root: Path, placement_selection: Path | None = None
             raise ValueError(f'invalid placement selection: {error}') from error
         delivery_rows = read_selected(root, selection)
     roles = load_role_form(payload['role_form'], {row['id'] for row in rows}).roles
-    from ATOM_LIFECYCLE.status_model import _STATUS_TARGET, _formal_claim_blocks, _statements, compile_status_model
-    status_paths = [root / row['source_path'] for row in rows
-                    if any(_STATUS_TARGET.match(statement)
-                           for block in _formal_claim_blocks(row['_content_bytes'].decode('utf-8'), model_class_bindings=model_class_bindings)
-                           for statement in _statements(block))]
+    from ATOM_LIFECYCLE.status_model import status_memberships
+    status_memberships_by_role = set()
+    for row in rows:
+        status_memberships_by_role.update(
+            (role, value) for role, _, value in status_memberships(row['_content_bytes'].decode('utf-8'))
+        )
     required_statuses = None
-    if status_paths:
-        declarations = json.loads(compile_status_model(status_paths, model_class_bindings=model_class_bindings))['declarations']
+    if status_memberships_by_role:
         required_statuses = {
             named_value_token(canonical_role_name(role)): {
-                row['value'] for row in declarations
-                if row['role'] is None or canonical_role_name(row['role']) == canonical_role_name(role)
+                value for declared_role, value in status_memberships_by_role
+                if declared_role is None or canonical_role_name(declared_role) == canonical_role_name(role)
             } for role in roles
         }
     placement = compile_placement(delivery_rows, rows, roles, required_statuses)

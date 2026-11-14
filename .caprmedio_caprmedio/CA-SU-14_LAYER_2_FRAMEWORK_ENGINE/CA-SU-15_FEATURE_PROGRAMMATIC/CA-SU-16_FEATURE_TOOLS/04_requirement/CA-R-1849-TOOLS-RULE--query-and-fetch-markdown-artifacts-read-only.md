@@ -23,7 +23,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Query and fetch Markdown Artifacts read-only
 
@@ -35,6 +35,8 @@ Its golden test is
 `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FIND_AND_FETCH_ARTIFACTS/tests/test_find_and_fetch_artifacts.py`.
 
 ## Claim
+
+### Prose Claim
 
 FIND_AND_FETCH_ARTIFACTS **must** implement CA-O-158 through CA-O-160 as one
 source-snapshot-stable, bounded, read-only Markdown query: it applies the

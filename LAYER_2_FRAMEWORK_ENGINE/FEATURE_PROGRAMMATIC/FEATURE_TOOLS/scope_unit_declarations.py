@@ -209,9 +209,9 @@ def read_scope_unit_declarations(
             raise ScopeDeclarationError("Project Scope Unit Declaration must be at the control root")
         rows.extend(roots)
         if len(roots) == 1:
-            pending = [(roots[0], control)]
+            pending = [(roots[0], control, ())]
             while pending:
-                parent, authority = pending.pop()
+                parent, authority, parent_path = pending.pop()
                 candidates = []
                 for directory, role in zip(DELEGATION_ROLE_FOLDERS,
                                            ("Requirement", "Method", "Evaluation", "Delivery", "Operations")):
@@ -224,6 +224,10 @@ def read_scope_unit_declarations(
                 structural: dict[str, list[Any]] = {}
                 delegated: dict[str, list[ScopeDelegation]] = {}
                 for candidate in candidates:
+                    if candidate.topic_path is not None and roots[0].name.casefold() != "caprmedio":
+                        raise ScopeDeclarationError(f"{candidate.source}: Structure Topic root does not identify this Project")
+                    if candidate.topic_path is not None and candidate.topic_path != (*parent_path, candidate.name):
+                        raise ScopeDeclarationError(f"{candidate.source}: Structure Topic path contradicts declared containment")
                     if isinstance(candidate, ScopeDelegation):
                         parent_id = parent.scope_unit_id
                         if parent_id is None:
@@ -244,31 +248,13 @@ def read_scope_unit_declarations(
                 if set(delegated) - set(structural):
                     raise ScopeDeclarationError("Scope Delegation has no structural declaration in its direct parent authority")
                 for name, choices in structural.items():
-                    explicit = [row for row in choices if row.form == "Scope Unit Declaration"]
-                    legacy = [row for row in choices if row.form == "Scope Delegation"]
-                    if len(explicit) > 1 or len(legacy) > 1:
+                    if len(choices) != 1:
                         raise ScopeDeclarationError("Scope Unit names and IDs require unique structural declarations")
-                    declaration = explicit[0] if explicit else legacy[0]
-                    if legacy:
-                        if explicit:
-                            fields = ("scope_unit_id", "label", "ordered", "local_order", "parent")
-                            if any(getattr(explicit[0], field) != getattr(legacy[0], field) for field in fields):
-                                raise ScopeDeclarationError("legacy and explicit Scope Unit topology disagree")
-                        old = legacy[0]
-                        delegated.setdefault(name, []).append(ScopeDelegation(
-                            name=old.name, atom_id=old.atom_id, version=old.version, source=old.source,
-                            admitted_role_forms=old.admitted_role_forms, pair_receivers=(),
-                        ))
+                    declaration = choices[0]
                     sources = tuple(delegated.get(name, ()))
-                    for delegation in sources:
-                        if any(receiver != (declaration.scope_unit_id if field == "ID" else declaration.name)
-                               for field, receiver in delegation.pair_receivers):
-                            raise ScopeDeclarationError("Scope Delegation pair names another Scope Unit")
-                    pairs = tuple(dict.fromkeys((*declaration.admitted_role_forms,
-                                               *(pair for item in sources for pair in item.admitted_role_forms))))
-                    declaration = replace(declaration, admitted_role_forms=pairs, delegations=sources)
+                    declaration = replace(declaration, delegations=sources)
                     rows.append(declaration)
-                    pending.append((declaration, _child_authority(authority, declaration)))
+                    pending.append((declaration, _child_authority(authority, declaration), (*parent_path, declaration.name)))
         if not rows:
             raise ScopeDeclarationError("no current Scope Unit Declarations found")
         for (directory, is_root), expected in frontier.items():

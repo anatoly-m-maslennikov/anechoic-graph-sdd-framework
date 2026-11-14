@@ -22,6 +22,8 @@ carrier_destination:
   file:
     name: CA-C-320-PROBLEM--reject-incomplete-p1300-reading-transports.md
     path: .caprmedio_caprmedio/01_concern/021_resolved
+container:
+  scope_unit: CA-SU-00
 ---
 # Summary
 

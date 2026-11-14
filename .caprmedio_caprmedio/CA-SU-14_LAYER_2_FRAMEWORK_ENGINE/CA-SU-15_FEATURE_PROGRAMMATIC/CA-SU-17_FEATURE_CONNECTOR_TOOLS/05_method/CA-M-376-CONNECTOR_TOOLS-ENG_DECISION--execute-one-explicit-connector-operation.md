@@ -23,7 +23,7 @@ current_scope_unit: CONNECTOR_TOOLS
 claim_target_scope_unit: CONNECTOR_TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Execute one explicit connector operation
 
@@ -32,6 +32,8 @@ Execute one explicit connector operation
 One explicit admitted storage operation through the coherent connector interface.
 
 ## Claim
+
+### Prose Claim
 
 **To** execute a connector request, the adapter **must**:
 

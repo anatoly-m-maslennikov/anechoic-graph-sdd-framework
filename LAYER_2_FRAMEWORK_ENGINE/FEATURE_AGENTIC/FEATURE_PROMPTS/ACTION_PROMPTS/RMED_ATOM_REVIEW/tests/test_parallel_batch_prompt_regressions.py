@@ -23,7 +23,7 @@ class DefaultLocalWorkflowPromptRegressions(unittest.TestCase):
         check = prompt("CA-O-109.prompt.md")
         readme = prompt("README.md")
         self.assertIn("one concise report", check)
-        for outcome in ("properties", "CCE", "Scope", "Claim", "Details", "Summary"):
+        for outcome in ("properties", "writing", "Scope", "Claim", "Details", "Summary"):
             self.assertIn(outcome, check)
         self.assertIn("actual defect quotes", readme)
         self.assertIn("one short progress list", readme)

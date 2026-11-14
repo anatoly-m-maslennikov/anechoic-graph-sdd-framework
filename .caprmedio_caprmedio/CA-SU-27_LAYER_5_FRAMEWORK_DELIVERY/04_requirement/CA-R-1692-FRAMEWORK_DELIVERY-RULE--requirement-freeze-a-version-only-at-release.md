@@ -17,10 +17,8 @@ topics:
   - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
   - CAPRMEDIO_MODEL <+ Scope Unit
   - CAPRMEDIO_STRUCTURE <+ Scope Unit//PROJECT_CONFIGURATION
+  - CAPRMEDIO_MODEL <+ Journal
 tier: 3
-relations:
-  depends_on:
-  - CA-R-1712
 status: Active
 version: 39
 updated_at: 2026-11-09 15:54:30 +0400

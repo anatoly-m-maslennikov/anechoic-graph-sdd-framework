@@ -1,13 +1,12 @@
 # CA-D-442@29
 
-"""Pure model and bounded CFEL parser for Scope Unit Declaration Atoms."""
+"""Parse native Scope Unit Declarations and prose Scope Delegations."""
 
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 import importlib.util
 from dataclasses import dataclass
-import json
 from pathlib import Path
 import re
 from types import MappingProxyType
@@ -23,28 +22,6 @@ import subject_notation as notation
 
 PROJECT = "PROJECT"
 _ROLE_LETTERS = {"Requirement": "R", "Method": "M", "Evaluation": "E", "Delivery": "D", "Operations": "O"}
-_SUBJECT = r'(?:"(?:[^"\\]|\\.)*"|[^.\n]+?)'
-_PROPERTY = re.compile(
-    rf"Scope Unit//(?P<name>{_SUBJECT})\.(?P<field>ID|Name|Label|order\.ordered|order\.number)"
-    r"\s*==\s*(?P<value>.+);\Z"
-)
-_CONTAINMENT = re.compile(
-    rf"Scope Unit//(?P<name>{_SUBJECT})\s+\(\(IS_CONTAINED_BY\)\)\s+"
-    rf"(?P<kind>Scope Unit|Project)//(?P<parent>{_SUBJECT});?\Z"
-)
-_ROOT_NAME = re.compile(rf"Project//(?P<name>{_SUBJECT})\.Name\s*==\s*(?P<value>.+)\Z")
-_QUOTED = r'"(?:[^"\\]|\\.)*"'
-_PAIR_LITERAL = rf'(?:{_QUOTED}|[^"();\n]+?)'
-_DELEGATION_RECEIVER = re.compile(
-    rf'Atom//(?P<atom>{_QUOTED})\s+\(\(HAS_ACTIVE_SUBJECT\)\)\s+'
-    rf'Scope Unit//(?P<name>{_PAIR_LITERAL});?\Z'
-)
-_ADMITTED_PAIR = re.compile(
-    rf"Atom/\(\.Header\.(?:Context\.)?Container\.scope_unit in \("
-    rf"(?:Scope Unit//(?P<scope>{_PAIR_LITERAL})|(?P<scope_id>{_QUOTED}))\)\)"
-    rf"/\(\.Header\.(?:Context\.)?Role in \((?P<role>{_PAIR_LITERAL})\)\)\.Header\.(?:Context\.)?Form :: (?P<form>{_PAIR_LITERAL});?\Z"
-)
-_CLAIM = re.compile(r"(?ms)^## Claim\s*\n+```CFEL\n(?P<cfel>.*?)\n```\s*\Z")
 _NAMESPACE_BRANCH = "STRUCTURE"
 
 
@@ -98,29 +75,6 @@ def _carrier(raw: bytes, source: Path) -> tuple[dict[str, Any], str]:
         raise
     except (UnicodeError, yaml.YAMLError, RuntimeError, ValueError) as error:
         raise ScopeDeclarationError(f"{source}: invalid declaration carrier") from error
-
-
-def _quoted(value: str) -> str:
-    return json.dumps(value, ensure_ascii=False)
-
-
-def _string(value: str) -> str:
-    try:
-        parsed = json.loads(value)
-    except json.JSONDecodeError as error:
-        raise ScopeDeclarationError("declaration strings must use JSON double quotes") from error
-    if not isinstance(parsed, str):
-        raise ScopeDeclarationError("declaration value must be a string")
-    return parsed
-
-
-def _subject(value: str) -> str:
-    value = value.strip()
-    if value.startswith('"'):
-        return _string(value)
-    if not value or '"' in value:
-        raise ScopeDeclarationError("declaration Subject is invalid")
-    return value
 
 
 def _safe_component(value: object, field: str) -> str:
@@ -222,77 +176,48 @@ def _native_scope(text: str, path: Path) -> tuple[str, dict[str, Any]] | None:
     return instance["type"], fields
 
 
-def _cfel(body: str, path: Path, *, allow_claim_prose: bool = False) -> list[str] | tuple[str, dict[str, Any]]:
-    lines = body.splitlines()
-    headings = []
-    fence = None
-    cfel_count = 0
-    for index, line in enumerate(lines):
-        marker = re.match(r"^ {0,3}(`{3,}|~{3,})(.*)$", line)
-        if marker:
-            token, suffix = marker.groups()
-            if fence is None:
-                fence = (token[0], len(token))
-                cfel_count += suffix.strip() == "CFEL"
-            elif token[0] == fence[0] and len(token) >= fence[1] and not suffix.strip():
-                fence = None
-            continue
-        if fence is None:
-            heading = re.fullmatch(r"(#{1,6}) (.+)", line)
-            if heading:
-                headings.append((len(heading[1]), heading[2], index))
-    if fence is None and cfel_count == 0 and allow_claim_prose:
-        claims = [row for row in headings if row[:2] == (2, "Claim")]
-        prose = [row for row in headings if row[:2] == (3, "Prose Claim")]
-        formal = [row for row in headings if row[:2] == (3, "Formal Claim")]
-        if len(claims) == len(prose) == 1 and not formal and prose[0][2] > claims[0][2]:
-            end = next((row[2] for row in headings if row[2] > prose[0][2] and row[0] <= 3), len(lines))
-            if "\n".join(lines[prose[0][2] + 1:end]).strip():
-                return []
-    if fence is not None or cfel_count > 1:
-        raise ScopeDeclarationError(f"{path}: declaration requires one unambiguous CFEL block")
-    claims = [row for row in headings if row[:2] == (2, "Claim")]
-    if len(claims) != 1:
-        raise ScopeDeclarationError(f"{path}: declaration requires one CFEL Claim")
-    start = claims[0][2]
-    boundaries = {(2, name) for name in ("Summary", "Scope", "Claim scope", "Claim", "Semantics", "Details")}
-    end = next((row[2] for row in headings if row[2] > start and row[:2] in boundaries), len(lines))
-    children = [row for row in headings if start < row[2] < end
-                and row[:2] in {(3, "Formal Claim"), (3, "Prose Claim")}]
-    claim = "\n".join(lines[start + 1:end]).strip()
-    if children:
-        formal = [row for row in children if row[1] == "Formal Claim"]
-        if len(formal) != 1 or len({row[1] for row in children}) != len(children):
-            raise ScopeDeclarationError(f"{path}: declaration requires one Formal Claim")
-        formal_start = formal[0][2]
-        formal_end = next((row[2] for row in children if row[2] > formal_start), end)
-        if not allow_claim_prose and "\n".join(lines[start + 1:children[0][2]]).strip():
-            raise ScopeDeclarationError(f"{path}: ambiguous Claim container")
-        claim = "\n".join(lines[formal_start + 1:formal_end]).strip()
-    matched = re.fullmatch(r"```CFEL\n(?P<cfel>.*?)\n```", claim, re.DOTALL)
-    if matched is not None and cfel_count == 1:
-        statements = [line.strip() for line in matched["cfel"].splitlines() if line.strip() and not line.lstrip().startswith("#")]
-    else:
-        python = re.fullmatch(r"```python\n(?P<python>.*?)\n```", claim, re.DOTALL)
-        if cfel_count != 0 or not children or python is None:
-            raise ScopeDeclarationError(f"{path}: declaration requires one CFEL or Python Formal Claim")
-        native = _native_scope(python["python"], path)
-        if native is not None:
-            return native
-        from python_model_claim import parse_python_model_claim
+def _claim(body: str, path: Path, *, delegation: bool) -> tuple[str, dict[str, Any]] | None:
+    from markdown_it import MarkdownIt
 
-        try:
-            statements = list(parse_python_model_claim(python["python"]))
-        except ValueError as error:
-            raise ScopeDeclarationError(f"{path}: invalid Python Formal Claim: {error}") from error
-        # The scope reader predates normalized statements and expects these
-        # separators on property assignments and relation expressions.
-        statements = [re.sub(r"(?<=\S)\(\(", " ((", statement) for statement in statements]
-        statements = [statement + ";" if _PROPERTY.fullmatch(statement + ";") else statement
-                      for statement in statements]
-    if not statements:
-        raise ScopeDeclarationError(f"{path}: declaration Claim is empty")
-    return statements
+    tokens = MarkdownIt("commonmark").parse(body)
+    headings = []
+    formal = []
+    prose = []
+    claim_count = 0
+    formal_count = 0
+    lines = body.splitlines()
+    for index, token in enumerate(tokens):
+        if token.type == "heading_open":
+            level = int(token.tag[1:])
+            headings = [row for row in headings if row[0] < level]
+            headings.append((level, tokens[index + 1].content.casefold().strip()))
+            if (level, headings[-1][1]) == (2, "claim"):
+                claim_count += 1
+            if (level, headings[-1][1]) == (3, "formal claim"):
+                formal_count += 1
+        elif token.type == "fence":
+            if token.info.strip().casefold() != "python":
+                raise ScopeDeclarationError(f"{path}: Scope Formal Claim requires Python")
+            if tuple(name for _, name in headings) != ("claim", "formal claim"):
+                raise ScopeDeclarationError(f"{path}: Python fence must be in Formal Claim")
+            closing = lines[token.map[1] - 1].strip()
+            if len(closing) < len(token.markup) or set(closing) != {token.markup[0]}:
+                raise ScopeDeclarationError(f"{path}: Python fence is not closed")
+            formal.append(token.content)
+        elif token.type == "inline" and tuple(name for _, name in headings) == ("claim", "prose claim"):
+            prose.append(token.content)
+    if claim_count != 1:
+        raise ScopeDeclarationError(f"{path}: declaration requires one Claim")
+    if delegation:
+        if formal or not any(value.strip() for value in prose):
+            raise ScopeDeclarationError(f"{path}: Scope Delegation requires a Prose Claim")
+        return None
+    if len(formal) != 1 or formal_count != 1:
+        raise ScopeDeclarationError(f"{path}: declaration requires one Python Formal Claim")
+    native = _native_scope(formal[0], path)
+    if native is None:
+        raise ScopeDeclarationError(f"{path}: declaration requires a native Scope instance")
+    return native
 
 
 @dataclass(frozen=True)
@@ -305,6 +230,7 @@ class ScopeDelegation:
     pair_receivers: tuple[tuple[str, str], ...]
     parent_id: str | None = None
     role: str = "Requirement"
+    topic_path: tuple[str, ...] | None = None
 
 
 @dataclass(frozen=True)
@@ -324,6 +250,7 @@ class ScopeUnitDeclaration:
     admitted_role_forms: tuple[tuple[str, str], ...] = ()
     delegations: tuple[ScopeDelegation, ...] = ()
     structural_level: int | None = None
+    topic_path: tuple[str, ...] | None = None
 
     @property
     def scope_unit_type(self) -> str:
@@ -335,147 +262,58 @@ class ScopeUnitDeclaration:
 
 
 def parse_scope_unit_declaration(raw: bytes, source: Path) -> ScopeUnitDeclaration | ScopeDelegation:
-    """Parse one already-read carrier without traversing, evaluating, or writing."""
+    """Parse one already-read Scope carrier without executing its Claim."""
     metadata, body = _carrier(raw, source)
     atom_id, version, active, form, role = _metadata(metadata, source)
-    statements = _cfel(body, source, allow_claim_prose=form == "Scope Delegation")
-
-    native = statements if isinstance(statements, tuple) else None
-    level = None
-    if native is not None:
-        kind, fields = native
-        if form != "Scope Unit Declaration":
-            raise ScopeDeclarationError(f"{source}: native Scope instance requires Scope Unit Declaration")
-        allowed = {"id", "name", "structural_level"} if kind == "Project" else {
-            "id", "name", "label", "ordered", "order_number", "container", "structural_level"
-        }
-        if set(fields) - allowed:
-            raise ScopeDeclarationError(f"{source}: unknown Scope instance field")
-        level = fields.get("structural_level")
-        if "structural_level" in fields and (type(level) is not int or level < 0):
-            raise ScopeDeclarationError(f"{source}: structural_level must be a nonnegative integer")
-        if kind == "Project":
-            if "id" in fields and fields["id"] != atom_id.split("-", 1)[0] + "-SU-00":
-                raise ScopeDeclarationError(f"{source}: invalid Project Scope Unit ID")
-            name = _safe_component(fields.get("name"), "Project Name")
-            if active is not None and active != f"Project//{name}":
-                raise ScopeDeclarationError(f"{source}: root declaration identity is contradictory")
-            return ScopeUnitDeclaration(name=name, atom_id=atom_id, version=version, source=source,
-                                        form=form, structural_level=level)
-        values = {key: fields[field] for key, field in (("ID", "id"), ("Name", "name"),
-                  ("Label", "label"), ("order.ordered", "ordered"), ("order.number", "order_number"))
-                  if field in fields}
-        name, parent = fields.get("name"), fields.get("container")
-        statements = []
-
-    root = _ROOT_NAME.fullmatch(statements[0]) if len(statements) == 1 else None
-    if root is not None:
-        if form != "Scope Unit Declaration":
-            raise ScopeDeclarationError(f"{source}: Project Scope Unit must use Scope Unit Declaration")
-        name = _subject(root["name"])
-        if (active is not None and active != f"Project//{name}") or _string(root["value"]) != name:
-            raise ScopeDeclarationError(f"{source}: root declaration identity is contradictory")
-        return ScopeUnitDeclaration(name=name, atom_id=atom_id, version=version, source=source, form=form)
-
+    topic_path = None
+    if active == "CAPRMEDIO_STRUCTURE" or (active and active.startswith("CAPRMEDIO_STRUCTURE/")):
+        parts = active.split("/")
+        if parts[0] != "CAPRMEDIO_STRUCTURE" or any(not part or _safe_component(part, "Topic component") != part for part in parts[1:]):
+            raise ScopeDeclarationError(f"{source}: invalid Structure Topic path")
+        topic_path = tuple(parts[1:])
+    native = _claim(body, source, delegation=form == "Scope Delegation")
     if native is None:
-        values: dict[str, str | bool | int] = {}
-        parent: str | None = None
-        name: str | None = None
-    formal_receiver: str | None = None
-    pair_receivers: list[tuple[str, str]] = []
-    admitted_pairs: list[tuple[str, str]] = []
-    for statement in statements:
-        receiver_match = _DELEGATION_RECEIVER.fullmatch(statement)
-        if receiver_match is not None and form == "Scope Delegation":
-            if formal_receiver is not None or _string(receiver_match["atom"]) != atom_id:
-                raise ScopeDeclarationError(f"{source}: duplicate or incorrect delegation receiver binding")
-            formal_receiver = _safe_component(_subject(receiver_match["name"]), "Scope Unit Name")
-            continue
-        pair_match = _ADMITTED_PAIR.fullmatch(statement)
-        if pair_match is not None and form == "Scope Delegation":
-            pair = (_subject(pair_match["role"]), _subject(pair_match["form"]))
-            if not all(pair):
-                raise ScopeDeclarationError(f"{source}: admitted Role/Form values must be nonempty")
-            if pair in admitted_pairs:
-                raise ScopeDeclarationError(f"{source}: duplicate admitted Role/Form pair")
-            if pair_match["scope_id"] is not None:
-                pair_receivers.append(("ID", _string(pair_match["scope_id"])))
-            else:
-                pair_receivers.append(("Name", _subject(pair_match["scope"])))
-            admitted_pairs.append(pair)
-            continue
-        property_match = _PROPERTY.fullmatch(statement)
-        if property_match is not None:
-            candidate, field, raw_value = _subject(property_match["name"]), property_match["field"], property_match["value"]
-            if name is None:
-                name = candidate
-            if candidate != name or field in values:
-                raise ScopeDeclarationError(f"{source}: duplicate or mixed Scope Unit Claim")
-            if field in {"ID", "Name", "Label"}:
-                values[field] = _string(raw_value)
-            elif field == "order.ordered":
-                if raw_value not in {"true", "false"}:
-                    raise ScopeDeclarationError(f"{source}: order.ordered must be true or false")
-                values[field] = raw_value == "true"
-            else:
-                if re.fullmatch(r"[1-9][0-9]*", raw_value) is None:
-                    raise ScopeDeclarationError(f"{source}: order.number must be a positive integer")
-                values[field] = int(raw_value)
-            continue
-        containment = _CONTAINMENT.fullmatch(statement)
-        if containment is None or parent is not None:
-            raise ScopeDeclarationError(f"{source}: unsupported or ambiguous declaration Claim")
-        candidate = _subject(containment["name"])
-        if name is None:
-            name = candidate
-        if candidate != name:
-            raise ScopeDeclarationError(f"{source}: mixed Scope Unit Claim")
-        parent = _subject(containment["parent"])
-
-    if form == "Scope Delegation" and not values and parent is None:
-        if formal_receiver is not None:
-            if active is not None and active != f"Scope Unit//{formal_receiver}":
-                raise ScopeDeclarationError(f"{source}: delegation Main Subject contradicts its formal receiver")
-            receiver_name = formal_receiver
-        elif active is not None and active.startswith("Scope Unit//") and active[len("Scope Unit//"):]:
-            receiver_name = active[len("Scope Unit//"):]
-        else:
+        if topic_path is not None and topic_path:
+            name = topic_path[-1]
+        elif active is None or not active.startswith("Scope Unit//") or not active[len("Scope Unit//"):]:
             raise ScopeDeclarationError(f"{source}: delegation requires a Scope Unit receiver")
+        else:
+            name = _safe_component(active[len("Scope Unit//"):], "Scope Unit Name")
         container = metadata.get("container")
         parent_id = container.get("scope_unit") if isinstance(container, Mapping) else None
-        return ScopeDelegation(
-            name=receiver_name, atom_id=atom_id, version=version, source=source,
-            admitted_role_forms=tuple(admitted_pairs), pair_receivers=tuple(pair_receivers), parent_id=parent_id,
-            role=role,
-        )
-
-    if role != "Requirement":
-        raise ScopeDeclarationError(f"{source}: structural topology requires Requirement Role")
-    if formal_receiver is not None:
-        raise ScopeDeclarationError(f"{source}: structural Claim cannot contain a delegation receiver binding")
-
-    if (name is None or (active is not None and active != f"Scope Unit//{name}")
-            or set(values) - {"ID", "Name", "Label", "order.ordered", "order.number"}):
+        return ScopeDelegation(name=name, atom_id=atom_id, version=version, source=source,
+                               admitted_role_forms=(), pair_receivers=(), parent_id=parent_id, role=role, topic_path=topic_path)
+    kind, fields = native
+    allowed = {"id", "name", "structural_level"} if kind == "Project" else {
+        "id", "name", "label", "ordered", "order_number", "container", "structural_level"
+    }
+    if set(fields) - allowed:
+        raise ScopeDeclarationError(f"{source}: unknown Scope instance field")
+    level = fields.get("structural_level")
+    if "structural_level" in fields and (type(level) is not int or level < 0):
+        raise ScopeDeclarationError(f"{source}: structural_level must be a nonnegative integer")
+    name = _safe_component(fields.get("name"), "Scope Unit Name")
+    if kind == "Project":
+        if "id" in fields and fields["id"] != atom_id.split("-", 1)[0] + "-SU-00":
+            raise ScopeDeclarationError(f"{source}: invalid Project Scope Unit ID")
+        if active is not None and active != f"Project//{name}" and not (topic_path == () and name.casefold() == "caprmedio"):
+            raise ScopeDeclarationError(f"{source}: root declaration identity is contradictory")
+        return ScopeUnitDeclaration(name=name, atom_id=atom_id, version=version, source=source,
+                                    form=form, structural_level=level, topic_path=topic_path)
+    if kind != "ScopeUnit" or (active is not None and active != f"Scope Unit//{name}" and (not topic_path or topic_path[-1] != name)):
         raise ScopeDeclarationError(f"{source}: invalid Scope Unit declaration identity")
-    scope_unit_id, declared_name, ordered = values.get("ID"), values.get("Name"), values.get("order.ordered")
-    label, local_order = values.get("Label"), values.get("order.number")
-    if (declared_name != name or not isinstance(ordered, bool) or parent is None):
+    scope_unit_id = _safe_component(fields.get("id"), "Scope Unit ID")
+    parent = _safe_component(fields.get("container"), "Scope Unit Container")
+    label, ordered, local_order = fields.get("label"), fields.get("ordered"), fields.get("order_number")
+    if type(ordered) is not bool:
         raise ScopeDeclarationError(f"{source}: declaration lacks an exact ID, Name, order, or parent")
-    _safe_component(parent, "Scope Unit Container")
-    scope_unit_id = _safe_component(scope_unit_id, "Scope Unit ID")
-    if any(values[field] != receiver for field, receiver in pair_receivers):
-        raise ScopeDeclarationError(f"{source}: admitted Role/Form pair names another Scope Unit")
-    _safe_component(name, "Scope Unit Name")
     if label is not None:
         _safe_component(label, "Scope Unit Label")
     if (ordered and (type(local_order) is not int or local_order < 1)) or (not ordered and local_order is not None):
         raise ScopeDeclarationError(f"{source}: order.number is required only for ordered Scope Units")
-    return ScopeUnitDeclaration(
-        name=name, atom_id=atom_id, version=version, source=source, form=form, scope_unit_id=scope_unit_id,
-        label=label, ordered=ordered, local_order=local_order, parent=parent,
-        admitted_role_forms=tuple(admitted_pairs),
-        structural_level=level,
-    )
+    return ScopeUnitDeclaration(name=name, atom_id=atom_id, version=version, source=source, form=form,
+                                scope_unit_id=scope_unit_id, label=label, ordered=ordered,
+                                local_order=local_order, parent=parent, structural_level=level, topic_path=topic_path)
 
 
 def _component(declaration: ScopeUnitDeclaration, *, authority: bool) -> str:

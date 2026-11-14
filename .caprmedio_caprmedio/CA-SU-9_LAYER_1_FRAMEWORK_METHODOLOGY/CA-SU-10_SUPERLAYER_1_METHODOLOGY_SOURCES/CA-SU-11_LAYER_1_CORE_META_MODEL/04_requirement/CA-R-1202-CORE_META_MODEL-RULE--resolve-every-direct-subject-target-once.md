@@ -8,8 +8,8 @@ form: Rule
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
   dependencies:
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//GOVERNS
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//DEPENDS_ON
+  - CAPRMEDIO_MODEL <+ Relation//GOVERNS
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics.Dependencies
   - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
 tier: 1
 status: Active

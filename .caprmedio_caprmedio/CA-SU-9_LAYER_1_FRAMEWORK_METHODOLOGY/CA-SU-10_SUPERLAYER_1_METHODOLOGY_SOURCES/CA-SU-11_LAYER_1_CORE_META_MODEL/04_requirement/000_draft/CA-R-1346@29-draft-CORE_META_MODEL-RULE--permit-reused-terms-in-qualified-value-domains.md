@@ -6,9 +6,8 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL
+  main_subject: CAPRMEDIO_MODEL <+ Term
   dependencies:
-  - CAPRMEDIO_MODEL <+ Term
   - CAPRMEDIO_MODEL <+ Term//Property
 tier: 2
 status: Draft

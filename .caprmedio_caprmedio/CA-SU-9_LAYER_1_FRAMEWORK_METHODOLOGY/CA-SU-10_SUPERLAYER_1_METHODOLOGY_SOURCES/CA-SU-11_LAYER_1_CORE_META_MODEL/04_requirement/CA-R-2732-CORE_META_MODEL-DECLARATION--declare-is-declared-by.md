@@ -6,11 +6,11 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_DECLARED_BY
+  main_subject: CAPRMEDIO_MODEL <+ Relation//IS_DECLARED_BY
 tier: 1
 status: active
-version: 3
-updated_at: '2026-11-13T08:44:30.822905+00:00'
+version: 4
+updated_at: '2026-11-13T22:37:32.288997+00:00'
 carrier_destination:
   file:
     name: CA-R-2732-CORE_META_MODEL-DECLARATION--declare-is-declared-by.md
@@ -34,10 +34,13 @@ Forward `Host ((IS_DECLARED_BY)) Target` and reverse `Target <((IS_DECLARED_BY))
 ### Formal Claim
 
 ```python
-# model
-classify(address='Relation//IS_DECLARED_BY', axis='Derivation', value='Derived', notation='relation')
-relation(source='Relation//IS_DECLARED_BY', name='IS_DERIVED_RELATION_OF', target='Relation//GOVERNS')
-# instances
-relation(source='$declared_subject', name='IS_DECLARED_BY', target='Atom/(.Header.Context.Role: Requirement)/(.Header.Context.Form in (Declaration, Relation Declaration))//$atom')
+from caprmedio.formal_claims import declare_relation
+
+declare_relation(
+    relation_name='IS_DECLARED_BY',
+    derived_from='GOVERNS',
+    source_endpoint={'level': 'model_entities_or_instances'},
+    target_endpoint={'level': 'instances', 'entity_paths': ('Atom/(.Header.Context.Role:=Requirement)/(.Header.Context.Form in (Declaration, Relation Declaration))',)},
+)
 ```
 

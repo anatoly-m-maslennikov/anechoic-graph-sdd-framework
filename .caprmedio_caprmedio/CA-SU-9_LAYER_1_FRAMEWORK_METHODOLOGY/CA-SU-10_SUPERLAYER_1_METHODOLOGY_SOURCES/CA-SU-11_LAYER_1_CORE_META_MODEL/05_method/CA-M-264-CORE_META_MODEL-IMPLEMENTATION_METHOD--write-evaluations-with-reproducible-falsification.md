@@ -12,7 +12,7 @@ topics:
   - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Method)
   - CAPRMEDIO_MODEL <+ Atom.Content.Claim.Prose Claim
   - CAPRMEDIO_MODEL <+ Atom.Header.Context.Tier
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//evaluation_for
+  - CAPRMEDIO_MODEL <+ Relation//evaluation_for
 tier: 3
 status: Active
 version: 29

@@ -30,11 +30,13 @@ llm_session_ids:
 author: Anatoly Maslennikov
 current_scope_unit: TOOLS
 ---
-# Summary
+## Summary
 
 Validate internally carried Atom Type
 
 ## Claim
+
+### Prose Claim
 
 the Carrier validation Tool **must** accept a valid Atom Type carried inside its Markdown file under the applicable Delivery schema **and** reject missing required **or** contradictory representations.
 

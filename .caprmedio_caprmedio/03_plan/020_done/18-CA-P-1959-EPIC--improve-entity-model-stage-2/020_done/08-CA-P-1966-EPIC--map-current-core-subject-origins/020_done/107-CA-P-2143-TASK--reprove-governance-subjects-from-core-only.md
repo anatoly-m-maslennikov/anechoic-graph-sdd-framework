@@ -18,8 +18,6 @@ tier: 3
 relations:
   is_decomposition_of:
   - CA-P-1966
-  depends_on:
-  - CA-P-2133
   blocks:
   - CA-P-2140
   - CA-P-2141

@@ -15,11 +15,13 @@ current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Bind Modules to File Carriers
 
 ## Claim
+
+### Prose Claim
 
 Realize the Module file-granularity contract in the prepared R2177 successor through its one File Carrier. Resolve its source-file location from the applicable delivery configuration; keep the logical Module identity distinct from filename/path.
 

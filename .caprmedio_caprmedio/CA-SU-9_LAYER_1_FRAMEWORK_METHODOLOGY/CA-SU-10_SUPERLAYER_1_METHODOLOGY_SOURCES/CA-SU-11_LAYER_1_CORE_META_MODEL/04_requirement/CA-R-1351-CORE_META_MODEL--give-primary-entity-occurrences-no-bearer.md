@@ -6,9 +6,9 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_PROPERTY_OF
+  main_subject: CAPRMEDIO_MODEL <+ Relation//IS_PROPERTY_OF
   dependencies:
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
   - CAPRMEDIO_MODEL <+ Entity
 tier: 1
 status: Active

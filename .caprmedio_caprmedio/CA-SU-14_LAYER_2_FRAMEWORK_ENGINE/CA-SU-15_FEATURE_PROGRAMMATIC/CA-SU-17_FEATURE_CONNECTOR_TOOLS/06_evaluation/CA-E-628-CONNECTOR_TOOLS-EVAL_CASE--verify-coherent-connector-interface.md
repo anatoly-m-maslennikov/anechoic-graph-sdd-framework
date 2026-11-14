@@ -29,7 +29,7 @@ current_scope_unit: CONNECTOR_TOOLS
 claim_target_scope_unit: CONNECTOR_TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Verify coherent connector interface
 
@@ -38,6 +38,8 @@ Verify coherent connector interface
 Required future conformance cases for CA-R-1936, CA-M-376 and CA-D-625 across every CONNECTOR_TOOLS connector and its declared supported subset. These are test specifications, not execution or passing-test evidence.
 
 ## Claim
+
+### Prose Claim
 
 Every connector uses the coherent logical input/output roles and performs only its explicitly supplied mechanical operation. Workflow admission owns identity, Version/time, lifecycle and configuration/schema decisions.
 

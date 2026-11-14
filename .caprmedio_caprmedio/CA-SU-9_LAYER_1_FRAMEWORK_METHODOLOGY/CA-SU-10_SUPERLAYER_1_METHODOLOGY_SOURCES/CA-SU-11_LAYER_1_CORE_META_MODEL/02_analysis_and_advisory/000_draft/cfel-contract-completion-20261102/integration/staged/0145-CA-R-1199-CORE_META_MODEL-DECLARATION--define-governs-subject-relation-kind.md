@@ -6,11 +6,9 @@ subjects:
   - Atom
   - Entity
   - Atom.Content
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
 version: 36
 updated_at: 2026-11-02 07:49:21 +0400
-relations:
-  depends_on:
-  - CA-R-1275
 atom_id: CA-R-1199
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
@@ -18,6 +16,14 @@ status: Active
 tier: 2
 role: Requirement
 form: Declaration
+context:
+  topics:
+    dependencies:
+    - CFEL > Relation
+    - Atom
+    - Entity
+    - Atom.Content
+    - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
 ---
 ## Summary
 

@@ -8,7 +8,7 @@ form: Decision
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Carrier/Directory
   dependencies:
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
   - CAPRMEDIO_MODEL <+ Carrier/Directory
 tier: 3
 status: Active

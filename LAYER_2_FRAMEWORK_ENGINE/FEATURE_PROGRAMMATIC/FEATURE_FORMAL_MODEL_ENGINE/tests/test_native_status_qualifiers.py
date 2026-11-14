@@ -3,9 +3,9 @@ from pathlib import Path
 import sys
 import unittest
 from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import NativeModelClaimError, parse_native_model_claim
-from FEATURE_FORMAL_MODEL_ENGINE.compiler_claim import compiler_model_statements
+from FEATURE_WORKBENCH_BACKEND.content_schema import DeclarationSource
 from FEATURE_WORKBENCH_BACKEND.workbench_schema_asset import compile_status_groups
-from ATOM_LIFECYCLE.status_model import _DECL, _STATUS_ORDER
+from ATOM_LIFECYCLE.status_model import status_memberships
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "FEATURE_TOOLS" / "GENERATE_ENTITY_GRAPH"))
 from cfel_claim_constraints import _native_constraints
@@ -24,16 +24,17 @@ class NativeStatusQualifiers(unittest.TestCase):
 
     def test_plan_group_order_and_graph(self):
         declaration = parse_native_model_claim(PLAN)
-        statements = compiler_model_statements(declaration)
-        self.assertEqual(compile_status_groups([(s, 'CA-R-1539') for s in statements]), (('Plan', 'Backlog', 'Backlog'),))
-        self.assertEqual({(_STATUS_ORDER.fullmatch(s)['status'], int(_STATUS_ORDER.fullmatch(s)['order'])) for s in statements if _STATUS_ORDER.fullmatch(s)}, {('Backlog', 1), ('Done', 20), ('Canceled', 40)})
+        self.assertEqual(declaration["classes"], ())
+        self.assertEqual(declaration["arguments"]["applies_to_entity_classes"], ("Plan",))
+        source = DeclarationSource('CA-R-1539', 1, 'status.md')
+        self.assertEqual(compile_status_groups([(declaration, source)]), (('Plan', 'Backlog', 'Backlog'),))
+        self.assertEqual(declaration['arguments']['status_order_numbers'], {'Backlog': 1, 'Done': 20, 'Canceled': 40})
         rows = _native_constraints(declaration, {'atom_id': 'CA-R-1539'}, PLAN)
         self.assertTrue(any(r.get('axis') == 'Status Group' and r.get('value') == 'Backlog' and 'Role := Plan' in r.get('subject_selector', '') for r in rows))
 
     def test_analysis_only_two_forms(self):
         declaration = parse_native_model_claim(ANALYSIS)
-        statements = compiler_model_statements(declaration)
-        decoded = {(_DECL.fullmatch(s)['role'].strip('"'), _DECL.fullmatch(s)['form'], _DECL.fullmatch(s)['value']) for s in statements}
+        decoded = set(status_memberships('## Claim\n\n### Formal Claim\n\n```python\n' + ANALYSIS + '\n```\n'))
         self.assertEqual(decoded, {('Analysis and Advisory', 'Analysis Report', 'Done'), ('Analysis and Advisory', 'Rationale', 'Done')})
         rows = _native_constraints(declaration, {'atom_id': 'CA-R-1875'}, ANALYSIS)
         self.assertEqual(len([r for r in rows if r.get('kind') == 'allowed_literal']), 2)

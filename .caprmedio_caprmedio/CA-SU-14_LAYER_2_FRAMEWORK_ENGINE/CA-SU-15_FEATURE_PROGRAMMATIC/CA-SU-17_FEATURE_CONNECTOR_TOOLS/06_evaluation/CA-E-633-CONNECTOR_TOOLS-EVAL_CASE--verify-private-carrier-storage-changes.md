@@ -32,7 +32,7 @@ current_scope_unit: CONNECTOR_TOOLS
 claim_target_scope_unit: CONNECTOR_TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Verify private carrier storage changes
 
@@ -41,6 +41,8 @@ Verify private carrier storage changes
 Required falsifiable cases for CA-R-1941, CA-D-630 and O215/O216/O217, using independently authored expected requests and before/after ledgers. No tests are claimed to have run.
 
 ## Claim
+
+### Prose Claim
 
 the private variant passes **only** **if** its explicitly admitted storage result **and** preservation frontier are independently verified. missing **or** contradictory evidence is unresolved/failure, never a pass **or** an invented effect.
 

@@ -124,6 +124,8 @@ def rebuild_baseline(packet: dict[str, Any], manifest: dict[str, Any]) -> None:
     This cannot admit a new source or refresh its bytes. The caller must bind
     every manifest entry before requesting this convenience projection.
     """
+    if manifest.get('unresolved_sources') or manifest.get('unresolved_settings'):
+        raise ValueError('baseline manifest has unresolved authority or settings bindings')
     sources = {}
     for record in packet['sources']:
         binding, raw = record['binding'], record['text']

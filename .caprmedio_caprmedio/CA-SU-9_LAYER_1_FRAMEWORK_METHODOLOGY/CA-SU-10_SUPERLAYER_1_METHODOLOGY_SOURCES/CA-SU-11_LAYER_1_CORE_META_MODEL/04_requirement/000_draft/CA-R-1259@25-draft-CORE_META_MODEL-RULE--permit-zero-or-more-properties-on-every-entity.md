@@ -9,7 +9,7 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Entity
   dependencies:
   - CAPRMEDIO_MODEL <+ Node.**
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//HAS_PROPERTY
+  - CAPRMEDIO_MODEL <+ Relation//HAS_PROPERTY
 tier: 2
 status: Draft
 version: 25

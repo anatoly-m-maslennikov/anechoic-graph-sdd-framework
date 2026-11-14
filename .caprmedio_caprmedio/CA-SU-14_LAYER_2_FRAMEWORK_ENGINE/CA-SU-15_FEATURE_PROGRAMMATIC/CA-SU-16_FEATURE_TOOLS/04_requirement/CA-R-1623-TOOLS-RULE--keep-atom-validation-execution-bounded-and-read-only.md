@@ -27,7 +27,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Keep Atom validation execution bounded and read-only
 
@@ -36,6 +36,8 @@ Keep Atom validation execution bounded and read-only
 `VALIDATE_ATOMS` Implementation invocations within their admitted input context.
 
 ## Claim
+
+### Prose Claim
 
 the `VALIDATE_ATOMS` Implementation **must** keep **every** invocation read-only **and** bounded by its admitted input context.
 

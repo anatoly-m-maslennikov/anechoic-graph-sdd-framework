@@ -6,6 +6,75 @@ import re
 from collections.abc import Collection, Callable, Mapping
 
 
+def has_dataclass_field_contracts(declaration: Mapping[str, Any]) -> bool:
+    keys = {"property_occurrence_cardinality", "value_cardinality"}
+    classes = declaration.get("classes", ())
+    if not isinstance(classes, (tuple, list)):
+        return False
+    for cls in classes:
+        if not isinstance(cls, Mapping):
+            continue
+        for field in cls.get("fields", ()):
+            if not isinstance(field, Mapping) or not isinstance(field.get("field"), Mapping):
+                continue
+            metadata = field["field"].get("metadata")
+            if isinstance(metadata, Mapping) and keys.intersection(metadata):
+                return True
+    return False
+
+
+def _validate_field_contracts(declaration):
+    if not has_dataclass_field_contracts(declaration):
+        return
+    classes = declaration["classes"]
+    keys = {"property_occurrence_cardinality", "value_cardinality"}
+    args = declaration["arguments"]
+    if set(args) - {"entity_name", "entity_class", "incoming_model_relations"} or not {"entity_name", "entity_class"} <= set(args):
+        raise ValueError("unsupported dataclass field contract declaration")
+    if (len(classes) != 1 or classes[0]["name"] != args["entity_class"]
+            or classes[0]["bases"] or classes[0]["dataclass"] is None):
+        raise ValueError("field contracts require the declared dataclass with no base")
+
+    def name(value, *, relation=False):
+        pattern = r"[A-Za-z_][A-Za-z_0-9]*" if relation else r"[A-Za-z_][A-Za-z_0-9 .-]*"
+        if not isinstance(value, str) or not re.fullmatch(pattern, value) or value != value.strip():
+            raise ValueError(f"unsupported compiler name: {value!r}")
+
+    def cardinality(value):
+        if type(value) is int and value >= 0:
+            return
+        if (not isinstance(value, dict) or set(value) != {"minimum", "maximum"}
+                or type(value["minimum"]) is not int or value["minimum"] < 0
+                or (value["maximum"] is not None and
+                    (type(value["maximum"]) is not int or value["maximum"] < value["minimum"]))):
+            raise ValueError(f"unsupported cardinality: {value!r}")
+
+    for field in classes[0]["fields"]:
+        options = field.get("field", {})
+        if set(options) != {"metadata"}:
+            raise ValueError("unsupported dataclass field contract")
+        metadata = options["metadata"]
+        if not isinstance(metadata, dict) or set(metadata) != keys:
+            raise ValueError("field contracts require occurrence and value cardinalities")
+        name(args["entity_name"])
+        name(field["name"])
+        cardinality(metadata["property_occurrence_cardinality"])
+        if field["annotation"] not in {"str", "int", "float", "bool", "datetime", "markdown", "atom_id"}:
+            raise ValueError(f"unsupported compiler format: {field['annotation']!r}")
+        cardinality(metadata["value_cardinality"])
+    incoming = args.get("incoming_model_relations", ())
+    if not isinstance(incoming, tuple):
+        raise ValueError("incoming model relations must be a tuple")
+    for relation in incoming:
+        if not isinstance(relation, dict) or set(relation) != {"source", "relation", "source_cardinality", "target_cardinality"}:
+            raise ValueError("invalid incoming model relation")
+        name(relation["source"])
+        cardinality(relation["source_cardinality"])
+        name(relation["relation"], relation=True)
+        cardinality(relation["target_cardinality"])
+        name(args["entity_name"])
+
+
 def lint_native_model_claim(declaration: dict, *, declared_addresses: Collection[str],
                             relation_names: Collection[str], path: str, first_line: int,
                             resolve_address: Callable, simple_address: Callable, canonical_address: Callable,
@@ -38,12 +107,10 @@ def lint_native_model_claim(declaration: dict, *, declared_addresses: Collection
     def error(message: str) -> tuple[str, ...]:
         return (f"{path}:{line}:1: {message}",)
 
-    from .compiler_claim import has_dataclass_field_contracts, compiler_model_statements
-    if has_dataclass_field_contracts(declaration):
-        try:
-            compiler_model_statements(declaration)
-        except ValueError as failure:
-            return error(str(failure))
+    try:
+        _validate_field_contracts(declaration)
+    except ValueError as failure:
+        return error(str(failure))
 
     check = declaration.get("instance_check")
     if check is not None:
@@ -103,7 +170,7 @@ def lint_native_model_claim(declaration: dict, *, declared_addresses: Collection
                 return error(f"invalid fallback Property: {full}")
 
     for rule in args.get("population_unique_constraints", ()):
-        population = args.get("population_entity_path", args["base_path"])
+        population = args.get("population_entity_path", args.get("base_path", args["entity_name"]))
         for relative in (*rule["keys"], *(("Header.State.Status",) if "status" in rule else ())):
             full = f"{population}.{relative}"
             try:

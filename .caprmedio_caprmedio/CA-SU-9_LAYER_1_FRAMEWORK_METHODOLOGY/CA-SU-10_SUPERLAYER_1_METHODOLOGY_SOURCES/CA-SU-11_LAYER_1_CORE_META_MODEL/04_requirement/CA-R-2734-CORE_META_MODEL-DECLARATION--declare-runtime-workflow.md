@@ -41,4 +41,4 @@ declare_entity(
 
 A Runtime Workflow is a Workflow whose Purpose is Runtime: it provides behavior through a Project's delivered result during its operation. In CAPRMEDIO, examples include Create Draft, Promote Draft and Archive Atom.
 
-It inherits Workflow's shared Step, Substep and Action model. Purpose describes use relative to a Project and does not change the canonical definition's owning Scope Unit.
+It inherits Workflow's shared recursive Step and Action model. Purpose describes use relative to a Project and does not change the canonical definition's owning Scope Unit.

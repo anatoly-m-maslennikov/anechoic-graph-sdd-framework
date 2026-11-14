@@ -58,16 +58,20 @@ class SpecTraceStore:
             return []
         section = None
         pins = []
-        for line in lines:
-            if line.startswith('## '):
-                section = {'## Implements': 'implements', '## Applies': 'applies'}.get(line)
-            elif section and line.startswith('- '):
-                match = PIN.fullmatch(line)
-                if match is None or (section == 'applies' and kind != 'package'):
-                    print(f'Invalid spec trace entry {sidecar}: {line}', file=sys.stderr)
-                    continue
-                pins.append((self._rel(path), self._rel(sidecar), section,
-                             match.group(1), int(match.group(2))))
+        for number, line in enumerate(lines, 1):
+            line = line.strip()
+            if not line:
+                continue
+            if line == '## Implements' or (line == '## Applies' and kind == 'package'):
+                section = line.removeprefix('## ').lower()
+                continue
+            match = PIN.fullmatch(line)
+            version = match.group(2).lstrip('0') if match else ''
+            if not section or not version or len(version) > 10 or int(version) > 2_147_483_647:
+                print(f'Invalid spec trace {sidecar}:{number}: expected a heading or an exact Atom version pin',
+                      file=sys.stderr)
+                return []
+            pins.append((self._rel(path), self._rel(sidecar), section, match.group(1), int(version)))
         return pins
 
     def _insert(self, path, kind):
@@ -75,6 +79,10 @@ class SpecTraceStore:
         container = None if path == self.root else self._rel(path.parent)
         self.connection.execute('INSERT OR REPLACE INTO implementation_objects VALUES (?, ?, ?)',
                                 [rel, kind, container])
+        self._refresh_pins(path, kind)
+
+    def _refresh_pins(self, path, kind):
+        rel = self._rel(path)
         self.connection.execute('DELETE FROM implementation_rmedo WHERE owner_path = ?', [rel])
         pins = self._pins(path, kind)
         if pins:
@@ -111,10 +119,19 @@ class SpecTraceStore:
             return
         for value in paths:
             path = Path(os.path.abspath(self.root / value))
+            if not (path == self.root / PILOT or self.root / PILOT in path.parents):
+                continue
             if path.name.endswith(SUFFIX):
                 name = path.name[:-len(SUFFIX)]
-                path = path.parent if name == path.parent.name + '.p' else path.with_name(name)
-            if not self._allowed(path) or not (path == self.root / PILOT or self.root / PILOT in path.parents):
+                if not name:
+                    continue
+                owner = path.parent if name == path.parent.name + '.p' else path.with_name(name)
+                row = self.connection.execute('SELECT kind FROM implementation_objects WHERE path = ?',
+                                              [self._rel(owner)]).fetchone()
+                if row:
+                    self._refresh_pins(owner, row[0])
+                continue
+            if not self._allowed(path):
                 continue
             rel = self._rel(path)
             for table, column in (('implementation_rmedo', 'owner_path'), ('implementation_objects', 'path')):

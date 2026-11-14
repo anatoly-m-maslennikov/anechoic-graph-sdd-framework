@@ -10,15 +10,19 @@ context:
   topics:
     main_subject: PROJECT STRUCTURE//CAPRMEDIO <+ Aspects <+ Engineering <+ Delivery
       <+ Change Readiness
+    dependencies:
+    - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Verification <+
+      Test Design
+    - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+
+      Code Authoring
+    - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Architecture
+      <+ Component Structure
+    - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Execution Control
+      <+ Outcome Reporting
   tier: 6
 relations:
   evaluation_for:
   - CA-M-395
-  depends_on:
-  - CA-E-637
-  - CA-M-402
-  - CA-M-403
-  - CA-M-405
 state:
   status: Active
   version: 18

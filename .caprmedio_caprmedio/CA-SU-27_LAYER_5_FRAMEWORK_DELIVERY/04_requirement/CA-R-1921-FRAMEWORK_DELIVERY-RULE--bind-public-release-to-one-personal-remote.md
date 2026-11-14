@@ -24,7 +24,7 @@ author: Anatoly Maslennikov
 relations: {}
 ---
 
-# Summary
+## Summary
 
 Bind public release to one personal remote
 
@@ -33,6 +33,8 @@ Bind public release to one personal remote
 the selected remote boundary of one public release.
 
 ## Claim
+
+### Prose Claim
 
 **the Operator** **must** bind one public-release invocation to an explicit personal remote identity and the exact `amm/dev` to `main` branch direction.
 

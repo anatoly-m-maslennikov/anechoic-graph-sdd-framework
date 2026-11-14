@@ -25,4 +25,28 @@ class EventIDTests(unittest.TestCase):
   self.assertNotIn('status',uniq);self.assertNotIn('single_value_paths',uniq);self.assertIn('unique ID',_clause(uniq))
   for invalid in (CLAIM.replace('{"keys": ("ID",)}','{"keys": ("ID",), "status": "Active"}'), CLAIM.replace('{"keys": ("ID",)}','{"keys": ()}')):
    with self.assertRaises(ValueError):parse_native_model_claim(invalid)
+
+ def test_class_population_uniqueness_uses_declared_class(self):
+  claim = """from caprmedio.formal_claims import declare_entity
+class Atom:
+    pass
+declare_entity(entity_name="Atom", entity_class=Atom,
+    population_unique_constraints=({"keys": ("Header.Identity.ID", "Header.State.Version")},))
+"""
+  addresses = {"Atom", "Atom.Header.Identity.ID", "Atom.Header.State.Version"}
+  parsed = parse_native_model_claim(claim)
+  self.assertEqual((), lint_python_model_claim(claim, declared_addresses=addresses, relation_names=()))
+  self.assertIn("unknown population Property", lint_python_model_claim(
+      claim, declared_addresses=addresses - {"Atom.Header.State.Version"}, relation_names=())[0])
+  row = {"source": {"atom_id": "CA-R-1", "version": 1, "path": "x", "sha256": "a" * 64},
+         "body": "## Claim\n### Formal Claim\n```python\n" + claim + "```\n",
+         "read_view": {"content_role": "Requirement"}}
+  records, diagnostics = extract_claim_constraints(row)
+  self.assertEqual([], diagnostics)
+  rule, = (item for item in records if item["kind"] == "population_unique_constraint")
+  self.assertEqual(("Atom", ("Header.Identity.ID", "Header.State.Version")),
+                   (rule["population_selector"], rule["keys"]))
+  invalid = claim.replace('entity_class=Atom,', 'entity_class=Atom, population_entity_path="Other",')
+  with self.assertRaises(ValueError):
+   parse_native_model_claim(invalid)
 if __name__=='__main__':unittest.main()

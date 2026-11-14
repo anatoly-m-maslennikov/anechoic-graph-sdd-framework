@@ -15,7 +15,7 @@ version: 27
 updated_at: 2026-11-05 12:58:42 +0400
 carrier_destination:
   file:
-    name: CA-D-442@27-draft-DECISION--encode-scope-unit-declaration-fields.md
+    name: CA-D-442@27-draft-CORE_META_MODEL-DECISION--encode-scope-unit-declaration-fields.md
     path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/000_draft
 ---
 ## Summary

@@ -9,8 +9,7 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Node.**
   dependencies:
   - CAPRMEDIO_MODEL <+ Term//Property
-  - CAPRMEDIO_MODEL <+ CFEL
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_PROPERTY_OF
+  - CAPRMEDIO_MODEL <+ Relation//IS_PROPERTY_OF
 tier: 1
 status: Draft
 version: 25

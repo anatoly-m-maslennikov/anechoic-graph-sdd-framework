@@ -12,12 +12,11 @@ context:
       <+ Frontend Engineering <+ Libraries and Frameworks
     dependencies:
     - MODEL//CAPRMEDIO <+ Projection
+    - CAPRMEDIO_STRUCTURE
   tier: 4
 relations:
   method_for:
   - CA-R-2727
-  depends_on:
-  - CA-R-3022
 state:
   status: active
   version: 7

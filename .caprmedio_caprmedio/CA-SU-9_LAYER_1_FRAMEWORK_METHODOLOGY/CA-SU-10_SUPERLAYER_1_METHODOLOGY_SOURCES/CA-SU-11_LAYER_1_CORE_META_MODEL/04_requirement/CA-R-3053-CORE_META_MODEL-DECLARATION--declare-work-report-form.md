@@ -11,9 +11,9 @@ context:
     main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Form := Work Report)
   tier: 3
 state:
-  status: Active
-  version: 3
-  updated_at: '2026-11-11 14:06:22 +0400'
+  status: active
+  version: 4
+  updated_at: '2026-11-13T22:57:24.985880+00:00'
 destination:
   file:
     name: CA-R-3053-CORE_META_MODEL-DECLARATION--declare-work-report-form.md
@@ -41,28 +41,24 @@ The report is updated throughout execution. Its Status describes the reporting w
 
 ### Formal Claim
 
-```CFEL
-# model
-Atom.Header.Context.Form :: Work Report;
+```python
+from caprmedio.formal_claims import declare_entity
+from caprmedio.model import Plan
 
-Atom/(.Header.Context.Role in (Plan))/(.Header.Context.Form in (Work Report)).Content.Details:: {::1};
+class WorkReport(Plan):
+    pass
 
-Atom/(.Header.Context.Role in (Plan))/(.Header.Context.Form in (Work Report)).Content.Details.*[]{::0};
-
-Atom/(.Header.Context.Role in (Plan))/(.Header.Context.Form in (Work Report)).Content.Summary ;> Atom/(.Header.Context.Role in (Plan))/(.Header.Context.Form in (Work Report)).Content.Details;
-
-# instances
-FOR EACH $report[<Atom>, (.Header.Context.Form = Work Report)]:
-(
-    $report.Header.Context.Role == Plan;
-
-    $report {::1}((IS_WORK_REPORT_FOR)) $task[<Atom>, (.Header.Context.Role = Plan) AND (.Header.Context.Form = Plan)];
-
-    $report.Header.Identity.ID != $task.Header.Identity.ID;
-
-    $report.Content.Summary == $task.Content.Summary;
-
-    $report.Header.Context.Container == $task.Header.Context.Container
+declare_entity(
+    entity_name='Work Report', entity_class=WorkReport,
+    qualification_property_path='Atom.Header.Context.Form',
+    form_roles=('Plan',),
+    instance_relation_constraints={
+        'IS_WORK_REPORT_FOR': {
+            'target_entity_paths': ('Atom/(.Header.Context.Role:=Plan)/(.Header.Context.Form:=Plan)',),
+            'targets_per_source': 1,
+        },
+    },
+    form_content={'required_value': 'Details', 'no_children': 'Details', 'after': 'Summary'},
 )
 ```
 

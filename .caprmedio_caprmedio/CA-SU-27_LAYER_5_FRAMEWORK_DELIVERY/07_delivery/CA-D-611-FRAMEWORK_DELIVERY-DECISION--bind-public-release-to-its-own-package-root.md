@@ -25,7 +25,7 @@ claim_target_scope_unit: FRAMEWORK_DELIVERY
 author: Anatoly Maslennikov
 ---
 
-# Summary
+## Summary
 
 Bind public release to its own package root
 
@@ -34,6 +34,8 @@ Bind public release to its own package root
 the installed-source root of the public-release Tool.
 
 ## Claim
+
+### Prose Claim
 
 the public-release Tool **must** retain `LAYER_5_FRAMEWORK_DELIVERY/PUBLIC_RELEASE/` as its own installed package-relative root and resolve sibling `RELEASE_VERSION` evidence through the selected installed Framework package.
 

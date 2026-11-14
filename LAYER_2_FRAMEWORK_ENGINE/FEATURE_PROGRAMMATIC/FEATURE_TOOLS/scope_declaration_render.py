@@ -53,25 +53,28 @@ def render_scope_declaration(
         "relations: {}\n"
         "---\n"
     )
-    claims = [f"{local_subject}.Name == {_quoted(name)}"]
-    if not project:
+    kind = "Project" if project else "ScopeUnit"
+    fields = [f"name={_quoted(name)}"]
+    if project:
+        fields.insert(0, f"id={_quoted(atom_id.split('-')[0] + '-SU-00')}")
+    else:
         if scope_id is not None:
-            claims.insert(0, f"{local_subject}.ID == {_quoted(scope_id)}")
+            fields.insert(0, f"id={_quoted(scope_id)}")
         if label is not None:
-            claims.append(f"{local_subject}.Label == {_quoted(label)}")
-        claims.append(f"{local_subject}.order.ordered == {str(bool(ordered)).lower()}")
+            fields.append(f"label={_quoted(label)}")
+        fields.append(f"ordered={bool(ordered)!r}")
         if ordered and _positive_int(order_number):
-            claims.append(f"{local_subject}.order.number == {order_number}")
+            fields.append(f"order_number={order_number}")
         if parent:
-            parent_subject = (
-                f"Project//{project_name}"
-                if parent in {PROJECT, project_name}
-                else f"Scope Unit//{parent}"
-            )
-            claims.append(f"{local_subject} ((IS_CONTAINED_BY)) {parent_subject}")
+            fields.append(f"container={_quoted(project_name if parent == PROJECT else parent)}")
+    claim = (
+        f"from caprmedio.model import {kind}\n"
+        "from caprmedio.formal_claims import declare_entity\n"
+        f"declare_entity(entity_name={_quoted(name)}, instance={kind}({', '.join(fields)}))"
+    )
     return (
         header
-        + f"## Summary\n\nDeclare {name}\n\n## Claim\n\n### Formal Claim\n\n```CFEL\n# instances\n"
-        + ";\n".join(claims)
+        + f"## Summary\n\nDeclare {name}\n\n## Claim\n\n### Formal Claim\n\n```python\n"
+        + claim
         + "\n```\n"
     )

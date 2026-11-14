@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//NARROWER_THAN
+  main_subject: CAPRMEDIO_MODEL <+ Relation//NARROWER_THAN
 tier: 3
 status: draft
 version: 7

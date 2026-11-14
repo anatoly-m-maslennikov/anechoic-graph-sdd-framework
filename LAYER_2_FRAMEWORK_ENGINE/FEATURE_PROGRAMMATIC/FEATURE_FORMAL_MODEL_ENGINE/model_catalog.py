@@ -38,13 +38,6 @@ def class_bindings(selected_carriers):
                 declarations[name].append((target, dict(carrier["source"])))
     return dict(declarations)
 
-def compile_native(code, bindings):
-    from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim
-    from FEATURE_FORMAL_MODEL_ENGINE.compiler_claim import compiler_model_statements
-    declaration = parse_native_model_claim(code)
-    lookup = {name: {rows[0][0]} for name, rows in bindings.items() if len(rows) == 1}
-    return compiler_model_statements(declaration, model_class_bindings=lookup)
-
 def bindings_from_workbench_rows(rows):
     """Build a fresh catalog from exactly the selected Workbench source rows."""
     import hashlib

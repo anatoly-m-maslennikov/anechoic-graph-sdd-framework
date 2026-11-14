@@ -78,6 +78,40 @@ class BatchAdmissionTests(unittest.TestCase):
         self.assertEqual(result["admission"], "rejected")
         self.assertIn("prompt bytes", result["reasons"][0])
 
+    def test_prompt_bindings_follow_each_local_contract(self):
+        for version in (6, 7):
+            packet = packet6()
+            packet['review_constraints']['report_contract'] = version
+            ctx = contract.ReviewContext(packet)
+            parts = [part6(group) for group in contract.LOCAL_GROUPS]
+            for row in parts:
+                row.update(contract_version=version, context_sha256=ctx.sha256)
+                if version == 7 and row['evaluator'] == 'cce':
+                    row['evaluator'] = 'writing'
+                    row['checks'][0]['id'] = 'writing'
+            texts = {group: 'prompt ' + group for group in contract.groups_for(version)}
+            bindings = {group: {'path': group + '.prompt.md',
+                                'sha256': hashlib.sha256(text.encode()).hexdigest()}
+                        for group, text in texts.items()}
+            for row in parts:
+                row['prompt_sha256'] = bindings[row['evaluator']]['sha256']
+            with self.subTest(version=version):
+                result = self.admit({'mock.md': parts}, review_context=ctx,
+                                    prompt_bindings=bindings, prompt_texts=texts)
+                self.assertEqual(result['admission'], 'accepted', result['reasons'])
+                wrong = dict(bindings)
+                key = 'writing' if version == 7 else 'cce'
+                wrong['cce' if version == 7 else 'writing'] = wrong.pop(key)
+                result = self.admit({'mock.md': parts}, review_context=ctx,
+                                    prompt_bindings=wrong, prompt_texts=texts)
+                self.assertEqual(result['admission'], 'rejected')
+                self.assertIn('each contract', result['reasons'][0])
+                parts[0]['prompt_sha256'] = '0' * 64
+                result = self.admit({'mock.md': parts}, review_context=ctx,
+                                    prompt_bindings=bindings, prompt_texts=texts)
+                self.assertEqual(result['admission'], 'rejected')
+                self.assertIn('missing or stale', result['reasons'][0])
+
     def test_rejects_a_missing_selected_candidate(self):
         second = source("mock-0.md", "MOCK-R-001", SOURCE_TEXT)["binding"]
         result = self.admit(candidates=[candidate(), second])

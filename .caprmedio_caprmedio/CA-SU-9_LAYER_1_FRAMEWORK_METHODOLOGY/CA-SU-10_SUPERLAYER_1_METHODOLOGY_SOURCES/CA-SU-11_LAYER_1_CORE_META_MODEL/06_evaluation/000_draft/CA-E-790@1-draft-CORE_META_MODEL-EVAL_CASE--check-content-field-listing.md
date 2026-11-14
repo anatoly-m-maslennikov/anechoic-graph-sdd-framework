@@ -15,11 +15,13 @@ current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Check Content Field Listing
 
 ## Claim
+
+### Prose Claim
 
 The proposed `content.get_list()` contract must distinguish allowed registered Markdown Content headings for a kind from headings actually present in a selected instance. It must return heading names, not heading values, logical-key aliases, unrelated metadata keys, or function names.
 

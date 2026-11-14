@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 PROGRAMMATIC = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROGRAMMATIC / "FEATURE_TOOLS"))
@@ -18,6 +19,32 @@ class NativeModelLintTests(unittest.TestCase):
              relations=("IS_PROPERTY_OF", "IS_CONTAINED_BY"), bindings=None):
         return lint_python_model_claim(source, declared_addresses=addresses, relation_names=relations,
                                        path="atom.md", first_line=10, python_class_bindings=bindings)
+
+    def test_native_field_contracts_are_checked_without_compiler(self):
+        source = ("from dataclasses import dataclass, field\n"
+                  "from caprmedio.formal_claims import declare_entity\n"
+                  "@dataclass\nclass Example:\n"
+                  "    id: int = field(metadata={'property_occurrence_cardinality': 1, 'value_cardinality': 1})\n"
+                  "declare_entity(entity_name='Example', entity_class=Example)\n")
+        with patch('FEATURE_FORMAL_MODEL_ENGINE.compiler_claim.compiler_model_statements', side_effect=AssertionError('translated')):
+            self.assertEqual((), self.lint(source))
+            for modified, message in (
+                (source.replace('    id: int', '    extra: str\n    id: int'), 'unsupported dataclass field contract'),
+                (source.replace("'value_cardinality': 1", "'other': 1"), 'require occurrence and value cardinalities'),
+                (source.replace('id: int', 'id: list[int]'), 'unsupported compiler format'),
+                (source.replace("entity_class=Example)", "entity_class=Example, classifications={'Container': 'yes'})"), 'unsupported dataclass field contract declaration'),
+            ):
+                with self.subTest(message=message):
+                    self.assertIn(message, self.lint(modified)[0])
+
+    def test_current_workspace_and_view_field_contracts(self):
+        from FEATURE_FORMAL_MODEL_ENGINE.model_catalog import _native_block
+        root = PROGRAMMATIC.parents[1] / '.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement'
+        for number in (2792, 2793):
+            path = next(root.glob(f'CA-R-{number}-*.md'))
+            source = next(_native_block(path.read_text()))
+            with self.subTest(number=number):
+                self.assertEqual((), self.lint(source, addresses=('View', 'Workspace'), relations=('IS_CONTAINED_BY',)))
 
     def test_property_references_and_missing_bearer(self):
         source = ("from caprmedio.formal_claims import declare_entity\n"

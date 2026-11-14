@@ -21,7 +21,7 @@ current_scope_unit: TOOL_WORKFLOWS
 claim_target_scope_unit: TOOL_WORKFLOWS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Migrate one sealed Atom identity
 
@@ -30,6 +30,8 @@ Migrate one sealed Atom identity
 One assigned legacy Atom identity normalization and independent composition of these Actions.
 
 ## Claim
+
+### Prose Claim
 
 The existing `update_atom` Workflow normalizes one explicitly selected assigned legacy identity. `legacy_identity_proof` binds the exact identity, path, digest and ancestor Git bytes. A missing identity header may be restored from that proof. An explicit noncanonical identity may be changed only through `legacy_identity_mapping`, which names the exact old identity, approved unused canonical identity and destination. An already canonical assigned identity must not be renumbered by this route.
 

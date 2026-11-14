@@ -25,7 +25,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Implement Atom Carrier Validation **in** VALIDATE_ATOMS
 
@@ -34,6 +34,8 @@ Implement Atom Carrier Validation **in** VALIDATE_ATOMS
 the `VALIDATE_ATOMS` Tool's implementation of the Check Atoms methodology Action.
 
 ## Claim
+
+### Prose Claim
 
 the `VALIDATE_ATOMS` Tool **must** implement **=1** methodology Action, Check Atoms under CA-O-087-CORE_META_MODEL-ACTION--check-atoms.
 

@@ -23,7 +23,7 @@ from carrier_aliases import matches_named_value
 
 
 @trace('validation.candidate')
-def validate_candidate(selection, model, raw: bytes, path: Path, *, authored: bool = True) -> None:
+def validate_candidate(selection, model, raw: bytes, path: Path, *, authored=True, require_main_subject=False) -> None:
     """Reject malformed prepared identity, required fields and Status values."""
     from ATOM_LIFECYCLE.common import InputError
 
@@ -33,6 +33,40 @@ def validate_candidate(selection, model, raw: bytes, path: Path, *, authored: bo
         view = logical_view(metadata, model)
     except ValueError as error:
         raise InputError('carrier', 'Candidate Carrier is malformed.', format='UTF-8 Markdown with valid YAML Header') from error
+
+    prefix = _validate_identity(selection, view)
+    _validate_state(view, model)
+    _validate_revision_reference(view)
+    if authored and getattr(model, 'candidate_schema', None) is not None:
+        from ATOM_LIFECYCLE.atom_header_validation import validate_context_fields
+
+        validate_context_fields(view)
+    _validate_declared_schema(model, metadata, parsed.body, view, authored)
+    _validate_composed_atom(model, metadata, view, parsed.body, require_main_subject)
+    if authored:
+        from .container_relation import validate_container_relation
+        from .main_subject_relation import validate_main_subject_relation
+
+        validate_container_relation(selection, model, view)
+        validate_main_subject_relation(selection, model, view, require_resolution=require_main_subject, body=parsed.body)
+    _validate_containment(selection, model, view)
+    _validate_authored_work_report(selection, model, parsed, view, prefix, authored)
+
+
+def _validate_composed_atom(model, metadata, view, body, require_main_subject):
+    schema = getattr(model, 'candidate_schema', None)
+    rules = getattr(schema, 'header_relation_rules', None)
+    if not rules or 'subjects' not in rules:
+        return
+    # Historical flat Headers stay editable until their required Properties are migrated.
+    if require_main_subject or {'identity', 'context', 'state', 'destination'} <= metadata.keys():
+        from .atom_instance_validation import validate_atom_instance
+
+        validate_atom_instance(view, body, schema.content)
+
+
+def _validate_identity(selection, view):
+    from ATOM_LIFECYCLE.common import InputError
 
     for field in ('atom_id', 'ref_id', 'role', 'form', 'status'):
         value = view.get(field)
@@ -49,15 +83,15 @@ def validate_candidate(selection, model, raw: bytes, path: Path, *, authored: bo
         raise InputError('atom_id', 'Atom ID is invalid for this Project.', format='Project Atom ID')
     if atom_id[len(prefix) + 1] != view['role'][0].upper():
         raise InputError('atom_id', 'Atom ID Role letter does not match Role.', format='Role-prefixed Atom ID')
-    version = view.get('version')
-    if type(version) is not int or version < 1:
-        raise InputError('version', 'Version must be a positive integer.', format='Positive integer')
+    return prefix
+
+
+def _validate_revision_reference(view):
+    from ATOM_LIFECYCLE.common import InputError
+
+    atom_id, version = view['atom_id'], view['version']
     if view['ref_id'] not in (atom_id, f'{atom_id}@{version}', f'{atom_id}@{version}-draft'):
         raise InputError('ref_id', 'Ref ID does not identify this Atom revision.', format='Atom ID or qualified revision')
-    _validate_state(view, model)
-    _validate_declared_schema(model, metadata, parsed.body, view, authored)
-    _validate_containment(selection, model, view)
-    _validate_authored_work_report(selection, model, parsed, view, prefix, authored)
 
 
 def _validate_authored_work_report(selection, model, parsed, view, prefix, authored):
@@ -70,26 +104,15 @@ def _validate_work_report(selection, model, parsed, view, prefix):
 
     if not matches_named_value(view['role'], 'Plan'):
         raise InputError('role', 'A Work Report must have the Plan Role.')
-    relations = view.get('relations', {})
-    if not isinstance(relations, dict):
-        raise InputError('relations', 'Relations must be a mapping.')
-    aliases = [key for key in relations if isinstance(key, str) and key.casefold() == 'is_work_report_for']
-    if (any(key not in {'IS_WORK_REPORT_FOR', 'is_work_report_for'} for key in aliases)
-            or not aliases or any(relations[key] != relations[aliases[0]] for key in aliases)):
-        raise InputError('relations', 'Supply one unambiguous Work Report target.')
-    targets = relations[aliases[0]]
-    if (not isinstance(targets, list) or len(targets) != 1 or not isinstance(targets[0], str)
-            or re.fullmatch(re.escape(prefix) + r'-P-[0-9]+', targets[0]) is None
-            or targets[0] == view['atom_id']):
-        raise InputError('relations', 'Supply one distinct Plan base Atom ID.')
+    constraint = getattr(getattr(model, 'candidate_schema', None), 'work_report_target', None)
+    target_ref = _work_report_target_ref(view, prefix, constraint)
     try:
         indexed = query_reader() is not None
-        target = select_context(selection, targets[0]) if indexed else select_source(selection, targets[0])
+        target = select_context(selection, target_ref) if indexed else select_source(selection, target_ref)
         target_view = logical_view(target.metadata, model)
-        if (target.status.casefold() in {'draft', 'archived'}
-                or not matches_named_value(target_view.get('role'), 'Plan')
-                or not matches_named_value(target_view.get('form'), 'Plan')):
+        if target.status.casefold() in {'draft', 'archived'}:
             raise ValueError('Not a Current Plan')
+        _validate_work_report_target_kind(target_view, constraint)
         if logical_container({}, view) != logical_container({}, target_view):
             raise InputError('container', 'Work Report and reported Plan must have the same Container.')
         target_body = (f'## Summary\n\n{target.summary}\n' if indexed and target.summary is not None else
@@ -100,6 +123,52 @@ def _validate_work_report(selection, model, parsed, view, prefix):
         raise
     except (ValueError, OSError, RuntimeError) as error:
         raise InputError('relations', 'The reported Current Plan cannot be resolved safely.') from error
+
+
+def _work_report_target_ref(view, prefix, constraint):
+    from ATOM_LIFECYCLE.common import InputError
+
+    relations = view.get('relations', {})
+    if not isinstance(relations, dict):
+        raise InputError('relations', 'Relations must be a mapping.')
+    aliases = [key for key in relations if isinstance(key, str) and key.casefold() == 'is_work_report_for']
+    if (any(key not in {'IS_WORK_REPORT_FOR', 'is_work_report_for'} for key in aliases)
+            or any(relations[key] != relations[aliases[0]] for key in aliases)):
+        raise InputError('relations', 'Supply one unambiguous Work Report target.')
+    targets = relations[aliases[0]] if aliases else []
+    if not isinstance(targets, list):
+        raise InputError('relations', 'Supply a list of Plan base Atom IDs.')
+    if constraint is None:
+        if len(targets) != 1:
+            raise InputError('relations', 'Supply one distinct Plan base Atom ID.')
+    else:
+        from ATOM_LIFECYCLE.work_report_model import validate_work_report_target_count
+
+        try:
+            validate_work_report_target_count(targets, constraint)
+        except ValueError as error:
+            raise InputError('relations', str(error)) from error
+    ref = targets[0]
+    if (not isinstance(ref, str) or re.fullmatch(re.escape(prefix) + r'-P-[0-9]+', ref) is None
+            or ref == view['atom_id']):
+        raise InputError('relations', 'Supply one distinct Plan base Atom ID.')
+    return ref
+
+
+def _validate_work_report_target_kind(target, constraint):
+    from ATOM_LIFECYCLE.common import InputError
+
+    is_plan = matches_named_value(target.get('role'), 'Plan') and matches_named_value(target.get('form'), 'Plan')
+    if constraint is None:
+        if not is_plan:
+            raise ValueError('Not a Current Plan')
+        return
+    from ATOM_LIFECYCLE.work_report_model import Plan, PlanForm, validate_work_report_targets
+
+    try:
+        validate_work_report_targets((PlanForm if is_plan else Plan,), constraint)
+    except ValueError as error:
+        raise InputError('relations', str(error)) from error
 
 
 _TERMINAL_PLANS = frozenset({'Done', 'Canceled'})
@@ -141,6 +210,7 @@ def _validate_state(view, model):
             raise ValueError
     except ValueError as error:
         raise InputError('updated_at', 'Updated At requires an offset-bearing timestamp.', format='Offset-bearing timestamp') from error
+    _validate_header_groups(view, model, timestamp)
     allowed = model.allowed(view['role'], view['form'])
     try:
         view['status'] = canonical_status(model, view['role'], view['form'], view['status'])
@@ -149,16 +219,33 @@ def _validate_state(view, model):
                          allowed_values=sorted(allowed))
 
 
-def _validate_declared_schema(model, metadata, body, view, authored):
+def _validate_header_groups(view, model, timestamp):
+    from ATOM_LIFECYCLE.common import InputError
+
+    if getattr(model, 'candidate_schema', None) is not None:
+        from ATOM_LIFECYCLE.atom_header_validation import validate_header_groups
+
+        validate_header_groups(view, timestamp)
+    elif type(view.get('version')) is not int or view['version'] < 1:
+        raise InputError('version', 'Version must be a positive integer.', format='Positive integer')
+
+
+def _validate_declared_schema(model, metadata, body, view, authored):  # noqa: C901
     """Apply the explicitly supplied, source-bound Workbench schema, if present."""
     from ATOM_LIFECYCLE.common import InputError
 
     schema = getattr(model, 'candidate_schema', None)
     if schema is None:
         return
+    from .header_ordering import validate_header_order
+
     row = {'header_json': metadata, 'role': view['role'], 'form': view['form'],
            'content_markdown': body}
     errors = []
+    try:
+        validate_header_order(metadata, schema)
+    except ValueError as error:
+        errors.append(InputError('header', str(error), format='Declared Header order'))
     try:
         schema.validate_role_form(view['role'], view['form'])
     except ValueError as error:

@@ -6,17 +6,19 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework Settings
+  main_subject: CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope
+    Unit/Project.Framework Settings
   dependencies:
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework Settings
+  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework
+    Settings
   - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Actor/Operator
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework Settings.Interaction.Reporting Mode
+  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework
+    Settings.Interaction.Reporting Mode
+  - CAPRMEDIO_MODEL <+ Project.Settings.Interaction.Reporting Mode
 tier: 6
 relations:
   child_of:
   - CA-D-361
-  depends_on:
-  - CA-R-1628
 status: Active
 version: 31
 updated_at: 2026-11-02 00:18:22 +0400

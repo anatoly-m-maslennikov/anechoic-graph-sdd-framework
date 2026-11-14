@@ -13,9 +13,9 @@ tier: 4
 relations:
   delivery_for:
   - CA-R-866
-status: Active
-version: 3
-updated_at: 2026-11-02 19:46:47 +0400
+status: active
+version: 4
+updated_at: '2026-11-13T19:23:48.880232+00:00'
 carrier_destination:
   file:
     name: CA-D-659-TOOL_WORKFLOWS-DECISION--deliver-atom-update-tool.md
@@ -32,25 +32,25 @@ llm_session_ids:
 
 Deliver ATOM_UPDATE Tool
 
-## Claim scope
+## Claim
+
+### Prose Claim
 
 Workflow admission owns identity, Version/time, lifecycle and complete schema decisions. Connector calls use CA-D-625 only to verify the supplied request, source preconditions and permission and to perform the explicit mechanical operation. A connector does not choose those decisions.
 
 This Delivery carrier records `TOOL_WORKFLOWS` ownership of the rebuilt flat RMEDO contracts and binds the canonical `ATOM_UPDATE` wrapper. Its rebuilt source authority uses the FEATURE's role folders, not an `ATOM_UPDATE` child folder. The existing executable collection remains at `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_UPDATE/`, explicitly bound to `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_UPDATE/atom_update.py`; it is not an independently registered Scope Unit. The new FEATURE Delivery root is future/unmaterialized and does not relocate that collection. It retains the existing generic update input and sealed apply guard and specifies authoritative-source-read-only Subject-only preview with opt-in local derived-candidate staging. The revised by-value and add/remove/full-set contracts require future implementation verification; historical index-based fixtures and source pins do not prove readiness. It does not define Core semantics, grammar adoption, migration decisions, source repair, or a new MCP route. CA-D-531 binds its separately admitted one-target Subject effect to the existing MCP update action.
 
-## Claim
-
 the `ATOM_UPDATE` Tool **must** deliver its canonical executable Carrier at `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_UPDATE/atom_update.py`; that Carrier realizes `CA-R-866` through the Action `CA-O-030`.
 
 The delivered `ATOM_UPDATE` wrapper **must** accept only the closed Subject-only preview envelope `{atoms, subject_profile?}`. Omission means `legacy`; `approved` is explicit; an unknown or malformed supplied profile fails. Each atom item is exactly an exact repository-relative source-path `selector`, an `expected` object containing exactly `atom_id`, `version`, and `sha256`, and an explicit `subject_patches` list. A replacement patch contains exactly `field` equal to `governs` or `depends_on`, `old` and `new`. Select one dependency by its unique exact current `old` value; caller indexes are rejected. Missing, ambiguous or duplicate current values fail before effects. The connector may compute an occurrence location internally after binding the exact source state. The selected profile validates both the pinned source and the proposed result. For replacement, the old value must match the pinned current bytes exactly, and the new value is explicit: no target, relation move, profile conversion, grammar conversion, or migration mapping is inferred.
 
-Legacy uses `/` as bearer qualification, `:` as Property-to-allowed-value, and literal dots, and rejects every `atom(...)` selector. Approved syntax is governed by the actual Current CA-R-1931, CA-R-1321, CA-R-1324, CA-M-228 and CA-E-383 definitions, resolved with their exact positive Versions, canonical paths and SHA-256 at the operation's Scope epoch. Preserve the case, references, grouping, escaping, operators and selector restrictions declared by those definitions; this consumer does not substitute an older descriptive grammar or infer a profile. Unsupported syntax, source drift or unavailable authority fails closed. Syntax validation does not establish Entity admission or instance resolution. The result includes the selected `subject_profile` and `subject_profile_evidence` containing exactly five reviewed grammar pins and `native_admission: not_performed`, sealed in `preview_sha256`. This is lexical syntax/direction checking only: it does not enumerate selector instances, establish target conformance, or admit a native endpoint.
+Legacy uses `/` as bearer qualification, `:` as Property-to-allowed-value, and literal dots, and rejects every `atom(...)` selector. Approved syntax is governed by the actual Current CA-R-1931, CA-R-1321, CA-R-1324, CA-M-228 and CA-E-833 definitions, resolved with their exact positive Versions, canonical paths and SHA-256 at the operation's Scope epoch. Preserve the case, references, grouping, escaping, operators and selector restrictions declared by those definitions; this consumer does not substitute an older descriptive grammar or infer a profile. Unsupported syntax, source drift or unavailable authority fails closed. Syntax validation does not establish Entity admission or instance resolution. The result includes the selected `subject_profile` and `subject_profile_evidence` containing exactly five reviewed grammar pins and `native_admission: not_performed`, sealed in `preview_sha256`. This is lexical syntax/direction checking only: it does not enumerate selector instances, establish target conformance, or admit a native endpoint.
 
 The Subject-only mode is exclusive. A request carrying `subject_patches` must not also carry complete `frontmatter` or `content` replacement fields. The selected source must be a complete, canonical, non-symlink Atom Carrier at the exact path, with the expected identity, Version, and full-file SHA-256. The preview validates the complete resulting Carrier and preserves path, filename, identity, Summary, body, unrelated frontmatter, and line endings; only the declared Subject spans plus required Version and `updated_at` spans may differ.
 
 Subject-only preview **must** select a complete original Atom Carrier with a stable Atom ID, excluding Draft and archived carriers by both carried Status and placement. Both the pinned source and proposed result **must** pass existing complete-carrier validation, including the applicable Content Role/Type Status model and correct Carrier placement. Preserve the carried Status byte-for-byte; do not activate the source or perform a lifecycle transition. Missing, ambiguous, unsupported, or stale validation authority **must** fail closed.
 
-### Instructed Subjects-only batch binding
+**Instructed Subjects-only batch binding**
 
 The existing updater realizes CA-R-866/CA-O-030's instructed exact ordered batch through its existing Workflow/Tool boundary. The actual instruction, Initiative and existing Operator authorization bind the packet; no extra form, review/pause response, content-review round or confirmation receipt is required or invented. Compose existing commit/stage/commit/promote/graph operations, preserving ordinary generic update behavior and actual outcomes. Public batch effects derive from the exact packet without initial intent-hash metadata; derive any fresh native intent internally. Retain normal local target/draft/patch/layout, source, archive, Version/time and readback checks, not a redundant full-candidate preflight. No new executor, Tool family or recovery mechanism is introduced.
 

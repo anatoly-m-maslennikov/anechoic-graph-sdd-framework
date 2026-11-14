@@ -31,10 +31,3 @@ Delegate responsibility to CORE_EXTENSIONS
 ### Prose Claim
 
 - CORE_EXTENSIONS must provide CAPRMEDIO-maintained Extensions that add or specialize optional CAPRMEDIO capabilities without modifying canonical Core Meta-Model authority. [CA-R-1180](../CA-R-1180-CAPRMEDIO-SCOPE_CONTRACT-GOAL--provide-caprmedio-maintained-optional-extensions.md)
-
-### Formal Claim
-
-```CFEL
-# instances
-Atom//"CA-R-3076" ((HAS_ACTIVE_SUBJECT)) Scope Unit//CORE_EXTENSIONS;
-```

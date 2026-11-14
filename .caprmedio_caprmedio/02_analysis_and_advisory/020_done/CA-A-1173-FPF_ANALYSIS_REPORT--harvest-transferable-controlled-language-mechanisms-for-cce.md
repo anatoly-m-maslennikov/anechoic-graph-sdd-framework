@@ -12,6 +12,10 @@ current_scope_unit: caprmedio
 local_tier: Standard
 global_tier: 2
 author: Anatoly Maslennikov
+destination:
+  file:
+    name: CA-A-1173-FPF_ANALYSIS_REPORT--harvest-transferable-controlled-language-mechanisms-for-cce.md
+    path: .caprmedio_caprmedio/02_analysis_and_advisory/020_done
 ---
 # Summary
 

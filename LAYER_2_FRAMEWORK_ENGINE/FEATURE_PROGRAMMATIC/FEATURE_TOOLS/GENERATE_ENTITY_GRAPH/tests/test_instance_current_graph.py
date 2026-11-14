@@ -30,6 +30,18 @@ def graph_for(subject: str) -> tuple[dict, dict]:
 
 
 class CurrentInstanceGraphTests(unittest.TestCase):
+    def test_approved_grammar_uses_current_evaluation_and_legacy_stays_pinned(self) -> None:
+        approved = subject_notation.get_profile("approved").grammar_pins
+        self.assertEqual("CA-E-833", approved[-1].atom_id)
+        self.assertTrue(approved[-1].path.endswith("CA-E-833-CORE_META_MODEL-EVAL_POLICY--validate-entity-and-topic-reference-expressions.md"))
+        legacy = subject_notation.get_profile("legacy").grammar_pins
+        self.assertEqual(("CA-E-383", 13), (legacy[-1].atom_id, legacy[-1].version))
+        observed = tuple(subject_notation.GrammarPin(item.atom_id, 1, item.path, "a" * 64) for item in approved)
+        self.assertEqual("CA-E-833", subject_notation.profile_evidence("approved", grammar_pins=observed)["grammar_pins"][-1]["atom_id"])
+        wrong = (*observed[:-1], subject_notation.GrammarPin("CA-E-383", 46, observed[-1].path, "a" * 64))
+        with self.assertRaises(subject_notation.SubjectNotationError):
+            subject_notation.profile_evidence("approved", grammar_pins=wrong)
+
     def test_instance_path_preserves_full_prefix_and_direction(self) -> None:
         subject = "Entity/Workflow//Daily.Status:Active"
         self.assertEqual(

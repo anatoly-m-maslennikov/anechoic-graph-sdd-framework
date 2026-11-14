@@ -8,16 +8,15 @@ form: Action
 topics:
   main_subject: Subject/caprmedio/Action//Persist Atom Replacement
   dependencies:
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Operations/Type: Action'
+  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Operations/Type:
+    Action'
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom.Header.State.Version Number
   - Subject/CAPRMEDIO/Carrier/File
   - Subject/CAPRMEDIO/Graph/Node/Project Model/History/Journal
   - Subject/CAPRMEDIO/Carrier/File.Filename
+  - CAPRMEDIO_MODEL <+ Relation
 tier: 3
-relations:
-  depends_on:
-  - CA-R-807
 status: Active
 version: 21
 updated_at: 2026-10-27 19:59:44 +0400

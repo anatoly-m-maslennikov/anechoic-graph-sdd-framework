@@ -24,8 +24,11 @@ LOCAL_GROUPS = {
 }
 
 
+WRITING_GROUPS = {"writing": ("writing",), **{k: v for k, v in LOCAL_GROUPS.items() if k != "cce"}}
+
+
 def groups_for(contract_version: int) -> dict[str, tuple[str, ...]]:
-    return LOCAL_GROUPS if contract_version == 6 else GROUPS
+    return WRITING_GROUPS if contract_version == 7 else LOCAL_GROUPS if contract_version == 6 else GROUPS
 
 
 def _result(checks: list[dict[str, Any]]) -> str:
@@ -87,10 +90,10 @@ def _validate_check(row: dict[str, Any], threshold: float, authorities: dict[str
 def _part_checks(part: dict[str, Any]) -> list[dict[str, Any]]:
     if not isinstance(part, dict):
         raise ValueError("expected evaluation object")
-    if type(part.get("contract_version")) is not int or part["contract_version"] not in (4, 5, 6):
-        raise ValueError("contract_version 4, 5 or 6 required; preserve legacy reports without upgrading them")
-    if part['contract_version'] == 6 and part.get('review_profile') != 'atom_local':
-        raise ValueError('contract 6 requires the atom_local review profile')
+    if type(part.get("contract_version")) is not int or part["contract_version"] not in (4, 5, 6, 7):
+        raise ValueError("contract_version 4, 5, 6 or 7 required; preserve legacy reports without upgrading them")
+    if part['contract_version'] in (6, 7) and part.get('review_profile') != 'atom_local':
+        raise ValueError('local contracts require the atom_local review profile')
     groups = groups_for(part['contract_version'])
     group = part.get("evaluator")
     if not isinstance(group, str) or group not in groups:
@@ -142,7 +145,7 @@ def validate_part(part: dict[str, Any], *, context: ReviewContext,
         part["authority_sources"], candidate=part['source'])
     for row in checks:
         _validate_check(row, context.confidence_threshold, authorities)
-        if part['contract_version'] == 6 and 'subject_inventory' in row:
+        if part['contract_version'] in (6, 7) and 'subject_inventory' in row:
             raise ValueError('Subject inventories are outside the atom_local profile')
         if row["id"] == "subjects":
             validate_subject_inventory(row, source_text, authorities, context.authority_targets(authorities),
@@ -188,7 +191,7 @@ def merge_evaluations(parts: list[dict[str, Any]], *, context: ReviewContext,
     checks = [row for part in ordered for row in part["checks"]]
     result = {"contract_version": first['contract_version'], "source": first["source"], "context_sha256": first["context_sha256"],
               "checks": checks, "result": _result(checks), "parts": ordered}
-    if context.report_contract == 6:
+    if context.report_contract in (6, 7):
         result['review_profile'] = 'atom_local'
     for field in ("authority_sources", "coverage_gaps", "mechanical_evidence"):
         values: list[Any] = []
@@ -216,7 +219,7 @@ def summarize_evaluations(evaluations: list[dict[str, Any]], *, context: ReviewC
             for checks in groups_for(context.report_contract).values() for check in checks
         },
     }
-    if context.report_contract == 6:
+    if context.report_contract in (6, 7):
         summary['review_profile'] = 'atom_local'
     seen: set[str] = set()
     for evaluation in evaluations:

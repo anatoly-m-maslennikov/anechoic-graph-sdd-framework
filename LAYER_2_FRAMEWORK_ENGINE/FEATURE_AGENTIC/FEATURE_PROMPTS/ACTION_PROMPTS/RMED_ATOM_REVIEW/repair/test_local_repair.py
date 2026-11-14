@@ -8,20 +8,27 @@ from test_repair_gate import (
 from repair_gate import _local_repair_boundary
 
 
-def local_inputs():
+def local_inputs(version=6):
     evaluation, proposal, permission = inputs()
     records = [source('mock.md','MOCK-R-001',SOURCE_TEXT), source('rule.md','MOCK-R-002',RULE_TEXT)]
     context = contract.ReviewContext({
         'confidence_threshold':.99,
-        'review_constraints':{'report_contract':6,'review_profile':'atom_local'},
+        'review_constraints':{'report_contract':version,'review_profile':'atom_local'},
         'sources':records, 'candidate_bindings':[records[0]['binding']],
         'authority_bindings':[records[1]['binding']],
     })
     parts = deepcopy(evaluation['parts'])
     for report in parts:
-        report.update(contract_version=6,review_profile='atom_local',context_sha256=context.sha256)
+        report.update(contract_version=version,review_profile='atom_local',context_sha256=context.sha256)
         report['checks'] = [r for r in report['checks'] if r['id'] in contract.LOCAL_GROUPS[report['evaluator']]]
         for row in report['checks']: row.pop('subject_inventory',None)
+        if version == 7 and report['evaluator'] == 'cce':
+            report['evaluator'] = 'writing'
+            report['checks'][0]['id'] = 'writing'
+    if version == 7:
+        for resolution in proposal['resolutions']:
+            if resolution['check_id'] == 'cce':
+                resolution['check_id'] = 'writing'
     evaluation = contract.merge_evaluations(parts,context=context)
     proposal['context_sha256'] = context.sha256
     return context,evaluation,proposal,permission
@@ -36,6 +43,12 @@ class LocalRepair(unittest.TestCase):
         self.assertFalse(result['source_mutation_permitted'])
         self.assertIn('Independent local evaluation',result['next'])
         self.assertNotIn('affected-reference',result['next'])
+
+    def test_contract7_formatting_proposal(self):
+        context, evaluation, proposal, permission = local_inputs(7)
+        result = admit_proposal(evaluation, proposal, context=context, permission=permission,
+                                preflight=caller_preflight(proposal))
+        self.assertEqual(result['result'], 'candidate')
 
     def test_entity_target_change_is_rejected(self):
         context,evaluation,proposal,permission = local_inputs()

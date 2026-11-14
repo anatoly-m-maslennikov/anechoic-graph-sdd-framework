@@ -17,7 +17,7 @@ local_tier: "General"
 author: "Anatoly Maslennikov"
 global_tier: 10
 ---
-# Summary
+## Summary
 
 Admit typed secondary graph connections
 
@@ -26,6 +26,8 @@ Admit typed secondary graph connections
 connections represented by a secondary CAPRMEDIO Graph.
 
 ## Claim
+
+### Prose Claim
 
 a secondary CAPRMEDIO Graph **may** represent typed Relations between its own nodes, **to** another secondary graph **or** its nodes, **and** **to** source Atoms **or** other admitted authoritative sources.
 

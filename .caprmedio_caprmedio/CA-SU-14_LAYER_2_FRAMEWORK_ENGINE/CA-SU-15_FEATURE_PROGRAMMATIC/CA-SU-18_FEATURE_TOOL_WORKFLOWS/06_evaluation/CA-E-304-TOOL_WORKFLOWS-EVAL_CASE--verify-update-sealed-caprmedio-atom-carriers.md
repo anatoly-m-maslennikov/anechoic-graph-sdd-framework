@@ -32,7 +32,7 @@ current_scope_unit: TOOL_WORKFLOWS
 claim_target_scope_unit: TOOL_WORKFLOWS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Verify update sealed caprmedio atom carriers
 
@@ -43,6 +43,8 @@ Workflow admission owns identity, Version/time, lifecycle and complete schema de
 One sealed Atom Modify action, including identity-preserving change classes, exact current state and prior semantic history; ordered actions remain independent.
 
 ## Claim
+
+### Prose Claim
 
 ATOM_UPDATE follows CA-R-866 and CA-O-030 for one Atom action, preserving identity, Summary, placement and exact prior semantic history with Version +1 for every actual changed same-ID update and actual edit-time results; no-op preserves Version and time. A later failed action cannot undo an earlier completed Atom action.
 

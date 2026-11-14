@@ -39,10 +39,10 @@ class ScopeDeclarationRenderTest(unittest.TestCase):
             name='CHILD"X', project_name="demo", atom_id="CA-R-1", updated_at="now",
             scope_id="SU-1", label="FEATURE", ordered=True, order_number=True, parent="PROJECT",
         )
-        self.assertIn('Scope Unit//CHILD"X.ID == "SU-1"', rendered)
-        self.assertIn("order.ordered == true", rendered)
-        self.assertNotIn("order.number", rendered)
-        self.assertIn("((IS_CONTAINED_BY)) Project//demo", rendered)
+        self.assertIn('id="SU-1"', rendered)
+        self.assertIn("ordered=True", rendered)
+        self.assertNotIn("order_number", rendered)
+        self.assertIn('container="demo"', rendered)
 
     def test_materializer_places_root_and_child_at_parent_authority(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

@@ -332,9 +332,9 @@ def prepare_fixture(temporary_root: Path) -> PerformanceFixture:
     relation_path.parent.mkdir(parents=True, exist_ok=True)
     relation_path.write_text(
         _relation_header(fixture.relative(relation_path))
-        + "## Summary\n\nDefine representative Relations.\n\n## Claim\n\n### Formal Claim\n\n```CFEL\n"
-        "Relation//IS_CONTAINED_BY ((HAS_INVERSE)) Relation//CONTAINS;\n"
-        "Relation//IS_BLOCKED_BY ((HAS_INVERSE)) Relation//BLOCKS;\n```\n",
+        + "## Summary\n\nDefine representative Relations.\n\n## Claim\n\n### Formal Claim\n\n```python\n"
+        'relation(source="Relation//IS_CONTAINED_BY", name="HAS_INVERSE", target="Relation//CONTAINS")\n'
+        "relation(source=\"Relation//IS_BLOCKED_BY\", name=\"HAS_INVERSE\", target=\"Relation//BLOCKS\")\n```\n",
         encoding="utf-8",
     )
     model_path = source_directory / f"{CONTENT_MODEL_REFERENCE}-content-model.md"

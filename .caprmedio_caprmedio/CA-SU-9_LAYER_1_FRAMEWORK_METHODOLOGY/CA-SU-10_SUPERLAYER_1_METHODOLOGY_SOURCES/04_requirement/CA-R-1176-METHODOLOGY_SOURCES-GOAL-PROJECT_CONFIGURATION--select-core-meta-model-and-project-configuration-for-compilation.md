@@ -15,6 +15,10 @@ version: 26
 updated_at: 2026-11-02 00:18:22 +0400
 current_scope_unit: METHODOLOGY_SOURCES
 claim_target_scope_unit: PROJECT_CONFIGURATION
+destination:
+  file:
+    name: CA-R-1176-METHODOLOGY_SOURCES-GOAL-PROJECT_CONFIGURATION--select-core-meta-model-and-project-configuration-for-compilation.md
+    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/04_requirement
 ---
 ## Summary
 

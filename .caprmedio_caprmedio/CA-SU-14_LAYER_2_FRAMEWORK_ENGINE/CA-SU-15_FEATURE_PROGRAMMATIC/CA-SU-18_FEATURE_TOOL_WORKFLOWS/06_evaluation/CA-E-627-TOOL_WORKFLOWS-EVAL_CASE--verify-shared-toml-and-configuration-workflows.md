@@ -27,7 +27,7 @@ current_scope_unit: TOOL_WORKFLOWS
 claim_target_scope_unit: TOOL_WORKFLOWS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Verify shared TOML and configuration workflows
 
@@ -38,6 +38,8 @@ Workflow admission owns identity, Version/time, lifecycle and complete schema de
 Required future checks for one shared TOML connector and configuration-specific Project Structure and Project Settings workflows.
 
 ## Claim
+
+### Prose Claim
 
 The shared connector supplies TOML storage mechanics; each configuration workflow owns its complete schema/domain validation before an authorized effect. Configuration kinds do not create separate connectors.
 

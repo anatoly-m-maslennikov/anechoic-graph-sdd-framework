@@ -9,7 +9,7 @@ topics:
   main_subject: 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Entities Graph)'
   dependencies:
   - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
   - CAPRMEDIO_MODEL <+ Atom
   - CAPRMEDIO_MODEL <+ Projection
 tier: 4

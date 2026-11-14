@@ -6,19 +6,19 @@ container:
 role: Method
 form: Eng Decision
 topics:
-  main_subject: "Subject/CAPRMEDIO/Graph/Node/Aspect/Engineering/Operation/Data Handling/Serialization"
+  main_subject: Subject/CAPRMEDIO/Graph/Node/Aspect/Engineering/Operation/Data Handling/Serialization
   dependencies:
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Scope Unit//PROJECT_CONFIGURATION
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Term//Property
   - Subject/CAPRMEDIO/Carrier
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Operations/Type: Workflow'
+  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Operations/Type:
+    Workflow'
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Code
+    Authoring <+ Python Code
 tier: 4
 relations:
   method_for:
   - CA-R-1936
-  depends_on:
-  - CA-M-415
-  - CA-O-204
 status: Active
 version: 15
 updated_at: 2026-10-27 19:59:42 +0400

@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Relation Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_INVERSE_ALIAS_FOR
+  main_subject: CAPRMEDIO_MODEL <+ Relation//IS_INVERSE_ALIAS_FOR
 tier: 3
 status: active
 version: 2

@@ -8,14 +8,15 @@ form: Implementation Method
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Term
   dependencies:
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled English"
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled
+    English
   - CAPRMEDIO_MODEL <+ Scope Unit.Name
   - CAPRMEDIO_MODEL <+ Actor
   - CAPRMEDIO_MODEL <+ Carrier/File
 tier: 3
-status: Active
-version: 34
-updated_at: 2026-11-03 23:25:51 +0400
+status: active
+version: 35
+updated_at: '2026-11-13T19:20:31.529454+00:00'
 carrier_destination:
   file:
     name: CA-M-229-CORE_META_MODEL-IMPLEMENTATION_METHOD--render-governed-terms-and-cce-operators-distinctly.md
@@ -32,10 +33,10 @@ Render Governed Terms and CCE Operators Distinctly
 ### Prose Claim
 
 
-CAPRMEDIO content lexical-case rendering.
+historical CCE content lexical-case rendering. This Method applies only when interpreting historical CCE material; it does not govern new Atom prose or require historical source rewriting.
 
 
-**to** render CAPRMEDIO content, the Author **must** apply the following lexical-case rules:
+For historical CCE content, assess lexical-case rendering under the following historical rules:
 
 - start **every** Governed Term with a capital letter.
 - start **every** General Term with a lowercase letter.

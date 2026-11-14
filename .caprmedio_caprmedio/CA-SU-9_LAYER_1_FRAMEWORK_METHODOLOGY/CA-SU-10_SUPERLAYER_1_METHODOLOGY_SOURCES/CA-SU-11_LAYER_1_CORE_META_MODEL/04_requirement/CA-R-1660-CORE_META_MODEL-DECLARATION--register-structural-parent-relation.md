@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//structural_parent
+  main_subject: CAPRMEDIO_MODEL <+ Relation//structural_parent
   dependencies:
   - CAPRMEDIO_MODEL <+ Scope Unit
 tier: 1

@@ -26,7 +26,7 @@ carrier_destination:
 current_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Derive and search the capability catalog
 
@@ -35,6 +35,8 @@ Derive and search the capability catalog
 the TOOLS capability for Capability Catalog.
 
 ## Claim
+
+### Prose Claim
 
 **to** derive **and** search the Capability Catalog, the Implementation **must** apply the following method.
 

@@ -1,4 +1,3 @@
-# CA-E-827@1
 """Lifecycle queries include retained carriers and update from file deltas."""
 from pathlib import Path
 import os

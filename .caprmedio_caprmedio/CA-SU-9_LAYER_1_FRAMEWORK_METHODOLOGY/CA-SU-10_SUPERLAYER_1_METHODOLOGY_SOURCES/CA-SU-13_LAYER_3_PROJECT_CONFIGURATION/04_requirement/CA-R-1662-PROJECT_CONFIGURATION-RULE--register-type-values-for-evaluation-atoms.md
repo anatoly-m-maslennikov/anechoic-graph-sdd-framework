@@ -8,9 +8,6 @@ form: Rule
 topics:
   main_subject: 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation).Header.Context.Form'
 tier: 3
-relations:
-  depends_on:
-  - CA-R-1506
 status: Active
 version: 39
 updated_at: 2026-11-02 19:44:26 +0400

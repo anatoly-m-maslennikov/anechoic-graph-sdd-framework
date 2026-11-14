@@ -23,7 +23,7 @@ current_scope_unit: CONNECTOR_TOOLS
 claim_target_scope_unit: CONNECTOR_TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Verify complete configuration reads
 
@@ -32,6 +32,8 @@ Verify complete configuration reads
 future conformance checks for CA-R-1942, CA-M-382, CA-D-631 **and** CA-O-218.
 
 ## Claim
+
+### Prose Claim
 
 Configuration Read passes **only** **when** independent source observations prove a complete faithful result, exact matching state evidence **and** no mutation. missing implementation **or** observations is unavailable evidence, **not** a pass.
 

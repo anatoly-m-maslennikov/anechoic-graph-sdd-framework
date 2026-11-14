@@ -23,7 +23,7 @@ current_scope_unit: CONNECTOR_TOOLS
 claim_target_scope_unit: CONNECTOR_TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Verify declared Scope Unit queries
 
@@ -32,6 +32,8 @@ Verify declared Scope Unit queries
 Future conformance evaluation of CA-R-1937-CONNECTOR_TOOLS-RULE--query-declared-scope-units, CA-D-626-CONNECTOR_TOOLS-ENG_DECISION--deliver-declared-scope-unit-query-data and CA-O-211-CONNECTOR_TOOLS-ACTION--query-declared-scope-units.
 
 ## Claim
+
+### Prose Claim
 
 a Scope Unit Query implementation passes this Evaluation **only** **when** independently authored inputs, reopened declared-source evidence **and** actual results show exact matching, complete truthful coverage **and** no mutation. missing implementation **or** observations is unavailable evidence, **not** a pass.
 

@@ -15,7 +15,7 @@ sys.path[:0] = [str(PROGRAMMATIC), str(APPS), str(TOOLS), str(TOOLS / "tests"),
                 str(APPS / "APP_WORKBENCH"), str(APPS / "APP_WORKBENCH" / "tests")]
 
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service import WorkbenchService
-from FEATURE_FORMAL_MODEL_ENGINE.project_claim_lint import lint_project_claim
+from FEATURE_FORMAL_MODEL_ENGINE.project_claim_lint import _relation_declaration_context, lint_project_claim
 from lifecycle_placement_test_support import fixture_rules
 from project_selection import resolve_project
 from scope_declaration_test_support import write_scope_unit_declarations
@@ -23,6 +23,15 @@ from smalltest_support import built_assets, extension_directory, write_settings
 
 
 class ProjectClaimLintTests(unittest.TestCase):
+    def test_direct_and_legacy_relation_declaration_subjects(self):
+        view = {"content_role": "Requirement", "type": "Relation Declaration"}
+        for branch in ("", "CFEL <+ "):
+            subject = f"CAPRMEDIO_MODEL <+ {branch}Relation//SPECIALIZES"
+            with self.subTest(subject=subject):
+                self.assertEqual(
+                    _relation_declaration_context(dict(view, subjects={"active": subject})), "SPECIALIZES",
+                )
+
     @patch("APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_watcher.NativeObserver", PollingObserver)
     def test_current_declarations_authorize_one_selected_claim(self):
         with TemporaryDirectory() as temporary:
@@ -50,8 +59,6 @@ class ProjectClaimLintTests(unittest.TestCase):
             write(10, "Atom", 'subject_path(address="Atom")')
             write(11, "Atom.Name", 'property_rule(address="Atom.Name", value_format="string")')
             write(12, "Relation//HAS_PROPERTY", "Relation//HAS_PROPERTY;", language="CFEL")
-            write(13, "CFEL <+ Operator//Delivery", '# model\nOperator//Delivery == ">>"', language="CFEL",
-                  form="Operator Declaration")
             write(14, "Atom.Unapproved", 'property_rule(address="Atom.Unapproved", value_format="string")',
                   status="Draft", directory=folder / "000_draft")
             # An installed copy cannot supply a missing declaration.

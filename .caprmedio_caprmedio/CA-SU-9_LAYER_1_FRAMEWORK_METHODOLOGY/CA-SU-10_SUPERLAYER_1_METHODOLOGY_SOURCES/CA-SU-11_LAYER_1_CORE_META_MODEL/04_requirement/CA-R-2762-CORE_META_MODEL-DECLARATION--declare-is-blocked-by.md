@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_BLOCKED_BY
+  main_subject: CAPRMEDIO_MODEL <+ Relation//IS_BLOCKED_BY
 tier: 1
 status: active
 version: 3

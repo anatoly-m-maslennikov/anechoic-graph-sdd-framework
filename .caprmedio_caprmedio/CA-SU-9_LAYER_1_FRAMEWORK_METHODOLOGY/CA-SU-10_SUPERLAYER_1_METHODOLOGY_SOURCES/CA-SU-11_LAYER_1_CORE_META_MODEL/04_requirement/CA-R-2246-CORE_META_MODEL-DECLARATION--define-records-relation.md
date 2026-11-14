@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//RECORDS
+  main_subject: CAPRMEDIO_MODEL <+ Relation//RECORDS
   dependencies:
   - CAPRMEDIO_MODEL <+ Event Record
   - CAPRMEDIO_MODEL <+ Event

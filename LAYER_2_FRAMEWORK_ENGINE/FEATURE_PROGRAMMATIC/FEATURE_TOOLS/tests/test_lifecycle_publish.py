@@ -105,11 +105,11 @@ def test_archive_failure_reports_partial_effects_and_stops():
 
 @with_fixture_placement
 def test_same_identity_promotion_requires_predecessor_summary_and_role():
-    base = DRAFT.replace(b'CA-R-9@1-draft', b'CA-R-9@2-draft').replace(
-        b'version: 1', b'version: 2').replace(
+    base = DRAFT.replace(b'CA-R-9@1-draft', b'CA-R-9@3-draft').replace(
+        b'version: 1', b'version: 3').replace(
         b'is_replacement_for: [CA-R-1, CA-R-1, CA-R-2]', b'is_replacement_for: []')
-    predecessor_raw = base.replace(b'CA-R-9@2-draft', b'CA-R-9').replace(
-        b'status: Draft', b'status: Active').replace(b'version: 2', b'version: 1')
+    predecessor_raw = base.replace(b'CA-R-9@3-draft', b'CA-R-9').replace(
+        b'status: Draft', b'status: Active').replace(b'version: 3', b'version: 1')
     selection = SimpleNamespace(root=ROOT)
     model = SimpleNamespace(allowed=lambda role, form: {'Draft', 'Active', 'Archived'})
     for predecessor_status in ('Active', 'Archived'):
@@ -119,7 +119,7 @@ def test_same_identity_promotion_requires_predecessor_summary_and_role():
                 raw = raw.replace(b'Example', b'Changed')
             if change == 'role':
                 raw = raw.replace(b'role: Requirement', b'role: Method')
-            draft = pin('CA-R-9', raw=raw, status='Draft', version=2, ref='CA-R-9@2-draft')
+            draft = pin('CA-R-9', raw=raw, status='Draft', version=3, ref='CA-R-9@3-draft')
             ref = 'CA-R-9@1' if predecessor_status == 'Archived' else 'CA-R-9'
             predecessor = pin('CA-R-9', raw=predecessor_raw, status=predecessor_status, version=1, ref=ref)
             def select(_selection, selected, *, expected_version):
@@ -137,7 +137,7 @@ def test_same_identity_promotion_requires_predecessor_summary_and_role():
                   patch.object(publish, 'write_destination', return_value=effects.Result(effects=[{'operation': 'create'}])) as write,
                   patch.object(publish.effects, 'remove', return_value=effects.Result(effects=[{'operation': 'remove'}])) as remove):
                 result = publish.promote_draft(selection, model, {
-                    'target': {'ref_id': draft.ref_id, 'version': 2}, 'targetStatus': 'Active'})
+                    'target': {'ref_id': draft.ref_id, 'version': 3}, 'targetStatus': 'Active'})
             if change == 'unchanged':
                 assert not result['errors'] and result['outcome'] == 'completed', result
                 assert (write.call_count, remove.call_count) == (1, 1)
@@ -150,6 +150,7 @@ def test_same_identity_promotion_requires_predecessor_summary_and_role():
 @with_fixture_placement
 def test_composed_update_preserves_status_and_version():
     import tempfile
+    from ATOM_LIFECYCLE import draft
     from project_selection import resolve_project
     from scope_declaration_test_support import write_scope_unit_declarations
 
@@ -204,12 +205,23 @@ def test_composed_update_preserves_status_and_version():
         assert 'status: active' in (root / outcome['artifact']['path']).read_text()
         assert not list(control.rglob('*-draft*.md'))
         assert list(control.rglob('CA-R-1@2-*.md'))
+        deferred = draft.create_draft(selection, model, {
+            'sourceCurrent': {'ref_id': 'CA-R-1', 'version': 3},
+            'changes': {'body': body + '\nDeferred.\n'}})
+        assert deferred['savedDraft']['version'] == 4, deferred
+        deferred_path = root / deferred['savedDraft']['path']
+        deferred_bytes = deferred_path.read_bytes()
         next_outcome = publish.update_atom(selection, model, {'sourceCurrent': {'ref_id': 'CA-R-1', 'version': 3},
                                                                'changes': {'body': body + '\nUpdated again.\n'}})
         assert not next_outcome['errors'], next_outcome
         assert next_outcome['artifact']['status'] == 'Active'
-        assert next_outcome['artifact']['version'] == 4
-        request = {'sourceCurrent': {'ref_id': 'CA-R-1', 'version': 4},
+        assert next_outcome['artifact']['version'] == 5
+        stale = publish.promote_draft(selection, model, {
+            'target': {'ref_id': deferred['savedDraft']['ref_id'], 'version': 4},
+            'targetStatus': 'Active'})
+        assert stale['outcome'] == 'needs_input' and not stale['effects'], stale
+        assert deferred_path.read_bytes() == deferred_bytes
+        request = {'sourceCurrent': {'ref_id': 'CA-R-1', 'version': 5},
                    'changes': {'body': body + '\nPromotion failure.\n'}}
         uncertain = {'operation': 'write', 'target': 'example', 'state': 'unknown'}
         with patch.object(publish, '_promote_draft', return_value={
@@ -222,8 +234,8 @@ def test_composed_update_preserves_status_and_version():
         assert failed['effects'] and failed['effects'][-1] == uncertain
         assert failed['warnings'] == ['warning']
         assert 'pending_promotion' not in failed and 'requested_input' not in failed
-        assert list(control.rglob('CA-R-1@5-draft*.md'))
-        assert list(control.rglob('CA-R-1@4-*.md')) and not path.exists()
+        assert list(control.rglob('CA-R-1@6-draft*.md'))
+        assert list(control.rglob('CA-R-1@5-*.md')) and not path.exists()
 
 
 @with_fixture_placement

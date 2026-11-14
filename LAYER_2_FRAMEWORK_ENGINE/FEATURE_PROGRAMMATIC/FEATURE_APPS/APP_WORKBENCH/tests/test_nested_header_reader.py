@@ -121,7 +121,7 @@ class NestedHeaderReaderTests(unittest.TestCase):
         self._nested(
             "contained-by.md", "CA-R-201", form="Relation Definition",
             topic="Subject/Graph/Relation//IS_CONTAINED_BY",
-            body="## Claim\n\n### Formal Claim\n\n```CFEL\nRelation//IS_CONTAINED_BY ((HAS_INVERSE)) Relation//CONTAINS;\n```\n",
+            body="## Claim\n\n### Formal Claim\n\n```python\nrelation(source=\"Relation//IS_CONTAINED_BY\", name=\"HAS_INVERSE\", target=\"Relation//CONTAINS\")\n```\n",
         )
         self._nested(
             "contains.md", "CA-R-202", form="Relation Definition",

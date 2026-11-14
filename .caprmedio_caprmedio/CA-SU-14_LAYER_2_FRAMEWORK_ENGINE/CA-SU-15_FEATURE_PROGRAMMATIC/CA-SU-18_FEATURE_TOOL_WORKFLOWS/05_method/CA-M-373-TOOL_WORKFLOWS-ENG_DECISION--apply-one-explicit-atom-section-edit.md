@@ -22,7 +22,7 @@ current_scope_unit: TOOL_WORKFLOWS
 claim_target_scope_unit: TOOL_WORKFLOWS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Apply one explicit Atom section edit
 
@@ -31,6 +31,8 @@ Apply one explicit Atom section edit
 One explicit section add, replace, remove, rename-title or reorder Action.
 
 ## Claim
+
+### Prose Claim
 
 **To** edit one section, the Atom Action **must**:
 

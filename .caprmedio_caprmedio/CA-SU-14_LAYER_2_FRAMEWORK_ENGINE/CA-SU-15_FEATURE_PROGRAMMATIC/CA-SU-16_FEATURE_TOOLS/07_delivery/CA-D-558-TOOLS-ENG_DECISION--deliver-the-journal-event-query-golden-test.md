@@ -22,7 +22,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Deliver the Journal Event query golden test
 
@@ -31,6 +31,8 @@ Deliver the Journal Event query golden test
 The query golden-test location.
 
 ## Claim
+
+### Prose Claim
 
 The Journal query golden test **must** be delivered at `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FIND_AND_FETCH_JOURNAL_EVENTS/tests/test_find_and_fetch_journal_events.py`.
 

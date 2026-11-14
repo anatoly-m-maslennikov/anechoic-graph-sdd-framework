@@ -35,7 +35,7 @@ current_scope_unit: TOOL_WORKFLOWS
 claim_target_scope_unit: TOOL_WORKFLOWS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Verify logical Atom and Scope Unit connectors
 
@@ -48,6 +48,8 @@ Required future tests for logical Atom and Scope Unit connectors under TOOL_WORK
 Legacy Core identity/Version and content rules require separate alignment in the content Epic before integrated runtime acceptance. This Engine contract does not edit or adopt Core.
 
 ## Claim
+
+### Prose Claim
 
 Each workflow supplies explicit logical targets, current source-state evidence and admitted identity/lifecycle/schema decisions; connectors verify that bound evidence and perform only the supplied mechanical operation. Physical file/TOML locations remain adapter details.
 

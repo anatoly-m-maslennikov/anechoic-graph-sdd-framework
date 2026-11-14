@@ -12,6 +12,8 @@ context:
       <+ Data Handling <+ Source Retrieval
     dependencies:
     - MODEL//CAPRMEDIO <+ Projection
+    - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling
+      <+ Schema
   tier: 4
 relations:
   method_for:
@@ -19,12 +21,10 @@ relations:
   - CA-R-2726
   - CA-R-2728
   - CA-R-2724
-  depends_on:
-  - CA-M-509
 state:
   status: active
-  version: 18
-  updated_at: '2026-11-13T10:13:50.460697+00:00'
+  version: 19
+  updated_at: '2026-11-13T19:29:03.465398+00:00'
 destination:
   file:
     name: CA-M-464-WORKBENCH_BACKEND-SOLUTION--preserve-governed-atom-data-and-reuse-native-sql.md
@@ -39,13 +39,13 @@ Preserve governed Atom data and reuse native SQL.
 
 ## Claim scope
 
-Direct file reading and native query semantics for Current and Draft Atom carriers excluding Archived carriers.
+Direct file reading and native query semantics for Current, Draft, Backlog and explicitly loaded Archived Atom carriers.
 
 ## Claim
 
 ### Prose Claim
 
-Discover Current and Draft Atom carriers throughout the selected Project’s `.caprmedio_<project name>` authority root, independent of membership in the Current Scope Unit tree. Do not restrict Atom discovery to declared Scope directories or select a hard-coded Core path. Identify an Atom by its filename: `<configured Project prefix>-<one Role letter>-*.md`, with the prefix matched literally and the Role letter uppercase. YAML/Header markers and role-folder membership do not establish Atom identity. A matching file with invalid data is reported and excluded; folder/name/Header inconsistencies remain visible through the carrier audits when its data is readable. Keep each readable physical carrier as a separate row keyed by relative path and filename. Report duplicate Atom ID and Version across Current and loaded Archived carriers. Keep Drafts out of that duplicate audit. Select the first eligible declaration separately for model compilation. Current and numbered Draft references stay distinct, while role-only Draft technical references remain path-specific. Exclude derived Projections. Load Archived carriers only for requested Scope Unit and Role pairs. Read the admitted carriers into the derived DuckDB database; every Current status, including Done and Canceled, remains included. Parse YAML and actual CommonMark headings with the existing safe reader. Reuse the compiled Current-Declaration Content model, including Role and Form applicability, to generate Content schema and parse queryable CAPRMEDO Content. Expose only explicitly declared Content property paths, including inherited declarations, without a fixed Claim-heading list. Wildcards and bracketed formats, conditions or constraints restrict those declared properties; neither they nor observed Markdown headings declare new paths. Do not turn unrelated prose headings into Content properties or relabel non-RMEDO bodies as Claims. Do not evaluate arbitrary CFEL or prose as schema. Use the selected SQL engine’s semantics and native tokenization, without another SQL parser or evaluator.
+Discover Current and Draft Atom carriers throughout the selected Project’s `.caprmedio_<project name>` authority root, independent of membership in the Current Scope Unit tree. Do not restrict Atom discovery to declared Scope directories or select a hard-coded Core path. Identify an Atom by its filename: `<configured Project prefix>-<one Role letter>-*.md`, with the prefix matched literally and the Role letter uppercase. YAML/Header markers and role-folder membership do not establish Atom identity. A matching file with invalid data is reported and excluded; folder/name/Header inconsistencies remain visible through the carrier audits when its data is readable. Keep each readable physical carrier as a separate row keyed by relative path and filename. Report duplicate Atom ID and Version across Current and loaded Archived carriers. Keep Drafts out of that duplicate audit. Select the first eligible declaration separately for model compilation. Current and numbered Draft references stay distinct, while role-only Draft technical references remain path-specific. Exclude derived Projections. Load Archived carriers only for requested Scope Unit and Role pairs. Read the admitted carriers into the derived DuckDB database; every Current status, including Done and Canceled, remains included. Parse YAML and actual CommonMark headings with the existing safe reader. Reuse the compiled Current-Declaration Content model, including Role and Form applicability, to generate Content schema and parse queryable CAPRMEDO Content. Expose only explicitly declared Content property paths, including inherited declarations, without a fixed Claim-heading list. Wildcards and bracketed formats, conditions or constraints restrict those declared properties; neither they nor observed Markdown headings declare new paths. Do not turn unrelated prose headings into Content properties or relabel non-RMEDO bodies as Claims. Compile schema only from supported Formal Claim declarations. Use the selected SQL engine’s semantics and native tokenization, without another SQL parser or evaluator.
 
 Preserve raw Header properties, original Markdown and real heading paths privately without a fixed heading list or Form validation. Build flattened SQL columns for model-declared Header paths in Mode 1, observed raw Header paths in Mode 2, and model-admitted Content paths in both modes; source carriers, intermediate files and a third public source table are not created. Only Current Scope Unit Declarations establish current Scope Unit inventory; a Draft Declaration remains queryable only.
 

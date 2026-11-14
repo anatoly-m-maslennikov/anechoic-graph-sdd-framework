@@ -26,11 +26,13 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Verify Journal query read-only and secret exclusion
 
 ## Claim
+
+### Prose Claim
 
 The Tool rejects mutation, credential, secret, arbitrary SQL, and arbitrary-code requests without reading protected values or changing Journal data.
 

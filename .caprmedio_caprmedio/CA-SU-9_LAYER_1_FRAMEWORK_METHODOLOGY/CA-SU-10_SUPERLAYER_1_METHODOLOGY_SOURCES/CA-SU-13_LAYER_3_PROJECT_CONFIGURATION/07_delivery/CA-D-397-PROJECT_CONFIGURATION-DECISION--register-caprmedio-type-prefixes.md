@@ -10,10 +10,8 @@ topics:
   dependencies:
   - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Term//Artifact
   - CAPRMEDIO_MODEL <+ Atom.Header.Identity.ID
+  - CAPRMEDIO_MODEL <+ Carrier
 tier: 3
-relations:
-  depends_on:
-  - CA-D-311
 status: Active
 version: 26
 updated_at: 2026-11-02 08:06:47 +0400

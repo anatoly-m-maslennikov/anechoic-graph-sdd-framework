@@ -26,7 +26,7 @@ current_scope_unit: TOOL_WORKFLOWS
 claim_target_scope_unit: TOOL_WORKFLOWS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Deliver shared TOML and configuration workflows
 
@@ -37,6 +37,8 @@ Workflow admission owns identity, Version/time, lifecycle and complete schema de
 The required shared TOML connector and configuration-specific workflow delivery contract under TOOL_WORKFLOWS. It establishes no additional configuration connector, storage backend or runtime path.
 
 ## Claim
+
+### Prose Claim
 
 one shared TOML connector under CONNECTOR_TOOLS supplies CA-O-218 complete Read under CA-D-631 **and** CA-O-204 Modify under CA-D-625 for admitted configuration sources. The Project Structure and Project Settings workflows each supply their own complete schema/domain validation and permission/currentness boundary.
 

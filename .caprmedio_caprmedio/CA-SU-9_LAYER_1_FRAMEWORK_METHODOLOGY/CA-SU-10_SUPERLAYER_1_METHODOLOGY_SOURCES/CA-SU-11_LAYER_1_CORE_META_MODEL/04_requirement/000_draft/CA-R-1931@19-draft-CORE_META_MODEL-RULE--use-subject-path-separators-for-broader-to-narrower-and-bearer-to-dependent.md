@@ -10,8 +10,8 @@ topics:
   dependencies:
   - CAPRMEDIO_MODEL <+ Term//Property
   - CAPRMEDIO_MODEL <+ Node.**
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_PROPERTY_OF
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//HAS_CLASSIFICATION
+  - CAPRMEDIO_MODEL <+ Relation//IS_PROPERTY_OF
+  - CAPRMEDIO_MODEL <+ Relation//HAS_CLASSIFICATION
   - CAPRMEDIO_MODEL <+ Entity
   - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Package <+ Module <+ Code Unit
 tier: 3

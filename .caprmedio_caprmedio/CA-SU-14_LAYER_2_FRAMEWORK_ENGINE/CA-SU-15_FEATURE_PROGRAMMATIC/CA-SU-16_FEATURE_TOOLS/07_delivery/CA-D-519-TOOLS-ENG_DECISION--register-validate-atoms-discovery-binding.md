@@ -28,7 +28,7 @@ carrier_destination:
 current_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Register VALIDATE_ATOMS discovery binding
 
@@ -37,6 +37,8 @@ Register VALIDATE_ATOMS discovery binding
 the TOOLS capability for Tool/VALIDATE_ATOMS/Carrier.
 
 ## Claim
+
+### Prose Claim
 
 the VALIDATE_ATOMS discovery binding **must** be carried **in** the following TOML table **in** this Atom's Details.
 

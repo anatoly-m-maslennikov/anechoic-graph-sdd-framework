@@ -7,20 +7,28 @@ import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[4] / 'FEATURE_TOOLS'))
 
-from role_directory_rules import compile_role_folders
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.audit_tables import _declared_filename_issue
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.content_schema import compile_content_schema
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.content_schema import DeclarationSource, compile_content_schema
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_inventory import filename_role_matches
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workbench_schema_asset import compile_schema, load_image_schema, schema_asset
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workbench_schema_asset import (
+    compile_role_folders, compile_schema, load_image_schema, schema_asset,
+)
+from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim
+from python_model_claim import parse_structured_python_model_claim
 
 
 class RoleFolderTests(unittest.TestCase):
     def test_formal_folders_round_trip_and_control_audit(self):
-        claims = [
-            ('Atom/(.Header.Context.Role := "Analysis and Advisory") >| (Role Order Number == 2)', 'source'),
-            ('Atom/(.Header.Context.Role := Plan) >| (Role Order Number == 3)', 'source'),
-        ]
-        declared = compile_role_folders(claims)
+        analysis = parse_native_model_claim('''
+from caprmedio.formal_claims import declare_entity
+declare_entity(entity_name="Analysis and Advisory", qualification_property_path="Atom.Header.Context.Role",
+               classifications={"Role Order Number": 2})
+''')
+        plan, = parse_structured_python_model_claim('''
+classify(address="Atom/(.Header.Context.Role := Plan)", axis="Role Order Number", value=3, grouped=True)
+''')
+        source = DeclarationSource('CA-R-2637', 1, 'role.md')
+        declared = compile_role_folders([(analysis, source), (plan, source)])
         folders = tuple(sorted((role, value[0]) for role, value in declared.items()))
         with tempfile.TemporaryDirectory() as directory:
             asset = Path(directory) / 'schema.json'

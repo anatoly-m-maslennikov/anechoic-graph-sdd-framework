@@ -13,9 +13,6 @@ topics:
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Project.Settings
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Governing Configuration
 tier: 3
-relations:
-  depends_on:
-  - CA-M-376
 status: Active
 version: 13
 updated_at: 2026-11-02 19:44:26 +0400
@@ -27,7 +24,7 @@ current_scope_unit: CONNECTOR_TOOLS
 claim_target_scope_unit: CONNECTOR_TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Construct a complete configuration read adapter
 
@@ -36,6 +33,8 @@ Construct a complete configuration read adapter
 construction of the complete Configuration Read operation on the shared TOML connector.
 
 ## Claim
+
+### Prose Claim
 
 **to** construct Configuration Read, the Implementer **must** refine CA-M-376:
 

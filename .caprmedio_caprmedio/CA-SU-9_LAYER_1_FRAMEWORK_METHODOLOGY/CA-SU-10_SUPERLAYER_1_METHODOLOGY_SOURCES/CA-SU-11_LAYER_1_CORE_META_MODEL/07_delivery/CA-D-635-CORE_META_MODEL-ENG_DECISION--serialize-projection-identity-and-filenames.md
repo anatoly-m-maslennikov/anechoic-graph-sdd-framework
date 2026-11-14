@@ -14,12 +14,9 @@ topics:
   - CAPRMEDIO_MODEL <+ Projection.Source.Named Selection
   - CAPRMEDIO_MODEL <+ Projection.Source.Atoms
   - CAPRMEDIO_MODEL <+ Scope Unit
+  - CAPRMEDIO_MODEL <+ Projection.Updated At
+  - CAPRMEDIO_MODEL <+ Carrier/Directory
 tier: 4
-relations:
-  depends_on:
-  - CA-R-1943
-  - CA-D-310
-  - CA-D-550
 status: Active
 version: 17
 updated_at: 2026-11-04 07:51:19 +0400

@@ -28,7 +28,7 @@ claim_target_scope_unit: FRAMEWORK_DELIVERY
 author: Anatoly Maslennikov
 ---
 
-# Summary
+## Summary
 
 Validate personal remote and branch boundary
 
@@ -37,6 +37,8 @@ Validate personal remote and branch boundary
 the remote and branch fields of one public-release request.
 
 ## Claim
+
+### Prose Claim
 
 **the Operator** **must** verify that only an explicit personal remote with `amm/dev` head and `main` base is admitted, while missing remote identity, another scope, or any branch change is refused before effects.
 

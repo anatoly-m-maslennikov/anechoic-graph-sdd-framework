@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from functools import cache
 from typing import TYPE_CHECKING
 
-from .reviewed_instance_check import bind_reviewed_instance_check
+from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.reviewed_instance_check import bind_reviewed_instance_check
 
 if TYPE_CHECKING:
     from scope_declaration_parse import ScopeUnitDeclarations

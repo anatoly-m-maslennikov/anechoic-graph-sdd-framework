@@ -19,7 +19,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Reject Event selectors outside the canonical namespace
 
@@ -28,6 +28,8 @@ Reject Event selectors outside the canonical namespace
 The Journal-specific selector admission boundary.
 
 ## Claim
+
+### Prose Claim
 
 FIND_AND_FETCH_JOURNAL_EVENTS **must** reject every selector outside the
 canonical Event namespace or with invalid pointer syntax before passing the

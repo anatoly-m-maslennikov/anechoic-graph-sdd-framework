@@ -12,9 +12,6 @@ topics:
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Scope Unit
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Project.Settings
 tier: 3
-relations:
-  depends_on:
-  - CA-D-625
 status: Active
 version: 15
 updated_at: 2026-11-02 19:32:45 +0400
@@ -26,7 +23,7 @@ current_scope_unit: CONNECTOR_TOOLS
 claim_target_scope_unit: CONNECTOR_TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Deliver complete Scope Unit read data
 
@@ -35,6 +32,8 @@ Deliver complete Scope Unit read data
 The operation-specific inner representation of one complete Scope Unit declaration Read, refining CA-D-625-CONNECTOR_TOOLS-ENG_DECISION--deliver-coherent-connector-interface.
 
 ## Claim
+
+### Prose Claim
 
 Scope Unit Read data **must** preserve the common closed interface **and** the logical target, complete declaration **and** exact source-state refinement below. a declared binding property is source data, **not** a public physical target **or** storage protocol.
 

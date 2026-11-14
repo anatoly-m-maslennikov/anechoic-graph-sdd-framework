@@ -22,7 +22,7 @@ current_scope_unit: TOOL_WORKFLOWS
 claim_target_scope_unit: TOOL_WORKFLOWS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Patch artifact metadata
 
@@ -31,6 +31,8 @@ Patch artifact metadata
 Generic Artifact metadata-patch orchestration and its boundary with logical Atom Modify.
 
 ## Claim
+
+### Prose Claim
 
 the framework **must** provide one deterministic generic Artifact Workflow that derives a schema-validated field-level patch **to** one artifact's frontmatter, preserves its body bytes, decides governed revision metadata, **and** rejects unknown fields **or** failed preconditions before delegating the explicit storage delta.
 

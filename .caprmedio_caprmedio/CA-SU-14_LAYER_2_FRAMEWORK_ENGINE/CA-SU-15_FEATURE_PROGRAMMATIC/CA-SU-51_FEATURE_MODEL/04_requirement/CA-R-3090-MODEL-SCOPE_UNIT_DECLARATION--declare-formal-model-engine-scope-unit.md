@@ -9,11 +9,11 @@ context:
   container:
     scope_unit: CA-SU-51
   topics:
-    main_subject: CAPRMEDIO_STRUCTURE <+ Scope Unit//FORMAL_MODEL_ENGINE
+    main_subject: CAPRMEDIO_STRUCTURE <+ Scope Unit//FORMAL_MODEL_GENERATOR
 state:
-  version: 3
+  version: 4
   status: active
-  updated_at: '2026-11-13T15:14:02.576340+00:00'
+  updated_at: '2026-11-13T17:44:23.397974+00:00'
 destination:
   file:
     name: CA-R-3090-MODEL-SCOPE_UNIT_DECLARATION--declare-formal-model-engine-scope-unit.md
@@ -32,14 +32,14 @@ from caprmedio.formal_claims import declare_entity
 from caprmedio.model import ScopeUnit
 
 declare_entity(
-    entity_name='FORMAL_MODEL_ENGINE',
+    entity_name="FORMAL_MODEL_GENERATOR",
     instance=ScopeUnit(
-        id='CA-SU-50',
-        name='FORMAL_MODEL_ENGINE',
+        id="CA-SU-50",
+        name="FORMAL_MODEL_GENERATOR",
         structural_level=4,
-        label='FEATURE',
+        label="FEATURE",
         ordered=False,
-        container='MODEL',
+        container="MODEL",
     ),
 )
 ```

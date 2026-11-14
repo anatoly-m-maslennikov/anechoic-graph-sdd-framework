@@ -16,10 +16,6 @@ subjects:
   governs: Subject/Graph Node/Engineering/MCP.selected Workflow capability routes
   depends_on: []
 relations:
-  depends_on:
-  - CA-P-2580
-  - CA-P-2581
-  - CA-P-2582
   relates_to:
   - CA-O-016
   - CA-O-239

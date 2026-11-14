@@ -22,7 +22,7 @@ carrier_destination:
 current_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Execute one snapshot-stable Artifact query
 
@@ -32,6 +32,8 @@ The query evaluation method for FIND_AND_FETCH_ARTIFACTS, not a new parser,
 Workflow, or Journal.
 
 ## Claim
+
+### Prose Claim
 
 FIND_AND_FETCH_ARTIFACTS **must** have CA-O-159 enumerate and retain one
 allowlisted Markdown snapshot before parsing the closed filter grammar, then

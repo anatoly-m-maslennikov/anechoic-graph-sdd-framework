@@ -66,6 +66,44 @@ class RunEvidenceTests(unittest.TestCase):
         self.assertEqual({e['workflow_run_id'] for e in events}, {'mock-run'})
         self.assertTrue(all(e['report_path'] == str(path.relative_to(self.root)) for e in events))
 
+    def test_new_runs_reject_legacy_and_mixed_check_keys(self):
+        state = self.start()
+        self.assertEqual(state['check_key'], 'writing')
+        self.assertEqual(self.store.check_context('mock-run', 0)['check_key'], 'writing')
+        row = checked(state['selection'][0]['source'], state['criteria_sha256'])
+        row['checks']['cce'] = row['checks'].pop('writing')
+        with self.assertRaisesRegex(ValueError, 'run check key'):
+            self.store.record('mock-run', 0, row, stage='check')
+        row['checks']['writing'] = {'status': 'passed'}
+        with self.assertRaisesRegex(ValueError, 'run check key'):
+            self.store.record('mock-run', 0, row, stage='check')
+
+    def test_legacy_run_continues_and_fixes_without_renaming_checks(self):
+        state = self.start()
+        del state['check_key']
+        self.store._save(state)
+        row = checked(state['selection'][0]['source'], state['criteria_sha256'])
+        row['checks']['cce'] = row['checks'].pop('writing')
+        row['checks']['claim']['status'] = 'blocked'
+        row.update(result='blocked', blockers=['unfinished'])
+        self.store.record('mock-run', 0, row, stage='check')
+        dispatch = self.store.check_context('mock-run', 0)
+        self.assertEqual(dispatch['check_key'], 'cce')
+        self.assertEqual(dispatch['report'], row)
+        self.assertEqual(dispatch['workflow_run_id'], 'mock-run')
+        row = dispatch['report']
+        row['checks']['claim']['status'] = 'failed'
+        row.update(result='issues', blockers=[], findings=[{'id': 'f1'}])
+        state = self.store.record('mock-run', 0, row, stage='check')
+        self.assertEqual(state['progress']['checked'], 1)
+        self.store.fix_context('mock-run', 0)
+        (self.root / 'atom.md').write_text('authorized correction')
+        row.update(result='fixed_not_rechecked', corrections=[{'finding_id': 'f1'}])
+        state = self.store.record('mock-run', 0, row, stage='fix', after_paths=['atom.md'])
+        self.assertTrue(state['progress']['complete'])
+        self.assertIn('cce', state['reports'][0]['checks'])
+        self.assertNotIn('writing', state['reports'][0]['checks'])
+
     def test_empty_run_and_pending_atoms_are_not_hidden(self):
         state = self.start(False)
         self.assertTrue(self.store.finish('mock-run', 'completed')['progress']['complete'])

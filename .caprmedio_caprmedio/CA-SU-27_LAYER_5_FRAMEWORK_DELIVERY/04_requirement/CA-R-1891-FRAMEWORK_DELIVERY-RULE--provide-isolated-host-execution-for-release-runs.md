@@ -32,7 +32,7 @@ author: Anatoly Maslennikov
 relations: {}
 ---
 
-# Summary
+## Summary
 
 provide isolated host execution for Release Runs
 
@@ -41,6 +41,8 @@ provide isolated host execution for Release Runs
 the direct host invocation of Local or Public Release through `LAYER_5_FRAMEWORK_DELIVERY/release.py`.
 
 ## Claim
+
+### Prose Claim
 
 the Project host **must** execute Local and Public Release through the direct release entrypoint while preserving the separate authoring, host and Docker/MCP execution boundaries.
 

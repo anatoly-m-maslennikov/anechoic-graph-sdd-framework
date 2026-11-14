@@ -30,7 +30,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Check Atom validator isolation **and** repeatability
 
@@ -39,6 +39,8 @@ Check Atom validator isolation **and** repeatability
 `VALIDATE_ATOMS` isolation and repeatability.
 
 ## Claim
+
+### Prose Claim
 
 the `VALIDATE_ATOMS` isolation check **must** reject unbounded, mutating, **or** misleading execution.
 

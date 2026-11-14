@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Entity Definition
 topics:
-  main_subject: Entity/Graph Syntax <+ Cardinality
+  main_subject: CAPRMEDIO_MODEL <+ Cardinality
 tier: 1
 status: Draft
 version: 2
@@ -21,13 +21,7 @@ Define Cardinality
 
 ## Claim
 
-Cardinality is Graph Syntax for expressing the allowed number of direct values or contained parts.
-
-### Formal claim
-
-```text
-Entity/Graph Syntax <+ Cardinality
-```
+Cardinality specifies the allowed count of direct values or contained parts.
 
 ## Details
 

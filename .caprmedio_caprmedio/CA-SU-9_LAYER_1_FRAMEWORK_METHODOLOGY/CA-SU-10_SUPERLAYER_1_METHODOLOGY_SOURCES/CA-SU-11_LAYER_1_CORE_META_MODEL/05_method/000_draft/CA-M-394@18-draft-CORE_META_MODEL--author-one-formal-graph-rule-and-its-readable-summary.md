@@ -22,7 +22,7 @@ current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Author one formal Graph Rule and its readable Summary
 
@@ -31,6 +31,8 @@ Author one formal Graph Rule and its readable Summary
 Authoring one formal Graph Rule Atom.
 
 ## Claim
+
+### Prose Claim
 
 To author a formal Graph Rule, write one independently replaceable formal mapping in one fenced yaml block under ## Claim, using the registered schema for its single graph_rule_type. Then derive the source-faithful Summary. This is one content.claim, not a frontmatter Claim plus a prose or code duplicate.
 

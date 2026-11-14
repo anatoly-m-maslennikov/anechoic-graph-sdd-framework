@@ -27,6 +27,14 @@ Separate the CAPRMEDIO model from Project structure
 ### Prose Claim
 
 
+`CAPRMEDIO_MODEL` and `CAPRMEDIO_STRUCTURE` are distinct namespaces.
+
+- MODEL holds declarations of kinds, Properties and Relations. `Kind//Narrower`
+  identifies a narrower kind in MODEL.
+- STRUCTURE holds the actual objects. `Whole/Part` follows an immediate
+  containment link in STRUCTURE. The canonical Relation is `IS_CONTAINED_BY`,
+  from Part to Whole. A Topic names an object by its containment path.
+
 CAPRMEDIO's PROJECT STRUCTURE has:
 
 - Scope Structure.
@@ -41,7 +49,9 @@ Its Scope Structure retains the proposed ordered Units:
 3. CORE EXTENSIONS.
 4. DOCUMENTATION.
 
-Its Core Meta-Model Unit contains the Atoms defining MODEL//CAPRMEDIO, including the Declarations for MODEL and PROJECT STRUCTURE. The MODEL and its defining Scope Unit have separate identities.
+Its Core Meta-Model Unit contains the Atoms defining `CAPRMEDIO_MODEL`,
+including the Declarations for MODEL and PROJECT STRUCTURE. The MODEL and
+its defining Scope Unit have separate identities.
 
 Each constrained Unit's formal Scope is declared outside that Unit. It states permitted active and passive Subjects, Relations, endpoints and cardinalities.
 
@@ -64,7 +74,5 @@ composition(container="Aspects", parts=("Product",))
 
 ## Details
 
-The two root kinds are MODEL and PROJECT STRUCTURE. Their CAPRMEDIO instance roots are MODEL//CAPRMEDIO and PROJECT STRUCTURE//CAPRMEDIO. A consumer Project has its own PROJECT STRUCTURE instance root and may have a local MODEL instance root.
-
-This Draft does not move directories. Exact instance registration and mapping from existing Scope Units remain adoption work. The earlier PROJECT//CAPRMEDIO Framework wrapper is superseded by the separate typed roots. CAPRMEDIO's actual Unit names are not universal values.
+Each Project has its own STRUCTURE namespace and may define a local MODEL.
 

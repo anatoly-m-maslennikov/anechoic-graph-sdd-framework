@@ -19,7 +19,7 @@ current_scope_unit: TOOL_WORKFLOWS
 claim_target_scope_unit: TOOL_WORKFLOWS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Coordinate Atom replacement intent
 
@@ -28,6 +28,8 @@ Coordinate Atom replacement intent
 REPLACE_ATOM's explicit singular or frozen bulk replacement intent, delegated application boundary and truthful result evidence.
 
 ## Claim
+
+### Prose Claim
 
 REPLACE_ATOM **must** coordinate explicit Atom replacement intent **without** owning generic Carrier creation, relation editing, **or** archival semantics.
 

@@ -122,12 +122,12 @@ class SplitEvaluation(unittest.TestCase):
             with self.subTest(mutation=mutation), self.assertRaises(ValueError):
                 merge_evaluations(parts)
 
-    def test_cce_includes_operator_inventory(self):
+    def test_writing_guidance_retires_cce_operator_rules(self):
         text = (HERE / "evaluate_cce.prompt.md").read_text()
-        for token in ("must not", "otherwise", "before", "unless", "every", "all", "none", "not in", "starts with", "!=", ">="):
-            self.assertIn(token, text)
-        for phrase in ("lowercase", "bold inline-code", "Scope Unit", "Requirement", "Method", "Evaluation", "Delivery"):
+        for phrase in ("ASD-STE100-aligned", "bold operators", "legacy report identifier",
+                       "Requirement", "Method", "Evaluation", "Delivery"):
             self.assertIn(phrase, text)
+        self.assertNotIn("Canonical operator inventory", text)
 
     def test_property_prompt_carries_schema_and_no_lookup_dependency(self):
         text = (HERE / "evaluate_properties.prompt.md").read_text()
@@ -141,16 +141,11 @@ class SplitEvaluation(unittest.TestCase):
             self.assertIn("inline", text)
             self.assertIn("blocked", text)
 
-    def test_cce_requires_separate_surface_and_language_sweeps(self):
-        # Prompt regression only: this does not simulate or prove model accuracy.
+    def test_writing_check_covers_text_and_evidence(self):
         text = (HERE / "evaluate_cce.prompt.md").read_text()
-        for required in (
-            "two separate sweeps", "raw Markdown delimiters",
-            "**>=2**", "**`>=2`**", "sentence, bullet, and table-cell starts",
-            "Rendering:", "Vocabulary:", "Profile:", "Understandability:",
-            "Unfinished coverage blocks", "Never initialize a batch to passed",
-            "Do not require a modal keyword", "assess actual dependencies",
-        ):
+        for required in ("Inspect the whole text", "Writing:", "Vocabulary:",
+                         "Profile:", "Understandability:", "Unfinished coverage blocks",
+                         "Never initialize a batch to passed", "assess actual dependencies"):
             self.assertIn(required, text)
 
     def test_coherence_scans_entire_markdown(self):
@@ -177,7 +172,7 @@ class SplitEvaluation(unittest.TestCase):
 
     def test_each_evaluator_baseline_has_fresh_bound_sources(self):
         import json
-        manifest = json.loads((HERE / "source_bindings.json").read_text())
+        manifest = json.loads((HERE / "source_bindings.contract6.historical.json").read_text())
         sources = {entry["atom_id"] for entry in manifest["sources"]}
         self.assertEqual(set(manifest["evaluators"]), set(GROUPS))
         for group, identifiers in manifest["evaluators"].items():

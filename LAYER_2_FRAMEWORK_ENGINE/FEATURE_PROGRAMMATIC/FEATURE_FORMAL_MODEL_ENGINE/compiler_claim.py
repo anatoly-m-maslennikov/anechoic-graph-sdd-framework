@@ -10,6 +10,9 @@ import re
 from collections.abc import Mapping
 from typing import Any
 
+from .native_model_lint import has_dataclass_field_contracts
+from .relation_inverse import emits_instance_inverse
+
 
 _PATH = re.compile(r"[A-Za-z_][A-Za-z_0-9 .-]*\Z")
 _RELATION = re.compile(r"[A-Za-z_][A-Za-z_0-9]*\Z")
@@ -85,6 +88,14 @@ def _format(value: Any) -> str:
     return _FORMATS[value]
 
 
+def _form_role_statement(form: str, roles: Any) -> str:
+    if not isinstance(roles, tuple) or not roles or len(set(roles)) != len(roles):
+        raise ValueError("Form Roles must be a nonempty tuple of distinct Roles")
+    names = ", ".join(_name(role) for role in roles)
+    return (f"FOR EACH $item[<Atom>, (.Header.Context.Form = {_name(form)})]: "
+            f"($item.Header.Context.Role:: [in ({names})]{{::1}})")
+
+
 def _aspect_statements(args: Mapping[str, Any]) -> tuple[str, str]:
     from .native_model_claim import validate_aspect_instance
 
@@ -93,23 +104,6 @@ def _aspect_statements(args: Mapping[str, Any]) -> tuple[str, str]:
     except ValueError:
         raise ValueError("invalid Aspect instance address") from None
     return address, f"({address}) ((INSTANCE_OF)) Aspect"
-
-def has_dataclass_field_contracts(declaration: Mapping[str, Any]) -> bool:
-    keys = {"property_occurrence_cardinality", "value_cardinality"}
-    classes = declaration.get("classes", ())
-    if not isinstance(classes, (tuple, list)):
-        return False
-    for cls in classes:
-        if not isinstance(cls, Mapping):
-            continue
-        for field in cls.get("fields", ()):
-            if not isinstance(field, Mapping) or not isinstance(field.get("field"), Mapping):
-                continue
-            metadata = field["field"].get("metadata")
-            if isinstance(metadata, Mapping) and keys.intersection(metadata):
-                return True
-    return False
-
 
 def compiler_model_statements(declaration: Mapping[str, Any], *, model_class_bindings: Mapping[str, Any] | None = None) -> tuple[str, ...]:
     """Return bounded compiler statements from an already parsed native Claim."""
@@ -165,9 +159,7 @@ def compiler_model_statements(declaration: Mapping[str, Any], *, model_class_bin
         statements = [f"Relation//{name}"]
         if inverse := args.get("inverse_alias"):
             inverse = _name(inverse, relation=True)
-            instance_levels = {"instances", "model_entities_or_instances"}
-            pairs = args.get("endpoint_pairs", (args,))
-            if all(pair[endpoint]["level"] in instance_levels for pair in pairs for endpoint in ("source_endpoint", "target_endpoint")):
+            if emits_instance_inverse(args):
                 statements.append(f"Relation//{name} ((HAS_INVERSE)) Relation//{inverse}")
             else:
                 statements.append(f"Relation//{inverse} ((IS_INVERSE_ALIAS_FOR)) Relation//{name}")
@@ -267,6 +259,8 @@ def compiler_model_statements(declaration: Mapping[str, Any], *, model_class_bin
         else:
             bases = [base]
         statements = [statement for selected_base in bases for statement in property_statements(selected_base)]
+        if "form_roles" in args:
+            statements.append(_form_role_statement(args["allowed_values"][0], args["form_roles"]))
         statements.extend(
             f"Atom/(.Header.State.Status := {status}).Header.State.Status >| (Status Order Number == {order})"
             for status, order in args.get("status_order_numbers", {}).items()
@@ -309,7 +303,20 @@ def compiler_model_statements(declaration: Mapping[str, Any], *, model_class_bin
         if len(classes) != 1 or len(classes[0]["bases"]) != 1:
             raise ValueError("a Role-qualified Form requires exactly one base class")
         role = _name(classes[0]["bases"][0])
-        return (f"Atom/(.Header.Context.Role in ({role})).Header.Context.Form :: {name}",)
+        if "form_roles" in args:
+            statements = [f"Atom.Header.Context.Form :: {name}", _form_role_statement(name, args["form_roles"])]
+        else:
+            statements = [f"Atom/(.Header.Context.Role in ({role})).Header.Context.Form :: {name}"]
+        if args.get("project_form_content"):
+            statements.extend((f"Atom/(.Header.Context.Role in ({role}))/{name}",
+                               f"{name}.Header.Context.Form:: [in ({name})]{{::1}}"))
+        if content := args.get("form_content"):
+            prefix = f"Atom/(.Header.Context.Role in ({role}))/(.Header.Context.Form in ({name})).Content"
+            required = _name(content["required_value"])
+            statements.extend((f"{prefix}.{required}:: {{::1}}",
+                               f"{prefix}.{_name(content['no_children'])}.*[]{{::0}}",
+                               f"{prefix}.{_name(content['after'])} ;> {prefix}.{required}"))
+        return tuple(statements)
     return ()
 
 
@@ -340,23 +347,8 @@ def compile_atom_dependencies_with_check(declaration, *, model_class_bindings=No
     The consumer must bind the callback through its reviewed-claim boundary.
     """
     from copy import deepcopy
-    from .topic_dependencies import DEPENDENCIES_CHECK_SOURCE_SHA256
-    from hashlib import sha256
-    args = declaration.get("arguments", {})
-    check = declaration.get("instance_check")
-    if (declaration.get("kind") != "entity" or args.get("entity_name") != "Dependencies"
-            or args.get("base_path") != "Atom.Header.Context.Topics"
-            or args.get("relation_name") != "IS_PROPERTY_OF"
-            or not check or check.get("name") != "dependencies_are_distinct"
-            or check.get("parameter_type") != "Atom"
-            or declaration.get("imports", {}).get("Atom") != "caprmedio.model"
-            or sha256(check["source"].encode()).hexdigest() != DEPENDENCIES_CHECK_SOURCE_SHA256
-            or args.get("property_occurrence_cardinality") != {"minimum": 0, "maximum": 1}
-            or args.get("value_format") != "str"
-            or args.get("value_cardinality") != {"minimum": 0, "maximum": None}
-            or args.get("dependent_property_cardinality") != 0
-            or len(args) != 8):
-        raise ValueError("instance_check requires the typed Atom Dependencies validator")
+    from .topic_dependencies import validate_dependencies_claim
+    check = validate_dependencies_claim(declaration)
     static = deepcopy(declaration)
     del static["arguments"]["instance_check"]
     del static["instance_check"]

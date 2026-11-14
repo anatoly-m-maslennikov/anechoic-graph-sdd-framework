@@ -7,25 +7,14 @@ role: Analysis & Advisory
 form: Specification Proposal
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Projection
+  dependencies:
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+
+    Query Processing
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Storage
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Architecture <+
+    Communication <+ Interface Contracts
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Delivery <+ Packaging
 tier: 3
-relations:
-  depends_on:
-  - CA-R-2729
-  - CA-R-2776
-  - CA-R-2727
-  - CA-M-462
-  - CA-M-470
-  - CA-D-673
-  - CA-D-674
-  - CA-E-676
-  - CA-E-678
-  - CA-R-2785
-  - CA-M-473
-  - CA-D-678
-  - CA-D-512
-  - CA-E-525
-  - CA-R-1804
-  - CA-O-112
 status: Done
 version: 1
 updated_at: 2026-11-05 13:04:02 +0400

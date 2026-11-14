@@ -19,7 +19,7 @@ current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Define Atom/Content Role: Requirement/Type: Graph Rule
 
@@ -28,6 +28,8 @@ Define Atom/Content Role: Requirement/Type: Graph Rule
 Requirement Atoms of Type Graph Rule.
 
 ## Claim
+
+### Prose Claim
 
 Graph Rule means the Requirement Type whose one content.claim states one fully formal condition on graph structure. The containing Atom has Content Role Requirement and Type Graph Rule. Its Claim is one complete fenced YAML block under ## Claim, not a claim mapping in frontmatter and not a second prose statement.
 

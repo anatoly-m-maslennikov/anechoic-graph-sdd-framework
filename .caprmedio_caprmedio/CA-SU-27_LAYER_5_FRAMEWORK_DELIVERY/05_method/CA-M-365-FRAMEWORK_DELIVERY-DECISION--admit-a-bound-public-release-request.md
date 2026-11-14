@@ -30,7 +30,7 @@ claim_target_scope_unit: FRAMEWORK_DELIVERY
 author: Anatoly Maslennikov
 ---
 
-# Summary
+## Summary
 
 Admit a bound public-release request
 
@@ -39,6 +39,8 @@ Admit a bound public-release request
 admission of one public-release execute request.
 
 ## Claim
+
+### Prose Claim
 
 **the Operator** **must** command one exact public-release execution with its personal remote and declared effects before native public bindings start. The command covers the workflow and its Actions; preparation, source validation, current-source observation, and one fresh complete public suite before the first public effect are internal Tool work, not separately commanded admissions or approvals.
 

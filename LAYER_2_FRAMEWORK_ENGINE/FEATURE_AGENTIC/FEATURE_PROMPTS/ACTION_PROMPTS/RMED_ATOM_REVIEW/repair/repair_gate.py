@@ -321,7 +321,7 @@ def admit_proposal(evaluation: dict[str, Any], proposal: dict[str, Any], *,
     retry state. This gate verifies only their agreement with this proposal;
     independent evaluation and the source writer still establish correctness.
     """
-    if context.report_contract not in (5, 6):
+    if context.report_contract not in (5, 6, 7):
         raise ValueError('repair admission requires report contract 5 or 6')
     summarize_evaluations([evaluation], context=context)
     if proposal.get('source') != evaluation['source'] or proposal.get('context_sha256') != context.sha256:
@@ -339,13 +339,13 @@ def admit_proposal(evaluation: dict[str, Any], proposal: dict[str, Any], *,
     classification = _preflight(proposal, bindings, context=context, preflight=preflight)
     original = context.source_text(proposal['source'])
     for output in outputs:
-        if context.report_contract == 6:
+        if context.report_contract in (6, 7):
             _local_repair_boundary(proposal, output, original)
         _identity(output, proposal['source'], original, proposal['disposition'], classification)
     return {'result': 'candidate', 'source_mutation_permitted': False,
             'source': proposal['source'], 'context_sha256': context.sha256, 'outputs': bindings,
             'next': ('Independent local evaluation, information preservation, freshness and history before mutation.'
-                     if context.report_contract == 6 else
+                     if context.report_contract in (6, 7) else
                      'Independent full evaluation, freshness, history and affected-reference checks before mutation.')}
 
 

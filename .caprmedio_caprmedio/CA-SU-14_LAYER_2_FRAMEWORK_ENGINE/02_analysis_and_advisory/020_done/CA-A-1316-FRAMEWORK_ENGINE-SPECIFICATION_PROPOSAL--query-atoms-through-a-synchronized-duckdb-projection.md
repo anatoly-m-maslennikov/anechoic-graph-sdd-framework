@@ -7,16 +7,14 @@ role: Analysis & Advisory
 form: Specification Proposal
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Projection
+  dependencies:
+  - CAPRMEDIO_MODEL <+ Atom.Header
+  - CAPRMEDIO_MODEL <+ Atom.Content
+  - CAPRMEDIO_MODEL <+ Atom.Content.Claim
+  - CAPRMEDIO_MODEL <+ Atom.Content.Claim.Formal Claim
+  - CAPRMEDIO_MODEL <+ Atom.Content.Claim.Prose Claim
+  - CAPRMEDIO_MODEL <+ Format//markdown
 tier: 3
-relations:
-  depends_on:
-  - CA-R-2719
-  - CA-R-2498
-  - CA-R-2500
-  - CA-R-2721
-  - CA-R-2722
-  - CA-R-2547
-  - CA-D-663
 status: Done
 version: 7
 updated_at: 2026-11-04 07:39:08 +0400

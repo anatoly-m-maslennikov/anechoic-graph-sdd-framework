@@ -11,9 +11,6 @@ topics:
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Projection
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Selection
 tier: 2
-relations:
-  depends_on:
-  - CA-R-2150
 status: Draft
 version: 2
 updated_at: 2026-10-28 16:27:23 +0400

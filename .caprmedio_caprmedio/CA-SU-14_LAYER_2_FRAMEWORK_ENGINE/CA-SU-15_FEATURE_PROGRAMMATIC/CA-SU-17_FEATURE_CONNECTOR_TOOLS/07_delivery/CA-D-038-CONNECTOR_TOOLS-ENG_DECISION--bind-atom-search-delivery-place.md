@@ -24,7 +24,7 @@ author: Anatoly Maslennikov
 llm_session_ids:
 - codex:01a02650-eff7-7453-8c37-0699b36773c6
 ---
-# Summary
+## Summary
 
 Bind ATOM_SEARCH Delivery place
 
@@ -33,6 +33,8 @@ Bind ATOM_SEARCH Delivery place
 Bind the rebuilt ATOM_SEARCH operation's source authority under CONNECTOR_TOOLS while retaining its existing executable Delivery location. This carrier does not establish a new transport or runtime admission.
 
 ## Claim
+
+### Prose Claim
 
 CONNECTOR_TOOLS owns the current ATOM_SEARCH contracts flattened into its role directories at `.caprmedio_caprmedio/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-17_FEATURE_CONNECTOR_TOOLS/`. The explicit executable binding remains `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_SEARCH/atom_search.py`; its Delivery directory remains `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_SEARCH/`.
 

@@ -13,10 +13,6 @@ topics:
   - Scope Unit
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Project.Settings
 tier: 3
-relations:
-  depends_on:
-  - CA-M-376
-  - CA-D-625
 status: Active
 version: 16
 updated_at: 2026-11-02 19:44:26 +0400
@@ -28,7 +24,7 @@ current_scope_unit: CONNECTOR_TOOLS
 claim_target_scope_unit: CONNECTOR_TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Construct a declared Scope Unit query adapter
 
@@ -37,6 +33,8 @@ Construct a declared Scope Unit query adapter
 Construction of a replaceable backend adapter for the Scope Unit Query contract.
 
 ## Claim
+
+### Prose Claim
 
 **to** construct the Scope Unit Query adapter, the Implementer **must** refine CA-M-376-CONNECTOR_TOOLS-ENG_DECISION--execute-one-explicit-connector-operation **without** creating a hidden Workflow:
 

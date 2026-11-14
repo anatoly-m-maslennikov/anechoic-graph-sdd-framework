@@ -38,7 +38,7 @@ class RepairPromptTests(unittest.TestCase):
             self.assertIn(token, raw)
 
     def test_canonical_change_authority_is_in_the_delivery_manifest(self):
-        manifest = json.loads((Path(__file__).parent.parent / 'source_bindings.json').read_text())
+        manifest = json.loads((Path(__file__).parent.parent / 'source_bindings.contract6.historical.json').read_text())
         identifiers = {binding['atom_id'] for binding in manifest['sources']}
         self.assertTrue({'CA-O-067', 'CA-R-1432', 'CA-R-1464', 'CA-R-1766',
                          'CA-R-1700', 'CA-D-276', 'CA-D-283'} <= identifiers)

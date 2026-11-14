@@ -24,6 +24,8 @@ carrier_destination:
   file:
     name: CA-C-398-PROBLEM--normalize-the-f13-analysis-tldr-heading.md
     path: .caprmedio_caprmedio/01_concern/021_resolved
+container:
+  scope_unit: CA-SU-00
 ---
 # Summary
 

@@ -6,11 +6,11 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Cardinality
+  main_subject: CAPRMEDIO_MODEL <+ Cardinality
 tier: 1
 status: active
-version: 7
-updated_at: '2026-11-13T06:26:02.151784+00:00'
+version: 8
+updated_at: '2026-11-13T22:57:39.635646+00:00'
 carrier_destination:
   file:
     name: CA-R-2327-CORE_META_MODEL-DECLARATION--define-cardinality.md
@@ -26,18 +26,27 @@ Define Cardinality
 
 ### Prose Claim
 
+Cardinality specifies an allowed count. Bounds are inclusive non-negative
+integers. An unspecified maximum permits any count at or above the minimum.
 
-Cardinality is CFEL syntax for expressing the allowed number of direct values,
-dependent Properties, Relation instances or contained parts.
-
-
-
-The forms are `{:n}`, `{:n+}` and `{:n..m}` with non-negative integer bounds.
+- A Property occurrence count measures the presence of that named Property on
+  one bearer. An explicit occurrence bound governs presence. Otherwise a
+  positive value minimum requires a leaf Property.
+- A direct-value count measures values on one Property occurrence. A structural
+  parent can hold dependent Properties with zero direct values.
+- A dependent Property count measures distinct declared children on one
+  bearer. An immediate count includes one level. A recursive count includes
+  every descendant level.
+- The two Relation endpoint counts are independent. Each counts matching
+  links per selected endpoint. Reading the inverse swaps the endpoint counts.
 
 ### Formal Claim
 
 ```python
-# model
-composition(container='CFEL', parts=('Cardinality',))
-```
+from caprmedio.formal_claims import declare_entity
 
+class CardinalityContract:
+    pass
+
+declare_entity(entity_name='Cardinality', entity_class=CardinalityContract)
+```

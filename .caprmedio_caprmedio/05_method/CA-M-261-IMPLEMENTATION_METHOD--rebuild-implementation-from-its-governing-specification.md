@@ -25,7 +25,7 @@ cce_form: method
 llm_session_ids:
 - codex:01a02650-eff7-7453-8c37-0699b36773c6
 ---
-# Summary
+## Summary
 
 Rebuild Implementation from its governing specification
 

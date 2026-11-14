@@ -27,11 +27,13 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Verify query snapshot excludes its own execution Events
 
 ## Claim
+
+### Prose Claim
 
 The Tool's result frontier remains unchanged when shared Run evidence appends during its actual invocation.
 

@@ -27,7 +27,7 @@ current_scope_unit: TOOL_WORKFLOWS
 claim_target_scope_unit: TOOL_WORKFLOWS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Verify independent Atom workflow effects
 
@@ -38,6 +38,8 @@ Workflow admission owns identity, Version/time, lifecycle and complete schema de
 Required future checks for ordered independent Atom workflows, fresh-ID Summary replacement and explicit reference handoffs.
 
 ## Claim
+
+### Prose Claim
 
 A workflow stops at its first failed Atom action, retains earlier completed actions and leaves the remaining targets untouched. All-or-nothing successful completion within one admitted Atom action remains required; there is no cross-Atom transaction. The selected Subject publication failure envelope below is not crash-atomic and does not change other Actions' safety boundaries.
 

@@ -59,7 +59,7 @@ def validate_report_quality(part: dict[str, Any], source: str, *,
     observation_sections = (_observation_sections(source)
                             if part.get('evaluator') == 'properties' else sections)
     for check in part['checks']:
-        if part.get('contract_version') in (5, 6):
+        if part.get('contract_version') in (5, 6, 7):
             _validate_observations(check, observation_sections, authorities)
         seen = []
         for finding in check['findings']:

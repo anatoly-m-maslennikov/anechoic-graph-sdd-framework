@@ -6,16 +6,14 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//GOVERNS
+  main_subject: CAPRMEDIO_MODEL <+ Relation//GOVERNS
   dependencies:
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
   - CAPRMEDIO_MODEL <+ Atom
   - CAPRMEDIO_MODEL <+ Entity
   - CAPRMEDIO_MODEL <+ Atom.Content
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
 tier: 2
-relations:
-  depends_on:
-  - CA-R-1275
 status: active
 version: 39
 updated_at: '2026-11-12T17:23:54+00:00'

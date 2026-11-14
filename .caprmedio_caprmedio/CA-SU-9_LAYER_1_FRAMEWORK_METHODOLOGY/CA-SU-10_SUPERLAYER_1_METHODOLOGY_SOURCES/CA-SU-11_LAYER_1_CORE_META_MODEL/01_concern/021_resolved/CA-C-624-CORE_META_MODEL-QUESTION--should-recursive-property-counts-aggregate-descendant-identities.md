@@ -6,7 +6,7 @@ container:
 role: Concern
 form: Question
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Cardinality
+  main_subject: CAPRMEDIO_MODEL <+ Cardinality
 tier: 3
 status: Resolved
 version: 3

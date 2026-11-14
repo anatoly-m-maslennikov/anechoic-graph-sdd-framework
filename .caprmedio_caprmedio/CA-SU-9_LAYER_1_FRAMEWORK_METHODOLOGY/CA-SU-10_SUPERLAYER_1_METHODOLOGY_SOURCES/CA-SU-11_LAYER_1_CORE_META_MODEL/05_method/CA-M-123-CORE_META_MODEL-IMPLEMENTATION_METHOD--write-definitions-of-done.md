@@ -8,17 +8,16 @@ form: Implementation Method
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)
   dependencies:
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled English"
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring
 tier: 6
 relations:
   child_of:
-  - CA-M-113
-  - CA-M-122
+  - CA-M-1021
   - CA-R-1581@23
   - CA-R-1583@26
-status: Active
-version: 31
-updated_at: 2026-11-02 18:35:20 +0400
+status: active
+version: 33
+updated_at: '2026-11-13T18:19:12.622411+00:00'
 carrier_destination:
   file:
     name: CA-M-123-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-definitions-of-done.md
@@ -38,9 +37,4 @@ Write Definitions of Done
 authoring one Definition of Done.
 
 
-**to** write one Definition of Done, the Author **must** perform **all** of:
-
-1. begin the falsification condition expression with: the Plan is **not** Done **if**.
-2. make **every** atomic condition observable **and** decidable.
-3. enclose **every** composite condition **and** **every** function argument **in** explicit parentheses.
-4. evaluate the condition expression according **to** CA-M-122-CORE_META_MODEL-IMPLEMENTATION_METHOD--evaluate-condition-expressions.
+To write a Definition of Done, state a falsifiable condition that makes the Plan not Done when unmet. Make each condition observable and decidable. State logical groupings explicitly and evaluate the conditions against the applicable evidence.

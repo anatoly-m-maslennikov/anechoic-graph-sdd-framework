@@ -30,7 +30,7 @@ author: Anatoly Maslennikov
 relations: {}
 ---
 
-# Summary
+## Summary
 
 Record public-release lineage with schema-v5 Runs
 
@@ -39,6 +39,8 @@ Record public-release lineage with schema-v5 Runs
 the Journal evidence of one public-release execution.
 
 ## Claim
+
+### Prose Claim
 
 **the Operator** **must** record actual Workflow, Step, and Action Runs with schema-v5 parentage and attach each Tool-call input, result, effect, and report reference to its parent Step and Action evidence.
 

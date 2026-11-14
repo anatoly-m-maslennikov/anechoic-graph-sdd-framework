@@ -8,9 +8,9 @@ form: Declaration
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/Step
 tier: 3
-status: Active
-version: 6
-updated_at: '2026-11-11 16:04:42 +0400'
+status: active
+version: 7
+updated_at: '2026-11-13T23:06:45.575413+00:00'
 carrier_destination:
   file:
     name: CA-R-2465-CORE_META_MODEL-DECLARATION--declare-step.md
@@ -25,26 +25,32 @@ Declare Step
 
 ## Claim
 
+### Prose Claim
+
+A Step uses exactly one execution mode. It runs one Action or Workflow, or contains one or more nested Steps.
+
 ### Formal Claim
 
-```CFEL
-# model
-Atom/(.Header.Context.Role in (Operations))/Step;
+```python
+from caprmedio.formal_claims import Cardinality, declare_entity
+from caprmedio.model import Operations
 
-Step ((NARROWER_THAN)) Atom/(.Header.Context.Role in (Operations));
+class Step(Operations):
+    pass
 
-# instances
-Step//$step;
-
-$step{::1}((IS_CONTAINED_BY)) Workflow//$workflow;
-
-IF $step {=0}((RUNS)) THEN $step {::1+}((CONTAINS)) Substep//$substep;
-
-IF $step {>0}((RUNS)) THEN $step {::0}((CONTAINS));
-
-IF $step {=0}((CONTAINS)) THEN $step {::1}((RUNS)) (in (Action, Workflow))//$selected
+declare_entity(
+    entity_name='Step', entity_class=Step,
+    instance_relation_constraints={
+        'IS_CONTAINED_BY': {'target_entity_paths': ('Atom/(.Header.Context.Role:=Operations)/Workflow', 'Atom/(.Header.Context.Role:=Operations)/Step'), 'targets_per_source': 1},
+        'RUNS': {
+            'target_entity_paths': ('Atom/(.Header.Context.Role:=Operations)/Action', 'Atom/(.Header.Context.Role:=Operations)/Workflow'),
+            'targets_per_source': Cardinality(minimum=0, maximum=1),
+        },
+        'CONTAINS': {'target_entity_paths': ('Atom/(.Header.Context.Role:=Operations)/Step',)},
+    },
+)
 ```
 
 ## Semantics
 
-A Step is a unit of work within a Workflow.
+A Step is a unit of work within a Workflow. It has exactly one immediate container, either a Workflow or a Step. It runs exactly one Action or Workflow, or contains one or more nested Steps.

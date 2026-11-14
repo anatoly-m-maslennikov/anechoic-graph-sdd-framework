@@ -21,9 +21,6 @@ tier: 3
 relations:
   is_decomposition_of:
   - CA-P-1959
-  depends_on:
-  - CA-P-1966
-  - CA-P-2045
   blocks:
   - CA-P-1969
 status: Done

@@ -22,7 +22,7 @@ current_scope_unit: TOOL_WORKFLOWS
 claim_target_scope_unit: TOOL_WORKFLOWS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Share one TOML connector across configuration Workflows
 
@@ -31,6 +31,8 @@ Share one TOML connector across configuration Workflows
 Logical edits of TOML-backed Project configuration, including Project Structure and Project Settings.
 
 ## Claim
+
+### Prose Claim
 
 Configuration Workflows **must** use the same TOML storage connector while retaining a distinct Workflow for each configuration. The Workflow owns the configuration's meaning, explicit requested delta, applicable schema, authorization and result; the connector owns TOML access and private storage representation through CA-R-1936-CONNECTOR_TOOLS-RULE--use-one-coherent-connector-interface. Workflows supply logical targets, deltas, schema, source-view and authorization bindings; they do not encode backend paths, table names or storage query languages. Replacing the backend changes the connector binding or implementation, not the configuration Workflow's meaning or sequence. Do not create a separate connector merely because the TOML configuration differs.
 

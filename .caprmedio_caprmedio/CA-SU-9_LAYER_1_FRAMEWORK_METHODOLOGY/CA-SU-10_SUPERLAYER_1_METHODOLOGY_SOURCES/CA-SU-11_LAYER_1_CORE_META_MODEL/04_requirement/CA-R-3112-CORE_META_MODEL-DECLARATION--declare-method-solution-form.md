@@ -36,11 +36,11 @@ Declare Method Solution Form
 from caprmedio.formal_claims import declare_entity
 from caprmedio.model import Method
 
-class Solution(Method):
+class MethodSolution(Method):
     pass
 
 declare_entity(
-    entity_class=Solution,
+    entity_class=MethodSolution,
     entity_name='Solution',
     qualification_property_path='Atom.Header.Context.Form',
 )

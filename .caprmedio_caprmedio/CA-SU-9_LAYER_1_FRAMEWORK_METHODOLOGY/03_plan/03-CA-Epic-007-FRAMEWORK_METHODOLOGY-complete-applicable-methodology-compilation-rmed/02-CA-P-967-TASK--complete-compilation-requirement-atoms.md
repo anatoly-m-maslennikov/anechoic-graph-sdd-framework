@@ -15,9 +15,6 @@ subjects:
   - Subject/Graph Node/Engineering/Confidence Threshold
 version: 13
 updated_at: 2026-10-25 17:32:27 +0400
-relations:
-  depends_on:
-  - CA-P-966
 status: Active
 author: Anatoly Maslennikov
 current_scope_unit: FRAMEWORK_METHODOLOGY

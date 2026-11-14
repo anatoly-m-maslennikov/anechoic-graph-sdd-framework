@@ -13,6 +13,10 @@ version: 5
 updated_at: 2026-11-02 15:49:28 +0400
 current_scope_unit: caprmedio
 author: Anatoly Maslennikov
+destination:
+  file:
+    name: CA-A-1306-SPEC_PROPOSAL--exactly-one-definition-per-model-entity.md
+    path: .caprmedio_caprmedio/02_analysis_and_advisory/020_done
 ---
 ## Summary
 

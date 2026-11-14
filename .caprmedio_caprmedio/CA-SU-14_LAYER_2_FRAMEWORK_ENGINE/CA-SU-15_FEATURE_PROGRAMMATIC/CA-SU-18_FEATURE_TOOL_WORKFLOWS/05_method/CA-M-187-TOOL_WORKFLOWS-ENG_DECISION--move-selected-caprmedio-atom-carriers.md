@@ -28,7 +28,7 @@ current_scope_unit: TOOL_WORKFLOWS
 claim_target_scope_unit: TOOL_WORKFLOWS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Move selected CAPRMEDIO Atom carriers
 
@@ -37,6 +37,8 @@ Move selected CAPRMEDIO Atom carriers
 use this Method **when** a caller prepares relocation of one exact Atom **or** an explicit sequence of independent Atom Actions while preserving their Substance, Summary, Type and identities and changing only the explicit placement and required Revision metadata. actual relocation is permitted **only** **when** an authorized project-local MCP delegation supplies a sealed Initiative action envelope.
 
 ## Claim
+
+### Prose Claim
 
 1. resolve the exact selector **or** recursive source subtree, retain **only** Atom carriers, **and** capture **every** source path, filename, ID, **and** digest.
    bind one sealed `move_atom` request to one target descriptor with `atom_id`, expected current Version or digest and source evidence, and to placement `{destination_path, owning_scope_unit, claim_target_scope_unit}`; preserve the Atom ID, Summary, Type, complete body and typed relations.

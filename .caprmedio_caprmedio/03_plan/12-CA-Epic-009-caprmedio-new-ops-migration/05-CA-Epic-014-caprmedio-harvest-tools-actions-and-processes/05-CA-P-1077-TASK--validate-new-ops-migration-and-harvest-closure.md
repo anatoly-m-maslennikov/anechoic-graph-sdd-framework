@@ -21,9 +21,6 @@ subjects:
   - 'Subject/Graph Node/Domain/Continuant/Atom/Content Role: Plan.Autonomous Confidence Threshold'
 version: 7
 updated_at: 2026-10-25 17:32:27 +0400
-relations:
-  depends_on:
-  - CA-P-1076
 status: Active
 current_scope_unit: caprmedio
 content_role: Plan

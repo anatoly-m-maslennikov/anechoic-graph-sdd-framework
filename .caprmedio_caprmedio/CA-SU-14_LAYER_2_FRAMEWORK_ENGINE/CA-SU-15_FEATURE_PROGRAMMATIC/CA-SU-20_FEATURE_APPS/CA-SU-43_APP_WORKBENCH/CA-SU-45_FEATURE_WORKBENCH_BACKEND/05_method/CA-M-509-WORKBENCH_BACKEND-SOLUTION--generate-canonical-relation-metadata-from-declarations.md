@@ -11,12 +11,12 @@ context:
     main_subject: PROJECT STRUCTURE//CAPRMEDIO <+ Aspects <+ Engineering <+ Operation
       <+ Data Handling <+ Schema
     dependencies:
-    - MODEL//CAPRMEDIO <+ CFEL <+ Relation
+    - MODEL//CAPRMEDIO <+ Relation
   tier: 3
 state:
   status: active
-  version: 8
-  updated_at: '2026-11-12T17:24:18.052976+00:00'
+  version: 9
+  updated_at: '2026-11-13T19:29:19.097366+00:00'
 destination:
   file:
     name: CA-M-509-WORKBENCH_BACKEND-SOLUTION--generate-canonical-relation-metadata-from-declarations.md
@@ -38,9 +38,9 @@ Generate canonical relation metadata from declarations
 
 Generate one rebuildable relation registry from Current Requirement relation Declarations for Workbench relation-name resolution and direct/derived materialization. Include canonical names, explicit inverse aliases, literal unqualified inverse bindings, and source IDs/versions. An inverse alias needs no separate Relation Declaration.
 
-Normalize an explicit inverse by swapping endpoints once; preserve an unambiguous legacy named inverse through its declared counterpart without source edits or invented bindings. Derive container facts from effective Header.Container, including Context carrier layout, and resolve the Project root as `uppercase(Project prefix)-SU-00`. Build each inverse view once and refresh only affected rows/hashes on source change. Preserve exact model addresses: ambiguous/unsupported metadata is diagnosed and omitted, never guessed; prose, general CFEL and qualified derivation rules are not runtime facts.
+Normalize an explicit inverse by swapping endpoints once; preserve an unambiguous legacy named inverse through its declared counterpart without source edits or invented bindings. Derive container facts from effective Header.Container, including Context carrier layout, and resolve the Project root as `uppercase(Project prefix)-SU-00`. Build each inverse view once and refresh only affected rows/hashes on source change. Preserve exact model addresses: ambiguous/unsupported metadata is diagnosed and omitted, never guessed; prose, expressions outside supported relation declarations, and qualified derivation rules are not runtime facts.
 
 In refresh mode, use the Current Declaration inputs selected under CA-M-1011, including its first-refresh bootstrap. Generate deterministic JSON metadata before image fingerprint and context assembly. In existing mode, use the checkout registry unchanged. Its fingerprint excludes a changing timestamp. A missing or invalid asset or a failed refresh prevents image or package acceptance. Load the delivered registry at startup. Source changes refresh relation facts under that registry. Apply relation declaration changes by refreshing the registry and rebuilding the image. MCP tool discovery remains separate.
 
 
-Generate declaration-derived model facts only from CFEL-labelled code blocks in `Content.Claim.Formal Claim`. Ignore `#` comments outside quoted strings, including section markers such as `# model`; comments are not declarations or parsing gates. Prose Claim, Semantics, Details, examples and Header Topics do not supply model facts. Source identity, lifecycle and provenance metadata may select and bind inputs. Register Relation names, inverse bindings and aliases from their formal declarations, not from Header Topics.
+Generate declaration-derived model facts only from code blocks in `Content.Claim.Formal Claim` that the build-time compiler accepts. Comments outside strings do not supply model facts or decide whether a block is a declaration. Prose Claim, Semantics, Details, examples and Header Topics do not supply model facts. Source identity, lifecycle and provenance metadata may select and bind inputs. Register Relation names, inverse bindings and aliases from their formal declarations, not from Header Topics.

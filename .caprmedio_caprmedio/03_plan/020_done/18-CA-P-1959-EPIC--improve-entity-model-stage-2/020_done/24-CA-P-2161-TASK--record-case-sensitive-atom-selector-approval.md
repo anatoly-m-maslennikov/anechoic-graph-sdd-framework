@@ -16,8 +16,6 @@ tier: 3
 relations:
   is_decomposition_of:
   - CA-P-1959
-  depends_on:
-  - CA-P-2157
 status: Done
 version: 4
 updated_at: 2026-10-25 17:32:27 +0400

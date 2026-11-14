@@ -12,11 +12,6 @@ tier: 3
 relations:
   is_decomposition_of:
   - CA-P-2585
-  depends_on:
-  - CA-P-2586
-  - CA-P-2587
-  - CA-P-2588
-  - CA-P-2589
   relates_to:
   - CA-P-2577
   - CA-E-539

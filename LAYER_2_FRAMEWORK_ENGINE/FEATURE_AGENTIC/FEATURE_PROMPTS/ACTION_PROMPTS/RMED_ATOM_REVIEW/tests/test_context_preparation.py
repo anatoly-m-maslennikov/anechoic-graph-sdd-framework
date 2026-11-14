@@ -13,6 +13,14 @@ TMPDIR.mkdir(parents=True, exist_ok=True)
 
 
 class ContextPreparation(unittest.TestCase):
+    def test_current_baseline_fails_closed_for_unresolved_bindings(self):
+        with self.assertRaisesRegex(ValueError, 'unresolved authority or settings'):
+            rebuild_baseline({'sources': []}, {'sources': [],
+                             'unresolved_sources': [{'atom_id': 'MOCK-R-1'}]})
+        with self.assertRaisesRegex(ValueError, 'unresolved authority or settings'):
+            rebuild_baseline({'sources': []}, {'sources': [],
+                             'unresolved_settings': ['missing']})
+
     def test_manifest_baseline_uses_bound_text_not_previous_convenience_copy(self):
         canonical = source('rule.md', 'MOCK-R-002', RULE_TEXT)
         packet = {'sources': [canonical], 'baseline': [{'raw': 'obsolete'}]}

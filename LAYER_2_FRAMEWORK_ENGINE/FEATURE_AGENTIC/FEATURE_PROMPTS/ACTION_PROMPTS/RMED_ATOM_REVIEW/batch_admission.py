@@ -11,7 +11,7 @@ from copy import deepcopy
 import hashlib
 from typing import Any, Mapping, Sequence
 
-from evaluation_contract import GROUPS, ReviewContext, merge_evaluations, summarize_evaluations
+from evaluation_contract import groups_for, ReviewContext, merge_evaluations, summarize_evaluations
 
 
 def _rejected(reason: str) -> dict[str, Any]:
@@ -72,7 +72,8 @@ def _validate_current_sources(candidates: Sequence[dict[str, Any]],
             raise ValueError("current source bytes do not match the caller context")
 
 
-def _validate_prompt_bindings(parts_by_path: Mapping[str, Sequence[dict[str, Any]]], *,
+def _validate_prompt_bindings(parts_by_path: Mapping[str, Sequence[dict[str, Any]]],
+                              contexts: ReviewContext | Mapping[str, ReviewContext], *,
                               prompt_bindings: Mapping[str, Mapping[str, str]] | None,
                               prompt_texts: Mapping[str, str] | None) -> None:
     """Optionally bind raw reports to caller-provided evaluator prompt bytes."""
@@ -80,8 +81,9 @@ def _validate_prompt_bindings(parts_by_path: Mapping[str, Sequence[dict[str, Any
         return
     if not isinstance(prompt_bindings, Mapping) or not isinstance(prompt_texts, Mapping):
         raise ValueError("prompt bindings and prompt texts must be supplied together")
-    if set(prompt_bindings) != set(GROUPS):
-        raise ValueError("prompt bindings must cover every evaluator exactly once")
+    for path in parts_by_path:
+        if set(prompt_bindings) != set(groups_for(_context_for(contexts, path).report_contract)):
+            raise ValueError("prompt bindings must cover every evaluator exactly once for each contract")
     expected: dict[str, str] = {}
     for evaluator, binding in prompt_bindings.items():
         if not isinstance(binding, Mapping) or not isinstance(binding.get("path"), str):
@@ -159,7 +161,7 @@ def admit_batch(candidates: Sequence[dict[str, Any]],
         if extra:
             raise ValueError("extra candidates in raw parts: " + ", ".join(sorted(extra)))
         _validate_current_sources(candidates, contexts, current_source_texts)
-        _validate_prompt_bindings(raw_parts_by_candidate, prompt_bindings=prompt_bindings,
+        _validate_prompt_bindings(raw_parts_by_candidate, contexts, prompt_bindings=prompt_bindings,
                                   prompt_texts=prompt_texts)
 
         merged_records: list[tuple[ReviewContext, dict[str, Any]]] = []

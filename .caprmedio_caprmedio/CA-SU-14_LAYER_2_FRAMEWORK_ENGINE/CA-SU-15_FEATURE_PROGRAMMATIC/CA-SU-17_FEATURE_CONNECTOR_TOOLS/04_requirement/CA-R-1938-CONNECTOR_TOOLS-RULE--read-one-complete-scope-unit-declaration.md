@@ -12,9 +12,6 @@ topics:
   - Scope Unit
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Project.Settings
 tier: 3
-relations:
-  depends_on:
-  - CA-D-625
 status: Active
 version: 15
 updated_at: 2026-11-02 19:44:26 +0400
@@ -26,7 +23,7 @@ current_scope_unit: CONNECTOR_TOOLS
 claim_target_scope_unit: CONNECTOR_TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Read one complete Scope Unit declaration
 
@@ -35,6 +32,8 @@ Read one complete Scope Unit declaration
 Effect-free full Read of one explicit Scope Unit in a bound Project and current or expressly pinned/historical source view.
 
 ## Claim
+
+### Prose Claim
 
 the Scope Unit Read result **must** contain the complete authoritative declaration state for exactly one explicit canonical Scope Unit Name **in** the bound Project, with actual source-view evidence **and** no mutation. Read is independently callable **without** Query, Find, Modify **or** an enclosing Workflow.
 

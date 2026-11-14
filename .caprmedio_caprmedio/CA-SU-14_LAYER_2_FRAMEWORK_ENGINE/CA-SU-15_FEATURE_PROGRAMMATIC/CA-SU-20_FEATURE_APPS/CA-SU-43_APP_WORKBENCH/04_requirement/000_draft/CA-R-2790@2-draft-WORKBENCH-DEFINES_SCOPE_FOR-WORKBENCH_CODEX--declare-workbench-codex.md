@@ -31,12 +31,20 @@ Declare WORKBENCH_CODEX
 Own Codex integration in Workbench: one chat per Project, its conversation interface, Project context, sessions and turns, streamed output, calls to all Tools exposed by the enabled configured MCP servers, and approval interaction. CAPRMEDIO calls carry the selected Project root; other servers retain their own inputs. Shared Workbench contracts remain in WORKBENCH.
 ### Formal Claim
 
-```CFEL
-# instances
-Scope Unit//WORKBENCH_CODEX.ID == "CA-SU-47";
-Scope Unit//WORKBENCH_CODEX.Name == "WORKBENCH_CODEX";
-Scope Unit//WORKBENCH_CODEX.Label == "FEATURE";
-Scope Unit//WORKBENCH_CODEX.order.ordered == false;
-Scope Unit//WORKBENCH_CODEX ((IS_CONTAINED_BY)) Scope Unit//WORKBENCH
+```python
+from caprmedio.formal_claims import declare_entity
+from caprmedio.model import ScopeUnit
+
+declare_entity(
+    entity_name='WORKBENCH_CODEX',
+    instance=ScopeUnit(
+        id='CA-SU-47',
+        name='WORKBENCH_CODEX',
+        label='FEATURE',
+        ordered=False,
+        container='WORKBENCH',
+        structural_level=5,
+    ),
+)
 ```
 

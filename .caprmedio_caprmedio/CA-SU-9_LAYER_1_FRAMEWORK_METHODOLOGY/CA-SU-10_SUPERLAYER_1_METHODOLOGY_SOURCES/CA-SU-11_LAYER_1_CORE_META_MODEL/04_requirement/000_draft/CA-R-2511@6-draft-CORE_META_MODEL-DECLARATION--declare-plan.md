@@ -22,30 +22,29 @@ Declare Atom/(.Role := Plan)
 
 ## Claim
 
+### Prose Claim
+
+Each Current Plan recursively contained by a Done or Canceled Plan has exactly one Status, either Done or Canceled.
+
 ### Formal Claim
 
-```CFEL
-# model
-Atom.Header.Context.Role :: Plan;
+```python
+from caprmedio.formal_claims import Cardinality, declare_entity
+from caprmedio.model import Atom
 
-Atom/(.Header.Context.Role in (Plan)) >| (Container == yes);
+class Plan(Atom):
+    pass
 
-Atom/(.Header.Context.Role in (Plan));
-
-# instances
-Atom/(.Header.Context.Role in (Plan))//$plan {::0+}((CONTAINS)) Atom/(.Header.Context.Role in (Plan))//$contained_plan;
-
-Atom/(.Header.Context.Role in (Plan))//$dependent {::0+}((IS_BLOCKED_BY)) Atom/(.Header.Context.Role in (Plan))//$prerequisite;
-
-Atom/(.Header.Context.Role in (Plan))//$prerequisite_2 {::0+}((BLOCKS)) Atom/(.Header.Context.Role in (Plan))//$dependent_2;
-
-FOR EACH $parent[<Atom>, ((.Header.Context.Role = Plan) AND (.Header.State.Status in (Done, Canceled)))]:
-(
-    FOR EACH $descendant[<Atom>, ((.Header.Context.Role = Plan) AND (.Header.State.Status >| Status Group = Current))]:
-    (
-        IF ($parent ((RECURSIVELY_CONTAINS)) $descendant)
-        THEN ($descendant.Header.State.Status :: [in (Done, Canceled)]{::1})
-    )
+declare_entity(
+    entity_class=Plan,
+    entity_name="Plan",
+    qualification_property_path="Atom.Header.Context.Role",
+    classifications={"Container": "yes"},
+    instance_relation_constraints={
+        "CONTAINS": {"target_entity_paths": ("Atom/(.Header.Context.Role:=Plan)",), "targets_per_source": Cardinality(minimum=0, maximum=None)},
+        "IS_BLOCKED_BY": {"target_entity_paths": ("Atom/(.Header.Context.Role:=Plan)",), "targets_per_source": Cardinality(minimum=0, maximum=None)},
+        "BLOCKS": {"target_entity_paths": ("Atom/(.Header.Context.Role:=Plan)",), "targets_per_source": Cardinality(minimum=0, maximum=None)},
+    },
 )
 ```
 

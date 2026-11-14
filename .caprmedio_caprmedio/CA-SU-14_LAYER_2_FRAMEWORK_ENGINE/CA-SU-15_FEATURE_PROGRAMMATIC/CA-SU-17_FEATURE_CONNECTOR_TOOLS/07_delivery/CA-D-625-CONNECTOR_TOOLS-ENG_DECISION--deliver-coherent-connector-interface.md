@@ -27,7 +27,7 @@ current_scope_unit: CONNECTOR_TOOLS
 claim_target_scope_unit: CONNECTOR_TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Deliver coherent connector interface
 
@@ -36,6 +36,8 @@ Deliver coherent connector interface
 The concrete logical API representation required by CA-R-1936 and CA-M-376 for every connector under CONNECTOR_TOOLS. API means one coherent caller contract, not a new MCP, HTTP, CLI or other transport.
 
 ## Claim
+
+### Prose Claim
 
 Connectors use the same request/result roles for explicit query, read, create and modify operations. Each connector declares only its supported subset and target kinds; the common vocabulary does not require every connector to implement all four operations.
 

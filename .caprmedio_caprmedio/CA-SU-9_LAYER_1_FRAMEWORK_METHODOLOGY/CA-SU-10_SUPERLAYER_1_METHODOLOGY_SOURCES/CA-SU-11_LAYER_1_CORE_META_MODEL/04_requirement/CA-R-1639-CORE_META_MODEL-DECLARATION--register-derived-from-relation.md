@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//DERIVED_FROM
+  main_subject: CAPRMEDIO_MODEL <+ Relation//DERIVED_FROM
   dependencies:
   - CAPRMEDIO_MODEL <+ Term//Artifact
 tier: 1

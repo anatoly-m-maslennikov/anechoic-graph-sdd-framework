@@ -21,6 +21,34 @@ class AtomAuditTests(IncrementalIndexingTests):
         self.service._refresh(*args)
         self.assertTrue(self.service.wait_for_audits(10), "background audit did not finish")
 
+    def test_plan_form_admission_in_the_audit_table(self):
+        from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service import _load_audit_model
+
+        self.service._reader._audit_model = _load_audit_model()
+        cases = (
+            ("CA-P-835", "03_plan", "Plan", "Plan"),
+            ("CA-P-836", "03_plan", "Plan", "Unsupported Form"),
+            ("CA-M-837", "05_method", "Method", "Plan"),
+        )
+        paths = []
+        for atom_id, folder, role, form in cases:
+            path = source_path(self.declarations, "ENGINE", folder, f"{atom_id}.md")
+            write_atom(path, atom_id, body="## Summary\n\nAudit fixture.\n",
+                       extra="container:\n  scope_unit: ENGINE\n")
+            path.write_text(path.read_text().replace('role: "Requirement"', f'role: "{role}"')
+                            .replace('form: "Definition"', f'form: "{form}"'))
+            paths.append(path)
+        self.refresh_and_audit([self.event(path, operation="create") for path in paths])
+        refs = "('CA-P-835', 'CA-P-836', 'CA-M-837')"
+        self.assertEqual([[3]], self.store.run(f"SELECT count(*) FROM atoms WHERE reference IN {refs}")["rows"])
+        self.assertEqual([
+            ["CA-M-837", "Role Method is not permitted for Form Plan; allowed: Plan"],
+            ["CA-P-836", "Form is not declared: Unsupported Form"],
+        ], self.store.run(
+            "SELECT reference, diagnostic FROM atom_schema_issues "
+            f"WHERE property = 'form' AND reference IN {refs} ORDER BY reference"
+        )["rows"])
+
     def test_schema_invalid_archive_remains_queryable_and_skips_placement_checks(self):
         archived = source_path(self.declarations, "ENGINE", "04_requirement", "archive/CA-R-834@1-old.md")
         write_atom(archived, "CA-R-834", status="Archived",

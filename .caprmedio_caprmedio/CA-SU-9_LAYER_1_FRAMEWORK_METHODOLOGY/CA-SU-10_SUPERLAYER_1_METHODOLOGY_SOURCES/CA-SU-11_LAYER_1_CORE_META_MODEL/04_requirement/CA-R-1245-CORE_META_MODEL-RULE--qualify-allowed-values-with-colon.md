@@ -6,9 +6,8 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Entity
+  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
   dependencies:
-  - CAPRMEDIO_MODEL <+ CFEL<+Operator//AllowedValue
   - CAPRMEDIO_MODEL <+ Term//Property
 tier: 3
 status: Active
@@ -29,4 +28,6 @@ Qualify Allowed Values with Colon
 
 ### Prose Claim
 
-A declaration with an allowed-value Main Subject `X := Y` states `X :: Y;` in its Formal Claim. For the qualified Subject `B/(.p := V)`, write `B.p :: V;`. Preserve parent qualifiers as conditions on B. The Formal Claim supplies its complete scope. Put instance constraints in a separate `FOR EACH ... : (...)` expression.
+A Declaration with a qualified Main Subject such as `B/(.p := V)` admits V
+for p in its Python Formal Claim. State the full Property path and preserve
+the parent qualifiers. Express any instance constraints for the same scope.

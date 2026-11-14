@@ -115,12 +115,14 @@ def split_frontmatter(text: str, path: Path) -> tuple[str, str, str]:
     return first_line, remainder[:boundary], remainder[boundary + len(marker) :]
 
 
-def atomic_write(path: Path, text: str) -> None:
+def atomic_write(path: Path, text: str, *, mode: int | None = None) -> None:
     descriptor, temporary_name = atomic_tempfile(path, "artifact_metadata")
     try:
         with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
             handle.write(text)
             handle.flush()
+            if mode is not None:
+                os.fchmod(handle.fileno(), mode)
             os.fsync(handle.fileno())
         os.replace(temporary_name, path)
     except BaseException:

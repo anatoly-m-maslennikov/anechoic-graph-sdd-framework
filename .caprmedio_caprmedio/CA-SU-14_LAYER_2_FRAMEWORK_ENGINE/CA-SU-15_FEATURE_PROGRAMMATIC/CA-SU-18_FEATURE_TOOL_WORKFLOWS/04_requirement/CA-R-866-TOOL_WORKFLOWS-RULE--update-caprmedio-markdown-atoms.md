@@ -14,9 +14,9 @@ topics:
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Implementation/Code/Tool
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom.Header.State.Updated At
 tier: 3
-status: Active
-version: 47
-updated_at: "2026-10-30 17:34:50 +0400"
+status: active
+version: 48
+updated_at: '2026-11-13T19:23:14.318791+00:00'
 carrier_destination:
   file:
     name: CA-R-866-TOOL_WORKFLOWS-RULE--update-caprmedio-markdown-atoms.md
@@ -29,11 +29,11 @@ author: Anatoly Maslennikov
 
 Update CAPRMEDIO Markdown Atoms
 
-## Claim scope
+## Claim
+
+### Prose Claim
 
 Same-identity updates of exact selected Markdown Atom Carriers by the ATOM_UPDATE Tool.
-
-## Claim
 
 the ATOM_UPDATE Tool **must** provide same-identity updates of the frontmatter, content, **or** both for exact selected Markdown Atoms:
 
@@ -60,7 +60,7 @@ Logical Property edits additionally support explicit add, replace and remove; li
 
 Subject-only preview **must** select a complete original Atom Carrier with a stable Atom ID, excluding Draft and archived carriers by both carried Status and placement. Both the pinned source and proposed result **must** pass existing complete-carrier validation, including the applicable Content Role/Type Status model and correct Carrier placement. Preserve the carried Status byte-for-byte; do not activate the source or perform a lifecycle transition. Missing, ambiguous, unsupported, or stale validation authority **must** fail closed.
 
-Omitted `subject_profile` selects `legacy`; `approved` is explicit; unknown or malformed supplied profiles **must** fail. Subject patches apply only to direct structured `subjects.governs` and `subjects.depends_on` fields, and the selected profile validates both the source and resulting scalar Subjects. Legacy uses `/` bearer qualification and `:` allowed values with literal dots and rejects every `atom(...)` selector. Approved syntax is governed by the actual Current CA-R-1931, CA-R-1321, CA-R-1324, CA-M-228 and CA-E-383 definitions, resolved with their exact positive Versions, canonical paths and SHA-256 at the operation's Scope epoch. Preserve the case, references, grouping, escaping, operators and selector restrictions declared by those definitions; this consumer does not substitute an older descriptive grammar or infer a profile. Unsupported syntax, source drift or unavailable authority fails closed. Syntax validation does not establish Entity admission or instance resolution. This is syntax validation only and does not enumerate selector instances, admit a target, or add an apply path.
+Omitted `subject_profile` selects `legacy`; `approved` is explicit; unknown or malformed supplied profiles **must** fail. Subject patches apply only to direct structured `subjects.governs` and `subjects.depends_on` fields, and the selected profile validates both the source and resulting scalar Subjects. Legacy uses `/` bearer qualification and `:` allowed values with literal dots and rejects every `atom(...)` selector. Approved syntax is governed by the actual Current CA-R-1931, CA-R-1321, CA-R-1324, CA-M-228 and CA-E-833 definitions, resolved with their exact positive Versions, canonical paths and SHA-256 at the operation's Scope epoch. Preserve the case, references, grouping, escaping, operators and selector restrictions declared by those definitions; this consumer does not substitute an older descriptive grammar or infer a profile. Unsupported syntax, source drift or unavailable authority fails closed. Syntax validation does not establish Entity admission or instance resolution. This is syntax validation only and does not enumerate selector instances, admit a target, or add an apply path.
 
 Subject patches **must** reject a malformed or nested legacy Subjects shape, an
 absent or ambiguous current value, a stale pin, an escaped or symlink target, or a

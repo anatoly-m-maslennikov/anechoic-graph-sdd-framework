@@ -22,6 +22,8 @@ carrier_destination:
   file:
     name: CA-C-325-PROBLEM--enforce-one-terminal-newline-in-harvest-carriers.md
     path: .caprmedio_caprmedio/01_concern/021_resolved
+container:
+  scope_unit: CA-SU-00
 ---
 # Summary
 

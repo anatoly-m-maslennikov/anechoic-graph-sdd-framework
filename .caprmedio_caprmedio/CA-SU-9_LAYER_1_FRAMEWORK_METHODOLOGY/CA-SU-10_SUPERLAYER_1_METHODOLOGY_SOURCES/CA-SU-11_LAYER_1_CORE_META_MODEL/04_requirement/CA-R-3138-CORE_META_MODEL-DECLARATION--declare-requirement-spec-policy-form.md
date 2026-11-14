@@ -35,11 +35,11 @@ Declare Requirement Spec Policy Form
 from caprmedio.formal_claims import declare_entity
 from caprmedio.model import Requirement
 
-class SpecPolicy(Requirement):
+class RequirementSpecPolicy(Requirement):
     pass
 
 declare_entity(
-    entity_class=SpecPolicy,
+    entity_class=RequirementSpecPolicy,
     entity_name='Spec Policy',
     qualification_property_path='Atom.Header.Context.Form',
 )

@@ -12,9 +12,9 @@ topics:
   - Subject/CAPRMEDIO/Carrier
   - Subject/CAPRMEDIO/Graph/Node/Project Model/History/Journal.Record
 tier: 3
-status: Active
-version: 28
-updated_at: "2026-10-30 17:33:17 +0400"
+status: active
+version: 29
+updated_at: '2026-11-13T19:22:52.603244+00:00'
 carrier_destination:
   file:
     name: CA-M-371-TOOL_WORKFLOWS-ENG_DECISION--preview-exact-subject-patches-for-valid-atom-carriers.md
@@ -27,11 +27,11 @@ author: Anatoly Maslennikov
 
 Preview exact Subject patches for valid Atom carriers
 
-## Claim scope
+## Claim
+
+### Prose Claim
 
 The Subject-only preview, opt-in local candidate staging, and pure intended-proposal preparation method for ATOM_UPDATE.
-
-## Claim
 
 ATOM_UPDATE **must** prepare a Subject-only preview from explicit, source-pinned
 replacements under one selected `subject_profile`: omission selects `legacy`,
@@ -53,7 +53,7 @@ Accept only the closed root `{atoms, subject_profile?}` and an item exactly
 `expected = {atom_id, version, sha256}`; reject unknown root or item keys.
 Separate `subject_patches` from complete-frontmatter or body replacement. Reject
 duplicate selected files. For each patch, require `field`, `old`, and `new`;
-for `depends_on`, resolve exactly one existing entry by the exact current value `old`; reject a caller-supplied index. Legacy uses `/` bearer qualification and `:` allowed values with literal dots and rejects every `atom(...)` selector. Approved syntax is governed by the actual Current CA-R-1931, CA-R-1321, CA-R-1324, CA-M-228 and CA-E-383 definitions, resolved with their exact positive Versions, canonical paths and SHA-256 at the operation's Scope epoch. Preserve the case, references, grouping, escaping, operators and selector restrictions declared by those definitions; this consumer does not substitute an older descriptive grammar or infer a profile. Unsupported syntax, source drift or unavailable authority fails closed. Syntax validation does not establish Entity admission or instance resolution. Reject invalid carrier shape, missing or ambiguous old values, stale pins, path escapes, symlink targets and duplicate resulting dependencies. Preserve all unrelated bytes and line endings. Selector syntax validates neither a selected Atom instance nor a relation, native admission, or source effect.
+for `depends_on`, resolve exactly one existing entry by the exact current value `old`; reject a caller-supplied index. Legacy uses `/` bearer qualification and `:` allowed values with literal dots and rejects every `atom(...)` selector. Approved syntax is governed by the actual Current CA-R-1931, CA-R-1321, CA-R-1324, CA-M-228 and CA-E-833 definitions, resolved with their exact positive Versions, canonical paths and SHA-256 at the operation's Scope epoch. Preserve the case, references, grouping, escaping, operators and selector restrictions declared by those definitions; this consumer does not substitute an older descriptive grammar or infer a profile. Unsupported syntax, source drift or unavailable authority fails closed. Syntax validation does not establish Entity admission or instance resolution. Reject invalid carrier shape, missing or ambiguous old values, stale pins, path escapes, symlink targets and duplicate resulting dependencies. Preserve all unrelated bytes and line endings. Selector syntax validates neither a selected Atom instance nor a relation, native admission, or source effect.
 
 Classify an actual Subject value change as a semantic revision with Version
 `N + 1`; a no-op creates no revision. The preview result returns the selected

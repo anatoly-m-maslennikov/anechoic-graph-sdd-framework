@@ -35,11 +35,11 @@ Declare Method Spec Policy Form
 from caprmedio.formal_claims import declare_entity
 from caprmedio.model import Method
 
-class SpecPolicy(Method):
+class MethodSpecPolicy(Method):
     pass
 
 declare_entity(
-    entity_class=SpecPolicy,
+    entity_class=MethodSpecPolicy,
     entity_name='Spec Policy',
     qualification_property_path='Atom.Header.Context.Form',
 )

@@ -12,9 +12,9 @@ topics:
   - CAPRMEDIO_MODEL <+ Atom.Content
   - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
   - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_PROPERTY_OF
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//HAS_PROPERTY
+  - CAPRMEDIO_MODEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation//IS_PROPERTY_OF
+  - CAPRMEDIO_MODEL <+ Relation//HAS_PROPERTY
   - CAPRMEDIO_MODEL <+ CFEL<+Operator//AllowedValue
   - CAPRMEDIO_MODEL <+ Projection
   - CAPRMEDIO_MODEL <+ Term

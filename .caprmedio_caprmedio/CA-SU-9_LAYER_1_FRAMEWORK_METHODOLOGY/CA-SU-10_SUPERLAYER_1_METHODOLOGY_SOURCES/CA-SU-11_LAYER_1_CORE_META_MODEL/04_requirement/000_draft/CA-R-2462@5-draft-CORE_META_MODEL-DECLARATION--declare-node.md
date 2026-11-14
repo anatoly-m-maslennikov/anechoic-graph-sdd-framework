@@ -13,7 +13,7 @@ version: 5
 updated_at: 2026-11-05 16:33:24 +0400
 carrier_destination:
   file:
-    name: CA-R-2462@5-draft-DECLARATION--declare-node.md
+    name: CA-R-2462@5-draft-CORE_META_MODEL-DECLARATION--declare-node.md
     path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/000_draft
 ---
 
@@ -25,71 +25,43 @@ Declare Node
 
 ### Prose Claim
 
-In the selected effective MODEL, each logical model entity selected by Node or Node.** has exactly one outgoing IS_DECLARED_BY Relation to its qualified canonical declaring Requirement/Form Declaration Atom. This named outgoing permission applies to model entities, including Node Properties, and does not impose an ownership requirement on runtime instances. Derive the view only from a GOVERNS fact satisfying the declaring ownership qualification; do not store a second fact or infer any other inverse permission. The target-omitted bound counts each selected model entity’s outgoing links within the Relation Declaration’s qualified endpoint domain.
+- Each Model Node and each of its Model Properties has exactly one outgoing IS_DECLARED_BY link to its canonical Requirement / Declaration Atom. Derive the link from a GOVERNS fact that identifies the canonical declaring Atom.
+- Each Node or its Properties allow only the explicitly admitted Relations, separately for Model entities and instances.
+- Each Property has exactly one bearer. Its bearer is a Node or a Property. A Node has no bearer.
+- Each Model Node or Property has at most one IS_PROPERTY_OF link.
+- A Model Node or Property with no bearer has Independence Primary Node. One with a bearer has Independence Property and no HAS_NARROWER links.
+- Atom Header and Content Property instances admit IS_ORDERED_RIGHT_AFTER and IS_ORDERED_RIGHT_BEFORE between siblings, under CA-R-2965.
+- Model Nodes and Properties have zero or more HAS_PROPERTY links to Node Properties.
+- Each Model Property has zero or more HAS_INSTANCE links to instances of Properties.
+- Each Model Node has zero or more HAS_INSTANCE links to Node instances.
+- Node instances and their Properties have zero or more HAS_PROPERTY links to instance Properties.
+- Each instance Property has exactly one IS_PROPERTY_OF link to its Node or Property bearer, and exactly one INSTANCE_OF link to its Model Property.
+- Each Model Property has zero or one instance per bearer.
+- Model Nodes and Properties, and their instances, admit HAS_ALLOWED_VALUE and HAS_VALUE_CONSTRAINT links.
 
 ### Formal Claim
 
-```CFEL
-# model
-(Node, Node.**) {::0}((*));
+```python
+from caprmedio.formal_claims import Cardinality, declare_entity
 
-(Node, Node.**) {::0+}((HAS_ALLOWED_VALUE));
+class Node:
+    pass
 
-(Node, Node.**) {::0+}((HAS_VALUE_CONSTRAINT));
-
-Node {::0}((IS_PROPERTY_OF));
-
-(Node, Node.**) {::0..1}((IS_PROPERTY_OF));
-
-(Node, Node.**) {::1}((IS_DECLARED_BY));
-
-Node {::0+}((NARROWER_THAN)) Node;
-
-Node {::0+}((HAS_NARROWER)) Node;
-
-Node.** {::1}((IS_PROPERTY_OF)) (Node, Node.**);
-
-Atom.Header.** {::0..1}((IS_ORDERED_RIGHT_AFTER)) Atom.Header.**;
-
-Atom.Header.** {::0..1}((IS_ORDERED_RIGHT_BEFORE)) Atom.Header.**;
-
-Atom.Content.** {::0..1}((IS_ORDERED_RIGHT_AFTER)) Atom.Content.**;
-
-Atom.Content.** {::0..1}((IS_ORDERED_RIGHT_BEFORE)) Atom.Content.**;
-
-(Node, Node.**) {::0+}((HAS_PROPERTY)) Node.**;
-
-Node.** {::0+}((HAS_INSTANCE));
-
-IF $model_node in (Node, Node.**) THEN (
-IF ($model_node {=0}((IS_PROPERTY_OF)))
-THEN ($model_node >| (Independence == Primary Node));
-);
-
-IF $model_node_2 in (Node, Node.**) THEN (
-IF ($model_node_2 {=1}((IS_PROPERTY_OF)))
-THEN ($model_node_2 >| (Independence == Property))
-AND ($model_node_2 {==0}((HAS_NARROWER)));
-);
-
-# instances
-$node[<Node>];
-
-($node, $node.**) {::0}((*));
-
-($node, $node.**) {::0+}((HAS_ALLOWED_VALUE));
-
-($node, $node.**) {::0+}((HAS_VALUE_CONSTRAINT));
-
-$node {::0+}((INSTANCE_OF)) Node;
-
-Node {::0+}((HAS_INSTANCE)) $node;
-
-$node.** {::1}((IS_PROPERTY_OF)) ($node, $node.**);
-
-$node.** {::1}((INSTANCE_OF)) Node.**;
-
-($node, $node.**) {::0+}((HAS_PROPERTY)) $node.**;
+declare_entity(
+    entity_name="Node",
+    entity_class=Node,
+    model_relation_constraints={
+        "IS_PROPERTY_OF": {"targets_per_source": 0},
+        "IS_DECLARED_BY": {"targets_per_source": 1},
+        "NARROWER_THAN": {"target_entity_paths": ("Node",), "targets_per_source": Cardinality(minimum=0, maximum=None)},
+        "HAS_NARROWER": {"target_entity_paths": ("Node",), "targets_per_source": Cardinality(minimum=0, maximum=None)},
+        "HAS_PROPERTY": {"targets_per_source": Cardinality(minimum=0, maximum=None)},
+    },
+    instance_relation_constraints={
+        "INSTANCE_OF": {"target_entity_paths": ("Node",), "targets_per_source": Cardinality(minimum=0, maximum=None)},
+        "HAS_PROPERTY": {"targets_per_source": Cardinality(minimum=0, maximum=None)},
+    },
+)
 ```
 
 ## Semantics

@@ -8,7 +8,7 @@ context:
   role: Requirement
   form: Relation Declaration
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_REPLACEMENT_FOR
+    main_subject: CAPRMEDIO_MODEL <+ Relation//IS_REPLACEMENT_FOR
   tier: 4
 relations:
   IS_REPLACEMENT_FOR:

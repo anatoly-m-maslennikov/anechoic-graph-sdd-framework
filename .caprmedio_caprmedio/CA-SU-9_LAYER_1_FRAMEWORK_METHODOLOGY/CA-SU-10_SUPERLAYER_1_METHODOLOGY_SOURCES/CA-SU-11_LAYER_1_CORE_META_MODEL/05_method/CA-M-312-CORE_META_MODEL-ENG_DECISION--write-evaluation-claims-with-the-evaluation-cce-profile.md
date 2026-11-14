@@ -6,17 +6,16 @@ container:
 role: Method
 form: Eng Decision
 topics:
-  main_subject: 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation).Content.Claim'
+  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation).Content.Claim
   dependencies:
   - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled English"
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled
+    English
   - CAPRMEDIO_MODEL <+ Atom.Header.Context.Tier
 tier: 6
 relations:
   child_of:
   - CA-M-307
-  depends_on:
-  - CA-M-264
 status: Active
 version: 24
 updated_at: 2026-11-02 18:35:20 +0400

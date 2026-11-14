@@ -18,7 +18,7 @@ version: 6
 updated_at: 2026-11-04 18:28:33 +0400
 carrier_destination:
   file:
-    name: CA-M-454-TERM_DEFINITION--define-artifact.md
+    name: CA-M-454-CORE_META_MODEL-TERM_DEFINITION--define-artifact.md
     path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
 ---
 ## Summary

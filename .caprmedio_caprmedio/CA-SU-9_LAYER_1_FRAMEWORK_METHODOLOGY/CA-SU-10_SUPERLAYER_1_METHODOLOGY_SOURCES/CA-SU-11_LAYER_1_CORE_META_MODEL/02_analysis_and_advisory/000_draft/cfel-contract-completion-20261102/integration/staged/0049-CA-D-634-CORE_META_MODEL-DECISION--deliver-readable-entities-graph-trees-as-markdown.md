@@ -10,17 +10,26 @@ subjects:
   - CFEL <+ Relation
   - Atom
   - Projection
+  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/(.Form:Entities Graph)
+  - CAPRMEDIO_MODEL <+ Projection.Updated At
+  - CAPRMEDIO_MODEL <+ Carrier/Directory
+  - CAPRMEDIO_MODEL <+ Projection
 version: 23
 updated_at: 2026-11-02 08:06:47 +0400
-relations:
-  depends_on:
-  - CA-R-1456
-  - CA-D-310
-  - CA-D-550
-  - CA-D-635
 tier: 5
 role: Delivery
 form: Decision
+context:
+  topics:
+    dependencies:
+    - Entity
+    - CFEL <+ Relation
+    - Atom
+    - Projection
+    - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/(.Form:Entities Graph)
+    - CAPRMEDIO_MODEL <+ Projection.Updated At
+    - CAPRMEDIO_MODEL <+ Carrier/Directory
+    - CAPRMEDIO_MODEL <+ Projection
 ---
 ## Summary
 

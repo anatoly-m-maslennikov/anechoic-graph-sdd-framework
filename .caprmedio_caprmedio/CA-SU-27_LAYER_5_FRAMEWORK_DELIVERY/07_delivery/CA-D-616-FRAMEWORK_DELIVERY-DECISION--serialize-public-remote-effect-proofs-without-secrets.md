@@ -29,7 +29,7 @@ claim_target_scope_unit: FRAMEWORK_DELIVERY
 author: Anatoly Maslennikov
 ---
 
-# Summary
+## Summary
 
 Serialize public remote effect proofs without secrets
 
@@ -38,6 +38,8 @@ Serialize public remote effect proofs without secrets
 the remote proof of one public push.
 
 ## Claim
+
+### Prose Claim
 
 public remote effect evidence **must** retain the personal remote identity, branch direction, immutable commit identity, and repository-relative result/effect references without credentials, tokens, passwords, or arbitrary environment values.
 

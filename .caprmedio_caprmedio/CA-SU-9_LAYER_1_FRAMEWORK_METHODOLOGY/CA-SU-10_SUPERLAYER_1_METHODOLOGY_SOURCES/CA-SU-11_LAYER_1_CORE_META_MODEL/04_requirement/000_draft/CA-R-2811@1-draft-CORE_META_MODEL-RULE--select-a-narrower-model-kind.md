@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL
+  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
 tier: 3
 status: Draft
 version: 1
@@ -24,4 +24,4 @@ Select a narrower Model kind
 
 ### Prose Claim
 
-In `X//Y`, Y is a narrower Primary Node of X; its applicable inherited rules apply.
+In a Topic, `X//Y` identifies Y as a kind narrower than X. Y inherits the applicable rules of X.

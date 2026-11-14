@@ -22,6 +22,10 @@ current_scope_unit: caprmedio
 local_tier: Standard
 global_tier: 2
 author: Anatoly Maslennikov
+destination:
+  file:
+    name: CA-C-515-QUESTION--retain-per-route-candidate-run-evidence.md
+    path: .caprmedio_caprmedio/01_concern
 ---
 # Summary
 

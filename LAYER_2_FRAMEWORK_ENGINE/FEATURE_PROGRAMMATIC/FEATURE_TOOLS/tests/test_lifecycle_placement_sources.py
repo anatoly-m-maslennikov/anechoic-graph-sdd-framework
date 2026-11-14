@@ -11,7 +11,7 @@ TOOLS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS))
 from ATOM_LIFECYCLE.candidate_schema import compile_candidate_schema  # noqa: E402
 from ATOM_LIFECYCLE.placement_sources import bootstrap_rows, inventory, pin, query_pins, read_selected, validate_selection  # noqa: E402
-from test_lifecycle_formal_placement import RULES, carrier  # noqa: E402
+from test_lifecycle_formal_placement import RULES, carrier, native_body, role_source  # noqa: E402
 from FEATURE_WORKBENCH_BACKEND.query_store import QueryStore  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -22,18 +22,16 @@ class PlacementSourcesTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
-        (self.root / 'CA-R-1.md').write_text(carrier('CA-R-1', 'Requirement', 'Active', '''## Claim
-### Formal Claim
-```CFEL
-Atom.Header.Role :: Plan;
-Atom.Header.Form :: Plan;
-Atom.Header.ID:: [atom id]{::1};
-Atom.Content.Summary:: {::1};
-```
-'''))
+        (self.root / 'CA-R-1.md').write_text(carrier('CA-R-1', 'Requirement', 'Active',
+            "## Claim\n### Formal Claim\n```python\n"
+            "from caprmedio.formal_claims import declare_entity\n"
+            "declare_entity(entity_name='Form', relation_name='IS_PROPERTY_OF', base_path='Atom.Header.Context', allowed_values=('Plan',))\n```\n",
+            'CAPRMEDIO_MODEL <+ Atom.Header.Context.Form'))
+        role_source(self.root, 'Concern', 77, 'CA-R-77')
+        role_source(self.root, 'Plan', 3, 'CA-R-78')
         self.delivery = self.root / 'CA-D-1.md'
         self.delivery.write_text(carrier('CA-D-1', 'Delivery', 'Active',
-            '## Claim\n### Formal Claim\n```CFEL\n' + RULES + '\n```',
+            native_body(RULES),
             'CAPRMEDIO_MODEL <+ Carrier'))
         (self.root / 'CA-D-2.md').write_text(carrier('CA-D-2', 'Delivery', 'Active',
             'irrelevant', 'CAPRMEDIO_MODEL <+ Other'))
@@ -104,6 +102,8 @@ Atom.Content.Summary:: {::1};
 
     def test_empty_selection_is_valid_for_minimal_model_without_placement(self):
         self.delivery.unlink()
+        (self.root / 'CA-R-77.md').unlink()
+        (self.root / 'CA-R-78.md').unlink()
         self.manifest.write_text('[]')
         self.assertNotIn('placement', json.loads(compile_candidate_schema(self.root, self.manifest)))
 

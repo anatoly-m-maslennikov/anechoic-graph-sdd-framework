@@ -7,18 +7,20 @@ role: Analysis & Advisory
 form: Specification Proposal
 topics:
   main_subject: Subject/CAPRMEDIO/Graph/Node/Aspect/Engineering/Authoring/Code Authoring
+  dependencies:
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Code
+    Authoring
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Architecture <+
+    Component Structure
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Execution Control
+    <+ Resource Limits
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Verification <+ Test
+    Design
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Storage <+ Temporary
+    State
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+
+    Indexing
 tier: 3
-relations:
-  depends_on:
-  - CA-M-402
-  - CA-M-403
-  - CA-M-410
-  - CA-M-424
-  - CA-M-431
-  - CA-M-432
-  - CA-M-463
-  - CA-M-465
-  - CA-M-472
 status: Draft
 version: 1
 updated_at: 2026-11-05 06:14:51 +0400

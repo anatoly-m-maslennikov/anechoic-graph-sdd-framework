@@ -29,7 +29,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Verify selected Run source admission and currentness
 
@@ -39,6 +39,8 @@ The shared RUN_SUPPORT admission boundary for selected operation routes and
 their current Operator authorization.
 
 ## Claim
+
+### Prose Claim
 
 RUN_SUPPORT starts only an explicitly selected, current, Operator-authorized
 selected Run in its sealed Initiative context.

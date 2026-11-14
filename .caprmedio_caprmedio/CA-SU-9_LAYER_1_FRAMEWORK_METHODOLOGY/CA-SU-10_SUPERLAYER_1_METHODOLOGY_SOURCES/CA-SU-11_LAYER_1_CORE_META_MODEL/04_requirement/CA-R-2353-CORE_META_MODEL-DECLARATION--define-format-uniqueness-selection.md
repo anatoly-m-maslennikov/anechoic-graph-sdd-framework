@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Format.Uniqueness Selection
+  main_subject: CAPRMEDIO_MODEL <+ Format.Uniqueness Selection
 tier: 1
 status: active
 version: 7

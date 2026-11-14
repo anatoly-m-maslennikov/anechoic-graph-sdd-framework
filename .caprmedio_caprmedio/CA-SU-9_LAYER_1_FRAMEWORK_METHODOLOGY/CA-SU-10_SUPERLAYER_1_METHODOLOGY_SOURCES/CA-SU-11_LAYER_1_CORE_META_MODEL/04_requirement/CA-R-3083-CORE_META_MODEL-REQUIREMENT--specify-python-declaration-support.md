@@ -38,4 +38,5 @@ Specify Python declaration support
 
 - Apply dependent Property constraints to immediate children by default. An explicit recursive selector covers descendants at every depth and preserves the original declaring Atom.
 - Resolve omitted Property occurrence constraints from the effective Model. Keep field presence, direct value cardinality, and dependent Property cardinality distinct.
+- Within the applicable Declaration and its inherited rules, admitted literal values are alternatives. A value satisfies at least one admitted alternative when the domain names any. It also satisfies every applicable format and cardinality constraint.
 - Preserve both a direct Markdown value and declared dependent Properties when a field has both. Bind only declared headings as Properties.

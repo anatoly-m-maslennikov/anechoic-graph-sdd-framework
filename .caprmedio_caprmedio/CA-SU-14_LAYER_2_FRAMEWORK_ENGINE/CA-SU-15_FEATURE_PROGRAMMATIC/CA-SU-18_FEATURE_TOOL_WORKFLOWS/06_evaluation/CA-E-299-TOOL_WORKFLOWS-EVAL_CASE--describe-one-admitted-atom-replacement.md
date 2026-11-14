@@ -31,7 +31,7 @@ current_scope_unit: TOOL_WORKFLOWS
 claim_target_scope_unit: TOOL_WORKFLOWS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Describe one admitted Atom replacement
 
@@ -42,6 +42,8 @@ Workflow admission owns identity, Version/time, lifecycle and complete schema de
 CA-O-031's mutation-free description of one predecessor replacement and independent replacement descriptions under CA-M-372.
 
 ## Claim
+
+### Prose Claim
 
 The description preserves the exact predecessor and explicit proposed or admitted successor set, with currentness and permission evidence. It does not turn a description into an applied replacement or one cross-Atom transaction.
 

@@ -1,6 +1,5 @@
 # CA-E-676@15
 # CA-E-677@30
-# CA-E-803@3
 """Runtime facts and hashes, independent of the repository's Atom contents."""
 
 from pathlib import Path
@@ -25,10 +24,7 @@ def atom(ref, *, relation=None, form="Rule", body="## Claim\nOne claim.\n"):
 
 
 def relation_declaration(ref, name, binding=""):
-    formal = f"Relation//{name} ((HAS_CLASSIFICATION)) Derivation == Direct;"
-    if binding:
-        formal += f"\n{binding}"
-    body = f"## Claim\n\n### Formal Claim\n\n```CFEL\n{formal}\n```\n"
+    body = f'## Claim\n\n### Formal Claim\n\n```python\nsubject_path(address="Relation//{name}")\n{binding}\n```\n'
     row = atom(ref, form="Declaration", body=body)
     row["header_json"]["subjects"] = {
         "active": "CAPRMEDIO_MODEL <+ CFEL <+ Relation//" + name,
@@ -36,10 +32,13 @@ def relation_declaration(ref, name, binding=""):
     return row
 
 
+def inverse_call(left, right, *, reverse=False):
+    return f'relation(source="Relation//{left}", name="HAS_INVERSE", target="Relation//{right}", reverse={reverse})'
+
+
 def declarations():
     return [
-        relation_declaration("CA-R-1", "IS_CONTAINED_BY",
-                             "Relation//IS_CONTAINED_BY ((HAS_INVERSE)) Relation//CONTAINS;"),
+        relation_declaration("CA-R-1", "IS_CONTAINED_BY", inverse_call("IS_CONTAINED_BY", "CONTAINS")),
         relation_declaration("CA-R-2", "CONTAINS"),
     ]
 
@@ -162,7 +161,7 @@ class RelationTests(unittest.TestCase):
         self.assertNotIn("IS_CONTAINED_BY", registered)
         self.assertEqual({}, inverses)
         rows[0]["status_group"] = "Current"
-        rows[0]["content_markdown"] += "\nRelation//A ((HAS_INVERSE)) Relation//B;\n"
+        rows[0]["content_markdown"] += "\n" + inverse_call("A", "B") + "\n"
         registered, inverses = relation_registry(rows)
         self.assertEqual({"IS_CONTAINED_BY": "CONTAINS"}, inverses)
         self.assertNotIn("A", registered)
@@ -191,7 +190,7 @@ class RelationTests(unittest.TestCase):
     def test_inverse_alias_without_own_declaration_normalizes_once(self):
         declaration = relation_declaration(
             "CA-R-1", "CONTAINS",
-            "Relation//IS_CONTAINED_BY ((IS_INVERSE_ALIAS_FOR)) Relation//CONTAINS;",
+            'relation(source="Relation//IS_CONTAINED_BY", name="IS_INVERSE_ALIAS_FOR", target="Relation//CONTAINS")',
         )
         parent = atom("CA-P-1", relation={"CONTAINS": ["CA-P-2"]})
         child = atom("CA-P-2", relation={"IS_CONTAINED_BY": ["CA-P-1"]})
@@ -208,33 +207,32 @@ class RelationTests(unittest.TestCase):
         )
         self.assertEqual({"IS_CONTAINED_BY": ["CA-P-1"]}, child["header_json"]["relations"])
 
-    def test_conditional_literal_metadata_is_warned_and_omitted(self):
-        conditional = relation_declaration(
+    def test_instance_scoped_literal_metadata_is_warned_and_omitted(self):
+        instance_scoped = relation_declaration(
             "CA-R-1", "DIRECT",
-            "IF(registered)\nTHEN(\n"
-            "Relation//DIRECT ((HAS_INVERSE)) Relation//INVERSE;\n"
-            "Relation//LEGACY ((IS_INVERSE_ALIAS_FOR)) Relation//DIRECT;\n)\n",
+            f'# instances\n{inverse_call("DIRECT", "INVERSE")}\n'
+            'relation(source="Relation//LEGACY", name="IS_INVERSE_ALIAS_FOR", target="Relation//DIRECT")\n',
         )
         inverse = relation_declaration("CA-R-2", "INVERSE")
         errors = StringIO()
         with redirect_stderr(errors):
-            registry = compile_relation_registry([conditional, inverse])
+            registry = compile_relation_registry([instance_scoped, inverse])
         self.assertEqual({"DIRECT", "INVERSE"}, set(registry.names))
         self.assertEqual({}, registry.inverse)
         self.assertEqual({}, registry.aliases)
-        self.assertIn("conditional/grouped CFEL relation metadata is unsupported", errors.getvalue())
+        self.assertIn("unsupported Python relation metadata", errors.getvalue())
 
     def test_ambiguous_literal_inverses_warn_and_keep_direct_facts(self):
         metadata = [
-            relation_declaration("A", "A", "Relation//A ((HAS_INVERSE)) Relation//B;"),
+            relation_declaration("A", "A", inverse_call("A", "B")),
             relation_declaration("B", "B"),
-            relation_declaration("C", "C", "Relation//C ((HAS_INVERSE)) Relation//B;"),
-            relation_declaration("D", "D", "Relation//D ((HAS_INVERSE)) Relation//D;"),
-            relation_declaration("E", "E", "Relation//E ((HAS_INVERSE)) Relation//F;"),
-            relation_declaration("F", "F", "Relation//F ((HAS_INVERSE)) Relation//G;"),
+            relation_declaration("C", "C", inverse_call("C", "B")),
+            relation_declaration("D", "D", inverse_call("D", "D")),
+            relation_declaration("E", "E", inverse_call("E", "F")),
+            relation_declaration("F", "F", inverse_call("F", "G")),
             relation_declaration("G", "G"),
-            relation_declaration("J", "J", "Relation//J ((HAS_INVERSE)) Relation//K;"),
-            relation_declaration("K", "K", "Relation//K <((HAS_INVERSE)) Relation//J;"),
+            relation_declaration("J", "J", inverse_call("J", "K")),
+            relation_declaration("K", "K", inverse_call("K", "J", reverse=True)),
         ]
         errors = StringIO()
         with redirect_stderr(errors):

@@ -23,7 +23,7 @@ current_scope_unit: TOOL_WORKFLOWS
 claim_target_scope_unit: TOOL_WORKFLOWS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Reject unadmitted replacement application
 
@@ -34,6 +34,8 @@ Workflow admission owns identity, Version/time, lifecycle and complete schema de
 One predecessor's admitted replacement effects under CA-R-1041 and CA-R-1093, and the independent actions used by its workflow.
 
 ## Claim
+
+### Prose Claim
 
 Prepared intent, admitted permission, observed creation, observed archival and completed replacement are distinct. Missing permission, currentness, validation or effect evidence cannot yield completion.
 

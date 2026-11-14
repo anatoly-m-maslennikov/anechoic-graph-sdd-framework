@@ -9,7 +9,7 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
   dependencies:
   - CAPRMEDIO_MODEL <+ Atom.Header.Context.Role
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//evaluation_for
+  - CAPRMEDIO_MODEL <+ Relation//evaluation_for
 tier: 2
 status: Active
 version: 26

@@ -8,7 +8,7 @@ context:
   role: Requirement
   form: Relation Declaration
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_WORK_REPORT_FOR
+    main_subject: CAPRMEDIO_MODEL <+ Relation//IS_WORK_REPORT_FOR
   tier: 3
 state:
   status: active

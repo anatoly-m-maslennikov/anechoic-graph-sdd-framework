@@ -5,18 +5,21 @@ subjects:
   - 'CAPRMEDIO_MODEL <+ Atom.Header.State.Status: Draft'
   - CAPRMEDIO_MODEL <+ Atom.Header.State.Version
   - CAPRMEDIO_MODEL <+ Atom
+  - CAPRMEDIO_MODEL <+ Carrier/File
 version: 20
 updated_at: 2026-11-03 22:28:39 +0400
-relations:
-  depends_on:
-  - CA-D-650
-  - CA-D-378
-  - CA-D-446
 atom_id: CA-D-568@20-draft
 status: Draft
 tier: 4
 role: Delivery
 form: Decision
+context:
+  topics:
+    dependencies:
+    - 'CAPRMEDIO_MODEL <+ Atom.Header.State.Status: Draft'
+    - CAPRMEDIO_MODEL <+ Atom.Header.State.Version
+    - CAPRMEDIO_MODEL <+ Atom
+    - CAPRMEDIO_MODEL <+ Carrier/File
 ---
 ## Summary
 

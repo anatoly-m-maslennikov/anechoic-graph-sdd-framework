@@ -4,65 +4,152 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import re
+import subject_notation as notation
 
 from carrier_aliases import matches_named_value
-from FEATURE_WORKBENCH_BACKEND.content_schema import declaration_statements
-from FEATURE_WORKBENCH_BACKEND.declaration_ancestry import compile_ancestry
-from FEATURE_WORKBENCH_BACKEND.declaration_cfel import filters, intersect_selectors, segments
-from FEATURE_WORKBENCH_BACKEND.markdown_content import content_key, parse_content, source_markdown
+from FEATURE_WORKBENCH_BACKEND.content_schema import _is_declaration, _records_by_path, _value_excluding_declared_children
+from FEATURE_FORMAL_MODEL_ENGINE.model_catalog import _native_block
+from FEATURE_WORKBENCH_BACKEND.markdown_content import content_key, content_lines, parse_content, source_markdown
 
-_CARD = r'\{\s*::\s*(\d+)(?:\s*\.\.\s*(\d+))?\s*\}'
-_PROPERTY = re.compile(rf'^\s*{_CARD}\s*::')
-_CHILDREN = re.compile(rf'^\s*\[\s*(?:string\s*,\s*)?in\s*\(([^()]*)\)\s*\]\s*{_CARD}\s*$')
-_VALUE = re.compile(rf'^\s*(?:\[\s*(?:markdown|string)?\s*\]\s*)?{_CARD}\s*$')
+def _native_declaration(row):
+    """Parse one native Declaration using the shared Claim parser."""
+    if not _is_declaration(row) or not isinstance(body := source_markdown(row), str):
+        return None
+    fences = tuple(_native_block(body))
+    if len(fences) != 1:
+        return None
+    from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim
+    declaration = parse_native_model_claim(fences[0])
+    if not declaration or declaration['kind'] != 'entity':
+        return None
+    return declaration
 
 
-def compile_content_constraints(rows):  # noqa: C901
-    statements = (statement for row in rows for statement in declaration_statements(row))
-    records = set()
-    for projected in compile_ancestry(statements):
-        statement = projected.statement
-        if not statement.startswith('Atom') or '.Content.' not in statement:
-            continue
-        prefix, tail = statement.split('.Content', 1)
-        path, remainder = segments(tail)
-        if not path or '**' in path or '*' in path[:-1]:
-            continue
-        roles = intersect_selectors(filters(prefix, 'Role'), projected.roles)
-        forms = intersect_selectors(filters(prefix, 'Form'), projected.forms)
-        children = ()
-        if path[-1] == '*':
-            match = _CHILDREN.fullmatch(remainder)
-            if not match:
-                continue
-            raw_names, lower, upper = match.groups()
-            names = [name.strip() for name in raw_names.split(',')]
-            if not names or any(not re.fullmatch(r'[A-Za-z][A-Za-z0-9 _-]*', name) for name in names):
-                continue
-            children = tuple(sorted(content_key(name) for name in names))
-            path = path[:-1]
-            bounds = [('children', lower, upper)]
+def _native_content(row, declaration, form_bindings):
+    args = declaration['arguments']
+    base = args.get('base_path', '')
+    if args.get('value_format') not in (None, 'str', 'string', 'markdown') or args.get('dependent_property_name_format') not in (None, 'str', 'string'):
+        return None
+    if args.get('relation_name') != 'IS_PROPERTY_OF' or not isinstance(base, str):
+        return None
+    if base == 'Atom' and args.get('entity_name') == 'Content':
+        return args, None, None, (), False
+    try:
+        path = notation.parse_subject_expression(base).expression
+    except notation.SubjectNotationError:
+        return None
+    if not isinstance(path, notation.Path) or not isinstance(path.head, notation.Name):
+        return None
+    binding = form_bindings.get(path.head.value)
+    if path.head.value != 'Atom' and binding is None:
+        return None
+    roles = frozenset({binding[0]}) if binding else None
+    forms = frozenset({binding[1]}) if binding else None
+    names = []
+    for step in path.steps:
+        if step.operator == '/' and isinstance(step.operand, notation.Qualification):
+            relative = step.operand.relative_path
+            components = [relative.head.value] + [x.operand.value for x in relative.steps
+                if x.operator == '.' and isinstance(x.operand, notation.Name)]
+            assignment = relative.steps[-1] if relative.steps else None
+            if (components not in (['Header', 'Context', 'Role'], ['Header', 'Context', 'Form'])
+                    or assignment is None or assignment.operator != ':='
+                    or not isinstance(assignment.operand, notation.ValueLiteral)):
+                return None
+            if components[-1] == 'Role':
+                roles = frozenset({assignment.operand.value})
+            else:
+                forms = frozenset({assignment.operand.value})
+        elif step.operator == '.' and isinstance(step.operand, notation.Name):
+            names.append(step.operand.value)
         else:
-            bounds = []
-            if match := _PROPERTY.match(remainder):
-                bounds.append(('heading', *match.groups()))
-                value = _VALUE.fullmatch(remainder[match.end():])
-                if value:
-                    bounds.append(('heading_value', *value.groups()))
-            elif remainder.strip().startswith('::') and (value := _VALUE.fullmatch(remainder.strip()[2:])):
-                bounds.append(('value', *value.groups()))
-        for kind, lower, upper in bounds:
-            low, high = int(lower), int(upper or lower)
-            if low > high:
-                raise ValueError(f'{projected.source.reference}: invalid Content cardinality')
-            records.add((kind, tuple(path), None if roles is None else tuple(sorted(roles)),
-                         None if forms is None else tuple(sorted(forms)), low, high,
-                         children, projected.source.reference))
-    return [dict(zip(('kind', 'path', 'roles', 'forms', 'min', 'max', 'children', 'source'),
-                     (kind, list(path), list(roles) if roles is not None else None,
-                      list(forms) if forms is not None else None, low, high, list(children), source)))
-            for kind, path, roles, forms, low, high, children, source in sorted(records, key=repr)]
+            return None
+    if not names or names[0] != 'Content':
+        return None
+    return args, roles, forms, tuple(content_key(name) for name in (*names[1:], args['entity_name'])), bool(binding)
+
+
+def _native_records(row, native):
+    args, roles, forms, path, binding = native
+    if classes := args.get('applies_to_entity_classes'):
+        roles = frozenset(classes) if roles is None else roles & frozenset(classes)
+    source = row.get('ref') or row.get('id')
+    result = []
+    def add(kind, target, cardinality, children=(), selected_roles=roles):
+        if type(cardinality) is int:
+            low = high = cardinality
+        else:
+            low, high = cardinality['minimum'], cardinality['maximum']
+        if high is None:
+            return
+        result.append(dict(kind=kind, path=list(target),
+                           roles=sorted(selected_roles) if selected_roles is not None else None,
+                           forms=sorted(forms) if forms is not None else None,
+                           min=low, max=high, children=list(children), source=source))
+
+    if path:
+        occurrence, value = args.get('property_occurrence_cardinality'), args.get('value_cardinality')
+        if occurrence is not None and value is not None:
+            add('heading', path, occurrence)
+            add('heading_value', path, value)
+        elif value is not None:
+            add('value', path, value)
+        if (children_count := args.get('dependent_property_cardinality')) is not None:
+            names = args.get('allowed_dependent_property_names', ())
+            add('children', path, children_count, sorted(content_key(name) for name in names))
+    order_roles = args.get('ordered_dependent_property_roles')
+    if order_roles:
+        roles = frozenset(order_roles) if roles is None else roles & frozenset(order_roles)
+    for first, second in (() if binding else args.get('ordered_dependent_property_pairs', ())):
+        add('order', path, 0, (content_key(first), content_key(second)), roles)
+    return result
+
+
+def _native_form_records(row, declaration, role_names):
+    args = declaration['arguments']
+    content = args.get('form_content')
+    if not content or args.get('qualification_property_path') != 'Atom.Header.Context.Form':
+        return []
+    classes = [item for item in declaration['classes'] if item['name'] == args.get('entity_class')]
+    if len(classes) != 1 or len(classes[0]['bases']) != 1:
+        raise ValueError(f"{row.get('id')}: Form requires one Role base")
+    role = role_names.get(classes[0]['bases'][0], classes[0]['bases'][0])
+    source = row.get('ref') or row.get('id')
+    def record(kind, path, minimum, maximum, children=()):
+        return dict(kind=kind, path=list(path), roles=[role], forms=[args['entity_name']],
+                    min=minimum, max=maximum, children=list(children), source=source)
+    required = content_key(content['required_value'])
+    no_children = content_key(content['no_children'])
+    return [record('value', (required,), 1, 1), record('children', (no_children,), 0, 0),
+            record('order', (), 0, 0, (content_key(content['after']), required))]
+
+
+def compile_content_constraints(rows):
+    rows = list(rows)
+    native = [(row, declaration) for row in rows if (declaration := _native_declaration(row)) is not None]
+    role_names = {d['arguments']['entity_class']: d['arguments']['entity_name'] for _, d in native
+                  if d['arguments'].get('qualification_property_path') == 'Atom.Header.Context.Role'
+                  and d['arguments'].get('entity_class')}
+    bindings = {}
+    for row, declaration in native:
+        args = declaration['arguments']
+        if not args.get('project_form_content'):
+            continue
+        classes = [item for item in declaration['classes'] if item['name'] == args.get('entity_class')]
+        if len(classes) != 1 or len(classes[0]['bases']) != 1:
+            raise ValueError(f"{row.get('id')}: Form requires one Role base")
+        role = role_names.get(classes[0]['bases'][0], classes[0]['bases'][0])
+        for name in {args['entity_name'], args['entity_class']}:
+            value = (role, args['entity_name'])
+            if name in bindings and bindings[name] != value:
+                raise ValueError(f'{row.get("id")}: ambiguous Form base {name}')
+            bindings[name] = value
+    records = []
+    for row, declaration in native:
+        if item := _native_content(row, declaration, bindings):
+            records.extend(_native_records(row, item))
+        records.extend(_native_form_records(row, declaration, role_names))
+    return [record for _, record in sorted({repr(record): record for record in records}.items())]
 
 
 @dataclass(frozen=True)
@@ -73,25 +160,46 @@ class ContentConstraints:
         body = source_markdown(row)
         parsed = parse_content(body, tolerate_duplicate_siblings=True) if isinstance(body, str) else []
         paths = [tuple(item['property_path']) for item in parsed]
-        for kind, path, roles, forms, low, high, children, source in self.records:
-            if roles is not None and not any(matches_named_value(row.get('role'), role) for role in roles):
-                continue
-            if forms is not None and not any(matches_named_value(row.get('form'), form) for form in forms):
-                continue
-            if kind == 'children':
+        def applies(record):
+            roles, forms = record[2:4]
+            return ((roles is None or any(matches_named_value(row.get('role'), role) for role in roles))
+                    and (forms is None or any(matches_named_value(row.get('form'), form) for form in forms)))
+
+        applicable = [record for record in self.records if applies(record)]
+        declared = {path for kind, path, *_ in applicable if kind not in {'children', 'order'}}
+        for kind, path, _, _, _, _, children, _ in applicable:
+            if kind in {'children', 'order'}:
+                declared.update((*path, child) for child in children)
+        by_path = _records_by_path(parsed)
+        lines = content_lines(body) if isinstance(body, str) else None
+        ordering = {}
+        for kind, path, roles, forms, low, high, children, source in applicable:
+            if kind == 'order':
+                ordering.setdefault((path, source), []).append(children)
+            elif kind == 'children':
                 if path not in paths:
                     continue
-                actual = [item[-1] for item in paths if item[:-1] == path]
-                if any(name not in children for name in actual) or not low <= len(actual) <= high or len(actual) != len(set(actual)):
+                actual = [item[-1] for item in paths if item[:-1] == path and item in declared]
+                if (children and any(name not in children for name in actual)) or not low <= len(actual) <= high or len(actual) != len(set(actual)):
                     raise ValueError(f'Content {".".join(path)} requires {low}..{high} unique children from {", ".join(children)} ({source})')
             elif kind == 'heading' and not low <= paths.count(path) <= high:
                 raise ValueError(f'Content {".".join(path)} requires {low}..{high} occurrences ({source})')
             elif kind in {'value', 'heading_value'}:
-                if kind == 'heading_value' and path not in paths:
+                if path not in paths:
                     continue
-                count = sum(bool(item['direct_markdown']) for item, address in zip(parsed, paths) if address == path)
+                declared_children = frozenset(child for child in declared if child[:-1] == path)
+                count = sum(bool(_value_excluding_declared_children(item, by_path, declared_children, lines)[1])
+                            for item in by_path.get(path, ()))
                 if not low <= count <= high:
                     raise ValueError(f'Content {".".join(path)} requires {low}..{high} direct Markdown values ({source})')
+
+        from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_property_order import order_properties
+        for (path, source), pairs in ordering.items():
+            actual = [item[-1] for item in paths if item[:-1] == path]
+            ordered_names = {name for pair in pairs for name in pair}
+            relevant = [name for name in actual if name in ordered_names]
+            if relevant != order_properties(relevant, pairs):
+                raise ValueError(f'Content {".".join(path) or "root"} Properties are out of order ({source})')
 
 
 def load_content_constraints(records, source_ids):
@@ -104,10 +212,11 @@ def load_content_constraints(records, source_ids):
         kind, path, roles, forms, low, high, children, source = (item[k] for k in ('kind', 'path', 'roles', 'forms', 'min', 'max', 'children', 'source'))
         def valid_names(value, nullable=False):
             return (value is None and nullable) or (isinstance(value, list) and all(isinstance(x, str) and x for x in value) and len(value) == len(set(value)))
-        if (kind not in ('heading', 'value', 'heading_value', 'children')
-                or not valid_names(path) or not path or not valid_names(roles, True) or not valid_names(forms, True)
+        if (kind not in ('heading', 'value', 'heading_value', 'children', 'order')
+                or not valid_names(path) or (not path and kind != 'order') or not valid_names(roles, True) or not valid_names(forms, True)
                 or not valid_names(children) or type(low) is not int or type(high) is not int
-                or bool(children) != (kind == 'children') or low < 0 or high < low
+                or (kind not in ('children', 'order') and bool(children))
+                or (kind == 'order' and (len(children) != 2 or low != 0 or high != 0)) or low < 0 or high < low
                 or not isinstance(source, str) or source not in source_ids):
             raise ValueError('invalid Content constraint')
         key = (kind, tuple(path), None if roles is None else tuple(roles), None if forms is None else tuple(forms), low, high, tuple(children), source)

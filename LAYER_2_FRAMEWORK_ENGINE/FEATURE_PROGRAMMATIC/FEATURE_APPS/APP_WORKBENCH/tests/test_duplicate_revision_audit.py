@@ -1,5 +1,4 @@
 import unittest
-# CA-E-821@2
 from pathlib import Path
 import sys
 

@@ -28,7 +28,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Verify Artifact query and selected fetch
 
@@ -38,6 +38,8 @@ Golden QA for
 `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FIND_AND_FETCH_ARTIFACTS/tests/test_find_and_fetch_artifacts.py`.
 
 ## Claim
+
+### Prose Claim
 
 The golden test **must** prove that FIND_AND_FETCH_ARTIFACTS returns only the
 correct default IDs or explicitly selected fetch values from one stable

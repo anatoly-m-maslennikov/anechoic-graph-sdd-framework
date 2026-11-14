@@ -12,16 +12,22 @@ subjects:
   - Journal
   - Projection
   - CFEL > Relation
+  - CAPRMEDIO_MODEL <+ Projection
 version: 23
-relations:
-  depends_on:
-  - CA-R-1493
-  - CA-R-1568
-  - CA-R-2535
 tier: 3
 role: Requirement
 form: Rule
 updated_at: 2026-11-02 07:49:21 +0400
+context:
+  topics:
+    dependencies:
+    - Entity/Aspect/Engineering/Traceability
+    - Entity
+    - 'Entity/Object/Continuant/Projection/Type: Realization Graph'
+    - Journal
+    - Projection
+    - CFEL > Relation
+    - CAPRMEDIO_MODEL <+ Projection
 ---
 ## Summary
 

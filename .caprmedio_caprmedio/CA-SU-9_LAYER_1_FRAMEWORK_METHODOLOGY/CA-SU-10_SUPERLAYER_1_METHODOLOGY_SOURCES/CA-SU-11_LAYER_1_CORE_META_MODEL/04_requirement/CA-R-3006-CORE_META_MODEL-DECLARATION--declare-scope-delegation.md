@@ -9,8 +9,8 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Form := Scope Delegation)
 tier: 3
 status: active
-version: 12
-updated_at: '2026-11-12T19:22:19.544711+00:00'
+version: 15
+updated_at: '2026-11-14T13:56:40.432945+00:00'
 carrier_destination:
   file:
     name: CA-R-3006-CORE_META_MODEL-DECLARATION--declare-scope-delegation.md
@@ -24,11 +24,11 @@ Declare Scope Delegation
 
 ### Prose Claim
 
-Scope Delegation is one generic Form for an external Atom whose Role is in RMEDO. Its active Subject identifies exactly one receiving non-Project Scope Unit within the Project. Its Container is that unit’s one direct structural Parent. Project may contain delegations for its children but is never their receiver. The direct Parent authors the structural declaration and assigns a contribution to the receiving unit; it retains its broader scope and accountability.
+Scope Delegation is one generic Form for an external Atom whose Role is in RMEDO. Its Main Subject identifies exactly one receiving non-Project Scope Unit within the Project. Its Container is that unit’s one direct structural Parent. Project may contain delegations for its children but is never their receiver. The direct Parent authors the structural declaration and assigns a contribution to the receiving unit; it retains its broader scope and accountability.
 
-The Scope Unit Declaration states the structural facts for FORMAL_MODEL_ENGINE.
+The Scope Unit Declaration states the structural facts for FORMAL_MODEL_GENERATOR.
 
-During the Python migration, each Scope Unit listed below may have one separate Scope Unit Declaration alongside its existing Scope Delegation. The Declaration states the unit's Name, stable ID, ordering state, order number when ordered, direct containing Scope Unit, and structural level. Label remains optional. The existing Delegation retains its responsibilities and local admissions. While both Claims state a structural fact, their values agree.
+During the Python migration, each Scope Unit listed below may have one separate Scope Unit Declaration alongside its existing Scope Delegation. The Declaration states the unit's Name, stable ID, ordering state, order number when ordered, direct containing Scope Unit, and structural level. Label remains optional. The existing Delegation retains its responsibilities and Main Subject boundaries. While both Claims state a structural fact, their values agree.
 
 - AGENTIC (CA-SU-22)
 - APPS (CA-SU-20)
@@ -52,19 +52,18 @@ During the Python migration, each Scope Unit listed below may have one separate 
 
 For each other Scope Unit that uses a combined Scope Delegation, that Delegation remains its structural declaration and states the same structural facts except structural level.
 
-Each concrete Scope Delegation Claim lists admitted local Role/Form pairs and typed HAS_ACTIVE_SUBJECT target selections. Plan / Work Report is admitted as a supporting Atom for an already admitted Task. It has that Task’s Container and remains within the applicable Subject selections. Its Role/Form pair needs no separate local listing.
+A Scope Delegation states the receiving Scope Unit's responsibilities and Main Subject boundaries in its Prose Claim. The applicable Model determines valid Role and Form combinations.
 
-For other local Atoms, admission requires the Header.Container-derived IS_CONTAINED_BY target to be the receiving Scope Unit, the HAS_ACTIVE_SUBJECT target to be in a listed selection, and the Role/Form pair to be listed. Solution, Direct Policy and Approach Policy are RMEDO Forms and require explicit inclusion in the local whitelist. Decision is a MEDO Form.
+For local admission, the Atom's Container resolves to the receiving Scope Unit. Its Main Subject resolves to an endpoint admitted by at least one applicable Scope Delegation. A Plan / Work Report has the reported Task's Container and meets the applicable Main Subject boundaries.
 
 ### Formal Claim
 
-```CFEL
-# model
-Atom.Header.Context.Form :: Scope Delegation;
+```python
+from caprmedio.formal_claims import declare_entity
 
-# instances
-FOR EACH $a[<Atom>, (.Header.Context.Form = Scope Delegation)]:
-(
-    $a.Header.Context.Role:: [in (Requirement, Method, Evaluation, Delivery, Operations)]{::1};
+declare_entity(
+    entity_name='Form', relation_name='IS_PROPERTY_OF',
+    base_path='Atom.Header.Context', allowed_values=('Scope Delegation',),
+    form_roles=('Requirement', 'Method', 'Evaluation', 'Delivery', 'Operations'),
 )
 ```

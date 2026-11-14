@@ -57,12 +57,10 @@ class ReviewRegressions(unittest.TestCase):
         self.assertIn('Properties owns missing, duplicate, or misplaced headings',
                       (HERE / 'evaluate_coherence.prompt.md').read_text())
 
-    def test_cce_keeps_the_previous_rendering_guards(self):
+    def test_writing_preserves_terminology_and_reference_guards(self):
         text = (HERE / 'evaluate_cce.prompt.md').read_text()
-        for phrase in ('not every bold word', 'Inventory all capitalized sentence, bullet, and table-cell starts',
-                       'justify each retained exact-case token against bound authority', 'Do not sample starts',
-                       'Set coordination in Scope still uses operators', 'Table headers are not sentence/list starts',
-                       '"before/after states" by syntactic function'):
+        for phrase in ('exact registered spelling', 'literal exact-case references',
+                       'Role and Form', 'inherited', 'Do not fetch the cited Atom'):
             self.assertIn(phrase, text)
 
     def test_summary_keeps_known_defects_when_coverage_is_blocked(self):

@@ -26,7 +26,7 @@ carrier_destination:
 current_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Derive one current capability catalog
 
@@ -35,6 +35,8 @@ Derive one current capability catalog
 the TOOLS capability for Capability Catalog.
 
 ## Claim
+
+### Prose Claim
 
 the Capability Catalog **must** be **`=1`** derived read model shared by Tool discovery, Operations discovery **and** execution-context retrieval.
 

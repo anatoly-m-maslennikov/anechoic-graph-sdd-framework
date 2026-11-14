@@ -19,7 +19,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Map canonical Event fields to the shared query filter
 
@@ -28,6 +28,8 @@ Map canonical Event fields to the shared query filter
 The Journal-specific selector namespace for QUERY_FILTER.
 
 ## Claim
+
+### Prose Claim
 
 FIND_AND_FETCH_JOURNAL_EVENTS **must** expose every canonical Event field as a valid selector to CA-R-1850's shared QUERY_FILTER contract.
 

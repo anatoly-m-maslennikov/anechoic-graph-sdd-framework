@@ -8,14 +8,6 @@ form: Specification Proposal
 topics:
   main_subject: CAPRMEDIO_MODEL <+ CFEL
 tier: 3
-relations:
-  depends_on:
-  - CA-R-2487
-  - CA-R-2549
-  - CA-R-2768
-  - CA-R-2552
-  - CA-R-2566
-  - CA-R-2585
 status: Active
 version: 4
 updated_at: 2026-11-04 20:33:16 +0400

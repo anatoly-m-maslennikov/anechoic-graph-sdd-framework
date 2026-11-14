@@ -17,8 +17,6 @@ tier: 4
 relations:
   delivery_for:
   - CA-R-1941
-  depends_on:
-  - CA-D-625
 status: Active
 version: 15
 updated_at: 2026-10-27 19:59:27 +0400
@@ -30,7 +28,7 @@ current_scope_unit: CONNECTOR_TOOLS
 claim_target_scope_unit: CONNECTOR_TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Bind private carrier operation payloads
 
@@ -39,6 +37,8 @@ Bind private carrier operation payloads
 The private adapter binding and result carrier for O215 rename, O216 move and O217 removal, under CA-R-1941. This is an unimplemented contract, not an executable, public path API or new transport binding.
 
 ## Claim
+
+### Prose Claim
 
 the public logical request/result **must** retain CA-D-625's exact representations. its supported common operation is `modify`; private `rename`, `move` **and** `remove` are declared storage variants behind that operation, **not** additions **to** the common operation enum.
 

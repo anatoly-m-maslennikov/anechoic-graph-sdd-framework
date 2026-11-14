@@ -12,8 +12,6 @@ tier: 3
 relations:
   is_decomposition_of:
   - CA-P-2536
-  depends_on:
-  - CA-P-2550
 status: Backlog
 version: 5
 updated_at: 2026-10-25 17:32:27 +0400

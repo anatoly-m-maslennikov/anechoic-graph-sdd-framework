@@ -31,25 +31,10 @@ Declare CODEX_EXTENSION
 
 ### Prose Claim
 
-The receiving Scope Unit is CODEX_EXTENSION. Existing default Role and Form admissions remain applicable. The admitted HAS_ACTIVE_SUBJECT targets are exactly the declared entities or instances at these addresses:
+The receiving Scope Unit is CODEX_EXTENSION. The admitted HAS_ACTIVE_SUBJECT targets are exactly the declared entities or instances at these addresses:
 
 - `MODEL//CAPRMEDIO <+ View`;
 - `MODEL//CAPRMEDIO <+ Workspace`;
 - `PROJECT STRUCTURE//CAPRMEDIO <+ Aspects <+ Engineering <+ Development <+ Architecture <+ Communication <+ Interface Contracts`;
 
 Each address selects one endpoint object, not the address string, other members of its type or descendants. An unresolved address is diagnostic and grants no admission. These permissions apply only to local Atoms whose Header.Container resolves to CODEX_EXTENSION. The Scope Unit identity, Parent, responsibility and structural tree are unchanged.
-
-### Formal Claim
-
-```CFEL
-# instances
-Scope Unit//CODEX_EXTENSION.ID == "CA-SU-48";
-Scope Unit//CODEX_EXTENSION.Name == "CODEX_EXTENSION";
-Scope Unit//CODEX_EXTENSION.Label == "FEATURE";
-Scope Unit//CODEX_EXTENSION.order.ordered == false;
-Scope Unit//CODEX_EXTENSION ((IS_CONTAINED_BY)) Scope Unit//WORKBENCH;
-
-Atom/(.Header.Context.Container.scope_unit in ("CA-SU-48"))/(.Header.Context.Role in (Delivery)).Header.Context.Form :: Solution;
-Atom/(.Header.Context.Container.scope_unit in ("CA-SU-48"))/(.Header.Context.Role in (Method)).Header.Context.Form :: Solution;
-Atom/(.Header.Context.Container.scope_unit in ("CA-SU-48"))/(.Header.Context.Role in (Requirement)).Header.Context.Form :: Rule;
-```

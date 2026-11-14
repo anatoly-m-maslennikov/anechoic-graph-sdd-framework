@@ -178,8 +178,8 @@ Atom.Content.Summary{::1}:: {::1};
 
 ### Formal Claim
 
-```CFEL
-Relation//DIRECT ((HAS_INVERSE)) Relation//INVERSE;
+```python
+relation(source="Relation//DIRECT", name="HAS_INVERSE", target="Relation//INVERSE")
 ```
 """)
         relation.write_text(relation.read_text().replace("subjects: {}", "subjects:\n  active: CFEL <+ Relation//DIRECT"))
@@ -187,8 +187,8 @@ Relation//DIRECT ((HAS_INVERSE)) Relation//INVERSE;
 
 ### Formal Claim
 
-```CFEL
-Relation//INVERSE <((HAS_INVERSE)) Relation//DIRECT;
+```python
+relation(source="Relation//INVERSE", name="HAS_INVERSE", target="Relation//DIRECT", reverse=True)
 ```
 """)
         inverse.write_text(inverse.read_text().replace("subjects: {}", "subjects:\n  active: CFEL <+ Relation//INVERSE"))
@@ -206,8 +206,8 @@ Relation//INVERSE <((HAS_INVERSE)) Relation//DIRECT;
 
 ### Formal Claim
 
-```CFEL
-Relation//STALE;
+```python
+subject_path(address="Relation//STALE")
 ```
 """)
         native = self.fixture._write_atom(
@@ -216,8 +216,8 @@ Relation//STALE;
 
 ### Formal Claim
 
-```CFEL
-Relation//CURRENT;
+```python
+subject_path(address="Relation//CURRENT")
 ```
 """,
         )
@@ -253,8 +253,8 @@ Relation//CURRENT;
 
 ### Formal Claim
 
-```CFEL
-Relation//VALID;
+```python
+subject_path(address="Relation//VALID")
 ```
 """)
         registry = json.loads(compile_project_registry(self.root))

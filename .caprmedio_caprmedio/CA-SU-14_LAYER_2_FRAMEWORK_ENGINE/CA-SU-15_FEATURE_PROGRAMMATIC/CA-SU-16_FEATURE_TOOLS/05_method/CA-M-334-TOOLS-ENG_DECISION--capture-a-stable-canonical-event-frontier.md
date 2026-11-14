@@ -26,7 +26,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Capture a stable canonical Event frontier
 
@@ -35,6 +35,8 @@ Capture a stable canonical Event frontier
 Source snapshot construction.
 
 ## Claim
+
+### Prose Claim
 
 To capture the query source, the adapter **must**, before any workflow/action-start
 recording or Action dispatch, read and seal the canonical Journal byte-prefix,

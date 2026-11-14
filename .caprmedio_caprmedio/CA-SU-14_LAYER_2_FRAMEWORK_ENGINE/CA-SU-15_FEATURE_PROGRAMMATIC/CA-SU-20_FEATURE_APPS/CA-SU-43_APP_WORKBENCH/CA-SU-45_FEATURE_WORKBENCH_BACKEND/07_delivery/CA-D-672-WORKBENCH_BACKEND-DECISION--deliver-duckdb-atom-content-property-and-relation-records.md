@@ -12,15 +12,13 @@ context:
       <+ Data Handling <+ Schema
     dependencies:
     - MODEL//CAPRMEDIO <+ Projection
+    - CAPRMEDIO_MODEL <+ Projection
   tier: 4
 relations:
   delivery_for:
   - CA-R-2723
   - CA-R-2726
   - CA-R-2724
-  depends_on:
-  - CA-M-509
-  - CA-D-715
 state:
   status: active
   version: 24

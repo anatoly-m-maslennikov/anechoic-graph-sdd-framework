@@ -15,7 +15,7 @@ topics:
   - CAPRMEDIO_MODEL <+ Term
   - CAPRMEDIO_MODEL <+ Term//Term
   - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//evaluation_for
+  - CAPRMEDIO_MODEL <+ Relation//evaluation_for
   - CAPRMEDIO_MODEL <+ Term//Property
   - CAPRMEDIO_MODEL <+ Node.**
 tier: 3

@@ -26,7 +26,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Journal only an actual query Run through shared support
 
@@ -35,6 +35,8 @@ Journal only an actual query Run through shared support
 Actual query invocation evidence.
 
 ## Claim
+
+### Prose Claim
 
 To record an actual Journal query invocation, the Tool **must** delegate
 preview/execute admission and Run evidence to shared selected-Run support only

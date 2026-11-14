@@ -32,7 +32,7 @@ claim_target_scope_unit: FRAMEWORK_DELIVERY
 author: Anatoly Maslennikov
 ---
 
-# Summary
+## Summary
 
 Validate public-release schema-v5 Run and Tool-call lineage
 
@@ -41,6 +41,8 @@ Validate public-release schema-v5 Run and Tool-call lineage
 the Journal output of one public-release fixture.
 
 ## Claim
+
+### Prose Claim
 
 **the Operator** **must** verify schema-v5 actual Workflow, Step, and Action Run parentage, started and terminal records, and Tool-call evidence references parented to their Step and Action without any Tool Run kind.
 

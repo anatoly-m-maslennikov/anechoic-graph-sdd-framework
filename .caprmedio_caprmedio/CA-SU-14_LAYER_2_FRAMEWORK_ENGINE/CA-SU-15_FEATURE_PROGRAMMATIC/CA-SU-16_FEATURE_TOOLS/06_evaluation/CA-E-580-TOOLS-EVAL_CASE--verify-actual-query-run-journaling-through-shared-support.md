@@ -27,11 +27,13 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Verify actual query Run journaling through shared support
 
 ## Claim
+
+### Prose Claim
 
 The Tool creates shared RunJournal evidence only for an actual admitted query execution and creates none for preview or denied requests.
 

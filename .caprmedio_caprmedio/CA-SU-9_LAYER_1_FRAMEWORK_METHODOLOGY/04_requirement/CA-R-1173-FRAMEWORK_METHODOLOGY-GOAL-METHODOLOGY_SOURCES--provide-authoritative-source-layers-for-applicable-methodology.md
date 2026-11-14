@@ -21,6 +21,10 @@ llm_session_ids:
 current_scope_unit: FRAMEWORK_METHODOLOGY
 author: Anatoly Maslennikov
 claim_target_scope_unit: METHODOLOGY_SOURCES
+destination:
+  file:
+    name: CA-R-1173-FRAMEWORK_METHODOLOGY-GOAL-METHODOLOGY_SOURCES--provide-authoritative-source-layers-for-applicable-methodology.md
+    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/04_requirement
 ---
 ## Summary
 Provide Authoritative Source Layers for Applicable Methodology

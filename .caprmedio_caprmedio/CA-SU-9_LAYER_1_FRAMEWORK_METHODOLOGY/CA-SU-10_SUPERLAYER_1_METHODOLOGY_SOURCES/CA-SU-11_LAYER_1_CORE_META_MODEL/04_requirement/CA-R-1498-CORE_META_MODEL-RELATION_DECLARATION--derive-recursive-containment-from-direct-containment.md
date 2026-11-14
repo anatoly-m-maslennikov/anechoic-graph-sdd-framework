@@ -6,13 +6,13 @@ container:
 role: Requirement
 form: Relation Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//RECURSIVELY_CONTAINS
+  main_subject: CAPRMEDIO_MODEL <+ Relation//RECURSIVELY_CONTAINS
   dependencies:
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//CONTAINS
+  - CAPRMEDIO_MODEL <+ Relation//CONTAINS
 tier: 1
 status: active
-version: 19
-updated_at: '2026-11-13T08:13:26.277090+00:00'
+version: 21
+updated_at: '2026-11-13T22:48:44.142840+00:00'
 carrier_destination:
   file:
     name: CA-R-1498-CORE_META_MODEL-RELATION_DECLARATION--derive-recursive-containment-from-direct-containment.md
@@ -29,9 +29,14 @@ Derive Recursive Containment from Direct Containment
 ### Formal Claim
 
 ```python
-# model
-relation(source='$container', name='RECURSIVELY_CONTAINS', target='$descendant')
-classify(address='Relation//RECURSIVELY_CONTAINS', axis='Derivation', value='Derived', notation='relation')
+from caprmedio.formal_claims import declare_relation
+
+declare_relation(
+    relation_name="RECURSIVELY_CONTAINS",
+    derived_from="CONTAINS",
+    source_endpoint={"level": "model_entities_or_instances"},
+    target_endpoint={"level": "model_entities_or_instances"},
+)
 ```
 
 ## Semantics

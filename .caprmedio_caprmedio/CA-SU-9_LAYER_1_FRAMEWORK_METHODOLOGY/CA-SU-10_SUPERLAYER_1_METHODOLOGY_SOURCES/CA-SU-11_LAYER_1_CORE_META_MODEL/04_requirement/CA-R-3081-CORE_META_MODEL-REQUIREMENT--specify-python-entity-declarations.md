@@ -11,9 +11,9 @@ context:
   topics:
     main_subject: CAPRMEDIO_MODEL <+ Atom.Content.Claim.Formal Claim
 state:
-  version: 3
+  version: 4
   status: active
-  updated_at: '2026-11-13T01:06:17.792126+00:00'
+  updated_at: '2026-11-14T07:31:14.773770+00:00'
 destination:
   file:
     name: CA-R-3081-CORE_META_MODEL-REQUIREMENT--specify-python-entity-declarations.md
@@ -31,7 +31,7 @@ Specify Python entity declarations
 - For a narrower kind, pass its Python class as `entity_class`. A singleton uses an explicit instance population cardinality in the Project. Declare the parent using ordinary Python class syntax. Derive the narrower Model address from that parent and the declared name.
 - Use `qualification_property_path` when the declared name is an allowed Property value. A Form class extends its Role class.
 - For a Property, pass `entity_name`, `relation_name="IS_PROPERTY_OF"`, and its bearer as `base_path`. Declare Property occurrence and direct values separately. Use `dependent_property_cardinality` to count immediate dependent Properties. Use `dependent_property_value_cardinality` with `dependent_property_value_format` to constrain the direct values of each immediate dependent Property.
-- Put Model and instance Relation permissions in separate declaration fields.
+- Put additional Model and instance Relation constraints in separate declaration fields. Apply them to links admitted by the Relation Declaration’s endpoint pairs.
 - For a conditional instance rule, define a named Python function with a Model-typed parameter and a `bool` return. Pass it to `declare_entity` as `instance_check`.
 
 ## Details

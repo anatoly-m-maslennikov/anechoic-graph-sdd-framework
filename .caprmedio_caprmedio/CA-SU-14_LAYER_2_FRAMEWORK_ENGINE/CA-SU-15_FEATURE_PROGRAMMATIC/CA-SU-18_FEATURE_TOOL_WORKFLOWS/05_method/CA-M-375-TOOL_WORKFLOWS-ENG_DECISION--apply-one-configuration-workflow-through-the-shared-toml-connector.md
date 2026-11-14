@@ -22,7 +22,7 @@ current_scope_unit: TOOL_WORKFLOWS
 claim_target_scope_unit: TOOL_WORKFLOWS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Apply one configuration Workflow through the shared TOML connector
 
@@ -31,6 +31,8 @@ Apply one configuration Workflow through the shared TOML connector
 One explicit update of a TOML-backed Project configuration.
 
 ## Claim
+
+### Prose Claim
 
 **To** update Project configuration, its distinct configuration Workflow **must**:
 

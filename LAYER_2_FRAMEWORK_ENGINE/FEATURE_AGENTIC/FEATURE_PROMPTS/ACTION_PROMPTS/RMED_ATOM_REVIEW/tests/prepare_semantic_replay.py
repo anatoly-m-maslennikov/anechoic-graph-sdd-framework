@@ -50,7 +50,7 @@ def mock_authority(identifier: str, target: str, claim: str) -> dict:
 def build(output: Path) -> None:
     output.mkdir(parents=True, exist_ok=False)
     root = HERE.parents[4]
-    manifest = json.loads((HERE / 'source_bindings.json').read_text())
+    manifest = json.loads((HERE / 'source_bindings.contract6.historical.json').read_text())
     baseline = []
     selected_ids = set(manifest['evaluators']['coherence'])
     for binding in manifest['sources']:

@@ -7,13 +7,10 @@ role: Analysis & Advisory
 form: Specification Proposal
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Projection
+  dependencies:
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+
+    Indexing
 tier: 4
-relations:
-  depends_on:
-  - CA-M-465
-  - CA-M-490
-  - CA-M-502
-  - CA-E-677
 status: Draft
 version: 1
 updated_at: 2026-11-07 01:34:24 +0400

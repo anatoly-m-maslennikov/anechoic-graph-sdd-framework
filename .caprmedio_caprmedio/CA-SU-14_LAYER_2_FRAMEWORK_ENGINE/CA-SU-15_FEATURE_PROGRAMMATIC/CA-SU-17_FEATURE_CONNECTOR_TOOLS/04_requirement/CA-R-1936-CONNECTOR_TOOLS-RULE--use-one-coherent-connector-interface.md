@@ -24,7 +24,7 @@ current_scope_unit: CONNECTOR_TOOLS
 claim_target_scope_unit: CONNECTOR_TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Use one coherent connector interface
 
@@ -33,6 +33,8 @@ Use one coherent connector interface
 All connectors in CONNECTOR_TOOLS, independently of their storage backend and supported operation subset.
 
 ## Claim
+
+### Prose Claim
 
 Every connector **must** use the coherent logical interface represented by CA-D-625-CONNECTOR_TOOLS-CORE-DELIVERY--deliver-coherent-connector-interface. A connector declares its supported subset of `query`, `read`, `create` and `modify` and the admitted payload schema for each supported operation. An unsupported operation or invalid payload **must** be rejected without effects; do not emulate it by composing a hidden Workflow. The common interface does not require every connector to support every operation.
 

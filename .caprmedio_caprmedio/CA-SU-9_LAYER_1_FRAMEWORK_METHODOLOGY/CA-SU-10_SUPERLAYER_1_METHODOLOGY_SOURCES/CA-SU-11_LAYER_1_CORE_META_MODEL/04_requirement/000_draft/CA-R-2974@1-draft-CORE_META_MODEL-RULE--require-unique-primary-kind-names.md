@@ -15,7 +15,7 @@ current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Require Unique Primary Kind Names
 
@@ -24,6 +24,8 @@ Require Unique Primary Kind Names
 Primary-kind declarations in the effective Subject model, including shared and project-local branches.
 
 ## Claim
+
+### Prose Claim
 
 Distinct primary-kind declarations **must** have unique canonical names across the effective Subject model. An existing-kind reference **may** use that name inside `@(...)`, as in `@(Module)`, and **must** resolve to exactly one declared kind. Repeated references to the same kind are not new declarations. An ambiguous name **must not** be resolved by choosing a branch or merging distinct targets.
 

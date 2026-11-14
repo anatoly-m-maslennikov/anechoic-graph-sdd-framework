@@ -23,7 +23,7 @@ current_scope_unit: CONNECTOR_TOOLS
 claim_target_scope_unit: CONNECTOR_TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Deliver complete configuration read data
 
@@ -32,6 +32,8 @@ Deliver complete configuration read data
 the Configuration Read refinement of CA-D-625's closed logical interface.
 
 ## Claim
+
+### Prose Claim
 
 Configuration Read **must** use the common request/result keys **and** the complete source representation below. CA-O-218 is its source Action binding on the same shared TOML connector as CA-O-204; separate Actions do **not** create separate connectors.
 

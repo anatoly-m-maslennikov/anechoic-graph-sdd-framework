@@ -31,7 +31,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Encode shared selected Run request and result contract
 
@@ -41,6 +41,8 @@ The small caller-facing contract shared by selected capability, MCP, and
 adapter implementations. It is a service interface, not a new Workflow.
 
 ## Claim
+
+### Prose Claim
 
 RUN_SUPPORT **must** expose `run_selected_operation(request) -> result` with
 the following exact bounded request and result representations.

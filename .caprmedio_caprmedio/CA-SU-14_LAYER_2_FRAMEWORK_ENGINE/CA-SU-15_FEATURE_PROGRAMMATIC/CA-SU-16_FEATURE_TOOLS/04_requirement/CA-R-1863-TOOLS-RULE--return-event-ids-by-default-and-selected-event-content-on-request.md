@@ -19,7 +19,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Return Event IDs by default and selected Event content on request
 
@@ -28,6 +28,8 @@ Return Event IDs by default and selected Event content on request
 The Event result representation.
 
 ## Claim
+
+### Prose Claim
 
 FIND_AND_FETCH_JOURNAL_EVENTS **must** return canonical Event IDs only unless the caller explicitly requests selected Event fields or complete Events.
 

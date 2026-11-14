@@ -13,7 +13,10 @@ _ORDER = re.compile(
 
 def compile_role_folders(statements):
     """Return canonical Role -> (derived folder, source) for bounded order claims."""
-    result, orders, tokens = {}, set(), set()
+    return role_folders_from_orders(_legacy_role_orders(statements))
+
+
+def _legacy_role_orders(statements):
     for statement, provenance in statements:
         if 'Role Order Number' not in statement:
             continue
@@ -23,10 +26,16 @@ def compile_role_folders(statements):
         role = match['role'].strip()
         if role.startswith('"'):
             role = role[1:-1]
+        yield role, int(match['order']), provenance
+
+
+def role_folders_from_orders(records):
+    result, orders, tokens = {}, set(), set()
+    for role, order, provenance in records:
         role = canonical_role_name(role)
         token = named_value_token(role)
-        order = int(match['order'])
-        if token is None or role in result or token in tokens or order in orders:
+        if (type(order) is not int or order < 1 or token is None
+                or role in result or token in tokens or order in orders):
             raise ValueError(f'{provenance}: duplicate or invalid Role order binding')
         result[role] = (f'{order:02d}_{token}', provenance)
         orders.add(order)

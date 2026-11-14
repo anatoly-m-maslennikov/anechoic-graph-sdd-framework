@@ -8,9 +8,6 @@ subjects:
   - CAPRMEDIO_MODEL <+ Atom.Content
 version: 36
 updated_at: 2026-11-02 08:06:47 +0400
-relations:
-  depends_on:
-  - CA-R-1275
 atom_id: CA-R-1199
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL

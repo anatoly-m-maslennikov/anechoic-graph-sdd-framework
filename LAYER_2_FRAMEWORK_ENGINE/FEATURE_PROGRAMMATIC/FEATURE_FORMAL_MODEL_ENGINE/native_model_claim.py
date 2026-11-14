@@ -44,9 +44,10 @@ _DECLARATION_KEYS = {
         "instance_population_cardinality", "instance_population_scope", "population_entity_path", "population_functional_dependencies", "population_unique_constraints", "classifications", "allowed_classification_values", "fallback_property_name", "fallback_value", "fallback_chain", "maximum_value",
         "required_instance_property_values", "instance_property_constraints", "model_relation_constraints",
         "instance_relation_constraints", "status_order_numbers", "applies_to_role", "applies_to_forms", "status_groups",
+        "form_roles", "form_content", "project_form_content",
     },
     "declare_relation": {
-        "relation_name", "source_endpoint", "target_endpoint", "endpoint_pairs", "inverse_alias", "written_alias",
+        "relation_name", "source_endpoint", "target_endpoint", "endpoint_pairs", "inverse_alias", "written_alias", "derived_from",
         "reverse_written_alias", "targets_per_source", "sources_per_target", "acyclic",
         "same_immediate_bearer", "swap_endpoints", "swap_endpoint_cardinalities",
     },
@@ -124,6 +125,7 @@ def _validate_cardinalities(value: Any, node: ast.AST) -> None:
 def _validate_endpoint(value: Any, label: str, node: ast.AST) -> None:
     if not isinstance(value, dict) or set(value) - _ENDPOINT_KEYS:
         _fail(node, f"{label} must be a supported endpoint mapping")
+    value.setdefault("level", "model_entities_or_instances")
     if value.get("level") not in _ENDPOINT_LEVELS:
         _fail(node, f"{label} requires an admitted level")
     if "entity_paths" in value:
@@ -419,6 +421,29 @@ def parse_native_model_claim(text: str) -> dict[str, Any] | None:  # noqa: C901
                        or not items or any(not isinstance(item, str) or not item.strip() for item in items)
                        or len(set(items)) != len(items) for axis, items in values.items())):
             _fail(declaration, "allowed_classification_values requires named nonempty tuples of distinct text values")
+    if "form_roles" in arguments:
+        roles = arguments["form_roles"]
+        values = arguments.get("allowed_values")
+        form_property = (arguments.get("relation_name") == "IS_PROPERTY_OF"
+                         and arguments.get("base_path") == "Atom.Header.Context"
+                         and arguments.get("entity_name") == "Form"
+                         and isinstance(values, tuple) and len(values) == 1
+                         and isinstance(values[0], str) and bool(values[0].strip()))
+        qualified_form = arguments.get("qualification_property_path") == "Atom.Header.Context.Form"
+        if (not (form_property or qualified_form) or not isinstance(roles, tuple) or not roles
+                or any(not isinstance(role, str) or not role.strip() for role in roles)
+                or len(set(roles)) != len(roles)):
+            _fail(declaration, "form_roles requires one Form and distinct Roles")
+    if "form_content" in arguments:
+        content = arguments["form_content"]
+        if (arguments.get("qualification_property_path") != "Atom.Header.Context.Form"
+                or not isinstance(content, dict) or set(content) != {"required_value", "no_children", "after"}
+                or any(not isinstance(value, str) or not value.strip() for value in content.values())):
+            _fail(declaration, "form_content requires a qualified Form and named Content properties")
+    if "project_form_content" in arguments:
+        if (arguments.get("qualification_property_path") != "Atom.Header.Context.Form"
+                or arguments["project_form_content"] is not True):
+            _fail(declaration, "project_form_content requires a qualified Form and true")
     if "structure_paths" in arguments or "aspect_memberships" in arguments:
         try:
             validate_aspect_hierarchy(arguments)
@@ -520,8 +545,9 @@ def parse_native_model_claim(text: str) -> dict[str, Any] | None:  # noqa: C901
                         or len(forms) != len(set(forms)) or set(arguments) - permitted):
                     _fail(declaration, "Form-qualified Status requires one Role and distinct Forms")
             if "status_groups" in arguments:
-                classes = arguments.get("applies_to_entity_classes")
-                if (not isinstance(groups, dict) or not groups or not isinstance(classes, (tuple, list)) or len(classes) != 1
+                applicable_classes = arguments.get("applies_to_entity_classes")
+                if (not isinstance(groups, dict) or not groups or not isinstance(applicable_classes, (tuple, list))
+                        or len(applicable_classes) != 1
                         or any(status not in allowed or not isinstance(group, str) or not group.strip() or group != group.strip()
                                for status, group in groups.items())):
                     _fail(declaration, "Status Groups require allowed values and one Role")
@@ -536,14 +562,17 @@ def parse_native_model_claim(text: str) -> dict[str, Any] | None:  # noqa: C901
     if "population_entity_path" in arguments and not ({"population_functional_dependencies", "population_unique_constraints"} & arguments.keys()):
         _fail(declaration, "population_entity_path requires a population constraint")
     if "population_unique_constraints" in arguments:
-        population = arguments.get("population_entity_path", arguments.get("base_path"))
+        class_declaration = function == "declare_entity" and "entity_class" in arguments
+        population = arguments.get("population_entity_path", arguments.get("base_path", arguments.get("entity_name")))
         base = arguments.get("base_path")
         rules = arguments["population_unique_constraints"]
-        if (function != "declare_entity" or arguments.get("relation_name") != "IS_PROPERTY_OF"
+        property_declaration = (function == "declare_entity" and arguments.get("relation_name") == "IS_PROPERTY_OF"
+                                and isinstance(base, str) and isinstance(population, str)
+                                and (base == population or base.startswith(population + ".")))
+        if (not (property_declaration or (class_declaration and population == arguments.get("entity_name")))
                 or not isinstance(population, str) or not population.strip() or population != population.strip()
-                or not isinstance(base, str) or not (base == population or base.startswith(population + "."))
                 or not isinstance(rules, (tuple, list)) or not rules):
-            _fail(declaration, "population uniqueness requires a Property and its population")
+            _fail(declaration, "population uniqueness requires a declared class or a Property and its population")
         seen = set()
         for rule in rules:
             if (not isinstance(rule, dict) or set(rule) not in ({"keys"}, {"keys", "status", "single_value_paths"})
@@ -631,6 +660,11 @@ def parse_native_model_claim(text: str) -> dict[str, Any] | None:  # noqa: C901
                 or not roles or any(not isinstance(role, str) or not role.strip() for role in roles)):
             _fail(declaration, "ordered dependent Property roles require ordering pairs and nonempty Roles")
     if function == "declare_relation":
+        if "derived_from" in arguments:
+            base = arguments["derived_from"]
+            if (not isinstance(base, str) or not re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]*", base)
+                    or base == arguments["relation_name"]):
+                _fail(declaration, "derived_from requires a different Relation name")
         if "endpoint_pairs" in arguments:
             pairs = arguments["endpoint_pairs"]
             if (not isinstance(pairs, (tuple, list)) or not pairs

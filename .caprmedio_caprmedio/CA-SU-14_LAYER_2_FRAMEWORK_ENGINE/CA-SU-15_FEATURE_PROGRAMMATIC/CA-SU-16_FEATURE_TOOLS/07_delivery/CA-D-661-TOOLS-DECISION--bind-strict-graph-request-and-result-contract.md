@@ -6,9 +6,9 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: "Subject/CAPRMEDIO/Graph/Node/Aspect/Engineering/Development/Architecture/Communication"
+  main_subject: Subject/CAPRMEDIO/Graph/Node/Aspect/Engineering/Development/Architecture/Communication
   dependencies:
-  - "Subject/CAPRMEDIO/Graph/Node/Aspect/Engineering/Operation/Data Handling/Data Validation"
+  - Subject/CAPRMEDIO/Graph/Node/Aspect/Engineering/Operation/Data Handling/Data Validation
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Projection
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Term//Artifact
   - Subject/CAPRMEDIO/Graph/Node/Project Model/History/Journal
@@ -19,9 +19,9 @@ relations:
   - CA-R-1836
   - CA-R-1837
   - CA-R-1838
-status: Active
-version: 2
-updated_at: "2026-10-30 15:50:46 +0400"
+status: active
+version: 3
+updated_at: '2026-11-13T19:23:29.517383+00:00'
 carrier_destination:
   file:
     name: CA-D-661-TOOLS-DECISION--bind-strict-graph-request-and-result-contract.md
@@ -34,11 +34,11 @@ author: Anatoly Maslennikov
 
 Bind strict graph request and result contract
 
-## Claim scope
+## Claim
+
+### Prose Claim
 
 The minimum Tool/MCP request-result boundary for one graph projection request.
-
-## Claim
 
 The Tool **must** reject ambiguous or mixed graph requests and return a result that makes source lineage, graph quality, namespace, effects, and non-authoritative state inspectable.
 
@@ -58,7 +58,7 @@ Omitting `output_destination` permits a non-persisting Tool description/construc
 
 `subject_profile`, when present, is exactly `legacy` or `approved`. Omission selects `legacy`; reject null, Boolean/numeric/container values, empty strings and unknown names at both the public descriptor and native request boundary. The builder does not infer a profile from source text, try another profile after a parse failure, or translate between profiles. This selection controls Subject syntax and Atom-incidence extraction only. Both graph kinds use the selected parser profile. In the approved profile, `/` denotes broader-to-narrower specialization with applicable inheritance, `//` names an instance of a kind, and `.` addresses a bearer's Property. `X: Y` means Y is an allowed value of X regardless of X's kind or preceding path; it is not assignment. `X/(.Y: Z)` qualifies the whole X by its own relative Property Y and allowed value Z: the qualified X is narrower than X and inherits its applicable features and constraints, while Y does not become a Property subtype of X. `@` calls an already declared Entity, not only a kind, and parentheses provide logical grouping. `Part +> Whole` and `Whole <+ Part` express the same containment fact, with direct IS_CONTAINED_BY and derived CONTAINS; containment supplies no inheritance. `X >| Y` and `Y |< X` express the same HAS_CLASSIFICATION axis-applicability fact, with ordinary Entity Y serving the Classification role; they do not express IS_CLASSIFIED_BY membership, create a Classification Entity kind, or declare another inverse Relation Type. `Source ((RELATION_TYPE)) Target` retains the exact registered named-Relation notation. Direct Property values use `Property[format]{count}`; Relation counts use `Source {forward-count}RELATION{reverse-count} Target`, counting Relation instances per written Source before the operator and reverse instances per Target after it. `{n}`, `{n+}` and `{n..m}` mean exact count, minimum and inclusive range; missing Relation slots remain unspecified, and the counts are neither Relation arity nor distinct-target counts. The registered initial lowercase `atom(...)` forms remain case-significant selector syntax; that initial reservation does not reserve an ordinary noninitial Name `atom`. `Atom` remains a case-significant lexical component of its full admitted canonical Entity expression, not a case-folded selector alias. Grouping and syntax recognition do not add a Boolean expression language or settle otherwise unspecified mixed-chain binding. Retain full decoded Subject and selected-owner literals. Syntax recognition does not admit a native Entity, Term, Property or Relation, resolve a selector, or alter the existing native recognition/admission profiles and their decisions.
 
-Before parsing an approved request, bind the profile's grammar source identities in declared order: CA-R-1931, CA-R-1321, CA-R-1324, CA-M-228 and CA-E-383. At the start of the operation's bound source scope, read each identity's actual Current original carrier and bind its actual positive integer Version, repository-relative original path and SHA-256 digest. A Draft or retained historical carrier is not a Current pin. Keep that exact ordered pin set immutable for the operation; this binding changes neither the legacy profile's frozen pins nor the caller's selected profile. Reject missing, unreadable, changed or symlinked pins, including a symlink in any parent path; a matching source digest does not admit native facts. Recheck these pins at the end of construction and immediately before publication or confirmation of an unchanged output. Drift returns truthful stale/failed evidence with no new output effect and preserves an existing output; it cannot be repaired by silently refreshing the selected profile or its pins.
+Before parsing an approved request, bind the profile's grammar source identities in declared order: CA-R-1931, CA-R-1321, CA-R-1324, CA-M-228 and CA-E-833. At the start of the operation's bound source scope, read each identity's actual Current original carrier and bind its actual positive integer Version, repository-relative original path and SHA-256 digest. A Draft or retained historical carrier is not a Current pin. Keep that exact ordered pin set immutable for the operation; this binding changes neither the legacy profile's frozen pins nor the caller's selected profile. Reject missing, unreadable, changed or symlinked pins, including a symlink in any parent path; a matching source digest does not admit native facts. Recheck these pins at the end of construction and immediately before publication or confirmation of an unchanged output. Drift returns truthful stale/failed evidence with no new output effect and preserves an existing output; it cannot be repaired by silently refreshing the selected profile or its pins.
 
 ### Derived fact context
 

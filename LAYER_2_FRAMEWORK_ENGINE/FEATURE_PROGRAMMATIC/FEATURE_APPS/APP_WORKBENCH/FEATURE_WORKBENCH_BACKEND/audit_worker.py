@@ -1,6 +1,4 @@
 # CA-M-465@29
-# CA-M-549@3
-# CA-D-715@3
 """Compute source diagnostics away from the query and lifecycle response path."""
 from __future__ import annotations
 
@@ -89,7 +87,10 @@ class AuditSnapshot:
             schema_audit = self.audit_model.issues
             placement = self.audit_model.schema.placement
             if placement is not None:
-                units = {unit[key]: unit for unit in self.units for key in ("scope_unit_name", "scope_unit_id")}
+                units = {
+                    unit[key]: unit for unit in self.units
+                    for key in ("scope_unit_name", "scope_unit_id") if isinstance(unit[key], str)
+                }
                 if (root_unit := units.get(self.root_unit_name)) is not None:
                     units[self.project_scope_id] = root_unit
 

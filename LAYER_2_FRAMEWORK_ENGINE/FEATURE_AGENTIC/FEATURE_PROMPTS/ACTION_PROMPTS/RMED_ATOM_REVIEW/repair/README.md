@@ -2,7 +2,7 @@
 
 ## Current local profile (contract 6)
 
-The current prompts use `atom_local`: local Properties, CCE and
+The current prompts use `atom_local`: local Properties, writing and
 Scope/Claim/Details/Summary only. Supply one candidate and the compact local rule
 pack. Independently review proposed and saved output under the same profile,
 and compare information preservation. No Entity/Subject resolution, graph

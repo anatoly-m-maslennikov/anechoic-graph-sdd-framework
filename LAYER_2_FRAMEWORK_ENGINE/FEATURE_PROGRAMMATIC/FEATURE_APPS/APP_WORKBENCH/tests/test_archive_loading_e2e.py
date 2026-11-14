@@ -1,5 +1,3 @@
-# CA-E-681@7
-# CA-E-821@2
 # CA-E-681@6
 """Isolated Project proof of scoped Archive loading and deferred audits."""
 from __future__ import annotations

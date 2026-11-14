@@ -9,7 +9,7 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Selection
   dependencies:
   - CAPRMEDIO_MODEL <+ Project
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
 tier: 2
 relations:
   evaluation_for:

@@ -23,7 +23,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Seal a stable Event source snapshot before query execution
 
@@ -32,6 +32,8 @@ Seal a stable Event source snapshot before query execution
 The query-source snapshot.
 
 ## Claim
+
+### Prose Claim
 
 FIND_AND_FETCH_JOURNAL_EVENTS **must** bind an immutable source snapshot before
 workflow/action-start execution evidence can append and must not enlarge that

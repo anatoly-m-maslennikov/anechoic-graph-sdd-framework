@@ -25,7 +25,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Evaluate shared query filters against Event selectors
 
@@ -34,6 +34,8 @@ Evaluate shared query filters against Event selectors
 Journal selector binding to QUERY_FILTER.
 
 ## Claim
+
+### Prose Claim
 
 To evaluate an Event filter, the Tool **must** resolve Event selectors then apply CA-R-1850's shared QUERY_FILTER without altering its grammar or value semantics.
 

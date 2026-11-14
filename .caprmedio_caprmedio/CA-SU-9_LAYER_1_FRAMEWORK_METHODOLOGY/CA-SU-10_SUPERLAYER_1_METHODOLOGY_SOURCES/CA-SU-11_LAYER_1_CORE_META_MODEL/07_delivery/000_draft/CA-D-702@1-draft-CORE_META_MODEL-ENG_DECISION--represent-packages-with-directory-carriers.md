@@ -15,11 +15,13 @@ current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Represent Packages with Directory Carriers
 
 ## Claim
+
+### Prose Claim
 
 In the proposed file/directory delivery profile, represent a logical Package by its Directory Carrier. Place its declared Module and nested Package representations consistently within that profile without deriving logical membership from arbitrary physical nesting alone.
 

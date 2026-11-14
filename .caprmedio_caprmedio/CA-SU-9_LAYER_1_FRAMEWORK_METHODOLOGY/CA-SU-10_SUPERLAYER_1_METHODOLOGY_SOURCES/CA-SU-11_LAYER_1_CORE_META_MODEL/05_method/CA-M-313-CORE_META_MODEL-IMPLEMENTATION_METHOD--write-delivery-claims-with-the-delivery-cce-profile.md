@@ -12,7 +12,7 @@ topics:
   - CAPRMEDIO_MODEL <+ Carrier
   - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
   - CAPRMEDIO_MODEL <+ Term
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
 tier: 6
 relations:
   child_of:

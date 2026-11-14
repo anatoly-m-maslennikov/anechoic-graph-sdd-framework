@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL
+  main_subject: CAPRMEDIO_MODEL
 tier: 3
 status: active
 version: 3
@@ -32,16 +32,5 @@ Assign a default when an Object Property is absent
 - A fallback expression can read a literal, a Property on the same bearer, an explicitly bound Property, or a contextual lookup. An explicit foreign-bearer read requires one resolved target.
 - The result is an effective value. The Property and its Carrier retain their authored values.
 
-### Formal Claim
-
-```CFEL
-# model
-p ?== expression
-```
-
-## Details
-
-```CFEL
-# model
-Atom.Header.Label ?== Atom.Header.Form
-```
+The Python Property Declaration specifies the fallback. For example,
+`Atom.Header.Context.Label` uses `Form` when `Label` is empty.

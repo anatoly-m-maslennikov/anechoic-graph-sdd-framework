@@ -47,17 +47,19 @@ class ReviewContext:
         if not isinstance(constraints, dict):
             raise ValueError('caller review_constraints must be a mapping')
         self.report_contract = constraints.get('report_contract', 4)
+        if self.report_contract == 7 and ('operator_precheck' in constraints or 'operator_registry' in constraints):
+            raise ValueError('contract 7 excludes the retired operator precheck')
         self.operator_precheck = constraints.get('operator_precheck')
         if self.operator_precheck is not None:
             if (self.report_contract != 6 or not isinstance(self.operator_precheck, list)
                     or not self.operator_precheck
                     or any(not isinstance(v, str) or not v for v in self.operator_precheck)):
                 raise ValueError('operator precheck needs an explicit contract-6 operator inventory')
-        if type(self.report_contract) is not int or self.report_contract not in (4, 5, 6):
-            raise ValueError('caller report_contract must be 4, 5 or 6')
-        if self.report_contract == 6:
+        if type(self.report_contract) is not int or self.report_contract not in (4, 5, 6, 7):
+            raise ValueError('caller report_contract must be 4, 5, 6 or 7')
+        if self.report_contract in (6, 7):
             if constraints.get('review_profile') != 'atom_local':
-                raise ValueError('contract 6 needs an explicit atom_local profile')
+                raise ValueError('local contracts need an explicit atom_local profile')
             if (not isinstance(snapshot.get('candidate_bindings'), list)
                     or len(snapshot['candidate_bindings']) != 1):
                 raise ValueError('atom_local context needs exactly one candidate')

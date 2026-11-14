@@ -1,11 +1,5 @@
-<!-- CA-R-2776@10 -->
 <!-- CA-D-674@26 -->
-<!-- CA-M-466@9 -->
-<!-- CA-M-468@8 -->
-<!-- CA-M-469@11 -->
-<!-- CA-R-2727@20 -->
 <!-- CA-R-2902@9 -->
-<!-- CA-M-470@14 -->
 <script lang="ts">
   import { onMount } from 'svelte';
   import ArchiveDialog from './lib/ArchiveDialog.svelte';

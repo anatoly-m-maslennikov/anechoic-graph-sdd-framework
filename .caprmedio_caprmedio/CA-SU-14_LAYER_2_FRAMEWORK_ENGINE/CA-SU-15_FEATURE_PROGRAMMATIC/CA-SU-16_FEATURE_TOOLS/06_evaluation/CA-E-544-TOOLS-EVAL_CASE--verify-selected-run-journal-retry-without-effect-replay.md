@@ -27,7 +27,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Verify selected Run Journal retry without effect replay
 
@@ -37,6 +37,8 @@ Storage recovery of a terminal selected-Run event after its domain effect has
 already occurred.
 
 ## Claim
+
+### Prose Claim
 
 When recording retry is supported, an append failure retains identical pending
 evidence and a retry appends without rerunning its completed Action. Neither

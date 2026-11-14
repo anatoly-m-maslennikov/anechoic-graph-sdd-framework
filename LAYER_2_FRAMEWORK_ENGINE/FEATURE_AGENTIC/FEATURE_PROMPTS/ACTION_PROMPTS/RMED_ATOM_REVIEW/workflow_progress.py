@@ -1,7 +1,8 @@
 """Summarize one-pass reports; never evaluate Atoms or rewrite check results."""
 from collections import Counter
 
-CHECKS = ('properties', 'cce', 'scope', 'claim', 'details', 'summary')
+CHECKS = ('properties', 'writing', 'scope', 'claim', 'details', 'summary')
+LEGACY_CHECKS = tuple('cce' if name == 'writing' else name for name in CHECKS)
 
 
 def findings_resolved(report):
@@ -30,14 +31,16 @@ def findings_resolved(report):
     return len(covered) == len(set(covered)) and set(covered) == set(range(len(findings)))
 
 
-def report_progress(report):
+def report_progress(report, *, check_key=None):
     if report is None:
         return {'state': 'pending', 'reported_result': None,
                 'check_complete': False, 'complete': False}
     checks = report.get('checks', {})
-    statuses = {name: checks.get(name, {}).get('status') for name in CHECKS}
+    expected = (LEGACY_CHECKS if check_key == 'cce' or
+                (check_key is None and 'cce' in checks) else CHECKS)
+    statuses = {name: checks.get(name, {}).get('status') for name in expected}
     check_complete = (
-        set(checks) == set(CHECKS)
+        set(checks) == set(expected)
         and all(status in {'passed', 'failed'} for status in statuses.values())
         and report.get('blockers') == []
         and report.get('coverage_gaps', []) == []
@@ -55,8 +58,8 @@ def report_progress(report):
             'check_complete': check_complete, 'complete': complete}
 
 
-def summarize_progress(reports):
-    rows = [report_progress(report) for report in reports]
+def summarize_progress(reports, *, check_key=None):
+    rows = [report_progress(report, check_key=check_key) for report in reports]
     return {'total': len(rows),
             'reported': sum(row['reported_result'] is not None for row in rows),
             'checked': sum(row['check_complete'] for row in rows),

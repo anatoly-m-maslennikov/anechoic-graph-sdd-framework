@@ -32,7 +32,7 @@ claim_target_scope_unit: FRAMEWORK_DELIVERY
 author: Anatoly Maslennikov
 ---
 
-# Summary
+## Summary
 
 Serialize parented public Tool-call evidence
 
@@ -41,6 +41,8 @@ Serialize parented public Tool-call evidence
 Tool-call evidence of one public-release Action.
 
 ## Claim
+
+### Prose Claim
 
 public-release Tool-call evidence **must** serialize input, result, effect, and report references under the actual parent Step and Action Run records of the existing schema-v5 Journal.
 

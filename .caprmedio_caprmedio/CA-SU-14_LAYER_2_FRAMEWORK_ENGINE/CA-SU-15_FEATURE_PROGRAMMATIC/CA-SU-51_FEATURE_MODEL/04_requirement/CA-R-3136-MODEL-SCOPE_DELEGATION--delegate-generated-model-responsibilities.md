@@ -11,9 +11,9 @@ context:
   topics:
     main_subject: CAPRMEDIO_STRUCTURE <+ Scope Unit//GENERATED_MODEL
 state:
-  version: 2
+  version: 3
   status: active
-  updated_at: '2026-11-13T15:38:23.242901+00:00'
+  updated_at: '2026-11-13T17:43:24.915400+00:00'
 destination:
   file:
     name: CA-R-3136-MODEL-SCOPE_DELEGATION--delegate-generated-model-responsibilities.md
@@ -27,10 +27,8 @@ Delegate GENERATED MODEL responsibilities
 
 ### Prose Claim
 
-The receiving Scope Unit is GENERATED_MODEL. The admitted HAS_ACTIVE_SUBJECT targets are exactly the declared instances at these addresses:
+The receiving Scope Unit is GENERATED_MODEL. The admitted Main Subject is the declared instance `CAPRMEDIO_STRUCTURE <+ Scope Unit//GENERATED_MODEL`.
 
-- `CAPRMEDIO_STRUCTURE <+ Scope Unit//GENERATED_MODEL`.
+Hold the Python package built by FORMAL_MODEL_GENERATOR from validated Model Declarations. The package contains only the required Python imports, class definitions, and object construction.
 
-Hold the Python Model package built by FORMAL_MODEL_ENGINE from validated Model Declarations.
-
-The generated package contains only the required Python imports, class definitions, and object construction. Omit Declaration Atom IDs, Versions, and rule provenance metadata from the generated package. Inspect the source Declarations for those details.
+Named instance checks are available to MODEL_VALIDATION through its separate checks module. Declaration Atom IDs, Versions, and rule provenance remain in the source Declarations.

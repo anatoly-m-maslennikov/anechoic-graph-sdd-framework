@@ -24,11 +24,24 @@ def claim(expression):
     return f"## Claim\n\n```CFEL\n{expression}\n```\n"
 
 
+def event_record_claim():
+    return '''## Claim
+### Formal Claim
+```python
+from caprmedio.model import Continuant
+from caprmedio.formal_claims import declare_entity
+class EventRecord(Continuant):
+    pass
+declare_entity(entity_name="Event Record", entity_class=EventRecord)
+```
+'''
+
+
 class NarrowingGraphTests(unittest.TestCase):
     def test_bare_narrowing_target_uses_declared_unique_parent(self):
         graph, _ = compose_narrowing_graph([
             carrier("CA-R-0", "Node"), carrier("CA-R-1", "Node/Continuant"),
-            carrier("CA-R-2", "Event Record", body=claim("Event Record ((NARROWER_THAN)) Continuant")),
+            carrier("CA-R-2", "Event Record", body=event_record_claim()),
             carrier("CA-R-3", "Node/Other", body=claim("Other ((NARROWER_THAN)) Missing")),
         ])
         names = {row["id"]: row["identity"] for row in graph["nodes"]}

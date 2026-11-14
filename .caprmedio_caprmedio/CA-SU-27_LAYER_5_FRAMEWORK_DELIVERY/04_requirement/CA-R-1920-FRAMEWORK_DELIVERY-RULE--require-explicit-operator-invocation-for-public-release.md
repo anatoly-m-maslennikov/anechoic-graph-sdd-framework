@@ -28,7 +28,7 @@ author: Anatoly Maslennikov
 relations: {}
 ---
 
-# Summary
+## Summary
 
 Require explicit Operator invocation for public release
 
@@ -37,6 +37,8 @@ Require explicit Operator invocation for public release
 one public-release Workflow invocation.
 
 ## Claim
+
+### Prose Claim
 
 **the Operator** **must** explicitly authorize the exact selected public-release request, definition manifest, source-currentness proof, effect set, and personal remote before a public commit, push, or PR effect begins.
 

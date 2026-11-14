@@ -8,11 +8,11 @@ relations:
 cce_version: cce_1
 cce_form: obligation
 subjects:
-  active: CFEL <+ Relation
+  active: Relation
   passive:
   - Project
   - Scope Unit
-  - CFEL <+ Relation
+  - Relation
   - Atom.Content
   - 'Entity/Object/Continuant/Governing Objects/Atom/Content Role: Requirement/Type: Demand'
 llm_session_ids:

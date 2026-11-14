@@ -74,6 +74,18 @@ class SpecTraceE2E(unittest.TestCase):
             time.sleep(0.1)
         self.fail(f"watcher projection did not converge: {sql}\nexpected={expected!r}, got={rows!r}")
 
+    def test_applies_pins_do_not_count_as_implementation(self):
+        package = self.package.relative_to(self.root).as_posix()
+        (self.package / "example.p.spec_trace.md").write_text("## Applies\n\n- CA-M-501@1\n")
+        self.wait("SELECT owner_path, entry_kind FROM implementation_rmedo", [[package, "applies"]])
+        self.assertEqual([[package, 0, 0]], self.sql(f"""
+            SELECT o.path, count(r.atom_id) FILTER (WHERE r.owner_path = o.path), count(r.atom_id)
+            FROM implementation_objects o
+            LEFT JOIN implementation_rmedo r ON r.entry_kind = 'implements'
+              AND (r.owner_path = o.path OR starts_with(r.owner_path, o.path || '/'))
+            WHERE o.path = '{package}' GROUP BY o.path
+        """))
+
     def test_watcher_and_reread(self):
         objects = f"SELECT path, kind FROM implementation_objects WHERE path LIKE '{self.prefix}/example%' ORDER BY path"
         package = self.prefix + "/example"
@@ -86,13 +98,15 @@ class SpecTraceE2E(unittest.TestCase):
         self.assertEqual([], self.sql(pins))
         # Both direct and subtree coverage must include an uncovered object.
         coverage = f"""SELECT o.path, count(r.atom_id) FROM implementation_objects o
-            LEFT JOIN implementation_rmedo r ON r.owner_path = o.path
-                OR r.owner_path LIKE o.path || '/%'
+            LEFT JOIN implementation_rmedo r ON r.entry_kind = 'implements'
+                AND (r.owner_path = o.path OR starts_with(r.owner_path, o.path || '/'))
             WHERE o.path IN ('{package}', '{module}') GROUP BY o.path ORDER BY o.path"""
         self.assertEqual([[package, 0], [module, 0]], self.sql(coverage))
         self.sidecar.write_text("## Implements\n\n- CA-R-501@1\n")
         self.wait(pins, [[module, "implements", "CA-R-501", 1]])
         self.assertEqual([], self.sql('SELECT "header.atom_id" FROM atoms WHERE "header.atom_id" = \'CA-R-501\''))
+        self.sidecar.write_text("## Implements\n\n- CA-R-501@1\n- invalid\n")
+        self.wait(pins, [])
         self.sidecar.write_text("## Implements\n\n- CA-R-501@2\n")
         self.wait(pins, [[module, "implements", "CA-R-501", 2]])
         renamed = self.package / "other.py.spec_trace.md"
@@ -115,6 +129,8 @@ class SpecTraceE2E(unittest.TestCase):
         self.wait(objects, [[package, "package"]])
         moved_module.unlink()
         self.wait(f"SELECT path FROM implementation_objects WHERE path = '{self.prefix}/other.py'", [])
+        self.assertEqual([], self.sql(f"""SELECT old_path, new_path FROM change_log
+            WHERE starts_with(old_path, '{self.prefix}/') OR starts_with(new_path, '{self.prefix}/')"""))
         before = (self.sql(objects), self.sql(pins), self.sql(coverage))
         self.assertEqual({"service": "workbench", "status": "ready"}, self.call("workbench_reread", {}))
         self.assertEqual(before, (self.sql(objects), self.sql(pins), self.sql(coverage)))

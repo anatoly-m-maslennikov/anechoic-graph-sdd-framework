@@ -12,8 +12,6 @@ tier: 3
 relations:
   is_decomposition_of:
   - CA-P-2613
-  depends_on:
-  - CA-C-583
   relates_to:
   - CA-O-029
   - CA-O-031

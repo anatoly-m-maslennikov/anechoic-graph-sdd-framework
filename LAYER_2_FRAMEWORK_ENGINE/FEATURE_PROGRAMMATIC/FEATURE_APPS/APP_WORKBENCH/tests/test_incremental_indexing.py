@@ -40,9 +40,8 @@ class IncrementalIndexingTests(unittest.TestCase):
         write_atom(
             self.paths["relation"], "CA-R-REL", subjects="{governs: ['Relation//BLOCKS', 'Relation//IS_BLOCKED_BY']}",
             body=(
-                "## Claim\n\n### Formal Claim\n\n```CFEL\n"
-                "Relation//BLOCKS ((HAS_CLASSIFICATION)) Derivation == Direct;\n"
-                "Relation//BLOCKS ((HAS_INVERSE)) Relation//IS_BLOCKED_BY;\n"
+                "## Claim\n\n### Formal Claim\n\n```python\n"
+                'relation(source="Relation//BLOCKS", name="HAS_INVERSE", target="Relation//IS_BLOCKED_BY")\n'
                 "```\n"
             ),
         )

@@ -28,6 +28,8 @@ carrier_destination:
   file:
     name: CA-C-324-PROBLEM--correct-harvest-proof-schema-assumptions.md
     path: .caprmedio_caprmedio/01_concern/021_resolved
+container:
+  scope_unit: CA-SU-00
 ---
 # Summary
 

@@ -8,17 +8,16 @@ form: Action
 topics:
   main_subject: Subject/caprmedio/Action//Atom Content Authoring
   dependencies:
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Operations/Type: Action'
+  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Operations/Type:
+    Action'
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom.Content
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom.Details
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom.Summary
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role
+  - CAPRMEDIO_MODEL <+ Carrier/File
+  - CAPRMEDIO_MODEL <+ Atom.Content.Summary
 tier: 3
-relations:
-  depends_on:
-  - CA-D-479
-  - CA-R-1464
 status: Active
 version: 16
 updated_at: 2026-10-27 19:59:45 +0400

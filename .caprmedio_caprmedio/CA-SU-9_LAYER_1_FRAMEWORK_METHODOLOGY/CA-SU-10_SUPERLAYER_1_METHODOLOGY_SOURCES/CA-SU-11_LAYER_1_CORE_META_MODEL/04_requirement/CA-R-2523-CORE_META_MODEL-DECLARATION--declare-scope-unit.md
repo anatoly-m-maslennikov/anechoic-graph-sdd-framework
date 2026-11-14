@@ -9,8 +9,8 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Scope Unit
 tier: 3
 status: active
-version: 4
-updated_at: 2026-11-05 12:58:42 +0400
+version: 6
+updated_at: '2026-11-13T22:57:24.985880+00:00'
 carrier_destination:
   file:
     name: CA-R-2523-CORE_META_MODEL-DECLARATION--declare-scope-unit.md
@@ -24,30 +24,34 @@ Declare Scope Unit
 
 ## Claim
 
+### Prose Claim
+
+Each Scope Unit other than a Project and CA-SU--1 has exactly one IS_CONTAINED_BY link to a Scope Unit.
+
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_entity
+from caprmedio.formal_claims import Cardinality, declare_entity
 from caprmedio.model import Continuant
 
 class ScopeUnit(Continuant):
     pass
 
-declare_entity(entity_class=ScopeUnit, entity_name="Scope Unit", classifications={"Container": "yes"})
-```
-
-```CFEL
-# instances
-Scope Unit//$scope_unit {::0+}((CONTAINS)) Atom//$atom;
-
-Scope Unit//$scope_unit{::0..1}((IS_CONTAINED_BY)) Scope Unit//$scope_unit_2;
-
-Scope Unit//$scope_unit_3{::0+}((CONTAINS)) Scope Unit//$scope_unit_4;
-
-Scope Unit//$unit;
-
-IF (($unit not in (Scope Unit/Project//$scope_unit_5)) AND ($unit.ID != "CA-SU--1"))
-THEN ($unit {==1}((IS_CONTAINED_BY)) Scope Unit//$scope_unit_6);
+declare_entity(
+    entity_name="Scope Unit",
+    entity_class=ScopeUnit,
+    classifications={"Container": "yes"},
+    instance_relation_constraints={
+        "CONTAINS": {
+            "target_entity_paths": ("Atom", "Scope Unit"),
+            "targets_per_source": Cardinality(minimum=0, maximum=None),
+        },
+        "IS_CONTAINED_BY": {
+            "target_entity_paths": ("Scope Unit",),
+            "targets_per_source": Cardinality(minimum=0, maximum=1),
+        },
+    },
+)
 ```
 
 ## Semantics

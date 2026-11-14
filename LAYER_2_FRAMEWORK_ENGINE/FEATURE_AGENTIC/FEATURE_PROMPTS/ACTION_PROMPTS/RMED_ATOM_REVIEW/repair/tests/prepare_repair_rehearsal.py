@@ -132,7 +132,7 @@ def bound_active_source(atom_id: str) -> dict[str, Any]:
 
 
 def baseline_sources() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    manifest = json.loads((REVIEW_ROOT / "source_bindings.json").read_text())
+    manifest = json.loads((REVIEW_ROOT / "source_bindings.contract6.historical.json").read_text())
     required = {identifier for group in ("cce", "properties", "coherence")
                 for identifier in manifest["evaluators"][group]} | set(REPAIR_AUTHORITY_IDS)
     rows = []

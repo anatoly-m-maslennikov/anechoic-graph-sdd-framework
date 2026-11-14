@@ -24,7 +24,7 @@ author: Anatoly Maslennikov
 relations: {}
 ---
 
-# Summary
+## Summary
 
 Package the Release Tool private reader closure
 
@@ -33,6 +33,8 @@ Package the Release Tool private reader closure
 The private reader dependency delivery of a content-addressed Tool Package containing the Release suite reference-context reader.
 
 ## Claim
+
+### Prose Claim
 
 A Tool Package containing `TOOLS/RELEASE_VERSION/release_suite_reference_context.py` **must** include its two canonical private MCP reader carriers at the sibling paths `204_MCP/release_source_admission.py` and `204_MCP/selected_routes.py`, with their exact source bytes and modes included in the same verified package inventory.
 

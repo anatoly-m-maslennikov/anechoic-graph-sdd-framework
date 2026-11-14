@@ -6,10 +6,12 @@ container:
 role: Evaluation
 form: Eval Case
 topics:
-  main_subject: "Subject/CAPRMEDIO/Graph/Node/Aspect/Engineering/Operation/Data Handling/Serialization"
+  main_subject: Subject/CAPRMEDIO/Graph/Node/Aspect/Engineering/Operation/Data Handling/Serialization
   dependencies:
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Governing Configuration
   - Subject/CAPRMEDIO/Carrier
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Code
+    Authoring <+ Python Code
 tier: 6
 relations:
   evaluation_for:
@@ -17,8 +19,6 @@ relations:
   - CA-M-383
   - CA-D-632
   - CA-O-204
-  depends_on:
-  - CA-E-254
 status: Active
 version: 11
 updated_at: 2026-10-27 19:59:38 +0400

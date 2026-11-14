@@ -16,14 +16,13 @@ _GRAPH_TOOLS = Path(__file__).resolve().parents[1] / "FEATURE_TOOLS" / "GENERATE
 if str(_GRAPH_TOOLS) not in sys.path:
     sys.path.insert(0, str(_GRAPH_TOOLS))
 
-from cfel_claim_constraints import extract_claim_constraints
 from contract_graph import compose_contract_graph
 from subject_projection_audits import select_model_subjects
 from subject_projection_data import _property_parts, _rule_groups
 
 _DECLARATION_FORMS = (
     "declaration", "definition", "entity_definition", "relation_definition",
-    "relation_declaration", "operator_declaration", "construct_declaration", "function_declaration",
+    "relation_declaration",
 )
 
 
@@ -127,7 +126,7 @@ def _relation_declaration_context(view):
         if isinstance(active, str):
             try:
                 address = _canonical_address(active)
-                match = re.fullmatch(r"CFEL <\+ Relation//([A-Za-z_][A-Za-z_0-9]*)", address)
+                match = re.fullmatch(r"(?:CFEL <\+ )?Relation//([A-Za-z_][A-Za-z_0-9]*)", address)
                 if match and active.startswith("CAPRMEDIO_MODEL <+ "):
                     relation_declaration = match.group(1)
             except ValueError:
@@ -194,7 +193,7 @@ def lint_project_claim(workbench, selection, reference: str) -> tuple[str, ...]:
          "content_markdown": row["body"], "_model_class_bindings": bindings}
         for row in selected
     ])
-    operators, glyphs = defaultdict(list), defaultdict(set)
+    glyphs = defaultdict(set)
     ambiguous_relations = {row["target"] for row in graph["relations"] if len(row["own"]) != 1}
     relations = (registry.names - ambiguous_relations) | {
         alias for alias, canonical in registry.aliases.items()
@@ -205,21 +204,11 @@ def lint_project_claim(workbench, selection, reference: str) -> tuple[str, ...]:
             for item in row["metadata"]:
                 if item["kind"] in {"notation", "reverse_notation"}:
                     glyphs[item["value"]].add(row["target"])
-    operator_clauses = [clause for node in graph["entities"] + graph["components"]
-                        for entry in node["own"] for clause in entry["clauses"]]
-    for row in selected:
-        if named_value_token(row["read_view"].get("type")) == "operator_declaration":
-            clauses, _ = extract_claim_constraints(row)
-            operator_clauses.extend(clauses)
-    for clause in operator_clauses:
-        if clause["kind"] == "operator_symbol":
-            operators[clause["operator"]].append(clause["symbol"])
-
     relation_declaration = _relation_declaration_context(selected_view)
     return tuple(diagnostic for code, line in blocks for diagnostic in lint_python_model_claim(
         code, path=str(rows[reference][0]), first_line=line, declared_addresses=addresses,
         relation_names=relations,
         relation_aliases={glyph: next(iter(names)) for glyph, names in glyphs.items() if len(names) == 1},
-        python_class_bindings=bindings, operator_catalog=operators, require_declared_aliases=True,
+        python_class_bindings=bindings, require_declared_aliases=True,
         address_bindings=address_bindings, relation_declaration=relation_declaration,
     ))

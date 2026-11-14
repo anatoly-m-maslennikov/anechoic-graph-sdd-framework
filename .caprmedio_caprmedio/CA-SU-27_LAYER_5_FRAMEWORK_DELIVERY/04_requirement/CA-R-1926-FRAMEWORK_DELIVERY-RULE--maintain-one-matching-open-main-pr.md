@@ -25,7 +25,7 @@ author: Anatoly Maslennikov
 relations: {}
 ---
 
-# Summary
+## Summary
 
 Maintain one matching open `main` PR
 
@@ -34,6 +34,8 @@ Maintain one matching open `main` PR
 one public release Pull Request boundary.
 
 ## Claim
+
+### Prose Claim
 
 **the Operator** **must** discover, create, or update exactly one actual open PR from the selected `amm/dev` head to `main` on the selected personal remote.
 

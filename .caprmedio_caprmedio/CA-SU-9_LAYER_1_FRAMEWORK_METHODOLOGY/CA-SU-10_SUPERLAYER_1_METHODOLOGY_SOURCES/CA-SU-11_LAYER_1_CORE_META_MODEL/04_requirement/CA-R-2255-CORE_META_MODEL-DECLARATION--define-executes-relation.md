@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//EXECUTES
+  main_subject: CAPRMEDIO_MODEL <+ Relation//EXECUTES
   dependencies:
   - CAPRMEDIO_MODEL <+ Runtime
   - CAPRMEDIO_MODEL <+ Execution

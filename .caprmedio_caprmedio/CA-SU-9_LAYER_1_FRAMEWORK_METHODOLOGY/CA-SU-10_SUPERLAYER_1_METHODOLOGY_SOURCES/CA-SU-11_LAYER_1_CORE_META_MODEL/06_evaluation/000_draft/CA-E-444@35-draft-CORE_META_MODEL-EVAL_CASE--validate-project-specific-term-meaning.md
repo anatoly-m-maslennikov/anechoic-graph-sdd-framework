@@ -26,7 +26,7 @@ topics:
   - CAPRMEDIO_MODEL <+ Scope Unit
   - CAPRMEDIO_MODEL <+ Actor
   - CAPRMEDIO_MODEL <+ Projection
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
 tier: 4
 relations:
   evaluation_for:

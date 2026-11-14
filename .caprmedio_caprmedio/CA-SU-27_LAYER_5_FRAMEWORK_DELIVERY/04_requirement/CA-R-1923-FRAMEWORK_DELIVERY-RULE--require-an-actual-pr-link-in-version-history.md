@@ -25,7 +25,7 @@ author: Anatoly Maslennikov
 relations: {}
 ---
 
-# Summary
+## Summary
 
 Require an actual PR link in Version History
 
@@ -34,6 +34,8 @@ Require an actual PR link in Version History
 one Version History entry for one public release.
 
 ## Claim
+
+### Prose Claim
 
 **the Operator** **must** record only a concise selected-Version summary and the actual matching public PR hyperlink in that Version History entry.
 

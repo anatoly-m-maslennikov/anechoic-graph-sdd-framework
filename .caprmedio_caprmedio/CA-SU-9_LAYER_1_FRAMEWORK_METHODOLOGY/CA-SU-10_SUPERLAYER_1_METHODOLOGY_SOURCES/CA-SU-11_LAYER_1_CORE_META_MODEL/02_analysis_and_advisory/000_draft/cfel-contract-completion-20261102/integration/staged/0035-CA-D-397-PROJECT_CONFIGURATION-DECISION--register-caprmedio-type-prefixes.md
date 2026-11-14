@@ -4,11 +4,9 @@ subjects:
   passive:
   - Entity/Object/Continuant/Term//Artifact
   - Atom.ID
+  - CAPRMEDIO_MODEL <+ Carrier
 version: 26
 updated_at: 2026-11-02 08:06:47 +0400
-relations:
-  depends_on:
-  - CA-D-311
 atom_id: CA-D-397
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: PROJECT_CONFIGURATION
@@ -16,6 +14,12 @@ status: Active
 tier: 3
 role: Delivery
 form: Decision
+context:
+  topics:
+    dependencies:
+    - Entity/Object/Continuant/Term//Artifact
+    - Atom.ID
+    - CAPRMEDIO_MODEL <+ Carrier
 ---
 ## Summary
 

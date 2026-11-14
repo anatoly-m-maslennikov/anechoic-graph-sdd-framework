@@ -17,6 +17,7 @@ from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
 from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier
 
 from ATOM_LIFECYCLE import common
+from ATOM_LIFECYCLE.atom_population import validate_candidate_population
 from ATOM_LIFECYCLE.carrier import effective_header, logical_view, render_carrier
 from ATOM_LIFECYCLE.placement import derive_destination, resolve_container
 from ATOM_LIFECYCLE.source import ArchiveNotLoadedError, SourceSelectionError, _candidate_paths, query_reader, select_source
@@ -149,7 +150,7 @@ def _next_version(selection, pin):
         match = marker.search(path.name) or suffix.search(path.name)
         if match:
             versions.append(int(match.group(1)))
-    if pin.status.casefold() == 'archived':
+    if pin.status.casefold() in {'archived', 'draft'}:
         try:
             versions.append(select_source(selection, pin.atom_id).version)
         except ArchiveNotLoadedError:
@@ -203,6 +204,11 @@ def prepare_draft(selection, model, params, *, source_pin=None):  # noqa: C901
     if source_pin is not None and not same:
         original = view.get('relations', {})
         fields['relations'] = _replacement_relations(original, values.get('relations', original), pin.atom_id)
+    if 'relations' in fields:
+        from ATOM_LIFECYCLE.header_relation_rules import validate_authored_relations
+
+        validate_authored_relations(selection, model, fields['relations'], view.get('relations'),
+                                   source_view={'role': role, 'form': form})
     if pin is None:
         fields.update(role=role, form=form, container=container)
     elif {'scope_unit', 'container'} & values.keys():
@@ -218,7 +224,10 @@ def prepare_draft(selection, model, params, *, source_pin=None):  # noqa: C901
                                      'path': destination.parent.relative_to(selection.root).as_posix()}}
     raw = render_carrier(pin.raw if pin else None, fields, model=model,
                          body=body if not pin or {'summary', 'body'} & values.keys() else None)
-    common.validate_candidate(selection, model, raw, destination)
+    common.validate_candidate(selection, model, raw, destination,
+                              require_main_subject=pin is None or 'topics' in values)
+    validate_candidate_population(selection, model, atom_id=atom_id, version=version, status='Draft',
+                                  summary=summary)
     return {'pin': pin, 'selector': {'ref_id': pin.ref_id, 'version': pin.version} if pin else None, 'destination': destination,
             'raw': raw, 'atom_id': atom_id, 'version': version, 'warnings': warnings}
 

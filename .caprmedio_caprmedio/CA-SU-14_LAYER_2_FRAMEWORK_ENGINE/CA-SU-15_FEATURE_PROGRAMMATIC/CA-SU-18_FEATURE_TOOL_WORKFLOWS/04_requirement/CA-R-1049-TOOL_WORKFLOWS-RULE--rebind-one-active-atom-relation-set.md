@@ -21,7 +21,7 @@ current_scope_unit: TOOL_WORKFLOWS
 claim_target_scope_unit: TOOL_WORKFLOWS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Rebind one active Atom relation set
 
@@ -30,6 +30,8 @@ Rebind one active Atom relation set
 One explicit active-Atom Relation edit and independent composition of several such Actions.
 
 ## Claim
+
+### Prose Claim
 
 `REBIND_ATOM_RELATIONS` is the canonical CAPRMEDIO Markdown Atom Doer for updating **=1** selected active Atom carrier **after** another active Atom has received a canonical filename-derived ID. it **must** default **to** dry run **and** accept one exact JSON request containing the explicit source path, expected source SHA-256 **and** version, explicit `updated_at`, **and** exact relation rewrite **and** removal maps. a Workflow with several relation rebindings invokes independent one-Atom Actions, stops at its first failed Action, retains completed Actions and leaves the remainder untouched. This Tool **must not** silently widen its one-Atom operation or promise a cross-Atom transaction; each Action retains its exact source, permission and storage-effect safeguards. Resume and retry policy for that sequence is deferred.
 

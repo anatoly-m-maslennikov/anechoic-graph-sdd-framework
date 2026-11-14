@@ -24,7 +24,7 @@ current_scope_unit: ACTION_ENGINE
 claim_target_scope_unit: ACTION_ENGINE
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Control registered background services
 
@@ -33,6 +33,8 @@ Control registered background services
 Queued background-service lifecycle action execution, process-state management, and governed operational sinks.
 
 ## Claim
+
+### Prose Claim
 
 Verify the selected runtime release, parse **and** validate its `background_services.toml`, expand **only** registered repository, runtime, temporary-state, Tool-root, **and** interpreter placeholders, **and** reject executable Framework Carriers outside `.caprmedio_runtime/tools`.
 

@@ -33,7 +33,7 @@ current_scope_unit: TOOL_WORKFLOWS
 claim_target_scope_unit: TOOL_WORKFLOWS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Verify archive selected active atoms
 
@@ -44,6 +44,8 @@ Workflow admission owns identity, Version/time, lifecycle and complete schema de
 One admitted Atom Archive action under CA-R-868 and CA-O-029, its retained history and independent sequencing under CA-M-372.
 
 ## Claim
+
+### Prose Claim
 
 Archive withdraws one current Atom while preserving its identity and historical content. No logical Atom deletion operation is admitted.
 

@@ -29,7 +29,7 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Verify selected Run identities, revisions and lineage
 
@@ -38,6 +38,8 @@ Verify selected Run identities, revisions and lineage
 Canonical selected-Run evidence for actual nested and standalone invocation.
 
 ## Claim
+
+### Prose Claim
 
 Every actual selected Run remains reconstructable with its distinct identity,
 exact definition revisions, and real lineage.

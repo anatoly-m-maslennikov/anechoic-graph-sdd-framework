@@ -17,7 +17,7 @@ local_tier: "Core"
 author: "Anatoly Maslennikov"
 global_tier: 9
 ---
-# Summary
+## Summary
 
 Register delivery_for relation
 
@@ -26,6 +26,8 @@ Register delivery_for relation
 `delivery_for` relations.
 
 ## Claim
+
+### Prose Claim
 
 `delivery_for` **must** be registered as a direct relation owned by a Delivery Atom **and** directed **to** one Requirement **or** Method Atom that the Delivery realizes.
 

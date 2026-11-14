@@ -12,6 +12,7 @@ from .timing import trace
 
 from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier
 from ATOM_LIFECYCLE import effects
+from ATOM_LIFECYCLE.atom_population import validate_candidate_population
 from ATOM_LIFECYCLE.carrier import logical_view, render_carrier
 from ATOM_LIFECYCLE.draft import _body, _clean, _summary
 from ATOM_LIFECYCLE.common import InputError, SourceChanged, logical_container, read_target, result, saved, validate_candidate, write_destination
@@ -122,7 +123,8 @@ def _prepare_archive(selection, model, pin):
     _status(model, view, 'Archived', 'target')
     path = _destination(selection, pin, view, body, 'Archived', model, archive=True)
     ref_id = f'{pin.atom_id}@{pin.version}'
-    raw = render_carrier(pin.raw, {'status': 'archived', 'ref_id': ref_id, 'destination': _destination_field(selection, path)})
+    raw = render_carrier(pin.raw, {'status': 'archived', 'ref_id': ref_id,
+                                  'destination': _destination_field(selection, path)}, model=model)
     validate_candidate(selection, model, raw, path, authored=False)
     return path, raw, ref_id
 
@@ -201,7 +203,8 @@ def prepare_current_status(selection, model, pin, target, *, verify_source=True)
         raise InputError('targetStatus', 'A Current Status is required')
     _status(model, view, target, 'targetStatus')
     path = _destination(selection, pin, view, body, target, model, verify_source=verify_source)
-    raw = render_carrier(pin.raw, {'status': encode_status(target), 'destination': _destination_field(selection, path)})
+    raw = render_carrier(pin.raw, {'status': encode_status(target),
+                                  'destination': _destination_field(selection, path)}, model=model)
     validate_candidate(selection, model, raw, path, authored=False)
     return path, raw
 
@@ -226,9 +229,16 @@ def direct_update(selection, model, params):
     if _companion(pin) is not None or has_shared_plan_children(selection, pin, model):
         raise InputError('target', 'Direct updates of container Atoms are unsupported')
     old, old_body = _view(pin.raw, pin.path, model)
+    if 'relations' in changes:
+        from ATOM_LIFECYCLE.header_relation_rules import validate_authored_relations
+
+        validate_authored_relations(selection, model, changes['relations'], old.get('relations'),
+                                   source_view=old | changes)
     body = _body(old_body, changes)
     summary = _summary(body)
-    if pin.status.casefold() != 'draft' and summary != _summary(old_body):
+    summary_changed = summary != _summary(old_body)
+    schema = getattr(model, 'candidate_schema', None)
+    if summary_changed and pin.status.casefold() != 'draft' and not getattr(schema, 'atom_population_model', False):
         for revision in select_published_revisions(selection, pin.atom_id):
             if revision.ref_id != pin.ref_id and _summary(parse_carrier(revision.raw, revision.path).body) != summary:
                 raise InputError('summary', 'Summary conflicts with another Current, Backlog or Archived revision.')
@@ -249,8 +259,11 @@ def direct_update(selection, model, params):
         if 'atom' in logical_container({}, old):
             _destination(selection, pin, old, old_body, pin.status, model)
         path = _destination(selection, pin, new, body, pin.status, model, verify_source=False)
-    raw = render_carrier(raw, {'destination': _destination_field(selection, path)})
-    validate_candidate(selection, model, raw, path)
+    raw = render_carrier(raw, {'destination': _destination_field(selection, path)}, model=model)
+    validate_candidate(selection, model, raw, path, require_main_subject='topics' in changes)
+    validate_candidate_population(selection, model, atom_id=pin.atom_id, version=pin.version,
+                                  status=status, summary=summary, replaced=(pin,),
+                                  preserve_summary=not summary_changed)
     output = _publish(selection, pin, path, raw, status, pin.ref_id)
     output['warnings'].extend(warnings)
     return output

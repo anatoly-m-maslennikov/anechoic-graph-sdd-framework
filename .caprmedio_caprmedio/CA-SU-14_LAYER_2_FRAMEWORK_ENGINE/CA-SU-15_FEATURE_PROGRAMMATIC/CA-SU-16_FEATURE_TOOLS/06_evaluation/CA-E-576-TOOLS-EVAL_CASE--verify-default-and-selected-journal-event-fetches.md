@@ -25,11 +25,13 @@ current_scope_unit: TOOLS
 claim_target_scope_unit: TOOLS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Verify default and selected Journal Event fetches
 
 ## Claim
+
+### Prose Claim
 
 The Tool returns only Event IDs by default and returns only explicitly selected fields or full Events when requested.
 

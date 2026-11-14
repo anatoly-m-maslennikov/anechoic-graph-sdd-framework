@@ -13,6 +13,7 @@ sys.path[:0] = [str(TOOLS), str(TOOL)]
 
 from declaration_sources import compose_declaration_catalog, resolve_relation_authorities  # noqa: E402
 from VALIDATE_ATOMS.validate_atoms_workers.check_sections import GRAPH_RULE_SOURCES  # noqa: E402
+from VALIDATE_ATOMS.validate_atoms_workers.support_authority import support_sources  # noqa: E402
 
 
 def relation_carrier(atom_id: str, subject: str, graph_scope: str, version: int = 1) -> dict:
@@ -301,6 +302,23 @@ class DeclarationSourcesTests(unittest.TestCase):
         self.assertEqual(rule["source"]["atom_id"], "CA-R-901021")
         self.assertEqual(rule["subject"], "Entity/Node/Continuant/Atom.Relations")
         self.assertTrue(rule["yaml_block"].startswith("```yaml\n"))
+        self.assertEqual(catalog["unresolved"], [])
+
+    def test_actual_support_manifest_admits_current_approved_evaluation(self):
+        entries = support_sources()
+        self.assertIn("CA-E-833", GRAPH_RULE_SOURCES)
+        self.assertTrue(set(GRAPH_RULE_SOURCES).issubset(entries))
+        entry = entries["CA-E-833"]
+        root = TOOL.parents[3]
+        raw = (root / entry["source_path"]).read_bytes()
+        self.assertEqual(entry["sha256"], hashlib.sha256(raw).hexdigest())
+        supports, _ = support_carriers()
+        evaluation = next(row for row in supports if row["source"]["atom_id"] == "CA-E-833")
+        evaluation["source"].update(version=entry["version"], path=entry["source_path"], sha256=entry["sha256"])
+        evaluation["metadata"]["version"] = entry["version"]
+        evaluation["raw"] = raw
+        catalog = compose_declaration_catalog([*supports, graph_rule_carrier()])
+        self.assertEqual(len(catalog["graph_rules"]), 1)
         self.assertEqual(catalog["unresolved"], [])
 
     def test_cardinality_rule_catalog_preserves_selection_yaml_and_source_evidence(self):

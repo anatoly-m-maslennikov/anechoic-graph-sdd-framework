@@ -26,7 +26,7 @@ author: Anatoly Maslennikov
 relations: {}
 ---
 
-# Summary
+## Summary
 
 Preserve authoritative sources across release delivery
 
@@ -35,6 +35,8 @@ Preserve authoritative sources across release delivery
 The boundary between canonical release inputs and derived source, runtime, Skill, and image deliveries.
 
 ## Claim
+
+### Prose Claim
 
 Release Version **must** copy, compile, package, install, and verify only derived deliveries while preserving canonical authoring sources, Project Structure, Project and Framework Settings, existing Journal evidence, and unrelated Skills byte-for-byte.
 

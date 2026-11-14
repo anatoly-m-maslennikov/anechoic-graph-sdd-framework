@@ -4,18 +4,12 @@ from dataclasses import dataclass
 import re
 import sys
 
-from .declaration_cfel import cfel_without_comments, formal_claim_fences, model_statements
+from .markdown_content import formal_claim_fences
 
 
 _NAME = r"[A-Za-z_][A-Za-z_0-9]*"
-_DECLARATION = re.compile(rf"Relation//({_NAME})(?:\s+(?:<\(\(|\(\().+)?\Z", re.DOTALL)
-_INVERSE = re.compile(
-    rf"Relation//({_NAME})\s+(\(\(HAS_INVERSE\)\)|<\(\(HAS_INVERSE\)\)|<-->)\s+Relation//({_NAME})\s*;?\s*\Z"
-)
-_INVERSE_ALIAS = re.compile(
-    rf"Relation//({_NAME})\s+\(\(IS_INVERSE_ALIAS_FOR\)\)\s+Relation//({_NAME})\s*;?\s*\Z"
-)
-_CONDITIONAL = re.compile(r"\b(?:IF|THEN|ELSE|ALL|ANY|GROUP)\s*\(", re.IGNORECASE)
+_LITERAL_RELATION = re.compile(rf"Relation//({_NAME})\Z")
+_BINDINGS = {"HAS_INVERSE", "IS_INVERSE_ALIAS_FOR"}
 
 
 @dataclass(frozen=True)
@@ -27,7 +21,7 @@ class RegistryContribution:
 
 def _unsupported_metadata(source: str) -> None:
     print(
-        f"Workbench: {source}: conditional/grouped CFEL relation metadata is unsupported; link skipped",
+        f"Workbench: {source}: unsupported Python relation metadata; link skipped",
         file=sys.stderr,
     )
 
@@ -37,49 +31,62 @@ def relation_declaration(body: str, source: str) -> RegistryContribution:
     inverses: list[tuple[str, str]] = []
     aliases: list[tuple[str, str]] = []
     for language, claim in formal_claim_fences(body):
-        if language == "python":
-            native = _native_contribution(claim)
-            if native is not None:
-                names.update(native.names)
-                inverses.extend(native.inverses)
-                aliases.extend(native.aliases)
-                continue
-            from python_model_claim import parse_python_model_claim
-
-            block = ";\n".join(parse_python_model_claim(claim))
-        elif language == "cfel":
-            block = cfel_without_comments(claim)
-        else:
+        if language != "python":
             continue
-        group_depth = 0
-        for statement in model_statements(block):
-            control = _CONDITIONAL.search(statement)
-            grouped = group_depth > 0 or control is not None
-            inverse = _INVERSE.fullmatch(statement)
-            alias = _INVERSE_ALIAS.fullmatch(statement)
-            if grouped:
-                if _INVERSE.search(statement) or _INVERSE_ALIAS.search(statement):
-                    _unsupported_metadata(source)
-            elif inverse is not None:
-                left, operator, right = inverse.groups()
-                names.update((left, right))
-                inverses.append((right, left) if operator.startswith("<((") else (left, right))
-            elif alias is not None:
-                aliases.append((alias.group(1), alias.group(2)))
-                names.add(alias.group(2))
-            elif (
-                "((HAS_INVERSE))" not in statement
-                and "((IS_INVERSE_ALIAS_FOR))" not in statement
-                and (declaration := _DECLARATION.fullmatch(statement))
-            ):
-                names.add(declaration.group(1))
-            if grouped:
-                group_depth = max(0, group_depth + statement.count("(") - statement.count(")"))
+        contribution = _native_contribution(claim)
+        if contribution is None:
+            contribution = _helper_contribution(claim, source)
+        names.update(contribution.names)
+        inverses.extend(contribution.inverses)
+        aliases.extend(contribution.aliases)
     return RegistryContribution(frozenset(names), tuple(inverses), tuple(aliases))
+
+
+def _helper_contribution(claim: str, source: str) -> RegistryContribution:
+    from python_model_claim import parse_structured_python_model_claim
+
+    names: set[str] = set()
+    inverses: list[tuple[str, str]] = []
+    aliases: list[tuple[str, str]] = []
+    for call in parse_structured_python_model_claim(claim):
+        helper, args = call["name"], call["arguments"]
+        if helper == "relation":
+            relation = args["name"]
+            left = _literal_name(args["source"])
+            if relation in _BINDINGS:
+                right = _literal_name(args.get("target"))
+                if left is None or right is None:
+                    continue
+                if (call["scope"] == "instances" or args.get("source_count") is not None
+                        or args.get("target_count") is not None
+                        or relation == "IS_INVERSE_ALIAS_FOR" and args.get("reverse")):
+                    _unsupported_metadata(source)
+                    continue
+                if args.get("reverse"):
+                    left, right = right, left
+                if relation == "HAS_INVERSE":
+                    names.update((left, right))
+                    inverses.append((left, right))
+                else:
+                    names.add(right)
+                    aliases.append((left, right))
+            elif left is not None and args.get("source_count") is None:
+                names.add(left)
+        elif (helper == "subject_path" or helper == "classify" and args.get("notation") == "relation") and (
+            name := _literal_name(args["address"])
+        ):
+            names.add(name)
+    return RegistryContribution(frozenset(names), tuple(inverses), tuple(aliases))
+
+
+def _literal_name(address: str | None) -> str | None:
+    match = _LITERAL_RELATION.fullmatch(address) if address else None
+    return match[1] if match else None
 
 
 def _native_contribution(claim: str) -> RegistryContribution | None:
     from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim
+    from FEATURE_FORMAL_MODEL_ENGINE.relation_inverse import emits_instance_inverse
 
     declaration = parse_native_model_claim(claim)
     if declaration is None:
@@ -92,10 +99,7 @@ def _native_contribution(claim: str) -> RegistryContribution | None:
     if not inverse:
         return RegistryContribution(frozenset({name}), (), ())
     inverse = _relation_name(inverse)
-    pairs = arguments.get("endpoint_pairs", (arguments,))
-    instance_levels = {"instances", "model_entities_or_instances"}
-    if all(pair[endpoint]["level"] in instance_levels
-           for pair in pairs for endpoint in ("source_endpoint", "target_endpoint")):
+    if emits_instance_inverse(arguments):
         return RegistryContribution(frozenset({name, inverse}), ((name, inverse),), ())
     return RegistryContribution(frozenset({name}), (), ((inverse, name),))
 

@@ -10,7 +10,7 @@ context:
   topics:
     main_subject: CAPRMEDIO_MODEL <+ Scope Unit
     dependencies:
-    - CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_CONTAINED_BY
+    - CAPRMEDIO_MODEL <+ Relation//IS_CONTAINED_BY
   tier: 2
 state:
   status: active

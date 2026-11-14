@@ -29,7 +29,7 @@ claim_target_scope_unit: FRAMEWORK_DELIVERY
 author: Anatoly Maslennikov
 ---
 
-# Summary
+## Summary
 
 Validate public release does not merge
 
@@ -38,6 +38,8 @@ Validate public release does not merge
 one public-release effect declaration.
 
 ## Claim
+
+### Prose Claim
 
 **the Operator** **must** verify that the native public-release binding exposes no merge, approval, target-retargeting, protected-branch update, tag, or deployment effect and ends with an open PR result only.
 

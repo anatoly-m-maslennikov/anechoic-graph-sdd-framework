@@ -21,7 +21,7 @@ current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Define Summary as an Atom Property
 
@@ -30,6 +30,8 @@ Define Summary as an Atom Property
 The Summary property of an Atom.
 
 ## Claim
+
+### Prose Claim
 
 A Summary means the short, non-authoritative navigation property derived from the finalized primary contribution of one Atom, read within its applicability. Its Markdown carrier uses the literal heading # Summary, followed by the Summary value; the Summary value itself is not the heading.
 

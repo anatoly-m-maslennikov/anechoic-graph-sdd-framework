@@ -10,15 +10,13 @@ topics:
     <+ Data Handling <+ Query Processing
   dependencies:
   - MODEL//CAPRMEDIO <+ Projection
+  - CAPRMEDIO_MODEL <+ Projection
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Storage <+ Temporary
+    State
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Architecture <+
+    Communication <+ Interface Contracts
 tier: 6
 relations:
-  depends_on:
-  - CA-R-2728@9-draft
-  - CA-R-2729
-  - CA-R-2724
-  - CA-M-463
-  - CA-M-550@1-draft
-  - CA-D-673@19-draft
   IS_REPLACEMENT_FOR:
   - CA-O-240
 status: Draft

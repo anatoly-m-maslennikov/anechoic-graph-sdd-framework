@@ -9,7 +9,7 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Carrier
   dependencies:
   - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//CARRIES
+  - CAPRMEDIO_MODEL <+ Relation//CARRIES
   - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/History
 tier: 1
 relations:

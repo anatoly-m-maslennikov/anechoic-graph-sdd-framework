@@ -30,7 +30,7 @@ current_scope_unit: TOOL_WORKFLOWS
 claim_target_scope_unit: TOOL_WORKFLOWS
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Verify create sealed caprmedio atom carriers
 
@@ -41,6 +41,8 @@ Workflow admission owns identity, Version/time, lifecycle and complete schema de
 One logical Atom Create action under CA-R-865 and CA-O-032, and ordered independent Create actions under CA-M-372.
 
 ## Claim
+
+### Prose Claim
 
 Create validates and admits one new Atom before its authorized effect. Several requested Atoms are independent actions, not one cross-Atom transaction.
 

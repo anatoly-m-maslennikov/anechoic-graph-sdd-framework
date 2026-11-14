@@ -30,11 +30,13 @@ llm_session_ids:
 author: Anatoly Maslennikov
 current_scope_unit: TOOLS
 ---
-# Summary
+## Summary
 
 Validate required defaults and optional overrides
 
 ## Claim
+
+### Prose Claim
 
 the Carrier validation Tool **must** preserve the distinction between a required defaulted Atom value **and** an optional inherited-setting override under CA-D-485.
 

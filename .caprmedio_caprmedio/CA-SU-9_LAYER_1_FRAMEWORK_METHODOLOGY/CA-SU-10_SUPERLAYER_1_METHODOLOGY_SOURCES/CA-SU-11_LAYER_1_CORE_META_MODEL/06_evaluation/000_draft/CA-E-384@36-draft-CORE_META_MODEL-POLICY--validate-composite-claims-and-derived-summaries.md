@@ -30,7 +30,7 @@ current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 author: Anatoly Maslennikov
 ---
-# Summary
+## Summary
 
 Validate Composite Claims and Derived Summaries
 
@@ -39,6 +39,8 @@ Validate Composite Claims and Derived Summaries
 The primary-contribution boundary, applicability, support and Summary of an Atom.
 
 ## Claim
+
+### Prose Claim
 
 the Evaluation **must** reject an Atom **if** **any** applicable content-boundary condition fails:
 
