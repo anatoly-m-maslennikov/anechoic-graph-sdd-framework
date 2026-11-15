@@ -19,28 +19,40 @@ from FEATURE_WORKBENCH_BACKEND.markdown_content import parse_content
 from FEATURE_WORKBENCH_BACKEND.source_schema_audit import SourceSchemaAudit
 
 
+def declaration(number, name, base_path, extra="", *, values=1):
+    reference = f"CA-R-{number}"
+    body = (
+        "## Claim\n### Formal Claim\n```python\n"
+        "from caprmedio.formal_claims import Cardinality, declare_entity\n"
+        "from caprmedio.model import Concern\n"
+        f'declare_entity(entity_name={name!r}, relation_name="IS_PROPERTY_OF", base_path={base_path!r}, '
+        f'property_occurrence_cardinality=1, value_cardinality={values}, {extra})\n```\n'
+    ).encode()
+    return {'id': reference, 'ref': reference, 'source_path': f'{reference}.md',
+            'version': 1, 'status_group': 'Current', 'role': 'Requirement',
+            'form': 'Declaration', '_content_bytes': body}
+
+
 def auditor():
-    formal = '''
-Atom.Header.Role{::1} :: [string]{::1};
-Atom.Header.Status{::1} :: [string]{::1};
-Atom.Header.Version{::1} :: [int]{::1};
-Atom/(.Header.Role: Concern).Header.Priority{::1} :: [string]{::1};
-Atom/(.Header.Role: Concern).Header.Priority: High;
-Atom.Content.Summary{::1} :: {::1};
-Atom.Content.Claim{::1} :: []{::0};
-Atom.Content.Claim.*[string, in (Formal Claim, Prose Claim)]{::1..2};
-'''
-    body = ('## Claim\n### Formal Claim\n```CFEL\n' + formal + '\n```\n').encode()
-    declaration = {'id': 'CA-R-1', 'ref': 'CA-R-1', 'source_path': 'CA-R-1.md',
-                   'version': 1, 'status_group': 'Current', 'role': 'Requirement',
-                   'form': 'Declaration', '_content_bytes': body}
-    content = compile_content_schema([declaration])
+    declarations = [
+        declaration(1, "Role", "Atom.Header", "value_format=str"),
+        declaration(2, "Status", "Atom.Header", "value_format=str"),
+        declaration(3, "Version", "Atom.Header", "value_format=int"),
+        declaration(4, "Priority", "Atom.Header",
+                    'value_format=str, applies_to_entity_classes=(Concern,), allowed_values=("High",)'),
+        declaration(5, "Summary", "Atom.Content"),
+        declaration(6, "Claim", "Atom.Content",
+                    'dependent_property_cardinality=Cardinality(minimum=1, maximum=2), '
+                    'allowed_dependent_property_names=("Formal Claim", "Prose Claim")', values=0),
+    ]
+    source_ids = {row['id'] for row in declarations}
+    content = compile_content_schema(declarations)
     header = HeaderSchema((HeaderColumn(('version',), 'header.version', 'BIGINT', True, 'version'),))
     roles = RoleFormSchema(frozenset({'Concern', 'Requirement'}), frozenset({'Problem', 'Declaration'}),
                            frozenset(), ())
     schema = CandidateSchema(SimpleNamespace(header=lambda _mode: header, content=content), roles,
-                             load_header_constraints(compile_header_constraints([declaration]), {'CA-R-1'}),
-                             load_content_constraints(compile_content_constraints([declaration]), {'CA-R-1'}))
+                             load_header_constraints(compile_header_constraints(declarations), source_ids),
+                             load_content_constraints(compile_content_constraints(declarations), source_ids))
     status = StatusModel(((None, None, 'Active'), (None, None, 'Archived')))
     return SourceSchemaAudit(schema, status)
 

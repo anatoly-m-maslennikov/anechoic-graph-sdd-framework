@@ -46,9 +46,13 @@ class PythonFormalClaimTest(unittest.TestCase):
         self.assertEqual(baseline, compile_content_schema([declaration('python', python)]))
 
     def test_relation_inverse_is_visible_to_registry(self):
-        cfel = 'Relation//PRECEDES ((HAS_INVERSE)) Relation//FOLLOWS'
+        native = (
+            'from caprmedio.formal_claims import declare_relation\n'
+            'declare_relation(relation_name="PRECEDES", inverse_alias="FOLLOWS", '
+            'source_endpoint={"level": "instances"}, target_endpoint={"level": "instances"})'
+        )
         python = 'relation(source="Relation//PRECEDES", name="HAS_INVERSE", target="Relation//FOLLOWS")'
-        baseline = compile_relation_registry([declaration('CFEL', cfel)])
+        baseline = compile_relation_registry([declaration('python', native)])
         self.assertEqual(baseline.inverse, {'PRECEDES': 'FOLLOWS'})
         self.assertEqual(baseline, compile_relation_registry([declaration('python', python)]))
 

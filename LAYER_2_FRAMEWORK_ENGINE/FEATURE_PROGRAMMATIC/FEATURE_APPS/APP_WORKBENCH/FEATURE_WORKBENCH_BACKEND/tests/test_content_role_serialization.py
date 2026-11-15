@@ -38,7 +38,7 @@ def atom(role, form, body):
 class CarrierSerializationTests(unittest.TestCase):
     def test_encoded_relation_declaration_is_admitted_without_changing_header(self):
         header = {"context": {"role": "requirement", "form": "relation_definition"}}
-        row = atom("requirement", "relation_definition", "## Claim\n\n### Formal Claim\n\n```CFEL\nRelation//RELATES_TO;\n```\n") | {
+        row = atom("requirement", "relation_definition", "## Claim\n\n### Formal Claim\n\n```python\nsubject_path(address=\"Relation//RELATES_TO\")\n```\n") | {
             "source_path": "model.md", "id": "CA-R-1", "version": 1, "header_json": header,
         }
         self.assertIn("RELATES_TO", registry_contribution(row).names)

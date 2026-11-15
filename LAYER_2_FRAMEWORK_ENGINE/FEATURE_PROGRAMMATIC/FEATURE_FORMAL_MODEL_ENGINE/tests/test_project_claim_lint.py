@@ -57,30 +57,39 @@ class ProjectClaimLintTests(unittest.TestCase):
                 return ref
 
             write(10, "Atom", 'subject_path(address="Atom")')
-            write(11, "Atom.Name", 'property_rule(address="Atom.Name", value_format="string")')
-            write(12, "Relation//HAS_PROPERTY", "Relation//HAS_PROPERTY;", language="CFEL")
-            write(14, "Atom.Unapproved", 'property_rule(address="Atom.Unapproved", value_format="string")',
+            write(11, "Atom.Name", 'property_rule(address="Atom.Name", value_format="string", values="1")')
+            write(12, "Relation//HAS_PROPERTY",
+                  'from caprmedio.formal_claims import declare_relation\n'
+                  'declare_relation(relation_name="HAS_PROPERTY", source_endpoint={"level": "instances"}, '
+                  'target_endpoint={"level": "instances"})')
+            write(14, "Atom.Unapproved", 'property_rule(address="Atom.Unapproved", value_format="string", values="1")',
                   status="Draft", directory=folder / "000_draft")
             # An installed copy cannot supply a missing declaration.
-            write(15, "Atom.Unapproved", 'property_rule(address="Atom.Unapproved", value_format="string")',
+            write(15, "Atom.Unapproved", 'property_rule(address="Atom.Unapproved", value_format="string", values="1")',
                   directory=control / "installed" / "04_requirement")
             draft = folder / "000_draft"
             good = write(16, "Atom.Name",
                          'relation(source="Atom", name="HAS_PROPERTY", target="Atom.Name")\n'
                          'deliver(source="Atom", carrier="Atom.Name")', status="Draft", directory=draft)
-            bad = write(17, "Atom.Name", 'property_rule(address="Atom.Unapproved", value_format="string")',
+            bad = write(17, "Atom.Name", 'property_rule(address="Atom.Unapproved", value_format="string", values="1")',
                         status="Draft", directory=draft)
             unknown_relation = write(18, "Atom.Name", 'relation(source="Atom", name="UNDECLARED")',
                                      status="Draft", directory=draft)
             syntax = write(19, "Atom.Name", 'property_rule(', status="Draft", directory=draft)
-            write(20, "Relation//CONTAINS", 'Relation//CONTAINS;\nalias(Relation//CONTAINS) == "<+"', language="CFEL")
+            write(20, "Relation//CONTAINS",
+                  'from caprmedio.formal_claims import declare_relation\n'
+                  'declare_relation(relation_name="CONTAINS", source_endpoint={"level": "instances"}, '
+                  'target_endpoint={"level": "instances"}, written_alias="<+")')
             composition = write(21, "Atom.Name", 'composition(container="Atom", parts=("Atom.Name",))',
                                 status="Draft", directory=draft)
-            write(22, "Relation//HAS_CLASSIFICATION", "Relation//HAS_CLASSIFICATION;", language="CFEL")
+            write(22, "Relation//HAS_CLASSIFICATION",
+                  'from caprmedio.formal_claims import declare_relation\n'
+                  'declare_relation(relation_name="HAS_CLASSIFICATION", source_endpoint={"level": "instances"}, '
+                  'target_endpoint={"level": "instances"})')
             unbound_alias = write(23, "Atom.Name", 'classify(address="Atom", axis="Role", value="Method")',
                                   status="Draft", directory=draft)
-            write(24, "Atom.Ambiguous", 'property_rule(address="Atom.Ambiguous", value_format="string")')
-            write(25, "Atom.Ambiguous", 'property_rule(address="Atom.Ambiguous", value_format="string")')
+            write(24, "Atom.Ambiguous", 'property_rule(address="Atom.Ambiguous", value_format="string", values="1")')
+            write(25, "Atom.Ambiguous", 'property_rule(address="Atom.Ambiguous", value_format="string", values="1")')
             ambiguous = write(26, "Atom.Name", 'subject_path(address="Atom.Ambiguous")',
                               status="Draft", directory=draft)
             operations = "Atom/(.Header.Context.Role := Operations)"
@@ -88,7 +97,7 @@ class ProjectClaimLintTests(unittest.TestCase):
             write(29, operations, 'subject_path(address="Atom")')
             write(30, operations + "/Workflow", 'subject_path(address="Atom")')
             write(31, operations + "/Step", 'subject_path(address="Atom")')
-            write(34, operations + ".Name", 'property_rule(address="Atom.Name", value_format="string")')
+            write(34, operations + ".Name", 'property_rule(address="Atom.Name", value_format="string", values="1")')
             qualified = write(32, "Atom.Name",
                               'subject_path(address="Atom/(.Header.Context.Role in (Operations))/Workflow")\n'
                               'subject_path(address="Workflow.Name")\n'

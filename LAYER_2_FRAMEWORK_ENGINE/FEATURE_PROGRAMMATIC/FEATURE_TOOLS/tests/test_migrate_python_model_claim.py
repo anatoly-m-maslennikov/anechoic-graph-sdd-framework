@@ -38,22 +38,14 @@ class MigrationTests(unittest.TestCase):
         self.assertIsNone(convert_claim('Atom.Status :: [string]{::1};\nIF x THEN y;'))
         self.assertIsNone(convert_claim('Atom.Status :: [string]{::1}; # inline'))
 
-    def test_form_role_constraint_compiles_from_python(self):
-        from ATOM_LIFECYCLE.role_form_schema import compile_role_form
-
+    def test_form_role_constraint_round_trips(self):
         original = (
             'FOR EACH $a[<Atom>, (.Header.Context.Form = Decision)]:\n'
             '(\n    $a.Header.Context.Role:: [in (Method, Evaluation, Delivery, Operations)]{::1}\n)'
         )
         converted = convert_claim(original)
         self.assertIn('allow_roles_for_form(', converted)
-        prefix = '## Claim\n### Formal Claim\n'
-        old = compile_role_form([{'id': 'CA-R-3005', '_content_bytes': (
-            prefix + '```CFEL\n' + original + '\n```\n').encode()}])
-        new = compile_role_form([{'id': 'CA-R-3005', '_content_bytes': (
-            prefix + '```python\n' + converted + '\n```\n').encode()}])
-        self.assertEqual(4, len(old))
-        self.assertEqual(old, new)
+        self.assertEqual(_LEXEMES.findall(original), _LEXEMES.findall(parse_python_model_claim(converted)[0]))
 
     def test_markdown_preserves_other_content_and_crlf(self):
         before = '## Claim\r\n### Formal Claim\r\n'

@@ -27,13 +27,6 @@ APP_ROOT = REPOSITORY / "LAYER_2_FRAMEWORK_ENGINE" / "FEATURE_PROGRAMMATIC" / "F
 FRONTEND_ROOT = APP_ROOT / "FEATURE_WORKBENCH_FRONTEND"
 TOOLS_ROOT = REPOSITORY / "LAYER_2_FRAMEWORK_ENGINE" / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 MCP_ROOT = REPOSITORY / "LAYER_2_FRAMEWORK_ENGINE" / "FEATURE_PROGRAMMATIC" / "FEATURE_MCP"
-WORKBENCH_TABLES = {
-    "atoms", "scope_units", "change_log", "atom_physical_carrier_issues",
-    "atom_declared_carrier_issues", "atom_parse_issues", "atom_schema_issues",
-    "atom_duplicate_revision_issues", "archive_role_max", "archive_version_max",
-    "live_runs", "query_log", "relations", "runtime_diagnostics",
-    "implementation_objects", "implementation_rmedo",
-}
 sys.path[:0] = [str(APP_ROOT / "tests"), str(APP_ROOT), str(TOOLS_ROOT), str(MCP_ROOT)]
 
 from workbench_docker_support import (  # noqa: E402
@@ -60,6 +53,14 @@ class WorkbenchDockerE2E(
     WorkbenchGridDockerMixin, WorkbenchWatcherDockerMixin, WorkbenchPerformanceDockerMixin, unittest.TestCase,
 ):
     """One owned container; tests make no image, project, or Docker-global changes."""
+
+    expected_tables = {
+        "atoms", "scope_units", "change_log", "atom_physical_carrier_issues",
+        "atom_declared_carrier_issues", "atom_parse_issues", "atom_schema_issues",
+        "atom_duplicate_revision_issues", "archive_role_max", "archive_version_max",
+        "live_runs", "query_log", "relations", "runtime_diagnostics",
+        "implementation_objects", "implementation_rmedo",
+    }
 
     @classmethod
     def setUpClass(cls) -> None:  # noqa: C901
@@ -256,7 +257,7 @@ class WorkbenchDockerE2E(
 
         (schema, ran, page, checked, saved, worksheet, loaded_by_id, loaded_by_url, recent,
          legacy_query, legacy_worksheet, invalid, invalid_is_error) = asyncio.run(exercise())
-        self.assertEqual(WORKBENCH_TABLES, set(schema["tables"]))
+        self.assertEqual(self.expected_tables, set(schema["tables"]))
         status_column = next(
             column for column in schema["tables"]["atoms"] if column["name"] == "header.status"
         )
@@ -358,7 +359,7 @@ class WorkbenchDockerE2E(
         self.assertEqual({"columns": ["value"], "rows": [[123]]}, json.loads(
             (self.result_root / Path(*result_path.parts[1:])).read_text(encoding="utf-8")
         ))
-        self.assertEqual(WORKBENCH_TABLES, set(schema["tables"]))
+        self.assertEqual(self.expected_tables, set(schema["tables"]))
         status_column = next(
             column for column in schema["tables"]["atoms"] if column["name"] == "header.status"
         )
