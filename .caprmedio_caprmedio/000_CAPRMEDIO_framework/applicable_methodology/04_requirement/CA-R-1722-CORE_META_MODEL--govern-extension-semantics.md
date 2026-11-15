@@ -14,23 +14,22 @@ topics:
 tier: 1
 relations:
   child_of:
-  - CA-R-831
-  - CA-R-686
+  - CA-R-3048
 status: Active
-version: 31
-updated_at: 2026-11-02 00:18:22 +0400
+version: 33
+updated_at: 2026-11-11 16:16:08 +0400
 carrier_destination:
   file:
-    name: CA-R-1722-CORE_META_MODEL-RULE--govern-extension-semantics.md
+    name: CA-R-1722-CORE_META_MODEL--govern-extension-semantics.md
     path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1722-CORE_META_MODEL--govern-extension-semantics.md
   source_atom_id: CA-R-1722
-  source_atom_revision: 31
-  source_sha256: e66539199d0fffb4d9e902ae7a439ef193cc0b98fb53acef847ad8c1a32d547d
-  original_relations_sha256: d70f656f9682acd73170a3c6cd18c284fa6e978da106c524fc44efa852ef99d9
+  source_atom_revision: 33
+  source_sha256: a3c12f39f757052432d44691c7ffa4ff4d3b5e8098545e7ce7ca9cc459f0f3ab
+  original_relations_sha256: d035597e76f458c418413a53cb546b17afb2dacad56cc63d30879d5bb88356aa
 ---
 ## Summary
 

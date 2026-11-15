@@ -6,9 +6,9 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan).Assignee'
+  main_subject: 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Assignee'
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)
   - CAPRMEDIO_MODEL <+ Actor
 tier: 1
 status: Active
@@ -24,7 +24,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1584-CORE_META_MODEL-RULE--require-an-effective-assignee-for-plan-work.md
   source_atom_id: CA-R-1584
   source_atom_revision: 23
-  source_sha256: 67b525cdaa4d0d144eada3f7d40c67f5a1bc6b8f1843faae67ddf59ff18ce259
+  source_sha256: 15e0c2a19cd8c54a79c4888d6bae6c0a9cc01d54fc9727e051ada5f477d79a4c
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

@@ -6,13 +6,13 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Tier
+  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Context.Tier
   dependencies:
   - CAPRMEDIO_MODEL <+ Scope Unit
   - CAPRMEDIO_MODEL <+ Project
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Form := Goal)
-  - CAPRMEDIO_MODEL <+ Atom.Header.Topics.Main Subject
-  - CAPRMEDIO_MODEL <+ Atom.Header.Tier
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Form := Goal)
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics.Main Subject
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Tier
 tier: 2
 status: Active
 version: 11
@@ -27,7 +27,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2131-CORE_META_MODEL-RULE--admit-numeric-tiers-in-non-project-scope-units.md
   source_atom_id: CA-R-2131
   source_atom_revision: 11
-  source_sha256: e21fdd42f9c89431ab3a2b21892373f10be469104b56372e4820744eaa1d3949
+  source_sha256: c0048e01a0d13f9086cc3e14c215467b749321301ae418860ab61d8d8e464738
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

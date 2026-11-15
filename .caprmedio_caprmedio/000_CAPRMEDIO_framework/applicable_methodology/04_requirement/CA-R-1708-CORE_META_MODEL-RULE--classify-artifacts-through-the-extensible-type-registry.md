@@ -12,11 +12,10 @@ topics:
 tier: 1
 relations:
   child_of:
-  - CA-M-447
-  - CA-R-1407
+  - CA-M-540
 status: Active
-version: 39
-updated_at: 2026-11-02 00:18:22 +0400
+version: 41
+updated_at: "2026-11-11 18:46:16 +0400"
 carrier_destination:
   file:
     name: CA-R-1708-CORE_META_MODEL-RULE--classify-artifacts-through-the-extensible-type-registry.md
@@ -26,9 +25,9 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1708-CORE_META_MODEL-RULE--classify-artifacts-through-the-extensible-type-registry.md
   source_atom_id: CA-R-1708
-  source_atom_revision: 39
-  source_sha256: 98d6b6fed1848d807c17423f2bdce5ac780e3b1b8dd052a87b05565b66352a99
-  original_relations_sha256: e69fbf26e6b2745e2e0a1ea2704c4317cf791fa0c7e136ed844a795cc53dab8d
+  source_atom_revision: 41
+  source_sha256: d6f183b61fb76cdbd97b7d25229f13e6f8dbc26dd141f762ef7363592d661a87
+  original_relations_sha256: e7e8c430ecdabe896ae5a52210effd0c1cf4563a147e957c4618b4bafbc2d791
 ---
 ## Summary
 

@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//NARROWER_THAN
+  main_subject: CAPRMEDIO_MODEL <+ Relation//NARROWER_THAN
   dependencies:
   - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/Type: Terms Graph'
 tier: 1
@@ -23,7 +23,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1345-CORE_META_MODEL-RULE--keep-the-narrower-than-graph-acyclic.md
   source_atom_id: CA-R-1345
   source_atom_revision: 29
-  source_sha256: df5d74e19ecef22c44fddce6f2f3f88492aa713f3622dc28ead51e773f226cc8
+  source_sha256: e6eafb521d6751e5c7b9acb6a25b9440343468ece1deb3d6581674254222b387
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

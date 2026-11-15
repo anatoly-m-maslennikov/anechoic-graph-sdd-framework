@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  main_subject: CAPRMEDIO_MODEL <+ Relation
 tier: 1
 status: Active
 version: 37
@@ -21,7 +21,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1699-CORE_META_MODEL-RULE--bind-governed-transactions-to-stable-artifact-revisions.md
   source_atom_id: CA-R-1699
   source_atom_revision: 37
-  source_sha256: f71a1d2d68be23dc152b487b282c3cc94d228556762a6c8938ec80b7cd52b75a
+  source_sha256: 52e2accb383c134445395fa0c77c5c0ee9e2ebc982d46b7ae8a5daeec17d026f
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

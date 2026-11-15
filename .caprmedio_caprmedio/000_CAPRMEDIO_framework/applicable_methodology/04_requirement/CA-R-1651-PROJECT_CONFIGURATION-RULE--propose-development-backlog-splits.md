@@ -6,9 +6,9 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan)/(.Header.Form := Plan)'
+  main_subject: 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)/(.Header.Context.Form := Plan)'
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)
   - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Actor/Operator
 tier: 3
 relations:
@@ -27,7 +27,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement/CA-R-1651-PROJECT_CONFIGURATION-RULE--propose-development-backlog-splits.md
   source_atom_id: CA-R-1651
   source_atom_revision: 33
-  source_sha256: ecdf9aa2277fe944ed80f91c0bdbe91c4e71320b515050543dc201cbc3fc94c1
+  source_sha256: f6d86de91dd8c8c649d00bf20d63482cff1c57d67869fa3b035190b2698966d4
   original_relations_sha256: a6cede7fe831d2cd728ef1b5f22f9bdfe75c97f8f8154479b37e5d92b25350a5
 ---
 ## Summary

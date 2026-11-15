@@ -9,7 +9,7 @@ topics:
   main_subject: "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Traceability"
   dependencies:
   - CAPRMEDIO_MODEL <+ Event Record
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
   - CAPRMEDIO_MODEL <+ Projection
 tier: 4
 relations:
@@ -29,7 +29,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-624-CORE_META_MODEL-POLICY--validate-generated-only-provenance-boundary.md
   source_atom_id: CA-E-624
   source_atom_revision: 38
-  source_sha256: 15e5dbc2ee1c5e367bc22b08419755261d30d200584396e27385fff896ef21c5
+  source_sha256: be7791bffe588c8bbeef919319bbd20b8c738e3269dc4d7608fa2ca9eb2628e3
   original_relations_sha256: b0aadc358a427cc216398d47a4db7d796727f2db97a57ae01d8d48eebea1d338
 ---
 ## Summary

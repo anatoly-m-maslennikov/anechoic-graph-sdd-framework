@@ -8,17 +8,16 @@ form: Action
 topics:
   main_subject: Subject/caprmedio/Action//Atom Content Authoring
   dependencies:
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Operations/Type: Action'
+  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Operations/Type:
+    Action'
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom.Content
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom.Details
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom.Summary
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role
+  - CAPRMEDIO_MODEL <+ Carrier/File
+  - CAPRMEDIO_MODEL <+ Atom.Content.Summary
 tier: 3
-relations:
-  depends_on:
-  - CA-D-479
-  - CA-R-1464
 status: Active
 version: 16
 updated_at: 2026-10-27 19:59:45 +0400
@@ -33,8 +32,8 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-103-PROJECT_CONFIGURATION-ACTION--author-atom-content-before-summary.md
   source_atom_id: CA-O-103
   source_atom_revision: 16
-  source_sha256: b1ff39a85c16a84b06dafa4b781d5a21250a33bd9137c1b3edfeb0cc5a20203f
-  original_relations_sha256: fa3a1e362de1b94f55b35ed3ee53e910097d54924cf8b3a3e4aa60f47f27e514
+  source_sha256: b6c4cda90971b53a3244d65ee63438d303f33de7af46c4e6eccf185328c44e6a
+  original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 # Summary
 

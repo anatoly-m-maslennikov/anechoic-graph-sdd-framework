@@ -6,11 +6,11 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Concern).Header.Priority
+  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Concern).Header.Context.Concern.Priority
 tier: 3
-status: Active
-version: 1
-updated_at: 2026-11-03 20:00:05 +0400
+status: active
+version: 3
+updated_at: '2026-11-13T00:11:02.013748+00:00'
 carrier_destination:
   file:
     name: CA-R-2710-CORE_META_MODEL-DECLARATION--declare-atom-header-role-concern-header-priority.md
@@ -20,10 +20,11 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2710-CORE_META_MODEL-DECLARATION--declare-atom-header-role-concern-header-priority.md
   source_atom_id: CA-R-2710
-  source_atom_revision: 1
-  source_sha256: af403d230fa06058703b87077d6cfd20b7a93103450306d28d69c87bbf2085e1
+  source_atom_revision: 3
+  source_sha256: 8dea8a205541c0f762fa05c709049887d867917f17fc0fd3d85c1cdd45b0de17
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
+
 ## Summary
 
 Declare Atom/(.Header.Role := Concern).Header.Priority
@@ -32,15 +33,17 @@ Declare Atom/(.Header.Role := Concern).Header.Priority
 
 ### Formal Claim
 
-```CFEL
-# model
-Atom/(.Header.Role: Concern).Header.Priority{::1}:: [string]{::1};
+```python
+from caprmedio.formal_claims import declare_entity
 
-Atom/(.Header.Role: Concern).Header.Priority.*[]{::0};
-
-Atom/(.Header.Role: Concern).Header.Priority: High;
-
-Atom/(.Header.Role: Concern).Header.Priority: Medium;
-
-Atom/(.Header.Role: Concern).Header.Priority: Low
+declare_entity(
+    entity_name="Priority",
+    relation_name="IS_PROPERTY_OF",
+    base_path='Atom/(.Header.Context.Role:=Concern).Header.Context.Concern',
+    property_occurrence_cardinality=1,
+    value_format="str",
+    value_cardinality=1,
+    dependent_property_cardinality=0,
+    allowed_values=("High", "Medium", "Low"),
+)
 ```

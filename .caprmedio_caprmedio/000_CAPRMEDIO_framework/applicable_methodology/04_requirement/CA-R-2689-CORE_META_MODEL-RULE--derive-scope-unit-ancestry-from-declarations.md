@@ -1,31 +1,34 @@
 ---
-atom_id: CA-R-2689
-ref_id: CA-R-2689
-role: Requirement
-form: Rule
-topics:
-  main_subject: CAPRMEDIO_MODEL <+ Scope Unit.Path
-  dependencies:
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - Entity/Object/Continuant/Structural Unit/Scope Unit.Parent
-  - Entity/Object/Continuant/Structural Unit/Scope Unit.Children
-tier: 2
-status: Active
-version: 3
-updated_at: "2026-11-07 15:28:42 +0400"
-container:
-  scope_unit: CA-SU-11
-carrier_destination:
+identity:
+  id: CA-R-2689
+  ref_id: CA-R-2689
+context:
+  container:
+    scope_unit: CA-SU-11
+  role: requirement
+  form: rule
+  topics:
+    main_subject: CAPRMEDIO_MODEL <+ Scope Unit
+    dependencies:
+    - CAPRMEDIO_MODEL <+ Relation//IS_CONTAINED_BY
+  tier: 2
+state:
+  status: active
+  version: 5
+  updated_at: '2026-11-13T00:30:11.510000+00:00'
+destination:
   file:
     name: CA-R-2689-CORE_META_MODEL-RULE--derive-scope-unit-ancestry-from-declarations.md
     path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2689-CORE_META_MODEL-RULE--derive-scope-unit-ancestry-from-declarations.md
   source_atom_id: CA-R-2689
-  source_atom_revision: 3
-  source_sha256: d608ca48b2f35695018639e75682c4654cb35f615411b6cff21c912d0e73fa5c
+  source_atom_revision: 5
+  source_sha256: 98ea0b46e08c86e80f7ed229f04cdd07a1b9a7ea9b03182b2e3a1e993ac9374e
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
+
+
 
 ## Summary
 
@@ -33,4 +36,8 @@ Derive Scope Unit ancestry from Declarations
 
 ## Claim
 
-Scope Unit ancestry is derived from the governing structural declarations and their direct parent relations: the Project Scope Unit Declaration and non-Project Scope Delegations. CAPRMEDIO does not author or persist a Structural Level property for a Scope Unit. A displayed path or depth is derived from that parent chain only. It does not establish or override parentage, ownership, or authority. Conflicting or unresolved parent inputs remain unresolved.
+### Prose Claim
+
+Scope Unit ancestry follows the Scope Unit Declarations and their direct `IS_CONTAINED_BY` Relations. Resolve conflicting or missing parent declarations before deriving ancestry.
+
+Any representation of Scope Unit ancestry derives from the declared containment chain. The Scope Unit Declarations remain authoritative for ancestry.

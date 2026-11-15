@@ -15,16 +15,11 @@ topics:
   - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Source Selection"
 tier: 1
 relations:
-  depends_on:
-  - CA-R-2748
-  - CA-R-2532
-  - CA-R-1402@27
   child_of:
-  - CA-M-446
-  - CA-R-1421
+  - CA-R-3033
 status: Active
-version: 35
-updated_at: 2026-11-04 09:30:21 +0400
+version: 37
+updated_at: "2026-11-11 18:46:16 +0400"
 carrier_destination:
   file:
     name: CA-R-622-PROJECT_CONFIGURATION-RULE--keep-selected-settings-in-their-authoritative-settings-artifact.md
@@ -39,9 +34,9 @@ claim_target_scope_unit: caprmedio
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement/CA-R-622-PROJECT_CONFIGURATION-RULE--keep-selected-settings-in-their-authoritative-settings-artifact.md
   source_atom_id: CA-R-622
-  source_atom_revision: 35
-  source_sha256: 92437837e6060b8d0c4d7080005ccfa6c80b68af0e838ec2e5420fc82fb1b8d4
-  original_relations_sha256: 40ad8a873bd6c0b77bd08d0d03bd385e6ad21287a32aa3f7239569c8c1ab1265
+  source_atom_revision: 37
+  source_sha256: d6db640196314ed56b74382ac51c08be6afc9a33daf662b088b6c6cb1648d40d
+  original_relations_sha256: 78706cde4a3ba914563fe339a8473dd2a80658662fbddfbfba8f1ce168f57b31
 ---
 ## Summary
 Keep selected settings in their authoritative Settings Artifact

@@ -6,7 +6,7 @@ container:
 role: Evaluation
 form: Eval Case
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  main_subject: CAPRMEDIO_MODEL <+ Relation
 tier: 2
 status: Active
 version: 34
@@ -21,7 +21,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-620-CORE_META_MODEL-EVAL_CASE--relation-vocabulary-interpretability.md
   source_atom_id: CA-E-620
   source_atom_revision: 34
-  source_sha256: 82364852f01505d4879c1697143267ffbd11a08903d14a9b7d33a1195b3c2363
+  source_sha256: a08f7cadbe6fdebeb203c3c75f8ebb9c81c96db90d3e2caa139a1f51e849a308
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

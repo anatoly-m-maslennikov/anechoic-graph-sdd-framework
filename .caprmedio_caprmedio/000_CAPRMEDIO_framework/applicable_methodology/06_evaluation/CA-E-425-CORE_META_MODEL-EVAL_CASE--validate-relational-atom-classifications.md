@@ -8,9 +8,9 @@ form: Eval Case
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Atom
   dependencies:
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Requirement)/(.Header.Form := Goal)'
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Requirement)/(.Header.Form := Demand)'
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan)
+  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Requirement)/(.Header.Context.Form := Goal)'
+  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Requirement)/(.Header.Context.Form := Demand)'
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)
 tier: 5
 relations:
   evaluation_for:
@@ -31,7 +31,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-425-CORE_META_MODEL-EVAL_CASE--validate-relational-atom-classifications.md
   source_atom_id: CA-E-425
   source_atom_revision: 30
-  source_sha256: c11a8b967f7e397397bfa52822baa5ce4186d4454370654632e00a1b026f5c45
+  source_sha256: 6e7b15c83bba56394625854ef0657f9c65ed643fbbd3a712fd9f914352288478
   original_relations_sha256: f51298c27d48a0f3abb1efc6b55cfe7af6ae821371edecacd6a64bf78acd5f9e
 ---
 ## Summary

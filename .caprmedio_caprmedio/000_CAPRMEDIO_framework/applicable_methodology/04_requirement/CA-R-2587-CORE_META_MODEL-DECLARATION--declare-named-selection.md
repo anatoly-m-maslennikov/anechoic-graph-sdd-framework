@@ -8,9 +8,9 @@ form: Declaration
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Named Selection
 tier: 3
-status: Active
-version: 2
-updated_at: 2026-11-02 00:18:22 +0400
+status: active
+version: 3
+updated_at: '2026-11-12T19:19:39.079406+00:00'
 carrier_destination:
   file:
     name: CA-R-2587-CORE_META_MODEL-DECLARATION--declare-named-selection.md
@@ -20,8 +20,8 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2587-CORE_META_MODEL-DECLARATION--declare-named-selection.md
   source_atom_id: CA-R-2587
-  source_atom_revision: 2
-  source_sha256: 778fea82cf32ab1525074c2c2b8199549d59e6dfb53eb62049b6ee7c2a8b87bc
+  source_atom_revision: 3
+  source_sha256: 55150a022f7ae75c04c589dd7548d7c256d7380dd6246aaee716b6ab40913107
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
@@ -32,11 +32,18 @@ Declare Named Selection
 
 ### Formal Claim
 
-```CFEL
-# model
-Named Selection {::0}((IS_PROPERTY_OF));
+```python
+from caprmedio.formal_claims import declare_entity
+from caprmedio.model import Continuant
 
-Named Selection ((NARROWER_THAN)) Continuant
+class NamedSelection(Continuant):
+    pass
+
+declare_entity(
+    entity_class=NamedSelection,
+    entity_name="Named Selection",
+    model_relation_constraints={"IS_PROPERTY_OF": {"targets_per_source": 0}},
+)
 ```
 
 ## Semantics

@@ -9,21 +9,21 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Entity
   dependencies:
   - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Selection
-  - CAPRMEDIO_MODEL <+ Atom.Header.Role
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Role
   - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/History
   - CAPRMEDIO_MODEL <+ Package/Project Package
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Operations)/(.Header.Form := Action)
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Operations)/(.Header.Form := Workflow)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Action)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow)
   - CAPRMEDIO_MODEL <+ Actor
   - CAPRMEDIO_MODEL <+ Event Record
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Evaluation)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
 tier: 1
 relations:
   child_of:
-  - CA-M-447
+  - CA-M-539
 status: Active
-version: 46
-updated_at: 2026-11-10 14:38:45 +0400
+version: 47
+updated_at: "2026-11-11 18:46:16 +0400"
 carrier_destination:
   file:
     name: CA-R-1683-CORE_META_MODEL--authority-evaluation-and-operations-remain-distinct.md
@@ -33,9 +33,9 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1683-CORE_META_MODEL--authority-evaluation-and-operations-remain-distinct.md
   source_atom_id: CA-R-1683
-  source_atom_revision: 46
-  source_sha256: 2071c5d049ef992e266c5071ea466861768b02b26df595f0ac1865aca2636929
-  original_relations_sha256: cda81380ab057c4da428dab72b93f65bb72092983ee69756870fff6e5dc9bea9
+  source_atom_revision: 47
+  source_sha256: 7a7ee5a9daf481f79f88c427a1ad044121790ddcde6ade54875cbfeb5b93a19a
+  original_relations_sha256: 38ed74fc4f1cae0538794d8e7474a259e7d50dd0094a82b19b8d86817482a7d0
 ---
 ## Summary
 

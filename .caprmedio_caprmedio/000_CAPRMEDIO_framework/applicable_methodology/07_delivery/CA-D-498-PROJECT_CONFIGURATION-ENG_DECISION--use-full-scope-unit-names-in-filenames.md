@@ -13,10 +13,6 @@ topics:
   - CAPRMEDIO_MODEL <+ Scope Unit
   - CAPRMEDIO_MODEL <+ Scope Unit.Name
 tier: 3
-relations:
-  depends_on:
-  - CA-D-284
-  - CA-D-302
 status: Active
 version: 14
 updated_at: 2026-11-03 23:25:51 +0400
@@ -30,8 +26,8 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/07_delivery/CA-D-498-PROJECT_CONFIGURATION-ENG_DECISION--use-full-scope-unit-names-in-filenames.md
   source_atom_id: CA-D-498
   source_atom_revision: 14
-  source_sha256: 333206973daaaf46b508e721b58aaff5ad79b2d262284cb5f4cba915b64067d7
-  original_relations_sha256: d990781b372f65b5de75cf683d3150a3fb54d4608a2f2f688cab00d4f2b9bb85
+  source_sha256: 858143f9536d94448df37b406aaa463671d4442e7cce1f5af58f286163c9f1da
+  original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
 

@@ -8,7 +8,7 @@ form: Rule
 topics:
   main_subject: CAPRMEDIO_STRUCTURE <+ Aspects <+ Product
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom.Header.Role
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Role
 tier: 4
 relations:
   child_of:
@@ -27,7 +27,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement/CA-R-1736-PROJECT_CONFIGURATION-RULE--define-the-caprmedio-expansion.md
   source_atom_id: CA-R-1736
   source_atom_revision: 33
-  source_sha256: ce34521fee20a7b8f3a4fbe4ee6e8a4dd352687b86dcb0dfc7ad4d6552c957ba
+  source_sha256: 8620694d4fb0178457a3787dc3dccaa8f7312078cd9e5ee064db9159d1db34ed
   original_relations_sha256: df4692bda14b805aff2606092f66ebe53c812b0061b87cbad6036395e7d3e930
 ---
 ## Summary

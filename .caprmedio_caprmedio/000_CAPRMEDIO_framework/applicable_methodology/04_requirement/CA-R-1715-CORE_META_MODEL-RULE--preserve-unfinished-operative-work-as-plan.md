@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan)
+  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)
 tier: 1
 status: Active
 version: 28
@@ -21,7 +21,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1715-CORE_META_MODEL-RULE--preserve-unfinished-operative-work-as-plan.md
   source_atom_id: CA-R-1715
   source_atom_revision: 28
-  source_sha256: b056f66b015d79591e34cae2036bbd8c657a8ed133fa11f3082ca8fa94e303bc
+  source_sha256: ec7be0fd37c420fa175f8e93cd97527da65120140b8dcf0730a8a7f0f9c37b1e
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

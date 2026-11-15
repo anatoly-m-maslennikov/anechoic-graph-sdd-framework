@@ -6,15 +6,15 @@ container:
 role: Evaluation
 form: Eval Case
 topics:
-  main_subject: 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan)/(.Header.Form := Plan)'
+  main_subject: 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)/(.Header.Context.Form := Plan)'
   dependencies:
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan)/(.Header.Form := Plan)'
+  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)/(.Header.Context.Form := Plan)'
   - CAPRMEDIO_MODEL <+ Atom.Content
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan).Assignee'
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan).Content.Definition of Done'
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan).Content.Details'
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan).Header.Label'
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan).Header.Status'
+  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Assignee'
+  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Content.Definition of Done'
+  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Content.Details'
+  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.Context.Label'
+  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.State.Status'
   - CAPRMEDIO_MODEL <+ Scope Unit
   - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Execution Control <+ Decision Confidence"
 tier: 4
@@ -46,7 +46,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-501-CORE_META_MODEL-EVAL_CASE--validate-common-plan-authoring.md
   source_atom_id: CA-E-501
   source_atom_revision: 30
-  source_sha256: e6b9dc7f0a203904db79065c5a8268e3035f47d049717f65b6444fde70f7bc74
+  source_sha256: b505841601de178f5990557dd167e751521cbf2d96c5af40beebf020248e4282
   original_relations_sha256: d74d6c67905f8978e335a96c2236f190cf7fc40fe29f88dee7d98b4bad6b5140
 ---
 ## Summary

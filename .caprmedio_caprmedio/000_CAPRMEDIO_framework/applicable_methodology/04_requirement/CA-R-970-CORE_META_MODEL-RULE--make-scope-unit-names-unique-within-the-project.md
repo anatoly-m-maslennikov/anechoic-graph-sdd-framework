@@ -13,10 +13,9 @@ tier: 2
 relations:
   child_of:
   - CA-R-962
-  - CA-R-2530
-status: Active
-version: 32
-updated_at: 2026-11-02 00:18:22 +0400
+status: active
+version: 33
+updated_at: '2026-11-12T22:57:56.664282+00:00'
 carrier_destination:
   file:
     name: CA-R-970-CORE_META_MODEL-RULE--make-scope-unit-names-unique-within-the-project.md
@@ -26,9 +25,9 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-970-CORE_META_MODEL-RULE--make-scope-unit-names-unique-within-the-project.md
   source_atom_id: CA-R-970
-  source_atom_revision: 32
-  source_sha256: 4cbd0106567013296472c0684d164f367dcc942ea917c1bc2e8803264c8042bb
-  original_relations_sha256: c5193d6b1c99d4cfba8810badf56db3e951f2c78165ab73076ccc36aaed57c4d
+  source_atom_revision: 33
+  source_sha256: 6cb6136300afbe888fdf226c763b7af6837aa1d369e45fbe364404933980ce8c
+  original_relations_sha256: 61bc80dfa5b74af88b0ffd6ef2c8c7099d773baf60ce64f4d5b5e5603b7942b4
 ---
 ## Summary
 

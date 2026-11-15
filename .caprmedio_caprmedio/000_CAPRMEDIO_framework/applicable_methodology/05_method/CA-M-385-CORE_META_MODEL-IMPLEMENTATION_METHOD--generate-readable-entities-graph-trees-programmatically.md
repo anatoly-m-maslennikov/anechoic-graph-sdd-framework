@@ -9,7 +9,7 @@ topics:
   main_subject: 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Entities Graph)'
   dependencies:
   - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
   - CAPRMEDIO_MODEL <+ Atom
   - CAPRMEDIO_MODEL <+ Projection
 tier: 4
@@ -29,7 +29,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-385-CORE_META_MODEL-IMPLEMENTATION_METHOD--generate-readable-entities-graph-trees-programmatically.md
   source_atom_id: CA-M-385
   source_atom_revision: 25
-  source_sha256: 074af475f8af9c29c4b6d9063fec052426177191d145c4e4afbfb139937af18e
+  source_sha256: 6bbde544cf3dd9ac3222830febac7c2c43cca174ef1efe44102166409cd3d951
   original_relations_sha256: 7733f3e3021e6be18516933e27e8835adbc33729eb63b7a4e716166b11e30c93
 ---
 ## Summary

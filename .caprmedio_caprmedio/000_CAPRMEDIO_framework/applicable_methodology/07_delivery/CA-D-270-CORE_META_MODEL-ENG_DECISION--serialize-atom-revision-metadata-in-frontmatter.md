@@ -8,8 +8,8 @@ form: Decision
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Atom
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom.Header.Version
-  - CAPRMEDIO_MODEL <+ Atom.Header.Updated At
+  - CAPRMEDIO_MODEL <+ Atom.Header.State.Version
+  - CAPRMEDIO_MODEL <+ Atom.Header.State.Updated At
 tier: 3
 status: Active
 version: 27
@@ -24,7 +24,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-270-CORE_META_MODEL-ENG_DECISION--serialize-atom-revision-metadata-in-frontmatter.md
   source_atom_id: CA-D-270
   source_atom_revision: 27
-  source_sha256: 05a3ca68d0bab3406b923fc19821540753c107160bf1151e691cad1a0987bc83
+  source_sha256: b916d4feb0fdf7ef699ff37c089093a6add9ef25a16da15fed96b80b127b6c21
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

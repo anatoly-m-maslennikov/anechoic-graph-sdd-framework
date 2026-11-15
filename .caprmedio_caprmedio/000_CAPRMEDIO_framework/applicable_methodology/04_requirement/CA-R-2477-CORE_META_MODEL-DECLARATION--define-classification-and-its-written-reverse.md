@@ -6,11 +6,11 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//HAS_CLASSIFICATION
+  main_subject: CAPRMEDIO_MODEL <+ Relation//HAS_CLASSIFICATION
 tier: 3
-status: Active
-version: 5
-updated_at: 2026-11-03 20:00:05 +0400
+status: active
+version: 6
+updated_at: '2026-11-12T12:33:04.158402+00:00'
 carrier_destination:
   file:
     name: CA-R-2477-CORE_META_MODEL-DECLARATION--define-classification-and-its-written-reverse.md
@@ -20,8 +20,8 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2477-CORE_META_MODEL-DECLARATION--define-classification-and-its-written-reverse.md
   source_atom_id: CA-R-2477
-  source_atom_revision: 5
-  source_sha256: 442f753a2a255040a75a9b3409c52b264779bfa23ab65a8cdbf6057e08f547b8
+  source_atom_revision: 6
+  source_sha256: 24f432d5def5f6c272dde3657803e2495cccfc41454818463822725345b37854
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
@@ -40,12 +40,15 @@ Forward `Host ((HAS_CLASSIFICATION)) Target` and reverse `Target <((HAS_CLASSIFI
 HAS_CLASSIFICATION relates declared Entity or instance to applicable classification axis.
 ### Formal Claim
 
-```CFEL
-# model
-$classified ((HAS_CLASSIFICATION)) $axis;
+```python
+from caprmedio.formal_claims import declare_relation
 
-alias(Relation//HAS_CLASSIFICATION) == ">|";
-
-Relation//HAS_CLASSIFICATION ((HAS_CLASSIFICATION)) Derivation == Direct
+declare_relation(
+    relation_name='HAS_CLASSIFICATION',
+    source_endpoint={'level': 'model_entities_or_instances'},
+    target_endpoint={'level': 'model_entities', 'classification_axis': True},
+    written_alias='>|',
+    reverse_written_alias='|<',
+)
 ```
 

@@ -8,9 +8,9 @@ form: Declaration
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Projection.Form
 tier: 3
-status: Active
-version: 3
-updated_at: 2026-11-04 07:51:19 +0400
+status: active
+version: 4
+updated_at: '2026-11-12T17:23:54+00:00'
 carrier_destination:
   file:
     name: CA-R-2538-CORE_META_MODEL-DECLARATION--declare-projection-form.md
@@ -20,8 +20,8 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2538-CORE_META_MODEL-DECLARATION--declare-projection-form.md
   source_atom_id: CA-R-2538
-  source_atom_revision: 3
-  source_sha256: 7770350f57827faa7f2ac03a9f2a38c5c6fa8299cef489834e612c9dd7d9e65c
+  source_atom_revision: 4
+  source_sha256: 53a5258baed16dd821d58a9cf9c6fec2fd108d0d801bc16a8d27c465d6e52fe0
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
@@ -32,10 +32,18 @@ Declare Projection.Form
 
 ### Formal Claim
 
-```CFEL
+```python
 # model
-Projection.Form{::1}:: [string]{::1};
+from caprmedio.formal_claims import declare_entity
 
-Projection.Form.*[]{::0}
+declare_entity(
+    entity_name='Form',
+    relation_name='IS_PROPERTY_OF',
+    base_path='Projection',
+    property_occurrence_cardinality=1,
+    value_cardinality=1,
+    value_format='str',
+    dependent_property_cardinality=0,
+)
 ```
 

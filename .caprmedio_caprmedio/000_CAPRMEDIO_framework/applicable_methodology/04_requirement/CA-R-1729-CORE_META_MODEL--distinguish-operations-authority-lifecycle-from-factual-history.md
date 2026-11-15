@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Operations)
+  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)
 tier: 1
 status: Active
 version: 27
@@ -21,7 +21,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1729-CORE_META_MODEL--distinguish-operations-authority-lifecycle-from-factual-history.md
   source_atom_id: CA-R-1729
   source_atom_revision: 27
-  source_sha256: 01b35af028fade5ffee6f308b4fd9c2c7151a1137330b09eb7b6e5c5f2a5a76f
+  source_sha256: 9be0ec48c38ba5ccdf7f757e9f05f4b6f5f876c00d496c004c09bab8448f4766
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

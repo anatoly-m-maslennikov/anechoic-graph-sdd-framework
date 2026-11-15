@@ -14,9 +14,6 @@ topics:
   - CAPRMEDIO_MODEL <+ Projection.Source.Named Selection
   - CAPRMEDIO_MODEL <+ Projection.Source.Atoms
 tier: 3
-relations:
-  depends_on:
-  - CA-R-2535
 status: Active
 version: 16
 updated_at: 2026-11-04 07:51:19 +0400

@@ -6,13 +6,13 @@ container:
 role: Delivery
 form: Policy
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Topics
+  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom.Header.Topics
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//GOVERNS
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//DEPENDS_ON
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
+  - CAPRMEDIO_MODEL <+ Relation//GOVERNS
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics.Dependencies
   - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
 tier: 3
 status: active
 version: 30
@@ -27,7 +27,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-269-CORE_META_MODEL-ENG_DECISION--serialize-atom-subjects-in-frontmatter.md
   source_atom_id: CA-D-269
   source_atom_revision: 30
-  source_sha256: 121e04f8380105a51e1aaa7854f8d9fce4e553a5a18fd66f3570cf8bb93aab73
+  source_sha256: 2833ac476d68296c203880eb36c7d895888b12f8f44fb7b9be102837299ac2b1
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

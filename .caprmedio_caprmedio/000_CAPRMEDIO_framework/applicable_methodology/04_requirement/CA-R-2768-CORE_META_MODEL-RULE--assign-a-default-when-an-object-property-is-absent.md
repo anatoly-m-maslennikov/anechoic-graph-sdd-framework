@@ -6,20 +6,20 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL
+  main_subject: CAPRMEDIO_MODEL
 tier: 3
-status: Active
-version: 2
-updated_at: 2026-11-04 20:33:16 +0400
+status: active
+version: 3
+updated_at: 2026-11-05 14:25:52 +0400
 carrier_destination:
   file:
-    name: CA-R-2768-RULE--assign-a-default-when-an-object-property-is-absent.md
+    name: CA-R-2768-CORE_META_MODEL-RULE--assign-a-default-when-an-object-property-is-absent.md
     path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2768-CORE_META_MODEL-RULE--assign-a-default-when-an-object-property-is-absent.md
   source_atom_id: CA-R-2768
-  source_atom_revision: 2
-  source_sha256: 259d83af3689cbb0411a985d7833508b70ae1c7664bcca9120bcce6cf61f6292
+  source_atom_revision: 3
+  source_sha256: f4ea688e9d4c2d8922701658d82a8ec01a8ba41b656e5e9937f65fd6b41303c4
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
@@ -32,25 +32,11 @@ Assign a default when an Object Property is absent
 
 
 
-- `p ?== e1 ?== e2` is one ordered conditional-assignment chain. Keep p when it has an authored value; when p is absent, use the first available valid expression from left to right and set that missing Object Property value in the Model. An authored invalid value is an error, not absence. Omission is Property absence, not null, an empty string, zero or false.
+- A fallback chain returns the first available value from left to right. An omitted value, null, or an empty string is empty. Zero and false are values.
+- A reached nonempty value must satisfy the applicable Format and cardinality. Invalid values are errors.
+- Evaluate each fallback only when needed. An exhausted chain, an evaluated cycle, or multiple applicable chains is an error.
+- A fallback expression can read a literal, a Property on the same bearer, an explicitly bound Property, or a contextual lookup. An explicit foreign-bearer read requires one resolved target.
+- The result is an effective value. The Property and its Carrier retain their authored values.
 
-- Expressions may be literals, same-bearer Property paths, explicit bound Property reads, or `LOOKUP(R, q)`. An explicit foreign-bearer read must resolve one target in the declared evaluation context; zero or multiple targets are errors.
-
-- `LOOKUP(R, q)` is an admitted fallback expression; its value and traversal semantics are defined by the Operator//Lookup Declaration.
-
-- Evaluate fallback expressions lazily from left to right; stop at the first valid available value. Later branches are not evaluated. Missing final values, evaluated fallback-expression cycles, and more than one applicable fallback chain are errors. Independent Declaration constraints still apply.
-
-- The conditional assignment sets the missing Object Property value in the Model and the result must satisfy p’s declared value Format and cardinality, including required effective cardinality. It does not itself write a Carrier, persist a file, or create an authored Carrier occurrence; Carrier I/O remains the responsibility of an adapter or Delivery rule. Property-declaration inheritance is unchanged; recursive instance-value lookup occurs only through explicit LOOKUP.
-### Formal Claim
-
-```CFEL
-# model
-p ?== expression
-```
-
-## Details
-
-```CFEL
-# model
-Atom.Header.Label ?== Atom.Header.Form
-```
+The Python Property Declaration specifies the fallback. For example,
+`Atom.Header.Context.Label` uses `Form` when `Label` is empty.

@@ -8,9 +8,9 @@ form: Declaration
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Project.Settings.RMED Review.Max Atoms
 tier: 3
-status: Active
-version: 2
-updated_at: 2026-11-04 05:21:15 +0400
+status: active
+version: 3
+updated_at: '2026-11-12T17:23:54+00:00'
 carrier_destination:
   file:
     name: CA-R-2630-CORE_META_MODEL-DECLARATION--declare-project-settings-rmed-review-max-atoms.md
@@ -20,8 +20,8 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2630-CORE_META_MODEL-DECLARATION--declare-project-settings-rmed-review-max-atoms.md
   source_atom_id: CA-R-2630
-  source_atom_revision: 2
-  source_sha256: b87dc1118dbf853201d0c589e955c852f29da0e148f0a273c99690d8943de1ee
+  source_atom_revision: 3
+  source_sha256: 2b8c3a9ae2ccff198202e5aebb9a3466e6b44fc55092ada93e73b97164dc96f9
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 
@@ -38,10 +38,17 @@ When present, the value is positive. Its absence supplies no default.
 
 ### Formal Claim
 
-```CFEL
+```python
 # model
-Project.Settings.RMED Review.Max Atoms:: [int]{::0..1};
+from caprmedio.formal_claims import Cardinality, declare_entity
 
-Project.Settings.RMED Review.Max Atoms.*[]{::0}
+declare_entity(
+    entity_name='Max Atoms',
+    relation_name='IS_PROPERTY_OF',
+    base_path='Project.Settings.RMED Review',
+    value_cardinality=Cardinality(minimum=0, maximum=1),
+    value_format='int',
+    dependent_property_cardinality=0,
+)
 ```
 

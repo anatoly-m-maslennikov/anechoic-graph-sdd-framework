@@ -8,9 +8,9 @@ form: Declaration
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Project.Settings.RMED Review.Context Headroom Fraction
 tier: 3
-status: Active
-version: 2
-updated_at: 2026-11-04 05:21:15 +0400
+status: active
+version: 3
+updated_at: '2026-11-12T19:06:43.021656+00:00'
 carrier_destination:
   file:
     name: CA-R-2629-CORE_META_MODEL-DECLARATION--declare-project-settings-rmed-review-context-headroom-fraction.md
@@ -20,8 +20,8 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2629-CORE_META_MODEL-DECLARATION--declare-project-settings-rmed-review-context-headroom-fraction.md
   source_atom_id: CA-R-2629
-  source_atom_revision: 2
-  source_sha256: aaad56770d084e5fb52e0c7e9fb25f3498a78996c5fde8b0cd20d8819819f01b
+  source_atom_revision: 3
+  source_sha256: d7bed71d661ec046c0351cbe555f579d5dc60cf24223116dea0f5240653dc035
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 
@@ -38,10 +38,16 @@ When present, the value is finite and strictly between zero and one.
 
 ### Formal Claim
 
-```CFEL
-# model
-Project.Settings.RMED Review.Context Headroom Fraction:: [float]{::0..1};
+```python
+from caprmedio.formal_claims import Cardinality, declare_entity
 
-Project.Settings.RMED Review.Context Headroom Fraction.*[]{::0}
+declare_entity(
+    entity_name="Context Headroom Fraction",
+    relation_name="IS_PROPERTY_OF",
+    base_path="Project.Settings.RMED Review",
+    value_format=float,
+    value_cardinality=Cardinality(minimum=0, maximum=1),
+    dependent_property_cardinality=0,
+)
 ```
 

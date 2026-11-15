@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Requirement
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Method)
+  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Method)
 tier: 1
 status: Active
 version: 32
@@ -21,7 +21,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1768-CORE_META_MODEL-REQUIREMENT--absorb-implementation-decisions-without-semantic-loss.md
   source_atom_id: CA-R-1768
   source_atom_revision: 32
-  source_sha256: 498384ba3e127b45efa198ea658cf2e2c948d73c63e28142f558b011b3770fb5
+  source_sha256: fabd0de48f9d5d09f814fff4381ce8aa01db40e26a931a3bb4ea83fbcbcf90cd
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 

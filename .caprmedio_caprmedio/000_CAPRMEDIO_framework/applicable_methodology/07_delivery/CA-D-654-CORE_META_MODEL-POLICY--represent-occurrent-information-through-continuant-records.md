@@ -10,7 +10,7 @@ topics:
   dependencies:
   - CAPRMEDIO_MODEL <+ Carrier
   - CAPRMEDIO_MODEL <+ Event Record
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//CARRIES
+  - CAPRMEDIO_MODEL <+ Relation//CARRIES
 tier: 1
 status: Active
 version: 3
@@ -25,7 +25,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-654-CORE_META_MODEL-POLICY--represent-occurrent-information-through-continuant-records.md
   source_atom_id: CA-D-654
   source_atom_revision: 3
-  source_sha256: 4bfa530f9426cac69d7e4ffa7c88a92e88c2d309356289e5cec2fbd38271747f
+  source_sha256: 770f6ed96abaf0abb954cbc154ec43537cd2bb6a1f7e3d93769541da4a66648c
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

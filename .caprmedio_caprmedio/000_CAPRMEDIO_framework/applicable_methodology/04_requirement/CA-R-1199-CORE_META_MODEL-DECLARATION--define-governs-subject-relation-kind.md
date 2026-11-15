@@ -6,19 +6,17 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//GOVERNS
+  main_subject: CAPRMEDIO_MODEL <+ Relation//GOVERNS
   dependencies:
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
   - CAPRMEDIO_MODEL <+ Atom
   - CAPRMEDIO_MODEL <+ Entity
   - CAPRMEDIO_MODEL <+ Atom.Content
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
 tier: 2
-relations:
-  depends_on:
-  - CA-R-1275
-status: Active
-version: 38
-updated_at: 2026-11-04 03:22:03 +0400
+status: active
+version: 39
+updated_at: '2026-11-12T17:23:54+00:00'
 carrier_destination:
   file:
     name: CA-R-1199-CORE_META_MODEL-DECLARATION--define-governs-subject-relation-kind.md
@@ -28,9 +26,9 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1199-CORE_META_MODEL-DECLARATION--define-governs-subject-relation-kind.md
   source_atom_id: CA-R-1199
-  source_atom_revision: 38
-  source_sha256: 0d6fe5682672debfd364d594181d901f9821435c925eb36dd03106722f147e39
-  original_relations_sha256: 716ef4f4c69122347b79d3f5b5752b137772edf3b9edf48f251d5d752fc50a4d
+  source_atom_revision: 39
+  source_sha256: 87916ade0f1498c8464e2f868c3d407f5e6f7f10d0903955df6c3734d5fab034
+  original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
 
@@ -50,11 +48,13 @@ Forward `Host ((GOVERNS)) Target` and reverse `Target <((GOVERNS)) Host` are vie
 GOVERNS relates Atom to canonical Subject entity or instance.
 ### Formal Claim
 
-```CFEL
-# model
-Relation//GOVERNS ((HAS_CLASSIFICATION)) Derivation == Direct;
+```python
+from caprmedio.formal_claims import declare_relation
 
-# instances
-Atom//$atom ((GOVERNS)) $governed_subject
+declare_relation(
+    relation_name='GOVERNS',
+    source_endpoint={'level': 'instances', 'entity_paths': ('Atom',)},
+    target_endpoint={'level': 'model_entities_or_instances'},
+)
 ```
 

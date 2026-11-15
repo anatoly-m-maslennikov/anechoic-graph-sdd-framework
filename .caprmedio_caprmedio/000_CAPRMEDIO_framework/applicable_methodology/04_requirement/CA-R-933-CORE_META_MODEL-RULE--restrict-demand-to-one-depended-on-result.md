@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Requirement)/(.Header.Form := Demand)'
+  main_subject: 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Requirement)/(.Header.Context.Form := Demand)'
   dependencies:
   - CAPRMEDIO_MODEL <+ Atom
 tier: 5
@@ -26,7 +26,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-933-CORE_META_MODEL-RULE--restrict-demand-to-one-depended-on-result.md
   source_atom_id: CA-R-933
   source_atom_revision: 33
-  source_sha256: 74a468921d109c58d8b482a6b7a127556ee5b135308e5101d7b9cd24b60818d3
+  source_sha256: 8304cb0e1f6301ec219f8af0b655b216c27b73a6ef23be10e05c91924cedbd16
   original_relations_sha256: c20ed3844d666cd523ff76d7355fb5c2277a21d8c1137804e80822202d14a70b
 ---
 ## Summary

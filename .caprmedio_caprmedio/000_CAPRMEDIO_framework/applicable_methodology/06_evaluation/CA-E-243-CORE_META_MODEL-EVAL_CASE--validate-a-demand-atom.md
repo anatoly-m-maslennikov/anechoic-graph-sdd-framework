@@ -6,7 +6,7 @@ container:
 role: Evaluation
 form: Eval Case
 topics:
-  main_subject: 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Requirement)/(.Header.Form := Demand)'
+  main_subject: 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Requirement)/(.Header.Context.Form := Demand)'
   dependencies:
   - CAPRMEDIO_MODEL <+ Scope Unit.order.number
 tier: 7
@@ -32,7 +32,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-243-CORE_META_MODEL-EVAL_CASE--validate-a-demand-atom.md
   source_atom_id: CA-E-243
   source_atom_revision: 39
-  source_sha256: 77ac9b1fb18951ed76ad234591d8b9dc0680cdfce12891888d7ae9e83c4f9893
+  source_sha256: 25d65656191e9e6a856657d79d4b0e0ea6d68a66b4041e5e2246adc7e22b9369
   original_relations_sha256: 815de8c826a60a1221779cd6cf15000fe9db13138a370fabc2cca19fa9055478
 ---
 ## Summary

@@ -9,7 +9,7 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Scope Unit
   dependencies:
   - CAPRMEDIO_MODEL <+ Atom.Content
-  - CAPRMEDIO_MODEL <+ Atom.Header.Tier
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Tier
   - CAPRMEDIO_MODEL <+ Scope Unit
   - CAPRMEDIO_STRUCTURE <+ Scope Unit//CORE_META_MODEL
   - CAPRMEDIO_STRUCTURE <+ Entity/Object/Continuant/Selection//Extension Sources
@@ -31,7 +31,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1748-CORE_META_MODEL--bound-descendant-specialization-to-its-structural-scope.md
   source_atom_id: CA-R-1748
   source_atom_revision: 37
-  source_sha256: 8390f8f5816e7e22fefedf793aeaeb81fada7a8aa91f090cdcd39757d4f36868
+  source_sha256: a791446ffa89c3f305a0d6cb0bf2fea0dc71b416c16d87a64bbfcfea2e96f1f1
   original_relations_sha256: 6448b762c698736659af7a49194381ae30d43e0901edf16ef3ba48f0e484c7b2
 ---
 ## Summary

@@ -6,20 +6,20 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Label
+  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Context.Label
 tier: 3
-status: Active
-version: 4
-updated_at: 2026-11-04 20:33:16 +0400
+status: active
+version: 5
+updated_at: '2026-11-13T03:26:58.057112+00:00'
 carrier_destination:
   file:
-    name: CA-R-2705-DECLARATION--declare-atom-header-label.md
+    name: CA-R-2705-CORE_META_MODEL-DECLARATION--declare-atom-header-label.md
     path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2705-CORE_META_MODEL-DECLARATION--declare-atom-header-label.md
   source_atom_id: CA-R-2705
-  source_atom_revision: 4
-  source_sha256: 294518348c7343fad922df0c8738c6d4c9d2319c3ea2265a3045573620582416
+  source_atom_revision: 5
+  source_sha256: aed6a03dfd446177729efaa496d03e1d3e3ce3ed43f42b48a76d9a17aa615624
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
@@ -30,14 +30,16 @@ Declare Atom.Header.Label
 
 ### Formal Claim
 
-```CFEL
-# model
-Atom.Header.Label:: [string]{::0..1};
+```python
+from caprmedio.formal_claims import Cardinality, declare_entity
 
-Atom.Header.Label.*[]{::0};
-
-# instances
-Atom//$atom;
-
-$atom.Header.Label ?== $atom.Header.Form
+declare_entity(
+    entity_name="Label",
+    relation_name="IS_PROPERTY_OF",
+    base_path="Atom.Header.Context",
+    value_format=str,
+    value_cardinality=Cardinality(minimum=0, maximum=1),
+    dependent_property_cardinality=0,
+    fallback_property_name="Form",
+)
 ```

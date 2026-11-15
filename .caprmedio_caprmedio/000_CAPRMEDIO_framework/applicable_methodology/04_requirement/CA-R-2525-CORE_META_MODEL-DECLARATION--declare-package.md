@@ -8,9 +8,9 @@ form: Declaration
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Package
 tier: 3
-status: Active
-version: 3
-updated_at: 2026-11-10 14:38:45 +0400
+status: active
+version: 5
+updated_at: '2026-11-13T22:57:24.985880+00:00'
 carrier_destination:
   file:
     name: CA-R-2525-CORE_META_MODEL-DECLARATION--declare-package.md
@@ -20,8 +20,8 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2525-CORE_META_MODEL-DECLARATION--declare-package.md
   source_atom_id: CA-R-2525
-  source_atom_revision: 3
-  source_sha256: 664ff49739df8d462df960ab0721e06bdd4738dabfecf600d915f7940e12f4ff
+  source_atom_revision: 5
+  source_sha256: 63d51d338fc045f867280895e16ec8597c7cea7aa6603e480faef2fe9d014a7d
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 
@@ -31,21 +31,34 @@ Declare Package
 
 ## Claim
 
+### Prose Claim
+
+Each Package other than a Project Package has exactly one IS_CONTAINED_BY link to a Package.
+
 ### Formal Claim
 
-```CFEL
-# model
-Package >| (Container == yes);
+```python
+from caprmedio.formal_claims import Cardinality, declare_entity
+from caprmedio.model import Continuant
 
-Package ((NARROWER_THAN)) Continuant;
+class Package(Continuant):
+    pass
 
-# instances
-Package//$package_2{::0..1}((IS_CONTAINED_BY)) Package//$package_3;
-
-Package//$package_4{::0+}((CONTAINS)) Package//$package_5;
-
-IF (Package//$package not in (Package/Project Package//$package_6))
-THEN ($package {==1}((IS_CONTAINED_BY)) Package//$package_7);
+declare_entity(
+    entity_name="Package",
+    entity_class=Package,
+    classifications={"Container": "yes"},
+    instance_relation_constraints={
+        "CONTAINS": {
+            "target_entity_paths": ("Package",),
+            "targets_per_source": Cardinality(minimum=0, maximum=None),
+        },
+        "IS_CONTAINED_BY": {
+            "target_entity_paths": ("Package",),
+            "targets_per_source": Cardinality(minimum=0, maximum=1),
+        },
+    },
+)
 ```
 
 ## Semantics

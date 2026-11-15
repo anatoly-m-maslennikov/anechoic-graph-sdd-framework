@@ -10,13 +10,13 @@ topics:
   dependencies:
   - CAPRMEDIO_MODEL <+ Carrier
   - CAPRMEDIO_MODEL <+ Atom.Content
-  - CAPRMEDIO_MODEL <+ Atom.Header.Topics.Main Subject
-  - CAPRMEDIO_MODEL <+ Atom.Header.Role
-  - CAPRMEDIO_MODEL <+ Atom.Header.Status
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics.Main Subject
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Role
+  - CAPRMEDIO_MODEL <+ Atom.Header.State.Status
   - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Selection
   - CAPRMEDIO_MODEL <+ Scope Unit
   - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Atom.Header.Tier
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Tier
 tier: 4
 relations:
   evaluation_for:
@@ -44,7 +44,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-460-CORE_META_MODEL-EVAL_CASE--validate-atom-set-selection-and-the-spec-alias.md
   source_atom_id: CA-E-460
   source_atom_revision: 34
-  source_sha256: 3f483886988dedd548c2074339ee73e5dde03c86ea7ee9eb9b32cc05d7e2533c
+  source_sha256: 98ebd1dafffc6d38cb3d8b3446526a875f69a31f7448e20f09370dbb96629d89
   original_relations_sha256: baa052213884859710efa6fdbde2944dae90c241dec1db15d7502bc3cc23369d
 ---
 ## Summary

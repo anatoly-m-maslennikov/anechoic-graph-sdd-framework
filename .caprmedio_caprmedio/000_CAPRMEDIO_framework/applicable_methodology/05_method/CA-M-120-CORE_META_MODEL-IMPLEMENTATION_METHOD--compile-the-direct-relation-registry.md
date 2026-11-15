@@ -8,10 +8,10 @@ form: Implementation Method
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Projection/(.Form:=Direct Relation Registry)
   dependencies:
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
   - CAPRMEDIO_MODEL <+ Entity
   - CAPRMEDIO_MODEL <+ Projection/(.Form:=Applicable Methodology)
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Requirement)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Requirement)
   - CAPRMEDIO_MODEL <+ Projection
   - CAPRMEDIO_MODEL <+ Package
   - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Traceability"
@@ -35,7 +35,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-120-CORE_META_MODEL-IMPLEMENTATION_METHOD--compile-the-direct-relation-registry.md
   source_atom_id: CA-M-120
   source_atom_revision: 43
-  source_sha256: d06c37738cc1ce1fc387fe4c5eb17282e5ae9222b341d5cd236ad49e59599581
+  source_sha256: 147d836807bc579922add2ada617a29f16cd1bfb247ab0df4fde02617e62f7f7
   original_relations_sha256: 68a2c39318c77d63e9da6b3745d4ed6a600564f503add663a28df99ecce4edd3
 ---
 ## Summary

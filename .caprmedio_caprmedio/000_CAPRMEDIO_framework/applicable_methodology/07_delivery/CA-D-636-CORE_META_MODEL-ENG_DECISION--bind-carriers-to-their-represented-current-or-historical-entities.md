@@ -9,7 +9,7 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Carrier
   dependencies:
   - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//CARRIES
+  - CAPRMEDIO_MODEL <+ Relation//CARRIES
   - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/History
 tier: 1
 relations:
@@ -28,7 +28,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-636-CORE_META_MODEL-ENG_DECISION--bind-carriers-to-their-represented-current-or-historical-entities.md
   source_atom_id: CA-D-636
   source_atom_revision: 16
-  source_sha256: 9a4b62c7cea5af755e8aef7e46d5c5902767120d02b98bcead47ca7edf03796f
+  source_sha256: a0f115a18d72528cae3f8c80a8447189cacbf1e67cbcc774dfacbe1c6d89dcdf
   original_relations_sha256: 2e54810b23dc6829999889d9dce55018a30d8606de806fb64b6f8578b2c66336
 ---
 ## Summary

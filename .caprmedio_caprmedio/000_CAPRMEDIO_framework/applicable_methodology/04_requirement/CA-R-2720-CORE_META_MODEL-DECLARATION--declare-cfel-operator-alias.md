@@ -8,9 +8,9 @@ form: Declaration
 topics:
   main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Operator//Alias
 tier: 3
-status: Active
-version: 3
-updated_at: 2026-11-05 22:47:24 +0400
+status: active
+version: 4
+updated_at: '2026-11-13T07:06:03.828788+00:00'
 carrier_destination:
   file:
     name: CA-R-2720-CORE_META_MODEL-DECLARATION--declare-cfel-operator-alias.md
@@ -20,8 +20,8 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2720-CORE_META_MODEL-DECLARATION--declare-cfel-operator-alias.md
   source_atom_id: CA-R-2720
-  source_atom_revision: 3
-  source_sha256: c4a7d881bc7bfc8c910d0f77f0933eebf1ed154cc39821fcb9499258d8b62339
+  source_atom_revision: 4
+  source_sha256: e39fbd3a36736587aafcc379977b701004b3b55a037d5c400ffb616ad5753343
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
@@ -37,8 +37,8 @@ Declare CFEL operator alias
 This CFEL operator binds notation metadata; an inverse alias name is not a separate Relation entity; it does not construct a literal-to-Node graph Relation or equate different Relation identities. The token follows its written name's directional reading and grants no endpoint permission, cardinality or second authored fact. In a graph expression, `Relation//NAME` references a canonical Relation model name or its declared inverse alias model name, whereas `((NAME))` invokes that Relation between endpoints.
 ### Formal Claim
 
-```CFEL
+```python
 # model
-Operator//Alias == "alias(Relation//RELATION_NAME) == \"notation token\""
+set_value(address='Operator//Alias', value='"alias(Relation//RELATION_NAME) == \\"notation token\\""')
 ```
 

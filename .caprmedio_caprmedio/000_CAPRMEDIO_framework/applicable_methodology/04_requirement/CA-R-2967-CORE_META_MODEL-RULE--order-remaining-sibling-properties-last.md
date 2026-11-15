@@ -8,9 +8,9 @@ form: Rule
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Node.**
 tier: 3
-status: Active
-version: 1
-updated_at: 2026-11-05 22:47:24 +0400
+status: active
+version: 2
+updated_at: '2026-11-13T20:15:15Z'
 carrier_destination:
   file:
     name: CA-R-2967-CORE_META_MODEL-RULE--order-remaining-sibling-properties-last.md
@@ -18,8 +18,8 @@ carrier_destination:
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2967-CORE_META_MODEL-RULE--order-remaining-sibling-properties-last.md
   source_atom_id: CA-R-2967
-  source_atom_revision: 1
-  source_sha256: 05774b99e5fca1a1546f87f1236678d935944cc2f4d104936256d873cf4d2365
+  source_atom_revision: 2
+  source_sha256: 8413877e869362b90707dd42260eb65318af05edadeb149fb9a4a42b32298305
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
@@ -30,4 +30,4 @@ Order remaining sibling Properties last
 
 ### Prose Claim
 
-Sibling Properties that do not participate in an IS_ORDERED_RIGHT_AFTER Relation follow the participating sibling Properties; their mutual order is unspecified. A Property participates when it is either endpoint of the Relation.
+On a bearer instance, present Properties in the declared sibling chain come first, even when only one member of the chain is present. All other present sibling Properties follow in any order.

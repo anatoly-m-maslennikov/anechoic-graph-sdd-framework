@@ -6,20 +6,19 @@ container:
 role: Method
 form: Implementation Method
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan)
+  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)
   - CAPRMEDIO_MODEL <+ Atom.Content
   - CAPRMEDIO_MODEL <+ Atom.Content.Summary
-  - CAPRMEDIO_MODEL <+ Atom.Header.Topics.Main Subject
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_BLOCKED_BY
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_CONTAINED_BY
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics.Main Subject
+  - CAPRMEDIO_MODEL <+ Relation//IS_BLOCKED_BY
+  - CAPRMEDIO_MODEL <+ Relation//IS_CONTAINED_BY
   - CAPRMEDIO_MODEL <+ Scope Unit
   - CAPRMEDIO_MODEL <+ Carrier/File
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role:=Plan).Header.Context.Topics.Main
+    Subject
 tier: 2
-relations:
-  depends_on:
-  - CA-R-1588
 status: Active
 version: 36
 updated_at: 2026-11-08 19:06:46 +0400
@@ -31,8 +30,8 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-306-CORE_META_MODEL--author-plan-atoms.md
   source_atom_id: CA-M-306
   source_atom_revision: 36
-  source_sha256: 1431ecc587245b80db006d96bb60a90e727e25f4e14e49269f911d6c4ffdb767
-  original_relations_sha256: 21b8448a6646f8fd0798650a427c7b91afc15bdc426943dd06bceecabbe3b997
+  source_sha256: 661de41830d8c1098aebb0b531c5e8a1a03d9263d8685a79310517f2dbd659d1
+  original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 
 ## Summary

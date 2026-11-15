@@ -6,11 +6,11 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role: Plan).Implementation Retry Limit'
+  main_subject: 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role: Plan).Implementation Retry Limit'
   dependencies:
   - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework Settings.Implementation Retry Limit
   - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Actor/Operator
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role: Plan)/(.Header.Form: Plan)'
+  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role: Plan)/(.Header.Context.Form: Plan)'
   - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework Settings
   - CAPRMEDIO_MODEL <+ Term//Property
 tier: 4
@@ -30,7 +30,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1489-CORE_META_MODEL-RULE--permit-implementation-retry-limit-defaults-and-overrides.md
   source_atom_id: CA-R-1489
   source_atom_revision: 25
-  source_sha256: a1a7f0bd223749680fda44fc9b6b0556a7bd4899be89315e848f1f1e0108e7f8
+  source_sha256: da32963366ef253c26209e93ba4b13b11543954f98a99e63e7551ac7562e8688
   original_relations_sha256: fb00d26782cf16ed70925bcf37271a24fb7ade9de38397c303a37b222a73f23d
 ---
 ## Summary

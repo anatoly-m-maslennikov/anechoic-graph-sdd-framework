@@ -6,11 +6,11 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//CONTRIBUTES_TO
+  main_subject: CAPRMEDIO_MODEL <+ Relation//CONTRIBUTES_TO
 tier: 3
-status: Active
-version: 2
-updated_at: "2026-11-07 15:18:44 +0400"
+status: active
+version: 3
+updated_at: '2026-11-12T12:33:04.158402+00:00'
 carrier_destination:
   file:
     name: CA-R-3001-CORE_META_MODEL-DECLARATION--declare-contributes-to.md
@@ -18,8 +18,8 @@ carrier_destination:
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-3001-CORE_META_MODEL-DECLARATION--declare-contributes-to.md
   source_atom_id: CA-R-3001
-  source_atom_revision: 2
-  source_sha256: 18dbedf5e95c869efb4426564654762fe1aa0daaef5421399d96c24d288421f9
+  source_atom_revision: 3
+  source_sha256: 2e82a38b5d021c4f248d96be6a52fef6e3b7bdc5859532c92e7624cccc5ffa44
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 
@@ -31,12 +31,14 @@ Declare CONTRIBUTES_TO
 
 ### Formal Claim
 
-```CFEL
-# model
-Relation//CONTRIBUTES_TO ((HAS_CLASSIFICATION)) Derivation == Direct;
+```python
+from caprmedio.formal_claims import declare_relation
 
-# instances
-Atom//$contributor ((CONTRIBUTES_TO)) Atom//$contribution
+declare_relation(
+    relation_name='CONTRIBUTES_TO',
+    source_endpoint={'level': 'instances', 'entity_paths': ('Atom',)},
+    target_endpoint={'level': 'instances', 'entity_paths': ('Atom',)},
+)
 ```
 
 ## Semantics

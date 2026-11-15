@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Version
+  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.State.Version
   dependencies:
   - CAPRMEDIO_MODEL <+ Atom
 tier: 2
@@ -23,7 +23,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1415-CORE_META_MODEL-RULE--give-every-atom-revision-one-version.md
   source_atom_id: CA-R-1415
   source_atom_revision: 28
-  source_sha256: 40f80df75666ba8e3163cb7be857deba9365a1a8cbf4d42e9dbf7cf6835215d4
+  source_sha256: 3e56e691cf78b72b692608690f30a0737086cfde9bdf49b45b25c893a9ea25ac
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

@@ -8,9 +8,9 @@ form: Rule
 topics:
   main_subject: CAPRMEDIO_STRUCTURE <+ Named Selection//Extension Sources
 tier: 1
-status: Active
-version: 4
-updated_at: 2026-11-02 08:06:47 +0400
+status: active
+version: 5
+updated_at: '2026-11-13T05:19:34.086915+00:00'
 carrier_destination:
   file:
     name: CA-R-2277-PROJECT_CONFIGURATION-RULE--define-extension-sources-selection.md
@@ -19,8 +19,8 @@ current_scope_unit: PROJECT_CONFIGURATION
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement/CA-R-2277-PROJECT_CONFIGURATION-RULE--define-extension-sources-selection.md
   source_atom_id: CA-R-2277
-  source_atom_revision: 4
-  source_sha256: b2d4fe295a12a49b428c8d95603d769ffd5790273c801ba60da68c9562e5b4ba
+  source_atom_revision: 5
+  source_sha256: 9e64bde2e4039afe3fcbe13acd6b34c0c9d3fb5b987aced71bc76462e78e338d
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
@@ -37,9 +37,9 @@ Extension Sources is the named Selection of immutable installed Extension source
 
 ### Formal Claim
 
-```CFEL
+```python
 # model
-Named Selection//Extension Sources
+subject_path(address="Named Selection//Extension Sources")
 ```
 
 ## Details

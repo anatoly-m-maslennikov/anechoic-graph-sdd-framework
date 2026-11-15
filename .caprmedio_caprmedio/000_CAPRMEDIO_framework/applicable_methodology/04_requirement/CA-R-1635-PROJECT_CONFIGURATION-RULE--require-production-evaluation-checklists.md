@@ -6,13 +6,11 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Verification"
+  main_subject: CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Verification
+  dependencies:
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role:=Evaluation)
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Verification <+ Coverage
 tier: 2
-relations:
-  depends_on:
-  - CA-R-1503
-  - CA-R-1504
-  - CA-R-1505
 status: Active
 version: 42
 updated_at: 2026-11-02 19:44:26 +0400
@@ -26,8 +24,8 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement/CA-R-1635-PROJECT_CONFIGURATION-RULE--require-production-evaluation-checklists.md
   source_atom_id: CA-R-1635
   source_atom_revision: 42
-  source_sha256: c7b01121cd563bf88602973dc6d1c5f3bc7597da08329b342e7cacf765af9977
-  original_relations_sha256: 6c50a8bd5dcb74eec5e6c55456dfc8dbae9842ad53ff8b9e24e70a74798e8908
+  source_sha256: 2ab59b3afc40aad4e6d411b8ed5bb4af1b841bd57ff3fb437383cc53db0f689e
+  original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
 

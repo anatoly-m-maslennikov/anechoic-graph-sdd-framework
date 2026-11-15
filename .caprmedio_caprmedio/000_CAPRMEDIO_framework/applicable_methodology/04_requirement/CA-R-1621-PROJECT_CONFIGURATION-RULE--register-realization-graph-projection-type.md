@@ -12,12 +12,9 @@ topics:
   - CAPRMEDIO_STRUCTURE <+ Scope Unit//PROJECT_CONFIGURATION
   - CAPRMEDIO_MODEL <+ Projection
   - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Selection
+  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework
+    Settings
 tier: 3
-relations:
-  depends_on:
-  - CA-R-1568
-  - CA-R-1631
-  - CA-R-2535
 status: Active
 version: 19
 updated_at: 2026-11-02 08:06:47 +0400
@@ -31,8 +28,8 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement/CA-R-1621-PROJECT_CONFIGURATION-RULE--register-realization-graph-projection-type.md
   source_atom_id: CA-R-1621
   source_atom_revision: 19
-  source_sha256: 722e6cf382b9b55a8041eea0eb70690e14b4467760459acc754917be650f8e85
-  original_relations_sha256: ca4f19a04ef603d0119ba0e2515933c7f693ac2b776d27f253b80e34776cb913
+  source_sha256: 776826eab587bfe6fcf63611aa8a4eff8c54de8af4bdbfc1dc94d9d259b89394
+  original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
 

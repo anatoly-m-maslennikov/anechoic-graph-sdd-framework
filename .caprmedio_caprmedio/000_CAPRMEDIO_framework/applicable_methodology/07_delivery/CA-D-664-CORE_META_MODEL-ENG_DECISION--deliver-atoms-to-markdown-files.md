@@ -8,9 +8,9 @@ form: Eng Decision
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Atom
 tier: 3
-status: Active
-version: 8
-updated_at: 2026-11-09 00:03:55 +0400
+status: active
+version: 9
+updated_at: '2026-11-13T05:43:12.969816+00:00'
 carrier_destination:
   file:
     name: CA-D-664-CORE_META_MODEL-ENG_DECISION--deliver-atoms-to-markdown-files.md
@@ -20,8 +20,8 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-664-CORE_META_MODEL-ENG_DECISION--deliver-atoms-to-markdown-files.md
   source_atom_id: CA-D-664
-  source_atom_revision: 8
-  source_sha256: 0fa7400feb2fcad6ff5dea9c3dd8d2c994c458b3306366e9ec556de2ab5ba31c
+  source_atom_revision: 9
+  source_sha256: 2ecd3b2c62d951779ef2bd9be4c53c7960d2675352fe5aed604695413724e124
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
@@ -32,7 +32,7 @@ Deliver Atoms to Markdown files
 
 ### Prose Claim
 
-The selected Carrier is the Markdown file delivering the selected Atom. Its filename includes the extension, and its location is the containing directory relative to the repository root.
+The selected Carrier is the Markdown file delivering the selected Atom. Its filename includes the extension and equals the Atom Header Destination File Name. Its location equals the Atom Header Destination File Path and is the containing directory relative to the repository root.
 
 Deliver the complete Header recursively as YAML frontmatter, preserving its declared nesting. Deliver declared Content Properties as Markdown sections.
 
@@ -40,17 +40,9 @@ For YAML, encode names and named values in lowercase words joined by single unde
 
 ### Formal Claim
 
-```CFEL
+```python
 # instances
-Atom//$atom >> Carrier//$carrier;
-
-$atom.Header >> $carrier.frontmatter;
-
-$atom.Content >> $carrier.markdown;
-
-$carrier.filename == $atom.Header.Carrier Destination.File.Name;
-
-$carrier.location == $atom.Header.Carrier Destination.File.Path
+deliver(source="Atom//$atom", carrier="Carrier//$carrier")
 ```
 
 ## Details

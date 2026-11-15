@@ -6,13 +6,14 @@ container:
 role: Delivery
 form: Eng Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Requirement)/(.Header.Form := Declaration)
+  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Requirement)/(.Header.Context.Form
+    := Declaration)
   dependencies:
   - CAPRMEDIO_MODEL <+ Atom
 tier: 3
-status: Active
-version: 6
-updated_at: 2026-11-09 00:03:55 +0400
+status: active
+version: 7
+updated_at: '2026-11-13T05:43:10.850606+00:00'
 carrier_destination:
   file:
     name: CA-D-662-CORE_META_MODEL-ENG_DECISION--encode-node-declarations-in-yaml.md
@@ -22,8 +23,8 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-662-CORE_META_MODEL-ENG_DECISION--encode-node-declarations-in-yaml.md
   source_atom_id: CA-D-662
-  source_atom_revision: 6
-  source_sha256: 85e3f15f04c1d3b148fd3bc93aa99f23ea21e117f4ca153739596b6f8404347c
+  source_atom_revision: 7
+  source_sha256: d7e506843ab249e895290e3075e7ece770c4972161c9f7e574fcb7ddfd436a4c
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
@@ -34,17 +35,18 @@ Encode Node Declarations in YAML
 
 ### Prose Claim
 
-Deliver a Node Declaration’s Header through the common recursive Atom-to-YAML mapping. Preserve its declared Property hierarchy and value cardinalities. Header names and named values use the common lowercase-and-underscore encoding.
+Deliver the selected Node Declaration as a whole to the selected Carrier. Deliver its Header to the Carrier frontmatter through the common recursive Atom-to-YAML mapping. Preserve its declared Property hierarchy and value cardinalities. Header names and named values use the common lowercase-and-underscore encoding.
 
 The declared Main Subject identifies the canonical HAS_ACTIVE_SUBJECT target. Direct Relation facts have one authored source; their encoded names retain that Relation’s meaning. Container references retain the declared target kind and exact target ID.
 
 ### Formal Claim
 
-```CFEL
+```python
 # instances
-$declaration[<Atom>, (.Header.Role = Requirement) AND (.Header.Form = Declaration)] >> $carrier[<Carrier>];
-
-$declaration.Header >> $carrier.frontmatter
+deliver(
+    source="$declaration[<Atom>, (.Header.Context.Role = Requirement) AND (.Header.Context.Form = Declaration)]",
+    carrier="$carrier[<Carrier>]",
+)
 ```
 
 ## Details

@@ -13,9 +13,9 @@ topics:
   - CAPRMEDIO_MODEL <+ Journal
   - CAPRMEDIO_MODEL <+ Event Record
   - CAPRMEDIO_MODEL <+ Projection
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role: Operations)/(.Header.Form: Workflow)'
+  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role: Operations)/(.Header.Context.Form: Workflow)'
   - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ Atom.Header.Role
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Role
   - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Actor/Operator
 tier: 4
 relations:
@@ -40,7 +40,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-522-CORE_META_MODEL-EVAL_CASE--storage-boundary-classification-interpretability.md
   source_atom_id: CA-E-522
   source_atom_revision: 19
-  source_sha256: f658c89b347732f586eeadb0b0fdc03bb87d8a7370d41009cf1c960ffbde50cd
+  source_sha256: e68c0a2f62bc3700f082d9a0b6742d3b4365cfa10ceb9ee081bee78480b2cdb6
   original_relations_sha256: 52070712db2bf0eb2d3df60c08582a01b89afa40850ef6755aff70799e6d9cee
 ---
 ## Summary

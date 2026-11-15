@@ -11,7 +11,7 @@ topics:
   - CAPRMEDIO_MODEL <+ Carrier
   - CAPRMEDIO_MODEL <+ Journal
   - CAPRMEDIO_MODEL <+ Event Record
-  - CAPRMEDIO_MODEL <+ Atom.Header.ID
+  - CAPRMEDIO_MODEL <+ Atom.Header.Identity.ID
 tier: 4
 relations:
   evaluation_for:
@@ -30,7 +30,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation/CA-E-465-PROJECT_CONFIGURATION-EVAL_CASE--validate-replacement-event-schema-encoding.md
   source_atom_id: CA-E-465
   source_atom_revision: 27
-  source_sha256: 5542b25a944f4b1d10e06b4a38eeb6d4d0631ad0baae5f34e59ad0ad8d9bc989
+  source_sha256: c0b6d707e26072b33906a9d7fffedd5194f49a87b35b48c94fb5938731005c96
   original_relations_sha256: ab954123eb0e5c59cf4240bd5fc1eff515c3df6541497c0bfdef1e8385c68df3
 ---
 ## Summary

@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Concern).Header.Status'
+  main_subject: 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Concern).Header.State.Status'
 tier: 1
 status: Active
 version: 30
@@ -21,7 +21,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1726-CORE_META_MODEL--concerns-have-active-and-solved-states.md
   source_atom_id: CA-R-1726
   source_atom_revision: 30
-  source_sha256: 17901616db1dc580706d3f9d50057b3ae724b53604356290acd2f2ec3041df53
+  source_sha256: abafc43811429aef9f07ecb3a4cd5412877eb0ad6d29ffe7e3ec8e7cb6bffcbe
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

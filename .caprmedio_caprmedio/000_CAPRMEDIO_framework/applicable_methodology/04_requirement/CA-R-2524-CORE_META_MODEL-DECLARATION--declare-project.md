@@ -6,9 +6,9 @@ form: Declaration
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Project
 tier: 3
-status: Active
-version: 6
-updated_at: "2026-11-07 15:18:44 +0400"
+status: active
+version: 7
+updated_at: '2026-11-12T12:33:04.158402+00:00'
 container:
   scope_unit: CA-SU-11
 carrier_destination:
@@ -18,8 +18,8 @@ carrier_destination:
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2524-CORE_META_MODEL-DECLARATION--declare-project.md
   source_atom_id: CA-R-2524
-  source_atom_revision: 6
-  source_sha256: c5eb25e47632181090ffab8395523cbe498366ae59185a1efa1496db147de976
+  source_atom_revision: 7
+  source_sha256: 28b40fa0c2535addf78b7740065ca3718bdb809bc7299a4b7491d5cc6f33a214
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 
@@ -35,22 +35,23 @@ A Project uses CAPRMEDIO's MODEL.
 
 ### Formal Claim
 
-```CFEL
-# model
-Scope Unit/Project;
+```python
+from caprmedio.formal_claims import declare_entity
+from caprmedio.model import ScopeUnit
 
-Project >| (Container == yes);
+class Project(ScopeUnit):
+    pass
 
-Project ((NARROWER_THAN)) Scope Unit;
-
-# instances
-Scope Unit/Project//$scope_unit{::1};
-
-Project//$project {::0}((IS_CONTAINED_BY)) Scope Unit//$scope_unit_2;
-
-Project//$project_2.order.ordered == false;
-
-Project//$project_3.order.number:: []{::0}
+declare_entity(
+    entity_class=Project,
+    entity_name='Project',
+    classifications={'Container': 'yes'},
+    instance_population_cardinality=1,
+    instance_population_scope='project',
+    instance_relation_constraints={'IS_CONTAINED_BY': {'target_entity_paths': ('Scope Unit',), 'targets_per_source': 0}},
+    required_instance_property_values={'order.ordered': False},
+    instance_property_constraints={'order.number': {'value_cardinality': 0}},
+)
 ```
 
 ## Semantics

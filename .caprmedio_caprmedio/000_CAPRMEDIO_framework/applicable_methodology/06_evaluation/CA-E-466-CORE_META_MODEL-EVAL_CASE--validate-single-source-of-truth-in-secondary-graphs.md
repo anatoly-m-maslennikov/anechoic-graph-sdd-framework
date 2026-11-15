@@ -13,7 +13,7 @@ topics:
   - CAPRMEDIO_MODEL <+ Atom.Content
   - CAPRMEDIO_MODEL <+ Entity
   - CAPRMEDIO_MODEL <+ Journal
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
 tier: 3
 relations:
   evaluation_for:
@@ -34,7 +34,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-466-CORE_META_MODEL-EVAL_CASE--validate-single-source-of-truth-in-secondary-graphs.md
   source_atom_id: CA-E-466
   source_atom_revision: 28
-  source_sha256: 49d7d6f33ef0bbdaa3651dc7486d7c2b732933da8d7b1dafdcb2de90491d4bc4
+  source_sha256: 4b8a6ecac8e297b214d7ea6b1e45ed6ae43ab8a8c6805659ddd8dd9e5e8f79f1
   original_relations_sha256: 8db81e4f3cb2102db425222e58f0524bd60d360c9981ec917f8eb310b4cbb0d1
 ---
 ## Summary

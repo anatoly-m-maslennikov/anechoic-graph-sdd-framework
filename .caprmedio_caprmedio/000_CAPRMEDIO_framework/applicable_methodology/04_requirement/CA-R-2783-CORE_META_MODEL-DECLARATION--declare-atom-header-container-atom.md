@@ -6,11 +6,11 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Container.atom
+  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Context.Container.atom
 tier: 3
-status: Active
-version: 1
-updated_at: 2026-11-05 22:47:24 +0400
+status: active
+version: 2
+updated_at: '2026-11-12T12:33:04.158402+00:00'
 carrier_destination:
   file:
     name: CA-R-2783-CORE_META_MODEL-DECLARATION--declare-atom-header-container-atom.md
@@ -18,8 +18,8 @@ carrier_destination:
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2783-CORE_META_MODEL-DECLARATION--declare-atom-header-container-atom.md
   source_atom_id: CA-R-2783
-  source_atom_revision: 1
-  source_sha256: da492cb9e8255d9199b1967d483dff7936ad6546cdba4304a67ba2177dbae55c
+  source_atom_revision: 2
+  source_sha256: 3a73fa745e7698bad98a501ab431d8930f2c0b4fa1e918688966ef8fe444e404
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 
@@ -31,9 +31,15 @@ Declare Atom.Header.Container.atom
 
 ### Formal Claim
 
-```CFEL
-# model
-Atom.Header.Container.atom :: [atom id]{::0..1};
+```python
+from caprmedio.formal_claims import Cardinality, declare_entity
 
-Atom.Header.Container.atom.*[]{::0}
+declare_entity(
+    entity_name='atom',
+    relation_name='IS_PROPERTY_OF',
+    base_path='Atom.Header.Context.Container',
+    value_format='atom_id',
+    value_cardinality=Cardinality(minimum=0, maximum=1),
+    dependent_property_cardinality=0,
+)
 ```

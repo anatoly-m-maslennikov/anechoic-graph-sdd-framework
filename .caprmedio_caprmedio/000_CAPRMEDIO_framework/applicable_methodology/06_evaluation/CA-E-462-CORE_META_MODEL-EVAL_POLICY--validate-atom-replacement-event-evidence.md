@@ -8,10 +8,10 @@ form: Eval Policy
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Event Record
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom.Header.ID
-  - CAPRMEDIO_MODEL <+ Atom.Header.Version
+  - CAPRMEDIO_MODEL <+ Atom.Header.Identity.ID
+  - CAPRMEDIO_MODEL <+ Atom.Header.State.Version
   - CAPRMEDIO_MODEL <+ Carrier
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Operations)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)
   - CAPRMEDIO_MODEL <+ Journal
   - CAPRMEDIO_MODEL <+ Atom
   - CAPRMEDIO_MODEL <+ Project
@@ -34,7 +34,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-462-CORE_META_MODEL-EVAL_POLICY--validate-atom-replacement-event-evidence.md
   source_atom_id: CA-E-462
   source_atom_revision: 33
-  source_sha256: 49633502bec45d34bfbbb31b520f9cf7b5208499aa8b748e2686506f4f1b3093
+  source_sha256: dd9c7fd1d48b9bf684d65a419e4971d65e06f92be8f8d0104a3c716f25758d5c
   original_relations_sha256: 80acf3d6005192a1209f2dc66b2cd8a4c44c2f3761556ba982dc7cd5b06bcdb6
 ---
 ## Summary

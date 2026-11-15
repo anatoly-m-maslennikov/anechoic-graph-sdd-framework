@@ -6,10 +6,10 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Operations)/Step
+  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/Step
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Operations)/Action
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Operations)/Workflow
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/Action
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/Workflow
 tier: 3
 status: Active
 version: 2
@@ -24,7 +24,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2639-CORE_META_MODEL-RULE--bind-step-parameters.md
   source_atom_id: CA-R-2639
   source_atom_revision: 2
-  source_sha256: 1d299d2224b62cbde76469acf08f95f028c20a20e3a5d6ecf28898d975735a2c
+  source_sha256: 96b46f55bb40e762d371e2f208e67a6631b9964015092893735080e5df172abf
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 

@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  main_subject: CAPRMEDIO_MODEL <+ Relation
 tier: 2
 relations:
   child_of:
@@ -24,7 +24,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1676-CORE_META_MODEL-RULE--keep-rmed-to-rmed-relations-within-active-authority.md
   source_atom_id: CA-R-1676
   source_atom_revision: 37
-  source_sha256: 7bec5e057f0b1355f3ec2036df5feefd9196b23891aa116b8239e308e9eb3ab0
+  source_sha256: cb905e113997350b6bd243058b266c2c9e51e06e218acb4b7f7a4deba3d23dfc
   original_relations_sha256: 4aec487970dae497ef90692442a5237150733f515bd4fde692fea433bcb457c1
 ---
 ## Summary

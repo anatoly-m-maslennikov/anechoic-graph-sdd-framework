@@ -6,18 +6,18 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//evaluation_for
+  main_subject: CAPRMEDIO_MODEL <+ Relation//evaluation_for
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Evaluation)
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Requirement)
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Method)
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Delivery)
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Operations)
-  - CAPRMEDIO_MODEL <+ Atom.Header.Tier
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Requirement)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Method)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Delivery)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Tier
 tier: 1
-status: Active
-version: 38
-updated_at: 2026-11-03 20:00:05 +0400
+status: active
+version: 39
+updated_at: '2026-11-12T12:33:04.158402+00:00'
 carrier_destination:
   file:
     name: CA-R-1018-CORE_META_MODEL-DECLARATION--register-evaluation-targets.md
@@ -27,8 +27,8 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1018-CORE_META_MODEL-DECLARATION--register-evaluation-targets.md
   source_atom_id: CA-R-1018
-  source_atom_revision: 38
-  source_sha256: ea9b5776ba2b1e013fefea5bd8fc5847b0674133bbb3427d7cc014e3f1d91a8f
+  source_atom_revision: 39
+  source_sha256: 349db1d54cbe88654c5310e072eb70d2514c5d0aef72a90d46587ba16dfcf83b
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
@@ -49,11 +49,13 @@ Forward `Host ((evaluation_for)) Target` and reverse `Target <((evaluation_for))
 evaluation_for relates Evaluation Atom to Atom whose authority is evaluated.
 ### Formal Claim
 
-```CFEL
-# model
-Relation//evaluation_for ((HAS_CLASSIFICATION)) Derivation == Direct;
+```python
+from caprmedio.formal_claims import declare_relation
 
-# instances
-Atom/(.Header.Role: Evaluation)//$atom ((evaluation_for)) Atom//$atom_2
+declare_relation(
+    relation_name='evaluation_for',
+    source_endpoint={'level': 'instances', 'entity_paths': ('Atom/(.Header.Context.Role := Evaluation)',)},
+    target_endpoint={'level': 'instances', 'entity_paths': ('Atom',)},
+)
 ```
 

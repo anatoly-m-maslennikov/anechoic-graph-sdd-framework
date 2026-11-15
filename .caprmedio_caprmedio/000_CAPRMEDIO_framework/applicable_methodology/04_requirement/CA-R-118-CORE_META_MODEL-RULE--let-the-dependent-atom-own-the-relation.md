@@ -6,16 +6,16 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  main_subject: CAPRMEDIO_MODEL <+ Relation
   dependencies:
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
 tier: 1
 relations:
   child_of:
-  - CA-R-1407
+  - CA-M-540
 status: Active
-version: 35
-updated_at: 2026-11-02 08:06:47 +0400
+version: 36
+updated_at: "2026-11-11 18:13:56 +0400"
 carrier_destination:
   file:
     name: CA-R-118-CORE_META_MODEL-RULE--let-the-dependent-atom-own-the-relation.md
@@ -25,9 +25,9 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-118-CORE_META_MODEL-RULE--let-the-dependent-atom-own-the-relation.md
   source_atom_id: CA-R-118
-  source_atom_revision: 35
-  source_sha256: 08cf85437b2d427af749fc4b62ff46165ac29dae2a8878630edd83857827a004
-  original_relations_sha256: 7d2757e38d080b77e3c772e862b88cd2cd05380adebd78760eb0686a937c9c20
+  source_atom_revision: 36
+  source_sha256: fc6aa5f2feb27f01d62c98b747ab4fa367705b069a42637596f064c36908f3e9
+  original_relations_sha256: e7e8c430ecdabe896ae5a52210effd0c1cf4563a147e957c4618b4bafbc2d791
 ---
 ## Summary
 

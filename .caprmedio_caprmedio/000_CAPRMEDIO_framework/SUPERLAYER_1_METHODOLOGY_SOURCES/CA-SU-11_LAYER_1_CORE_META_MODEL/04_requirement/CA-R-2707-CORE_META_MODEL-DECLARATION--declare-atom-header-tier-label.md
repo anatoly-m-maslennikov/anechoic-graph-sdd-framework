@@ -6,11 +6,11 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Tier.Label
+  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Context.Tier.Label
 tier: 3
-status: Active
-version: 4
-updated_at: "2026-11-07 15:18:44 +0400"
+status: active
+version: 5
+updated_at: '2026-11-13T22:53:30.315950+00:00'
 carrier_destination:
   file:
     name: CA-R-2707-CORE_META_MODEL-DECLARATION--declare-atom-header-tier-label.md
@@ -18,35 +18,26 @@ carrier_destination:
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---
-
 ## Summary
 
 Declare Atom.Header.Tier.Label
 
 ## Claim
 
+### Prose Claim
+
+When a Tier Label is present, Tier 1 requires Core, Tier 2 requires General, Tier 3 requires Standard, and Tier 4 requires Detail.
+
 ### Formal Claim
 
-```CFEL
-# model
-Atom.Header.Tier.Label:: [string]{::0..1};
+```python
+from caprmedio.formal_claims import Cardinality, declare_entity
 
-Atom.Header.Tier.Label.*[]{::0};
-
-# instances
-Atom//$atom_2;
-
-IF (($atom_2.Header.Tier.Label{=1}) AND ($atom_2.Header.Tier = 1)) THEN ($atom_2.Header.Tier.Label == Core);
-
-Atom//$atom_3;
-
-IF (($atom_3.Header.Tier.Label{=1}) AND ($atom_3.Header.Tier = 2)) THEN ($atom_3.Header.Tier.Label == General);
-
-Atom//$atom_4;
-
-IF (($atom_4.Header.Tier.Label{=1}) AND ($atom_4.Header.Tier = 3)) THEN ($atom_4.Header.Tier.Label == Standard);
-
-Atom//$atom_5;
-
-IF (($atom_5.Header.Tier.Label{=1}) AND ($atom_5.Header.Tier = 4)) THEN ($atom_5.Header.Tier.Label == Detail)
+declare_entity(
+    entity_name='Label',
+    relation_name="IS_PROPERTY_OF",
+    base_path='Atom.Header.Context.Tier',
+    value_format=str, value_cardinality=Cardinality(minimum=0, maximum=1), dependent_property_cardinality=0,
+)
 ```
+

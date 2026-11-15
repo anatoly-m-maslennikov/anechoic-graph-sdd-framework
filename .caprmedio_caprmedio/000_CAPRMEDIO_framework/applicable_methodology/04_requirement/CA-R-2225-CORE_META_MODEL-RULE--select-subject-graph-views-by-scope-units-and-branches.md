@@ -12,9 +12,6 @@ topics:
   - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Selection
   - CAPRMEDIO_MODEL <+ Entity
 tier: 2
-relations:
-  depends_on:
-  - CA-R-2150@15
 status: Active
 version: 4
 updated_at: 2026-11-02 00:18:22 +0400
@@ -28,8 +25,8 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2225-CORE_META_MODEL-RULE--select-subject-graph-views-by-scope-units-and-branches.md
   source_atom_id: CA-R-2225
   source_atom_revision: 4
-  source_sha256: e50c68fa635e87bcaa0ac9af7a6a181a496281f47a8a261a66924b232afde416
-  original_relations_sha256: e5ed80c802b42a75a70b2cec6a262ed7c2e007d5530dfdb1f2db24403c6b3cb2
+  source_sha256: 06b9ade22746a86da4190a023b98c426edeff02d4b77511338995be2e94865e8
+  original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
 

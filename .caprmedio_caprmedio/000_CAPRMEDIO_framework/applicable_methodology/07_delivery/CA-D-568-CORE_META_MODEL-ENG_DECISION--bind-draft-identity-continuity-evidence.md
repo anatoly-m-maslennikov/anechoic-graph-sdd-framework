@@ -6,17 +6,13 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.ID
+  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Identity.ID
   dependencies:
-  - 'CAPRMEDIO_MODEL <+ Atom.Header.Status: Draft'
-  - CAPRMEDIO_MODEL <+ Atom.Header.Version
+  - 'CAPRMEDIO_MODEL <+ Atom.Header.State.Status: Draft'
+  - CAPRMEDIO_MODEL <+ Atom.Header.State.Version
   - CAPRMEDIO_MODEL <+ Atom
+  - CAPRMEDIO_MODEL <+ Carrier/File
 tier: 4
-relations:
-  depends_on:
-  - CA-D-650
-  - CA-D-378
-  - CA-D-446
 status: active
 version: 21
 updated_at: 2026-11-09 00:57:07 +0400
@@ -30,8 +26,8 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-568-CORE_META_MODEL-ENG_DECISION--bind-draft-identity-continuity-evidence.md
   source_atom_id: CA-D-568
   source_atom_revision: 21
-  source_sha256: db6f685acbfef4d93bba9d31240ac004e61bc7c173f2500b5bc2e035d0a59800
-  original_relations_sha256: 6aef9f445368f29b2bb5f4a7f1db2761c20ac826e6a1e8020f727585712627d4
+  source_sha256: 7e3e981800f7bee1b4c2fea3189bc7d35364c74eb183143da1b243fbefac260d
+  original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
 

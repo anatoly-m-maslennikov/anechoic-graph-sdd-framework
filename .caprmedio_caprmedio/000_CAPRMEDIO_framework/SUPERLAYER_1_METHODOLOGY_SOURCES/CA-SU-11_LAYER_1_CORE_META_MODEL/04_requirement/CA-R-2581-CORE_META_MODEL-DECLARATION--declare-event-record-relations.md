@@ -8,9 +8,9 @@ form: Declaration
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Event Record.Relations
 tier: 3
-status: Active
-version: 2
-updated_at: 2026-11-02 00:18:22 +0400
+status: active
+version: 4
+updated_at: '2026-11-13T22:57:24.985880+00:00'
 carrier_destination:
   file:
     name: CA-R-2581-CORE_META_MODEL-DECLARATION--declare-event-record-relations.md
@@ -24,13 +24,19 @@ Declare Event Record.Relations
 
 ## Claim
 
+### Prose Claim
+
+Each immediate dependent Property name is a Relation instance (Relation//$relation).
+
 ### Formal Claim
 
-```CFEL
-# model
-Event Record.Relations{::1}:: []{::0};
+```python
+from caprmedio.formal_claims import Cardinality, declare_entity
 
-# instances
-Event Record.Relations.*[Relation//$relation]{::0+}
+declare_entity(
+    entity_name='Relations',
+    relation_name="IS_PROPERTY_OF",
+    base_path='Event Record',
+    property_occurrence_cardinality=1, value_cardinality=0, dependent_property_cardinality=Cardinality(minimum=0, maximum=None),
+)
 ```
-

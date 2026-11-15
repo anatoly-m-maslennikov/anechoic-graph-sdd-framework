@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan)
+  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)
 tier: 1
 status: Active
 version: 28
@@ -21,7 +21,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1714-CORE_META_MODEL-RULE--distinguish-operative-plans-from-plan-artifacts.md
   source_atom_id: CA-R-1714
   source_atom_revision: 28
-  source_sha256: 342c203f3494c494452e5a88e928b00b336b40a8813450ee83c1d1883e0592f6
+  source_sha256: c83554f8475335b04673bf393e3a43bddcc1996514c8c1d62f63264b55cdf677
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

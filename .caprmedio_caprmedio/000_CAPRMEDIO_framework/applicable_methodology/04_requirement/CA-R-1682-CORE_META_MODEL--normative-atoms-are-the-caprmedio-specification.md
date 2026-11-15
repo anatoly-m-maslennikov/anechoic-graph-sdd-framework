@@ -9,17 +9,17 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Atom.Content.Claim
   dependencies:
   - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Selection
-  - CAPRMEDIO_MODEL <+ Atom.Header.Role
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Role
   - CAPRMEDIO_MODEL <+ Entity
   - CAPRMEDIO_MODEL <+ Package/Project Package
   - CAPRMEDIO_MODEL <+ Event Record
 tier: 1
 relations:
   child_of:
-  - CA-M-447
+  - CA-M-541
 status: Active
-version: 42
-updated_at: 2026-11-10 14:38:45 +0400
+version: 43
+updated_at: "2026-11-11 18:46:16 +0400"
 carrier_destination:
   file:
     name: CA-R-1682-CORE_META_MODEL--normative-atoms-are-the-caprmedio-specification.md
@@ -29,9 +29,9 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1682-CORE_META_MODEL--normative-atoms-are-the-caprmedio-specification.md
   source_atom_id: CA-R-1682
-  source_atom_revision: 42
-  source_sha256: 5bfa8d52bd874ef6cccb23487ee4639b7f8e1c867323e14d3984a633774205fc
-  original_relations_sha256: cda81380ab057c4da428dab72b93f65bb72092983ee69756870fff6e5dc9bea9
+  source_atom_revision: 43
+  source_sha256: c456273e93d020b5417117c4d04e5f113b97e908c693d7d47f2ae912dc998a17
+  original_relations_sha256: c596412f2e51dceebf1fb5230aae533b294fb7653e4a3d1181ccf1121a5c6229
 ---
 ## Summary
 

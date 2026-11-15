@@ -6,7 +6,7 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Delivery).Header.Form
+  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Delivery).Header.Context.Form
   dependencies:
   - CAPRMEDIO_MODEL <+ Carrier
 tier: 3
@@ -23,7 +23,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-402-CORE_META_MODEL-DECISION--serialize-delivery-type-tokens.md
   source_atom_id: CA-D-402
   source_atom_revision: 29
-  source_sha256: f665db984911ce31a3586252bb11aec4013f3337a2b45aae4a74ea6b72243c22
+  source_sha256: ee412f8cf6ed91dd0b262087dc46a0a570f04d690b61a1cfc70063515f39ee1b
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 

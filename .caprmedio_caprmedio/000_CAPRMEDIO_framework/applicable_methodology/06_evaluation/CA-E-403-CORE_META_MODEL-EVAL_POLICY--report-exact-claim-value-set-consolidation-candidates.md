@@ -9,7 +9,7 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Atom.Content
   dependencies:
   - CAPRMEDIO_MODEL <+ Atom.Local Scope Unit
-  - CAPRMEDIO_MODEL <+ Atom.Header.Topics.Main Subject
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics.Main Subject
   - CAPRMEDIO_MODEL <+ Term//Property
   - CAPRMEDIO_MODEL <+ CFEL<+Operator//AllowedValue
 tier: 4
@@ -30,7 +30,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-403-CORE_META_MODEL-EVAL_POLICY--report-exact-claim-value-set-consolidation-candidates.md
   source_atom_id: CA-E-403
   source_atom_revision: 36
-  source_sha256: ae4d37e3fdca70af1aae265dc1271217430f56b3a0f97a219cb5443d9607e47d
+  source_sha256: 58e5131e379ac7ad478d278605d5be1cc4711e57793d7b83beac1619a59db8ff
   original_relations_sha256: 6a00f7d16b948b6efc2ff0323845b40414b33702cc1c8739c485b5ff952c5cf4
 ---
 ## Summary

@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Role := "Analysis & Advisory")
+  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := "Analysis and Advisory")
 tier: 2
 relations:
   child_of:
@@ -24,7 +24,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1725-CORE_META_MODEL--review-external-analysis-before-project-adoption.md
   source_atom_id: CA-R-1725
   source_atom_revision: 28
-  source_sha256: a8763af890dbdbef818a291e29c5ec1d28dce518cfc8aa3ffcb9a41e7e1bb2dc
+  source_sha256: 9c4c2baf66194fa559e8f3f211f630ccf4f6d27fd02ef78c054ce33ad921ed0e
   original_relations_sha256: ebfc173e4b162d78ab314354e8d5d6b31c2617a2329fa6881f2d716336679351
 ---
 ## Summary

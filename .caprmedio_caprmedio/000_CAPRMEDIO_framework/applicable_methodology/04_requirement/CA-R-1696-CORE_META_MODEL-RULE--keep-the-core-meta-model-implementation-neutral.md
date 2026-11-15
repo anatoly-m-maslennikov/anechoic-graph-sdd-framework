@@ -10,11 +10,10 @@ topics:
 tier: 1
 relations:
   child_of:
-  - CA-M-447
   - CA-M-261
 status: Active
-version: 37
-updated_at: 2026-11-02 19:44:26 +0400
+version: 38
+updated_at: "2026-11-11 18:46:16 +0400"
 carrier_destination:
   file:
     name: CA-R-1696-CORE_META_MODEL-RULE--keep-the-core-meta-model-implementation-neutral.md
@@ -24,9 +23,9 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1696-CORE_META_MODEL-RULE--keep-the-core-meta-model-implementation-neutral.md
   source_atom_id: CA-R-1696
-  source_atom_revision: 37
-  source_sha256: 5dc22a902a2bb5b108ef9fa2f7bc56ec6e5b401a73ecd8a860ba21e635005af6
-  original_relations_sha256: daa221ee3824742de82fc1e74c79b2e49ba96d8d13faef8080c702793c699583
+  source_atom_revision: 38
+  source_sha256: af7f465d3d9f9a9af6772ac092614d9eb7e3a726f6a64ae58b089d0a875d596b
+  original_relations_sha256: 94899af1df3add3533bb824b693365050895abf0a071adfe4339109a042cf4cb
 ---
 ## Summary
 

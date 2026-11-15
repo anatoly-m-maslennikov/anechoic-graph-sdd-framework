@@ -8,8 +8,8 @@ form: Eval Case
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Atom
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom.Header.Topics.Main Subject
-  - CAPRMEDIO_MODEL <+ Atom.Header.Container
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics.Main Subject
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Container
   - CAPRMEDIO_MODEL <+ Atom.Content.Claim.Prose Claim
   - CAPRMEDIO_MODEL <+ Scope Unit
 tier: 7
@@ -32,7 +32,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-240-CORE_META_MODEL-EVAL_CASE--validate-atom-scope-and-claim-scope.md
   source_atom_id: CA-E-240
   source_atom_revision: 51
-  source_sha256: e8e1047f20dfa9efcf14e5e1b78d25907c2ef3161ac7b91d000f9840b0766b3a
+  source_sha256: b1c2d3a7fb9006daef485a946b11a80a157330bf31c9466ddcffe21d49f2dd3d
   original_relations_sha256: b448486d5687c8e6084f9eb8a06e38ac1eeb1387d6037d45636f2cf923a2da47
 ---
 ## Summary

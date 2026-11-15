@@ -8,7 +8,7 @@ form: Rule
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Scope Unit
   dependencies:
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Requirement)/(.Header.Form := Goal)'
+  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Requirement)/(.Header.Context.Form := Goal)'
   - CAPRMEDIO_MODEL <+ Atom.Content
 tier: 1
 status: Active
@@ -24,7 +24,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1292-CORE_META_MODEL-RULE--require-an-accepted-goal-for-every-scope-unit.md
   source_atom_id: CA-R-1292
   source_atom_revision: 31
-  source_sha256: a9eada1710dcb1dcd12b8c30bc98367c67943ba2ec565dceec7f05320b9c90a2
+  source_sha256: 51749089ab6c3f020ea7086e333baad18e87eb5df18afae805f3dd8b1c750715
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

@@ -9,11 +9,11 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Scope Unit.Name
   dependencies:
   - CAPRMEDIO_MODEL <+ Scope Unit
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled English"
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring
 tier: 3
-status: Active
-version: 20
-updated_at: 2026-11-02 18:35:20 +0400
+status: active
+version: 21
+updated_at: '2026-11-13T18:40:53.349183+00:00'
 carrier_destination:
   file:
     name: CA-M-299-CORE_META_MODEL-IMPLEMENTATION_METHOD--distinguish-scope-unit-names-from-ordinary-english.md
@@ -23,8 +23,8 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-299-CORE_META_MODEL-IMPLEMENTATION_METHOD--distinguish-scope-unit-names-from-ordinary-english.md
   source_atom_id: CA-M-299
-  source_atom_revision: 20
-  source_sha256: 1106aa68ca8bd8e7bad77a1e0cf43f7b59bccd8cb071ca0515bfaf423936942a
+  source_atom_revision: 21
+  source_sha256: 03023722c0fc45ca1c1552f9f606f59a2c8fb4b71b2a454518fe884e7da34f7b
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

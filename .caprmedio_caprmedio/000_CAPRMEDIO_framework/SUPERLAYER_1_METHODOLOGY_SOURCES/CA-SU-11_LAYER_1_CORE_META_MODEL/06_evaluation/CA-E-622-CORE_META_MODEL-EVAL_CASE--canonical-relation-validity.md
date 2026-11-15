@@ -8,13 +8,13 @@ context:
   role: Evaluation
   form: Eval Case
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation
+    main_subject: CAPRMEDIO_MODEL <+ Relation
     dependencies:
     - CAPRMEDIO_MODEL <+ Atom
-    - CAPRMEDIO_MODEL <+ Atom.Header.Role
-    - CAPRMEDIO_MODEL <+ Atom.Header.Status
+    - CAPRMEDIO_MODEL <+ Atom.Header.Context.Role
+    - CAPRMEDIO_MODEL <+ Atom.Header.State.Status
     - CAPRMEDIO_MODEL <+ Journal
-    - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+    - CAPRMEDIO_MODEL <+ Relation
     - CAPRMEDIO_MODEL <+ Entity
     - CAPRMEDIO_MODEL <+ Projection/(.Form:=Applicable Methodology)
     - CAPRMEDIO_MODEL <+ Projection
@@ -28,7 +28,7 @@ relations:
   - CA-R-1472
   - CA-M-120
   - CA-R-1676
-  - CA-R-1580
+  - CA-R-2762
   - CA-R-807
   - CA-D-268
   - CA-R-1040

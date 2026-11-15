@@ -9,7 +9,7 @@ topics:
   main_subject: "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Observability <+ Logging"
   dependencies:
   - CAPRMEDIO_MODEL <+ Carrier
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Evaluation)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
   - 'CAPRMEDIO_MODEL <+ Projection/(.Form:=Catalog)'
 tier: 3
 status: Active
@@ -25,7 +25,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement/CA-R-1779-PROJECT_CONFIGURATION-RULE--require-production-logging-policies.md
   source_atom_id: CA-R-1779
   source_atom_revision: 17
-  source_sha256: a3231eafe0f0c2e570d4c30f06c7b20fd094e0e3b91eda94ce1a5524aa68fd06
+  source_sha256: b7d3dc891b1262498b8084248e1abc0efc12aabb1151b500bdae2db411d444d8
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

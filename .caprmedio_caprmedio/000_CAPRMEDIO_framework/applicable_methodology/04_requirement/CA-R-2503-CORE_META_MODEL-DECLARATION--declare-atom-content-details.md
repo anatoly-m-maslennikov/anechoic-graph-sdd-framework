@@ -8,9 +8,9 @@ form: Declaration
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Atom.Content.Details
 tier: 3
-status: Active
-version: 5
-updated_at: 2026-11-04 05:21:15 +0400
+status: active
+version: 6
+updated_at: '2026-11-12T12:33:04.158402+00:00'
 carrier_destination:
   file:
     name: CA-R-2503-CORE_META_MODEL-DECLARATION--declare-atom-content-details.md
@@ -20,8 +20,8 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2503-CORE_META_MODEL-DECLARATION--declare-atom-content-details.md
   source_atom_id: CA-R-2503
-  source_atom_revision: 5
-  source_sha256: 3271e49731d4320257a2661598457a3eb93cd369280ee857b9c07a1d7a642feb
+  source_atom_revision: 6
+  source_sha256: bf333da0c6b656fe9baf23edc1c33d8cd96f8e7fe53277cfdcf23b86f3ce9d13
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
@@ -32,10 +32,18 @@ Declare Atom.Content.Details
 
 ### Formal Claim
 
-```CFEL
-# model
-Atom/(.Header.Role in RMED).Content.Details:: {::0..1};
+```python
+from caprmedio.formal_claims import Cardinality, declare_entity
+from caprmedio.model import Delivery, Evaluation, Method, Requirement
 
-Atom/(.Header.Role in RMED).Content.Details.*[string]{::0+}
+declare_entity(
+    entity_name='Details',
+    relation_name='IS_PROPERTY_OF',
+    base_path='Atom.Content',
+    value_cardinality=Cardinality(minimum=0, maximum=1),
+    dependent_property_cardinality=Cardinality(minimum=0, maximum=None),
+    dependent_property_name_format=str,
+    applies_to_entity_classes=(Requirement, Method, Evaluation, Delivery),
+)
 ```
 

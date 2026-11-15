@@ -6,17 +6,18 @@ container:
 role: Method
 form: Implementation Method
 topics:
-  main_subject: "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled English"
+  main_subject: CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring
+    <+ Controlled English
   dependencies:
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled English"
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Parsing"
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled
+    English
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+
+    Parsing
 tier: 5
-relations:
-  child_of:
-  - CA-M-113
-status: Active
-version: 30
-updated_at: 2026-11-02 18:35:20 +0400
+relations: {}
+status: active
+version: 31
+updated_at: '2026-11-13T18:58:11.162204+00:00'
 carrier_destination:
   file:
     name: CA-M-122-CORE_META_MODEL-IMPLEMENTATION_METHOD--evaluate-condition-expressions.md
@@ -33,7 +34,7 @@ Evaluate Condition Expressions
 ### Prose Claim
 
 
-evaluation of CCE Condition Expressions.
+evaluation of historical CCE Condition Expressions. This Method applies only to historical CCE material; it does not govern new Atom prose.
 
 
 **to** evaluate one CCE condition expression, the Resolver **must** perform **all** of:

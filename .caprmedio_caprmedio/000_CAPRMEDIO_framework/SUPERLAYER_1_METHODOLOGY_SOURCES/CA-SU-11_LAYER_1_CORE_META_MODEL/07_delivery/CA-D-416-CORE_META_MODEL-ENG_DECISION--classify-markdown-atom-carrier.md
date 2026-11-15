@@ -10,7 +10,7 @@ topics:
   dependencies:
   - CAPRMEDIO_MODEL <+ Carrier/File
   - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Term
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//NARROWER_THAN
+  - CAPRMEDIO_MODEL <+ Relation//NARROWER_THAN
 tier: 1
 status: Active
 version: 29

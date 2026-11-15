@@ -6,11 +6,11 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Carrier Destination.File.Path
+  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Destination.File.Path
 tier: 3
-status: Active
-version: 3
-updated_at: 2026-11-04 05:21:15 +0400
+status: active
+version: 4
+updated_at: '2026-11-12T17:23:54+00:00'
 carrier_destination:
   file:
     name: CA-R-2718-CORE_META_MODEL-DECLARATION--declare-atom-header-carrier-destination-file-path.md
@@ -20,8 +20,8 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2718-CORE_META_MODEL-DECLARATION--declare-atom-header-carrier-destination-file-path.md
   source_atom_id: CA-R-2718
-  source_atom_revision: 3
-  source_sha256: 9561d14c2a54ee6940faf397be5a8ec94ab7b985a12b26bab0862b56508f9478
+  source_atom_revision: 4
+  source_sha256: 05e88aec72484125548d336031470996abc7f7634d1e6113859698576061c75e
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
@@ -38,10 +38,16 @@ Declare Atom.Header.Carrier Destination.File.Path
 Calculated path of the containing directory, relative to the repository root.
 ### Formal Claim
 
-```CFEL
+```python
 # model
-Atom.Header.Carrier Destination.File.Path:: {::1};
+from caprmedio.formal_claims import declare_entity
 
-Atom.Header.Carrier Destination.File.Path.*[]{::0}
+declare_entity(
+    entity_name='Path',
+    relation_name='IS_PROPERTY_OF',
+    base_path='Atom.Header.Destination.File',
+    value_cardinality=1,
+    dependent_property_cardinality=0,
+)
 ```
 

@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  main_subject: CAPRMEDIO_MODEL <+ Relation
 tier: 2
 relations:
   child_of:
@@ -24,7 +24,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1735-CORE_META_MODEL-RULE--relate-self-improvement-stages-explicitly.md
   source_atom_id: CA-R-1735
   source_atom_revision: 28
-  source_sha256: 2dd9316a6b2ca7f9607ea765cafb29186af73c2c51e249008caee631034ed728
+  source_sha256: be0497bcfee479895cd62c709f7f6386327e984b689b24ed1d546713478ecee9
   original_relations_sha256: e13e79eeea85ad662b1755f5aff1041a17824a44a9438a0e8f5cda4b021dd0ba
 ---
 ## Summary

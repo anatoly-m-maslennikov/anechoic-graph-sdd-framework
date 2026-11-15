@@ -11,7 +11,6 @@ topics:
   - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Applicable Methodology)'
   - CAPRMEDIO_MODEL <+ Scope Unit
   - CAPRMEDIO_MODEL <+ Term//Type
-  - CAPRMEDIO_MODEL <+ CFEL
   - CAPRMEDIO_MODEL <+ Entity/Property
 tier: 1
 status: Active
@@ -27,7 +26,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1284-CORE_META_MODEL--define-type.md
   source_atom_id: CA-R-1284
   source_atom_revision: 27
-  source_sha256: e03fab204410b66fc951426ebd271d3283d73a3808c047cff001e905b9370f60
+  source_sha256: 4d5824d02fd74f06e2a5ca2a21f88c82e662fb7391231b065b9e699f1d54923c
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

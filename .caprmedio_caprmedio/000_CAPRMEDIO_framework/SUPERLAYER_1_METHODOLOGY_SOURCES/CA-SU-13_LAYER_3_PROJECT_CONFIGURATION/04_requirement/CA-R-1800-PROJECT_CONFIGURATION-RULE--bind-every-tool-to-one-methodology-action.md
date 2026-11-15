@@ -8,17 +8,20 @@ form: Rule
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Package
   dependencies:
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Operations)/(.Header.Form := Action)'
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Operations)/(.Header.Form := Workflow)'
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Operations)/(.Header.Form := Workflow) >{1+} Atom/(.Header.Role := Operations)/(.Header.Form := Step)'
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form
+    := Action)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form
+    := Workflow)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form
+    := Workflow) >{1+} Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form
+    := Step)
   - CAPRMEDIO_STRUCTURE <+ Entity/Object/Continuant/Selection//Methodology Sources
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Operations)
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Architecture <+ Component Structure"
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Architecture <+
+    Component Structure
   - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role:=Operations)/Step
 tier: 3
-relations:
-  depends_on:
-  - CA-R-2465
 status: Active
 version: 19
 updated_at: 2026-11-02 18:35:20 +0400

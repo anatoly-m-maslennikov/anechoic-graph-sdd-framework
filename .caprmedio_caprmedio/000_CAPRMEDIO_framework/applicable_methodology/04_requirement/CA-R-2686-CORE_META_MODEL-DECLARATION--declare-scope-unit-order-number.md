@@ -8,16 +8,20 @@ topics:
   dependencies:
   - CAPRMEDIO_MODEL <+ Scope Unit.order
   - CAPRMEDIO_MODEL <+ Scope Unit.order.ordered
-  - CAPRMEDIO_MODEL <+ CFEL <+ Format/int
+  - CAPRMEDIO_MODEL <+ Format/int
 tier: 3
-status: Active
-version: 1
-updated_at: 2026-11-02 19:17:40 +0400
+status: active
+version: 2
+updated_at: '2026-11-13T22:57:24.985880+00:00'
+destination:
+  file:
+    name: CA-R-2686-CORE_META_MODEL-DECLARATION--declare-scope-unit-order-number.md
+    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2686-CORE_META_MODEL-DECLARATION--declare-scope-unit-order-number.md
   source_atom_id: CA-R-2686
-  source_atom_revision: 1
-  source_sha256: e2dc865be1cf7d6dafdaea097135546320b5c5a7a145e244d3501e6c8667aa47
+  source_atom_revision: 2
+  source_sha256: da65cde235dbdd05da5c02756f84dc59e2c3c2f0131de5fdbdc688319900eda3
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
@@ -26,13 +30,21 @@ Declare Scope Unit.order.number
 
 ## Claim
 
+### Prose Claim
+
+If order.ordered is true, order.number has exactly one integer value of at least 1; otherwise it has no value.
+
 ### Formal Claim
 
-```CFEL
-# model
-Scope Unit.order.number: IF order.ordered = true THEN [int, 1+]{::1} ELSE []{::0};
+```python
+from caprmedio.formal_claims import Cardinality, declare_entity
 
-Scope Unit.order.number.*[]{::0}
+declare_entity(
+    entity_name='number',
+    relation_name="IS_PROPERTY_OF",
+    base_path='Scope Unit.order',
+    value_format=int, value_cardinality=Cardinality(minimum=0, maximum=1), dependent_property_cardinality=0, minimum_value=1,
+)
 ```
 
 ## Semantics

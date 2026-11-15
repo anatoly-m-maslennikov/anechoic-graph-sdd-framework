@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Topics
+  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
   dependencies:
   - CAPRMEDIO_MODEL <+ Entity
 tier: 1
@@ -23,7 +23,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2004-CORE_META_MODEL--define-subject-target.md
   source_atom_id: CA-R-2004
   source_atom_revision: 14
-  source_sha256: 99dfdbdffc267d46c15df7fe31989959d29a8eece51a055e069886f886b34381
+  source_sha256: 0026cd40b9df49784a032684f63f4ee8dd84279b1a858274f21383a0d42ddf5a
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

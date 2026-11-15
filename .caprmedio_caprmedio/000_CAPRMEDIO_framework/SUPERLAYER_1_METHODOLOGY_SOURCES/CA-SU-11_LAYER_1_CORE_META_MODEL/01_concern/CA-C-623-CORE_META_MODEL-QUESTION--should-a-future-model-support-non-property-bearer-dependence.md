@@ -6,9 +6,9 @@ container:
 role: Concern
 form: Question
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_PROPERTY_OF
+  main_subject: CAPRMEDIO_MODEL <+ Relation//IS_PROPERTY_OF
   dependencies:
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//HAS_PROPERTY
+  - CAPRMEDIO_MODEL <+ Relation//HAS_PROPERTY
 tier: 3
 status: Active
 version: 1

@@ -8,16 +8,15 @@ form: Action
 topics:
   main_subject: Subject/caprmedio/Action//Persist Atom Replacement
   dependencies:
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Operations/Type: Action'
+  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Operations/Type:
+    Action'
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom.Version Number
+  - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom.Header.State.Version Number
   - Subject/CAPRMEDIO/Carrier/File
   - Subject/CAPRMEDIO/Graph/Node/Project Model/History/Journal
   - Subject/CAPRMEDIO/Carrier/File.Filename
+  - CAPRMEDIO_MODEL <+ Relation
 tier: 3
-relations:
-  depends_on:
-  - CA-R-807
 status: Active
 version: 21
 updated_at: 2026-10-27 19:59:44 +0400
@@ -32,8 +31,8 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-051-PROJECT_CONFIGURATION-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md
   source_atom_id: CA-O-051
   source_atom_revision: 21
-  source_sha256: 35888258b3cb3faae4cbbdfc12f723ca599c5decd9c9d6153b5abd53a40ee2c2
-  original_relations_sha256: 67577f2516b11efabad843133bbc9a2bcd11b91623e7a492544579838c61aac8
+  source_sha256: 0e223ae48b2588639142d9c32dab5d9ff4d68663cc9b86ce7e79a9ef843ddd9e
+  original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 # Summary
 

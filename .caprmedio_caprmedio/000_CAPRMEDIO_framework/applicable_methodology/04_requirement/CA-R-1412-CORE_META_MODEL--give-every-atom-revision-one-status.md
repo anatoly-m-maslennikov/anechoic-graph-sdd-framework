@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Status
+  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.State.Status
   dependencies:
   - CAPRMEDIO_MODEL <+ Atom
 tier: 1
@@ -23,7 +23,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1412-CORE_META_MODEL--give-every-atom-revision-one-status.md
   source_atom_id: CA-R-1412
   source_atom_revision: 24
-  source_sha256: b3dde81ad0b2bd2448a179aa8574b4e6c9e6fa7622f13c8c2452e3746ee0f692
+  source_sha256: 1b95569bf2386d318004419bb221985753ca8c4a786b3f64e26add9f5285ebb4
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

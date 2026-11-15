@@ -16,10 +16,10 @@ tier: 3
 relations:
   child_of:
   - CA-R-1052
-  - CA-R-007
+  - CA-M-544
 status: Active
-version: 41
-updated_at: 2026-11-02 19:44:26 +0400
+version: 42
+updated_at: 2026-11-11 15:00:27 +0400
 carrier_destination:
   file:
     name: CA-R-1740-CORE_META_MODEL-RULE--bind-every-project-scope-unit-graph-value-to-exact-sources.md
@@ -29,9 +29,9 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1740-CORE_META_MODEL-RULE--bind-every-project-scope-unit-graph-value-to-exact-sources.md
   source_atom_id: CA-R-1740
-  source_atom_revision: 41
-  source_sha256: 7a403316de1042e04f6be78e93d8075ca367901d0982f359faf7799fc654087a
-  original_relations_sha256: e892fff95c7b88c75c6e5c328b69d7239f899c984648a1b875c6a4c3aadcb888
+  source_atom_revision: 42
+  source_sha256: 43c296383d77dceb24b0b347f3874827ac3c271dd63f0587f2fcbd2558f40c46
+  original_relations_sha256: bf03d8e0276d6376f47bd946c2030109ff1c571e4ca0870df92b93f7791b0762
 ---
 ## Summary
 

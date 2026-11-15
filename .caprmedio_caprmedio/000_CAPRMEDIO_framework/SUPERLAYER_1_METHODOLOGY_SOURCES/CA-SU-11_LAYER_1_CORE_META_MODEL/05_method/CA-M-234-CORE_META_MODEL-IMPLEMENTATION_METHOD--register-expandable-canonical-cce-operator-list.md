@@ -6,13 +6,15 @@ container:
 role: Method
 form: Implementation Method
 topics:
-  main_subject: "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled English"
+  main_subject: CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring
+    <+ Controlled English
   dependencies:
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled English"
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled
+    English
 tier: 3
-status: Active
-version: 24
-updated_at: 2026-11-02 18:35:20 +0400
+status: active
+version: 25
+updated_at: '2026-11-13T19:24:46.250073+00:00'
 carrier_destination:
   file:
     name: CA-M-234-CORE_META_MODEL-IMPLEMENTATION_METHOD--register-expandable-canonical-cce-operator-list.md
@@ -29,7 +31,7 @@ Register Expandable Canonical CCE Operator List
 ### Prose Claim
 
 
-the canonical CCE Operator Registry.
+the canonical CCE Operator Registry for interpreting historical CCE material. This Method does not govern new Atom prose.
 
 
 the current canonical CCE Operator Registry **must** contain this expandable set:
@@ -46,4 +48,4 @@ the current canonical CCE Operator Registry **must** contain this expandable set
 
 ## Details
 
-another token **may** enter the CCE Operator Registry **when** one active CCE Method assigns the token one syntactic **or** logical function.
+recognize another token in historical CCE material only when an applicable historical CCE Method assigned it one syntactic or logical function.

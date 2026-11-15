@@ -6,11 +6,11 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Operations)
+  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)
 tier: 3
-status: Active
-version: 4
-updated_at: "2026-11-07 15:18:44 +0400"
+status: active
+version: 7
+updated_at: '2026-11-12T12:33:04.158402+00:00'
 carrier_destination:
   file:
     name: CA-R-2463-CORE_META_MODEL-DECLARATION--declare-operations.md
@@ -25,9 +25,19 @@ Declare Operations
 
 ### Formal Claim
 
-```CFEL
-# model
-Atom/(.Header.Role := Operations)
+```python
+from caprmedio.formal_claims import declare_entity
+from caprmedio.model import Atom
+
+class Operations(Atom):
+    pass
+
+declare_entity(
+    entity_class=Operations,
+    entity_name='Operations',
+    qualification_property_path='Atom.Header.Context.Role',
+    classifications={'Role Order Number': 9},
+)
 ```
 
 ## Semantics

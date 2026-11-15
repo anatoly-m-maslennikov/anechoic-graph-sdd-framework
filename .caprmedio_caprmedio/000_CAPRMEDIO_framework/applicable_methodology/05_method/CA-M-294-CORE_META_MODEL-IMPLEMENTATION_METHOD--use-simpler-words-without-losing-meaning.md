@@ -10,7 +10,7 @@ topics:
   dependencies:
   - CAPRMEDIO_MODEL <+ Actor
   - CAPRMEDIO_MODEL <+ Atom.Content.Summary
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled English"
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring
   - CAPRMEDIO_MODEL <+ Term
 tier: 3
 relations:
@@ -20,11 +20,9 @@ relations:
   method_for:
   - CA-R-940
   - CA-R-941
-  depends_on:
-  - CA-R-1273
-status: Active
-version: 27
-updated_at: 2026-11-02 18:35:20 +0400
+status: active
+version: 28
+updated_at: '2026-11-13T18:34:35.271162+00:00'
 carrier_destination:
   file:
     name: CA-M-294-CORE_META_MODEL-IMPLEMENTATION_METHOD--use-simpler-words-without-losing-meaning.md
@@ -34,9 +32,9 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-294-CORE_META_MODEL-IMPLEMENTATION_METHOD--use-simpler-words-without-losing-meaning.md
   source_atom_id: CA-M-294
-  source_atom_revision: 27
-  source_sha256: 28b9b87fb44cc3df874222c7659c70eec2fba95712eaa78572bca55023c34034
-  original_relations_sha256: 6746b4a0115b5db0b9c42517faa8335a9996da63970cc352369cb14deac5244e
+  source_atom_revision: 28
+  source_sha256: fccf4aa71ee1aec937b2e25ffd060a2cd3e07251ca78c4baa7524ace2b5ac451
+  original_relations_sha256: eecd6fadeba49ebc7262853261b3de7e93e183d453faf32f06e0ecb9cb8be7fb
 ---
 ## Summary
 
@@ -58,7 +56,7 @@ CAPRMEDIO content wording.
 - preserve who **or** what the statement concerns, its obligations **or** permissions, quantities, conditions, boundaries, **and** logical distinctions.
 - prefer a clear longer phrase over a shorter obscure expression; fewer words do **not** necessarily make the content simpler.
 - retain specialized wording **when** replacing it would lose a necessary distinction **or** make the meaning less precise.
-- retain exact full canonical entity names, CCE Operators, **and** references. simpler wording does **not** authorize a synonymous alternate full name, another full canonical name for the same entity, use of one full canonical name for another entity, **or** a silent rename. property, value, bearer, context, **and** registered-synonym qualifications do **not** exempt a full-name collision from this prohibition.
+- retain exact full canonical entity names, registered references, and literal code and formal syntax. simpler wording does **not** authorize a synonymous alternate full name, another full canonical name for the same entity, use of one full canonical name for another entity, **or** a silent rename. property, value, bearer, context, **and** registered-synonym qualifications do **not** exempt a full-name collision from this prohibition.
 - resolve the named entities of Subject Graph expressions **and** the source-declared Relation Types named inside `((...))` **to** their full canonical names **and** preserve those names **in** **all** authored mentions, including entity names, Claims including applicability in Prose Claim, Semantics, Details, instructions, descriptions, **and** explanations. repeated references **to** one entity remain repeated uses of its full name. a qualified reference introduces no entity **or** full-name alias. parsing a named relation does **not** supply its defining authority.
 - distinguish reusable component Terms from full canonical entity names. read each component Term's meaning directly from its explicit authoritative Method Atom of Type Term Definition **and** preserve that meaning across compositions; agreement among Entity Definitions **or** Semantics does **not** define the Term. its consistent reuse **in** different full names is **not** a naming collision. outside the Term branch, a complete entity name **must** use its full admitted expression **and** **must not** be just one registered Term; the Subject root `Entity` is the sole exception. do **not** replace a component **within** an established full canonical name for stylistic variation **or** invent a graph entity for that component alone. unknown **or** incomplete defining-source coverage remains unresolved, **not** evidence of a successful check.
 - keep syntax symbols, delimiters, **and** selector keywords distinct from entity names. preserve the separate entity names using the registered `/`, `//`, `.`, `:`, `+>`, `<+`, `>|`, **and** `|<` constructs, qualified references to already declared Entities, logical grouping `()`, direct-value Format and count markers, the two independent Relation count positions, **and** a source-defined Relation Type name inside `((...))` under CA-R-1931 **and** CA-R-2244. the contextual topic/code spellings `atom.id` **and** `projection.id` distinguish their respective ID Properties; they are not alternative complete canonical Subject names **or** case-folded aliases. authored Subjects use their full admitted expressions; the dot remains syntax. under CA-R-1325, an arbitrary complete composite expression does **not** automatically become another full canonical name, entity, **or** separate Term node.

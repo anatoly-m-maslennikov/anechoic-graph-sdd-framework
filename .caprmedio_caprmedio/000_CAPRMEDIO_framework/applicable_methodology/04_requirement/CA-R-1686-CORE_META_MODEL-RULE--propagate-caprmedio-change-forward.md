@@ -10,10 +10,10 @@ topics:
 tier: 3
 relations:
   child_of:
-  - CA-M-447
+  - CA-M-540
 status: Active
-version: 33
-updated_at: 2026-11-02 00:18:22 +0400
+version: 34
+updated_at: "2026-11-11 18:46:16 +0400"
 carrier_destination:
   file:
     name: CA-R-1686-CORE_META_MODEL-RULE--propagate-caprmedio-change-forward.md
@@ -23,9 +23,9 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1686-CORE_META_MODEL-RULE--propagate-caprmedio-change-forward.md
   source_atom_id: CA-R-1686
-  source_atom_revision: 33
-  source_sha256: 9523e5d1916b1d20310669469ec6cd7be9743321fda7eeade785423f06ee7ffe
-  original_relations_sha256: cda81380ab057c4da428dab72b93f65bb72092983ee69756870fff6e5dc9bea9
+  source_atom_revision: 34
+  source_sha256: f1772618c8429f7d36ef36cb33c9cc9a4328e5541f2055f1f00a2c0060a4d05d
+  original_relations_sha256: e7e8c430ecdabe896ae5a52210effd0c1cf4563a147e957c4618b4bafbc2d791
 ---
 ## Summary
 

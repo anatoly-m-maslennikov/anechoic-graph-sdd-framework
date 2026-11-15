@@ -8,9 +8,9 @@ form: Declaration
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Projection.Source.Named Selection
 tier: 3
-status: Active
-version: 2
-updated_at: 2026-11-02 00:18:22 +0400
+status: active
+version: 3
+updated_at: '2026-11-12T21:17:02.662445+00:00'
 carrier_destination:
   file:
     name: CA-R-2541-CORE_META_MODEL-DECLARATION--declare-projection-source-named-selection.md
@@ -20,8 +20,8 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2541-CORE_META_MODEL-DECLARATION--declare-projection-source-named-selection.md
   source_atom_id: CA-R-2541
-  source_atom_revision: 2
-  source_sha256: 3f5df9dd72529a5b63a6d3239d0fa6a56beafc32d735232e822485cf5c31527e
+  source_atom_revision: 3
+  source_sha256: 1de0e55907fde3d84ea2c57e505464c10254d4b5646e69ebdac0470d9a68c76e
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
@@ -32,10 +32,17 @@ Declare Projection.Source.Named Selection
 
 ### Formal Claim
 
-```CFEL
-# model
-Projection.Source.Named Selection{::1}:: [Named Selection//]{::1};
+```python
+from caprmedio.formal_claims import declare_entity
+from caprmedio.model import NamedSelection
 
-Projection.Source.Named Selection.*[]{::0}
+declare_entity(
+    entity_name="Named Selection",
+    relation_name="IS_PROPERTY_OF",
+    base_path="Projection.Source",
+    property_occurrence_cardinality=1,
+    value_format=NamedSelection,
+    value_cardinality=1,
+    dependent_property_cardinality=0,
+)
 ```
-

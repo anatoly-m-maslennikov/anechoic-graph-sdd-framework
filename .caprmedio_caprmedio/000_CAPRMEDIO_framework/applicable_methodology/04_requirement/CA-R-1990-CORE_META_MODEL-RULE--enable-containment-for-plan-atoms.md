@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan).Enabled Relations.Contains'
+  main_subject: 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Enabled Relations.Contains'
   dependencies:
   - CAPRMEDIO_MODEL <+ Atom.Enabled Relations.Contains
 tier: 3
@@ -26,7 +26,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1990-CORE_META_MODEL-RULE--enable-containment-for-plan-atoms.md
   source_atom_id: CA-R-1990
   source_atom_revision: 12
-  source_sha256: b883608bcd21abe4b4b5fa2aed288c7137a51cd935cf73fcfedac91ffb4e4360
+  source_sha256: fed4eb12c476314c8498b6dc20246e9a088d23ea3e1e22c4d68f1b7f50f1b985
   original_relations_sha256: 4fde62f0627e52833e954bbd64d451c404b9f9d66585c52603ef12fa5886adfa
 ---
 ## Summary

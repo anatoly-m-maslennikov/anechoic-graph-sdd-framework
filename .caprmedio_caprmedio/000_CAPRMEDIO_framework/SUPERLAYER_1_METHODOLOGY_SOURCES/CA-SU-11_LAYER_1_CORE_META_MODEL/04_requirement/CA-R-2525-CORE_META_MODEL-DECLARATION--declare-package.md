@@ -8,9 +8,9 @@ form: Declaration
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Package
 tier: 3
-status: Active
-version: 3
-updated_at: 2026-11-10 14:38:45 +0400
+status: active
+version: 5
+updated_at: '2026-11-13T22:57:24.985880+00:00'
 carrier_destination:
   file:
     name: CA-R-2525-CORE_META_MODEL-DECLARATION--declare-package.md
@@ -25,21 +25,34 @@ Declare Package
 
 ## Claim
 
+### Prose Claim
+
+Each Package other than a Project Package has exactly one IS_CONTAINED_BY link to a Package.
+
 ### Formal Claim
 
-```CFEL
-# model
-Package >| (Container == yes);
+```python
+from caprmedio.formal_claims import Cardinality, declare_entity
+from caprmedio.model import Continuant
 
-Package ((NARROWER_THAN)) Continuant;
+class Package(Continuant):
+    pass
 
-# instances
-Package//$package_2{::0..1}((IS_CONTAINED_BY)) Package//$package_3;
-
-Package//$package_4{::0+}((CONTAINS)) Package//$package_5;
-
-IF (Package//$package not in (Package/Project Package//$package_6))
-THEN ($package {==1}((IS_CONTAINED_BY)) Package//$package_7);
+declare_entity(
+    entity_name="Package",
+    entity_class=Package,
+    classifications={"Container": "yes"},
+    instance_relation_constraints={
+        "CONTAINS": {
+            "target_entity_paths": ("Package",),
+            "targets_per_source": Cardinality(minimum=0, maximum=None),
+        },
+        "IS_CONTAINED_BY": {
+            "target_entity_paths": ("Package",),
+            "targets_per_source": Cardinality(minimum=0, maximum=1),
+        },
+    },
+)
 ```
 
 ## Semantics

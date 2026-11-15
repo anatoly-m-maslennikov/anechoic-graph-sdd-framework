@@ -6,7 +6,7 @@ container:
 role: Method
 form: Eng Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Tier
+  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Context.Tier
   dependencies:
   - CAPRMEDIO_MODEL <+ Atom
   - CAPRMEDIO_MODEL <+ Atom.Content
@@ -37,7 +37,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-438-CORE_META_MODEL-ENG-DECISION--derive-current-rmed-atom-ordering-tier.md
   source_atom_id: CA-M-438
   source_atom_revision: 18
-  source_sha256: d740ad1cf1b3953b9cc57f6dfc8c27988a1e73aefcf22d06420b768eef537bf8
+  source_sha256: f30f01355e51fc59923235333215d1ab313ed2b5fbff613aee7dce4b5dcb6f5d
   original_relations_sha256: d8d596a10b897c5c4aa55d3539234f7ffe0dd09a820db712c7695b620e6c2de7
 ---
 ## Summary

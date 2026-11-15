@@ -13,7 +13,7 @@ topics:
   - CAPRMEDIO_MODEL <+ Atom
   - CAPRMEDIO_MODEL <+ Project
   - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/Type: Applicable Methodology'
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Evaluation)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
 tier: 1
 relations:
   child_of:
@@ -31,7 +31,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1491-CORE_META_MODEL-RULE--keep-project-validation-out-of-journal-admission.md
   source_atom_id: CA-R-1491
   source_atom_revision: 29
-  source_sha256: 4024d59e07b1de8ccc000bd255b4de9ee5234bb00b92f86c4e4ab06faf824ef8
+  source_sha256: 36578a109e85d111008271e2e37fd6d78b2575cf7b2566208c43de80a3807663
   original_relations_sha256: 1c8dbdb6ec99acae043d53724c2c907d16b11cbb375710999addae41b4be44c8
 ---
 ## Summary

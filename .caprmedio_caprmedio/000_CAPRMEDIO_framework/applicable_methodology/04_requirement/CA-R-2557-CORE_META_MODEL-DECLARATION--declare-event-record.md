@@ -8,20 +8,18 @@ form: Declaration
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Event Record
 tier: 3
-status: Active
-version: 4
-updated_at: 2026-11-02 08:06:47 +0400
+status: active
+version: 5
+updated_at: 2026-11-05 13:47:13 +0400
 carrier_destination:
   file:
     name: CA-R-2557-CORE_META_MODEL-DECLARATION--declare-event-record.md
     path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
-current_scope_unit: CORE_META_MODEL
-claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2557-CORE_META_MODEL-DECLARATION--declare-event-record.md
   source_atom_id: CA-R-2557
-  source_atom_revision: 4
-  source_sha256: e145e57587e9d228a8e0b8b092f7ac4e17cc65e8e61ef77189539df822f654d8
+  source_atom_revision: 5
+  source_sha256: 820f2d734c4c7f26fcd3b386e84cc2f19e7e641b8ed8729c9ffe02e24a24b79c
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
@@ -38,14 +36,22 @@ An Event Record is immutable.
 
 ### Formal Claim
 
-```CFEL
-# model
-Event Record {::0}((IS_PROPERTY_OF));
+```python
+from caprmedio.formal_claims import declare_entity
+from caprmedio.model import Continuant
 
-Event Record ((NARROWER_THAN)) Continuant;
+class EventRecord(Continuant):
+    pass
 
-# instances
-Event Record//$event_record {::1}((IS_CONTAINED_BY)) Journal//$journal
+declare_entity(
+    entity_class=EventRecord,
+    entity_name="Event Record",
+    model_relation_constraints={"IS_PROPERTY_OF": {"targets_per_source": 0}},
+    instance_relation_constraints={
+        "IS_CONTAINED_BY": {"target_entity_paths": ("Journal",), "targets_per_source": 1},
+        "RECORDS": {"target_entity_paths": ("Event",), "targets_per_source": 1},
+    },
+)
 ```
 
 ## Semantics

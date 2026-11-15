@@ -9,11 +9,9 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Projection.Form
   dependencies:
   - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Term//Artifact
-  - CAPRMEDIO_MODEL <+ Atom.Header.ID
+  - CAPRMEDIO_MODEL <+ Atom.Header.Identity.ID
+  - CAPRMEDIO_MODEL <+ Carrier
 tier: 3
-relations:
-  depends_on:
-  - CA-D-311
 status: Active
 version: 26
 updated_at: 2026-11-02 08:06:47 +0400
@@ -27,8 +25,8 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/07_delivery/CA-D-397-PROJECT_CONFIGURATION-DECISION--register-caprmedio-type-prefixes.md
   source_atom_id: CA-D-397
   source_atom_revision: 26
-  source_sha256: 60c9f98f61cf153b8aff6accdd8643d70109760b7f2cf59d62e9f690f338fda1
-  original_relations_sha256: a6d638134d69fe971d3bde80c3f62222f7ca0d2ff91362d9992fd7b5263e9c8d
+  source_sha256: 14c4327017da3bcc55452a5eb0b935fb521415732bc160ffba9f9714c8cb08f2
+  original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
 

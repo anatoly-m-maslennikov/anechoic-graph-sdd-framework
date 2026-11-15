@@ -12,9 +12,9 @@ topics:
   - CAPRMEDIO_MODEL <+ Journal
   - CAPRMEDIO_MODEL <+ Event Record
   - CAPRMEDIO_MODEL <+ Projection
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Operations)/(.Header.Form := Workflow)'
+  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow)'
   - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ Atom.Header.Role
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Role
   - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Actor/Operator
 tier: 4
 relations:
@@ -39,7 +39,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-523-CORE_META_MODEL-EVAL_CASE--journal-view-integrity.md
   source_atom_id: CA-E-523
   source_atom_revision: 18
-  source_sha256: eb6545fc0de9ef2c8fd2ce19eec00cf2156eb7c517de79f2e13121b8a6a41e2c
+  source_sha256: 8d090c51979811af3bd5b146c8761e876fe7feaa4d557bc0d14f74d139d8c456
   original_relations_sha256: 52070712db2bf0eb2d3df60c08582a01b89afa40850ef6755aff70799e6d9cee
 ---
 ## Summary

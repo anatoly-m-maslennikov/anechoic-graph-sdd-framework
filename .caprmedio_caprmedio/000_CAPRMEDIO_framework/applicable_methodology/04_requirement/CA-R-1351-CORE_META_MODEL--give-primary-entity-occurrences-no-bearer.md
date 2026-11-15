@@ -6,9 +6,9 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_PROPERTY_OF
+  main_subject: CAPRMEDIO_MODEL <+ Relation//IS_PROPERTY_OF
   dependencies:
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
   - CAPRMEDIO_MODEL <+ Entity
 tier: 1
 status: Active
@@ -24,7 +24,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1351-CORE_META_MODEL--give-primary-entity-occurrences-no-bearer.md
   source_atom_id: CA-R-1351
   source_atom_revision: 23
-  source_sha256: 1444f220c2319bf34ab712556d612cd8fe29cdc1edc1cc29e57e7d7f4bfaabe3
+  source_sha256: 5d9845b01d6f5196b99ed37bb4ded51b0fad65430030b8d17db8afcd394ba1aa
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

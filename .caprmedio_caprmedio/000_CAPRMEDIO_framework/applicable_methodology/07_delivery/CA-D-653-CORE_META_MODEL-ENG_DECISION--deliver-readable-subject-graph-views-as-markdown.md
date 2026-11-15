@@ -12,8 +12,8 @@ topics:
   - CAPRMEDIO_MODEL <+ Projection.Form
   - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Selection
   - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Atom.Header.ID
-  - CAPRMEDIO_MODEL <+ Atom.Header.Version
+  - CAPRMEDIO_MODEL <+ Atom.Header.Identity.ID
+  - CAPRMEDIO_MODEL <+ Atom.Header.State.Version
   - CAPRMEDIO_MODEL <+ Carrier
 tier: 3
 relations:
@@ -37,7 +37,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-653-CORE_META_MODEL-ENG_DECISION--deliver-readable-subject-graph-views-as-markdown.md
   source_atom_id: CA-D-653
   source_atom_revision: 16
-  source_sha256: cb4ae8638608e90e7ef58bf4b938cf93fdfd16db2824e50524fca3bacafa2857
+  source_sha256: 5141c4945d7c538adc218e50645fc20c0edd608b5a332461081d177bae081af2
   original_relations_sha256: a84fd6d90b5c78a0ecf46e9fb5ce5529824abc141929b0b3145795fb5e727ae4
 ---
 ## Summary

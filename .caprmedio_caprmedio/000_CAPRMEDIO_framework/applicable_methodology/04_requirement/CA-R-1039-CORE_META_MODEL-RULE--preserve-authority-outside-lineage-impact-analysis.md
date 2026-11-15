@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  main_subject: CAPRMEDIO_MODEL <+ Relation
 tier: 1
 status: Active
 version: 28
@@ -21,7 +21,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1039-CORE_META_MODEL-RULE--preserve-authority-outside-lineage-impact-analysis.md
   source_atom_id: CA-R-1039
   source_atom_revision: 28
-  source_sha256: 66bc64fcd428b402dff9335c4554a11890989afd43160c1a43953456d6787f12
+  source_sha256: 0e40314eea1d4f6aff0bedef4c60558f27fc9ab43388da0f412039ff74139cff
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  main_subject: CAPRMEDIO_MODEL <+ Relation
 tier: 2
 status: Active
 version: 28
@@ -21,7 +21,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1032-CORE_META_MODEL-RULE--block-dependent-gates-until-lineage-impact-reaches-a-fixed-point.md
   source_atom_id: CA-R-1032
   source_atom_revision: 28
-  source_sha256: c9696440fff3ec9b37dd83a6a2b577133a40c833db35953808a472f786ff859b
+  source_sha256: f79d274d5980c7d622bda323fd6883d4edc5a18cb5822feff8ca3bc5c81b2e01
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

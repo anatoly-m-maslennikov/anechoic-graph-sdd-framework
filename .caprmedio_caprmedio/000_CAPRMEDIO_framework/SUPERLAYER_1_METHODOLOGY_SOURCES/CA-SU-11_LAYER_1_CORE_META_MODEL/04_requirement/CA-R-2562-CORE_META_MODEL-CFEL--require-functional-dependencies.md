@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL
+  main_subject: CAPRMEDIO_MODEL <+ Node.**
 tier: 3
 status: Active
 version: 2
@@ -26,8 +26,7 @@ Require functional dependencies between Property tuples
 
 ### Prose Claim
 
-
-`DETERMINES(selector, (.key, ...), (.dependent, ...))` requires equal ordered key tuples to have equal ordered dependent tuples. An optional fourth argument, `condition`, restricts the state population: `DETERMINES(selector, (.key, ...), (.dependent, ...), condition)`.
+Equal ordered key tuples require equal ordered dependent tuples. An optional condition restricts the selected states.
 
 - Use one explicit Project evaluation context. Resolve the complete relevant state history selected by Kind, including versions and rebuild states, rather than only the latest Current snapshot.
 - The context supplies the historical population, Property-value resolution and declared reference-identity bindings. These are evaluation inputs, not new Artifact fields.
@@ -37,4 +36,4 @@ Require functional dependencies between Property tuples
 - For every pair of selected states, equal keys require equal dependents. Repeated keys with equal dependents are allowed. Different keys may have equal dependents.
 - An unresolved or incomplete required history is an error. A known complete empty selection satisfies the constraint.
 
-`DETERMINES` does not assert key uniqueness, merge instances, allocate IDs, freeze inputs, assign values or execute a Workflow.
+Functional dependency permits repeated keys with the same dependent tuple.

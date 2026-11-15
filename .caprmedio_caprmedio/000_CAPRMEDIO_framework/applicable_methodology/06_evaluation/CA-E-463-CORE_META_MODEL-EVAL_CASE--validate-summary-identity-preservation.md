@@ -9,7 +9,7 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Atom.Content.Summary
   dependencies:
   - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Atom.Header.ID
+  - CAPRMEDIO_MODEL <+ Atom.Header.Identity.ID
   - CAPRMEDIO_MODEL <+ Atom.Content
 tier: 4
 relations:
@@ -30,7 +30,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-463-CORE_META_MODEL-EVAL_CASE--validate-summary-identity-preservation.md
   source_atom_id: CA-E-463
   source_atom_revision: 23
-  source_sha256: 09ef001875b903174437aaa916e255f8042dfc191f608816611ed22c5136c33a
+  source_sha256: 63a4a529b4247b54ef25c9c8e24cf8ec7ed4cf206243082be295866357a677de
   original_relations_sha256: 810dc2051be3ce6bc035323b9af494373476f872a3b764c46205617aae342f98
 ---
 ## Summary

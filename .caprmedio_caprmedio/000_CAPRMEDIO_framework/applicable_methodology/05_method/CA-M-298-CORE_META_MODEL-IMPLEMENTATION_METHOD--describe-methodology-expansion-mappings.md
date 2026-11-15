@@ -14,20 +14,20 @@ topics:
 tier: 2
 relations:
   child_of:
-  - CA-M-006
+  - CA-R-1375
   method_for:
   - CA-R-1375
 status: Active
-version: 26
-updated_at: 2026-11-02 18:35:20 +0400
+version: 27
+updated_at: "2026-11-11 18:46:16 +0400"
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: PROJECT_CONFIGURATION
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-298-CORE_META_MODEL-IMPLEMENTATION_METHOD--describe-methodology-expansion-mappings.md
   source_atom_id: CA-M-298
-  source_atom_revision: 26
-  source_sha256: bf0e58e39fb924f8d0cf5fcca47a64224967ea7656704fd39bcf976408056c12
-  original_relations_sha256: 7e5e58e1c9bed41c0ded2593d8cbcc64b300c073a390fbc4f30a646c8fc641fa
+  source_atom_revision: 27
+  source_sha256: 1d6e33c08f82a8992725a77339ea2bfb54b0a0a9fdcf22fa57f98c507a343c2c
+  original_relations_sha256: 8bd15af5764c32dc1c5e420de77e90fac3418e6fddfad17bc2127235065a021b
 ---
 ## Summary
 

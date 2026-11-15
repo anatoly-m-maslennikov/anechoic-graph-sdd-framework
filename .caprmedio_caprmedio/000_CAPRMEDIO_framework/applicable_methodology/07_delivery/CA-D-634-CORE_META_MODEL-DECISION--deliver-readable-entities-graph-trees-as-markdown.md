@@ -9,16 +9,13 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Projection/(.Form:=Entities Graph)
   dependencies:
   - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
   - CAPRMEDIO_MODEL <+ Atom
   - CAPRMEDIO_MODEL <+ Projection
+  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/(.Form:Entities Graph)
+  - CAPRMEDIO_MODEL <+ Projection.Updated At
+  - CAPRMEDIO_MODEL <+ Carrier/Directory
 tier: 5
-relations:
-  depends_on:
-  - CA-R-1456
-  - CA-D-310
-  - CA-D-550
-  - CA-D-635
 status: Active
 version: 23
 updated_at: 2026-11-02 08:06:47 +0400
@@ -32,8 +29,8 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-634-CORE_META_MODEL-DECISION--deliver-readable-entities-graph-trees-as-markdown.md
   source_atom_id: CA-D-634
   source_atom_revision: 23
-  source_sha256: 2815103aa1052f59858d253793c361122c4af47d966336cee6389c15d02807eb
-  original_relations_sha256: 280d3ccecebd0c897a18a284c4b0e0cab14ddeb006061ad92c1292258a736dcd
+  source_sha256: ac8a14b0302d0b90617d52a74ec69afea644e54a93b8b0d03a20e39b66579c4e
+  original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
 

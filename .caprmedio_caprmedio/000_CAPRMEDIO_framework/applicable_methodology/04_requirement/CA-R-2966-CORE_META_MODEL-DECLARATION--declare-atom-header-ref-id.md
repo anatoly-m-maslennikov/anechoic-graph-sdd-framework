@@ -6,11 +6,11 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Ref ID
+  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Identity.Ref ID
 tier: 3
-status: Active
-version: 1
-updated_at: 2026-11-05 22:47:24 +0400
+status: active
+version: 3
+updated_at: '2026-11-12T17:23:54+00:00'
 carrier_destination:
   file:
     name: CA-R-2966-CORE_META_MODEL-DECLARATION--declare-atom-header-ref-id.md
@@ -18,8 +18,8 @@ carrier_destination:
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2966-CORE_META_MODEL-DECLARATION--declare-atom-header-ref-id.md
   source_atom_id: CA-R-2966
-  source_atom_revision: 1
-  source_sha256: b422959cc8d649c07cd8fda6f2cbdb91d5c4b546af46790618380da3cdf01bf2
+  source_atom_revision: 3
+  source_sha256: 79abad838cf65655af365c810e7fc049c4760a455a49cf7139b32eeb183b62c6
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
@@ -30,13 +30,21 @@ Declare Atom.Header.Ref ID
 
 ### Prose Claim
 
-For a Current Atom, Ref ID is its base Atom ID. For an Archived Atom, Ref ID is `<ID>@<Version>`. For a Draft Atom, Ref ID is `<ID>@<Version>-draft`.
+For an Atom in the Current or Backlog Status Group, Ref ID is its base Atom ID. For an Archived Atom, Ref ID is `<ID>@<Version>`. For a Draft Atom, Ref ID is `<ID>@<Version>-draft`.
 
 ### Formal Claim
 
-```CFEL
+```python
 # model
-Atom.Header.Ref ID{::1} :: [string]{::1};
+from caprmedio.formal_claims import declare_entity
 
-Atom.Header.Ref ID.*[]{::0}
+declare_entity(
+    entity_name='Ref ID',
+    relation_name='IS_PROPERTY_OF',
+    base_path='Atom.Header.Identity',
+    property_occurrence_cardinality=1,
+    value_cardinality=1,
+    value_format='str',
+    dependent_property_cardinality=0,
+)
 ```

@@ -6,9 +6,9 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan)
+  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)
 tier: 1
 status: Active
 version: 22
@@ -23,7 +23,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1534-CORE_META_MODEL-RULE--keep-plan-atom-identity-independent-from-decomposition.md
   source_atom_id: CA-R-1534
   source_atom_revision: 22
-  source_sha256: 4757f675779a7560d0a947e1ed123d2be4de6fe408a629b80bcd95a38cd6ecb4
+  source_sha256: a515bd11aec8af7a98c68129c7f8724256c6e6f1bb8567c311e9738f5243a211
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

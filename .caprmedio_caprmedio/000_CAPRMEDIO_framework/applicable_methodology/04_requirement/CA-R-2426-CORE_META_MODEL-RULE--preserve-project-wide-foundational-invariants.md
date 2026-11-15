@@ -9,15 +9,15 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Project
   dependencies:
   - CAPRMEDIO_MODEL <+ Project
-  - CAPRMEDIO_MODEL <+ Atom.Header.Tier
-  - CAPRMEDIO_MODEL <+ Atom.Header.Role
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Tier
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Role
 tier: 1
 relations:
   child_of:
-  - CA-M-447
+  - CA-R-3029
 status: Active
-version: 3
-updated_at: 2026-11-02 00:18:22 +0400
+version: 4
+updated_at: "2026-11-11 18:46:16 +0400"
 carrier_destination:
   file:
     name: CA-R-2426-CORE_META_MODEL-RULE--preserve-project-wide-foundational-invariants.md
@@ -27,9 +27,9 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2426-CORE_META_MODEL-RULE--preserve-project-wide-foundational-invariants.md
   source_atom_id: CA-R-2426
-  source_atom_revision: 3
-  source_sha256: fa5cdc0f154443ccbd3bcd0b20baff4e5a42975bf6e7c828634ffdcd142cb242
-  original_relations_sha256: cda81380ab057c4da428dab72b93f65bb72092983ee69756870fff6e5dc9bea9
+  source_atom_revision: 4
+  source_sha256: 589ebaa92a8c17dd5bf37773e38f0be15cf6eed10f26d8a820634925a354ed62
+  original_relations_sha256: 298232ee25b0d00dce82421c07f5441769f6bc3298f7a4aab8df4955d59a2711
 ---
 ## Summary
 

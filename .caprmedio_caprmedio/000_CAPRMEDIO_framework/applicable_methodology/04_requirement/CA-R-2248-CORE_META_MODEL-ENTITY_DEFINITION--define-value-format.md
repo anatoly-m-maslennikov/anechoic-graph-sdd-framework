@@ -6,22 +6,22 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Format
+  main_subject: CAPRMEDIO_MODEL <+ Format
 tier: 1
-status: Active
-version: 5
-updated_at: 2026-11-03 23:25:51 +0400
+status: active
+version: 8
+updated_at: '2026-11-13T22:57:39.635646+00:00'
 carrier_destination:
   file:
-    name: CA-R-2248-CORE_META_MODEL-DECLARATION--define-value-format.md
+    name: CA-R-2248-CORE_META_MODEL-ENTITY_DEFINITION--define-value-format.md
     path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2248-CORE_META_MODEL-ENTITY_DEFINITION--define-value-format.md
   source_atom_id: CA-R-2248
-  source_atom_revision: 5
-  source_sha256: 29816a9d3043bfac7932eaaa45389370f1056b612f80e7436de0c46b5fe1bab3
+  source_atom_revision: 8
+  source_sha256: 27bf80107cc08eebe0b688cca47af53f94023ed946ca5d5aa537676351614997
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
@@ -48,9 +48,13 @@ and prose conditions determine admissibility.
 
 ### Formal Claim
 
-```CFEL
-# model
-CFEL <+ Format
+```python
+from caprmedio.formal_claims import declare_entity
+
+class ValueFormat:
+    pass
+
+declare_entity(entity_name='Format', entity_class=ValueFormat)
 ```
 
 ## Semantics
@@ -59,4 +63,3 @@ Format annotations constrain direct values. Markdown, YAML, TOML and JSON are
 Carrier representation formats, not value Formats. The initial scalar
 vocabulary—bool, datetime, decimal, float, int and string—is provisional. A
 format annotation selects a value domain; it does not impose uniqueness.
-

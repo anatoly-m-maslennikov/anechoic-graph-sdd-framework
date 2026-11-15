@@ -6,9 +6,9 @@ container:
 role: Method
 form: Implementation Method
 topics:
-  main_subject: 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Method).Content.Claim'
+  main_subject: 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Method).Content.Claim'
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Method)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Method)
   - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled English"
   - CAPRMEDIO_MODEL <+ Atom.Content
 tier: 6
@@ -30,7 +30,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-311-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-method-claims-with-the-method-cce-profile.md
   source_atom_id: CA-M-311
   source_atom_revision: 25
-  source_sha256: d8998a037bad0a4d3127622520859f28dd05ff683176f63622d8393dc7290be4
+  source_sha256: 48ee7daa975ed7c913ad2ad77c361872c7e7ca9d2f1e1f385f674fd6affcf9ab
   original_relations_sha256: 47b06870f90f386d56ae6b28c085ecca8c85c303431390d57d18a6a22f61c0d2
 ---
 ## Summary

@@ -8,20 +8,19 @@ form: Action
 topics:
   main_subject: 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Plan'
   dependencies:
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Operations/Type: Action'
+  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Operations/Type:
+    Action'
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Plan.Definition of Done'
+  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Plan.Definition
+    of Done'
   - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Plan.Status'
   - Subject/CAPRMEDIO/Graph/Relation
   - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Actor/Type: Operator'
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Execution/Workflow Run
   - Subject/CAPRMEDIO/Graph/Node/Project Model/History/Journal
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role:=Plan).Content.Definition of Done
+  - CAPRMEDIO_MODEL <+ Relation//BLOCKS
 tier: 3
-relations:
-  depends_on:
-  - CA-R-1583
-  - CA-R-1599
-  - CA-R-1580
 status: Active
 version: 16
 updated_at: 2026-10-29 22:26:57 +0400

@@ -8,9 +8,9 @@ form: Declaration
 topics:
   main_subject: CAPRMEDIO_MODEL <+ CFEL<+Operator//SubjectValueSelection
 tier: 3
-status: Active
-version: 1
-updated_at: 2026-11-02 08:06:47 +0400
+status: active
+version: 2
+updated_at: '2026-11-13T05:29:42.684007+00:00'
 carrier_destination:
   file:
     name: CA-R-2615-CORE_META_MODEL-DECLARATION--declare-cfel-operator.md
@@ -20,8 +20,8 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2615-CORE_META_MODEL-DECLARATION--declare-cfel-operator.md
   source_atom_id: CA-R-2615
-  source_atom_revision: 1
-  source_sha256: 37e72a6d3db2be5fa7a34a19be922918e4b834894e207c74c3017b6becbbc30e
+  source_atom_revision: 2
+  source_sha256: 1be4551ad79c3f2a3617ac44aa707dc6c6e4ed3d77c87d9bd993ad358abaf737
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 
@@ -33,9 +33,9 @@ Declare CFEL operator :=
 
 ### Formal Claim
 
-```CFEL
+```python
 # model
-Operator//SubjectValueSelection == ":="
+set_value(address='Operator//SubjectValueSelection', value='":="')
 ```
 
 ## Semantics

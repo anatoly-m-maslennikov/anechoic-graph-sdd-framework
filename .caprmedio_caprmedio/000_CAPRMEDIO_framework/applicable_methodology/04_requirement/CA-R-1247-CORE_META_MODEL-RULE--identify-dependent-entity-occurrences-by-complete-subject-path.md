@@ -6,12 +6,11 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Entity/Property
+  main_subject: CAPRMEDIO_MODEL <+ Node.**
   dependencies:
   - CAPRMEDIO_MODEL <+ Entity
   - CAPRMEDIO_MODEL <+ Term//Property
-  - CAPRMEDIO_MODEL <+ CFEL
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_PROPERTY_OF
+  - CAPRMEDIO_MODEL <+ Relation//IS_PROPERTY_OF
 tier: 1
 status: Active
 version: 24
@@ -26,7 +25,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1247-CORE_META_MODEL-RULE--identify-dependent-entity-occurrences-by-complete-subject-path.md
   source_atom_id: CA-R-1247
   source_atom_revision: 24
-  source_sha256: ab4e29daa98c74eb0e22772581008689bc7863879b6d57dc51e1c9497da79880
+  source_sha256: 5ed51c4c2a9c98a1dbdd2d9ce90d93fc83ada90878e2a28edbbe0f9f8c2cf221
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
@@ -38,11 +37,11 @@ Identify Dependent-Entity Occurrences by Complete Subject Path
 ### Prose Claim
 
 
-`Entity/Property` occurrences, their immediate bearers, and their
+`Node.**` occurrences, their immediate bearers, and their
 complete Subject Paths.
 
 
-**every** `Entity/Property` occurrence **must** derive its
+**every** `Node.**` occurrence **must** derive its
 source-admitted bearer-qualified identity from its complete Subject Path
 **without** imposing one global ordinal position on a reusable Term. Its
 outgoing direct IS_PROPERTY_OF Relation identifies its immediate bearer. Distinct
@@ -58,7 +57,7 @@ Qualification is part of the complete property name used for collision checks.
 A repeated display or reference of one entity remains the same entity, and
 parsing a name does not introduce another graph entity.
 
-`Entity/Property` is the Entity kind governed by this Rule.
+`Node.**` is the Entity kind governed by this Rule.
 `Term//Property` is its reusable lexical Term; the Term is not the
 Entity kind or an occurrence. The direct IS_PROPERTY_OF Relation runs from the
 Property occurrence to its bearer. The separate bearer-cardinality Rule owns

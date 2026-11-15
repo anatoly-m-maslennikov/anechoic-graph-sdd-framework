@@ -9,7 +9,7 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Projection/(.Form := Applicable Methodology)
   dependencies:
   - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//DERIVED_FROM
+  - CAPRMEDIO_MODEL <+ Relation//DERIVED_FROM
 tier: 1
 status: Active
 version: 34
@@ -24,7 +24,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement/CA-R-1314-PROJECT_CONFIGURATION-RULE--preserve-source-atom-revision-identity-in-applicable-methodology.md
   source_atom_id: CA-R-1314
   source_atom_revision: 34
-  source_sha256: 59f5b2e568ac50e3aac5ed320ea3d0548c2f28367c180546b95b767413d73d62
+  source_sha256: d475a63bc471b1ba013250a4104524d8345374a3af7d117e4759151d09040a29
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

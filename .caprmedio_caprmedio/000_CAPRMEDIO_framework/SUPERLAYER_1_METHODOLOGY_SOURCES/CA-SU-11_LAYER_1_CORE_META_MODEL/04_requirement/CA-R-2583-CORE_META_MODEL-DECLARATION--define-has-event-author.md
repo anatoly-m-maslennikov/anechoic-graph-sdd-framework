@@ -6,11 +6,11 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//HAS_EVENT_AUTHOR
+  main_subject: CAPRMEDIO_MODEL <+ Relation//HAS_EVENT_AUTHOR
 tier: 3
-status: Active
-version: 5
-updated_at: 2026-11-03 20:00:05 +0400
+status: active
+version: 6
+updated_at: '2026-11-13T22:36:47.668532+00:00'
 carrier_destination:
   file:
     name: CA-R-2583-CORE_META_MODEL-DECLARATION--define-has-event-author.md
@@ -32,13 +32,14 @@ Forward `Host ((HAS_EVENT_AUTHOR)) Target` and reverse `Target <((HAS_EVENT_AUTH
 HAS_EVENT_AUTHOR relates Event Record instance to Actor instance.
 ### Formal Claim
 
-```CFEL
-# model
-Relation//HAS_EVENT_AUTHOR ((HAS_INVERSE)) Relation//IS_EVENT_AUTHOR_OF;
+```python
+from caprmedio.formal_claims import declare_relation
 
-Relation//HAS_EVENT_AUTHOR ((HAS_CLASSIFICATION)) Derivation == Direct;
-
-# instances
-Event Record//$event_record ((HAS_EVENT_AUTHOR)) Actor//$actor;
+declare_relation(
+    relation_name='HAS_EVENT_AUTHOR',
+    source_endpoint={'level': 'instances', 'entity_paths': ('Event Record',)},
+    target_endpoint={'level': 'instances', 'entity_paths': ('Actor',)},
+    inverse_alias='IS_EVENT_AUTHOR_OF',
+)
 ```
 

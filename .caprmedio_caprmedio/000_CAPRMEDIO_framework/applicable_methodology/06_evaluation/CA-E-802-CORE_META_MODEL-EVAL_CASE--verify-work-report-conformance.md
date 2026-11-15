@@ -8,7 +8,7 @@ context:
   role: Evaluation
   form: Eval Case
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan)/(.Header.Form := Work Report)
+    main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)/(.Header.Context.Form := Work Report)
   tier: 4
 state:
   status: Active
@@ -22,7 +22,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-802-CORE_META_MODEL-EVAL_CASE--verify-work-report-conformance.md
   source_atom_id: CA-E-802
   source_atom_revision: 2
-  source_sha256: 4aae996a375a3df40149658f0c03e74936cb456b47f116b5d52e7cbde0c46336
+  source_sha256: 254aebfed53df3c9763b81c86e21580322eddda3f4498558353675014c84f568
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 

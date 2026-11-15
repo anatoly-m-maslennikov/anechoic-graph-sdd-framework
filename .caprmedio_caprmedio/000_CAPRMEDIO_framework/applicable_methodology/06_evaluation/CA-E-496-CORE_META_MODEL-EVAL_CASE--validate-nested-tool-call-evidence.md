@@ -12,9 +12,9 @@ topics:
   - CAPRMEDIO_MODEL <+ Journal
   - CAPRMEDIO_MODEL <+ Step Run
   - CAPRMEDIO_MODEL <+ Workflow Run
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Operations)/Workflow
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Operations)/Step
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Operations)/Action
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/Workflow
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/Step
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/Action
   - CAPRMEDIO_MODEL <+ Projection
 tier: 3
 relations:
@@ -34,7 +34,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-496-CORE_META_MODEL-EVAL_CASE--validate-nested-tool-call-evidence.md
   source_atom_id: CA-E-496
   source_atom_revision: 23
-  source_sha256: ca718b31271b35bb659037af498a2ed3d73ed7f0351b7089ec3227fcf91e2682
+  source_sha256: 6cb67e57534f1e86c821cf4f9cc0c25c64e48a3029dd0550d9655c36743972cd
   original_relations_sha256: 2dde8ea9685247f7085155ccd836cc6ed9705f9aa6cd78755d6134dfe5795c12
 ---
 ## Summary

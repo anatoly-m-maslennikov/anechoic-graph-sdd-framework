@@ -8,9 +8,9 @@ form: Declaration
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Projection.Source.Atoms
 tier: 3
-status: Active
-version: 2
-updated_at: 2026-11-02 00:18:22 +0400
+status: active
+version: 3
+updated_at: '2026-11-12T17:23:54+00:00'
 carrier_destination:
   file:
     name: CA-R-2540-CORE_META_MODEL-DECLARATION--declare-projection-source-atoms.md
@@ -20,8 +20,8 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2540-CORE_META_MODEL-DECLARATION--declare-projection-source-atoms.md
   source_atom_id: CA-R-2540
-  source_atom_revision: 2
-  source_sha256: 0f9ec5fc8328285d1961f1d96de33d4c588b018599db36914319c467fbfc2383
+  source_atom_revision: 3
+  source_sha256: d0314d5ee9cee05df57a8799f2e05e9cd50b09d5456ef2032be5cadcca67a71b
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
@@ -37,10 +37,18 @@ Declare Projection.Source.Atoms
 Each value is an Atom ID with an explicit Version.
 ### Formal Claim
 
-```CFEL
+```python
 # model
-Projection.Source.Atoms{::0..1}:: [string]{::0+};
+from caprmedio.formal_claims import Cardinality, declare_entity
 
-Projection.Source.Atoms.*[]{::0}
+declare_entity(
+    entity_name='Atoms',
+    relation_name='IS_PROPERTY_OF',
+    base_path='Projection.Source',
+    property_occurrence_cardinality=Cardinality(minimum=0, maximum=1),
+    value_cardinality=Cardinality(minimum=0, maximum=None),
+    value_format='str',
+    dependent_property_cardinality=0,
+)
 ```
 

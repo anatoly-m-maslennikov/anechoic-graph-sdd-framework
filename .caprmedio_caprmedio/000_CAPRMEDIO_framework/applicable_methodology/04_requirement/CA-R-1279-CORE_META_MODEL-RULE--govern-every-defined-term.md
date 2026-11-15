@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//GOVERNS
+  main_subject: CAPRMEDIO_MODEL <+ Relation//GOVERNS
   dependencies:
   - CAPRMEDIO_MODEL <+ Atom.Content.Semantics
   - CAPRMEDIO_MODEL <+ Entity
@@ -26,7 +26,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1279-CORE_META_MODEL-RULE--govern-every-defined-term.md
   source_atom_id: CA-R-1279
   source_atom_revision: 32
-  source_sha256: c7b1d70d7d5e988724ba218b15f6bcbea6ca37789ac78b304d981e69d4e9a587
+  source_sha256: 67c0d77f7e64c15e8b58159e2cbdcbb288b9e999e3abfbea0e2b4d1ef20b3fbb
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

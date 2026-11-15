@@ -6,11 +6,11 @@ container:
 role: Evaluation
 form: Eval Case
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Topics.Main Subject
+  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics.Main Subject
   dependencies:
   - CAPRMEDIO_MODEL <+ Atom.Content
   - CAPRMEDIO_MODEL <+ Atom.Local Scope Unit
-  - CAPRMEDIO_MODEL <+ Atom.Header.Topics
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
   - CAPRMEDIO_MODEL <+ Atom
   - CAPRMEDIO_MODEL <+ Scope Unit
 tier: 4
@@ -37,7 +37,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-511-CORE_META_MODEL-EVAL_CASE--validate-target-scope-unit-and-textual-claim-scope.md
   source_atom_id: CA-E-511
   source_atom_revision: 23
-  source_sha256: 81112423110dcd390df9d04b615f9c02733f4179a0af80829da3c4f6f2318cc3
+  source_sha256: 20e8741e6b2c704be8cef26a15ed4ab1b0264afe888487b422eee82c01e9bf11
   original_relations_sha256: 62e600ae351ff84ee1edfcb102569c0c97a74a686bf80919f3b4d68e38cdb4b7
 ---
 ## Summary

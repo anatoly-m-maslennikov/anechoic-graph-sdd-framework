@@ -8,17 +8,18 @@ form: Action
 topics:
   main_subject: Subject/caprmedio/Action//Select Priority-Governed Alternative
   dependencies:
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Operations/Type: Action'
+  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Operations/Type:
+    Action'
   - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Actor/Type: Operator'
-  - "Subject/CAPRMEDIO/Graph/Node/Aspect/Engineering/Operation/Execution Control/Effect Authorization"
+  - Subject/CAPRMEDIO/Graph/Node/Aspect/Engineering/Operation/Execution Control/Effect
+    Authorization
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Selection//PROJECT_PRIORITY_MODEL
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Selection//PROJECT_LEXICOGRAPHIC
+  - CAPRMEDIO_STRUCTURE <+ Entity/Object/Continuant/Selection//PROJECT_LEXICOGRAPHIC
 tier: 3
 relations:
   child_of:
   - CA-R-1487
-  depends_on:
-  - CA-M-297
 status: Active
 version: 20
 updated_at: 2026-10-27 19:59:44 +0400
@@ -33,8 +34,8 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-023-PROJECT_CONFIGURATION-ACTION--select-an-alternative-under-active-priorities.md
   source_atom_id: CA-O-023
   source_atom_revision: 20
-  source_sha256: 71b9759c4569803568f74adf90f3a3307d4ba1f539a6e6b9da4cf55996816e3b
-  original_relations_sha256: 8df28fafc59a8839acbe18a6aef8b5f090b211118455b922c1125a08b40bc003
+  source_sha256: a509d613d3a4ec2aab8954713f4d6d69d33cd81ca441afe77ef11f9552c0f6d3
+  original_relations_sha256: 2cccfab5f9eb53e0f786c8f141ca6d892cd6285d32a2aceff4e7a46010d8ba97
 ---
 # Summary
 

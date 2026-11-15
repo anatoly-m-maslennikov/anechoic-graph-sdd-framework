@@ -14,12 +14,9 @@ topics:
   - CAPRMEDIO_MODEL <+ Projection.Source.Named Selection
   - CAPRMEDIO_MODEL <+ Projection.Source.Atoms
   - CAPRMEDIO_MODEL <+ Scope Unit
+  - CAPRMEDIO_MODEL <+ Projection.Updated At
+  - CAPRMEDIO_MODEL <+ Carrier/Directory
 tier: 4
-relations:
-  depends_on:
-  - CA-R-1943
-  - CA-D-310
-  - CA-D-550
 status: Active
 version: 17
 updated_at: 2026-11-04 07:51:19 +0400
@@ -33,8 +30,8 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-635-CORE_META_MODEL-ENG_DECISION--serialize-projection-identity-and-filenames.md
   source_atom_id: CA-D-635
   source_atom_revision: 17
-  source_sha256: bb89db55454c90f77d3120e220bf5593c0bf73d8f3380a8f41bf491afe67be1e
-  original_relations_sha256: d43f4bf4aabcc9f4b50a5498062a151d8142ac5fb8e67e0e2cde8894a4b819fd
+  source_sha256: 0d81d377d5a9ae81cc7f7a7b0f1b0ec751f19d64ab22492a89b868cbe641937b
+  original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
 

@@ -6,14 +6,13 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Entity
+  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
   dependencies:
-  - CAPRMEDIO_MODEL <+ CFEL<+Operator//AllowedValue
   - CAPRMEDIO_MODEL <+ Term//Property
 tier: 3
 status: Active
-version: 28
-updated_at: 2026-11-02 08:06:47 +0400
+version: 29
+updated_at: '2026-11-11 14:06:22 +0400'
 carrier_destination:
   file:
     name: CA-R-1245-CORE_META_MODEL-RULE--qualify-allowed-values-with-colon.md
@@ -23,8 +22,8 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1245-CORE_META_MODEL-RULE--qualify-allowed-values-with-colon.md
   source_atom_id: CA-R-1245
-  source_atom_revision: 28
-  source_sha256: 7e437c988c379b25e8c9ee8d6447777e97bdcab730282dc2080ac8bf6250d775
+  source_atom_revision: 29
+  source_sha256: cabf8ef58e15fb1069ea3cb0e1d723004f340092d8c9df7e131db4f983585579
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
@@ -35,8 +34,6 @@ Qualify Allowed Values with Colon
 
 ### Prose Claim
 
-
-allowed-value qualification in a Subject Expression.
-
-
-**in** a Subject Expression, `X:Y` **must** admit Y as one possible value of X in X's qualified context, irrespective of X's kind or path. This qualification is a CFEL operator, not a graph Relation. It does not assign Y to an occurrence or determine direct-value cardinality.
+A Declaration with a qualified Main Subject such as `B/(.p := V)` admits V
+for p in its Python Formal Claim. State the full Property path and preserve
+the parent qualifiers. Express any instance constraints for the same scope.

@@ -6,11 +6,11 @@ container:
 role: Evaluation
 form: Eval Case
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Role:=Operations)/Workflow
+  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role:=Operations)/Workflow
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role:=Operations)/Action
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Operations)/(.Header.Form := Workflow) >{1+} Atom/(.Header.Role := Operations)/(.Header.Form := Step)'
-  - 'CAPRMEDIO_STRUCTURE <+ Atom/(.Header.Role := Operations)/(.Header.Form := Action)//Assess Atom Update Identity'
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role:=Operations)/Action
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow) >{1+} Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Step)
+  - CAPRMEDIO_STRUCTURE <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Action)//Assess Atom Update Identity
   - CAPRMEDIO_MODEL <+ Atom
   - CAPRMEDIO_MODEL <+ Atom.Content.Summary
   - CAPRMEDIO_MODEL <+ Entity/Object/Occurrent/Execution/Workflow Run
@@ -19,20 +19,22 @@ tier: 4
 relations:
   evaluation_for:
   - CA-O-067
-  - CA-O-127
+  - CA-O-10016
+  - CA-O-10018
+  - CA-O-10024
   - CA-R-1432
   - CA-R-1464
 status: Active
-version: 25
-updated_at: 2026-11-02 08:06:47 +0400
+version: 26
+updated_at: 2026-11-11 14:09:10 +0400
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation/CA-E-491-PROJECT_CONFIGURATION-EVAL_CASE--validate-atom-update-identity-and-promotion.md
   source_atom_id: CA-E-491
-  source_atom_revision: 25
-  source_sha256: c13acb0d1a14696fecca429f2ada4876cfe21bf6c6cead7c809658cda9fe3d48
-  original_relations_sha256: b7a5c065662184cf8b763bad5a539856a6b61d56a6076ae5ae222a66b422de1b
+  source_atom_revision: 26
+  source_sha256: bdb56870b495b26ab86e018b7e224b13ad386b73f410702da8ac13f7188c678f
+  original_relations_sha256: b4aa64fba4254e1da686e41524a75e69cb916883ae276a836e306822d387b85c
 ---
 ## Summary
 
@@ -42,7 +44,7 @@ Validate Atom update identity and promotion
 
 ### Prose Claim
 
-This Evaluation checks the identity and Version consequences of preparing and promoting an Atom Draft under CA-O-067, CA-O-127 and CA-R-1432. An identity observation is read-only and is not a semantic assessment gate or a prerequisite to a lifecycle effect.
+This Evaluation checks the identity and Version consequences of preparing and promoting an Atom Draft under CA-O-067, CA-O-10016, CA-O-10018, CA-O-10024 and CA-R-1432. An identity observation is read-only and is not a semantic assessment gate or a prerequisite to a lifecycle effect.
 
 ## Details
 

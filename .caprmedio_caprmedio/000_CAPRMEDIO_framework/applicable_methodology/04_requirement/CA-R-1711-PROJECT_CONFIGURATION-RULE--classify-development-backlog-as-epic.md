@@ -6,13 +6,11 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan)
+  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)
+  - CAPRMEDIO_MODEL <+ Entity
 tier: 2
-relations:
-  depends_on:
-  - CA-R-1708
 status: Active
 version: 31
 updated_at: 2026-11-02 00:18:22 +0400
@@ -26,8 +24,8 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement/CA-R-1711-PROJECT_CONFIGURATION-RULE--classify-development-backlog-as-epic.md
   source_atom_id: CA-R-1711
   source_atom_revision: 31
-  source_sha256: fcf9a21b5d94f57c564a8e2174f11a0119a5350966b146d5ffec1c26c77529c0
-  original_relations_sha256: 31629d4c001efec68713297020fe099c1da3966e9c2bede0d39b87a2851050f3
+  source_sha256: 30e97e142dc7abc6fc4e4977a1212fcff1aedb64ef96077108c8f05ad9315b88
+  original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
 

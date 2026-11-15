@@ -6,11 +6,12 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Project.Settings.Authority Modes.Project Authority Mode
+  main_subject: CAPRMEDIO_MODEL <+ Project.Settings.Authority Modes.Project Authority
+    Mode
 tier: 3
-status: Active
-version: 2
-updated_at: 2026-11-04 05:21:15 +0400
+status: active
+version: 3
+updated_at: '2026-11-12T17:23:54+00:00'
 carrier_destination:
   file:
     name: CA-R-2634-CORE_META_MODEL-DECLARATION--declare-project-settings-authority-modes-project-authority-mode.md
@@ -20,8 +21,8 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2634-CORE_META_MODEL-DECLARATION--declare-project-settings-authority-modes-project-authority-mode.md
   source_atom_id: CA-R-2634
-  source_atom_revision: 2
-  source_sha256: b241e943ba8aeaa832b17bfce6a4291e2810680f09683e815d3861657a93d252
+  source_atom_revision: 3
+  source_sha256: c8db78f666b4abc9e766857d3f4333fb6b8d8d1431d7290ae0585572b1141d36
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 
@@ -38,10 +39,17 @@ The permitted values are `strict` and `casual`. The effective selection follows 
 
 ### Formal Claim
 
-```CFEL
+```python
 # model
-Project.Settings.Authority Modes.Project Authority Mode{::1}:: {::1};
+from caprmedio.formal_claims import declare_entity
 
-Project.Settings.Authority Modes.Project Authority Mode.*[]{::0}
+declare_entity(
+    entity_name='Project Authority Mode',
+    relation_name='IS_PROPERTY_OF',
+    base_path='Project.Settings.Authority Modes',
+    property_occurrence_cardinality=1,
+    value_cardinality=1,
+    dependent_property_cardinality=0,
+)
 ```
 

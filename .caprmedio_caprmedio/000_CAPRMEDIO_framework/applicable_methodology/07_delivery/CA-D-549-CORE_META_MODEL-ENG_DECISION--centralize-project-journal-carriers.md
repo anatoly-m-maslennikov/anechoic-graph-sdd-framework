@@ -12,7 +12,7 @@ topics:
   - CAPRMEDIO_MODEL <+ Journal
   - CAPRMEDIO_MODEL <+ Carrier
   - CAPRMEDIO_MODEL <+ Projection
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Operations)/(.Header.Form := Workflow)'
+  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow)'
 tier: 3
 status: Active
 version: 19
@@ -27,7 +27,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-549-CORE_META_MODEL-ENG_DECISION--centralize-project-journal-carriers.md
   source_atom_id: CA-D-549
   source_atom_revision: 19
-  source_sha256: 32dcb188ba87c91591e162635810e7ad53d2bf7d4087730bea123f3422c9c24f
+  source_sha256: b1627ef288e24c629db281b489123059b75b8f712fb3bc86c8ed6e203f3c9733
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

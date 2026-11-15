@@ -14,11 +14,8 @@ topics:
   - Scope Unit
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Projection//PROJECT_SCOPE_UNIT_GRAPH
   - Subject/CAPRMEDIO/Carrier
+  - CAPRMEDIO_STRUCTURE <+ Projection//PROJECT_SCOPE_UNIT_GRAPH
 tier: 3
-relations:
-  depends_on:
-  - CA-D-453
-  - CA-D-454
 status: Active
 version: 14
 updated_at: 2026-11-02 19:44:26 +0400
@@ -29,8 +26,8 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-062-PROJECT_CONFIGURATION-ACTION--retire-legacy-structural-projections-after-consumer-cutover.md
   source_atom_id: CA-O-062
   source_atom_revision: 14
-  source_sha256: 02507e1ccac4f1883974599bd9473da1dc5d0f98c4ed8464f8c0f94f1dbc173e
-  original_relations_sha256: acc4680717f4f8a037686b6fbd15a18e497fe033dae799974be421637af48a74
+  source_sha256: 6815bb27e68cad695480e238026ea046ab67286f1115d151ee7e2b8507bacc66
+  original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 # Retire legacy structural Projections after consumer cutover
 

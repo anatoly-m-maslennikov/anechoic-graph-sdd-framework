@@ -11,9 +11,6 @@ topics:
   - CAPRMEDIO_MODEL <+ Atom.Content
   - CAPRMEDIO_MODEL <+ Scope Unit
 tier: 2
-relations:
-  depends_on:
-  - CA-R-1595@21
 status: Active
 version: 22
 updated_at: 2026-11-02 00:18:22 +0400
@@ -27,8 +24,8 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1596-CORE_META_MODEL--give-every-claim-one-target-scope-unit.md
   source_atom_id: CA-R-1596
   source_atom_revision: 22
-  source_sha256: f924c1365307596bfbf74f05b0ce8ae23d33dff9dbca757821abf18a9ea641a2
-  original_relations_sha256: a22aa993ac3cd9ae8fad49a5c6a296f3778b61218ab62382254ddcf55f91414f
+  source_sha256: bb5c41a490988e6a18e02c485505b45e53a5e4ec00f7abb6bb480da0c9210fa8
+  original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
 Give every Claim one Target Scope Unit

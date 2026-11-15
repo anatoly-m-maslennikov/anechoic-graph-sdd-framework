@@ -11,7 +11,7 @@ topics:
   - CAPRMEDIO_MODEL <+ Atom
   - CAPRMEDIO_MODEL <+ Atom.Content.Summary
   - CAPRMEDIO_MODEL <+ Carrier
-  - CAPRMEDIO_MODEL <+ Atom.Header.Role
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Role
 tier: 2
 status: Active
 version: 30
@@ -24,7 +24,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1432-CORE_META_MODEL-RULE--govern-atom-lifecycle-identity-and-version.md
   source_atom_id: CA-R-1432
   source_atom_revision: 30
-  source_sha256: df8c734b6a9613cf5c76eb99ebc618dc9e61fbc12d39eecc98e8ec2f993b4a57
+  source_sha256: d9b875a9b76593eb98d46d85fa02a703212d3f99696fde34fe72b286e87eaa69
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

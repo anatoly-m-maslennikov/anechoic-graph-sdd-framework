@@ -10,10 +10,10 @@ topics:
 tier: 1
 relations:
   child_of:
-  - CA-M-446
+  - CA-M-539
 status: Active
-version: 35
-updated_at: 2026-11-02 19:44:26 +0400
+version: 36
+updated_at: "2026-11-11 18:46:16 +0400"
 carrier_destination:
   file:
     name: CA-R-1051-CORE_META_MODEL-RULE--separate-active-authority-from-preserved-history.md
@@ -23,9 +23,9 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1051-CORE_META_MODEL-RULE--separate-active-authority-from-preserved-history.md
   source_atom_id: CA-R-1051
-  source_atom_revision: 35
-  source_sha256: 95b82f0de44b91883cd66353c6157ccecc9effd1cb058da1336488569b00d22c
-  original_relations_sha256: b89a25fc58f998c131ce54128d80bfe7e80b8e3bae5533fc6910372a7e874e93
+  source_atom_revision: 36
+  source_sha256: c5573ab01d3589eae7c4f57fb1af869b18d08538e3ea16824b963087468e0fe8
+  original_relations_sha256: 38ed74fc4f1cae0538794d8e7474a259e7d50dd0094a82b19b8d86817482a7d0
 ---
 ## Summary
 

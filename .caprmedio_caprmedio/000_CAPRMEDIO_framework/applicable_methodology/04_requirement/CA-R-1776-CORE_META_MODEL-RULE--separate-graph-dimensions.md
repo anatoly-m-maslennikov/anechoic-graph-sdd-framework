@@ -14,11 +14,10 @@ topics:
 tier: 1
 relations:
   child_of:
-  - CA-M-447
-  - CA-R-1407
+  - CA-M-540
 status: Active
-version: 40
-updated_at: 2026-11-02 18:35:20 +0400
+version: 42
+updated_at: "2026-11-11 18:46:16 +0400"
 carrier_destination:
   file:
     name: CA-R-1776-CORE_META_MODEL-RULE--separate-graph-dimensions.md
@@ -28,9 +27,9 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1776-CORE_META_MODEL-RULE--separate-graph-dimensions.md
   source_atom_id: CA-R-1776
-  source_atom_revision: 40
-  source_sha256: 12a420275df76f3d65131635dfd4f6cb433a123c40d8a74a517fea7c5325d728
-  original_relations_sha256: e69fbf26e6b2745e2e0a1ea2704c4317cf791fa0c7e136ed844a795cc53dab8d
+  source_atom_revision: 42
+  source_sha256: 3de04693f739a777cf7c8914d079531dab92d48230889a702d879cfb4bf95f1e
+  original_relations_sha256: e7e8c430ecdabe896ae5a52210effd0c1cf4563a147e957c4618b4bafbc2d791
 ---
 ## Summary
 

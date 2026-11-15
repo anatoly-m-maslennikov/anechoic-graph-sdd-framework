@@ -6,15 +6,14 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Scope Unit.Path
+  main_subject: CAPRMEDIO_MODEL <+ Scope Unit.Paths
 tier: 3
 relations:
   child_of:
-  - CA-M-447
   - CA-R-1776
-status: Active
-version: 39
-updated_at: 2026-11-02 19:44:26 +0400
+status: active
+version: 41
+updated_at: '2026-11-12T22:48:36.180013+00:00'
 carrier_destination:
   file:
     name: CA-R-1688-CORE_META_MODEL-RULE--scope-path-does-not-change-semantic-coordinates.md
@@ -24,9 +23,9 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1688-CORE_META_MODEL-RULE--scope-path-does-not-change-semantic-coordinates.md
   source_atom_id: CA-R-1688
-  source_atom_revision: 39
-  source_sha256: 7a506698a241e1ae2a642ba083acff0f3099dc66c2aa04e6b5968799c1111656
-  original_relations_sha256: b8dcfd73d6f0c11b7eaf8d81fb734512e58f3895c78965eff1dcb2306ef36af2
+  source_atom_revision: 41
+  source_sha256: 893d0ebd638d69c838aa168e82d1909dace7a3296af9dea6cd3507ccbfd301f5
+  original_relations_sha256: 1aee20d21b9ce38a56336862dc1f3d576ad4e3123506d524cd0d5ea4cd2829ab
 ---
 ## Summary
 
@@ -36,10 +35,4 @@ Scope path does not change semantic coordinates
 
 ### Prose Claim
 
-
-Scope paths in the current project.
-
-
-Scope path is a project-relative address containing **`>=0`** operator-labeled structural scopes ordered from broader parent **to** narrower child.
-
-the current project is ambient. Scope **may** govern ownership, applicability, **and** inheritance, but it never changes stable Artifact identity, Artifact form, Content Role, **or** Governance locus.
+A change to the physical Authority or Delivery folder coordinates alone preserves the stable identity, Form, Role, and governance locus of each affected Atom.

@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  main_subject: CAPRMEDIO_MODEL <+ Relation
 tier: 1
 status: Active
 version: 27
@@ -21,7 +21,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1029-CORE_META_MODEL-RULE--record-lineage-impact-disposition-context.md
   source_atom_id: CA-R-1029
   source_atom_revision: 27
-  source_sha256: c6af264715e1b6d3ff421d17a564bfea83afcad6cd23e6a4c040e8a0e9d179b1
+  source_sha256: c32bbec2503a92c23cb591fff1536d026fca7b24f18df76af99cc8652f4991ea
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

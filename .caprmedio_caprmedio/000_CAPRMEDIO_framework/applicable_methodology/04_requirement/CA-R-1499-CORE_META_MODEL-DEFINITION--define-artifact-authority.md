@@ -12,22 +12,22 @@ topics:
 tier: 1
 relations:
   child_of:
-  - CA-M-447
+  - CA-M-539
 status: Active
-version: 21
-updated_at: 2026-11-02 00:18:22 +0400
+version: 22
+updated_at: "2026-11-11 18:46:16 +0400"
 carrier_destination:
   file:
-    name: CA-R-1499-CORE_META_MODEL-RULE--define-artifact-authority.md
+    name: CA-R-1499-CORE_META_MODEL-DEFINITION--define-artifact-authority.md
     path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1499-CORE_META_MODEL-DEFINITION--define-artifact-authority.md
   source_atom_id: CA-R-1499
-  source_atom_revision: 21
-  source_sha256: 141f5906a45d671440b9ab28d184239530bcdb3e215df1eef00aab4e85585f84
-  original_relations_sha256: cda81380ab057c4da428dab72b93f65bb72092983ee69756870fff6e5dc9bea9
+  source_atom_revision: 22
+  source_sha256: 0f9d5e6ad9d9d2b93a2f7482e6ebbe6a23e8c39cadd6243ac13990b2bb42154a
+  original_relations_sha256: 38ed74fc4f1cae0538794d8e7474a259e7d50dd0094a82b19b8d86817482a7d0
 ---
 ## Summary
 

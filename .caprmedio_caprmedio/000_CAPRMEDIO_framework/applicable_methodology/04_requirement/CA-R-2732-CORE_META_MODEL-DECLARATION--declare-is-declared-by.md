@@ -6,11 +6,11 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_DECLARED_BY
+  main_subject: CAPRMEDIO_MODEL <+ Relation//IS_DECLARED_BY
 tier: 1
-status: Active
-version: 2
-updated_at: 2026-11-05 22:47:24 +0400
+status: active
+version: 4
+updated_at: '2026-11-13T22:37:32.288997+00:00'
 carrier_destination:
   file:
     name: CA-R-2732-CORE_META_MODEL-DECLARATION--declare-is-declared-by.md
@@ -20,8 +20,8 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2732-CORE_META_MODEL-DECLARATION--declare-is-declared-by.md
   source_atom_id: CA-R-2732
-  source_atom_revision: 2
-  source_sha256: a66962dd7ff199eec604bf36a6038dff88896a97336b777e4bb2e074829d9a94
+  source_atom_revision: 4
+  source_sha256: d4c3994b7454a43cbfa5f8187a3c2762b1ef3651592fbffdf491b18c37c94a33
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
@@ -39,13 +39,14 @@ The Host is the qualified Declaration's governed Subject; it may be outside the 
 Forward `Host ((IS_DECLARED_BY)) Target` and reverse `Target <((IS_DECLARED_BY)) Host` are written views of that same derived fact. CA-R-1199 retains the general GOVERNS meaning. CA-R-2278 supplies the declaring ownership qualification; this Declaration retains the qualified endpoint transformation. Neither a derivation reference nor a displayed view grants permission or cardinality.
 ### Formal Claim
 
-```CFEL
-# model
-Relation//IS_DECLARED_BY ((HAS_CLASSIFICATION)) Derivation == Derived;
+```python
+from caprmedio.formal_claims import declare_relation
 
-Relation//IS_DECLARED_BY ((IS_DERIVED_RELATION_OF)) Relation//GOVERNS;
-
-# instances
-$declared_subject ((IS_DECLARED_BY)) Atom/(.Header.Role: Requirement)/(.Header.Form in (Declaration, Relation Declaration))//$atom
+declare_relation(
+    relation_name='IS_DECLARED_BY',
+    derived_from='GOVERNS',
+    source_endpoint={'level': 'model_entities_or_instances'},
+    target_endpoint={'level': 'instances', 'entity_paths': ('Atom/(.Header.Context.Role:=Requirement)/(.Header.Context.Form in (Declaration, Relation Declaration))',)},
+)
 ```
 

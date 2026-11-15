@@ -8,9 +8,9 @@ form: Rule
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Atom
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom.Header.ID
-  - CAPRMEDIO_MODEL <+ Atom.Header.Version
-  - CAPRMEDIO_MODEL <+ Atom.Header.Updated At
+  - CAPRMEDIO_MODEL <+ Atom.Header.Identity.ID
+  - CAPRMEDIO_MODEL <+ Atom.Header.State.Version
+  - CAPRMEDIO_MODEL <+ Atom.Header.State.Updated At
 tier: 3
 status: Active
 version: 36
@@ -25,7 +25,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-366-CORE_META_MODEL-RULE--reference-exact-atom-revisions-by-version-and-time.md
   source_atom_id: CA-R-366
   source_atom_revision: 36
-  source_sha256: 38ff93082f1a490a57ad3ddefda69cb90dd92da4cdf42507eeeb6edce31334a9
+  source_sha256: c269cb1ed6f8a09ee3378e5cbf6b93472d92740ce974a8fbf33a0f7f04b60892
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

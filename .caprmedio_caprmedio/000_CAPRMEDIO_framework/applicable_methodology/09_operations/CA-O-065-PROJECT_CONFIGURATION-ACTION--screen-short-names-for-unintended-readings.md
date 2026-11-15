@@ -14,10 +14,10 @@ topics:
 tier: 3
 relations:
   child_of:
-  - CA-M-005
+  - CA-M-1000
 status: Active
-version: 15
-updated_at: 2026-10-27 19:59:45 +0400
+version: 16
+updated_at: "2026-11-11 18:46:16 +0400"
 carrier_destination:
   file:
     name: CA-O-065-PROJECT_CONFIGURATION-ACTION--screen-short-names-for-unintended-readings.md
@@ -28,9 +28,9 @@ author: Anatoly Maslennikov
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-065-PROJECT_CONFIGURATION-ACTION--screen-short-names-for-unintended-readings.md
   source_atom_id: CA-O-065
-  source_atom_revision: 15
-  source_sha256: 019e4d5e07e35fc7a26ceec2e01f5d5135919c97a86ac2d29e6168c2da81227a
-  original_relations_sha256: 492413f1249ab26855e5486c7d168371d1c677633fce8e2c0144e0c4df387c15
+  source_atom_revision: 16
+  source_sha256: b7abdff72eea0e37a27641369de7218ce8d2693404e60d3722e2230e0a55ec2c
+  original_relations_sha256: 935c0a879a38b5187b9e8471780ecab0909d84c1ddb91a9a1aebff029593ddb9
 ---
 # Summary
 

@@ -6,12 +6,12 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Status:Draft
+  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.State.Status:Draft
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom.Header.ID
-  - CAPRMEDIO_MODEL <+ Atom.Header.Version
-  - CAPRMEDIO_MODEL <+ Atom.Header.Status:Draft
-  - CAPRMEDIO_MODEL <+ Atom.Header.Role
+  - CAPRMEDIO_MODEL <+ Atom.Header.Identity.ID
+  - CAPRMEDIO_MODEL <+ Atom.Header.State.Version
+  - CAPRMEDIO_MODEL <+ Atom.Header.State.Status:Draft
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Role
 tier: 3
 status: active
 version: 26
@@ -26,7 +26,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-570-CORE_META_MODEL-DECISION--serialize-draft-revision-lineage.md
   source_atom_id: CA-D-570
   source_atom_revision: 26
-  source_sha256: a5689a46690cda7e6a088f3043fb0858b0c9cf15462cff4cd0e85cca5e79ae75
+  source_sha256: e640fa9d0efe28a0ecaab914f3b078a467027955be92943d4313d874483281e5
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

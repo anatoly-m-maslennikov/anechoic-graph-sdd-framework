@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  main_subject: CAPRMEDIO_MODEL <+ Relation
 tier: 3
 relations:
   child_of:
@@ -24,7 +24,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1038-CORE_META_MODEL-RULE--permit-multiple-child-rows-in-one-lineage-impact-analysis.md
   source_atom_id: CA-R-1038
   source_atom_revision: 28
-  source_sha256: 4892d90dda31fd57c12820e0995129152c88f2fce243e648890463ae1affe987
+  source_sha256: d8c66679f4d08bd0917b7efd64da5158d95ac65d33d6d05f31023945ef53453b
   original_relations_sha256: 7ebdb9b425b2dd0260c108974f4577998b125ec90d8080910111b3b61e830967
 ---
 ## Summary

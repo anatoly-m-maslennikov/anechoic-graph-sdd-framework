@@ -6,16 +6,16 @@ container:
 role: Method
 form: Implementation Method
 topics:
-  main_subject: 'CAPRMEDIO_STRUCTURE <+ Atom/(.Header.Role := Operations)/(.Header.Form := Workflow)//Applicable Methodology Compilation'
+  main_subject: 'CAPRMEDIO_STRUCTURE <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow)//Applicable Methodology Compilation'
   dependencies:
   - CAPRMEDIO_MODEL <+ Project
 tier: 1
 relations:
   child_of:
-  - CA-M-446
+  - CA-M-538
 status: Active
-version: 23
-updated_at: 2026-11-02 00:18:22 +0400
+version: 24
+updated_at: "2026-11-11 18:46:16 +0400"
 carrier_destination:
   file:
     name: CA-M-260-PROJECT_CONFIGURATION-IMPLEMENTATION_METHOD--one-statement-one-source.md
@@ -28,9 +28,9 @@ current_scope_unit: PROJECT_CONFIGURATION
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/05_method/CA-M-260-PROJECT_CONFIGURATION-IMPLEMENTATION_METHOD--one-statement-one-source.md
   source_atom_id: CA-M-260
-  source_atom_revision: 23
-  source_sha256: 2d5230b0d5848377c2cf928c0022f75928d7ef98b7b645f62b969f5b9d898cce
-  original_relations_sha256: b89a25fc58f998c131ce54128d80bfe7e80b8e3bae5533fc6910372a7e874e93
+  source_atom_revision: 24
+  source_sha256: c0aa1c01cb07b5dd51d7272e44a4972a871a77f665f178ad5e36b607b3709cbf
+  original_relations_sha256: cb1112b2844194bcb2f1e62bea4fe84b7a6104bd43db1a0561a87d8d3673d488
 ---
 ## Summary
 One statement, one source

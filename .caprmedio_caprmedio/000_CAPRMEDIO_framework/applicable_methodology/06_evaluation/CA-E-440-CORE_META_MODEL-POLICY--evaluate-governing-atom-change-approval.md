@@ -8,7 +8,7 @@ form: Eval Policy
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Atom
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan).Header.AI Agent Confidence Threshold
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.Context.Plan.AI Agent Confidence Threshold
 tier: 4
 relations:
   child_of:
@@ -28,7 +28,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-440-CORE_META_MODEL-POLICY--evaluate-governing-atom-change-approval.md
   source_atom_id: CA-E-440
   source_atom_revision: 38
-  source_sha256: 0e1727791c9cc439d2c4645b49a6928c100b9d8300b5ef4b6a5f463a61617faf
+  source_sha256: 63e7bc4796c47acebb92ebe0846aab786eb2cc56d3881a7445e8e9decbb3203f
   original_relations_sha256: c8e1cfb27ad9ddf54dcfb2657bf6f2421aa41703fa5b8d095db9541dcae92c3d
 ---
 ## Summary

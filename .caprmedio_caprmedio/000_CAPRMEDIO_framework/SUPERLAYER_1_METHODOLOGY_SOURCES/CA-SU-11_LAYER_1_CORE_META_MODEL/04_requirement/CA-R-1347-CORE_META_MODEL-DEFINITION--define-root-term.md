@@ -9,7 +9,7 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Term
   dependencies:
   - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Terms Graph)'
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//NARROWER_THAN
+  - CAPRMEDIO_MODEL <+ Relation//NARROWER_THAN
 tier: 1
 status: Active
 version: 29

@@ -8,7 +8,7 @@ context:
   role: Requirement
   form: Rule
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation
+    main_subject: CAPRMEDIO_MODEL <+ Relation
   tier: 1
 state:
   status: Active
@@ -24,7 +24,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-807-CORE_META_MODEL-RULE--record-replacement-transitions-in-the-journal.md
   source_atom_id: CA-R-807
   source_atom_revision: 36
-  source_sha256: 6290575cbf4fdfc21de296f45cb81736fb632655e2ab5a5b0252f95e3449103e
+  source_sha256: 08ab68f016ace5c712e54160fb5c8c56b7f3647d13a7964d06e3d5f96950a6e6
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

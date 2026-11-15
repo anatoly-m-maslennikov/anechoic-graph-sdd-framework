@@ -6,10 +6,10 @@ container:
 role: Evaluation
 form: Eval Policy
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Requirement)
+  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Requirement)
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Requirement)
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Evaluation)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Requirement)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
   - CAPRMEDIO_MODEL <+ Atom
 tier: 3
 relations:
@@ -32,7 +32,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-434-CORE_META_MODEL-POLICY--evaluate-requirement-checkability.md
   source_atom_id: CA-E-434
   source_atom_revision: 26
-  source_sha256: da8320df93b0b451ab24e95759abb8afa01197e1f54e73a53e0e3616e1d833b7
+  source_sha256: 3e90664435e9b51a83438c7f9992e7f7057059ce58eb6334d0fabaa257b8a3a4
   original_relations_sha256: c2ab95456accbf184854301a761479594f3176feb4cc120063cbcf3a7cd917a1
 ---
 ## Summary

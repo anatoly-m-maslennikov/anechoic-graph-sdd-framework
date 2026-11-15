@@ -8,21 +8,25 @@ form: Implementation Method
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Project
   dependencies:
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled English"
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring
 tier: 3
 relations:
   child_of:
   - CA-R-940
-status: Active
-version: 29
-updated_at: 2026-11-02 18:35:20 +0400
+status: active
+version: 30
+updated_at: '2026-11-13T18:40:25.356465+00:00'
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: PROJECT_CONFIGURATION
+destination:
+  file:
+    name: CA-M-112-CORE_META_MODEL-IMPLEMENTATION_METHOD--use-english-as-the-project-language.md
+    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-112-CORE_META_MODEL-IMPLEMENTATION_METHOD--use-english-as-the-project-language.md
   source_atom_id: CA-M-112
-  source_atom_revision: 29
-  source_sha256: 8e8a056cbdefe8310f44fd146dc165bb14dceb1af6f6324b1315763b73d4246b
+  source_atom_revision: 30
+  source_sha256: aaa7619891dbb890de88f414aef8f870a16f5d91a28f462aa55eddef1bc0f20c
   original_relations_sha256: 909b774c184e37cf1e31372f49dab4276a30bd643b4d0c25e061b4865bb09e1e
 ---
 ## Summary

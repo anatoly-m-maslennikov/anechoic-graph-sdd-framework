@@ -9,10 +9,10 @@ topics:
   main_subject: 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Terms Graph)'
   dependencies:
   - CAPRMEDIO_MODEL <+ Term
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Method)/(.Header.Form := Term Definition)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Method)/(.Header.Context.Form := Term Definition)
   - CAPRMEDIO_MODEL <+ Atom.Content
   - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
   - CAPRMEDIO_MODEL <+ Projection
 tier: 2
 relations:
@@ -31,7 +31,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1454-CORE_META_MODEL--derive-governed-terms-views-from-selected-authority.md
   source_atom_id: CA-R-1454
   source_atom_revision: 33
-  source_sha256: 9a05fd2365ccc0e458ce933690629e7e26d85f2b06c2b1e4329bdf3acf1b68fa
+  source_sha256: b8486d90b881b166e23b1b623fb38b98d5911f20aa52ca150f09624bc6f4bb2b
   original_relations_sha256: 8e132c01045800f67488d18acbb3aa8f36eb62c00d1c6ed57e3afc55b5abc32f
 ---
 ## Summary

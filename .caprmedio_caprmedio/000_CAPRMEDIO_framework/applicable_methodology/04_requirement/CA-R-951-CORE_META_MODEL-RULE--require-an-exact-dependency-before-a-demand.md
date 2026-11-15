@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Requirement)/(.Header.Form := Demand)'
+  main_subject: 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Requirement)/(.Header.Context.Form := Demand)'
   dependencies:
   - CAPRMEDIO_MODEL <+ Atom
 tier: 6
@@ -26,7 +26,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-951-CORE_META_MODEL-RULE--require-an-exact-dependency-before-a-demand.md
   source_atom_id: CA-R-951
   source_atom_revision: 33
-  source_sha256: 9f9fae2ad6cd685ad29467918025e3528d976aa88c20f5bbf2b4a3b3646386a9
+  source_sha256: 8cecab9c4404ca0e8ff8f15e20e8be3e26004367f951f1a7f7a30ee5a6d06afd
   original_relations_sha256: c28d84bac21e6f7cc7bfde47da5b055ffadede71bf17c4da3c8b2456c1f525ea
 ---
 ## Summary

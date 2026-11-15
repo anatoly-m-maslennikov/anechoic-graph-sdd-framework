@@ -8,9 +8,9 @@ form: Declaration
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Event Record.object_output.id
 tier: 3
-status: Active
-version: 2
-updated_at: 2026-11-02 00:18:22 +0400
+status: active
+version: 3
+updated_at: '2026-11-12T12:33:04.158402+00:00'
 carrier_destination:
   file:
     name: CA-R-2577-CORE_META_MODEL-DECLARATION--declare-event-record-object-output-id.md
@@ -20,8 +20,8 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2577-CORE_META_MODEL-DECLARATION--declare-event-record-object-output-id.md
   source_atom_id: CA-R-2577
-  source_atom_revision: 2
-  source_sha256: d209b2a24858bd828fcc258fa98de387e26c1dd72354b5af982c5059dc206690
+  source_atom_revision: 3
+  source_sha256: d272c2418da096f55cc22d4e5055ac2e847de98400842cbf9bf3a115716b5ab4
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
@@ -32,10 +32,17 @@ Declare Event Record.object_output.id
 
 ### Formal Claim
 
-```CFEL
-# model
-Event Record.object_output.id{::1}:: [string]{::1};
+```python
+from caprmedio.formal_claims import declare_entity
 
-Event Record.object_output.id.*[]{::0}
+declare_entity(
+    entity_name='id',
+    relation_name='IS_PROPERTY_OF',
+    base_path='Event Record.object_output',
+    value_format=str,
+    property_occurrence_cardinality=1,
+    value_cardinality=1,
+    dependent_property_cardinality=0,
+)
 ```
 

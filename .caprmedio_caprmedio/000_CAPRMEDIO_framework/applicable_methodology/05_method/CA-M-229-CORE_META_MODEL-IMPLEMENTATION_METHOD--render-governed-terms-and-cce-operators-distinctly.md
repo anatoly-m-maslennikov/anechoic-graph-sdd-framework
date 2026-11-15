@@ -8,14 +8,15 @@ form: Implementation Method
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Term
   dependencies:
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled English"
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled
+    English
   - CAPRMEDIO_MODEL <+ Scope Unit.Name
   - CAPRMEDIO_MODEL <+ Actor
   - CAPRMEDIO_MODEL <+ Carrier/File
 tier: 3
-status: Active
-version: 34
-updated_at: 2026-11-03 23:25:51 +0400
+status: active
+version: 35
+updated_at: '2026-11-13T19:20:31.529454+00:00'
 carrier_destination:
   file:
     name: CA-M-229-CORE_META_MODEL-IMPLEMENTATION_METHOD--render-governed-terms-and-cce-operators-distinctly.md
@@ -25,8 +26,8 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-229-CORE_META_MODEL-IMPLEMENTATION_METHOD--render-governed-terms-and-cce-operators-distinctly.md
   source_atom_id: CA-M-229
-  source_atom_revision: 34
-  source_sha256: 5509a32045abca34b799fe0511714ae4e2038705b278153e899276c1e308ed05
+  source_atom_revision: 35
+  source_sha256: ba02917c4adb2ddb70bdb5746aa327effa4f0d4e9f3cf3fb52dfe3fc878f9db5
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
@@ -38,10 +39,10 @@ Render Governed Terms and CCE Operators Distinctly
 ### Prose Claim
 
 
-CAPRMEDIO content lexical-case rendering.
+historical CCE content lexical-case rendering. This Method applies only when interpreting historical CCE material; it does not govern new Atom prose or require historical source rewriting.
 
 
-**to** render CAPRMEDIO content, the Author **must** apply the following lexical-case rules:
+For historical CCE content, assess lexical-case rendering under the following historical rules:
 
 - start **every** Governed Term with a capital letter.
 - start **every** General Term with a lowercase letter.

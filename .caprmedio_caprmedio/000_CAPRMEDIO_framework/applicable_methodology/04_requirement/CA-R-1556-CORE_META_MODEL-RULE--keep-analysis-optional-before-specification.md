@@ -13,7 +13,7 @@ topics:
   - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Selection
   - CAPRMEDIO_MODEL <+ Atom.Content
   - CAPRMEDIO_MODEL <+ Carrier
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := "Analysis & Advisory")/(.Header.Form := Analysis Report)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := "Analysis and Advisory")/(.Header.Context.Form := Analysis Report)
 tier: 2
 relations:
   child_of:
@@ -31,7 +31,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1556-CORE_META_MODEL-RULE--keep-analysis-optional-before-specification.md
   source_atom_id: CA-R-1556
   source_atom_revision: 26
-  source_sha256: 7e206e33f5ec93cfcbcc534066d984018ff8d85ec56794f5f554022ecd00b34b
+  source_sha256: e7a190b597dc8181916ba781853f621bc837c4c5054b2e308b10552fd370a41a
   original_relations_sha256: 86f48d79fbbfe66ffab2b0bb686a446bbbe206535c96d6e0d3b25f21670f9677
 ---
 ## Summary

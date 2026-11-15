@@ -6,24 +6,25 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//evidence_for
+  main_subject: CAPRMEDIO_MODEL <+ Relation//evidence_for
   dependencies:
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
 tier: 1
-status: Active
-version: 33
-updated_at: 2026-11-04 22:00:28 +0400
+status: active
+version: 34
+updated_at: '2026-11-12T23:18:16.780674+00:00'
 carrier_destination:
   file:
-    name: CA-R-1021-DECLARATION--register-evidence-for-relation.md
+    name: CA-R-1021-CORE_META_MODEL-DECLARATION--register-evidence-for-relation.md
     path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1021-CORE_META_MODEL-DECLARATION--register-evidence-for-relation.md
   source_atom_id: CA-R-1021
-  source_atom_revision: 33
-  source_sha256: 94da98174b6c69d36c0d90800cd5aaa3bfd0957259c903670307bbdc24cfb1bd
+  source_atom_revision: 34
+  source_sha256: 055a716e8edbf4462e66bcb83c6f15a3da1b90b6ead7e43815441a31326c9816
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
+
 ## Summary
 
 Register evidence_for relation
@@ -36,11 +37,13 @@ evidence_for is the direct Relation owned by an evidence Carrier. The Host is th
 
 ### Formal Claim
 
-```CFEL
-# model
-Relation//evidence_for ((HAS_CLASSIFICATION)) Derivation == Direct;
+```python
+from caprmedio.formal_claims import declare_relation
 
-# instances
-Carrier//$evidence_carrier ((evidence_for)) Carrier//$supported_carrier
+declare_relation(
+    relation_name='evidence_for',
+    source_endpoint={'level': 'instances', 'entity_paths': ('Carrier',)},
+    target_endpoint={'level': 'instances', 'entity_paths': ('Carrier',)},
+)
 ```
 

@@ -8,7 +8,7 @@ form: Rule
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Atom
   dependencies:
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
 tier: 2
 status: Active
 version: 26
@@ -23,7 +23,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1036-CORE_META_MODEL--define-uncertain-lineage-impact-disposition.md
   source_atom_id: CA-R-1036
   source_atom_revision: 26
-  source_sha256: 364e907651e95dce3173482af95a7e0a9154fbb8256712cf7be75d3b1616a0c2
+  source_sha256: 90c8b313793bd3c9f9bb39537f325df11ebeaacd26ce8bc5196409f63eb13873
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

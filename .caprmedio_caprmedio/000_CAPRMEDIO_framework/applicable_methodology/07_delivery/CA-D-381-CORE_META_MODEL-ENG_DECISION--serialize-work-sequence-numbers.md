@@ -6,7 +6,7 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan).Header.Work Sequence Number
+  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.Context.Plan.Work Sequence Number
   dependencies:
   - CAPRMEDIO_MODEL <+ Carrier
 tier: 3
@@ -23,7 +23,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-381-CORE_META_MODEL-ENG_DECISION--serialize-work-sequence-numbers.md
   source_atom_id: CA-D-381
   source_atom_revision: 23
-  source_sha256: 435262f0a89c01f5a8dc32c780c7e61894a7104db8d43635f5643522fcd34bc3
+  source_sha256: ee5f85d273025ba3e95f4f39039579081ad2154061f65d8c6d41e1c45f36226b
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

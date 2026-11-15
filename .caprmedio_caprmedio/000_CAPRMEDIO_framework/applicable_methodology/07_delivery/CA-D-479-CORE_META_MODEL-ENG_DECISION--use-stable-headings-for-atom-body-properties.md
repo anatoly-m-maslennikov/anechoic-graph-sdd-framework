@@ -10,7 +10,7 @@ topics:
   dependencies:
   - CAPRMEDIO_MODEL <+ Atom.Content.Summary
   - CAPRMEDIO_MODEL <+ Atom.Content
-  - CAPRMEDIO_MODEL <+ Atom.Header.Role
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Role
   - CAPRMEDIO_MODEL <+ Atom.Content.Details
   - CAPRMEDIO_MODEL <+ Term//Property
 tier: 3
@@ -30,7 +30,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-479-CORE_META_MODEL-ENG_DECISION--use-stable-headings-for-atom-body-properties.md
   source_atom_id: CA-D-479
   source_atom_revision: 36
-  source_sha256: f9782cfa1185b634ccbdb07fdc225fc6867c8b882fde46270eafa9054ead733d
+  source_sha256: c5e96e66a4782c6a1f0988253ec99d211f48fc83e291cb0fe24a54000e2a208e
   original_relations_sha256: 7eae1ab0b01a3c6e868bff88650758c42b946164219bbc8034612eec6bd5e9dd
 ---
 ## Summary

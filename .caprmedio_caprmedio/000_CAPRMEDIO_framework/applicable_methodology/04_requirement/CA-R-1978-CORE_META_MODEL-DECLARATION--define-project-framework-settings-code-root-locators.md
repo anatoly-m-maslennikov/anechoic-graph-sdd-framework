@@ -11,9 +11,9 @@ tier: 3
 relations:
   child_of:
   - CA-R-1176
-status: Active
-version: 15
-updated_at: 2026-11-02 08:06:47 +0400
+status: active
+version: 16
+updated_at: '2026-11-12T17:23:54+00:00'
 carrier_destination:
   file:
     name: CA-R-1978-CORE_META_MODEL-DECLARATION--define-project-framework-settings-code-root-locators.md
@@ -23,8 +23,8 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1978-CORE_META_MODEL-DECLARATION--define-project-framework-settings-code-root-locators.md
   source_atom_id: CA-R-1978
-  source_atom_revision: 15
-  source_sha256: db8ff80f323b703b91ff58db59d51c504af43f051e67c41677763109046bc728
+  source_atom_revision: 16
+  source_sha256: 60200dde55f42b60734e4b3ba10d2fe1c30cd4788211214f43e357247e191d4a
   original_relations_sha256: 9e3e53a370b31aee7f492cc3fbaba3b8b30f92b5773698d221265754db5d0402
 ---
 ## Summary
@@ -42,11 +42,19 @@ the code-root references in the Project's Framework Settings.
 
 ### Formal Claim
 
-```CFEL
+```python
 # model
-Project.Settings.Code-Root Locators{::0..1}:: [string]{::1+};
+from caprmedio.formal_claims import Cardinality, declare_entity
 
-Project.Settings.Code-Root Locators.*[]{::0}
+declare_entity(
+    entity_name='Code-Root Locators',
+    relation_name='IS_PROPERTY_OF',
+    base_path='Project.Settings',
+    property_occurrence_cardinality=Cardinality(minimum=0, maximum=1),
+    value_cardinality=Cardinality(minimum=1, maximum=None),
+    value_format='str',
+    dependent_property_cardinality=0,
+)
 ```
 
 ## Details

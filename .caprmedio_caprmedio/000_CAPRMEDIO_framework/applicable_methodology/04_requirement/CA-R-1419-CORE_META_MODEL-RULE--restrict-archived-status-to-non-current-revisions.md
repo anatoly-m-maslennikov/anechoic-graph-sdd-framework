@@ -6,10 +6,10 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Status:Archived
+  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.State.Status:Archived
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom.Header.Status
-  - CAPRMEDIO_MODEL <+ Atom.Header.Version
+  - CAPRMEDIO_MODEL <+ Atom.Header.State.Status
+  - CAPRMEDIO_MODEL <+ Atom.Header.State.Version
 tier: 1
 status: Active
 version: 23
@@ -24,7 +24,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1419-CORE_META_MODEL-RULE--restrict-archived-status-to-non-current-revisions.md
   source_atom_id: CA-R-1419
   source_atom_revision: 23
-  source_sha256: 36b34cba3f0a881789c72b811094d084107d087fb61d95c5f0887dd6d211ff56
+  source_sha256: e32a06ce6ee318b85ce9c57d758110cdee02ba3ab2fc250f04d7a8ac03973c12
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

@@ -8,13 +8,13 @@ context:
   role: Evaluation
   form: Eval Case
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation
+    main_subject: CAPRMEDIO_MODEL <+ Relation
     dependencies:
     - CAPRMEDIO_MODEL <+ Atom
-    - CAPRMEDIO_MODEL <+ Atom.Header.Role
-    - CAPRMEDIO_MODEL <+ Atom.Header.Status
+    - CAPRMEDIO_MODEL <+ Atom.Header.Context.Role
+    - CAPRMEDIO_MODEL <+ Atom.Header.State.Status
     - CAPRMEDIO_MODEL <+ Journal
-    - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+    - CAPRMEDIO_MODEL <+ Relation
     - CAPRMEDIO_MODEL <+ Entity
     - CAPRMEDIO_MODEL <+ Projection/(.Form:=Applicable Methodology)
     - CAPRMEDIO_MODEL <+ Projection
@@ -28,7 +28,7 @@ relations:
   - CA-R-1472
   - CA-M-120
   - CA-R-1676
-  - CA-R-1580
+  - CA-R-2762
   - CA-R-807
   - CA-D-268
   - CA-R-1040
@@ -48,8 +48,8 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-622-CORE_META_MODEL-EVAL_CASE--canonical-relation-validity.md
   source_atom_id: CA-E-622
   source_atom_revision: 55
-  source_sha256: 8e61965c18827e7bb09e911aff44d596d41e35d8955a0f84604c5919ac76862d
-  original_relations_sha256: 357e7479e6ae13967f90b616d81d1e027f95992fe72c504d878c5095c9e39d9f
+  source_sha256: 524be8e9cedd633e25d8be45cb66d3c41636836e716285a49ad3e191b634b10b
+  original_relations_sha256: 412eb511665e3c52a62b240f2585404f9df63f594e2e0eb26ee11480b9f8e6d2
 ---
 ## Summary
 

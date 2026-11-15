@@ -6,13 +6,13 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan)
+  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)
   - CAPRMEDIO_MODEL <+ Atom.Content.Summary
   - CAPRMEDIO_MODEL <+ Atom.Content
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan).Content.Definition of Done
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan).Content.Details
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Content.Definition of Done
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Content.Details
   - CAPRMEDIO_MODEL <+ Carrier/File
 tier: 3
 status: active
@@ -28,7 +28,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-470-CORE_META_MODEL-ENG_DECISION--serialize-plan-file-sections.md
   source_atom_id: CA-D-470
   source_atom_revision: 33
-  source_sha256: 1339d792b016eef829996c314117a56b29aae9ff5e2b38fc455795fa2ed1f7db
+  source_sha256: cc2fa1a692e16da86d1f44beae951f2916809f6976e510bf374acfb08f7ea925
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 

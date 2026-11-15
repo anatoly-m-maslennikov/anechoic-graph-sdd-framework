@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Demand
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  main_subject: CAPRMEDIO_MODEL <+ Relation
   dependencies:
   - CAPRMEDIO_MODEL <+ Atom.Local Scope Unit
   - CAPRMEDIO_MODEL <+ Atom.Target Scope Unit
@@ -27,7 +27,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-916-CORE_META_MODEL-DEMAND--restrict-ordered-demands-to-earlier-producers.md
   source_atom_id: CA-R-916
   source_atom_revision: 37
-  source_sha256: 853d97cf87819979a9f98e565bf63f21d8583b2401671ade2371b0668f9136b5
+  source_sha256: 952fbd56d92b5d6ebf2ac557bc62a59d4905eccec94cf3f0eb211ba9a03555f2
   original_relations_sha256: c20ed3844d666cd523ff76d7355fb5c2277a21d8c1137804e80822202d14a70b
 ---
 ## Summary

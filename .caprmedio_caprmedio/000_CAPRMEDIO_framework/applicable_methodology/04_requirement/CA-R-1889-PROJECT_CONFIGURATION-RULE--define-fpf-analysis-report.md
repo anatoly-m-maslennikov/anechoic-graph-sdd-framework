@@ -6,16 +6,15 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Role := "Analysis & Advisory")/(.Header.Form := FPF Analysis Report)
+  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := "Analysis & Advisory")/(.Header.Context.Form
+    := FPF Analysis Report)
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := "Analysis & Advisory")
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := "Analysis & Advisory")/(.Header.Form := Analysis Report)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := "Analysis & Advisory")
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := "Analysis & Advisory")/(.Header.Context.Form
+    := Analysis Report)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role:=Analysis and Advisory).Header.State.Status
+  - CAPRMEDIO_MODEL <+ Carrier/File
 tier: 2
-relations:
-  depends_on:
-  - CA-R-1727@30
-  - CA-R-1875
-  - CA-D-479
 status: Active
 version: 20
 updated_at: 2026-11-02 19:33:47 +0400
@@ -29,8 +28,8 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement/CA-R-1889-PROJECT_CONFIGURATION-RULE--define-fpf-analysis-report.md
   source_atom_id: CA-R-1889
   source_atom_revision: 20
-  source_sha256: deeb03375cb29889ae44e3d31ce7d19f34e0cdd3c5920d36cf24ac6e982e7aa9
-  original_relations_sha256: 3435f8757c90dd20c1ec967f027979b866b3148b4ae7ae12df23a154ee1990fd
+  source_sha256: 4c7cc8cc9c6743487148129d2904a5a86166dd1cc809f7228019bc6adb39141a
+  original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
 

@@ -14,41 +14,43 @@ topics:
   - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Package <+ Module
   - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Package <+ Module <+ Code Unit
   - CAPRMEDIO_MODEL <+ Term//Entity
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Method)/(.Header.Form := Term Definition)
-  - CAPRMEDIO_MODEL <+ Atom.Header.Topics
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Method)/(.Header.Context.Form
+    := Term Definition)
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
   - CAPRMEDIO_MODEL <+ Term
   - CAPRMEDIO_MODEL <+ Project
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role: Requirement)/(.Header.Form: Entity Definition)'
+  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role: Requirement)/(.Header.Context.Form:
+    Entity Definition)'
   - CAPRMEDIO_MODEL <+ Atom.Content
   - CAPRMEDIO_MODEL <+ Entity
   - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Terms Graph)'
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Concern)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Concern)
   - CAPRMEDIO_MODEL <+ Term//Artifact
   - CAPRMEDIO_MODEL <+ Scope Unit
   - CAPRMEDIO_MODEL <+ Actor
   - CAPRMEDIO_MODEL <+ Projection
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
 tier: 4
 relations:
   evaluation_for:
   - CA-R-1318
   - CA-R-1319
   - CA-R-1320
-  - CA-M-125
-  - CA-M-113
-status: Active
-version: 36
-updated_at: 2026-11-04 18:28:33 +0400
+  - CA-M-1026
+  - CA-M-1021
+status: active
+version: 38
+updated_at: '2026-11-13T18:55:54.474187+00:00'
 carrier_destination:
   file:
-    name: CA-E-444-EVAL_CASE--validate-project-specific-term-meaning.md
+    name: CA-E-444-CORE_META_MODEL-EVAL_CASE--validate-project-specific-term-meaning.md
     path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-444-CORE_META_MODEL-EVAL_CASE--validate-project-specific-term-meaning.md
   source_atom_id: CA-E-444
-  source_atom_revision: 36
-  source_sha256: 9974535da11aea3277a93042d40cba4baf0a2fd4781343d46261fddcb0332a7a
-  original_relations_sha256: aedddb0c2e1e658dd8ba37ccf7c007a8772a73e688ebf1d07a325ce14a6e7db9
+  source_atom_revision: 38
+  source_sha256: 34dd05a0ac8358dc1fe67d9a07ac413f073429f0415bf841ec7dd3b95486c16e
+  original_relations_sha256: 2e97ea309203e1011a1071b14d204c2da899fae4045403986d992e849a2c5b73
 ---
 ## Summary
 

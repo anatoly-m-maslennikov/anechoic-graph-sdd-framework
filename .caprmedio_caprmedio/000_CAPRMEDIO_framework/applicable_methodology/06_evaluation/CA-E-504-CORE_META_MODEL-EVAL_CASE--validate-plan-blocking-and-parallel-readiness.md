@@ -6,15 +6,15 @@ container:
 role: Evaluation
 form: Eval Case
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan)
+  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan)
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan).Header.Status: Done'
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan).Header.Work Sequence Number
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)
+  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.State.Status: Done'
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.Context.Plan.Work Sequence Number
 tier: 4
 relations:
   evaluation_for:
-  - CA-R-1580
+  - CA-R-2762
   - CA-R-1583@26
   - CA-R-1592
   - CA-D-471
@@ -29,8 +29,8 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-504-CORE_META_MODEL-EVAL_CASE--validate-plan-blocking-and-parallel-readiness.md
   source_atom_id: CA-E-504
   source_atom_revision: 24
-  source_sha256: 9826bf04b9b27c451a40b0e20d909b607d2e2cf2b04ec03c3475182b862268ca
-  original_relations_sha256: 16439a02e9b16e78cd3237b12f6c8445cc5504208a38a44ce29a9dad5973c4ed
+  source_sha256: b1da344e5e1593fe755c1865ab1dd2983ea59014aebefed953f28439b8580031
+  original_relations_sha256: 98eaba937672151faa2a5908a00e516091510a6486c3548712e9bfa2ef842778
 ---
 ## Summary
 

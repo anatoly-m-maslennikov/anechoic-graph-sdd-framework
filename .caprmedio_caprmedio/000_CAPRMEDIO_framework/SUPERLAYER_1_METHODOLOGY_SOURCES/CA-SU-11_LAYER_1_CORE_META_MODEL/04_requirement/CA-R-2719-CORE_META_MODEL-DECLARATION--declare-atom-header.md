@@ -8,9 +8,9 @@ form: Declaration
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Atom.Header
 tier: 3
-status: Active
-version: 3
-updated_at: 2026-11-05 22:47:24 +0400
+status: active
+version: 5
+updated_at: '2026-11-13T01:11:43.332082+00:00'
 carrier_destination:
   file:
     name: CA-R-2719-CORE_META_MODEL-DECLARATION--declare-atom-header.md
@@ -30,34 +30,23 @@ Atom.Header groups the Atom Properties carried in YAML frontmatter, including fo
 
 ### Formal Claim
 
-```CFEL
-# model
-Atom.Header{::1}:: []{::0};
+```python
+from caprmedio.formal_claims import Cardinality, declare_entity
 
-Atom.Header.*[string,in(ID, Ref ID, Role, Form, Version, Status, Updated At, Label, Tier, Topics, Container, Relations, Carrier Destination, Priority, AI Agent Confidence Threshold, Work Sequence Number)]{::0+};
-
-Atom.Header.ID ;> Atom.Header.Ref ID;
-
-Atom.Header.Ref ID ;> Atom.Header.Container;
-
-Atom.Header.Container ;> Atom.Header.Role;
-
-Atom.Header.Role ;> Atom.Header.Form;
-
-Atom.Header.Form ;> Atom.Header.Label;
-
-Atom.Header.Label ;> Atom.Header.Topics;
-
-Atom.Header.Topics ;> Atom.Header.Tier;
-
-Atom.Header.Tier ;> Atom.Header.Relations;
-
-Atom.Header.Relations ;> Atom.Header.Status;
-
-Atom.Header.Status ;> Atom.Header.Version;
-
-Atom.Header.Version ;> Atom.Header.Updated At;
-
-Atom.Header.Updated At ;> Atom.Header.Carrier Destination
+declare_entity(
+    entity_name="Header",
+    relation_name="IS_PROPERTY_OF",
+    base_path="Atom",
+    property_occurrence_cardinality=1,
+    value_cardinality=0,
+    dependent_property_cardinality=Cardinality(minimum=0, maximum=None),
+    dependent_property_name_format=str,
+    allowed_dependent_property_names=("Identity", "Context", "Relations", "State", "Destination"),
+    ordered_dependent_property_pairs=(
+        ("Identity", "Context"),
+        ("Context", "Relations"),
+        ("Relations", "State"),
+        ("State", "Destination"),
+    ),
+)
 ```
-

@@ -9,7 +9,7 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Atom
   dependencies:
   - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Atom.Header.Version
+  - CAPRMEDIO_MODEL <+ Atom.Header.State.Version
 tier: 1
 status: Active
 version: 28
@@ -24,7 +24,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-303-CORE_META_MODEL-ENG_DECISION--replace-and-archive-atoms-as-whole-carriers.md
   source_atom_id: CA-D-303
   source_atom_revision: 28
-  source_sha256: f342c282e01d20d3957d7e4f2bec948f91685014da8f09b4187b47748b989ee1
+  source_sha256: 0f2804f58dc5e4caee234abfecb6c0be57bb930dc00adf7d2a8711b999a7e69b
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

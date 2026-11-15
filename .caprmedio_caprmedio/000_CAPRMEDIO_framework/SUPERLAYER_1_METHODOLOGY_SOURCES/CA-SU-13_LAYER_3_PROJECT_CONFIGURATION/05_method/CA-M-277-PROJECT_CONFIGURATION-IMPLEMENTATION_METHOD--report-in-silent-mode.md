@@ -6,17 +6,18 @@ container:
 role: Method
 form: Implementation Method
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Project.Settings.Interaction.Reporting Mode := silent
+  main_subject: CAPRMEDIO_MODEL <+ Project.Settings.Interaction.Reporting Mode :=
+    silent
   dependencies:
   - CAPRMEDIO_MODEL <+ Project.Settings.Interaction.Reporting Mode
   - CAPRMEDIO_MODEL <+ Project.Settings.Interaction
   - CAPRMEDIO_MODEL <+ Term//Artifact
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Architecture <+ Communication"
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Architecture <+
+    Communication
   - CAPRMEDIO_MODEL <+ Project
+  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework
+    Settings.Interaction
 tier: 3
-relations:
-  depends_on:
-  - CA-R-1440
 status: Active
 version: 34
 updated_at: 2026-11-04 09:30:21 +0400

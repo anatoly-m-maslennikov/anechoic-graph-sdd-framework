@@ -8,7 +8,7 @@ form: Rule
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Atom
   dependencies:
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
 tier: 2
 status: Active
 version: 26
@@ -23,7 +23,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1035-CORE_META_MODEL--define-replacement-required-lineage-impact-disposition.md
   source_atom_id: CA-R-1035
   source_atom_revision: 26
-  source_sha256: 091f330d5401ede4275318a9c15cc18e88a724b538093c697e4328f00497122f
+  source_sha256: 851279f05fb93f8be2e7419211d66b1bbb6c15fddd20fee7d9152085f79edaa7
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

@@ -6,18 +6,18 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//CARRIES
+  main_subject: CAPRMEDIO_MODEL <+ Relation//CARRIES
   dependencies:
   - CAPRMEDIO_MODEL <+ Carrier
   - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
 tier: 1
 relations:
   child_of:
   - CA-R-1174
-status: Active
-version: 20
-updated_at: 2026-11-03 20:00:05 +0400
+status: active
+version: 21
+updated_at: '2026-11-12T12:33:04.158402+00:00'
 carrier_destination:
   file:
     name: CA-R-1993-CORE_META_MODEL-DECLARATION--define-carries.md
@@ -27,8 +27,8 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1993-CORE_META_MODEL-DECLARATION--define-carries.md
   source_atom_id: CA-R-1993
-  source_atom_revision: 20
-  source_sha256: 833259fefe03764b79eb9ddda445abf160b451db7343d99b81f18f04a122fc7b
+  source_atom_revision: 21
+  source_sha256: 9087af4754ffd881666134ed108cf460a1c89e8d88074ab6c1b74778841328a9
   original_relations_sha256: 2e54810b23dc6829999889d9dce55018a30d8606de806fb64b6f8578b2c66336
 ---
 ## Summary
@@ -52,13 +52,14 @@ CARRIES relates Carrier to non-ephemeral Entity.
 IS_CARRIED_BY **means** the inverse of CARRIES, directed from a non-ephemeral Entity to its Carrier. The Carrier binding exposes this inverse direction; it is not a separately authored primitive Relation fact. This preserves the existing meaning defined by CA-D-257. Neither direction requires a separately registered binding for each YAML field or Markdown section, a new Carrier, a snapshot or a historical record. The applicable D policy specifies how the represented Entity is bound and represented. No additional endpoint class, graph ownership, cardinality or inference permission is introduced by moving this definition to R.
 ### Formal Claim
 
-```CFEL
-# model
-Relation//CARRIES ((HAS_INVERSE)) Relation//IS_CARRIED_BY;
+```python
+from caprmedio.formal_claims import declare_relation
 
-Relation//CARRIES ((HAS_CLASSIFICATION)) Derivation == Direct;
-
-# instances
-Carrier//$carrier ((CARRIES)) $represented_entity
+declare_relation(
+    relation_name='CARRIES',
+    source_endpoint={'level': 'instances', 'entity_paths': ('Carrier',)},
+    target_endpoint={'level': 'instances', 'ephemeral': False},
+    inverse_alias='IS_CARRIED_BY',
+)
 ```
 

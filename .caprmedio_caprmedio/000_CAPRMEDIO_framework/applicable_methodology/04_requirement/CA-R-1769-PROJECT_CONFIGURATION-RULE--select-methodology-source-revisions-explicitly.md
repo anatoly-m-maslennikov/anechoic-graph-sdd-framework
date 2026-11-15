@@ -6,17 +6,18 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Source Selection"
+  main_subject: CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data
+    Handling <+ Source Selection
+  dependencies:
+  - CAPRMEDIO_MODEL <+ Node/Continuant
+  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/History
 tier: 2
 relations:
   child_of:
-  - CA-R-686
-  depends_on:
-  - CA-R-1502
-  - CA-R-1698
+  - CA-M-538
 status: Active
-version: 36
-updated_at: 2026-11-02 19:44:26 +0400
+version: 37
+updated_at: 2026-11-11 16:09:46 +0400
 carrier_destination:
   file:
     name: CA-R-1769-PROJECT_CONFIGURATION-RULE--select-methodology-source-revisions-explicitly.md
@@ -26,9 +27,9 @@ claim_target_scope_unit: PROJECT_CONFIGURATION
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement/CA-R-1769-PROJECT_CONFIGURATION-RULE--select-methodology-source-revisions-explicitly.md
   source_atom_id: CA-R-1769
-  source_atom_revision: 36
-  source_sha256: ba501a62c730f41b8b6d58075ddf2da2fb2caeabe48abdedd9616014a0f2378c
-  original_relations_sha256: 6d15f06a371e9113520f9fa24f3577cace32d5c97810504c769063d5d5b83f24
+  source_atom_revision: 37
+  source_sha256: 91e55e6ed7638f1de2ee5f970e61f5f085243f461d6dd246b75bf61b84e03025
+  original_relations_sha256: cb1112b2844194bcb2f1e62bea4fe84b7a6104bd43db1a0561a87d8d3673d488
 ---
 ## Summary
 

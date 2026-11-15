@@ -12,7 +12,7 @@ topics:
   - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Governing Objects/Governing Configuration
   - CAPRMEDIO_MODEL <+ Project
   - CAPRMEDIO_MODEL <+ Carrier
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Evaluation)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
 tier: 5
 relations:
   evaluation_for:
@@ -33,7 +33,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-450-CORE_META_MODEL-POLICY--validate-framework-parameter-fallback.md
   source_atom_id: CA-E-450
   source_atom_revision: 27
-  source_sha256: 4400fcdf08d191562a08f1be0919ecfa456af4fb129a3653a046ccf469c11ebb
+  source_sha256: 667417fc29af5e853552b0e87cbd2e3982b2235d3e24659b04d95e62927ba166
   original_relations_sha256: 65faded9bfe83c5b2b2d5e7359ce3fd2faf6195be2f2ede8ed1cbfde518b2f43
 ---
 ## Summary

@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  main_subject: CAPRMEDIO_MODEL <+ Relation
 tier: 6
 relations:
   child_of:
@@ -24,7 +24,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-934-CORE_META_MODEL-RULE--preserve-producer-authority-outside-demanded-result.md
   source_atom_id: CA-R-934
   source_atom_revision: 31
-  source_sha256: d2810b9de845812ef35f76f38d875245ab7848f131e3a03601dab283636447a4
+  source_sha256: 4e443234f7af11f5802dad588e62ced9a21980c791a750f757d889b7e30699fe
   original_relations_sha256: c28d84bac21e6f7cc7bfde47da5b055ffadede71bf17c4da3c8b2456c1f525ea
 ---
 ## Summary

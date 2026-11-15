@@ -9,7 +9,7 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Selection
   dependencies:
   - CAPRMEDIO_MODEL <+ Project
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
 tier: 2
 relations:
   evaluation_for:
@@ -29,7 +29,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-481-CORE_META_MODEL-POLICY--validate-the-normative-authority-hierarchy.md
   source_atom_id: CA-E-481
   source_atom_revision: 22
-  source_sha256: 5587d0a36aa4ba4dd53e199d202f124d56d8dd93dfde3608451bd7867ea443d9
+  source_sha256: 9ecd670b249c40ee99a08ec7683d685d81d29e5d0a3a63612c5a5301dffe42cd
   original_relations_sha256: be79cc6e03c2c93b1ca7941d6b2dc8bfbffc174d340a258e50efb1ec789ee673
 ---
 ## Summary

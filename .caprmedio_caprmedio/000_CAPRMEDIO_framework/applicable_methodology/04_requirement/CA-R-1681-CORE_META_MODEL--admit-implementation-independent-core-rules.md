@@ -10,22 +10,22 @@ topics:
 tier: 1
 relations:
   child_of:
-  - CA-M-447
+  - CA-R-3029
 status: Active
-version: 33
-updated_at: 2026-11-02 00:18:22 +0400
+version: 34
+updated_at: "2026-11-11 18:46:16 +0400"
 carrier_destination:
   file:
-    name: CA-R-1681-CORE_META_MODEL-RULE--admit-implementation-independent-core-rules.md
+    name: CA-R-1681-CORE_META_MODEL--admit-implementation-independent-core-rules.md
     path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1681-CORE_META_MODEL--admit-implementation-independent-core-rules.md
   source_atom_id: CA-R-1681
-  source_atom_revision: 33
-  source_sha256: a7c2843b5b720f3e7bb82e51e6d02764da5f4fd218db52c7f35c65eab0384d90
-  original_relations_sha256: cda81380ab057c4da428dab72b93f65bb72092983ee69756870fff6e5dc9bea9
+  source_atom_revision: 34
+  source_sha256: 6b16d12354dfe75f58df62bfdd202f650478bde7053ab2de846dce03e62ee3bf
+  original_relations_sha256: 298232ee25b0d00dce82421c07f5441769f6bc3298f7a4aab8df4955d59a2711
 ---
 ## Summary
 

@@ -6,11 +6,12 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Form := Requirement)
+  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Requirement)/(.Header.Context.Form
+    := Requirement)
 tier: 3
-status: Active
-version: 2
-updated_at: "2026-11-07 15:18:44 +0400"
+status: active
+version: 4
+updated_at: '2026-11-13T04:57:09.691167+00:00'
 carrier_destination:
   file:
     name: CA-R-2999-CORE_META_MODEL-DECLARATION--declare-requirement-form.md
@@ -18,11 +19,10 @@ carrier_destination:
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2999-CORE_META_MODEL-DECLARATION--declare-requirement-form.md
   source_atom_id: CA-R-2999
-  source_atom_revision: 2
-  source_sha256: 60c1a0e7e7a4d261afe61dfee699e91ddb9efe076a0ccfc71623404859d3fd93
+  source_atom_revision: 4
+  source_sha256: 2d4e17b815c1dc1ccb8cb432c145d66e2076053c9ac64fc787fffaecd1588cce
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
-
 ## Summary
 
 Declare Requirement Form
@@ -31,12 +31,20 @@ Declare Requirement Form
 
 ### Formal Claim
 
-```CFEL
-# model
-Atom/(.Header.Form := Requirement);
+```python
+from caprmedio.formal_claims import declare_entity
+from caprmedio.model import Requirement
 
-# instances
-Atom/(.Header.Form := Requirement)//$requirement.Header.Role:: [in (Requirement)]{::1}
+
+class RequirementForm(Requirement):
+    pass
+
+
+declare_entity(
+    entity_name="Requirement",
+    entity_class=RequirementForm,
+    qualification_property_path="Atom.Header.Context.Form",
+)
 ```
 
 ## Semantics

@@ -12,7 +12,7 @@ topics:
   - CAPRMEDIO_MODEL <+ Scope Unit
   - CAPRMEDIO_MODEL <+ Atom
   - CAPRMEDIO_MODEL <+ Projection
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Evaluation)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
 tier: 3
 relations:
   child_of:
@@ -32,7 +32,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1695-CORE_META_MODEL-RULE--preserve-implementation-traceability-in-the-shared-project-journal.md
   source_atom_id: CA-R-1695
   source_atom_revision: 38
-  source_sha256: 5dc74f024ec1cbfdd43f84d7e694ad1f760155b08adfb5956ae873873db96961
+  source_sha256: ce3e511bd3988bd01280f7e332cad8314f77285a951229cdb703c1b19d1bfd83
   original_relations_sha256: 1a4372e2f3efbdcf7c6855f6a9824aa7fe3d74003fad45463d9884801ef19cb7
 ---
 ## Summary

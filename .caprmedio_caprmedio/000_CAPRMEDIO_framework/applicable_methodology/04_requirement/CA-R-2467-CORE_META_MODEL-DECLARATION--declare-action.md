@@ -6,11 +6,11 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Operations)/Action
+  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/Action
 tier: 3
-status: Active
-version: 2
-updated_at: 2026-11-02 00:18:22 +0400
+status: active
+version: 5
+updated_at: '2026-11-13T22:58:40.301878+00:00'
 carrier_destination:
   file:
     name: CA-R-2467-CORE_META_MODEL-DECLARATION--declare-action.md
@@ -20,8 +20,8 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2467-CORE_META_MODEL-DECLARATION--declare-action.md
   source_atom_id: CA-R-2467
-  source_atom_revision: 2
-  source_sha256: a3273b8062e8fea35866131908d3b0495296e55779e43d20f5046067414fb068
+  source_atom_revision: 5
+  source_sha256: 0ec19e3b92707a24c5647192c8b0aa3c4a90cd33d4d5c66d91c8fc64699b5de1
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 
@@ -33,12 +33,19 @@ Declare Action
 
 ### Formal Claim
 
-```CFEL
-# model
-Atom/(.Header.Role: Operations)/Action;
+```python
+from caprmedio.formal_claims import Cardinality, declare_entity
+from caprmedio.model import Operations
 
-# instances
-Action//$action{::0+}((IS_RUN_BY)) (in (Step, Substep))//$selected
+class Action(Operations):
+    pass
+
+declare_entity(
+    entity_name='Action', entity_class=Action,
+    instance_relation_constraints={
+        'IS_RUN_BY': {'target_entity_paths': ('Atom/(.Header.Context.Role:=Operations)/Step',), 'targets_per_source': Cardinality(minimum=0, maximum=None)},
+    },
+)
 ```
 
 ## Semantics

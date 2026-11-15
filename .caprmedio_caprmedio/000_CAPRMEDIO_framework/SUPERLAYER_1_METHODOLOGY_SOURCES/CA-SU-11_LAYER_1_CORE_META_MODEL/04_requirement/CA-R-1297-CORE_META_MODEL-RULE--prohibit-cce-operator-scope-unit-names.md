@@ -8,11 +8,12 @@ form: Rule
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Scope Unit.Name
   dependencies:
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled English"
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled
+    English
 tier: 3
-status: Active
-version: 28
-updated_at: 2026-11-02 18:35:20 +0400
+status: active
+version: 29
+updated_at: '2026-11-13T19:27:10.754327+00:00'
 carrier_destination:
   file:
     name: CA-R-1297-CORE_META_MODEL-RULE--prohibit-cce-operator-scope-unit-names.md
@@ -29,7 +30,7 @@ Prohibit CCE Operator Scope Unit Names
 ### Prose Claim
 
 
-Scope Unit Names.
+Scope Unit Names when interpreting historical CCE material. This Rule imposes no CCE-based restriction on new Scope Unit Names.
 
 
 a Scope Unit Name **must not** equal the uppercase underscore-joined rendering of **any** word-form CCE Operator.

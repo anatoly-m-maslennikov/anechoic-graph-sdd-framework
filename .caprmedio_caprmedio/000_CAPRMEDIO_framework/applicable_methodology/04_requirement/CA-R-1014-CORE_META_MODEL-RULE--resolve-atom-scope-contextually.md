@@ -10,7 +10,7 @@ topics:
   dependencies:
   - CAPRMEDIO_MODEL <+ Atom.Local Scope Unit
   - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Actor/Operator
-  - CAPRMEDIO_MODEL <+ Atom.Header.Topics.Main Subject
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics.Main Subject
   - CAPRMEDIO_MODEL <+ Atom.Content
 tier: 3
 relations:
@@ -29,7 +29,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1014-CORE_META_MODEL-RULE--resolve-atom-scope-contextually.md
   source_atom_id: CA-R-1014
   source_atom_revision: 40
-  source_sha256: 67d6d03e23ee56c2652e6703c26bb99f40a8afde378f745176a496e01482a46d
+  source_sha256: fa80f105c97efb8b3a0f3525043c663a61927ea168c5daf35c99ff2c041e9ef8
   original_relations_sha256: 26aa04726746f899586a0393ece67890930c69f69ffcdcc6cc042d360740bb1b
 ---
 ## Summary

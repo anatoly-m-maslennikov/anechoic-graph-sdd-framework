@@ -6,15 +6,14 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Role
+  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Context.Role
 tier: 1
 relations:
   child_of:
-  - CA-M-447
-  - CA-M-446
+  - CA-M-539
 status: Active
-version: 39
-updated_at: 2026-11-02 19:44:26 +0400
+version: 40
+updated_at: "2026-11-11 18:46:16 +0400"
 carrier_destination:
   file:
     name: CA-R-740-CORE_META_MODEL-RULE--give-every-atom-one-content-role.md
@@ -24,9 +23,9 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-740-CORE_META_MODEL-RULE--give-every-atom-one-content-role.md
   source_atom_id: CA-R-740
-  source_atom_revision: 39
-  source_sha256: bb31257f03d205b6bbf7214ef62b23bf38f4a746572c55d9a155b7f9d786741d
-  original_relations_sha256: 9722c7976f44fdae542a0bbe7d9a73b4c30d215a317f600142ac2a81185e9986
+  source_atom_revision: 40
+  source_sha256: e8116317df7a8f2f9526cf9cbba8888fa8d5ba2780f584c1cc4a2eeb8994c369
+  original_relations_sha256: 38ed74fc4f1cae0538794d8e7474a259e7d50dd0094a82b19b8d86817482a7d0
 ---
 ## Summary
 

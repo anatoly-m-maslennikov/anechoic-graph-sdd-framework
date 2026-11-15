@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  main_subject: CAPRMEDIO_MODEL <+ Relation
   dependencies:
   - CAPRMEDIO_MODEL <+ Scope Unit
   - CAPRMEDIO_MODEL <+ Atom.Local Scope Unit
@@ -28,7 +28,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-945-CORE_META_MODEL-RULE--define-result-flow-direction.md
   source_atom_id: CA-R-945
   source_atom_revision: 38
-  source_sha256: a1eba612e792a371a39888261a0c10eea6fb338d3e0106d648ead6441d5e725a
+  source_sha256: e942ed3e5d603e82a97444249130a4d2f6b6818c1599da8e199fe36002527475
   original_relations_sha256: c28d84bac21e6f7cc7bfde47da5b055ffadede71bf17c4da3c8b2456c1f525ea
 ---
 ## Summary

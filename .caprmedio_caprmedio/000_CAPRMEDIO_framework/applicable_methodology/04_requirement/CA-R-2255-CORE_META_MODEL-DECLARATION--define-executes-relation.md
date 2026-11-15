@@ -6,25 +6,23 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//EXECUTES
+  main_subject: CAPRMEDIO_MODEL <+ Relation//EXECUTES
   dependencies:
-  - CAPRMEDIO_MODEL <+ Entity/Object/Occurrent/Runtime
-  - CAPRMEDIO_MODEL <+ Entity/Object/Occurrent/Execution/Workflow Run
+  - CAPRMEDIO_MODEL <+ Runtime
+  - CAPRMEDIO_MODEL <+ Execution
 tier: 1
-status: Active
-version: 9
-updated_at: 2026-11-03 20:00:05 +0400
+status: active
+version: 10
+updated_at: 2026-11-05 03:46:06 +0400
 carrier_destination:
   file:
     name: CA-R-2255-CORE_META_MODEL-DECLARATION--define-executes-relation.md
     path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
-current_scope_unit: CORE_META_MODEL
-claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2255-CORE_META_MODEL-DECLARATION--define-executes-relation.md
   source_atom_id: CA-R-2255
-  source_atom_revision: 9
-  source_sha256: 37b75af60a7a8261b2dde0420201cfad6a9d7625a57dbcc806466b22f42c4e13
+  source_atom_revision: 10
+  source_sha256: b9d1d4bb9fb25370b567ab48eeb38e50d14067902fb37838562b49db39f6c1f0
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
@@ -33,25 +31,19 @@ Define EXECUTES Relation
 
 ## Claim
 
-### Prose Claim
-
-EXECUTES connects an actual Runtime to a Workflow Run it executes. The stored direction is Runtime to Workflow Run. IS_EXECUTED_BY is its declared derived inverse and is not a second stored fact.
-
-The Host is an actual Runtime and the Target is the Workflow Run it executes.
-Forward `Host ((EXECUTES)) Target` and reverse `Target <((EXECUTES)) Host` are views of the same Relation fact.
-EXECUTES relates Runtime to Workflow Run.
-
-#### Details
-This named Type uses the general `((RELATION_TYPE))` form. It has no dedicated short Subject operator. This defines the reusable Type and its derived reverse view; it creates no Runtime or actual endpoint tuple.
 ### Formal Claim
 
-```CFEL
-# model
-Relation//EXECUTES ((HAS_INVERSE)) Relation//IS_EXECUTED_BY;
+```python
+from caprmedio.formal_claims import declare_relation
 
-Relation//EXECUTES ((HAS_CLASSIFICATION)) Derivation == Direct;
-
-# instances
-$runtime ((EXECUTES)) $workflow_run
+declare_relation(
+    relation_name='EXECUTES',
+    source_endpoint={"level": "instances", "entity_paths": ('Runtime',)},
+    target_endpoint={"level": "instances", "entity_paths": ('Execution',)},
+    inverse_alias='IS_EXECUTED_BY',
+)
 ```
 
+## Semantics
+
+EXECUTES is the stored Relation from a Runtime to an Execution. Its declared inverse IS_EXECUTED_BY is a derived view.

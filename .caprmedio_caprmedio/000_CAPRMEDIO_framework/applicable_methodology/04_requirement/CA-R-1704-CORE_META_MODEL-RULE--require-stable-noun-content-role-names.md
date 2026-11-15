@@ -6,9 +6,9 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Role
+  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Context.Role
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom.Header.Role
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Role
 tier: 3
 relations:
   child_of:
@@ -26,7 +26,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1704-CORE_META_MODEL-RULE--require-stable-noun-content-role-names.md
   source_atom_id: CA-R-1704
   source_atom_revision: 35
-  source_sha256: f48fb4dc706384c87c4b6c48dcb8090d8ab4fff10b906ccf78f449af99d90a03
+  source_sha256: ed6934ba0dc0ba8c06d402509bb3fe108d5ca5f8529b27529e41d13d5efc5703
   original_relations_sha256: 1bb79538ba1bd0a27ba716a698f1817c43f1fc9b59537056c2b6466292e9bada
 ---
 ## Summary

@@ -17,12 +17,12 @@ topics:
   - Scope Unit
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Projection
   - Subject/CAPRMEDIO/Carrier
+  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework
+    Settings.Parameter Resolution
 tier: 3
 relations:
   child_of:
   - CA-R-1052
-  depends_on:
-  - CA-M-279
 status: Active
 version: 18
 updated_at: 2026-11-02 19:44:26 +0400
@@ -37,8 +37,8 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-052-PROJECT_CONFIGURATION-ACTION--resolve-project-and-framework-settings-before-derived-structure.md
   source_atom_id: CA-O-052
   source_atom_revision: 18
-  source_sha256: 6304e4bf7a4b09cf997ecd5347b6c7f838450a7738d29a5b1a5965bb2acc2be6
-  original_relations_sha256: e2002a085a395006defcaa09501b89a1cb36ccfb1f056745f30902034238766c
+  source_sha256: 00975a409982cadbe59b3f24f73049f753618df186dc6afac9b91cde85fd544f
+  original_relations_sha256: 4da88bfd568e331e611b88e2266c8ebada80b327e0c6157174dcddd4c33bfb0b
 ---
 # Summary
 

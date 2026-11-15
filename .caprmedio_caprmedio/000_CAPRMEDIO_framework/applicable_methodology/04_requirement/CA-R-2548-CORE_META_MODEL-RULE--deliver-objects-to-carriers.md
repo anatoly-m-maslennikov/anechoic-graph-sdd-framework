@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL
+  main_subject: CAPRMEDIO_MODEL <+ Carrier
 tier: 3
 status: Active
 version: 2
@@ -21,7 +21,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2548-CORE_META_MODEL-RULE--deliver-objects-to-carriers.md
   source_atom_id: CA-R-2548
   source_atom_revision: 2
-  source_sha256: b33cfd77cb14f88d5ccea3b431c0048f04e6be7a73b4117a3bcb971e4ae436c5
+  source_sha256: f7ddd2cfc6b05767fdaee49fb916f28ee391a1ffdc21dfffe706a80c4429c4fd
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
@@ -32,10 +32,6 @@ Deliver Objects to Carriers
 
 ### Prose Claim
 
-
-- `>>` delivers an Object to the referenced Carrier or Carrier part.
-- A selection delivers its selected Objects.
-- A bare qualified address refers to its declared target.
-- `!(selectors)` excludes those branches from a selection.
-- Relative exclusions use the selection's base.
-- `=` states an equality condition.
+- Deliver each selected Object to the declared Carrier or Carrier part.
+- A qualified address resolves to its declared target.
+- Resolve relative exclusions from the base selection before delivery.

@@ -6,17 +6,15 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//RUNS
+  main_subject: CAPRMEDIO_MODEL <+ Relation//RUNS
 tier: 3
-status: Active
-version: 3
-updated_at: 2026-11-03 20:00:05 +0400
+status: active
+version: 4
+updated_at: 2026-11-05 02:06:39 +0400
 carrier_destination:
   file:
     name: CA-R-2638-CORE_META_MODEL-DECLARATION--define-runs.md
     path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
-current_scope_unit: CORE_META_MODEL
-claim_target_scope_unit: CORE_META_MODEL
 ---
 ## Summary
 
@@ -26,18 +24,20 @@ Define RUNS
 
 ### Prose Claim
 
-RUNS binds a Step or Substep invocation to its execution target. Its inverse is IS_RUN_BY.
+RUNS binds a Step invocation to its Action or Workflow. Its inverse is IS_RUN_BY.
 ### Formal Claim
 
-```CFEL
-# model
-Relation//RUNS ((HAS_INVERSE)) Relation//IS_RUN_BY;
+```python
+from caprmedio.formal_claims import declare_relation
 
-Relation//RUNS ((HAS_CLASSIFICATION)) Derivation == Direct;
-
-# instances
-Step//$step ((RUNS)) (in (Action, Workflow))//$selected;
-
-Substep//$substep ((RUNS)) Action//$action;
+declare_relation(
+    relation_name='RUNS',
+    inverse_alias='IS_RUN_BY',
+    source_endpoint={'level': 'instances', 'entity_paths': ('Atom/(.Header.Context.Role:=Operations)/Step',)},
+    target_endpoint={
+        'level': 'instances',
+        'entity_paths': ('Atom/(.Header.Context.Role:=Operations)/Action', 'Atom/(.Header.Context.Role:=Operations)/Workflow'),
+    },
+)
 ```
 

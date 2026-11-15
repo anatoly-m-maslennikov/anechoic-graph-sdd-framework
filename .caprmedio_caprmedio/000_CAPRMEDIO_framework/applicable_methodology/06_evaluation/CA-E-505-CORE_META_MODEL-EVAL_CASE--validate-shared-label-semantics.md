@@ -10,9 +10,9 @@ topics:
   dependencies:
   - CAPRMEDIO_MODEL <+ Scope Unit.Label
   - CAPRMEDIO_MODEL <+ Scope Unit.order.ordered
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role: Plan)/(.Header.Form: Plan).Header.Label'
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//BLOCKS
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role: Plan)/(.Header.Form: Plan)'
+  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role: Plan)/(.Header.Context.Form: Plan).Header.Context.Label'
+  - CAPRMEDIO_MODEL <+ Relation//BLOCKS
+  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role: Plan)/(.Header.Context.Form: Plan)'
   - CAPRMEDIO_MODEL <+ Term//Property
   - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Actor/Operator
 tier: 3
@@ -35,7 +35,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-505-CORE_META_MODEL-EVAL_CASE--validate-shared-label-semantics.md
   source_atom_id: CA-E-505
   source_atom_revision: 22
-  source_sha256: 7692c36cacba04c85da8f3bb619e30655f480c474a124b0ada6b53414cdae98c
+  source_sha256: b00d949bb78687c129b39966f6d25609f38298476913c2883048c72886c79b69
   original_relations_sha256: d1861630b40d29dc993c79566cff3e52b0d91a98d38a089791a31ee7469a5e27
 ---
 ## Summary

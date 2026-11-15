@@ -6,11 +6,11 @@ container:
 role: Requirement
 form: Relation Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_INVERSE_ALIAS_FOR
+  main_subject: CAPRMEDIO_MODEL <+ Relation//IS_INVERSE_ALIAS_FOR
 tier: 3
-status: Active
-version: 1
-updated_at: 2026-11-05 22:47:24 +0400
+status: active
+version: 2
+updated_at: '2026-11-12T12:33:04.158402+00:00'
 carrier_destination:
   file:
     name: CA-R-2951-CORE_META_MODEL-RELATION_DECLARATION--declare-is-inverse-alias-for.md
@@ -18,8 +18,8 @@ carrier_destination:
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2951-CORE_META_MODEL-RELATION_DECLARATION--declare-is-inverse-alias-for.md
   source_atom_id: CA-R-2951
-  source_atom_revision: 1
-  source_sha256: e3d4b41f967387061299baf404c3e168187043c44aca690657f3365f913ca59a
+  source_atom_revision: 2
+  source_sha256: 94eb36a9ffcfbdd34c525a898da85b26cf3ea55b1fe3297c8d8313fe1abd693a
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 
@@ -35,9 +35,18 @@ IS_INVERSE_ALIAS_FOR binds an inverse alias model address to its canonical Relat
 
 ### Formal Claim
 
-```CFEL
-# model
-$host ((IS_INVERSE_ALIAS_FOR)) $target
+```python
+from caprmedio.formal_claims import declare_relation
+
+declare_relation(
+    relation_name='IS_INVERSE_ALIAS_FOR',
+    source_endpoint={'level': 'model_entities',
+ 'entity_paths': ('Relation',),
+ 'address_form': 'inverse_alias'},
+    target_endpoint={'level': 'model_entities', 'entity_paths': ('Relation',), 'address_form': 'canonical'},
+    swap_endpoints=True,
+    swap_endpoint_cardinalities=True,
+)
 ```
 
 ## Semantics

@@ -17,12 +17,12 @@ topics:
   - Scope Unit
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Projection
   - Subject/CAPRMEDIO/Carrier
+  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework
+    Settings.Parameter Resolution
 tier: 3
 relations:
   child_of:
   - CA-R-1052
-  depends_on:
-  - CA-M-279
 status: Active
 version: 18
 updated_at: 2026-11-02 19:44:26 +0400

@@ -10,11 +10,11 @@ topics:
   dependencies:
   - CAPRMEDIO_MODEL <+ Entity
   - CAPRMEDIO_MODEL <+ Atom.Content
-  - CAPRMEDIO_MODEL <+ Atom.Header.Topics
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
   - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_PROPERTY_OF
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//HAS_PROPERTY
+  - CAPRMEDIO_MODEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation//IS_PROPERTY_OF
+  - CAPRMEDIO_MODEL <+ Relation//HAS_PROPERTY
   - CAPRMEDIO_MODEL <+ CFEL<+Operator//AllowedValue
   - CAPRMEDIO_MODEL <+ Projection
   - CAPRMEDIO_MODEL <+ Term
@@ -41,7 +41,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1456-CORE_META_MODEL-RULE--derive-entities-views-from-selected-authority.md
   source_atom_id: CA-R-1456
   source_atom_revision: 39
-  source_sha256: 584c9bc2de8a560824c8307913a7a7b006be0a95d15cf5b75456350f0dd21d17
+  source_sha256: b007af293222da4c8c98927ea8a9b8cff68c5009685fb28507b4300645701a8f
   original_relations_sha256: 34bdab1060ebf5d277b4263fd572a5686b173f936b95c4a1f57daeaf75e20641
 ---
 ## Summary

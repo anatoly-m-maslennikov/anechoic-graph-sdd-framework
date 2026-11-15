@@ -8,7 +8,7 @@ form: Rule
 topics:
   main_subject: "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Execution Control <+ Decision Confidence"
   dependencies:
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan)/(.Header.Form := Plan)'
+  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)/(.Header.Context.Form := Plan)'
 tier: 1
 status: Active
 version: 33
@@ -23,7 +23,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1044-CORE_META_MODEL-DEFINITION--define-autonomous-confidence-threshold.md
   source_atom_id: CA-R-1044
   source_atom_revision: 33
-  source_sha256: 8a4acb6d0daacf7d424ce6ebdfb9145dac2e4842c56c0b865e70363adb3ac380
+  source_sha256: 9e3b09e634a0f409ec6e1d3a72bb57d7f819a35906517b6f990c8fd0276b489e
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

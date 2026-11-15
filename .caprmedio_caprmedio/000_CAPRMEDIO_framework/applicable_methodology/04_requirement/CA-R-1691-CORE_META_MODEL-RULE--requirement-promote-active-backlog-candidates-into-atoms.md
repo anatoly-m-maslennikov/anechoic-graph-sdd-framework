@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan)
+  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)
 tier: 3
 relations:
   child_of:
@@ -25,7 +25,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1691-CORE_META_MODEL-RULE--requirement-promote-active-backlog-candidates-into-atoms.md
   source_atom_id: CA-R-1691
   source_atom_revision: 32
-  source_sha256: 598dcbb9bc7eb55dc36c3ae6ba3ddf044fbf358855f30453b7cf80d1639f4363
+  source_sha256: 93bc7b7ccc8d7b3cc4a3392b8b61398f3cd0ee3d5c1734869cfc49b6d77954e1
   original_relations_sha256: be92ea46e7c0624624be489e5359ed84dc27ef5c9d86897e368c45609f9cf496
 ---
 ## Summary

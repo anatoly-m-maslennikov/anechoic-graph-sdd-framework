@@ -8,7 +8,7 @@ form: Requirement
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Atom
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Requirement)/(.Header.Form := Goal)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Requirement)/(.Header.Context.Form := Goal)
   - CAPRMEDIO_MODEL <+ Scope Unit
   - CAPRMEDIO_MODEL <+ Project
 tier: 6
@@ -29,7 +29,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-947-CORE_META_MODEL-REQUIREMENT--validate-goal-claim-scope.md
   source_atom_id: CA-R-947
   source_atom_revision: 43
-  source_sha256: 424e3b3c06ae1c5ed98053022937f227c8cdec12b8ba41bed174f71cfad14631
+  source_sha256: 580efd685541a3d537104c5db480a49190acb1331609096a1cf0617a62445209
   original_relations_sha256: 236d94e327ec596b5a218bed2cc9c66996650c204cdcf9b91681016c182bd1bc
 ---
 

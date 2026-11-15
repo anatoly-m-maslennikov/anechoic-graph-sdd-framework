@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  main_subject: CAPRMEDIO_MODEL <+ Relation
 tier: 1
 status: Active
 version: 27
@@ -21,7 +21,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1023-CORE_META_MODEL-RULE--permit-distinct-direct-relations-on-one-atom.md
   source_atom_id: CA-R-1023
   source_atom_revision: 27
-  source_sha256: 36fb07e45107afa4228f9f31b7b2ce08fd13884eb11a1e7d7111efd0acef7bac
+  source_sha256: c8f430a0dc0c93665a80e1c6277ec8cb9e7b8d4a56a53d77b2d3c51fb41a6723
   original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary

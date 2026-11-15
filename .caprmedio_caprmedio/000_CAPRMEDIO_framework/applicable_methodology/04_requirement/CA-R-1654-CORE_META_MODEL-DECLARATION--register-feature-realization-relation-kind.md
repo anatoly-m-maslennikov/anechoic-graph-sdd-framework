@@ -6,16 +6,16 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//feature_realization
+  main_subject: CAPRMEDIO_MODEL <+ Relation//feature_realization
   dependencies:
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
 tier: 3
 relations:
   child_of:
   - CA-R-1718
-status: Active
-version: 38
-updated_at: 2026-11-03 20:00:05 +0400
+status: active
+version: 39
+updated_at: '2026-11-12T20:21:08.194209+00:00'
 carrier_destination:
   file:
     name: CA-R-1654-CORE_META_MODEL-DECLARATION--register-feature-realization-relation-kind.md
@@ -25,8 +25,8 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1654-CORE_META_MODEL-DECLARATION--register-feature-realization-relation-kind.md
   source_atom_id: CA-R-1654
-  source_atom_revision: 38
-  source_sha256: 73cdc0780f9c61bd8f61d2bf2dab537b1118d922748c6006a9ce2597ae1f1be3
+  source_atom_revision: 39
+  source_sha256: 296e75080d425a369588f41d4d319f046b37a817a4a08c8b4146ce95d8dd7bbf
   original_relations_sha256: e505aa9ff1d066a0f7732fbe0bcf2c3da1556ffff64b77a4c92730c9625e58ef
 ---
 ## Summary
@@ -47,11 +47,13 @@ Forward `Host ((feature_realization)) Target` and reverse `Target <((feature_rea
 feature_realization relates SPEC Feature Scope Unit to applicable native Realization target.
 ### Formal Claim
 
-```CFEL
-# model
-Relation//feature_realization ((HAS_CLASSIFICATION)) Derivation == Direct;
+```python
+from caprmedio.formal_claims import declare_relation
 
-# instances
-Scope Unit//$scope_unit ((feature_realization)) $realization_target
+declare_relation(
+    relation_name='feature_realization',
+    source_endpoint={'level': 'instances', 'entity_paths': ('Scope Unit',)},
+    target_endpoint={'level': 'instances'},
+)
 ```
 

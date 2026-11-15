@@ -14,15 +14,13 @@ topics:
 tier: 3
 relations:
   child_of:
-  - CA-M-006
   - CA-E-001
   evaluation_for:
   - CA-R-2426
-  - CA-R-706
   - CA-R-2425
 status: Active
-version: 2
-updated_at: 2026-11-02 00:18:22 +0400
+version: 4
+updated_at: "2026-11-11 18:46:16 +0400"
 carrier_destination:
   file:
     name: CA-E-668-CORE_META_MODEL-EVAL_POLICY--check-the-selected-scope-against-active-project-wide-invariants.md
@@ -35,9 +33,9 @@ current_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-668-CORE_META_MODEL-EVAL_POLICY--check-the-selected-scope-against-active-project-wide-invariants.md
   source_atom_id: CA-E-668
-  source_atom_revision: 2
-  source_sha256: 9fdbfe6ce456f19da8ba6b154039458bdf07038f40f0a9ea5970d678fc4a254c
-  original_relations_sha256: 2b188f62feb322f2869bf3a79743b4520e1e3d3338b37cbbfe450f1eb7db7b03
+  source_atom_revision: 4
+  source_sha256: 4d565ab7d5cf1a958222a0a6bba211822e1daaa83b210553dccb7f4d22645f16
+  original_relations_sha256: 6ae925b515c523773b0e11dcab7f6d8461e902423f56be91f9448be7b29c4574
 ---
 ## Summary
 

@@ -6,14 +6,14 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  main_subject: CAPRMEDIO_MODEL <+ Relation
 tier: 1
 relations:
   child_of:
-  - CA-R-007
+  - CA-M-544
 status: Active
-version: 36
-updated_at: 2026-11-02 19:44:26 +0400
+version: 37
+updated_at: 2026-11-11 15:00:27 +0400
 carrier_destination:
   file:
     name: CA-R-1697-CORE_META_MODEL-RULE--bind-traceability-to-exact-claims-and-revisions.md
@@ -23,9 +23,9 @@ claim_target_scope_unit: CORE_META_MODEL
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1697-CORE_META_MODEL-RULE--bind-traceability-to-exact-claims-and-revisions.md
   source_atom_id: CA-R-1697
-  source_atom_revision: 36
-  source_sha256: fc285f979dacf6c2be3c3fb03c7e0897c9ecf1ef90bd179a91a5a11dd230c295
-  original_relations_sha256: edef9085fddd1e905afd02423e8d88f5300a99b1f0a711703db5055e0c42a859
+  source_atom_revision: 37
+  source_sha256: 066d88e2ee384e7dcee7e440ae7668fcad7fd391ff6d817db75daf84d7f64c70
+  original_relations_sha256: d35825eca971ddd65fbe11e6167650bbc190099b18899bf70c7a06e6ced9ec10
 ---
 ## Summary
 

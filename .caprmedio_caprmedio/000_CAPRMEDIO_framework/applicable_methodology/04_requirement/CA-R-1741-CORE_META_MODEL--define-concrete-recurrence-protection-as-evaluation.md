@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Evaluation)
+  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
 tier: 1
 relations:
   child_of:
@@ -24,7 +24,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1741-CORE_META_MODEL--define-concrete-recurrence-protection-as-evaluation.md
   source_atom_id: CA-R-1741
   source_atom_revision: 30
-  source_sha256: 88dfa29e23c0eb0e2bdfdcffefa4a970e74ca59342230e746dd3542b064cbb62
+  source_sha256: d5e2b36daaac3536e04b5fa2d9453921e5ca7a3da0c2d87459b94527519f8866
   original_relations_sha256: bfc7a72807e021008b163bf434df2d6ecee7995990885977c224958455eeee55
 ---
 ## Summary

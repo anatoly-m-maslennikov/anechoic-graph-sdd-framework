@@ -7,11 +7,10 @@ role: Requirement
 form: Rule
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Carrier/File
+  dependencies:
+  - CAPRMEDIO_MODEL <+ Project.Settings
 tier: 2
 relations:
-  depends_on:
-  - CA-D-359
-  - CA-D-364
   child_of:
   - CA-R-622
 status: Active
@@ -28,8 +27,8 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement/CA-R-621-PROJECT_CONFIGURATION-RULE--use-settings-locations-defined-by-the-core-meta-model.md
   source_atom_id: CA-R-621
   source_atom_revision: 17
-  source_sha256: 726ab50955f8255df9fb4c8a4f634bd91d6d04f67d6041239d424fcd68a4f407
-  original_relations_sha256: b8cbb30ffabe4fcbb8a02dc0d203a78072d64c00f7f4b788e477136b73ff28f7
+  source_sha256: 14fa470078d284d8b222ec1ef1d13ab81fb2363a70fd42c02523d9d70211ee3b
+  original_relations_sha256: a2648917eb6107d988b9193aea85b4123d17e1f800d5c6ed24820775fb976764
 ---
 ## Summary
 Use settings locations defined by the Core Meta-Model

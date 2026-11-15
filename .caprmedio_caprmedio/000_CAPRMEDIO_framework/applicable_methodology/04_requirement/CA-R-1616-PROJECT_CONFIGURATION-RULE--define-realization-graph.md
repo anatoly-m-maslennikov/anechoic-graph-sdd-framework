@@ -8,18 +8,13 @@ form: Rule
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Projection/(.Form := Realization Graph)
   dependencies:
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Traceability"
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Traceability
   - CAPRMEDIO_MODEL <+ Entity
   - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/Type: Realization Graph'
   - CAPRMEDIO_MODEL <+ Journal
   - CAPRMEDIO_MODEL <+ Projection
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
 tier: 3
-relations:
-  depends_on:
-  - CA-R-1493
-  - CA-R-1568
-  - CA-R-2535
 status: Active
 version: 25
 updated_at: 2026-11-02 18:35:20 +0400
@@ -33,8 +28,8 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement/CA-R-1616-PROJECT_CONFIGURATION-RULE--define-realization-graph.md
   source_atom_id: CA-R-1616
   source_atom_revision: 25
-  source_sha256: ba9e2d107a41e077f45072b15c9c4aebfe2b11b72761681d894178eb8520b78f
-  original_relations_sha256: 36b983a251288c7a82a8b58fc531b8512945c90ac25c124f675a82cc4c0b0732
+  source_sha256: e9e8c7e00fbeffe88788637c273ca7d04e307af7cfcb4dbda601c4d7d08812ac
+  original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
 

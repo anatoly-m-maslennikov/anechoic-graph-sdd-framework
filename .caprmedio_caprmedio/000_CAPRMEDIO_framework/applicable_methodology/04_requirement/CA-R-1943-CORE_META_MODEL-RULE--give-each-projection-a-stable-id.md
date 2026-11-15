@@ -14,9 +14,6 @@ topics:
   - CAPRMEDIO_MODEL <+ Projection.Source.Named Selection
   - CAPRMEDIO_MODEL <+ Projection.Source.Atoms
 tier: 3
-relations:
-  depends_on:
-  - CA-R-2535
 status: Active
 version: 16
 updated_at: 2026-11-04 07:51:19 +0400
@@ -30,8 +27,8 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1943-CORE_META_MODEL-RULE--give-each-projection-a-stable-id.md
   source_atom_id: CA-R-1943
   source_atom_revision: 16
-  source_sha256: 50133828cb05c7209ec7ddc7070ffa63a72a032d0e89286d5da965f958811e43
-  original_relations_sha256: 6878e685139e7f8ef4f489b6e750cc91c96c00e957ae6a05bdf9168f28ce7685
+  source_sha256: 296ec49e0548d2ca87e8a9932d9a0979959b05842e6968b5c3027a1b6170d146
+  original_relations_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ---
 ## Summary
 

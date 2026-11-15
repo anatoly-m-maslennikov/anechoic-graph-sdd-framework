@@ -13,7 +13,7 @@ topics:
   - CAPRMEDIO_STRUCTURE <+ Scope Unit//PROJECT_CONFIGURATION
   - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Actor/Operator
   - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ Atom.Header.Tier
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Tier
 tier: 3
 relations:
   child_of:
@@ -34,7 +34,7 @@ projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-249-CORE_META_MODEL-POLICY--evaluate-methodology-expansion-mappings.md
   source_atom_id: CA-E-249
   source_atom_revision: 36
-  source_sha256: bbb5c45ac11f8ade11121d4b5e4f61eeceb6939b7a1076048f47be83ff6869bd
+  source_sha256: e2e7208f1cb13b62548a9f0c99ca28da95114f19374f0832aef22d39fb8231a7
   original_relations_sha256: 0e408119c14301165502ac987eef3c1bdf7e75d15e76577b578cb41d35fe1e01
 ---
 ## Summary

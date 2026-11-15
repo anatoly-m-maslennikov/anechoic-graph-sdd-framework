@@ -11,16 +11,17 @@ topics:
   - CAPRMEDIO_MODEL <+ Project
   - CAPRMEDIO_MODEL <+ Scope Unit
   - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Requirement)/(.Header.Form := Goal)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Requirement)/(.Header.Context.Form := Goal)
 tier: 4
 relations:
   evaluation_for:
-  - CA-R-706
+  - CA-R-3034
+  - CA-R-2650
   - CA-R-718
   - CA-D-325
 status: Active
-version: 30
-updated_at: "2026-11-07 15:18:44 +0400"
+version: 31
+updated_at: "2026-11-11 18:11:33 +0400"
 cce_version: cce_1
 cce_form: evaluation
 llm_session_ids:
@@ -34,9 +35,9 @@ carrier_destination:
 projection:
   source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation/CA-E-445-PROJECT_CONFIGURATION-EVAL_CASE--validate-methodology-membership-in-the-project.md
   source_atom_id: CA-E-445
-  source_atom_revision: 30
-  source_sha256: ab1eb6a4264363da41824d4acd1a077d95efd24b5e3bac54c9beea96659e52e5
-  original_relations_sha256: b44b20e012b4a11fdeca3e65c5d30f54989f67003fcb6939e46e32716dfd3cfb
+  source_atom_revision: 31
+  source_sha256: 6fd8bdcbefb53414d83f07480d9527285a8abd63c8b1514f1ff53a695d9e2f50
+  original_relations_sha256: b0f91f6c879d8351a3b8f4bee531f132b959c1a7b82b4391abf4e0507085842c
 ---
 
 ## Summary

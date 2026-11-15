@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//GOVERNS
+  main_subject: CAPRMEDIO_MODEL <+ Relation//GOVERNS
   dependencies:
   - CAPRMEDIO_MODEL <+ Atom.Content.Semantics
   - CAPRMEDIO_MODEL <+ Entity
