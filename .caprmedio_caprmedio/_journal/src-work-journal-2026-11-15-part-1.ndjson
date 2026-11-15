@@ -1,0 +1,1 @@
+{"action_id":"local-20261115-preserve-prod-143421","event":"started","event_id":"7f1eaa87-f488-4455-a5e4-1e3c11858c06","governed_subjects":[],"kind":"workflow","occurred_at":"2026-11-15 14:34:21 +0400","operation":"release_version","produced_outputs":[],"schema_version":1,"session_id":"local-20261115-preserve-prod-143421","structural_scope":"project"}
