@@ -10,24 +10,24 @@ from pathlib import Path
 import sys
 
 if __package__:
-    from .content_schema import _is_declaration, content_schema_from_statements, declaration_statements
+    from .content_schema import _is_declaration, _source, content_schema_from_statements, declaration_statements
+    from .declared_classifications import compile_status_groups
     from .declared_header_rules import header_rules_from_statements
     from .header_columns import declared_header_schema
+    from .markdown_content import formal_claim_fences, source_markdown
     from .source_reader import SourceReader
     from .source_selection import first_reference_rows
-    from .workbench_schema_asset import compile_schema, compile_status_groups, schema_asset
+    from .workbench_schema_asset import compile_schema, schema_asset
 else:  # pragma: no cover - direct image-build invocation
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from FEATURE_WORKBENCH_BACKEND.content_schema import _is_declaration, content_schema_from_statements, declaration_statements
+    from FEATURE_WORKBENCH_BACKEND.content_schema import _is_declaration, _source, content_schema_from_statements, declaration_statements
+    from FEATURE_WORKBENCH_BACKEND.declared_classifications import compile_status_groups
     from FEATURE_WORKBENCH_BACKEND.declared_header_rules import header_rules_from_statements
     from FEATURE_WORKBENCH_BACKEND.header_columns import declared_header_schema
+    from FEATURE_WORKBENCH_BACKEND.markdown_content import formal_claim_fences, source_markdown
     from FEATURE_WORKBENCH_BACKEND.source_reader import SourceReader
     from FEATURE_WORKBENCH_BACKEND.source_selection import first_reference_rows
-    from FEATURE_WORKBENCH_BACKEND.workbench_schema_asset import (
-        compile_schema,
-        compile_status_groups,
-        schema_asset,
-    )
+    from FEATURE_WORKBENCH_BACKEND.workbench_schema_asset import compile_schema, schema_asset
 
 from role_directory_rules import compile_role_folders
 
@@ -52,7 +52,30 @@ def compile_project_schema(project_root: Path, *, model_class_bindings=None) -> 
     header = declared_header_schema(header_rules_from_statements(statements))
     folders = compile_role_folders(statements)
     role_folders = tuple(sorted((role, folder) for role, (folder, _source) in folders.items())) if folders else None
-    return schema_asset(list(pins.values()), compile_schema(atoms, content, header, compile_status_groups(statements), role_folders))
+    status_groups = compile_status_groups(_python_declarations(selected))
+    return schema_asset(list(pins.values()), compile_schema(atoms, content, header, status_groups, role_folders))
+
+
+def _python_declarations(rows):
+    from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim
+    from python_model_claim import parse_structured_python_model_claim
+
+    for row in rows:
+        if not _is_declaration(row):
+            continue
+        body = source_markdown(row)
+        if body is None:
+            continue
+        source = _source(row)
+        for language, claim in formal_claim_fences(body):
+            if language != "python":
+                continue
+            native = parse_native_model_claim(claim)
+            if native is not None:
+                yield native, source
+            else:
+                for declaration in parse_structured_python_model_claim(claim):
+                    yield declaration, source
 
 
 def write_schema(output: Path, data: bytes) -> None:

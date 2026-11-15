@@ -430,6 +430,31 @@ Atom.Header.Carrier Destination.File.Name:: {::1};
         self.assertEqual(2, reader.capture.call_count)
         self.assertEqual([], json.loads(first)["sources"])
 
+    def test_project_generator_emits_declared_status_groups(self) -> None:
+        row = atom(form="Declaration", body="""## Claim
+
+### Formal Claim
+
+```python
+from caprmedio.model import Plan
+from caprmedio.formal_claims import declare_entity
+declare_entity(
+    entity_name="Status", relation_name="IS_PROPERTY_OF", base_path="Atom.Header.State",
+    applies_to_entity_classes=(Plan,), allowed_values=("Backlog", "Done"),
+    status_groups={"Backlog": "Backlog"},
+)
+```
+""")
+        ordinary = atom("CA-R-2", body="## Claim\n\n### Formal Claim\n\n```python\nvalue = 1\n```\n")
+        rows = [row, ordinary]
+        reader = Mock(capture=Mock(return_value=(rows, [])), model_rows=Mock(return_value=rows))
+        with patch(
+            "APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.generate_workbench_schema.SourceReader",
+            return_value=reader,
+        ):
+            asset = json.loads(compile_project_schema(Path("/project")))
+        self.assertEqual([["Plan", "Backlog", "Backlog"]], asset["status_groups"])
+
 
 if __name__ == "__main__":
     unittest.main()
