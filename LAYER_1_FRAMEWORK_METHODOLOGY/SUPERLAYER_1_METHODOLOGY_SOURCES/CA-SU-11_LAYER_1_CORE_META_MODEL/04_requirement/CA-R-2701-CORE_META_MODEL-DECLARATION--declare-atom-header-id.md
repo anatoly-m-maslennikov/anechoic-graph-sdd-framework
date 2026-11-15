@@ -6,11 +6,11 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.ID
+  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Identity.ID
 tier: 3
-status: Active
-version: 1
-updated_at: 2026-11-03 20:00:05 +0400
+status: active
+version: 3
+updated_at: '2026-11-13T22:53:30.315950+00:00'
 carrier_destination:
   file:
     name: CA-R-2701-CORE_META_MODEL-DECLARATION--declare-atom-header-id.md
@@ -24,17 +24,20 @@ Declare Atom.Header.ID
 
 ## Claim
 
+### Prose Claim
+
+The ID is immutable when the Atom Status belongs to Current, Backlog, or Archived Status Group.
+
 ### Formal Claim
 
-```CFEL
-# model
-Atom.Header.ID{::1}:: [string]{::1};
+```python
+from caprmedio.formal_claims import declare_entity
 
-Atom.Header.ID.*[]{::0};
-
-# instances
-Atom//$atom;
-
-IF (($atom.Header.Status >| Status Group = Current) OR ($atom.Header.Status >| Status Group = Archived))
-THEN (IMMUTABLE($atom.Header.ID))
+declare_entity(
+    entity_name='ID',
+    relation_name="IS_PROPERTY_OF",
+    base_path='Atom.Header.Identity',
+    property_occurrence_cardinality=1, value_format=str, value_cardinality=1, dependent_property_cardinality=0,
+)
 ```
+

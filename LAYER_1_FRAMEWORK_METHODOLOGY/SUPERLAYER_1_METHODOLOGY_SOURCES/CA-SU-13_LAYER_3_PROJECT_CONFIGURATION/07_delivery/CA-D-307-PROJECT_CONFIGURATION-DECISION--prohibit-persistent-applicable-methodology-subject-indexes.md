@@ -8,8 +8,8 @@ form: Decision
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Projection/(.Form:=Applicable Methodology)
   dependencies:
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//GOVERNS
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//DEPENDS_ON
+  - CAPRMEDIO_MODEL <+ Relation//GOVERNS
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics.Dependencies
 tier: 3
 status: Active
 version: 28

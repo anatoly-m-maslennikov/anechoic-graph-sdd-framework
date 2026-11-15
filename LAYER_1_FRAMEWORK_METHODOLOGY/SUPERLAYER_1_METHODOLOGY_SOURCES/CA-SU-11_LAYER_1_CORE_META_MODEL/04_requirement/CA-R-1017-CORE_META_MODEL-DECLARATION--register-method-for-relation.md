@@ -6,13 +6,13 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//method_for
+  main_subject: CAPRMEDIO_MODEL <+ Relation//method_for
   dependencies:
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
 tier: 1
-status: Active
-version: 31
-updated_at: 2026-11-03 20:00:05 +0400
+status: active
+version: 32
+updated_at: '2026-11-12T12:33:04.158402+00:00'
 carrier_destination:
   file:
     name: CA-R-1017-CORE_META_MODEL-DECLARATION--register-method-for-relation.md
@@ -38,11 +38,13 @@ Forward `Host ((method_for)) Target` and reverse `Target <((method_for)) Host` a
 method_for relates Method Atom to served Requirement Atom.
 ### Formal Claim
 
-```CFEL
-# model
-Relation//method_for ((HAS_CLASSIFICATION)) Derivation == Direct;
+```python
+from caprmedio.formal_claims import declare_relation
 
-# instances
-Atom/(.Header.Role: Method)//$atom ((method_for)) Atom/(.Header.Role: Requirement)//$atom_2
+declare_relation(
+    relation_name='method_for',
+    source_endpoint={'level': 'instances', 'entity_paths': ('Atom/(.Header.Context.Role := Method)',)},
+    target_endpoint={'level': 'instances', 'entity_paths': ('Atom/(.Header.Context.Role := Requirement)',)},
+)
 ```
 

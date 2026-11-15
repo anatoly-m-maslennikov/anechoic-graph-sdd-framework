@@ -9,7 +9,7 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Projection/(.Form := Applicable Methodology)
   dependencies:
   - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//DERIVED_FROM
+  - CAPRMEDIO_MODEL <+ Relation//DERIVED_FROM
 tier: 1
 status: Active
 version: 34

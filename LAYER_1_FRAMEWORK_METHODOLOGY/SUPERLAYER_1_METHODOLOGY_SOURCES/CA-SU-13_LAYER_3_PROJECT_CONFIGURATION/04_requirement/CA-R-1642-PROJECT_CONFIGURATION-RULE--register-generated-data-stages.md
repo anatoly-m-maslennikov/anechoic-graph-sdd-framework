@@ -7,10 +7,10 @@ role: Requirement
 form: Rule
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Carrier
+  dependencies:
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+
+    Data Transformation
 tier: 3
-relations:
-  depends_on:
-  - CA-R-1717
 status: Active
 version: 33
 updated_at: 2026-11-02 19:44:26 +0400

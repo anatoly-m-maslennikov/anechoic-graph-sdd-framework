@@ -11,9 +11,6 @@ topics:
   - CAPRMEDIO_MODEL <+ Atom.Content
   - CAPRMEDIO_MODEL <+ Scope Unit
 tier: 2
-relations:
-  depends_on:
-  - CA-R-1595@21
 status: Active
 version: 22
 updated_at: 2026-11-02 00:18:22 +0400

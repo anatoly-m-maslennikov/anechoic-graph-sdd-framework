@@ -8,9 +8,9 @@ form: Declaration
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Node/Continuant
 tier: 3
-status: Active
-version: 2
-updated_at: 2026-11-02 00:18:22 +0400
+status: active
+version: 4
+updated_at: '2026-11-12T17:40:07+00:00'
 carrier_destination:
   file:
     name: CA-R-2589-CORE_META_MODEL-DECLARATION--declare-continuant.md
@@ -27,9 +27,14 @@ Declare Continuant
 
 ### Formal Claim
 
-```CFEL
-# model
-Node/Continuant
+```python
+from caprmedio.formal_claims import declare_entity
+from caprmedio.model import Node
+
+class Continuant(Node):
+    pass
+
+declare_entity(entity_class=Continuant, entity_name='Continuant')
 ```
 
 ## Semantics

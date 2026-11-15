@@ -8,9 +8,9 @@ form: Declaration
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Projection.Updated At
 tier: 3
-status: Active
-version: 2
-updated_at: 2026-11-02 00:18:22 +0400
+status: active
+version: 3
+updated_at: '2026-11-13T22:53:30.315950+00:00'
 carrier_destination:
   file:
     name: CA-R-2539-CORE_META_MODEL-DECLARATION--declare-projection-updated-at.md
@@ -24,15 +24,21 @@ Declare Projection.Updated At
 
 ## Claim
 
+### Prose Claim
+
+The Updated At value equals the maximum happened_at among Event Records whose single object_output has no version, has this Projection ID, and has action create or update.
+
 ### Formal Claim
 
-```CFEL
-# model
-Projection.Updated At{::1}:: [datetime]{::1};
+```python
+from datetime import datetime
+from caprmedio.formal_claims import declare_entity
 
-Projection.Updated At.*[]{::0};
-
-# instances
-Projection//$projection.Updated At == MAX(Event Record//$event_record(.object_output{=1}, .object_output.version{=0}, .object_output.id = $projection.ID, (.action = create OR .action = update)).happened_at)
+declare_entity(
+    entity_name='Updated At',
+    relation_name="IS_PROPERTY_OF",
+    base_path='Projection',
+    property_occurrence_cardinality=1, value_format=datetime, value_cardinality=1, dependent_property_cardinality=0,
+)
 ```
 

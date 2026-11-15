@@ -6,11 +6,11 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Concern).Header.Priority
+  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Concern).Header.Context.Concern.Priority
 tier: 3
-status: Active
-version: 1
-updated_at: 2026-11-03 20:00:05 +0400
+status: active
+version: 3
+updated_at: '2026-11-13T00:11:02.013748+00:00'
 carrier_destination:
   file:
     name: CA-R-2710-CORE_META_MODEL-DECLARATION--declare-atom-header-role-concern-header-priority.md
@@ -18,6 +18,7 @@ carrier_destination:
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---
+
 ## Summary
 
 Declare Atom/(.Header.Role := Concern).Header.Priority
@@ -26,15 +27,17 @@ Declare Atom/(.Header.Role := Concern).Header.Priority
 
 ### Formal Claim
 
-```CFEL
-# model
-Atom/(.Header.Role: Concern).Header.Priority{::1}:: [string]{::1};
+```python
+from caprmedio.formal_claims import declare_entity
 
-Atom/(.Header.Role: Concern).Header.Priority.*[]{::0};
-
-Atom/(.Header.Role: Concern).Header.Priority: High;
-
-Atom/(.Header.Role: Concern).Header.Priority: Medium;
-
-Atom/(.Header.Role: Concern).Header.Priority: Low
+declare_entity(
+    entity_name="Priority",
+    relation_name="IS_PROPERTY_OF",
+    base_path='Atom/(.Header.Context.Role:=Concern).Header.Context.Concern',
+    property_occurrence_cardinality=1,
+    value_format="str",
+    value_cardinality=1,
+    dependent_property_cardinality=0,
+    allowed_values=("High", "Medium", "Low"),
+)
 ```

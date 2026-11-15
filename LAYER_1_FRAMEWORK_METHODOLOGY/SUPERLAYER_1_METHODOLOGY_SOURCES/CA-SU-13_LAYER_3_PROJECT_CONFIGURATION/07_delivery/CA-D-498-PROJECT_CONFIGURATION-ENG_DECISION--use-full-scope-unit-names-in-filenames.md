@@ -13,10 +13,6 @@ topics:
   - CAPRMEDIO_MODEL <+ Scope Unit
   - CAPRMEDIO_MODEL <+ Scope Unit.Name
 tier: 3
-relations:
-  depends_on:
-  - CA-D-284
-  - CA-D-302
 status: Active
 version: 14
 updated_at: 2026-11-03 23:25:51 +0400

@@ -6,18 +6,15 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Tier
+  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Context.Tier
   dependencies:
   - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Atom.Header.Tier
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Tier
   - CAPRMEDIO_MODEL <+ Projection
 tier: 4
 relations:
   delivery_for:
   - CA-R-2706
-  depends_on:
-  - CA-D-651
-  - CA-D-478
 status: Active
 version: 13
 updated_at: 2026-11-02 00:18:22 +0400

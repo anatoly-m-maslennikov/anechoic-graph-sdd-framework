@@ -12,12 +12,9 @@ topics:
   - CAPRMEDIO_STRUCTURE <+ Scope Unit//PROJECT_CONFIGURATION
   - CAPRMEDIO_MODEL <+ Projection
   - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Selection
+  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework
+    Settings
 tier: 3
-relations:
-  depends_on:
-  - CA-R-1568
-  - CA-R-1631
-  - CA-R-2535
 status: Active
 version: 19
 updated_at: 2026-11-02 08:06:47 +0400

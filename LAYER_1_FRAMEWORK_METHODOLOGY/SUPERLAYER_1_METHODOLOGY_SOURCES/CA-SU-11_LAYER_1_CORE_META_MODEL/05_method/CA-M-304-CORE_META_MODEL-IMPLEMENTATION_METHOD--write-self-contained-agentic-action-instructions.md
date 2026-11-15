@@ -6,14 +6,21 @@ container:
 role: Method
 form: Implementation Method
 topics:
-  main_subject: "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Prompt Authoring"
+  main_subject: CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring
+    <+ Prompt Authoring
   dependencies:
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Operations)/(.Header.Form := Action)'
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Operations)/(.Header.Form := Workflow) >{1+} Atom/(.Header.Role := Operations)/(.Header.Form := Step)'
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Operations)/(.Header.Form := Workflow)'
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form
+    := Action)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form
+    := Workflow) >{1+} Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form
+    := Step)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form
+    := Workflow)
   - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Actor/Operator
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Prompt Authoring"
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Operations)/(.Header.Form := Action).Execution Kind: Agentic'
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Prompt
+    Authoring
+  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form
+    := Action).Execution Kind: Agentic'
   - CAPRMEDIO_MODEL <+ Entity/Object/Occurrent/Execution
 tier: 3
 relations:
@@ -23,9 +30,9 @@ relations:
   - CA-R-1791
   - CA-R-1792
   - CA-R-1793
-status: Active
-version: 26
-updated_at: 2026-11-02 18:35:20 +0400
+status: active
+version: 27
+updated_at: '2026-11-13T18:39:14.008491+00:00'
 carrier_destination:
   file:
     name: CA-M-304-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-self-contained-agentic-action-instructions.md
@@ -49,5 +56,5 @@ derived instructions that present an Agentic Action for execution.
 - distinguish already performed effects from proposed changes, **and** existing permissions from decisions still needed.
 - state the expected result **and** how **to** report uncertainty, failures, partial effects, **or** a request for Operator input. do **not** treat a suggested correction as permission **to** apply it.
 - keep the instruction limited **to** the bound Action. leave next-Step selection **and** cross-Workflow handoff coordination **to** the executor using the governing Workflow.
-- use understandable wording **and** structured points under CA-M-444-CORE_META_MODEL-METHOD--make-atom-claims-easy-to-understand **and** CA-M-294-CORE_META_MODEL-METHOD--use-simpler-words-without-losing-meaning; reference governing definitions rather than copying another authoritative procedure into the prompt.
+- use understandable wording **and** structured points under CA-M-1024-CORE_META_MODEL-IMPLEMENTATION_METHOD--make-atom-claims-clear-and-preserve-their-meaning **and** CA-M-294-CORE_META_MODEL-IMPLEMENTATION_METHOD--use-simpler-words-without-losing-meaning; reference governing definitions rather than copying another authoritative procedure into the prompt.
 - keep internal Tool calls as execution detail under CA-R-1528-CORE_META_MODEL-RULE--record-tool-calls-within-step-runs. **when** an operation needs independently governed routing, checks, **or** approval boundaries, express it as an explicit Step during Workflow authoring rather than inventing Workflow nodes from runtime calls.

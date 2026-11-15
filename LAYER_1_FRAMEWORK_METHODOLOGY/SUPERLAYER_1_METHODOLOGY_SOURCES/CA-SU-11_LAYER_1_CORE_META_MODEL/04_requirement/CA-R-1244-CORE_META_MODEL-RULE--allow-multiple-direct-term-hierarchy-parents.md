@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//NARROWER_THAN
+  main_subject: CAPRMEDIO_MODEL <+ Relation//NARROWER_THAN
   dependencies:
   - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Terms Graph)'
   - CAPRMEDIO_MODEL <+ Term

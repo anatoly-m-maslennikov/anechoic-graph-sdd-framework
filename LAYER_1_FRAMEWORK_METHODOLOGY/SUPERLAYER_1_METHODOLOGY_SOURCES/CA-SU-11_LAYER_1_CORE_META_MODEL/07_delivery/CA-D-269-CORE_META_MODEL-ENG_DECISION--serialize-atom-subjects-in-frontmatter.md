@@ -6,13 +6,13 @@ container:
 role: Delivery
 form: Policy
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Topics
+  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom.Header.Topics
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//GOVERNS
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//DEPENDS_ON
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
+  - CAPRMEDIO_MODEL <+ Relation//GOVERNS
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics.Dependencies
   - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
 tier: 3
 status: active
 version: 30

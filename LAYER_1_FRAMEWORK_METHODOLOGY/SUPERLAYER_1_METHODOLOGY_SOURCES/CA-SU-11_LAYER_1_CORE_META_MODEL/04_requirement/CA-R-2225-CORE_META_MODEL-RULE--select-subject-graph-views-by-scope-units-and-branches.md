@@ -12,9 +12,6 @@ topics:
   - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Selection
   - CAPRMEDIO_MODEL <+ Entity
 tier: 2
-relations:
-  depends_on:
-  - CA-R-2150@15
 status: Active
 version: 4
 updated_at: 2026-11-02 00:18:22 +0400

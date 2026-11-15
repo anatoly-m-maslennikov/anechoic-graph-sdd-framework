@@ -11,7 +11,6 @@ topics:
   - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Applicable Methodology)'
   - CAPRMEDIO_MODEL <+ Scope Unit
   - CAPRMEDIO_MODEL <+ Term//Type
-  - CAPRMEDIO_MODEL <+ CFEL
   - CAPRMEDIO_MODEL <+ Entity/Property
 tier: 1
 status: Active

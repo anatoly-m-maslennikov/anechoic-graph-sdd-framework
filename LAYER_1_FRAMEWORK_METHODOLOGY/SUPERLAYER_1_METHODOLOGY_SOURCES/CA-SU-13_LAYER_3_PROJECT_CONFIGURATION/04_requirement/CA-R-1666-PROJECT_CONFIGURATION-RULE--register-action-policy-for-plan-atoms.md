@@ -6,11 +6,10 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan).Header.Form'
+  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.Context.Form
+  dependencies:
+  - CAPRMEDIO_MODEL <+ Entity
 tier: 2
-relations:
-  depends_on:
-  - CA-R-1286
 status: Active
 version: 37
 updated_at: 2026-11-02 19:44:26 +0400

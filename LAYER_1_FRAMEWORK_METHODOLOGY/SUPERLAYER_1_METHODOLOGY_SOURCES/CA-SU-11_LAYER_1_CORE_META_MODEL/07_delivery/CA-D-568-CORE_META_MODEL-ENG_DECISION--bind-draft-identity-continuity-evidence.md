@@ -6,17 +6,13 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.ID
+  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Identity.ID
   dependencies:
-  - 'CAPRMEDIO_MODEL <+ Atom.Header.Status: Draft'
-  - CAPRMEDIO_MODEL <+ Atom.Header.Version
+  - 'CAPRMEDIO_MODEL <+ Atom.Header.State.Status: Draft'
+  - CAPRMEDIO_MODEL <+ Atom.Header.State.Version
   - CAPRMEDIO_MODEL <+ Atom
+  - CAPRMEDIO_MODEL <+ Carrier/File
 tier: 4
-relations:
-  depends_on:
-  - CA-D-650
-  - CA-D-378
-  - CA-D-446
 status: active
 version: 21
 updated_at: 2026-11-09 00:57:07 +0400

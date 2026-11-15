@@ -6,19 +6,17 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//GOVERNS
+  main_subject: CAPRMEDIO_MODEL <+ Relation//GOVERNS
   dependencies:
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
   - CAPRMEDIO_MODEL <+ Atom
   - CAPRMEDIO_MODEL <+ Entity
   - CAPRMEDIO_MODEL <+ Atom.Content
+  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
 tier: 2
-relations:
-  depends_on:
-  - CA-R-1275
-status: Active
-version: 38
-updated_at: 2026-11-04 03:22:03 +0400
+status: active
+version: 39
+updated_at: '2026-11-12T17:23:54+00:00'
 carrier_destination:
   file:
     name: CA-R-1199-CORE_META_MODEL-DECLARATION--define-governs-subject-relation-kind.md
@@ -44,11 +42,13 @@ Forward `Host ((GOVERNS)) Target` and reverse `Target <((GOVERNS)) Host` are vie
 GOVERNS relates Atom to canonical Subject entity or instance.
 ### Formal Claim
 
-```CFEL
-# model
-Relation//GOVERNS ((HAS_CLASSIFICATION)) Derivation == Direct;
+```python
+from caprmedio.formal_claims import declare_relation
 
-# instances
-Atom//$atom ((GOVERNS)) $governed_subject
+declare_relation(
+    relation_name='GOVERNS',
+    source_endpoint={'level': 'instances', 'entity_paths': ('Atom',)},
+    target_endpoint={'level': 'model_entities_or_instances'},
+)
 ```
 

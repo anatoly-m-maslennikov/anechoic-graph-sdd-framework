@@ -8,7 +8,7 @@ form: Rule
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Projection/(.Form:=Realization Graph)
   dependencies:
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
   - CAPRMEDIO_MODEL <+ Projection
 tier: 3
 status: Active

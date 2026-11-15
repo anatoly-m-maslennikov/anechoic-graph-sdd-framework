@@ -6,16 +6,15 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Role := "Analysis & Advisory")/(.Header.Form := FPF Analysis Report)
+  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := "Analysis & Advisory")/(.Header.Context.Form
+    := FPF Analysis Report)
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := "Analysis & Advisory")
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := "Analysis & Advisory")/(.Header.Form := Analysis Report)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := "Analysis & Advisory")
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := "Analysis & Advisory")/(.Header.Context.Form
+    := Analysis Report)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role:=Analysis and Advisory).Header.State.Status
+  - CAPRMEDIO_MODEL <+ Carrier/File
 tier: 2
-relations:
-  depends_on:
-  - CA-R-1727@30
-  - CA-R-1875
-  - CA-D-479
 status: Active
 version: 20
 updated_at: 2026-11-02 19:33:47 +0400

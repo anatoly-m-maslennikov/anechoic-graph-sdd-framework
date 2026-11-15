@@ -6,13 +6,13 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//rationale_for
+  main_subject: CAPRMEDIO_MODEL <+ Relation//rationale_for
   dependencies:
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - CAPRMEDIO_MODEL <+ Relation
 tier: 1
-status: Active
-version: 32
-updated_at: 2026-11-03 20:00:05 +0400
+status: active
+version: 34
+updated_at: '2026-11-12T12:33:04.158402+00:00'
 carrier_destination:
   file:
     name: CA-R-1016-CORE_META_MODEL-DECLARATION--register-rationale-for-relation.md
@@ -31,18 +31,22 @@ Register rationale_for relation
 #### Applicability
 Rationale For Relation.
 
-`rationale_for` **means** the direct relation from a Rationale Analysis & Advisory Atom
+`rationale_for` **means** the direct relation from a Rationale Analysis and Advisory Atom
 to the Atom that it explains.
 
 Forward `Host ((rationale_for)) Target` and reverse `Target <((rationale_for)) Host` are views of the same Relation fact.
-rationale_for relates Rationale Analysis & Advisory Atom to explained Atom.
+rationale_for relates Rationale Analysis and Advisory Atom to explained Atom.
 ### Formal Claim
 
-```CFEL
-# model
-Relation//rationale_for ((HAS_CLASSIFICATION)) Derivation == Direct;
+```python
+from caprmedio.formal_claims import declare_relation
 
-# instances
-Atom/(.Header.Role: "Analysis & Advisory")/(.Header.Form: Rationale)//$atom ((rationale_for)) Atom//$atom_2
+declare_relation(
+    relation_name='rationale_for',
+    source_endpoint={'level': 'instances',
+ 'entity_paths': ('Atom/(.Header.Context.Role := Analysis and '
+                  'Advisory)/(.Header.Context.Form := Rationale)',)},
+    target_endpoint={'level': 'instances', 'entity_paths': ('Atom',)},
+)
 ```
 

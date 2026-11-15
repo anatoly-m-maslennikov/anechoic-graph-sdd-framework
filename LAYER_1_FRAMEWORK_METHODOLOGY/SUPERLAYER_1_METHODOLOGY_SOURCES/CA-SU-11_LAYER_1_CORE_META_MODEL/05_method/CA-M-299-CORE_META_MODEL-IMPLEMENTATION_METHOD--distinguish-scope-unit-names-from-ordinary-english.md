@@ -9,11 +9,11 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Scope Unit.Name
   dependencies:
   - CAPRMEDIO_MODEL <+ Scope Unit
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled English"
+  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring
 tier: 3
-status: Active
-version: 20
-updated_at: 2026-11-02 18:35:20 +0400
+status: active
+version: 21
+updated_at: '2026-11-13T18:40:53.349183+00:00'
 carrier_destination:
   file:
     name: CA-M-299-CORE_META_MODEL-IMPLEMENTATION_METHOD--distinguish-scope-unit-names-from-ordinary-english.md

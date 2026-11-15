@@ -14,11 +14,8 @@ topics:
   - Scope Unit
   - Subject/CAPRMEDIO/Graph/Node/Project Model/Projection//PROJECT_SCOPE_UNIT_GRAPH
   - Subject/CAPRMEDIO/Carrier
+  - CAPRMEDIO_STRUCTURE <+ Projection//PROJECT_SCOPE_UNIT_GRAPH
 tier: 3
-relations:
-  depends_on:
-  - CA-D-453
-  - CA-D-454
 status: Active
 version: 14
 updated_at: 2026-11-02 19:44:26 +0400

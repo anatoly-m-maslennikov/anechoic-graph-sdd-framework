@@ -9,7 +9,7 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Entity/Property
   dependencies:
   - CAPRMEDIO_MODEL <+ Term//Property
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_PROPERTY_OF
+  - CAPRMEDIO_MODEL <+ Relation//IS_PROPERTY_OF
   - CAPRMEDIO_STRUCTURE <+ Entity/Object/Continuant/Selection//Property Occurrences
 tier: 1
 status: Active

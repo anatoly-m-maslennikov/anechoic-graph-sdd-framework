@@ -8,7 +8,7 @@ form: Rule
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Atom.Content
   dependencies:
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//GOVERNS
+  - CAPRMEDIO_MODEL <+ Relation//GOVERNS
   - CAPRMEDIO_MODEL <+ Entity
 tier: 1
 status: Active

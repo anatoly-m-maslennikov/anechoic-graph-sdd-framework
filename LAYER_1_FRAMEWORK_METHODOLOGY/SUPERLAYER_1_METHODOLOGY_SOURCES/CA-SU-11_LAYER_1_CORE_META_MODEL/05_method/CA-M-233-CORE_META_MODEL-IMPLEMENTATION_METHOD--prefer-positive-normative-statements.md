@@ -6,15 +6,14 @@ container:
 role: Method
 form: Implementation Method
 topics:
-  main_subject: "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring"
+  main_subject: CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring
   dependencies:
   - CAPRMEDIO_MODEL <+ Atom
   - CAPRMEDIO_MODEL <+ Atom.Content
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled English"
 tier: 3
-status: Active
-version: 31
-updated_at: 2026-11-02 18:35:20 +0400
+status: active
+version: 32
+updated_at: '2026-11-13T18:44:11.687850+00:00'
 carrier_destination:
   file:
     name: CA-M-233-CORE_META_MODEL-IMPLEMENTATION_METHOD--prefer-positive-normative-statements.md
@@ -31,7 +30,7 @@ Prefer Positive Normative Statements
 ### Prose Claim
 
 
-normative Atom prose authored **in** CCE.
+normative Atom prose.
 
 
 **to** author normative Atom prose, state applicable conditions **and** required behavior positively **when** this preserves the complete Claim; an explicit prohibition is warranted **only** **when** it prevents a real ambiguity **or** protects an important boundary.

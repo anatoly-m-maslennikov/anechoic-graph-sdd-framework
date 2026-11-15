@@ -6,11 +6,11 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_DECLARED_BY
+  main_subject: CAPRMEDIO_MODEL <+ Relation//IS_DECLARED_BY
 tier: 1
-status: Active
-version: 2
-updated_at: 2026-11-05 22:47:24 +0400
+status: active
+version: 4
+updated_at: '2026-11-13T22:37:32.288997+00:00'
 carrier_destination:
   file:
     name: CA-R-2732-CORE_META_MODEL-DECLARATION--declare-is-declared-by.md
@@ -33,13 +33,14 @@ The Host is the qualified Declaration's governed Subject; it may be outside the 
 Forward `Host ((IS_DECLARED_BY)) Target` and reverse `Target <((IS_DECLARED_BY)) Host` are written views of that same derived fact. CA-R-1199 retains the general GOVERNS meaning. CA-R-2278 supplies the declaring ownership qualification; this Declaration retains the qualified endpoint transformation. Neither a derivation reference nor a displayed view grants permission or cardinality.
 ### Formal Claim
 
-```CFEL
-# model
-Relation//IS_DECLARED_BY ((HAS_CLASSIFICATION)) Derivation == Derived;
+```python
+from caprmedio.formal_claims import declare_relation
 
-Relation//IS_DECLARED_BY ((IS_DERIVED_RELATION_OF)) Relation//GOVERNS;
-
-# instances
-$declared_subject ((IS_DECLARED_BY)) Atom/(.Header.Role: Requirement)/(.Header.Form in (Declaration, Relation Declaration))//$atom
+declare_relation(
+    relation_name='IS_DECLARED_BY',
+    derived_from='GOVERNS',
+    source_endpoint={'level': 'model_entities_or_instances'},
+    target_endpoint={'level': 'instances', 'entity_paths': ('Atom/(.Header.Context.Role:=Requirement)/(.Header.Context.Form in (Declaration, Relation Declaration))',)},
+)
 ```
 

@@ -6,12 +6,11 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Entity/Property
+  main_subject: CAPRMEDIO_MODEL <+ Node.**
   dependencies:
   - CAPRMEDIO_MODEL <+ Entity
   - CAPRMEDIO_MODEL <+ Term//Property
-  - CAPRMEDIO_MODEL <+ CFEL
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_PROPERTY_OF
+  - CAPRMEDIO_MODEL <+ Relation//IS_PROPERTY_OF
 tier: 1
 status: Active
 version: 24
@@ -32,11 +31,11 @@ Identify Dependent-Entity Occurrences by Complete Subject Path
 ### Prose Claim
 
 
-`Entity/Property` occurrences, their immediate bearers, and their
+`Node.**` occurrences, their immediate bearers, and their
 complete Subject Paths.
 
 
-**every** `Entity/Property` occurrence **must** derive its
+**every** `Node.**` occurrence **must** derive its
 source-admitted bearer-qualified identity from its complete Subject Path
 **without** imposing one global ordinal position on a reusable Term. Its
 outgoing direct IS_PROPERTY_OF Relation identifies its immediate bearer. Distinct
@@ -52,7 +51,7 @@ Qualification is part of the complete property name used for collision checks.
 A repeated display or reference of one entity remains the same entity, and
 parsing a name does not introduce another graph entity.
 
-`Entity/Property` is the Entity kind governed by this Rule.
+`Node.**` is the Entity kind governed by this Rule.
 `Term//Property` is its reusable lexical Term; the Term is not the
 Entity kind or an occurrence. The direct IS_PROPERTY_OF Relation runs from the
 Property occurrence to its bearer. The separate bearer-cardinality Rule owns

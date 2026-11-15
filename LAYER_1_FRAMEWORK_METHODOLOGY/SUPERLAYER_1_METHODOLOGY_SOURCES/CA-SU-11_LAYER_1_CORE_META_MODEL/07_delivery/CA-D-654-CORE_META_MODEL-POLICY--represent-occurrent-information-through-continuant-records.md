@@ -10,7 +10,7 @@ topics:
   dependencies:
   - CAPRMEDIO_MODEL <+ Carrier
   - CAPRMEDIO_MODEL <+ Event Record
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//CARRIES
+  - CAPRMEDIO_MODEL <+ Relation//CARRIES
 tier: 1
 status: Active
 version: 3

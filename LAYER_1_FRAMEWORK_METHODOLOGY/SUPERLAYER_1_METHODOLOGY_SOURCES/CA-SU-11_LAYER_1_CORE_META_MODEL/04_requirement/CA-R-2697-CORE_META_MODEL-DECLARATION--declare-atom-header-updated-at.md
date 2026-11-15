@@ -6,11 +6,11 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Updated At
+  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.State.Updated At
 tier: 3
-status: Active
-version: 1
-updated_at: 2026-11-03 20:00:05 +0400
+status: active
+version: 2
+updated_at: '2026-11-13T22:53:30.315950+00:00'
 carrier_destination:
   file:
     name: CA-R-2697-CORE_META_MODEL-DECLARATION--declare-atom-header-updated-at.md
@@ -24,14 +24,21 @@ Declare Atom.Header.Updated At
 
 ## Claim
 
+### Prose Claim
+
+The Updated At value equals the maximum happened_at among Event Records whose single object_output has a version, has this Atom ID and current Version, and has action create or update.
+
 ### Formal Claim
 
-```CFEL
-# model
-Atom.Header.Updated At{::1}:: [datetime]{::1};
+```python
+from datetime import datetime
+from caprmedio.formal_claims import declare_entity
 
-Atom.Header.Updated At.*[]{::0};
-
-# instances
-Atom//$atom.Header.Updated At == MAX(Event Record//$event_record(.object_output{=1}, .object_output.version{=1}, .object_output.id = $atom.Header.ID, .object_output.version = $atom.Header.Version, (.action = create OR .action = update)).happened_at)
+declare_entity(
+    entity_name='Updated At',
+    relation_name="IS_PROPERTY_OF",
+    base_path='Atom.Header.State',
+    property_occurrence_cardinality=1, value_format=datetime, value_cardinality=1, dependent_property_cardinality=0,
+)
 ```
+

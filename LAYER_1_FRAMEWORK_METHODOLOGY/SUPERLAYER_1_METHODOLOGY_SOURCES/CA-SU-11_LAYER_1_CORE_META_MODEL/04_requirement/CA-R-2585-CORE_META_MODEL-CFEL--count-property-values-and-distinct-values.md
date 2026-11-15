@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL
+  main_subject: CAPRMEDIO_MODEL <+ Node.**
 tier: 3
 status: Active
 version: 2
@@ -26,19 +26,6 @@ Count direct Property values and distinct values
 
 ### Prose Claim
 
-
-- Within `COUNT(...)`, `p: $` selects the direct value occurrences of Property p on the current bearer. `$` is anonymous and binds no new named variable. It does not select dependent Property names.
-- Repeated equal values remain separate occurrences. A known absent optional p selects an empty selection of value occurrences. An unresolved or malformed bearer, Property population, or value is an error, not an empty set.
-- `COUNT(p: $)` returns the nonnegative number of selected direct value occurrences. `COUNT(DISTINCT p: $)` returns the number of their unique values.
-- DISTINCT equality is the declared Format equality: no implicit string trimming, case folding, coercion, or canonicalization. A reference Format compares resolved reference identity.
-- Counts apply per current bearer, not across Atoms. Existing Property occurrence, value-format, value-count, and source constraints remain in force.
-- Outside this COUNT selection, existing `p: literal` and `p: [format]{:n}` meanings are unchanged.
-
-## Details
-
-```CFEL
-# instances
-Atom//$atom;
-
-COUNT($atom.Header.Subjects.Passive: $) = COUNT(DISTINCT $atom.Header.Subjects.Passive: $)
-```
+- A direct-value count measures the actual values of one Property on one bearer. Equal values contribute separate occurrences. An absent optional Property contributes zero.
+- A distinct-value count compares values using their declared Format. Compare references by resolved identity. Count dependent Property names separately.
+- Report an error when the bearer, Property or value cannot be resolved.

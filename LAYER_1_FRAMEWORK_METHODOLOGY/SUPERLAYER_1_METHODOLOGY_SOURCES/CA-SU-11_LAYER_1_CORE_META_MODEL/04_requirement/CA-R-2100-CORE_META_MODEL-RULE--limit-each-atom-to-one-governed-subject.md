@@ -6,9 +6,9 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Topics
+  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
   dependencies:
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//GOVERNS
+  - CAPRMEDIO_MODEL <+ Relation//GOVERNS
 tier: 1
 status: Active
 version: 8

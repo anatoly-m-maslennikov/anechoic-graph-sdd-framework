@@ -9,14 +9,14 @@ topics:
   main_subject: CAPRMEDIO_MODEL <+ Term//ID
   dependencies:
   - CAPRMEDIO_MODEL <+ Term
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Method)/(.Header.Form := Term Definition)
+  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Method)/(.Header.Context.Form := Term Definition)
 tier: 1
 status: Active
 version: 7
 updated_at: 2026-11-04 18:28:33 +0400
 carrier_destination:
   file:
-    name: CA-M-450-TERM_DEFINITION--define-id.md
+    name: CA-M-450-CORE_META_MODEL-TERM_DEFINITION--define-id.md
     path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
 ---
 ## Summary

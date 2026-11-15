@@ -7,11 +7,10 @@ role: Requirement
 form: Rule
 topics:
   main_subject: CAPRMEDIO_MODEL <+ Carrier/File
+  dependencies:
+  - CAPRMEDIO_MODEL <+ Project.Settings
 tier: 2
 relations:
-  depends_on:
-  - CA-D-359
-  - CA-D-364
   child_of:
   - CA-R-622
 status: Active
