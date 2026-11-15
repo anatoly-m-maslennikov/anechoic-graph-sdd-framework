@@ -3,23 +3,19 @@
   "sources": [
     {
       "atom_id": "CA-R-1539",
-      "version": 25
+      "version": 26
     },
     {
       "atom_id": "CA-R-1608",
-      "version": 23
-    },
-    {
-      "atom_id": "CA-R-1875",
       "version": 24
     },
     {
-      "atom_id": "CA-R-2696",
-      "version": 3
+      "atom_id": "CA-R-1875",
+      "version": 25
     },
     {
-      "atom_id": "CA-R-3010",
-      "version": 7
+      "atom_id": "CA-R-2696",
+      "version": 4
     }
   ],
   "declarations": [
@@ -82,12 +78,6 @@
       "role": null,
       "form": null,
       "value": "Draft"
-    },
-    {
-      "source": "CA-R-3010",
-      "role": "Analysis and Advisory",
-      "form": "Code Synopsis",
-      "value": "Resolved"
     }
   ]
 }
