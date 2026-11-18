@@ -35,8 +35,8 @@ def pre_tool_use(event: object) -> dict[str, Any]:
     if not isinstance(arguments, dict):
         return deny("CAPRMEDIO tool arguments must be an object")
     root = arguments.get("project_root")
-    if not isinstance(root, str) or not root.strip():
-        return deny("CAPRMEDIO tool call requires an existing Project binding")
+    if "project_root" in arguments and (not isinstance(root, str) or not root.strip()):
+        return deny("CAPRMEDIO tool call has an invalid Project root")
     if not isinstance(session_id, str) or not session_id.strip():
         return deny("CAPRMEDIO hook event requires a session ID")
     context = arguments.get("caller_context", {})

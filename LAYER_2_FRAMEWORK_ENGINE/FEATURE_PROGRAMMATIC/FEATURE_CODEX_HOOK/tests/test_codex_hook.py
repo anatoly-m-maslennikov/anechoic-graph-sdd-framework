@@ -47,6 +47,15 @@ class CodexHookTests(unittest.TestCase):
         result = self.decision(self.event)
         self.assertEqual(self.event["tool_input"], result["updatedInput"])
 
+    def test_injects_session_without_project_root(self):
+        del self.event["tool_input"]["project_root"]
+        result = self.decision(self.event)
+        self.assertEqual("allow", result["permissionDecision"])
+        self.assertEqual(
+            {**self.event["tool_input"], "caller_context": {"session_id": "codex-session-123"}},
+            result["updatedInput"],
+        )
+
     def test_conflicting_session_is_denied(self):
         self.event["tool_input"]["caller_context"] = {"session_id": "another-session"}
         self.assertEqual("deny", self.decision(self.event)["permissionDecision"])
