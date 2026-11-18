@@ -20,12 +20,14 @@ def invoke(event):
 
 class CodexHookTests(unittest.TestCase):
     def setUp(self):
+        self.project = Path(HOOK.anchor) / "projects" / "example"
         self.event = {
             "hook_event_name": "PreToolUse",
             "tool_name": "mcp__caprmedio__query_run",
             "session_id": "codex-session-123",
+            "cwd": str(self.project),
             "tool_input": {
-                "project_root": "/projects/example",
+                "project_root": str(self.project),
                 "sql": "SELECT 1",
                 "session_id": "native-argument",
             },
@@ -47,14 +49,33 @@ class CodexHookTests(unittest.TestCase):
         result = self.decision(self.event)
         self.assertEqual(self.event["tool_input"], result["updatedInput"])
 
-    def test_injects_session_without_project_root(self):
+    def test_injects_exact_session_folder_when_project_root_is_omitted(self):
         del self.event["tool_input"]["project_root"]
-        result = self.decision(self.event)
-        self.assertEqual("allow", result["permissionDecision"])
-        self.assertEqual(
-            {**self.event["tool_input"], "caller_context": {"session_id": "codex-session-123"}},
-            result["updatedInput"],
-        )
+        for project in (self.project, self.project.with_name("another"), self.project / "nested"):
+            folder = str(project)
+            with self.subTest(folder=folder):
+                result = self.decision({**self.event, "cwd": folder})
+                self.assertEqual("allow", result["permissionDecision"])
+                self.assertEqual(
+                    {
+                        **self.event["tool_input"],
+                        "project_root": folder,
+                        "caller_context": {"session_id": "codex-session-123"},
+                    },
+                    result["updatedInput"],
+                )
+
+    def test_conflicting_project_root_is_denied(self):
+        self.event["tool_input"]["project_root"] = str(self.project.with_name("another"))
+        self.assertEqual("deny", self.decision(self.event)["permissionDecision"])
+
+    def test_missing_or_invalid_session_folder_is_denied(self):
+        del self.event["cwd"]
+        self.assertEqual("deny", self.decision(self.event)["permissionDecision"])
+        for folder in (None, "", "relative/project", str(self.project / "bad\x00path")):
+            with self.subTest(folder=folder):
+                result = self.decision({**self.event, "cwd": folder})
+                self.assertEqual("deny", result["permissionDecision"])
 
     def test_conflicting_session_is_denied(self):
         self.event["tool_input"]["caller_context"] = {"session_id": "another-session"}

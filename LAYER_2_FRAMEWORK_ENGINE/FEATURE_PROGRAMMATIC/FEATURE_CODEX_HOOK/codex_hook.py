@@ -1,11 +1,12 @@
 # CA-M-517@1
 # CA-D-706@2
 
-"""Attach the native Codex session to a bound CAPRMEDIO MCP call."""
+"""Attach the native Codex session and its folder to a CAPRMEDIO MCP call."""
 
 from __future__ import annotations
 
 import json
+from os.path import isabs
 import sys
 from typing import Any
 
@@ -34,9 +35,11 @@ def pre_tool_use(event: object) -> dict[str, Any]:
     session_id = event.get("session_id")
     if not isinstance(arguments, dict):
         return deny("CAPRMEDIO tool arguments must be an object")
-    root = arguments.get("project_root")
-    if "project_root" in arguments and (not isinstance(root, str) or not root.strip()):
-        return deny("CAPRMEDIO tool call has an invalid Project root")
+    cwd = event.get("cwd")
+    if not isinstance(cwd, str) or not isabs(cwd) or "\x00" in cwd:
+        return deny("CAPRMEDIO hook event requires an absolute Codex session folder")
+    if arguments.get("project_root", cwd) != cwd:
+        return deny("CAPRMEDIO Project root differs from the Codex session folder")
     if not isinstance(session_id, str) or not session_id.strip():
         return deny("CAPRMEDIO hook event requires a session ID")
     context = arguments.get("caller_context", {})
@@ -45,6 +48,7 @@ def pre_tool_use(event: object) -> dict[str, Any]:
     if "session_id" in context and context["session_id"] != session_id:
         return deny("CAPRMEDIO caller session differs from the Codex session")
     updated = dict(arguments)
+    updated["project_root"] = cwd
     updated["caller_context"] = {**context, "session_id": session_id}
     return {
         "hookSpecificOutput": {

@@ -68,7 +68,8 @@ class CallerContextE2ETests(unittest.IsolatedAsyncioTestCase):
         return {
             "tool_name": "mcp__caprmedio__echo",
             "session_id": session,
-            "tool_input": {"project_root": str(root), "session_id": native_session},
+            "cwd": str(root),
+            "tool_input": {"session_id": native_session},
         }
 
     def _run_hook(self, event):
