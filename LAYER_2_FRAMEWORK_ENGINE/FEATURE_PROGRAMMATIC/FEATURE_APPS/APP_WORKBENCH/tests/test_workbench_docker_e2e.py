@@ -57,7 +57,7 @@ class WorkbenchDockerE2E(
     expected_tables = {
         "atoms", "scope_units", "change_log", "atom_physical_carrier_issues",
         "atom_declared_carrier_issues", "atom_parse_issues", "atom_schema_issues",
-        "atom_duplicate_revision_issues", "archive_role_max", "archive_version_max",
+        "atom_duplicate_revision_issues", "archive_role_max", "archive_version_max", "atom_version_max",
         "live_runs", "query_log", "relations", "runtime_diagnostics",
         "implementation_objects", "implementation_rmedo",
     }
