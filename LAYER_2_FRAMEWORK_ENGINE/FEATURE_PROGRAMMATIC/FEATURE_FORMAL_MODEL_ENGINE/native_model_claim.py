@@ -400,16 +400,28 @@ def parse_native_model_claim(text: str) -> dict[str, Any] | None:  # noqa: C901
             continue
         if (function != "declare_entity" or not isinstance(value, ast.Call)
                 or not isinstance(value.func, ast.Name)
-                or value.func.id not in {"ScopeUnit", "Project", "Aspect"}
+                or value.func.id not in {"ScopeUnit", "Project", "Aspect", "ProjectManifest"}
                 or imports.get(value.func.id) != "caprmedio.model"):
-            _fail(value, "instance requires an imported ScopeUnit, Project, or Aspect")
+            _fail(value, "instance requires an imported ScopeUnit, Project, Aspect, or ProjectManifest")
         fields = {}
         for field, field_value in _keywords(value).items():
+            if value.func.id == "ProjectManifest" and field == "parameters":
+                if not isinstance(field_value, ast.Dict) or any(
+                    isinstance(node, (ast.Name, ast.Call)) for node in ast.walk(field_value)
+                ):
+                    _fail(field_value, "Project Manifest parameters must be a literal mapping")
+                fields[field] = _dictionary(field_value, set())
+                continue
             try:
                 literal = ast.literal_eval(field_value)
             except (ValueError, TypeError, SyntaxError, RecursionError):
                 _fail(field_value, "instance fields must be literals")
-            if literal is not None and type(literal) not in {str, int, bool}:
+            if value.func.id == "ProjectManifest" and field == "lens_whitelist":
+                if literal is not None and (not isinstance(literal, list) or any(
+                    not isinstance(lens, str) or not lens or lens != lens.strip() for lens in literal
+                )):
+                    _fail(field_value, "Project Manifest lens_whitelist must be a list of lens names or None")
+            elif literal is not None and type(literal) not in {str, int, bool}:
                 _fail(field_value, "instance fields must be scalar literals")
             fields[field] = literal
         arguments[key] = {"type": value.func.id, "fields": fields}

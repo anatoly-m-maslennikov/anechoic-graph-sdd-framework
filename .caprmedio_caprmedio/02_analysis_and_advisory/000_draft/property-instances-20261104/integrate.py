@@ -9,7 +9,7 @@ from zoneinfo import ZoneInfo
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
-HELPER = ROOT / '.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/integration/adopt.py'
+HELPER = ROOT / 'migration-evidence/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/integration/adopt.py'
 spec = importlib.util.spec_from_file_location('property_packet_adopt', HELPER)
 native = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(native)

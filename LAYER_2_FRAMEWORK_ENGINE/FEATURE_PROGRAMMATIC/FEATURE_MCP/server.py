@@ -2,20 +2,36 @@
 # CA-R-1820@9
 
 """MCP entry point for the native Workbench gateway."""
+from __future__ import annotations
+
 import argparse
 import asyncio
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from direct_gateway import DirectGateway, bind_selection, startup_selection
 from runtime_process_boundary import run_process
 
-def _serve_stdio(args):
+if TYPE_CHECKING:
+    from native_query import NativeQueryInputs
+
+
+def _serve_stdio(args, *, native_inputs: NativeQueryInputs | None = None):
+    if native_inputs is not None:
+        from native_project_selection import resolve_native_project
+        from native_query import NativeQueryOwner
+
+        selection = resolve_native_project(args.project_root, args.control_root,
+                                           validate_manifest=native_inputs.validate_manifest)
+        owner = NativeQueryOwner(selection, native_inputs)
+        asyncio.run(DirectGateway(selection.root, native_query=owner).serve())
+        return
     selection = startup_selection(args.project_root, args.control_root, args.instance_id, args.host_project_root)
     with bind_selection(selection):
         asyncio.run(DirectGateway(args.project_root, selection=selection).serve())
 
 
-def main(argv=None):
+def main(argv=None, *, native_inputs: NativeQueryInputs | None = None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--project-root', required=True, type=Path)
     parser.add_argument('--control-root')
@@ -23,9 +39,14 @@ def main(argv=None):
     parser.add_argument('--host-project-root')
     parser.add_argument('--transport', choices=('stdio', 'streamable-http'), default='stdio')
     args = parser.parse_args(argv)
+    if native_inputs is not None and (
+        args.transport != 'stdio' or not args.control_root
+        or args.instance_id is not None or args.host_project_root is not None
+    ):
+        parser.error('Native selection requires stdio and --control-root and derives its own instance identity')
     if args.transport == 'stdio':
         return run_process(
-            lambda: _serve_stdio(args), operation='mcp.stdio_startup',
+            lambda: _serve_stdio(args, native_inputs=native_inputs), operation='mcp.stdio_startup',
             root=args.project_root,
         )
     else:

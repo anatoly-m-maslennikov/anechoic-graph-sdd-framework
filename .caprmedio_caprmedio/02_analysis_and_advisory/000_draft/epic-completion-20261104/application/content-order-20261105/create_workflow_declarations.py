@@ -3,7 +3,7 @@ from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 root=Path.cwd().resolve()
-helper=root/'.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/integration/adopt.py'
+helper=root/'migration-evidence/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/integration/adopt.py'
 spec=importlib.util.spec_from_file_location('model_adopt',helper); a=importlib.util.module_from_spec(spec); spec.loader.exec_module(a); a.ROOT=root
 out=root/'.caprmedio_caprmedio/02_analysis/draft/epic-completion-20261104/application/content-order-20261105'
 relative=Path('.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/draft')

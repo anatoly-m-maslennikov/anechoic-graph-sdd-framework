@@ -33,6 +33,7 @@ from mcp import types
 
 if TYPE_CHECKING:
     from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service import WorkbenchService
+    from native_query import NativeQueryOwner
 
 tools = str(Path(__file__).resolve().parents[1] / "FEATURE_TOOLS")
 apps = str(Path(__file__).resolve().parents[1] / "FEATURE_APPS")
@@ -154,10 +155,13 @@ def native_tools() -> tuple[types.Tool, ...]:
 class WorkbenchTools:
     """One lazy Workbench owner per Project Gateway."""
 
-    def __init__(self, root: Path, *, selection=None, diagnostics_snapshot=None) -> None:
+    def __init__(
+        self, root: Path, *, selection=None, diagnostics_snapshot=None, query_owner: NativeQueryOwner | None = None,
+    ) -> None:
         self.root = root
         self._project = (selection.root, selection.instance_id) if selection is not None else None
         self._diagnostics_snapshot = diagnostics_snapshot
+        self._query_owner = query_owner
         self._service: WorkbenchService | None = None
         self._lifecycle_lock = threading.RLock()
 
@@ -166,6 +170,9 @@ class WorkbenchTools:
             from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service import WorkbenchService
             self._service = WorkbenchService(self.root)
         return self._service
+
+    def _query(self) -> WorkbenchService | NativeQueryOwner:
+        return self._query_owner if self._query_owner is not None else self._owner()
 
     @contextmanager
     def lifecycle_reader(self):
@@ -214,22 +221,23 @@ class WorkbenchTools:
                 return self._owner().interface_call(name, arguments)
             if name == RUN:
                 sql, page_size, cursor, save, preview, query_name, delivery, result_format = self._run(arguments)
-                return self._owner().run(
+                return self._query().run(
                     sql, page_size=page_size, cursor_position=cursor,
                     save=save, preview=preview, name=query_name,
                     result_delivery=delivery, result_format=result_format,
                 )
             if name == CHECK:
                 sql, cursor = self._sql(arguments, {"sql", "cursor_position"})
-                return self._owner().check(sql, cursor_position=cursor)
+                return self._query().check(sql, cursor_position=cursor)
             if name == PAGE:
                 query_id, offset, page_size, grid, preview, delivery, result_format = self._page(arguments)
-                return self._owner().page(query_id, offset, page_size=page_size, grid=grid,
-                                          preview=preview, result_delivery=delivery,
-                                          result_format=result_format)
+                return self._query().page(
+                    query_id, offset, page_size=page_size, grid=grid, preview=preview,
+                    result_delivery=delivery, result_format=result_format,
+                )
             if name == SCHEMA:
                 self._empty(arguments)
-                return self._owner().schema()
+                return self._query().schema()
             if name == SAVE_VIEW:
                 if isinstance(arguments, dict) and {"workspace_id", "view_id"} <= set(arguments):
                     return self._owner().interface_call(name, arguments)
@@ -370,6 +378,8 @@ class WorkbenchTools:
 
     def _close(self) -> None:
         with self._lifecycle_lock:
+            if self._query_owner is not None:
+                self._query_owner.close()
             if self._service is not None:
                 self._service.close()
                 self._service = None

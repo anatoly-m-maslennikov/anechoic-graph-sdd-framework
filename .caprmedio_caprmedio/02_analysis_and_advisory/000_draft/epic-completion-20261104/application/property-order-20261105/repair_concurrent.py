@@ -17,7 +17,7 @@ def module(name, path):
     return result
 
 
-n = module('concurrent_order_adoption', ROOT / '.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/integration/adopt.py')
+n = module('concurrent_order_adoption', ROOT / 'migration-evidence/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/integration/adopt.py')
 n.ROOT = ROOT
 order = module('concurrent_order_transform', HERE / 'migration/prepare_order.py')
 ref = module('concurrent_ref_transform', HERE / 'ref-id-data/prepare_ref_id.py')

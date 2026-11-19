@@ -72,6 +72,36 @@ class NativeModelClaimTests(unittest.TestCase):
         with self.assertRaises(NativeModelClaimError):
             parse_native_model_claim('from caprmedio.formal_claims import declare_entity\n' + call)
 
+    def test_project_manifest_parameters_are_literal_mapping_only(self):
+        imports = ('from caprmedio.formal_claims import declare_entity\n'
+                   'from caprmedio.model import ProjectManifest, Project\n')
+        claim = ('declare_entity(entity_name="Project Manifest", instance=ProjectManifest('
+                 'name="Anechoic", prefix="AN", parameters={"options": {"verbose": False}}))')
+        parsed = parse_native_model_claim(imports + claim)
+        self.assertEqual({"name": "Anechoic", "prefix": "AN", "parameters": {"options": {"verbose": False}}},
+                         parsed["arguments"]["instance"]["fields"])
+        for invalid in (claim.replace('False', 'read()'), claim.replace('False', 'str'),
+                        claim.replace('"verbose": False', '"verbose": False, "verbose": True'),
+                        claim.replace('instance=ProjectManifest', 'instance=Project')):
+            with self.subTest(claim=invalid), self.assertRaises(NativeModelClaimError):
+                parse_native_model_claim(imports + invalid)
+
+    def test_project_manifest_lens_whitelist_accepts_literal_lists(self):
+        imports = ('from caprmedio.formal_claims import declare_entity\n'
+                   'from caprmedio.model import ProjectManifest, Project\n')
+        claim = ('declare_entity(entity_name="Project Manifest", instance=ProjectManifest('
+                 'name="Anechoic", prefix="AN", lens_whitelist={value}))')
+        for value in (None, [], ["SPEC", "DES"]):
+            with self.subTest(value=value):
+                result = parse_native_model_claim(imports + claim.format(value=repr(value)))
+                self.assertEqual(value, result["arguments"]["instance"]["fields"]["lens_whitelist"])
+        for value in ('load_lenses()', '["SPEC", str]', '[""]', '[" SPEC"]', '[17]', '("SPEC",)', '"SPEC"'):
+            with self.subTest(value=value), self.assertRaises(NativeModelClaimError):
+                parse_native_model_claim(imports + claim.format(value=value))
+        with self.assertRaisesRegex(NativeModelClaimError, "scalar literals"):
+            parse_native_model_claim(imports + claim.replace('instance=ProjectManifest', 'instance=Project')
+                                     .format(value='["SPEC"]'))
+
     def test_named_instance_check_is_preserved_without_execution(self):
         claim = '''
 from caprmedio.formal_claims import declare_entity

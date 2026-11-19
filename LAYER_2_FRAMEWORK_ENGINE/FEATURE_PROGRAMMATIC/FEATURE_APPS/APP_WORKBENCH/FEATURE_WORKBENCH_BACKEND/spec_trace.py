@@ -10,7 +10,7 @@ PILOT = Path('LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_APPS/APP_WOR
 EXCLUDED = {'FEATURE_WORKBENCH_CODEX', 'FEATURE_CODEX_EXTENSION', 'node_modules',
             '__pycache__', 'dist', 'build', 'coverage', 'assets', 'generated', 'benchmark', 'benchmarks'}
 EXTENSIONS = {'.py', '.svelte', '.ts', '.js', '.mjs'}
-PIN = re.compile(r'- (CA-[RMEDO]-[0-9]+)@([0-9]+)')
+PIN = re.compile(r'- ((?:CA-[RMEDO]|AN-[SP])-[0-9]+)@([0-9]+)')
 SUFFIX = '.spec_trace.md'
 
 

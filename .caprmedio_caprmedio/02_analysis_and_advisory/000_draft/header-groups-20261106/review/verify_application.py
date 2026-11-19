@@ -30,7 +30,7 @@ def load_module(name: str, path: Path):
 
 n = load_module(
     "header_group_adoption_base",
-    ROOT / ".caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/integration/adopt.py",
+    ROOT / "migration-evidence/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/integration/adopt.py",
 )
 g = load_module("header_group_data", PACKET / "data/prepare_groups.py")
 references = load_module("header_group_references", PACKET / "references/prepare_reference_impact.py")

@@ -10,6 +10,27 @@ from FEATURE_WORKBENCH_BACKEND.spec_trace import PILOT, SpecTraceStore
 
 
 class SpecTraceTests(unittest.TestCase):
+    def test_mixed_legacy_and_native_pins_preserve_exact_versions(self):
+        root = Path(self.enterContext(TemporaryDirectory()))
+        package = root / PILOT / 'example'
+        package.mkdir(parents=True)
+        (package / 'unit.py').write_text('pass')
+        sidecar = package / 'unit.py.spec_trace.md'
+        sidecar.write_text('## Implements\n- CA-R-123@4\n- AN-S-125@12\n- AN-P-9@2\n')
+        connection = self.enterContext(duckdb.connect(':memory:'))
+        store = SpecTraceStore(connection, root)
+        store.initialize()
+        store.refresh()
+        pins = 'SELECT atom_id, version FROM implementation_rmedo ORDER BY atom_id'
+        self.assertEqual(connection.execute(pins).fetchall(),
+                         [('AN-P-9', 2), ('AN-S-125', 12), ('CA-R-123', 4)])
+
+        for invalid in ('AN-T-1@1', 'AN-S-1', 'AN-S-1@1-draft', 'AN-S-1@0'):
+            sidecar.write_text(f'## Implements\n- CA-R-123@4\n- {invalid}\n')
+            with redirect_stderr(StringIO()):
+                store.refresh([sidecar])
+            self.assertEqual(connection.execute(pins).fetchall(), [])
+
     def test_sidecar_edits_replace_only_the_owner_pins(self):
         root = Path(self.enterContext(TemporaryDirectory()))
         package = root / PILOT / 'example'

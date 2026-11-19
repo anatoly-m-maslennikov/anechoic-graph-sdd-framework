@@ -8,7 +8,7 @@ import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[6]
-OLD = ROOT / '.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/migration'
+OLD = ROOT / 'migration-evidence/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/migration'
 sys.path.insert(0, str(OLD))
 spec = importlib.util.spec_from_file_location('guarded_header_migration', OLD / 'migrate.py')
 guards = importlib.util.module_from_spec(spec)

@@ -1,6 +1,6 @@
 import json,re,hashlib,csv
 from pathlib import Path
-root=Path('.'); frontier=root/'.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/integration/current-source-frontier.json'; out=Path(__file__).parent
+root=Path('.'); frontier=root/'migration-evidence/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/integration/current-source-frontier.json'; out=Path(__file__).parent
 rows=[]
 for x in json.loads(frontier.read_text())['operations']:
  p=root/x['destination_path']; b=p.read_bytes(); t=b.decode(); m=re.search(r'^  active: ["\']?CAPRMEDIO_MODEL <\+ (.+?)["\']?$',t,re.M)

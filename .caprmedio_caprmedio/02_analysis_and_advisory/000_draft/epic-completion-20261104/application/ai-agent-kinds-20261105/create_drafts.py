@@ -4,7 +4,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 root = Path.cwd().resolve()
-helper = root / '.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/integration/adopt.py'
+helper = root / 'migration-evidence/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/integration/adopt.py'
 spec = importlib.util.spec_from_file_location('model_adopt', helper)
 a = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(a)

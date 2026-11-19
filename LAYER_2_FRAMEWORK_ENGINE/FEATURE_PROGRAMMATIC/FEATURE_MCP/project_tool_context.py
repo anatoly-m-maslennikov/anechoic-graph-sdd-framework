@@ -8,12 +8,17 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from project_selection import ProjectSelection
 
+if TYPE_CHECKING:
+    from native_project_selection import NativeProjectSelection
 
-def native_arguments(arguments: Any, selection: ProjectSelection | None, root: Path) -> Any:
+
+def native_arguments(
+    arguments: Any, selection: ProjectSelection | NativeProjectSelection | None, root: Path,
+) -> Any:
     """Accept only the bound host/container root, then remove the outer assertion."""
     if not isinstance(arguments, dict) or "project_root" not in arguments:
         return arguments
@@ -26,9 +31,9 @@ def native_arguments(arguments: Any, selection: ProjectSelection | None, root: P
         raise ValueError("project_root must be a canonical bound Project root") from error
     if not path.is_absolute() or ".." in path.parts or path.as_posix() != value:
         raise ValueError("project_root must be a canonical bound Project root")
-    allowed = {str(root)} if selection is None else {str(selection.root)} | (
-        {str(selection.host_root)} if selection.host_root is not None else set()
-    )
+    allowed = {str(root if selection is None else selection.root)}
+    if isinstance(selection, ProjectSelection) and selection.host_root is not None:
+        allowed.add(str(selection.host_root))
     if value not in allowed:
         raise ValueError("project_root does not match the bound Project")
     return {key: item for key, item in arguments.items() if key != "project_root"}

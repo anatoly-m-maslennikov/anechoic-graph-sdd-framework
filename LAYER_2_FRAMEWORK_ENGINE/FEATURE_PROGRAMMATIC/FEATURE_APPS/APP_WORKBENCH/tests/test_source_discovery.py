@@ -40,8 +40,12 @@ class SourceDiscoveryTests(unittest.TestCase):
         copied = self.source("installed-copy/custom/record.md", "CA-R-782")
         additional = [
             self.source("retired-owner/archive/old.md", "CA-R-783"),
-            self.source("_projection/copy.md", "CA-R-784"),
             self.source("loose/old.md", "CA-R-785", status="Archived"),
+        ]
+        generated = [
+            self.source("_projection/copy.md", "CA-R-784"),
+            self.source("000_CAPRMEDIO_framework/SUPERLAYER_1_METHODOLOGY_SOURCES/copy.md", "CA-R-787"),
+            self.source("000_CAPRMEDIO_framework/applicable_methodology/copy.md", "CA-R-788"),
         ]
         outside = self.root / "CA-R-786-outside.md"
         outside.write_bytes(current.read_bytes().replace(b"CA-R-780", b"CA-R-786"))
@@ -50,9 +54,29 @@ class SourceDiscoveryTests(unittest.TestCase):
         paths = {row["source_path"] for row in atoms}
         for path in (current, draft, copied, *additional):
             self.assertIn(path.relative_to(self.root).as_posix(), paths)
+        for path in generated:
+            self.assertNotIn(path.relative_to(self.root).as_posix(), paths)
         self.assertNotIn(outside.relative_to(self.root).as_posix(), paths)
         self.assertEqual({"fixture", "MAIN", "CHILD"}, {row["name"] for row in scopes})
         self.assertEqual("Draft", next(row for row in atoms if row["id"] == "CA-R-781")["status_group"])
+
+    def test_generated_copies_stay_excluded_during_incremental_changes(self):
+        source = self.source("loose/current.md", "CA-R-789")
+        self.fixture._capture()
+        for directory in ("000_CAPRMEDIO_framework", "_projection"):
+            copy = self.control / directory / "nested" / source.name
+            copy.parent.mkdir(parents=True, exist_ok=True)
+            copy.write_bytes(source.read_bytes())
+            for changed in (copy, copy.parent):
+                rows, _ = self.reader.capture([{
+                    "operation": "create", "old_path": None,
+                    "new_path": changed.relative_to(self.root).as_posix(),
+                }])
+                self.assertEqual([source.relative_to(self.root).as_posix()],
+                                 [row["source_path"] for row in rows if row["ref"] == "CA-R-789"])
+        rows, _, _ = self.fixture._capture()
+        self.assertEqual([source.relative_to(self.root).as_posix()],
+                         [row["source_path"] for row in rows if row["ref"] == "CA-R-789"])
 
     def test_orphan_source_lifecycle_does_not_rescan_scope_or_atom_inventory(self):
         self.source("loose/seed.md", "CA-R-790")
@@ -200,6 +224,46 @@ relation(source="Relation//INVERSE", name="HAS_INVERSE", target="Relation//DIREC
         self.assertEqual(["DIRECT", "INVERSE"], registry["registered_names"])
         self.assertEqual([{"direct": "DIRECT", "inverse": "INVERSE"}], registry["inverse_bindings"])
         self.assertEqual({"CA-R-796", "CA-R-797"}, {item["atom_id"] for item in registry["sources"]})
+
+    def test_installed_model_feeds_asset_compilers_but_not_public_capture(self):
+        installed = "000_CAPRMEDIO_framework/SUPERLAYER_1_METHODOLOGY_SOURCES/04_requirement"
+        declaration = self.source(f"{installed}/content.md", "CA-R-795", body="""## Claim
+
+### Formal Claim
+
+```CFEL
+Atom.Content.Summary{::1}:: {::1};
+```
+""")
+        relation = self.source(f"{installed}/relation.md", "CA-R-796", form="Relation Declaration", body="""## Claim
+
+### Formal Claim
+
+```python
+relation(source="Relation//DIRECT", name="HAS_INVERSE", target="Relation//INVERSE")
+```
+""")
+        relation.write_text(relation.read_text().replace("subjects: {}", "subjects:\n  active: CFEL <+ Relation//DIRECT"))
+        projected = self.source("_projection/relation.md", "CA-R-797", form="Relation Declaration", body="""## Claim
+
+### Formal Claim
+
+```python
+relation(source="Relation//PROJECTED", name="HAS_INVERSE", target="Relation//COPY")
+```
+""")
+        projected.write_text(projected.read_text().replace("subjects: {}", "subjects:\n  active: CFEL <+ Relation//PROJECTED"))
+
+        atoms, _, _ = self.fixture._capture()
+        self.assertFalse({"CA-R-795", "CA-R-796", "CA-R-797"} & {row["id"] for row in atoms})
+
+        schema = json.loads(compile_project_schema(self.root))
+        columns = schema["modes"]["2"]["content"]["content_columns"]
+        self.assertEqual(["content.summary"], [column["name"] for column in columns])
+        self.assertIn(declaration.relative_to(self.root).as_posix(), {item["path"] for item in schema["sources"]})
+        registry = json.loads(compile_project_registry(self.root))
+        self.assertEqual(["DIRECT", "INVERSE"], registry["registered_names"])
+        self.assertEqual({"CA-R-796"}, {item["atom_id"] for item in registry["sources"]})
 
     def test_registry_prefers_current_declared_scope_source_over_earlier_copy(self):
         copied = self.source("000_copy/record.md", "CA-R-810", form="Relation Declaration", body="""## Claim

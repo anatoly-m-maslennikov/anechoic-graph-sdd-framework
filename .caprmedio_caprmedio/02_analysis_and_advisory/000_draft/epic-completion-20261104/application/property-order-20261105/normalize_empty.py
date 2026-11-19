@@ -11,7 +11,7 @@ SNAPSHOT = ROOT / '.caprmedio_caprmedio/02_analysis/draft/epic-completion-202611
 
 
 def main():
-    helper = ROOT / '.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/integration/adopt.py'
+    helper = ROOT / 'migration-evidence/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/integration/adopt.py'
     spec = importlib.util.spec_from_file_location('empty_property_adoption', helper)
     n = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(n)

@@ -54,6 +54,7 @@ class SourceReader:
         status_groups: tuple[tuple[str, str, str], ...] = (),
         role_folders: tuple[tuple[str, str], ...] | None = None,
         include_archived: bool = True,
+        include_installed_framework: bool = False,
         archive_placement: Any | None = None,
         audit_model: Any | None = None,
     ) -> None:
@@ -80,6 +81,10 @@ class SourceReader:
             self.control_root = (
                 candidate if candidate.is_absolute() else self.root / candidate
             ).resolve()
+        generated = {"_projection"}
+        if not include_installed_framework:
+            generated.add("000_CAPRMEDIO_framework")
+        self._excluded_directories = frozenset(self.control_root / name for name in generated)
         self._failed: dict[Path, tuple[int, ...]] = {}
         self._diagnostics: dict[Path, str] = {}
         self._cached: dict[Path, tuple[tuple[int, ...], dict[str, Any]]] = {}
@@ -574,7 +579,7 @@ class SourceReader:
     def _add_paths(self, path: Path) -> set[Path]:
         if path.suffix == ".md":
             candidates = {path} if self._is_source_path(path) else set()
-        elif path.is_dir():
+        elif path.is_dir() and not any(path.is_relative_to(directory) for directory in self._excluded_directories):
             candidates = {candidate for candidate in _markdown_paths(path) if self._is_source_path(candidate)}
         else:
             candidates = set()
@@ -595,6 +600,8 @@ class SourceReader:
         return added
     def _is_source_path(self, path: Path) -> bool:
         if self._atom_filename is None or not self._atom_filename.fullmatch(path.name) or not path.is_relative_to(self.control_root):
+            return False
+        if any(path.is_relative_to(directory) for directory in self._excluded_directories):
             return False
         return not self._has_symlink_ancestor(path)
     def _has_symlink_ancestor(self, path: Path) -> bool:
@@ -871,7 +878,7 @@ class SourceReader:
             return sources
         directory = None
         archived_directory = False
-        for path in _markdown_paths(self.control_root):
+        for path in _markdown_paths(self.control_root, excluded_directories=self._excluded_directories):
             # The walk already excludes symlink files and directories.
             if not self._atom_filename.fullmatch(path.name):
                 continue

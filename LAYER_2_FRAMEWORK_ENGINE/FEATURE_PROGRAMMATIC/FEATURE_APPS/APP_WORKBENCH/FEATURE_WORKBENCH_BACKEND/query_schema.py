@@ -15,7 +15,8 @@ from .archive_catalog import ARCHIVE_ROLE_MAX, ARCHIVE_VERSION_MAX
 def public_schema(connection: Any, header_schema: HeaderSchema) -> dict[str, dict[str, list[dict[str, Any]]]]:
     tables: dict[str, list[dict[str, Any]]] = {}
     for name in ("atoms", "scope_units", "relations", "change_log", "query_log", "live_runs", "runtime_diagnostics",
-                 "implementation_objects", "implementation_rmedo", ARCHIVE_VERSION_MAX, ARCHIVE_ROLE_MAX, *AUDIT_TABLES):
+                 "implementation_objects", "implementation_rmedo", ARCHIVE_VERSION_MAX, ARCHIVE_ROLE_MAX,
+                 *AUDIT_TABLES, "native_references", "native_legacy_references", "native_migration_paths"):
         rows = connection.execute(
             "SELECT column_name, data_type FROM information_schema.columns "
             "WHERE table_schema = 'main' AND table_name = ? ORDER BY ordinal_position", [name],

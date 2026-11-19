@@ -17,7 +17,7 @@ def module(name, path):
     return result
 
 
-n = module('identity_only_adoption', CONTROL / '03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/integration/adopt.py')
+n = module('identity_only_adoption', ROOT / 'migration-evidence/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/integration/adopt.py')
 n.ROOT = ROOT
 order = module('identity_only_order', HERE.parent / 'property-order-20261105/migration/prepare_order.py')
 

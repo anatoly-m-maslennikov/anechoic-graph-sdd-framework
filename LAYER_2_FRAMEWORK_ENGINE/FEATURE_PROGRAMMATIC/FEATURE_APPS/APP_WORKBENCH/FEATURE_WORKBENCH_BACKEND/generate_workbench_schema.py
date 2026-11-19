@@ -34,7 +34,7 @@ from role_directory_rules import compile_role_folders
 
 def compile_project_schema(project_root: Path, *, model_class_bindings=None) -> bytes:
     """Capture one Project and compile both admitted Workbench schema modes."""
-    reader = SourceReader(Path(project_root), include_archived=False)
+    reader = SourceReader(Path(project_root), include_archived=False, include_installed_framework=True)
     atoms, _scopes = reader.capture()
     selected = list(first_reference_rows(reader.model_rows(atoms, _is_declaration)))
     if model_class_bindings is None:

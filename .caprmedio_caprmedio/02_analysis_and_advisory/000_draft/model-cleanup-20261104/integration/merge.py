@@ -12,7 +12,7 @@ import re
 HERE = Path(__file__).resolve().parent
 PACKETS = HERE.parent
 ROOT = HERE.parents[4]
-OLD_ADOPT = ROOT / ".caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/integration/adopt.py"
+OLD_ADOPT = ROOT / "migration-evidence/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/integration/adopt.py"
 
 
 def sha(data: bytes) -> str:

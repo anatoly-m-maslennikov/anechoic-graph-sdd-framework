@@ -46,7 +46,7 @@ def load_module(name, path):
 
 n = load_module(
     "header_group_adoption",
-    CONTROL / "03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/integration/adopt.py",
+    ROOT / "migration-evidence/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/integration/adopt.py",
 )
 g = load_module("header_group_data", PACKET / "data/prepare_groups.py")
 # Contract owned by the reference lane: rewrite(path, text) -> text is pure

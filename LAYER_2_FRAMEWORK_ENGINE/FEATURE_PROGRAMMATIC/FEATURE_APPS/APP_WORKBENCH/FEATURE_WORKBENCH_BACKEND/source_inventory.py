@@ -68,7 +68,7 @@ def archived(parts: tuple[str, ...]) -> bool:
     return any(part.casefold() in ARCHIVE_PARTS or carrier_status_folder(part) == "archived" for part in parts)
 
 
-def markdown_paths(root: Path, *, include_archived: bool = True) -> Iterator[Path]:
+def markdown_paths(root: Path, *, include_archived: bool = True, excluded_directories: frozenset[Path] = frozenset()) -> Iterator[Path]:
     pending = [root]
     while pending:
         directory = pending.pop()
@@ -89,6 +89,8 @@ def markdown_paths(root: Path, *, include_archived: bool = True) -> Iterator[Pat
                         continue
                     path = directory / entry.name
                     if is_directory:
+                        if path in excluded_directories:
+                            continue
                         pending.append(path)
                     if path.suffix == ".md":
                         yield path

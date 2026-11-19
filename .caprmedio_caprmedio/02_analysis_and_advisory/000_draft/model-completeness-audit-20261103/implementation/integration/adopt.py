@@ -11,7 +11,7 @@ import sys
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[5]
 PACKETS = HERE.parent
-OLD = ROOT / '.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103'
+OLD = ROOT / 'migration-evidence/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103'
 sys.path.insert(0, str(OLD / 'migration'))
 spec = importlib.util.spec_from_file_location('existing_adoption', OLD / 'integration/adopt.py')
 native = importlib.util.module_from_spec(spec)

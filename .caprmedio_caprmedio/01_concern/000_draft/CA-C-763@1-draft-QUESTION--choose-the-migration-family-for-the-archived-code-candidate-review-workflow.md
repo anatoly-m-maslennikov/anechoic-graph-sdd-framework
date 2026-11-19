@@ -1,0 +1,40 @@
+---
+identity:
+  atom_id: CA-C-763
+  ref_id: CA-C-763@1-draft
+context:
+  container:
+    scope_unit: CA-SU-00
+  role: concern
+  form: Question
+  topics:
+    main_subject: PROJECT STRUCTURE//CAPRMEDIO
+  tier: 3
+  concern:
+    priority: Medium
+state:
+  status: draft
+  version: 1
+  updated_at: '2026-11-19T10:12:36.185625+00:00'
+destination:
+  file:
+    name: CA-C-763@1-draft-QUESTION--choose-the-migration-family-for-the-archived-code-candidate-review-workflow.md
+    path: .caprmedio_caprmedio/01_concern/000_draft
+---
+## Summary
+
+Choose the migration family for the archived code-candidate review Workflow
+
+## Concern
+
+Should the mechanical migration place CA-O-223 in PMETA as a Project Workflow?
+
+## Details
+
+CA-O-223 has 14 archived Workflow revisions for reviewing a Project code candidate against selected checks and policy. Its use of reusable Programmatic policy also supports a SPEC reading. The source evidence identifies four related Step histories without choosing exact Step revisions.
+
+Proposed disposition. Preserve all 14 Workflow revisions in one PMETA lineage. Let Steps with verified membership follow that family. Keep unresolved revision-level relationships in the migration receipt.
+
+## References
+
+CA-P-3075, CA-P-3092, CA-O-223.
