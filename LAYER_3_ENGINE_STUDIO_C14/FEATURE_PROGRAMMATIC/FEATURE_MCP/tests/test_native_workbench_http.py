@@ -38,6 +38,10 @@ class NativeWorkbenchHttpTests(unittest.IsolatedAsyncioTestCase):
         await gateway.initialize()
         self.addAsyncCleanup(gateway.close)
         self.assertTrue({'workspace_open', 'view_run', 'view_fetch'} <= {tool.name for tool in gateway.tools})
+        self.assertIn('workbench_status', {tool.name for tool in gateway.tools})
+        status = await gateway.call(None, types.CallToolRequestParams(name='workbench_status', arguments={}))
+        self.assertFalse(status.is_error, status.structured_content)
+        self.assertEqual({'mode': 'startup_snapshot'}, status.structured_content)
         mcp_open = await gateway.call(None, types.CallToolRequestParams(
             name='workspace_open', arguments={'session_id': 'mcp-session'},
         ))
@@ -50,6 +54,11 @@ class NativeWorkbenchHttpTests(unittest.IsolatedAsyncioTestCase):
         async with httpx2.AsyncClient(transport=httpx2.ASGITransport(app=app),
                                      base_url='http://127.0.0.1:18093') as client:
             path = '/anechoic/Anechoic/api'
+            status = await client.post(f'{path}/status', json={})
+            self.assertEqual(200, status.status_code, status.text)
+            self.assertEqual({'mode': 'startup_snapshot'}, status.json())
+            wrong_status_root = await client.post(f'{path}/status', json={'project_root': '/wrong/project'})
+            self.assertEqual(400, wrong_status_root.status_code)
 
             async def call(operation, arguments, **envelope):
                 return await client.post(f'{path}/interface', json={
@@ -97,16 +106,23 @@ class NativeWorkbenchHttpTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_manifest_blacklist_applies_to_mcp_and_http(self):
         gateway = create_native_gateway(self.root, fixture.CONTROL, fixture._native_inputs())
-        selection = replace(gateway.selection, parameters={'project_mcp': {'tool_blacklist': ['query_schema']}})
+        selection = replace(gateway.selection, parameters={
+            'project_mcp': {'tool_blacklist': ['query_schema', 'workbench_status']},
+        })
         gateway.selection = gateway._native_query.selection = selection
         await gateway.initialize()
         self.addAsyncCleanup(gateway.close)
         self.assertNotIn('query_schema', {tool.name for tool in gateway.tools})
+        self.assertNotIn('workbench_status', {tool.name for tool in gateway.tools})
         response = await gateway.call(None, types.CallToolRequestParams(name='query_schema', arguments={}))
+        self.assertTrue(response.is_error)
+        response = await gateway.call(None, types.CallToolRequestParams(name='workbench_status', arguments={}))
         self.assertTrue(response.is_error)
         async with httpx2.AsyncClient(transport=httpx2.ASGITransport(app=Starlette(routes=routes(gateway))),
                                      base_url='http://127.0.0.1:18093') as client:
             response = await client.post('/anechoic/Anechoic/api/schema', json={})
+            self.assertEqual(400, response.status_code)
+            response = await client.post('/anechoic/Anechoic/api/status', json={})
             self.assertEqual(400, response.status_code)
 
         invalid = create_native_gateway(self.root, fixture.CONTROL, fixture._native_inputs())

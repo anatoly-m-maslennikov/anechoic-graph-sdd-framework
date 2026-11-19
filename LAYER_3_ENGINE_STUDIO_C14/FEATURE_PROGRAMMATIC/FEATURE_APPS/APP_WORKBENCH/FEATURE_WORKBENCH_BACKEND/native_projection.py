@@ -110,12 +110,14 @@ def project_native(store: QueryStore, capture: NativeCapture, *,
     with store._lock:
         store.replace(rows, [], relation_types=set(relation_types))
         try:
+            store._connection.execute('''CREATE TABLE internal.native_exact_refs AS
+                SELECT unnest(?::VARCHAR[]) AS reference, unnest(?::VARCHAR[]) AS exact_ref''',
+                [[row["ref"] for row in rows], [row["_exact_ref"] for row in rows]])
             store._connection.execute('''CREATE OR REPLACE VIEW main.native_references AS
                 SELECT relative_path, filename, status_group, reference,
                        CASE WHEN status_group = 'Current' THEN reference END AS stable_ref,
-                       "header.identity.atom_id" || '@' || CAST("header.state.version" AS VARCHAR) ||
-                       CASE WHEN status_group = 'Draft' THEN '-draft' ELSE '' END AS exact_ref
-                FROM main.atoms''')
+                       exact_ref
+                FROM main.atoms JOIN internal.native_exact_refs USING (reference)''')
             store._connection.execute('''CREATE OR REPLACE TABLE main.native_legacy_references (
                 legacy_ref VARCHAR, original_path VARCHAR, exact_ref VARCHAR,
                 PRIMARY KEY (legacy_ref, original_path))''')

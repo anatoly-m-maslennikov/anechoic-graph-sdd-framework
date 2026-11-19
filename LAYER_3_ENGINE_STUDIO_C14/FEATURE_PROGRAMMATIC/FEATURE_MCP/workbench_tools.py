@@ -208,7 +208,7 @@ class WorkbenchTools:
         if name == SYNC_STATUS:
             self._empty(arguments)
             if self._query_owner is not None:
-                raise ValueError("Operation is unavailable for a native Project")
+                return self._query_owner.status()
             owner = self._service
             status = {"syncing": False, "last_synced_at": None, "loaded_archive_scopes": [],
                       "audits_pending": False, "last_audit_ms": None, "audit_error": None}

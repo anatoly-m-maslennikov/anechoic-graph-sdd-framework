@@ -71,7 +71,7 @@
   const migrationProgressKey = standalone?.migrationProgressKey ?? '';
   const initial = newView(1) as Tab;
   let tabs = $state<Tab[]>([initial]); let activeId = $state(initial.id); let view = $state<'settings' | 'saved' | 'view'>('view');
-  let schema = $state<Schema>({ tables: {} }); let savedItems = $state<SavedItem[]>([]); let logItems = $state<QueryLogItem[]>([]); let syncStatus = $state<SourceSyncStatus>({ syncing: false, last_synced_at: null }); let storageError = $state(''); let collapsed = $state(false);
+  let schema = $state<Schema>({ tables: {} }); let savedItems = $state<SavedItem[]>([]); let logItems = $state<QueryLogItem[]>([]); let syncStatus = $state<SourceSyncStatus>({ mode: 'unavailable' }); let storageError = $state(''); let collapsed = $state(false);
   let workspaceReady = $state(false); let savedBusy = $state(false); let openSavedDialog = $state(false); let commandOpen = $state(false); let nameDialog = $state<{ kind: 'save' | 'rename'; id?: string; initialValue: string } | null>(null);
   let archiveDialogOpen = $state(false);
   let preferenceCommands = $state<PreferenceCommand[]>([]); let api: WorkbenchApi; let boundApi: WorkspaceApi | undefined; const syncing = new Map<string, Promise<boolean>>(); const paging = new Map<string, number>(); let pageRequest = 0;
@@ -146,7 +146,7 @@
       if (target) updateTab(target, { sql: source.sql, cursor: source.cursor, dirty: source.dirty, savedSql: source.savedSql ?? source.sql, syncDirty: false });
     }
   }
-  async function refreshStatus() { try { syncStatus = await api.status(); } catch {} }
+  async function refreshStatus() { try { syncStatus = await api.status(); } catch { syncStatus = { ...syncStatus, mode: 'unavailable' }; } }
   async function loadArchives(scopes: ArchiveScope[]) {
     const coverage = await api.loadArchives(scopes);
     syncStatus = { ...syncStatus, ...coverage };

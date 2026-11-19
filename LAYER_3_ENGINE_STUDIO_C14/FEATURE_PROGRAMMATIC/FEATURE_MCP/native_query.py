@@ -75,8 +75,7 @@ class NativeQueryOwner(ServiceInterface):
         workbench = runtime.get("workbench", {}) if isinstance(runtime, dict) else None
         if not isinstance(workbench, dict):
             raise ValueError("Project Manifest runtime.workbench must be a mapping")
-        ttl = workbench.get("result_ttl_seconds")
-        options = {} if "result_ttl_seconds" not in workbench else {"result_ttl_seconds": ttl}
+        options = {key: workbench[key] for key in ("result_ttl_seconds", "schema_mode") if key in workbench}
         store = QueryStore(extension_directory=self._inputs.extension_directory, **options)
         try:
             project_native(store, capture, relation_types=self._inputs.relation_types,
@@ -106,6 +105,10 @@ class NativeQueryOwner(ServiceInterface):
         if self._store is None:
             raise RuntimeError("Native query projection is unavailable")
         return self._store
+
+    def status(self) -> dict[str, str]:
+        self._owner()
+        return {"mode": "startup_snapshot"}
 
     def page(self, query_id: str, offset: int, page_size: int = 100, *, grid: object = None,
              preview: int | None = None, result_delivery: str = "file",
