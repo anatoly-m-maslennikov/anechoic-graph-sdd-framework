@@ -91,19 +91,42 @@ edits in parallel where the paths and files are separate.
   build with existing assets passed. Refreshing the assets resolved to the
   same immutable image. Both Docker Workbench MCP and HTTP tests passed.
   Build and test logs are under `.anechoic_tmp/ca-p-3073/`.
-- [ ] Move the IWE Console and MCP Patchbay code into their Component
-  folders. Keep the Workbench backend with IWE Console. Verify each move
-  with its current callers. The isolated C21/C43 rehearsal is commit `ce1030270d`.
+- [x] Move the IWE Console and MCP Patchbay code into their Component
+  folders. Commit `53d820ce6b` moved both code trees and kept the
+  Workbench backend with IWE Console. The current caller checks passed
+  100 focused tests. The isolated C21/C43 rehearsal is commit `ce1030270d`.
   Its image build and both Docker Workbench MCP and HTTP tests passed. The
   combined rehearsal with native runtime is `52465f61ba`. Its image built,
   and its normal Docker launcher passed native MCP alias and Workbench View
   checks. The replay patch against `189f757401` is
   `.anechoic_tmp/ca-p-3073/component-split-after-native.patch`.
 
+### Atom IDs and references
+
+- [x] Prepare a compact old-ID and new-ID file for the isolated Active
+  preview. The provisional map is
+  `.anechoic_tmp/ca-p-3073/current-family-rebind/active-preview-id-map.tsv`.
+- [ ] Freeze the compact ID map for the verified migration set. Keep the
+  original path for ambiguous legacy exact references.
+- [ ] Apply the same map to Atom IDs and references in native YAML,
+  filenames, and relations admitted by CA-P-3089. Keep unresolved
+  relation occurrences in the migration receipt.
+- [x] Verify the Active preview against the production native runtime.
+  The preview contains 3,544 Active Atoms and 189 required Current
+  records. The runtime resolved all 3,733 path-bound legacy aliases,
+  loaded 45 Manifests, and read 12 Settings groups. The preview uses
+  provisional IDs. The receipt is
+  `.anechoic_tmp/ca-p-3073/active-native-startup/active-complete-preview-synthetic.json`.
+
 ### Project structure cutover
 
 Keep the live legacy tree at `.anechoic_anechoic/` throughout staging and
-the pre-cutover Local Release.
+the pre-cutover Local Release. Prioritize Active Atoms and their required
+references. The archive may remain partial.
+
+- [x] Preserve 293 unresolved archived source files in `.anechoic_archive/`.
+  Their bytes match the current legacy sources. The legacy package selector
+  excludes the archive and still selects the same 1,108 source files.
 
 - [x] Create `.anechoic_new/` for native staging.
 - [ ] Stage the verified native records in `.anechoic_new/` with CA-P-3075.
@@ -149,6 +172,8 @@ the pre-cutover Local Release.
   Manifest. The normal launcher selects it after the directory rename.
   Preserve the legacy Local Release selection during coexistence. Commit
   `189f757401` wires native queries, Workspaces, Views, and saved items.
+  Commit `4dba891959` selects the Active Project Manifest from the
+  Project’s `SPEC/` directory.
 - [ ] Verify the production launch and query path in an isolated checkout with
   the final directory names. Use CA-P-3096 to verify the migrated records and
   reference lookups. The isolated launch returned `READY_STARTED`, resolved
@@ -202,8 +227,9 @@ work groups above.
 - [ ] Verify `existing` mode with the generated assets saved with the matching
   checkout.
 - [ ] After the pre-cutover Local Release succeeds, rename the live legacy tree
-  from `.anechoic_anechoic/` to `.anechoic_legacy/`. Then rename
-  `.anechoic_new/` to `.anechoic_anechoic/`.
+  from `.anechoic_anechoic/` to `.anechoic_legacy/` as one complete tree,
+  including the legacy release inputs. Then rename `.anechoic_new/` to
+  `.anechoic_anechoic/`.
 - [ ] Verify discovery and reference lookup from the final native path.
 - [ ] Verify Workbench and MCP `query_run` against the resulting runtime.
 
