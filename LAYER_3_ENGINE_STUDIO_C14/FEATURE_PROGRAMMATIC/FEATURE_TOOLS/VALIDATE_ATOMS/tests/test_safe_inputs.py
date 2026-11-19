@@ -1,9 +1,12 @@
 """Small regression tests for untrusted carriers and read boundaries."""
 
+from contextlib import contextmanager
+import os
 from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
@@ -78,6 +81,24 @@ class ReadTests(unittest.TestCase):
         path.write_bytes(b"x" * 21)
         with self.assertRaises(LimitReached):
             self.reader.read(path)
+
+    def test_inventory_rechecks_entry_type_when_it_visits_the_path(self) -> None:
+        entry = self.root / "pending"
+        entry.touch()
+        self.assertEqual(self.reader.inventory(self.root), [])
+        scandir = os.scandir
+
+        @contextmanager
+        def scan_and_replace(descriptor):
+            with scandir(descriptor) as entries:
+                yield entries
+            if entry.is_file():
+                entry.unlink()
+                entry.mkdir()
+                (entry / "a.md").write_text("new input", encoding="utf-8")
+
+        with patch("validate_atoms_workers.read_io.os.scandir", scan_and_replace):
+            self.assertEqual(self.reader.currentness()["state"], "changed")
 
     def test_symlink_escape(self) -> None:
         path = self.root / "outside.md"

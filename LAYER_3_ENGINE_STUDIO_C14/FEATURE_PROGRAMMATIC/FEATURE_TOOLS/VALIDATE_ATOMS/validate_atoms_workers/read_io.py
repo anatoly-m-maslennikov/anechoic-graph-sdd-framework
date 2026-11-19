@@ -1,5 +1,6 @@
 """Bound all reads, reject protected paths, and fingerprint actual inputs."""
 
+from contextlib import suppress
 from dataclasses import dataclass, field
 import hashlib
 import os
@@ -110,9 +111,12 @@ class ReadContext:
         while pending:
             path = pending.pop()
             self.checkpoint()
-            if path.is_symlink():
+            mode = 0
+            with suppress(OSError):
+                mode = path.lstat().st_mode
+            if stat.S_ISLNK(mode):
                 found.append(path)  # Report without following or reading.
-            elif path.is_dir():
+            elif stat.S_ISDIR(mode):
                 self.allowed(path)
                 descriptor = open_regular(path, directory=True)
                 try:
