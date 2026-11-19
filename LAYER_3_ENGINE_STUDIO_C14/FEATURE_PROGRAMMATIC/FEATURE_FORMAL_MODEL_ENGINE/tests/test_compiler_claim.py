@@ -8,7 +8,7 @@ import unittest
 FEATURE = Path(__file__).resolve().parents[1]
 PROGRAMMATIC = FEATURE.parent
 TOOLS = PROGRAMMATIC / "FEATURE_TOOLS"
-WORKBENCH = PROGRAMMATIC / "FEATURE_APPS" / "APP_WORKBENCH"
+WORKBENCH = PROGRAMMATIC.parent / "IWE_CONSOLE_C43" / "APP_WORKBENCH"
 sys.path[:0] = [str(PROGRAMMATIC), str(TOOLS), str(WORKBENCH)]
 
 from FEATURE_FORMAL_MODEL_ENGINE.compiler_claim import compiler_model_statements  # noqa: E402

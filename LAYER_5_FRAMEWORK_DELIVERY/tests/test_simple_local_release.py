@@ -106,7 +106,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         prompt.parent.mkdir(parents=True)
         prompt.write_text("# source-only prompt\n", encoding="utf-8")
         self.engine_bootstrap = (
-            self.root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP/"
+            self.root / "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/"
             "docker/start_mcp.py"
         )
         self.engine_bootstrap.parent.mkdir(parents=True)
@@ -118,13 +118,13 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             '{"mcp_blacklist":[],"providers":[]}\n', encoding="utf-8")
         write_tool_registry_generator(mcp)
         workbench_backend = (
-            self.root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_APPS/"
+            self.root / "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/"
             "APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND"
         )
         workbench_backend.mkdir(parents=True)
         write_relation_registry_generator(workbench_backend)
         write_workbench_schema_generator(workbench_backend)
-        lifecycle = mcp.parent / "FEATURE_TOOLS/ATOM_LIFECYCLE"
+        lifecycle = tools / "ATOM_LIFECYCLE"
         lifecycle.mkdir()
         (lifecycle / "status_model.py").write_text(
             "from pathlib import Path\n"
@@ -372,11 +372,11 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             self.assertTrue((package / "LAYER_5_FRAMEWORK_DELIVERY/PUBLIC_RELEASE/tests/test_private.py").is_file())
             self.assertTrue((package / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/"
                              "FEATURE_TOOLS/GENERATE_ENTITY_GRAPH/render_entity_tree.py").is_file())
-            self.assertTrue((package / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_APPS/"
+            self.assertTrue((package / "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/"
                              "APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/generate_workbench_schema.py").is_file())
             self.assertEqual(
                 '{"schema_version":1,"providers":[]}\n',
-                (package / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP/"
+                (package / "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/"
                  "tool_registry.json").read_text(encoding="utf-8"),
             )
             self.assertTrue((package / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/retired.py").is_file())
@@ -553,7 +553,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertIn('version = "0.4.1.10"', (self.root / "version.toml").read_text())
 
     def test_workbench_node_dependencies_are_not_packaged(self):
-        frontend = self.root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_APPS/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND"
+        frontend = self.root / "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND"
         dependencies = frontend / "node_modules/.bin"
         dependencies.mkdir(parents=True)
         (frontend / "package.json").write_text('{"name":"workbench"}')
@@ -742,7 +742,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
                     for path in target.rglob("*") if path.is_file()}
         before = {target: inventory(target) for target in (self.installed, runtime_package, skill)}
         for relative in ("uv.lock", "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ca/SKILL.md",
-                         "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP/docker/runtime.py"):
+                         "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/runtime.py"):
             with self.subTest(relative=relative):
                 missing = self.root / relative
                 payload = missing.read_bytes()

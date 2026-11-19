@@ -9,7 +9,7 @@ from unittest.mock import patch
 from watchdog.observers.polling import PollingObserver
 
 PROGRAMMATIC = Path(__file__).resolve().parents[2]
-APPS = PROGRAMMATIC / "FEATURE_APPS"
+APPS = PROGRAMMATIC.parent / "IWE_CONSOLE_C43"
 TOOLS = PROGRAMMATIC / "FEATURE_TOOLS"
 sys.path[:0] = [str(PROGRAMMATIC), str(APPS), str(TOOLS), str(TOOLS / "tests"),
                 str(APPS / "APP_WORKBENCH"), str(APPS / "APP_WORKBENCH" / "tests")]

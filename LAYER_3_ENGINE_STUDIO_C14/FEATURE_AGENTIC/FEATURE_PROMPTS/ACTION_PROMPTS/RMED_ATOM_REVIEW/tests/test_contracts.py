@@ -137,7 +137,7 @@ class PromptContracts(unittest.TestCase):
     def test_current_rmed_claim_reaches_declared_body_checker(self):
         programmatic = ROOT / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC"
         tools = programmatic / "FEATURE_TOOLS"
-        sys.path[:0] = [str(tools), str(programmatic / "FEATURE_APPS/APP_WORKBENCH")]
+        sys.path[:0] = [str(tools), str(programmatic.parent / "IWE_CONSOLE_C43/APP_WORKBENCH")]
         from ATOM_LIFECYCLE.candidate_schema import load_candidate_schema
         schema = load_candidate_schema(tools / "ATOM_LIFECYCLE/candidate_schema.json")
         body = "## Summary\nA summary.\n## Claim\n### Prose Claim\nA claim.\n"

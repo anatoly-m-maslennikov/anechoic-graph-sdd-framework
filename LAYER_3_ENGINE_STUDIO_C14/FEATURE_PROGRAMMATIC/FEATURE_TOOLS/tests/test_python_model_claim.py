@@ -5,7 +5,7 @@ import sys
 import unittest
 
 TOOLS = Path(__file__).resolve().parents[1]
-sys.path[:0] = [str(TOOLS), str(TOOLS.parent / "FEATURE_APPS/APP_WORKBENCH")]
+sys.path[:0] = [str(TOOLS), str(TOOLS.parent.parent / "IWE_CONSOLE_C43/APP_WORKBENCH")]
 
 from python_model_claim import (  # noqa: E402
     PythonModelClaimError,

@@ -18,7 +18,7 @@ from project_mcp_bootstrap import (  # noqa: E402
 
 
 RELATIVE = Path(
-    "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP/"
+    "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/"
     "docker/start_mcp.py"
 )
 

@@ -17,6 +17,8 @@ import time
 
 from full_suite_docker import APP, current_code_test_image
 
+PROGRAMMATIC = Path("LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC")
+WORKBENCH = Path("LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH")
 CODE_ROOTS = ("LAYER_3_ENGINE_STUDIO_C14", "LAYER_5_FRAMEWORK_DELIVERY")
 MODULE_TIMEOUT_SECONDS = 3600
 RESULT_MARKER = "ANECHOIC_TEST_COUNTS "
@@ -103,12 +105,12 @@ def run_module(
         "ANECHOIC_DOCKER_E2E": "1",
         "ANECHOIC_DOCKER_QUERY_E2E": "1",
     }
-    programmatic = root / APP.parent
-    apps = programmatic / "FEATURE_APPS"
+    programmatic = root / PROGRAMMATIC
+    apps = root / WORKBENCH.parent
     existing_pythonpath = environment.get("PYTHONPATH")
     environment["PYTHONPATH"] = os.pathsep.join(
         path for path in (str(programmatic / "FEATURE_TOOLS"), str(programmatic), str(apps),
-                          str(apps / "APP_WORKBENCH"), existing_pythonpath) if path
+                          str(apps / "APP_WORKBENCH"), str(root / APP.parent), existing_pythonpath) if path
     )
     print(f"Test module START: {module.relative_to(root)}", flush=True)
     try:
@@ -143,7 +145,7 @@ def run_module(
 
 
 def _docker_module(root: Path, module: Path) -> bool:
-    app_tests = root / APP.parent / "FEATURE_APPS/APP_WORKBENCH/tests"
+    app_tests = root / WORKBENCH / "tests"
     return module.parent in (root / APP / "tests", app_tests) and (
         module.stem.endswith("_docker_e2e") or module.stem == "test_selected_query_mcp_e2e"
     )
@@ -213,7 +215,7 @@ def _record_modules(root: Path, pending: dict) -> tuple[list[str], int, int]:
 def _run_modules(root: Path, modules: list[Path], environment: dict, integration: bool) -> int:
     failed = []
     tests = skipped = 0
-    workbench_tests = root / APP.parent / "FEATURE_APPS/APP_WORKBENCH/tests"
+    workbench_tests = root / WORKBENCH / "tests"
     isolated = [module for module in modules if module.parent == workbench_tests and module.stem in {
         "test_workbench_docker_e2e", "test_workbench_resource_docker_e2e",
     }]

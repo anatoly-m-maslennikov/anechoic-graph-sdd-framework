@@ -9,7 +9,7 @@ import subject_notation as notation
 from carrier_aliases import matches_named_value
 from lint_python_model_claim import _canonical_address, _resolve, _simple_address
 from model_class_subject import model_class_target
-from FEATURE_APPS.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.markdown_content import parse_content
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.markdown_content import parse_content
 
 from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import NativeModelClaimError, parse_native_model_claim
 from FEATURE_FORMAL_MODEL_ENGINE.native_model_lint import _validate_field_contracts, lint_native_model_claim

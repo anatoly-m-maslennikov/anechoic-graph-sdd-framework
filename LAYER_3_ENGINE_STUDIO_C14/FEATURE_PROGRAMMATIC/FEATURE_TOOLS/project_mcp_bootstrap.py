@@ -11,7 +11,7 @@ import tempfile
 
 
 BOOTSTRAP_RELATIVE = Path(
-    "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP/docker/start_mcp.py"
+    "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/start_mcp.py"
 )
 TARGET_RELATIVE = Path(".anechoic_runtime/start_mcp.py")
 

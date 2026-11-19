@@ -12,7 +12,7 @@ import sys
 import tempfile
 import uuid
 
-APP = Path("LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP")
+APP = Path("LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP")
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / APP / "docker"))
 from runtime_images import ImageManager, _bounded_run  # noqa: E402
 

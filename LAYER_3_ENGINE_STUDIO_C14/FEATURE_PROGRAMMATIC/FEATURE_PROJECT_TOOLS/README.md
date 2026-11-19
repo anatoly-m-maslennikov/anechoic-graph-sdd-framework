@@ -101,7 +101,7 @@ can stay stopped.
 To build an image without deploying it, use the same locked Python environment:
 
 ```sh
-python -B LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP/docker/runtime.py \
+python -B LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/runtime.py \
   build --image-mode existing
 ```
 

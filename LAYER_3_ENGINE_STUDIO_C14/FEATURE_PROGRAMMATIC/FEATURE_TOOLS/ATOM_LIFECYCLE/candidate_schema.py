@@ -12,7 +12,7 @@ from pathlib import Path
 import sys
 
 TOOLS = Path(__file__).resolve().parents[1]
-WORKBENCH = TOOLS.parent / 'FEATURE_APPS/APP_WORKBENCH'
+WORKBENCH = TOOLS.parent.parent / 'IWE_CONSOLE_C43/APP_WORKBENCH'
 sys.path.insert(0, str(TOOLS.parent))
 sys.path.insert(0, str(TOOLS))
 sys.path.insert(0, str(WORKBENCH))

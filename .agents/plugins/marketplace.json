@@ -8,7 +8,7 @@
       "name": "anechoic-workbench",
       "source": {
         "source": "local",
-        "path": "./LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_APPS/APP_WORKBENCH/FEATURE_CODEX_EXTENSION/plugin"
+        "path": "./LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_CODEX_EXTENSION/plugin"
       },
       "policy": {
         "installation": "AVAILABLE",

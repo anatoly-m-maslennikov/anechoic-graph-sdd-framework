@@ -26,11 +26,11 @@ from typing import Any
 
 from carrier_aliases import carrier_read_view, carrier_status_folder
 from header_yaml import parse_header
-from LAYER_3_ENGINE_STUDIO_C14.FEATURE_PROGRAMMATIC.FEATURE_MCP.docker.image_relation_registry import (
+from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_relation_registry import (
     compile_lifecycle_assets, verify_status_workflow_asset,
 )
-from LAYER_3_ENGINE_STUDIO_C14.FEATURE_PROGRAMMATIC.FEATURE_MCP.docker.image_docker_client import MAX_OUTPUT
-from LAYER_3_ENGINE_STUDIO_C14.FEATURE_PROGRAMMATIC.FEATURE_MCP.docker.runtime_images import (
+from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_docker_client import MAX_OUTPUT
+from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images import (
     _GENERATED_ASSETS, ready_predecessor,
 )
 from project_selection import active_selection
@@ -450,13 +450,13 @@ def _prepare_package(root: Path, product: Path, package: Path, *,
         "SKILLS/ca/SKILL.md",
         "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ca/SKILL.md",
         "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/project_mcp_bootstrap.py",
-        "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP/docker/start_mcp.py",
-        "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP/docker/runtime.py",
-        "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP/generate_tool_registry.py",
-        "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP/tool_providers.json",
-        "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_APPS/APP_WORKBENCH/"
+        "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/start_mcp.py",
+        "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/runtime.py",
+        "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/generate_tool_registry.py",
+        "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/tool_providers.json",
+        "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/"
         "FEATURE_WORKBENCH_BACKEND/generate_relation_registry.py",
-        "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_APPS/APP_WORKBENCH/"
+        "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/"
         "FEATURE_WORKBENCH_BACKEND/generate_workbench_schema.py",
         *_GENERATED_ASSETS,
     ):
@@ -480,7 +480,7 @@ def _cleanup_staging(root: Path, staging: Path | None) -> str:
 
 def _image_manager(source: Path, temporary: Path | None = None, *, project_root: Path,
                    build_provenance: dict[str, str] | None = None):
-    docker = Path(__file__).resolve().parents[2] / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP/docker"
+    docker = Path(__file__).resolve().parents[2] / "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker"
     if str(docker) not in sys.path:
         sys.path.insert(0, str(docker))
     from runtime_images import ImageManager

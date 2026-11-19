@@ -138,7 +138,7 @@ class ContextSelectionTests(unittest.TestCase):
     def test_real_workbench_context_serves_plan_without_carrier_byte_reads(self):
         from watchdog.observers.polling import PollingObserver
         from project_selection import bind_selection
-        app = TOOLS.parent / 'FEATURE_APPS'
+        app = TOOLS.parent.parent / 'IWE_CONSOLE_C43'
         sys.path[:0] = [str(app), str(app / 'APP_WORKBENCH/tests')]
         from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service import WorkbenchService
         from smalltest_support import built_assets, extension_directory

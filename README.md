@@ -320,7 +320,7 @@ with an Operator-selected run ID and a JSON content draft for Public release.
 They use the host's Git, GitHub and Docker tools independently of MCP. Legacy
 release MCP bindings are retired; the two host commands remain. Regular
 Project MCP runs in Docker on localhost without a password; the
-[launcher documentation](LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP/docker/README.md)
+[launcher documentation](LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/README.md)
 describes Project selection and endpoint startup.
 
 Local numbering adds or increments the fourth component (`0.4.2.1` →

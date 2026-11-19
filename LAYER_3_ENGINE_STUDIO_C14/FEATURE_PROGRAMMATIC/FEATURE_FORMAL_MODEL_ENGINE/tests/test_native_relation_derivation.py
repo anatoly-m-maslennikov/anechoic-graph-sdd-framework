@@ -6,7 +6,7 @@ import unittest
 PROGRAMMATIC = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(PROGRAMMATIC), str(PROGRAMMATIC / 'FEATURE_TOOLS'),
                 str(PROGRAMMATIC / 'FEATURE_TOOLS/GENERATE_ENTITY_GRAPH'),
-                str(PROGRAMMATIC / 'FEATURE_APPS/APP_WORKBENCH')]
+                str(PROGRAMMATIC.parent / 'IWE_CONSOLE_C43/APP_WORKBENCH')]
 
 from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import NativeModelClaimError, parse_native_model_claim
 from FEATURE_WORKBENCH_BACKEND.relation_declarations import relation_declaration

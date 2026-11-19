@@ -1,0 +1,300 @@
+# CA-E-821@1
+"""Exercise Atom audits through the shared query backend."""
+
+from pathlib import Path
+from dataclasses import replace
+import sys
+from types import SimpleNamespace
+import unittest
+from unittest.mock import patch
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests"))
+from test_incremental_indexing import APP_ROOT, IncrementalIndexingTests, QueryStore, WorkbenchService
+from smalltest_support import built_assets, extension_directory, source_path, write_atom
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND import audit_tables
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.content_schema import compile_content_schema
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.markdown_content import parse_content
+
+
+class AtomAuditTests(IncrementalIndexingTests):
+    def refresh_and_audit(self, *args):
+        self.service._refresh(*args)
+        self.assertTrue(self.service.wait_for_audits(10), "background audit did not finish")
+
+    def test_plan_form_admission_in_the_audit_table(self):
+        from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service import _load_audit_model
+
+        self.service._reader._audit_model = _load_audit_model()
+        cases = (
+            ("CA-P-835", "03_plan", "Plan", "Plan"),
+            ("CA-P-836", "03_plan", "Plan", "Unsupported Form"),
+            ("CA-M-837", "05_method", "Method", "Plan"),
+        )
+        paths = []
+        for atom_id, folder, role, form in cases:
+            path = source_path(self.declarations, "ENGINE", folder, f"{atom_id}.md")
+            write_atom(path, atom_id, body="## Summary\n\nAudit fixture.\n",
+                       extra="container:\n  scope_unit: ENGINE\n")
+            path.write_text(path.read_text().replace('role: "Requirement"', f'role: "{role}"')
+                            .replace('form: "Definition"', f'form: "{form}"'))
+            paths.append(path)
+        self.refresh_and_audit([self.event(path, operation="create") for path in paths])
+        refs = "('CA-P-835', 'CA-P-836', 'CA-M-837')"
+        self.assertEqual([[3]], self.store.run(f"SELECT count(*) FROM atoms WHERE reference IN {refs}")["rows"])
+        self.assertEqual([
+            ["CA-M-837", "Role Method is not permitted for Form Plan; allowed: Plan"],
+            ["CA-P-836", "Form is not declared: Unsupported Form"],
+        ], self.store.run(
+            "SELECT reference, diagnostic FROM atom_schema_issues "
+            f"WHERE property = 'form' AND reference IN {refs} ORDER BY reference"
+        )["rows"])
+
+    def test_schema_invalid_archive_remains_queryable_and_skips_placement_checks(self):
+        archived = source_path(self.declarations, "ENGINE", "04_requirement", "archive/CA-R-834@1-old.md")
+        write_atom(archived, "CA-R-834", status="Archived",
+                   body="## Summary\n\nOld text.\n\n## Summary\n\nRepeated.\n")
+        self.service._reader._audit_model = SimpleNamespace(
+            schema=SimpleNamespace(placement=None),
+            issues=lambda row: [{"field": "content.summary", "message": "Duplicate Summary"}]
+            if row.get("ref") == "CA-R-834@1" else [],
+        )
+        self.service.load_archives([{"scope_unit": "ENGINE", "role": "Requirement"}])
+        self.assertTrue(self.service.wait_for_audits(10))
+        self.assertEqual([["Archived"]], self.store.run(
+            "SELECT status_group FROM atoms WHERE reference = 'CA-R-834@1'"
+        )["rows"])
+        self.assertEqual([["content.summary"]], self.store.run(
+            "SELECT property FROM atom_schema_issues WHERE reference = 'CA-R-834@1'"
+        )["rows"])
+        for table in (audit_tables.PARSE_ISSUES, audit_tables.DECLARED_CARRIER_ISSUES, audit_tables.PHYSICAL_CARRIER_ISSUES):
+            self.assertEqual([[0]], self.store.run(f"SELECT count(*) FROM {table} WHERE filename LIKE 'CA-R-834%'")["rows"])
+
+    def test_missing_declared_column_is_reported_from_compiled_rules(self):
+        declaration = {"role": "Requirement", "form": "Declaration", "status_group": "Current",
+                       "content_markdown": "## Claim\n\n### Formal Claim\n\n```CFEL\n"
+                       "Atom.Content.Summary:: {::1};\nAtom.Content.Details:: {::1};\n```\n"}
+        body = "## Summary\n\nPresent.\n\n## Details\n\nMissing.\n"
+        row = {"ref": "CA-R-851", "role": "Requirement", "form": "Rule",
+               "content_markdown": body, "content_properties_json": parse_content(body, tolerate_duplicate_siblings=True)}
+        complete = compile_content_schema([declaration, row])
+        incomplete = replace(complete, columns=tuple(c for c in complete.columns if c.name != "content.details"))
+        issues = audit_tables._content_issues(Path("source/CA-R-851.md"), row, incomplete,
+                                              {"content.summary": "Present."}, {})
+        self.assertEqual("content.details", issues[0][4])
+
+    def test_empty_source_and_presentation_headings_are_not_missing_content(self):
+        declaration = {"role": "Requirement", "form": "Declaration", "status_group": "Current",
+                       "content_markdown": "## Claim\n\n### Formal Claim\n\n```CFEL\n"
+                       "Atom.Content.Details:: {::0..1};\n```\n"}
+        body = "## Details\n\n### Presentation only\n\nKeep as prose.\n"
+        row = {"ref": "CA-R-851", "role": "Requirement", "form": "Rule",
+               "content_markdown": body, "content_properties_json": parse_content(body, tolerate_duplicate_siblings=True)}
+        schema = compile_content_schema([declaration, row])
+        present = schema.values(row)["content.details"]
+        self.assertIn("### Presentation only", present)
+        self.assertEqual([], audit_tables._content_issues(Path("source/CA-R-851.md"), row, schema,
+                                                          {"content.details": present}, {}))
+        row["content_markdown"] = "## Details\n\n"
+        row["content_properties_json"] = parse_content(row["content_markdown"], tolerate_duplicate_siblings=True)
+        self.assertEqual([], audit_tables._content_issues(Path("source/CA-R-851.md"), row, schema,
+                                                          {"content.details": None}, {}))
+
+    def test_reports_declared_content_missing_from_the_query_projection(self):
+        model = source_path(self.declarations, "ENGINE", "04_requirement", "CA-R-850.md")
+        source = source_path(self.declarations, "ENGINE", "04_requirement", "CA-R-851.md")
+        draft = source_path(self.declarations, "ENGINE", "04_requirement", "draft/CA-R-852@2-draft.md")
+        write_atom(model, "CA-R-850", body="## Claim\n\n### Formal Claim\n\n```CFEL\n"
+                   "Atom.Content.Summary:: {::1};\nAtom.Content.Details:: {::0..1};\n```\n")
+        model.write_text(model.read_text().replace('form: "Definition"', 'form: "Declaration"'))
+        write_atom(source, "CA-R-851", body="## Summary\n\nPresent.\n\n## Details\n\nMissing.\n")
+        write_atom(draft, "CA-R-852", status="Draft", version=2,
+                   body="## Summary\n\nPresent.\n\n## Details\n\nMissing draft.\n")
+        self.service.close()
+        self.service = WorkbenchService(self.root, **built_assets(self.root))
+        self.service._store = QueryStore(extension_directory=extension_directory(APP_ROOT.parents[1]))
+        self.addCleanup(lambda: self.service.close())
+        self.refresh_and_audit()
+        self.store = self.service._store
+        original = {path: path.read_bytes() for path in (source, draft)}
+        self.assertEqual([["Present.", "Missing."]], self.store.run(
+            'SELECT "content.summary", "content.details" FROM atoms WHERE filename = \'CA-R-851.md\''
+        )["rows"])
+        self.store._connection.execute(
+            'UPDATE atoms SET "content.details" = NULL '
+            "WHERE filename = 'CA-R-851.md'"
+        )
+        self.store._connection.execute(
+            'UPDATE atoms SET "content.details" = \'Miss\' WHERE filename = \'CA-R-852@2-draft.md\''
+        )
+        self.refresh_and_audit([self.event(path) for path in (source, draft)])
+        issues = self.store.run(
+            "SELECT filename, issue_category, property FROM atom_schema_issues "
+            "WHERE filename LIKE 'CA-R-85%' ORDER BY filename"
+        )["rows"]
+        self.assertEqual([
+            ["CA-R-851.md", "query_inaccessible_atom", "content.details"],
+            ["CA-R-852@2-draft.md", "query_inaccessible_atom", "content.details"],
+        ], issues)
+        self.assertEqual(original, {path: path.read_bytes() for path in (source, draft)})
+        self.refresh_and_audit()
+        self.assertEqual([[0]], self.store.run(
+            "SELECT count(*) FROM atom_schema_issues WHERE filename LIKE 'CA-R-85%'"
+        )["rows"])
+
+    def test_declared_role_conflicts_and_matching_carriers(self):
+        role_dir = Path(self.declarations["ENGINE"]["authority_path"]) / "04_requirement"
+        relative = role_dir.relative_to(self.root).as_posix()
+        cases = [
+            ("CA-R-810.md", "CA-P-810.md", "Active", 1),
+            ("draft/CA-R-811@2-draft.md", "CA-P-811@2-draft.md", "Draft", 2),
+            ("CA-R-812.md", "CA-R-812.md", "Active", 1),
+            ("draft/CA-R-813@2-draft.md", "CA-R-813@2-draft.md", "Draft", 2),
+        ]
+        paths = []
+        for index, (filename, declared_name, status, version) in enumerate(cases, 810):
+            path = source_path(self.declarations, "ENGINE", "04_requirement", filename)
+            destination = relative + ("/draft" if status == "Draft" else "")
+            write_atom(path, f"CA-R-{index}", status=status, version=version,
+                       extra=f'destination:\n  file:\n    name: "{declared_name}"\n    path: "{destination}"\n')
+            paths.append(path)
+        self.refresh_and_audit([self.event(path, operation="create") for path in paths])
+        result = self.store.run(
+            "SELECT filename, issue_category FROM atom_declared_carrier_issues "
+            "WHERE filename LIKE 'CA-R-81%' AND issue_category = 'declared_carrier_inconsistency' "
+            "ORDER BY filename"
+        )
+        self.assertEqual([["CA-R-810.md", "declared_carrier_inconsistency"],
+                          ["CA-R-811@2-draft.md", "declared_carrier_inconsistency"]], result["rows"])
+        self.assertEqual(result["rows"], self.store.page(result["query_id"], 0)["rows"])
+        clean = self.store.run(
+            "SELECT count(*) FROM atom_physical_carrier_issues "
+            "WHERE filename LIKE 'CA-R-812%' OR filename LIKE 'CA-R-813%'"
+        )["rows"]
+        self.assertEqual([[0]], clean)
+        self.assertEqual([[0]], self.store.run("SELECT count(*) FROM atom_declared_carrier_issues WHERE filename LIKE 'CA-R-812%' OR filename LIKE 'CA-R-813%'")["rows"])
+
+    def test_role_directory_mismatch_is_audited_until_removed(self):
+        paths = [source_path(self.declarations, "ENGINE", "04_requirement", name) for name in
+                 ("CA-P-900.md", "draft/CA-P-901@2-draft.md")]
+        for index, path in enumerate(paths):
+            write_atom(path, f"CA-P-{900 + index}", status="Draft" if index else "Active", version=2 if index else 1,
+                       extra=f'destination:\n  file:\n    name: "{path.name}"\n    path: "{path.parent.relative_to(self.root).as_posix()}"\n')
+        self.refresh_and_audit([self.event(path, operation="create") for path in paths])
+        self.assertEqual([[2]], self.store.run("SELECT count(*) FROM atom_declared_carrier_issues WHERE filename LIKE 'CA-P-90%'")["rows"])
+        self.assertEqual([[2]], self.store.run("SELECT count(*) FROM atoms WHERE filename LIKE 'CA-P-90%'")["rows"])
+        repaired = paths[0].with_name("CA-R-900.md")
+        paths[0].unlink()
+        write_atom(repaired, "CA-R-900")
+        paths[1].unlink()
+        self.refresh_and_audit([self.event(None, old=path, operation="remove") for path in paths]
+                              + [self.event(repaired, operation="create")])
+        self.assertEqual([[0]], self.store.run("SELECT count(*) FROM atom_parse_issues WHERE filename LIKE 'CA-P-90%'")["rows"])
+        self.assertEqual([[1]], self.store.run("SELECT count(*) FROM atoms WHERE filename='CA-R-900.md'")["rows"])
+
+    def test_declared_filename_conflicts_with_header_identity_or_role(self):
+        paths = [source_path(self.declarations, "ENGINE", "04_requirement", f"CA-R-{n}.md") for n in (890, 891)]
+        for path in paths:
+            relative = path.parent.relative_to(self.root).as_posix()
+            write_atom(path, f"CA-R-{path.stem[-3:]}", extra=f'destination:\n  file:\n    name: "{path.name}"\n    path: "{relative}"\n')
+        paths[0].write_text(paths[0].read_text().replace('name: "CA-R-890.md"', 'name: "CA-R-2.md"'))
+        paths[1].write_text(paths[1].read_text().replace('role: "Requirement"', 'role: "Method"'))
+        self.refresh_and_audit([self.event(path, operation="create") for path in paths])
+        self.assertEqual([["CA-R-890.md"], ["CA-R-891.md"]], self.store.run(
+            "SELECT DISTINCT filename FROM atom_declared_carrier_issues WHERE filename LIKE 'CA-R-89%' ORDER BY filename"
+        )["rows"])
+
+    def test_declared_path_conflicts_are_distinct_from_physical_mismatches(self):
+        cases = [("CA-R-820.md", "Active", 1), ("draft/CA-R-821@2-draft.md", "Draft", 2)]
+        paths = []
+        for index, (filename, status, version) in enumerate(cases, 820):
+            path = source_path(self.declarations, "ENGINE", "04_requirement", filename)
+            write_atom(
+                path, f"CA-R-{index}", status=status, version=version,
+                extra=f'container:\n  scope_unit: "TEST-SU-1"\n'
+                f'destination:\n  file:\n    name: "{path.name}"\n    path: "outside"\n',
+            )
+            paths.append(path)
+        before = {path: path.read_bytes() for path in paths}
+        self.refresh_and_audit([self.event(path, operation="create") for path in paths])
+        for table, category in (
+            ("atom_declared_carrier_issues", "declared_carrier_inconsistency"),
+            ("atom_physical_carrier_issues", "physical_carrier_mismatch"),
+        ):
+            rows = self.store.run(
+                f"SELECT filename, property, issue_category FROM {table} "
+                "WHERE filename LIKE 'CA-R-82%' AND property = 'file.path' ORDER BY filename"
+            )["rows"]
+            expected = [[path.name, "file.path", category] for path in paths]
+            self.assertEqual(expected if table == audit_tables.DECLARED_CARRIER_ISSUES else [], rows)
+        self.assertEqual(before, {path: path.read_bytes() for path in paths})
+
+    def test_schema_has_only_the_declared_audit_columns(self):
+        schema = self.store.schema()["tables"]
+        for table in audit_tables.TABLES:
+            self.assertEqual(list(audit_tables.COLUMNS), [column["name"] for column in schema[table]])
+
+    def test_invalid_new_carrier_updates_only_its_audit_rows(self):
+        path = source_path(self.declarations, "ENGINE", "04_requirement", "CA-R-899.md")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("---\natom_id: [invalid\n---\n")
+        with patch.object(audit_tables, "issues_for_source", wraps=audit_tables.issues_for_source) as inspected:
+            self.refresh_and_audit([self.event(path, operation="create")])
+        self.assertEqual(1, inspected.call_count)
+        self.assertEqual([[1]], self.store.run(
+            "SELECT count(*) FROM atom_parse_issues WHERE filename='CA-R-899.md'"
+        )["rows"])
+        write_atom(path, "CA-R-899")
+        self.refresh_and_audit([self.event(path)])
+        self.assertEqual([[0]], self.store.run(
+            "SELECT count(*) FROM atom_parse_issues WHERE filename='CA-R-899.md'"
+        )["rows"])
+
+    def test_value_only_update_preserves_unrelated_audit_rows(self):
+        paths = [
+            source_path(self.declarations, "ENGINE", "04_requirement", f"CA-R-{index}.md")
+            for index in (830, 831)
+        ]
+        for index, path in zip((830, 831), paths):
+            write_atom(path, f"CA-R-{index}", extra='destination:\n  file:\n    name: "wrong.md"\n    path: "wrong"\n')
+        self.refresh_and_audit([self.event(path, operation="create") for path in paths])
+        before = self.store.run(
+            "SELECT issue_category, property, observed, expected, diagnostic FROM atom_physical_carrier_issues "
+            "WHERE filename='CA-R-831.md' ORDER BY property"
+        )["rows"]
+        write_atom(paths[0], "CA-R-830", version=2,
+                   extra='destination:\n  file:\n    name: "wrong.md"\n    path: "wrong"\n')
+        with patch.object(audit_tables, "issues_for_source", wraps=audit_tables.issues_for_source) as inspected:
+            self.refresh_and_audit([self.event(paths[0])])
+        self.assertEqual(1, inspected.call_count)
+        self.assertEqual(before, self.store.run(
+            "SELECT issue_category, property, observed, expected, diagnostic FROM atom_physical_carrier_issues "
+            "WHERE filename='CA-R-831.md' ORDER BY property"
+        )["rows"])
+
+    def test_audit_tables_report_current_draft_and_clear_stale_issues(self):
+        role_dir = Path(self.declarations["ENGINE"]["authority_path"]) / "04_requirement"
+        current = source_path(self.declarations, "ENGINE", "04_requirement", "CA-R-800.md")
+        draft = source_path(self.declarations, "ENGINE", "04_requirement", "draft/CA-R-801@2-draft.md")
+        broken = source_path(self.declarations, "ENGINE", "04_requirement", "CA-R-802.md")
+        broken_draft = source_path(self.declarations, "ENGINE", "04_requirement", "draft/CA-R-803@2-draft.md")
+        relative = role_dir.relative_to(self.root).as_posix()
+        write_atom(current, "CA-R-800", extra=f'destination:\n  file:\n    name: "CA-R-800-renamed.md"\n    path: "{relative}"\n')
+        write_atom(draft, "CA-R-801", status="Draft", version=2,
+                   extra=f'destination:\n  file:\n    name: "CA-R-801@2-draft-renamed.md"\n    path: "{relative}/draft"\n')
+        for path in (broken, broken_draft):
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("---\natom_id: [not valid\n---\n## Summary\n\nInvalid.\n")
+        self.refresh_and_audit([self.event(p, operation="create") for p in (current, draft, broken, broken_draft)])
+        self.assertEqual(2, self.store.run("SELECT count(*) FROM atom_parse_issues WHERE filename LIKE 'CA-R-80%'")["rows"][0][0])
+        self.assertEqual(2, self.store.run("SELECT count(*) FROM atom_physical_carrier_issues WHERE property = 'file.name' AND filename LIKE 'CA-R-80%'")["rows"][0][0])
+        self.assertEqual(0, self.store.run("SELECT count(*) FROM atoms WHERE filename LIKE 'CA-R-802%' OR filename LIKE 'CA-R-803%'")["rows"][0][0])
+
+        for path in (current, draft, broken, broken_draft):
+            path.unlink()
+        self.refresh_and_audit([self.event(None, old=p, operation="remove") for p in (current, draft, broken, broken_draft)])
+        for table in audit_tables.TABLES:
+            self.assertEqual(0, self.store.run(f"SELECT count(*) FROM {table} WHERE filename LIKE 'CA-R-80%'")["rows"][0][0])
+
+
+if __name__ == "__main__":
+    unittest.main()

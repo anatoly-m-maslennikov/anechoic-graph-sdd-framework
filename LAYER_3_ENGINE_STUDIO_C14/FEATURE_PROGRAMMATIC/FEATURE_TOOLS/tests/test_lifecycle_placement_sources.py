@@ -1,6 +1,7 @@
 """The build selector uses Workbench and the compiler verifies its pins."""
 from pathlib import Path
 import json
+import os
 import re
 import sys
 import tempfile
@@ -10,7 +11,7 @@ from unittest.mock import patch
 TOOLS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS))
 from ATOM_LIFECYCLE.candidate_schema import compile_candidate_schema  # noqa: E402
-from ATOM_LIFECYCLE.placement_sources import bootstrap_rows, inventory, pin, query_pins, read_selected, validate_selection  # noqa: E402
+from ATOM_LIFECYCLE.placement_sources import _apps_directory, bootstrap_rows, inventory, pin, query_pins, read_selected, validate_selection  # noqa: E402
 from test_lifecycle_formal_placement import RULES, carrier, native_body, role_source  # noqa: E402
 from FEATURE_WORKBENCH_BACKEND.query_store import QueryStore  # noqa: E402
 
@@ -38,8 +39,18 @@ class PlacementSourcesTests(unittest.TestCase):
         self.manifest = self.root.parent / (self.root.name + '-selection.json')
         self.addCleanup(self.manifest.unlink, missing_ok=True)
 
+    def test_selector_resolves_current_and_previous_image_workbench(self):
+        tools = self.root / 'FEATURE_PROGRAMMATIC/FEATURE_TOOLS'
+        previous = tools.parent / 'FEATURE_APPS'
+        current = tools.parent.parent / 'IWE_CONSOLE_C43'
+        previous.mkdir(parents=True)
+        with patch('ATOM_LIFECYCLE.placement_sources._PACKAGED', tools.parent):
+            self.assertEqual(previous, _apps_directory(tools))
+            current.mkdir()
+            self.assertEqual(current, _apps_directory(tools))
+
     def test_real_workbench_query_selects_and_compiles(self):
-        extension = ROOT / '.anechoic_tmp/workbench/extensions'
+        extension = Path(os.environ.get('ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY', ROOT / '.anechoic_tmp/workbench/extensions'))
         queries = []
 
         class TracedStore(QueryStore):
@@ -63,7 +74,7 @@ class PlacementSourcesTests(unittest.TestCase):
             'CA-R-1', 'Requirement', 'Active', 'body', 'Atom.Header.Status'))
         (self.root / 'CA-R-2.md').write_text(carrier(
             'CA-R-2', 'Requirement', 'Active', 'body', 'Atom.Content.Other'))
-        extension = ROOT / '.anechoic_tmp/workbench/extensions'
+        extension = Path(os.environ.get('ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY', ROOT / '.anechoic_tmp/workbench/extensions'))
 
         class LocalStore(QueryStore):
             def __init__(self):

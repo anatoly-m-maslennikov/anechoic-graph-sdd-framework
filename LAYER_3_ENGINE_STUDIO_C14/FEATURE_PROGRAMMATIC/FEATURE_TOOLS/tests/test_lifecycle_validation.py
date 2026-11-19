@@ -334,7 +334,7 @@ class CandidateValidationTests(unittest.TestCase):
 
 class DeclaredSchemaValidationTests(unittest.TestCase):
     def test_header_format_and_duplicate_declared_content(self):
-        workbench = TOOLS.parents[0] / 'FEATURE_APPS/APP_WORKBENCH'
+        workbench = TOOLS.parent.parent / 'IWE_CONSOLE_C43/APP_WORKBENCH'
         sys.path.insert(0, str(workbench))
         from FEATURE_WORKBENCH_BACKEND.content_schema import (  # noqa: PLC0415
             ContentRule, DeclarationSource, _schema_from_rules,

@@ -31,8 +31,8 @@ class FullTestSuiteParallelTests(unittest.TestCase):
             self.case.file(str(path))
             for path in (
                 full.APP / "tests/test_selected_subject_apply.py",
-                full.APP.parents[1] / "FEATURE_MCP/tests/test_subject_publication_confirmation.py",
-                full.APP.parents[1] / "FEATURE_MCP/tests/test_subject_publication_gateway.py",
+                full.APP / "tests/test_subject_publication_confirmation.py",
+                full.APP / "tests/test_subject_publication_gateway.py",
             )
         ]
         modules += long_host
@@ -95,7 +95,7 @@ class FullTestSuiteParallelTests(unittest.TestCase):
         )
 
     def test_workbench_performance_suites_do_not_overlap_other_docker_tests(self):
-        workbench = full.APP.parent / "FEATURE_APPS/APP_WORKBENCH/tests"
+        workbench = full.WORKBENCH / "tests"
         isolated = [self.case.file(str(workbench / name)) for name in (
             "test_workbench_docker_e2e.py", "test_workbench_resource_docker_e2e.py",
         )]

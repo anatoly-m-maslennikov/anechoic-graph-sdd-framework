@@ -21,7 +21,7 @@ class RelationRegistryReleaseTests(unittest.TestCase):
     def test_generated_registry_replaces_stale_package_asset_before_image_build(self):
         fixture = self.fixture
         relative = Path(
-            "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_APPS/"
+            "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/"
             "APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/canonical_relation_registry.json"
         )
         (fixture.root / relative).write_text("stale source asset", encoding="utf-8")
@@ -47,7 +47,7 @@ class RelationRegistryReleaseTests(unittest.TestCase):
     def test_missing_fresh_output_does_not_reuse_a_copied_registry(self):
         fixture = self.fixture
         script = fixture.root / (
-            "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_APPS/APP_WORKBENCH/"
+            "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/"
             "FEATURE_WORKBENCH_BACKEND/generate_relation_registry.py"
         )
         script.write_text("pass\n", encoding="utf-8")
@@ -63,7 +63,7 @@ class RelationRegistryReleaseTests(unittest.TestCase):
     def test_generator_failure_stops_before_image_build_or_startup(self):
         fixture = self.fixture
         script = fixture.root / (
-            "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_APPS/APP_WORKBENCH/"
+            "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/"
             "FEATURE_WORKBENCH_BACKEND/generate_relation_registry.py"
         )
         script.write_text("raise SystemExit(1)\n", encoding="utf-8")
@@ -90,7 +90,7 @@ class RelationRegistryReleaseTests(unittest.TestCase):
             "from pathlib import Path\n"
             "import sys\n"
             "root = Path(sys.argv[sys.argv.index('--package-root') + 1])\n"
-            "(root / 'LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP/tool_registry.json').write_text('not-json', encoding='utf-8')\n",
+            "(root / 'LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/tool_registry.json').write_text('not-json', encoding='utf-8')\n",
             encoding="utf-8",
         )
         runner, calls = fixture._runner()
@@ -102,7 +102,7 @@ class RelationRegistryReleaseTests(unittest.TestCase):
     def test_generated_schema_replaces_stale_package_asset_and_is_sealed(self):
         fixture = self.fixture
         relative = Path(
-            "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_APPS/"
+            "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/"
             "APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/workbench_schema.json"
         )
         (fixture.root / relative).write_text("stale source asset", encoding="utf-8")
@@ -133,7 +133,7 @@ class RelationRegistryReleaseTests(unittest.TestCase):
     def test_missing_fresh_schema_does_not_reuse_a_copied_asset(self):
         fixture = self.fixture
         script = fixture.root / (
-            "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_APPS/APP_WORKBENCH/"
+            "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/"
             "FEATURE_WORKBENCH_BACKEND/generate_workbench_schema.py"
         )
         script.write_text("pass\n", encoding="utf-8")
@@ -147,7 +147,7 @@ class RelationRegistryReleaseTests(unittest.TestCase):
     def test_symlinked_schema_output_stops_before_image_build_or_startup(self):
         fixture = self.fixture
         script = fixture.root / (
-            "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_APPS/APP_WORKBENCH/"
+            "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/"
             "FEATURE_WORKBENCH_BACKEND/generate_workbench_schema.py"
         )
         target = script.with_name("schema-target.json")

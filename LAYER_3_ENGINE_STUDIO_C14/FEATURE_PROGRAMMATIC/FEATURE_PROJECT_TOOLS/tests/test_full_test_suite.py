@@ -52,6 +52,8 @@ class FullTestSuiteTests(unittest.TestCase):
         selected = [
             self.file("LAYER_3_ENGINE_STUDIO_C14/component/tests/test_engine.py"),
             self.file("LAYER_3_ENGINE_STUDIO_C14/capability/test_service.py"),
+            self.file(str(full.APP / "tests/test_mcp.py")),
+            self.file(str(full.WORKBENCH / "tests/test_workbench.py")),
             self.file("LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/tests/test_project.py"),
             self.file("LAYER_5_FRAMEWORK_DELIVERY/tests/test_release.py"),
             self.file("LAYER_5_FRAMEWORK_DELIVERY/PUBLIC_RELEASE/tests/test_public.py"),
@@ -161,10 +163,10 @@ class FullTestSuiteTests(unittest.TestCase):
             self.assertEqual("1", environment["ANECHOIC_DOCKER_QUERY_E2E"])
             self.assertEqual("actual-image", environment["ANECHOIC_DOCKER_QUERY_IMAGE"])
             programmatic = self.root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC"
-            apps = programmatic / "FEATURE_APPS"
+            apps = self.root / full.WORKBENCH.parent
             self.assertEqual(
                 os.pathsep.join((str(programmatic / "FEATURE_TOOLS"), str(programmatic), str(apps),
-                                 str(apps / "APP_WORKBENCH"), "existing-pythonpath")),
+                                 str(apps / "APP_WORKBENCH"), str(self.root / full.APP.parent), "existing-pythonpath")),
                 environment["PYTHONPATH"],
             )
 
@@ -190,6 +192,23 @@ class FullTestSuiteTests(unittest.TestCase):
         )
         self.assertEqual(0, self.run_suite(), self.errors.getvalue())
         self.assertIn(f"Test module FINISH: {module.relative_to(self.root)}", self.output.getvalue())
+
+    def test_child_imports_moved_component_packages(self) -> None:
+        self.file(str(full.APP / "__init__.py"), "VALUE = 'mcp'\n")
+        self.file(str(full.WORKBENCH / "FEATURE_WORKBENCH_BACKEND/__init__.py"), "VALUE = 'workbench'\n")
+        self.file(
+            "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/tests/test_component_imports.py",
+            "import unittest\n"
+            "import FEATURE_MCP\n"
+            "import APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND as app_backend\n"
+            "import FEATURE_WORKBENCH_BACKEND as backend\n"
+            "class Test(unittest.TestCase):\n"
+            " def test_imports(self):\n"
+            "  self.assertEqual('mcp', FEATURE_MCP.VALUE)\n"
+            "  self.assertEqual('workbench', app_backend.VALUE)\n"
+            "  self.assertEqual('workbench', backend.VALUE)\n",
+        )
+        self.assertEqual(0, self.run_suite(), self.errors.getvalue())
 
     def test_empty_suite_and_module_with_no_cases_are_failures(self) -> None:
         self.assertEqual(1, self.run_suite())

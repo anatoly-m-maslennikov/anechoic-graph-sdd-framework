@@ -6,7 +6,7 @@ import re
 import sys
 
 from ATOM_LIFECYCLE.source import bind_query_reader, select_sources
-from FEATURE_APPS.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.relation_registry import compile_relation_registry
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.relation_registry import compile_relation_registry
 from FEATURE_FORMAL_MODEL_ENGINE.model_catalog import class_bindings
 from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier
 from carrier_aliases import carrier_read_view, named_value_token

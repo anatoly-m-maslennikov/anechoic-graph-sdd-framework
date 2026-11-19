@@ -4,7 +4,7 @@ import unittest
 
 FEATURE = Path(__file__).resolve().parents[1]
 PROGRAMMATIC = FEATURE.parent
-sys.path[:0] = [str(PROGRAMMATIC), str(PROGRAMMATIC / 'FEATURE_TOOLS'), str(PROGRAMMATIC / 'FEATURE_APPS/APP_WORKBENCH')]
+sys.path[:0] = [str(PROGRAMMATIC), str(PROGRAMMATIC / 'FEATURE_TOOLS'), str(PROGRAMMATIC.parent / 'IWE_CONSOLE_C43/APP_WORKBENCH')]
 
 from ATOM_LIFECYCLE.role_form_schema import compile_role_form  # noqa: E402
 from ATOM_LIFECYCLE.content_constraints import compile_content_constraints  # noqa: E402

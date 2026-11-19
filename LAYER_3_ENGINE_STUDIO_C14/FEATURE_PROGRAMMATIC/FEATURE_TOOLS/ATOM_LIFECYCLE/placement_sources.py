@@ -15,7 +15,12 @@ import sys
 _PACKAGED = Path('/workspace/LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC')
 _TOOLS = (_PACKAGED / 'FEATURE_TOOLS' if _PACKAGED.is_dir()
           else Path(__file__).resolve().parents[1])
-_APPS = _TOOLS.parent / 'FEATURE_APPS'
+def _apps_directory(tools: Path) -> Path:
+    current = tools.parent.parent / 'IWE_CONSOLE_C43'
+    return current if current.is_dir() or tools.parent != _PACKAGED else tools.parent / 'FEATURE_APPS'
+
+
+_APPS = _apps_directory(_TOOLS)
 for _directory in (_TOOLS, _APPS, _APPS / 'APP_WORKBENCH'):
     sys.path.insert(0, str(_directory))
 

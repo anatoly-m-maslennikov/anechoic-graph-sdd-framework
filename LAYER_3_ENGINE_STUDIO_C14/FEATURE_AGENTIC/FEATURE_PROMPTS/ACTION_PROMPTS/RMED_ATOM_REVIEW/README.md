@@ -93,7 +93,7 @@ retries evidence writes; sealed Event IDs make Journal retries idempotent.
 write the recovery state is a Tool error, not a success acknowledgement.
 
 The initial local adapter is in
-`LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP/server.py`; it delegates
+`LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/server.py`; it delegates
 to the `RMED_ATOMS_BASE_REVISE` Tool. It returns
 prompts and accepts results. The calling session performs scope gathering,
 launches reviewers/fixers, and grants permission for any Atom edits. MCP does not

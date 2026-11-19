@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import patch
 
 TOOLS = Path(__file__).resolve().parents[1]
-WORKBENCH = TOOLS.parent / 'FEATURE_APPS/APP_WORKBENCH'
+WORKBENCH = TOOLS.parent.parent / 'IWE_CONSOLE_C43/APP_WORKBENCH'
 sys.path[:0] = [str(TOOLS), str(WORKBENCH)]
 from ATOM_LIFECYCLE.content_constraints import compile_content_constraints, load_content_constraints  # noqa: E402
 
