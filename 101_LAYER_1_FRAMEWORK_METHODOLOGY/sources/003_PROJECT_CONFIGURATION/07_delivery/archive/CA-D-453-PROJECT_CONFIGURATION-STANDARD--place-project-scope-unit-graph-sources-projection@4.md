@@ -26,7 +26,7 @@ the historical versionless Project Scope Unit Graph Sources Projection.
 
 ## Claim
 
-**if** the CAPRMEDIO Project's versionless Project Scope Unit Graph Sources Projection is retained as historical migration evidence, **then** it **must** retain its legacy Carrier location at `.caprmedio_caprmedio/project_scope_unit_graph_sources.projection.toml`.
+**if** the ANECHOIC Project's versionless Project Scope Unit Graph Sources Projection is retained as historical migration evidence, **then** it **must** retain its legacy Carrier location at `.anechoic_anechoic/project_scope_unit_graph_sources.projection.toml`.
 
 ## Details
 

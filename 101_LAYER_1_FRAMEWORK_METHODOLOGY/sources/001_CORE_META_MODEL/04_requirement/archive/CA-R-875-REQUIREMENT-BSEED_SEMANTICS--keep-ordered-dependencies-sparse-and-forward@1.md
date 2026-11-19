@@ -6,8 +6,8 @@ version: 1
 updated_at: 2026-08-22 00:53:40
 relations:
   child_of:
-    - CAPRMEDIO-META-REQU-712--define-ordered-unit-structural-kind
-    - CAPRMEDIO-META-REQU-718--separate-structural-ownership-from-cross-unit-flow
+    - ANECHOIC-META-REQU-712--define-ordered-unit-structural-kind
+    - ANECHOIC-META-REQU-718--separate-structural-ownership-from-cross-unit-flow
 ---
 # Keep ordered dependencies sparse and forward
 

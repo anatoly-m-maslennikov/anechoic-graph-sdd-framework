@@ -1,6 +1,6 @@
 # Project release tools
 
-These tools belong to the `caprmedio` Project, not the reusable Framework
+These tools belong to the `anechoic` Project, not the reusable Framework
 package. Shared compiler, installer and test-gate helpers remain in the Engine.
 
 ## Two workflows
@@ -60,10 +60,10 @@ operations are not exposed through the retained Workbench MCP surface.
 From the repository root, use the project-local locked uv environment:
 
 ```sh
-UV_PROJECT_ENVIRONMENT="$PWD/.caprmedio_runtime/launcher-venv" \
+UV_PROJECT_ENVIRONMENT="$PWD/.anechoic_runtime/launcher-venv" \
 uv run --project "$PWD" --locked --no-sync --python 3.14 --managed-python --no-env-file \
   --all-groups python -B LAYER_5_FRAMEWORK_DELIVERY/release.py local --run-id local-001
-UV_PROJECT_ENVIRONMENT="$PWD/.caprmedio_runtime/launcher-venv" \
+UV_PROJECT_ENVIRONMENT="$PWD/.anechoic_runtime/launcher-venv" \
 uv run --project "$PWD" --locked --no-sync --python 3.14 --managed-python --no-env-file \
   --all-groups python -B LAYER_5_FRAMEWORK_DELIVERY/release.py public --run-id public-001 --content-draft /absolute/path/release-draft.json
 ```
@@ -73,7 +73,7 @@ default. For an explicit opt-in focused run, repeat it with repository-relative
 discovered module paths:
 
 ```sh
-UV_PROJECT_ENVIRONMENT="$PWD/.caprmedio_runtime/launcher-venv" \
+UV_PROJECT_ENVIRONMENT="$PWD/.anechoic_runtime/launcher-venv" \
 uv run --project "$PWD" --locked --no-sync --python 3.14 --managed-python --no-env-file \
   --all-groups python -B LAYER_5_FRAMEWORK_DELIVERY/release.py local --run-id local-focused \
   --test-module LAYER_5_FRAMEWORK_DELIVERY/tests/test_release_cli.py \
@@ -90,7 +90,7 @@ Local Release defaults to `--image-mode refresh`. It regenerates the image asset
 from the selected declarations and records them with the checkout. For recovery,
 restore or cherry-pick the known-good code and its generated assets together,
 then run Local Release with `--image-mode existing`. The test and release
-images both use those files. A running CAPRMEDIO service or the old Docker image
+images both use those files. A running ANECHOIC service or the old Docker image
 is unnecessary.
 
 For a release that predates these Git snapshots, recover its generated files
@@ -123,7 +123,7 @@ and schema, without release effects. Supply the draft and rerun with the same
 run ID. Results are JSON on stdout; exit status is zero only for `completed`.
 
 Local release reports phase and test-module progress on stderr. Its full test
-output is streamed to a log under `.caprmedio_tmp/simple_local_release`, with
+output is streamed to a log under `.anechoic_tmp/simple_local_release`, with
 the location printed before testing starts. Interruption during release execution
 retains that log and a failure report, attempts the terminal Journal event, and exits 130.
 It stops the owned test processes without retrying effects or rolling back
@@ -146,7 +146,7 @@ Failures stop and report the actual failed step for manual handling.
 ## Focused tests
 
 ```sh
-UV_PROJECT_ENVIRONMENT=.caprmedio_runtime/launcher-venv uv run --locked --no-sync --no-env-file --group rmed-workflow-mcp python -B -m unittest discover -s LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/tests
+UV_PROJECT_ENVIRONMENT=.anechoic_runtime/launcher-venv uv run --locked --no-sync --no-env-file --group rmed-workflow-mcp python -B -m unittest discover -s LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/tests
 ```
 
 These tests use temporary fixtures, real scoped Git checkpoints and mocked

@@ -1,6 +1,6 @@
 {
   "status": "MIGRATION_CHECKED_WITH_MODEL_AUDIT_QUEUE",
-  "project_root": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework",
+  "project_root": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework",
   "epic": "CA-P-2694",
   "epic_version": 49,
   "branch": "amm/dev",
@@ -13,7 +13,7 @@
     "status": "Done@2",
     "sources": 1178,
     "values": 3685,
-    "proof": ".caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/root-subject-migration-20261103/application-receipt.json",
+    "proof": ".anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/root-subject-migration-20261103/application-receipt.json",
     "independent_verification": "PASS"
   },
   "next_order": [
@@ -34,16 +34,16 @@
     "NARROWER_THANcanonicalnamespellingunchanged"
   ],
   "candidate_packets": {
-    "header": ".caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/manifest.json",
-    "claim": ".caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/manifest.md",
-    "relations": ".caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/source-map.json"
+    "header": ".anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/manifest.json",
+    "claim": ".anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/manifest.md",
+    "relations": ".anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/source-map.json"
   },
   "needed_root_work": [
     "resolve12MODELbindinggapsoneatatime",
     "existingP2707Engineverification"
   ],
-  "migration_input_map": ".caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/integration/reference-map.json",
-  "migration_input_paths": ".caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/integration/mechanical-source-files.before-adoption.txt",
+  "migration_input_map": ".anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/integration/reference-map.json",
+  "migration_input_paths": ".anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/integration/mechanical-source-files.before-adoption.txt",
   "source_input_count": 1157,
   "coordination_chat": "01a0263a-7510-7672-bce4-58830bc4d184",
   "open_user_questions": [],
@@ -60,7 +60,7 @@
   "current_layout_pin": {
     "version": 29,
     "sha256": "c792456553d706316eb23e9d885fcd570a0168e111dcf5adc428008851c00af3",
-    "source_path": ".caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-479-CORE_META_MODEL-ENG_DECISION--use-stable-headings-for-atom-body-properties.md",
+    "source_path": ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-479-CORE_META_MODEL-ENG_DECISION--use-stable-headings-for-atom-body-properties.md",
     "required": true,
     "obligations": [
       "body.sections",

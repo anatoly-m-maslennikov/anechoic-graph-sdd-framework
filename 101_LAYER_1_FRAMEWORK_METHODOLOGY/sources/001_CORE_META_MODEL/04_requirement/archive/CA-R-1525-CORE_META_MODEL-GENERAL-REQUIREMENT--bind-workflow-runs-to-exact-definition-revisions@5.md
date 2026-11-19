@@ -11,7 +11,7 @@ subjects:
     - "Operator"
 version: 5
 updated_at: "2026-09-21 00:57:42 +0000"
-relations: {"relates_to": ["CA-R-1510", "CA-R-1511", "CA-R-1519", "CA-R-1520", "CAPRMEDIO-META-REQU-158"]}
+relations: {"relates_to": ["CA-R-1510", "CA-R-1511", "CA-R-1519", "CA-R-1520", "ANECHOIC-META-REQU-158"]}
 atom_id: "CA-R-1525"
 content_role: "Requirement"
 current_scope_unit: "CORE_META_MODEL"

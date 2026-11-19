@@ -1,0 +1,43 @@
+---
+atom_id: CA-R-004
+ref_id: CA-R-004
+container:
+  scope_unit: CA-SU-00
+role: Requirement
+form: Rule
+topics:
+  main_subject: ANECHOIC_STRUCTURE <+ Aspects <+ Product
+  dependencies:
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Actor/Operator
+  - ANECHOIC_MODEL <+ Project
+tier: 4
+relations:
+  child_of:
+  - CA-R-2157
+status: Active
+version: 37
+updated_at: 2026-11-02 18:35:20 +0400
+carrier_destination:
+  file:
+    name: CA-R-004-ANECHOIC-RULE--keep-the-framework-under-operator-control.md
+    path: .anechoic_anechoic/04_requirement
+current_scope_unit: anechoic
+claim_target_scope_unit: anechoic
+---
+## Summary
+
+Keep the framework under Operator control
+
+## Claim
+
+### Prose Claim
+
+
+**every** governed part of the ANECHOIC Framework Instance **in** **every** governed state, including **after** admissible instance changes.
+
+
+the ANECHOIC Framework Instance **must** keep **every** governed part of itself under the Operator's control **and** keep the Operator able **to** change the Project through that instance.
+
+## Details
+
+control remains available throughout admissible Framework Instance changes.

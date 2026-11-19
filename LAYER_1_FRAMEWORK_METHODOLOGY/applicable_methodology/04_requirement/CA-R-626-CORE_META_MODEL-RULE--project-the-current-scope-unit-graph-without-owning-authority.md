@@ -6,12 +6,12 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Projection/(.Form:=Scope Unit Graph)
+  main_subject: ANECHOIC_MODEL <+ Projection/(.Form:=Scope Unit Graph)
   dependencies:
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ Projection
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Requirement)/(.Header.Context.Form := Goal)'
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework Settings
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Projection
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Requirement)/(.Header.Context.Form := Goal)'
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework Settings
 tier: 3
 relations:
   child_of:
@@ -24,11 +24,11 @@ updated_at: 2026-11-02 19:44:26 +0400
 carrier_destination:
   file:
     name: CA-R-626-CORE_META_MODEL-RULE--project-the-current-scope-unit-graph-without-owning-authority.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-626-CORE_META_MODEL-RULE--project-the-current-scope-unit-graph-without-owning-authority.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-626-CORE_META_MODEL-RULE--project-the-current-scope-unit-graph-without-owning-authority.md
   source_atom_id: CA-R-626
   source_atom_revision: 43
   source_sha256: 7e991570bd9051e104ff72ee67186ab00c39b1107ac9127fb9c0830dc4068a28

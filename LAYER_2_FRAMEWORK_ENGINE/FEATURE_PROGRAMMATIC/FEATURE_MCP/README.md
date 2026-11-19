@@ -1,4 +1,4 @@
-# CAPRMEDIO Workbench MCP
+# ANECHOIC Workbench MCP
 
 The native MCP frontier contains the 28 Workbench tools for SQL queries,
 Workspaces, Views, query history, the MCP App bridge, and Workbench service
@@ -57,7 +57,7 @@ and listing do not.
 Use the project-local environment from the source checkout:
 
 ```sh
-UV_PROJECT_ENVIRONMENT="$PWD/.caprmedio_runtime/launcher-venv" \
+UV_PROJECT_ENVIRONMENT="$PWD/.anechoic_runtime/launcher-venv" \
 uv run --project "$PWD" --locked --no-sync --python 3.14 --managed-python --no-env-file \
   --group rmed-workflow-mcp python \
   LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_MCP/server.py --project-root "$PWD"

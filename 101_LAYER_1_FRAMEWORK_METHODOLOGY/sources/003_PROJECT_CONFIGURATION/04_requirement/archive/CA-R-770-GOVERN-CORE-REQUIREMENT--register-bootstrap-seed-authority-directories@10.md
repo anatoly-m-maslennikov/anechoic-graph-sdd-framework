@@ -10,4 +10,4 @@ relations:
 ---
 # Register Bootstrap Seed authority directories
 
-GOVERNANCE MUST register `.caprmedio/001_BSEED_LAYER_1_METAMODEL/`, `.caprmedio/002_BSEED_LAYER_2_SEMANTICS/`, and `.caprmedio/003_BSEED_LAYER_3_GOVERNANCE/` as the authority directories of the three ordered BSEED Scope Units.
+GOVERNANCE MUST register `.anechoic/001_BSEED_LAYER_1_METAMODEL/`, `.anechoic/002_BSEED_LAYER_2_SEMANTICS/`, and `.anechoic/003_BSEED_LAYER_3_GOVERNANCE/` as the authority directories of the three ordered BSEED Scope Units.

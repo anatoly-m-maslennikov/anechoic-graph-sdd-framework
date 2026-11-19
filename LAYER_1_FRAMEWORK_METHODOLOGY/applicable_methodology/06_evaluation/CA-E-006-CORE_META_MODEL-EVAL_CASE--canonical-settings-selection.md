@@ -4,9 +4,9 @@ ref_id: CA-E-006
 role: Evaluation
 form: Eval Case
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Project.Settings
+  main_subject: ANECHOIC_MODEL <+ Project.Settings
   dependencies:
-  - CAPRMEDIO_MODEL <+ Project.Settings
+  - ANECHOIC_MODEL <+ Project.Settings
   - Entity/Object/Continuant/Governing Objects/Governing Configuration
 tier: 7
 status: Active
@@ -17,9 +17,9 @@ container:
 carrier_destination:
   file:
     name: CA-E-006-CORE_META_MODEL-EVAL_CASE--canonical-settings-selection.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-006-CORE_META_MODEL-EVAL_CASE--canonical-settings-selection.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-006-CORE_META_MODEL-EVAL_CASE--canonical-settings-selection.md
   source_atom_id: CA-E-006
   source_atom_revision: 42
   source_sha256: e09e184336f97a11af1634e13238b38c2ff4026fc2c0aa7c39cd8d28be74543b

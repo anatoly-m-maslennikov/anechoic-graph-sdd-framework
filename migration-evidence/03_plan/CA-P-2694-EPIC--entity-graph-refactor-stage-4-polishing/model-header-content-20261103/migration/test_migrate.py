@@ -28,9 +28,9 @@ class MigrationTests(unittest.TestCase):
 
     def test_exact_legacy_atom_addresses(self):
         mapping = dict(MAP, atom_header_fields=['Status', 'Role', 'Form'])
-        source = b"---\nrole: Rule\nsubjects:\n  active: 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom/Content Role: Operations/Type: Workflow//Run'\n---\n## Claim\nAtom/Content Role Atom/Type Atom/Content Role: Plan.Content.Claim\nAtom/Content Role: Plan.Status Entity/Object/Continuant/Other/Atom/Content Role\nProjection/Type Type Content Role \"Atom/Content Role: Plan\"\n"
+        source = b"---\nrole: Rule\nsubjects:\n  active: 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom/Content Role: Operations/Type: Workflow//Run'\n---\n## Claim\nAtom/Content Role Atom/Type Atom/Content Role: Plan.Content.Claim\nAtom/Content Role: Plan.Status Entity/Object/Continuant/Other/Atom/Content Role\nProjection/Type Type Content Role \"Atom/Content Role: Plan\"\n"
         result = transform(source, mapping)
-        self.assertIn(b"'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Operations)/(.Header.Form := Workflow)//Run'", result)
+        self.assertIn(b"'ANECHOIC_MODEL <+ Atom/(.Header.Role := Operations)/(.Header.Form := Workflow)//Run'", result)
         self.assertIn(b'Atom.Header.Role Atom.Header.Form Atom/(.Header.Role := Plan).Content.Claim', result)
         self.assertIn(b'Atom/(.Header.Role := Plan).Header.Status', result)
         self.assertIn(b'Entity/Object/Continuant/Other/Atom/Content Role', result)

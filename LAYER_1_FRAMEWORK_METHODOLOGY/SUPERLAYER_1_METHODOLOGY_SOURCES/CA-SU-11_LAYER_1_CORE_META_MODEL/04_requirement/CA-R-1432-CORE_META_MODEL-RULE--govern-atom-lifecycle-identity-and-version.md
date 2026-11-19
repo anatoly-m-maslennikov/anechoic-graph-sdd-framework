@@ -6,12 +6,12 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom
+  main_subject: ANECHOIC_MODEL <+ Atom
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Atom.Content.Summary
-  - CAPRMEDIO_MODEL <+ Carrier
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Role
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Atom.Content.Summary
+  - ANECHOIC_MODEL <+ Carrier
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Role
 tier: 2
 status: Active
 version: 30
@@ -19,7 +19,7 @@ updated_at: 2026-11-04 18:34:50 +0400
 carrier_destination:
   file:
     name: CA-R-1432-CORE_META_MODEL-RULE--govern-atom-lifecycle-identity-and-version.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 ---
 ## Summary
 

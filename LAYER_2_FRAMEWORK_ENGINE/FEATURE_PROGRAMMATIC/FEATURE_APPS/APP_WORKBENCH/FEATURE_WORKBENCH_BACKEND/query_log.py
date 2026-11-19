@@ -19,7 +19,7 @@ class QueryLog:
     _TTL = dt.timedelta(hours=48)
 
     def __init__(self, root: Path) -> None:
-        runtime = Path(root) / ".caprmedio_runtime" / "workbench"
+        runtime = Path(root) / ".anechoic_runtime" / "workbench"
         self._directory = runtime / "query_log"
         self._legacy_path = runtime / "query-log.json"
         self._lock = threading.RLock()

@@ -24,7 +24,7 @@ persistent Carriers of Project governing Artifacts and project-control evidence.
 
 ## Claim
 
-**every** governed Project **must** place its governing Artifacts **and** project-control evidence under `.caprmedio_<project_name>/`, **where** `<project_name>` is that Project's exact lowercase name.
+**every** governed Project **must** place its governing Artifacts **and** project-control evidence under `.anechoic_<project_name>/`, **where** `<project_name>` is that Project's exact lowercase name.
 
 ## Details
 

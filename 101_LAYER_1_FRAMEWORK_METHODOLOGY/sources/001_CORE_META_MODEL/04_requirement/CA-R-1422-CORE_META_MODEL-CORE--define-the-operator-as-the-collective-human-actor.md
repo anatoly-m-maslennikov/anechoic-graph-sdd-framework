@@ -4,7 +4,7 @@ subjects:
   depends_on:
     - "Actor"
     - "Project"
-    - "CAPRMEDIO Framework Instance"
+    - "ANECHOIC Framework Instance"
 version: 8
 updated_at: "2026-10-02 22:59:46 +0400"
 relations:
@@ -25,10 +25,10 @@ Define the Operator as the collective human Actor
 
 ## Scope
 
-the Operator for a Project **and** its CAPRMEDIO Framework Instance.
+the Operator for a Project **and** its ANECHOIC Framework Instance.
 
 ## Claim
 
-the Operator **means** the collective Actor formed by **`>=1`** identified human participants for the Project **and** its CAPRMEDIO Framework Instance.
+the Operator **means** the collective Actor formed by **`>=1`** identified human participants for the Project **and** its ANECHOIC Framework Instance.
 
 ## Details

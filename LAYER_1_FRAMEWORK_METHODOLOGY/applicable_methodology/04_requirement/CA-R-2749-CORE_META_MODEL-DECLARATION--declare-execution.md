@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Execution
+  main_subject: ANECHOIC_MODEL <+ Execution
 tier: 3
 status: active
 version: 1
@@ -14,9 +14,9 @@ updated_at: 2026-11-05 01:38:59 +0400
 carrier_destination:
   file:
     name: CA-R-2749-CORE_META_MODEL-DECLARATION--declare-execution.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2749-CORE_META_MODEL-DECLARATION--declare-execution.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2749-CORE_META_MODEL-DECLARATION--declare-execution.md
   source_atom_id: CA-R-2749
   source_atom_revision: 1
   source_sha256: d1a4843d7f734f02759973bd7da4ae66ec378b626f716beb37bbea73f26441bd
@@ -31,8 +31,8 @@ Declare Execution
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_entity, Cardinality
-from caprmedio.model import Occurrent
+from anechoic.formal_claims import declare_entity, Cardinality
+from anechoic.model import Occurrent
 
 class Execution(Occurrent):
     pass

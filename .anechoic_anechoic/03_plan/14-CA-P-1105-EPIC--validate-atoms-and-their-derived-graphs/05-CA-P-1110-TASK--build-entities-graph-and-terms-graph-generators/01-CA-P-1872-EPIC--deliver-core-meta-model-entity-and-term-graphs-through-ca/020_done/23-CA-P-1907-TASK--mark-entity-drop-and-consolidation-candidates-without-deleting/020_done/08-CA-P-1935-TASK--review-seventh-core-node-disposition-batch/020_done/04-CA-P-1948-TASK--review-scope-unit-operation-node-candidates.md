@@ -1,0 +1,65 @@
+---
+atom_id: CA-P-1948
+ref_id: CA-P-1948
+container:
+  atom: CA-P-1935
+role: Plan
+form: Plan
+label: Task
+topics:
+  main_subject: Subject/Graph Node/Domain/Continuant/Projection
+  dependencies:
+  - Subject
+  - Subject/Graph Node/Domain/Continuant/Term
+  - Subject/Graph Node/Domain/Continuant/Atom
+  - Subject/Graph Node/Domain/Continuant/Term//Property
+  - Subject/Graph Node/Engineering/Continuant/Carrier
+  - 'Subject/Graph Node/Domain/Continuant/Atom/Content Role: Plan'
+tier: 3
+relations:
+  is_decomposition_of:
+  - CA-P-1935
+  blocks:
+  - CA-P-1951
+status: Done
+version: 7
+updated_at: 2026-10-25 17:32:27 +0400
+carrier_destination:
+  file:
+    name: 4-CA-P-1948-TASK--review-scope-unit-operation-node-candidates.md
+    path: .anechoic_anechoic/03_plan/14-CA-P-1105-EPIC--validate-atoms-and-their-derived-graphs/5-CA-P-1110-TASK--build-entities-graph-and-terms-graph-generators/1-CA-P-1872-EPIC--deliver-core-meta-model-entity-and-term-graphs-through-ca/done/23-CA-P-1907-TASK--mark-entity-drop-and-consolidation-candidates-without-deleting/done/8-CA-P-1935-TASK--review-seventh-core-node-disposition-batch/done
+work_sequence_number: 4
+current_scope_unit: anechoic
+claim_target_scope_unit: anechoic
+author: Anatoly Maslennikov
+assignee: AI Agent
+---
+# Summary
+
+Review Scope Unit operation node candidates
+
+## Objective
+
+Review the assigned coherent node family and record its five checks and source-backed candidate dispositions without changing authority.
+
+## Details
+
+Review context: the Operator chose **Finish against the captured snapshot only**. Use the original CA-P-1905 source pins and immutable Git commit `a971d0e00c33c779f485fc8cad63194894d440fb`; read `nodes/snapshot.context.md` and `nodes/support/snapshot_sources.py`. CA-D-494 revision 2 remains the review input; live revision 3 is outside this snapshot. Preserve originals and label receipts as captured-snapshot checks, not current-Core checks. Any currentness or source-pin requirement below means exact validity against this selected captured snapshot. Do not silently rebind or overwrite live Core.
+
+Estimated own work: 15 minutes. Assignee: AI Agent.
+
+Required start prerequisite: CA-P-1906. It explicitly BLOCKS this Task.
+
+Review 20 exact identities from batch 7, node indexes `40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59`, preserved in `nodes/inputs/slices/CA-P-1948.input.json`. Read the parent batch, shared node contract, source Main Content and Scope-omission decision. Output `nodes/slices/CA-P-1948.review.json` with the same node/evidence schema, exact subset coverage, parent input pin and subset pin. Use retain when a current definition or meaningful constraint supports the identity; do not require proof of a nonexistent replacement to preserve it. Merely mentioning a name while defining another concept is not its definition. Missing meaning is a specific question, not an empty entity or permission to delete.
+
+All five checks need identity-specific reasons. Positive reduction proposals need exact evidence, replacements and effects on relations, constraints, history and queries. Below 90% confidence, keep the semantic proposal unresolved and ask the specific Operator question. New Substance and Scope-omission directions are candidate proposals, not Core proof. No actual deletion, adoption or Subject migration.
+
+Exclusive scope: assigned derived slice output and unique temporary helper. You are not alone; preserve others. Root owns Plans/Git. No Core, Subjects, baseline, history, schema, implementation, runtime, MCP or FPF writes. Use uv only; return truthful partial work if incomplete.
+
+### Completion receipt
+
+Captured-snapshot review verified: 20 original identities, {"retain":20} dispositions, 54 exact Main Content spans and 41 captured sources checked. Output `nodes/slices/CA-P-1948.review.json` SHA-256 `6058a7ce7577f854b6b575990d43dccfd86cf45b871ca4f0f8482003049c5cc6`. Target-specific meaning checks and required repairs passed; missing or limited meanings remain explicit questions, never deletion evidence. No Core, Subject, native fact, source migration or candidate adoption occurred. All source bytes are bound to the selected captured Git snapshot; this is not a current-Core receipt.
+
+### Definition of Done
+
+the Plan is **not** Done **if** ((an assigned identity or any of the five checks is missing) **or** (meaning or reduction is asserted without current evidence) **or** (uncertainty is silently decided or its specific question is missing) **or** (pins/checks are stale) **or** (a required start prerequisite is **not** Done) **or** (scope is exceeded) **or** (any direct decomposing Plan is **not** Done)).

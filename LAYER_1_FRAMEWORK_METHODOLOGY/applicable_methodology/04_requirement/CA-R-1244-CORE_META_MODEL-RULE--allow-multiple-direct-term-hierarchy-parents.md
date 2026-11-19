@@ -6,10 +6,10 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Relation//NARROWER_THAN
+  main_subject: ANECHOIC_MODEL <+ Relation//NARROWER_THAN
   dependencies:
-  - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Terms Graph)'
-  - CAPRMEDIO_MODEL <+ Term
+  - 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Terms Graph)'
+  - ANECHOIC_MODEL <+ Term
 tier: 2
 status: Active
 version: 33
@@ -17,11 +17,11 @@ updated_at: 2026-11-02 00:18:22 +0400
 carrier_destination:
   file:
     name: CA-R-1244-CORE_META_MODEL-RULE--allow-multiple-direct-term-hierarchy-parents.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1244-CORE_META_MODEL-RULE--allow-multiple-direct-term-hierarchy-parents.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1244-CORE_META_MODEL-RULE--allow-multiple-direct-term-hierarchy-parents.md
   source_atom_id: CA-R-1244
   source_atom_revision: 33
   source_sha256: cd450b6dfb9f8ccf09c943a46f328feea492c8d1bdd8b6dd35857203387fe46e

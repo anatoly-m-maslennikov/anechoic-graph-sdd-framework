@@ -6,7 +6,7 @@ container:
 role: Method
 form: Implementation Method
 topics:
-  main_subject: "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Traceability"
+  main_subject: "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Traceability"
 tier: 3
 status: Active
 version: 32
@@ -14,11 +14,11 @@ updated_at: 2026-11-02 19:44:26 +0400
 carrier_destination:
   file:
     name: CA-M-135-CORE_META_MODEL-IMPLEMENTATION_METHOD--exclude-generated-only-implementation-edges.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-135-CORE_META_MODEL-IMPLEMENTATION_METHOD--exclude-generated-only-implementation-edges.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-135-CORE_META_MODEL-IMPLEMENTATION_METHOD--exclude-generated-only-implementation-edges.md
   source_atom_id: CA-M-135
   source_atom_revision: 32
   source_sha256: cfe605ebe13a8389e68ef59f6f5d26e10be6a822dc82dfea082898c732d6b39a

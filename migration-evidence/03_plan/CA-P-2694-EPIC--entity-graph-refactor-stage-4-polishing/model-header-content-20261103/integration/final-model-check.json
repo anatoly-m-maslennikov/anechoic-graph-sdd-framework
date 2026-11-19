@@ -11,92 +11,92 @@
   "declaration_detail_source_count": 110,
   "declaration_detail_violations": [],
   "namespace_roots": [
-    "CAPRMEDIO_MODEL",
-    "CAPRMEDIO_STRUCTURE"
+    "ANECHOIC_MODEL",
+    "ANECHOIC_STRUCTURE"
   ],
   "binding_gaps": [
     {
       "atom_id": "CA-R-2559",
       "version": 2,
-      "path": ".caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2559-CORE_META_MODEL-DECLARATION--declare-model.md",
-      "subject": "CAPRMEDIO_MODEL",
+      "path": ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2559-CORE_META_MODEL-DECLARATION--declare-model.md",
+      "subject": "ANECHOIC_MODEL",
       "reason": "Declaration active Subject is not a declared Node, Property, Relation, or component."
     },
     {
       "atom_id": "CA-R-1014",
       "version": 40,
-      "path": ".caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1014-CORE_META_MODEL-RULE--resolve-atom-scope-contextually.md",
-      "subject": "CAPRMEDIO_MODEL <+ Atom.Local Scope Unit",
+      "path": ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1014-CORE_META_MODEL-RULE--resolve-atom-scope-contextually.md",
+      "subject": "ANECHOIC_MODEL <+ Atom.Local Scope Unit",
       "reason": "Active Subject has no declared target in this selection."
     },
     {
       "atom_id": "CA-R-1489",
       "version": 25,
-      "path": ".caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1489-CORE_META_MODEL-RULE--permit-implementation-retry-limit-defaults-and-overrides.md",
-      "subject": "CAPRMEDIO_MODEL <+ Atom/(.Header.Role: Plan).Implementation Retry Limit",
+      "path": ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1489-CORE_META_MODEL-RULE--permit-implementation-retry-limit-defaults-and-overrides.md",
+      "subject": "ANECHOIC_MODEL <+ Atom/(.Header.Role: Plan).Implementation Retry Limit",
       "reason": "Active Subject has no declared target in this selection."
     },
     {
       "atom_id": "CA-R-1596",
       "version": 22,
-      "path": ".caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1596-CORE_META_MODEL--give-every-claim-one-target-scope-unit.md",
-      "subject": "CAPRMEDIO_MODEL <+ Atom.Target Scope Unit",
+      "path": ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1596-CORE_META_MODEL--give-every-claim-one-target-scope-unit.md",
+      "subject": "ANECHOIC_MODEL <+ Atom.Target Scope Unit",
       "reason": "Active Subject has no declared target in this selection."
     },
     {
       "atom_id": "CA-R-1690",
       "version": 33,
-      "path": ".caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1690-CORE_META_MODEL-RULE--preserve-external-boundary-obligations.md",
-      "subject": "CAPRMEDIO_MODEL <+ Atom.Governance Origin",
+      "path": ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1690-CORE_META_MODEL-RULE--preserve-external-boundary-obligations.md",
+      "subject": "ANECHOIC_MODEL <+ Atom.Governance Origin",
       "reason": "Active Subject has no declared target in this selection."
     },
     {
       "atom_id": "CA-R-1732",
       "version": 25,
-      "path": ".caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1732-CORE_META_MODEL--target-the-narrowest-capable-improvement-owner.md",
-      "subject": "CAPRMEDIO_MODEL <+ Atom.Target Scope Unit",
+      "path": ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1732-CORE_META_MODEL--target-the-narrowest-capable-improvement-owner.md",
+      "subject": "ANECHOIC_MODEL <+ Atom.Target Scope Unit",
       "reason": "Active Subject has no declared target in this selection."
     },
     {
       "atom_id": "CA-R-718",
       "version": 44,
-      "path": ".caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-718-CORE_META_MODEL--separate-atom-claim-scope-from-structural-ownership.md",
-      "subject": "CAPRMEDIO_MODEL <+ Atom.Target Scope Unit",
+      "path": ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-718-CORE_META_MODEL--separate-atom-claim-scope-from-structural-ownership.md",
+      "subject": "ANECHOIC_MODEL <+ Atom.Target Scope Unit",
       "reason": "Active Subject has no declared target in this selection."
     },
     {
       "atom_id": "CA-R-886",
       "version": 39,
-      "path": ".caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-886-CORE_META_MODEL-RULE--resolve-scope-unit-references-from-atom-scope.md",
-      "subject": "CAPRMEDIO_MODEL <+ Atom.Local Scope Unit",
+      "path": ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-886-CORE_META_MODEL-RULE--resolve-scope-unit-references-from-atom-scope.md",
+      "subject": "ANECHOIC_MODEL <+ Atom.Local Scope Unit",
       "reason": "Active Subject has no declared target in this selection."
     },
     {
       "atom_id": "CA-R-920",
       "version": 33,
-      "path": ".caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-920-CORE_META_MODEL--give-every-atom-one-scope.md",
-      "subject": "CAPRMEDIO_MODEL <+ Atom.Local Scope Unit",
+      "path": ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-920-CORE_META_MODEL--give-every-atom-one-scope.md",
+      "subject": "ANECHOIC_MODEL <+ Atom.Local Scope Unit",
       "reason": "Active Subject has no declared target in this selection."
     },
     {
       "atom_id": "CA-R-947",
       "version": 40,
-      "path": ".caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-947-CORE_META_MODEL-RULE--validate-goal-claim-scope.md",
-      "subject": "CAPRMEDIO_MODEL <+ Atom.Target Scope Unit",
+      "path": ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-947-CORE_META_MODEL-RULE--validate-goal-claim-scope.md",
+      "subject": "ANECHOIC_MODEL <+ Atom.Target Scope Unit",
       "reason": "Active Subject has no declared target in this selection."
     },
     {
       "atom_id": "CA-D-291",
       "version": 31,
-      "path": ".caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-291-CORE_META_MODEL-ENG_DECISION--serialize-the-current-scope-unit-in-atom-filenames.md",
-      "subject": "CAPRMEDIO_MODEL <+ Atom.Local Scope Unit",
+      "path": ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-291-CORE_META_MODEL-ENG_DECISION--serialize-the-current-scope-unit-in-atom-filenames.md",
+      "subject": "ANECHOIC_MODEL <+ Atom.Local Scope Unit",
       "reason": "Active Subject has no declared target in this selection."
     },
     {
       "atom_id": "CA-R-1645",
       "version": 39,
-      "path": ".caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement/CA-R-1645-PROJECT_CONFIGURATION-RULE--define-self-hosted-governance-origins.md",
-      "subject": "CAPRMEDIO_MODEL <+ Atom.Governance Origin",
+      "path": ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement/CA-R-1645-PROJECT_CONFIGURATION-RULE--define-self-hosted-governance-origins.md",
+      "subject": "ANECHOIC_MODEL <+ Atom.Governance Origin",
       "reason": "Active Subject has no declared target in this selection."
     }
   ],

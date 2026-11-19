@@ -29,11 +29,11 @@ class CandidateValidationTests(unittest.TestCase):
             asset.write_bytes(compile_candidate_schema(CORE))
             schema = replace(load_candidate_schema(asset), placement=fixture_rules())
             self.assertIsNotNone(schema.work_report_target)
-            control = root / '.caprmedio_test'
+            control = root / '.anechoic_test'
             control.mkdir()
-            (control / 'caprmedio_project_settings.toml').write_text(
+            (control / 'anechoic_project_settings.toml').write_text(
                 '[project]\nname="TEST"\n[artifacts.identity]\nproject_prefix="CA"\n'
-                '[paths]\ncontrol_root=".caprmedio_test"\n')
+                '[paths]\ncontrol_root=".anechoic_test"\n')
             write_scope_unit_declarations(root, control_root=control, rows=[])
             selection = resolve_project(root)
             target = control / '03_plan/done/CA-P-1-TASK--same-work.md'
@@ -41,7 +41,7 @@ class CandidateValidationTests(unittest.TestCase):
             fields = {'atom_id': 'CA-P-1', 'ref_id': 'CA-P-1', 'role': 'Plan', 'form': 'Plan',
                       'status': 'Done', 'version': 1, 'updated_at': '2026-01-01T00:00:00+00:00',
                       'container.scope_unit': 'TEST', 'tier': 0,
-                      'topics': {'main_subject': 'CAPRMEDIO_MODEL <+ Atom'}}
+                      'topics': {'main_subject': 'ANECHOIC_MODEL <+ Atom'}}
             target.write_bytes(render_carrier(None, fields, body='## Summary\n\nSame work\n'))
             report = fields | {'atom_id': 'CA-P-2', 'ref_id': 'CA-P-2', 'form': 'Work Report',
                                'relations': {'IS_WORK_REPORT_FOR': ['CA-P-1']}}
@@ -101,7 +101,7 @@ class CandidateValidationTests(unittest.TestCase):
             self.assertEqual(refused['outcome'], 'needs_input', refused)
             self.assertIn('main_subject', refused['requested_input'])
             self.assertEqual(saved, path.read_bytes())
-            for subject in ('CAPRMEDIO_MODEL <+ Missing', 'CAPRMEDIO_STRUCTURE <+ Scope Unit//Missing'):
+            for subject in ('ANECHOIC_MODEL <+ Missing', 'ANECHOIC_STRUCTURE <+ Scope Unit//Missing'):
                 refused = execute(selection, model, 'atom_lifecycle_direct_update',
                                   params | {'changes': {'topics': {'main_subject': subject}}})
                 self.assertEqual(refused['outcome'], 'needs_input', refused)
@@ -168,12 +168,12 @@ class CandidateValidationTests(unittest.TestCase):
 
         with TemporaryDirectory() as directory:
             root = Path(directory).resolve()
-            control = root / '.caprmedio_test'
+            control = root / '.anechoic_test'
             folder = control / '04_requirement'
             folder.mkdir(parents=True)
-            (control / 'caprmedio_project_settings.toml').write_text(
+            (control / 'anechoic_project_settings.toml').write_text(
                 '[project]\nname="TEST"\n[artifacts.identity]\nproject_prefix="CA"\n'
-                '[paths]\ncontrol_root=".caprmedio_test"\n')
+                '[paths]\ncontrol_root=".anechoic_test"\n')
             write_scope_unit_declarations(root, control_root=control, rows=[])
             asset = root / 'schema.json'
             asset.write_bytes(compile_candidate_schema(CORE))
@@ -199,7 +199,7 @@ class CandidateValidationTests(unittest.TestCase):
             fields = {'atom_id': ref, 'ref_id': ref, 'role': 'Requirement', 'form': 'Requirement',
                       'status': 'Active', 'version': 1, 'updated_at': '2026-01-01T00:00:00+00:00',
                       'container.scope_unit': 'TEST', 'tier': 0,
-                      'topics': {'main_subject': 'CAPRMEDIO_MODEL <+ Atom'},
+                      'topics': {'main_subject': 'ANECHOIC_MODEL <+ Atom'},
                       'destination': {'file': {'name': path.name, 'path': path.parent.name}}}
             raw = render_carrier(None, fields, body='## Summary\n\nExample\n\n## Claim\n\n'
                                                    '### Prose Claim\n\nExample claim.\n')

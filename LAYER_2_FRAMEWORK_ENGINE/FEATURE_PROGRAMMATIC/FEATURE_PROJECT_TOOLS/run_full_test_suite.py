@@ -19,7 +19,7 @@ from full_suite_docker import APP, current_code_test_image
 
 CODE_ROOTS = ("LAYER_2_FRAMEWORK_ENGINE", "LAYER_5_FRAMEWORK_DELIVERY")
 MODULE_TIMEOUT_SECONDS = 3600
-RESULT_MARKER = "CAPRMEDIO_TEST_COUNTS "
+RESULT_MARKER = "ANECHOIC_TEST_COUNTS "
 CHILD = """
 import json, sys, unittest
 sys.path.insert(0, sys.argv[1])
@@ -30,7 +30,7 @@ required_skips = [(test.id(), reason) for test, reason in result.skipped
                   if "_e2e" in sys.argv[2] or "_e2e." in test.id()]
 if required_skips:
     print("Required integration tests skipped: " + repr(required_skips), file=sys.stderr)
-print("CAPRMEDIO_TEST_COUNTS " + json.dumps({"tests": result.testsRun, "skipped": len(result.skipped)}))
+print("ANECHOIC_TEST_COUNTS " + json.dumps({"tests": result.testsRun, "skipped": len(result.skipped)}))
 if not count:
     print("No test cases loaded", file=sys.stderr)
 sys.exit(0 if count and result.wasSuccessful() and not required_skips else 1)
@@ -100,8 +100,8 @@ def run_module(
     started = time.monotonic()
     environment = {
         **(os.environ if environment is None else environment),
-        "CAPRMEDIO_DOCKER_E2E": "1",
-        "CAPRMEDIO_DOCKER_QUERY_E2E": "1",
+        "ANECHOIC_DOCKER_E2E": "1",
+        "ANECHOIC_DOCKER_QUERY_E2E": "1",
     }
     programmatic = root / APP.parent
     apps = programmatic / "FEATURE_APPS"
@@ -174,8 +174,8 @@ def run_full_suite(root: Path, test_modules: tuple[str, ...] | None = None, *,
         with context as additions:
             environment = {**os.environ, **additions}
             if integration:
-                environment.pop("CAPRMEDIO_RELEASE_E2E_CONTEXT", None)
-                environment.pop("CAPRMEDIO_CANDIDATE_IMAGE_DIGEST", None)
+                environment.pop("ANECHOIC_RELEASE_E2E_CONTEXT", None)
+                environment.pop("ANECHOIC_CANDIDATE_IMAGE_DIGEST", None)
             return _run_modules(root, modules, environment, integration)
     except Exception as error:
         print(f"Required test environment failed: {error}", file=sys.stderr)

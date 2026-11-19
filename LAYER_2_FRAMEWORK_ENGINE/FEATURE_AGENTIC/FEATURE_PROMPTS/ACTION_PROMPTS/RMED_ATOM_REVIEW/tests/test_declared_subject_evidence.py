@@ -31,7 +31,7 @@ version: 5
 updated_at: "2026-09-05 03:48:00 +0400"
 relations:
   child_of:
-    - "ANATOLY-MASLENNIKOV-DEFINES_GOAL_FOR-CAPRMEDIO--create-and-evolve-a-working-caprmedio-framework"
+    - "ANATOLY-MASLENNIKOV-DEFINES_GOAL_FOR-ANECHOIC--create-and-evolve-a-working-anechoic-framework"
 ---
 # Distinguish human Operators from AI Agents
 

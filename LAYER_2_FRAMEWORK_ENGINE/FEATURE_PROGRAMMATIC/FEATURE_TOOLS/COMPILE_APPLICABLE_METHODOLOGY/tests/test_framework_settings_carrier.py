@@ -21,14 +21,14 @@ class FrameworkSettingsCarrierTest(unittest.TestCase):
     def setUp(self) -> None:
         from scope_declaration_test_support import write_scope_unit_declarations
 
-        temporary = Path.cwd() / ".caprmedio_tmp/framework-settings-carrier-tests"
+        temporary = Path.cwd() / ".anechoic_tmp/framework-settings-carrier-tests"
         temporary.mkdir(parents=True, exist_ok=True)
         self.root = Path(tempfile.mkdtemp(prefix="case-", dir=temporary))
         self.addCleanup(shutil.rmtree, self.root, True)
-        self.control = Path(".caprmedio_caprmedio")
+        self.control = Path(".anechoic_anechoic")
         (self.root / compiler.SETTINGS_PATH).parent.mkdir(parents=True, exist_ok=True)
         (self.root / compiler.SETTINGS_PATH).write_text(
-            "[project]\nname = \"caprmedio\"\n[paths]\ncontrol_root = \".caprmedio_caprmedio\"\n", encoding="utf-8"
+            "[project]\nname = \"anechoic\"\n[paths]\ncontrol_root = \".anechoic_anechoic\"\n", encoding="utf-8"
         )
         self.declarations = write_scope_unit_declarations(
             self.root,
@@ -66,7 +66,7 @@ class FrameworkSettingsCarrierTest(unittest.TestCase):
             "[instance]\nlabel = \"custom-control\"\n[extensions.default]\nenabled = true\nrevision = \"v2\"\n",
         )
         legacy = self.write(
-            self.layers["PROJECT_CONFIGURATION"] / "caprmedio_framework_settings.toml",
+            self.layers["PROJECT_CONFIGURATION"] / "anechoic_framework_settings.toml",
             "[extensions.default]\nenabled = true\nrevision = \"legacy\"\n",
         )
 
@@ -108,7 +108,7 @@ class FrameworkSettingsCarrierTest(unittest.TestCase):
         default_dir.rmdir()
         external_dir = self.root / "external-defaults"
         external_dir.mkdir()
-        (external_dir / "caprmedio_framework_default_settings.toml").write_text("[defaults]\nvalue = 1\n", encoding="utf-8")
+        (external_dir / "anechoic_framework_default_settings.toml").write_text("[defaults]\nvalue = 1\n", encoding="utf-8")
         os.symlink(external_dir, default_dir)
         with self.assertRaises(compiler.CompileError) as symlinked_ancestor:
             compiler.framework_settings(self.root, self.paths())

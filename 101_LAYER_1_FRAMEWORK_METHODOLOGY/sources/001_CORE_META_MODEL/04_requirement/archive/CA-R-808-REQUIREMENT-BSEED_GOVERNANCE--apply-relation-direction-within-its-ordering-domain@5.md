@@ -8,7 +8,7 @@ version: 5
 updated_at: 2026-08-23 11:32:10
 relations:
   child_of:
-    - CAPRMEDIO-GOV-REQU-767--keep-active-prmedo-relations-within-active-authority
+    - ANECHOIC-GOV-REQU-767--keep-active-prmedo-relations-within-active-authority
 ---
 # Apply relation direction within its ordering domain
 

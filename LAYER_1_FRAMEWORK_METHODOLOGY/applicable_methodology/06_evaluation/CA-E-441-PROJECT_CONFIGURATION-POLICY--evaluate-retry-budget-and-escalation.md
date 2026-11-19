@@ -6,14 +6,14 @@ container:
 role: Evaluation
 form: Eval Policy
 topics:
-  main_subject: 'CAPRMEDIO_STRUCTURE <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Action)//Implementation Retry Control'
+  main_subject: 'ANECHOIC_STRUCTURE <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Action)//Implementation Retry Control'
   dependencies:
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Actor/Operator
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Execution Control <+ Failure Handling"
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Autonomous Confidence Threshold'
-  - CAPRMEDIO_MODEL <+ Project
-  - CAPRMEDIO_MODEL <+ Entity/Object/Occurrent/Execution/Workflow Run.Implementation Retry Limit
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Actor/Operator
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
+  - "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Execution Control <+ Failure Handling"
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan).Autonomous Confidence Threshold'
+  - ANECHOIC_MODEL <+ Project
+  - ANECHOIC_MODEL <+ Entity/Object/Occurrent/Execution/Workflow Run.Implementation Retry Limit
 tier: 6
 relations:
   child_of:
@@ -29,7 +29,7 @@ updated_at: 2026-11-02 18:35:20 +0400
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation/CA-E-441-PROJECT_CONFIGURATION-POLICY--evaluate-retry-budget-and-escalation.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation/CA-E-441-PROJECT_CONFIGURATION-POLICY--evaluate-retry-budget-and-escalation.md
   source_atom_id: CA-E-441
   source_atom_revision: 35
   source_sha256: 28f3eb91e7feb1cb9d7911603173b0a842a91c2272c467ca908558e31e09e2ba

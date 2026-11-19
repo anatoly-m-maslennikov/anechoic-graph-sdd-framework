@@ -3,7 +3,7 @@ subjects:
   governs: "Relation Kind/Metadata"
   depends_on:
     - "Relation Kind"
-    - "CAPRMEDIO Graph"
+    - "ANECHOIC Graph"
     - "Projection"
     - "Atom"
 version: 19
@@ -12,4 +12,4 @@ relations: {}
 ---
 # Register Complete Relation Kind Metadata
 
-**every** admitted Relation Kind **must** have **`=1`** canonical metadata record derived from its governing authority that resolves its owning kind of CAPRMEDIO Graph, canonical name, meaning, declared direction, inverse direction, source class, target class, the allowed graph context of **every** endpoint including cross-graph **and** authoritative-source references **when** admitted, cardinality, authority effect, transitivity, applicability, Status, **and** exclusive purpose.
+**every** admitted Relation Kind **must** have **`=1`** canonical metadata record derived from its governing authority that resolves its owning kind of ANECHOIC Graph, canonical name, meaning, declared direction, inverse direction, source class, target class, the allowed graph context of **every** endpoint including cross-graph **and** authoritative-source references **when** admitted, cardinality, authority effect, transitivity, applicability, Status, **and** exclusive purpose.

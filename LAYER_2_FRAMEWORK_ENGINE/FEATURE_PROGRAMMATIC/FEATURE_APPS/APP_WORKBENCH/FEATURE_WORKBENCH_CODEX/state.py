@@ -12,7 +12,7 @@ from urllib.parse import urlsplit
 
 
 def runtime_directory(root: Path) -> Path:
-    return root / ".caprmedio_runtime" / "workbench" / "codex"
+    return root / ".anechoic_runtime" / "workbench" / "codex"
 
 
 def public_state(root: Path, expected_host_root: Path | None = None) -> dict[str, Any]:

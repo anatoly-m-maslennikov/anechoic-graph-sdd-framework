@@ -6,10 +6,10 @@ container:
 role: Method
 form: Implementation Method
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Projection/(.Form:=Applicable Methodology)
+  main_subject: ANECHOIC_MODEL <+ Projection/(.Form:=Applicable Methodology)
   dependencies:
-  - CAPRMEDIO_MODEL <+ Projection/(.Form:=Applicable Methodology)
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
+  - ANECHOIC_MODEL <+ Projection/(.Form:=Applicable Methodology)
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Topics
 tier: 3
 status: Active
 version: 33
@@ -17,11 +17,11 @@ updated_at: 2026-11-02 08:06:47 +0400
 carrier_destination:
   file:
     name: CA-M-225-PROJECT_CONFIGURATION-IMPLEMENTATION_METHOD--retrieve-applicable-methodology-mechanically.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/05_method
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/05_method
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: PROJECT_CONFIGURATION
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/05_method/CA-M-225-PROJECT_CONFIGURATION-IMPLEMENTATION_METHOD--retrieve-applicable-methodology-mechanically.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/05_method/CA-M-225-PROJECT_CONFIGURATION-IMPLEMENTATION_METHOD--retrieve-applicable-methodology-mechanically.md
   source_atom_id: CA-M-225
   source_atom_revision: 33
   source_sha256: 8624a31ffdee2731d7e68614b03d62ceadf57c19976cc675c465e06f42fce180

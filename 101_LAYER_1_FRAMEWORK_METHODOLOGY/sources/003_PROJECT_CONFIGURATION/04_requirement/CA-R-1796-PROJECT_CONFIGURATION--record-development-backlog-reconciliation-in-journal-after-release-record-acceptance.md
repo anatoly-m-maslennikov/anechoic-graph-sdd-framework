@@ -22,6 +22,6 @@ Development Backlog reconciliation **after** the Release Record is accepted.
 
 ## Claim
 
-CAPRMEDIO **must** append Journal records for Development Backlog reconciliation.
+ANECHOIC **must** append Journal records for Development Backlog reconciliation.
 
 ## Details

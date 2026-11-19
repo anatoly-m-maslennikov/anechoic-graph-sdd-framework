@@ -1,0 +1,39 @@
+---
+identity:
+  atom_id: CA-E-824
+  ref_id: CA-E-824
+context:
+  role: evaluation
+  form: direct_policy
+  tier: 3
+  topics:
+    main_subject: PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Engineering <+ Quality
+      <+ Verification <+ Test Design
+  container:
+    scope_unit: CA-SU-14
+state:
+  version: 3
+  status: active
+  updated_at: '2026-11-12T17:12:09.762722+00:00'
+destination:
+  file:
+    name: CA-E-824-FRAMEWORK_ENGINE-DIRECT_POLICY--check-valid-and-invalid-input.md
+    path: .anechoic_anechoic/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/06_evaluation
+---
+## Summary
+
+Check valid and invalid input
+
+## Claim
+
+### Prose Claim
+
+Check how an Engine operation behaves with each applicable input case.
+- valid input.
+- valid fields and one or more wrong values.
+- valid fields and one or more missing required values.
+- wrong and missing values together when both can occur in one request.
+
+Where the operation accepts corrections, check that it returns field errors to the caller, retains recognized valid fields, reports unknown fields, and accepts corrected fields alone or with additional input. For a live Workflow Run, use the exact Run ID. For MCP, check that the AI Agent receives the errors in the response without an Operator form.
+
+Check cancellation at each stage that can wait for correction before a write. Cancellation clears the pending request without applying changes. After a write, check that a failure reports completed effects and ends the request.

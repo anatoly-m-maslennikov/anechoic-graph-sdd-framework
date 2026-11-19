@@ -22,7 +22,7 @@ PROVIDER_DIAGNOSTIC = "provider diagnostic /fixture/absolute/path"
 
 class HealthHTTPFixture(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
-        directory = APP.parents[2] / ".caprmedio_tmp/tests/mcp-health"
+        directory = APP.parents[2] / ".anechoic_tmp/tests/mcp-health"
         directory.mkdir(parents=True, exist_ok=True)
         self.temp = tempfile.TemporaryDirectory(dir=directory, ignore_cleanup_errors=True)
         self.addCleanup(self.temp.cleanup)

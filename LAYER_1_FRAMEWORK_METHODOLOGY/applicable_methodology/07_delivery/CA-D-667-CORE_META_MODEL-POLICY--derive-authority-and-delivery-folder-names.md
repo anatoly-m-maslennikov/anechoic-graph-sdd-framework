@@ -8,15 +8,15 @@ context:
   role: delivery
   form: policy
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ Carrier/Directory
+    main_subject: ANECHOIC_MODEL <+ Carrier/Directory
     dependencies:
-    - CAPRMEDIO_MODEL <+ Scope Unit.ID
-    - CAPRMEDIO_MODEL <+ Scope Unit.Name
-    - CAPRMEDIO_MODEL <+ Scope Unit.Label
-    - CAPRMEDIO_MODEL <+ Scope Unit.order.ordered
-    - CAPRMEDIO_MODEL <+ Scope Unit.order.number
-    - CAPRMEDIO_MODEL <+ Scope Unit.Paths.Authority
-    - CAPRMEDIO_MODEL <+ Scope Unit.Paths.Delivery
+    - ANECHOIC_MODEL <+ Scope Unit.ID
+    - ANECHOIC_MODEL <+ Scope Unit.Name
+    - ANECHOIC_MODEL <+ Scope Unit.Label
+    - ANECHOIC_MODEL <+ Scope Unit.order.ordered
+    - ANECHOIC_MODEL <+ Scope Unit.order.number
+    - ANECHOIC_MODEL <+ Scope Unit.Paths.Authority
+    - ANECHOIC_MODEL <+ Scope Unit.Paths.Delivery
   tier: 1
 state:
   status: active
@@ -25,9 +25,9 @@ state:
 destination:
   file:
     name: CA-D-667-CORE_META_MODEL-POLICY--derive-authority-and-delivery-folder-names.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-667-CORE_META_MODEL-POLICY--derive-authority-and-delivery-folder-names.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-667-CORE_META_MODEL-POLICY--derive-authority-and-delivery-folder-names.md
   source_atom_id: CA-D-667
   source_atom_revision: 6
   source_sha256: 4e165071c113c129317f16936656658060b5e1f2dd997012612125a1c3dd4215
@@ -44,7 +44,7 @@ Derive Authority and Delivery Folder Names
 ### Prose Claim
 
 
-The Project’s `Scope Unit.Paths.Authority` is `.caprmedio_<project name>`. Its `Scope Unit.Paths.Delivery` is `.`, the Project root.
+The Project’s `Scope Unit.Paths.Authority` is `.anechoic_<project name>`. Its `Scope Unit.Paths.Delivery` is `.`, the Project root.
 
 For a non-root Scope Unit, derive the folder names from its ID, Label, order.number and Name:
 

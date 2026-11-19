@@ -39,7 +39,7 @@ from FEATURE_FORMAL_MODEL_ENGINE.topic_dependencies import (  # noqa: E402
 )
 from ATOM_LIFECYCLE.work_report_model import compile_work_report_target, verify_work_report_target  # noqa: E402
 
-_DEPENDENCIES_SUBJECT = 'CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics.Dependencies'
+_DEPENDENCIES_SUBJECT = 'ANECHOIC_MODEL <+ Atom.Header.Context.Topics.Dependencies'
 
 
 @dataclass(frozen=True)

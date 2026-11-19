@@ -1,6 +1,6 @@
 ---
 subjects:
-  governs: "CAPRMEDIO Graph"
+  governs: "ANECHOIC Graph"
   depends_on:
     - "Single Source of Truth"
     - "Projection"

@@ -6,17 +6,17 @@ container:
 role: Evaluation
 form: Eval Case
 topics:
-  main_subject: 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)/(.Header.Context.Form := Plan)'
+  main_subject: 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan)/(.Header.Context.Form := Plan)'
   dependencies:
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)/(.Header.Context.Form := Plan)'
-  - CAPRMEDIO_MODEL <+ Atom.Content
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Assignee'
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Content.Definition of Done'
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Content.Details'
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.Context.Label'
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.State.Status'
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Execution Control <+ Decision Confidence"
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan)/(.Header.Context.Form := Plan)'
+  - ANECHOIC_MODEL <+ Atom.Content
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan).Assignee'
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan).Content.Definition of Done'
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan).Content.Details'
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.Context.Label'
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.State.Status'
+  - ANECHOIC_MODEL <+ Scope Unit
+  - "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Execution Control <+ Decision Confidence"
 tier: 4
 relations:
   evaluation_for:
@@ -39,7 +39,7 @@ updated_at: 2026-11-02 18:35:20 +0400
 carrier_destination:
   file:
     name: CA-E-501-CORE_META_MODEL-EVAL_CASE--validate-common-plan-authoring.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---

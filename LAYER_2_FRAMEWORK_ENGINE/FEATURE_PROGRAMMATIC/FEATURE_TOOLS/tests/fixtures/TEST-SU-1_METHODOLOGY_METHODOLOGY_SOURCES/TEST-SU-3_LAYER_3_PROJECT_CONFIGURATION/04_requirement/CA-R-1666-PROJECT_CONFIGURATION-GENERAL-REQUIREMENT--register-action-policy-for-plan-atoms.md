@@ -21,10 +21,10 @@ Register Action Policy for Plan Atoms
 
 ## Scope
 
-the CAPRMEDIO Project Configuration registration of `Atom/Content Role: Plan/Type` values.
+the ANECHOIC Project Configuration registration of `Atom/Content Role: Plan/Type` values.
 
 ## Claim
 
-the CAPRMEDIO Project Configuration **must** register Action Policy as an additional value of `Atom/Content Role: Plan/Type`; Plan retains its canonical admission under CA-R-1574-CORE_META_MODEL-CORE-REQUIREMENT--define-the-common-plan-atom; navigation Labels do **not** add further Type values.
+the ANECHOIC Project Configuration **must** register Action Policy as an additional value of `Atom/Content Role: Plan/Type`; Plan retains its canonical admission under CA-R-1574-CORE_META_MODEL-CORE-REQUIREMENT--define-the-common-plan-atom; navigation Labels do **not** add further Type values.
 
 ## Details

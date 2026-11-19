@@ -30,11 +30,11 @@ Keep Implementation specifications independent of production Workflows
 
 ## Scope
 
-the CAPRMEDIO Project's governing RMED for an Implementation.
+the ANECHOIC Project's governing RMED for an Implementation.
 
 ## Claim
 
-**in** the CAPRMEDIO Project, governing RMED **must** fully specify the required Implementation independently of the Workflow used **to** produce it.
+**in** the ANECHOIC Project, governing RMED **must** fully specify the required Implementation independently of the Workflow used **to** produce it.
 
 ## Details
 
@@ -43,4 +43,4 @@ the CAPRMEDIO Project's governing RMED for an Implementation.
 - the permitted authority references are the Tool realization binding under CA-R-1516-PROJECT_CONFIGURATION-REQUIREMENT--bind-each-tool-to-one-methodology-action **and** CA-R-1517-PROJECT_CONFIGURATION-REQUIREMENT--keep-tool-operational-authority-outside-its-own-subtree, **and** methodology checks of Action **and** Workflow definitions under CA-R-1518-PROJECT_CONFIGURATION-GENERAL-REQUIREMENT--separate-methodology-and-tool-evaluation-responsibilities. neither exception makes the Workflow used **to** build the Implementation part of its specification.
 - a generic executor **may** consume applicable O definitions as runtime inputs under CA-R-1519-CORE_META_MODEL-GENERAL-REQUIREMENT--require-conforming-workflow-execution. its RMED **must** fully specify how it interprets those inputs; the selected Workflow is **not** its production procedure **or** an independently copied part of its Spec.
 
-these are CAPRMEDIO Project Configuration boundaries, **not** a change **to** the reusable Core Meta-Model Content Roles.
+these are ANECHOIC Project Configuration boundaries, **not** a change **to** the reusable Core Meta-Model Content Roles.

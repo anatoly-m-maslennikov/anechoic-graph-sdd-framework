@@ -40,21 +40,21 @@ class StartWorkbenchCodexTests(unittest.TestCase):
             redirect_stdout(output),
         ):
             self.assertEqual(0, starter.main([
-                "--project-root", str(self.root), "--mcp-url", "http://127.0.0.1:56317/caprmedio/mcp",
+                "--project-root", str(self.root), "--mcp-url", "http://127.0.0.1:56317/anechoic/mcp",
             ]))
 
         argv = popen.call_args.args[0]
         self.assertEqual(sys.executable, argv[0])
         self.assertTrue(argv[1].endswith("bridge_server.py"))
         self.assertEqual(str(self.root), argv[argv.index("--project-root") + 1])
-        self.assertEqual("http://127.0.0.1:56317/caprmedio/mcp", argv[argv.index("--mcp-url") + 1])
+        self.assertEqual("http://127.0.0.1:56317/anechoic/mcp", argv[argv.index("--mcp-url") + 1])
         self.assertTrue(popen.call_args.kwargs["start_new_session"])
         ready.assert_called_once_with(starter._state_path(self.root), self.root, process.pid)
         self.assertEqual("http://127.0.0.1:43210\n", output.getvalue())
 
     def test_only_matching_project_bridge_is_an_owned_process(self) -> None:
         server = STARTER.with_name("bridge_server.py").resolve()
-        command = f"{sys.executable} {server} --project-root {self.root} --mcp-url http://127.0.0.1:56317/caprmedio/mcp"
+        command = f"{sys.executable} {server} --project-root {self.root} --mcp-url http://127.0.0.1:56317/anechoic/mcp"
         with patch.object(starter.subprocess, "run", return_value=subprocess.CompletedProcess((), 0, command, "")):
             self.assertEqual(7001, starter._owned_bridge(
                 {"pid": 7001, "project_root": str(self.root)}, self.root, server,

@@ -35,7 +35,7 @@ class QueryPreviewTests(unittest.TestCase):
         fixture = test_query_store.QueryStoreTest
         edge = fixture.edge("Atom", "A", "Atom", "B")
         self.store.replace([fixture.atom("A", [edge]), fixture.atom("B")], [])
-        graph = ("FROM GRAPH_TABLE (caprmedio MATCH (a:Reference)-[e:CONTAINS]->(b:Reference) "
+        graph = ("FROM GRAPH_TABLE (anechoic MATCH (a:Reference)-[e:CONTAINS]->(b:Reference) "
                  "COLUMNS (a.ref AS source, b.ref AS target)) ORDER BY 2 -- terminal comment")
         for ending, preview in (("", None), ("\n", None), ("", 2), ("\n", 2)):
             sql = graph + ending

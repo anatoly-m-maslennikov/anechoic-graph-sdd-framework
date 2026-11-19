@@ -1,0 +1,41 @@
+---
+atom_id: CA-P-2526
+ref_id: CA-P-2526
+container:
+  atom: CA-P-2401
+role: Plan
+form: Plan
+label: Task
+topics:
+  main_subject: Subject/Graph Node/Engineering/Release Version/Runtime Package Carrier
+tier: 3
+relations:
+  is_decomposition_of:
+  - CA-P-2401
+status: Done
+version: 6
+updated_at: 2026-10-25 17:32:27 +0400
+carrier_destination:
+  file:
+    name: 83-CA-P-2526-TASK--align-post-green-local-release-image-retention.md
+    path: .anechoic_anechoic/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/03_plan/5-CA-P-2401-EPIC--make-atom-and-scope-unit-actions-good/done
+work_sequence_number: 83
+current_scope_unit: PROGRAMMATIC
+claim_target_scope_unit: PROGRAMMATIC
+author: Anatoly Maslennikov
+---
+# Summary
+
+Align post-green Local release image retention
+
+## Objective
+
+Align post-green Local release image retention.
+
+## Details
+
+Record the new Operator policy before implementation: after a green full suite, normal Local release names its image and retains only the last rebuild of the current version. Bind that image to the exact admitted candidate SHA and package version, not a moving tag or host clock. Use the Operator-selected Project-only cleanup scope. Preserve all container references, exact non-force removal and truthful pending results. Align applicable R1878, O164/O169/O178, M332/E573/D564 at their current tiers, preserving exact predecessors. O179 is not an additional registered release Step. At most 15 minutes own work; split before extending. No actual release or cleanup is authorized by this implementation task.
+
+### Accepted source checkpoint
+
+The Operator selected Project-only retention. Aligned R1878@6, M332@9, E573@3, D564@5 and O164@19/O169@10/O178@6/O179@3 at their existing tiers, preserving exact predecessors. Candidate-only means immutable identity, including same-fingerprint rebuilds; image ownership needs complete Project/root/control labels, not container linkage. All references and other Projects remain protected. C563 is Resolved. Source alignment is complete; implementation and isolated acceptance remain P2527/P2529, not runtime activation.

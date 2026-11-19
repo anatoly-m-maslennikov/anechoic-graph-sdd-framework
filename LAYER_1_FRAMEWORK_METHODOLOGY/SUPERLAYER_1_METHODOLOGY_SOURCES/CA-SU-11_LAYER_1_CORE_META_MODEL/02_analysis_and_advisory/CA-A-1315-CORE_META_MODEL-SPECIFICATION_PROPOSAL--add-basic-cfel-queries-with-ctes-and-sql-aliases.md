@@ -6,7 +6,7 @@ container:
 role: Analysis & Advisory
 form: Specification Proposal
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL
+  main_subject: ANECHOIC_MODEL <+ CFEL
 tier: 3
 status: Active
 version: 4
@@ -14,7 +14,7 @@ updated_at: 2026-11-04 20:33:16 +0400
 carrier_destination:
   file:
     name: CA-A-1315-SPECIFICATION_PROPOSAL--add-basic-cfel-queries-with-ctes-and-sql-aliases.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/02_analysis_and_advisory
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/02_analysis_and_advisory
 ---
 
 ## Summary
@@ -38,7 +38,7 @@ SELECT chooses the Properties. FROM chooses the instances. WHERE filters them. V
 
 ## Sources and context
 
-The query context supplies one Project snapshot and the selected source scope. CAPRMEDIO_MODEL and CAPRMEDIO_STRUCTURE name the two logical contexts: declared model and actual Project structure. They do not have to occupy FROM. This replaces the earlier suggestion that FROM could contain only those two names. No extra context keyword is proposed here.
+The query context supplies one Project snapshot and the selected source scope. ANECHOIC_MODEL and ANECHOIC_STRUCTURE name the two logical contexts: declared model and actual Project structure. They do not have to occupy FROM. This replaces the earlier suggestion that FROM could contain only those two names. No extra context keyword is proposed here.
 
 FROM accepts a CFEL instance selector such as `atom//`, or a CTE name. `atom//` selects Current Atom instances and their narrower kinds. Current includes Done and Canceled where applicable; it is not the same as Status = Active. History queries remain separate.
 

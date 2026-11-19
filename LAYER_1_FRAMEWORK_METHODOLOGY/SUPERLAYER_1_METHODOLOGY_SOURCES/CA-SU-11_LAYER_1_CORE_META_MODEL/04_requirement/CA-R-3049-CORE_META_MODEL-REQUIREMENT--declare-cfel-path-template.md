@@ -8,7 +8,7 @@ context:
   role: requirement
   form: requirement
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ CFEL/Function//PATH_TEMPLATE
+    main_subject: ANECHOIC_MODEL <+ CFEL/Function//PATH_TEMPLATE
   tier: 3
 state:
   status: active
@@ -17,7 +17,7 @@ state:
 destination:
   file:
     name: CA-R-3049-CORE_META_MODEL-REQUIREMENT--declare-cfel-path-template.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 ---
 
 ## Summary

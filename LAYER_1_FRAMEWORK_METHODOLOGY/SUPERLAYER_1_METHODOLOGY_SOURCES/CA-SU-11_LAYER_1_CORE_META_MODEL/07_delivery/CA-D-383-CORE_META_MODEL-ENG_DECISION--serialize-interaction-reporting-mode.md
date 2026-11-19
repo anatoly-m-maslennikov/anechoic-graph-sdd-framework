@@ -6,15 +6,15 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope
+  main_subject: ANECHOIC_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope
     Unit/Project.Framework Settings
   dependencies:
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework
     Settings
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Actor/Operator
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Actor/Operator
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework
     Settings.Interaction.Reporting Mode
-  - CAPRMEDIO_MODEL <+ Project.Settings.Interaction.Reporting Mode
+  - ANECHOIC_MODEL <+ Project.Settings.Interaction.Reporting Mode
 tier: 6
 relations:
   child_of:
@@ -25,7 +25,7 @@ updated_at: 2026-11-02 00:18:22 +0400
 carrier_destination:
   file:
     name: CA-D-383-CORE_META_MODEL-DECISION--serialize-interaction-reporting-mode.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---

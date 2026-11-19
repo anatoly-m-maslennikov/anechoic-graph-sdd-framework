@@ -6,7 +6,7 @@ subjects:
   depends_on:
     - "Action"
     - "Process"
-    - "CAPRMEDIO Graph"
+    - "ANECHOIC Graph"
 version: 7
 updated_at: "2026-09-13 02:05:21 +0400"
 relations: {}
@@ -15,4 +15,4 @@ llm_session_ids:
 ---
 # Define Entity
 
-an Entity **means** one independently identified **or** bearer-qualified object admitted by an authoritative source as a possible node **in** **`>=1`** CAPRMEDIO Graph, excluding Action **and** Process identities. referencing an Action **or** Process from a graph does **not** classify it as an Entity **or** create an Entity duplicate of it.
+an Entity **means** one independently identified **or** bearer-qualified object admitted by an authoritative source as a possible node **in** **`>=1`** ANECHOIC Graph, excluding Action **and** Process identities. referencing an Action **or** Process from a graph does **not** classify it as an Entity **or** create an Entity duplicate of it.

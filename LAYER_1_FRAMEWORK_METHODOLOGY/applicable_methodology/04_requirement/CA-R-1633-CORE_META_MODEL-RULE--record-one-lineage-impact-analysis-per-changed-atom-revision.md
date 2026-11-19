@@ -6,11 +6,11 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom
+  main_subject: ANECHOIC_MODEL <+ Atom
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Carrier
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Traceability"
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Carrier
+  - "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Traceability"
 tier: 2
 status: Active
 version: 43
@@ -18,11 +18,11 @@ updated_at: 2026-11-02 18:35:20 +0400
 carrier_destination:
   file:
     name: CA-R-1633-CORE_META_MODEL-RULE--record-one-lineage-impact-analysis-per-changed-atom-revision.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1633-CORE_META_MODEL-RULE--record-one-lineage-impact-analysis-per-changed-atom-revision.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1633-CORE_META_MODEL-RULE--record-one-lineage-impact-analysis-per-changed-atom-revision.md
   source_atom_id: CA-R-1633
   source_atom_revision: 43
   source_sha256: 39ba19d3e1ca179397c42b8080e859f86bce8372537395b414223b5a593a74b4

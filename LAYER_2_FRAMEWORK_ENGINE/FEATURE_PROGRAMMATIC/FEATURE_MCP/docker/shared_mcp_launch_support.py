@@ -53,12 +53,12 @@ def _path(value):
 def _environment(config, image):
     return {
         **{name: os.environ[name] for name in DOCKER_ENV if name in os.environ},
-        "CAPRMEDIO_IMAGE": image,
-        "CAPRMEDIO_HOST_SETTINGS": str(config.source_path),
-        "CAPRMEDIO_PROJECTS_ROOT": str(config.projects_root),
-        "CAPRMEDIO_MCP_HTTP_PORT": str(config.http_port),
-        "CAPRMEDIO_MAX_LOADED_PROJECTS": str(getattr(config, "max_loaded_projects", 2)),
-        "CAPRMEDIO_SHARED_RUNTIME_ID": config.shared_runtime_id,
+        "ANECHOIC_IMAGE": image,
+        "ANECHOIC_HOST_SETTINGS": str(config.source_path),
+        "ANECHOIC_PROJECTS_ROOT": str(config.projects_root),
+        "ANECHOIC_MCP_HTTP_PORT": str(config.http_port),
+        "ANECHOIC_MAX_LOADED_PROJECTS": str(getattr(config, "max_loaded_projects", 2)),
+        "ANECHOIC_SHARED_RUNTIME_ID": config.shared_runtime_id,
     }
 
 
@@ -83,7 +83,7 @@ def prepare_config(settings_path=None, image=None, *, compose_file=None, timeout
     image = _image(image)
     compose = _path(compose_file or COMPOSE)
     timeout = bounded(timeout, "startup_timeout")
-    project = "caprmedio-shared-" + config.shared_runtime_id[:16]
+    project = "anechoic-shared-" + config.shared_runtime_id[:16]
     environment = _environment(config, image)
     prefix = _prefix(compose, project)
     return {

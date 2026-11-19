@@ -24,6 +24,6 @@ operative plans and Plan artifacts.
 
 ## Claim
 
-an operative plan is ephemeral session control; a Plan is a persisted CAPRMEDIO artifact created **only** by governed entry criteria.
+an operative plan is ephemeral session control; a Plan is a persisted ANECHOIC artifact created **only** by governed entry criteria.
 
 ## Details

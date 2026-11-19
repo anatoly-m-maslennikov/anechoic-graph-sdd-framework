@@ -1,8 +1,8 @@
 ---
 subjects:
-  active: CAPRMEDIO_MODEL <+ CFEL <+ Relation//DERIVED_FROM
+  active: ANECHOIC_MODEL <+ CFEL <+ Relation//DERIVED_FROM
   passive:
-  - CAPRMEDIO_MODEL <+ Term//Artifact
+  - ANECHOIC_MODEL <+ Term//Artifact
 version: 37
 updated_at: 2026-11-02 08:06:47 +0400
 relations: {}

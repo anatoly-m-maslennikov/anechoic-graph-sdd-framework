@@ -4,7 +4,7 @@ current_scope_unit: CORE_META_MODEL
 status: Active
 tier: 1
 subjects:
-  active: CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_CARRIED_BY
+  active: ANECHOIC_MODEL <+ CFEL <+ Relation//IS_CARRIED_BY
 relations: {}
 version: 4
 updated_at: 2026-11-02 08:06:47 +0400

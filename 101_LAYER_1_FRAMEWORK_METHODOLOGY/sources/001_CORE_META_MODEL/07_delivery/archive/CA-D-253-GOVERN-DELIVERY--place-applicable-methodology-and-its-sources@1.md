@@ -16,4 +16,4 @@ relations: {}
 ---
 # Place Applicable Methodology and Its Sources
 
-the Delivery Authority **must** place Applicable Methodology under `.caprmedio_framework/00_APPLICABLE_METHODOLOGY/` and reserve `.caprmedio_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/` for exactly three structural Source Layer Carriers in (CORE_META_MODEL, INSTALLED_EXTENSIONS, LOCAL_CONFIGURATION).
+the Delivery Authority **must** place Applicable Methodology under `.anechoic_framework/00_APPLICABLE_METHODOLOGY/` and reserve `.anechoic_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/` for exactly three structural Source Layer Carriers in (CORE_META_MODEL, INSTALLED_EXTENSIONS, LOCAL_CONFIGURATION).

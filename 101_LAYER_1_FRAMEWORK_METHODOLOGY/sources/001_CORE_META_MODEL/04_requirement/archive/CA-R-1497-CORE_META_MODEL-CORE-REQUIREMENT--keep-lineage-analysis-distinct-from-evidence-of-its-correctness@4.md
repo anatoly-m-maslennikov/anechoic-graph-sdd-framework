@@ -20,4 +20,4 @@ global_tier: 9
 ---
 # Keep lineage analysis distinct from evidence of its correctness
 
-a Lineage Impact Analysis Atom **must not** serve as execution evidence of its own correctness. Analysis **and** the factual Journal Records carrying execution evidence remain distinct contributions under CAPRMEDIO-META-REQU-092 **and** CAPRMEDIO-META-REQU-093.
+a Lineage Impact Analysis Atom **must not** serve as execution evidence of its own correctness. Analysis **and** the factual Journal Records carrying execution evidence remain distinct contributions under ANECHOIC-META-REQU-092 **and** ANECHOIC-META-REQU-093.

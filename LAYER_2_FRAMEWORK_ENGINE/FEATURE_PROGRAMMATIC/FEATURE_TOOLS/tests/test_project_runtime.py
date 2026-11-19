@@ -16,7 +16,7 @@ class ProjectRuntimeBoundaryTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name).resolve()
-        self.control = self.root / ".caprmedio_fixture"
+        self.control = self.root / ".anechoic_fixture"
         self.control.mkdir()
         self.reference = self.root / "delivered" / "nested"
         self.reference.mkdir(parents=True)
@@ -28,7 +28,7 @@ class ProjectRuntimeBoundaryTests(unittest.TestCase):
             return exists(path, *args, **kwargs)
 
         def local_glob(path, pattern, *args, **kwargs):
-            if pattern == ".caprmedio_*" and path != self.root and self.root not in path.parents:
+            if pattern == ".anechoic_*" and path != self.root and self.root not in path.parents:
                 return iter(())
             return glob(path, pattern, *args, **kwargs)
 
@@ -42,25 +42,25 @@ class ProjectRuntimeBoundaryTests(unittest.TestCase):
         return path
 
     def test_gitless_project_requires_both_authoritative_carriers(self):
-        self.marker("caprmedio_project_settings.toml")
+        self.marker("anechoic_project_settings.toml")
         with self.assertRaises(TemporaryBoundaryError):
             repository_root(self.reference)
-        (self.control / "caprmedio_project_settings.toml").write_text(
-            '[project]\nname = "fixture"\n[paths]\ncontrol_root = ".caprmedio_fixture"\n',
+        (self.control / "anechoic_project_settings.toml").write_text(
+            '[project]\nname = "fixture"\n[paths]\ncontrol_root = ".anechoic_fixture"\n',
             encoding="utf-8",
         )
         write_scope_unit_declarations(self.root, control_root=self.control)
         self.assertEqual(repository_root(self.reference), self.root)
 
     def test_runtime_or_scratch_folder_does_not_identify_a_project(self):
-        (self.root / ".caprmedio_runtime").mkdir()
-        (self.root / ".caprmedio_tmp").mkdir()
+        (self.root / ".anechoic_runtime").mkdir()
+        (self.root / ".anechoic_tmp").mkdir()
         with self.assertRaises(TemporaryBoundaryError):
             repository_root(self.reference)
 
     def test_symlinked_control_or_carrier_is_not_a_project_marker(self):
-        (self.control / "caprmedio_project_settings.toml").write_text(
-            '[project]\nname = "fixture"\n[paths]\ncontrol_root = ".caprmedio_fixture"\n',
+        (self.control / "anechoic_project_settings.toml").write_text(
+            '[project]\nname = "fixture"\n[paths]\ncontrol_root = ".anechoic_fixture"\n',
             encoding="utf-8",
         )
         target = self.root / "structure.toml"

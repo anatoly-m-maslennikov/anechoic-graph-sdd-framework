@@ -4,9 +4,9 @@ ref_id: CA-D-442
 role: Delivery
 form: Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Scope Unit
+  main_subject: ANECHOIC_MODEL <+ Scope Unit
   dependencies:
-  - CAPRMEDIO_MODEL <+ Carrier
+  - ANECHOIC_MODEL <+ Carrier
 tier: 3
 status: Active
 version: 29
@@ -16,9 +16,9 @@ container:
 carrier_destination:
   file:
     name: CA-D-442-CORE_META_MODEL-DECISION--encode-scope-unit-declaration-fields.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-442-CORE_META_MODEL-DECISION--encode-scope-unit-declaration-fields.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-442-CORE_META_MODEL-DECISION--encode-scope-unit-declaration-fields.md
   source_atom_id: CA-D-442
   source_atom_revision: 29
   source_sha256: 3096db5d7f7cce4545311a4e03681dbe04537360b7663e8eefba8c24777f9bca

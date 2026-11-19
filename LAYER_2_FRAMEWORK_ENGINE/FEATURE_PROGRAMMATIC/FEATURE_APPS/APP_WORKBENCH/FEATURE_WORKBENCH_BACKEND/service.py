@@ -114,7 +114,7 @@ class WorkbenchService(ServiceRefresh, ServiceLifecycle, ServiceLifecycleEffects
         self._watcher_change_log = WatcherChangeLog(self._root)
         self._extension_directory = extension_directory
         self._database_path = (
-            self._root / ".caprmedio_runtime" / "workbench" / "projection.duckdb"
+            self._root / ".anechoic_runtime" / "workbench" / "projection.duckdb"
         )
         self._start_lock = threading.Lock()
         self._refresh_lock = threading.RLock()

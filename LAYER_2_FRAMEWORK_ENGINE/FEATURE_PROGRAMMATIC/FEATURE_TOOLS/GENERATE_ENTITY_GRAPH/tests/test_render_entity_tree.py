@@ -12,7 +12,7 @@ import yaml
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / "render_entity_tree.py"
-TEST_TEMP_ROOT = Path.cwd() / ".caprmedio_tmp/tests/test_render_entity_tree"
+TEST_TEMP_ROOT = Path.cwd() / ".anechoic_tmp/tests/test_render_entity_tree"
 
 
 def atom(version=7, subject="Alpha.Label"):
@@ -30,9 +30,9 @@ class RenderEntityTreeTests(unittest.TestCase):
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
         (self.root / ".git").mkdir()
-        self.projection = self.root / ".caprmedio_caprmedio/_projection"
+        self.projection = self.root / ".anechoic_anechoic/_projection"
         self.projection.mkdir(parents=True)
-        settings = self.projection.parent / "caprmedio_project_settings.toml"
+        settings = self.projection.parent / "anechoic_project_settings.toml"
         settings.write_text('[artifact_timestamps]\ntimezone = "UTC"\n', encoding="utf-8")
         self.source = self.root / "sources/CA-R-9001.md"
         self.source.parent.mkdir()

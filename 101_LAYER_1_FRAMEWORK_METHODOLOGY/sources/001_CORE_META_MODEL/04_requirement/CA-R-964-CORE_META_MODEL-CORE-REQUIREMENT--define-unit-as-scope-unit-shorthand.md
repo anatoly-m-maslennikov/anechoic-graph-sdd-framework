@@ -22,10 +22,10 @@ Define Unit as Scope Unit shorthand
 
 ## Scope
 
-the governed shorthand `Unit` in CAPRMEDIO.
+the governed shorthand `Unit` in ANECHOIC.
 
 ## Claim
 
-Unit **means** Scope Unit **when** CAPRMEDIO uses Unit as a governed shorthand.
+Unit **means** Scope Unit **when** ANECHOIC uses Unit as a governed shorthand.
 
 ## Details

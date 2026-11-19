@@ -6,14 +6,14 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := "Analysis & Advisory")/(.Header.Context.Form
+  main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := "Analysis & Advisory")/(.Header.Context.Form
     := FPF Analysis Report)
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := "Analysis & Advisory")
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := "Analysis & Advisory")/(.Header.Context.Form
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := "Analysis & Advisory")
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := "Analysis & Advisory")/(.Header.Context.Form
     := Analysis Report)
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role:=Analysis and Advisory).Header.State.Status
-  - CAPRMEDIO_MODEL <+ Carrier/File
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role:=Analysis and Advisory).Header.State.Status
+  - ANECHOIC_MODEL <+ Carrier/File
 tier: 2
 status: Active
 version: 20
@@ -21,7 +21,7 @@ updated_at: 2026-11-02 19:33:47 +0400
 carrier_destination:
   file:
     name: CA-R-1889-PROJECT_CONFIGURATION-RULE--define-fpf-analysis-report.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: PROJECT_CONFIGURATION
 ---

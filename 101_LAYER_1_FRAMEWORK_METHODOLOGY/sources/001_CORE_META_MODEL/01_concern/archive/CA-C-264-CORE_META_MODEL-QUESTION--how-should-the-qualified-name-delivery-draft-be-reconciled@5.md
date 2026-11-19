@@ -25,7 +25,7 @@ how should the identified Draft Atom be reconciled **with** active authority **a
 
 ## Draft under review
 
-- archived Carrier: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/07_delivery/archive/CA-D--MMODEL-DELIVERY--deliver-qualified-entity-names-by-interaction-boundary@1.md`.
+- archived Carrier: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/07_delivery/archive/CA-D--MMODEL-DELIVERY--deliver-qualified-entity-names-by-interaction-boundary@1.md`.
 - inspected SHA-256: `d29a0bb2c3927d873a0553a4f45319e8cd92096c98ccfa780de60520742461b0`.
 - review point: 55 of 79; campaign `draft-review-8afeac79`.
 
@@ -37,16 +37,16 @@ how should the identified Draft Atom be reconciled **with** active authority **a
 
 ## Active authority cited by the review
 
-- `CA-M-228@10`: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/CA-M-228-CORE_META_MODEL-METHOD--write-subject-expressions-with-bearer-and-value-qualification.md`; SHA-256 `1c83ca0d007ce7c4c2d624e46fc6f270a5ac7dfd992687c2f0dc7e508016d80d`.
-- `CA-M-313@1`: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/CA-M-313-CORE_META_MODEL-METHOD--write-delivery-claims-with-the-delivery-cce-profile.md`; SHA-256 `2f7e6adc52588ea7b0be005b3fa0caf446fe814e64a6514ab8227bc8ee1d8fec`.
+- `CA-M-228@10`: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/CA-M-228-CORE_META_MODEL-METHOD--write-subject-expressions-with-bearer-and-value-qualification.md`; SHA-256 `1c83ca0d007ce7c4c2d624e46fc6f270a5ac7dfd992687c2f0dc7e508016d80d`.
+- `CA-M-313@1`: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/CA-M-313-CORE_META_MODEL-METHOD--write-delivery-claims-with-the-delivery-cce-profile.md`; SHA-256 `2f7e6adc52588ea7b0be005b3fa0caf446fe814e64a6514ab8227bc8ee1d8fec`.
 
 ## Principles to apply
 
-- [CA-M-002](/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/05_method/CA-M-002-PRINCIPLE-METHOD--dry-don-t-repeat-yourself.md).
-- [CA-M-005](/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/05_method/CA-M-005-PRINCIPLE-METHOD--add-complexity-only-when-necessary.md).
-- [CA-M-006](/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/05_method/CA-M-006-PRINCIPLE-METHOD--keep-the-whole-project-coherent.md).
-- [CA-R-1490](/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/04_requirement/CA-R-1490-PRINCIPLE-REQUIREMENT--preserve-valuable-information.md).
-- [CA-E-001](/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/06_evaluation/CA-E-001-PRINCIPLE-EVALUATION--make-governed-commitments-and-results-checkable.md).
+- [CA-M-002](/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/05_method/CA-M-002-PRINCIPLE-METHOD--dry-don-t-repeat-yourself.md).
+- [CA-M-005](/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/05_method/CA-M-005-PRINCIPLE-METHOD--add-complexity-only-when-necessary.md).
+- [CA-M-006](/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/05_method/CA-M-006-PRINCIPLE-METHOD--keep-the-whole-project-coherent.md).
+- [CA-R-1490](/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/04_requirement/CA-R-1490-PRINCIPLE-REQUIREMENT--preserve-valuable-information.md).
+- [CA-E-001](/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/06_evaluation/CA-E-001-PRINCIPLE-EVALUATION--make-governed-commitments-and-results-checkable.md).
 
 ## Resolution
 
@@ -61,7 +61,7 @@ the draft repeats the rejected interaction notation **and** a blanket Atom-conte
 
 ## Surviving authority checked for this disposition
 
-- `CA-M-228@10`: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/CA-M-228-CORE_META_MODEL-METHOD--write-subject-expressions-with-bearer-and-value-qualification.md`; SHA-256 `1c83ca0d007ce7c4c2d624e46fc6f270a5ac7dfd992687c2f0dc7e508016d80d`.
-- `CA-M-294@1`: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/CA-M-294-CORE_META_MODEL-METHOD--use-simpler-words-without-losing-meaning.md`; SHA-256 `b3f6bc25174ef24c412b25e95a6b334370c7a33b831212c10f6be05b355097b0`.
-- `CA-M-301@1`: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/CA-M-301-CORE_META_MODEL-METHOD--make-atom-claims-easy-to-understand.md`; SHA-256 `4738745a26c982c352ab2ffd051fa7d02b211482c910f0e8f99b11d17de86868`.
-- `CA-D-269@9`: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/07_delivery/CA-D-269-CORE_META_MODEL-DELIVERY--serialize-atom-subjects-in-frontmatter.md`; SHA-256 `f3b43a72109dbdb710295e46c37c1c5d86b7c15ff982f980bae8a845f6756f0b`.
+- `CA-M-228@10`: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/CA-M-228-CORE_META_MODEL-METHOD--write-subject-expressions-with-bearer-and-value-qualification.md`; SHA-256 `1c83ca0d007ce7c4c2d624e46fc6f270a5ac7dfd992687c2f0dc7e508016d80d`.
+- `CA-M-294@1`: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/CA-M-294-CORE_META_MODEL-METHOD--use-simpler-words-without-losing-meaning.md`; SHA-256 `b3f6bc25174ef24c412b25e95a6b334370c7a33b831212c10f6be05b355097b0`.
+- `CA-M-301@1`: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/CA-M-301-CORE_META_MODEL-METHOD--make-atom-claims-easy-to-understand.md`; SHA-256 `4738745a26c982c352ab2ffd051fa7d02b211482c910f0e8f99b11d17de86868`.
+- `CA-D-269@9`: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/07_delivery/CA-D-269-CORE_META_MODEL-DELIVERY--serialize-atom-subjects-in-frontmatter.md`; SHA-256 `f3b43a72109dbdb710295e46c37c1c5d86b7c15ff982f980bae8a845f6756f0b`.

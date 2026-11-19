@@ -21,7 +21,7 @@ how should the identified Draft Atom be reconciled **with** active authority **a
 
 ## Draft under review
 
-- archived Carrier: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/archive/CA-M--MMODEL-METHOD--author-one-claim-target-scope@1.md`.
+- archived Carrier: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/archive/CA-M--MMODEL-METHOD--author-one-claim-target-scope@1.md`.
 - inspected SHA-256: `2581dc7bd991fa345786c48cf9d8818ab5c0302c86e3c7c29afa677ac5c96930`.
 - review point: 37 of 79; campaign `draft-review-8afeac79`.
 
@@ -33,16 +33,16 @@ how should the identified Draft Atom be reconciled **with** active authority **a
 
 ## Active authority cited by the review
 
-- `CA-M-111@18`: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/CA-M-111-CORE_META_MODEL-METHOD--author-one-cce-claim-and-derived-summary.md`; SHA-256 `a407cf835c08d56cd0b45c795cb855666c34f23796702731977ebf0f5eb9ea07`.
-- `CA-M-273@6`: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/CA-M-273-CORE_META_MODEL-METHOD--derive-ownership-and-claim-target-atom-sets.md`; SHA-256 `7b4cb4512b5e4f8f63694c89dc3cd641b902e1c88dfd0374412cca66403f10c8`.
+- `CA-M-111@18`: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/CA-M-111-CORE_META_MODEL-METHOD--author-one-cce-claim-and-derived-summary.md`; SHA-256 `a407cf835c08d56cd0b45c795cb855666c34f23796702731977ebf0f5eb9ea07`.
+- `CA-M-273@6`: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/CA-M-273-CORE_META_MODEL-METHOD--derive-ownership-and-claim-target-atom-sets.md`; SHA-256 `7b4cb4512b5e4f8f63694c89dc3cd641b902e1c88dfd0374412cca66403f10c8`.
 
 ## Principles to apply
 
-- [CA-M-002](/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/05_method/CA-M-002-PRINCIPLE-METHOD--dry-don-t-repeat-yourself.md).
-- [CA-M-005](/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/05_method/CA-M-005-PRINCIPLE-METHOD--add-complexity-only-when-necessary.md).
-- [CA-M-006](/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/05_method/CA-M-006-PRINCIPLE-METHOD--keep-the-whole-project-coherent.md).
-- [CA-R-1490](/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/04_requirement/CA-R-1490-PRINCIPLE-REQUIREMENT--preserve-valuable-information.md).
-- [CA-E-001](/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/06_evaluation/CA-E-001-PRINCIPLE-EVALUATION--make-governed-commitments-and-results-checkable.md).
+- [CA-M-002](/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/05_method/CA-M-002-PRINCIPLE-METHOD--dry-don-t-repeat-yourself.md).
+- [CA-M-005](/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/05_method/CA-M-005-PRINCIPLE-METHOD--add-complexity-only-when-necessary.md).
+- [CA-M-006](/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/05_method/CA-M-006-PRINCIPLE-METHOD--keep-the-whole-project-coherent.md).
+- [CA-R-1490](/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/04_requirement/CA-R-1490-PRINCIPLE-REQUIREMENT--preserve-valuable-information.md).
+- [CA-E-001](/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/06_evaluation/CA-E-001-PRINCIPLE-EVALUATION--make-governed-commitments-and-results-checkable.md).
 
 ## Resolution
 

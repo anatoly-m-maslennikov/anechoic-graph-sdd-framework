@@ -9,7 +9,7 @@ version: 1
 updated_at: 2026-08-23 02:30:00
 relations:
   child_of:
-    - CAPRMEDIO-GOV-REQU-345--represent-accepted-meaning-faithfully
+    - ANECHOIC-GOV-REQU-345--represent-accepted-meaning-faithfully
 ---
 # Register replaced_by and replacement_of relation pair
 

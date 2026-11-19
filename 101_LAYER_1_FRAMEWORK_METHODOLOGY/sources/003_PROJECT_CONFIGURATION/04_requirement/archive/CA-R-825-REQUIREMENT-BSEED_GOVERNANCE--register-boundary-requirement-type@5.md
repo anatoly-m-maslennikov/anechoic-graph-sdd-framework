@@ -12,10 +12,10 @@ llm_session_ids:
   - codex:01a01cb6-4ee4-7553-b68d-0823dda35094
 relations:
   child_of:
-    - CAPRMEDIO-META-REQU-132--define-role-specific-atom-atomicity
-    - CAPRMEDIO-META-REQU-151--admit-only-materially-distinct-framework-constructs
-    - CAPRMEDIO-META-REQU-740--separate-content-role-from-artifact-type
-    - CAPRMEDIO-GOV-REQU-345--represent-accepted-meaning-faithfully
+    - ANECHOIC-META-REQU-132--define-role-specific-atom-atomicity
+    - ANECHOIC-META-REQU-151--admit-only-materially-distinct-framework-constructs
+    - ANECHOIC-META-REQU-740--separate-content-role-from-artifact-type
+    - ANECHOIC-GOV-REQU-345--represent-accepted-meaning-faithfully
     - CA-R-888
 ---
 # Register Boundary Requirement Type

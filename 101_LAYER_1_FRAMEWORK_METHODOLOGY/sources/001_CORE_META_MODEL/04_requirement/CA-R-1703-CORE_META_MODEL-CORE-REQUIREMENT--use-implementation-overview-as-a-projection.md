@@ -40,6 +40,6 @@ the presence of this Projection does **not** require an internal Implementation 
 
 ## Primary claim
 
-CAPRMEDIO represents the current view of project realization through an Implementation Overview Projection rather than an Implementation Atom.
+ANECHOIC represents the current view of project realization through an Implementation Overview Projection rather than an Implementation Atom.
 
 ## Details

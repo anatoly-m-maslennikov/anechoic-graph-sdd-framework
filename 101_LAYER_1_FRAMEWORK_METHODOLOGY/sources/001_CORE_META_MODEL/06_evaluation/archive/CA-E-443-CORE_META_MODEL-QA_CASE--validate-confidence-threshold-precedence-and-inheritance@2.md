@@ -29,7 +29,7 @@ relations:
     - "CA-M-130"
     - "CA-D-273"
     - "CA-D-278"
-    - "CAPRMEDIO-META-REQU-144"
+    - "ANECHOIC-META-REQU-144"
 ---
 # Validate confidence-threshold precedence and inheritance
 

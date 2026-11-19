@@ -6,16 +6,16 @@ container:
 role: Evaluation
 form: Eval Case
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.State.Updated At
+  main_subject: ANECHOIC_MODEL <+ Atom.Header.State.Updated At
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Atom.Header.State.Version
-  - CAPRMEDIO_MODEL <+ Carrier
-  - CAPRMEDIO_MODEL <+ Atom.Header.State.Status
-  - CAPRMEDIO_MODEL <+ Atom.Content.Summary
-  - CAPRMEDIO_MODEL <+ Atom.Header.Identity.ID
-  - CAPRMEDIO_MODEL <+ Entity
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Atom.Header.State.Version
+  - ANECHOIC_MODEL <+ Carrier
+  - ANECHOIC_MODEL <+ Atom.Header.State.Status
+  - ANECHOIC_MODEL <+ Atom.Content.Summary
+  - ANECHOIC_MODEL <+ Atom.Header.Identity.ID
+  - ANECHOIC_MODEL <+ Entity
 tier: 4
 relations:
   evaluation_for:
@@ -29,7 +29,7 @@ updated_at: 2026-11-02 00:18:22 +0400
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation/CA-E-521-PROJECT_CONFIGURATION-EVAL_CASE--verify-atom-lifecycle-version-and-updated-at.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation/CA-E-521-PROJECT_CONFIGURATION-EVAL_CASE--verify-atom-lifecycle-version-and-updated-at.md
   source_atom_id: CA-E-521
   source_atom_revision: 22
   source_sha256: 832e6813f08981fd8842b07d6767268f91aaaf9127b004507ef27e6e78162bc3

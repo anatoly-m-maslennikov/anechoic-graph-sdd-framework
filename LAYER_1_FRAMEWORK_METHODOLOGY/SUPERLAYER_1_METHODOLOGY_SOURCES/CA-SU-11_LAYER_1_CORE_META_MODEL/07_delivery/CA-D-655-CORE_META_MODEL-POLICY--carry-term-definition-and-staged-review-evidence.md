@@ -6,10 +6,10 @@ container:
 role: Delivery
 form: Policy
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Content
+  main_subject: ANECHOIC_MODEL <+ Atom.Content
   dependencies:
-  - CAPRMEDIO_MODEL <+ Term
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Method)/(.Header.Context.Form := Term Definition)
+  - ANECHOIC_MODEL <+ Term
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Method)/(.Header.Context.Form := Term Definition)
 tier: 3
 status: Active
 version: 4
@@ -17,7 +17,7 @@ updated_at: 2026-11-04 18:28:33 +0400
 carrier_destination:
   file:
     name: CA-D-655-POLICY--carry-term-definition-and-staged-review-evidence.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
 ---
 ## Summary
 

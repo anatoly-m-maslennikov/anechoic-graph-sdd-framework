@@ -6,12 +6,12 @@ container:
 role: Method
 form: Implementation Method
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Content
+  main_subject: ANECHOIC_MODEL <+ Atom.Content
   dependencies:
-  - CAPRMEDIO_MODEL <+ Actor
-  - CAPRMEDIO_MODEL <+ Atom.Content.Summary
-  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring
-  - CAPRMEDIO_MODEL <+ Term
+  - ANECHOIC_MODEL <+ Actor
+  - ANECHOIC_MODEL <+ Atom.Content.Summary
+  - ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring
+  - ANECHOIC_MODEL <+ Term
 tier: 3
 relations:
   child_of:
@@ -26,11 +26,11 @@ updated_at: '2026-11-13T18:34:35.271162+00:00'
 carrier_destination:
   file:
     name: CA-M-294-CORE_META_MODEL-IMPLEMENTATION_METHOD--use-simpler-words-without-losing-meaning.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-294-CORE_META_MODEL-IMPLEMENTATION_METHOD--use-simpler-words-without-losing-meaning.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-294-CORE_META_MODEL-IMPLEMENTATION_METHOD--use-simpler-words-without-losing-meaning.md
   source_atom_id: CA-M-294
   source_atom_revision: 28
   source_sha256: fccf4aa71ee1aec937b2e25ffd060a2cd3e07251ca78c4baa7524ace2b5ac451
@@ -45,10 +45,10 @@ Use simpler words without losing meaning
 ### Prose Claim
 
 
-CAPRMEDIO content wording.
+ANECHOIC content wording.
 
 
-**when** choosing wording for CAPRMEDIO content, the Author **must** choose words **and** phrases that are simpler **and** more familiar **to** the intended reader **when** they preserve the intended meaning **without** adding ambiguity.
+**when** choosing wording for ANECHOIC content, the Author **must** choose words **and** phrases that are simpler **and** more familiar **to** the intended reader **when** they preserve the intended meaning **without** adding ambiguity.
 
 ## Details
 

@@ -15,4 +15,4 @@ relations:
 ---
 # Give each governed term one Definition Atom
 
-EVERY CAPRMEDIO-specific governed term MUST resolve to EXACTLY ONE active Definition Atom in its applicable Claim Scope.
+EVERY ANECHOIC-specific governed term MUST resolve to EXACTLY ONE active Definition Atom in its applicable Claim Scope.

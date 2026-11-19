@@ -6,18 +6,18 @@ container:
 role: Evaluation
 form: Eval Policy
 topics:
-  main_subject: 'CAPRMEDIO_STRUCTURE <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow)//Applicable Methodology Compilation'
+  main_subject: 'ANECHOIC_STRUCTURE <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow)//Applicable Methodology Compilation'
   dependencies:
-  - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/Type: Applicable Methodology'
-  - CAPRMEDIO_STRUCTURE <+ Entity/Object/Continuant/Selection//Methodology Sources
-  - CAPRMEDIO_STRUCTURE <+ Scope Unit//PROJECT_CONFIGURATION
-  - CAPRMEDIO_STRUCTURE <+ Entity/Object/Continuant/Selection//Extension Sources
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework Settings
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Atom.Content
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Actor/Operator
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/History/Journal <+ Event Record
+  - 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Projection/Type: Applicable Methodology'
+  - ANECHOIC_STRUCTURE <+ Entity/Object/Continuant/Selection//Methodology Sources
+  - ANECHOIC_STRUCTURE <+ Scope Unit//PROJECT_CONFIGURATION
+  - ANECHOIC_STRUCTURE <+ Entity/Object/Continuant/Selection//Extension Sources
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework Settings
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Actor/Operator
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/History/Journal <+ Event Record
 tier: 4
 relations:
   evaluation_for:
@@ -34,11 +34,11 @@ updated_at: 2026-11-02 00:18:22 +0400
 carrier_destination:
   file:
     name: CA-E-379-PROJECT_CONFIGURATION-EVAL_POLICY--validate-applicable-methodology-compilation.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: PROJECT_CONFIGURATION
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation/CA-E-379-PROJECT_CONFIGURATION-POLICY--validate-applicable-methodology-compilation.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation/CA-E-379-PROJECT_CONFIGURATION-POLICY--validate-applicable-methodology-compilation.md
   source_atom_id: CA-E-379
   source_atom_revision: 46
   source_sha256: 609cf7bcde371150793c9495defe45db89f03eccd986e49b27f0b9a93f2bc628

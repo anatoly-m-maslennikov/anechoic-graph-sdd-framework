@@ -6,10 +6,10 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Carrier/File
+  main_subject: ANECHOIC_MODEL <+ Carrier/File
   dependencies:
-  - CAPRMEDIO_MODEL <+ Carrier
-  - CAPRMEDIO_MODEL <+ Journal
+  - ANECHOIC_MODEL <+ Carrier
+  - ANECHOIC_MODEL <+ Journal
 tier: 2
 status: Active
 version: 41
@@ -17,11 +17,11 @@ updated_at: 2026-11-03 23:25:51 +0400
 carrier_destination:
   file:
     name: CA-R-1643-CORE_META_MODEL-RULE--register-type-values-for-work-journal-events.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1643-CORE_META_MODEL-RULE--register-type-values-for-work-journal-events.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1643-CORE_META_MODEL-RULE--register-type-values-for-work-journal-events.md
   source_atom_id: CA-R-1643
   source_atom_revision: 41
   source_sha256: 0021805e24d1cc0a050fa30e3d0710f266a133c94ad439f929c4fa6f8fdd369d

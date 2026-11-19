@@ -1,0 +1,26 @@
+---
+atom_id: CA-R-2256@2
+current_scope_unit: anechoic
+status: Archived
+tier: 1
+subjects:
+  active: 'Entity/Aspect/Product: ANECHOIC Framework'
+relations: {}
+version: 2
+updated_at: 2026-11-02 00:18:22 +0400
+role: Requirement
+form: Entity Definition
+---
+## Summary
+
+Define the ANECHOIC Framework product
+
+## Claim
+
+ANECHOIC Framework is the product produced by the anechoic Project. This Subject identifies that product and its required capabilities. Project Settings identify the Project; this project-local definition identifies its product.
+
+### Formal claim
+
+```text
+Entity/Aspect/Product: ANECHOIC Framework
+```

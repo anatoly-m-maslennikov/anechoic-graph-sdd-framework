@@ -6,12 +6,12 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.State.Status:Draft
+  main_subject: ANECHOIC_MODEL <+ Atom.Header.State.Status:Draft
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom.Header.Identity.ID
-  - CAPRMEDIO_MODEL <+ Atom.Header.State.Version
-  - CAPRMEDIO_MODEL <+ Atom.Header.State.Status:Draft
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Role
+  - ANECHOIC_MODEL <+ Atom.Header.Identity.ID
+  - ANECHOIC_MODEL <+ Atom.Header.State.Version
+  - ANECHOIC_MODEL <+ Atom.Header.State.Status:Draft
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Role
 tier: 3
 status: active
 version: 26
@@ -19,7 +19,7 @@ updated_at: 2026-11-09 00:57:07 +0400
 carrier_destination:
   file:
     name: CA-D-570-CORE_META_MODEL-DECISION--serialize-draft-revision-lineage.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---

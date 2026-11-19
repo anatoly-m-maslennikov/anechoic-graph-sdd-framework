@@ -13,7 +13,7 @@ class RelationCardinalityTests(unittest.TestCase):
             'body': """## Claim
 ### Formal Claim
 ```python
-from caprmedio.formal_claims import Cardinality, declare_relation
+from anechoic.formal_claims import Cardinality, declare_relation
 declare_relation(
     relation_name="IS_CONTAINED_BY",
     source_endpoint={"level": "model_entities", "entity_paths": ("View",)},

@@ -34,10 +34,10 @@ class ProjectMcpServiceSelectionTests(unittest.TestCase):
             "Image": "sha256:" + "b" * 64,
             "Config": {
                 "Labels": {
-                    "org.caprmedio.project": selection.instance_id,
-                    "org.caprmedio.service": "mcp-http",
-                    "org.caprmedio.control_root": "control",
-                    "org.caprmedio.host_project_root": str(selection.root),
+                    "org.anechoic.project": selection.instance_id,
+                    "org.anechoic.service": "mcp-http",
+                    "org.anechoic.control_root": "control",
+                    "org.anechoic.host_project_root": str(selection.root),
                 }
             },
             "State": {"Status": "running", "Health": {"Status": "healthy"}},
@@ -54,7 +54,7 @@ class ProjectMcpServiceSelectionTests(unittest.TestCase):
     def _docker_roster(self, selection, mcp_identifiers: list[str], *, foreign_project=False):
         def run(argv, *, timeout, env):
             if argv[:3] == ["docker", "ps", "--all"]:
-                service_filter = "label=org.caprmedio.service=mcp-http"
+                service_filter = "label=org.anechoic.service=mcp-http"
                 identifiers = (
                     mcp_identifiers if service_filter in argv else [_WORKER_ID, *mcp_identifiers]
                 )
@@ -64,7 +64,7 @@ class ProjectMcpServiceSelectionTests(unittest.TestCase):
                     self.fail("worker must not be inspected as the MCP service")
                 row = self._row(selection, argv[-1])
                 if foreign_project:
-                    row["Config"]["Labels"]["org.caprmedio.project"] = "f" * 64
+                    row["Config"]["Labels"]["org.anechoic.project"] = "f" * 64
                 return json.dumps(row)
             self.fail(f"unexpected Docker command: {argv!r}")
 

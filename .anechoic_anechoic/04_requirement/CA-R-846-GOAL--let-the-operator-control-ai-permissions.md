@@ -1,0 +1,37 @@
+---
+atom_id: CA-R-846
+ref_id: CA-R-846
+container:
+  scope_unit: CA-SU-00
+role: Requirement
+form: Goal
+topics:
+  main_subject: ANECHOIC_MODEL <+ Entity/Object/Continuant/Actor/AI Agent.Permissions
+  dependencies:
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Actor/AI Agent
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Actor/Operator
+  - "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Execution Control <+ Effect Authorization"
+  - ANECHOIC_STRUCTURE <+ Aspects <+ Product
+tier: 4
+relations:
+  child_of:
+  - CA-R-2157
+status: Active
+version: 31
+updated_at: 2026-11-02 18:35:20 +0400
+cce_version: cce_1
+cce_form: obligation
+llm_session_ids:
+- codex:01a02650-eff7-7453-8c37-0699b36773c6
+current_scope_unit: anechoic
+claim_target_scope_unit: FRAMEWORK_ENGINE
+---
+## Summary
+Let the Operator control AI permissions
+
+## Claim
+
+### Prose Claim
+
+
+ANECHOIC **must** let the Operator create AI Agent Delegations **and** mandatory authorization rules for **every** identified AI Agent **and** inspect, limit, modify, suspend, **and** revoke **every** such delegation **or** rule.

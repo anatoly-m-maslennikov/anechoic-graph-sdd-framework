@@ -10,10 +10,10 @@ from ATOM_LIFECYCLE.status_model import status_memberships
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "FEATURE_TOOLS" / "GENERATE_ENTITY_GRAPH"))
 from cfel_claim_constraints import _native_constraints
 
-PLAN = '''from caprmedio.model import Plan
-from caprmedio.formal_claims import declare_entity
+PLAN = '''from anechoic.model import Plan
+from anechoic.formal_claims import declare_entity
 declare_entity(entity_name="Status", relation_name="IS_PROPERTY_OF", base_path="Atom.Header.State", applies_to_entity_classes=(Plan,), allowed_values=("Backlog", "Done", "Canceled"), status_order_numbers={"Backlog": 1, "Done": 20, "Canceled": 40}, status_groups={"Backlog": "Backlog"})'''
-ANALYSIS = '''from caprmedio.formal_claims import declare_entity
+ANALYSIS = '''from anechoic.formal_claims import declare_entity
 declare_entity(entity_name="Status", relation_name="IS_PROPERTY_OF", base_path="Atom.Header.State", applies_to_role="Analysis and Advisory", applies_to_forms=("Analysis Report", "Rationale"), allowed_values=("Done",))'''
 
 class NativeStatusQualifiers(unittest.TestCase):

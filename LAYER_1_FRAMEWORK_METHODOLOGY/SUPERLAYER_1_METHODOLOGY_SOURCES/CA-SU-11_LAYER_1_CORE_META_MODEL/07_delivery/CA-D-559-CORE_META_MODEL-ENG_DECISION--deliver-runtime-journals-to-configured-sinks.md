@@ -6,12 +6,12 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Journal
+  main_subject: ANECHOIC_MODEL <+ Journal
   dependencies:
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Output Publication"
-  - CAPRMEDIO_MODEL <+ Projection
-  - CAPRMEDIO_MODEL <+ Journal
-  - CAPRMEDIO_MODEL <+ Carrier
+  - "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Output Publication"
+  - ANECHOIC_MODEL <+ Projection
+  - ANECHOIC_MODEL <+ Journal
+  - ANECHOIC_MODEL <+ Carrier
 tier: 3
 status: Active
 version: 19
@@ -19,7 +19,7 @@ updated_at: 2026-11-02 18:35:20 +0400
 carrier_destination:
   file:
     name: CA-D-559-CORE_META_MODEL-DECISION--deliver-runtime-journals-to-configured-sinks.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---
@@ -35,7 +35,7 @@ Deliver runtime Journals to configured sinks
 technical and business runtime Journal Carriers.
 
 
-runtime technical **and** business Journals **may** be delivered **to** an explicitly configured local database, remote database, **or** governed logging sink. these Carriers **need not** reside under `.caprmedio_<project_name>/_journal/` **or** `.caprmedio_runtime/`.
+runtime technical **and** business Journals **may** be delivered **to** an explicitly configured local database, remote database, **or** governed logging sink. these Carriers **need not** reside under `.anechoic_<project_name>/_journal/` **or** `.anechoic_runtime/`.
 
 ## Details
 

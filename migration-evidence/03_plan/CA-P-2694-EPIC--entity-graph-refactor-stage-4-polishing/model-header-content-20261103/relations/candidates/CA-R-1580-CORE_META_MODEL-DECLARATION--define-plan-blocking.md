@@ -1,12 +1,12 @@
 ---
 subjects:
-  active: CAPRMEDIO_MODEL <+ CFEL <+ Relation//BLOCKS
+  active: ANECHOIC_MODEL <+ CFEL <+ Relation//BLOCKS
   passive:
-  - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom/Content Role: Plan/Type: Plan'
-  - CAPRMEDIO_MODEL <+ Projection
-  - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom/Content Role: Plan.Status: Done'
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ CFEL > Relation//DEPENDS_ON
+  - 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom/Content Role: Plan/Type: Plan'
+  - ANECHOIC_MODEL <+ Projection
+  - 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom/Content Role: Plan.Status: Done'
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ CFEL > Relation//DEPENDS_ON
 version: 26
 updated_at: 2026-11-02 08:06:47 +0400
 relations: {}

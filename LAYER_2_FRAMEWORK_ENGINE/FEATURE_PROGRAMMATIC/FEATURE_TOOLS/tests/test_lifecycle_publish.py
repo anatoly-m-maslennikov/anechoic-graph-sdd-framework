@@ -159,15 +159,15 @@ def test_composed_update_preserves_status_and_version():
     from project_selection import resolve_project
     from scope_declaration_test_support import write_scope_unit_declarations
 
-    scratch = Path(__file__).resolve().parents[4] / '.caprmedio_tmp/CA-P-2791/CA-P-2934/publish'
+    scratch = Path(__file__).resolve().parents[4] / '.anechoic_tmp/CA-P-2791/CA-P-2934/publish'
     scratch.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=scratch) as directory:
         root = Path(directory)
-        control = root / '.caprmedio_test'
+        control = root / '.anechoic_test'
         control.mkdir()
-        (control / 'caprmedio_project_settings.toml').write_text(
+        (control / 'anechoic_project_settings.toml').write_text(
             '[project]\nname="TEST"\n[artifacts.identity]\nproject_prefix="CA"\n'
-            '[paths]\ncontrol_root=".caprmedio_test"\n')
+            '[paths]\ncontrol_root=".anechoic_test"\n')
         write_scope_unit_declarations(root, control_root=control, rows=[])
         selection = resolve_project(root)
         summary = "Follow the Operator's priorities"
@@ -260,15 +260,15 @@ def test_noop_update_and_same_identity_promotion_preserve_current():
     from scope_declaration_test_support import write_scope_unit_declarations
     from ATOM_LIFECYCLE import draft
 
-    scratch = Path(__file__).resolve().parents[4] / '.caprmedio_tmp/CA-P-2791/CA-P-2934/publish'
+    scratch = Path(__file__).resolve().parents[4] / '.anechoic_tmp/CA-P-2791/CA-P-2934/publish'
     scratch.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=scratch) as directory:
         root = Path(directory)
-        control = root / '.caprmedio_test'
+        control = root / '.anechoic_test'
         control.mkdir()
-        (control / 'caprmedio_project_settings.toml').write_text(
+        (control / 'anechoic_project_settings.toml').write_text(
             '[project]\nname="TEST"\n[artifacts.identity]\nproject_prefix="CA"\n'
-            '[paths]\ncontrol_root=".caprmedio_test"\n')
+            '[paths]\ncontrol_root=".anechoic_test"\n')
         write_scope_unit_declarations(root, control_root=control, rows=[])
         selection = resolve_project(root)
         path = control / '04_requirement/CA-R-1-RULE--example.md'
@@ -346,11 +346,11 @@ def test_independent_copy_promotion_applies_inherited_replacement():
     model = replace(status_model.load_status_model(status_path), candidate_schema=schema)
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory).resolve()
-        control = root / '.caprmedio_test'
+        control = root / '.anechoic_test'
         control.mkdir()
-        (control / 'caprmedio_project_settings.toml').write_text(
+        (control / 'anechoic_project_settings.toml').write_text(
             '[project]\nname="TEST"\n[artifacts.identity]\nproject_prefix="CA"\n'
-            '[paths]\ncontrol_root=".caprmedio_test"\n')
+            '[paths]\ncontrol_root=".anechoic_test"\n')
         write_scope_unit_declarations(root, control_root=control, rows=[])
         selection = resolve_project(root)
         role_root = control / '04_requirement'
@@ -361,7 +361,7 @@ def test_independent_copy_promotion_applies_inherited_replacement():
                          'form': 'Rule', 'status': 'Active', 'version': 1,
                          'updated_at': '2026-01-01T00:00:00+00:00',
                          'container.scope_unit': 'TEST', 'tier': 2,
-                         'topics': {'main_subject': 'CAPRMEDIO_MODEL <+ Atom'}}
+                         'topics': {'main_subject': 'ANECHOIC_MODEL <+ Atom'}}
         target.write_bytes(render_carrier(None, target_fields,
                                           body='## Summary\n\nTarget\n\n## Claim\n\n'
                                                '### Prose Claim\n\nTarget claim.\n'))

@@ -15,7 +15,7 @@ if (!script || !stylesheet || files.some((file) => ![script, stylesheet].include
 }
 const [javascript, css] = await Promise.all([readFile(resolve(assets, script), 'utf8'), readFile(resolve(assets, stylesheet), 'utf8')]);
 const inlineScript = javascript.replace(/<\/script/gi, '<\\/script');
-const html = `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CAPRMEDIO Workbench</title><style>${css}</style><div id="app"></div><script type="module">${inlineScript}</script></html>`;
+const html = `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ANECHOIC Workbench</title><style>${css}</style><div id="app"></div><script type="module">${inlineScript}</script></html>`;
 if (/<script\b[^>]*\bsrc=|<link\b[^>]*\brel=["']stylesheet/i.test(html)) throw new Error('MCP App must not reference external assets.');
 await writeFile(output, html);
 await rm(assets, { recursive: true, force: true });

@@ -19,7 +19,7 @@ class RuntimeRequestContext:
 
 
 _REQUEST_CONTEXT: ContextVar[RuntimeRequestContext | None] = ContextVar(
-    "caprmedio_runtime_request_context", default=None
+    "anechoic_runtime_request_context", default=None
 )
 
 

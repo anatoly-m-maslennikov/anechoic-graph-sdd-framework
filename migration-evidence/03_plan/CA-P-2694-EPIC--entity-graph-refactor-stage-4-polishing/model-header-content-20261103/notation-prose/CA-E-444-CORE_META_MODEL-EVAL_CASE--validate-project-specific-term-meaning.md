@@ -1,27 +1,27 @@
 ---
 subjects:
-  active: CAPRMEDIO_MODEL <+ Atom
+  active: ANECHOIC_MODEL <+ Atom
   passive:
-  - CAPRMEDIO_MODEL <+ Package
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Package/Eval Package
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Package/Runtime Package
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Package <+ Module
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Package <+ Module <+ Code Unit
-  - CAPRMEDIO_MODEL <+ Term//Entity
-  - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom/(.Header.Role: Method)/(.Header.Form: Term Definition)'
-  - CAPRMEDIO_MODEL <+ Atom.Header.Subjects
-  - CAPRMEDIO_MODEL <+ Term
-  - CAPRMEDIO_MODEL <+ Project
-  - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom/(.Header.Role: Requirement)/(.Header.Form: Entity Definition)'
-  - CAPRMEDIO_MODEL <+ Atom.Content
-  - CAPRMEDIO_MODEL <+ Entity
-  - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Terms Graph)'
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Concern)
-  - CAPRMEDIO_MODEL <+ Term//Artifact
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ Actor
-  - CAPRMEDIO_MODEL <+ Projection
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - ANECHOIC_MODEL <+ Package
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Package/Eval Package
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Package/Runtime Package
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Package <+ Module
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Package <+ Module <+ Code Unit
+  - ANECHOIC_MODEL <+ Term//Entity
+  - 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom/(.Header.Role: Method)/(.Header.Form: Term Definition)'
+  - ANECHOIC_MODEL <+ Atom.Header.Subjects
+  - ANECHOIC_MODEL <+ Term
+  - ANECHOIC_MODEL <+ Project
+  - 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom/(.Header.Role: Requirement)/(.Header.Form: Entity Definition)'
+  - ANECHOIC_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ Entity
+  - 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Terms Graph)'
+  - ANECHOIC_MODEL <+ Atom/(.Header.Role := Concern)
+  - ANECHOIC_MODEL <+ Term//Artifact
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Actor
+  - ANECHOIC_MODEL <+ Projection
+  - ANECHOIC_MODEL <+ CFEL <+ Relation
 version: 34
 updated_at: 2026-11-02 00:18:22 +0400
 relations:

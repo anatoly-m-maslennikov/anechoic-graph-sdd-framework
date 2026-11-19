@@ -23,7 +23,7 @@ class SavedPublicLinksTests(unittest.TestCase):
             saved = {"saved_query_id": "q_1"}
             unknown = provider.present_result("query_run", saved, context)
             self.assertEqual({**saved, "saved_query_url": None, "saved_query_url_reason": "workbench_url_unknown"}, unknown)
-            settings = root / ".caprmedio_runtime" / "caprmedio_runtime_settings.toml"
+            settings = root / ".anechoic_runtime" / "anechoic_runtime_settings.toml"
             settings.parent.mkdir()
             settings.write_text('[workbench]\npublic_url = "https://example.test/custom/page"\n')
             linked = provider.present_result("query_saved_list", {"items": [saved]}, context)["items"][0]
@@ -33,7 +33,7 @@ class SavedPublicLinksTests(unittest.TestCase):
             settings.write_text('invalid toml =')
             self.assertIsNone(provider.present_result("query_run", saved, context)["saved_query_url"])
             request = SimpleNamespace(base_url="http://localhost/")
-            self.assertEqual("http://localhost/caprmedio/workbench/alpha?query=q_1", public_saved(saved, request, selection)["saved_query_url"])
+            self.assertEqual("http://localhost/anechoic/workbench/alpha?query=q_1", public_saved(saved, request, selection)["saved_query_url"])
 
 
 if __name__ == "__main__":

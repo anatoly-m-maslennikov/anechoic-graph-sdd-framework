@@ -5,11 +5,11 @@ cce_form: restriction
 subjects:
   governs:
     occurrent:
-      - CAPRMEDIO General System Prompt Loading
+      - ANECHOIC General System Prompt Loading
   depends_on:
     continuant:
-      - CAPRMEDIO Main Skill
-      - CAPRMEDIO General System Prompt
+      - ANECHOIC Main Skill
+      - ANECHOIC General System Prompt
 version: 1
 updated_at: 2026-08-30 16:32:06 +0400
 llm_session_ids:
@@ -18,4 +18,4 @@ relations: {}
 ---
 # Restrict General System Prompt Loading to Main Skill
 
-**only** the CAPRMEDIO Main Skill **may** load the CAPRMEDIO General System Prompt.
+**only** the ANECHOIC Main Skill **may** load the ANECHOIC General System Prompt.

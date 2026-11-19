@@ -1,0 +1,25 @@
+---
+atom_id: CA-R-2256@3-draft
+current_scope_unit: anechoic
+status: Draft
+tier: 1
+subjects:
+  active: Node/Continuant//ANECHOIC Framework
+relations: {}
+version: 3
+role: Requirement
+form: Declaration
+---
+## Summary
+
+Define the ANECHOIC Framework product
+
+## Claim
+
+```CFEL
+Node/Continuant//ANECHOIC Framework{:1}
+```
+
+## Semantics
+
+ANECHOIC Framework is the product produced by the anechoic Project. It has required capabilities.

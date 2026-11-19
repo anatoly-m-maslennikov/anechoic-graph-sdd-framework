@@ -16,4 +16,4 @@ llm_session_ids:
 ---
 # Define Framework Instance Settings
 
-the Term Framework Instance Settings **means** the authoritative Artifact containing explicit Operator-selected behavior **and** configuration choices for **`=1`** CAPRMEDIO Framework Instance serving **`=1`** Project.
+the Term Framework Instance Settings **means** the authoritative Artifact containing explicit Operator-selected behavior **and** configuration choices for **`=1`** ANECHOIC Framework Instance serving **`=1`** Project.

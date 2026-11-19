@@ -7,8 +7,8 @@ export function newView(number) {
 }
 
 export function storageKey(projectName, workspaceId, projectRoot) {
-  if (!workspaceId) return `caprmedio.workbench.${projectName}.workspace`;
-  return `caprmedio.workbench.${projectRoot || projectName}.workspace.${workspaceId}`;
+  if (!workspaceId) return `anechoic.workbench.${projectName}.workspace`;
+  return `anechoic.workbench.${projectRoot || projectName}.workspace.${workspaceId}`;
 }
 
 export function persistable(tabs, activeId) {

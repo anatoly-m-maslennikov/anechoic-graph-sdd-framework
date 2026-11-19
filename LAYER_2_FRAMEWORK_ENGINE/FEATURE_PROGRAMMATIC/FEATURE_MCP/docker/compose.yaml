@@ -10,7 +10,7 @@ x-runtime-logging: &runtime-logging
     max-buffer-size: "1m"
 
 x-runtime: &runtime
-  image: ${CAPRMEDIO_IMAGE:-caprmedio-runtime:local}
+  image: ${ANECHOIC_IMAGE:-anechoic-runtime:local}
   logging: *runtime-logging
   init: true
   read_only: true
@@ -24,11 +24,11 @@ x-runtime: &runtime
 
 x-project-mounts: &project-mounts
   - type: bind
-    source: ${CAPRMEDIO_PROJECT_ROOT}
+    source: ${ANECHOIC_PROJECT_ROOT}
     target: /project
     bind: {create_host_path: false}
   - type: bind
-    source: ${CAPRMEDIO_PROJECT_ROOT}/.git
+    source: ${ANECHOIC_PROJECT_ROOT}/.git
     target: /project/.git
     read_only: true
     bind: {create_host_path: false}
@@ -40,7 +40,7 @@ services:
     stdin_open: true
     profiles: [stdio]
     environment:
-      CAPRMEDIO_RUNTIME_NAMESPACE: docker
+      ANECHOIC_RUNTIME_NAMESPACE: docker
     volumes: *project-mounts
     networks: [runtime]
 

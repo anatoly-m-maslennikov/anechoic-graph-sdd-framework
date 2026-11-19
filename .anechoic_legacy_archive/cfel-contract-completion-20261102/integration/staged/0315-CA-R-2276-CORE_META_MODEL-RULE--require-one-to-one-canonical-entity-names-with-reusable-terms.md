@@ -21,7 +21,7 @@ Require one-to-one canonical entity names with reusable Terms
 
 ## Claim scope
 
-Every entity represented in the Subject Graph, every declared Relation Type entity, and every authored occurrence mentioning one of those entities in CAPRMEDIO Controlled English.
+Every entity represented in the Subject Graph, every declared Relation Type entity, and every authored occurrence mentioning one of those entities in ANECHOIC Controlled English.
 
 ## Claim
 

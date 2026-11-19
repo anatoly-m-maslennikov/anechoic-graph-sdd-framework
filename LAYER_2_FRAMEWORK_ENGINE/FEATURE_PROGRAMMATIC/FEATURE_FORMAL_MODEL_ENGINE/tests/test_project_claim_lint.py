@@ -26,7 +26,7 @@ class ProjectClaimLintTests(unittest.TestCase):
     def test_direct_and_legacy_relation_declaration_subjects(self):
         view = {"content_role": "Requirement", "type": "Relation Declaration"}
         for branch in ("", "CFEL <+ "):
-            subject = f"CAPRMEDIO_MODEL <+ {branch}Relation//SPECIALIZES"
+            subject = f"ANECHOIC_MODEL <+ {branch}Relation//SPECIALIZES"
             with self.subTest(subject=subject):
                 self.assertEqual(
                     _relation_declaration_context(dict(view, subjects={"active": subject})), "SPECIALIZES",
@@ -50,7 +50,7 @@ class ProjectClaimLintTests(unittest.TestCase):
                 (directory / f"{ref}-{form.upper()}--fixture.md").write_text(
                     f'---\natom_id: {atom_id}\nrole: Requirement\nform: {form}\n'
                     f'status: {status}\nversion: 1\nupdated_at: "2026-01-01T00:00:00Z"\n'
-                    f'subjects:\n  governs: {json.dumps("CAPRMEDIO_MODEL <+ " + subject)}\n---\n'
+                    f'subjects:\n  governs: {json.dumps("ANECHOIC_MODEL <+ " + subject)}\n---\n'
                     f'\n## Summary\n\nFixture\n\n## Claim\n\n### Formal Claim\n\n'
                     f'```{language}\n{claim}\n```\n', encoding="utf-8",
                 )
@@ -59,7 +59,7 @@ class ProjectClaimLintTests(unittest.TestCase):
             write(10, "Atom", 'subject_path(address="Atom")')
             write(11, "Atom.Name", 'property_rule(address="Atom.Name", value_format="string", values="1")')
             write(12, "Relation//HAS_PROPERTY",
-                  'from caprmedio.formal_claims import declare_relation\n'
+                  'from anechoic.formal_claims import declare_relation\n'
                   'declare_relation(relation_name="HAS_PROPERTY", source_endpoint={"level": "instances"}, '
                   'target_endpoint={"level": "instances"})')
             write(14, "Atom.Unapproved", 'property_rule(address="Atom.Unapproved", value_format="string", values="1")',
@@ -77,13 +77,13 @@ class ProjectClaimLintTests(unittest.TestCase):
                                      status="Draft", directory=draft)
             syntax = write(19, "Atom.Name", 'property_rule(', status="Draft", directory=draft)
             write(20, "Relation//CONTAINS",
-                  'from caprmedio.formal_claims import declare_relation\n'
+                  'from anechoic.formal_claims import declare_relation\n'
                   'declare_relation(relation_name="CONTAINS", source_endpoint={"level": "instances"}, '
                   'target_endpoint={"level": "instances"}, written_alias="<+")')
             composition = write(21, "Atom.Name", 'composition(container="Atom", parts=("Atom.Name",))',
                                 status="Draft", directory=draft)
             write(22, "Relation//HAS_CLASSIFICATION",
-                  'from caprmedio.formal_claims import declare_relation\n'
+                  'from anechoic.formal_claims import declare_relation\n'
                   'declare_relation(relation_name="HAS_CLASSIFICATION", source_endpoint={"level": "instances"}, '
                   'target_endpoint={"level": "instances"})')
             unbound_alias = write(23, "Atom.Name", 'classify(address="Atom", axis="Role", value="Method")',

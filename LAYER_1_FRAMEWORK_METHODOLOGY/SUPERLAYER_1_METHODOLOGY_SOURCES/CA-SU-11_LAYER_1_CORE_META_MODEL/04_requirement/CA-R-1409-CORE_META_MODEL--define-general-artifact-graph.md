@@ -6,15 +6,15 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Projection
+  main_subject: ANECHOIC_MODEL <+ Projection
   dependencies:
-  - CAPRMEDIO_MODEL <+ Term//Artifact
-  - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ Carrier
-  - CAPRMEDIO_MODEL <+ Relation
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Journal
+  - ANECHOIC_MODEL <+ Term//Artifact
+  - ANECHOIC_MODEL <+ Entity
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Carrier
+  - ANECHOIC_MODEL <+ Relation
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Journal
 tier: 1
 status: Active
 version: 30
@@ -22,7 +22,7 @@ updated_at: 2026-11-02 00:18:22 +0400
 carrier_destination:
   file:
     name: CA-R-1409-CORE_META_MODEL-RULE--define-general-artifact-graph.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---

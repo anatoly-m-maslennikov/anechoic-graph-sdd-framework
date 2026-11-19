@@ -52,25 +52,25 @@ class SubjectProjectionDataTests(unittest.TestCase):
 
     def test_keeps_explicit_new_namespace_roots(self):
         data = build_subject_projection_data([
-            carrier("CA-R-1", "CAPRMEDIO_MODEL", claim("Model root.")),
-            carrier("CA-R-2", "CAPRMEDIO_MODEL <+ Node", claim("Node.")),
-            carrier("CA-R-3", "CAPRMEDIO_STRUCTURE <+ Project", claim("Project.")),
+            carrier("CA-R-1", "ANECHOIC_MODEL", claim("Model root.")),
+            carrier("CA-R-2", "ANECHOIC_MODEL <+ Node", claim("Node.")),
+            carrier("CA-R-3", "ANECHOIC_STRUCTURE <+ Project", claim("Project.")),
         ])
         self.assertEqual(
-            [("CAPRMEDIO_MODEL", "CA-R-1"), ("CAPRMEDIO_STRUCTURE", "CA-R-3")],
+            [("ANECHOIC_MODEL", "CA-R-1"), ("ANECHOIC_STRUCTURE", "CA-R-3")],
             [(row["subject"], row["source"]["atom_id"]) for row in data["namespaces"]],
         )
 
     def test_keeps_one_explicit_root_namespace_context_and_uses_prefix_only_as_fallback(self):
         data = build_subject_projection_data([
-            carrier("CA-R-1", "CAPRMEDIO <+ MODEL", claim("Model root.")),
-            carrier("CA-R-2", "CAPRMEDIO <+ MODEL <+ Node", claim("Node declaration.")),
-            carrier("CA-R-3", "CAPRMEDIO <+ STRUCTURE <+ Project", claim("Project declaration.")),
-            carrier("CA-R-4", "CAPRMEDIO <+ OTHER <+ Ignored", claim("Other declaration.")),
+            carrier("CA-R-1", "ANECHOIC <+ MODEL", claim("Model root.")),
+            carrier("CA-R-2", "ANECHOIC <+ MODEL <+ Node", claim("Node declaration.")),
+            carrier("CA-R-3", "ANECHOIC <+ STRUCTURE <+ Project", claim("Project declaration.")),
+            carrier("CA-R-4", "ANECHOIC <+ OTHER <+ Ignored", claim("Other declaration.")),
         ])
 
         self.assertEqual(
-            [("CAPRMEDIO <+ MODEL", "CA-R-1"), ("CAPRMEDIO <+ STRUCTURE", "CA-R-3")],
+            [("ANECHOIC <+ MODEL", "CA-R-1"), ("ANECHOIC <+ STRUCTURE", "CA-R-3")],
             [(row["subject"], row["source"]["atom_id"]) for row in data["namespaces"]],
         )
 

@@ -6,9 +6,9 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Data Validation"
+  main_subject: "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Data Validation"
   dependencies:
-  - CAPRMEDIO_MODEL <+ Entity/Object/Occurrent/Runtime/Session
+  - ANECHOIC_MODEL <+ Entity/Object/Occurrent/Runtime/Session
 tier: 2
 status: Active
 version: 34
@@ -16,11 +16,11 @@ updated_at: 2026-11-02 18:35:20 +0400
 carrier_destination:
   file:
     name: CA-R-1650-CORE_META_MODEL-RULE--define-the-bounded-session-state-envelope.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1650-CORE_META_MODEL-RULE--define-the-bounded-session-state-envelope.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1650-CORE_META_MODEL-RULE--define-the-bounded-session-state-envelope.md
   source_atom_id: CA-R-1650
   source_atom_revision: 34
   source_sha256: 752395a677e17ee95e5ebbc64832c291dc2c105153931828d612b845f60c69b8

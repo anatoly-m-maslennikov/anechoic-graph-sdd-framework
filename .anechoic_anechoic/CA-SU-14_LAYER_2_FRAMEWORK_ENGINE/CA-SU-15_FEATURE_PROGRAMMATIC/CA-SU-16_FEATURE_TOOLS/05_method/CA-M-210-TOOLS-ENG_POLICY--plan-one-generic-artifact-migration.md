@@ -1,0 +1,46 @@
+---
+atom_id: CA-M-210
+ref_id: CA-M-210
+container:
+  scope_unit: CA-SU-16
+role: Method
+form: Eng Policy
+topics:
+  main_subject: "Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control"
+tier: 2
+relations:
+  method_for:
+  - CA-R-1138
+  derived_from:
+  - CA-A-058
+status: Active
+version: 20
+updated_at: 2026-11-02 19:44:26 +0400
+cce_version: cce_1
+cce_form: method
+llm_session_ids:
+- codex:01a02650-eff7-7453-8c37-0699b36773c6
+author: Anatoly Maslennikov
+current_scope_unit: TOOLS
+---
+# Plan one generic Artifact migration
+
+## Applicable when
+
+use this Method **when** a declared generic Artifact transformation **must** be expanded into a reviewable read-only migration plan.
+
+## Procedure
+
+1. accept one declared transformation rule **and** bounded source frontier **in** read-only mode.
+2. resolve **every** source carrier **and** derive its preconditions, old-to-new identity mapping, collision checks, required reference rewrites, affected Projections, **and** expected postconditions.
+3. record the source frontier identities, revisions **or** digests, transformation inputs, **and** complete derived effect set **in** a stable order.
+4. mark the result as a plan **only**: it grants neither approval nor mutation authority.
+5. return explicit unresolved, ambiguous, **and** collision findings rather than omitting affected carriers **or** effects.
+
+## Outcome
+
+one reviewable migration plan describes the complete expected transformation of the declared unchanged source frontier **without** mutating it.
+
+## Failure or stop
+
+do **not** mutate **any** carrier, reference, Projection, **or** Journal; stop on an invalid transformation, unresolved source, ambiguous mapping, **or** collision.

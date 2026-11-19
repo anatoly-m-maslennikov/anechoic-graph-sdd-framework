@@ -6,16 +6,16 @@ container:
 role: Operations
 form: Action
 topics:
-  main_subject: Subject/caprmedio/Action//Assess Lineage Impact
+  main_subject: Subject/anechoic/Action//Assess Lineage Impact
   dependencies:
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Operations/Type:
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Atom/Content Role: Operations/Type:
     Action'
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom.Header.State.Version Number
-  - Subject/CAPRMEDIO/Graph/Relation
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Analysis & Advisory'
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Actor/Type: Operator'
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Actor/Type: AI Agent'
+  - Subject/ANECHOIC/Graph/Node/Project Model/Atom
+  - Subject/ANECHOIC/Graph/Node/Project Model/Atom.Header.State.Version Number
+  - Subject/ANECHOIC/Graph/Relation
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Atom/Content Role: Analysis & Advisory'
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Actor/Type: Operator'
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Actor/Type: AI Agent'
 tier: 3
 status: Active
 version: 20
@@ -23,12 +23,12 @@ updated_at: 2026-11-02 15:49:28 +0400
 carrier_destination:
   file:
     name: CA-O-058-PROJECT_CONFIGURATION-ACTION--assess-revision-impact-through-lineage.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: PROJECT_CONFIGURATION
 author: Anatoly Maslennikov
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-058-PROJECT_CONFIGURATION-ACTION--assess-revision-impact-through-lineage.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-058-PROJECT_CONFIGURATION-ACTION--assess-revision-impact-through-lineage.md
   source_atom_id: CA-O-058
   source_atom_revision: 20
   source_sha256: f04823981e50658228c0c8e96b07804b0838f85d44dade5131471a4be0ce18bc

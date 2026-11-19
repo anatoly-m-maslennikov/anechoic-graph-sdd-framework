@@ -6,7 +6,7 @@ version: 20
 updated_at: "2026-10-03 02:00:11 +0400"
 relations:
   child_of:
-    - CAPRMEDIO-R-791
+    - ANECHOIC-R-791
 atom_id: "CA-R-1677"
 content_role: "Requirement"
 current_scope_unit: "CORE_META_MODEL"

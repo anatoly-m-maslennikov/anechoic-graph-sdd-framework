@@ -8,7 +8,7 @@ updated_at: "2026-10-02 23:35:16 +0400"
 relations:
   child_of:
     - "CA-R-1708"
-    - CAPRMEDIO-META-REQU-128--separate-artifact-carrier-and-revision
+    - ANECHOIC-META-REQU-128--separate-artifact-carrier-and-revision
 atom_id: "CA-R-1495"
 content_role: "Requirement"
 current_scope_unit: "CORE_META_MODEL"

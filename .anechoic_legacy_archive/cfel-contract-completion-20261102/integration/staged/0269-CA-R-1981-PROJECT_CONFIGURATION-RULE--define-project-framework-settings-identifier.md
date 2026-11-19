@@ -24,8 +24,8 @@ the Identifier of the Project’s authoritative Framework Instance Settings Carr
 
 ## Claim
 
-The Identifier of the Project’s authoritative Framework Instance Settings Carrier is `caprmedio_framework_settings`.
+The Identifier of the Project’s authoritative Framework Instance Settings Carrier is `anechoic_framework_settings`.
 
 ## Details
 
-Evidence: CA-R-1402@27 defines the owning configuration; CA-R-1404 keeps it outside the Atom type; CA-D-358 supplies its concrete identifier. Candidate #6 decision 11 places Project under Continuant; concrete CAPRMEDIO identity encodings belong in Project Configuration. This definition does not duplicate the concrete identifier spelling or create an Atom ID.
+Evidence: CA-R-1402@27 defines the owning configuration; CA-R-1404 keeps it outside the Atom type; CA-D-358 supplies its concrete identifier. Candidate #6 decision 11 places Project under Continuant; concrete ANECHOIC identity encodings belong in Project Configuration. This definition does not duplicate the concrete identifier spelling or create an Atom ID.

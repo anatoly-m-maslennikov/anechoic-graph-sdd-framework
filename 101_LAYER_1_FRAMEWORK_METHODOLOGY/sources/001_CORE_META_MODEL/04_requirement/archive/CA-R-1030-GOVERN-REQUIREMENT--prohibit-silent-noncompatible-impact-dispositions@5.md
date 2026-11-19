@@ -13,7 +13,7 @@ version: 5
 updated_at: 2026-08-29 02:40:41 +0400
 relations:
   child_of:
-    - CAPRMEDIO-GOV-REQU-310--lineage-impact-dispositions
+    - ANECHOIC-GOV-REQU-310--lineage-impact-dispositions
 ---
 # Prohibit silent non-compatible Impact dispositions
 

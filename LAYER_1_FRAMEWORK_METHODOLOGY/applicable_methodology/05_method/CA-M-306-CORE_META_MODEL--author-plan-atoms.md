@@ -6,17 +6,17 @@ container:
 role: Method
 form: Implementation Method
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)
+  main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan)
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)
-  - CAPRMEDIO_MODEL <+ Atom.Content
-  - CAPRMEDIO_MODEL <+ Atom.Content.Summary
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics.Main Subject
-  - CAPRMEDIO_MODEL <+ Relation//IS_BLOCKED_BY
-  - CAPRMEDIO_MODEL <+ Relation//IS_CONTAINED_BY
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ Carrier/File
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role:=Plan).Header.Context.Topics.Main
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan)
+  - ANECHOIC_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ Atom.Content.Summary
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Topics.Main Subject
+  - ANECHOIC_MODEL <+ Relation//IS_BLOCKED_BY
+  - ANECHOIC_MODEL <+ Relation//IS_CONTAINED_BY
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Carrier/File
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role:=Plan).Header.Context.Topics.Main
     Subject
 tier: 2
 status: Active
@@ -25,9 +25,9 @@ updated_at: 2026-11-08 19:06:46 +0400
 carrier_destination:
   file:
     name: CA-M-306-CORE_META_MODEL--author-plan-atoms.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-306-CORE_META_MODEL--author-plan-atoms.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-306-CORE_META_MODEL--author-plan-atoms.md
   source_atom_id: CA-M-306
   source_atom_revision: 36
   source_sha256: 661de41830d8c1098aebb0b531c5e8a1a03d9263d8685a79310517f2dbd659d1

@@ -19,4 +19,4 @@ type: "Delivery"
 ---
 # Bind Project Settings to its authoritative TOML Carrier
 
-the Project Settings Artifact for a Project named `<project_name>` **must** use `.caprmedio_<project_name>/caprmedio_<project_name>_settings.toml` as its **`=1`** authoritative TOML File Carrier.
+the Project Settings Artifact for a Project named `<project_name>` **must** use `.anechoic_<project_name>/anechoic_<project_name>_settings.toml` as its **`=1`** authoritative TOML File Carrier.

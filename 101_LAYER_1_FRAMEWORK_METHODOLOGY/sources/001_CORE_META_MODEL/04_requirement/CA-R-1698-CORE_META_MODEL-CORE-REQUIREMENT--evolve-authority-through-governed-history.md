@@ -22,10 +22,10 @@ Evolve authority through governed history
 
 ## Scope
 
-governed authority in CAPRMEDIO.
+governed authority in ANECHOIC.
 
 ## Claim
 
-CAPRMEDIO evolves governed authority through recoverable revisions that preserve the exact historical meaning on which accepted downstream work relied.
+ANECHOIC evolves governed authority through recoverable revisions that preserve the exact historical meaning on which accepted downstream work relied.
 
 ## Details

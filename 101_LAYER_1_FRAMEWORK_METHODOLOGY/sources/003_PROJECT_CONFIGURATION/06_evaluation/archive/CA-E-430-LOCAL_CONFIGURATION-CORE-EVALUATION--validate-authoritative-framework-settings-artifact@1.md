@@ -24,4 +24,4 @@ relations:
 ---
 # Validate Authoritative Framework Settings Artifact
 
-the Evaluation **must** reject caprmedio_framework_settings **if** it is treated as an Atom, has an Atom ID **or** Atom Content Role, has other than **`=1`** authoritative TOML Carrier, resolves from another Carrier, **or** lacks an exact current Revision, SHA-256 Digest, **and** governed-commit Work Journal receipt.
+the Evaluation **must** reject anechoic_framework_settings **if** it is treated as an Atom, has an Atom ID **or** Atom Content Role, has other than **`=1`** authoritative TOML Carrier, resolves from another Carrier, **or** lacks an exact current Revision, SHA-256 Digest, **and** governed-commit Work Journal receipt.

@@ -13,4 +13,4 @@ relations:
 ---
 # Resolve Both Settings Artifacts and the Scope Unit Graph Separately
 
-**every** CAPRMEDIO Skill **must** resolve caprmedio_framework_settings through its authoritative TOML Carrier, resolve caprmedio_<project_name>_settings through the authoritative Project Settings TOML Carrier for the current Project, **and** resolve the Project Scope Unit Graph through its registered generated Projection addresses, **without** substituting a Projection for either settings authority **or** treating either Settings Artifact as derived graph state.
+**every** ANECHOIC Skill **must** resolve anechoic_framework_settings through its authoritative TOML Carrier, resolve anechoic_<project_name>_settings through the authoritative Project Settings TOML Carrier for the current Project, **and** resolve the Project Scope Unit Graph through its registered generated Projection addresses, **without** substituting a Projection for either settings authority **or** treating either Settings Artifact as derived graph state.

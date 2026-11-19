@@ -18,11 +18,11 @@ from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.saved_queries import SavedQueryStor
 
 
 def _settings(root: Path) -> Path:
-    control = root / ".caprmedio_demo"
+    control = root / ".anechoic_demo"
     control.mkdir()
-    (control / "caprmedio_project_settings.toml").write_text(
-        '[project]\nname = "demo"\n[paths]\ncontrol_root = ".caprmedio_demo"\n'
-        'journal_root = ".caprmedio_demo/_journal"\nruntime_root = ".caprmedio_runtime"\n',
+    (control / "anechoic_project_settings.toml").write_text(
+        '[project]\nname = "demo"\n[paths]\ncontrol_root = ".anechoic_demo"\n'
+        'journal_root = ".anechoic_demo/_journal"\nruntime_root = ".anechoic_runtime"\n',
         encoding="utf-8",
     )
     return control

@@ -4,7 +4,7 @@ subjects:
   depends_on: []
 version: 19
 updated_at: "2026-09-17 05:10:56 +0000"
-relations: {"child_of":["CA-R-1698","CA-R-1502","CAPRMEDIO-REQU-686-CORE-REQUIREMENT--separate-core-extension-and-project-configuration-authority"]}
+relations: {"child_of":["CA-R-1698","CA-R-1502","ANECHOIC-REQU-686-CORE-REQUIREMENT--separate-core-extension-and-project-configuration-authority"]}
 atom_id: "CA-R-1769"
 content_role: "Requirement"
 current_scope_unit: "PROJECT_CONFIGURATION"

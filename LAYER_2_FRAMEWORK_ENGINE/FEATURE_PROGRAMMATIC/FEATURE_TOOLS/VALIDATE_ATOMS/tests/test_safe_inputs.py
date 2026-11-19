@@ -48,7 +48,7 @@ class CarrierTests(unittest.TestCase):
 
 class ReadTests(unittest.TestCase):
     def setUp(self) -> None:
-        parent = HERE.parents[4] / ".caprmedio_tmp"
+        parent = HERE.parents[4] / ".anechoic_tmp"
         parent.mkdir(exist_ok=True)
         self.root = Path(tempfile.mkdtemp(dir=parent, prefix="validator-input-test-"))
         self.limits = dict(

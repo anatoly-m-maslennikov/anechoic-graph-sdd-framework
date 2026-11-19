@@ -1,0 +1,54 @@
+---
+atom_id: CA-P-1739
+ref_id: CA-P-1739
+role: Plan
+form: Plan
+label: Task
+topics:
+  main_subject: Subject/Graph Node/Engineering/Release Version/Installed Delivery Verification
+  dependencies:
+  - Subject/Graph Node/Engineering/Implementation
+  - Subject/Graph Node/Engineering/Implementation Evaluation
+  - Subject/Graph Node/Engineering/Release Version/Runtime Package Carrier
+  - 'Subject/Graph Node/Domain/Continuant/Projection/Type: Applicable Methodology'
+  - Subject/Graph Node/Engineering/Image
+  - Subject/Graph Node/Domain/Continuant/History/Journal
+  - Subject/Graph Node/Engineering/ANECHOIC Main Skill
+tier: 3
+relations:
+  is_decomposition_of:
+  - CA-P-1714
+status: Done
+version: 11
+updated_at: 2026-10-25 17:32:27 +0400
+work_sequence_number: 8
+current_scope_unit: anechoic
+author: Anatoly Maslennikov
+assignee: AI Agent
+autonomous_confidence_threshold: 90
+---
+# Summary
+
+Prove the actual first runtime installation
+
+## Objective
+
+Establish the actual complete Framework N and hook-free project-local ca Skill through the admitted explicit Action.
+
+## Details
+
+Require fresh canonical compilation, real immutable image build/inspection/canary and canonical started/terminal Journal evidence. Retain old Runs and rollback data. If permissions deny a real operation, preserve its actual state and leave this Task Active. Expected bounded effort: <=15 minutes; decompose further if necessary.
+
+## Definition of Done
+
+The actual admitted installation and its current package, Skill, selector, immutable image and canonical Action proof are independently verified. Source and mock evidence alone do not satisfy this Task.
+
+## Actual first-N acceptance
+
+Run `first-framework-runtime-20261006-03` completed the admitted O180 installation. Independently verified package and selector SHA `6f2e3a615a4f4d6da0f16831800f9e4b7ff84f89b89faeefc359f51711d28c57`: all 15,135 package rows match exact bytes, modes and complete path set (694 Engine, 14,439 Methodology and two Skill resources). Public `.agents/skills/ca` has exactly the two hook-free packaged files.
+
+Immutable image `sha256:79899cfe59fb36c8da5ce1c12ea52c529a61738e51100b3d3e8488c52496d54e` passed actual build, inspection and complete-package/MCP canary, all exit 0 with no timeout. The canary verified 15,135 files and 28 MCP Tools; independent acceptance reopened retained receipts and performed a fresh read-only immutable-image inspection. Bootstrap receipt SHA: `b804cc3800566489ee875ce25e5be6be742cc46ec7ad5f3503a2851f10606e59`.
+
+Canonical started/completed Action facts and persisted receipts match the exact immutable installation intent and all four effects. Completed event: `.anechoic_anechoic/_journal/anatoly-m-maslennikov-2026-10-06-part-1.ndjson`, line 2, digest `203fa0be69330ec6531738e2749b11b66e60577b11022e5409361431cf4632f1`. The retained result's pre-terminal `published_pending_terminal` state is closed by this canonical terminal fact, not relabeled as an independent final-state ledger.
+
+This closes CA-P-1739's first-install scope only. N-to-N+1 complete-suite, candidate E2E, promotion and deferred retirement remain separate unfinished Release gates; installed N remains immutable and available as the working baseline.

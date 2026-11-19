@@ -21,8 +21,8 @@ relations:
     - CA-R-1493
     - CA-R-1616
     - CA-R-1617
-    - CAPRMEDIO-META-REQU-097
-    - CAPRMEDIO-META-REQU-657
+    - ANECHOIC-META-REQU-097
+    - ANECHOIC-META-REQU-657
 global_tier: 11
 ---
 # Summary

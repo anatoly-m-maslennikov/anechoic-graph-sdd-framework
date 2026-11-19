@@ -17,11 +17,11 @@ version: 1
 updated_at: "2026-09-11 18:18:55 +0400"
 relations:
   relates_to:
-    - "CAPRMEDIO-GOV-REQU-294"
+    - "ANECHOIC-GOV-REQU-294"
     - "CA-R-1439"
     - "CA-R-1440"
     - "CA-M-137"
-    - "CAPRMEDIO-META-REQU-675"
+    - "ANECHOIC-META-REQU-675"
 ---
 # Report in verbose mode
 

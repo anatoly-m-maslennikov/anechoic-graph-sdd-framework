@@ -21,21 +21,21 @@ IMMUTABLE_IMAGE = "sha256:" + "a" * 64
 class ImageOverrideTests(unittest.TestCase):
     def test_runtime_uses_explicit_immutable_image(self):
         self.assertEqual(
-            IMMUTABLE_IMAGE, runtime.image_reference({"CAPRMEDIO_IMAGE": IMMUTABLE_IMAGE})
+            IMMUTABLE_IMAGE, runtime.image_reference({"ANECHOIC_IMAGE": IMMUTABLE_IMAGE})
         )
         with tempfile.TemporaryDirectory() as directory:
             instance = runtime.Runtime(Path(directory), image=IMMUTABLE_IMAGE)
-            with patch.dict(runtime.os.environ, {"CAPRMEDIO_IMAGE": "sha256:" + "b" * 64}):
-                self.assertEqual(IMMUTABLE_IMAGE, instance.environment()["CAPRMEDIO_IMAGE"])
+            with patch.dict(runtime.os.environ, {"ANECHOIC_IMAGE": "sha256:" + "b" * 64}):
+                self.assertEqual(IMMUTABLE_IMAGE, instance.environment()["ANECHOIC_IMAGE"])
 
     def test_runtime_empty_override_uses_safe_development_fallback(self):
-        self.assertEqual(IMAGE, runtime.image_reference({"CAPRMEDIO_IMAGE": ""}))
+        self.assertEqual(IMAGE, runtime.image_reference({"ANECHOIC_IMAGE": ""}))
 
     def test_mutable_or_malformed_overrides_are_rejected(self):
         for value in ("alpine:latest", "sha256:" + "A" * 64, "sha256:" + "a" * 63, 1):
             with self.subTest(value=value):
                 with self.assertRaisesRegex(ValueError, "immutable sha256"):
-                    runtime.image_reference({"CAPRMEDIO_IMAGE": value})
+                    runtime.image_reference({"ANECHOIC_IMAGE": value})
 
 
 if __name__ == "__main__":

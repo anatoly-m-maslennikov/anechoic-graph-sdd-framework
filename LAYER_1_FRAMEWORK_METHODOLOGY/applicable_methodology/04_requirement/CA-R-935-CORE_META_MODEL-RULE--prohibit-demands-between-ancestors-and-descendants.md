@@ -6,11 +6,11 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Relation
+  main_subject: ANECHOIC_MODEL <+ Relation
   dependencies:
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ Atom.Local Scope Unit
-  - CAPRMEDIO_MODEL <+ Atom.Target Scope Unit
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Atom.Local Scope Unit
+  - ANECHOIC_MODEL <+ Atom.Target Scope Unit
 tier: 5
 relations:
   child_of:
@@ -21,11 +21,11 @@ updated_at: 2026-11-02 08:06:47 +0400
 carrier_destination:
   file:
     name: CA-R-935-CORE_META_MODEL-RULE--prohibit-demands-between-ancestors-and-descendants.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-935-CORE_META_MODEL-RULE--prohibit-demands-between-ancestors-and-descendants.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-935-CORE_META_MODEL-RULE--prohibit-demands-between-ancestors-and-descendants.md
   source_atom_id: CA-R-935
   source_atom_revision: 37
   source_sha256: 3c4f6326d7654b5d9dc9a809fae3caedeb66d2142126282bdbcecd24387fd60d

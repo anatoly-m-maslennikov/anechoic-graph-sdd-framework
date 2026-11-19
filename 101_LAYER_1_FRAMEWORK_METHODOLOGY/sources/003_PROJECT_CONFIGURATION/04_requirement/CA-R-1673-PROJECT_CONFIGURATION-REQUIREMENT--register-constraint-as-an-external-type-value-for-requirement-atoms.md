@@ -5,7 +5,7 @@ subjects:
 version: 23
 updated_at: "2026-10-03 01:51:15 +0400"
 relations:
-  {"child_of": ["CAPRMEDIO-META-REQU-740--separate-content-role-from-artifact-type"], "relates_to": ["CA-D-393"], "depends_on": ["CA-R-1690"]}
+  {"child_of": ["ANECHOIC-META-REQU-740--separate-content-role-from-artifact-type"], "relates_to": ["CA-D-393"], "depends_on": ["CA-R-1690"]}
 atom_id: "CA-R-1673"
 content_role: "Requirement"
 current_scope_unit: "PROJECT_CONFIGURATION"

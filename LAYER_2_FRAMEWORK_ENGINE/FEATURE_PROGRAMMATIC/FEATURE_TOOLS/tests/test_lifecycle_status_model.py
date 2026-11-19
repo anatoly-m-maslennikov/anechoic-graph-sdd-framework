@@ -12,7 +12,7 @@ from ATOM_LIFECYCLE.status_model import StatusModel, StatusModelError, canonical
 from carrier_aliases import carrier_read_view  # noqa: E402
 
 ROOT = TOOLS.parents[2]
-CORE = ROOT / '.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement'
+CORE = ROOT / '.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement'
 
 
 class StatusModelTests(unittest.TestCase):

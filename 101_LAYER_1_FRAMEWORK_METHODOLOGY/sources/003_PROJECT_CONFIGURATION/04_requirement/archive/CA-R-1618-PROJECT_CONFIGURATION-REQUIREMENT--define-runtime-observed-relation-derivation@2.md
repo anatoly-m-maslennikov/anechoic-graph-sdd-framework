@@ -21,8 +21,8 @@ relations:
   relates_to:
     - CA-R-1616
     - CA-R-1617
-    - CAPRMEDIO-META-REQU-097
-    - CAPRMEDIO-META-REQU-657
+    - ANECHOIC-META-REQU-097
+    - ANECHOIC-META-REQU-657
 ---
 # Summary
 

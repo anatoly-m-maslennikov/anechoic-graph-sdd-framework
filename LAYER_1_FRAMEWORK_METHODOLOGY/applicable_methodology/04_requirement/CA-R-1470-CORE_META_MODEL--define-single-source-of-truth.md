@@ -6,14 +6,14 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Entity
+  main_subject: ANECHOIC_MODEL <+ Entity
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Atom.Content
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ Carrier
-  - CAPRMEDIO_MODEL <+ Journal
-  - CAPRMEDIO_MODEL <+ Projection
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Carrier
+  - ANECHOIC_MODEL <+ Journal
+  - ANECHOIC_MODEL <+ Projection
 tier: 1
 status: Active
 version: 27
@@ -21,11 +21,11 @@ updated_at: 2026-11-02 19:44:26 +0400
 carrier_destination:
   file:
     name: CA-R-1470-CORE_META_MODEL-RULE--define-single-source-of-truth.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1470-CORE_META_MODEL--define-single-source-of-truth.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1470-CORE_META_MODEL--define-single-source-of-truth.md
   source_atom_id: CA-R-1470
   source_atom_revision: 27
   source_sha256: daf779b0fae6136d706adea7dc68b543415b02dbec39ceb8800284afa70bb1e4

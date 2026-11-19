@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Relation//IS_BLOCKED_BY
+  main_subject: ANECHOIC_MODEL <+ Relation//IS_BLOCKED_BY
 tier: 1
 status: active
 version: 3
@@ -14,7 +14,7 @@ updated_at: 2026-11-05 18:23:39 +0400
 carrier_destination:
   file:
     name: CA-R-2762-CORE_META_MODEL-DECLARATION--declare-is-blocked-by.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 ---
 
 ## Summary
@@ -30,7 +30,7 @@ A dependent Plan may start only after each Plan it is blocked by is Done. BLOCKS
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_relation
+from anechoic.formal_claims import declare_relation
 
 declare_relation(
     relation_name="IS_BLOCKED_BY",

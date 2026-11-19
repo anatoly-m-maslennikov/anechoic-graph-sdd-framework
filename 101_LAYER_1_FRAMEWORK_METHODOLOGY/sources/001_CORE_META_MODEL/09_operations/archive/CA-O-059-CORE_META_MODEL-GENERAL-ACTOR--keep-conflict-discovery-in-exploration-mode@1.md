@@ -12,7 +12,7 @@ version: 1
 updated_at: "2026-09-17 13:50:59 +0000"
 llm_session_ids:
   - codex:01a02650-eff7-7453-8c37-0699b36773c6
-relations: {"child_of":["CAPRMEDIO-META-REQU-114"]}
+relations: {"child_of":["ANECHOIC-META-REQU-114"]}
 ---
 # Keep conflict discovery in Exploration Mode
 

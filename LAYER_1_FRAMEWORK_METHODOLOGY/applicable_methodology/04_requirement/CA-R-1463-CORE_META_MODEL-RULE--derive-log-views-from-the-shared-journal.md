@@ -6,15 +6,15 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Projection
+  main_subject: ANECHOIC_MODEL <+ Projection
   dependencies:
-  - CAPRMEDIO_MODEL <+ Journal
-  - CAPRMEDIO_MODEL <+ Event Record
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Action)'
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow)'
-  - CAPRMEDIO_MODEL <+ Project
-  - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/Type: Artifact Change Log'
-  - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/Type: Process Log'
+  - ANECHOIC_MODEL <+ Journal
+  - ANECHOIC_MODEL <+ Event Record
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Action)'
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow)'
+  - ANECHOIC_MODEL <+ Project
+  - 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Projection/Type: Artifact Change Log'
+  - 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Projection/Type: Process Log'
 tier: 2
 status: Active
 version: 26
@@ -22,11 +22,11 @@ updated_at: 2026-11-02 00:18:22 +0400
 carrier_destination:
   file:
     name: CA-R-1463-CORE_META_MODEL-RULE--derive-log-views-from-the-shared-journal.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1463-CORE_META_MODEL-RULE--derive-log-views-from-the-shared-journal.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1463-CORE_META_MODEL-RULE--derive-log-views-from-the-shared-journal.md
   source_atom_id: CA-R-1463
   source_atom_revision: 26
   source_sha256: b80bec35b55e9ff8ff365fc99a7878d8c94ecf1f7fd265fa2ae7d9ea7c0b3e46

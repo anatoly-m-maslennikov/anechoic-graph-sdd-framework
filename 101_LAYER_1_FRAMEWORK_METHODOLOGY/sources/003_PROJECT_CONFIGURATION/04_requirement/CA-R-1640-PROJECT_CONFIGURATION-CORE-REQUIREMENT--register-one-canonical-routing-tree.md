@@ -1,6 +1,6 @@
 ---
 subjects:
-  governs: "CAPRMEDIO Routing Tree"
+  governs: "ANECHOIC Routing Tree"
   depends_on: []
 version: 19
 updated_at: "2026-10-03 01:23:33 +0400"
@@ -20,7 +20,7 @@ Register one canonical routing tree
 
 ## Scope
 
-machine-readable and human-readable CAPRMEDIO Routing Trees.
+machine-readable and human-readable ANECHOIC Routing Trees.
 
 ## Claim
 

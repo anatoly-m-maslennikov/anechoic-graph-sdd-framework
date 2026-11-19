@@ -21,7 +21,7 @@ how should the identified Draft Atom be reconciled **with** active authority **a
 
 ## Draft under review
 
-- Carrier: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/07_delivery/drafts/CA-D--MMODEL-DELIVERY--serialize-claim-target-scope-only-when-needed.md`.
+- Carrier: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/07_delivery/drafts/CA-D--MMODEL-DELIVERY--serialize-claim-target-scope-only-when-needed.md`.
 - inspected SHA-256: `fff5784add64b9e890b544f6a684a725aecb162d9ba9870eda81f713a3f9d76c`.
 - review point: 56 of 79; campaign `draft-review-8afeac79`.
 
@@ -33,15 +33,15 @@ how should the identified Draft Atom be reconciled **with** active authority **a
 
 ## Active authority cited by the review
 
-- `CA-D-367@7`: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/07_delivery/CA-D-367-CORE_META_MODEL-DELIVERY--serialize-claim-structural-entity-only-for-relational-atoms.md`; SHA-256 `1c8fc657fad1462771e98190f36f0d0052b5a553fd82e24eaeff0b366b8b1da9`.
+- `CA-D-367@7`: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/07_delivery/CA-D-367-CORE_META_MODEL-DELIVERY--serialize-claim-structural-entity-only-for-relational-atoms.md`; SHA-256 `1c8fc657fad1462771e98190f36f0d0052b5a553fd82e24eaeff0b366b8b1da9`.
 
 ## Principles to apply
 
-- [CA-M-002](.caprmedio_caprmedio/05_method/CA-M-002-PRINCIPLE-METHOD--dry-don-t-repeat-yourself.md).
-- [CA-M-005](.caprmedio_caprmedio/05_method/CA-M-005-PRINCIPLE-METHOD--add-complexity-only-when-necessary.md).
-- [CA-M-006](.caprmedio_caprmedio/05_method/CA-M-006-PRINCIPLE-METHOD--keep-the-whole-project-coherent.md).
-- [CA-R-1490](.caprmedio_caprmedio/04_requirement/CA-R-1490-PRINCIPLE-REQUIREMENT--preserve-valuable-information.md).
-- [CA-E-001](.caprmedio_caprmedio/06_evaluation/CA-E-001-PRINCIPLE-EVALUATION--make-governed-commitments-and-results-checkable.md).
+- [CA-M-002](.anechoic_anechoic/05_method/CA-M-002-PRINCIPLE-METHOD--dry-don-t-repeat-yourself.md).
+- [CA-M-005](.anechoic_anechoic/05_method/CA-M-005-PRINCIPLE-METHOD--add-complexity-only-when-necessary.md).
+- [CA-M-006](.anechoic_anechoic/05_method/CA-M-006-PRINCIPLE-METHOD--keep-the-whole-project-coherent.md).
+- [CA-R-1490](.anechoic_anechoic/04_requirement/CA-R-1490-PRINCIPLE-REQUIREMENT--preserve-valuable-information.md).
+- [CA-E-001](.anechoic_anechoic/06_evaluation/CA-E-001-PRINCIPLE-EVALUATION--make-governed-commitments-and-results-checkable.md).
 
 ## Resolution
 

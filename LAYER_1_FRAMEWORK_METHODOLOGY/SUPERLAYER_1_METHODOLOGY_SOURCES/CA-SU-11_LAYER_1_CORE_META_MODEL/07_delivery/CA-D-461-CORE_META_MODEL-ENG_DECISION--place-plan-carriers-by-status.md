@@ -6,10 +6,10 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.State.Status'
+  main_subject: 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.State.Status'
   dependencies:
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.State.Status'
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.State.Status'
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan)
 tier: 1
 status: Active
 version: 33
@@ -17,7 +17,7 @@ updated_at: '2026-11-11T19:06:04+04:00'
 carrier_destination:
   file:
     name: CA-D-461-CORE_META_MODEL-DECISION--place-plan-carriers-by-status.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---

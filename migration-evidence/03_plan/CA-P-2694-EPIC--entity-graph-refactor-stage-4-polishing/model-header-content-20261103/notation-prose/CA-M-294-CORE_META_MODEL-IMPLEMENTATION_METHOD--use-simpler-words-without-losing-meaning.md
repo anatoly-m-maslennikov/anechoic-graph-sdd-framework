@@ -9,12 +9,12 @@ relations:
   - CA-R-940
   - CA-R-941
 subjects:
-  active: CAPRMEDIO_MODEL <+ Atom.Content
+  active: ANECHOIC_MODEL <+ Atom.Content
   passive:
-  - CAPRMEDIO_MODEL <+ Actor
-  - CAPRMEDIO_MODEL <+ Atom.Content.Summary
-  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Authoring <+ Controlled English
-  - CAPRMEDIO_MODEL <+ Term
+  - ANECHOIC_MODEL <+ Actor
+  - ANECHOIC_MODEL <+ Atom.Content.Summary
+  - ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Authoring <+ Controlled English
+  - ANECHOIC_MODEL <+ Term
 atom_id: CA-M-294
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
@@ -32,10 +32,10 @@ Use simpler words without losing meaning
 ### Prose Claim
 
 
-CAPRMEDIO content wording.
+ANECHOIC content wording.
 
 
-**when** choosing wording for CAPRMEDIO content, the Author **must** choose words **and** phrases that are simpler **and** more familiar **to** the intended reader **when** they preserve the intended meaning **without** adding ambiguity.
+**when** choosing wording for ANECHOIC content, the Author **must** choose words **and** phrases that are simpler **and** more familiar **to** the intended reader **when** they preserve the intended meaning **without** adding ambiguity.
 
 ## Details
 

@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Step Run
+  main_subject: ANECHOIC_MODEL <+ Step Run
 tier: 3
 status: active
 version: 1
@@ -14,9 +14,9 @@ updated_at: 2026-11-05 05:27:06 +0400
 carrier_destination:
   file:
     name: CA-R-2751-CORE_META_MODEL-DECLARATION--declare-step-run.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2751-CORE_META_MODEL-DECLARATION--declare-step-run.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2751-CORE_META_MODEL-DECLARATION--declare-step-run.md
   source_atom_id: CA-R-2751
   source_atom_revision: 1
   source_sha256: 9b980c49db7a842c60f83b583463ad46439a1fcb6317f6e631ba7e28f038280d
@@ -32,8 +32,8 @@ Declare Step Run
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import Cardinality, declare_entity
-from caprmedio.model import Execution
+from anechoic.formal_claims import Cardinality, declare_entity
+from anechoic.model import Execution
 
 class StepRun(Execution):
     pass

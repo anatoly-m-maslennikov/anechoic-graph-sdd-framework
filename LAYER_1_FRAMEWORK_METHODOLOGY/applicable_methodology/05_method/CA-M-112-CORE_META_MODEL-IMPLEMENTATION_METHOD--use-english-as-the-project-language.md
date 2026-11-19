@@ -6,9 +6,9 @@ container:
 role: Method
 form: Implementation Method
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Project
+  main_subject: ANECHOIC_MODEL <+ Project
   dependencies:
-  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring
+  - ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring
 tier: 3
 relations:
   child_of:
@@ -21,9 +21,9 @@ claim_target_scope_unit: PROJECT_CONFIGURATION
 destination:
   file:
     name: CA-M-112-CORE_META_MODEL-IMPLEMENTATION_METHOD--use-english-as-the-project-language.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-112-CORE_META_MODEL-IMPLEMENTATION_METHOD--use-english-as-the-project-language.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-112-CORE_META_MODEL-IMPLEMENTATION_METHOD--use-english-as-the-project-language.md
   source_atom_id: CA-M-112
   source_atom_revision: 30
   source_sha256: aaa7619891dbb890de88f414aef8f870a16f5d91a28f462aa55eddef1bc0f20c
@@ -36,7 +36,7 @@ Use English as the Project language
 
 ### Prose Claim
 
-expressing CAPRMEDIO Project meaning.
+expressing ANECHOIC Project meaning.
 
 
-**to** express CAPRMEDIO Project meaning, the Author **must** use English as the base language.
+**to** express ANECHOIC Project meaning, the Author **must** use English as the base language.

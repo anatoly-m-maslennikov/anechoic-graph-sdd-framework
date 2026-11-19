@@ -6,7 +6,7 @@ updated_at: 2026-08-22 06:00:00
 relations:
   child_of:
     - CA-R-875-REQUIREMENT-BSEED_SEMANTICS--keep-ordered-dependencies-sparse-and-forward
-    - CAPRMEDIO-GOV-REQU-345--represent-accepted-meaning-faithfully
+    - ANECHOIC-GOV-REQU-345--represent-accepted-meaning-faithfully
 ---
 # Register the forward dependency relation kind
 

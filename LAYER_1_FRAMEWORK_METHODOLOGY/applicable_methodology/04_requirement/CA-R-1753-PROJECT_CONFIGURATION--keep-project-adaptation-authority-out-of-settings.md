@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: 'CAPRMEDIO_STRUCTURE <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow)//Applicable Methodology Compilation'
+  main_subject: 'ANECHOIC_STRUCTURE <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow)//Applicable Methodology Compilation'
 tier: 1
 status: Active
 version: 31
@@ -14,11 +14,11 @@ updated_at: 2026-11-02 19:44:26 +0400
 carrier_destination:
   file:
     name: CA-R-1753-PROJECT_CONFIGURATION-RULE--keep-project-adaptation-authority-out-of-settings.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: PROJECT_CONFIGURATION
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement/CA-R-1753-PROJECT_CONFIGURATION--keep-project-adaptation-authority-out-of-settings.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement/CA-R-1753-PROJECT_CONFIGURATION--keep-project-adaptation-authority-out-of-settings.md
   source_atom_id: CA-R-1753
   source_atom_revision: 31
   source_sha256: b5d8ec0374c40c8b52e2619fc5b1faf42f095ccc3aa40f12c8683d22bc863696

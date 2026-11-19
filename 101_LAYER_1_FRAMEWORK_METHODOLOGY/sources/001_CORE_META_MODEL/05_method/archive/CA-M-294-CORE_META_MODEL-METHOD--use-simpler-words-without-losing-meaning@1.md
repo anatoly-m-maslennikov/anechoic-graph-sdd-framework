@@ -25,7 +25,7 @@ cce_form: method
 ---
 # Use simpler words without losing meaning
 
-**when** choosing wording for CAPRMEDIO content, the Author **must** choose words **and** phrases that are simpler **and** more familiar **to** the intended reader **when** they preserve the intended meaning **without** adding ambiguity.
+**when** choosing wording for ANECHOIC content, the Author **must** choose words **and** phrases that are simpler **and** more familiar **to** the intended reader **when** they preserve the intended meaning **without** adding ambiguity.
 
 - prefer clear everyday wording over unnecessary jargon **or** specialized wording.
 - preserve who **or** what the statement concerns, its obligations **or** permissions, quantities, conditions, boundaries, **and** logical distinctions.

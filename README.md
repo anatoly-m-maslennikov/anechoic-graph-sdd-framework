@@ -1,12 +1,12 @@
-# CAPRMEDIO
+# Anechoic
 
 **The Graph-Driven Development Framework**
 
 ## Contents
 
 - [The Goal](#the-goal)
-- [What CAPRMEDIO is](#what-caprmedio-is)
-- [Why CAPRMEDIO works this way (chains-of-thoughts)](#why-caprmedio-works-this-way-chains-of-thoughts)
+- [What Anechoic is](#what-anechoic-is)
+- [Why Anechoic works this way (chains-of-thoughts)](#why-anechoic-works-this-way-chains-of-thoughts)
 - [Main framework architecture](#main-framework-architecture)
 - [First usable cut](#first-usable-cut)
 - [Current boundaries](#current-boundaries)
@@ -16,17 +16,17 @@
 
 ## The Goal
 
-If it can be built, CAPRMEDIO should help anyone build it if they are willing to invest the time and effort.
+If it can be built, Anechoic should help anyone build it if they are willing to invest the time and effort.
 
 In practice, it should make AI-assisted development reliable from the first idea to production without losing meaning, traceability, or learning.
 
 Even a fully AI-generated project should be understandable, controllable and **not slop**.
 
-## What CAPRMEDIO is
+## What Anechoic is
 
-CAPRMEDIO stores project knowledge as small artifacts connected by typed links. Humans and AI use this graph to understand the project, make changes, check consistency, and generate useful views.
+Anechoic stores project knowledge as small artifacts connected by typed links. Humans and AI use this graph to understand the project, make changes, check consistency, and generate useful views.
 
-## Why CAPRMEDIO works this way (chains-of-thoughts)
+## Why Anechoic works this way (chains-of-thoughts)
 
 Prompts/Skills, MCP, Apps and execution Tools form the harness →\
 the project's meaning must not depend on them →\
@@ -57,7 +57,7 @@ derive them from one authoritative source →\
 **load only the context needed without duplicating authority.**
 
 Natural-language phrases can be ambiguous →\
-shared vocabulary + CAPRMEDIO Controlled English (CCE), a constrained way to write Claims →\
+shared vocabulary + Anechoic Controlled English (CCE), a constrained way to write Claims →\
 **explicit, checkable Claims.**
 
 The spec is about different things →\
@@ -250,7 +250,7 @@ Internal/external say **who defines the meaning**. Relational says **where the C
 Subjects are links, not nodes.
 
 Scope Units + typed relations + Subjects →\
-**fetch the right part of the spec or other CAPRMEDIO content mechanically, or almost mechanically.**
+**fetch the right part of the spec or other Anechoic content mechanically, or almost mechanically.**
 
 ### Main projections
 
@@ -268,7 +268,7 @@ for example: one prompt for how to write code, built from all M Atoms that apply
 
 **Different views, one source.** Rebuild Projections from their sources.
 
-Each Project has a `.caprmedio_<project_name>/` folder. Store persistent Journals in `_journal/` and general Projections in `_projection/`. Project-declared Methodology source remains authoritative. In this Project, `LAYER_1_FRAMEWORK_METHODOLOGY/` is the delivered product and `.caprmedio_caprmedio/000_CAPRMEDIO_framework/` is the installed copy. Both are derived deliveries that preserve provenance. Neither they, graph views, nor derived Journal views replace source or grant Action authority.
+Each Project has a `.anechoic_<project_name>/` folder. Store persistent Journals in `_journal/` and general Projections in `_projection/`. Project-declared Methodology source remains authoritative. In this Project, `LAYER_1_FRAMEWORK_METHODOLOGY/` is the delivered product and `.anechoic_anechoic/000_ANECHOIC_framework/` is the installed copy. Both are derived deliveries that preserve provenance. Neither they, graph views, nor derived Journal views replace source or grant Action authority.
 
 With an explicit Project root, Journal writes and queries use that Project's settings and Journal, not those of a parent or sibling Project. Ambiguous control folders and symlinked settings are rejected.
 
@@ -284,7 +284,7 @@ Workspace, View and service tools. Legacy discovery, Atom mutation, selected
 execution, workflow queues and reversal interfaces are retired in code.
 
 The standalone Subject renderer supports seven views without the old execution
-engine. See [the retained runtime and builders](.caprmedio_caprmedio/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/03_plan/CA-P-2849-WORK_REPORT--2848.md)
+engine. See [the retained runtime and builders](.anechoic_anechoic/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/03_plan/CA-P-2849-WORK_REPORT--2848.md)
 for entry points, shared dependencies and verification limits. This code-first
 retirement does not claim that the corresponding methodology Atoms have already
 been reconciled or that an installed runtime has been replaced.
@@ -311,7 +311,7 @@ Local release skips an empty initial commit; commit failure or remaining changes
 stop it before tests, builds or Docker work. Existing environment-file exclusions
 remain; excluded nonignored changes must be resolved before release.
 
-The installed Project package is in `.caprmedio_runtime/simple_local_release/package`.
+The installed Project package is in `.anechoic_runtime/simple_local_release/package`.
 Configuration and existing Project records remain outside the replacement
 boundary. Python runs through locked `uv` environments, not system libraries.
 
@@ -336,8 +336,8 @@ its research remain non-authoritative; full migration is not claimed complete.
 
 ## Current boundaries
 
-- More than one person can use CAPRMEDIO on a project, but the framework does not yet provide native support for team workflows.
-- CAPRMEDIO is not only local-first; it is currently local-only.
+- More than one person can use Anechoic on a project, but the framework does not yet provide native support for team workflows.
+- Anechoic is not only local-first; it is currently local-only.
 
 ## Status
 

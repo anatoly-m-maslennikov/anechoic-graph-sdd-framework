@@ -6,11 +6,11 @@ container:
 role: Evaluation
 form: Eval Case
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)
+  main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan)
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.State.Status: Done'
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.Context.Plan.Work Sequence Number
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan)
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.State.Status: Done'
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.Context.Plan.Work Sequence Number
 tier: 4
 relations:
   evaluation_for:
@@ -24,7 +24,7 @@ updated_at: 2026-11-04 16:52:59 +0400
 carrier_destination:
   file:
     name: CA-E-504-EVAL_CASE--validate-plan-blocking-and-parallel-readiness.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
 ---
 ## Summary
 

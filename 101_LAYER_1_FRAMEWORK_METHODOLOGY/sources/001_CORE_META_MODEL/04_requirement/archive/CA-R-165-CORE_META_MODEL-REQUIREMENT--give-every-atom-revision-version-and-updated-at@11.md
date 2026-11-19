@@ -15,7 +15,7 @@ version: 11
 updated_at: "2026-09-10 07:15:17 +0400"
 relations:
   child_of:
-    - CAPRMEDIO-META-REQU-125-CORE_META_MODEL-CORE-REQUIREMENT--classify-artifacts-through-the-extensible-type-registry
+    - ANECHOIC-META-REQU-125-CORE_META_MODEL-CORE-REQUIREMENT--classify-artifacts-through-the-extensible-type-registry
 ---
 # Give every Atom Revision version and updated at
 

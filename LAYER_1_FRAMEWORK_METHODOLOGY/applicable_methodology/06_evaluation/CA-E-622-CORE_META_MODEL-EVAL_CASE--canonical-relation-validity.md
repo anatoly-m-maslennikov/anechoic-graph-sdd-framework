@@ -8,17 +8,17 @@ context:
   role: Evaluation
   form: Eval Case
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ Relation
+    main_subject: ANECHOIC_MODEL <+ Relation
     dependencies:
-    - CAPRMEDIO_MODEL <+ Atom
-    - CAPRMEDIO_MODEL <+ Atom.Header.Context.Role
-    - CAPRMEDIO_MODEL <+ Atom.Header.State.Status
-    - CAPRMEDIO_MODEL <+ Journal
-    - CAPRMEDIO_MODEL <+ Relation
-    - CAPRMEDIO_MODEL <+ Entity
-    - CAPRMEDIO_MODEL <+ Projection/(.Form:=Applicable Methodology)
-    - CAPRMEDIO_MODEL <+ Projection
-    - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Traceability"
+    - ANECHOIC_MODEL <+ Atom
+    - ANECHOIC_MODEL <+ Atom.Header.Context.Role
+    - ANECHOIC_MODEL <+ Atom.Header.State.Status
+    - ANECHOIC_MODEL <+ Journal
+    - ANECHOIC_MODEL <+ Relation
+    - ANECHOIC_MODEL <+ Entity
+    - ANECHOIC_MODEL <+ Projection/(.Form:=Applicable Methodology)
+    - ANECHOIC_MODEL <+ Projection
+    - "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Traceability"
   tier: 4
 relations:
   evaluation_for:
@@ -41,11 +41,11 @@ state:
 destination:
   file:
     name: CA-E-622-CORE_META_MODEL-EVAL_CASE--canonical-relation-validity.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-622-CORE_META_MODEL-EVAL_CASE--canonical-relation-validity.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-622-CORE_META_MODEL-EVAL_CASE--canonical-relation-validity.md
   source_atom_id: CA-E-622
   source_atom_revision: 55
   source_sha256: 524be8e9cedd633e25d8be45cb66d3c41636836e716285a49ad3e191b634b10b

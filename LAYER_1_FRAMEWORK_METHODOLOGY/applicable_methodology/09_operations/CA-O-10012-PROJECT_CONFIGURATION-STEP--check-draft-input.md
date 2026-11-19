@@ -8,10 +8,10 @@ context:
   role: Operations
   form: Step
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/Step
+    main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/Step
     dependencies:
-    - CAPRMEDIO_MODEL <+ Atom
-    - CAPRMEDIO_STRUCTURE <+ Scope Unit//PROJECT_CONFIGURATION
+    - ANECHOIC_MODEL <+ Atom
+    - ANECHOIC_STRUCTURE <+ Scope Unit//PROJECT_CONFIGURATION
   tier: 3
 relations:
   RUNS:
@@ -23,9 +23,9 @@ state:
 destination:
   file:
     name: CA-O-10012-PROJECT_CONFIGURATION-STEP--check-draft-input.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-10016-PROJECT_CONFIGURATION-WORKFLOW--atom-lifecycle-create-draft
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-10016-PROJECT_CONFIGURATION-WORKFLOW--atom-lifecycle-create-draft
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-10016-PROJECT_CONFIGURATION-WORKFLOW--atom-lifecycle-create-draft/CA-O-10012-PROJECT_CONFIGURATION-STEP--check-draft-input.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-10016-PROJECT_CONFIGURATION-WORKFLOW--atom-lifecycle-create-draft/CA-O-10012-PROJECT_CONFIGURATION-STEP--check-draft-input.md
   source_atom_id: CA-O-10012
   source_atom_revision: 1
   source_sha256: c2249b10fd272f0d340f8579539bc2c48b3f9468fb34226c9c0c857b59f778bd

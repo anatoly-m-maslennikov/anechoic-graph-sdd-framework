@@ -20,7 +20,7 @@ relations:
   relates_to:
     - CA-R-1470
     - CA-R-1568
-    - CAPRMEDIO-META-REQU-657
+    - ANECHOIC-META-REQU-657
 ---
 # Summary
 
@@ -31,5 +31,5 @@ Distinguish projected representations from represented Entities
 a representation inside a Projection **must** remain distinct from the Entity it represents.
 
 - depicting an existing Artifact **or** Scope Unit does **not** create another authoritative Artifact **or** Scope Unit.
-- a representation **may** identify a source Entity **or** a derived element admitted by the Projection specification; source identities **and** traceability remain governed by CAPRMEDIO-META-REQU-657.
+- a representation **may** identify a source Entity **or** a derived element admitted by the Projection specification; source identities **and** traceability remain governed by ANECHOIC-META-REQU-657.
 - this boundary introduces no separate Projection Element Term, lifecycle, **or** independently maintained authority.

@@ -6,7 +6,7 @@ from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_cl
 from cfel_claim_constraints import extract_claim_constraints
 from contract_graph import _clause
 from lint_python_model_claim import lint_python_model_claim
-CLAIM='''from caprmedio.formal_claims import declare_entity
+CLAIM='''from anechoic.formal_claims import declare_entity
 declare_entity(entity_name="ID", relation_name="IS_PROPERTY_OF", base_path="Event Record",
     property_occurrence_cardinality=1, value_format=str, value_cardinality=1,
     dependent_property_cardinality=0, population_entity_path="Event Record",
@@ -27,7 +27,7 @@ class EventIDTests(unittest.TestCase):
    with self.assertRaises(ValueError):parse_native_model_claim(invalid)
 
  def test_class_population_uniqueness_uses_declared_class(self):
-  claim = """from caprmedio.formal_claims import declare_entity
+  claim = """from anechoic.formal_claims import declare_entity
 class Atom:
     pass
 declare_entity(entity_name="Atom", entity_class=Atom,

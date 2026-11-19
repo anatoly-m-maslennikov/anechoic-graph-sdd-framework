@@ -6,17 +6,17 @@ container:
 role: Evaluation
 form: Eval Case
 topics:
-  main_subject: "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Architecture <+ Component Structure"
+  main_subject: "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Architecture <+ Component Structure"
   dependencies:
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow)'
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Action)'
-  - CAPRMEDIO_MODEL <+ Package
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)
-  - CAPRMEDIO_MODEL <+ Package/Implementation
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
-  - CAPRMEDIO_STRUCTURE <+ Entity/Object/Continuant/Selection//Methodology Sources
-  - CAPRMEDIO_MODEL <+ Atom.Content
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Requirement)
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow)'
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Action)'
+  - ANECHOIC_MODEL <+ Package
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)
+  - ANECHOIC_MODEL <+ Package/Implementation
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
+  - ANECHOIC_STRUCTURE <+ Entity/Object/Continuant/Selection//Methodology Sources
+  - ANECHOIC_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Requirement)
 tier: 3
 relations:
   evaluation_for:
@@ -27,11 +27,11 @@ updated_at: 2026-11-02 18:35:20 +0400
 carrier_destination:
   file:
     name: CA-E-487-PROJECT_CONFIGURATION-EVAL_CASE--validate-workflow-independent-implementation-specifications.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: PROJECT_CONFIGURATION
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation/CA-E-487-PROJECT_CONFIGURATION-EVAL_CASE--validate-workflow-independent-implementation-specifications.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation/CA-E-487-PROJECT_CONFIGURATION-EVAL_CASE--validate-workflow-independent-implementation-specifications.md
   source_atom_id: CA-E-487
   source_atom_revision: 28
   source_sha256: 1f7a2dd8e10ff338bddf062d1e809f5e4290763eca7baf35f2743e73a6f8c744
@@ -46,10 +46,10 @@ Validate Workflow-independent Implementation specifications
 ### Prose Claim
 
 
-the Evaluation of a CAPRMEDIO implementation Spec.
+the Evaluation of a ANECHOIC implementation Spec.
 
 
-the Evaluation of a CAPRMEDIO implementation Spec **must** reject dependence on a production Workflow under CA-R-1514-PROJECT_CONFIGURATION-RULE--keep-implementation-specifications-independent-of-production-workflows.
+the Evaluation of a ANECHOIC implementation Spec **must** reject dependence on a production Workflow under CA-R-1514-PROJECT_CONFIGURATION-RULE--keep-implementation-specifications-independent-of-production-workflows.
 
 ## Cases and expected results
 

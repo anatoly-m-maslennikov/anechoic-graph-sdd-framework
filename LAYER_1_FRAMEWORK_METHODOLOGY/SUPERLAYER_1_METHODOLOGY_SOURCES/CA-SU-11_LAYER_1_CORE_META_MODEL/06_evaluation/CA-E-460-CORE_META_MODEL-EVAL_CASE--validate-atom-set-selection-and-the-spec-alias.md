@@ -6,17 +6,17 @@ container:
 role: Evaluation
 form: Eval Case
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Selection
+  main_subject: ANECHOIC_MODEL <+ Entity/Object/Continuant/Selection
   dependencies:
-  - CAPRMEDIO_MODEL <+ Carrier
-  - CAPRMEDIO_MODEL <+ Atom.Content
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics.Main Subject
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Role
-  - CAPRMEDIO_MODEL <+ Atom.Header.State.Status
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Selection
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Tier
+  - ANECHOIC_MODEL <+ Carrier
+  - ANECHOIC_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Topics.Main Subject
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Role
+  - ANECHOIC_MODEL <+ Atom.Header.State.Status
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Selection
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Tier
 tier: 4
 relations:
   evaluation_for:
@@ -37,7 +37,7 @@ updated_at: 2026-11-02 00:18:22 +0400
 carrier_destination:
   file:
     name: CA-E-460-CORE_META_MODEL-EVAL_CASE--validate-atom-set-selection-and-the-spec-alias.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---

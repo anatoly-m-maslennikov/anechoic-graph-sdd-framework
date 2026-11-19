@@ -18,14 +18,14 @@ version: 4
 updated_at: "2026-09-15 02:06:34 +0400"
 relations:
   evaluation_for:
-    - "CAPRMEDIO-META-REQU-619"
+    - "ANECHOIC-META-REQU-619"
     - "CA-R-1402"
     - "CA-R-1052"
     - "CA-R-1429"
     - "CA-R-1430"
-    - "CAPRMEDIO-META-REQU-620"
+    - "ANECHOIC-META-REQU-620"
     - "CA-R-626"
-    - "CAPRMEDIO-META-REQU-627"
+    - "ANECHOIC-META-REQU-627"
     - "CA-D-317"
     - "CA-D-318"
     - "CA-D-359"
@@ -35,10 +35,10 @@ relations:
 
 ## Test case
 
-create two Projects in one repository, **every** Project with its own Project Settings **and** `000_CAPRMEDIO_framework` directory. resolve both settings before creating Project Atoms **or** Implementation. select different Authority Modes, installed Extensions, **and** Project Configuration for the two instances. give the two instances distinct Methodology Sources **and** compiled Applicable Methodology results. add a Scope Unit directory with no active Goal, a Draft Goal, **and** an archived Goal.
+create two Projects in one repository, **every** Project with its own Project Settings **and** `000_ANECHOIC_framework` directory. resolve both settings before creating Project Atoms **or** Implementation. select different Authority Modes, installed Extensions, **and** Project Configuration for the two instances. give the two instances distinct Methodology Sources **and** compiled Applicable Methodology results. add a Scope Unit directory with no active Goal, a Draft Goal, **and** an archived Goal.
 
 ## Acceptance criteria
 
 settings resolve through their own Project paths **without** cross-Project fallback. Project Settings remain authoritative initialization inputs; Framework Instance Settings remain authoritative instance choices. Core settings Atoms define purpose, content, **and** authority boundaries, General Atoms define independently governable shared settings specifications **when** needed, **and** Standard Atoms define concrete sections **or** fields. Project Structure includes the actual Scope Unit **and** reports the missing active Goal **without** promoting Draft **or** archived Claims. no Projection edit changes either Settings Artifact **or** source Atom. an unresolved authority-backed value does **not** conceal observed structure.
 
-**every** Framework Instance's Methodology Sources **and** Applicable Methodology output **must** resolve beneath its own Project's `000_CAPRMEDIO_framework/` directory. rebuilding one Project's Applicable Methodology **must not** read, replace, **or** modify another Project's sources, settings, **or** compiled results. a missing selected Project instance **must** be reported rather than resolved through another Project **or** the former repository-shared framework root. nesting the framework directory **must not** change source Atom identity **or** make a projected copy a second authoritative Atom.
+**every** Framework Instance's Methodology Sources **and** Applicable Methodology output **must** resolve beneath its own Project's `000_ANECHOIC_framework/` directory. rebuilding one Project's Applicable Methodology **must not** read, replace, **or** modify another Project's sources, settings, **or** compiled results. a missing selected Project instance **must** be reported rather than resolved through another Project **or** the former repository-shared framework root. nesting the framework directory **must not** change source Atom identity **or** make a projected copy a second authoritative Atom.

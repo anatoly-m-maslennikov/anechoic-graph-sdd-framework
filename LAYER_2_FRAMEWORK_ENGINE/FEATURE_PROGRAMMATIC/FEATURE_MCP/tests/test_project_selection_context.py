@@ -26,11 +26,11 @@ class ProjectContextTests(unittest.IsolatedAsyncioTestCase):
         self.selections = []
         for name in ("alpha", "beta"):
             root = self.base / name
-            control = root / (".caprmedio_" + name)
+            control = root / (".anechoic_" + name)
             control.mkdir(parents=True)
-            (control / "caprmedio_project_settings.toml").write_text(
+            (control / "anechoic_project_settings.toml").write_text(
                 f'[project]\nname="{name}"\nkey="{name}"\nrepository_slug="{name}"\n'
-                f'[paths]\ncontrol_root=".caprmedio_{name}"\n'
+                f'[paths]\ncontrol_root=".anechoic_{name}"\n'
                 f'[artifacts.identity]\nproject_prefix="{name.upper()}"\n'
                 '[artifact_timestamps]\ntimezone="UTC"\n')
             write_scope_unit_declarations(root, control_root=control)
@@ -45,10 +45,10 @@ class ProjectContextTests(unittest.IsolatedAsyncioTestCase):
 
     def test_runtime_namespace_properties_are_selected_and_read_only(self):
         for selection in self.selections:
-            runtime = selection.root / ".caprmedio_runtime/runtime"
+            runtime = selection.root / ".anechoic_runtime/runtime"
             self.assertEqual(runtime / "project_mcp" / selection.instance_id, selection.launcher_state)
             self.assertFalse(runtime.exists())
-            self.assertFalse((selection.root / ".caprmedio_install").exists())
+            self.assertFalse((selection.root / ".anechoic_install").exists())
 
 
     def test_foreign_root_and_outside_project_source_refuse(self):
@@ -64,10 +64,10 @@ class ProjectContextTests(unittest.IsolatedAsyncioTestCase):
         entrypoint = importlib.util.module_from_spec(specification)
         specification.loader.exec_module(entrypoint)
         selection = self.selections[0]
-        values = {"CAPRMEDIO_CONTROL_ROOT": selection.control_relative.as_posix(),
-                  "CAPRMEDIO_PROJECT_INSTANCE_ID": selection.instance_id,
-                  "CAPRMEDIO_HOST_PROJECT_ROOT": str(selection.host_root),
-                  "CAPRMEDIO_MCP_HTTP_SECRET_TOKEN": "private"}
+        values = {"ANECHOIC_CONTROL_ROOT": selection.control_relative.as_posix(),
+                  "ANECHOIC_PROJECT_INSTANCE_ID": selection.instance_id,
+                  "ANECHOIC_HOST_PROJECT_ROOT": str(selection.host_root),
+                  "ANECHOIC_MCP_HTTP_SECRET_TOKEN": "private"}
         with patch.object(sys, "argv", ["entrypoint", "mcp-http"]), patch.dict(os.environ, values), patch.object(os, "execv") as execute:
             entrypoint.main()
         arguments = execute.call_args.args[1]

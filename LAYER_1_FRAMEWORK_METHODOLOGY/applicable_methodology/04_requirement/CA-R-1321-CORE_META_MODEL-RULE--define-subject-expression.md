@@ -6,15 +6,15 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
+  main_subject: ANECHOIC_MODEL <+ Atom.Header.Context.Topics
   dependencies:
-  - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ Term
-  - CAPRMEDIO_MODEL <+ Term//Property
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Package
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Package <+ Module
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Package <+ Module <+ Code Unit
+  - ANECHOIC_MODEL <+ Entity
+  - ANECHOIC_MODEL <+ Term
+  - ANECHOIC_MODEL <+ Term//Property
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Package
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Package <+ Module
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Package <+ Module <+ Code Unit
 tier: 1
 status: active
 version: 37
@@ -22,11 +22,11 @@ updated_at: '2026-11-13T23:01:25.455940+00:00'
 carrier_destination:
   file:
     name: CA-R-1321-CORE_META_MODEL-RULE--define-subject-expression.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1321-CORE_META_MODEL-RULE--define-subject-expression.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1321-CORE_META_MODEL-RULE--define-subject-expression.md
   source_atom_id: CA-R-1321
   source_atom_revision: 37
   source_sha256: 2ad0b61843bb1252da1cf38accbc401ccb432ecb6754ed30565a18d413784806
@@ -55,7 +55,7 @@ Outside the Term branch, an Entity reference **must** use its exact complete can
 ### Subject notation
 
 - In MODEL, `X//Y` identifies Y as a narrower declared kind of X. `X.p` selects a Property of X, including an inherited Property through its existing Declaration.
-- In STRUCTURE, `Whole/Part` identifies Part through immediate containment. Chaining paths follows each declared container in order. For example, `CAPRMEDIO_STRUCTURE/FRAMEWORK_ENGINE/PROGRAMMATIC` identifies the PROGRAMMATIC Scope Unit.
+- In STRUCTURE, `Whole/Part` identifies Part through immediate containment. Chaining paths follows each declared container in order. For example, `ANECHOIC_STRUCTURE/FRAMEWORK_ENGINE/PROGRAMMATIC` identifies the PROGRAMMATIC Scope Unit.
 - A qualified kind selects the scope where its Property has an admitted value. Existing Subject addresses retain their resolved targets during the notation migration.
 - `X >| Axis` and `Axis |< X` express classification. Relation Declarations identify canonical Relations and their inverse aliases.
 - `Source ((RELATION)) Target` and `Target <((RELATION)) Source` write the same fact. Reverse writing swaps the endpoints and their count slots. Endpoint permissions come from the Relation and applicable Entity Declarations.

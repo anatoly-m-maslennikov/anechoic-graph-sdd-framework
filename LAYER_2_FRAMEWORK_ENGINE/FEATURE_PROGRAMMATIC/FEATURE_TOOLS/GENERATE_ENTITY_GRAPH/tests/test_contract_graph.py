@@ -45,12 +45,12 @@ class ContractGraphTests(unittest.TestCase):
         roles = ("Requirement", "Method", "Evaluation", "Delivery")
         atom = carrier("CA-R-1", "Atom", body())
         role_rows = [carrier(f"CA-R-{index}", f"Atom/(.Header.Context.Role:={name})", body(
-            "### Formal Claim", "```python", "from caprmedio.formal_claims import declare_entity",
-            "from caprmedio.model import Atom", f"class {name}(Atom):", "    pass",
+            "### Formal Claim", "```python", "from anechoic.formal_claims import declare_entity",
+            "from anechoic.model import Atom", f"class {name}(Atom):", "    pass",
             f"declare_entity(entity_class={name}, entity_name='{name}', qualification_property_path='Atom.Header.Context.Role')", "```"))
             for index, name in enumerate((*roles, "Analysis"), start=2)]
-        native = body("### Formal Claim", "```python", "from caprmedio.formal_claims import Cardinality, declare_entity",
-                      "from caprmedio.model import Requirement, Method, Evaluation, Delivery",
+        native = body("### Formal Claim", "```python", "from anechoic.formal_claims import Cardinality, declare_entity",
+                      "from anechoic.model import Requirement, Method, Evaluation, Delivery",
                       "declare_entity(entity_name='Content', relation_name='IS_PROPERTY_OF', base_path='Atom',",
                       "  property_occurrence_cardinality=1, value_cardinality=0,",
                       "  dependent_property_cardinality=Cardinality(minimum=0, maximum=None), dependent_property_name_format=str,",
@@ -77,8 +77,8 @@ class ContractGraphTests(unittest.TestCase):
     def test_native_dependent_counts(self):
         address = "Atom.Header.Relations"
         native = body(
-            "### Formal Claim", "```python", "from caprmedio.formal_claims import declare_entity",
-            "from caprmedio.formal_claims import Cardinality",
+            "### Formal Claim", "```python", "from anechoic.formal_claims import declare_entity",
+            "from anechoic.formal_claims import Cardinality",
             "declare_entity(entity_name='Relations', relation_name='IS_PROPERTY_OF', base_path='Atom.Header',",
             "  property_occurrence_cardinality=Cardinality(minimum=0, maximum=1), value_cardinality=0,",
             "  dependent_property_cardinality=Cardinality(minimum=1, maximum=None), dependent_property_name_format=str,",
@@ -112,8 +112,8 @@ class ContractGraphTests(unittest.TestCase):
 
         atom = carrier("CA-R-1", "Atom", body())
         claim = carrier("CA-R-2", "Atom.Content.Claim", body(
-            "### Formal Claim", "```python", "from caprmedio.formal_claims import declare_entity",
-            "from caprmedio.model import Requirement, Method, Evaluation, Delivery",
+            "### Formal Claim", "```python", "from anechoic.formal_claims import declare_entity",
+            "from anechoic.model import Requirement, Method, Evaluation, Delivery",
             "declare_entity(entity_name='Claim', relation_name='IS_PROPERTY_OF', base_path='Atom.Content',",
             "  dependent_property_cardinality=2, allowed_dependent_property_names=('Prose Claim', 'Formal Claim'),",
             "  ordered_dependent_property_pairs=(('Prose Claim', 'Formal Claim'),),",
@@ -129,8 +129,8 @@ class ContractGraphTests(unittest.TestCase):
         self.assertEqual(("Requirement", "Method", "Evaluation", "Delivery"), order["applicable_entity_classes"])
         self.assertEqual("CA-R-2", order["source"]["atom_id"])
         role = carrier("CA-R-3", "Atom/(.Header.Context.Role:=Requirement)", body(
-            "### Formal Claim", "```python", "from caprmedio.formal_claims import declare_entity",
-            "from caprmedio.model import Atom", "class Requirement(Atom):", "    pass",
+            "### Formal Claim", "```python", "from anechoic.formal_claims import declare_entity",
+            "from anechoic.model import Atom", "class Requirement(Atom):", "    pass",
             "declare_entity(entity_class=Requirement, entity_name='Requirement', qualification_property_path='Atom.Header.Context.Role')", "```"))
         projection = build_subject_projection_data([atom, claim, role])
         base = next(row for row in projection["entities"] if row["identity"] == "Atom")
@@ -141,12 +141,12 @@ class ContractGraphTests(unittest.TestCase):
 
     def test_native_property_uses_explicit_bearer_and_preserves_written_subject(self):
         step = "Atom/(.Header.Context.Role:=Operations)/Step"
-        topic = "CAPRMEDIO_MODEL <+ Step.Kind"
+        topic = "ANECHOIC_MODEL <+ Step.Kind"
         declarations = [
             carrier("CA-R-1", step, body()),
             carrier("CA-R-2", "Other/Step", body()),
             carrier("CA-R-3", topic, body(
-                "### Formal Claim", "```python", "from caprmedio.formal_claims import declare_entity",
+                "### Formal Claim", "```python", "from anechoic.formal_claims import declare_entity",
                 f"declare_entity(entity_name='Kind', relation_name='IS_PROPERTY_OF', base_path={step!r})",
                 "```")),
         ]
@@ -161,7 +161,7 @@ class ContractGraphTests(unittest.TestCase):
     def test_native_nested_bearers_resolve_independently_of_source_order(self):
         def property_declaration(atom_id, subject, base, name):
             return carrier(atom_id, subject, body(
-                "### Formal Claim", "```python", "from caprmedio.formal_claims import declare_entity",
+                "### Formal Claim", "```python", "from anechoic.formal_claims import declare_entity",
                 f"declare_entity(entity_name={name!r}, relation_name='IS_PROPERTY_OF', base_path={base!r})",
                 "```"))
 
@@ -182,8 +182,8 @@ class ContractGraphTests(unittest.TestCase):
 
         root = carrier("CA-R-1", "Atom", body())
         method = carrier("CA-R-2", "Atom/(.Header.Context.Role := Method)", body(
-            "### Formal Claim", "```python", "from caprmedio.formal_claims import declare_entity",
-            "from caprmedio.model import Atom", "class Method(Atom):", "    pass",
+            "### Formal Claim", "```python", "from anechoic.formal_claims import declare_entity",
+            "from anechoic.model import Atom", "class Method(Atom):", "    pass",
             "declare_entity(entity_class=Method, entity_name='Method', qualification_property_path='Atom.Header.Context.Role')",
             "```"))
         tree, _ = compose_narrowing_graph([root, method])
@@ -192,7 +192,7 @@ class ContractGraphTests(unittest.TestCase):
                       {(identities[edge["relation_source"]], identities[edge["relation_target"]])
                        for edge in tree["edges"]})
         relation = carrier("CA-R-3", "Relation//CARRIES", body(
-            "### Formal Claim", "```python", "from caprmedio.formal_claims import declare_relation",
+            "### Formal Claim", "```python", "from anechoic.formal_claims import declare_relation",
             "declare_relation(relation_name='CARRIES', source_endpoint={'level': 'instances', 'entity_paths': ('Carrier',)}, target_endpoint={'level': 'instances'}, inverse_alias='IS_CARRIED_BY', written_alias='>>')",
             "```"))
         clauses, diagnostics = extract_claim_constraints(relation)
@@ -203,7 +203,7 @@ class ContractGraphTests(unittest.TestCase):
 
     def test_native_direct_relation_preserves_the_legacy_inverse_view(self):
         direct = carrier("CA-R-1", "Relation//CARRIES", body(
-            "### Formal Claim", "```python", "from caprmedio.formal_claims import declare_relation",
+            "### Formal Claim", "```python", "from anechoic.formal_claims import declare_relation",
             "declare_relation(relation_name='CARRIES', source_endpoint={'level': 'instances', 'entity_paths': ('Carrier',)},",
             "                 target_endpoint={'level': 'instances', 'ephemeral': False},",
             "                 inverse_alias='IS_CARRIED_BY', targets_per_source=1)", "```",
@@ -224,7 +224,7 @@ class ContractGraphTests(unittest.TestCase):
     def test_native_inverse_without_separate_declaration_keeps_source_and_bounds(self):
         direct = carrier("CA-R-1", "Relation//CARRIES", body(
             "### Formal Claim", "```python",
-            "from caprmedio.formal_claims import Cardinality, declare_relation",
+            "from anechoic.formal_claims import Cardinality, declare_relation",
             "declare_relation(relation_name='CARRIES',",
             "  source_endpoint={'level': 'instances', 'entity_paths': ('Carrier',)},",
             "  target_endpoint={'level': 'instances', 'entity_paths': ('Atom',)},",
@@ -251,7 +251,7 @@ class ContractGraphTests(unittest.TestCase):
         def direct(atom_id, name):
             return carrier(atom_id, "Relation//" + name, body(
                 "### Formal Claim", "```python",
-                "from caprmedio.formal_claims import declare_relation",
+                "from anechoic.formal_claims import declare_relation",
                 f"declare_relation(relation_name='{name}', source_endpoint={{'level':'instances'}},",
                 "  target_endpoint={'level':'instances'}, inverse_alias='SHARED')",
                 "```", semantics="Direct meaning."))
@@ -269,12 +269,12 @@ class ContractGraphTests(unittest.TestCase):
         for index, role in enumerate(("Method", "Evaluation"), 2):
             parent = f"Atom/(.Header.Context.Role := {role})"
             carriers.append(carrier(f"CA-R-{index}", parent, body(
-                "### Formal Claim", "```python", "from caprmedio.formal_claims import declare_entity",
-                "from caprmedio.model import Atom", f"class {role}(Atom):", "    pass",
+                "### Formal Claim", "```python", "from anechoic.formal_claims import declare_entity",
+                "from anechoic.model import Atom", f"class {role}(Atom):", "    pass",
                 f"declare_entity(entity_class={role}, entity_name='{role}')", "```")))
             carriers.append(carrier(f"CA-R-{index + 10}", parent + "/(.Header.Context.Form := Decision)", body(
-                "### Formal Claim", "```python", "from caprmedio.formal_claims import declare_entity",
-                f"from caprmedio.model import {role}", f"class Decision({role}):", "    pass",
+                "### Formal Claim", "```python", "from anechoic.formal_claims import declare_entity",
+                f"from anechoic.model import {role}", f"class Decision({role}):", "    pass",
                 "declare_entity(entity_class=Decision, entity_name='Decision')", "```")))
         tree, _ = compose_narrowing_graph(carriers)
         identities = {node["id"]: node["identity"] for node in tree["nodes"]}
@@ -285,9 +285,9 @@ class ContractGraphTests(unittest.TestCase):
             self.assertIn((parent + "/(.Header.Context.Form:=Decision)", parent), edges)
 
     def test_native_namespace_classification_keeps_source(self):
-        row = carrier("CA-R-1", "CAPRMEDIO_MODEL", body(
-            "### Formal Claim", "```python", "from caprmedio.formal_claims import declare_entity",
-            "from caprmedio.model import Node", "class Model(Node):", "    pass",
+        row = carrier("CA-R-1", "ANECHOIC_MODEL", body(
+            "### Formal Claim", "```python", "from anechoic.formal_claims import declare_entity",
+            "from anechoic.model import Node", "class Model(Node):", "    pass",
             'declare_entity(entity_class=Model, entity_name="MODEL", classifications={"Container": "yes"})',
             "```"))
         graph = compose_contract_graph([row])
@@ -305,20 +305,20 @@ class ContractGraphTests(unittest.TestCase):
         rows = [carrier("CA-R-1", "Atom", body())]
         for index, role in enumerate(("Method", "Plan"), 2):
             rows.append(carrier(f"CA-R-{index}", f"Atom/(.Header.Context.Role := {role})", body(
-                "### Formal Claim", "```python", "from caprmedio.formal_claims import declare_entity",
-                "from caprmedio.model import Atom", f"class {role}(Atom):", "    pass",
+                "### Formal Claim", "```python", "from anechoic.formal_claims import declare_entity",
+                "from anechoic.model import Atom", f"class {role}(Atom):", "    pass",
                 f"declare_entity(entity_class={role}, entity_name='{role}')", "```")))
         rows.append(carrier("CA-R-6", "Atom.Content", body(
-            "### Formal Claim", "```python", "from caprmedio.formal_claims import declare_entity",
+            "### Formal Claim", "```python", "from anechoic.formal_claims import declare_entity",
             "declare_entity(entity_name='Content', relation_name='IS_PROPERTY_OF', base_path='Atom',",
             "  recursive_dependent_property_value_format='markdown')", "```")))
         rows.append(carrier("CA-R-4", "Atom.Content.Semantics", body(
-            "### Formal Claim", "```python", "from caprmedio.formal_claims import declare_entity",
-            "from caprmedio.model import Method",
+            "### Formal Claim", "```python", "from anechoic.formal_claims import declare_entity",
+            "from anechoic.model import Method",
             "declare_entity(entity_name='Semantics', relation_name='IS_PROPERTY_OF', base_path='Atom.Content', applies_to_entity_classes=(Method,), value_cardinality=1)",
             "```")))
         rows.append(carrier("CA-R-5", "Relation//CARRIES", body(
-            "### Formal Claim", "```python", "from caprmedio.formal_claims import declare_relation",
+            "### Formal Claim", "```python", "from anechoic.formal_claims import declare_relation",
             "declare_relation(relation_name='CARRIES', source_endpoint={'level':'instances'}, target_endpoint={'level':'instances'})",
             "```"), form="Relation Declaration"))
         data = build_subject_projection_data(rows)
@@ -368,7 +368,7 @@ class ContractGraphTests(unittest.TestCase):
         self.assertEqual(("Atom.A", "Atom.B"), (clauses[0]["source_selector"], clauses[0]["target_selector"]))
 
     def test_operator_symbol_is_bound_to_its_declared_subject(self):
-        address = "CAPRMEDIO_MODEL <+ CFEL <+ Operator//Delivery"
+        address = "ANECHOIC_MODEL <+ CFEL <+ Operator//Delivery"
         python = carrier("CA-R-1", address, body("### Formal Claim", "```python", "# model",
                          "set_value(address='Operator//Delivery', value='\">>\"')", "```"))
         clauses, diagnostics = extract_claim_constraints(python)
@@ -409,9 +409,9 @@ class ContractGraphTests(unittest.TestCase):
         self.assertNotIn("→ `None`", document)
 
     def test_namespace_declaration_preserves_claim_without_creating_node(self):
-        graph = compose_contract_graph([carrier("CA-R-1", "CAPRMEDIO_MODEL", body("```CFEL", "MODEL >| (Container == yes)", "```")),
+        graph = compose_contract_graph([carrier("CA-R-1", "ANECHOIC_MODEL", body("```CFEL", "MODEL >| (Container == yes)", "```")),
                                         carrier("CA-R-2", "UNKNOWN_MODEL", body("Unknown."))])
-        self.assertEqual(["CAPRMEDIO_MODEL"], [row["target"] for row in graph["namespaces"]])
+        self.assertEqual(["ANECHOIC_MODEL"], [row["target"] for row in graph["namespaces"]])
         self.assertEqual(["UNKNOWN_MODEL"], [row["target"] for row in graph["entities"]])
         self.assertEqual([], graph["coverage_gaps"])
         self.assertIn("MODEL >| (Container == yes)", render_contract_graph(graph))
@@ -508,18 +508,18 @@ class ContractGraphTests(unittest.TestCase):
 
     def test_explicit_namespace_header_qualifications_bind_declared_properties(self):
         graph = compose_contract_graph([
-            carrier("CA-R-1", "CAPRMEDIO_MODEL <+ Atom", body("Atom.")),
-            carrier("CA-R-2", "CAPRMEDIO_MODEL <+ Atom.Header", body("Header.")),
-            carrier("CA-R-3", "CAPRMEDIO_MODEL <+ Atom.Header.Role", body("Role.")),
-            carrier("CA-R-4", "CAPRMEDIO_MODEL <+ Atom.Header.Form", body("Form.")),
-            carrier("CA-R-5", "CAPRMEDIO_MODEL <+ Atom/(.Header.Role:=Requirement)", body("Role rule."), form="Rule"),
-            carrier("CA-R-6", "CAPRMEDIO_MODEL <+ Atom/(.Header.Form:=Declaration)", body("Form rule."), form="Rule"),
-            carrier("CA-R-7", "CAPRMEDIO_MODEL <+ (Node, Node.**)", body("Scope."), form="Rule"),
-            carrier("CA-R-8", "CAPRMEDIO_MODEL <+ Node", body("Node.")),
-            carrier("CA-R-9", "CAPRMEDIO_MODEL <+ Atom/(.Header.Role:=Requirement)/(.Header.Form:=Declaration)", body("Combined rule."), form="Rule"),
-            carrier("CA-R-10", "CAPRMEDIO_MODEL <+ Atom/(.Header.Role: Method)/(.Header.Form: Declaration)", body("Combined colon rule."), form="Rule"),
-            carrier("CA-R-11", "CAPRMEDIO_MODEL <+ Atom.Content.Claim", body("Claim.")),
-            carrier("CA-R-12", "CAPRMEDIO_MODEL <+ Atom/(.Header.Role: Delivery).Content.Claim", body("Claim rule."), form="Rule"),
+            carrier("CA-R-1", "ANECHOIC_MODEL <+ Atom", body("Atom.")),
+            carrier("CA-R-2", "ANECHOIC_MODEL <+ Atom.Header", body("Header.")),
+            carrier("CA-R-3", "ANECHOIC_MODEL <+ Atom.Header.Role", body("Role.")),
+            carrier("CA-R-4", "ANECHOIC_MODEL <+ Atom.Header.Form", body("Form.")),
+            carrier("CA-R-5", "ANECHOIC_MODEL <+ Atom/(.Header.Role:=Requirement)", body("Role rule."), form="Rule"),
+            carrier("CA-R-6", "ANECHOIC_MODEL <+ Atom/(.Header.Form:=Declaration)", body("Form rule."), form="Rule"),
+            carrier("CA-R-7", "ANECHOIC_MODEL <+ (Node, Node.**)", body("Scope."), form="Rule"),
+            carrier("CA-R-8", "ANECHOIC_MODEL <+ Node", body("Node.")),
+            carrier("CA-R-9", "ANECHOIC_MODEL <+ Atom/(.Header.Role:=Requirement)/(.Header.Form:=Declaration)", body("Combined rule."), form="Rule"),
+            carrier("CA-R-10", "ANECHOIC_MODEL <+ Atom/(.Header.Role: Method)/(.Header.Form: Declaration)", body("Combined colon rule."), form="Rule"),
+            carrier("CA-R-11", "ANECHOIC_MODEL <+ Atom.Content.Claim", body("Claim.")),
+            carrier("CA-R-12", "ANECHOIC_MODEL <+ Atom/(.Header.Role: Delivery).Content.Claim", body("Claim rule."), form="Rule"),
         ])
         rows = {row["target"]: row for row in graph["entities"]}
         self.assertEqual({"Atom", "Atom.Header", "Atom.Header.Role", "Atom.Header.Form", "Atom.Content.Claim", "Node"}, set(rows))
@@ -606,7 +606,7 @@ Actual root detail.
             carrier("CA-R-2", "Node/Parent", body("Parent declaration.")),
             carrier("CA-R-3", "Node/Parent/Child", body("Child declaration.")),
             carrier("CA-R-4", "Node/Parent.Status", body(
-                "### Formal Claim", "```python", "from caprmedio.formal_claims import declare_entity",
+                "### Formal Claim", "```python", "from anechoic.formal_claims import declare_entity",
                 "declare_entity(entity_name='Status', relation_name='IS_PROPERTY_OF', base_path='Node/Parent',",
                 "  value_format=str, value_cardinality=1)", "```")),
             carrier("CA-R-5", "Node/Parent/Child", body("Rule for Child."), form="Rule"),
@@ -696,14 +696,14 @@ Actual root detail.
             carrier("CA-R-2", "Project", body("Project kind declaration.")),
             carrier("CA-R-9", "Projection", body("Projection kind declaration.")),
             carrier("CA-R-10", "Named Selection", body("Selection kind declaration.")),
-            carrier("CA-R-11", "CAPRMEDIO <+ MODEL <+ PROJECT STRUCTURE", body("Structure kind declaration.")),
+            carrier("CA-R-11", "ANECHOIC <+ MODEL <+ PROJECT STRUCTURE", body("Structure kind declaration.")),
             carrier("CA-R-3", "Scope Unit//CORE_META_MODEL", body("Core scope declaration."),
                     form="Scope Unit Declaration"),
-            carrier("CA-R-4", "Project//caprmedio", body("Project declaration."),
+            carrier("CA-R-4", "Project//anechoic", body("Project declaration."),
                     form="Scope Unit Declaration"),
             carrier("CA-R-5", "Scope Unit//CORE_META_MODEL", body("Core scope evidence."),
                     form="Rule"),
-            carrier("CA-R-6", "Project//caprmedio", body("Project evidence."), form="Rule"),
+            carrier("CA-R-6", "Project//anechoic", body("Project evidence."), form="Rule"),
             carrier("CA-R-7", "Scope Unit//MISSING", body("Missing scope evidence."), form="Rule"),
             carrier("CA-R-8", "Actor//ANATOLY", body("Unknown kind declaration."),
                     form="Scope Unit Declaration"),
@@ -711,11 +711,11 @@ Actual root detail.
                     form="Rule"),
             carrier("CA-R-13", "Named Selection//ExtensionSources", body("Selection context."),
                     form="Rule"),
-            carrier("CA-R-14", "CAPRMEDIO <+ STRUCTURE", body("Structure context."),
+            carrier("CA-R-14", "ANECHOIC <+ STRUCTURE", body("Structure context."),
                     form="Rule"),
             carrier("CA-R-15", "Named Selection//Unknown", body("Unknown selection context."),
                     form="Rule"),
-            carrier("CA-R-16", "PROJECT STRUCTURE//CAPRMEDIO", body("Historical structure context."),
+            carrier("CA-R-16", "PROJECT STRUCTURE//ANECHOIC", body("Historical structure context."),
                     form="Rule"),
         ])
 
@@ -764,29 +764,29 @@ Actual root detail.
 
     def test_binds_prefixed_namespaces_to_local_targets_without_losing_subject_provenance(self):
         graph = compose_contract_graph([
-            carrier("CA-R-1", "CAPRMEDIO <+ MODEL <+ Node", body("Node declaration.")),
-            carrier("CA-R-2", "CAPRMEDIO <+ MODEL <+ Node.Status", body("Status declaration.")),
-            carrier("CA-R-3", "CAPRMEDIO <+ MODEL <+ Node//Example", body("Example declaration.")),
-            carrier("CA-R-4", "CAPRMEDIO <+ MODEL <+ CFEL <+ Format", body("Format declaration.")),
-            carrier("CA-R-5", "CAPRMEDIO <+ MODEL <+ CFEL <+ Relation//depends_on",
+            carrier("CA-R-1", "ANECHOIC <+ MODEL <+ Node", body("Node declaration.")),
+            carrier("CA-R-2", "ANECHOIC <+ MODEL <+ Node.Status", body("Status declaration.")),
+            carrier("CA-R-3", "ANECHOIC <+ MODEL <+ Node//Example", body("Example declaration.")),
+            carrier("CA-R-4", "ANECHOIC <+ MODEL <+ CFEL <+ Format", body("Format declaration.")),
+            carrier("CA-R-5", "ANECHOIC <+ MODEL <+ CFEL <+ Relation//depends_on",
                     body("Relation declaration."), form="Relation Definition"),
-            carrier("CA-R-6", "CAPRMEDIO <+ STRUCTURE <+ Project", body("Project declaration.")),
-            carrier("CA-R-7", "CAPRMEDIO <+ STRUCTURE <+ Project//caprmedio",
+            carrier("CA-R-6", "ANECHOIC <+ STRUCTURE <+ Project", body("Project declaration.")),
+            carrier("CA-R-7", "ANECHOIC <+ STRUCTURE <+ Project//anechoic",
                     body("Project declaration context."), form="Scope Unit Declaration"),
-            carrier("CA-R-8", "CAPRMEDIO <+ MODEL <+ Node", body("Node rule."), form="Rule"),
-            carrier("CA-R-9", "CAPRMEDIO <+ MODEL <+ CFEL <+ Relation//depends_on",
+            carrier("CA-R-8", "ANECHOIC <+ MODEL <+ Node", body("Node rule."), form="Rule"),
+            carrier("CA-R-9", "ANECHOIC <+ MODEL <+ CFEL <+ Relation//depends_on",
                     body("Relation rule."), form="Rule"),
-            carrier("CA-R-10", "CAPRMEDIO <+ STRUCTURE <+ Project//caprmedio",
+            carrier("CA-R-10", "ANECHOIC <+ STRUCTURE <+ Project//anechoic",
                     body("Project rule."), form="Rule"),
-            carrier("CA-R-11", "CAPRMEDIO <+ MODEL <+ Projection", body("Projection declaration.")),
-            carrier("CA-R-12", "CAPRMEDIO <+ MODEL <+ Named Selection", body("Selection declaration.")),
-            carrier("CA-R-13", "CAPRMEDIO <+ MODEL <+ (Node, Node.**)", body("Node scope."), form="Rule"),
-            carrier("CA-R-14", "CAPRMEDIO <+ MODEL <+ (Node, Node.**)", body("Node scope."), form="Rule"),
-            carrier("CA-R-15", "CAPRMEDIO <+ STRUCTURE <+ Projection//PROJECT_SCOPE_UNIT_GRAPH",
+            carrier("CA-R-11", "ANECHOIC <+ MODEL <+ Projection", body("Projection declaration.")),
+            carrier("CA-R-12", "ANECHOIC <+ MODEL <+ Named Selection", body("Selection declaration.")),
+            carrier("CA-R-13", "ANECHOIC <+ MODEL <+ (Node, Node.**)", body("Node scope."), form="Rule"),
+            carrier("CA-R-14", "ANECHOIC <+ MODEL <+ (Node, Node.**)", body("Node scope."), form="Rule"),
+            carrier("CA-R-15", "ANECHOIC <+ STRUCTURE <+ Projection//PROJECT_SCOPE_UNIT_GRAPH",
                     body("Projection context."), form="Rule"),
-            carrier("CA-R-16", "CAPRMEDIO <+ STRUCTURE <+ Projection//PROJECT_SCOPE_UNIT_GRAPH",
+            carrier("CA-R-16", "ANECHOIC <+ STRUCTURE <+ Projection//PROJECT_SCOPE_UNIT_GRAPH",
                     body("Projection context."), form="Rule"),
-            carrier("CA-R-17", "CAPRMEDIO <+ STRUCTURE <+ Named Selection//Extension Sources",
+            carrier("CA-R-17", "ANECHOIC <+ STRUCTURE <+ Named Selection//Extension Sources",
                     body("Selection context."), form="Rule"),
         ])
 
@@ -794,14 +794,14 @@ Actual root detail.
         components = {row["target"]: row for row in graph["components"]}
         relations = {row["target"]: row for row in graph["relations"]}
         self.assertEqual("exact", entities["Node"]["shared"][0]["binding"])
-        self.assertEqual("CAPRMEDIO <+ MODEL <+ Node", entities["Node"]["shared"][0]["subject"])
+        self.assertEqual("ANECHOIC <+ MODEL <+ Node", entities["Node"]["shared"][0]["subject"])
         self.assertEqual("property", entities["Node.Status"]["kind"])
         self.assertEqual("instance", entities["Node//Example"]["kind"])
         self.assertEqual("component", components["Format"]["kind"])
         self.assertEqual("Project", entities["Project"]["shared"][0]["target"])
         self.assertEqual("scope_unit_declaration_context", entities["Project"]["shared"][0]["binding"])
         self.assertEqual("depends_on", relations["depends_on"]["target"])
-        self.assertEqual("CAPRMEDIO <+ MODEL <+ CFEL <+ Relation//depends_on",
+        self.assertEqual("ANECHOIC <+ MODEL <+ CFEL <+ Relation//depends_on",
                          relations["depends_on"]["shared"][0]["subject"])
         self.assertEqual(1, len(entities["Node"]["shared"]))
         self.assertEqual(2, len(entities["Projection"]["shared"]))
@@ -921,7 +921,7 @@ Carrier-specific constraint.
         graph = compose_contract_graph([
             carrier(
                 "CA-R-1", "CFEL <+ Relation//is_depended_on",
-                body("### Formal Claim", "```python", "from caprmedio.formal_claims import declare_relation",
+                body("### Formal Claim", "```python", "from anechoic.formal_claims import declare_relation",
                      "declare_relation(relation_name='is_depended_on', derived_from='depends_on',",
                      "  source_endpoint={'level': 'instances'}, target_endpoint={'level': 'instances'})",
                      "```", semantics="Reverse dependency."),
@@ -938,7 +938,7 @@ Carrier-specific constraint.
             carrier("CA-R-1", "Node", body("One.")),
             carrier("CA-R-2", "Node", body("Two.")),
             carrier("CA-R-3", "CFEL <+ Relation//RUN", body(
-                "### Formal Claim", "```python", "from caprmedio.formal_claims import declare_relation",
+                "### Formal Claim", "```python", "from anechoic.formal_claims import declare_relation",
                 "declare_relation(relation_name='RUN', written_alias='>>')", "```")),
         ])
 

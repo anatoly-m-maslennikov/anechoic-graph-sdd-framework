@@ -17,7 +17,7 @@ type: "Requirement"
 ---
 # Requirement — Reconcile the Development Backlog after release
 
-**after** the Release Record is accepted, CAPRMEDIO reconciles the Development Backlog against its exact released manifest.
+**after** the Release Record is accepted, ANECHOIC reconciles the Development Backlog against its exact released manifest.
 
 Candidates whose promoted Atoms were fully delivered **in** that release are removed from the Development Backlog. Unfinished, partially delivered, excluded, **or** newly deferred candidates remain unscheduled **or** move **to** another target version. a candidate cannot be removed as shipped **unless** the released manifest accounts for its promoted Atoms.
 

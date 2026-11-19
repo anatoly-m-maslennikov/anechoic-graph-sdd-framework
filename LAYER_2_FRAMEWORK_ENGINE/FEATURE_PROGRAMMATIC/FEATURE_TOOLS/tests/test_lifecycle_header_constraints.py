@@ -6,7 +6,7 @@ from ATOM_LIFECYCLE.header_constraints import compile_header_constraints, load_h
 def declaration(source, name, base, **constraints):
     args = ', '.join(f'{key}={value!r}' for key, value in constraints.items())
     body = ('## Claim\n### Formal Claim\n```python\n'
-            'from caprmedio.formal_claims import declare_entity\n'
+            'from anechoic.formal_claims import declare_entity\n'
             f'declare_entity(entity_name={name!r}, base_path={base!r}, '
             f'relation_name="IS_PROPERTY_OF", {args})\n```\n')
     return {'id': source, '_content_bytes': body.encode()}

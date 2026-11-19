@@ -1,0 +1,48 @@
+---
+atom_id: CA-O-216
+ref_id: CA-O-216
+container:
+  scope_unit: CA-SU-17
+role: Operations
+form: Action
+topics:
+  main_subject: "Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Storage"
+  dependencies:
+  - Subject/ANECHOIC/Carrier
+  - Subject/ANECHOIC/Graph/Node/Project Model/Continuant/Workflow
+  - Subject/ANECHOIC/Graph/Node/Project Model/Atom
+  - Subject/ANECHOIC/Graph/Node/Project Model/Actor
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Atom/Content Role: Operations/Type: Action'
+tier: 3
+status: Active
+version: 12
+updated_at: 2026-10-27 19:59:48 +0400
+carrier_destination:
+  file:
+    name: CA-O-216-CONNECTOR_TOOLS-ACTION--move-one-private-carrier.md
+    path: .anechoic_anechoic/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-17_FEATURE_CONNECTOR_TOOLS/09_operations
+current_scope_unit: CONNECTOR_TOOLS
+claim_target_scope_unit: CONNECTOR_TOOLS
+author: Anatoly Maslennikov
+---
+# Summary
+
+Move one private carrier
+
+## Operation
+
+Move One Private Carrier **means** the reusable private Action that realizes one explicitly bound file/folder location change behind an admitted logical connector `modify`, preserving the exact admitted carrier frontier **without** choosing a lifecycle transition.
+
+### Inputs **and** preconditions
+
+require CA-D-630's private move binding, approved source/destination roots **and** parents, expected source state, explicit destination **and** expected absence for an actual move, sealed permission/context **and** complete approved folder inventory. **any** basename change **must** already be explicit. for an Atom carrier, require the already admitted exact lifecycle/currentness/history context; no helper permission substitutes for it.
+
+### Action **and** result
+
+require CA-R-1941's exact staged-change review **and** fresh trusted authorization/window record, including recorded outside-edits-paused confirmation. within that confirmed window, apply CA-R-1941/CA-M-381 safety checks **and** recheck the complete bound source, destination, parents, inventory, preservation, authority **and** permission frontier **before** the effect. retain independent readback **and** verification. perform **only** the explicitly bound location change. reject root/ancestor effects, escapes, symlinks/substitution, stale state, collisions, overwrite, merging **and** unlisted entries. verify destination contents/modes/inventory, source absence **and** unchanged unrelated frontier independently.
+
+return CA-D-625's actual data/state/effects/errors. a same-binding no-op needs verified unchanged requested state; missing expected-present source does **not** prove an earlier move. retain known partial effects **and** mark uncertainty with `effect_uncertain`; errors are **not** success. no new transaction, retry, resume **or** concurrent-publication guarantee is implied.
+
+## Details
+
+Archive, retire, upgrade, replacement, identity/Version metadata and history remain owned by their existing admitted operation. This Action supplies only internal carrier movement and never reports lifecycle completion or rewrites references. No executable or runtime admission is established.

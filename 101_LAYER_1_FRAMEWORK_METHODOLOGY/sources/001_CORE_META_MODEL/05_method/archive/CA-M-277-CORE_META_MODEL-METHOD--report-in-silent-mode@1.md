@@ -18,13 +18,13 @@ version: 1
 updated_at: "2026-09-11 18:18:55 +0400"
 relations:
   relates_to:
-    - "CAPRMEDIO-GOV-REQU-294"
+    - "ANECHOIC-GOV-REQU-294"
     - "CA-R-1439"
     - "CA-R-1440"
-    - "CAPRMEDIO-META-REQU-087"
+    - "ANECHOIC-META-REQU-087"
     - "CA-M-137"
-    - "CAPRMEDIO-META-REQU-675"
+    - "ANECHOIC-META-REQU-675"
 ---
 # Report in silent mode
 
-**to** report **in** `silent` mode, answer exploratory input normally **and**, apart from the mandatory information governed by CA-R-1440, report **only** durable Artifacts **or** Project state that CAPRMEDIO created, updated, archived, committed, **or** **otherwise** changed; omit ordinary announcements of mode selection, workflow routing, Skill chaining, **and** gate transitions.
+**to** report **in** `silent` mode, answer exploratory input normally **and**, apart from the mandatory information governed by CA-R-1440, report **only** durable Artifacts **or** Project state that ANECHOIC created, updated, archived, committed, **or** **otherwise** changed; omit ordinary announcements of mode selection, workflow routing, Skill chaining, **and** gate transitions.

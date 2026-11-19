@@ -1,24 +1,24 @@
 ---
 subjects:
-  active: 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Terms Graph)'
+  active: 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Terms Graph)'
   passive:
-  - CAPRMEDIO_MODEL <+ Package
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Package/Eval Package
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Package/Runtime Package
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Package <+ Module
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Package <+ Module <+ Code Unit
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom/(.Header.Role: Method)/(.Header.Form: Term Definition)'
-  - CAPRMEDIO_MODEL <+ Term
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//NARROWER_THAN
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
-  - CAPRMEDIO_MODEL <+ Projection
-  - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom/(.Header.Role: Requirement)/(.Header.Form: Entity Definition)'
-  - CAPRMEDIO_MODEL <+ Atom.Content
-  - CAPRMEDIO_MODEL <+ Entity
-  - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom/(.Header.Role: Operations)/(.Header.Form: Action)'
-  - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom/(.Header.Role: Operations)/(.Header.Form: Workflow)'
-  - CAPRMEDIO_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Package
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Package/Eval Package
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Package/Runtime Package
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Package <+ Module
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Package <+ Module <+ Code Unit
+  - ANECHOIC_MODEL <+ Scope Unit
+  - 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom/(.Header.Role: Method)/(.Header.Form: Term Definition)'
+  - ANECHOIC_MODEL <+ Term
+  - ANECHOIC_MODEL <+ CFEL <+ Relation//NARROWER_THAN
+  - ANECHOIC_MODEL <+ CFEL <+ Relation
+  - ANECHOIC_MODEL <+ Projection
+  - 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom/(.Header.Role: Requirement)/(.Header.Form: Entity Definition)'
+  - ANECHOIC_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ Entity
+  - 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom/(.Header.Role: Operations)/(.Header.Form: Action)'
+  - 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom/(.Header.Role: Operations)/(.Header.Form: Workflow)'
+  - ANECHOIC_MODEL <+ Atom
 version: 49
 updated_at: 2026-11-02 00:18:22 +0400
 relations:

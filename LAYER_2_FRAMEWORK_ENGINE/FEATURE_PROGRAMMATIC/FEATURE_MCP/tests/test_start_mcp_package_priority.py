@@ -15,14 +15,14 @@ class StartMcpPackagePriorityTests(unittest.TestCase):
         temporary = tempfile.TemporaryDirectory(prefix="local-package-priority-")
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name).resolve()
-        deployed = self.root / ".caprmedio_runtime/start_mcp.py"
+        deployed = self.root / ".anechoic_runtime/start_mcp.py"
         deployed.parent.mkdir()
         deployed.write_bytes(fixture.SCRIPT.read_bytes())
         self.module = fixture.StartMcpScriptTests()._module(deployed)
-        self.local = self.root / ".caprmedio_runtime/simple_local_release/package"
-        self.old = self.root / ".caprmedio_install/releases" / ("a" * 64)
+        self.local = self.root / ".anechoic_runtime/simple_local_release/package"
+        self.old = self.root / ".anechoic_install/releases" / ("a" * 64)
         self.launcher(self.old)
-        self.selector = self.root / ".caprmedio_install/current.toml"
+        self.selector = self.root / ".anechoic_install/current.toml"
         self.selector.write_text('release_relpath = "releases/' + "a" * 64 + '"\n')
 
     def launcher(self, package):
@@ -33,7 +33,7 @@ class StartMcpPackagePriorityTests(unittest.TestCase):
 
     def test_local_package_wins_without_changing_old_selector_or_runtime_config(self):
         launcher = self.launcher(self.local)
-        config = self.root / ".caprmedio_runtime/config.toml"
+        config = self.root / ".anechoic_runtime/config.toml"
         config.write_bytes(b"retained = true\n")
         before = self.selector.read_bytes()
         with patch.object(

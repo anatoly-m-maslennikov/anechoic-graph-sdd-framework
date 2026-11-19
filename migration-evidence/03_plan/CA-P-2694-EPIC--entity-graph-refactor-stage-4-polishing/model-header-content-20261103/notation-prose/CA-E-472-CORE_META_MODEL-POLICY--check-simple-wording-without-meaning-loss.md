@@ -5,20 +5,20 @@ relations:
   evaluation_for:
   - CA-M-294
 subjects:
-  active: CAPRMEDIO_MODEL <+ Atom.Content
+  active: ANECHOIC_MODEL <+ Atom.Content
   passive:
-  - CAPRMEDIO_MODEL <+ Package
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Package/Eval Package
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Package/Runtime Package
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Package <+ Module
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Package <+ Module <+ Code Unit
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ Entity
-  - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom/(.Header.Role: Method)/(.Header.Form: Term Definition)'
-  - CAPRMEDIO_MODEL <+ Actor
-  - CAPRMEDIO_MODEL <+ Atom.Content.Summary
-  - CAPRMEDIO_MODEL <+ Term
-  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Authoring <+ Controlled English
+  - ANECHOIC_MODEL <+ Package
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Package/Eval Package
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Package/Runtime Package
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Package <+ Module
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Package <+ Module <+ Code Unit
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Entity
+  - 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom/(.Header.Role: Method)/(.Header.Form: Term Definition)'
+  - ANECHOIC_MODEL <+ Actor
+  - ANECHOIC_MODEL <+ Atom.Content.Summary
+  - ANECHOIC_MODEL <+ Term
+  - ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Authoring <+ Controlled English
 atom_id: CA-E-472
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL

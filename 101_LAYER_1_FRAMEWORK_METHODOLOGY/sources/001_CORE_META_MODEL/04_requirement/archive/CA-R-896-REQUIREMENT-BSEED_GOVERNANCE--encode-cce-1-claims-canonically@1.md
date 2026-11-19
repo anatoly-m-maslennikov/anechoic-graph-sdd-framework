@@ -6,7 +6,7 @@ relations:
     - CA-R-892
     - CA-R-894
     - CA-R-895
-    - CAPRMEDIO-GOV-REQU-345--represent-accepted-meaning-faithfully
+    - ANECHOIC-GOV-REQU-345--represent-accepted-meaning-faithfully
 version: 1
 updated_at: 2026-08-22 02:53:47
 ---

@@ -6,7 +6,7 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Carrier
+  main_subject: ANECHOIC_MODEL <+ Carrier
 tier: 3
 status: Active
 version: 13
@@ -14,11 +14,11 @@ updated_at: 2026-11-02 19:44:26 +0400
 carrier_destination:
   file:
     name: CA-D-502-PROJECT_CONFIGURATION-DECISION--exclude-secrets-from-production-logs.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/07_delivery
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: PROJECT_CONFIGURATION
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/07_delivery/CA-D-502-PROJECT_CONFIGURATION-ENG_DECISION--exclude-secrets-from-production-logs.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/07_delivery/CA-D-502-PROJECT_CONFIGURATION-ENG_DECISION--exclude-secrets-from-production-logs.md
   source_atom_id: CA-D-502
   source_atom_revision: 13
   source_sha256: d30efd04303fd4b2580ae486b8f571e3576530051b39ec416e6e86bae32d7d7a

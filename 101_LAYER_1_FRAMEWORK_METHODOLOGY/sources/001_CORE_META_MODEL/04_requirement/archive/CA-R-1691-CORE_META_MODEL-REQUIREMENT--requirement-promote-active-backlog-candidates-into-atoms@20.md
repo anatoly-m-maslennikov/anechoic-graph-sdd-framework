@@ -20,7 +20,7 @@ global_tier: 11
 ---
 # Requirement — Promote active backlog candidates into Atoms
 
-assigning a Development Backlog candidate **to** a current **or** future version does **not** establish governed truth. the candidate becomes active work **only** **when** the operator selects it **and** CAPRMEDIO creates one bounded Task Atom for its action. Execution **then** materializes the minimum Requirement, Method, Evaluation, Delivery, **or** future Operations Atoms needed **to** govern that work.
+assigning a Development Backlog candidate **to** a current **or** future version does **not** establish governed truth. the candidate becomes active work **only** **when** the operator selects it **and** ANECHOIC creates one bounded Task Atom for its action. Execution **then** materializes the minimum Requirement, Method, Evaluation, Delivery, **or** future Operations Atoms needed **to** govern that work.
 
 one backlog line **may** produce multiple Atoms. multiple closely related backlog lines **may** produce one Concern **or** RMED Atom **only** **when** they resolve **to** one independently replaceable claim. Analysis, Task, Implementation, **and** Operations use their separately governed atomicity models.
 
@@ -28,4 +28,4 @@ the backlog entry **may** link the resulting Atoms for navigation but remains a 
 
 ## Primary claim
 
-a Development Backlog candidate becomes active **only** through a bounded Task Atom; specification **or** other semantic authority arises **only** from the applicable CAPRMEDIO Atoms created **or** revised during execution.
+a Development Backlog candidate becomes active **only** through a bounded Task Atom; specification **or** other semantic authority arises **only** from the applicable ANECHOIC Atoms created **or** revised during execution.

@@ -86,9 +86,9 @@ class SharedBackendParityTests(unittest.IsolatedAsyncioTestCase):
 
     def _project(self, name: str) -> Path:
         root = self.projects / name
-        control = root / f".caprmedio_{name}"
+        control = root / f".anechoic_{name}"
         control.mkdir(parents=True)
-        (control / "caprmedio_project_settings.toml").write_text(
+        (control / "anechoic_project_settings.toml").write_text(
             f'[project]\nname="{name}"\n[paths]\ncontrol_root="{control.name}"\n'
             f'[artifacts.identity]\nproject_prefix="{name.upper()}"\n'
         )

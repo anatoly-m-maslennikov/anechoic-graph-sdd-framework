@@ -6,13 +6,13 @@ container:
 role: Method
 form: Implementation Method
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Content
+  main_subject: ANECHOIC_MODEL <+ Atom.Content
   dependencies:
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled English"
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Data Validation"
-  - CAPRMEDIO_MODEL <+ Atom.Content
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Role
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Form
+  - "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled English"
+  - "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Data Validation"
+  - ANECHOIC_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Role
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Form
 tier: 7
 relations:
   child_of:
@@ -24,11 +24,11 @@ updated_at: 2026-11-02 18:35:20 +0400
 carrier_destination:
   file:
     name: CA-M-315-CORE_META_MODEL-IMPLEMENTATION_METHOD--validate-claims-against-effective-cce-role-profiles.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-315-CORE_META_MODEL--validate-claims-against-effective-cce-role-profiles.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-315-CORE_META_MODEL--validate-claims-against-effective-cce-role-profiles.md
   source_atom_id: CA-M-315
   source_atom_revision: 26
   source_sha256: 4ea1ea650164c04ff6f0ba5aff046b5c5f469e2f3a231d57089022dfca64c32a

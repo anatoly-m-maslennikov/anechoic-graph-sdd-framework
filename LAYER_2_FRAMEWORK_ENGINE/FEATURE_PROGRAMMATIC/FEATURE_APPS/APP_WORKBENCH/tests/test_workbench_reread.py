@@ -49,7 +49,7 @@ class WorkbenchRereadTests(unittest.TestCase):
         self.source = Path(declarations["ENGINE"]["authority_path"]) / "04_requirement" / "CA-R-501.md"
         write_atom(self.source, "CA-R-501")
         self.source_bytes = self.source.read_bytes()
-        database = self.root / ".caprmedio_runtime" / "workbench" / "projection.duckdb"
+        database = self.root / ".anechoic_runtime" / "workbench" / "projection.duckdb"
         database.parent.mkdir(parents=True)
         connection = duckdb.connect(str(database))
         try:
@@ -63,7 +63,7 @@ class WorkbenchRereadTests(unittest.TestCase):
 
     def test_reread_rebuilds_only_derived_database_and_preserves_sources_and_saved_queries(self) -> None:
         before = asyncio.run(self.tools.call("query_run", {"sql": "SELECT 1", "save": True}))
-        database = self.root / ".caprmedio_runtime" / "workbench" / "projection.duckdb"
+        database = self.root / ".anechoic_runtime" / "workbench" / "projection.duckdb"
         temporary = database.parent / "duckdb-temp"
         self.assertTrue(database.is_file())
         self.assertTrue(temporary.is_dir())

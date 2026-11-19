@@ -119,7 +119,7 @@ class SharedProjectPoolTests(unittest.IsolatedAsyncioTestCase):
             with patch("shared_project_pool.sys.stderr", stream):
                 with self.assertRaisesRegex(RuntimeError, "private detail"):
                     await pool.acquire(_selection("alpha"))
-        self.assertEqual("caprmedio: technical diagnostics unavailable\n", stream.getvalue())
+        self.assertEqual("anechoic: technical diagnostics unavailable\n", stream.getvalue())
 
     async def test_eviction_close_failure_warns_and_does_not_leak_reservation(self):
         factory = _Factory(

@@ -1,12 +1,12 @@
 ---
 subjects:
-  active: CAPRMEDIO_MODEL <+ CFEL <+ Relation//BLOCKS
+  active: ANECHOIC_MODEL <+ CFEL <+ Relation//BLOCKS
   passive:
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan)/(.Header.Form := Plan)'
-  - CAPRMEDIO_MODEL <+ Projection
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan).Header.Status: Done'
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ CFEL > Relation//DEPENDS_ON
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Role := Plan)/(.Header.Form := Plan)'
+  - ANECHOIC_MODEL <+ Projection
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Role := Plan).Header.Status: Done'
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ CFEL > Relation//DEPENDS_ON
 version: 27
 updated_at: 2026-11-03 20:00:05 +0400
 relations: {}
@@ -20,7 +20,7 @@ form: Declaration
 carrier_destination:
   file:
     name: CA-R-1580-CORE_META_MODEL-DECLARATION--define-plan-blocking.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 ---
 ## Summary
 

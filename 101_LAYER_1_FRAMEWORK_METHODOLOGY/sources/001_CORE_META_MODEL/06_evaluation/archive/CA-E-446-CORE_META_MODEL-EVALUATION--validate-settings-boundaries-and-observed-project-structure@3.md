@@ -18,14 +18,14 @@ version: 3
 updated_at: "2026-09-10 02:19:47 +0400"
 relations:
   evaluation_for:
-    - "CAPRMEDIO-META-REQU-619"
+    - "ANECHOIC-META-REQU-619"
     - "CA-R-1402"
     - "CA-R-1052"
     - "CA-R-1429"
     - "CA-R-1430"
-    - "CAPRMEDIO-META-REQU-620"
+    - "ANECHOIC-META-REQU-620"
     - "CA-R-626"
-    - "CAPRMEDIO-META-REQU-627"
+    - "ANECHOIC-META-REQU-627"
     - "CA-D-317"
     - "CA-D-318"
     - "CA-D-359"
@@ -35,7 +35,7 @@ relations:
 
 ## Test case
 
-create two Projects in one repository, **every** Project with its own Project Settings **and** `000_CAPRMEDIO_framework` directory. resolve both settings before creating Project Atoms **or** Implementation. select different Authority Modes **and** Extension settings for the two instances. add a Scope Unit directory with no active Goal, a Draft Goal, **and** an archived Goal.
+create two Projects in one repository, **every** Project with its own Project Settings **and** `000_ANECHOIC_framework` directory. resolve both settings before creating Project Atoms **or** Implementation. select different Authority Modes **and** Extension settings for the two instances. add a Scope Unit directory with no active Goal, a Draft Goal, **and** an archived Goal.
 
 ## Acceptance criteria
 

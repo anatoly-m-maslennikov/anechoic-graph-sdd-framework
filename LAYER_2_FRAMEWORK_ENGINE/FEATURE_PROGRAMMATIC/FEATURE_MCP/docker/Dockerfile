@@ -18,24 +18,24 @@ ARG RUNTIME_GID=1000
 RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates \
     && git config --system --add safe.directory /project \
     && rm -rf /var/lib/apt/lists/* \
-    && (getent group ${RUNTIME_GID} || groupadd -g ${RUNTIME_GID} caprmedio) \
-    && useradd -u ${RUNTIME_UID} -g ${RUNTIME_GID} -m -d /home/caprmedio caprmedio
+    && (getent group ${RUNTIME_GID} || groupadd -g ${RUNTIME_GID} anechoic) \
+    && useradd -u ${RUNTIME_UID} -g ${RUNTIME_GID} -m -d /home/anechoic anechoic
 RUN python -m pip install --no-cache-dir uv==0.12.18
 WORKDIR /workspace
 COPY pyproject.toml uv.lock ./
 ENV UV_PROJECT_ENVIRONMENT=/opt/venv UV_CACHE_DIR=/tmp/uv-cache
-RUN --mount=type=cache,id=caprmedio-uv,target=/tmp/uv-cache uv sync --locked --no-dev --group rmed-workflow-mcp --group workbench
-RUN /opt/venv/bin/python -c "import duckdb; c=duckdb.connect(':memory:',config={'extension_directory':'/home/caprmedio/.duckdb/extensions'}); c.execute('INSTALL duckpgq FROM community'); c.close()" \
-    && chown -R ${RUNTIME_UID}:${RUNTIME_GID} /home/caprmedio/.duckdb
+RUN --mount=type=cache,id=anechoic-uv,target=/tmp/uv-cache uv sync --locked --no-dev --group rmed-workflow-mcp --group workbench
+RUN /opt/venv/bin/python -c "import duckdb; c=duckdb.connect(':memory:',config={'extension_directory':'/home/anechoic/.duckdb/extensions'}); c.execute('INSTALL duckpgq FROM community'); c.close()" \
+    && chown -R ${RUNTIME_UID}:${RUNTIME_GID} /home/anechoic/.duckdb
 COPY version.toml ./
 COPY LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC ./LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC
 COPY LAYER_2_FRAMEWORK_ENGINE/FEATURE_AGENTIC/FEATURE_SKILLS/ca \
      ./LAYER_2_FRAMEWORK_ENGINE/FEATURE_AGENTIC/FEATURE_SKILLS/ca
 COPY --from=workbench_frontend /frontend/dist \
      ./LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_APPS/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/dist
-RUN mkdir -p /workspace/.caprmedio_install \
-    /workspace/.caprmedio_tmp /workspace/tmp /workspace/.caprmedio_caprmedio \
-    && chown -R ${RUNTIME_UID}:${RUNTIME_GID} /home/caprmedio
+RUN mkdir -p /workspace/.anechoic_install \
+    /workspace/.anechoic_tmp /workspace/tmp /workspace/.anechoic_anechoic \
+    && chown -R ${RUNTIME_UID}:${RUNTIME_GID} /home/anechoic
 ENV PATH=/opt/venv/bin:/usr/local/bin:/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1
-USER caprmedio
+USER anechoic
 ENTRYPOINT ["/opt/venv/bin/python", "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_MCP/docker/entrypoint.py"]

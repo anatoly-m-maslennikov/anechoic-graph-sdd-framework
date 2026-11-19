@@ -11,9 +11,9 @@ relations:
   child_of:
     - CA-D-361
   relates_to:
-    - CAPRMEDIO-GOV-REQU-294
-    - CAPRMEDIO-META-REQU-675
+    - ANECHOIC-GOV-REQU-294
+    - ANECHOIC-META-REQU-675
 ---
 # Serialize Interaction Reporting Mode
 
-an explicit instance reporting default **in** the Framework Instance Settings TOML Carrier **must** use `reporting_mode` **in** the `[interaction]` section, using an allowed value governed by CAPRMEDIO-GOV-REQU-294.
+an explicit instance reporting default **in** the Framework Instance Settings TOML Carrier **must** use `reporting_mode` **in** the `[interaction]` section, using an allowed value governed by ANECHOIC-GOV-REQU-294.

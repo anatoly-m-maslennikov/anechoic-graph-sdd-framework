@@ -6,7 +6,7 @@ version: 19
 updated_at: "2026-10-03 02:55:28 +0400"
 relations:
   child_of:
-    - CAPRMEDIO-REQU-686-CORE-REQUIREMENT--separate-core-extension-and-project-configuration-authority
+    - ANECHOIC-REQU-686-CORE-REQUIREMENT--separate-core-extension-and-project-configuration-authority
 atom_id: "CA-R-1752"
 content_role: "Requirement"
 current_scope_unit: "CORE_META_MODEL"

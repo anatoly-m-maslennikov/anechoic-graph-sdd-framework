@@ -6,12 +6,12 @@ container:
 role: Evaluation
 form: Eval Case
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Carrier
+  main_subject: ANECHOIC_MODEL <+ Carrier
   dependencies:
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow)'
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow) >{1+} Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Step)'
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Action)'
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow)'
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow) >{1+} Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Step)'
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Action)'
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
 tier: 4
 relations:
   evaluation_for:
@@ -24,11 +24,11 @@ updated_at: 2026-11-02 00:18:22 +0400
 carrier_destination:
   file:
     name: CA-E-513-PROJECT_CONFIGURATION-EVAL_CASE--validate-the-atom-carrier-validation-workflow-definition.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: PROJECT_CONFIGURATION
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation/CA-E-513-PROJECT_CONFIGURATION-EVAL_CASE--validate-the-atom-carrier-validation-workflow-definition.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation/CA-E-513-PROJECT_CONFIGURATION-EVAL_CASE--validate-the-atom-carrier-validation-workflow-definition.md
   source_atom_id: CA-E-513
   source_atom_revision: 23
   source_sha256: 5c462b8ee415668bab765398a6ff642fa83044e193bffdacaf639f90a643dec6

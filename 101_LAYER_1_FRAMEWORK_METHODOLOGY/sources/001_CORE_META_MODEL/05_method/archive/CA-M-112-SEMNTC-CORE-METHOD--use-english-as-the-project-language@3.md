@@ -12,4 +12,4 @@ relations:
 ---
 # Use English as the Project language
 
-TO express CAPRMEDIO Project meaning, the Author MUST use English as the base language.
+TO express ANECHOIC Project meaning, the Author MUST use English as the base language.

@@ -11,7 +11,7 @@ llm_session_ids:
   - codex:019f591f-04f6-70f2-8de7-828b7cccc69d
 relations:
   child_of:
-    - CAPRMEDIO-META-REQU-128--separate-artifact-carrier-and-revision
+    - ANECHOIC-META-REQU-128--separate-artifact-carrier-and-revision
 ---
 # Preserve Artifact identity across Carrier migration
 

@@ -6,16 +6,16 @@ container:
 role: Evaluation
 form: Eval Policy
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Scope Unit
+  main_subject: ANECHOIC_MODEL <+ Scope Unit
   dependencies:
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ Carrier
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Actor/Operator
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Execution Control <+ Decision Confidence"
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Requirement)/(.Header.Context.Form := Goal)'
-  - CAPRMEDIO_MODEL <+ Project
-  - CAPRMEDIO_MODEL <+ Projection
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Carrier
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Actor/Operator
+  - "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Execution Control <+ Decision Confidence"
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Requirement)/(.Header.Context.Form := Goal)'
+  - ANECHOIC_MODEL <+ Project
+  - ANECHOIC_MODEL <+ Projection
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
 tier: 4
 relations:
   evaluation_for:
@@ -29,11 +29,11 @@ updated_at: 2026-11-02 19:44:26 +0400
 carrier_destination:
   file:
     name: CA-E-471-PROJECT_CONFIGURATION-EVAL_POLICY--validate-structural-change-cutover.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: PROJECT_CONFIGURATION
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation/CA-E-471-PROJECT_CONFIGURATION-POLICY--validate-structural-change-cutover.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation/CA-E-471-PROJECT_CONFIGURATION-POLICY--validate-structural-change-cutover.md
   source_atom_id: CA-E-471
   source_atom_revision: 28
   source_sha256: 7f340828fccfc10e2ad528930877366ca63c5d4d018fe2fda60c9403771451fb

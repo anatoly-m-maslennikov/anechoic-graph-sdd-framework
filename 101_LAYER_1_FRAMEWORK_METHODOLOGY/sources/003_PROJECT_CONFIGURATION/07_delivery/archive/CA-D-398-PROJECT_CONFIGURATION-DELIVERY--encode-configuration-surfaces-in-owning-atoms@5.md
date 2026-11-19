@@ -13,7 +13,7 @@ updated_at: "2026-09-15 00:19:55 +0000"
 relations:
   child_of:
     - "CA-D-311"
-    - "CAPRMEDIO-META-REQU-675"
+    - "ANECHOIC-META-REQU-675"
 llm_session_ids:
   - codex:01a02650-eff7-7453-8c37-0699b36773c6
 ---

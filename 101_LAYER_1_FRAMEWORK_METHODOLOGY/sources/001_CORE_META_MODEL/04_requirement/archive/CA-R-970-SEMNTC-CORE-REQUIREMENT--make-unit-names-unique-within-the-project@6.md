@@ -11,7 +11,7 @@ updated_at: 2026-08-29 01:16:37 +0400
 relations:
   child_of:
     - CA-R-962
-    - CAPRMEDIO-META-REQU-716
+    - ANECHOIC-META-REQU-716
 ---
 # Make Unit Names unique within the Project
 

@@ -103,7 +103,7 @@ class WorkbenchRestartTests(unittest.IsolatedAsyncioTestCase):
         authority = Path(self.declarations["ENGINE"]["authority_path"])
         write_atom(authority / "04_requirement" / "CA-R-501-source.md", "CA-R-501")
         self.app = create_app(self.root, selection=startup_selection(self.root))
-        extension_directory = REPOSITORY / ".caprmedio_tmp" / "workbench" / "extensions"
+        extension_directory = REPOSITORY / ".anechoic_tmp" / "workbench" / "extensions"
         self.app.gateway.workbench = _ConfiguredWorkbenchTools(self.root, extension_directory)
 
     @asynccontextmanager
@@ -206,7 +206,7 @@ class WorkbenchRestartTests(unittest.IsolatedAsyncioTestCase):
                 side_effect=OSError("disk full"),
             ):
                 partial_http = await client.post(
-                    "/caprmedio/workbench/fixture/run",
+                    "/anechoic/workbench/fixture/run",
                     json={"sql": "SELECT 44", "save": True, "result_delivery": "inline"},
                 )
             self.assertEqual(200, partial_http.status_code)

@@ -64,20 +64,20 @@ class WorkbenchDockerE2E(
 
     @classmethod
     def setUpClass(cls) -> None:  # noqa: C901
-        image = os.environ.get("CAPRMEDIO_IMAGE")
+        image = os.environ.get("ANECHOIC_IMAGE")
         if not image:
-            raise RuntimeError("CAPRMEDIO_IMAGE is required; the full suite builds the current-code image once")
+            raise RuntimeError("ANECHOIC_IMAGE is required; the full suite builds the current-code image once")
         cls.image = image
         cls.port = free_port()
-        cls.name = f"caprmedio-workbench-e2e-{uuid4().hex}"
+        cls.name = f"anechoic-workbench-e2e-{uuid4().hex}"
         cls.url = f"http://127.0.0.1:{cls.port}"
-        cls.target = next((path for path in (REPOSITORY / ".caprmedio_caprmedio").rglob("CA-R-2723-*.md") if not
+        cls.target = next((path for path in (REPOSITORY / ".anechoic_anechoic").rglob("CA-R-2723-*.md") if not
                            {"archive", "archived", "draft", "drafts"}.intersection(
                                part.casefold() for part in path.relative_to(REPOSITORY).parts)), None)
         if cls.target is None:
             raise RuntimeError("current CA-R-2723 source is required for the Workbench Docker proof")
         cls.before_hash = hashlib.sha256(cls.target.read_bytes()).hexdigest()
-        cls.project_name = read_project_name(REPOSITORY / ".caprmedio_caprmedio")
+        cls.project_name = read_project_name(REPOSITORY / ".anechoic_anechoic")
         cls.workbench_path = f"{WORKBENCH_PATH}/{cls.project_name}"
         cls.journal_relative = configured_journal_root(REPOSITORY)
         cls.runtime = tempfile.TemporaryDirectory()
@@ -114,12 +114,12 @@ class WorkbenchDockerE2E(
         cls.process = subprocess.Popen(
             [
                 "docker", "run", "--rm", "--name", cls.name,
-                "--label", "caprmedio.test=workbench-e2e",
+                "--label", "anechoic.test=workbench-e2e",
                 "--memory=1536m", "--memory-swap=1536m",
                 "--tmpfs", "/tmp:rw,nosuid,nodev,size=256m",
                 "-p", f"127.0.0.1:{cls.port}:8092", "-v", f"{REPOSITORY}:/project:ro",
-                "-v", f"{cls.runtime_root}:/project/.caprmedio_runtime:rw",
-                "-v", f"{cls.result_root}:/project/.caprmedio_tmp:rw",
+                "-v", f"{cls.runtime_root}:/project/.anechoic_runtime:rw",
+                "-v", f"{cls.result_root}:/project/.anechoic_tmp:rw",
                 "-v", f"{cls.journal_state}:{cls.journal_mount}:rw",
                 image, "mcp-http",
             ],
@@ -141,11 +141,11 @@ class WorkbenchDockerE2E(
                     project_mounts = [mount for mount in json.loads(mounts) if mount["Destination"] == "/project"]
                     if len(project_mounts) != 1 or project_mounts[0]["RW"]:
                         raise RuntimeError("Workbench MCP project mount is not read-only")
-                    runtime_mounts = [mount for mount in json.loads(mounts) if mount["Destination"] == "/project/.caprmedio_runtime"]
+                    runtime_mounts = [mount for mount in json.loads(mounts) if mount["Destination"] == "/project/.anechoic_runtime"]
                     if (len(runtime_mounts) != 1 or not runtime_mounts[0]["RW"]
                             or Path(runtime_mounts[0]["Source"]).resolve() != cls.runtime_root.resolve()):
                         raise RuntimeError("Workbench runtime root is not the owned writable host directory")
-                    state_mounts = [mount for mount in json.loads(mounts) if mount["Destination"] == "/project/.caprmedio_runtime/workbench"]
+                    state_mounts = [mount for mount in json.loads(mounts) if mount["Destination"] == "/project/.anechoic_runtime/workbench"]
                     if state_mounts or cls.workbench_state.parent != cls.runtime_root:
                         raise RuntimeError("Workbench state must use the owned runtime mount")
                     journal_mounts = [mount for mount in json.loads(mounts) if mount["Destination"] == cls.journal_mount]
@@ -177,7 +177,7 @@ class WorkbenchDockerE2E(
         if stderr is not None:
             try:
                 stderr.seek(0)
-                (REPOSITORY / ".caprmedio_tmp/workbench/latest-container.stderr.log").write_text(stderr.read())
+                (REPOSITORY / ".anechoic_tmp/workbench/latest-container.stderr.log").write_text(stderr.read())
             except OSError:
                 pass
 
@@ -312,7 +312,7 @@ class WorkbenchDockerE2E(
     def test_workbench_browser_flows(self) -> None:
         environment = os.environ | {
             "WORKBENCH_E2E_URL": f"{self.url}{self.workbench_path}",
-            "PLAYWRIGHT_BROWSERS_PATH": str(REPOSITORY / ".caprmedio_tmp/workbench/playwright-browsers"),
+            "PLAYWRIGHT_BROWSERS_PATH": str(REPOSITORY / ".anechoic_tmp/workbench/playwright-browsers"),
         }
         try:
             result = subprocess.run(
@@ -355,7 +355,7 @@ class WorkbenchDockerE2E(
         self.assertEqual("json_matrix", artifact["format"])
         self.assertEqual(1, artifact["row_count"])
         result_path = Path(artifact["path"])
-        self.assertEqual((".caprmedio_tmp", "workbench", "query_results"), result_path.parts[:3])
+        self.assertEqual((".anechoic_tmp", "workbench", "query_results"), result_path.parts[:3])
         self.assertEqual({"columns": ["value"], "rows": [[123]]}, json.loads(
             (self.result_root / Path(*result_path.parts[1:])).read_text(encoding="utf-8")
         ))

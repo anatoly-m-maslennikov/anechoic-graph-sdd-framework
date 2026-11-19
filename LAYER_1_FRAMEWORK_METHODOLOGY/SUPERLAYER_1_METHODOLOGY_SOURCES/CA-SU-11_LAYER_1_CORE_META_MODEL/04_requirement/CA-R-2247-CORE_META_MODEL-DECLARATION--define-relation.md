@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Relation
+  main_subject: ANECHOIC_MODEL <+ Relation
 tier: 1
 status: active
 version: 16
@@ -14,7 +14,7 @@ updated_at: '2026-11-13T22:35:15.466785+00:00'
 carrier_destination:
   file:
     name: CA-R-2247-CORE_META_MODEL-DECLARATION--define-relation.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 ---
 ## Summary
 
@@ -34,7 +34,7 @@ Each Relation Property has exactly one bearer, which is the Relation or another 
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_entity
+from anechoic.formal_claims import declare_entity
 
 class Relation:
     pass

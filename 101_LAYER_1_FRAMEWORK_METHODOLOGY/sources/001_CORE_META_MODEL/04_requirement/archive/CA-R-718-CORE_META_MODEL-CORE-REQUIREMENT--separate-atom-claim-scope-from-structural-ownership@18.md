@@ -9,7 +9,7 @@ version: 18
 updated_at: "2026-09-22 17:59:17 +0000"
 relations:
   child_of:
-    - CAPRMEDIO-REQU-045
+    - ANECHOIC-REQU-045
 ---
 # Separate Atom Claim Scope from structural ownership
 

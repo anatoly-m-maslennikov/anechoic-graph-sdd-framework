@@ -4,11 +4,11 @@ ref_id: CA-R-2686
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Scope Unit.order.number
+  main_subject: ANECHOIC_MODEL <+ Scope Unit.order.number
   dependencies:
-  - CAPRMEDIO_MODEL <+ Scope Unit.order
-  - CAPRMEDIO_MODEL <+ Scope Unit.order.ordered
-  - CAPRMEDIO_MODEL <+ Format/int
+  - ANECHOIC_MODEL <+ Scope Unit.order
+  - ANECHOIC_MODEL <+ Scope Unit.order.ordered
+  - ANECHOIC_MODEL <+ Format/int
 tier: 3
 status: active
 version: 2
@@ -16,9 +16,9 @@ updated_at: '2026-11-13T22:57:24.985880+00:00'
 destination:
   file:
     name: CA-R-2686-CORE_META_MODEL-DECLARATION--declare-scope-unit-order-number.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2686-CORE_META_MODEL-DECLARATION--declare-scope-unit-order-number.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2686-CORE_META_MODEL-DECLARATION--declare-scope-unit-order-number.md
   source_atom_id: CA-R-2686
   source_atom_revision: 2
   source_sha256: da65cde235dbdd05da5c02756f84dc59e2c3c2f0131de5fdbdc688319900eda3
@@ -37,7 +37,7 @@ If order.ordered is true, order.number has exactly one integer value of at least
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import Cardinality, declare_entity
+from anechoic.formal_claims import Cardinality, declare_entity
 
 declare_entity(
     entity_name='number',

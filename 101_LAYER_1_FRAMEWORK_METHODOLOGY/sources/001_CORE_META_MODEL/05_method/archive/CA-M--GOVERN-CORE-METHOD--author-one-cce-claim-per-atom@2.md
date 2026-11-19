@@ -21,5 +21,5 @@ to author an Atom, the Author must perform all of:
 2. when the Claim uses a logical composition, verify that no component can be accepted, replaced, or retired independently of the complete Claim.
 3. move every independently replaceable component to another Atom.
 4. identify exactly one Claim Scope selected by one atomic or composite Scope Expression.
-5. write the complete Claim in the current CAPRMEDIO Controlled English version.
+5. write the complete Claim in the current ANECHOIC Controlled English version.
 6. remove every duplicate alternate authoritative statement from the active Carrier.

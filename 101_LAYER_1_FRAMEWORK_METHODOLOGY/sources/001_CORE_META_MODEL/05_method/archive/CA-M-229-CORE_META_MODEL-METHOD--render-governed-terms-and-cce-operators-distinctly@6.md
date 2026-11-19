@@ -16,4 +16,4 @@ llm_session_ids:
 ---
 # Render Governed Terms and CCE Operators Distinctly
 
-**to** render CAPRMEDIO content, start **every** Governed Term with a capital letter, start **every** General Term with a lowercase letter, **and** render **every** registered CCE Operator **in** lowercase bold text, including at the start of a sentence.
+**to** render ANECHOIC content, start **every** Governed Term with a capital letter, start **every** General Term with a lowercase letter, **and** render **every** registered CCE Operator **in** lowercase bold text, including at the start of a sentence.

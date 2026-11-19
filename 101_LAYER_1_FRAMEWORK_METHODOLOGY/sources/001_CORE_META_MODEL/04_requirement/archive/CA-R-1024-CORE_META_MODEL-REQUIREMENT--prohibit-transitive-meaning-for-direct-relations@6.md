@@ -13,7 +13,7 @@ version: 6
 updated_at: 2026-09-06 01:45:12 +0400
 relations:
   child_of:
-    - CAPRMEDIO-META-REQU-121--store-only-direct-semantic-relations
+    - ANECHOIC-META-REQU-121--store-only-direct-semantic-relations
 ---
 # Prohibit transitive meaning for direct relations
 

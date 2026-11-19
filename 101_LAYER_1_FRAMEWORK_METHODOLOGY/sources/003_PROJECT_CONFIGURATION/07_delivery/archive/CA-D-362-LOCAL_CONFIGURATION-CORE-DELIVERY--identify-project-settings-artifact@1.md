@@ -17,4 +17,4 @@ relations:
 ---
 # Identify Project Settings Artifact
 
-the Identifier of Project Settings for a Project named `<project_name>` **must** be `caprmedio_<project_name>_settings`.
+the Identifier of Project Settings for a Project named `<project_name>` **must** be `anechoic_<project_name>_settings`.

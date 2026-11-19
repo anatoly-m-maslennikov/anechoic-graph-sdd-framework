@@ -6,9 +6,9 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Project.Settings
+  main_subject: ANECHOIC_MODEL <+ Project.Settings
   dependencies:
-  - CAPRMEDIO_MODEL <+ Carrier/File
+  - ANECHOIC_MODEL <+ Carrier/File
 tier: 4
 relations:
   child_of:
@@ -19,7 +19,7 @@ updated_at: 2026-11-04 09:30:21 +0400
 carrier_destination:
   file:
     name: CA-D-359-CORE_META_MODEL-DECISION--bind-framework-settings-to-its-authoritative-toml-carrier.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---
@@ -35,4 +35,4 @@ Bind Framework Settings to Its Authoritative TOML Carrier
 the existing Framework Settings TOML Carrier for a Project named `<project_name>`.
 
 
-the Framework Settings Carrier for a Project named `<project_name>` **must** use `.caprmedio_<project_name>/000_CAPRMEDIO_framework/caprmedio_framework_settings.toml` as its **`=1`** authoritative TOML File Carrier for the Project.Settings fields registered to that physical partition.
+the Framework Settings Carrier for a Project named `<project_name>` **must** use `.anechoic_<project_name>/000_ANECHOIC_framework/anechoic_framework_settings.toml` as its **`=1`** authoritative TOML File Carrier for the Project.Settings fields registered to that physical partition.

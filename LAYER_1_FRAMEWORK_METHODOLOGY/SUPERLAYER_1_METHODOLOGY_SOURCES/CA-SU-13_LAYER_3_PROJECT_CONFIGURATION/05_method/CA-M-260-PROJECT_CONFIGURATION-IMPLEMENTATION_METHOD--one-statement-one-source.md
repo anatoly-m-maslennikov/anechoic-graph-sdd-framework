@@ -6,9 +6,9 @@ container:
 role: Method
 form: Implementation Method
 topics:
-  main_subject: 'CAPRMEDIO_STRUCTURE <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow)//Applicable Methodology Compilation'
+  main_subject: 'ANECHOIC_STRUCTURE <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow)//Applicable Methodology Compilation'
   dependencies:
-  - CAPRMEDIO_MODEL <+ Project
+  - ANECHOIC_MODEL <+ Project
 tier: 1
 relations:
   child_of:
@@ -19,7 +19,7 @@ updated_at: "2026-11-11 18:46:16 +0400"
 carrier_destination:
   file:
     name: CA-M-260-PROJECT_CONFIGURATION-IMPLEMENTATION_METHOD--one-statement-one-source.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/05_method
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/05_method
 cce_version: cce_1
 cce_form: method
 llm_session_ids:

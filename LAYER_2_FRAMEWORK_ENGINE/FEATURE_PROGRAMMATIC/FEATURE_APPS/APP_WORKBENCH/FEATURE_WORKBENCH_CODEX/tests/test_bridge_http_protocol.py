@@ -28,7 +28,7 @@ CODEX_ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY = CODEX_ROOT.parents[4]
 FIXTURE = Path(__file__).with_name("fixtures") / "fake_codex.py"
 ALLOWED_ORIGIN = "http://127.0.0.1:56317"
-MCP_URL = f"{ALLOWED_ORIGIN}/caprmedio/mcp"
+MCP_URL = f"{ALLOWED_ORIGIN}/anechoic/mcp"
 FORBIDDEN_OVERRIDE_KEYS = {
     "model",
     "modelProvider",
@@ -69,7 +69,7 @@ class BridgeEventDrainTests(unittest.TestCase):
 
 
 def _bridge_server() -> Path | None:
-    configured = os.environ.get("CAPRMEDIO_CODEX_BRIDGE_SERVER")
+    configured = os.environ.get("ANECHOIC_CODEX_BRIDGE_SERVER")
     path = Path(configured) if configured else CODEX_ROOT / "bridge_server.py"
     return path if path.is_file() else None
 
@@ -93,11 +93,11 @@ class BridgeHTTPTests(unittest.TestCase):
         bridge = _bridge_server()
         if bridge is None:
             raise unittest.SkipTest("bridge_server.py is not available yet")
-        temp_parent = REPOSITORY / ".caprmedio_tmp/workbench-codex-http"
+        temp_parent = REPOSITORY / ".anechoic_tmp/workbench-codex-http"
         temp_parent.mkdir(parents=True, exist_ok=True)
         cls.temp = tempfile.TemporaryDirectory(dir=temp_parent)
         cls.root = Path(cls.temp.name) / "project"
-        (cls.root / ".caprmedio_caprmedio").mkdir(parents=True)
+        (cls.root / ".anechoic_anechoic").mkdir(parents=True)
         fake_bin = Path(cls.temp.name) / "bin"
         fake_bin.mkdir()
         _write_codex_path_fixture(fake_bin)
@@ -125,7 +125,7 @@ class BridgeHTTPTests(unittest.TestCase):
 
     @classmethod
     def _wait_for_bridge(cls) -> str:
-        state = cls.root / ".caprmedio_runtime/workbench/codex/bridge.json"
+        state = cls.root / ".anechoic_runtime/workbench/codex/bridge.json"
         deadline = time.monotonic() + 15
         while time.monotonic() < deadline:
             if cls.process.poll() is not None:
@@ -421,7 +421,7 @@ class BridgeHTTPTests(unittest.TestCase):
         self.assertTrue(health.get("ready"))
 
         state = json.loads(
-            (self.root / ".caprmedio_runtime/workbench/codex/thread.json").read_text(encoding="utf-8")
+            (self.root / ".anechoic_runtime/workbench/codex/thread.json").read_text(encoding="utf-8")
         )
         self.assertEqual({"thread_id"}, set(state))
         self.assertEqual("native-thread-1", state["thread_id"])
@@ -430,7 +430,7 @@ class BridgeHTTPTests(unittest.TestCase):
         argv = next(item["argv"] for item in audit if "argv" in item)
         self.assertEqual("app-server", argv[-1])
         self.assertIn("-c", argv)
-        self.assertTrue(any(item.startswith("mcp_servers.caprmedio.url=") for item in argv))
+        self.assertTrue(any(item.startswith("mcp_servers.anechoic.url=") for item in argv))
         forbidden_flags = ("--model", "--tool", "--tools", "--auth", "--sandbox", "--approval")
         self.assertFalse(any(item == flag or item.startswith(flag + "=") for item in argv for flag in forbidden_flags))
         thread_starts = [

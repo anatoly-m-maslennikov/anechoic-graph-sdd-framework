@@ -6,10 +6,10 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom
+  main_subject: ANECHOIC_MODEL <+ Atom
   dependencies:
-  - CAPRMEDIO_MODEL <+ Term//Artifact
-  - CAPRMEDIO_MODEL <+ Entity
+  - ANECHOIC_MODEL <+ Term//Artifact
+  - ANECHOIC_MODEL <+ Entity
 tier: 1
 relations:
   child_of:
@@ -20,11 +20,11 @@ updated_at: "2026-11-11 18:46:16 +0400"
 carrier_destination:
   file:
     name: CA-R-1501-CORE_META_MODEL-DEFINITION--define-artifact-currentness.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1501-CORE_META_MODEL-DEFINITION--define-artifact-currentness.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1501-CORE_META_MODEL-DEFINITION--define-artifact-currentness.md
   source_atom_id: CA-R-1501
   source_atom_revision: 22
   source_sha256: 559808a5700ee6d8f1bded4990a9e0f4a1ab2d1ec06626d64be1510d4376a633

@@ -1,9 +1,9 @@
 ---
 subjects:
-  governs: "CAPRMEDIO Main Skill Routing"
+  governs: "ANECHOIC Main Skill Routing"
   depends_on:
-    - "CAPRMEDIO Main Skill"
-    - "CAPRMEDIO Routing Tree"
+    - "ANECHOIC Main Skill"
+    - "ANECHOIC Routing Tree"
 version: 9
 updated_at: "2026-10-02 22:23:29 +0400"
 relations: {}
@@ -22,10 +22,10 @@ Route Main Skill Through Canonical Routing Tree
 
 ## Scope
 
-requested registered branches **or** leaves handled by the CAPRMEDIO Main Skill.
+requested registered branches **or** leaves handled by the ANECHOIC Main Skill.
 
 ## Claim
 
-the CAPRMEDIO Main Skill **must** route **every** requested registered branch **or** leaf through the CAPRMEDIO Routing Tree.
+the ANECHOIC Main Skill **must** route **every** requested registered branch **or** leaf through the ANECHOIC Routing Tree.
 
 ## Details

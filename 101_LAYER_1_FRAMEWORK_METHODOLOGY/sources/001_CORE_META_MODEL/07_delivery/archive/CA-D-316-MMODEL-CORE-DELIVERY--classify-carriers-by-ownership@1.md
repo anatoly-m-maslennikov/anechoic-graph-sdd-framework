@@ -12,4 +12,4 @@ relations: {}
 ---
 # Classify Carriers by Ownership
 
-every internal CAPRMEDIO Carrier **must** have exactly one Ownership Class in (Framework-Owned, Project-Owned, Runtime State).
+every internal ANECHOIC Carrier **must** have exactly one Ownership Class in (Framework-Owned, Project-Owned, Runtime State).

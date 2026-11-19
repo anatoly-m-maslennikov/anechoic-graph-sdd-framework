@@ -6,10 +6,10 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Scope Unit
+  main_subject: ANECHOIC_MODEL <+ Scope Unit
   dependencies:
-  - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/Type: Applicable Methodology'
-  - CAPRMEDIO_MODEL <+ Scope Unit
+  - 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Projection/Type: Applicable Methodology'
+  - ANECHOIC_MODEL <+ Scope Unit
 tier: 1
 status: Active
 version: 32
@@ -17,11 +17,11 @@ updated_at: 2026-11-02 00:18:22 +0400
 carrier_destination:
   file:
     name: CA-R-1219-CORE_META_MODEL-RULE--define-methodology-source.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1219-CORE_META_MODEL-DEFINITION--define-methodology-source.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1219-CORE_META_MODEL-DEFINITION--define-methodology-source.md
   source_atom_id: CA-R-1219
   source_atom_revision: 32
   source_sha256: 3e76191eb3b4bcd0dfa362687956154c17c93415af404f7741016ae52fcd6231

@@ -6,9 +6,9 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Project.Settings.Interaction.Reporting Mode
+  main_subject: ANECHOIC_MODEL <+ Project.Settings.Interaction.Reporting Mode
   dependencies:
-  - CAPRMEDIO_MODEL <+ Project.Settings
+  - ANECHOIC_MODEL <+ Project.Settings
 tier: 3
 relations:
   child_of:
@@ -19,11 +19,11 @@ updated_at: 2026-11-04 09:30:21 +0400
 carrier_destination:
   file:
     name: CA-R-1628-CORE_META_MODEL-RULE--allow-silent-and-verbose-reporting-modes.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1628-CORE_META_MODEL-RULE--allow-silent-and-verbose-reporting-modes.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1628-CORE_META_MODEL-RULE--allow-silent-and-verbose-reporting-modes.md
   source_atom_id: CA-R-1628
   source_atom_revision: 42
   source_sha256: 337b64408598d04d80040c538f2293a9a868cb968271bb4f8b082c184635832b

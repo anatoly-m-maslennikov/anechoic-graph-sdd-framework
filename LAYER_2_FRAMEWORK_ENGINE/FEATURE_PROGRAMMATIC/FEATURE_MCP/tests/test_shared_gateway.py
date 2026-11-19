@@ -84,9 +84,9 @@ class SharedGatewayTests(unittest.IsolatedAsyncioTestCase):
 
     def _project(self, name):
         root = self.projects / name
-        control = root / (".caprmedio_" + root.name)
+        control = root / (".anechoic_" + root.name)
         control.mkdir(parents=True)
-        (control / "caprmedio_project_settings.toml").write_text(
+        (control / "anechoic_project_settings.toml").write_text(
             f'[project]\nname="{root.name}"\n[paths]\ncontrol_root="{control.name}"\n'
             f'[artifacts.identity]\nproject_prefix="{root.name.upper()}"\n'
         )

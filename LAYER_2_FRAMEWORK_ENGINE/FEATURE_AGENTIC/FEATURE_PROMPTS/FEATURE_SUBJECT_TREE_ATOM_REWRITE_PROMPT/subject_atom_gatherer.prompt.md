@@ -6,13 +6,13 @@ Gather the complete, pinned source set and parent context needed to rebuild Atom
 
 ## What to do
 
-Create a work-specific scratchpad under `.caprmedio_tmp` and pass its path to the rewriter.
+Create a work-specific scratchpad under `.anechoic_tmp` and pass its path to the rewriter.
 
-Read Atoms and model Declarations through CAPRMEDIO MCP `query_run`. If a required section is missing from the query results, record the gap. Keep Header fields separate from the Markdown body in the handoff.
+Read Atoms and model Declarations through ANECHOIC MCP `query_run`. If a required section is missing from the query results, record the gap. Keep Header fields separate from the Markdown body in the handoff.
 
 Before drafting a new Atom, gather all Current Active Atoms for its exact Main Subject and every parent Subject. Use this inventory to check what the proposed Atom adds.
 
-1. Use CAPRMEDIO MCP to read the requested root Main Subject, its Subject structure, and the applicable Atom, Role, Form, and Scope Unit model. Resolve `/`, `.`, `//`, and `:=` from parsed Subject expressions and the model; do not infer ancestry from text prefixes or treat structural `<+` as inheritance. Identify every parent Subject, including ancestors above the root, and traverse the selected descendants parent first.
+1. Use ANECHOIC MCP to read the requested root Main Subject, its Subject structure, and the applicable Atom, Role, Form, and Scope Unit model. Resolve `/`, `.`, `//`, and `:=` from parsed Subject expressions and the model; do not infer ancestry from text prefixes or treat structural `<+` as inheritance. Identify every parent Subject, including ancestors above the root, and traverse the selected descendants parent first.
 2. If the input selects a Scope Unit tree, include its declared descendants by default; honor an explicit single-Scope-Unit boundary. Exclude temporary burst and test scopes unless explicitly selected. Inventory the selected scope separately from the Subject tree. Group Atoms by exact parsed Main Subject; do not assume every Atom in a Scope Unit shares its Main Subject.
 3. For each Subject, retrieve and read every Current, Active Atom whose Main Subject is that Subject. Pin its identity, revision, status, and complete source content. Mark Atoms within the selected scope as rewrite targets and all others as read-only context. Record empty Subjects. If no scope is selected, the selected Subject tree defines the target boundary.
 4. Gather the complete pinned Current, Active Atom set for every parent Subject, including ancestors above the root through the direct parent. Include completed parent Drafts supplied by the workflow alongside their Current sources, identifying each Draft, source, and status separately. Do not omit parents outside the selected scope. For example, provide both `atom` and `atom//role` when processing `atom//role: method`.

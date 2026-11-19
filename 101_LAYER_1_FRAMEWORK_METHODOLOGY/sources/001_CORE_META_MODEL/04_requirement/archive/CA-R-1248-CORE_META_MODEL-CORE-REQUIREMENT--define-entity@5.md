@@ -12,4 +12,4 @@ relations: {}
 ---
 # Define Entity
 
-an Entity **means** one independently identified **or** bearer-qualified object admitted by an authoritative source as a possible node in **`>=1`** CAPRMEDIO Graph.
+an Entity **means** one independently identified **or** bearer-qualified object admitted by an authoritative source as a possible node in **`>=1`** ANECHOIC Graph.

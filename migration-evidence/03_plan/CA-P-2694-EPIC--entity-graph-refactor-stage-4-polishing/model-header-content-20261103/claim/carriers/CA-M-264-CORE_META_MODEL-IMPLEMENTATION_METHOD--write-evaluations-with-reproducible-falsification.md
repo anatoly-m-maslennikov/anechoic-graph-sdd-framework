@@ -1,12 +1,12 @@
 ---
 subjects:
-  active: CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Evaluation)
+  active: ANECHOIC_MODEL <+ Atom/(.Header.Role := Evaluation)
   passive:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Evaluation)
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Method)
-  - CAPRMEDIO_MODEL <+ Atom.Content.Claim.Prose Claim
-  - CAPRMEDIO_MODEL <+ Atom.Header.Tier
-  - CAPRMEDIO_MODEL <+ CFEL > Relation//evaluation_for
+  - ANECHOIC_MODEL <+ Atom/(.Header.Role := Evaluation)
+  - ANECHOIC_MODEL <+ Atom/(.Header.Role := Method)
+  - ANECHOIC_MODEL <+ Atom.Content.Claim.Prose Claim
+  - ANECHOIC_MODEL <+ Atom.Header.Tier
+  - ANECHOIC_MODEL <+ CFEL > Relation//evaluation_for
 version: 28
 updated_at: 2026-11-02 00:18:22 +0400
 relations: {}

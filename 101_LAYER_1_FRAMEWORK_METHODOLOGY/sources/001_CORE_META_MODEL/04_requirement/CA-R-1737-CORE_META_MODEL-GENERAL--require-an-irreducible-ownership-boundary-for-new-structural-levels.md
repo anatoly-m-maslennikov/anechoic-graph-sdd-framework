@@ -11,7 +11,7 @@ relations:
   child_of:
     - "CA-R-1731"
   resolution_of:
-    - CAPRMEDIO-META-CONC-012--structural-level-necessity-is-not-operationalized
+    - ANECHOIC-META-CONC-012--structural-level-necessity-is-not-operationalized
 atom_id: "CA-R-1737"
 content_role: "Requirement"
 current_scope_unit: "CORE_META_MODEL"

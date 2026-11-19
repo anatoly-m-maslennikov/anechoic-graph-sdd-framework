@@ -148,7 +148,7 @@ class ProjectMcpBackend:
     @staticmethod
     def _compose_project(selection: object) -> str:
         value = getattr(selection, "compose_project", None)
-        if not isinstance(value, str) or not re.fullmatch(r"caprmedio-mcp-[0-9a-f]{24}", value):
+        if not isinstance(value, str) or not re.fullmatch(r"anechoic-mcp-[0-9a-f]{24}", value):
             raise BackendError()
         return value
 
@@ -164,12 +164,12 @@ class ProjectMcpBackend:
             raise BackendError()
         environment = {
             "PATH": os.environ.get("PATH", ""),
-            "CAPRMEDIO_IMAGE": image_id,
-            "CAPRMEDIO_PROJECT_ROOT": str(root),
-            "CAPRMEDIO_CONTROL_ROOT": ProjectMcpBackend._control(selection),
-            "CAPRMEDIO_PROJECT_INSTANCE_ID": ProjectMcpBackend._safe_instance(selection),
-            "CAPRMEDIO_RUNTIME_FINGERPRINT": fingerprint,
-            "CAPRMEDIO_MCP_HTTP_PORT": str(port),
+            "ANECHOIC_IMAGE": image_id,
+            "ANECHOIC_PROJECT_ROOT": str(root),
+            "ANECHOIC_CONTROL_ROOT": ProjectMcpBackend._control(selection),
+            "ANECHOIC_PROJECT_INSTANCE_ID": ProjectMcpBackend._safe_instance(selection),
+            "ANECHOIC_RUNTIME_FINGERPRINT": fingerprint,
+            "ANECHOIC_MCP_HTTP_PORT": str(port),
         }
         for name in _DOCKER_CLIENT_ENV:
             if name in os.environ:
@@ -194,10 +194,10 @@ class ProjectMcpBackend:
         labels = config.get("Labels") if isinstance(config, Mapping) else None
         root = ProjectMcpBackend._root(selection)
         if not isinstance(labels, Mapping) or (
-            labels.get("org.caprmedio.project") != ProjectMcpBackend._safe_instance(selection)
-            or labels.get("org.caprmedio.service") != "mcp-http"
-            or labels.get("org.caprmedio.control_root") != ProjectMcpBackend._control(selection)
-            or labels.get("org.caprmedio.host_project_root") != str(root)
+            labels.get("org.anechoic.project") != ProjectMcpBackend._safe_instance(selection)
+            or labels.get("org.anechoic.service") != "mcp-http"
+            or labels.get("org.anechoic.control_root") != ProjectMcpBackend._control(selection)
+            or labels.get("org.anechoic.host_project_root") != str(root)
         ):
             return False
         mounts = row.get("Mounts")
@@ -225,8 +225,8 @@ class ProjectMcpBackend:
             return value
         instance = self._safe_instance(selection)
         listing = _bounded_run([
-            "docker", "ps", "--all", "--filter", f"label=org.caprmedio.project={instance}",
-            "--filter", "label=org.caprmedio.service=mcp-http",
+            "docker", "ps", "--all", "--filter", f"label=org.anechoic.project={instance}",
+            "--filter", "label=org.anechoic.service=mcp-http",
             "--format", "{{.ID}}",
         ], timeout=remaining(), env=self._docker_client_environment())
         identifiers = [line.strip() for line in listing.splitlines() if line.strip()]

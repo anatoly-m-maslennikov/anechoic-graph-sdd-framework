@@ -14,7 +14,7 @@ from ATOM_LIFECYCLE.validation import _validate_declared_schema  # noqa: E402
 from ATOM_LIFECYCLE.common import InputError  # noqa: E402
 from ATOM_LIFECYCLE.role_form_schema import RoleFormSchema  # noqa: E402
 
-CORE = TOOLS.parents[2] / '.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL'
+CORE = TOOLS.parents[2] / '.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL'
 
 
 def source(atom_id, status='Active', body=''):
@@ -31,8 +31,8 @@ version: 1
 
 class CandidateSchemaTests(unittest.TestCase):
     def test_reviewed_atom_dependencies_callback_survives_asset_compilation(self):
-        claim = """from caprmedio.formal_claims import Cardinality, declare_entity
-from caprmedio.model import Atom
+        claim = """from anechoic.formal_claims import Cardinality, declare_entity
+from anechoic.model import Atom
 
 def dependencies_are_distinct(atom: Atom) -> bool:
     return len(atom.dependencies) == len(set(atom.dependencies))
@@ -54,8 +54,8 @@ declare_entity(
             (root / 'CA-R-1.md').write_text(source('CA-R-1', body='''## Claim
 ### Formal Claim
 ```python
-from caprmedio.formal_claims import declare_entity
-from caprmedio.model import Atom
+from anechoic.formal_claims import declare_entity
+from anechoic.model import Atom
 class Requirement(Atom):
     pass
 declare_entity(entity_name="Requirement", entity_class=Requirement,
@@ -63,7 +63,7 @@ declare_entity(entity_name="Requirement", entity_class=Requirement,
 ```
 '''))
             target = root / 'CA-R-4001.md'
-            subject = 'CAPRMEDIO_MODEL<+Atom.Header.Context.Topics.Dependencies'
+            subject = 'ANECHOIC_MODEL<+Atom.Header.Context.Topics.Dependencies'
             carrier = source('CA-R-4001', body='## Claim\n### Formal Claim\n```python\n' + claim + '```\n')
             carrier = carrier.replace('version: 1\n', f'version: 1\ntopics:\n  main_subject: {subject}\n')
             target.write_text(carrier)
@@ -96,7 +96,7 @@ declare_entity(entity_name="Requirement", entity_class=Requirement,
             with self.assertRaisesRegex(ValueError, 'Multiple Current Declarations'):
                 compile_candidate_schema(root)
             duplicate_declaration.unlink()
-            target.write_text(carrier.replace(subject, 'CAPRMEDIO_MODEL <+ Atom.Header.Context.Label'))
+            target.write_text(carrier.replace(subject, 'ANECHOIC_MODEL <+ Atom.Header.Context.Label'))
             with self.assertRaisesRegex(ValueError, 'Atom Dependencies check requires'):
                 compile_candidate_schema(root)
             target.write_text(carrier.replace('len(set(atom.dependencies))', '0'))
@@ -132,17 +132,17 @@ Atom.Content.Hidden:: {::1};
             (root / 'CA-R-1.md').write_text(encoded.replace('role: Requirement', 'role: requirement')
                                            .replace('form: Declaration', 'form: declaration'))
             native_claims = {
-                'CA-R-4': '''from caprmedio.model import Atom
+                'CA-R-4': '''from anechoic.model import Atom
 class Plan(Atom):
     pass
 declare_entity(entity_name="Plan", entity_class=Plan,
                qualification_property_path="Atom.Header.Context.Role")''',
-                'CA-R-5': '''from caprmedio.model import Atom
+                'CA-R-5': '''from anechoic.model import Atom
 class Method(Atom):
     pass
 declare_entity(entity_name="Method", entity_class=Method,
                qualification_property_path="Atom.Header.Context.Role")''',
-                'CA-R-6': '''from caprmedio.model import Plan
+                'CA-R-6': '''from anechoic.model import Plan
 class PlanForm(Plan):
     pass
 declare_entity(entity_name="Plan", entity_class=PlanForm,
@@ -152,7 +152,7 @@ declare_entity(entity_name="Plan", entity_class=PlanForm,
             }
             for atom_id, claim in native_claims.items():
                 (root / f'{atom_id}.md').write_text(source(atom_id, body=(
-                    '## Claim\n### Formal Claim\n```python\nfrom caprmedio.formal_claims import declare_entity\n'
+                    '## Claim\n### Formal Claim\n```python\nfrom anechoic.formal_claims import declare_entity\n'
                     + claim + '\n```\n'
                 )))
             (root / 'CA-R-2.md').write_text(source('CA-R-2', status='Draft', body='invalid'))

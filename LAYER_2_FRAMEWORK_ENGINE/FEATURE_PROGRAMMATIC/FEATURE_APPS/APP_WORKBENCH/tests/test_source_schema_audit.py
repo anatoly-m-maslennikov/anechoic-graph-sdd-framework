@@ -23,8 +23,8 @@ def declaration(number, name, base_path, extra="", *, values=1):
     reference = f"CA-R-{number}"
     body = (
         "## Claim\n### Formal Claim\n```python\n"
-        "from caprmedio.formal_claims import Cardinality, declare_entity\n"
-        "from caprmedio.model import Concern\n"
+        "from anechoic.formal_claims import Cardinality, declare_entity\n"
+        "from anechoic.model import Concern\n"
         f'declare_entity(entity_name={name!r}, relation_name="IS_PROPERTY_OF", base_path={base_path!r}, '
         f'property_occurrence_cardinality=1, value_cardinality={values}, {extra})\n```\n'
     ).encode()

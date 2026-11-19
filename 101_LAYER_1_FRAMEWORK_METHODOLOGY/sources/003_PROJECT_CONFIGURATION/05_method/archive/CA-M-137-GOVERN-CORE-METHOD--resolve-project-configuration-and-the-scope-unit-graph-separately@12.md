@@ -13,4 +13,4 @@ relations:
 ---
 # Resolve Project Configuration and the Scope Unit Graph Separately
 
-**every** CAPRMEDIO skill **must** resolve caprmedio_framework_settings through its authoritative TOML Carrier **and** resolve the Project Scope Unit Graph through its registered generated Projection addresses, **without** substituting a Projection for configuration authority **or** treating Project Configuration as derived graph state.
+**every** ANECHOIC skill **must** resolve anechoic_framework_settings through its authoritative TOML Carrier **and** resolve the Project Scope Unit Graph through its registered generated Projection addresses, **without** substituting a Projection for configuration authority **or** treating Project Configuration as derived graph state.

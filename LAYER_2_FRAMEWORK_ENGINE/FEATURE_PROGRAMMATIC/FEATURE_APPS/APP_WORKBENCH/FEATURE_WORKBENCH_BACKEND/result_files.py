@@ -23,7 +23,7 @@ if str(TOOLS) not in sys.path:
 from project_runtime import _validate_directory_components  # noqa: E402
 
 
-_RELATIVE_DIRECTORY = Path(".caprmedio_tmp/workbench/query_results")
+_RELATIVE_DIRECTORY = Path(".anechoic_tmp/workbench/query_results")
 _EXTENSIONS = {"json_matrix": "json", "csv": "csv", "toon": "toon"}
 
 

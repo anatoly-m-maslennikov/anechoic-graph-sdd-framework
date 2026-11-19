@@ -6,10 +6,10 @@ container:
 role: Evaluation
 form: Eval Case
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := "Analysis & Advisory")/(.Header.Context.Form := FPF Analysis Report)
+  main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := "Analysis & Advisory")/(.Header.Context.Form := FPF Analysis Report)
   dependencies:
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Traceability"
-  - CAPRMEDIO_MODEL <+ Carrier
+  - "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Traceability"
+  - ANECHOIC_MODEL <+ Carrier
 tier: 3
 relations:
   evaluation_for:
@@ -20,11 +20,11 @@ updated_at: 2026-11-02 19:33:47 +0400
 carrier_destination:
   file:
     name: CA-E-588-PROJECT_CONFIGURATION-EVAL_CASE--check-fpf-analysis-report-imports.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: PROJECT_CONFIGURATION
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation/CA-E-588-PROJECT_CONFIGURATION-EVAL_CASE--check-fpf-analysis-report-imports.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation/CA-E-588-PROJECT_CONFIGURATION-EVAL_CASE--check-fpf-analysis-report-imports.md
   source_atom_id: CA-E-588
   source_atom_revision: 20
   source_sha256: 9df9fa1ac958f1b26e1209b511b3114030d944c167ad21ed0d2ddd1089f0b5ae

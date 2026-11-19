@@ -34,7 +34,7 @@ class MCPHTTPNetworkTests(unittest.TestCase):
     def test_http_keeps_exact_loopback_and_container_boundaries(self):
         service = self.http["services"]["mcp-http"]
         self.assertEqual(
-            ["127.0.0.1:${CAPRMEDIO_MCP_HTTP_PORT:?Set an explicit HTTP MCP port}:8092"],
+            ["127.0.0.1:${ANECHOIC_MCP_HTTP_PORT:?Set an explicit HTTP MCP port}:8092"],
             service["ports"],
         )
         self.assertTrue(service["read_only"])

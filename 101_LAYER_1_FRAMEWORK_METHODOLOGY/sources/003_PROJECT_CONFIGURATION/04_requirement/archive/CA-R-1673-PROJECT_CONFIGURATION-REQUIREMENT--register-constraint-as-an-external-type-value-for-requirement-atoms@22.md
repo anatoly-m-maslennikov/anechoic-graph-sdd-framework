@@ -7,7 +7,7 @@ updated_at: "2026-09-11 23:47:49 +0400"
 relations:
   child_of:
     - "CA-R-1690"
-    - "CAPRMEDIO-META-REQU-740--separate-content-role-from-artifact-type"
+    - "ANECHOIC-META-REQU-740--separate-content-role-from-artifact-type"
   relates_to:
     - "CA-D-393"
 atom_id: "CA-R-1673"

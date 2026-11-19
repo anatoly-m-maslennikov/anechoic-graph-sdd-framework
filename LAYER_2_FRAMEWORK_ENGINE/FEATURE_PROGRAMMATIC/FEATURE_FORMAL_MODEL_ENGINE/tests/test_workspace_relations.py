@@ -7,7 +7,7 @@ from lint_python_model_claim import lint_python_model_claim
 class WorkspaceRelationTests(unittest.TestCase):
  def test_authored_direction_and_cardinality(self):
   claim = """from dataclasses import dataclass, field
-from caprmedio.formal_claims import Cardinality, declare_entity
+from anechoic.formal_claims import Cardinality, declare_entity
 
 @dataclass
 class Workspace:
@@ -27,6 +27,6 @@ declare_entity(entity_name="Workspace", entity_class=Workspace,
   self.assertTrue(lint_python_model_claim(claim,declared_addresses=['View','Workspace'],relation_names=[]))
   with self.assertRaises(ValueError):compile_python_model_claim(claim.replace('"source_cardinality": 1','"source_cardinality": -1'))
  def test_incoming_without_dataclass_contract_fails_closed(self):
-  bad = 'from caprmedio.formal_claims import declare_entity\ndeclare_entity(entity_name="Workspace", incoming_model_relations=())'
+  bad = 'from anechoic.formal_claims import declare_entity\ndeclare_entity(entity_name="Workspace", incoming_model_relations=())'
   with self.assertRaises(ValueError): compile_python_model_claim(bad)
 if __name__=='__main__':unittest.main()

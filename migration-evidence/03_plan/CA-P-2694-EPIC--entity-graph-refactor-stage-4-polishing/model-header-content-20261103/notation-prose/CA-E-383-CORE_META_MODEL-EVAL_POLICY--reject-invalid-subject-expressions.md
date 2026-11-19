@@ -1,17 +1,17 @@
 ---
 subjects:
-  active: CAPRMEDIO_MODEL <+ Entity
+  active: ANECHOIC_MODEL <+ Entity
   passive:
-  - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom.Header.Status: Active'
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Actor/Operator
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Method)
-  - CAPRMEDIO_MODEL <+ Term
-  - CAPRMEDIO_MODEL <+ Term//Property
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_PROPERTY_OF
-  - CAPRMEDIO_MODEL <+ CFEL<+Operator//AllowedValue
-  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Data Handling <+ Data Validation
-  - CAPRMEDIO_MODEL <+ Atom.Content
-  - CAPRMEDIO_MODEL <+ Scope Unit.Name
+  - 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom.Header.Status: Active'
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Actor/Operator
+  - ANECHOIC_MODEL <+ Atom/(.Header.Role := Method)
+  - ANECHOIC_MODEL <+ Term
+  - ANECHOIC_MODEL <+ Term//Property
+  - ANECHOIC_MODEL <+ CFEL <+ Relation//IS_PROPERTY_OF
+  - ANECHOIC_MODEL <+ CFEL<+Operator//AllowedValue
+  - ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Data Handling <+ Data Validation
+  - ANECHOIC_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ Scope Unit.Name
 version: 45
 updated_at: 2026-11-02 18:35:20 +0400
 relations:

@@ -6,10 +6,10 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom
+  main_subject: ANECHOIC_MODEL <+ Atom
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := "Analysis and Advisory")
-  - CAPRMEDIO_MODEL <+ Event Record
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := "Analysis and Advisory")
+  - ANECHOIC_MODEL <+ Event Record
 tier: 1
 status: Active
 version: 24
@@ -17,7 +17,7 @@ updated_at: 2026-11-02 15:49:28 +0400
 carrier_destination:
   file:
     name: CA-R-1497-CORE_META_MODEL-RULE--keep-lineage-analysis-distinct-from-evidence-of-its-correctness.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---

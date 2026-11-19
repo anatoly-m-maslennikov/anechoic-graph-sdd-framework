@@ -23,11 +23,11 @@ SCOPE_FIXTURES = tuple(TOOLS / name for name in (
 
 
 def run_resource_case(case: unittest.TestCase, seconds: int) -> None:
-    image = os.environ["CAPRMEDIO_IMAGE"]
-    name = f"caprmedio-workbench-resource-{uuid4().hex}"
+    image = os.environ["ANECHOIC_IMAGE"]
+    name = f"anechoic-workbench-resource-{uuid4().hex}"
     command = [
         "docker", "run", "--rm", "--name", name,
-        "--label", "caprmedio.test=workbench-resource",
+        "--label", "anechoic.test=workbench-resource",
         "--cpus=1", "--memory=1536m", "--memory-swap=1536m",
         "--tmpfs", "/tmp:rw,nosuid,nodev,size=256m",
     ]
@@ -35,9 +35,9 @@ def run_resource_case(case: unittest.TestCase, seconds: int) -> None:
         command += ["--mount", f"type=bind,src={ROOT / path},dst=/workspace/{path},readonly"]
     # Test containers must never look like an installed Project service.
     for label in ("project", "service", "control_root", "host_project_root"):
-        command += ["--label", f"org.caprmedio.{label}="]
+        command += ["--label", f"org.anechoic.{label}="]
     command += [
-        "--env", f"CAPRMEDIO_IMAGE={image}",
+        "--env", f"ANECHOIC_IMAGE={image}",
         "--entrypoint", "/opt/venv/bin/python", image, str(RUNNER),
         "--seconds", str(seconds),
     ]

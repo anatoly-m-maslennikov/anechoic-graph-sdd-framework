@@ -1,11 +1,11 @@
 {
-  "name": "caprmedio-local",
+  "name": "anechoic-local",
   "interface": {
-    "displayName": "CAPRMEDIO"
+    "displayName": "ANECHOIC"
   },
   "plugins": [
     {
-      "name": "caprmedio-workbench",
+      "name": "anechoic-workbench",
       "source": {
         "source": "local",
         "path": "./LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_APPS/APP_WORKBENCH/FEATURE_CODEX_EXTENSION/plugin"

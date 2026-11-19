@@ -8,10 +8,10 @@ context:
   role: Operations
   form: Step
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/Step
+    main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/Step
     dependencies:
-    - CAPRMEDIO_MODEL <+ Atom
-    - CAPRMEDIO_STRUCTURE <+ Scope Unit//PROJECT_CONFIGURATION
+    - ANECHOIC_MODEL <+ Atom
+    - ANECHOIC_STRUCTURE <+ Scope Unit//PROJECT_CONFIGURATION
   tier: 3
 relations:
   RUNS:
@@ -23,9 +23,9 @@ state:
 destination:
   file:
     name: CA-O-10010-PROJECT_CONFIGURATION-STEP--set-the-selected-current-status.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-10011-PROJECT_CONFIGURATION-WORKFLOW--atom-lifecycle-change-current-status
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-10011-PROJECT_CONFIGURATION-WORKFLOW--atom-lifecycle-change-current-status
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-10011-PROJECT_CONFIGURATION-WORKFLOW--atom-lifecycle-change-current-status/CA-O-10010-PROJECT_CONFIGURATION-STEP--set-the-selected-current-status.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-10011-PROJECT_CONFIGURATION-WORKFLOW--atom-lifecycle-change-current-status/CA-O-10010-PROJECT_CONFIGURATION-STEP--set-the-selected-current-status.md
   source_atom_id: CA-O-10010
   source_atom_revision: 1
   source_sha256: 6eaa0d360e322a82fdfad60ff4399bd9d32c67f0f6483c16dfa440709cd70272

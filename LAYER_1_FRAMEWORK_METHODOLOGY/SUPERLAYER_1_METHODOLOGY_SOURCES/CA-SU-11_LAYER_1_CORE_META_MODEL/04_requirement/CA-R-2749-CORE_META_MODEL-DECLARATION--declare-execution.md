@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Execution
+  main_subject: ANECHOIC_MODEL <+ Execution
 tier: 3
 status: active
 version: 1
@@ -14,7 +14,7 @@ updated_at: 2026-11-05 01:38:59 +0400
 carrier_destination:
   file:
     name: CA-R-2749-CORE_META_MODEL-DECLARATION--declare-execution.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 ---
 ## Summary
 
@@ -25,8 +25,8 @@ Declare Execution
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_entity, Cardinality
-from caprmedio.model import Occurrent
+from anechoic.formal_claims import declare_entity, Cardinality
+from anechoic.model import Occurrent
 
 class Execution(Occurrent):
     pass

@@ -6,7 +6,7 @@ version: 6
 updated_at: 2026-08-23 02:55:00
 relations:
   child_of:
-    - CAPRMEDIO-GOV-REQU-767--keep-active-rmed-relations-out-of-archives
+    - ANECHOIC-GOV-REQU-767--keep-active-rmed-relations-out-of-archives
 ---
 # Record replacement transitions in the Journal
 

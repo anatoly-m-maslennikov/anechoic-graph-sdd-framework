@@ -6,12 +6,12 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Carrier/File
+  main_subject: ANECHOIC_MODEL <+ Carrier/File
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Project
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ Scope Unit.Name
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Project
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Scope Unit.Name
 tier: 3
 status: Active
 version: 14
@@ -19,11 +19,11 @@ updated_at: 2026-11-03 23:25:51 +0400
 carrier_destination:
   file:
     name: CA-D-498-PROJECT_CONFIGURATION-DECISION--use-full-scope-unit-names-in-filenames.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/07_delivery
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: PROJECT_CONFIGURATION
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/07_delivery/CA-D-498-PROJECT_CONFIGURATION-ENG_DECISION--use-full-scope-unit-names-in-filenames.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/07_delivery/CA-D-498-PROJECT_CONFIGURATION-ENG_DECISION--use-full-scope-unit-names-in-filenames.md
   source_atom_id: CA-D-498
   source_atom_revision: 14
   source_sha256: 858143f9536d94448df37b406aaa463671d4442e7cce1f5af58f286163c9f1da
@@ -38,7 +38,7 @@ Use full Scope Unit names in filenames
 ### Prose Claim
 
 
-Scope Unit references serialized **in** Atom filenames **in** the CAPRMEDIO Project.
+Scope Unit references serialized **in** Atom filenames **in** the ANECHOIC Project.
 
 
 **every** filename token representing a Scope Unit **must** use its complete Scope Unit Name, rendered **in** uppercase with underscores under `CA-D-284-CORE_META_MODEL-DELIVERY--serialize-filename-token-case`, **without** abbreviation **or** a separately maintained alias.

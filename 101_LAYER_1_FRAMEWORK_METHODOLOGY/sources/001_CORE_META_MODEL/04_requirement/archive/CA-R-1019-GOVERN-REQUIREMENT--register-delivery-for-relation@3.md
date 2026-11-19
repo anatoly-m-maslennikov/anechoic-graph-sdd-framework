@@ -13,8 +13,8 @@ version: 3
 updated_at: 2026-08-23 15:24:07
 relations:
   child_of:
-    - CAPRMEDIO-META-REQU-117--store-each-semantic-relation-once
-    - CAPRMEDIO-META-REQU-121--store-only-direct-semantic-relations
+    - ANECHOIC-META-REQU-117--store-each-semantic-relation-once
+    - ANECHOIC-META-REQU-121--store-only-direct-semantic-relations
 ---
 # Register delivery_for relation
 

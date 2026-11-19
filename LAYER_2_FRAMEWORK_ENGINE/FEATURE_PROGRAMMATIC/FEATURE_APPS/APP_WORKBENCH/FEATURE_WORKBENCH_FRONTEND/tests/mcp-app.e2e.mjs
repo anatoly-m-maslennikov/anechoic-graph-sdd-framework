@@ -69,7 +69,7 @@ async function bridgePage({ input, initial, resultFirst = false, callTool }) {
     }
   });
   if (fixtureUrl) await page.goto(fixtureUrl);
-  await page.setContent('<iframe title="CAPRMEDIO Workbench"></iframe>');
+  await page.setContent('<iframe title="ANECHOIC Workbench"></iframe>');
   await page.evaluate(({ html: app, input: toolInput, initial: toolResult, resultFirst: resultBeforeInput }) => {
     const frame = document.querySelector('iframe');
     window.addEventListener('message', (event) => {

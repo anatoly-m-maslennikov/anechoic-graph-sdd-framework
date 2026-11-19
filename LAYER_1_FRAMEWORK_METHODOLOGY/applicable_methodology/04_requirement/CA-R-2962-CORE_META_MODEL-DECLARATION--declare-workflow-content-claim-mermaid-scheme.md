@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Workflow.Content.Claim.Mermaid Scheme
+  main_subject: ANECHOIC_MODEL <+ Workflow.Content.Claim.Mermaid Scheme
 tier: 3
 status: active
 version: 2
@@ -14,9 +14,9 @@ updated_at: '2026-11-12T17:23:54+00:00'
 carrier_destination:
   file:
     name: CA-R-2962-CORE_META_MODEL-DECLARATION--declare-workflow-content-claim-mermaid-scheme.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2962-CORE_META_MODEL-DECLARATION--declare-workflow-content-claim-mermaid-scheme.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2962-CORE_META_MODEL-DECLARATION--declare-workflow-content-claim-mermaid-scheme.md
   source_atom_id: CA-R-2962
   source_atom_revision: 2
   source_sha256: a0fdf7b13dae4d48fe6319baf2f9e45a888fdc540bddb6c8afa918079db0fe89
@@ -37,7 +37,7 @@ The scheme shows all Workflow Steps, including nested Steps.
 
 ```python
 # model
-from caprmedio.formal_claims import declare_entity
+from anechoic.formal_claims import declare_entity
 
 declare_entity(
     entity_name='Mermaid Scheme',

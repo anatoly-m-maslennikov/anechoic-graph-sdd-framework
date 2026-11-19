@@ -1,6 +1,6 @@
 # Claim and declared headings: candidate changes
 
-These are proposed replacement passages, not Current authority. Inventory and migration instructions are separate. Retain each source's other content and metadata except the explicitly identified replacements and Subject changes. Use the new Subject roots `CAPRMEDIO_MODEL` and `CAPRMEDIO_STRUCTURE` when the integrated subject-path migration defines their exact paths; do not allocate IDs here. The derived named-relation counterpart has a minimal binding Claim; it has no special exception.
+These are proposed replacement passages, not Current authority. Inventory and migration instructions are separate. Retain each source's other content and metadata except the explicitly identified replacements and Subject changes. Use the new Subject roots `ANECHOIC_MODEL` and `ANECHOIC_STRUCTURE` when the integrated subject-path migration defines their exact paths; do not allocate IDs here. The derived named-relation counterpart has a minimal binding Claim; it has no special exception.
 
 ## CA-R-2498, Claim replacement
 
@@ -73,7 +73,7 @@ The complete replacement Method is in its candidate carrier.
 
 ## CA-M-264, passive Subject replacement
 
-Replace the passive Subject targeting `Atom.Content.Claim Scope` with the integrated canonical Subject targeting `Atom.Content.Claim.Prose Claim` under `CAPRMEDIO_MODEL`. Retain the Claim and remaining Subjects.
+Replace the passive Subject targeting `Atom.Content.Claim Scope` with the integrated canonical Subject targeting `Atom.Content.Claim.Prose Claim` under `ANECHOIC_MODEL`. Retain the Claim and remaining Subjects.
 
 ## CA-E-240, test case replacement of the first sentence
 

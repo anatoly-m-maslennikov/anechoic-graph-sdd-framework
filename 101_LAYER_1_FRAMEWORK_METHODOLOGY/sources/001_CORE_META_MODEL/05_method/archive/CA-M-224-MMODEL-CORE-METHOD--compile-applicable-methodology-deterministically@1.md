@@ -20,7 +20,7 @@ relations: {}
 
 to compile Applicable Methodology, the Compiler **must** perform all of:
 
-1. read only the Source Layer Carriers under `.caprmedio_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/` that have an exact governed source reference.
+1. read only the Source Layer Carriers under `.anechoic_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/` that have an exact governed source reference.
 2. confirm the ordered structural Source Layers as CORE_META_MODEL, INSTALLED_EXTENSIONS, and LOCAL_CONFIGURATION.
 3. include every active authoritative CORE_META_MODEL Source Atom revision.
 4. include every active authoritative LOCAL_CONFIGURATION Source Atom revision that records a retained Project selection or resolution.

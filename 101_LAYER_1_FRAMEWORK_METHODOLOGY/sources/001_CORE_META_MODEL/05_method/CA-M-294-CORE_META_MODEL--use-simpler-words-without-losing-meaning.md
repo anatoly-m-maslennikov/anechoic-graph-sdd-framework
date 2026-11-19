@@ -35,11 +35,11 @@ Use simpler words without losing meaning
 
 ## Scope
 
-CAPRMEDIO content wording.
+ANECHOIC content wording.
 
 ## Claim
 
-**when** choosing wording for CAPRMEDIO content, the Author **must** choose words **and** phrases that are simpler **and** more familiar **to** the intended reader **when** they preserve the intended meaning **without** adding ambiguity.
+**when** choosing wording for ANECHOIC content, the Author **must** choose words **and** phrases that are simpler **and** more familiar **to** the intended reader **when** they preserve the intended meaning **without** adding ambiguity.
 
 ## Details
 

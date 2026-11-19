@@ -19,7 +19,7 @@ Require framework instance root locators
 
 ## Claim scope
 
-The caprmedio Project’s Framework Instance Settings.
+The anechoic Project’s Framework Instance Settings.
 
 ## Claim
 

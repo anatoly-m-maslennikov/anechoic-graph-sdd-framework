@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => mode === 'mcp-app' ? {
   },
 } : {
   server,
-  base: '/caprmedio/workbench/',
+  base: '/anechoic/workbench/',
   plugins: [svelte()],
   build: { outDir: 'dist', emptyOutDir: true },
 });

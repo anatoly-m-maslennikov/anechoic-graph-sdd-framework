@@ -13,9 +13,9 @@ def _settings(root: Path, control_root: Path | None) -> tuple[Path, str]:
     root = Path(root)
     supplied_control_root = control_root
     if control_root is None:
-        control_root = root / ".caprmedio_caprmedio"
+        control_root = root / ".anechoic_anechoic"
     control_root = Path(control_root)
-    settings = tomllib.loads((control_root / "caprmedio_project_settings.toml").read_text("utf-8"))
+    settings = tomllib.loads((control_root / "anechoic_project_settings.toml").read_text("utf-8"))
     if supplied_control_root is None:
         configured = settings.get("paths", {}).get("control_root")
         if isinstance(configured, str) and configured:

@@ -9,7 +9,7 @@ def compile_atom_population_model(rows):
     selected = {}
     for row in rows:
         _, subject = header_value(row['header_json'], 'topics.main_subject')
-        if not isinstance(subject, str) or not subject.startswith('CAPRMEDIO_MODEL'):
+        if not isinstance(subject, str) or not subject.startswith('ANECHOIC_MODEL'):
             continue
         address = _canonical_address(subject)
         if address in {'Atom', 'Atom.Content.Summary'}:

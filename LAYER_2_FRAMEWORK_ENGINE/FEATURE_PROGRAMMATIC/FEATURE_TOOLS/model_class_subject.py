@@ -11,16 +11,16 @@ def model_class_target(subject, entity_name, *, require_namespace=True):
     except notation.SubjectNotationError:
         return None
     if (isinstance(expression, notation.Path) and isinstance(expression.head, notation.Name)
-            and expression.head.value == "CAPRMEDIO_MODEL" and not expression.steps):
-        return "CAPRMEDIO_MODEL" if entity_name.casefold() == "model" else None
+            and expression.head.value == "ANECHOIC_MODEL" and not expression.steps):
+        return "ANECHOIC_MODEL" if entity_name.casefold() == "model" else None
     root = expression.endpoints[0] if isinstance(expression, notation.RelationChain) else expression
     root_name = root.head.value if isinstance(root.head, notation.Name) else None
-    if root_name in {"CAPRMEDIO_STRUCTURE", "CAPRMEDIO"}:
-        if root_name != "CAPRMEDIO" or not isinstance(expression, notation.RelationChain) or len(expression.endpoints) < 2 or not isinstance(expression.endpoints[1].head, notation.Name) or expression.endpoints[1].head.value != "MODEL":
+    if root_name in {"ANECHOIC_STRUCTURE", "ANECHOIC"}:
+        if root_name != "ANECHOIC" or not isinstance(expression, notation.RelationChain) or len(expression.endpoints) < 2 or not isinstance(expression.endpoints[1].head, notation.Name) or expression.endpoints[1].head.value != "MODEL":
             return None
     local = notation.namespace_local_expression(expression)
     if local is None:
-        if require_namespace or root_name == "CAPRMEDIO_MODEL":
+        if require_namespace or root_name == "ANECHOIC_MODEL":
             return None
         local = expression
     if isinstance(local, notation.RelationChain):

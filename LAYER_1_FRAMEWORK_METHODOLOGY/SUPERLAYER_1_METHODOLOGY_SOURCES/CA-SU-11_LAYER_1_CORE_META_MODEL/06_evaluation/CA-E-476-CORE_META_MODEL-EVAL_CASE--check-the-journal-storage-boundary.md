@@ -6,13 +6,13 @@ container:
 role: Evaluation
 form: Eval Case
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Journal
+  main_subject: ANECHOIC_MODEL <+ Journal
   dependencies:
-  - CAPRMEDIO_MODEL <+ Event Record
-  - CAPRMEDIO_MODEL <+ Carrier
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Project
-  - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/Type: Applicable Methodology'
+  - ANECHOIC_MODEL <+ Event Record
+  - ANECHOIC_MODEL <+ Carrier
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Project
+  - 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Projection/Type: Applicable Methodology'
 tier: 3
 relations:
   evaluation_for:
@@ -25,7 +25,7 @@ updated_at: 2026-11-02 00:18:22 +0400
 carrier_destination:
   file:
     name: CA-E-476-CORE_META_MODEL-EVAL_CASE--check-the-journal-storage-boundary.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---

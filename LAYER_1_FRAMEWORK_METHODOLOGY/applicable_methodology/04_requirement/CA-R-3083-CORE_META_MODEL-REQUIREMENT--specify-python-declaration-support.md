@@ -9,7 +9,7 @@ context:
   container:
     scope_unit: CA-SU-11
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ Atom.Content.Claim.Formal Claim
+    main_subject: ANECHOIC_MODEL <+ Atom.Content.Claim.Formal Claim
 state:
   version: 2
   status: active
@@ -17,9 +17,9 @@ state:
 destination:
   file:
     name: CA-R-3083-CORE_META_MODEL-REQUIREMENT--specify-python-declaration-support.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-3083-CORE_META_MODEL-REQUIREMENT--specify-python-declaration-support.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-3083-CORE_META_MODEL-REQUIREMENT--specify-python-declaration-support.md
   source_atom_id: CA-R-3083
   source_atom_revision: 2
   source_sha256: 215f424a3005d7213ae65d9a408d430cff5c1ff866ab169329c80cf4fa58afc0

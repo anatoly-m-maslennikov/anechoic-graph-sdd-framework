@@ -6,14 +6,14 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Relation//IS_EXECUTION_OF
+  main_subject: ANECHOIC_MODEL <+ Relation//IS_EXECUTION_OF
   dependencies:
-  - CAPRMEDIO_MODEL <+ Workflow Run
-  - CAPRMEDIO_MODEL <+ Step Run
-  - CAPRMEDIO_MODEL <+ Action Run
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/Workflow
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/Step
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/Action
+  - ANECHOIC_MODEL <+ Workflow Run
+  - ANECHOIC_MODEL <+ Step Run
+  - ANECHOIC_MODEL <+ Action Run
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/Workflow
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/Step
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/Action
 tier: 1
 status: active
 version: 9
@@ -21,9 +21,9 @@ updated_at: 2026-11-04 16:07:35 +0400
 carrier_destination:
   file:
     name: CA-R-2245-CORE_META_MODEL-DECLARATION--define-is-execution-of-relation.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2245-CORE_META_MODEL-DECLARATION--define-is-execution-of-relation.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2245-CORE_META_MODEL-DECLARATION--define-is-execution-of-relation.md
   source_atom_id: CA-R-2245
   source_atom_revision: 9
   source_sha256: 022e51a1d68abcfd1b2897cee9d4bacd28e412a28ecbed438dd23ce671fd7d1f
@@ -38,7 +38,7 @@ Define IS_EXECUTION_OF Relation
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_relation
+from anechoic.formal_claims import declare_relation
 
 declare_relation(
     relation_name="IS_EXECUTION_OF",

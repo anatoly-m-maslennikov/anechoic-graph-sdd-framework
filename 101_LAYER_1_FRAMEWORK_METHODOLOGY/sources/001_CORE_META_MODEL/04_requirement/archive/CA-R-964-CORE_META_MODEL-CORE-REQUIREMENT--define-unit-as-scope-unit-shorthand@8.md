@@ -16,4 +16,4 @@ relations: {}
 ---
 # Define Unit as Scope Unit shorthand
 
-Unit **means** Scope Unit **when** CAPRMEDIO uses Unit as a governed shorthand.
+Unit **means** Scope Unit **when** ANECHOIC uses Unit as a governed shorthand.

@@ -4,12 +4,12 @@ ref_id: CA-R-1430
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Project.Settings.Authority Modes
+  main_subject: ANECHOIC_MODEL <+ Project.Settings.Authority Modes
   dependencies:
-  - CAPRMEDIO_MODEL <+ Project.Settings
-  - CAPRMEDIO_MODEL <+ Scope Unit/Project
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Project.Settings
+  - ANECHOIC_MODEL <+ Scope Unit/Project
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Atom
 tier: 2
 status: Active
 version: 27

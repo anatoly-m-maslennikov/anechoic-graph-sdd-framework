@@ -1,0 +1,46 @@
+---
+atom_id: CA-E-584
+ref_id: CA-E-584
+container:
+  scope_unit: CA-SU-21
+role: Evaluation
+form: Eval Case
+topics:
+  main_subject: PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Engineering <+ Development <+ Architecture <+ Communication
+  dependencies:
+  - PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Engineering <+ Development <+ Architecture <+ Component Structure
+  - PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Engineering <+ Quality <+ Verification <+ Dynamic Testing
+  - MODEL//ANECHOIC <+ Package/Project Package
+  - MODEL//ANECHOIC <+ Runtime/Session
+tier: 5
+relations:
+  evaluation_for:
+  - CA-R-1884
+  - CA-M-1008
+status: Active
+version: 15
+updated_at: '2026-11-12T01:59:14.433341+00:00'
+carrier_destination:
+  file:
+    name: CA-E-584-MCP-EVAL_CASE--verify-http-mcp-gateway-and-stdio-preservation.md
+    path: .anechoic_anechoic/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-21_FEATURE_MCP/06_evaluation
+current_scope_unit: MCP
+author: Anatoly Maslennikov
+---
+## Summary
+
+verify HTTP MCP Gateway and stdio preservation
+
+## Claim
+
+### Prose Claim
+
+the Evaluation **must** verify that real MCP HTTP initialization, discovery and calls use the existing Gateway without breaking stdio behavior.
+
+## Details
+
+### Scope
+
+the additional localhost HTTP transport for the existing Project MCP Gateway.
+
+Use real-Gateway E2E fixtures with a disposable mock implementation to exercise Streamable HTTP initialization, discovery and a Tool call. On lifespan exit, verify Session cleanup; run existing stdio transport tests. When Docker is available, verify the Docker service’s localhost URL in a container; a mock or host-ASGI pass does not satisfy that Docker gate.

@@ -7,7 +7,7 @@ subjects:
   depends_on:
     - "Actor"
     - "Project"
-    - "CAPRMEDIO Framework Instance"
+    - "ANECHOIC Framework Instance"
 version: 3
 updated_at: "2026-09-16 23:48:40 +0000"
 relations:
@@ -18,4 +18,4 @@ llm_session_ids:
 ---
 # Define the Operator as the collective human Actor
 
-the Operator **means** the collective Actor formed by **`>=1`** identified human participants for the Project **and** its CAPRMEDIO Framework Instance.
+the Operator **means** the collective Actor formed by **`>=1`** identified human participants for the Project **and** its ANECHOIC Framework Instance.

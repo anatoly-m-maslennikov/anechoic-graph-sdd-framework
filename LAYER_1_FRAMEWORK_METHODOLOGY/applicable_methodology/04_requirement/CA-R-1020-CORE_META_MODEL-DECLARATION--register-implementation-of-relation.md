@@ -6,9 +6,9 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Relation//implementation_of
+  main_subject: ANECHOIC_MODEL <+ Relation//implementation_of
   dependencies:
-  - CAPRMEDIO_MODEL <+ Relation
+  - ANECHOIC_MODEL <+ Relation
 tier: 1
 status: active
 version: 34
@@ -16,9 +16,9 @@ updated_at: '2026-11-12T17:23:54+00:00'
 carrier_destination:
   file:
     name: CA-R-1020-CORE_META_MODEL-DECLARATION--register-implementation-of-relation.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1020-CORE_META_MODEL-DECLARATION--register-implementation-of-relation.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1020-CORE_META_MODEL-DECLARATION--register-implementation-of-relation.md
   source_atom_id: CA-R-1020
   source_atom_revision: 34
   source_sha256: ec57150346480b34629d742957368cd1ef960c697b63a9892a6692395fe9f658
@@ -37,7 +37,7 @@ implementation_of is the direct Relation owned by a governed Implementation Carr
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_relation
+from anechoic.formal_claims import declare_relation
 
 declare_relation(
     relation_name='implementation_of',

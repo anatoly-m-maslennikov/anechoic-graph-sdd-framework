@@ -20,7 +20,7 @@ class WorkspaceStore:
 
     def __init__(self, root: Path) -> None:
         self._root = Path(root)
-        self._directory = self._root / ".caprmedio_runtime" / "workbench" / "workspaces"
+        self._directory = self._root / ".anechoic_runtime" / "workbench" / "workspaces"
 
     @staticmethod
     def text(value: object, field: str, *, required: bool = True) -> str | None:

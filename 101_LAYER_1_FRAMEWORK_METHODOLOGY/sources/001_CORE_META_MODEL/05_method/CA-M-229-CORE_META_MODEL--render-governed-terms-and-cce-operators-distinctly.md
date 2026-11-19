@@ -29,11 +29,11 @@ Render Governed Terms and CCE Operators Distinctly
 
 ## Scope
 
-CAPRMEDIO content lexical-case rendering.
+ANECHOIC content lexical-case rendering.
 
 ## Claim
 
-**to** render CAPRMEDIO content, the Author **must** apply the following lexical-case rules:
+**to** render ANECHOIC content, the Author **must** apply the following lexical-case rules:
 
 - start **every** Governed Term with a capital letter.
 - start **every** General Term with a lowercase letter.

@@ -8,10 +8,10 @@ context:
   role: Operations
   form: Action
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/Action
+    main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/Action
     dependencies:
-    - CAPRMEDIO_MODEL <+ Atom
-    - CAPRMEDIO_STRUCTURE <+ Scope Unit//PROJECT_CONFIGURATION
+    - ANECHOIC_MODEL <+ Atom
+    - ANECHOIC_STRUCTURE <+ Scope Unit//PROJECT_CONFIGURATION
   tier: 3
 state:
   status: Active
@@ -20,9 +20,9 @@ state:
 destination:
   file:
     name: CA-O-10004-PROJECT_CONFIGURATION-ACTION--present-intermediate-results-and-request-input.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-10004-PROJECT_CONFIGURATION-ACTION--present-intermediate-results-and-request-input.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-10004-PROJECT_CONFIGURATION-ACTION--present-intermediate-results-and-request-input.md
   source_atom_id: CA-O-10004
   source_atom_revision: 4
   source_sha256: 539a25b2ac7eec1df2e7ec6e0c6253e45fe4fa2d8ff06d6edc9d8d36276a1987

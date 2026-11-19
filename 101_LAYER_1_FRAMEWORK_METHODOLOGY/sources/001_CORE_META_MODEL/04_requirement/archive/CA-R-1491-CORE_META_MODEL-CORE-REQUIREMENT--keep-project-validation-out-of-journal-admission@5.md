@@ -14,7 +14,7 @@ relations:
   child_of:
     - CA-R-1490
   relates_to:
-    - CAPRMEDIO-META-REQU-656
+    - ANECHOIC-META-REQU-656
 atom_id: "CA-R-1491"
 content_role: "Requirement"
 current_scope_unit: "CORE_META_MODEL"

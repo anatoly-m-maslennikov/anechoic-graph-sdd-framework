@@ -13,7 +13,7 @@ version: 5
 updated_at: 2026-08-29 01:16:37 +0400
 relations:
   child_of:
-    - CAPRMEDIO-GOV-REQU-768--validate-active-prmedo-relation-target-lifecycle
+    - ANECHOIC-GOV-REQU-768--validate-active-prmedo-relation-target-lifecycle
 ---
 # Reject authored inverse relations
 

@@ -1,20 +1,20 @@
 ---
 subjects:
-  active: 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Entities Graph)'
+  active: 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Entities Graph)'
   passive:
-  - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ Atom.Content
-  - CAPRMEDIO_MODEL <+ Atom.Header.Subjects
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_PROPERTY_OF
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//HAS_PROPERTY
-  - CAPRMEDIO_MODEL <+ CFEL<+Operator//AllowedValue
-  - CAPRMEDIO_MODEL <+ Projection
-  - CAPRMEDIO_MODEL <+ Term
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ Journal
-  - CAPRMEDIO_MODEL <+ Carrier
+  - ANECHOIC_MODEL <+ Entity
+  - ANECHOIC_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ Atom.Header.Subjects
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ CFEL <+ Relation
+  - ANECHOIC_MODEL <+ CFEL <+ Relation//IS_PROPERTY_OF
+  - ANECHOIC_MODEL <+ CFEL <+ Relation//HAS_PROPERTY
+  - ANECHOIC_MODEL <+ CFEL<+Operator//AllowedValue
+  - ANECHOIC_MODEL <+ Projection
+  - ANECHOIC_MODEL <+ Term
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Journal
+  - ANECHOIC_MODEL <+ Carrier
 version: 39
 updated_at: 2026-11-02 08:06:47 +0400
 relations:

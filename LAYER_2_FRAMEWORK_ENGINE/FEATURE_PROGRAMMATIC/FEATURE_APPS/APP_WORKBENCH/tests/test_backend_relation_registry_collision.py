@@ -81,7 +81,7 @@ class RelationRegistryCollisionTests(unittest.TestCase):
 
         self.store.replace(rows, scopes, relation_types=registered)
         result = self.store.run(
-            "FROM GRAPH_TABLE (caprmedio "
+            "FROM GRAPH_TABLE (anechoic "
             "MATCH (source:Reference)-[edge:CONTAINS]->(target:Reference) "
             "COLUMNS (source.ref AS source_ref, target.ref AS target_ref))"
         )
@@ -99,7 +99,7 @@ class RelationRegistryCollisionTests(unittest.TestCase):
         rows, scopes = materialize([direct, inverse, parent, child], [])
         self.store.replace(rows, scopes, relation_types=registered)
         result = self.store.run(
-            "FROM GRAPH_TABLE (caprmedio "
+            "FROM GRAPH_TABLE (anechoic "
             "MATCH (source:Reference)-[edge:IS_CONTAINED_BY]->(target:Reference) "
             "COLUMNS (source.ref AS source_ref, target.ref AS target_ref, edge.derived AS derived))"
         )

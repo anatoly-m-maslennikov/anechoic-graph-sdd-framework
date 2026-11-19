@@ -6,11 +6,11 @@ container:
 role: Operations
 form: Action
 topics:
-  main_subject: Subject/caprmedio/Action//Screen Short Names
+  main_subject: Subject/anechoic/Action//Screen Short Names
   dependencies:
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Operations/Type: Action'
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Actor/Type: Operator'
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Project
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Atom/Content Role: Operations/Type: Action'
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Actor/Type: Operator'
+  - Subject/ANECHOIC/Graph/Node/Project Model/Project
 tier: 3
 relations:
   child_of:
@@ -21,12 +21,12 @@ updated_at: "2026-11-11 18:46:16 +0400"
 carrier_destination:
   file:
     name: CA-O-065-PROJECT_CONFIGURATION-ACTION--screen-short-names-for-unintended-readings.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: PROJECT_CONFIGURATION
 author: Anatoly Maslennikov
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-065-PROJECT_CONFIGURATION-ACTION--screen-short-names-for-unintended-readings.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-065-PROJECT_CONFIGURATION-ACTION--screen-short-names-for-unintended-readings.md
   source_atom_id: CA-O-065
   source_atom_revision: 16
   source_sha256: b7abdff72eea0e37a27641369de7218ce8d2693404e60d3722e2230e0a55ec2c

@@ -9,7 +9,7 @@ version: 1
 updated_at: 2026-08-23 02:34:00
 relations:
   child_of:
-    - CAPRMEDIO-GOV-REQU-310--lineage-impact-dispositions
+    - ANECHOIC-GOV-REQU-310--lineage-impact-dispositions
 ---
 # Define update_required Lineage Impact disposition
 

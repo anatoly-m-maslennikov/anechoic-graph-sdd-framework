@@ -26,7 +26,7 @@ how should the identified Draft Atom be reconciled **with** active authority **a
 
 ## Draft under review
 
-- archived Carrier: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/archive/CA-M--GOVERN-CORE-METHOD--migrate-atoms-to-a-current-cce-version@2.md`.
+- archived Carrier: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/archive/CA-M--GOVERN-CORE-METHOD--migrate-atoms-to-a-current-cce-version@2.md`.
 - inspected SHA-256: `c0c0f7bd562a445ee053bc041c4a3d0df5fc103f2749b3ebcc95f356923724b3`.
 - review point: 36 of 79; campaign `draft-review-8afeac79`.
 
@@ -38,16 +38,16 @@ how should the identified Draft Atom be reconciled **with** active authority **a
 
 ## Active authority cited by the review
 
-- `CA-O-053@2`: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/09_operations/CA-O-053-CORE_META_MODEL-ACTION--migrate-atoms-to-a-current-cce-version.md`; SHA-256 `e09dbf60ea17784f667c84d2529c1f3f8135012f8d35e7189084f187e4bd598f`.
-- `CA-M-271@4`: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/CA-M-271-CORE_META_MODEL-METHOD--resolve-confidence-thresholds-by-source-precedence.md`; SHA-256 `613525aa6a07f19511ff7e38aa9b384980449d9eec39582e9906ad4729efa737`.
+- `CA-O-053@2`: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/09_operations/CA-O-053-CORE_META_MODEL-ACTION--migrate-atoms-to-a-current-cce-version.md`; SHA-256 `e09dbf60ea17784f667c84d2529c1f3f8135012f8d35e7189084f187e4bd598f`.
+- `CA-M-271@4`: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/CA-M-271-CORE_META_MODEL-METHOD--resolve-confidence-thresholds-by-source-precedence.md`; SHA-256 `613525aa6a07f19511ff7e38aa9b384980449d9eec39582e9906ad4729efa737`.
 
 ## Principles to apply
 
-- [CA-M-002](/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/05_method/CA-M-002-PRINCIPLE-METHOD--dry-don-t-repeat-yourself.md).
-- [CA-M-005](/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/05_method/CA-M-005-PRINCIPLE-METHOD--add-complexity-only-when-necessary.md).
-- [CA-M-006](/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/05_method/CA-M-006-PRINCIPLE-METHOD--keep-the-whole-project-coherent.md).
-- [CA-R-1490](/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/04_requirement/CA-R-1490-PRINCIPLE-REQUIREMENT--preserve-valuable-information.md).
-- [CA-E-001](/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/06_evaluation/CA-E-001-PRINCIPLE-EVALUATION--make-governed-commitments-and-results-checkable.md).
+- [CA-M-002](/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/05_method/CA-M-002-PRINCIPLE-METHOD--dry-don-t-repeat-yourself.md).
+- [CA-M-005](/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/05_method/CA-M-005-PRINCIPLE-METHOD--add-complexity-only-when-necessary.md).
+- [CA-M-006](/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/05_method/CA-M-006-PRINCIPLE-METHOD--keep-the-whole-project-coherent.md).
+- [CA-R-1490](/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/04_requirement/CA-R-1490-PRINCIPLE-REQUIREMENT--preserve-valuable-information.md).
+- [CA-E-001](/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/06_evaluation/CA-E-001-PRINCIPLE-EVALUATION--make-governed-commitments-and-results-checkable.md).
 
 ## Resolution
 
@@ -63,5 +63,5 @@ CA-O-053 owns the reusable CCE migration Action **and** preserves Claim, identit
 
 ### Authority verified at resolution
 
-- `CA-O-053@2`: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/09_operations/CA-O-053-CORE_META_MODEL-ACTION--migrate-atoms-to-a-current-cce-version.md`; SHA-256 `e09dbf60ea17784f667c84d2529c1f3f8135012f8d35e7189084f187e4bd598f`.
-- `CA-M-271@4`: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/CA-M-271-CORE_META_MODEL-METHOD--resolve-confidence-thresholds-by-source-precedence.md`; SHA-256 `613525aa6a07f19511ff7e38aa9b384980449d9eec39582e9906ad4729efa737`.
+- `CA-O-053@2`: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/09_operations/CA-O-053-CORE_META_MODEL-ACTION--migrate-atoms-to-a-current-cce-version.md`; SHA-256 `e09dbf60ea17784f667c84d2529c1f3f8135012f8d35e7189084f187e4bd598f`.
+- `CA-M-271@4`: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/CA-M-271-CORE_META_MODEL-METHOD--resolve-confidence-thresholds-by-source-precedence.md`; SHA-256 `613525aa6a07f19511ff7e38aa9b384980449d9eec39582e9906ad4729efa737`.

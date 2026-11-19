@@ -13,8 +13,8 @@ from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext
 from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
 
 
-_SETTINGS_PATH = Path(".caprmedio_caprmedio/caprmedio_project_settings.toml")
-_CONTROL_ROOT = Path(".caprmedio_caprmedio")
+_SETTINGS_PATH = Path(".anechoic_anechoic/anechoic_project_settings.toml")
+_CONTROL_ROOT = Path(".anechoic_anechoic")
 
 
 class ProjectSettingsValueError(RuntimeError):
@@ -48,7 +48,7 @@ def control_root(root: Path) -> Path:
     candidate = Path(configured) if isinstance(configured, str) and configured else None
     if candidate is None or candidate.is_absolute() or ".." in candidate.parts or candidate != _CONTROL_ROOT:
         raise ProjectSettingsValueError(
-            "project-settings-invalid", "paths.control_root must be .caprmedio_caprmedio"
+            "project-settings-invalid", "paths.control_root must be .anechoic_anechoic"
         )
     return (root / candidate).resolve()
 

@@ -11,7 +11,7 @@ subjects:
     - "Skill"
 version: 5
 updated_at: "2026-09-17 05:05:06 +0000"
-relations: {"relates_to":["CAPRMEDIO-GOV-REQU-294","CA-R-1439","CA-R-1440","CA-O-052","CAPRMEDIO-META-REQU-675"]}
+relations: {"relates_to":["ANECHOIC-GOV-REQU-294","CA-R-1439","CA-R-1440","CA-O-052","ANECHOIC-META-REQU-675"]}
 llm_session_ids:
   - codex:01a02650-eff7-7453-8c37-0699b36773c6
 ---

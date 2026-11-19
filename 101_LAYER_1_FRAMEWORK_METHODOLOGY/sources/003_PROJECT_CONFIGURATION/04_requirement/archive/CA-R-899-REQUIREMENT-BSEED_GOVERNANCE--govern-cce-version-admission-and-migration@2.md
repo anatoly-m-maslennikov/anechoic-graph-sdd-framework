@@ -22,7 +22,7 @@ relations:
     - CA-R-896
     - CA-R-897
     - CA-R-898
-    - CAPRMEDIO-GOV-REQU-380--configure-semantic-resolution-confidence-threshold
+    - ANECHOIC-GOV-REQU-380--configure-semantic-resolution-confidence-threshold
 version: 2
 updated_at: 2026-08-22 02:55:23
 ---

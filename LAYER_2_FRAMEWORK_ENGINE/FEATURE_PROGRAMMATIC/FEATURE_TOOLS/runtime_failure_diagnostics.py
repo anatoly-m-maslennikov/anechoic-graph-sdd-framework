@@ -19,7 +19,7 @@ from project_selection import active_selection
 from technical_diagnostics import make_technical_logger, make_unbound_technical_logger
 
 
-_DIAGNOSTIC_SEQUENCE: ContextVar[int] = ContextVar("caprmedio_diagnostic_sequence", default=0)
+_DIAGNOSTIC_SEQUENCE: ContextVar[int] = ContextVar("anechoic_diagnostic_sequence", default=0)
 _LOGGER_UNAVAILABLE = "diagnostic logger unavailable"
 _BINDING_UNAVAILABLE = "project binding unavailable"
 

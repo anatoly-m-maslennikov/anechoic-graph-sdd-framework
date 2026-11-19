@@ -1,0 +1,54 @@
+---
+atom_id: CA-P-1746
+ref_id: CA-P-1746
+role: Plan
+form: Plan
+label: Task
+topics:
+  main_subject: Subject/Graph Node/Engineering/Release
+  dependencies:
+  - Subject/Graph Node/Engineering/Implementation
+  - Subject/Graph Node/Engineering/Evaluation
+  - Subject/Graph Node/Engineering/Workflow
+  - Subject/Graph Node/Engineering/Action
+  - Subject/Graph Node/Engineering/Image
+  - Subject/Graph Node/Engineering/Release Testing/Executor Admission
+  - Subject/Graph Node/Domain/Continuant/History/Journal
+tier: 3
+relations:
+  is_decomposition_of:
+  - CA-P-1740
+  blocks:
+  - CA-P-1748
+status: Done
+version: 9
+updated_at: 2026-10-25 17:32:27 +0400
+work_sequence_number: 6
+current_scope_unit: anechoic
+author: Anatoly Maslennikov
+assignee: AI Agent
+autonomous_confidence_threshold: 90
+---
+# Summary
+
+Bind the three E2E harnesses to sealed context
+
+## Objective
+
+Run each declared E2E harness only against the sealed candidate image and dedicated writable scratch.
+
+## Details
+
+Own only the three APP/WORKFLOW_ORCHESTRATOR E2E harness files and necessary bounded Runtime constructor binding/tests. Remove mutable-tag admission and ambient opt-in acceptance; source workspace remains sealed read-only. Coordinate exact context API with P1745. ETA <=15 minutes.
+
+## Definition of Done
+
+The owned source or implementation is independently accepted and actual scoped verification is saved. Mock or source acceptance does not close live Docker, complete-suite, installation or promotion gates.
+
+## Pre-execution review
+
+Root accepts this bounded decomposition of the Operator-approved host E2E design. Respect the stated dependency and file-ownership boundaries. The existing isolated Unit executor, current public manifest, pending Runs and retained N remain protected.
+
+## Recorded verification
+
+Local implementation acceptance is saved in 7874fc864 and 5e0dfee93. The complete private gate module passed 11/11 tests after bounded failed/malformed/empty JUnit retention was fixed; the affected method also passed independently. Narrow D582#10 review accepted the final branch. Earlier context/Driver/phase-map, Runtime image-binding and actual stdio transport results remain retained. Synthetic image/command observations are mock data, not Docker or Release proof. No full-suite, installation, promotion or retirement result is claimed.

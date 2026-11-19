@@ -28,7 +28,7 @@ _KINDS = {
     ":": "IS_ALLOWED_VALUE_OF",
     ":=": "IS_ALLOWED_VALUE_OF",
 }
-_NAMESPACE_ROOTS = {"CAPRMEDIO_MODEL", "CAPRMEDIO_STRUCTURE"}
+_NAMESPACE_ROOTS = {"ANECHOIC_MODEL", "ANECHOIC_STRUCTURE"}
 
 
 def _has_selection(node: object) -> bool:
@@ -129,7 +129,7 @@ class _SubjectFacts:
             if step.operator not in _KINDS:
                 raise ValueError("Unsupported Subject path operator")
             kind = _KINDS[step.operator]
-            if (isinstance(value.head, notation.Name) and value.head.value == "CAPRMEDIO_STRUCTURE"
+            if (isinstance(value.head, notation.Name) and value.head.value == "ANECHOIC_STRUCTURE"
                     and step.operator == "/"):
                 kind = "IS_CONTAINED_BY"
             elif (self.native_class_narrowing and isinstance(value.head, notation.Name)
@@ -676,7 +676,7 @@ def _relation_definition_target(
 
     expression = namespace_local_expression(expression) or expression
     if isinstance(expression, notation.Path):
-        legacy = re.fullmatch(r"(?:CAPRMEDIO_MODEL/)?CFEL/Relation//([A-Za-z_][A-Za-z_0-9]*)",
+        legacy = re.fullmatch(r"(?:ANECHOIC_MODEL/)?CFEL/Relation//([A-Za-z_][A-Za-z_0-9]*)",
                               notation.render_subject(expression))
         if legacy is not None:
             return f"Relation//{legacy[1]}", "relation"

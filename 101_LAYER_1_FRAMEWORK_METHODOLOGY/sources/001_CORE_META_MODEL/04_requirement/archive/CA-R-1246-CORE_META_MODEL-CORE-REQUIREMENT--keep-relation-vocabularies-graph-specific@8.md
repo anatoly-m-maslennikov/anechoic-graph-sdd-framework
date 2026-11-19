@@ -4,7 +4,7 @@ cce_form: obligation
 subjects:
   governs: "Relation Kind"
   depends_on:
-    - "CAPRMEDIO Graph"
+    - "ANECHOIC Graph"
     - "Applicable Methodology"
     - "Projection"
     - "Relation Kind/Metadata"
@@ -16,7 +16,7 @@ llm_session_ids:
 ---
 # Keep relation vocabularies graph-specific
 
-**every** Relation Kind **must** belong **to** **`=1`** kind of CAPRMEDIO Graph **and** be admitted as native **only** **in** instances of that graph kind. instances of the same graph kind governed by the same Applicable Methodology **must** reuse the same Relation Kind authority.
+**every** Relation Kind **must** belong **to** **`=1`** kind of ANECHOIC Graph **and** be admitted as native **only** **in** instances of that graph kind. instances of the same graph kind governed by the same Applicable Methodology **must** reuse the same Relation Kind authority.
 
 the owning graph kind **and** canonical name **must** determine the Relation Kind's graph-qualified identity. matching names **or** compatible endpoints **must not** make Relation Kinds from different graph kinds interchangeable.
 

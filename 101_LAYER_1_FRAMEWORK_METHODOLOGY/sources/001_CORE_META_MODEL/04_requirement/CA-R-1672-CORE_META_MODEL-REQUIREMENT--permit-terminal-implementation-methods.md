@@ -6,7 +6,7 @@ version: 16
 updated_at: "2026-10-03 01:51:15 +0400"
 relations:
   child_of:
-    - CAPRMEDIO-REQU-030-REQUIREMENT--require-complete-authority-topology-in-strict-mode
+    - ANECHOIC-REQU-030-REQUIREMENT--require-complete-authority-topology-in-strict-mode
     - "CA-R-1767"
 atom_id: "CA-R-1672"
 content_role: "Requirement"

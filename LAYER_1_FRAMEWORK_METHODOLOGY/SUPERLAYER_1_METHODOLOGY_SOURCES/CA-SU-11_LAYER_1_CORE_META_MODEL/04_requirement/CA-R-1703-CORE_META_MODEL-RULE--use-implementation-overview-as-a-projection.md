@@ -6,16 +6,16 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Implementation Overview)'
+  main_subject: 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Implementation Overview)'
   dependencies:
-  - CAPRMEDIO_MODEL <+ Projection
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Term//Artifact
-  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Traceability
-  - CAPRMEDIO_MODEL <+ Journal
-  - CAPRMEDIO_MODEL <+ Package/Project Package
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Role
+  - ANECHOIC_MODEL <+ Projection
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Term//Artifact
+  - ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Traceability
+  - ANECHOIC_MODEL <+ Journal
+  - ANECHOIC_MODEL <+ Package/Project Package
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Role
 tier: 1
 status: Active
 version: 41
@@ -23,7 +23,7 @@ updated_at: 2026-11-10 14:38:45 +0400
 carrier_destination:
   file:
     name: CA-R-1703-CORE_META_MODEL-RULE--use-implementation-overview-as-a-projection.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---
@@ -47,4 +47,4 @@ the presence of this Projection does **not** require an internal Implementation 
 
 ## Details
 
-CAPRMEDIO represents the current view of project realization through an Implementation Overview Projection rather than an Implementation Atom.
+ANECHOIC represents the current view of project realization through an Implementation Overview Projection rather than an Implementation Atom.

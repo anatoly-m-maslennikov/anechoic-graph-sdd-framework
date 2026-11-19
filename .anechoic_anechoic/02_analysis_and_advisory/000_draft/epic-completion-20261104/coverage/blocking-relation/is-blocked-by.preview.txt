@@ -1,0 +1,39 @@
+---
+atom_id: "<UNALLOCATED-is-blocked-by>"
+current_scope_unit: CORE_META_MODEL
+claim_target_scope_unit: CORE_META_MODEL
+status: Draft
+subjects:
+  active: ANECHOIC_MODEL <+ CFEL <+ Relation//IS_BLOCKED_BY
+version: 1
+relations: {}
+tier: 1
+role: Requirement
+form: Declaration
+---
+
+## Summary
+
+Declare IS_BLOCKED_BY
+
+## Claim
+
+### Formal Claim
+
+```CFEL
+# model
+Relation//IS_BLOCKED_BY ((HAS_INVERSE)) Relation//BLOCKS;
+
+Relation//IS_BLOCKED_BY ((HAS_CLASSIFICATION)) Derivation == Direct;
+
+# instances
+Atom/(.Header.Role: Plan)//$dependent ((IS_BLOCKED_BY)) Atom/(.Header.Role: Plan)//$prerequisite
+```
+
+### Prose Claim
+
+A dependent Plan may start only after each Plan it is blocked by is Done.
+
+## Semantics
+
+IS_BLOCKED_BY relates a dependent Plan to a prerequisite Plan.

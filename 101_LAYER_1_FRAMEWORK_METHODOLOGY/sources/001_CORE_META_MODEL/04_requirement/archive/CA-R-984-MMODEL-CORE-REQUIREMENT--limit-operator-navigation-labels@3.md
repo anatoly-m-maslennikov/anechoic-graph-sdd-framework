@@ -12,7 +12,7 @@ version: 3
 updated_at: 2026-08-23 15:00:38
 relations:
   child_of:
-    - CAPRMEDIO-META-REQU-716
+    - ANECHOIC-META-REQU-716
 ---
 # Limit Operator navigation labels
 

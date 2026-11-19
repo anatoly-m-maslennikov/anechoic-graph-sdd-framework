@@ -17,11 +17,11 @@ relations:
 
 ## Claim checked
 
-Authority directories encode structural markers only under `.caprmedio/`, while root Delivery directories encode only optional Layer order and Unit Name.
+Authority directories encode structural markers only under `.anechoic/`, while root Delivery directories encode only optional Layer order and Unit Name.
 
 ## Test case
 
-Resolve the three Bootstrap Seed Layer authority directories, six Project Layer authority-to-root pairs, `.caprmedio/FEATURE_FIELD/` to `/FIELD/`, and the three Bootstrap Seed Delivery exceptions. Then add a structural marker to a root Delivery folder, remove one from an authority folder, or replace an exact Unit Name with a readable rendering.
+Resolve the three Bootstrap Seed Layer authority directories, six Project Layer authority-to-root pairs, `.anechoic/FEATURE_FIELD/` to `/FIELD/`, and the three Bootstrap Seed Delivery exceptions. Then add a structural marker to a root Delivery folder, remove one from an authority folder, or replace an exact Unit Name with a readable rendering.
 
 ## Acceptance criteria
 

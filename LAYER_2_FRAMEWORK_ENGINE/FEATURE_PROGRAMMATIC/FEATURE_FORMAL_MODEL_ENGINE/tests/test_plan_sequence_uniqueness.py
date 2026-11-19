@@ -10,7 +10,7 @@ from lint_python_model_claim import lint_python_model_claim
 from cfel_claim_constraints import _native_constraints
 from contract_graph import _clause
 PLAN='Atom/(.Header.Context.Role:=Plan)';SEQ='Header.Context.Plan.Work Sequence Number';BASE=PLAN+'.Header.Context.Plan';PROP=PLAN+'.'+SEQ
-CLAIM=f'''from caprmedio.formal_claims import Cardinality, declare_entity
+CLAIM=f'''from anechoic.formal_claims import Cardinality, declare_entity
 declare_entity(entity_name="Work Sequence Number", relation_name="IS_PROPERTY_OF", base_path="{BASE}", value_format=int,
  value_cardinality=Cardinality(minimum=0, maximum=1), minimum_value=1, dependent_property_cardinality=0,
  population_entity_path="{PLAN}", population_unique_constraints=(

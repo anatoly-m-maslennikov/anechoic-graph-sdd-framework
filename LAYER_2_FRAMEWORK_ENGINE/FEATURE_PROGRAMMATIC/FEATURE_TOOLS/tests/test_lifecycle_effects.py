@@ -18,7 +18,7 @@ def digest(value):
 
 class LifecycleEffectsTest(unittest.TestCase):
     def setUp(self):
-        parent = ROOT / ".caprmedio_tmp/CA-P-2791/CA-P-2934/carrier-effects"
+        parent = ROOT / ".anechoic_tmp/CA-P-2791/CA-P-2934/carrier-effects"
         parent.mkdir(parents=True, exist_ok=True)
         self.temp = tempfile.TemporaryDirectory(dir=parent)
         self.directory = Path(self.temp.name)

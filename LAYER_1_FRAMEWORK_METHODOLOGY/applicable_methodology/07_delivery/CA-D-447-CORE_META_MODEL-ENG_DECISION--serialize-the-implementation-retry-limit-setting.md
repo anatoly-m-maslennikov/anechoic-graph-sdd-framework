@@ -6,13 +6,13 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework Settings.Implementation Retry Limit
+  main_subject: ANECHOIC_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework Settings.Implementation Retry Limit
   dependencies:
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework Settings
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Governing Objects/Governing Configuration
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Implementation Retry Limit'
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)/(.Header.Context.Form := Plan)'
-  - CAPRMEDIO_MODEL <+ Carrier
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework Settings
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Governing Objects/Governing Configuration
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan).Implementation Retry Limit'
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan)/(.Header.Context.Form := Plan)'
+  - ANECHOIC_MODEL <+ Carrier
 tier: 3
 status: Active
 version: 30
@@ -20,11 +20,11 @@ updated_at: 2026-11-02 00:18:22 +0400
 carrier_destination:
   file:
     name: CA-D-447-CORE_META_MODEL-DECISION--serialize-the-implementation-retry-limit-setting.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-447-CORE_META_MODEL-ENG_DECISION--serialize-the-implementation-retry-limit-setting.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-447-CORE_META_MODEL-ENG_DECISION--serialize-the-implementation-retry-limit-setting.md
   source_atom_id: CA-D-447
   source_atom_revision: 30
   source_sha256: ab4e249b16529739457605172a58e6c77c38c3497584d2304f5f9b674f41a4b2

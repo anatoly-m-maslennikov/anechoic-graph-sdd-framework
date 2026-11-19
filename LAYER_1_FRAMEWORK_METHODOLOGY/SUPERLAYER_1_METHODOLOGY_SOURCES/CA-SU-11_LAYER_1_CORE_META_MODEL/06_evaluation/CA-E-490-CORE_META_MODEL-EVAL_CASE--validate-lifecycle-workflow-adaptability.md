@@ -6,15 +6,15 @@ container:
 role: Evaluation
 form: Eval Case
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role:=Operations)/Workflow
+  main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role:=Operations)/Workflow
   dependencies:
-  - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Role
-  - CAPRMEDIO_MODEL <+ Scope Unit.order.ordered
-  - CAPRMEDIO_MODEL <+ Atom.Header.State.Status
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ Carrier
+  - ANECHOIC_MODEL <+ Entity
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Role
+  - ANECHOIC_MODEL <+ Scope Unit.order.ordered
+  - ANECHOIC_MODEL <+ Atom.Header.State.Status
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Carrier
 tier: 3
 relations:
   evaluation_for:
@@ -25,7 +25,7 @@ updated_at: 2026-11-02 19:44:26 +0400
 carrier_destination:
   file:
     name: CA-E-490-CORE_META_MODEL-EVAL_CASE--validate-lifecycle-workflow-adaptability.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---

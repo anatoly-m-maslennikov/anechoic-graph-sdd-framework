@@ -23,7 +23,7 @@ from carrier_aliases import carrier_read_view, carrier_status_folder, matches_na
 from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier  # noqa: E402
 
 PLACEMENT_SUBJECT = re.compile(
-    r'^CAPRMEDIO_MODEL\s*<\+\s*(?:Carrier|Atom\.Header\.Context\.Role|'
+    r'^ANECHOIC_MODEL\s*<\+\s*(?:Carrier|Atom\.Header\.Context\.Role|'
     r'Atom(?:/\([^)]*\))*\.Header\.State\.Status(?:\s*:\s*[^/]+)?|'
     r'Atom/\(\.Header\.Context\.Role\s*:=\s*Plan\)\.Header\.State\.Status'
     r'\s*>\|\s*Status Group\s*:=\s*Backlog|'

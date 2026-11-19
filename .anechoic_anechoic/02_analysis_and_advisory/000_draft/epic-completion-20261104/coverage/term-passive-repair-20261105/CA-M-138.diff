@@ -1,0 +1,11 @@
+--- .anechoic_anechoic/05_method/CA-M-138-IMPLEMENTATION_METHOD--author-in-canonical-framework-language.md
++++ .anechoic_anechoic/02_analysis/draft/epic-completion-20261104/coverage/term-passive-repair-20261105/CA-M-138.preview.txt
+@@ -8,7 +8,7 @@
+   active: ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Authoring
+   passive:
+   - ANECHOIC_MODEL <+ Term//Artifact
+-  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Term
++  - ANECHOIC_MODEL <+ Term
+   - ANECHOIC_STRUCTURE <+ Aspects <+ Product
+ cce_version: cce_1
+ cce_form: method

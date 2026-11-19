@@ -1,0 +1,28 @@
+---
+atom_id: CA-R-2327@2-draft
+ref_id: CA-R-2327@2-draft
+container:
+  scope_unit: CA-SU-11
+role: Requirement
+form: Entity Definition
+topics:
+  main_subject: ANECHOIC_MODEL <+ Cardinality
+tier: 1
+status: Draft
+version: 2
+updated_at: 2026-10-30 08:44:43 +0400
+current_scope_unit: CORE_META_MODEL
+author: Anatoly Maslennikov
+claim_target_scope_unit: CORE_META_MODEL
+---
+## Summary
+
+Define Cardinality
+
+## Claim
+
+Cardinality specifies the allowed count of direct values or contained parts.
+
+## Details
+
+Source meaning: CA-R-1248@23, CA-R-2244@1. Scope-specific constraints remain in their governing Rs.

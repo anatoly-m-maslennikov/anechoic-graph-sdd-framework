@@ -6,11 +6,11 @@ container:
 role: Evaluation
 form: Eval Policy
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom
+  main_subject: ANECHOIC_MODEL <+ Atom
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Project
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Actor/Operator
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Project
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Actor/Operator
 tier: 3
 relations:
   child_of:
@@ -24,14 +24,14 @@ updated_at: "2026-11-11 18:46:16 +0400"
 carrier_destination:
   file:
     name: CA-E-668-CORE_META_MODEL-EVAL_POLICY--check-the-selected-scope-against-active-project-wide-invariants.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
 cce_version: cce_1
 cce_form: evaluation
 llm_session_ids:
 - codex:01a02650-eff7-7453-8c37-0699b36773c6
 current_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-668-CORE_META_MODEL-EVAL_POLICY--check-the-selected-scope-against-active-project-wide-invariants.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-668-CORE_META_MODEL-EVAL_POLICY--check-the-selected-scope-against-active-project-wide-invariants.md
   source_atom_id: CA-E-668
   source_atom_revision: 4
   source_sha256: 4d565ab7d5cf1a958222a0a6bba211822e1daaa83b210553dccb7f4d22645f16

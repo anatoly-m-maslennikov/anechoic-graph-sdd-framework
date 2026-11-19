@@ -6,18 +6,18 @@ container:
 role: Method
 form: Implementation Method
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Content
+  main_subject: ANECHOIC_MODEL <+ Atom.Content
   dependencies:
-  - CAPRMEDIO_MODEL <+ Term
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role: Operations)/(.Header.Context.Form:
+  - ANECHOIC_MODEL <+ Term
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role: Operations)/(.Header.Context.Form:
     Workflow) {:1+}<+ Atom/(.Header.Context.Role: Operations)/(.Header.Context.Form:
     Step)'
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Actor
-  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role: Operations)/(.Header.Context.Form:
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Actor
+  - ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role: Operations)/(.Header.Context.Form:
     Action)'
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role: Operations)/(.Header.Context.Form:
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role: Operations)/(.Header.Context.Form:
     Workflow)'
 tier: 5
 relations:
@@ -29,7 +29,7 @@ updated_at: '2026-11-13T18:37:48.576277+00:00'
 carrier_destination:
   file:
     name: CA-M-1024-CORE_META_MODEL-IMPLEMENTATION_METHOD--make-atom-claims-clear-and-preserve-their-meaning.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---

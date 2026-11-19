@@ -4,11 +4,11 @@ ref_id: CA-D-670
 role: Delivery
 form: Eng Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Scope Unit
+  main_subject: ANECHOIC_MODEL <+ Scope Unit
   dependencies:
   - Entity/Object/Continuant/History
-  - CAPRMEDIO_MODEL <+ Journal
-  - CAPRMEDIO_MODEL <+ Carrier
+  - ANECHOIC_MODEL <+ Journal
+  - ANECHOIC_MODEL <+ Carrier
 tier: 3
 status: Active
 version: 3
@@ -18,9 +18,9 @@ container:
 carrier_destination:
   file:
     name: CA-D-670-CORE_META_MODEL-ENG_DECISION--bind-scope-unit-declarations-to-source-evidence.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-670-CORE_META_MODEL-ENG_DECISION--bind-scope-unit-declarations-to-source-evidence.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-670-CORE_META_MODEL-ENG_DECISION--bind-scope-unit-declarations-to-source-evidence.md
   source_atom_id: CA-D-670
   source_atom_revision: 3
   source_sha256: 0fc821a5fd310c2d6a35b06cec1f41ce192a2fc4588a5ca28b83a2f03ba64d98

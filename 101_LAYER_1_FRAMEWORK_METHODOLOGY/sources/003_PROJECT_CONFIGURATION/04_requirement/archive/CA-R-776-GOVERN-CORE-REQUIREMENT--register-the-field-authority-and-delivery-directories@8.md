@@ -10,4 +10,4 @@ relations:
 ---
 # Register the FIELD authority and Delivery directories
 
-GOVERNANCE MUST register `.caprmedio/AREA_FIELD/` as the FIELD authority directory and `/FIELD/` as the FIELD Delivery directory.
+GOVERNANCE MUST register `.anechoic/AREA_FIELD/` as the FIELD authority directory and `/FIELD/` as the FIELD Delivery directory.

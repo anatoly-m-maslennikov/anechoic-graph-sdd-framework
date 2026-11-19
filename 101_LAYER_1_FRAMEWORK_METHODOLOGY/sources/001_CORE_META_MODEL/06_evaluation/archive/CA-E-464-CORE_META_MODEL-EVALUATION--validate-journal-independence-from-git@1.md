@@ -14,7 +14,7 @@ updated_at: "2026-09-14 06:21:07 +0400"
 relations:
   evaluation_for:
     - CA-R-1466
-    - CAPRMEDIO-META-REQU-158
+    - ANECHOIC-META-REQU-158
     - CA-R-1463
     - CA-R-1467
     - CA-R-1468

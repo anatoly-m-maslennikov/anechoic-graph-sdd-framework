@@ -1,8 +1,8 @@
 ---
 subjects:
-  active: CAPRMEDIO_MODEL <+ CFEL
+  active: ANECHOIC_MODEL <+ CFEL
   passive:
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
+  - ANECHOIC_MODEL <+ CFEL <+ Relation
 version: 36
 updated_at: 2026-11-03 20:00:05 +0400
 relations: {}
@@ -16,7 +16,7 @@ form: Implementation Method
 carrier_destination:
   file:
     name: CA-M-228-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-subject-expressions-with-bearer-and-value-qualification.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
 ---
 ## Summary
 

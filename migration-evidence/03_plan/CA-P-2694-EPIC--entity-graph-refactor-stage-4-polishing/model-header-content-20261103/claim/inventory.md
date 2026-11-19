@@ -1,6 +1,6 @@
 # Bounded source inventory
 
-Authoritative source root: `.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL`. Inventory is limited to the 15 requested Current sources; D-482 and R-2501 are retirement dispositions; projections, archives, runtime and other consumers are not inventoried. Hashes identify the reviewed bytes, not approval or adoption.
+Authoritative source root: `.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL`. Inventory is limited to the 15 requested Current sources; D-482 and R-2501 are retirement dispositions; projections, archives, runtime and other consumers are not inventoried. Hashes identify the reviewed bytes, not approval or adoption.
 
 | Atom | Version | SHA-256 | Source relative to root |
 |---|---:|---|---|

@@ -22,7 +22,7 @@ class NativeModelLintTests(unittest.TestCase):
 
     def test_native_field_contracts_are_checked_without_compiler(self):
         source = ("from dataclasses import dataclass, field\n"
-                  "from caprmedio.formal_claims import declare_entity\n"
+                  "from anechoic.formal_claims import declare_entity\n"
                   "@dataclass\nclass Example:\n"
                   "    id: int = field(metadata={'property_occurrence_cardinality': 1, 'value_cardinality': 1})\n"
                   "declare_entity(entity_name='Example', entity_class=Example)\n")
@@ -39,7 +39,7 @@ class NativeModelLintTests(unittest.TestCase):
 
     def test_current_workspace_and_view_field_contracts(self):
         from FEATURE_FORMAL_MODEL_ENGINE.model_catalog import _native_block
-        root = PROGRAMMATIC.parents[1] / '.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement'
+        root = PROGRAMMATIC.parents[1] / '.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement'
         for number in (2792, 2793):
             path = next(root.glob(f'CA-R-{number}-*.md'))
             source = next(_native_block(path.read_text()))
@@ -47,7 +47,7 @@ class NativeModelLintTests(unittest.TestCase):
                 self.assertEqual((), self.lint(source, addresses=('View', 'Workspace'), relations=('IS_CONTAINED_BY',)))
 
     def test_property_references_and_missing_bearer(self):
-        source = ("from caprmedio.formal_claims import declare_entity\n"
+        source = ("from anechoic.formal_claims import declare_entity\n"
                   "declare_entity(entity_name='Claim', relation_name='IS_PROPERTY_OF', "
                   "base_path='Atom.Content', value_format=str)")
         self.assertEqual(self.lint(source), ())
@@ -55,32 +55,32 @@ class NativeModelLintTests(unittest.TestCase):
         self.assertIn("unknown Relation: IS_PROPERTY_OF", self.lint(source, relations=())[0])
 
     def test_class_base_is_a_declared_model_class(self):
-        source = ("from caprmedio.formal_claims import declare_entity\n"
-                  "from caprmedio.model import ScopeUnit\n"
+        source = ("from anechoic.formal_claims import declare_entity\n"
+                  "from anechoic.model import ScopeUnit\n"
                   "class Project(ScopeUnit):\n    pass\n"
                   "declare_entity(entity_class=Project, entity_name='Project')")
         self.assertEqual(self.lint(source), ())
         self.assertIn("unknown Model class: ScopeUnit", self.lint(source, addresses=("Atom",))[0])
 
     def test_instance_check_type_uses_declared_model_catalog(self):
-        source = ("from caprmedio.formal_claims import declare_entity\n"
-                  "from caprmedio.model import ScopeUnit\n"
+        source = ("from anechoic.formal_claims import declare_entity\n"
+                  "from anechoic.model import ScopeUnit\n"
                   "def check(unit: ScopeUnit) -> bool:\n    return unit.id != 'CA-SU--1'\n"
                   "declare_entity(entity_name='Scope Unit', instance_check=check)")
         self.assertEqual(self.lint(source), ())
         self.assertIn("unknown Model class: ScopeUnit", self.lint(source, addresses=("Atom",))[0])
 
     def test_instance_check_must_match_the_declared_class(self):
-        source = ("from caprmedio.formal_claims import declare_entity\n"
-                  "from caprmedio.model import ScopeUnit\n"
+        source = ("from anechoic.formal_claims import declare_entity\n"
+                  "from anechoic.model import ScopeUnit\n"
                   "class Project(ScopeUnit):\n    pass\n"
                   "def check(unit: ScopeUnit) -> bool:\n    return True\n"
                   "declare_entity(entity_class=Project, entity_name='Project', instance_check=check)")
         self.assertIn("instance check argument must match entity_class", self.lint(source)[0])
 
     def test_qualified_class_imports_must_be_unambiguous(self):
-        source = ("from caprmedio.formal_claims import declare_entity\n"
-                  "from caprmedio.model import Decision\n"
+        source = ("from anechoic.formal_claims import declare_entity\n"
+                  "from anechoic.model import Decision\n"
                   "class Detail(Decision):\n    pass\n"
                   "declare_entity(entity_class=Detail, entity_name='Detail')")
         decision = "Atom/(.Header.Context.Role := Method)/(.Header.Context.Form := Decision)"
@@ -89,8 +89,8 @@ class NativeModelLintTests(unittest.TestCase):
         self.assertIn("ambiguous Model class: Decision", self.lint(source, addresses=(decision, other))[0])
 
     def test_exact_python_class_binding_selects_qualified_model_identity(self):
-        source = ("from caprmedio.formal_claims import declare_entity\n"
-                  "from caprmedio.model import Requirement\n"
+        source = ("from anechoic.formal_claims import declare_entity\n"
+                  "from anechoic.model import Requirement\n"
                   "class R(Requirement):\n    pass\n"
                   "declare_entity(entity_class=R, entity_name='R')")
         role = "Atom/(.Header.Context.Role := Requirement)"
@@ -105,8 +105,8 @@ class NativeModelLintTests(unittest.TestCase):
         self.assertIn("ambiguous Model class", self.lint(source, addresses=addresses, bindings={})[0])
 
     def test_graph_catalog_resolves_unambiguous_legacy_imports(self):
-        source = ("from caprmedio.formal_claims import declare_entity\n"
-                  "from caprmedio.model import ScopeUnit\n"
+        source = ("from anechoic.formal_claims import declare_entity\n"
+                  "from anechoic.model import ScopeUnit\n"
                   "class Project(ScopeUnit):\n    pass\n"
                   "declare_entity(entity_class=Project, entity_name='Project')")
         self.assertEqual(self.lint(source, addresses=("Scope Unit",), bindings={}), ())
@@ -120,7 +120,7 @@ class NativeModelLintTests(unittest.TestCase):
                                    bindings={"Requirement": [addresses[-1]]}), ())
 
     def test_relation_endpoints_are_checked(self):
-        source = ("from caprmedio.formal_claims import declare_relation\n"
+        source = ("from anechoic.formal_claims import declare_relation\n"
                   "declare_relation(relation_name='TEST', "
                   "source_endpoint={'level': 'instances', 'entity_paths': ('Carrier',)}, "
                   "target_endpoint={'level': 'instances', 'entity_paths': ('Atom',)})")
@@ -129,7 +129,7 @@ class NativeModelLintTests(unittest.TestCase):
 
     def test_property_accepts_exact_qualified_bearer(self):
         path = "Atom/(.Header.Context.Role:=Operations)/Step.Content.Claim"
-        source = ("from caprmedio.formal_claims import declare_entity\n"
+        source = ("from anechoic.formal_claims import declare_entity\n"
                   "declare_entity(entity_name='Mermaid Scheme', relation_name='IS_PROPERTY_OF', "
                   f"base_path={path!r})")
         self.assertEqual(self.lint(source, addresses=(path,)), ())
@@ -138,7 +138,7 @@ class NativeModelLintTests(unittest.TestCase):
     def test_model_and_instance_relation_constraints_are_checked(self):
         for level in ("model", "instance"):
             with self.subTest(level=level):
-                prefix = ("from caprmedio.formal_claims import declare_entity\n"
+                prefix = ("from anechoic.formal_claims import declare_entity\n"
                           f"declare_entity(entity_name='Project', {level}_relation_constraints=")
                 valid = prefix + "{'IS_CONTAINED_BY': {'target_entity_paths': ('Scope Unit',)}})"
                 self.assertEqual(self.lint(valid), ())
@@ -148,7 +148,7 @@ class NativeModelLintTests(unittest.TestCase):
                 self.assertIn("must map Relation names", self.lint(malformed)[0])
 
     def test_invalid_native_code_has_location_and_is_never_executed(self):
-        source = ("from caprmedio.formal_claims import declare_entity\n"
+        source = ("from anechoic.formal_claims import declare_entity\n"
                   "declare_entity(entity_name=__import__('os').getcwd())")
         diagnostic = self.lint(source)[0]
         self.assertIn("atom.md:11:", diagnostic)
@@ -161,7 +161,7 @@ class NativeModelLintTests(unittest.TestCase):
             addresses = root / "addresses.json"
             relations = root / "relations.json"
             claim.write_text("## Claim\n### Formal Claim\n```python\n"
-                             "from caprmedio.formal_claims import declare_entity\n"
+                             "from anechoic.formal_claims import declare_entity\n"
                              "declare_entity(entity_name='Name', relation_name='IS_PROPERTY_OF', "
                              "base_path='Atom')\n```\n")
             addresses.write_text(json.dumps(["Atom"]))
@@ -178,8 +178,8 @@ class NativeModelLintTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             claim, addresses, relations = (root / name for name in ("claim.py", "addresses.json", "relations.json"))
-            claim.write_text("from caprmedio.formal_claims import declare_entity\n"
-                             "from caprmedio.model import Requirement\n"
+            claim.write_text("from anechoic.formal_claims import declare_entity\n"
+                             "from anechoic.model import Requirement\n"
                              "class R(Requirement):\n    pass\n"
                              "declare_entity(entity_class=R, entity_name='R')\n")
             role = "Atom/(.Header.Context.Role:=Requirement)"

@@ -112,8 +112,8 @@ class RuleOriginTests(unittest.TestCase):
                          {(r["relation"], r["level"], r["direction"], r["derivation"]) for r in rules})
 
     def test_native_relation_constraints_have_instance_scope(self):
-        python = ("from caprmedio.formal_claims import declare_entity\n"
-                  "from caprmedio.model import Node\n"
+        python = ("from anechoic.formal_claims import declare_entity\n"
+                  "from anechoic.model import Node\n"
                   "class Child(Node):\n    pass\n"
                   "declare_entity(entity_class=Child, entity_name='Child', "
                   "instance_relation_constraints={'IS_CONTAINED_BY': {'target_entity_paths': ('Node',), "
@@ -137,7 +137,7 @@ class RuleOriginTests(unittest.TestCase):
         declaration = carrier("CA-R-2", "CFEL <+ Relation//LINKS", "", form="Relation Declaration")
         declaration["body"] = (
             "## Claim\n\n### Formal Claim\n\n```python\n"
-            "from caprmedio.formal_claims import declare_relation\n"
+            "from anechoic.formal_claims import declare_relation\n"
             "declare_relation(relation_name='LINKS', inverse_alias='LINKED_BY', "
             "source_endpoint={'level': 'instances', 'entity_paths': ('Node',)}, "
             "target_endpoint={'level': 'instances', 'entity_paths': ('Node',)})\n```\n"

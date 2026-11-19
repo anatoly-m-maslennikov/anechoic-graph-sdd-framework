@@ -6,19 +6,19 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: 'CAPRMEDIO_MODEL <+ Projection/(.Form:=Catalog)'
+  main_subject: 'ANECHOIC_MODEL <+ Projection/(.Form:=Catalog)'
   dependencies:
-  - CAPRMEDIO_MODEL <+ Term
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role: Requirement)/(.Header.Context.Form: Entity Definition)'
-  - CAPRMEDIO_MODEL <+ Atom.Content
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
-  - CAPRMEDIO_MODEL <+ Term//Artifact
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ Actor
-  - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ Projection
-  - CAPRMEDIO_MODEL <+ Relation
-  - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Terms Graph)'
+  - ANECHOIC_MODEL <+ Term
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role: Requirement)/(.Header.Context.Form: Entity Definition)'
+  - ANECHOIC_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Topics
+  - ANECHOIC_MODEL <+ Term//Artifact
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Actor
+  - ANECHOIC_MODEL <+ Entity
+  - ANECHOIC_MODEL <+ Projection
+  - ANECHOIC_MODEL <+ Relation
+  - 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Terms Graph)'
 tier: 2
 relations:
   child_of:
@@ -32,11 +32,11 @@ updated_at: 2026-11-02 00:18:22 +0400
 carrier_destination:
   file:
     name: CA-R-1455-CORE_META_MODEL-RULE--preserve-evidence-and-uncertainty-in-vocabulary-diagnostic-indexes.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1455-CORE_META_MODEL--preserve-evidence-and-uncertainty-in-vocabulary-diagnostic-indexes.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1455-CORE_META_MODEL--preserve-evidence-and-uncertainty-in-vocabulary-diagnostic-indexes.md
   source_atom_id: CA-R-1455
   source_atom_revision: 27
   source_sha256: 55df6df3ce659c8df4aaed3022d1fb68e329be44f24008c5603c8138545a2409

@@ -24,7 +24,7 @@ technical and business runtime Journal Carriers.
 
 ## Claim
 
-runtime technical **and** business Journals **may** be delivered **to** an explicitly configured local database, remote database, **or** governed logging sink. these Carriers **need not** reside under `.caprmedio_<project_name>/_journal/` **or** `.caprmedio_runtime/`.
+runtime technical **and** business Journals **may** be delivered **to** an explicitly configured local database, remote database, **or** governed logging sink. these Carriers **need not** reside under `.anechoic_<project_name>/_journal/` **or** `.anechoic_runtime/`.
 
 ## Details
 

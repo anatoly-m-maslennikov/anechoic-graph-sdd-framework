@@ -11,14 +11,14 @@ relations:
 ---
 # Register Scope Unit names and filename scope names
 
-GOVERNANCE registers each current Scope Unit's full atomic uppercase `SNAKE_CASE` name and one stable filename `scope_path_name`. Atom prose and structured meaning refer to the Scope Unit by its full case-sensitive name. A non-Project filename scope name may occur in `<CURRENT_SCOPE>` or Type-governed `<TARGET_SCOPE>`. The Project root omits `<CURRENT_SCOPE>` but uses `CAPRMEDIO` when it occurs as `<TARGET_SCOPE>`; its separate `CA` Project identity prefix remains governed independently. Each Unit's parent-relative authority-to-Delivery-place binding is governed by that Unit's Delivery Atom.
+GOVERNANCE registers each current Scope Unit's full atomic uppercase `SNAKE_CASE` name and one stable filename `scope_path_name`. Atom prose and structured meaning refer to the Scope Unit by its full case-sensitive name. A non-Project filename scope name may occur in `<CURRENT_SCOPE>` or Type-governed `<TARGET_SCOPE>`. The Project root omits `<CURRENT_SCOPE>` but uses `ANECHOIC` when it occurs as `<TARGET_SCOPE>`; its separate `CA` Project identity prefix remains governed independently. Each Unit's parent-relative authority-to-Delivery-place binding is governed by that Unit's Delivery Atom.
 
 | Full name | Filename `scope_path_name` |
 | --- | --- |
 | METAMODEL | `MMODEL` |
 | SEMANTICS | `SEMNTC` |
 | GOVERNANCE | `GOVERN` |
-| CAPRMEDIO | `CAPRMEDIO` |
+| ANECHOIC | `ANECHOIC` |
 | FRAMEWORK_METHODOLOGY | `FR_MTHD` |
 | FRAMEWORK_ENGINE | `FR_ENGN` |
 | OPERATOR_DOCUMENTATION | `OPER_DOC` |

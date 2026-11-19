@@ -8,7 +8,7 @@ context:
   role: Requirement
   form: Declaration
   topics:
-    main_subject: MODEL//CAPRMEDIO <+ (View, View.id, View.sql, View.name)
+    main_subject: MODEL//ANECHOIC <+ (View, View.id, View.sql, View.name)
   tier: 3
 state:
   status: active
@@ -17,12 +17,12 @@ state:
 destination:
   file:
     name: CA-R-2793-CORE_META_MODEL-DECLARATION--define-view.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 author: Anatoly Maslennikov
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2793-CORE_META_MODEL-DECLARATION--define-view.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2793-CORE_META_MODEL-DECLARATION--define-view.md
   source_atom_id: CA-R-2793
   source_atom_revision: 5
   source_sha256: 796160c0bb34c81ebe2053022055ee060d42b9433a660b75ae241e01d723a0f6
@@ -42,7 +42,7 @@ A View is a Workbench SQL document in one Workspace. It has one stable string ID
 
 ```python
 from dataclasses import dataclass, field
-from caprmedio.formal_claims import Cardinality, declare_entity
+from anechoic.formal_claims import Cardinality, declare_entity
 
 @dataclass
 class View:

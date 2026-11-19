@@ -6,15 +6,15 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Projection
+  main_subject: ANECHOIC_MODEL <+ Projection
   dependencies:
-  - CAPRMEDIO_MODEL <+ Projection
-  - CAPRMEDIO_MODEL <+ Projection.Form
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Selection
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Atom.Header.Identity.ID
-  - CAPRMEDIO_MODEL <+ Atom.Header.State.Version
-  - CAPRMEDIO_MODEL <+ Carrier
+  - ANECHOIC_MODEL <+ Projection
+  - ANECHOIC_MODEL <+ Projection.Form
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Selection
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Atom.Header.Identity.ID
+  - ANECHOIC_MODEL <+ Atom.Header.State.Version
+  - ANECHOIC_MODEL <+ Carrier
 tier: 3
 relations:
   delivery_for:
@@ -30,7 +30,7 @@ updated_at: 2026-11-02 00:18:22 +0400
 carrier_destination:
   file:
     name: CA-D-653-CORE_META_MODEL-DECISION--deliver-readable-subject-graph-views-as-markdown.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---
@@ -62,7 +62,7 @@ Declare the exact named source selection, including Scope Units, Roles and statu
 
 The combined Subject Graph Type has four main sections:
 
-1. ## Primary subjects: one literal-tab hierarchy rooted at Subject, showing kinds and source-backed classification-axis topics with their namespace and branch context. Exclude named instances, dependent properties, allowed property values and their descendants. A value-qualified narrower kind such as `Atom/(.Header.Role := Plan)` remains a kind, not a named Atom instance. Within CAPRMEDIO, keep Graph/Node, Graph/Relation and Graph/Rule as sibling branches beneath Graph; show Node/Project Model and Node/Aspect, and keep Carrier outside Graph. Retain selected project-specific namespaces. Namespace and classification-axis segments are context or topics, not extra entity kinds. Keep the bare `Atom.Header.Role` axis visible and distinguish its meaning from role-qualified narrower Atom kinds. Named Relation Type declarations belong in section 3, not the primary tree.
+1. ## Primary subjects: one literal-tab hierarchy rooted at Subject, showing kinds and source-backed classification-axis topics with their namespace and branch context. Exclude named instances, dependent properties, allowed property values and their descendants. A value-qualified narrower kind such as `Atom/(.Header.Role := Plan)` remains a kind, not a named Atom instance. Within ANECHOIC, keep Graph/Node, Graph/Relation and Graph/Rule as sibling branches beneath Graph; show Node/Project Model and Node/Aspect, and keep Carrier outside Graph. Retain selected project-specific namespaces. Namespace and classification-axis segments are context or topics, not extra entity kinds. Keep the bare `Atom.Header.Role` axis visible and distinguish its meaning from role-qualified narrower Atom kinds. Named Relation Type declarations belong in section 3, not the primary tree.
 2. ## Properties: one property detail section for every displayed primary with direct or inherited properties, following its first appearance in section 1. Keep source-backed classification-axis detail with that Subject; do not hide the bare `Atom.Header.Role` Subject or collapse its identity into Atom. An axis does not acquire bearer Atom properties merely by occupying an intermediate path segment. Keep role-qualified narrower Atom kinds such as `Atom/(.Header.Role := Plan)` as separate sections where properties are present; those kinds inherit Atom properties. Show direct properties and additive source-backed inherited properties and allowed values. Mark inherited display entries as `[inherited]` only. Keep full source origins internally and retain all origins for equal-name entries; report conflicts without silently overriding a source. Preserve actual bearer Atom properties and role-specific descendants. Do not copy inherited properties into source Atoms.
 3. ## Instances: show only the selected named Relation Type declarations with their bare defining R IDs and source-backed names. Do not enumerate Workflow instances, actual endpoint tuples or a retired Graph Rule catalogue. Constraints remain in the corresponding model definitions.
 

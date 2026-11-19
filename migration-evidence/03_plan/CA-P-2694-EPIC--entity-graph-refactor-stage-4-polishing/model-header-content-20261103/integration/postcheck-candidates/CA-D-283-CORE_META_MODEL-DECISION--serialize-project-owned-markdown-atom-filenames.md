@@ -1,13 +1,13 @@
 ---
 subjects:
-  active: CAPRMEDIO_MODEL <+ Carrier/File.Filename
+  active: ANECHOIC_MODEL <+ Carrier/File.Filename
   passive:
-  - CAPRMEDIO_MODEL <+ Atom.Header.ID
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Atom.Content.Summary
-  - CAPRMEDIO_MODEL <+ Atom.Local Scope Unit
-  - CAPRMEDIO_MODEL <+ Atom.Header.Tier
-  - CAPRMEDIO_MODEL <+ Atom.Header.Label
+  - ANECHOIC_MODEL <+ Atom.Header.ID
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Atom.Content.Summary
+  - ANECHOIC_MODEL <+ Atom.Local Scope Unit
+  - ANECHOIC_MODEL <+ Atom.Header.Tier
+  - ANECHOIC_MODEL <+ Atom.Header.Label
 version: 32
 updated_at: 2026-11-02 00:18:22 +0400
 relations: {}

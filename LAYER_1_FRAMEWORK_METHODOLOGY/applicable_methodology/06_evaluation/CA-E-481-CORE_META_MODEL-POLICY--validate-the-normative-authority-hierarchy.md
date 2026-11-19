@@ -6,10 +6,10 @@ container:
 role: Evaluation
 form: Eval Policy
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Selection
+  main_subject: ANECHOIC_MODEL <+ Entity/Object/Continuant/Selection
   dependencies:
-  - CAPRMEDIO_MODEL <+ Project
-  - CAPRMEDIO_MODEL <+ Relation
+  - ANECHOIC_MODEL <+ Project
+  - ANECHOIC_MODEL <+ Relation
 tier: 2
 relations:
   evaluation_for:
@@ -22,11 +22,11 @@ updated_at: 2026-11-02 00:18:22 +0400
 carrier_destination:
   file:
     name: CA-E-481-CORE_META_MODEL-EVAL_POLICY--validate-the-normative-authority-hierarchy.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-481-CORE_META_MODEL-POLICY--validate-the-normative-authority-hierarchy.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-481-CORE_META_MODEL-POLICY--validate-the-normative-authority-hierarchy.md
   source_atom_id: CA-E-481
   source_atom_revision: 22
   source_sha256: 9ecd670b249c40ee99a08ec7683d685d81d29e5d0a3a63612c5a5301dffe42cd

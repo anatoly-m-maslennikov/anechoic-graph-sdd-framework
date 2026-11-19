@@ -38,7 +38,7 @@ class SharedNativeRoutingTests(unittest.IsolatedAsyncioTestCase):
         observer = patch("APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_watcher.NativeObserver", PollingObserver)
         observer.start()
         self.addCleanup(observer.stop)
-        test_dir = ROOT / ".caprmedio_tmp/tests/shared-native-routing"
+        test_dir = ROOT / ".anechoic_tmp/tests/shared-native-routing"
         test_dir.mkdir(parents=True, exist_ok=True)
         self.temporary = tempfile.TemporaryDirectory(dir=test_dir)
         self.addCleanup(self.temporary.cleanup)
@@ -59,9 +59,9 @@ class SharedNativeRoutingTests(unittest.IsolatedAsyncioTestCase):
 
     def _project(self, name: str) -> Path:
         root = self.projects / name
-        control = root / f".caprmedio_{name}"
+        control = root / f".anechoic_{name}"
         control.mkdir(parents=True)
-        (control / "caprmedio_project_settings.toml").write_text(
+        (control / "anechoic_project_settings.toml").write_text(
             f"[project]\nname={name!r}\n[artifacts.identity]\nproject_prefix={name.upper()!r}\n"
             f"[paths]\ncontrol_root={control.name!r}\n",
             encoding="utf-8",
@@ -131,7 +131,7 @@ class SharedNativeRoutingTests(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(all(not response.is_error for response in responses), responses)
             self.assertEqual(["alpha", "beta"], [r.structured_content["project_name"] for r in responses])
             for root in self.projects_by_name.values():
-                self.assertEqual(1, len(list((root / ".caprmedio_runtime/workbench/workspaces").glob("*.json"))))
+                self.assertEqual(1, len(list((root / ".anechoic_runtime/workbench/workspaces").glob("*.json"))))
             created = await session.call_tool("view_create", {
                 "project_root": str(self.projects_by_name["alpha"]), "workspace_id": "same-id",
             })

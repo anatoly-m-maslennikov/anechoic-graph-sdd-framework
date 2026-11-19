@@ -1,11 +1,11 @@
 ---
 name: ca
-description: "Use CAPRMEDIO through its MCP tools. Use for $ca, /ca, or CAPRMEDIO requests."
+description: "Use ANECHOIC through its MCP tools. Use for $ca, /ca, or ANECHOIC requests."
 ---
 
 # CA
 
-Use the host-configured CAPRMEDIO MCP for all CAPRMEDIO operations.
+Use the host-configured ANECHOIC MCP for all ANECHOIC operations.
 
 1. Discover the live MCP tools and select the ones needed for the request.
 2. Before using each tool for the first time in the session, read its MCP help. If there is no dedicated help, read the advertised description and input schema. Follow the server and tool instructions, including prerequisites and required context.

@@ -14,4 +14,4 @@ relations:
 ---
 # Encode structural markers only in authority directory names
 
-EVERY Scope Unit authority directory under `.caprmedio/` MUST encode its applicable Project Boundary Position, derived Unit Kind Name, Structural Level, Operator Order Number, Local Order for a Layer, and Unit Name according to its registered structure.
+EVERY Scope Unit authority directory under `.anechoic/` MUST encode its applicable Project Boundary Position, derived Unit Kind Name, Structural Level, Operator Order Number, Local Order for a Layer, and Unit Name according to its registered structure.

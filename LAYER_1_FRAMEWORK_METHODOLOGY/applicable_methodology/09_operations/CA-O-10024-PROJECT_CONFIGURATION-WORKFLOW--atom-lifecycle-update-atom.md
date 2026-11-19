@@ -8,11 +8,11 @@ context:
   role: Operations
   form: Workflow
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/Workflow/(.Purpose
+    main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/Workflow/(.Purpose
       := Runtime)
     dependencies:
-    - CAPRMEDIO_MODEL <+ Atom
-    - CAPRMEDIO_STRUCTURE <+ Scope Unit//PROJECT_CONFIGURATION
+    - ANECHOIC_MODEL <+ Atom
+    - ANECHOIC_STRUCTURE <+ Scope Unit//PROJECT_CONFIGURATION
   tier: 3
 state:
   status: Active
@@ -21,12 +21,12 @@ state:
 destination:
   file:
     name: CA-O-10024-PROJECT_CONFIGURATION-WORKFLOW--atom-lifecycle-update-atom.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations
 relations:
   IS_REPLACEMENT_FOR:
   - CA-O-127
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-10024-PROJECT_CONFIGURATION-WORKFLOW--atom-lifecycle-update-atom.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-10024-PROJECT_CONFIGURATION-WORKFLOW--atom-lifecycle-update-atom.md
   source_atom_id: CA-O-10024
   source_atom_revision: 3
   source_sha256: d85f78d19a52f8057d646f01ac17b37bbf7e6e210a0ea67649891ac18a47fc75

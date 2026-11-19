@@ -16,7 +16,7 @@ subjects:
     - "Operator"
     - "Scope"
     - "Project"
-    - "CAPRMEDIO Framework Instance"
+    - "ANECHOIC Framework Instance"
     - "Resolve Operator Priorities"
     - "Select Priority-Governed Alternative"
     - "Project/lexicographic selection"

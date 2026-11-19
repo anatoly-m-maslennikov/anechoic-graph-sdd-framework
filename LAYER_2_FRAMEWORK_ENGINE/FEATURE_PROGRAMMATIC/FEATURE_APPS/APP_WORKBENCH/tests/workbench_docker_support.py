@@ -23,7 +23,7 @@ def free_port() -> int:
 
 
 def project_name(control_root: Path) -> str:
-    settings_path = control_root / "caprmedio_project_settings.toml"
+    settings_path = control_root / "anechoic_project_settings.toml"
     settings = tomllib.loads(settings_path.read_text(encoding="utf-8"))
     return settings["project"]["name"]
 

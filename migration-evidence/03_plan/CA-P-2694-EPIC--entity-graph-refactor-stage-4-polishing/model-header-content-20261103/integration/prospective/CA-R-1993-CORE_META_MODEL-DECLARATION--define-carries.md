@@ -4,11 +4,11 @@ current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 status: Active
 subjects:
-  active: CAPRMEDIO_MODEL <+ CFEL <+ Relation//CARRIES
+  active: ANECHOIC_MODEL <+ CFEL <+ Relation//CARRIES
   passive:
-  - CAPRMEDIO_MODEL <+ Carrier
-  - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ CFEL > Relation
+  - ANECHOIC_MODEL <+ Carrier
+  - ANECHOIC_MODEL <+ Entity
+  - ANECHOIC_MODEL <+ CFEL > Relation
 relations:
   child_of:
   - CA-R-1174
@@ -20,7 +20,7 @@ form: Declaration
 carrier_destination:
   file:
     name: CA-R-1993-CORE_META_MODEL-DECLARATION--define-carries.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 ---
 ## Summary
 

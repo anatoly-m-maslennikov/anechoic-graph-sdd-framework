@@ -24,7 +24,7 @@ llm_session_ids:
 - codex:01a02650-eff7-7453-8c37-0699b36773c6
 atom_id: CA-E-438
 status: Active
-current_scope_unit: caprmedio
+current_scope_unit: anechoic
 tier: 3
 role: Evaluation
 form: Eval Policy

@@ -3,7 +3,7 @@ atom_id: CA-D-327
 cce_version: cce_1
 cce_form: restriction
 subjects:
-  governs: "CAPRMEDIO/Project Root/Carrier"
+  governs: "ANECHOIC/Project Root/Carrier"
   depends_on:
     - "Directory Carrier"
     - "Delivery"
@@ -15,4 +15,4 @@ llm_session_ids:
 ---
 # Use the Project Root Only for Delivery Carriers
 
-the CAPRMEDIO Project root **must** carry **only** Delivery Directory Carriers produced for Project Scope Units whose authority Carriers live under `.caprmedio_caprmedio/` **or** another registered Project-owned Carrier root.
+the ANECHOIC Project root **must** carry **only** Delivery Directory Carriers produced for Project Scope Units whose authority Carriers live under `.anechoic_anechoic/` **or** another registered Project-owned Carrier root.

@@ -15,4 +15,4 @@ relations:
 ---
 # Place Project Goals by lifecycle
 
-GOVERNANCE MUST place active external Project Goal Atoms in `.caprmedio/`, drafts in `.caprmedio/goals_drafts/`, and archived revisions in `.caprmedio/goals_archive/`.
+GOVERNANCE MUST place active external Project Goal Atoms in `.anechoic/`, drafts in `.anechoic/goals_drafts/`, and archived revisions in `.anechoic/goals_archive/`.

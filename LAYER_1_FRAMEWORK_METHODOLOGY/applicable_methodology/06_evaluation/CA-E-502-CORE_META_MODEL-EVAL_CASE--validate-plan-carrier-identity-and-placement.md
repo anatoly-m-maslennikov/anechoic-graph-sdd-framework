@@ -6,17 +6,17 @@ container:
 role: Evaluation
 form: Eval Case
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Carrier
+  main_subject: ANECHOIC_MODEL <+ Carrier
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)
-  - CAPRMEDIO_MODEL <+ Carrier/File
-  - CAPRMEDIO_MODEL <+ Carrier/Directory
-  - CAPRMEDIO_MODEL <+ Atom.Header.Identity.ID
-  - CAPRMEDIO_MODEL <+ Atom.Content.Summary
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.Context.Plan.Work Sequence Number
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.Context.Label'
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.State.Status'
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Content.Definition of Done'
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan)
+  - ANECHOIC_MODEL <+ Carrier/File
+  - ANECHOIC_MODEL <+ Carrier/Directory
+  - ANECHOIC_MODEL <+ Atom.Header.Identity.ID
+  - ANECHOIC_MODEL <+ Atom.Content.Summary
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.Context.Plan.Work Sequence Number
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.Context.Label'
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.State.Status'
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan).Content.Definition of Done'
 tier: 4
 relations:
   evaluation_for:
@@ -35,11 +35,11 @@ updated_at: '2026-11-11T19:34:00+04:00'
 carrier_destination:
   file:
     name: CA-E-502-CORE_META_MODEL-EVAL_CASE--validate-plan-carrier-identity-and-placement.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-502-CORE_META_MODEL-EVAL_CASE--validate-plan-carrier-identity-and-placement.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-502-CORE_META_MODEL-EVAL_CASE--validate-plan-carrier-identity-and-placement.md
   source_atom_id: CA-E-502
   source_atom_revision: 31
   source_sha256: 750eeca89d80201b46d22a3ce1937bbd4f6e9aabb3ce7ef51248d59977c4d437

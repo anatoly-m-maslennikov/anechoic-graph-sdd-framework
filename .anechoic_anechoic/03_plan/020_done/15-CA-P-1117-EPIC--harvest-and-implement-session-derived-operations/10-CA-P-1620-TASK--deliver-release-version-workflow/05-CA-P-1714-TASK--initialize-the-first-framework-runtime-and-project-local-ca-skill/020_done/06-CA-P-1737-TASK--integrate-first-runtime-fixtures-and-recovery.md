@@ -1,0 +1,50 @@
+---
+atom_id: CA-P-1737
+ref_id: CA-P-1737
+role: Plan
+form: Plan
+label: Task
+topics:
+  main_subject: Subject/Graph Node/Engineering/Evaluation Implementation
+  dependencies:
+  - Subject/Graph Node/Engineering/Implementation
+  - Subject/Graph Node/Engineering/Evaluation Implementation
+  - Subject/Graph Node/Engineering/Framework Package
+  - Subject/Graph Node/Engineering/Methodology
+  - Subject/Graph Node/Engineering/Image
+  - Subject/Graph Node/Domain/Continuant/History/Journal
+  - Subject/Graph Node/Engineering/Skill
+tier: 3
+relations:
+  is_decomposition_of:
+  - CA-P-1714
+status: Done
+version: 12
+updated_at: 2026-10-25 17:32:27 +0400
+work_sequence_number: 6
+current_scope_unit: anechoic
+author: Anatoly Maslennikov
+assignee: AI Agent
+autonomous_confidence_threshold: 90
+---
+# Summary
+
+Integrate first runtime fixtures and recovery
+
+## Objective
+
+Update existing first-install and N-to-N+1 compatibility fixtures for the accepted proof contract.
+
+## Details
+
+Own only existing test_framework_initialization.py, test_framework_initialization_journal.py and test_bootstrap_release_compatibility.py. Preserve refusal/recovery semantics and make all test doubles explicit; do not weaken production guards or claim Docker proof. Expected bounded effort: <=15 minutes; decompose further if necessary.
+
+## Definition of Done
+
+The owned source or implementation is independently accepted and its real verification result is saved. Source or mock proof alone does not close actual first-install or Release gates.
+
+## Result
+
+Twenty-five initialization, canonical Journal recovery and next-release compatibility tests passed with real compiler fixtures and patched trusted DockerSubprocessExecutor calls; no Docker daemon was contacted.
+
+Saved implementation: b790a3fd0. This is scoped source and fixture verification, not an actual complete Release or Framework installation. P1739 remains Active.

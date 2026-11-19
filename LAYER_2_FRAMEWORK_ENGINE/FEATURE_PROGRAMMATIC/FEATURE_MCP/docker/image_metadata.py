@@ -8,7 +8,7 @@ import re
 import tomllib
 
 
-IMAGE_REPOSITORY = "caprmedio-runtime"
+IMAGE_REPOSITORY = "anechoic-runtime"
 OCI_VERSION_LABEL = "org.opencontainers.image.version"
 _IMAGE_ID = re.compile(r"sha256:[0-9a-f]{64}")
 _SAFE_VERSION = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}")

@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Requirement
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom
+  main_subject: ANECHOIC_MODEL <+ Atom
 tier: 3
 relations:
   child_of:
@@ -17,11 +17,11 @@ updated_at: "2026-11-07 15:18:44 +0400"
 carrier_destination:
   file:
     name: CA-R-1672-CORE_META_MODEL-REQUIREMENT--permit-terminal-implementation-methods.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1672-CORE_META_MODEL-REQUIREMENT--permit-terminal-implementation-methods.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1672-CORE_META_MODEL-REQUIREMENT--permit-terminal-implementation-methods.md
   source_atom_id: CA-R-1672
   source_atom_revision: 30
   source_sha256: 6525b0ad4e9b83fb12f84ecb7044940ecca1b49bbdea71b54fca5bd03eb14f19

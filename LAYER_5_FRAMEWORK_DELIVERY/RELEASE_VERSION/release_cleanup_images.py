@@ -17,9 +17,9 @@ from release_cleanup_identity import (
 
 
 _OWNER_KEYS = (
-    "org.caprmedio.project",
-    "org.caprmedio.control_root",
-    "org.caprmedio.host_project_root",
+    "org.anechoic.project",
+    "org.anechoic.control_root",
+    "org.anechoic.host_project_root",
 )
 
 
@@ -35,16 +35,16 @@ def _declares_owner(labels: dict[str, str]) -> bool:
 
 
 def _foreign_owner(labels: dict[str, str], owner: dict[str, str]) -> bool:
-    project_id = labels.get("org.caprmedio.project", "")
-    root = labels.get("org.caprmedio.host_project_root", "")
-    control = labels.get("org.caprmedio.control_root", "")
+    project_id = labels.get("org.anechoic.project", "")
+    root = labels.get("org.anechoic.host_project_root", "")
+    control = labels.get("org.anechoic.control_root", "")
     return (
         bool(owner)
-        and project_id != owner.get("org.caprmedio.project")
+        and project_id != owner.get("org.anechoic.project")
         and re.fullmatch(r"[0-9a-f]{64}", project_id) is not None
         and Path(root).is_absolute()
         and ".." not in Path(root).parts
-        and control.startswith(".caprmedio_")
+        and control.startswith(".anechoic_")
         and len(Path(control).parts) == 1
     )
 

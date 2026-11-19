@@ -6,9 +6,9 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Selection
+  main_subject: ANECHOIC_MODEL <+ Entity/Object/Continuant/Selection
   dependencies:
-  - CAPRMEDIO_MODEL <+ Project
+  - ANECHOIC_MODEL <+ Project
 tier: 1
 relations:
   child_of:
@@ -19,7 +19,7 @@ updated_at: "2026-11-11 18:13:56 +0400"
 carrier_destination:
   file:
     name: CA-R-833-CORE_META_MODEL-RULE--organize-normative-authority-as-an-acyclic-hierarchy.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---

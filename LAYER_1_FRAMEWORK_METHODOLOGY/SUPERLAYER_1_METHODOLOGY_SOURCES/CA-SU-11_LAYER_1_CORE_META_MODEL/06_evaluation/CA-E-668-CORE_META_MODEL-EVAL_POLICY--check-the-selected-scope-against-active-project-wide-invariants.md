@@ -6,11 +6,11 @@ container:
 role: Evaluation
 form: Eval Policy
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom
+  main_subject: ANECHOIC_MODEL <+ Atom
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Project
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Actor/Operator
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Project
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Actor/Operator
 tier: 3
 relations:
   child_of:
@@ -24,7 +24,7 @@ updated_at: "2026-11-11 18:46:16 +0400"
 carrier_destination:
   file:
     name: CA-E-668-CORE_META_MODEL-EVAL_POLICY--check-the-selected-scope-against-active-project-wide-invariants.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
 cce_version: cce_1
 cce_form: evaluation
 llm_session_ids:

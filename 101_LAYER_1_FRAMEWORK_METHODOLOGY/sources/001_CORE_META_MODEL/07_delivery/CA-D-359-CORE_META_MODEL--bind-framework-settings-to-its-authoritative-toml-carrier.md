@@ -28,6 +28,6 @@ the Framework Instance Settings Artifact for a Project named `<project_name>`.
 
 ## Claim
 
-the Framework Instance Settings Artifact for a Project named `<project_name>` **must** use `.caprmedio_<project_name>/000_CAPRMEDIO_framework/caprmedio_framework_settings.toml` as its **`=1`** authoritative TOML File Carrier.
+the Framework Instance Settings Artifact for a Project named `<project_name>` **must** use `.anechoic_<project_name>/000_ANECHOIC_framework/anechoic_framework_settings.toml` as its **`=1`** authoritative TOML File Carrier.
 
 ## Details

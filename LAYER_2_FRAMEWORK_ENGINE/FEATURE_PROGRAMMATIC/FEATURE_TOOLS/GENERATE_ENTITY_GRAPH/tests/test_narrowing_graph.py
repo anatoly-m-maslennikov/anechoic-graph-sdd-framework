@@ -28,8 +28,8 @@ def event_record_claim():
     return '''## Claim
 ### Formal Claim
 ```python
-from caprmedio.model import Continuant
-from caprmedio.formal_claims import declare_entity
+from anechoic.model import Continuant
+from anechoic.formal_claims import declare_entity
 class EventRecord(Continuant):
     pass
 declare_entity(entity_name="Event Record", entity_class=EventRecord)
@@ -75,7 +75,7 @@ class NarrowingGraphTests(unittest.TestCase):
             carrier("CA-R-3", "Node/Atom/(.Role := Method)"),
             carrier("CA-R-4", "Node/Actor", body=claim("Actor ((NARROWER_THAN)) @Continuant")),
             carrier("CA-R-5", "Event Record"),
-            carrier("CA-R-5A", "Node/Continuant//CAPRMEDIO Framework"),
+            carrier("CA-R-5A", "Node/Continuant//ANECHOIC Framework"),
             carrier("CA-R-6", "Node/Atom.Status"),
             carrier("CA-R-7", "Node/Node", body=claim("Node {:0+}((NARROWER_THAN)) Node")),
             carrier("CA-R-8", "CFEL", form="Entity Definition"),
@@ -92,7 +92,7 @@ class NarrowingGraphTests(unittest.TestCase):
         nodes = {row["identity"]: row for row in graph["nodes"]}
         self.assertTrue({"Node/Continuant", "Node/Atom", "Node/Atom/(.Role:=Method)", "Node/Actor", "CFEL", "Carrier", "Carrier/File/Markdown", "Term"} <= set(nodes))
         self.assertNotIn("Node/Atom.Status", nodes)
-        self.assertNotIn("Node/Continuant//CAPRMEDIO Framework", nodes)
+        self.assertNotIn("Node/Continuant//ANECHOIC Framework", nodes)
         self.assertNotIn("Format/bool", nodes)
         self.assertEqual("(.Role:=Method)", nodes["Node/Atom/(.Role:=Method)"]["display_name"])
         names = {row["id"]: row["identity"] for row in graph["nodes"]}
@@ -102,7 +102,7 @@ class NarrowingGraphTests(unittest.TestCase):
         self.assertNotIn(("Node/Node", "Node/Node"), edges)
         self.assertTrue(any("CFEL > Format/bool" in row for row in graph["diagnostics"]))
         self.assertTrue(any("Entity/Legacy" in row for row in graph["diagnostics"]))
-        self.assertFalse(any("CAPRMEDIO Framework" in row for row in graph["diagnostics"]))
+        self.assertFalse(any("ANECHOIC Framework" in row for row in graph["diagnostics"]))
         self.assertIn("Event Record: no explicit NARROWER_THAN parent; rendered as a root.", graph["diagnostics"])
         document = render_inherency(
             graph, provenance, updated_at="2026-11-02 00:00:00 +0400",
@@ -145,10 +145,10 @@ class NarrowingGraphTests(unittest.TestCase):
 
     def test_namespace_prefix_admits_only_the_local_narrowing_tree(self):
         graph, _ = compose_narrowing_graph([
-            carrier("CA-R-1", "CAPRMEDIO <+ MODEL <+ Node"),
-            carrier("CA-R-2", "CAPRMEDIO <+ MODEL <+ Node/Atom"),
-            carrier("CA-R-3", "CAPRMEDIO <+ MODEL <+ CFEL <+ Format"),
-            carrier("CA-R-4", "CAPRMEDIO <+ MODEL <+ CFEL <+ Format/bool"),
+            carrier("CA-R-1", "ANECHOIC <+ MODEL <+ Node"),
+            carrier("CA-R-2", "ANECHOIC <+ MODEL <+ Node/Atom"),
+            carrier("CA-R-3", "ANECHOIC <+ MODEL <+ CFEL <+ Format"),
+            carrier("CA-R-4", "ANECHOIC <+ MODEL <+ CFEL <+ Format/bool"),
         ])
 
         names = {row["id"]: row["identity"] for row in graph["nodes"]}
@@ -156,12 +156,12 @@ class NarrowingGraphTests(unittest.TestCase):
         self.assertTrue({"Node", "Node/Atom", "Format", "Format/bool"} <= set(names.values()))
         self.assertIn(("Node/Atom", "Node"), edges)
         self.assertIn(("Format/bool", "Format"), edges)
-        self.assertFalse(any("CAPRMEDIO" in edge for edge in edges))
+        self.assertFalse(any("ANECHOIC" in edge for edge in edges))
 
     def test_explicit_namespace_roots_do_not_create_primary_nodes(self):
         graph, _ = compose_narrowing_graph([
-            carrier("CA-R-1", "CAPRMEDIO_MODEL"),
-            carrier("CA-R-2", "CAPRMEDIO_STRUCTURE"),
-            carrier("CA-R-3", "CAPRMEDIO_MODEL <+ Node"),
+            carrier("CA-R-1", "ANECHOIC_MODEL"),
+            carrier("CA-R-2", "ANECHOIC_STRUCTURE"),
+            carrier("CA-R-3", "ANECHOIC_MODEL <+ Node"),
         ])
         self.assertEqual({"Node"}, {row["identity"] for row in graph["nodes"]})

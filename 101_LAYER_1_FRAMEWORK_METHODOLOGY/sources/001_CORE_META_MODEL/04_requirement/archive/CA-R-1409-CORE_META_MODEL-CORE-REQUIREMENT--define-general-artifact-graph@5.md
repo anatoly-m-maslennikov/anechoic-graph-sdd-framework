@@ -9,7 +9,7 @@ subjects:
     - "Scope Unit"
     - "Atom Collection"
     - "Carrier"
-    - "CAPRMEDIO Graph"
+    - "ANECHOIC Graph"
     - "Structural Entity/Direct Containment"
     - "Atom"
     - "Journal"
@@ -22,6 +22,6 @@ llm_session_ids:
 ---
 # Define General Artifact Graph
 
-a General Artifact Graph **means** the derived CAPRMEDIO Graph that represents governed Artifacts **and** Structural Entities as nodes, locates them by their authoritative Carriers, **and** connects them through the existing direct containment relations. its Structural Entity nodes include Scope Units **and** Atom Collections; its Artifact nodes include Atoms, Journals, **and** Projections.
+a General Artifact Graph **means** the derived ANECHOIC Graph that represents governed Artifacts **and** Structural Entities as nodes, locates them by their authoritative Carriers, **and** connects them through the existing direct containment relations. its Structural Entity nodes include Scope Units **and** Atom Collections; its Artifact nodes include Atoms, Journals, **and** Projections.
 
 node identities, Carrier locations, **and** containment come from existing authoritative sources **and** registered containment rules, **not** independently maintained graph declarations. an administrative directory does **not** become a Structural Entity merely because it is a folder. the graph provides their shared structural context **without** duplicating specialized graphs **or** becoming a separate source of authority.

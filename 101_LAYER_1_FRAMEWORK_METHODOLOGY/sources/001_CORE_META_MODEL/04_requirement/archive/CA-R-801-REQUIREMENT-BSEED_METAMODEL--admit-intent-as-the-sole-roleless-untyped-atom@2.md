@@ -6,7 +6,7 @@ version: 2
 updated_at: 2026-08-20 23:16:46
 relations:
   child_of:
-    - CAPRMEDIO-META-REQU-740--separate-content-role-from-artifact-type
+    - ANECHOIC-META-REQU-740--separate-content-role-from-artifact-type
 ---
 # Admit Intent as the sole roleless untyped Atom
 

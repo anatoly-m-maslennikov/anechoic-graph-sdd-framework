@@ -6,7 +6,7 @@ version: 23
 updated_at: "2026-10-03 01:45:07 +0400"
 relations:
   child_of:
-    - CAPRMEDIO-META-REQU-740--separate-content-role-from-artifact-type
+    - ANECHOIC-META-REQU-740--separate-content-role-from-artifact-type
 atom_id: "CA-R-1663"
 content_role: "Requirement"
 current_scope_unit: "PROJECT_CONFIGURATION"

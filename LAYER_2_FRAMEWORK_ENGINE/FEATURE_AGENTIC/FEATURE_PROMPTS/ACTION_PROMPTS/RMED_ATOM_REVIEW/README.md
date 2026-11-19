@@ -79,7 +79,7 @@ unknown, or conflicting references cannot produce completion. Fix blockers do
 not erase initial check coverage. The fixer retains all initial evidence.
 
 - Full reports: `tmp/RMED Atoms Base Revise/<workflow_run_id>.md`.
-- Internal recovery state: `.caprmedio_tmp/rmed-base-revise/<workflow_run_id>/progress.json`.
+- Internal recovery state: `.anechoic_tmp/rmed-base-revise/<workflow_run_id>/progress.json`.
 - Per-Atom reports: `reports/0001.json`, etc., below that recovery directory.
 - Execution events: the existing configured Project Journal, with the same Run
   ID and report path. No separate Workflow Journal. Schema-v4 execution records

@@ -15,7 +15,7 @@ llm_session_ids:
   - codex:019f591f-04f6-70f2-8de7-828b7cccc69d
 relations:
   child_of:
-    - CAPRMEDIO-META-REQU-125--three-artifact-forms-with-generated-projections
+    - ANECHOIC-META-REQU-125--three-artifact-forms-with-generated-projections
 ---
 # Define Atom Artifact form
 

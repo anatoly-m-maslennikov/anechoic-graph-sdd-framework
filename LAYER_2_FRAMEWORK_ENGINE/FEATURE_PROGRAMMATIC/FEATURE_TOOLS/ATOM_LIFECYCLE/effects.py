@@ -181,7 +181,7 @@ def _cleanup_temp(root: Path, temp: str | None, result: Result) -> None:
         try:
             retained = Path(temp).relative_to(Path(root).absolute()).as_posix()
         except ValueError:
-            retained = ".caprmedio_tmp (path unavailable)"
+            retained = ".anechoic_tmp (path unavailable)"
         _error(result, "backend_failure", f"temporary carrier retained at {retained}")
 
 

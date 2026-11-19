@@ -7,8 +7,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from cfel_claim_constraints import extract_claim_constraints
 from contract_graph import compose_contract_graph
 
-CLAIM = '''from caprmedio.formal_claims import Cardinality, declare_entity
-from caprmedio.model import Atom
+CLAIM = '''from anechoic.formal_claims import Cardinality, declare_entity
+from anechoic.model import Atom
 
 def dependencies_are_distinct(atom: Atom) -> bool:
     return len(atom.dependencies) == len(set(atom.dependencies))
@@ -37,7 +37,7 @@ def carrier(code, label="python", subject="Atom.Header.Context.Topics.Dependenci
 
 class TopicsUniquenessGraphTests(unittest.TestCase):
     def test_class_dependent_property_constraint_matches_formal_claim(self):
-        code = '''from caprmedio.formal_claims import declare_entity
+        code = '''from anechoic.formal_claims import declare_entity
 class Atom:
     pass
 declare_entity(entity_name="Atom", entity_class=Atom,
@@ -101,8 +101,8 @@ Atom.Header.Context.Topics.Dependencies.*[]{::0}
                 self.assertTrue(any(d["code"] == "python-formal-claim-invalid" for d in diagnostics))
 
     def test_existing_scope_check_still_projects(self):
-        code = '''from caprmedio.formal_claims import declare_entity
-from caprmedio.model import ScopeUnit
+        code = '''from anechoic.formal_claims import declare_entity
+from anechoic.model import ScopeUnit
 
 def check_structural_level(unit: ScopeUnit) -> bool:
     return True

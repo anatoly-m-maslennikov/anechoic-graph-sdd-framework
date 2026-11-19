@@ -31,11 +31,11 @@ Validate Tool Action bindings and Evaluation ownership
 
 ## Scope
 
-a CAPRMEDIO Tool's methodology binding **and** Evaluation responsibility.
+a ANECHOIC Tool's methodology binding **and** Evaluation responsibility.
 
 ## Claim
 
-the Evaluation of a CAPRMEDIO Tool's methodology binding **must** check the canonical Action owner, binding cardinality, **and** division of Evaluation responsibility under CA-R-1515-PROJECT_CONFIGURATION-GENERAL-REQUIREMENT--keep-canonical-actions-and-workflows-in-methodology, CA-R-1516-PROJECT_CONFIGURATION-REQUIREMENT--bind-each-tool-to-one-methodology-action, CA-R-1517-PROJECT_CONFIGURATION-REQUIREMENT--keep-tool-operational-authority-outside-its-own-subtree, **and** CA-R-1518-PROJECT_CONFIGURATION-GENERAL-REQUIREMENT--separate-methodology-and-tool-evaluation-responsibilities.
+the Evaluation of a ANECHOIC Tool's methodology binding **must** check the canonical Action owner, binding cardinality, **and** division of Evaluation responsibility under CA-R-1515-PROJECT_CONFIGURATION-GENERAL-REQUIREMENT--keep-canonical-actions-and-workflows-in-methodology, CA-R-1516-PROJECT_CONFIGURATION-REQUIREMENT--bind-each-tool-to-one-methodology-action, CA-R-1517-PROJECT_CONFIGURATION-REQUIREMENT--keep-tool-operational-authority-outside-its-own-subtree, **and** CA-R-1518-PROJECT_CONFIGURATION-GENERAL-REQUIREMENT--separate-methodology-and-tool-evaluation-responsibilities.
 
 ## Details
 

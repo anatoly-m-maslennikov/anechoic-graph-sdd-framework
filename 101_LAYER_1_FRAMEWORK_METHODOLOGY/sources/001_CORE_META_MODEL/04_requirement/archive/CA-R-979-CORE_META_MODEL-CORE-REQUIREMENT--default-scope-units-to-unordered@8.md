@@ -10,8 +10,8 @@ version: 8
 updated_at: 2026-09-07 09:59:57 +0000
 relations:
   child_of:
-    - CAPRMEDIO-META-REQU-709
-    - CAPRMEDIO-META-REQU-713
+    - ANECHOIC-META-REQU-709
+    - ANECHOIC-META-REQU-713
 ---
 # Default Scope Units to Unordered
 

@@ -19,4 +19,4 @@ relations:
 ---
 # Validate Goal Claim Scope
 
-GOVERNANCE MUST require a Goal Claim Scope to be the direct child of its Current Scope or CAPRMEDIO when the Current Scope is empty.
+GOVERNANCE MUST require a Goal Claim Scope to be the direct child of its Current Scope or ANECHOIC when the Current Scope is empty.

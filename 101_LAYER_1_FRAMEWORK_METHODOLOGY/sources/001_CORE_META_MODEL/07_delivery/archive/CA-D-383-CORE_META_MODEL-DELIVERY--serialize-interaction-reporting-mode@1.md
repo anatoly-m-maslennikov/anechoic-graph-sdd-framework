@@ -15,4 +15,4 @@ relations: {}
 ---
 # Serialize Interaction Reporting Mode
 
-the Framework Instance Settings TOML Carrier **must** serialize its interaction reporting setting as `reporting_mode` **in** the `[interaction]` section, using the allowed value **and** default governed by CAPRMEDIO-GOV-REQU-294.
+the Framework Instance Settings TOML Carrier **must** serialize its interaction reporting setting as `reporting_mode` **in** the `[interaction]` section, using the allowed value **and** default governed by ANECHOIC-GOV-REQU-294.

@@ -23,7 +23,7 @@ class CodexHookTests(unittest.TestCase):
         self.project = Path(HOOK.anchor) / "projects" / "example"
         self.event = {
             "hook_event_name": "PreToolUse",
-            "tool_name": "mcp__caprmedio__query_run",
+            "tool_name": "mcp__anechoic__query_run",
             "session_id": "codex-session-123",
             "cwd": str(self.project),
             "tool_input": {

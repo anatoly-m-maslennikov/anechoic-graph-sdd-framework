@@ -158,7 +158,7 @@ def _release(
             raise PublicReleaseError("public-release-pr-not-draft")
         step = "update_pr"
         effects.append(f"PR update attempted: {pr_url}; remote effect may be uncertain")
-        command(("gh", "pr", "edit", pr_url, "--repo", repository, "--title", f"CAPRMEDIO {version} public release", "--body", description))
+        command(("gh", "pr", "edit", pr_url, "--repo", repository, "--title", f"ANECHOIC {version} public release", "--body", description))
         effects[-1] = f"Updated PR: {pr_url}"
         step = "ready_pr"
         effects.append(f"PR readiness attempted: {pr_url}; remote effect may be uncertain")
@@ -180,7 +180,7 @@ def _release(
 
 
 def _report_failure(root: Path, run_id: str, step: str, error: Exception, effects: list[str]) -> dict[str, object]:
-    report = root / ".caprmedio_tmp" / "public_release" / run_id / "issue.md"
+    report = root / ".anechoic_tmp" / "public_release" / run_id / "issue.md"
     report.parent.mkdir(parents=True, exist_ok=True)
     report.write_text(
         f"# Public release issue\n\n- Run: `{run_id}`\n- Step: `{step}`\n- Error: {error}\n" + "".join(f"- Effect: {effect}\n" for effect in effects),

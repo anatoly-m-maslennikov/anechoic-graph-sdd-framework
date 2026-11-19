@@ -6,27 +6,27 @@ container:
 role: Evaluation
 form: Eval Policy
 topics:
-  main_subject: 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Entities Graph)'
+  main_subject: 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Entities Graph)'
   dependencies:
-  - CAPRMEDIO_MODEL <+ Entity/Property
-  - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ Term//Property
-  - CAPRMEDIO_MODEL <+ Term
-  - CAPRMEDIO_MODEL <+ Relation//IS_PROPERTY_OF
-  - CAPRMEDIO_MODEL <+ Relation//HAS_PROPERTY
-  - CAPRMEDIO_MODEL <+ CFEL<+Operator//AllowedValue
-  - CAPRMEDIO_MODEL <+ Relation
-  - CAPRMEDIO_MODEL <+ Atom.Content
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
-  - CAPRMEDIO_MODEL <+ Term//Artifact
-  - CAPRMEDIO_MODEL <+ Projection
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role: Operations)/(.Header.Context.Form: Action)'
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role: Operations)/(.Header.Context.Form: Workflow)'
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ Journal
-  - CAPRMEDIO_MODEL <+ Carrier
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
+  - ANECHOIC_MODEL <+ Entity/Property
+  - ANECHOIC_MODEL <+ Entity
+  - ANECHOIC_MODEL <+ Term//Property
+  - ANECHOIC_MODEL <+ Term
+  - ANECHOIC_MODEL <+ Relation//IS_PROPERTY_OF
+  - ANECHOIC_MODEL <+ Relation//HAS_PROPERTY
+  - ANECHOIC_MODEL <+ CFEL<+Operator//AllowedValue
+  - ANECHOIC_MODEL <+ Relation
+  - ANECHOIC_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Topics
+  - ANECHOIC_MODEL <+ Term//Artifact
+  - ANECHOIC_MODEL <+ Projection
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role: Operations)/(.Header.Context.Form: Action)'
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role: Operations)/(.Header.Context.Form: Workflow)'
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Journal
+  - ANECHOIC_MODEL <+ Carrier
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
 tier: 4
 relations:
   evaluation_for:
@@ -47,11 +47,11 @@ updated_at: 2026-11-02 08:06:47 +0400
 carrier_destination:
   file:
     name: CA-E-449-CORE_META_MODEL-EVAL_POLICY--validate-entities-graph.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-449-CORE_META_MODEL-EVAL_POLICY--validate-entities-graph.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-449-CORE_META_MODEL-EVAL_POLICY--validate-entities-graph.md
   source_atom_id: CA-E-449
   source_atom_revision: 44
   source_sha256: acfdef1f61a28a5733ab53703bbe5430db56b3b753289c4221655445edc84209

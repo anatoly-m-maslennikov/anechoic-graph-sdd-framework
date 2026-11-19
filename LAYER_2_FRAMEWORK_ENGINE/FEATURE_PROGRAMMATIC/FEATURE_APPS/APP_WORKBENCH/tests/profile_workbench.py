@@ -142,7 +142,7 @@ def profile(project_root: Path, output: Path) -> dict[str, Any]:
         raw_atoms, raw_scopes = reader.capture()
         report["source_hashes_before"] = _source_digest(project_root, raw_atoms, raw_scopes)
         atom_rows, scope_rows, relation_types, _inverse, _state, _delta = materialize_delta(raw_atoms, raw_scopes)
-        extension = os.environ.get("CAPRMEDIO_DUCKPGQ_EXTENSION_DIRECTORY")
+        extension = os.environ.get("ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY")
         store = QueryStore(
             extension_directory=Path(extension) if extension else None,
             database_path=database_directory / "projection.duckdb",
@@ -210,7 +210,7 @@ def profile(project_root: Path, output: Path) -> dict[str, Any]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--project-root", required=True, type=Path, help="CAPRMEDIO Project whose sources are read")
+    parser.add_argument("--project-root", required=True, type=Path, help="ANECHOIC Project whose sources are read")
     parser.add_argument("--output", type=Path, help="Optional output under the selected Project temporary root")
     args = parser.parse_args()
     project_root = args.project_root.resolve()

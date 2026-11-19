@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
+  main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
 tier: 3
 status: active
 version: 7
@@ -14,11 +14,11 @@ updated_at: '2026-11-12T12:33:04.158402+00:00'
 carrier_destination:
   file:
     name: CA-R-2514-CORE_META_MODEL-DECLARATION--declare-atom-role-evaluation.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2514-CORE_META_MODEL-DECLARATION--declare-atom-role-evaluation.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2514-CORE_META_MODEL-DECLARATION--declare-atom-role-evaluation.md
   source_atom_id: CA-R-2514
   source_atom_revision: 7
   source_sha256: 0d447da709858ca83524eb145ecbf58ebdcb84bedc7c56917e66f8480d579f22
@@ -34,8 +34,8 @@ Declare Atom/(.Role := Evaluation)
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_entity
-from caprmedio.model import Atom
+from anechoic.formal_claims import declare_entity
+from anechoic.model import Atom
 
 class Evaluation(Atom):
     pass

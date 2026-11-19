@@ -9,8 +9,8 @@ subjects:
   - Atom/(.Role := Analysis)
   - 'Entity/Object/Continuant/Governing Objects/Atom/Content Role: Analysis/Type:
     Analysis Report'
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role:=Analysis and Advisory).Header.State.Status
-  - CAPRMEDIO_MODEL <+ Carrier/File
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role:=Analysis and Advisory).Header.State.Status
+  - ANECHOIC_MODEL <+ Carrier/File
 version: 17
 relations:
   depends_on:
@@ -25,8 +25,8 @@ context:
     - Atom/(.Role := Analysis)
     - 'Entity/Object/Continuant/Governing Objects/Atom/Content Role: Analysis/Type:
       Analysis Report'
-    - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role:=Analysis and Advisory).Header.State.Status
-    - CAPRMEDIO_MODEL <+ Carrier/File
+    - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role:=Analysis and Advisory).Header.State.Status
+    - ANECHOIC_MODEL <+ Carrier/File
 ---
 ## Summary
 

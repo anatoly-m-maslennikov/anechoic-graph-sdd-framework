@@ -31,11 +31,11 @@ Validate Workflow-independent Implementation specifications
 
 ## Scope
 
-the Evaluation of a CAPRMEDIO implementation Spec.
+the Evaluation of a ANECHOIC implementation Spec.
 
 ## Claim
 
-the Evaluation of a CAPRMEDIO implementation Spec **must** reject dependence on a production Workflow under CA-R-1514-PROJECT_CONFIGURATION-GENERAL-REQUIREMENT--keep-implementation-specifications-independent-of-production-workflows.
+the Evaluation of a ANECHOIC implementation Spec **must** reject dependence on a production Workflow under CA-R-1514-PROJECT_CONFIGURATION-GENERAL-REQUIREMENT--keep-implementation-specifications-independent-of-production-workflows.
 
 ## Details
 

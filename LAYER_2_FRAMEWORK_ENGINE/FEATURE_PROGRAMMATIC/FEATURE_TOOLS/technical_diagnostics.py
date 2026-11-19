@@ -60,7 +60,7 @@ def _runtime_version() -> str | None:
 
 
 def _runtime_environment() -> str:
-    namespace = os.environ.get("CAPRMEDIO_RUNTIME_NAMESPACE", "")
+    namespace = os.environ.get("ANECHOIC_RUNTIME_NAMESPACE", "")
     if namespace:
         return _sanitize(namespace, limit=128)
     return "docker" if Path("/.dockerenv").is_file() else "host"

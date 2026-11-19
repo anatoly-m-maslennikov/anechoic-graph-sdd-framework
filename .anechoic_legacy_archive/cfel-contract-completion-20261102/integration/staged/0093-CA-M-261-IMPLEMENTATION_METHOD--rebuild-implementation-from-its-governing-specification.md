@@ -1,7 +1,7 @@
 ---
 atom_id: CA-M-261
-current_scope_unit: caprmedio
-claim_target_scope_unit: caprmedio
+current_scope_unit: anechoic
+claim_target_scope_unit: anechoic
 status: Active
 cce_version: cce_1
 cce_form: method

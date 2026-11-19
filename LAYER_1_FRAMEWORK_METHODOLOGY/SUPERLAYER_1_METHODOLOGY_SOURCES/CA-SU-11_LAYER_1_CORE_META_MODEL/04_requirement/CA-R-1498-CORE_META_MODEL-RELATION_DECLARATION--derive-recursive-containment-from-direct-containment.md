@@ -6,9 +6,9 @@ container:
 role: Requirement
 form: Relation Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Relation//RECURSIVELY_CONTAINS
+  main_subject: ANECHOIC_MODEL <+ Relation//RECURSIVELY_CONTAINS
   dependencies:
-  - CAPRMEDIO_MODEL <+ Relation//CONTAINS
+  - ANECHOIC_MODEL <+ Relation//CONTAINS
 tier: 1
 status: active
 version: 21
@@ -16,7 +16,7 @@ updated_at: '2026-11-13T22:48:44.142840+00:00'
 carrier_destination:
   file:
     name: CA-R-1498-CORE_META_MODEL-RELATION_DECLARATION--derive-recursive-containment-from-direct-containment.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---
@@ -29,7 +29,7 @@ Derive Recursive Containment from Direct Containment
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_relation
+from anechoic.formal_claims import declare_relation
 
 declare_relation(
     relation_name="RECURSIVELY_CONTAINS",

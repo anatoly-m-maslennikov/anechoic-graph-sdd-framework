@@ -6,15 +6,15 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Selection
+  main_subject: ANECHOIC_MODEL <+ Entity/Object/Continuant/Selection
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Requirement)
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Method)
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Delivery)
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Role
-  - CAPRMEDIO_MODEL <+ Package/Project Package
-  - CAPRMEDIO_MODEL <+ Carrier
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Requirement)
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Method)
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Delivery)
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Role
+  - ANECHOIC_MODEL <+ Package/Project Package
+  - ANECHOIC_MODEL <+ Carrier
 tier: 1
 status: Active
 version: 25
@@ -22,7 +22,7 @@ updated_at: 2026-11-10 14:38:45 +0400
 carrier_destination:
   file:
     name: CA-R-1548-CORE_META_MODEL-DEFINITION--define-specification-content-roles.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---

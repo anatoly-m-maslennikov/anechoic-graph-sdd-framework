@@ -1,0 +1,35 @@
+---
+atom_id: CA-R-1176
+ref_id: CA-R-1176
+container:
+  scope_unit: CA-SU-10
+role: Requirement
+form: Goal
+topics:
+  main_subject: ANECHOIC_STRUCTURE <+ Scope Unit//PROJECT_CONFIGURATION
+  dependencies:
+  - ANECHOIC_STRUCTURE <+ Entity/Object/Continuant/Selection//Methodology Sources
+tier: 3
+status: Active
+version: 26
+updated_at: 2026-11-02 00:18:22 +0400
+current_scope_unit: METHODOLOGY_SOURCES
+claim_target_scope_unit: PROJECT_CONFIGURATION
+destination:
+  file:
+    name: CA-R-1176-METHODOLOGY_SOURCES-GOAL-PROJECT_CONFIGURATION--select-core-meta-model-and-project-configuration-for-compilation.md
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/04_requirement
+---
+## Summary
+
+Select Core Meta-Model and Project Configuration for Compilation
+
+## Claim
+
+### Prose Claim
+
+
+PROJECT_CONFIGURATION.
+
+
+PROJECT_CONFIGURATION **must** state Project-owned Customizations **and** composition decisions that select CORE_META_MODEL **and** PROJECT_CONFIGURATION for Applicable Methodology compilation.

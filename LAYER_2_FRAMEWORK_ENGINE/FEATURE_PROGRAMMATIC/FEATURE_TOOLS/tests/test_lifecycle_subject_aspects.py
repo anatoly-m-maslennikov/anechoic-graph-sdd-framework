@@ -19,11 +19,11 @@ def source(ref, claim, status="active", form="Declaration"):
 
 class AspectResolutionTests(unittest.TestCase):
     def setUp(self):
-        self.selection = SimpleNamespace(settings={"project": {"name": "caprmedio"}})
-        self.subject = "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Query"
-        self.address = "PROJECT STRUCTURE//CAPRMEDIO <+ Aspects <+ Engineering <+ Query"
-        self.claim = ("from caprmedio.formal_claims import declare_entity\n"
-                      "from caprmedio.model import Aspect\n"
+        self.selection = SimpleNamespace(settings={"project": {"name": "anechoic"}})
+        self.subject = "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Query"
+        self.address = "PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Engineering <+ Query"
+        self.claim = ("from anechoic.formal_claims import declare_entity\n"
+                      "from anechoic.model import Aspect\n"
                       f"declare_entity(entity_name='Query', instance=Aspect(address={self.address!r}))")
         self.reader = SimpleNamespace(run=lambda *args, **kwargs: {"rows": [["CA-R-1"]], "has_more": False})
 
@@ -41,10 +41,10 @@ class AspectResolutionTests(unittest.TestCase):
             "ATOM_LIFECYCLE.subject_aspects.select_current_sources", return_value={"CA-R-1": pin}
         ):
             self.assertTrue(resolve_aspect(self.selection, self.address))
-            self.assertTrue(resolve_aspect(self.selection, "CAPRMEDIO <+ STRUCTURE <+ Aspects <+ Engineering <+ Query"))
+            self.assertTrue(resolve_aspect(self.selection, "ANECHOIC <+ STRUCTURE <+ Aspects <+ Engineering <+ Query"))
 
     def test_hierarchy_requires_aspect_membership(self):
-        prefix = "from caprmedio.formal_claims import declare_entity\n"
+        prefix = "from anechoic.formal_claims import declare_entity\n"
         def claim(members):
             return (prefix + "declare_entity(entity_name='Project Structure', "
                     f"structure_paths=({self.address!r},), aspect_memberships={members!r})")
@@ -52,11 +52,11 @@ class AspectResolutionTests(unittest.TestCase):
         self.assertFalse(self.resolve(claim(())))
 
     def test_legacy_named_aspect_uses_the_defining_composition(self):
-        self.subject = "PROJECT STRUCTURE//CAPRMEDIO <+ Aspect//Visual Design"
-        claim = 'composition(container="PROJECT STRUCTURE//CAPRMEDIO", parts=("Aspect//Visual Design",))'
+        self.subject = "PROJECT STRUCTURE//ANECHOIC <+ Aspect//Visual Design"
+        claim = 'composition(container="PROJECT STRUCTURE//ANECHOIC", parts=("Aspect//Visual Design",))'
         self.assertTrue(self.resolve(claim))
         self.assertFalse(self.resolve('subject_path(address="Aspect//Visual Design")'))
-        self.assertFalse(self.resolve('composition(container="PROJECT STRUCTURE//CAPRMEDIO", '
+        self.assertFalse(self.resolve('composition(container="PROJECT STRUCTURE//ANECHOIC", '
                                       'parts=(str("Aspect//Visual Design"),))'))
         self.assertFalse(self.resolve(claim + '\nprint("extra")'))
         self.assertTrue(self.resolve(claim + '\n' + claim))
@@ -81,4 +81,4 @@ class AspectResolutionTests(unittest.TestCase):
 
     def test_different_project_and_non_aspect_are_not_selected(self):
         self.assertIsNone(resolve_aspect(self.selection, "PROJECT STRUCTURE//OTHER <+ Aspects <+ Query"))
-        self.assertIsNone(resolve_aspect(self.selection, "CAPRMEDIO_STRUCTURE <+ Scope Unit//TOOLS"))
+        self.assertIsNone(resolve_aspect(self.selection, "ANECHOIC_STRUCTURE <+ Scope Unit//TOOLS"))

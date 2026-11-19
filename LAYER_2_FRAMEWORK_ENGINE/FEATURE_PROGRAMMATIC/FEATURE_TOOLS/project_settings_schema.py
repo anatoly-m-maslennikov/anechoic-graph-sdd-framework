@@ -127,7 +127,7 @@ def _parse_settings(document: dict) -> tuple[str, str, str, tuple[str, ...] | No
         raise _SchemaError("artifacts.identity.project_prefix", "The selected Project prefix must already be uppercase.")
     paths = _table(document["paths"], {"control_root"}, set(), "paths")
     control = _string(paths["control_root"], "paths.control_root")
-    if control != f".caprmedio_{name}" or len(Path(control).parts) != 1 or Path(control).as_posix() != control:
+    if control != f".anechoic_{name}" or len(Path(control).parts) != 1 or Path(control).as_posix() != control:
         raise _SchemaError("paths.control_root", "The control root must be the exact selected direct Project child.")
     obsolete = project.get("obsolete_names")
     if "obsolete_names" in project:

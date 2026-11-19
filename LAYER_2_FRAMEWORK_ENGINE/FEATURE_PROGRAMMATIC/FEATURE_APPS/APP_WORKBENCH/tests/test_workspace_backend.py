@@ -218,7 +218,7 @@ class WorkspaceBackendTests(unittest.TestCase):
             "view_update", workspace_id=opened["workspace_id"], view_id=view["id"],
             sql="SELECT 1", expected_revision=0,
         )
-        settings = self.root / ".caprmedio_runtime" / "caprmedio_runtime_settings.toml"
+        settings = self.root / ".anechoic_runtime" / "anechoic_runtime_settings.toml"
         settings.parent.mkdir(parents=True, exist_ok=True)
         settings.write_text("[workbench]\nresult_ttl_seconds = 0\n", encoding="utf-8")
 

@@ -6,14 +6,14 @@ container:
 role: Evaluation
 form: Eval Policy
 topics:
-  main_subject: 'CAPRMEDIO_STRUCTURE <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Action)//Implementation Retry Control'
+  main_subject: 'ANECHOIC_STRUCTURE <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Action)//Implementation Retry Control'
   dependencies:
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Actor/Operator
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Execution Control <+ Failure Handling"
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Autonomous Confidence Threshold'
-  - CAPRMEDIO_MODEL <+ Project
-  - CAPRMEDIO_MODEL <+ Entity/Object/Occurrent/Execution/Workflow Run.Implementation Retry Limit
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Actor/Operator
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
+  - "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Execution Control <+ Failure Handling"
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan).Autonomous Confidence Threshold'
+  - ANECHOIC_MODEL <+ Project
+  - ANECHOIC_MODEL <+ Entity/Object/Occurrent/Execution/Workflow Run.Implementation Retry Limit
 tier: 6
 relations:
   child_of:

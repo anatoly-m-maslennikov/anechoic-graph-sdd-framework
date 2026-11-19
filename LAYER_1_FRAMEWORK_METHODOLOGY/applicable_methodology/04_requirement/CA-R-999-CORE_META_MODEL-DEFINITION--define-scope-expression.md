@@ -6,9 +6,9 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Selection
+  main_subject: ANECHOIC_MODEL <+ Entity/Object/Continuant/Selection
   dependencies:
-  - CAPRMEDIO_MODEL <+ Entity
+  - ANECHOIC_MODEL <+ Entity
 tier: 3
 status: Active
 version: 26
@@ -16,11 +16,11 @@ updated_at: 2026-11-02 00:18:22 +0400
 carrier_destination:
   file:
     name: CA-R-999-CORE_META_MODEL-RULE--define-scope-expression.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-999-CORE_META_MODEL-DEFINITION--define-scope-expression.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-999-CORE_META_MODEL-DEFINITION--define-scope-expression.md
   source_atom_id: CA-R-999
   source_atom_revision: 26
   source_sha256: fe8170ae4207a0999d47212f8c549cf671c66e28427e174cc098daf9ad272361

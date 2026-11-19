@@ -4,10 +4,10 @@ current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 status: Active
 subjects:
-  active: CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_EXECUTION_OF
+  active: ANECHOIC_MODEL <+ CFEL <+ Relation//IS_EXECUTION_OF
   passive:
-  - CAPRMEDIO_MODEL <+ Entity/Object/Occurrent/Execution/Workflow Run
-  - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom/Content Role: Operations/Type: Workflow'
+  - ANECHOIC_MODEL <+ Entity/Object/Occurrent/Execution/Workflow Run
+  - 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom/Content Role: Operations/Type: Workflow'
 version: 7
 relations: {}
 tier: 1

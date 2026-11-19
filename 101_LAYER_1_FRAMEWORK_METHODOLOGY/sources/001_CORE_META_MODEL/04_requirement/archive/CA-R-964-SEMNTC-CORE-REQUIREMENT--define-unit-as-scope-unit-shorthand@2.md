@@ -9,8 +9,8 @@ version: 2
 updated_at: 2026-08-23 01:44:00
 relations:
   child_of:
-    - CAPRMEDIO-META-REQU-708
+    - ANECHOIC-META-REQU-708
 ---
 # Define Unit as Scope Unit shorthand
 
-Unit MEANS Scope Unit when CAPRMEDIO uses Unit as a governed shorthand.
+Unit MEANS Scope Unit when ANECHOIC uses Unit as a governed shorthand.

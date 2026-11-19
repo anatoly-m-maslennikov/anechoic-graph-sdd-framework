@@ -1,13 +1,13 @@
 ---
 subjects:
-  active: CAPRMEDIO_MODEL <+ Carrier/File.Main Content
+  active: ANECHOIC_MODEL <+ Carrier/File.Main Content
   passive:
-  - CAPRMEDIO_MODEL <+ Atom.Content.Summary
-  - CAPRMEDIO_MODEL <+ Atom.Content
-  - CAPRMEDIO_MODEL <+ Atom.Header.Role
-  - CAPRMEDIO_MODEL <+ Atom.Content.Details
-  - CAPRMEDIO_MODEL <+ Term//Property
-  - CAPRMEDIO_MODEL <+ Carrier/File
+  - ANECHOIC_MODEL <+ Atom.Content.Summary
+  - ANECHOIC_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ Atom.Header.Role
+  - ANECHOIC_MODEL <+ Atom.Content.Details
+  - ANECHOIC_MODEL <+ Term//Property
+  - ANECHOIC_MODEL <+ Carrier/File
 version: 29
 updated_at: 2026-11-03 20:00:05 +0400
 relations: {}
@@ -21,7 +21,7 @@ form: Policy
 carrier_destination:
   file:
     name: CA-D-479-CORE_META_MODEL-ENG_DECISION--use-stable-headings-for-atom-body-properties.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
 ---
 ## Summary
 

@@ -5,7 +5,7 @@ version: 3
 updated_at: 2026-08-22 01:32:10
 relations:
   child_of:
-    - CAPRMEDIO-GOV-REQU-767--keep-active-rmed-relations-out-of-archives
+    - ANECHOIC-GOV-REQU-767--keep-active-rmed-relations-out-of-archives
 ---
 # Apply relation direction within its ordering domain
 

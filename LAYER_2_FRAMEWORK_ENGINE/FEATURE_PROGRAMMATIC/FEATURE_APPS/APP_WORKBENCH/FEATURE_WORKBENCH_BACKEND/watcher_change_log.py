@@ -60,7 +60,7 @@ class WatcherChangeLog:
     MAX_ROWS = 100_000
 
     def __init__(self, root: Path) -> None:
-        self._path = Path(root) / ".caprmedio_runtime" / "workbench" / "watcher-change-log.ndjson"
+        self._path = Path(root) / ".anechoic_runtime" / "workbench" / "watcher-change-log.ndjson"
         self._rows: list[dict[str, str | None]] | None = None
         self._next_expiry: dt.datetime | None = None
 

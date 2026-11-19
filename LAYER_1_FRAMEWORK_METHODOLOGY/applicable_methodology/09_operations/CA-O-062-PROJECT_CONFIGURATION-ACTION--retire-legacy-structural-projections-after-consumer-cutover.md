@@ -6,15 +6,15 @@ container:
 role: Operations
 form: Action
 topics:
-  main_subject: Subject/CAPRMEDIO/Graph/Node/Project Model/Projection
+  main_subject: Subject/ANECHOIC/Graph/Node/Project Model/Projection
   dependencies:
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Operations/Type:
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Atom/Content Role: Operations/Type:
     Action'
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Projection
+  - Subject/ANECHOIC/Graph/Node/Project Model/Projection
   - Scope Unit
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Projection//PROJECT_SCOPE_UNIT_GRAPH
-  - Subject/CAPRMEDIO/Carrier
-  - CAPRMEDIO_STRUCTURE <+ Projection//PROJECT_SCOPE_UNIT_GRAPH
+  - Subject/ANECHOIC/Graph/Node/Project Model/Projection//PROJECT_SCOPE_UNIT_GRAPH
+  - Subject/ANECHOIC/Carrier
+  - ANECHOIC_STRUCTURE <+ Projection//PROJECT_SCOPE_UNIT_GRAPH
 tier: 3
 status: Active
 version: 14
@@ -23,7 +23,7 @@ current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: PROJECT_CONFIGURATION
 author: Anatoly Maslennikov
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-062-PROJECT_CONFIGURATION-ACTION--retire-legacy-structural-projections-after-consumer-cutover.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-062-PROJECT_CONFIGURATION-ACTION--retire-legacy-structural-projections-after-consumer-cutover.md
   source_atom_id: CA-O-062
   source_atom_revision: 14
   source_sha256: 6815bb27e68cad695480e238026ea046ab67286f1115d151ee7e2b8507bacc66

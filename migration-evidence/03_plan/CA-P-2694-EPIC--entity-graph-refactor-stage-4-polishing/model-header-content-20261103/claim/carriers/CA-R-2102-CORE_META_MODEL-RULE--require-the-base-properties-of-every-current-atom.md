@@ -1,6 +1,6 @@
 ---
 subjects:
-  active: CAPRMEDIO_MODEL <+ Atom
+  active: ANECHOIC_MODEL <+ Atom
 version: 16
 updated_at: 2026-11-02 15:49:28 +0400
 relations: {}

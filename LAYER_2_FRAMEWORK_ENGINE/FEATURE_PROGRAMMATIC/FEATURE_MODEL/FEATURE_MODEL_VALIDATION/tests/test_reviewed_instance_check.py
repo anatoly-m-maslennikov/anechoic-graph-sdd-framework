@@ -17,8 +17,8 @@ class ScopeUnit:
     container: "ScopeUnit | None" = None
 
 
-CLAIM = """from caprmedio.formal_claims import declare_entity
-from caprmedio.model import ScopeUnit
+CLAIM = """from anechoic.formal_claims import declare_entity
+from anechoic.model import ScopeUnit
 
 def check_structural_level(unit: ScopeUnit) -> bool:
     expected = 0 if unit.container is None else unit.container.structural_level + 1

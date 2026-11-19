@@ -1,11 +1,11 @@
 ---
 subjects:
-  active: CAPRMEDIO_MODEL <+ Atom
+  active: ANECHOIC_MODEL <+ Atom
   passive:
-  - CAPRMEDIO_MODEL <+ Atom.Header.Subjects.Active
-  - CAPRMEDIO_MODEL <+ Atom.Header.Relations.IS_CONTAINED_BY
-  - CAPRMEDIO_MODEL <+ Atom.Content.Claim.Prose Claim
-  - CAPRMEDIO_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Atom.Header.Subjects.Active
+  - ANECHOIC_MODEL <+ Atom.Header.Relations.IS_CONTAINED_BY
+  - ANECHOIC_MODEL <+ Atom.Content.Claim.Prose Claim
+  - ANECHOIC_MODEL <+ Scope Unit
 version: 48
 updated_at: 2026-11-02 19:44:26 +0400
 relations:

@@ -14,7 +14,7 @@ version: 5
 updated_at: 2026-08-29 02:40:41 +0400
 relations:
   child_of:
-    - CAPRMEDIO-GOV-REQU-312--lineage-impact-analysis-records
+    - ANECHOIC-GOV-REQU-312--lineage-impact-analysis-records
 ---
 # Define Lineage Impact Analysis content
 

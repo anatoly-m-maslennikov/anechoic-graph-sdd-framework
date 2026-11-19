@@ -96,7 +96,7 @@ class Backend:
         # Model the backend subprocess boundary: only its sanitized environment
         # is observable by Docker inspection, never the launcher credential.
         environment = dict(os.environ)
-        environment.pop("CAPRMEDIO_MCP_HTTP_SECRET_TOKEN", None)
+        environment.pop("ANECHOIC_MCP_HTTP_SECRET_TOKEN", None)
         self.inspect_envs.append(environment)
         return list(self.rows)
 
@@ -122,9 +122,9 @@ def healthy_row(*, project=INSTANCE_ID, image=IMAGE_ID, fingerprint=FINGERPRINT,
         "Id": "container-a",
         "Image": image,
         "Config": {"Labels": {
-            "org.caprmedio.project": project,
-            "org.caprmedio.runtime.fingerprint": fingerprint,
-            "org.caprmedio.service": "mcp-http",
+            "org.anechoic.project": project,
+            "org.anechoic.runtime.fingerprint": fingerprint,
+            "org.anechoic.service": "mcp-http",
         }},
         "State": {"Status": "running", "Health": {"Status": "healthy"}},
         "NetworkSettings": {"Ports": {
@@ -139,18 +139,18 @@ class LauncherStartupContractTests(unittest.TestCase):
     """Fixtures are retained: sandbox cleanup is not test evidence."""
 
     def setUp(self) -> None:
-        parent = APP.parents[2] / ".caprmedio_tmp" / "launcher-epic-1829" / "startup"
+        parent = APP.parents[2] / ".anechoic_tmp" / "launcher-epic-1829" / "startup"
         parent.mkdir(parents=True, exist_ok=True)
         self.project_root = Path(tempfile.mkdtemp(dir=parent))
-        self.control_root = self.project_root / ".caprmedio_local"
+        self.control_root = self.project_root / ".anechoic_local"
         self.control_root.mkdir()
         self.selection = SimpleNamespace(
             root=self.project_root,
             rootPath=self.project_root,
             control_root=self.control_root,
             control_rootPath=self.control_root,
-            control_relative=Path(".caprmedio_local"),
-            control_relativePath=Path(".caprmedio_local"),
+            control_relative=Path(".anechoic_local"),
+            control_relativePath=Path(".anechoic_local"),
             instance_id=INSTANCE_ID,
             settings={"project_mcp": {"http_port": 56317}},
             structure={},
@@ -198,11 +198,11 @@ class LauncherStartupContractTests(unittest.TestCase):
         self.assertEqual("mcp-http", result["service"])
         self.assertEqual(56317, result["port"])
         self.assertTrue(result["readiness"])
-        self.assertEqual("http://127.0.0.1:56317/caprmedio/mcp", result["url"])
+        self.assertEqual("http://127.0.0.1:56317/anechoic/mcp", result["url"])
         self.assertEqual([self.project_root], self.backend.image_project_roots)
         self.assertEqual(1, len(self.backend.health_calls))
         url, remaining_timeout = self.backend.health_calls[0]
-        self.assertEqual("http://127.0.0.1:56317/caprmedio/mcp", url)
+        self.assertEqual("http://127.0.0.1:56317/anechoic/mcp", url)
         self.assertGreater(remaining_timeout, 0)
         self.assertLessEqual(remaining_timeout, 7)
 
@@ -239,7 +239,7 @@ class LauncherStartupContractTests(unittest.TestCase):
         self.assertEqual("reused", result["disposition"])
         self.assertEqual("READY_REUSED", result["condition"])
         self.assertEqual(0, self.backend.start_calls)
-        self.assertEqual("http://127.0.0.1:56317/caprmedio/mcp", result["url"])
+        self.assertEqual("http://127.0.0.1:56317/anechoic/mcp", result["url"])
 
     def test_cli_port_is_an_equality_assertion_for_the_configured_publication(self):
         self.backend.rows = [healthy_row(host_port="56317")]
@@ -261,7 +261,7 @@ class LauncherStartupContractTests(unittest.TestCase):
         self.assertEqual("READY_STARTED", result["condition"])
         self.assertEqual([56317], self.backend.start_ports)
         self.assertEqual(56317, result["port"])
-        self.assertEqual("http://127.0.0.1:56317/caprmedio/mcp", result["url"])
+        self.assertEqual("http://127.0.0.1:56317/anechoic/mcp", result["url"])
 
     def test_missing_or_invalid_project_settings_refuse_before_docker(self):
         invalid = ({}, {"project_mcp": {}}, {"project_mcp": {"http_port": True}},
@@ -294,12 +294,12 @@ class LauncherStartupContractTests(unittest.TestCase):
         self.assertEqual([], self.backend.inspect_envs)
 
     def test_runtime_inspection_environment_contains_no_http_password(self):
-        with patch.dict(os.environ, {"CAPRMEDIO_MCP_HTTP_SECRET_TOKEN": "legacy-secret"}):
+        with patch.dict(os.environ, {"ANECHOIC_MCP_HTTP_SECRET_TOKEN": "legacy-secret"}):
             self.backend.rows = [healthy_row()]
             result = self.launch(source_root=APP.parents[2])
         self.assertEqual("reused", result["disposition"])
         self.assertTrue(self.backend.inspect_envs)
-        self.assertNotIn("CAPRMEDIO_MCP_HTTP_SECRET_TOKEN", self.backend.inspect_envs[0])
+        self.assertNotIn("ANECHOIC_MCP_HTTP_SECRET_TOKEN", self.backend.inspect_envs[0])
 
     def test_image_and_build_boundary_failures_preserve_their_codes(self):
         for code, disposition in (("IMAGE_INPUT_UNAVAILABLE", "failed"),
@@ -335,7 +335,7 @@ class LauncherStartupContractTests(unittest.TestCase):
         self.assertEqual([], self.backend.rows)
 
     def test_external_project_lock_contention_reports_busy_without_runtime_effects(self):
-        lock_path = (self.project_root / ".caprmedio_runtime" / "runtime" / "project_mcp" /
+        lock_path = (self.project_root / ".anechoic_runtime" / "runtime" / "project_mcp" /
                      INSTANCE_ID / "launch.lock")
         lock_path.parent.mkdir(parents=True)
         with lock_path.open("w", encoding="utf-8") as held:

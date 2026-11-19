@@ -8,9 +8,9 @@ Target at least 10:1 by raw file bytes across the selected Scope Unit tree. Coun
 
 ## What to do
 
-Reuse the gatherer's scratchpad under `.caprmedio_tmp`. Create one when useful if the gatherer did not. Keep rewrite notes and review findings there.
+Reuse the gatherer's scratchpad under `.anechoic_tmp`. Create one when useful if the gatherer did not. Keep rewrite notes and review findings there.
 
-Use CAPRMEDIO MCP `query_run` for Atom reads and the MCP Atom Lifecycle tools for Draft writes. Pass only Markdown in `body`, starting with `## Summary`. Pass Header changes as structured fields. Check that the body has no YAML Header before writing. After writing, verify the Draft reference, status, and Content through MCP.
+Use ANECHOIC MCP `query_run` for Atom reads and the MCP Atom Lifecycle tools for Draft writes. Pass only Markdown in `body`, starting with `## Summary`. Pass Header changes as structured fields. Check that the body has no YAML Header before writing. After writing, verify the Draft reference, status, and Content through MCP.
 
 1. Obtain the Subject's quark pool, source lookup path, and read-only context from `subject_atom_gatherer.prompt.md`. Process parent Subjects before children. Report missing inputs.
 2. Read the pool and use the parent, dependency, and model context. Open the source lookup only after the first rebuild. Keep the quark IDs in your grouping so you can trace the new Atoms later.

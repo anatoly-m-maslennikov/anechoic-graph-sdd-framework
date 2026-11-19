@@ -89,9 +89,9 @@ class SharedProjectCatalogTests(unittest.IsolatedAsyncioTestCase):
 
     def _project(self, name):
         root = self.projects / name
-        control = root / f".caprmedio_{name}"
+        control = root / f".anechoic_{name}"
         control.mkdir(parents=True)
-        (control / "caprmedio_project_settings.toml").write_text(
+        (control / "anechoic_project_settings.toml").write_text(
             f'[project]\nname = "{name}"\n[artifacts.identity]\n'
             f'project_prefix = "{name.upper()}"\n[paths]\ncontrol_root = "{control.name}"\n',
             encoding="utf-8",
@@ -172,7 +172,7 @@ class SharedProjectCatalogTests(unittest.IsolatedAsyncioTestCase):
             (scan_root / f"empty-{index:03d}").mkdir()
         late = scan_root / "late-project"
         late.mkdir()
-        (late / ".caprmedio_late").mkdir()
+        (late / ".anechoic_late").mkdir()
         bounded_config = replace(self.config, projects_root=scan_root)
         frontier = SharedToolFrontier()
         self.assertLessEqual(len(_candidate_paths(bounded_config, frontier)), 1)

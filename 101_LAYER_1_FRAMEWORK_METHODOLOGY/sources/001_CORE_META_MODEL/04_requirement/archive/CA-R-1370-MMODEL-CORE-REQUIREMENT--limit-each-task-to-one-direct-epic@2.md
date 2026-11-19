@@ -13,7 +13,7 @@ version: 2
 updated_at: 2026-09-04 01:04:00 +0400
 relations:
   replacement_of:
-    - CAPRMEDIO-META-REQU-140
+    - ANECHOIC-META-REQU-140
 ---
 # Limit Each Task to One Direct Epic
 

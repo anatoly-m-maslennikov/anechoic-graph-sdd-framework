@@ -40,7 +40,7 @@ RESOURCE_AUTHORITY_IDS = (
     "CA-R-1390", "CA-R-1391", "CA-R-1442", "CA-R-1484", "CA-R-1488",
     "CA-R-1283", "CA-R-1284", "CA-R-1286", "CA-R-1308", "CA-R-1309", "CA-R-1313",
 )
-SOURCES_ROOT = REPOSITORY_ROOT / ".caprmedio_caprmedio" / "000_CAPRMEDIO_framework" / "00_APPLICABLE_METHODOLOGY" / "000_APPLICABLE_MTHD_sources"
+SOURCES_ROOT = REPOSITORY_ROOT / ".anechoic_anechoic" / "000_ANECHOIC_framework" / "00_APPLICABLE_METHODOLOGY" / "000_APPLICABLE_MTHD_sources"
 CASES = tuple(json.loads(CASE_FILE.read_text()))
 
 
@@ -158,8 +158,8 @@ def baseline_sources() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
 
 
 def write_resources(output: Path) -> dict[str, str]:
-    control_root = output / ".caprmedio_synthetic_project"
-    framework_root = control_root / "000_CAPRMEDIO_framework"
+    control_root = output / ".anechoic_synthetic_project"
+    framework_root = control_root / "000_ANECHOIC_framework"
     default_root = framework_root / "00_APPLICABLE_METHODOLOGY" / "000_APPLICABLE_MTHD_sources" / "CA-SU-11_LAYER_1_CORE_META_MODEL"
     for path in (
         framework_root / "01_SYNTHETIC_ROOT",
@@ -179,7 +179,7 @@ scope_unit_type = "Unordered"
 scope_unit_label = "Synthetic rehearsal root"
 structural_level = 1
 navigational_order_number = 1
-authority_path = ".caprmedio_synthetic_project/000_CAPRMEDIO_framework/01_SYNTHETIC_ROOT"
+authority_path = ".anechoic_synthetic_project/000_ANECHOIC_framework/01_SYNTHETIC_ROOT"
 delivery_path = "synthetic/repair-rehearsal"
 authority_mode = "strict"
 
@@ -191,7 +191,7 @@ scope_unit_label = "Synthetic rehearsal middle"
 structural_level = 2
 local_order = 1
 navigational_order_number = 2
-authority_path = ".caprmedio_synthetic_project/000_CAPRMEDIO_framework/02_SYNTHETIC_MIDDLE"
+authority_path = ".anechoic_synthetic_project/000_ANECHOIC_framework/02_SYNTHETIC_MIDDLE"
 delivery_path = "synthetic/repair-rehearsal"
 authority_mode = "strict"
 
@@ -203,11 +203,11 @@ scope_unit_label = "Synthetic rehearsal candidate scope"
 structural_level = 3
 local_order = 1
 navigational_order_number = 3
-authority_path = ".caprmedio_synthetic_project/000_CAPRMEDIO_framework/03_SYNTHETIC"
+authority_path = ".anechoic_synthetic_project/000_ANECHOIC_framework/03_SYNTHETIC"
 delivery_path = "synthetic/repair-rehearsal"
 authority_mode = "strict"
 """,
-        control_root / "caprmedio_synthetic_project_settings.toml": """[project]
+        control_root / "anechoic_synthetic_project_settings.toml": """[project]
 name = "synthetic_project"
 
 [artifacts.identity]
@@ -217,7 +217,7 @@ project_prefix = "SYN"
 name = "Synthetic Fixture Operator"
 role = "fixture reviewer"
 """,
-        framework_root / "caprmedio_framework_settings.toml": """[confidence]
+        framework_root / "anechoic_framework_settings.toml": """[confidence]
 necessary_information_threshold_percent = 99
 semantic_resolution_threshold_percent = 99
 
@@ -244,7 +244,7 @@ max_findings = 100
 max_atoms = 4
 target_minutes = 10
 """,
-        default_root / "caprmedio_framework_default_settings.toml": """[confidence]
+        default_root / "anechoic_framework_default_settings.toml": """[confidence]
 necessary_information_threshold_percent = 99
 semantic_resolution_threshold_percent = 99
 
@@ -275,11 +275,11 @@ target_minutes = 10
     for path, text in values.items():
         path.write_text(text)
     return {
-        "project_structure": ".caprmedio_synthetic_project/project_structure.toml",
-        "project_settings": ".caprmedio_synthetic_project/caprmedio_synthetic_project_settings.toml",
-        "operators_registry": ".caprmedio_synthetic_project/operators_registry.toml",
-        "framework_instance_settings": ".caprmedio_synthetic_project/000_CAPRMEDIO_framework/caprmedio_framework_settings.toml",
-        "default_settings": ".caprmedio_synthetic_project/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/caprmedio_framework_default_settings.toml",
+        "project_structure": ".anechoic_synthetic_project/project_structure.toml",
+        "project_settings": ".anechoic_synthetic_project/anechoic_synthetic_project_settings.toml",
+        "operators_registry": ".anechoic_synthetic_project/operators_registry.toml",
+        "framework_instance_settings": ".anechoic_synthetic_project/000_ANECHOIC_framework/anechoic_framework_settings.toml",
+        "default_settings": ".anechoic_synthetic_project/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/anechoic_framework_default_settings.toml",
     }
 
 

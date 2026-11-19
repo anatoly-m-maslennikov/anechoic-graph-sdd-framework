@@ -6,24 +6,24 @@ container:
 role: Evaluation
 form: Eval Case
 topics:
-  main_subject: CAPRMEDIO_STRUCTURE <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form
+  main_subject: ANECHOIC_STRUCTURE <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form
     := Workflow)//Release Readiness
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow)
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow)
     >{1+} Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Step)
-  - CAPRMEDIO_STRUCTURE <+ Scope Unit//PROJECT_CONFIGURATION
-  - CAPRMEDIO_STRUCTURE <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Action)//Assess
+  - ANECHOIC_STRUCTURE <+ Scope Unit//PROJECT_CONFIGURATION
+  - ANECHOIC_STRUCTURE <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Action)//Assess
     Release Readiness
-  - CAPRMEDIO_STRUCTURE <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow)//Implementation
+  - ANECHOIC_STRUCTURE <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow)//Implementation
     Workflow
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Actor/Operator
-  - CAPRMEDIO_MODEL <+ Projection
-  - CAPRMEDIO_MODEL <+ Event Record
-  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Traceability
-  - CAPRMEDIO_MODEL <+ Project
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/History/Release.ID
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Actor/Operator
+  - ANECHOIC_MODEL <+ Projection
+  - ANECHOIC_MODEL <+ Event Record
+  - ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Traceability
+  - ANECHOIC_MODEL <+ Project
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/History/Release.ID
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
 tier: 4
 relations:
   evaluation_for:
@@ -34,7 +34,7 @@ updated_at: 2026-11-09 15:54:30 +0400
 carrier_destination:
   file:
     name: CA-E-474-PROJECT_CONFIGURATION-EVAL_CASE--validate-configurable-release-readiness.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: PROJECT_CONFIGURATION
 ---

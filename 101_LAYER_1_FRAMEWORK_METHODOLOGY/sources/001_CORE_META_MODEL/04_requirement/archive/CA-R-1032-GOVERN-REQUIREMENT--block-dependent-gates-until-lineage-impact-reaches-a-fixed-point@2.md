@@ -12,7 +12,7 @@ version: 2
 updated_at: 2026-08-23 15:00:38
 relations:
   child_of:
-    - CAPRMEDIO-GOV-REQU-312--lineage-impact-analysis-records
+    - ANECHOIC-GOV-REQU-312--lineage-impact-analysis-records
 ---
 # Block dependent gates until Lineage Impact reaches a fixed point
 

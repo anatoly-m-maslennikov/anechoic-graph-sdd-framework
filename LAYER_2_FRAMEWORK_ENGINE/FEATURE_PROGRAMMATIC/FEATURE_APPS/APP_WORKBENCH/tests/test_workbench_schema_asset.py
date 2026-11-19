@@ -436,8 +436,8 @@ Atom.Header.Carrier Destination.File.Name:: {::1};
 ### Formal Claim
 
 ```python
-from caprmedio.model import Plan
-from caprmedio.formal_claims import declare_entity
+from anechoic.model import Plan
+from anechoic.formal_claims import declare_entity
 declare_entity(
     entity_name="Status", relation_name="IS_PROPERTY_OF", base_path="Atom.Header.State",
     applies_to_entity_classes=(Plan,), allowed_values=("Backlog", "Done"),

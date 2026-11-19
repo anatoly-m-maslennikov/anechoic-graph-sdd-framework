@@ -6,11 +6,11 @@ container:
 role: Evaluation
 form: Eval Policy
 topics:
-  main_subject: "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Traceability"
+  main_subject: "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Traceability"
   dependencies:
-  - CAPRMEDIO_MODEL <+ Event Record
-  - CAPRMEDIO_MODEL <+ Relation
-  - CAPRMEDIO_MODEL <+ Projection
+  - ANECHOIC_MODEL <+ Event Record
+  - ANECHOIC_MODEL <+ Relation
+  - ANECHOIC_MODEL <+ Projection
 tier: 4
 relations:
   evaluation_for:
@@ -22,11 +22,11 @@ updated_at: 2026-11-02 18:35:20 +0400
 carrier_destination:
   file:
     name: CA-E-624-CORE_META_MODEL-EVAL_POLICY--validate-generated-only-provenance-boundary.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-624-CORE_META_MODEL-POLICY--validate-generated-only-provenance-boundary.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-624-CORE_META_MODEL-POLICY--validate-generated-only-provenance-boundary.md
   source_atom_id: CA-E-624
   source_atom_revision: 38
   source_sha256: be7791bffe588c8bbeef919319bbd20b8c738e3269dc4d7608fa2ca9eb2628e3

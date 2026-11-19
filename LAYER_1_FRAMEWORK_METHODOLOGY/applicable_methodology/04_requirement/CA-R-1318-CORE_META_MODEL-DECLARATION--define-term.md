@@ -6,15 +6,15 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Term
+  main_subject: ANECHOIC_MODEL <+ Term
   dependencies:
-  - CAPRMEDIO_MODEL <+ Project
-  - CAPRMEDIO_MODEL <+ Term//Entity
-  - CAPRMEDIO_MODEL <+ Term.Name
-  - CAPRMEDIO_MODEL <+ Term//Term
-  - CAPRMEDIO_MODEL <+ Term//Empty
-  - CAPRMEDIO_MODEL <+ Term//ID
-  - CAPRMEDIO_MODEL <+ Term//Property
+  - ANECHOIC_MODEL <+ Project
+  - ANECHOIC_MODEL <+ Term//Entity
+  - ANECHOIC_MODEL <+ Term.Name
+  - ANECHOIC_MODEL <+ Term//Term
+  - ANECHOIC_MODEL <+ Term//Empty
+  - ANECHOIC_MODEL <+ Term//ID
+  - ANECHOIC_MODEL <+ Term//Property
 tier: 1
 status: active
 version: 39
@@ -22,9 +22,9 @@ updated_at: '2026-11-13T21:35:06.220853+00:00'
 carrier_destination:
   file:
     name: CA-R-1318-CORE_META_MODEL-DECLARATION--define-term.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1318-CORE_META_MODEL-DECLARATION--define-term.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1318-CORE_META_MODEL-DECLARATION--define-term.md
   source_atom_id: CA-R-1318
   source_atom_revision: 39
   source_sha256: 3722aa77121548771937ff42c64ad7be3365d8569f794786b919ea8a61e358cf
@@ -45,7 +45,7 @@ Use the full admitted canonical expression when identifying or comparing an enti
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_entity
+from anechoic.formal_claims import declare_entity
 
 
 class Term:

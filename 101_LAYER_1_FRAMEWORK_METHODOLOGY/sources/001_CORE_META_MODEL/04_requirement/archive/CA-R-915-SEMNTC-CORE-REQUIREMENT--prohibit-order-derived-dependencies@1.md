@@ -6,8 +6,8 @@ version: 1
 updated_at: 2026-08-22 06:00:00
 relations:
   child_of:
-    - CAPRMEDIO-META-REQU-712--define-ordered-unit-structural-kind
-    - CAPRMEDIO-META-REQU-715--define-local-order
+    - ANECHOIC-META-REQU-712--define-ordered-unit-structural-kind
+    - ANECHOIC-META-REQU-715--define-local-order
   replacement_of: [CA-R-875]
 ---
 # Prohibit order-derived dependencies

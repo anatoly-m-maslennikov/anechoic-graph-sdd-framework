@@ -17,4 +17,4 @@ relations:
 ---
 # Register Project Current-scope Content-role directories
 
-GOVERNANCE MUST register `.caprmedio/01_concern/`, `02_analysis/`, `03_plan/`, `04_requirement/`, `05_method/`, `06_evaluation/`, `07_delivery/`, `08_implementation/`, and `09_ops/` as the Project Current-scope Content-role directories.
+GOVERNANCE MUST register `.anechoic/01_concern/`, `02_analysis/`, `03_plan/`, `04_requirement/`, `05_method/`, `06_evaluation/`, `07_delivery/`, `08_implementation/`, and `09_ops/` as the Project Current-scope Content-role directories.

@@ -30,8 +30,8 @@ test('historical generated tab names become Views without losing the draft', () 
 });
 
 test('bound drafts use their own Project and Workspace key', () => {
-  assert.equal(storageKey('caprmedio'), 'caprmedio.workbench.caprmedio.workspace');
-  assert.equal(storageKey('caprmedio', 'chat-a', '/projects/a'), 'caprmedio.workbench./projects/a.workspace.chat-a');
+  assert.equal(storageKey('anechoic'), 'anechoic.workbench.anechoic.workspace');
+  assert.equal(storageKey('anechoic', 'chat-a', '/projects/a'), 'anechoic.workbench./projects/a.workspace.chat-a');
 });
 
 test('polling a result-free bound View does not dereference a missing local result', () => {

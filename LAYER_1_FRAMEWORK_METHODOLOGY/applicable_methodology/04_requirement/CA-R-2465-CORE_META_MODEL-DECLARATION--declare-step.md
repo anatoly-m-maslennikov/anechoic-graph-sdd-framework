@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/Step
+  main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/Step
 tier: 3
 status: active
 version: 7
@@ -14,11 +14,11 @@ updated_at: '2026-11-13T23:06:45.575413+00:00'
 carrier_destination:
   file:
     name: CA-R-2465-CORE_META_MODEL-DECLARATION--declare-step.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2465-CORE_META_MODEL-DECLARATION--declare-step.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2465-CORE_META_MODEL-DECLARATION--declare-step.md
   source_atom_id: CA-R-2465
   source_atom_revision: 7
   source_sha256: 1b67b2a4711231fd2e577c4ed614bf970d48c15fcdf6cbdfe1c18aeff44a100d
@@ -38,8 +38,8 @@ A Step uses exactly one execution mode. It runs one Action or Workflow, or conta
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import Cardinality, declare_entity
-from caprmedio.model import Operations
+from anechoic.formal_claims import Cardinality, declare_entity
+from anechoic.model import Operations
 
 class Step(Operations):
     pass

@@ -30,7 +30,7 @@ _CONDITIONAL_ENUMERATED_DOMAIN = re.compile(
     rf"(?P=terminal) \*\*otherwise\*\*\.$"
 )
 _INTERNAL_CARRIER_OWNERSHIP_DOMAIN = re.compile(
-    rf"^\*\*every\*\* internal CAPRMEDIO Carrier \*\*must\*\* have \*\*`=1`\*\* "
+    rf"^\*\*every\*\* internal ANECHOIC Carrier \*\*must\*\* have \*\*`=1`\*\* "
     rf"Ownership Class \*\*in\*\* \((?P<first>{_VALUE_TOKEN}), "
     rf"(?P<second>{_VALUE_TOKEN}), (?P<third>{_VALUE_TOKEN})\)\.$"
 )

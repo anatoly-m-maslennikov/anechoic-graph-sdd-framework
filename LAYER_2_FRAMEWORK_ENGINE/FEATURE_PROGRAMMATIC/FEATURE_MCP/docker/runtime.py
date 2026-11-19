@@ -42,13 +42,13 @@ class Runtime:
         if image is not None and (not isinstance(image, str) or IMMUTABLE_IMAGE.fullmatch(image) is None):
             raise ValueError("Runtime image must be an immutable sha256 image ID")
         self.image = image
-        self.project = "caprmedio-" + hashlib.sha256(str(self.root).encode()).hexdigest()[:12]
+        self.project = "anechoic-" + hashlib.sha256(str(self.root).encode()).hexdigest()[:12]
 
     def environment(self):
         environment = dict(
             os.environ,
-            CAPRMEDIO_PROJECT_ROOT=str(self.root),
-            CAPRMEDIO_IMAGE=self.image or image_reference(os.environ),
+            ANECHOIC_PROJECT_ROOT=str(self.root),
+            ANECHOIC_IMAGE=self.image or image_reference(os.environ),
         )
         return environment
 
@@ -81,7 +81,7 @@ class Runtime:
         return result.stdout if capture else None
 
     def _project_temp_root(self, *, create=False):
-        path = self.root / ".caprmedio_tmp"
+        path = self.root / ".anechoic_tmp"
         if path.is_symlink():
             raise ValueError("Runtime temporary root must not be a symlink")
         try:
@@ -105,7 +105,7 @@ class Runtime:
     def _ensure_launch_image(self):
         if self.image is not None:
             return self.image
-        if os.environ.get("CAPRMEDIO_IMAGE"):
+        if os.environ.get("ANECHOIC_IMAGE"):
             self.image = image_reference(os.environ)
             return self.image
         self.image = self._image_manager().resolve(build_if_missing=False)
@@ -116,12 +116,12 @@ class Runtime:
         return self.image
 
     def prepare(self):
-        for relative in (".caprmedio_caprmedio", ".git"):
+        for relative in (".anechoic_anechoic", ".git"):
             if (self.root / relative).is_symlink():
                 raise ValueError("Runtime mounts must not be symlinks")
-        if not (self.root / ".caprmedio_caprmedio").is_dir() or not (self.root / ".git").is_dir():
+        if not (self.root / ".anechoic_anechoic").is_dir() or not (self.root / ".git").is_dir():
             raise ValueError("Project authority and a directory Git repository are required")
-        for relative in (".caprmedio_install", ".caprmedio_tmp", "tmp"):
+        for relative in (".anechoic_install", ".anechoic_tmp", "tmp"):
             path = self.root / relative
             if path.is_symlink():
                 raise ValueError("Runtime mounts must not be symlinks")
@@ -133,13 +133,13 @@ class Runtime:
         return {"runtime": "docker", "project_name": self.project, "services": services}
 
     def _http_port(self):
-        value = os.environ.get("CAPRMEDIO_MCP_HTTP_PORT", "")
+        value = os.environ.get("ANECHOIC_MCP_HTTP_PORT", "")
         try:
             port = int(value)
         except ValueError as error:
-            raise ValueError("Set CAPRMEDIO_MCP_HTTP_PORT to an integer in 1..65535") from error
+            raise ValueError("Set ANECHOIC_MCP_HTTP_PORT to an integer in 1..65535") from error
         if not 1 <= port <= 65535:
-            raise ValueError("Set CAPRMEDIO_MCP_HTTP_PORT to an integer in 1..65535")
+            raise ValueError("Set ANECHOIC_MCP_HTTP_PORT to an integer in 1..65535")
         return port
 
     @staticmethod
@@ -208,7 +208,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project-root", type=Path, default=SOURCE_ROOT)
     parser.add_argument("--image", help=argparse.SUPPRESS)
-    parser.add_argument("--control-root", help="Direct .caprmedio_<project> folder, when explicit selection is needed")
+    parser.add_argument("--control-root", help="Direct .anechoic_<project> folder, when explicit selection is needed")
     parser.add_argument("--source-root", type=Path, help="Explicit Framework checkout with image build inputs; required for project-mcp")
     parser.add_argument("--startup-timeout", type=float, default=420, help="Bound startup/readiness seconds (maximum 420)")
     parser.add_argument("--build-timeout", type=float, default=600, help="Bound image build seconds (maximum 600)")

@@ -25,11 +25,11 @@ class ProjectSettingsValuesTests(unittest.TestCase):
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name) / "project"
         self.root.mkdir()
-        self.control = self.root / ".caprmedio_caprmedio"
+        self.control = self.root / ".anechoic_anechoic"
         self.control.mkdir()
-        self.settings = self.control / "caprmedio_project_settings.toml"
+        self.settings = self.control / "anechoic_project_settings.toml"
         self.settings.write_text(
-            '[artifacts.identity]\nproject_prefix = "CA"\n[paths]\ncontrol_root = ".caprmedio_caprmedio"\n',
+            '[artifacts.identity]\nproject_prefix = "CA"\n[paths]\ncontrol_root = ".anechoic_anechoic"\n',
             encoding="utf-8",
         )
 
@@ -41,7 +41,7 @@ class ProjectSettingsValuesTests(unittest.TestCase):
         self.assertEqual("CA", project_identity_prefix(self.root))
 
     def test_invalid_values_remain_attributable(self) -> None:
-        self.settings.write_text('[paths]\ncontrol_root = ".caprmedio_other"\n', encoding="utf-8")
+        self.settings.write_text('[paths]\ncontrol_root = ".anechoic_other"\n', encoding="utf-8")
         with self.assertRaises(ProjectSettingsValueError) as control_error:
             control_root(self.root)
         self.assertEqual("project-settings-invalid", control_error.exception.code)

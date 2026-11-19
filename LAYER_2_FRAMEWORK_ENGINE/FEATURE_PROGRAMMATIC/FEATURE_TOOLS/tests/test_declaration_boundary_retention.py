@@ -14,16 +14,16 @@ from scope_declaration_test_support import write_scope_unit_declarations
 
 class DeclarationBoundaryRetentionTests(unittest.TestCase):
     def setUp(self):
-        scratch = Path.cwd() / ".caprmedio_tmp/tests/declaration-retention"
+        scratch = Path.cwd() / ".anechoic_tmp/tests/declaration-retention"
         scratch.mkdir(parents=True, exist_ok=True)
         temporary = tempfile.TemporaryDirectory(dir=scratch)
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name).resolve()
-        self.control = self.root / ".caprmedio_caprmedio"
+        self.control = self.root / ".anechoic_anechoic"
         self.control.mkdir()
-        (self.control / "caprmedio_project_settings.toml").write_text(
-            '[project]\nname="caprmedio"\nkey="test"\nrepository_slug="test"\n'
-            '[paths]\ncontrol_root=".caprmedio_caprmedio"\n'
+        (self.control / "anechoic_project_settings.toml").write_text(
+            '[project]\nname="anechoic"\nkey="test"\nrepository_slug="test"\n'
+            '[paths]\ncontrol_root=".anechoic_anechoic"\n'
             '[artifacts.identity]\nproject_prefix="CA"\n[authority_modes]\ndefault="casual"\n'
         )
         self.declarations = write_scope_unit_declarations(
@@ -40,8 +40,8 @@ class DeclarationBoundaryRetentionTests(unittest.TestCase):
     def foreign_marker(self):
         foreign = self.declarations["PARENT"]["delivery_path"]
         foreign.mkdir(parents=True, exist_ok=True)
-        (foreign / "caprmedio_project_settings.toml").write_text(
-            '[project]\nname="caprmedio"\n[paths]\ncontrol_root=".caprmedio_empty"\n'
+        (foreign / "anechoic_project_settings.toml").write_text(
+            '[project]\nname="anechoic"\n[paths]\ncontrol_root=".anechoic_empty"\n'
         )
 
     def test_selection_recheck_gets_fresh_budget_but_keeps_original_absence(self):

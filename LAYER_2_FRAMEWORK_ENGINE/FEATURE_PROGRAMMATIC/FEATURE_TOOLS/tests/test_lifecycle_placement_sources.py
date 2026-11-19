@@ -24,22 +24,22 @@ class PlacementSourcesTests(unittest.TestCase):
         self.root = Path(self.temp.name)
         (self.root / 'CA-R-1.md').write_text(carrier('CA-R-1', 'Requirement', 'Active',
             "## Claim\n### Formal Claim\n```python\n"
-            "from caprmedio.formal_claims import declare_entity\n"
+            "from anechoic.formal_claims import declare_entity\n"
             "declare_entity(entity_name='Form', relation_name='IS_PROPERTY_OF', base_path='Atom.Header.Context', allowed_values=('Plan',))\n```\n",
-            'CAPRMEDIO_MODEL <+ Atom.Header.Context.Form'))
+            'ANECHOIC_MODEL <+ Atom.Header.Context.Form'))
         role_source(self.root, 'Concern', 77, 'CA-R-77')
         role_source(self.root, 'Plan', 3, 'CA-R-78')
         self.delivery = self.root / 'CA-D-1.md'
         self.delivery.write_text(carrier('CA-D-1', 'Delivery', 'Active',
             native_body(RULES),
-            'CAPRMEDIO_MODEL <+ Carrier'))
+            'ANECHOIC_MODEL <+ Carrier'))
         (self.root / 'CA-D-2.md').write_text(carrier('CA-D-2', 'Delivery', 'Active',
-            'irrelevant', 'CAPRMEDIO_MODEL <+ Other'))
+            'irrelevant', 'ANECHOIC_MODEL <+ Other'))
         self.manifest = self.root.parent / (self.root.name + '-selection.json')
         self.addCleanup(self.manifest.unlink, missing_ok=True)
 
     def test_real_workbench_query_selects_and_compiles(self):
-        extension = ROOT / '.caprmedio_tmp/workbench/extensions'
+        extension = ROOT / '.anechoic_tmp/workbench/extensions'
         queries = []
 
         class TracedStore(QueryStore):
@@ -63,7 +63,7 @@ class PlacementSourcesTests(unittest.TestCase):
             'CA-R-1', 'Requirement', 'Active', 'body', 'Atom.Header.Status'))
         (self.root / 'CA-R-2.md').write_text(carrier(
             'CA-R-2', 'Requirement', 'Active', 'body', 'Atom.Content.Other'))
-        extension = ROOT / '.caprmedio_tmp/workbench/extensions'
+        extension = ROOT / '.anechoic_tmp/workbench/extensions'
 
         class LocalStore(QueryStore):
             def __init__(self):

@@ -14,4 +14,4 @@ llm_session_ids:
 ---
 # Provide the Minimal Self-Applicable Canonical Methodology Model
 
-CORE_META_MODEL **must** provide the minimal self-applicable canonical model necessary **and** sufficient **to** represent, govern, validate, **and** compile CAPRMEDIO Methodology authority.
+CORE_META_MODEL **must** provide the minimal self-applicable canonical model necessary **and** sufficient **to** represent, govern, validate, **and** compile ANECHOIC Methodology authority.

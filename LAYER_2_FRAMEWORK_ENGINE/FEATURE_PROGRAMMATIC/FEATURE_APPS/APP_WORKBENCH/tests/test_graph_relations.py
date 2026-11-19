@@ -126,7 +126,7 @@ class GraphRelationsTests(unittest.TestCase):
         self.assertEqual(
             [("A", "C", False)],
             self.store._connection.execute(
-                'FROM GRAPH_TABLE (caprmedio MATCH '
+                'FROM GRAPH_TABLE (anechoic MATCH '
                 '(source:Reference)-[edge:"CONTAINS"]->(target:Reference) '
                 'COLUMNS (source.ref, target.ref, edge.derived))'
             ).fetchall(),
@@ -134,7 +134,7 @@ class GraphRelationsTests(unittest.TestCase):
         self.assertEqual(
             [("A", "B", False)],
             self.store._connection.execute(
-                'FROM GRAPH_TABLE (caprmedio MATCH '
+                'FROM GRAPH_TABLE (anechoic MATCH '
                 '(source:Reference)-[edge:"LINKS"]->(target:Reference) '
                 'COLUMNS (source.ref, target.ref, edge.derived))'
             ).fetchall(),
@@ -181,7 +181,7 @@ class GraphRelationsTests(unittest.TestCase):
         self.assertEqual(
             [],
             self.store._connection.execute(
-                'FROM GRAPH_TABLE (caprmedio MATCH '
+                'FROM GRAPH_TABLE (anechoic MATCH '
                 '(source:Reference)-[edge:"LINKS"]->(target:Reference) '
                 'COLUMNS (source.ref, target.ref))'
             ).fetchall(),

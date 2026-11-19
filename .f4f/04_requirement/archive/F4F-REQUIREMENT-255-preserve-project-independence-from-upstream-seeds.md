@@ -15,4 +15,4 @@ relations:
 
 # Preserve project independence from upstream seeds
 
-CAPRMEDIO must preserve a semantically complete and operationally usable Project authority graph independently of any cohosted upstream framework-engineering seed.
+ANECHOIC must preserve a semantically complete and operationally usable Project authority graph independently of any cohosted upstream framework-engineering seed.

@@ -1,14 +1,14 @@
 ---
 subjects:
-  active: CAPRMEDIO_MODEL <+ CFEL
+  active: ANECHOIC_MODEL <+ CFEL
   passive:
-  - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ Term
-  - CAPRMEDIO_MODEL <+ Term//Property
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Package
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Package <+ Module
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Package <+ Module <+ Code Unit
+  - ANECHOIC_MODEL <+ Entity
+  - ANECHOIC_MODEL <+ Term
+  - ANECHOIC_MODEL <+ Term//Property
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Package
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Package <+ Module
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Package <+ Module <+ Code Unit
 version: 35
 updated_at: 2026-11-02 08:06:47 +0400
 relations: {}

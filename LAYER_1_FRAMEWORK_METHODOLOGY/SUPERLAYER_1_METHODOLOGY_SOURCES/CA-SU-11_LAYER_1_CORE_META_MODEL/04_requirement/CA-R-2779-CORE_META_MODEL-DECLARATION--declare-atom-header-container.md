@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Context.Container
+  main_subject: ANECHOIC_MODEL <+ Atom.Header.Context.Container
 tier: 3
 status: active
 version: 2
@@ -14,7 +14,7 @@ updated_at: '2026-11-13T00:55:28.879761+00:00'
 carrier_destination:
   file:
     name: CA-R-2779-CORE_META_MODEL-DECLARATION--declare-atom-header-container.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 ---
 ## Summary
 
@@ -33,7 +33,7 @@ Header.Container is the sole stored Atom-containment value.
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_entity
+from anechoic.formal_claims import declare_entity
 
 declare_entity(
     entity_name="Container",

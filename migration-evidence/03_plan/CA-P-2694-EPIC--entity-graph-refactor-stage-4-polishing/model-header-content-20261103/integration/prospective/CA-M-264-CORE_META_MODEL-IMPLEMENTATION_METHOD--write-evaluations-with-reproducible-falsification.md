@@ -1,12 +1,12 @@
 ---
 subjects:
-  active: CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Evaluation)
+  active: ANECHOIC_MODEL <+ Atom/(.Header.Role := Evaluation)
   passive:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Evaluation)
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Method)
-  - CAPRMEDIO_MODEL <+ Atom.Content.Claim.Prose Claim
-  - CAPRMEDIO_MODEL <+ Atom.Header.Tier
-  - CAPRMEDIO_MODEL <+ CFEL > Relation//evaluation_for
+  - ANECHOIC_MODEL <+ Atom/(.Header.Role := Evaluation)
+  - ANECHOIC_MODEL <+ Atom/(.Header.Role := Method)
+  - ANECHOIC_MODEL <+ Atom.Content.Claim.Prose Claim
+  - ANECHOIC_MODEL <+ Atom.Header.Tier
+  - ANECHOIC_MODEL <+ CFEL > Relation//evaluation_for
 version: 29
 updated_at: 2026-11-03 20:00:05 +0400
 relations: {}
@@ -20,7 +20,7 @@ form: Implementation Method
 carrier_destination:
   file:
     name: CA-M-264-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-evaluations-with-reproducible-falsification.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
 ---
 ## Summary
 

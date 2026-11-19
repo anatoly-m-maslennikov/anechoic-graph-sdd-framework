@@ -6,12 +6,12 @@ container:
 role: Method
 form: Eng Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation).Content.Claim
+  main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Evaluation).Content.Claim
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
-  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
+  - ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled
     English
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Tier
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Tier
 tier: 6
 relations:
   child_of:
@@ -22,7 +22,7 @@ updated_at: 2026-11-02 18:35:20 +0400
 carrier_destination:
   file:
     name: CA-M-312-CORE_META_MODEL-ENG_DECISION--write-evaluation-claims-with-the-evaluation-cce-profile.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---

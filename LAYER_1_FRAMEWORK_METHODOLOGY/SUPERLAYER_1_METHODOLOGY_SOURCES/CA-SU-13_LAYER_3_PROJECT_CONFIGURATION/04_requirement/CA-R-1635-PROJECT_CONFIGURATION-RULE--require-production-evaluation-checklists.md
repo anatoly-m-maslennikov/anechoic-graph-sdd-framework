@@ -6,10 +6,10 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Verification
+  main_subject: ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Verification
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role:=Evaluation)
-  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Verification <+ Coverage
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role:=Evaluation)
+  - ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Verification <+ Coverage
 tier: 2
 status: Active
 version: 42
@@ -17,7 +17,7 @@ updated_at: 2026-11-02 19:44:26 +0400
 carrier_destination:
   file:
     name: CA-R-1635-PROJECT_CONFIGURATION-RULE--require-production-evaluation-checklists.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: PROJECT_CONFIGURATION
 ---

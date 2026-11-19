@@ -1,0 +1,48 @@
+---
+atom_id: CA-O-038
+ref_id: CA-O-038
+container:
+  scope_unit: CA-SU-16
+role: Operations
+form: Action
+topics:
+  main_subject: Subject/ANECHOIC/Graph/Node/Project Model/Selection
+  dependencies:
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Atom/Content Role: Operations/Type: Action'
+  - Subject/ANECHOIC/Graph/Node/Project Model/Term//Artifact
+  - Subject/ANECHOIC/Carrier
+  - Subject/ANECHOIC/Graph/Relation
+tier: 1
+status: Active
+version: 15
+updated_at: 2026-10-27 19:59:44 +0400
+cce_version: cce_1
+cce_form: definition
+llm_session_ids:
+- codex:01a02650-eff7-7453-8c37-0699b36773c6
+author: Anatoly Maslennikov
+current_scope_unit: TOOLS
+---
+# Query generic Artifacts by filters
+
+Query Generic Artifacts **means** the reusable Action that produces one complete body-free generic Artifact query result against the selected source frontier under CA-R-1135. its modeled boundary is the complete requested result; partial comparison, incomplete attribution, **or** an unreported unresolved input is **not** an independently successful outcome.
+
+## Applicable when
+
+use this Action **when** framework internals need a body-free ordered set of generic Artifact identities **and** paths selected by composable filters.
+
+## Action
+
+1. normalize the requested structural scope, layer, Tier, Feature, Content role, subject scope, lifecycle, **and** typed-relation filters.
+2. evaluate their declared composition over generic Artifact metadata **and** carrier-derived identity **without** loading **any** Artifact body.
+3. include **every** **and** **only** matching canonical Artifact ID **and** carrier path, deduplicate them, **and** order them by the registered stable ordering rule.
+4. attribute the result **to** the selected source frontier **and** preserve explicit diagnostics for unsupported filters **or** malformed metadata.
+5. return the helper result **without** applying ANECHOIC Atom eligibility, content-query, lifecycle, subtree, **or** output-view semantics.
+
+## Outcome
+
+one deterministic generic Artifact query result **contains** **only** matching canonical IDs **and** carrier paths **in** stable order.
+
+## Failure or stop
+
+return no partial accepted result on an unsupported filter, ambiguous selector, **or** malformed required metadata; never load bodies **or** mutate carriers.

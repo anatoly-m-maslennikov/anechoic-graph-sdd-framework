@@ -28,7 +28,7 @@ class StartMcpScriptTests(unittest.TestCase):
         self.assertIn("runtime.py", source)
         self.assertIn("project-mcp", source)
         self.assertNotIn("project_mcp_configuration", source)
-        self.assertNotIn("caprmedio_project_settings.toml", source)
+        self.assertNotIn("anechoic_project_settings.toml", source)
 
     def test_main_uses_locked_uv_project_mcp_url_handoff_only(self) -> None:
         module = self._module(SCRIPT)
@@ -59,17 +59,17 @@ class StartMcpScriptTests(unittest.TestCase):
             self.assertEqual(2, module.main(["--project-root", str(root), "--source-root", str(root)]))
 
     def test_deployed_bootstrap_uses_the_selected_installed_package_without_a_checkout(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="caprmedio-start-mcp-", ignore_cleanup_errors=True) as temporary:
+        with tempfile.TemporaryDirectory(prefix="anechoic-start-mcp-", ignore_cleanup_errors=True) as temporary:
             root = Path(temporary).resolve()
-            deployed = root / ".caprmedio_runtime" / "start_mcp.py"
+            deployed = root / ".anechoic_runtime" / "start_mcp.py"
             deployed.parent.mkdir(parents=True)
             deployed.write_bytes(SCRIPT.read_bytes())
             digest = "a" * 64
-            package = root / ".caprmedio_install" / "releases" / digest
+            package = root / ".anechoic_install" / "releases" / digest
             launcher = package / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_MCP/docker/runtime.py"
             launcher.parent.mkdir(parents=True)
             launcher.write_text("# installed launcher fixture\n", encoding="utf-8")
-            (root / ".caprmedio_install" / "current.toml").write_text(
+            (root / ".anechoic_install" / "current.toml").write_text(
                 f'schema_version = 1\nrelease_relpath = "releases/{digest}"\n', encoding="utf-8"
             )
             module = self._module(deployed)
@@ -86,12 +86,12 @@ class StartMcpScriptTests(unittest.TestCase):
         self.assertNotIn("workflow", command)
 
     def test_deployed_bootstrap_defaults_to_the_simple_local_package_and_target_runtime_paths(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="caprmedio-start-mcp-", ignore_cleanup_errors=True) as temporary:
+        with tempfile.TemporaryDirectory(prefix="anechoic-start-mcp-", ignore_cleanup_errors=True) as temporary:
             root = Path(temporary).resolve()
-            deployed = root / ".caprmedio_runtime" / "start_mcp.py"
+            deployed = root / ".anechoic_runtime" / "start_mcp.py"
             deployed.parent.mkdir(parents=True)
             deployed.write_bytes(SCRIPT.read_bytes())
-            package = root / ".caprmedio_runtime" / "simple_local_release" / "package"
+            package = root / ".anechoic_runtime" / "simple_local_release" / "package"
             launcher = package / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_MCP/docker/runtime.py"
             launcher.parent.mkdir(parents=True)
             launcher.write_text("# simple local package launcher\n", encoding="utf-8")
@@ -104,22 +104,22 @@ class StartMcpScriptTests(unittest.TestCase):
         environment = run.call_args.kwargs["env"]
         self.assertEqual(str(package.resolve()), command[command.index("--project") + 1])
         self.assertIn(str(launcher.resolve()), command)
-        self.assertEqual(str(root / ".caprmedio_runtime" / "launcher-venv"),
+        self.assertEqual(str(root / ".anechoic_runtime" / "launcher-venv"),
                          environment["UV_PROJECT_ENVIRONMENT"])
-        self.assertEqual(str(root / ".caprmedio_tmp" / "cache" / "uv"), environment["UV_CACHE_DIR"])
+        self.assertEqual(str(root / ".anechoic_tmp" / "cache" / "uv"), environment["UV_CACHE_DIR"])
 
     def test_malformed_installed_selector_fails_closed_without_fallback(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="caprmedio-start-mcp-", ignore_cleanup_errors=True) as temporary:
+        with tempfile.TemporaryDirectory(prefix="anechoic-start-mcp-", ignore_cleanup_errors=True) as temporary:
             repository = Path(temporary).resolve() / "repository"
             root = repository / "project"
-            deployed = root / ".caprmedio_runtime" / "start_mcp.py"
+            deployed = root / ".anechoic_runtime" / "start_mcp.py"
             deployed.parent.mkdir(parents=True)
             deployed.write_bytes(SCRIPT.read_bytes())
             enclosing_launcher = repository / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_MCP/docker/runtime.py"
             enclosing_launcher.parent.mkdir(parents=True)
             enclosing_launcher.write_text("# enclosing checkout launcher\n", encoding="utf-8")
-            (root / ".caprmedio_install").mkdir()
-            (root / ".caprmedio_install" / "current.toml").write_text(
+            (root / ".anechoic_install").mkdir()
+            (root / ".anechoic_install" / "current.toml").write_text(
                 'release_relpath = "releases/not-a-digest"\n', encoding="utf-8"
             )
             module = self._module(deployed)
@@ -131,21 +131,21 @@ class StartMcpScriptTests(unittest.TestCase):
         run.assert_not_called()
 
     def test_nested_project_prefers_its_selected_package_over_enclosing_checkout(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="caprmedio-start-mcp-", ignore_cleanup_errors=True) as temporary:
+        with tempfile.TemporaryDirectory(prefix="anechoic-start-mcp-", ignore_cleanup_errors=True) as temporary:
             repository = Path(temporary).resolve() / "repository"
             root = repository / "project"
-            deployed = root / ".caprmedio_runtime" / "start_mcp.py"
+            deployed = root / ".anechoic_runtime" / "start_mcp.py"
             deployed.parent.mkdir(parents=True)
             deployed.write_bytes(SCRIPT.read_bytes())
             enclosing_launcher = repository / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_MCP/docker/runtime.py"
             enclosing_launcher.parent.mkdir(parents=True)
             enclosing_launcher.write_text("# enclosing checkout launcher\n", encoding="utf-8")
             digest = "b" * 64
-            package = root / ".caprmedio_install" / "releases" / digest
+            package = root / ".anechoic_install" / "releases" / digest
             launcher = package / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_MCP/docker/runtime.py"
             launcher.parent.mkdir(parents=True)
             launcher.write_text("# selected package launcher\n", encoding="utf-8")
-            (root / ".caprmedio_install" / "current.toml").write_text(
+            (root / ".anechoic_install" / "current.toml").write_text(
                 f'schema_version = 1\nrelease_relpath = "releases/{digest}"\n', encoding="utf-8"
             )
             module = self._module(deployed)

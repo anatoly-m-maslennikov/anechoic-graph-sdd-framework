@@ -66,7 +66,7 @@ class SingleProjectRootContextTests(unittest.IsolatedAsyncioTestCase):
         self.app = create_app(
             self.container, selection=selection,
         )
-        extensions = REPOSITORY / ".caprmedio_tmp" / "workbench" / "extensions"
+        extensions = REPOSITORY / ".anechoic_tmp" / "workbench" / "extensions"
         self.app.gateway.workbench = _ConfiguredWorkbenchTools(self.container, extensions)
 
     @staticmethod

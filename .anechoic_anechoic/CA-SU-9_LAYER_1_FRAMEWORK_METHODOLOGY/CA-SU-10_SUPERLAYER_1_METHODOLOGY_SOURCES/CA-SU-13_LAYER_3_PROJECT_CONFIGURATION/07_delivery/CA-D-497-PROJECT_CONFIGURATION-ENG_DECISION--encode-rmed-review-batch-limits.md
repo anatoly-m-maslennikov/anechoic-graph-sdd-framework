@@ -1,0 +1,49 @@
+---
+atom_id: CA-D-497
+ref_id: CA-D-497
+container:
+  scope_unit: CA-SU-13
+role: Delivery
+form: Decision
+topics:
+  main_subject: ANECHOIC_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework Settings
+  dependencies:
+  - ANECHOIC_MODEL <+ Entity/Object/Occurrent/Execution/Workflow Run
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Governing Objects/Governing Configuration
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Actor/Operator
+  - ANECHOIC_MODEL <+ Atom
+tier: 3
+status: Active
+version: 18
+updated_at: 2026-11-02 00:18:22 +0400
+carrier_destination:
+  file:
+    name: CA-D-497-PROJECT_CONFIGURATION-DECISION--encode-rmed-review-batch-limits.md
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/07_delivery
+current_scope_unit: PROJECT_CONFIGURATION
+claim_target_scope_unit: PROJECT_CONFIGURATION
+---
+## Summary
+
+Encode RMED review batch limits
+
+## Claim
+
+### Prose Claim
+
+
+the `rmed_review` parameter group **in** Framework Instance Settings **and** Default Settings.
+
+
+RMED review batch limits **must** use these TOML parameters:
+
+| Parameter | Encoding |
+|---|---|
+| `rmed_review.context_headroom_fraction` | finite TOML number strictly between zero **and** one; fraction of each worker's effective context capacity reserved rather than planned for use |
+| `rmed_review.max_atoms` | optional positive integer; an explicit cap on selected Atoms, with no default **when** omitted |
+
+resolve **every** parameter independently from explicit Operator Run input, **then** Framework Instance Settings, **then** Default Settings. report the selected value **and** source; do **not** silently coerce invalid values **or** store the same default **in** prompt text as independent authority.
+
+## Details
+
+effective context capacity **and** already-used context are caller-supplied runtime evidence for each worker, **not** reusable default settings. the progress list records their available source under CA-D-496; estimated usage remains labelled as an estimate. the handoff threshold is the effective capacity multiplied by `1 - context_headroom_fraction`. the former `rmed_review.target_minutes` parameter is retired; ETA is informational, **not** an admission limit. settings **must not** raise a worker's actual context capacity. an individually oversized Atom remains explicit deferred work requiring a smaller complete context slice **or** an admitted higher-capacity worker.

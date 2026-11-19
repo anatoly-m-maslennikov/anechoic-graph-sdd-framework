@@ -8,7 +8,7 @@ subjects:
     - "AI Agent Delegation"
 version: 2
 updated_at: "2026-09-21 00:39:50 +0000"
-relations: {"child_of":["CAPRMEDIO-META-REQU-144"]}
+relations: {"child_of":["ANECHOIC-META-REQU-144"]}
 ---
 # Govern CA execution gates
 

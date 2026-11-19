@@ -42,8 +42,8 @@ def _control(root: Path, control_root: Path | str) -> Path:
         control = value
     else:
         control = root / value
-    if (control.parent != root or not control.name.startswith(".caprmedio_")
-            or control.name == ".caprmedio_"):
+    if (control.parent != root or not control.name.startswith(".anechoic_")
+            or control.name == ".anechoic_"):
         raise ScopeDeclarationError("control root must be one direct Project control directory")
     return control
 
@@ -224,14 +224,14 @@ def read_scope_unit_declarations(
                 structural: dict[str, list[Any]] = {}
                 delegated: dict[str, list[ScopeDelegation]] = {}
                 for candidate in candidates:
-                    if candidate.topic_path is not None and roots[0].name.casefold() != "caprmedio":
+                    if candidate.topic_path is not None and roots[0].name.casefold() != "anechoic":
                         raise ScopeDeclarationError(f"{candidate.source}: Structure Topic root does not identify this Project")
                     if candidate.topic_path is not None and candidate.topic_path != (*parent_path, candidate.name):
                         raise ScopeDeclarationError(f"{candidate.source}: Structure Topic path contradicts declared containment")
                     if isinstance(candidate, ScopeDelegation):
                         parent_id = parent.scope_unit_id
                         if parent_id is None:
-                            settings = read_settings_carrier(control / "caprmedio_project_settings.toml", read_bytes=reader.read)
+                            settings = read_settings_carrier(control / "anechoic_project_settings.toml", read_bytes=reader.read)
                             artifacts = settings.get("artifacts")
                             identity = artifacts.get("identity") if isinstance(artifacts, dict) else None
                             prefix = identity.get("project_prefix") if isinstance(identity, dict) else None

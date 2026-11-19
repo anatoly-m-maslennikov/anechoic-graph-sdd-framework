@@ -112,19 +112,19 @@ class WorkspaceEndToEndTests(unittest.IsolatedAsyncioTestCase):
             descriptors = {tool.name: tool for tool in (await session.list_tools()).tools}
             uri = descriptors["workbench_ui_probe"].meta["ui"]["resourceUri"]
             self.assertEqual(
-                {"ui": {"resourceUri": "ui://caprmedio/workbench.html"}},
+                {"ui": {"resourceUri": "ui://anechoic/workbench.html"}},
                 descriptors["workspace_open"].meta,
             )
             self.assertIsNone(descriptors["workbench_ui_ping"].meta)
             resources = (await session.list_resources()).resources
             resource_uris = [resource.uri for resource in resources]
             self.assertIn(uri, resource_uris)
-            self.assertIn("ui://caprmedio/workbench.html", resource_uris)
+            self.assertIn("ui://anechoic/workbench.html", resource_uris)
             contents = (await session.read_resource(uri)).contents
             self.assertEqual("text/html;profile=mcp-app", contents[0].mime_type)
             self.assertIn("ui/initialize", contents[0].text)
             self.assertIn("ui/notifications/tool-result", contents[0].text)
-            self.assertEqual({"message": "CAPRMEDIO MCP App resource loaded"},
+            self.assertEqual({"message": "ANECHOIC MCP App resource loaded"},
                              await self.tool(session, "workbench_ui_probe", {}))
             self.assertEqual({"message": "Tool bridge passed"},
                              await self.tool(session, "workbench_ui_ping", {}))
@@ -132,7 +132,7 @@ class WorkspaceEndToEndTests(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(invalid.is_error)
             self.assertIs(service, self.app.gateway.workbench._service)
             with self.assertRaises(MCPError):
-                await session.read_resource("ui://caprmedio/not-a-resource")
+                await session.read_resource("ui://anechoic/not-a-resource")
 
     async def test_sync_status_is_shared_and_readable_during_initial_capture(self) -> None:
         async with self.session() as (session, client):
@@ -222,7 +222,7 @@ class WorkspaceEndToEndTests(unittest.IsolatedAsyncioTestCase):
             self.assertNotEqual(self.root.name, state["project_name"])
             self.assertEqual(first, state["active_view_id"])
             self.assertEqual({item["id"] for item in created["views"]}, {item["id"] for item in state["views"]})
-            workspace_files = list((self.root / ".caprmedio_runtime" / "workbench" / "workspaces").glob("*.json"))
+            workspace_files = list((self.root / ".anechoic_runtime" / "workbench" / "workspaces").glob("*.json"))
             self.assertEqual(1, len(workspace_files))
             self.assertNotIn("project_name", workspace_files[0].read_text(encoding="utf-8"))
 

@@ -86,11 +86,11 @@ def _stderr(message: str) -> None:
 
 def _failure_text(failure: FailureRecord | None, secondary: str | None) -> str:
     if failure is not None and failure.severity == "ERROR":
-        text = "caprmedio: runtime failure\n"
+        text = "anechoic: runtime failure\n"
     else:
-        text = "caprmedio: operation failed\n"
+        text = "anechoic: operation failed\n"
     if secondary is not None:
-        text += "caprmedio: technical diagnostics unavailable\n"
+        text += "anechoic: technical diagnostics unavailable\n"
     return text
 
 
@@ -115,9 +115,9 @@ def _synthetic_exit(status: object) -> FailureRecord:
 def _handle_exit(root: Path | None, status: object, operation: str) -> None:
     failure, secondary = _report(root, _synthetic_exit(status), operation)
     if secondary is not None:
-        _stderr("caprmedio: technical diagnostics unavailable\n")
+        _stderr("anechoic: technical diagnostics unavailable\n")
     elif failure is None:
-        _stderr("caprmedio: process exited with a non-zero status\n")
+        _stderr("anechoic: process exited with a non-zero status\n")
 
 
 def _nonzero_status(status: object) -> bool:
@@ -156,9 +156,9 @@ def run_process(
     ):
         failure, secondary = _report(diagnostic_root, _synthetic_exit(result), operation)
         if secondary is not None:
-            _stderr("caprmedio: technical diagnostics unavailable\n")
+            _stderr("anechoic: technical diagnostics unavailable\n")
         elif failure is None:
-            _stderr("caprmedio: process exited with a non-zero status\n")
+            _stderr("anechoic: process exited with a non-zero status\n")
     return result
 
 

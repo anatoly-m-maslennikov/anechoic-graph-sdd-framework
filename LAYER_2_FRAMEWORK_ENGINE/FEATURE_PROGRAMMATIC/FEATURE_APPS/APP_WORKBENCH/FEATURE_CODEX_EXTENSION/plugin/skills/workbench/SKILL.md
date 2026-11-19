@@ -1,9 +1,9 @@
 ---
-name: caprmedio-workbench
-description: Operate a CAPRMEDIO Workbench Workspace and Views in the current native Codex session through the host-configured CAPRMEDIO MCP.
+name: anechoic-workbench
+description: Operate a ANECHOIC Workbench Workspace and Views in the current native Codex session through the host-configured ANECHOIC MCP.
 ---
 
-# CAPRMEDIO Workbench
+# ANECHOIC Workbench
 
 Use the native session ID supplied at session start and the explicitly trusted Project root. Do not infer either value, start a service, or configure another MCP connection.
 

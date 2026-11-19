@@ -24,7 +24,7 @@ relations:
 
 ## Test case
 
-create valid fixtures beginning with an ordinary word, a CAPRMEDIO Term, **and** an exact registered reference. use **every** registered CCE Operator at sentence-initial **and** sentence-internal positions with forms such as `**means**`, `**if**`, `**then**`, `**must**`, **and** `**every**`. then capitalize one ordinary sentence-initial word, capitalize one CCE Operator, remove one delimiter pair, add an extra emphasis delimiter, emphasize only part of one multiword CCE Operator, lowercase one exact-case Term, **and** change one exact registered reference.
+create valid fixtures beginning with an ordinary word, a ANECHOIC Term, **and** an exact registered reference. use **every** registered CCE Operator at sentence-initial **and** sentence-internal positions with forms such as `**means**`, `**if**`, `**then**`, `**must**`, **and** `**every**`. then capitalize one ordinary sentence-initial word, capitalize one CCE Operator, remove one delimiter pair, add an extra emphasis delimiter, emphasize only part of one multiword CCE Operator, lowercase one exact-case Term, **and** change one exact registered reference.
 
 ## Acceptance criteria
 

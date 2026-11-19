@@ -1,0 +1,27 @@
+---
+subjects:
+  active: ANECHOIC_MODEL <+ Project.Settings
+  passive:
+  - ANECHOIC_MODEL <+ Project
+  - ANECHOIC_MODEL <+ Actor
+  - ANECHOIC_MODEL <+ Project.Settings.Name
+  - ANECHOIC_MODEL <+ Project.Settings.Prefix
+  - ANECHOIC_MODEL <+ Atom
+version: 1
+updated_at: 2026-11-02 20:07:03 +0400
+relations: {}
+atom_id: CA-R-ALLOCATE
+status: Draft
+tier: 1
+role: Requirement
+form: Rule
+---
+## Summary
+
+Unify Operator-selected Project Settings
+
+## Claim
+
+### Prose Claim
+
+Project.Settings owns the Operator-selected Project initialization inputs and applicable ANECHOIC behavior and configuration choices. Each selected setting has one authoritative owner in its Project. Atoms define permitted parameters, constraints, and applicability without duplicating selected values or defaults.

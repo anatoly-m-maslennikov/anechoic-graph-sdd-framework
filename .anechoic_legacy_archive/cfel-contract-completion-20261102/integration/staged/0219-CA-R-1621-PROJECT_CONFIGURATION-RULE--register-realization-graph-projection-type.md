@@ -10,8 +10,8 @@ subjects:
   - Scope Unit//PROJECT_CONFIGURATION
   - Projection
   - Entity/Object/Continuant/Selection
-  - CAPRMEDIO_MODEL <+ Projection
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework
+  - ANECHOIC_MODEL <+ Projection
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework
     Settings
 version: 19
 updated_at: 2026-11-02 07:52:54 +0400
@@ -25,8 +25,8 @@ context:
     - Scope Unit//PROJECT_CONFIGURATION
     - Projection
     - Entity/Object/Continuant/Selection
-    - CAPRMEDIO_MODEL <+ Projection
-    - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework
+    - ANECHOIC_MODEL <+ Projection
+    - ANECHOIC_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework
       Settings
 ---
 ## Summary
@@ -35,11 +35,11 @@ Register Realization Graph Projection Type
 
 ## Claim scope
 
-the caprmedio Project Configuration registration of the `realization_graph` Projection Type.
+the anechoic Project Configuration registration of the `realization_graph` Projection Type.
 
 ## Claim
 
-the caprmedio Project Configuration **must** register `realization_graph` as a specialized non-authoritative Projection Type for understanding existing Implementation **and** supporting reverse engineering into proposed RMED.
+the anechoic Project Configuration **must** register `realization_graph` as a specialized non-authoritative Projection Type for understanding existing Implementation **and** supporting reverse engineering into proposed RMED.
 
 ## Details
 

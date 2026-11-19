@@ -1,0 +1,47 @@
+---
+atom_id: CA-R-1517
+ref_id: CA-R-1517
+container:
+  scope_unit: CA-SU-13
+role: Requirement
+form: Rule
+topics:
+  main_subject: ANECHOIC_MODEL <+ Package
+  dependencies:
+  - ANECHOIC_MODEL <+ Scope Unit
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Action)'
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow)'
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
+  - ANECHOIC_STRUCTURE <+ Entity/Object/Continuant/Selection//Methodology Sources
+tier: 3
+status: Active
+version: 18
+updated_at: 2026-11-02 00:18:22 +0400
+carrier_destination:
+  file:
+    name: CA-R-1517-PROJECT_CONFIGURATION-RULE--keep-tool-operational-authority-outside-its-own-subtree.md
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement
+current_scope_unit: PROJECT_CONFIGURATION
+claim_target_scope_unit: PROJECT_CONFIGURATION
+---
+## Summary
+
+Keep Tool operational authority outside its own subtree
+
+## Claim
+
+### Prose Claim
+
+
+Tools' implementation references to methodology Action and Workflow definitions in the anechoic Project.
+
+
+**in** the anechoic Project, a Tool's implementation reference **to** a methodology Action **or** Workflow definition **must not** target an O Atom owned by the Tool's Scope Unit **or** **any** descendant of that Scope Unit.
+
+## Details
+
+- the restriction concerns the owner of the operational definition, **not** the location of the Tool's code, prompts, **or** runtime results.
+- methodology Evaluations of their own Action **and** Workflow definitions under CA-R-1518 are **not** Tool implementation references **and** are **not** prohibited by this rule.
+
+this restriction prevents self-reference through the Tool's own subtree; it does **not** establish that **all** indirect dependency cycles are absent.

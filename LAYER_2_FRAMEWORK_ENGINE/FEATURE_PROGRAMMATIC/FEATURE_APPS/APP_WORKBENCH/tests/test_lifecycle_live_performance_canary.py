@@ -32,10 +32,10 @@ from scope_unit_declarations import read_scope_unit_declarations  # noqa: E402
 from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier  # noqa: E402
 from carrier_aliases import carrier_read_view  # noqa: E402
 
-OUT = ROOT / '.caprmedio_tmp/workbench/lifecycle-live-canary'
-ENDPOINT = os.environ.get('CAPRMEDIO_LIVE_LIFECYCLE_URL', '')
-SEED = int(os.environ.get('CAPRMEDIO_RANDOM_SEED', '3005'))
-CALL_TIMEOUT = int(os.environ.get('CAPRMEDIO_LIVE_CALL_TIMEOUT', '15'))
+OUT = ROOT / '.anechoic_tmp/workbench/lifecycle-live-canary'
+ENDPOINT = os.environ.get('ANECHOIC_LIVE_LIFECYCLE_URL', '')
+SEED = int(os.environ.get('ANECHOIC_RANDOM_SEED', '3005'))
+CALL_TIMEOUT = int(os.environ.get('ANECHOIC_LIVE_CALL_TIMEOUT', '15'))
 PARENT = 'WORKBENCH_BACKEND'
 
 def digest(path):
@@ -90,9 +90,9 @@ async def load_archive_scope(client, scope_name):
 
 
 async def main():  # noqa: C901 -- ordered live workflow and ownership checks
-    if os.environ.get('CAPRMEDIO_LIVE_LIFECYCLE') != '1':
-        raise RuntimeError('Explicit CAPRMEDIO_LIVE_LIFECYCLE=1 required')
-    configured_root = os.environ.get('CAPRMEDIO_LIVE_LIFECYCLE_ROOT', '')
+    if os.environ.get('ANECHOIC_LIVE_LIFECYCLE') != '1':
+        raise RuntimeError('Explicit ANECHOIC_LIVE_LIFECYCLE=1 required')
+    configured_root = os.environ.get('ANECHOIC_LIVE_LIFECYCLE_ROOT', '')
     url = urlparse(ENDPOINT)
     if not configured_root or Path(configured_root).resolve() != ROOT.resolve():
         raise RuntimeError('Explicit current Project root required')
@@ -169,7 +169,7 @@ async def main():  # noqa: C901 -- ordered live workflow and ownership checks
                     print(f"{name}: {status} ({entry['seconds']:.2f}s)", flush=True)
                     return result.structured_content
                 scope_sql = f"SELECT name FROM scope_units WHERE scope_unit_id = '{scope.scope_unit_id}'"
-                project_name = tomllib.loads((control / 'caprmedio_project_settings.toml').read_text())['project']['name']
+                project_name = tomllib.loads((control / 'anechoic_project_settings.toml').read_text())['project']['name']
                 staged = stage_carrier(OUT, scope.atom_id, scope_carrier(scope, project_name, '2026-11-06 00:00:00 +0000'))
                 try:
                     write_scope_declaration(staged, scope, project_name)
@@ -331,8 +331,8 @@ async def main():  # noqa: C901 -- ordered live workflow and ownership checks
 
 class LifecycleLivePerformanceCanary(unittest.TestCase):
     def test_twenty_atoms(self):
-        if os.environ.get('CAPRMEDIO_LIVE_LIFECYCLE') != '1':
-            self.skipTest('set CAPRMEDIO_LIVE_LIFECYCLE=1 for the live Project canary')
+        if os.environ.get('ANECHOIC_LIVE_LIFECYCLE') != '1':
+            self.skipTest('set ANECHOIC_LIVE_LIFECYCLE=1 for the live Project canary')
         asyncio.run(main())
 
 

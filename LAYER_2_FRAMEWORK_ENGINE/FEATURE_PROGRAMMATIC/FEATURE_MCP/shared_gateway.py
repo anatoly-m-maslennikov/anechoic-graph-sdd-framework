@@ -278,7 +278,7 @@ class SharedGateway:
             return types.ListToolsResult(tools=tools)
 
         self.server = Server(
-            "CAPRMEDIO", version="0.2.0", on_list_tools=list_tools, on_call_tool=self.call,
+            "ANECHOIC", version="0.2.0", on_list_tools=list_tools, on_call_tool=self.call,
             on_list_resources=mcp_app_probe.list_resources,
             on_read_resource=mcp_app_probe.read_resource,
         )

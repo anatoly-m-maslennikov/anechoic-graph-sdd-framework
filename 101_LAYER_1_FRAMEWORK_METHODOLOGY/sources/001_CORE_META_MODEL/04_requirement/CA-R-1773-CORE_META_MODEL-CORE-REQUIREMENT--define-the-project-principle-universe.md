@@ -14,7 +14,7 @@ subjects:
     - "Artifact"
     - "Extension"
     - "Project Configuration"
-    - "CAPRMEDIO Framework Instance"
+    - "ANECHOIC Framework Instance"
 
 atom_id: "CA-R-1773"
 content_role: "Requirement"
@@ -35,6 +35,6 @@ the Project Principle universe.
 
 ## Claim
 
-CAPRMEDIO **must** define the Project Principle universe as **all** irreducible governed invariants that apply across the entire current Project independently of Structural Level, scope label, Content Role, Artifact form, Extension, Project Configuration, **or** substrate.
+ANECHOIC **must** define the Project Principle universe as **all** irreducible governed invariants that apply across the entire current Project independently of Structural Level, scope label, Content Role, Artifact form, Extension, Project Configuration, **or** substrate.
 
 ## Details

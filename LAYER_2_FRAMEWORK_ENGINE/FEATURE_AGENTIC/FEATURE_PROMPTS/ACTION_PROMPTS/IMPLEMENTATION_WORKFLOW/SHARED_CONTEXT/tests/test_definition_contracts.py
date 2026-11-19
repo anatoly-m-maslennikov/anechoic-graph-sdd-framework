@@ -42,7 +42,7 @@ class SharedDefinitionContracts(unittest.TestCase):
         for row in sources.values():
             self.assertGreater(row["version"], 0)
             self.assertRegex(row["sha256"], r"^[a-f0-9]{64}$")
-            self.assertTrue(row["path"].startswith(".caprmedio_caprmedio/"))
+            self.assertTrue(row["path"].startswith(".anechoic_anechoic/"))
 
     def test_shared_packet_keeps_authority_and_actual_evidence(self):
         readme = (HERE / "README.md").read_text()

@@ -19,7 +19,7 @@ version: 5
 updated_at: "2026-09-23 20:47:56 +0000"
 llm_session_ids:
   - codex:01a02650-eff7-7453-8c37-0699b36773c6
-relations: {"relates_to": ["CA-R-1568", "CAPRMEDIO-GOV-REQU-305", "CAPRMEDIO-META-REQU-657"]}
+relations: {"relates_to": ["CA-R-1568", "ANECHOIC-GOV-REQU-305", "ANECHOIC-META-REQU-657"]}
 ---
 # Summary
 
@@ -27,8 +27,8 @@ Register Realization Graph Projection Type
 
 ## Claim
 
-the caprmedio Project Configuration **must** register `realization_graph` as a specialized non-authoritative Projection Type for understanding existing Implementation **and** supporting reverse engineering into proposed RMED.
+the anechoic Project Configuration **must** register `realization_graph` as a specialized non-authoritative Projection Type for understanding existing Implementation **and** supporting reverse engineering into proposed RMED.
 
 - registration uses the accepted specialized graph specification **and** the general Projection guarantees of CORE_META_MODEL; it does **not** add this Type **to** the universal Core requirements of other Projects.
-- registration **and** activation remain distinct. the configured activation follows CAPRMEDIO-GOV-REQU-305; this Draft activates nothing.
-- the output remains a Projection under CAPRMEDIO-META-REQU-657. its permitted Implementation contribution under CA-R-1568 is **not** an Atom Content Role assigned **to** the Projection.
+- registration **and** activation remain distinct. the configured activation follows ANECHOIC-GOV-REQU-305; this Draft activates nothing.
+- the output remains a Projection under ANECHOIC-META-REQU-657. its permitted Implementation contribution under CA-R-1568 is **not** an Atom Content Role assigned **to** the Projection.

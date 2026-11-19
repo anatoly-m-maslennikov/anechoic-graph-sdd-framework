@@ -31,6 +31,6 @@ the definition of Default Settings.
 
 ## Claim
 
-the Term Default Settings **means** the authoritative Artifact containing reusable baseline values for registered CAPRMEDIO Framework Instance Settings parameters, **not** Project initialization inputs **or** a Project's explicit Operator selections.
+the Term Default Settings **means** the authoritative Artifact containing reusable baseline values for registered ANECHOIC Framework Instance Settings parameters, **not** Project initialization inputs **or** a Project's explicit Operator selections.
 
 ## Details

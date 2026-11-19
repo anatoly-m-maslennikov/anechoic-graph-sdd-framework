@@ -13,7 +13,7 @@ llm_session_ids:
   - codex:01a02650-eff7-7453-8c37-0699b36773c6
 relations:
   child_of:
-    - CAPRMEDIO-REQU-045
+    - ANECHOIC-REQU-045
 ---
 # Separate Atom Claim Scope from structural ownership
 

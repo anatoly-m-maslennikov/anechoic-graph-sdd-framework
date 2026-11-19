@@ -5,7 +5,7 @@ subjects:
 version: 20
 updated_at: "2026-10-03 02:00:11 +0400"
 relations:
-  {"child_of": ["CAPRMEDIO-META-REQU-084--relational-artifacts-declare-endpoints"], "depends_on": ["CA-R-1767"]}
+  {"child_of": ["ANECHOIC-META-REQU-084--relational-artifacts-declare-endpoints"], "depends_on": ["CA-R-1767"]}
 atom_id: "CA-R-1675"
 content_role: "Requirement"
 current_scope_unit: "PROJECT_CONFIGURATION"

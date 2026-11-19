@@ -5,7 +5,7 @@ version: 3
 updated_at: 2026-08-22 05:30:00
 relations:
   child_of:
-    - CAPRMEDIO-META-REQU-084--relational-artifacts-declare-endpoints
+    - ANECHOIC-META-REQU-084--relational-artifacts-declare-endpoints
 ---
 # Encode relational semantic shape
 

@@ -20,4 +20,4 @@ relations:
 ---
 # Place Project Jobs by lifecycle
 
-THE Project Job Atom MUST use `.caprmedio/` when active, `.caprmedio/jobs_drafts/` when draft, and `.caprmedio/jobs_archive/` when archived.
+THE Project Job Atom MUST use `.anechoic/` when active, `.anechoic/jobs_drafts/` when draft, and `.anechoic/jobs_archive/` when archived.

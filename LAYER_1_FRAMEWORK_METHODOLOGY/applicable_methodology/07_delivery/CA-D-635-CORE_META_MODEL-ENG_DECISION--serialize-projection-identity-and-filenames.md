@@ -6,16 +6,16 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Projection
+  main_subject: ANECHOIC_MODEL <+ Projection
   dependencies:
-  - CAPRMEDIO_MODEL <+ Projection.ID
-  - CAPRMEDIO_MODEL <+ Projection.Form
-  - CAPRMEDIO_MODEL <+ Projection.Scope Unit
-  - CAPRMEDIO_MODEL <+ Projection.Source.Named Selection
-  - CAPRMEDIO_MODEL <+ Projection.Source.Atoms
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ Projection.Updated At
-  - CAPRMEDIO_MODEL <+ Carrier/Directory
+  - ANECHOIC_MODEL <+ Projection.ID
+  - ANECHOIC_MODEL <+ Projection.Form
+  - ANECHOIC_MODEL <+ Projection.Scope Unit
+  - ANECHOIC_MODEL <+ Projection.Source.Named Selection
+  - ANECHOIC_MODEL <+ Projection.Source.Atoms
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Projection.Updated At
+  - ANECHOIC_MODEL <+ Carrier/Directory
 tier: 4
 status: Active
 version: 17
@@ -23,11 +23,11 @@ updated_at: 2026-11-04 07:51:19 +0400
 carrier_destination:
   file:
     name: CA-D-635-CORE_META_MODEL-DECISION--serialize-projection-identity-and-filenames.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-635-CORE_META_MODEL-ENG_DECISION--serialize-projection-identity-and-filenames.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-635-CORE_META_MODEL-ENG_DECISION--serialize-projection-identity-and-filenames.md
   source_atom_id: CA-D-635
   source_atom_revision: 17
   source_sha256: 0d81d377d5a9ae81cc7f7a7b0f1b0ec751f19d64ab22492a89b868cbe641937b
@@ -64,7 +64,7 @@ The YAML frontmatter carries:
 - `artifact_form: Projection`
 - `projection_id`: the full Projection ID.
 - `form`: Projection Form.
-- `scope_unit`: the reference to the one Scope Unit of the Projection; for a Project-root Projection in caprmedio, `Project//caprmedio`.
+- `scope_unit`: the reference to the one Scope Unit of the Projection; for a Project-root Projection in anechoic, `Project//anechoic`.
 - `source.named_selection`: the named source selection.
 - `source.atoms`: contributing Atom references with explicit Versions, such as `CA-R-123@3`, when recorded. Identify contributing non-Atom sources separately; do not invent Atom IDs for them.
 - `updated_at`: the latest completed rebuild time under CA-D-310.

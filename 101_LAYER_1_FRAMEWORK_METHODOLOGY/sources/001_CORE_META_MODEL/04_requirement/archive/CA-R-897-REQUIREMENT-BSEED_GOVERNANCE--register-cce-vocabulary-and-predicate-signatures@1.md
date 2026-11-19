@@ -5,8 +5,8 @@ relations:
   child_of:
     - CA-R-892
     - CA-R-894
-    - CAPRMEDIO-META-REQU-126--govern-canonical-scoped-vocabulary
-    - CAPRMEDIO-META-REQU-121--store-only-direct-semantic-relations
+    - ANECHOIC-META-REQU-126--govern-canonical-scoped-vocabulary
+    - ANECHOIC-META-REQU-121--store-only-direct-semantic-relations
 version: 1
 updated_at: 2026-08-22 02:53:47
 ---

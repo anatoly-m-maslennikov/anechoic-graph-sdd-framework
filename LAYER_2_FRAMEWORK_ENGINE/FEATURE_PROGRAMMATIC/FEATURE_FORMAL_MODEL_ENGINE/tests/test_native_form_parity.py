@@ -24,7 +24,7 @@ class NativeFormParityTests(unittest.TestCase):
             ('''Atom.Header.Context.Form :: Scope Delegation;
 FOR EACH $a[<Atom>, (.Header.Context.Form = Scope Delegation)]:
 ($a.Header.Context.Role:: [in (Requirement, Method, Evaluation, Delivery, Operations)]{::1});''',
-             '''from caprmedio.formal_claims import declare_entity
+             '''from anechoic.formal_claims import declare_entity
 declare_entity(entity_name='Form', relation_name='IS_PROPERTY_OF', base_path='Atom.Header.Context',
     allowed_values=('Scope Delegation',), form_roles=('Requirement', 'Method', 'Evaluation', 'Delivery', 'Operations'))'''),
             ('''Atom.Header.Context.Form :: Work Report;
@@ -32,8 +32,8 @@ Atom/(.Header.Context.Role in (Plan))/(.Header.Context.Form in (Work Report)).Co
 Atom/(.Header.Context.Role in (Plan))/(.Header.Context.Form in (Work Report)).Content.Details.*[]{::0};
 Atom/(.Header.Context.Role in (Plan))/(.Header.Context.Form in (Work Report)).Content.Summary ;> Atom/(.Header.Context.Role in (Plan))/(.Header.Context.Form in (Work Report)).Content.Details;
 FOR EACH $report[<Atom>, (.Header.Context.Form = Work Report)]: ($report.Header.Context.Role == Plan);''',
-             '''from caprmedio.formal_claims import declare_entity
-from caprmedio.model import Plan
+             '''from anechoic.formal_claims import declare_entity
+from anechoic.model import Plan
 class WorkReport(Plan):
     pass
 declare_entity(entity_name='Work Report', entity_class=WorkReport, qualification_property_path='Atom.Header.Context.Form',
@@ -61,12 +61,12 @@ declare_entity(entity_name='Work Report', entity_class=WorkReport, qualification
             parse_native_model_claim(examples[0][1].replace("('Requirement', 'Method', 'Evaluation', 'Delivery', 'Operations')", "()"))
 
     def test_workflow_content_projection_keeps_form_ancestry(self):
-        new = row('workflow', '''from caprmedio.formal_claims import declare_entity
-from caprmedio.model import Operations
+        new = row('workflow', '''from anechoic.formal_claims import declare_entity
+from anechoic.model import Operations
 class Workflow(Operations):
     pass
 declare_entity(entity_name='Workflow', entity_class=Workflow, qualification_property_path='Atom.Header.Context.Form', project_form_content=True)''', 'python')
-        content = row('content', '''from caprmedio.formal_claims import declare_entity
+        content = row('content', '''from anechoic.formal_claims import declare_entity
 declare_entity(entity_name='Claim', relation_name='IS_PROPERTY_OF', base_path='Workflow.Content',
     property_occurrence_cardinality=1, value_cardinality=1)''', 'python')
         result = compile_content_constraints([new, content])

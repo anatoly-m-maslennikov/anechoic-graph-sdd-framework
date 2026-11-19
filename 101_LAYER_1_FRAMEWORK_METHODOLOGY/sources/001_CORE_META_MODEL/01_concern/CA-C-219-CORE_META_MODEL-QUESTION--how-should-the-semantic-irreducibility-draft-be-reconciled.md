@@ -26,7 +26,7 @@ how should the identified Draft Atom be reconciled **with** active authority **a
 
 ## Draft under review
 
-- archived Carrier: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/04_requirement/archive/CA-R--MMODEL-CORE-REQUIREMENT--keep-each-atom-semantically-irreducible@2.md`.
+- archived Carrier: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/04_requirement/archive/CA-R--MMODEL-CORE-REQUIREMENT--keep-each-atom-semantically-irreducible@2.md`.
 - inspected SHA-256: `2421ea93f751286b69e1459ed3cd2d77fc3cbc3d8540bf6675c1e375cd657cdc`.
 - review point: 10 of 79; campaign `draft-review-8afeac79`.
 
@@ -38,16 +38,16 @@ how should the identified Draft Atom be reconciled **with** active authority **a
 
 ## Active authority cited by the review
 
-- `CA-R-154@14`: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/04_requirement/CA-R-154-CORE_META_MODEL-CORE-REQUIREMENT--keep-each-atom-semantically-irreducible.md`; SHA-256 `4c924f038fc509af31c5d06e328ce956c65115d8907c80924446651b2d83f7f0`.
-- `CA-R-918@11`: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/04_requirement/CA-R-918-CORE_META_MODEL-CORE-REQUIREMENT--give-every-atom-one-claim.md`; SHA-256 `9d474f9b8f33a33d87149066e33a1926396186c0f3f6adb627b620a9179a408c`.
+- `CA-R-154@14`: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/04_requirement/CA-R-154-CORE_META_MODEL-CORE-REQUIREMENT--keep-each-atom-semantically-irreducible.md`; SHA-256 `4c924f038fc509af31c5d06e328ce956c65115d8907c80924446651b2d83f7f0`.
+- `CA-R-918@11`: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/04_requirement/CA-R-918-CORE_META_MODEL-CORE-REQUIREMENT--give-every-atom-one-claim.md`; SHA-256 `9d474f9b8f33a33d87149066e33a1926396186c0f3f6adb627b620a9179a408c`.
 
 ## Principles to apply
 
-- [CA-M-002](/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/05_method/CA-M-002-PRINCIPLE-METHOD--dry-don-t-repeat-yourself.md).
-- [CA-M-005](/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/05_method/CA-M-005-PRINCIPLE-METHOD--add-complexity-only-when-necessary.md).
-- [CA-M-006](/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/05_method/CA-M-006-PRINCIPLE-METHOD--keep-the-whole-project-coherent.md).
-- [CA-R-1490](/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/04_requirement/CA-R-1490-PRINCIPLE-REQUIREMENT--preserve-valuable-information.md).
-- [CA-E-001](/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/06_evaluation/CA-E-001-PRINCIPLE-EVALUATION--make-governed-commitments-and-results-checkable.md).
+- [CA-M-002](/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/05_method/CA-M-002-PRINCIPLE-METHOD--dry-don-t-repeat-yourself.md).
+- [CA-M-005](/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/05_method/CA-M-005-PRINCIPLE-METHOD--add-complexity-only-when-necessary.md).
+- [CA-M-006](/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/05_method/CA-M-006-PRINCIPLE-METHOD--keep-the-whole-project-coherent.md).
+- [CA-R-1490](/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/04_requirement/CA-R-1490-PRINCIPLE-REQUIREMENT--preserve-valuable-information.md).
+- [CA-E-001](/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/06_evaluation/CA-E-001-PRINCIPLE-EVALUATION--make-governed-commitments-and-results-checkable.md).
 
 ## Resolution
 
@@ -67,6 +67,6 @@ the earlier review finding was too broad: acceptance-together wording is **not**
 
 ### Authority verified at resolution
 
-- `CA-R-154@14`: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/04_requirement/CA-R-154-CORE_META_MODEL-CORE-REQUIREMENT--keep-each-atom-semantically-irreducible.md`; SHA-256 `4c924f038fc509af31c5d06e328ce956c65115d8907c80924446651b2d83f7f0`.
-- `CA-R-918@11`: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/04_requirement/CA-R-918-CORE_META_MODEL-CORE-REQUIREMENT--give-every-atom-one-claim.md`; SHA-256 `9d474f9b8f33a33d87149066e33a1926396186c0f3f6adb627b620a9179a408c`.
-- `CA-R-1270@7`: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/04_requirement/CA-R-1270-CORE_META_MODEL-CORE-REQUIREMENT--permit-one-composite-claim-as-one-authority-unit.md`; SHA-256 `f95fea4bdf00c0fb17e05b87684e9fea6abf6f7b21d62cd965d78ee1b63af5b5`.
+- `CA-R-154@14`: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/04_requirement/CA-R-154-CORE_META_MODEL-CORE-REQUIREMENT--keep-each-atom-semantically-irreducible.md`; SHA-256 `4c924f038fc509af31c5d06e328ce956c65115d8907c80924446651b2d83f7f0`.
+- `CA-R-918@11`: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/04_requirement/CA-R-918-CORE_META_MODEL-CORE-REQUIREMENT--give-every-atom-one-claim.md`; SHA-256 `9d474f9b8f33a33d87149066e33a1926396186c0f3f6adb627b620a9179a408c`.
+- `CA-R-1270@7`: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/04_requirement/CA-R-1270-CORE_META_MODEL-CORE-REQUIREMENT--permit-one-composite-claim-as-one-authority-unit.md`; SHA-256 `f95fea4bdf00c0fb17e05b87684e9fea6abf6f7b21d62cd965d78ee1b63af5b5`.

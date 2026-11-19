@@ -14,12 +14,12 @@ def carrier(name, subject, code, label='CFEL', form='Declaration'):
 class GraphParity(unittest.TestCase):
     def test_native_special_contracts_do_not_compile_cfel(self):
         code = '''from dataclasses import dataclass, field
-from caprmedio.formal_claims import Cardinality, declare_entity
+from anechoic.formal_claims import Cardinality, declare_entity
 @dataclass
 class Workspace:
     name: str = field(metadata={"property_occurrence_cardinality": 1, "value_cardinality": 1})
 declare_entity(entity_name="Workspace", entity_class=Workspace, incoming_model_relations=({"source": "View", "relation": "IS_CONTAINED_BY", "source_cardinality": 1, "target_cardinality": Cardinality(minimum=1, maximum=None)},))'''
-        classification = '''from caprmedio.formal_claims import declare_entity
+        classification = '''from anechoic.formal_claims import declare_entity
 declare_entity(entity_name="Node", allowed_classification_values={"Container": ("yes", "no")})'''
         with patch('FEATURE_FORMAL_MODEL_ENGINE.compiler_claim.compiler_model_statements', side_effect=AssertionError('legacy compiler')):
             fields, errors = extract_claim_constraints(carrier('CA-R-1', 'Workspace', code, 'python'))
@@ -31,8 +31,8 @@ declare_entity(entity_name="Node", allowed_classification_values={"Container": (
         self.assertEqual([row['value'] for row in allowed], ['yes', 'no'])
 
     def test_typed_step_check_and_relation_permissions_project_together(self):
-        step = carrier('CA-R-2465', 'Atom/(.Header.Context.Role:=Operations)/Step', '''from caprmedio.formal_claims import declare_entity
-from caprmedio.model import Operations
+        step = carrier('CA-R-2465', 'Atom/(.Header.Context.Role:=Operations)/Step', '''from anechoic.formal_claims import declare_entity
+from anechoic.model import Operations
 
 class Step(Operations):
     pass
@@ -63,8 +63,8 @@ declare_entity(
         })
 
     def test_instance_property_native(self):
-        native=carrier('CA-R-2524','Project', '''from caprmedio.formal_claims import declare_entity
-from caprmedio.model import ScopeUnit
+        native=carrier('CA-R-2524','Project', '''from anechoic.formal_claims import declare_entity
+from anechoic.model import ScopeUnit
 class Project(ScopeUnit):
     pass
 declare_entity(entity_class=Project, entity_name="Project", instance_property_constraints={"order.number": {"value_cardinality": 0}})''','python')
@@ -79,7 +79,7 @@ declare_entity(entity_class=Project, entity_name="Project", instance_property_co
         self.assertIn('order.number` values', rendered)
         self.assertIn('values count=0', rendered)
     def test_model_inverse_alias_keeps_derived_reverse_view(self):
-        c=carrier('CA-R-2965','CFEL <+ Relation//AFTER','''from caprmedio.formal_claims import declare_relation, Cardinality
+        c=carrier('CA-R-2965','CFEL <+ Relation//AFTER','''from anechoic.formal_claims import declare_relation, Cardinality
 declare_relation(relation_name="AFTER", source_endpoint={"level": "model_entities", "entity_paths": ("Host",)}, target_endpoint={"level": "model_entities", "entity_paths": ("Target",)}, inverse_alias="BEFORE", targets_per_source=Cardinality(minimum=0, maximum=1), sources_per_target=Cardinality(minimum=0, maximum=2))''','python','Relation Declaration')
         clauses,diag=extract_claim_constraints(c);self.assertFalse(diag)
         inverse=next(x for x in clauses if x.get('relation')=='IS_INVERSE_ALIAS_FOR')
@@ -95,7 +95,7 @@ declare_relation(relation_name="AFTER", source_endpoint={"level": "model_entitie
         aliases=_relation_declarations(graph['relations']);self.assertTrue(any(r['name']=='BEFORE' and r['derivation']=='Derived' and r['direct_relations']==['AFTER'] for r in aliases))
 
     def test_native_relation_keeps_endpoint_pairs_and_reverses_each_pair(self):
-        declaration = carrier('CA-R-2245', 'CFEL <+ Relation//IS_EXECUTION_OF', '''from caprmedio.formal_claims import declare_relation
+        declaration = carrier('CA-R-2245', 'CFEL <+ Relation//IS_EXECUTION_OF', '''from anechoic.formal_claims import declare_relation
 
 declare_relation(
     relation_name="IS_EXECUTION_OF",

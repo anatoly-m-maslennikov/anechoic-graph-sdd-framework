@@ -80,7 +80,7 @@ def _state_root(selection: object) -> Path:
         instance = getattr(selection, "instance_id", "")
         if not isinstance(instance, str) or _FINGERPRINT.fullmatch(instance) is None:
             raise LaunchError("PROJECT_SELECTION_REFUSED")
-        value = root / ".caprmedio_runtime" / "runtime" / "project_mcp" / instance
+        value = root / ".anechoic_runtime" / "runtime" / "project_mcp" / instance
     try:
         state = Path(value)
         relative = state.relative_to(root)
@@ -248,8 +248,8 @@ def _project_labels_are_exact(labels: Mapping[str, Any], row: Mapping[str, Any],
     if not isinstance(control, Path) or control.is_absolute():
         return False
     return (
-        labels.get("org.caprmedio.control_root") == control.as_posix()
-        and labels.get("org.caprmedio.host_project_root") == str(_selection_root(selection))
+        labels.get("org.anechoic.control_root") == control.as_posix()
+        and labels.get("org.anechoic.host_project_root") == str(_selection_root(selection))
     )
 
 
@@ -354,9 +354,9 @@ def _admit_runtime(rows: object, selection: object, image_id: str, fingerprint: 
     instance = getattr(selection, "instance_id", None)
     if (
         labels is None
-        or labels.get("org.caprmedio.project") != instance
-        or labels.get("org.caprmedio.service") != "mcp-http"
-        or labels.get("org.caprmedio.runtime.fingerprint") != fingerprint
+        or labels.get("org.anechoic.project") != instance
+        or labels.get("org.anechoic.service") != "mcp-http"
+        or labels.get("org.anechoic.runtime.fingerprint") != fingerprint
         or row.get("Image") != image_id
         or not _project_labels_are_exact(labels, row, selection)
         or not _project_mount_is_exact(row, selection)

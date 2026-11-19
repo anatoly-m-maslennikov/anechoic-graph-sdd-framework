@@ -21,10 +21,10 @@ class Container(Node):
 
 
 def claim(name, parent="", rules="", uniqueness=""):
-    model_import = f"from caprmedio.model import {parent}\n" if parent else ""
+    model_import = f"from anechoic.model import {parent}\n" if parent else ""
     base = f"({parent})" if parent else ""
     return parse_native_model_claim(
-        "from caprmedio.formal_claims import declare_entity\n" + model_import
+        "from anechoic.formal_claims import declare_entity\n" + model_import
         + f"class {name}{base}:\n    pass\n"
         + f"declare_entity(entity_name='{name}', entity_class={name}{rules}{uniqueness})\n"
     )
@@ -38,8 +38,8 @@ class ModelDeclarationBindingsTests(unittest.TestCase):
         child = claim("Container", "Node", rules=", instance_relation_constraints={"
                       "'LINKS': {'target_entity_paths': ('Node',), 'targets_per_source': 0}}")
         bindings = bind_model_declarations([
-            ("CAPRMEDIO_MODEL <+ Node", node),
-            ("CAPRMEDIO_MODEL <+ Node/Container", child),
+            ("ANECHOIC_MODEL <+ Node", node),
+            ("ANECHOIC_MODEL <+ Node/Container", child),
         ], {"Node": Node, "Container": Container})
         relations, types, populations = bindings
         self.assertIs(types["Node"], Node)
@@ -54,33 +54,33 @@ class ModelDeclarationBindingsTests(unittest.TestCase):
         child = claim("Container", "Node", rules=", instance_relation_constraints={"
                       "'LINKS': {'target_entity_paths': ('Missing',)}}")
         with self.assertRaisesRegex(ValueError, "Invalid Model class binding"):
-            bind_model_declarations([("CAPRMEDIO_MODEL <+ Other", node)], {"Node": Node})
+            bind_model_declarations([("ANECHOIC_MODEL <+ Other", node)], {"Node": Node})
         with self.assertRaisesRegex(ValueError, "Duplicate Model class binding"):
-            bind_model_declarations([("CAPRMEDIO_MODEL <+ Node", node)] * 2, {"Node": Node})
+            bind_model_declarations([("ANECHOIC_MODEL <+ Node", node)] * 2, {"Node": Node})
         with self.assertRaisesRegex(ValueError, "unresolved or ambiguous target kind"):
             bind_model_declarations([
-                ("CAPRMEDIO_MODEL <+ Node", node),
-                ("CAPRMEDIO_MODEL <+ Node/Container", child),
+                ("ANECHOIC_MODEL <+ Node", node),
+                ("ANECHOIC_MODEL <+ Node/Container", child),
             ], {"Node": Node, "Container": Container})
 
     def test_rejects_different_python_inheritance(self):
         wrong = type("Container", (), {})
         with self.assertRaisesRegex(ValueError, "inheritance differs"):
-            bind_model_declarations([("CAPRMEDIO_MODEL <+ Node/Container", claim("Container", "Node"))],
+            bind_model_declarations([("ANECHOIC_MODEL <+ Node/Container", claim("Container", "Node"))],
                                     {"Container": wrong})
         fake_node = type("Node", (), {})
         with self.assertRaisesRegex(ValueError, "inheritance differs"):
-            bind_model_declarations([("CAPRMEDIO_MODEL <+ Node/Container", claim("Container", "Node"))],
+            bind_model_declarations([("ANECHOIC_MODEL <+ Node/Container", claim("Container", "Node"))],
                                     {"Container": Container, "Node": fake_node})
 
     def test_binds_uniqueness_declared_on_a_property(self):
         prop = parse_native_model_claim(
-            "from caprmedio.formal_claims import declare_entity\n"
+            "from anechoic.formal_claims import declare_entity\n"
             "declare_entity(entity_name='ID', relation_name='IS_PROPERTY_OF', base_path='Node', "
             "population_unique_constraints=({'keys': ('ID',)},))\n"
         )
-        subject = ("CAPRMEDIO_MODEL <+ Node.ID", prop)
-        rows = [("CAPRMEDIO_MODEL <+ Node", claim("Node")), subject]
+        subject = ("ANECHOIC_MODEL <+ Node.ID", prop)
+        rows = [("ANECHOIC_MODEL <+ Node", claim("Node")), subject]
         _, _, populations = bind_model_declarations(rows, {"Node": Node})
         self.assertEqual(populations[Node], ({"keys": ("ID",)},))
         with self.assertRaisesRegex(ValueError, "Unresolved or ambiguous population kind"):

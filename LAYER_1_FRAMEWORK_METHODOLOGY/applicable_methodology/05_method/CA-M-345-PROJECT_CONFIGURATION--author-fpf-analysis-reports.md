@@ -6,10 +6,10 @@ container:
 role: Method
 form: Implementation Method
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := "Analysis & Advisory")/(.Header.Context.Form := FPF Analysis Report)
+  main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := "Analysis & Advisory")/(.Header.Context.Form := FPF Analysis Report)
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom.Content.Summary
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Traceability"
+  - ANECHOIC_MODEL <+ Atom.Content.Summary
+  - "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Traceability"
 tier: 3
 relations:
   method_for:
@@ -20,11 +20,11 @@ updated_at: 2026-11-02 19:33:47 +0400
 carrier_destination:
   file:
     name: CA-M-345-PROJECT_CONFIGURATION-IMPLEMENTATION_METHOD--author-fpf-analysis-reports.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/05_method
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/05_method
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: PROJECT_CONFIGURATION
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/05_method/CA-M-345-PROJECT_CONFIGURATION--author-fpf-analysis-reports.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/05_method/CA-M-345-PROJECT_CONFIGURATION--author-fpf-analysis-reports.md
   source_atom_id: CA-M-345
   source_atom_revision: 20
   source_sha256: 4d3dbd28239aa4bf23c33f503637944edbd8ebbe4fc7bb6e54978536a5c6290c

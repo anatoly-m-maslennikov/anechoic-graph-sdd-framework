@@ -14,7 +14,7 @@ updated_at: 2026-09-06 01:45:12 +0400
 relations:
   child_of:
     - CA-R-151
-    - CAPRMEDIO-META-REQU-121--store-only-direct-semantic-relations
+    - ANECHOIC-META-REQU-121--store-only-direct-semantic-relations
 ---
 # Require authority for new relation meanings
 

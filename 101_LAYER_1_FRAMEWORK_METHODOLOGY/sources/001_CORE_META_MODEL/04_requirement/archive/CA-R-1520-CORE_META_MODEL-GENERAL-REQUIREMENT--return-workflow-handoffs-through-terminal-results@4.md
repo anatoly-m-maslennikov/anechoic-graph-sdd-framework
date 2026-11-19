@@ -11,7 +11,7 @@ subjects:
     - "Status"
 version: 4
 updated_at: "2026-09-18 21:23:47 +0000"
-relations: {"relates_to": ["CA-R-1510", "CA-R-1513", "CA-R-1519", "CAPRMEDIO-META-REQU-158"]}
+relations: {"relates_to": ["CA-R-1510", "CA-R-1513", "CA-R-1519", "ANECHOIC-META-REQU-158"]}
 atom_id: "CA-R-1520"
 content_role: "Requirement"
 current_scope_unit: "CORE_META_MODEL"

@@ -27,11 +27,11 @@ Keep Tool operational authority outside its own subtree
 
 ## Scope
 
-Tools' implementation references to methodology Action and Workflow definitions in the caprmedio Project.
+Tools' implementation references to methodology Action and Workflow definitions in the anechoic Project.
 
 ## Claim
 
-**in** the caprmedio Project, a Tool's implementation reference **to** a methodology Action **or** Workflow definition **must not** target an O Atom owned by the Tool's Scope Unit **or** **any** descendant of that Scope Unit.
+**in** the anechoic Project, a Tool's implementation reference **to** a methodology Action **or** Workflow definition **must not** target an O Atom owned by the Tool's Scope Unit **or** **any** descendant of that Scope Unit.
 
 ## Details
 

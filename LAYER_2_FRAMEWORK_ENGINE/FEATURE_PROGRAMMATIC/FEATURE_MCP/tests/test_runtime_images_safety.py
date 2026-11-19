@@ -44,13 +44,13 @@ def _tagging_executor(executor, calls):
             tagged.add(command[-1])
             sources[command[-1]] = command[-2]
             return subprocess.CompletedProcess(argv, 0, "", "")
-        if command[:3] == ("docker", "image", "inspect") and command[-1].startswith("caprmedio-runtime:"):
+        if command[:3] == ("docker", "image", "inspect") and command[-1].startswith("anechoic-runtime:"):
             if command[-1] not in tagged:
                 return subprocess.CompletedProcess(argv, 1, "", "")
             payload = json.loads(inspections[sources[command[-1]]])
             payload[0]["RepoTags"] = [command[-1]]
             return subprocess.CompletedProcess(argv, 0, json.dumps(payload), "")
-        if command[:3] == ("docker", "image", "ls") and command[-1].startswith("caprmedio-runtime:"):
+        if command[:3] == ("docker", "image", "ls") and command[-1].startswith("anechoic-runtime:"):
             return subprocess.CompletedProcess(argv, 0, "", "")
         result = executor(argv, **kwargs)
         if command[:3] == ("docker", "image", "inspect") and result.returncode == 0:
@@ -114,7 +114,7 @@ class ImageOutputSafetyTests(unittest.TestCase):
             "TMPDIR": "/synthetic-tmp",
         }
         client.update(PROXY_ROUTING)
-        caller = dict(client, CAPRMEDIO_MCP_HTTP_SECRET_TOKEN=PRIVATE_MARKER,
+        caller = dict(client, ANECHOIC_MCP_HTTP_SECRET_TOKEN=PRIVATE_MARKER,
                       AWS_SECRET_ACCESS_KEY=PRIVATE_MARKER, GITHUB_TOKEN=PRIVATE_MARKER,
                       LANG="en_US.UTF-8")
         manager = images.ImageManager(APP.parents[2], platform="linux/amd64", project_root=APP.parents[2])
@@ -133,16 +133,16 @@ class ImageOutputSafetyTests(unittest.TestCase):
                     self.assertEqual("", manager._run(command))
                 child_environment = start.call_args.kwargs["env"]
                 self.assertEqual(client, child_environment)
-                self.assertNotIn("CAPRMEDIO_MCP_HTTP_SECRET_TOKEN", child_environment)
+                self.assertNotIn("ANECHOIC_MCP_HTTP_SECRET_TOKEN", child_environment)
                 self.assertNotIn(PRIVATE_MARKER, child_environment.values())
                 for proxy in PROXY_ROUTING.values():
                     self.assertNotIn(proxy, start.call_args.args[0])
 
     def test_backend_environments_preserve_present_proxy_routing_without_ambient_credentials(self):
-        selection = SimpleNamespace(root=APP.parents[2], control_relative=Path(".caprmedio_fixture"),
+        selection = SimpleNamespace(root=APP.parents[2], control_relative=Path(".anechoic_fixture"),
                                     instance_id="c" * 64)
         caller = dict(PROXY_ROUTING, PATH="/synthetic-bin",
-                      CAPRMEDIO_MCP_HTTP_SECRET_TOKEN=PRIVATE_MARKER,
+                      ANECHOIC_MCP_HTTP_SECRET_TOKEN=PRIVATE_MARKER,
                       AWS_SECRET_ACCESS_KEY=PRIVATE_MARKER, GITHUB_TOKEN=PRIVATE_MARKER)
         with patch.dict(os.environ, caller, clear=True):
             client = ProjectMcpBackend._docker_client_environment()
@@ -150,7 +150,7 @@ class ImageOutputSafetyTests(unittest.TestCase):
         self.assertEqual(dict(PROXY_ROUTING, PATH="/synthetic-bin"), client)
         for name, value in PROXY_ROUTING.items():
             self.assertEqual(value, service[name])
-        self.assertNotIn("CAPRMEDIO_MCP_HTTP_SECRET_TOKEN", service)
+        self.assertNotIn("ANECHOIC_MCP_HTTP_SECRET_TOKEN", service)
         self.assertNotIn(PRIVATE_MARKER, client.values())
         self.assertNotIn(PRIVATE_MARKER, service.values())
         self.assertNotIn("AWS_SECRET_ACCESS_KEY", service)
@@ -195,7 +195,7 @@ class ImageCredentialContextTests(unittest.TestCase):
         lifecycle = patch("runtime_images._compile_lifecycle_assets", return_value=(b'{"schema_version":1}\n', b'{"schema_version":1}\n'))
         lifecycle.start()
         self.addCleanup(lifecycle.stop)
-        parent = APP.parents[2] / ".caprmedio_tmp/launcher-epic-1829/images"
+        parent = APP.parents[2] / ".anechoic_tmp/launcher-epic-1829/images"
         parent.mkdir(parents=True, exist_ok=True)
         source = Path(tempfile.mkdtemp(prefix="image-credentials-", dir=parent))
         docker = source / images.DOCKER_ROOT
@@ -224,7 +224,7 @@ class ImageCredentialContextTests(unittest.TestCase):
             path = directory / "unclassified-store.txt"
             path.write_text(PRIVATE_MARKER)
             protected.add(path)
-        generated = engine / ".caprmedio_runtime"
+        generated = engine / ".anechoic_runtime"
         generated.mkdir()
         path = generated / "generated-output.json"
         path.write_text(PRIVATE_MARKER)
@@ -272,9 +272,9 @@ class LifecycleImageAssetsTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()
             project_id = "c" * 64
-            state = root / ".caprmedio_runtime/runtime/project_mcp" / project_id
+            state = root / ".anechoic_runtime/runtime/project_mcp" / project_id
             state.mkdir(parents=True)
-            control = root / ".caprmedio_project"
+            control = root / ".anechoic_project"
             selection = SimpleNamespace(root=root, control_root=control, instance_id=project_id, launcher_state=state)
             receipt = {"project_root": str(root), "control_root": str(control), "project_id": project_id,
                        "image_id": IMAGE_ID, "readiness": True}
@@ -292,9 +292,9 @@ class LifecycleImageAssetsTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()
             project_id = "d" * 64
-            state = root / ".caprmedio_runtime/runtime/project_mcp" / project_id
+            state = root / ".anechoic_runtime/runtime/project_mcp" / project_id
             state.mkdir(parents=True)
-            control = root / ".caprmedio_project"
+            control = root / ".anechoic_project"
             selection = SimpleNamespace(root=root, control_root=control, instance_id=project_id, launcher_state=state)
             path = state / "ready.json"
             receipt = {"project_root": str(root), "control_root": str(control), "project_id": "e" * 64,
@@ -334,7 +334,7 @@ class LifecycleImageAssetsTests(unittest.TestCase):
     def test_previous_image_runs_staged_read_only_selector_for_candidate_only(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            (root / ".caprmedio_tmp").mkdir()
+            (root / ".anechoic_tmp").mkdir()
             model = root / "METHODOLOGY/sources"
             model.mkdir(parents=True)
             (model / "source.md").write_text("source", encoding="utf-8")
@@ -383,7 +383,7 @@ class LifecycleImageAssetsTests(unittest.TestCase):
     def test_missing_previous_image_fails_without_native_fallback(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            (root / ".caprmedio_tmp").mkdir()
+            (root / ".anechoic_tmp").mkdir()
             (root / "METHODOLOGY/sources").mkdir(parents=True)
             failed = subprocess.CompletedProcess([], 1, "", "")
             with patch("image_relation_registry.bounded_run", return_value=failed), \
@@ -396,7 +396,7 @@ class LifecycleImageAssetsTests(unittest.TestCase):
     def test_image_compiles_the_packaged_sources_after_workflow_verification(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            (root / ".caprmedio_tmp").mkdir()
+            (root / ".anechoic_tmp").mkdir()
             sources = root / "METHODOLOGY/sources"
             sources.mkdir(parents=True)
             pin = sources / "workflow.md"

@@ -24,8 +24,8 @@ class RelationOrderingTests(unittest.TestCase):
                          ['CA-D-407', 'CA-D-408', 'CA-M-279', 'CA-R-1441'])
 
     def test_legacy_namespace_remains_an_id(self):
-        self.assertEqual(atom_id_key('CAPRMEDIO-GOV-EVAL-003'),
-                         ('CAPRMEDIO-GOV-EVAL', 3, 'CAPRMEDIO-GOV-EVAL-003'))
+        self.assertEqual(atom_id_key('ANECHOIC-GOV-EVAL-003'),
+                         ('ANECHOIC-GOV-EVAL', 3, 'ANECHOIC-GOV-EVAL-003'))
 
     def test_preserves_exact_strings_and_does_not_mutate_input(self):
         original = ['CA-O-015', 'CA-O-012']

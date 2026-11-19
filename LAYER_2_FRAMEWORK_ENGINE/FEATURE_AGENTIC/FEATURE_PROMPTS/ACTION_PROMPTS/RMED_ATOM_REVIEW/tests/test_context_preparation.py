@@ -8,7 +8,7 @@ from test_split_evaluation import context, contract, part, source, RULE_TEXT, SO
 from context_builder import prepare_context, lookup, prose, rebuild_baseline
 
 
-TMPDIR = Path(__file__).resolve().parents[6] / '.caprmedio_tmp/epic-resume-prompts'
+TMPDIR = Path(__file__).resolve().parents[6] / '.anechoic_tmp/epic-resume-prompts'
 TMPDIR.mkdir(parents=True, exist_ok=True)
 
 

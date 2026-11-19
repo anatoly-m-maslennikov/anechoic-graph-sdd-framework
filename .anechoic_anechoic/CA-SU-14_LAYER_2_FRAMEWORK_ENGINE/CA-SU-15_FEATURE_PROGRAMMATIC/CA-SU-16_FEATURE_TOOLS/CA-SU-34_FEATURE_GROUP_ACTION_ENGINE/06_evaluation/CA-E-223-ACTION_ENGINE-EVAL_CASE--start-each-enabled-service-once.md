@@ -1,0 +1,54 @@
+---
+atom_id: CA-E-223
+ref_id: CA-E-223
+container:
+  scope_unit: CA-SU-34
+role: Evaluation
+form: Eval Case
+topics:
+  main_subject: Subject/ANECHOIC/Graph/Node/Project Model/Runtime
+tier: 3
+relations:
+  evaluation_for:
+  - CA-R-2154
+  - CA-M-104
+status: Active
+version: 21
+updated_at: 2026-11-02 19:44:26 +0400
+carrier_destination:
+  file:
+    name: CA-E-223-ACTION_ENGINE-EVAL_CASE--start-each-enabled-service-once.md
+    path: .anechoic_anechoic/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-16_FEATURE_TOOLS/CA-SU-34_FEATURE_GROUP_ACTION_ENGINE/06_evaluation
+llm_session_ids:
+- codex:01a02650-eff7-7453-8c37-0699b36773c6
+current_scope_unit: ACTION_ENGINE
+claim_target_scope_unit: ACTION_ENGINE
+author: Anatoly Maslennikov
+---
+## Summary
+
+Start each enabled service once
+
+## Scope
+
+Evaluation of one background-service lifecycle action and its recorded outcome.
+
+## Claim
+
+### Prose Claim
+
+## Claim checked
+
+Apply starts each enabled installed service once **and** repeated apply recognizes its live process.
+
+## Test case
+
+Install one enabled long-running Python service, invoke dry-run, apply, apply again, **and** status.
+
+## Acceptance criteria
+
+Dry-run predicts one start **without** mutation. First apply starts one process **and** writes its disposable PID state only under its runtime service directory and appends technical and business log Journal records to their explicitly configured governed local or remote sinks. Second apply reports the same PID as already running **and** starts no process. Status reports one enabled **and** running service; `.anechoic_runtime/tools` **contains** no Python cache; **and** disposable bytecode **and** cache Carriers exist **only** below `.anechoic_tmp`.
+
+## Failure disposition
+
+Reject delivery **if** dry-run mutates, apply duplicates a live service, disposable process state is written outside `.anechoic_runtime`, configured log Journal sinks are bypassed, or stopping or cleaning disposable state changes accepted runtime Journal history, implementation is read outside `.anechoic_runtime/tools`, **or** liveness is reported incorrectly.

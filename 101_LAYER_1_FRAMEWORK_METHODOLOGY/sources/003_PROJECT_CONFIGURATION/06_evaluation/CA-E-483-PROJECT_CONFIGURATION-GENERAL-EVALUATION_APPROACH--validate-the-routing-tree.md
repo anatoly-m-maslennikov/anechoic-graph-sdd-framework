@@ -1,6 +1,6 @@
 ---
 subjects:
-  governs: "CAPRMEDIO Routing Tree"
+  governs: "ANECHOIC Routing Tree"
   depends_on: []
 version: 6
 updated_at: "2026-10-02 20:16:06 +0400"
@@ -21,11 +21,11 @@ Validate the routing tree
 
 ## Scope
 
-the CAPRMEDIO Routing Tree.
+the ANECHOIC Routing Tree.
 
 ## Claim
 
-the Evaluation of the CAPRMEDIO Routing Tree registered under CA-R-1640-PROJECT_CONFIGURATION-CORE-REQUIREMENT--register-one-canonical-routing-tree **must** reject a routing tree **when** **any** of the following is present:
+the Evaluation of the ANECHOIC Routing Tree registered under CA-R-1640-PROJECT_CONFIGURATION-CORE-REQUIREMENT--register-one-canonical-routing-tree **must** reject a routing tree **when** **any** of the following is present:
 
 ## Details
 

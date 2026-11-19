@@ -24,7 +24,7 @@ subjects:
     - "CCE"
     - "Atom/Local Tier: Principle"
     - "Operator"
-    - "CAPRMEDIO Framework Instance"
+    - "ANECHOIC Framework Instance"
     - "Workflow"
 relations: {"evaluation_for":["CA-D-269","CA-D-478","CA-D-479","CA-D-495","CA-M-113","CA-M-125","CA-R-1269","CA-R-1270","CA-R-1271","CA-R-1273","CA-R-1465","CA-R-1624","CA-R-1799"]}
 ---

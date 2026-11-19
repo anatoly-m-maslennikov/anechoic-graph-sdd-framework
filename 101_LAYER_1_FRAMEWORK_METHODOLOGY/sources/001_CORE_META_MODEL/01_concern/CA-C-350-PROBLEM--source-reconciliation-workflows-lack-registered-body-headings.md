@@ -28,8 +28,8 @@ Neither Carrier has literal `# Summary`, `## Operation` or `## Details`. Their e
 
 CA-A-1058 compares both full live source files with CA-D-479 v6. Exact later-authoring targets:
 
-- `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/09_operations/CA-O-010-CORE_META_MODEL-WORKFLOW--reconcile-sources.md` — v7, SHA-256 `fe23f033b0c68300ba3e63cdab27e574a81b4e4781c79a0ea06d1f659da55e94`; descriptive H1, `## Steps`, `## Transitions`.
-- `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/09_operations/CA-O-011-CORE_META_MODEL-WORKFLOW--bind-source-reconciliation-to-applicable-methodology.md` — v10, SHA-256 `7afcae57fc1496c5f01e74ec39735b76b7df9c0189f72cd4db509a4ba787cf83`; descriptive H1 and unsectioned binding table.
+- `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/09_operations/CA-O-010-CORE_META_MODEL-WORKFLOW--reconcile-sources.md` — v7, SHA-256 `fe23f033b0c68300ba3e63cdab27e574a81b4e4781c79a0ea06d1f659da55e94`; descriptive H1, `## Steps`, `## Transitions`.
+- `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/09_operations/CA-O-011-CORE_META_MODEL-WORKFLOW--bind-source-reconciliation-to-applicable-methodology.md` — v10, SHA-256 `7afcae57fc1496c5f01e74ec39735b76b7df9c0189f72cd4db509a4ba787cf83`; descriptive H1 and unsectioned binding table.
 
 ## Blast radius
 

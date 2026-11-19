@@ -16,7 +16,7 @@ updated_at: "2026-09-10 20:55:09 +0400"
 relations:
   child_of:
     - "CA-R-1052"
-    - "CAPRMEDIO-REQU-051-REQUIREMENT--use-caprmedio-as-the-canonical-project-name"
+    - "ANECHOIC-REQU-051-REQUIREMENT--use-anechoic-as-the-canonical-project-name"
 ---
 # Register obsolete project names
 

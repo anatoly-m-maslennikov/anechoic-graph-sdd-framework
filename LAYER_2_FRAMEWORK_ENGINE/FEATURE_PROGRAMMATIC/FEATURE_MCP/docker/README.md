@@ -11,12 +11,12 @@ enqueue a Workflow or release anything.
 ## Build and run
 
 ```sh
-UV_PROJECT_ENVIRONMENT="$PWD/.caprmedio_runtime/launcher-venv" \
+UV_PROJECT_ENVIRONMENT="$PWD/.anechoic_runtime/launcher-venv" \
 uv run --project "$PWD" --locked --no-sync --python 3.14 --managed-python --no-env-file \
   --group rmed-workflow-mcp python \
   LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_MCP/docker/runtime.py build
 
-UV_PROJECT_ENVIRONMENT="$PWD/.caprmedio_runtime/launcher-venv" \
+UV_PROJECT_ENVIRONMENT="$PWD/.anechoic_runtime/launcher-venv" \
 uv run --project "$PWD" --locked --no-sync --python 3.14 --managed-python --no-env-file \
   --group rmed-workflow-mcp python \
   LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_MCP/docker/runtime.py mcp-http-start
@@ -34,6 +34,6 @@ independent of the retired AI Agent runtime.
 
 | State | Location |
 | --- | --- |
-| Workbench runtime | `.caprmedio_runtime/workbench/` |
+| Workbench runtime | `.anechoic_runtime/workbench/` |
 
 Historical Run data is retained outside this runtime.

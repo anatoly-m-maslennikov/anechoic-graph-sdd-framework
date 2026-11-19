@@ -9,7 +9,7 @@ project_graph_state:
       - evaluation:evaluation_control
 version: 25
 updated_at: "2026-09-17 11:52:27 +0000"
-relations: {"child_of":["CA-R-1506","CAPRMEDIO-META-REQU-740--separate-content-role-from-artifact-type"]}
+relations: {"child_of":["CA-R-1506","ANECHOIC-META-REQU-740--separate-content-role-from-artifact-type"]}
 atom_id: "CA-R-1662"
 content_role: "Requirement"
 current_scope_unit: "PROJECT_CONFIGURATION"

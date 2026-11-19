@@ -9,7 +9,7 @@ updated_at: "2026-10-03 01:40:36 +0400"
 relations:
   child_of:
     - "CA-R-1718"
-    - CAPRMEDIO-META-REQU-084--relational-artifacts-declare-endpoints
+    - ANECHOIC-META-REQU-084--relational-artifacts-declare-endpoints
 atom_id: "CA-R-1654"
 content_role: "Requirement"
 current_scope_unit: "CORE_META_MODEL"

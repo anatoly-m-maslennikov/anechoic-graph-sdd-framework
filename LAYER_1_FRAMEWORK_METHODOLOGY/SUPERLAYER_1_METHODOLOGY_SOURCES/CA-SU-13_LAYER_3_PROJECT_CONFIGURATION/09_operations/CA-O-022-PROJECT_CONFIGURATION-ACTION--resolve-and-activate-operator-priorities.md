@@ -6,13 +6,13 @@ container:
 role: Operations
 form: Action
 topics:
-  main_subject: "Subject/CAPRMEDIO/Graph/Node/Aspect/Engineering/Operation/Execution Control/Effect Authorization"
+  main_subject: "Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Effect Authorization"
   dependencies:
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Operations/Type: Action'
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Actor/Type: Operator'
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Project
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Scope Unit
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Selection//PROJECT_PRIORITY_MODEL
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Atom/Content Role: Operations/Type: Action'
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Actor/Type: Operator'
+  - Subject/ANECHOIC/Graph/Node/Project Model/Project
+  - Subject/ANECHOIC/Graph/Node/Project Model/Scope Unit
+  - Subject/ANECHOIC/Graph/Node/Project Model/Selection//PROJECT_PRIORITY_MODEL
 tier: 3
 relations:
   child_of:
@@ -23,7 +23,7 @@ updated_at: 2026-10-27 19:59:44 +0400
 carrier_destination:
   file:
     name: CA-O-022-PROJECT_CONFIGURATION-ACTION--resolve-and-activate-operator-priorities.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: PROJECT_CONFIGURATION
 author: Anatoly Maslennikov
@@ -41,7 +41,7 @@ Resolve Operator Priorities **means** the Action that turns applicable Operator 
 1. identify the affected Scope **and** Project stage from the Operator input **and** its applicable context.
 2. resolve the Operator-selected model, effective parameters, active criteria, applicable authority, **and** non-negotiable constraints. retain **every** applicable criterion **without** imposing a fixed catalog **or** comparison by priority order on another model.
 3. check whether the input determines an admissible model **and** the parameters needed **to** apply it.
-4. **if** that resolution succeeds, activate the resolved priorities **in** the CAPRMEDIO Framework Instance for the identified context **and** return them as the Action result.
+4. **if** that resolution succeeds, activate the resolved priorities **in** the ANECHOIC Framework Instance for the identified context **and** return them as the Action result.
 
 ### unresolved input
 

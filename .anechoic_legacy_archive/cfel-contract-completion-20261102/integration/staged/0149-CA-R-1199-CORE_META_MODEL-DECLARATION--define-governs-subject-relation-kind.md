@@ -6,7 +6,7 @@ subjects:
   - Atom
   - Entity
   - Atom.Content
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Topics
 version: 36
 updated_at: 2026-11-02 08:06:47 +0400
 atom_id: CA-R-1199
@@ -23,7 +23,7 @@ context:
     - Atom
     - Entity
     - Atom.Content
-    - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
+    - ANECHOIC_MODEL <+ Atom.Header.Context.Topics
 ---
 ## Summary
 

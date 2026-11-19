@@ -15,7 +15,7 @@ version: 1
 updated_at: 2026-09-04 04:05:44 +0400
 relations:
   evaluation_for:
-    - CAPRMEDIO-META-REQU-619
+    - ANECHOIC-META-REQU-619
     - CA-R-1400
     - CA-R-1401
     - CA-D-362

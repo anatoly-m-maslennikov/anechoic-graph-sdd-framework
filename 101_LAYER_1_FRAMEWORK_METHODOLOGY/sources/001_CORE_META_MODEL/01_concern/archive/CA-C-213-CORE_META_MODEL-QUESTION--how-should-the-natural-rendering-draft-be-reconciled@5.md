@@ -17,7 +17,7 @@ how should the identified Draft Atom be reconciled **with** active authority **a
 
 ## Draft under review
 
-- archived Carrier: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/04_requirement/archive/CA-R--MMODEL-CORE-REQUIREMENT--define-natural-rendering-of-a-qualified-subject-expression@1.md`.
+- archived Carrier: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/04_requirement/archive/CA-R--MMODEL-CORE-REQUIREMENT--define-natural-rendering-of-a-qualified-subject-expression@1.md`.
 - inspected SHA-256: `224d814353bac52deecbdade70ae467185ab3f16b94a9de082d26991a99e0190`.
 - review point: 4 of 79; campaign `draft-review-8afeac79`.
 
@@ -29,16 +29,16 @@ how should the identified Draft Atom be reconciled **with** active authority **a
 
 ## Active authority cited by the review
 
-- `CA-R-1321@8`: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/04_requirement/CA-R-1321-CORE_META_MODEL-CORE-REQUIREMENT--define-subject-expression.md`; SHA-256 `e9ee1b5918295cb6b979e36ba64a304fccb91d6cfce20c5fd54b7e4746aad44f`.
-- `CA-M-228@10`: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/CA-M-228-CORE_META_MODEL-METHOD--write-subject-expressions-with-bearer-and-value-qualification.md`; SHA-256 `1c83ca0d007ce7c4c2d624e46fc6f270a5ac7dfd992687c2f0dc7e508016d80d`.
+- `CA-R-1321@8`: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/04_requirement/CA-R-1321-CORE_META_MODEL-CORE-REQUIREMENT--define-subject-expression.md`; SHA-256 `e9ee1b5918295cb6b979e36ba64a304fccb91d6cfce20c5fd54b7e4746aad44f`.
+- `CA-M-228@10`: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/CA-M-228-CORE_META_MODEL-METHOD--write-subject-expressions-with-bearer-and-value-qualification.md`; SHA-256 `1c83ca0d007ce7c4c2d624e46fc6f270a5ac7dfd992687c2f0dc7e508016d80d`.
 
 ## Principles to apply
 
-- [CA-M-002](/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/05_method/CA-M-002-PRINCIPLE-METHOD--dry-don-t-repeat-yourself.md).
-- [CA-M-005](/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/05_method/CA-M-005-PRINCIPLE-METHOD--add-complexity-only-when-necessary.md).
-- [CA-M-006](/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/05_method/CA-M-006-PRINCIPLE-METHOD--keep-the-whole-project-coherent.md).
-- [CA-R-1490](/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/04_requirement/CA-R-1490-PRINCIPLE-REQUIREMENT--preserve-valuable-information.md).
-- [CA-E-001](/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/06_evaluation/CA-E-001-PRINCIPLE-EVALUATION--make-governed-commitments-and-results-checkable.md).
+- [CA-M-002](/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/05_method/CA-M-002-PRINCIPLE-METHOD--dry-don-t-repeat-yourself.md).
+- [CA-M-005](/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/05_method/CA-M-005-PRINCIPLE-METHOD--add-complexity-only-when-necessary.md).
+- [CA-M-006](/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/05_method/CA-M-006-PRINCIPLE-METHOD--keep-the-whole-project-coherent.md).
+- [CA-R-1490](/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/04_requirement/CA-R-1490-PRINCIPLE-REQUIREMENT--preserve-valuable-information.md).
+- [CA-E-001](/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/06_evaluation/CA-E-001-PRINCIPLE-EVALUATION--make-governed-commitments-and-results-checkable.md).
 
 ## Resolution
 
@@ -53,6 +53,6 @@ the Operator explicitly rejected the additional Natural Rendering concept. canon
 
 ## Surviving authority checked for this disposition
 
-- `CA-R-1321@8`: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/04_requirement/CA-R-1321-CORE_META_MODEL-CORE-REQUIREMENT--define-subject-expression.md`; SHA-256 `e9ee1b5918295cb6b979e36ba64a304fccb91d6cfce20c5fd54b7e4746aad44f`.
-- `CA-M-228@10`: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/CA-M-228-CORE_META_MODEL-METHOD--write-subject-expressions-with-bearer-and-value-qualification.md`; SHA-256 `1c83ca0d007ce7c4c2d624e46fc6f270a5ac7dfd992687c2f0dc7e508016d80d`.
-- `CA-M-301@1`: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/CA-M-301-CORE_META_MODEL-METHOD--make-atom-claims-easy-to-understand.md`; SHA-256 `4738745a26c982c352ab2ffd051fa7d02b211482c910f0e8f99b11d17de86868`.
+- `CA-R-1321@8`: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/04_requirement/CA-R-1321-CORE_META_MODEL-CORE-REQUIREMENT--define-subject-expression.md`; SHA-256 `e9ee1b5918295cb6b979e36ba64a304fccb91d6cfce20c5fd54b7e4746aad44f`.
+- `CA-M-228@10`: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/CA-M-228-CORE_META_MODEL-METHOD--write-subject-expressions-with-bearer-and-value-qualification.md`; SHA-256 `1c83ca0d007ce7c4c2d624e46fc6f270a5ac7dfd992687c2f0dc7e508016d80d`.
+- `CA-M-301@1`: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/CA-M-301-CORE_META_MODEL-METHOD--make-atom-claims-easy-to-understand.md`; SHA-256 `4738745a26c982c352ab2ffd051fa7d02b211482c910f0e8f99b11d17de86868`.

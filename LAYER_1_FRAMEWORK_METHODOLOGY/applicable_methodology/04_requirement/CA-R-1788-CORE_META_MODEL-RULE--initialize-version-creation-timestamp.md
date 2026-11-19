@@ -6,11 +6,11 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.State.Updated At
+  main_subject: ANECHOIC_MODEL <+ Atom.Header.State.Updated At
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Atom.Header.State.Status
-  - CAPRMEDIO_MODEL <+ Carrier
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Atom.Header.State.Status
+  - ANECHOIC_MODEL <+ Carrier
 tier: 3
 relations:
   child_of:
@@ -21,11 +21,11 @@ updated_at: 2026-11-03 23:25:51 +0400
 carrier_destination:
   file:
     name: CA-R-1788-CORE_META_MODEL-RULE--initialize-version-creation-timestamp.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 claim_target_scope_unit: CORE_META_MODEL
 current_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1788-CORE_META_MODEL-RULE--initialize-version-creation-timestamp.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1788-CORE_META_MODEL-RULE--initialize-version-creation-timestamp.md
   source_atom_id: CA-R-1788
   source_atom_revision: 20
   source_sha256: fbc4927c314435ba2d241b1805d70e9c7dbf28b9069a7c3acf9181edf07b9748

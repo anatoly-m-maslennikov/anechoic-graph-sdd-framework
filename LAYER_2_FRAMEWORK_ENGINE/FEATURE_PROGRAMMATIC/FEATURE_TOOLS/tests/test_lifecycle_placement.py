@@ -16,14 +16,14 @@ class PlacementTest(unittest.TestCase):
         binding = bind_placement(fixture_rules())
         binding.__enter__()
         self.addCleanup(binding.__exit__, None, None, None)
-        scratch = TOOLS.parents[2] / '.caprmedio_tmp/CA-P-2791/CA-P-2934/placement'
+        scratch = TOOLS.parents[2] / '.anechoic_tmp/CA-P-2791/CA-P-2934/placement'
         scratch.mkdir(parents=True, exist_ok=True)
         self.tmp = tempfile.TemporaryDirectory(dir=scratch)
         self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name)
-        self.control = self.root / '.caprmedio_test'
+        self.control = self.root / '.anechoic_test'
         self.control.mkdir()
-        (self.control / 'caprmedio_project_settings.toml').write_text('[project]\nname="TEST"\n[artifacts.identity]\nproject_prefix="CA"\n[paths]\ncontrol_root=".caprmedio_test"\n')
+        (self.control / 'anechoic_project_settings.toml').write_text('[project]\nname="TEST"\n[artifacts.identity]\nproject_prefix="CA"\n[paths]\ncontrol_root=".anechoic_test"\n')
         self.units = write_scope_unit_declarations(self.root, control_root=self.control, rows=[{'scope_unit_name': 'OTHER', 'atom_id': 'CA-R-990001', 'scope_unit_id': 'CA-SU-1'}])
         self.selection = resolve_project(self.root)
 

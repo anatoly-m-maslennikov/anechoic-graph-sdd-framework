@@ -6,12 +6,12 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Projection
+  main_subject: ANECHOIC_MODEL <+ Projection
   dependencies:
-  - CAPRMEDIO_MODEL <+ Package/Project Package
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Selection
-  - CAPRMEDIO_MODEL <+ Term//Artifact
-  - CAPRMEDIO_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Package/Project Package
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Selection
+  - ANECHOIC_MODEL <+ Term//Artifact
+  - ANECHOIC_MODEL <+ Atom
 tier: 2
 status: Active
 version: 27
@@ -19,11 +19,11 @@ updated_at: 2026-11-10 14:38:45 +0400
 carrier_destination:
   file:
     name: CA-R-1568-CORE_META_MODEL--permit-projections-as-implementation-outputs.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1568-CORE_META_MODEL--permit-projections-as-implementation-outputs.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1568-CORE_META_MODEL--permit-projections-as-implementation-outputs.md
   source_atom_id: CA-R-1568
   source_atom_revision: 27
   source_sha256: 3c1e6ec21eadc96499ed5f08ecad2ae97fa7d54cd0a25061c80852206d7e53fb

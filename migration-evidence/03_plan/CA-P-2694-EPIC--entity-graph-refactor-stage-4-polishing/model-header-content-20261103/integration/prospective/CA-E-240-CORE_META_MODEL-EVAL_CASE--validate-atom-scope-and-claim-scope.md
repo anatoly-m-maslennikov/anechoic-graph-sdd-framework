@@ -1,11 +1,11 @@
 ---
 subjects:
-  active: CAPRMEDIO_MODEL <+ Atom
+  active: ANECHOIC_MODEL <+ Atom
   passive:
-  - CAPRMEDIO_MODEL <+ Atom.Header.Subjects.Active
-  - CAPRMEDIO_MODEL <+ Atom.Header.Relations.IS_CONTAINED_BY
-  - CAPRMEDIO_MODEL <+ Atom.Content.Claim.Prose Claim
-  - CAPRMEDIO_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Atom.Header.Subjects.Active
+  - ANECHOIC_MODEL <+ Atom.Header.Relations.IS_CONTAINED_BY
+  - ANECHOIC_MODEL <+ Atom.Content.Claim.Prose Claim
+  - ANECHOIC_MODEL <+ Scope Unit
 version: 49
 updated_at: 2026-11-03 20:00:05 +0400
 relations:
@@ -24,7 +24,7 @@ form: Eval Case
 carrier_destination:
   file:
     name: CA-E-240-CORE_META_MODEL-EVAL_CASE--validate-atom-scope-and-claim-scope.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
 ---
 ## Summary
 

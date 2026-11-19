@@ -104,11 +104,11 @@ def _dependencies(classes, imports):
                                     if isinstance(item, ast.Name) and item.id in classes)
         for symbol in used:
             module = imports[name].get(symbol)
-            if module == "caprmedio.model" and symbol not in classes:
+            if module == "anechoic.model" and symbol not in classes:
                 raise ValueError(f"Missing Model class: {symbol}")
-            if module == "caprmedio.formal_claims":
+            if module == "anechoic.formal_claims":
                 raise ValueError(f"Unsupported class dependency: {symbol}")
-            if module and module not in {"caprmedio.model", "__future__"}:
+            if module and module not in {"anechoic.model", "__future__"}:
                 if symbol in classes or (symbol in used_imports and used_imports[symbol] != module):
                     raise ValueError(f"Conflicting class dependency: {symbol}")
                 used_imports[symbol] = module

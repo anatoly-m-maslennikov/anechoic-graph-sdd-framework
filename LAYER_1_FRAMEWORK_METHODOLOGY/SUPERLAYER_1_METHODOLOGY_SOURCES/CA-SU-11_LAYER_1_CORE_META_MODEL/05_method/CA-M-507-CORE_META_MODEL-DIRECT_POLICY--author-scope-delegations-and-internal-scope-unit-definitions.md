@@ -5,7 +5,7 @@ container:
 role: Method
 form: Direct Policy
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Scope Unit
+  main_subject: ANECHOIC_MODEL <+ Scope Unit
 tier: 3
 ref_id: CA-M-507
 status: Active
@@ -14,7 +14,7 @@ updated_at: "2026-11-07 15:18:44 +0400"
 carrier_destination:
   file:
     name: CA-M-507-CORE_META_MODEL-DIRECT_POLICY--author-scope-delegations-and-internal-scope-unit-definitions.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
 ---
 
 ## Summary
@@ -31,4 +31,4 @@ This Method/Direct Policy provides common authoring guidance and requires no loc
 
 - Keep Label independent of ordering state.
 - Derive Authority and Delivery folder names from declared structure under the applicable Delivery rules.
-- Use `.caprmedio_<project name>` for the Project Authority Folder.
+- Use `.anechoic_<project name>` for the Project Authority Folder.

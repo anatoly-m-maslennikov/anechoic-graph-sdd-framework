@@ -6,11 +6,11 @@ container:
 role: Method
 form: Term Definition
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Term//Term
+  main_subject: ANECHOIC_MODEL <+ Term//Term
   dependencies:
-  - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ Term
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Method)/(.Header.Context.Form := Term Definition)
+  - ANECHOIC_MODEL <+ Entity
+  - ANECHOIC_MODEL <+ Term
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Method)/(.Header.Context.Form := Term Definition)
 tier: 1
 status: Active
 version: 4
@@ -18,9 +18,9 @@ updated_at: 2026-11-04 18:28:33 +0400
 carrier_destination:
   file:
     name: CA-M-452-CORE_META_MODEL-TERM_DEFINITION--define-term.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-452-CORE_META_MODEL-TERM_DEFINITION--define-term.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-452-CORE_META_MODEL-TERM_DEFINITION--define-term.md
   source_atom_id: CA-M-452
   source_atom_revision: 4
   source_sha256: b83825c8d43573ed069fbfcecf1a11f944b4ac284e6489f3682fc11c88d1152e

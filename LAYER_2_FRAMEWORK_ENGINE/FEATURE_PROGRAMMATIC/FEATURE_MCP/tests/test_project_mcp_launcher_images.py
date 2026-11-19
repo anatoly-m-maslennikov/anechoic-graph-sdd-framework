@@ -30,7 +30,7 @@ FRAMEWORK_VERSION = "0.4.4.9"
 
 class ImageGoldenTests(unittest.TestCase):
     def setUp(self) -> None:
-        parent = APP.parents[2] / ".caprmedio_tmp/CA-P-2791/CA-P-2818/images"
+        parent = APP.parents[2] / ".anechoic_tmp/CA-P-2791/CA-P-2818/images"
         parent.mkdir(parents=True, exist_ok=True)
         self.fixture_root = Path(tempfile.mkdtemp(dir=parent))
         self.registry = patch("runtime_images._compile_relation_registry", return_value=b'{"schema_version":1}\n')
@@ -55,14 +55,14 @@ class ImageGoldenTests(unittest.TestCase):
                 tagged.add(command[-1])
                 sources[command[-1]] = command[-2]
                 return subprocess.CompletedProcess(argv, 0, "", "")
-            if command[:3] == ("docker", "image", "inspect") and command[-1].startswith("caprmedio-runtime:"):
+            if command[:3] == ("docker", "image", "inspect") and command[-1].startswith("anechoic-runtime:"):
                 tag = command[-1]
                 if tag not in tagged:
                     return subprocess.CompletedProcess(argv, 1, "", "")
                 payload = json.loads(inspections[sources[tag]])
                 payload[0]["RepoTags"] = sorted(set(payload[0].get("RepoTags", [])) | {tag})
                 return subprocess.CompletedProcess(argv, 0, json.dumps(payload), "")
-            if command[:3] == ("docker", "image", "ls") and command[-1].startswith("caprmedio-runtime:"):
+            if command[:3] == ("docker", "image", "ls") and command[-1].startswith("anechoic-runtime:"):
                 return subprocess.CompletedProcess(argv, 0, "", "")
             result = executor(argv, **kwargs)
             if command[:3] == ("docker", "image", "inspect") and result.returncode == 0:
@@ -106,9 +106,9 @@ class ImageGoldenTests(unittest.TestCase):
         no_docker = lambda *_args, **_kwargs: self.fail("identity must not invoke Docker")
         before = self.manager(source, no_docker).identity()
 
-        project_state = self.fixture_root / "project" / ".caprmedio_demo"
+        project_state = self.fixture_root / "project" / ".anechoic_demo"
         project_state.mkdir(parents=True)
-        (project_state / "caprmedio_project_settings.toml").write_text("changed", encoding="utf-8")
+        (project_state / "anechoic_project_settings.toml").write_text("changed", encoding="utf-8")
         (project_state / "generated-output.json").write_text("changed", encoding="utf-8")
         after = self.manager(source, no_docker).identity()
 
@@ -150,8 +150,8 @@ class ImageGoldenTests(unittest.TestCase):
             return subprocess.CompletedProcess(argv, 0, json.dumps([{
                 "Id": IMAGE_ID, "Created": "2026-10-21T14:15:16Z", "Os": "linux",
                 "Architecture": "amd64", "Config": {"Labels": {
-                    "org.caprmedio.runtime.schema": "1",
-                    "org.caprmedio.runtime.fingerprint": identity.fingerprint,
+                    "org.anechoic.runtime.schema": "1",
+                    "org.anechoic.runtime.fingerprint": identity.fingerprint,
                     "org.opencontainers.image.version": identity.version,
                 }},
             }]), "")
@@ -191,7 +191,7 @@ class ImageGoldenTests(unittest.TestCase):
                 return subprocess.CompletedProcess(argv, 0, "", "")
             inspection = [{"Id": IMAGE_ID, "Created": "2026-10-21T14:15:16.987654321Z", "RepoTags": [],
                            "Os": "linux", "Architecture": "amd64", "Config": {"Labels": {
-                "org.caprmedio.runtime.schema": "1", "org.caprmedio.runtime.fingerprint": identity.fingerprint,
+                "org.anechoic.runtime.schema": "1", "org.anechoic.runtime.fingerprint": identity.fingerprint,
                 "org.opencontainers.image.version": identity.version,
             }}}]
             return subprocess.CompletedProcess(argv, 0, json.dumps(inspection), "")
@@ -231,8 +231,8 @@ class ImageGoldenTests(unittest.TestCase):
             if "ls" in argv:
                 return subprocess.CompletedProcess(argv, 0, IMAGE_ID + "\n", "")
             labels = {
-                "org.caprmedio.runtime.schema": "1",
-                "org.caprmedio.runtime.fingerprint": expected.fingerprint,
+                "org.anechoic.runtime.schema": "1",
+                "org.anechoic.runtime.fingerprint": expected.fingerprint,
                 "org.opencontainers.image.version": expected.version,
             }
             inspection = json.dumps([{
@@ -248,9 +248,9 @@ class ImageGoldenTests(unittest.TestCase):
         resolved = self.manager(source, executor).resolve(build_if_missing=False)
         self.assertEqual(IMAGE_ID, resolved)
         flattened = " ".join(" ".join(call) for call in calls)
-        self.assertIn("label=org.caprmedio.runtime.schema=1", flattened)
+        self.assertIn("label=org.anechoic.runtime.schema=1", flattened)
         self.assertIn(
-            f"label=org.caprmedio.runtime.fingerprint={expected.fingerprint}", flattened
+            f"label=org.anechoic.runtime.fingerprint={expected.fingerprint}", flattened
         )
         self.assertNotIn(" build ", f" {flattened} ")
 
@@ -270,8 +270,8 @@ class ImageGoldenTests(unittest.TestCase):
                 "Id": IMAGE_ID, "Created": "2026-10-21T14:15:16.987654321Z", "RepoTags": [],
                 "Os": "linux", "Architecture": "amd64",
                 "Config": {"Labels": {
-                    "org.caprmedio.runtime.schema": "1",
-                    "org.caprmedio.runtime.fingerprint": identity.fingerprint,
+                    "org.anechoic.runtime.schema": "1",
+                    "org.anechoic.runtime.fingerprint": identity.fingerprint,
                     "org.opencontainers.image.version": FRAMEWORK_VERSION,
                 }},
             }])
@@ -288,7 +288,7 @@ class ImageGoldenTests(unittest.TestCase):
             return subprocess.CompletedProcess(argv, 0, "", "")
 
         manager = self.manager(APP.parents[2], executor)
-        for value in ("caprmedio-runtime:local", "sha256:" + "b" * 64):
+        for value in ("anechoic-runtime:local", "sha256:" + "b" * 64):
             with self.subTest(value=value), self.assertRaises(ImageError) as raised:
                 manager.resolve(explicit_id=value)
             self.assertEqual("IMAGE_REFUSED", raised.exception.code)
@@ -337,8 +337,8 @@ class ImageGoldenTests(unittest.TestCase):
                 "Os": "linux",
                 "Architecture": "amd64",
                 "Config": {"Labels": {
-                    "org.caprmedio.runtime.schema": "1",
-                    "org.caprmedio.runtime.fingerprint": initial.fingerprint,
+                    "org.anechoic.runtime.schema": "1",
+                    "org.anechoic.runtime.fingerprint": initial.fingerprint,
                     "org.opencontainers.image.version": FRAMEWORK_VERSION,
                 }},
             }])
@@ -377,8 +377,8 @@ class ImageGoldenTests(unittest.TestCase):
                 "Os": "linux",
                 "Architecture": "amd64",
                 "Config": {"Labels": {
-                    "org.caprmedio.runtime.schema": "1",
-                    "org.caprmedio.runtime.fingerprint": identity.fingerprint,
+                    "org.anechoic.runtime.schema": "1",
+                    "org.anechoic.runtime.fingerprint": identity.fingerprint,
                     "org.opencontainers.image.version": identity.version,
                 }},
             }]), "")
@@ -417,8 +417,8 @@ class ImageGoldenTests(unittest.TestCase):
                 "Id": IMAGE_ID, "Created": "2026-10-21T14:15:16.987654321Z", "RepoTags": [],
                 "Os": "linux", "Architecture": "amd64",
                 "Config": {"Labels": {
-                    "org.caprmedio.runtime.schema": "1",
-                    "org.caprmedio.runtime.fingerprint": identity.fingerprint,
+                    "org.anechoic.runtime.schema": "1",
+                    "org.anechoic.runtime.fingerprint": identity.fingerprint,
                     "org.opencontainers.image.version": FRAMEWORK_VERSION,
                 }},
             }])

@@ -1,0 +1,45 @@
+---
+atom_id: CA-P-1728
+ref_id: CA-P-1728
+role: Plan
+form: Plan
+label: Task
+topics:
+  main_subject: Subject/Graph Node/Engineering/Release
+  dependencies:
+  - Subject/Graph Node/Engineering/Implementation
+  - Subject/Graph Node/Engineering/Evaluation
+  - Subject/Graph Node/Engineering/Manifest
+  - Subject/Graph Node/Engineering/Release Testing/Executor Admission
+tier: 3
+relations:
+  is_decomposition_of:
+  - CA-P-1727
+status: Done
+version: 8
+updated_at: 2026-10-25 17:32:27 +0400
+work_sequence_number: 1
+current_scope_unit: anechoic
+author: Anatoly Maslennikov
+assignee: AI Agent
+autonomous_confidence_threshold: 90
+---
+# Summary
+
+Define the sealed suite reference context
+
+## Objective
+
+Declare and independently review the private evaluator-reference closure, digest, read-only materialization and freshness contract.
+
+## Details
+
+R1887/M344/E587/D580 and D579 schema 2 own this source change. Candidate schema D566, source-admission D572 and the canonical selected manifest are not changed. Expected bounded effort <=15 minutes.
+
+## Definition of Done
+
+The owned work is independently accepted and its real verification result is saved. Source or mock proof alone does not close the actual Release gate.
+
+## Results
+
+R1887/M344/E587/D580 and D579 schema 2 were independently accepted and saved in b7d44ccfa. The evaluator-owned reference context is separate from the unchanged candidate package inventory and sixteen-route authority. Its source contract requires exact current control closure, descriptor-safe capture, read-only materialization and fresh trusted binding revalidation immediately before and after execution. This is completed source authoring, not a Docker suite or Release success.

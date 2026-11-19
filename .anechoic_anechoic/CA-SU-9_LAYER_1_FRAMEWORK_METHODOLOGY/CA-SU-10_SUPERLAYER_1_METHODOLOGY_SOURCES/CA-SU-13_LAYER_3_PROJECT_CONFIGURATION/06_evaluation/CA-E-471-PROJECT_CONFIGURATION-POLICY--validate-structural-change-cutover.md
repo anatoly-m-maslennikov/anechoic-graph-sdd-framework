@@ -1,0 +1,66 @@
+---
+atom_id: CA-E-471
+ref_id: CA-E-471
+container:
+  scope_unit: CA-SU-13
+role: Evaluation
+form: Eval Policy
+topics:
+  main_subject: ANECHOIC_MODEL <+ Scope Unit
+  dependencies:
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Carrier
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Actor/Operator
+  - "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Execution Control <+ Decision Confidence"
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Requirement)/(.Header.Context.Form := Goal)'
+  - ANECHOIC_MODEL <+ Project
+  - ANECHOIC_MODEL <+ Projection
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
+tier: 4
+relations:
+  evaluation_for:
+  - CA-O-012
+  - CA-O-013
+  - CA-O-014
+  - CA-O-015
+status: Active
+version: 28
+updated_at: 2026-11-02 19:44:26 +0400
+carrier_destination:
+  file:
+    name: CA-E-471-PROJECT_CONFIGURATION-EVAL_POLICY--validate-structural-change-cutover.md
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation
+current_scope_unit: PROJECT_CONFIGURATION
+claim_target_scope_unit: PROJECT_CONFIGURATION
+---
+## Summary
+Validate structural change cutover
+
+## Claim
+
+### Prose Claim
+
+structural changes **and** no-change repeats, including create, rename, reparent, reorder, rebind, reconciliation, **and** declaration removal.
+
+
+the Evaluation **must** fail a structural change **if** it:
+
+- starts from stale declarations;
+- exceeds authorization;
+- bypasses the effective confidence gate;
+- loses a Goal **or** reference;
+- violates post-change consistency;
+- changes another Project;
+- silently overwrites concurrent changes; **or**
+- reports completion **after** partial failure.
+
+test the following groups:
+
+- create, rename, reparent, reorder, rebind, reconciliation **and** declaration removal against their exact before/after states;
+- rejection, invalid proposal, stale-state failure, injected apply failure **and** authorized recovery.
+
+the following conditions also apply:
+
+- a no-change repeat **must** preserve authority bytes **and** have no additional structural effects.
+- declaration removal **must not** delete a folder **unless** that exact deletion is authorized.
+- a missing structural Projection **must not** prevent an **otherwise** valid change.

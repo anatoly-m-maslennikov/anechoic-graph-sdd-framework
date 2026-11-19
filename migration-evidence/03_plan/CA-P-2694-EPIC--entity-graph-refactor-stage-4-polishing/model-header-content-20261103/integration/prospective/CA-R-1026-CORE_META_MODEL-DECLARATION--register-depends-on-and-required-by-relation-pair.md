@@ -1,10 +1,10 @@
 ---
 subjects:
-  active: CAPRMEDIO_MODEL <+ CFEL <+ Relation//depends_on
+  active: ANECHOIC_MODEL <+ CFEL <+ Relation//depends_on
   passive:
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
-  - CAPRMEDIO_MODEL <+ Term//Artifact
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//required_by
+  - ANECHOIC_MODEL <+ CFEL <+ Relation
+  - ANECHOIC_MODEL <+ Term//Artifact
+  - ANECHOIC_MODEL <+ CFEL <+ Relation//required_by
 version: 33
 updated_at: 2026-11-03 20:00:05 +0400
 relations: {}
@@ -18,7 +18,7 @@ form: Declaration
 carrier_destination:
   file:
     name: CA-R-1026-CORE_META_MODEL-DECLARATION--register-depends-on-and-required-by-relation-pair.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 ---
 ## Summary
 

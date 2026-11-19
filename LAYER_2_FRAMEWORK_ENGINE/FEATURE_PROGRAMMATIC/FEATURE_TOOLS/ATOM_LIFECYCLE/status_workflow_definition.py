@@ -26,7 +26,7 @@ _CODE_ROOT = Path(__file__).resolve().parents[4]
 _ASSET_DIRECTORY = Path(__file__).resolve().with_name('assets')
 ASSET = _ASSET_DIRECTORY / 'change_current_status.py'
 SNAPSHOT = _ASSET_DIRECTORY / 'change_current_status_sources.json'
-CHECKOUT_MODEL = Path('.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/'
+CHECKOUT_MODEL = Path('.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/'
                       'CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES')
 OPERATIONS = Path('CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations')
 WORKFLOW = 'CA-O-10011-PROJECT_CONFIGURATION-WORKFLOW--atom-lifecycle-change-current-status'

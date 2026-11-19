@@ -23,7 +23,7 @@ Projection Carriers belonging to a Project.
 
 ## Claim
 
-**all** persistent Projection Carriers of a Project **must** reside under **`=1`** Directory Carrier: `.caprmedio_<project_name>/_projection/`.
+**all** persistent Projection Carriers of a Project **must** reside under **`=1`** Directory Carrier: `.anechoic_<project_name>/_projection/`.
 
 ## Details
 

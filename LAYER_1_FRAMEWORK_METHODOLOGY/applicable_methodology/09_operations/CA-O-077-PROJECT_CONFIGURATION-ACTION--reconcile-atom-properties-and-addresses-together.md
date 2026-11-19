@@ -6,13 +6,13 @@ container:
 role: Operations
 form: Action
 topics:
-  main_subject: Subject/caprmedio/Action//Reconcile Atom Properties and Addresses
+  main_subject: Subject/anechoic/Action//Reconcile Atom Properties and Addresses
   dependencies:
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom.Header.State.Version Number
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom.Summary
-  - Subject/CAPRMEDIO/Carrier
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Actor/Type: Operator'
+  - Subject/ANECHOIC/Graph/Node/Project Model/Atom
+  - Subject/ANECHOIC/Graph/Node/Project Model/Atom.Header.State.Version Number
+  - Subject/ANECHOIC/Graph/Node/Project Model/Atom.Summary
+  - Subject/ANECHOIC/Carrier
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Actor/Type: Operator'
 tier: 3
 status: Active
 version: 19
@@ -20,12 +20,12 @@ updated_at: 2026-10-27 19:59:45 +0400
 carrier_destination:
   file:
     name: CA-O-077-PROJECT_CONFIGURATION-ACTION--reconcile-atom-properties-and-addresses-together.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: PROJECT_CONFIGURATION
 author: Anatoly Maslennikov
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-077-PROJECT_CONFIGURATION-ACTION--reconcile-atom-properties-and-addresses-together.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-077-PROJECT_CONFIGURATION-ACTION--reconcile-atom-properties-and-addresses-together.md
   source_atom_id: CA-O-077
   source_atom_revision: 19
   source_sha256: 299cd8365a7f58e9d6adc764344787836057c7ac110177e77225d0d2af60e769

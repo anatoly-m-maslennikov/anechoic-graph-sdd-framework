@@ -357,7 +357,7 @@ test('scales interface and query content text independently', async ({ page }) =
 test('migrates one standalone draft without running it and keeps close protection after sync', async ({ browser }) => {
   const context = await browser.newContext(); const page = await context.newPage();
   const parsed = new URL(url); const root = parsed.searchParams.get('project_root') ?? projectName;
-  const legacyKey = `caprmedio.workbench.${root}.workspace`;
+  const legacyKey = `anechoic.workbench.${root}.workspace`;
   await page.addInitScript(({ key }) => localStorage.setItem(key, JSON.stringify({ activeId: 'legacy', tabs: [{ id: 'legacy', title: 'View 1', sql: 'SELECT 41 AS migrated_draft', cursor: 0, dirty: true, savedSql: '' }] })), { key: legacyKey });
   let runs = 0; const opened: string[] = [];
   page.on('request', (request) => {
@@ -392,7 +392,7 @@ test('resumes a partial standalone migration without overwriting existing Views 
   };
   const opened = await call('workspace_open', { session_id: workspace }); const initial = opened.views[0];
   await call('view_update', { workspace_id: workspace, view_id: initial.id, sql: 'SELECT 7 AS existing_view', expected_revision: initial.revision, cursor_position: 0 });
-  const legacyKey = `caprmedio.workbench.${root}.workspace`; const sessionKey = `caprmedio.workbench.${root}.standalone-session`;
+  const legacyKey = `anechoic.workbench.${root}.workspace`; const sessionKey = `anechoic.workbench.${root}.standalone-session`;
   const legacy = JSON.stringify({ activeId: 'second', tabs: [
     { id: 'first', title: 'View 1', sql: 'SELECT 8 AS imported_once', cursor: 0, dirty: true, savedSql: '' },
     { id: 'second', title: 'View 2', sql: 'SELECT 9 AS resumed_import', cursor: 0, dirty: true, savedSql: '' },

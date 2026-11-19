@@ -6,17 +6,17 @@ container:
 role: Operations
 form: Action
 topics:
-  main_subject: Subject/caprmedio/Action//Atom Content Authoring
+  main_subject: Subject/anechoic/Action//Atom Content Authoring
   dependencies:
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Operations/Type:
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Atom/Content Role: Operations/Type:
     Action'
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom.Content
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom.Details
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom.Summary
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role
-  - CAPRMEDIO_MODEL <+ Carrier/File
-  - CAPRMEDIO_MODEL <+ Atom.Content.Summary
+  - Subject/ANECHOIC/Graph/Node/Project Model/Atom
+  - Subject/ANECHOIC/Graph/Node/Project Model/Atom.Content
+  - Subject/ANECHOIC/Graph/Node/Project Model/Atom.Details
+  - Subject/ANECHOIC/Graph/Node/Project Model/Atom.Summary
+  - Subject/ANECHOIC/Graph/Node/Project Model/Atom/Content Role
+  - ANECHOIC_MODEL <+ Carrier/File
+  - ANECHOIC_MODEL <+ Atom.Content.Summary
 tier: 3
 status: Active
 version: 16
@@ -24,7 +24,7 @@ updated_at: 2026-10-27 19:59:45 +0400
 carrier_destination:
   file:
     name: CA-O-103-PROJECT_CONFIGURATION-ACTION--author-atom-content-before-summary.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: PROJECT_CONFIGURATION
 author: Anatoly Maslennikov

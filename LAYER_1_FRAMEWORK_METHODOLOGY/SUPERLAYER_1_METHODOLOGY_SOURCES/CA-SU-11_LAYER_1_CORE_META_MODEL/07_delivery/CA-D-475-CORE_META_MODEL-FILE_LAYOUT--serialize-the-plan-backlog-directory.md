@@ -6,13 +6,13 @@ container:
 role: Delivery
 form: file_layout
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.State.Status
+  main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.State.Status
     >| Status Group := Backlog
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.Context.Label
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.State.Status
-  - CAPRMEDIO_MODEL <+ Carrier/Directory
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan)
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.Context.Label
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.State.Status
+  - ANECHOIC_MODEL <+ Carrier/Directory
 tier: 3
 status: active
 version: 29
@@ -20,7 +20,7 @@ updated_at: '2026-11-12T19:34:44.489998+00:00'
 carrier_destination:
   file:
     name: CA-D-475-CORE_META_MODEL-FILE_LAYOUT--serialize-the-plan-backlog-directory.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---

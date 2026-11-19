@@ -25,8 +25,8 @@ relations:
     - "CA-O-025"
     - "CA-O-026"
     - "CA-O-027"
-    - "CAPRMEDIO-META-REQU-102"
-    - "CAPRMEDIO-GOV-REQU-353"
+    - "ANECHOIC-META-REQU-102"
+    - "ANECHOIC-GOV-REQU-353"
 ---
 # Validate configurable release readiness
 

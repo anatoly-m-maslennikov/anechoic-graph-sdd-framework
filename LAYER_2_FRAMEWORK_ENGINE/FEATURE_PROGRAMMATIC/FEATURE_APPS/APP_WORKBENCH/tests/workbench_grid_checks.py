@@ -174,7 +174,7 @@ class WorkbenchGridDockerMixin:
         self.assertEqual(run["query_id"], page["query_id"])
 
     def test_workbench_result_ttl_pin_unpin_rerun_restart_and_hourly_log(self) -> None:  # noqa: C901
-        settings = self.runtime_root / "caprmedio_runtime_settings.toml"
+        settings = self.runtime_root / "anechoic_runtime_settings.toml"
         self.assertFalse(settings.exists())
         watcher_log = self.workbench_state / "watcher-change-log.ndjson"
 
@@ -192,7 +192,7 @@ class WorkbenchGridDockerMixin:
 
         def assert_runtime_settings_are_excluded(events: set[tuple[object, object, object, object]]) -> None:
             self.assertFalse(any(
-                ".caprmedio_runtime/caprmedio_runtime_settings.toml" in {old, new}
+                ".anechoic_runtime/anechoic_runtime_settings.toml" in {old, new}
                 for _at, _operation, old, new in events
             ))
 

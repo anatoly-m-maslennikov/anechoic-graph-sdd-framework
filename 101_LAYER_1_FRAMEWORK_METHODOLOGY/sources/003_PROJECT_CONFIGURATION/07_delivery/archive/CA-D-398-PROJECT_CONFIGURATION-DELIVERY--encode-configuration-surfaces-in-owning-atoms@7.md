@@ -11,7 +11,7 @@ updated_at: "2026-09-15 00:19:55 +0000"
 relations:
   child_of:
     - "CA-D-311"
-    - "CAPRMEDIO-META-REQU-675"
+    - "ANECHOIC-META-REQU-675"
 atom_id: "CA-D-398"
 content_role: "Delivery"
 current_scope_unit: "PROJECT_CONFIGURATION"

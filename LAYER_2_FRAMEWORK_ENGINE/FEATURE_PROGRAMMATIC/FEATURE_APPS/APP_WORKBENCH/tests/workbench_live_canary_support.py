@@ -151,7 +151,7 @@ def atom_carrier(
         "  form: Declaration\n"
         "  tier: 1\n"
         "  topics:\n"
-        "    main_subject: MODEL//CAPRMEDIO <+ Atom\n"
+        "    main_subject: MODEL//ANECHOIC <+ Atom\n"
         "    dependencies: []\n"
         "relations: {}\n"
         "state:\n"
@@ -180,7 +180,7 @@ def copy_declaration_tree(root: Path, control: Path, declarations: object, desti
     control = control if control.is_absolute() else root / control
     staged_control = destination / control.relative_to(root)
     staged_control.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(control / "caprmedio_project_settings.toml", staged_control / "caprmedio_project_settings.toml")
+    shutil.copyfile(control / "anechoic_project_settings.toml", staged_control / "anechoic_project_settings.toml")
     for source in declarations.paths:  # type: ignore[attr-defined]
         target = destination / source.relative_to(root)
         target.parent.mkdir(parents=True, exist_ok=True)

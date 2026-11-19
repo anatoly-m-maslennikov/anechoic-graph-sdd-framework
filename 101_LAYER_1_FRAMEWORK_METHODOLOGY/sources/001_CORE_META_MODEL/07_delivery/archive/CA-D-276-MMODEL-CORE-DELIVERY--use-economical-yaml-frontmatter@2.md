@@ -12,4 +12,4 @@ relations: {}
 ---
 # Use Economical YAML Frontmatter
 
-CAPRMEDIO YAML frontmatter **must** use the least syntax **and** nesting that preserves unambiguous deterministic parsing, validation, extensibility, **and** human readability.
+ANECHOIC YAML frontmatter **must** use the least syntax **and** nesting that preserves unambiguous deterministic parsing, validation, extensibility, **and** human readability.

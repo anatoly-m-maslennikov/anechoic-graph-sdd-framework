@@ -6,12 +6,12 @@ container:
 role: Evaluation
 form: Eval Policy
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Journal
+  main_subject: ANECHOIC_MODEL <+ Journal
   dependencies:
-  - CAPRMEDIO_STRUCTURE <+ Scope Unit//CORE_META_MODEL
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/Type: Artifact Change Log'
-  - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/Type: Process Log'
+  - ANECHOIC_STRUCTURE <+ Scope Unit//CORE_META_MODEL
+  - ANECHOIC_MODEL <+ Scope Unit
+  - 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Projection/Type: Artifact Change Log'
+  - 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Projection/Type: Process Log'
 tier: 4
 relations:
   evaluation_for:
@@ -26,7 +26,7 @@ updated_at: 2026-11-02 00:18:22 +0400
 carrier_destination:
   file:
     name: CA-E-464-CORE_META_MODEL-EVAL_POLICY--validate-journal-independence-from-git.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---

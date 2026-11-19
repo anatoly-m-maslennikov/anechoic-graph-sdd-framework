@@ -6,14 +6,14 @@ container:
 role: Operations
 form: Action
 topics:
-  main_subject: Subject/caprmedio/Action//Admit Methodology Expansion Mapping
+  main_subject: Subject/anechoic/Action//Admit Methodology Expansion Mapping
   dependencies:
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Operations/Type: Action'
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Scope Unit.Expansion Boundary
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Scope Unit
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Scope Unit//PROJECT_CONFIGURATION
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Scope Unit//CORE_META_MODEL
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Actor/Type: Operator'
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Atom/Content Role: Operations/Type: Action'
+  - Subject/ANECHOIC/Graph/Node/Project Model/Scope Unit.Expansion Boundary
+  - Subject/ANECHOIC/Graph/Node/Project Model/Scope Unit
+  - Subject/ANECHOIC/Graph/Node/Project Model/Scope Unit//PROJECT_CONFIGURATION
+  - Subject/ANECHOIC/Graph/Node/Project Model/Scope Unit//CORE_META_MODEL
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Actor/Type: Operator'
 tier: 3
 status: Active
 version: 20
@@ -21,12 +21,12 @@ updated_at: 2026-10-27 19:59:45 +0400
 carrier_destination:
   file:
     name: CA-O-054-PROJECT_CONFIGURATION-ACTION--admit-methodology-expansion-mappings.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: PROJECT_CONFIGURATION
 author: Anatoly Maslennikov
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-054-PROJECT_CONFIGURATION-ACTION--admit-methodology-expansion-mappings.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-054-PROJECT_CONFIGURATION-ACTION--admit-methodology-expansion-mappings.md
   source_atom_id: CA-O-054
   source_atom_revision: 20
   source_sha256: c17f1968f2ab43fd067b624e403829dc137e24925738f88cc1668c6cd68bf762

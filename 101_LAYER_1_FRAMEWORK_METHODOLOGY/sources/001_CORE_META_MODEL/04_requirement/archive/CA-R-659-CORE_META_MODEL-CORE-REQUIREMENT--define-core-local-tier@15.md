@@ -19,6 +19,6 @@ llm_session_ids:
 ---
 # Define Core Local Tier
 
-the Local Tier value Core **means** the foundational Spec tier that establishes the model premises **and** boundaries governing General rules for **all** CAPRMEDIO Content Roles, **not** **only** General Requirements.
+the Local Tier value Core **means** the foundational Spec tier that establishes the model premises **and** boundaries governing General rules for **all** ANECHOIC Content Roles, **not** **only** General Requirements.
 
 these foundations establish identity, purpose, authority ownership, fundamental separation, **or** conservation boundaries; they are **not** concrete CAPO **or** I content **and** do **not** gain their tier from the role of the content they specify.

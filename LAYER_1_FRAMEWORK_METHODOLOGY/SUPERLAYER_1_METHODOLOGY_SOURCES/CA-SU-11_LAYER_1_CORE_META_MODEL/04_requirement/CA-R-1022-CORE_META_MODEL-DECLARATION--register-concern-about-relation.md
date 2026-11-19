@@ -6,9 +6,9 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Relation//concern_about
+  main_subject: ANECHOIC_MODEL <+ Relation//concern_about
   dependencies:
-  - CAPRMEDIO_MODEL <+ Relation
+  - ANECHOIC_MODEL <+ Relation
 tier: 1
 status: active
 version: 33
@@ -16,7 +16,7 @@ updated_at: '2026-11-12T20:24:07.873527+00:00'
 carrier_destination:
   file:
     name: CA-R-1022-CORE_META_MODEL-DECLARATION--register-concern-about-relation.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---
@@ -44,7 +44,7 @@ metadata.
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_relation
+from anechoic.formal_claims import declare_relation
 
 declare_relation(
     relation_name='concern_about',

@@ -76,7 +76,7 @@ def run(seconds: int, *, calibrate: bool, output: Path | None) -> dict[str, Any]
     started = time.monotonic()
     with tempfile.TemporaryDirectory(prefix="workbench-soak-") as temporary:
         fixture = prepare_fixture(Path(temporary))
-        settings = fixture.root / ".caprmedio_runtime" / "caprmedio_runtime_settings.toml"
+        settings = fixture.root / ".anechoic_runtime" / "anechoic_runtime_settings.toml"
         settings.parent.mkdir(parents=True)
         settings.write_text("[workbench]\nresult_ttl_seconds = 1\n", encoding="utf-8")
         tools = WorkbenchTools(fixture.root)
@@ -156,7 +156,7 @@ def run(seconds: int, *, calibrate: bool, output: Path | None) -> dict[str, Any]
                 "status": "passed", "calibration_only": calibrate, "requested_seconds": seconds,
                 "continuous_seconds": continuous_seconds, "cycles": cycles, "pid": identity[0],
                 "owner": identity[1], "elapsed_seconds": time.monotonic() - started,
-                "fixture_atoms": FIXTURE_ATOM_COUNT, "runtime_image": os.environ.get("CAPRMEDIO_IMAGE"),
+                "fixture_atoms": FIXTURE_ATOM_COUNT, "runtime_image": os.environ.get("ANECHOIC_IMAGE"),
                 "platform": platform.platform(), "cpu_cap": 1, "memory_cap_bytes": 1536 * 1024**2,
                 "cold": cold, "warm_full_reread": reread, "final_full_reread": final_reread,
                 "idle_15_seconds": idle, "plateau": plateau_values,

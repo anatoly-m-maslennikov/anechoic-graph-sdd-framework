@@ -6,11 +6,11 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data
+  main_subject: ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data
     Handling <+ Source Selection
   dependencies:
-  - CAPRMEDIO_MODEL <+ Node/Continuant
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/History
+  - ANECHOIC_MODEL <+ Node/Continuant
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/History
 tier: 2
 relations:
   child_of:
@@ -21,7 +21,7 @@ updated_at: 2026-11-11 16:09:46 +0400
 carrier_destination:
   file:
     name: CA-R-1769-PROJECT_CONFIGURATION-RULE--select-methodology-source-revisions-explicitly.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: PROJECT_CONFIGURATION
 ---

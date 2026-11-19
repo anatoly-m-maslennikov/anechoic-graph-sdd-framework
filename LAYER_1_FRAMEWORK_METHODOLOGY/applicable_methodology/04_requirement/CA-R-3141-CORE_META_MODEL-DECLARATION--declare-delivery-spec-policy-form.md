@@ -9,7 +9,7 @@ context:
     scope_unit: CA-SU-11
   tier: 3
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Delivery)/(.Header.Context.Form
+    main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Delivery)/(.Header.Context.Form
       := Spec Policy)
 relations:
   IS_REPLACEMENT_FOR:
@@ -21,9 +21,9 @@ state:
 destination:
   file:
     name: CA-R-3141-CORE_META_MODEL-DECLARATION--declare-delivery-spec-policy-form.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-3141-CORE_META_MODEL-DECLARATION--declare-delivery-spec-policy-form.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-3141-CORE_META_MODEL-DECLARATION--declare-delivery-spec-policy-form.md
   source_atom_id: CA-R-3141
   source_atom_revision: 1
   source_sha256: 2fad75392b61eff8d83f6a7c2507ad4dc12a441e6acbec55927674ac7df98f1c
@@ -38,8 +38,8 @@ Declare Delivery Spec Policy Form
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_entity
-from caprmedio.model import Delivery
+from anechoic.formal_claims import declare_entity
+from anechoic.model import Delivery
 
 class DeliverySpecPolicy(Delivery):
     pass

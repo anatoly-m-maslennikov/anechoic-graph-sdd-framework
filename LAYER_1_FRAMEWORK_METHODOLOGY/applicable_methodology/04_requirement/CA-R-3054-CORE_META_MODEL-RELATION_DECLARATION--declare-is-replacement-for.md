@@ -8,7 +8,7 @@ context:
   role: Requirement
   form: Relation Declaration
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ Relation//IS_REPLACEMENT_FOR
+    main_subject: ANECHOIC_MODEL <+ Relation//IS_REPLACEMENT_FOR
   tier: 4
 relations:
   IS_REPLACEMENT_FOR:
@@ -20,10 +20,10 @@ state:
 destination:
   file:
     name: CA-R-3054-CORE_META_MODEL-RELATION_DECLARATION--declare-is-replacement-for.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 author: Anatoly Maslennikov
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-3054-CORE_META_MODEL-RELATION_DECLARATION--declare-is-replacement-for.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-3054-CORE_META_MODEL-RELATION_DECLARATION--declare-is-replacement-for.md
   source_atom_id: CA-R-3054
   source_atom_revision: 2
   source_sha256: 53321a210f9c49b09004f4794f6008751492d11d3d7ce4372096e0224294426e
@@ -45,7 +45,7 @@ A Draft Host proposes replacement. Its links remain after promotion, including w
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_relation
+from anechoic.formal_claims import declare_relation
 
 declare_relation(
     relation_name='IS_REPLACEMENT_FOR',

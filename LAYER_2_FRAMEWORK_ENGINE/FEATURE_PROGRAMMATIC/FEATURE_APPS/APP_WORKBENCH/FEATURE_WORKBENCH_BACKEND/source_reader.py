@@ -83,7 +83,7 @@ class SourceReader:
             ).resolve()
         generated = {"_projection"}
         if not include_installed_framework:
-            generated.add("000_CAPRMEDIO_framework")
+            generated.add("000_ANECHOIC_framework")
         self._excluded_directories = frozenset(self.control_root / name for name in generated)
         self._failed: dict[Path, tuple[int, ...]] = {}
         self._diagnostics: dict[Path, str] = {}

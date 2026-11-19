@@ -4,7 +4,7 @@ current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 status: Draft
 subjects:
-  active: CAPRMEDIO_MODEL <+ Atom.Header.Tier
+  active: ANECHOIC_MODEL <+ Atom.Header.Tier
 version: 3
 relations: {}
 tier: 3

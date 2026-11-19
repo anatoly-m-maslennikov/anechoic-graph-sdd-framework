@@ -127,7 +127,7 @@ class QueryStore:
     def _clear_startup_projection(self) -> None:
         """Discard the disposable projection and any prior process's query cache."""
         try:
-            self._connection.execute("DROP PROPERTY GRAPH IF EXISTS caprmedio")
+            self._connection.execute("DROP PROPERTY GRAPH IF EXISTS anechoic")
             self._connection.execute("DROP SCHEMA IF EXISTS internal CASCADE")
             self._connection.execute("DROP SCHEMA IF EXISTS workbench_results CASCADE")
             self._connection.execute("DROP SCHEMA IF EXISTS lifecycle_private CASCADE")
@@ -323,7 +323,7 @@ class QueryStore:
                     content_schema = compile_content_schema(atom_rows)
                 self._connection.execute("BEGIN TRANSACTION")
                 if self._initialized:
-                    self._connection.execute("DROP PROPERTY GRAPH caprmedio")
+                    self._connection.execute("DROP PROPERTY GRAPH anechoic")
                     self._connection.execute("DROP SCHEMA internal CASCADE")
                     self._connection.execute("DROP TABLE main.atoms")
                     self._connection.execute("DROP TABLE main.scope_units")

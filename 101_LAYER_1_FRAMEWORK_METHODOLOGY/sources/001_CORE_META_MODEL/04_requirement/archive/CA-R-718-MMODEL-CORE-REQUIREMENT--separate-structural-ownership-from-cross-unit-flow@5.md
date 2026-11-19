@@ -14,8 +14,8 @@ llm_session_ids:
   - codex:019f591f-04f6-70f2-8de7-828b7cccc69d
 relations:
   child_of:
-    - CAPRMEDIO-REQU-045--separate-hierarchy-dimensions
-    - CAPRMEDIO-META-REQU-706--make-structural-ownership-immediate-recursive-and-typed
+    - ANECHOIC-REQU-045--separate-hierarchy-dimensions
+    - ANECHOIC-META-REQU-706--make-structural-ownership-immediate-recursive-and-typed
 ---
 # Separate Structural ownership from cross-unit flow
 

@@ -28,13 +28,13 @@ class MCPToolBlacklistTests(unittest.IsolatedAsyncioTestCase):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name).resolve()
-        self.control = self.root / ".caprmedio_fixture"
+        self.control = self.root / ".anechoic_fixture"
         self.control.mkdir()
-        self.settings = self.control / "caprmedio_project_settings.toml"
+        self.settings = self.control / "anechoic_project_settings.toml"
 
     def write_settings(self, blacklist):
         self.settings.write_text(
-            '[paths]\ncontrol_root = ".caprmedio_fixture"\n'
+            '[paths]\ncontrol_root = ".anechoic_fixture"\n'
             f'[project_mcp]\ntool_blacklist = {blacklist}\n', encoding="utf-8",
         )
 
@@ -50,7 +50,7 @@ class MCPToolBlacklistTests(unittest.IsolatedAsyncioTestCase):
 
     def test_ambiguous_and_symlink_settings_are_rejected(self):
         self.write_settings('[]')
-        second = self.root / ".caprmedio_second"
+        second = self.root / ".anechoic_second"
         second.mkdir()
         (second / self.settings.name).write_text("[paths]\n", encoding="utf-8")
         with self.assertRaises(ValueError):

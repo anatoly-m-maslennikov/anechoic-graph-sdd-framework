@@ -18,7 +18,7 @@ class StructuredHelperProjectionTests(unittest.TestCase):
             ("# model\ncomposition(container='Aspects', parts=('Product',))", 'Node'),
             ("# instances\nrelation(source='Step', name='RUNS', target='Action', target_count='1')", 'Node'),
             ("# instances\ndeliver(source='Atom//$atom', carrier='Carrier//$carrier')", 'Node'),
-            ("# model\nset_value(address='Operator//Addition', value='\"+\"')", 'CAPRMEDIO_MODEL <+ CFEL <+ Operator//Addition'),
+            ("# model\nset_value(address='Operator//Addition', value='\"+\"')", 'ANECHOIC_MODEL <+ CFEL <+ Operator//Addition'),
         ]
         for code, subject in samples:
             item = carrier(code, subject)

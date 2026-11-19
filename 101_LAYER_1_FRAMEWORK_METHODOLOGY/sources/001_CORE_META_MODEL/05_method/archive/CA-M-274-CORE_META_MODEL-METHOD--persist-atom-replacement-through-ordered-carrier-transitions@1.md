@@ -23,7 +23,7 @@ relations:
 ---
 # Persist Atom replacement through ordered Carrier transitions
 
-**to** persist an Atom replacement, CAPRMEDIO **must** perform **all** of:
+**to** persist an Atom replacement, ANECHOIC **must** perform **all** of:
 
 1. commit the successor as Active **before** archiving the predecessor.
 2. archive the predecessor as one whole Carrier under CA-D-303 **in** a `MOVE` whose authoritative Work Journal Event records explicit predecessor **and** successor Atom IDs under CA-R-807.

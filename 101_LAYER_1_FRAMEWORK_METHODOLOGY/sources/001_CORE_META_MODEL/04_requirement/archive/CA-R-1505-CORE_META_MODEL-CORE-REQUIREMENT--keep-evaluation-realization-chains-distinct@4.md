@@ -32,4 +32,4 @@ an Evaluation Atom's realization chains **must** remain distinct between determi
 - its Evidence;
 - its Verification judgment.
 
-a shared runner, prompt, judge, report, **or** gate **must not** merge the chains' meanings, results, **or** coverage. the source authority, executable mechanisms, factual Journal Records, **and** reusable Operations definitions retain their distinct roles under CAPRMEDIO-META-REQU-092 **and** CAPRMEDIO-META-REQU-093.
+a shared runner, prompt, judge, report, **or** gate **must not** merge the chains' meanings, results, **or** coverage. the source authority, executable mechanisms, factual Journal Records, **and** reusable Operations definitions retain their distinct roles under ANECHOIC-META-REQU-092 **and** ANECHOIC-META-REQU-093.

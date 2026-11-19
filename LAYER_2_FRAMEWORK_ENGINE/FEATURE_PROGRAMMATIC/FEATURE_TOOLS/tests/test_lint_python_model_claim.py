@@ -13,7 +13,7 @@ from lint_python_model_claim import _names, lint_python_model_claim
 
 class LintPythonModelClaimTests(unittest.TestCase):
     def lint(self, source):
-        return lint_python_model_claim(source, declared_addresses=["CAPRMEDIO_MODEL <+ Atom.Name", "Atom"],
+        return lint_python_model_claim(source, declared_addresses=["ANECHOIC_MODEL <+ Atom.Name", "Atom"],
                                        relation_names=["HAS_PROPERTY"], path="test.md", first_line=10)
 
     def test_known_reference_and_relation(self):

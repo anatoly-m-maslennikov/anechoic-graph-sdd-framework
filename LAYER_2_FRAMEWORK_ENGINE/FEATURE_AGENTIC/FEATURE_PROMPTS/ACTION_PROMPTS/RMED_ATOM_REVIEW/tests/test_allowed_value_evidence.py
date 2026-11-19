@@ -31,7 +31,7 @@ EXECUTION_EXCERPT = (
 OWNERSHIP_PROPERTY = "Carrier/Ownership Class"
 OWNERSHIP_VALUES = ("Framework-Owned", "Project-Owned", "Runtime State")
 OWNERSHIP_EXCERPT = (
-    '**every** internal CAPRMEDIO Carrier **must** have **`=1`** Ownership Class '
+    '**every** internal ANECHOIC Carrier **must** have **`=1`** Ownership Class '
     '**in** (Framework-Owned, Project-Owned, Runtime State).'
 )
 OWNERSHIP_AUTHORITY = "CA-D-316@11"
@@ -509,8 +509,8 @@ class AllowedValueEvidenceTests(unittest.TestCase):
             (ownership_mention("Framework-Owned"), claim_with_extra, targets),
             (ownership_mention(
                 "Framework-Owned",
-                excerpt=OWNERSHIP_EXCERPT.replace("internal CAPRMEDIO ", ""),
-            ), raw.replace("internal CAPRMEDIO ", ""), targets),
+                excerpt=OWNERSHIP_EXCERPT.replace("internal ANECHOIC ", ""),
+            ), raw.replace("internal ANECHOIC ", ""), targets),
             (ownership_mention("Framework-Owned"), raw.replace("status: Active", "status: Draft"), targets),
             (ownership_mention("Framework-Owned"), raw, {OWNERSHIP_AUTHORITY: "Other/Ownership Class"}),
         )

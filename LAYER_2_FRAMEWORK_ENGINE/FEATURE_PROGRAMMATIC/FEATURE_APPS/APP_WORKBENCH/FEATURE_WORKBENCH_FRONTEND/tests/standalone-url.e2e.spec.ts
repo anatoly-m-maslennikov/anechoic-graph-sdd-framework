@@ -15,7 +15,7 @@ test('cleans only this browser legacy standalone URL and preserves explicit Work
   const ownId = `standalone-url-own-${Date.now()}`; const foreignId = `chat-workspace-${Date.now()}`;
   try {
     const own = await openWorkspace(page, ownId); await openWorkspace(page, foreignId);
-    const sessionKey = `caprmedio.workbench.${own.project_root}.standalone-session`;
+    const sessionKey = `anechoic.workbench.${own.project_root}.standalone-session`;
     await page.addInitScript(({ key, value }) => localStorage.setItem(key, value), { key: sessionKey, value: ownId });
 
     const legacy = new URL(url);

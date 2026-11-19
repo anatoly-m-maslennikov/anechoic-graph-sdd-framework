@@ -6,8 +6,8 @@ version: 15
 updated_at: "2026-09-10 05:08:55 +0400"
 relations:
   child_of:
-    - CAPRMEDIO-META-REQU-709
-    - CAPRMEDIO-META-REQU-713
+    - ANECHOIC-META-REQU-709
+    - ANECHOIC-META-REQU-713
 atom_id: "CA-R-979"
 content_role: "Requirement"
 current_scope_unit: "CORE_META_MODEL"

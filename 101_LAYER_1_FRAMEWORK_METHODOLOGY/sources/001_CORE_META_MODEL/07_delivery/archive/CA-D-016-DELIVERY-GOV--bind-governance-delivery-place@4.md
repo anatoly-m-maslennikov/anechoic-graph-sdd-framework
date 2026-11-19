@@ -9,4 +9,4 @@ relations:
 ---
 # Bind GOVERNANCE Delivery place
 
-The root-level `GOVERNANCE` Scope Unit uses authority place `.caprmedio/GOVERNANCE` directly and delivers within the `FRAMEWORK_METHODOLOGY` authority place; its exact path relative to that Delivery parent is `TBD`.
+The root-level `GOVERNANCE` Scope Unit uses authority place `.anechoic/GOVERNANCE` directly and delivers within the `FRAMEWORK_METHODOLOGY` authority place; its exact path relative to that Delivery parent is `TBD`.

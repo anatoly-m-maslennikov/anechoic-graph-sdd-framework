@@ -33,16 +33,16 @@ class NumberedStatusTests(unittest.TestCase):
                         native_body(claim if isinstance(claim, (tuple, list)) else (claim,)))
 
     def test_exact_numbered_status_rules_and_current_source_boundary(self):
-        self.delivery('CA-D-1001', 'CAPRMEDIO_MODEL <+ Carrier',
+        self.delivery('CA-D-1001', 'ANECHOIC_MODEL <+ Carrier',
                       {'kind': 'role_root'})
-        prefix = 'CAPRMEDIO_MODEL <+ Atom.Header.State.Status >| Status Group := '
+        prefix = 'ANECHOIC_MODEL <+ Atom.Header.State.Status >| Status Group := '
         self.delivery('CA-D-1002', prefix + 'Draft', statement('Draft', '<owning scope unit>/<role folder>/000_draft'))
         self.delivery('CA-D-1003', prefix + 'Archived', statement('Archived', '<owning scope unit>/<role folder>/099_archived'))
         self.delivery('CA-D-1004', prefix + 'Current', [
             statement('Active', '<container>'), statement('Done', '<container>/020_done'),
             statement('Resolved', '<container>/021_resolved'), statement('Canceled', '<container>/040_canceled')])
         self.delivery('CA-D-1005',
-                      'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.State.Status >| Status Group := Backlog',
+                      'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.State.Status >| Status Group := Backlog',
                       statement('Backlog', '<owning scope unit>/<role folder>/001_backlog', plan=True))
         # A copied carrier can still say Active, but its revision folder excludes it.
         self.delivery('CA-D-1006', prefix + 'Draft', statement('Draft', '<owning scope unit>/<role folder>/wrong'),

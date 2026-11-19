@@ -22,11 +22,11 @@ Keep relation vocabularies graph-specific
 
 ## Claim scope
 
-Relation Types, their shared Project identities, and any applicable Entity Definition constraints in CAPRMEDIO Graphs.
+Relation Types, their shared Project identities, and any applicable Entity Definition constraints in ANECHOIC Graphs.
 
 ## Claim
 
-Relation Type names are shared across CAPRMEDIO Graphs and unique within the Project. A Relation Type is not owned by a graph kind. Existing Entity Definition constraints, where applicable, supply graph-specific endpoint classes, endpoint graph contexts, cardinality, permissions, and prohibitions for that shared Type. They do not create graph-owned Type copies or impose a new per-Type/per-graph admission registry; this contract chooses neither default allow nor default deny.
+Relation Type names are shared across ANECHOIC Graphs and unique within the Project. A Relation Type is not owned by a graph kind. Existing Entity Definition constraints, where applicable, supply graph-specific endpoint classes, endpoint graph contexts, cardinality, permissions, and prohibitions for that shared Type. They do not create graph-owned Type copies or impose a new per-Type/per-graph admission registry; this contract chooses neither default allow nor default deny.
 
 instances of the same graph kind governed by the same Applicable Methodology **must** reuse the same defining Relation Type authority and any applicable Entity Definition constraints. Matching names identify the shared Type; they do not create interchangeable copies or erase graph-specific constraints.
 

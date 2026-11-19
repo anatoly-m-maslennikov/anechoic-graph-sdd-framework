@@ -11,7 +11,7 @@ from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_cl
 
 
 CLAIM = """from dataclasses import dataclass, field
-from caprmedio.formal_claims import Cardinality, declare_entity
+from anechoic.formal_claims import Cardinality, declare_entity
 
 @dataclass
 class Example:
@@ -38,7 +38,7 @@ class DataclassFieldContractsTests(unittest.TestCase):
 
     def test_unconstrained_class_keeps_existing_behavior(self):
         claim = """from dataclasses import dataclass
-from caprmedio.formal_claims import declare_entity
+from anechoic.formal_claims import declare_entity
 
 @dataclass
 class Example:

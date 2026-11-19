@@ -18,9 +18,9 @@ relations: {}
 ---
 # Author one CCE Claim and derived Summary
 
-**to** author one CAPRMEDIO Atom Claim, the Author **must** perform **all** of:
+**to** author one ANECHOIC Atom Claim, the Author **must** perform **all** of:
 
-1. write exactly one independently replaceable Claim in CAPRMEDIO Controlled English.
+1. write exactly one independently replaceable Claim in ANECHOIC Controlled English.
 2. assign exactly one atomic or composite Claim Scope.
 3. derive one concise Summary from the complete Claim and Claim Scope.
 4. derive every Translation from the complete Claim and Claim Scope rather than from the Summary.

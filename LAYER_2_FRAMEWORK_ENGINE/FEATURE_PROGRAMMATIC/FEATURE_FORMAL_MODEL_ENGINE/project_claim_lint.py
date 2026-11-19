@@ -127,7 +127,7 @@ def _relation_declaration_context(view):
             try:
                 address = _canonical_address(active)
                 match = re.fullmatch(r"(?:CFEL <\+ )?Relation//([A-Za-z_][A-Za-z_0-9]*)", address)
-                if match and active.startswith("CAPRMEDIO_MODEL <+ "):
+                if match and active.startswith("ANECHOIC_MODEL <+ "):
                     relation_declaration = match.group(1)
             except ValueError:
                 pass

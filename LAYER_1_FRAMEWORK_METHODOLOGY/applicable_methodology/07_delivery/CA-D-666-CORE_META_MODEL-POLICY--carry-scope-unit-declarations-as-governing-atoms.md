@@ -4,9 +4,9 @@ ref_id: CA-D-666
 role: Delivery
 form: Policy
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Scope Unit
+  main_subject: ANECHOIC_MODEL <+ Scope Unit
   dependencies:
-  - CAPRMEDIO_MODEL <+ Carrier
+  - ANECHOIC_MODEL <+ Carrier
 tier: 3
 status: Active
 version: 3
@@ -16,9 +16,9 @@ container:
 carrier_destination:
   file:
     name: CA-D-666-CORE_META_MODEL-POLICY--carry-scope-unit-declarations-as-governing-atoms.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-666-CORE_META_MODEL-POLICY--carry-scope-unit-declarations-as-governing-atoms.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-666-CORE_META_MODEL-POLICY--carry-scope-unit-declarations-as-governing-atoms.md
   source_atom_id: CA-D-666
   source_atom_revision: 3
   source_sha256: eff9d5620499151035409dec478648a3de9e5cd17a1c1ca035faf69847c404ae

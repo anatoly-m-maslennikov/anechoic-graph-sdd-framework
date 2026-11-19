@@ -6,15 +6,15 @@ container:
 role: Method
 form: Implementation Method
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Projection/(.Form:=Direct Relation Registry)
+  main_subject: ANECHOIC_MODEL <+ Projection/(.Form:=Direct Relation Registry)
   dependencies:
-  - CAPRMEDIO_MODEL <+ Relation
-  - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ Projection/(.Form:=Applicable Methodology)
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Requirement)
-  - CAPRMEDIO_MODEL <+ Projection
-  - CAPRMEDIO_MODEL <+ Package
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Traceability"
+  - ANECHOIC_MODEL <+ Relation
+  - ANECHOIC_MODEL <+ Entity
+  - ANECHOIC_MODEL <+ Projection/(.Form:=Applicable Methodology)
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Requirement)
+  - ANECHOIC_MODEL <+ Projection
+  - ANECHOIC_MODEL <+ Package
+  - "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Traceability"
 tier: 3
 relations:
   method_for:
@@ -28,11 +28,11 @@ updated_at: 2026-11-02 18:35:20 +0400
 carrier_destination:
   file:
     name: CA-M-120-CORE_META_MODEL-IMPLEMENTATION_METHOD--compile-the-direct-relation-registry.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-120-CORE_META_MODEL-IMPLEMENTATION_METHOD--compile-the-direct-relation-registry.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-120-CORE_META_MODEL-IMPLEMENTATION_METHOD--compile-the-direct-relation-registry.md
   source_atom_id: CA-M-120
   source_atom_revision: 43
   source_sha256: 147d836807bc579922add2ada617a29f16cd1bfb247ab0df4fde02617e62f7f7

@@ -8,10 +8,10 @@ context:
   role: requirement
   form: declaration
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Delivery)/(.Header.Context.Form
+    main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Delivery)/(.Header.Context.Form
       := File Layout)
     dependencies:
-    - CAPRMEDIO_MODEL <+ Atom.Header.Destination.File
+    - ANECHOIC_MODEL <+ Atom.Header.Destination.File
   tier: 3
 state:
   status: active
@@ -20,9 +20,9 @@ state:
 destination:
   file:
     name: CA-R-3050-CORE_META_MODEL-DECLARATION--declare-file-layout-form.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-3050-CORE_META_MODEL-DECLARATION--declare-file-layout-form.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-3050-CORE_META_MODEL-DECLARATION--declare-file-layout-form.md
   source_atom_id: CA-R-3050
   source_atom_revision: 2
   source_sha256: e76933affa1193f4645f00589acf5ef12901cfbb49033a14885bf1156feceeea
@@ -42,8 +42,8 @@ A File Layout Claim specifies how delivered files are named, where they are plac
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_entity
-from caprmedio.model import Delivery
+from anechoic.formal_claims import declare_entity
+from anechoic.model import Delivery
 
 class FileLayout(Delivery):
     pass

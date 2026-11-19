@@ -41,8 +41,8 @@ relations:
     - "CA-O-024"
     - "CA-O-026"
     - "CA-O-027"
-    - "CAPRMEDIO-META-REQU-102"
-    - "CAPRMEDIO-GOV-REQU-353"
+    - "ANECHOIC-META-REQU-102"
+    - "ANECHOIC-GOV-REQU-353"
 ---
 # Check release readiness when selected
 
@@ -94,5 +94,5 @@ the transitions below use the Workflow-scoped ON_RESULT Relation under CA-R-1513
 - reassessment **or** a new candidate does **not** silently reset a retry budget. **every** autonomous revisit requires an applicable accepted allowance; missing **or** exhausted allowance requires Operator disposition.
 - source corrections use CA-O-008's governed revision **or** replacement workflow. projected content **must not** become the correction target.
 - optional Atom consolidation is a separately authorized source change, **not** a mandatory release step.
-- record actual execution outcomes **in** the shared Journal. successful readiness is **not** release execution **and** does **not** freeze a Version under CAPRMEDIO-META-REQU-102.
+- record actual execution outcomes **in** the shared Journal. successful readiness is **not** release execution **and** does **not** freeze a Version under ANECHOIC-META-REQU-102.
 - this Workflow selects no Git branch, commit, tag, merge, publication, **or** universal Framework Instance workflow setting.

@@ -94,7 +94,7 @@ class RunEvidence:
     def _directory(self, run_id):
         if not RUN_ID.fullmatch(run_id):
             raise ValueError('unsafe workflow run id')
-        return self.path(f'.caprmedio_tmp/rmed-base-revise/{run_id}')
+        return self.path(f'.anechoic_tmp/rmed-base-revise/{run_id}')
 
     @contextmanager
     def _lock(self, run_id):
@@ -113,7 +113,7 @@ class RunEvidence:
 
     def _atomic(self, path, raw):
         self.path(str(path.relative_to(self.root)))
-        self.path('.caprmedio_tmp/rmed-base-revise/atomic')
+        self.path('.anechoic_tmp/rmed-base-revise/atomic')
         descriptor, name = atomic_tempfile(path, 'rmed-base-revise', repository=self.root)
         try:
             with os.fdopen(descriptor, 'wb') as handle:

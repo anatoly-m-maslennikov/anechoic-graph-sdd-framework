@@ -6,11 +6,11 @@ container:
 role: Delivery
 form: file_layout
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Context.Role
+  main_subject: ANECHOIC_MODEL <+ Atom.Header.Context.Role
   dependencies:
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Carrier/Directory
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Carrier/Directory
 tier: 3
 status: active
 version: 34
@@ -18,11 +18,11 @@ updated_at: '2026-11-12T19:34:39.244837+00:00'
 carrier_destination:
   file:
     name: CA-D-296-CORE_META_MODEL-FILE_LAYOUT--materialize-content-role-directories-on-first-artifact.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-296-CORE_META_MODEL-FILE_LAYOUT--materialize-content-role-directories-on-first-artifact.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-296-CORE_META_MODEL-FILE_LAYOUT--materialize-content-role-directories-on-first-artifact.md
   source_atom_id: CA-D-296
   source_atom_revision: 34
   source_sha256: 6a1cc105819170e1bb568631e430d1875d01f207b8388e5f78719b0b913c3e7d

@@ -6,12 +6,12 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics.Dependencies
+  main_subject: ANECHOIC_MODEL <+ Atom.Header.Context.Topics.Dependencies
   dependencies:
-  - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
-  - CAPRMEDIO_MODEL <+ Atom.Content
-  - CAPRMEDIO_MODEL <+ Atom.Content.Summary
+  - ANECHOIC_MODEL <+ Entity
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Topics
+  - ANECHOIC_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ Atom.Content.Summary
 tier: 1
 status: active
 version: 35
@@ -19,7 +19,7 @@ updated_at: '2026-11-13T18:39:50.375078+00:00'
 carrier_destination:
   file:
     name: CA-R-1280-CORE_META_MODEL-RULE--reference-every-prerequisite-subject-through-depends-on.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---

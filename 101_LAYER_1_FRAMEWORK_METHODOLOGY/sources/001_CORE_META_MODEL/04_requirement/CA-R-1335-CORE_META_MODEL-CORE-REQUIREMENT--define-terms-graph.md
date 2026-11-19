@@ -6,7 +6,7 @@ subjects:
     - "Term"
     - "Relation Kind"
     - "Relation"
-    - "CAPRMEDIO Graph"
+    - "ANECHOIC Graph"
 version: 13
 updated_at: "2026-10-02 22:05:04 +0400"
 relations: {}
@@ -29,7 +29,7 @@ Terms Graph projections **and** their represented graph facts.
 
 ## Claim
 
-Terms Graph **means** the Type value under Projection whose instances are derived CAPRMEDIO Graphs with native Term nodes **and** edges representing Relations admitted for that graph kind by their governing authority. their represented facts retain their appropriate source authority under CA-R-1746.
+Terms Graph **means** the Type value under Projection whose instances are derived ANECHOIC Graphs with native Term nodes **and** edges representing Relations admitted for that graph kind by their governing authority. their represented facts retain their appropriate source authority under CA-R-1746.
 
 ## Details
 

@@ -12,7 +12,7 @@ version: 12
 updated_at: 2026-09-06 01:45:12 +0400
 relations:
   child_of:
-    - CAPRMEDIO-GOV-REQU-767-CORE_META_MODEL-CORE-REQUIREMENT--keep-active-prmedo-relations-within-active-authority
+    - ANECHOIC-GOV-REQU-767-CORE_META_MODEL-CORE-REQUIREMENT--keep-active-prmedo-relations-within-active-authority
 ---
 # Record replacement transitions in the Journal
 

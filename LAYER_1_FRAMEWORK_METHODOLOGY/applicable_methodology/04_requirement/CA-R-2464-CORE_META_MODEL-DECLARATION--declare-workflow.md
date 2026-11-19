@@ -4,7 +4,7 @@ ref_id: CA-R-2464
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/Workflow
+  main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/Workflow
 tier: 3
 status: active
 version: 10
@@ -14,9 +14,9 @@ container:
 destination:
   file:
     name: CA-R-2464-CORE_META_MODEL-DECLARATION--declare-workflow.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2464-CORE_META_MODEL-DECLARATION--declare-workflow.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2464-CORE_META_MODEL-DECLARATION--declare-workflow.md
   source_atom_id: CA-R-2464
   source_atom_revision: 10
   source_sha256: 695eae8bbf60815b21bfa1397bbf9f8b4b48464ce5fd789265e14cb0fc903da8
@@ -32,8 +32,8 @@ Declare Workflow
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import Cardinality, declare_entity
-from caprmedio.model import Operations
+from anechoic.formal_claims import Cardinality, declare_entity
+from anechoic.model import Operations
 
 class Workflow(Operations):
     pass

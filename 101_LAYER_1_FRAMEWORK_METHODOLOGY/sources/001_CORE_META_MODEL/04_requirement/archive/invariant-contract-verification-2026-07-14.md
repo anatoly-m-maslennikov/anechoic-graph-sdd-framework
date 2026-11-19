@@ -6,7 +6,7 @@
 > [!NOTE]
 > Historical proof only. This record evaluated the pre-layer DSET 0.2 contract
 > at commit `b84c23bdbc642508a142b8f7469de4cd08b94573`. Its `METH-*` candidate
-> owners were superseded by schema 1.2 layer-owned `CAPRMEDIO-*` truth, so this file
+> owners were superseded by schema 1.2 layer-owned `ANECHOIC-*` truth, so this file
 > no longer supports a current invariant-contract Pass claim. Reopen occurred
 > when the ID model, accepted owners, schemas, validation, and version changed.
 
@@ -16,10 +16,10 @@ This evidence covers only the DSET 0.2 invariant-contract batch. It verifies sta
 
 ## Contract identity
 
-- Roadmap invariants: `CAPRMEDIO-INVARIANT-TOOL-001..002`, `CAPRMEDIO-INVARIANT-GOV-001..004`, `CAPRMEDIO-INVARIANT-SKILL-001..002`, and `CAPRMEDIO-INVARIANT-META-001`
-- Candidate change requirements: `CAPRMEDIO-REQUIREMENT-TOOL-006..007`, `CAPRMEDIO-REQUIREMENT-GOV-007..010`, `CAPRMEDIO-REQUIREMENT-SKILL-002..003`, and `CAPRMEDIO-META-REQU-184--stable-public-identity`
-- Candidate deterministic proof: `CAPRMEDIO-TEST-CASE-TOOL-009..011`, `CAPRMEDIO-TEST-CASE-GOV-009..011`, `CAPRMEDIO-TEST-CASE-SKILL-002..003`, and `CAPRMEDIO-TEST-CASE-META-004`
-- Candidate qualitative proof: `CAPRMEDIO-EVALUATION-CASE-TOOL-001..002`, `CAPRMEDIO-EVALUATION-CASE-SKILL-002`, and `CAPRMEDIO-EVALUATION-CASE-GOV-009`
+- Roadmap invariants: `ANECHOIC-INVARIANT-TOOL-001..002`, `ANECHOIC-INVARIANT-GOV-001..004`, `ANECHOIC-INVARIANT-SKILL-001..002`, and `ANECHOIC-INVARIANT-META-001`
+- Candidate change requirements: `ANECHOIC-REQUIREMENT-TOOL-006..007`, `ANECHOIC-REQUIREMENT-GOV-007..010`, `ANECHOIC-REQUIREMENT-SKILL-002..003`, and `ANECHOIC-META-REQU-184--stable-public-identity`
+- Candidate deterministic proof: `ANECHOIC-TEST-CASE-TOOL-009..011`, `ANECHOIC-TEST-CASE-GOV-009..011`, `ANECHOIC-TEST-CASE-SKILL-002..003`, and `ANECHOIC-TEST-CASE-META-004`
+- Candidate qualitative proof: `ANECHOIC-EVALUATION-CASE-TOOL-001..002`, `ANECHOIC-EVALUATION-CASE-SKILL-002`, and `ANECHOIC-EVALUATION-CASE-GOV-009`
 - Candidate accepted invariants: `METH-INV-013`–`METH-INV-021`
 - Candidate accepted requirements: `METH-REQUIREMENT-026`–`METH-REQUIREMENT-034`
 - Candidate accepted deterministic proof: `METH-TEST-CASE-027`–`METH-TEST-CASE-035`
@@ -40,4 +40,4 @@ The first direct `uv run dset verify .` attempt could not use the sandbox-denied
 
 ## Disposition
 
-The invariant contract is internally consistent and ready to govern later 0.2 implementation batches. `CAPRMEDIO-TEST-CASE-TOOL-009..011`, `CAPRMEDIO-TEST-CASE-GOV-009..011`, `CAPRMEDIO-TEST-CASE-SKILL-002..003`, `CAPRMEDIO-TEST-CASE-META-004`, `CAPRMEDIO-EVALUATION-CASE-TOOL-001..002`, `CAPRMEDIO-EVALUATION-CASE-SKILL-002`, and `CAPRMEDIO-EVALUATION-CASE-GOV-009` remain planned proof obligations and must not be marked passing until their corresponding mechanics and fixtures exist.
+The invariant contract is internally consistent and ready to govern later 0.2 implementation batches. `ANECHOIC-TEST-CASE-TOOL-009..011`, `ANECHOIC-TEST-CASE-GOV-009..011`, `ANECHOIC-TEST-CASE-SKILL-002..003`, `ANECHOIC-TEST-CASE-META-004`, `ANECHOIC-EVALUATION-CASE-TOOL-001..002`, `ANECHOIC-EVALUATION-CASE-SKILL-002`, and `ANECHOIC-EVALUATION-CASE-GOV-009` remain planned proof obligations and must not be marked passing until their corresponding mechanics and fixtures exist.

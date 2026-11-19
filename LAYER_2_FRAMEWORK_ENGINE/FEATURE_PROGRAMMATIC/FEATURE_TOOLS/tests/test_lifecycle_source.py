@@ -61,14 +61,14 @@ class SourceTest(unittest.TestCase):
         binding = bind_placement(fixture_rules())
         binding.__enter__()
         self.addCleanup(binding.__exit__, None, None, None)
-        scratch = TOOLS.parents[2] / '.caprmedio_tmp' / 'CA-P-2791' / 'CA-P-2934' / 'exact-carrier'
+        scratch = TOOLS.parents[2] / '.anechoic_tmp' / 'CA-P-2791' / 'CA-P-2934' / 'exact-carrier'
         scratch.mkdir(parents=True, exist_ok=True)
         self.tmp = tempfile.TemporaryDirectory(dir=scratch)
         self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name)
-        self.control = self.root / '.caprmedio_test'
+        self.control = self.root / '.anechoic_test'
         self.control.mkdir()
-        (self.control / 'caprmedio_project_settings.toml').write_text('[project]\nname="TEST"\n[artifacts.identity]\nproject_prefix="CA"\n[paths]\ncontrol_root=".caprmedio_test"\n')
+        (self.control / 'anechoic_project_settings.toml').write_text('[project]\nname="TEST"\n[artifacts.identity]\nproject_prefix="CA"\n[paths]\ncontrol_root=".anechoic_test"\n')
         write_scope_unit_declarations(self.root, control_root=self.control)
         self.folder = self.control / '04_requirement'
         self.folder.mkdir(exist_ok=True)
@@ -134,7 +134,7 @@ class SourceTest(unittest.TestCase):
             select_source(self.selection, 'CA-R-096@024')
 
     def test_project_prefix_and_root_local_authority(self):
-        settings = self.control / 'caprmedio_project_settings.toml'
+        settings = self.control / 'anechoic_project_settings.toml'
         settings.write_text(settings.read_text().replace('project_prefix="CA"', 'project_prefix="DEMO"'))
         selection = resolve_project(self.root)
         path = self.carrier('DEMO-R-10-goal.md', identity='DEMO-R-10', folder=self.control)
@@ -249,7 +249,7 @@ class SourceTest(unittest.TestCase):
         self.assertTrue(any(call[1] == 'CA-R-' for call in indexed.calls))
 
     def test_allocate_in_project_range_with_and_without_index(self):
-        settings = self.control / 'caprmedio_project_settings.toml'
+        settings = self.control / 'anechoic_project_settings.toml'
         settings.write_text(settings.read_text().replace('project_prefix="CA"',
                                                          'project_prefix="CA"\nautomatic_number_ceiling=100'))
         self.selection = resolve_project(self.root)

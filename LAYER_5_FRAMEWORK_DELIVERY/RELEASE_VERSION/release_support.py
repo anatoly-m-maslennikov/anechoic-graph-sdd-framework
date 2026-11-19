@@ -47,19 +47,19 @@ from release_assets import (
 
 _SOURCE_UNITS = ("CORE_META_MODEL", "INSTALLED_EXTENSIONS", "PROJECT_CONFIGURATION")
 _DEFAULT_PRODUCT = "LAYER_1_FRAMEWORK_METHODOLOGY"
-_DEFAULT_INSTALLED = ".caprmedio_caprmedio/000_CAPRMEDIO_framework"
+_DEFAULT_INSTALLED = ".anechoic_anechoic/000_ANECHOIC_framework"
 _PRESERVED_NAMES = frozenset(
     {
         "settings.toml",
         "config.toml",
         "project_settings.toml",
-        "caprmedio_framework_settings.toml",
+        "anechoic_framework_settings.toml",
         "operators_registry.toml",
         "operator_registry",
     }
 )
 _RUN_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*\Z")
-_NON_SOURCE_DIRECTORIES = frozenset({"archive", "archived", "draft", "drafts", "journal", "projection", "_journal", "_projection", ".caprmedio_tmp", "__pycache__"})
+_NON_SOURCE_DIRECTORIES = frozenset({"archive", "archived", "draft", "drafts", "journal", "projection", "_journal", "_projection", ".anechoic_tmp", "__pycache__"})
 
 
 def _relative(value: object, *, label: str) -> Path:
@@ -234,7 +234,7 @@ def _clear_owned(path: Path, *, label: str) -> None:
 
 def _target(root: Path, relative: Path, *, label: str) -> Path:
     target = _project_path(root, relative, label=label)
-    if target == root or target.parent == target or target == root / ".caprmedio_caprmedio":
+    if target == root or target.parent == target or target == root / ".anechoic_anechoic":
         raise LocalReleaseError("local-release-target-invalid")
     if target.exists() and (target.is_symlink() or not target.is_dir()):
         raise LocalReleaseError(f"local-release-{label}-unsafe")
@@ -359,7 +359,7 @@ def _prepare_package(root: Path, product: Path, package: Path, *,
                      refresh_assets: bool = True, previous_image: str | None = None,
                      scope_callback_selection=None) -> dict[str, tuple[str, int]]:
     selection = active_selection(root)
-    excluded = frozenset({selection.control_relative.name.casefold(), ".caprmedio_runtime", ".caprmedio_tmp", ".runtime", ".git", ".pytest_cache", "__pycache__", ".mypy_cache", ".ruff_cache", ".venv", ".vite", "node_modules"})
+    excluded = frozenset({selection.control_relative.name.casefold(), ".anechoic_runtime", ".anechoic_tmp", ".runtime", ".git", ".pytest_cache", "__pycache__", ".mypy_cache", ".ruff_cache", ".venv", ".vite", "node_modules"})
     programmatic = root / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC"
     trees = (
         (root, Path(".")),
@@ -373,7 +373,7 @@ def _prepare_package(root: Path, product: Path, package: Path, *,
             raise LocalReleaseError("local-release-package-source-unavailable")
         members = _walk_regular_files(source, excluded_directories=excluded,
                                       excluded_root_prefix=".anechoic_" if source == root else "",
-                                      excluded_root_directories=frozenset({".caprmedio_install"}) if source == root else frozenset())
+                                      excluded_root_directories=frozenset({".anechoic_install"}) if source == root else frozenset())
         if not members:
             raise LocalReleaseError("local-release-package-source-unavailable")
         inventories.append((source, members))
@@ -388,7 +388,7 @@ def _prepare_package(root: Path, product: Path, package: Path, *,
     for source, members in inventories:
         current = _walk_regular_files(source, excluded_directories=excluded,
                                       excluded_root_prefix=".anechoic_" if source == root else "",
-                                      excluded_root_directories=frozenset({".caprmedio_install"}) if source == root else frozenset())
+                                      excluded_root_directories=frozenset({".anechoic_install"}) if source == root else frozenset())
         if current != members:
             raise LocalReleaseError("local-release-package-source-changed")
     for source, relative in sources:
@@ -546,7 +546,7 @@ def _failed_test_output(
     if log_path is not None:
         return f"Complete test output: `{log_path}`\n{streams['stdout'][-8000:]}"
     try:
-        temporary = _target(root, Path(".caprmedio_tmp/simple_local_release"), label="test-log")
+        temporary = _target(root, Path(".anechoic_tmp/simple_local_release"), label="test-log")
         temporary.mkdir(parents=True, exist_ok=True)
         with named_temporary_file(
             mode="w", encoding="utf-8", prefix=f"{run_id}-tests-", suffix=".log",

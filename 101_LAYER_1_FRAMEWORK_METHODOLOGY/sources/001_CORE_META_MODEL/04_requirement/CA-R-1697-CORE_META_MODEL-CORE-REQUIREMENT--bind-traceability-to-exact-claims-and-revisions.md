@@ -6,7 +6,7 @@ version: 21
 updated_at: "2026-10-03 02:13:51 +0400"
 relations:
   child_of:
-    - CAPRMEDIO-REQU-007-CORE-REQUIREMENT--full-minimal-traceability
+    - ANECHOIC-REQU-007-CORE-REQUIREMENT--full-minimal-traceability
     - CA-E-002
 atom_id: "CA-R-1697"
 content_role: "Requirement"
@@ -23,11 +23,11 @@ Bind traceability to exact claims and revisions
 
 ## Scope
 
-CAPRMEDIO traceability assertions.
+ANECHOIC traceability assertions.
 
 ## Claim
 
-**every** CAPRMEDIO traceability assertion **must** identify the exact governed claim revision on which a receiving artifact, implementation target, evaluation use, delivery action, operational observation, **or** other governed result relies.
+**every** ANECHOIC traceability assertion **must** identify the exact governed claim revision on which a receiving artifact, implementation target, evaluation use, delivery action, operational observation, **or** other governed result relies.
 
 ## Details
 

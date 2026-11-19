@@ -6,16 +6,16 @@ container:
 role: Evaluation
 form: Eval Case
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Context.Tier
+  main_subject: ANECHOIC_MODEL <+ Atom.Header.Context.Tier
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Tier
-  - CAPRMEDIO_MODEL <+ Atom.Local Scope Unit
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit.Parent
-  - CAPRMEDIO_MODEL <+ Atom.Header.State.Status
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Selection
-  - CAPRMEDIO_STRUCTURE <+ Entity/Object/Continuant/Selection//Stored Governing RMED Relation Occurrences
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Tier
+  - ANECHOIC_MODEL <+ Atom.Local Scope Unit
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit.Parent
+  - ANECHOIC_MODEL <+ Atom.Header.State.Status
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Selection
+  - ANECHOIC_STRUCTURE <+ Entity/Object/Continuant/Selection//Stored Governing RMED Relation Occurrences
 tier: 5
 relations:
   evaluation_for:
@@ -32,11 +32,11 @@ updated_at: 2026-11-04 09:19:08 +0400
 carrier_destination:
   file:
     name: CA-E-654-CORE_META_MODEL-EVAL_CASE--validate-integer-tier-ordering-and-scope-constraints.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-654-CORE_META_MODEL-EVAL-CASE--validate-integer-tier-ordering-and-scope-constraints.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-654-CORE_META_MODEL-EVAL-CASE--validate-integer-tier-ordering-and-scope-constraints.md
   source_atom_id: CA-E-654
   source_atom_revision: 13
   source_sha256: b2c5686d17d2da1760dba565f714477e6c355265ef16ca6f88cde2e3e751c30c

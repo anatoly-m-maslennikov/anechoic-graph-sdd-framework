@@ -2,7 +2,7 @@
 cce_version: cce_1
 cce_form: obligation
 subjects:
-  governs: "CAPRMEDIO Graph"
+  governs: "ANECHOIC Graph"
   depends_on:
     - "Single Source of Truth"
     - "Projection"
@@ -19,6 +19,6 @@ llm_session_ids:
 ---
 # Keep secondary graphs derived from source authority
 
-secondary CAPRMEDIO Graphs **must** be Projections derived from their selected authoritative sources **or** source-traceable upstream Projections. their nodes **and** Relations **must** preserve source identities **and** traceability **to** the governing derivation authority **and** source facts.
+secondary ANECHOIC Graphs **must** be Projections derived from their selected authoritative sources **or** source-traceable upstream Projections. their nodes **and** Relations **must** preserve source identities **and** traceability **to** the governing derivation authority **and** source facts.
 
 storing, composing, filtering, **or** rebuilding a secondary graph **must not** make its contents another source of authority. a represented source fact is corrected **at** its authoritative source; an incorrect derivation is corrected under its governing methodology. neither case is resolved by independently editing the projected fact **or** fabricating source history.

@@ -4,7 +4,7 @@ cce_form: definition
 subjects:
   governs: "Entity"
   depends_on:
-    - "CAPRMEDIO Graph"
+    - "ANECHOIC Graph"
 version: 9
 updated_at: "2026-09-22 20:07:50 +0000"
 relations: {}
@@ -13,4 +13,4 @@ llm_session_ids:
 ---
 # Define Entity
 
-an Entity **means** one independently identified **or** bearer-qualified object admitted by an authoritative source as a possible node **in** **`>=1`** CAPRMEDIO Graph.
+an Entity **means** one independently identified **or** bearer-qualified object admitted by an authoritative source as a possible node **in** **`>=1`** ANECHOIC Graph.

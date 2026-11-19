@@ -20,7 +20,7 @@ relations: {}
 
 to compile Applicable Methodology, the Compiler **must** perform all of:
 
-1. read only the Source Layer Carriers under `.caprmedio_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/` that have an exact governed source reference.
+1. read only the Source Layer Carriers under `.anechoic_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/` that have an exact governed source reference.
 2. confirm the ordered structural Source Layers as CORE_META_MODEL, INSTALLED_EXTENSIONS, and LOCAL_CONFIGURATION.
 3. select only current active Atom revisions with Content Role in (REQUIREMENT, METHOD, EVALUATION, DELIVERY, OPS), and exclude every CONCERN, ANALYSIS, PLAN, IMPLEMENTATION, Draft, and archived revision.
 4. include eligible Source Atom revisions from CORE_META_MODEL and LOCAL_CONFIGURATION only.
@@ -34,7 +34,7 @@ to compile Applicable Methodology, the Compiler **must** perform all of:
 12. stop without generating an Output **if** selection or resolution does not produce exactly one selected current revision for every retained Atom identity.
 13. order selected Atom revisions by canonical role directory, Atom ID, and canonical relative Carrier path.
 14. require CA-P-110 to implement and use the deterministic `COMPILE_APPLICABLE_METHODOLOGY` Tool with dry-run validation and staged atomic replacement of only generated RMEDO output directories.
-15. map each selected Source Atom Carrier to `.caprmedio_framework/00_APPLICABLE_METHODOLOGY/<canonical role directory>/<source basename>`.
+15. map each selected Source Atom Carrier to `.anechoic_framework/00_APPLICABLE_METHODOLOGY/<canonical role directory>/<source basename>`.
 16. copy each Source Atom Carrier claim content and all source frontmatter unchanged, add only the projection mapping required by CA-R-1229, and treat that mapping as an explicit non-authoritative Projection declaration.
 17. store no CAP or IMPLEMENTATION role directory, Draft, archive, monolithic JSON methodology, or precompiled Subject Index Carrier in the generated output tree.
 18. preserve every Source Carrier unchanged, use no LLM inference, and reproduce the same generated Atom Carrier tree from the same resolved source frontier.

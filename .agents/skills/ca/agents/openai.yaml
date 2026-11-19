@@ -1,11 +1,11 @@
 interface:
   display_name: "CA"
-  short_description: "Thin shared-host CAPRMEDIO MCP client"
-  default_prompt: "Use $ca through the shared CAPRMEDIO MCP for the explicitly trusted Project."
+  short_description: "Thin shared-host ANECHOIC MCP client"
+  default_prompt: "Use $ca through the shared ANECHOIC MCP for the explicitly trusted Project."
 
 dependencies:
   tools:
     - type: "mcp"
-      value: "caprmedio"
-      description: "Shared HTTP CAPRMEDIO discovery, context and execution"
+      value: "anechoic"
+      description: "Shared HTTP ANECHOIC discovery, context and execution"
       transport: "streamable_http"

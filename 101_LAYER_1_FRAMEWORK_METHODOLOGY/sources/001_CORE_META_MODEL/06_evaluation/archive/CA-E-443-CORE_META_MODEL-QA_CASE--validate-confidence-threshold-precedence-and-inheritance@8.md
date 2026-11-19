@@ -13,7 +13,7 @@ subjects:
     - "Carrier"
 version: 8
 updated_at: "2026-09-22 23:02:20 +0000"
-relations: {"evaluation_for":["CA-R-1587","CA-R-1044","CA-R-1045","CA-R-1427","CA-R-1428","CA-M-271","CA-R-1591","CA-D-472","CA-D-485","CAPRMEDIO-META-REQU-144"]}
+relations: {"evaluation_for":["CA-R-1587","CA-R-1044","CA-R-1045","CA-R-1427","CA-R-1428","CA-M-271","CA-R-1591","CA-D-472","CA-D-485","ANECHOIC-META-REQU-144"]}
 atom_id: "CA-E-443"
 content_role: "Evaluation"
 current_scope_unit: "CORE_META_MODEL"

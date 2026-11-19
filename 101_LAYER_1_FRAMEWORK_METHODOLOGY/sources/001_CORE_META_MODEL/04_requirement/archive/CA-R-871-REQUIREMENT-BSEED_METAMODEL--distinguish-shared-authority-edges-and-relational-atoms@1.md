@@ -11,6 +11,6 @@ relations:
 ---
 # Distinguish shared authority, edges, and relational Atoms
 
-CAPRMEDIO must use three distinct graph representations: an ordinary ancestor-scope RMEDO Atom for meaning shared by descendants, a declared typed edge for a relationship with no independently governed meaning, and a directional relational Atom when the relationship itself needs independent identity, revision, and lifecycle.
+ANECHOIC must use three distinct graph representations: an ordinary ancestor-scope RMEDO Atom for meaning shared by descendants, a declared typed edge for a relationship with no independently governed meaning, and a directional relational Atom when the relationship itself needs independent identity, revision, and lifecycle.
 
 The narrowest sufficient representation owns each meaning; none of the three representations duplicates another.

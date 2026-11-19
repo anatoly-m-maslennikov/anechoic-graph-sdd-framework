@@ -4,11 +4,11 @@ current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 status: Active
 subjects:
-  active: CAPRMEDIO_MODEL <+ CFEL <+ Relation//CARRIES
+  active: ANECHOIC_MODEL <+ CFEL <+ Relation//CARRIES
   passive:
-  - CAPRMEDIO_MODEL <+ Carrier
-  - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ CFEL > Relation
+  - ANECHOIC_MODEL <+ Carrier
+  - ANECHOIC_MODEL <+ Entity
+  - ANECHOIC_MODEL <+ CFEL > Relation
 relations:
   child_of:
   - CA-R-1174

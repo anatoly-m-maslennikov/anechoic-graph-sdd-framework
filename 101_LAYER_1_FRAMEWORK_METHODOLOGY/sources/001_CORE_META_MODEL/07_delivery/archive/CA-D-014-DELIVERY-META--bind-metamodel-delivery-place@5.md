@@ -9,4 +9,4 @@ relations:
 ---
 # Bind METAMODEL Delivery place
 
-The root-level `METAMODEL` Scope Unit uses authority place `.caprmedio/METAMODEL` directly and delivers within the `FRAMEWORK_METHODOLOGY` authority place; its path relative to that Delivery parent is `METAMODEL`.
+The root-level `METAMODEL` Scope Unit uses authority place `.anechoic/METAMODEL` directly and delivers within the `FRAMEWORK_METHODOLOGY` authority place; its path relative to that Delivery parent is `METAMODEL`.

@@ -6,7 +6,7 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Carrier
+  main_subject: ANECHOIC_MODEL <+ Carrier
 tier: 3
 status: Active
 version: 24
@@ -14,11 +14,11 @@ updated_at: 2026-11-02 19:44:26 +0400
 carrier_destination:
   file:
     name: CA-D-320-PROJECT_CONFIGURATION-DECISION--place-framework-engine-runtime-carriers.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/07_delivery
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: PROJECT_CONFIGURATION
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/07_delivery/CA-D-320-PROJECT_CONFIGURATION-ENG_DECISION--place-framework-engine-runtime-carriers.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/07_delivery/CA-D-320-PROJECT_CONFIGURATION-ENG_DECISION--place-framework-engine-runtime-carriers.md
   source_atom_id: CA-D-320
   source_atom_revision: 24
   source_sha256: ee675064e6618dcaf779cf6ac5b989739a2181aac2aa920cfe07132a37e2c139
@@ -33,10 +33,10 @@ Place Framework Engine Runtime Carriers
 ### Prose Claim
 
 
-Framework Engine executable installation and mutable execution-state Carriers in a CAPRMEDIO Project.
+Framework Engine executable installation and mutable execution-state Carriers in a ANECHOIC Project.
 
 
-the CAPRMEDIO Project **must** place its selected running Framework Engine releases, stable launchers, Tools, Apps, Skills, sessions, service state, **and** resumable execution state under `.caprmedio_runtime/`. runtime technical **and** business Journal Carriers use their explicitly configured governed sinks **and** are **not** required **to** use this Directory Carrier.
+the ANECHOIC Project **must** place its selected running Framework Engine releases, stable launchers, Tools, Apps, Skills, sessions, service state, **and** resumable execution state under `.anechoic_runtime/`. runtime technical **and** business Journal Carriers use their explicitly configured governed sinks **and** are **not** required **to** use this Directory Carrier.
 
 ## Details
 

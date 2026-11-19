@@ -9,7 +9,7 @@ relations:
   child_of:
     - CA-D-361
   relates_to:
-    - CAPRMEDIO-GOV-REQU-302
+    - ANECHOIC-GOV-REQU-302
 atom_id: "CA-D-387"
 content_role: "Delivery"
 current_scope_unit: "CORE_META_MODEL"
@@ -21,4 +21,4 @@ type: "Delivery"
 ---
 # Serialize Atomic Admission Strictness
 
-an explicit atomic admission strictness selection **in** the Framework Instance Settings TOML Carrier **must** use `creation_strictness` **in** `[artifacts]`, using the allowed values governed by CAPRMEDIO-GOV-REQU-302.
+an explicit atomic admission strictness selection **in** the Framework Instance Settings TOML Carrier **must** use `creation_strictness` **in** `[artifacts]`, using the allowed values governed by ANECHOIC-GOV-REQU-302.

@@ -1,0 +1,22 @@
+---
+atom_id: CA-D-321
+cce_version: cce_1
+cce_form: placement
+subjects:
+  governs: "ANECHOIC/Temporary State Carrier Root"
+  depends_on: []
+version: 5
+updated_at: "2026-09-16 23:48:40 +0000"
+relations: {}
+llm_session_ids:
+  - codex:01a02650-eff7-7453-8c37-0699b36773c6
+---
+# Place Disposable Temporary State
+
+the ANECHOIC Project **must** place disposable scratch, staging, test cache,
+atomic-write intermediate, build intermediate, **and** interrupted-cleanup
+Carriers under `.anechoic_tmp/`.
+
+deleting `.anechoic_tmp/` **must not** delete governed authority, Project
+Journal history, installed Framework Engine releases, runtime logs, sessions,
+databases, service state, **or** resumable state.

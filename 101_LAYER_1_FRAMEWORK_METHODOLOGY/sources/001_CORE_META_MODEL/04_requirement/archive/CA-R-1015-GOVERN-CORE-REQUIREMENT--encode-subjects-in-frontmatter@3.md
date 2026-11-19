@@ -17,7 +17,7 @@ relations:
   child_of:
     - CA-R-1013
     - CA-R-1091
-    - CAPRMEDIO-GOV-REQU-308--plain-scalar-frontmatter-values
+    - ANECHOIC-GOV-REQU-308--plain-scalar-frontmatter-values
 ---
 # Encode Subjects in Frontmatter
 

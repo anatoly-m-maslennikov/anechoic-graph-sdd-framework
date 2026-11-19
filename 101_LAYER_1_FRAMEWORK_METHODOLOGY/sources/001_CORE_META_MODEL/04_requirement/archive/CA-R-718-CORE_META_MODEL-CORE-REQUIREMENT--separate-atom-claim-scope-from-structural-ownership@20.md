@@ -9,7 +9,7 @@ version: 20
 updated_at: "2026-09-22 17:59:17 +0000"
 relations:
   child_of:
-    - CAPRMEDIO-REQU-045
+    - ANECHOIC-REQU-045
 atom_id: "CA-R-718"
 content_role: "Requirement"
 current_scope_unit: "CORE_META_MODEL"

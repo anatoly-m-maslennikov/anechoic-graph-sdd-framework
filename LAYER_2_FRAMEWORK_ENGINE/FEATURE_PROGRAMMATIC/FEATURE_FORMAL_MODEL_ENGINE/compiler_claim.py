@@ -333,7 +333,7 @@ def compile_scope_level_with_check(declaration):
             or args.get("base_path") != "Scope Unit" or args.get("relation_name") != "IS_PROPERTY_OF"
             or not check or check.get("name") != "check_structural_level"
             or check.get("parameter_type") != "ScopeUnit"
-            or declaration.get("imports", {}).get("ScopeUnit") != "caprmedio.model"):
+            or declaration.get("imports", {}).get("ScopeUnit") != "anechoic.model"):
         raise ValueError("instance_check requires a typed validator")
     static = deepcopy(declaration)
     del static["arguments"]["instance_check"]

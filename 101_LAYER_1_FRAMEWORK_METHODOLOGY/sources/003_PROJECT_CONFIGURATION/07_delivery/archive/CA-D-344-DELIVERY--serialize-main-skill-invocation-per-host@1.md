@@ -5,10 +5,10 @@ cce_form: serialization
 subjects:
   governs:
     continuant:
-      - CAPRMEDIO Main Skill/Host Invocation
+      - ANECHOIC Main Skill/Host Invocation
   depends_on:
     continuant:
-      - CAPRMEDIO Main Skill
+      - ANECHOIC Main Skill
 version: 1
 updated_at: 2026-08-30 16:32:06 +0400
 llm_session_ids:
@@ -17,4 +17,4 @@ relations: {}
 ---
 # Serialize Main Skill Invocation per Host
 
-the Host Invocation of the CAPRMEDIO Main Skill **must** serialize as `$ca` in Codex **and** `/ca` in Claude.
+the Host Invocation of the ANECHOIC Main Skill **must** serialize as `$ca` in Codex **and** `/ca` in Claude.

@@ -6,15 +6,15 @@ container:
 role: Evaluation
 form: Eval Policy
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Entity/Object/Occurrent/Execution
+  main_subject: ANECHOIC_MODEL <+ Entity/Object/Occurrent/Execution
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Requirement)
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Method)
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Delivery)
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Verification"
-  - CAPRMEDIO_MODEL <+ Atom.Header.Identity.ID
-  - CAPRMEDIO_MODEL <+ Project
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Requirement)
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Method)
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Delivery)
+  - "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Verification"
+  - ANECHOIC_MODEL <+ Atom.Header.Identity.ID
+  - ANECHOIC_MODEL <+ Project
 tier: 4
 relations:
   child_of:
@@ -35,7 +35,7 @@ cce_form: evaluation
 llm_session_ids:
 - codex:01a02650-eff7-7453-8c37-0699b36773c6
 current_scope_unit: PROJECT_CONFIGURATION
-claim_target_scope_unit: caprmedio
+claim_target_scope_unit: anechoic
 ---
 ## Summary
 Evaluate the Evaluation-first implementation loop
@@ -45,7 +45,7 @@ Evaluate the Evaluation-first implementation loop
 ### Prose Claim
 
 
-within the caprmedio Project, the implementation-loop Evaluation **must** return `fail` **if**
+within the anechoic Project, the implementation-loop Evaluation **must** return `fail` **if**
 
 - unchanged mode, RMED, **and** complete execution inputs yield different applicable tasks **or** ordering,
 - a consumer runs **before** its prerequisite,

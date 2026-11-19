@@ -11,7 +11,7 @@ subjects:
     - "DEPENDS_ON"
     - "Relation"
     - "Relation Kind"
-    - "CAPRMEDIO Graph"
+    - "ANECHOIC Graph"
     - "Artifact/Revision"
     - "Subject"
     - "Term"
@@ -37,7 +37,7 @@ Atom Subjects Graph Type values under Projection.
 
 ## Claim
 
-Atom Subjects Graph **means** the Type value under Projection whose instances are non-authoritative CAPRMEDIO Graphs derived from selected current Atom Subjects, with Atom nodes linked by direct GOVERNS **and** DEPENDS_ON Subject Relations **to** their canonical Entity target nodes. the Subjects are the links, **not** the target nodes **or** intermediate Subject nodes.
+Atom Subjects Graph **means** the Type value under Projection whose instances are non-authoritative ANECHOIC Graphs derived from selected current Atom Subjects, with Atom nodes linked by direct GOVERNS **and** DEPENDS_ON Subject Relations **to** their canonical Entity target nodes. the Subjects are the links, **not** the target nodes **or** intermediate Subject nodes.
 
 ## Details
 

@@ -62,7 +62,7 @@ def resolve_methodology_layout(project_root: Path | str) -> MethodologyLayout:
     product = _relative(root, framework.get("delivery_path"))
     copied = _relative(root, sources.get("delivery_path"))
     compiled = _relative(root, applicable.get("delivery_path"))
-    installed = _relative(root, (control / "000_CAPRMEDIO_framework").as_posix())
+    installed = _relative(root, (control / "000_ANECHOIC_framework").as_posix())
     if not Path(source).is_relative_to(control) or Path(source).is_relative_to(Path(installed)):
         raise ValueError("Release sources must be Project authority, not installed Methodology")
     if Path(copied).parent != Path(product) or Path(compiled).parent != Path(product):

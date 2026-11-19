@@ -1,9 +1,9 @@
 ---
 subjects:
-  governs: "CAPRMEDIO General System Prompt Loading"
+  governs: "ANECHOIC General System Prompt Loading"
   depends_on:
-    - "CAPRMEDIO Main Skill"
-    - "CAPRMEDIO General System Prompt"
+    - "ANECHOIC Main Skill"
+    - "ANECHOIC General System Prompt"
 version: 9
 updated_at: "2026-10-02 22:23:29 +0400"
 relations: {}
@@ -22,10 +22,10 @@ Restrict General System Prompt Loading to Main Skill
 
 ## Scope
 
-CAPRMEDIO General System Prompt loading.
+ANECHOIC General System Prompt loading.
 
 ## Claim
 
-**only** the CAPRMEDIO Main Skill **may** load the CAPRMEDIO General System Prompt.
+**only** the ANECHOIC Main Skill **may** load the ANECHOIC General System Prompt.
 
 ## Details

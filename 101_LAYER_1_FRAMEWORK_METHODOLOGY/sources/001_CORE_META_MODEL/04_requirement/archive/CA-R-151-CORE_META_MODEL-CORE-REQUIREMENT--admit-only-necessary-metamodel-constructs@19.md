@@ -20,4 +20,4 @@ global_tier: 9
 ---
 # Admit only necessary Metamodel constructs
 
-the CAPRMEDIO Metamodel **must** admit a durable construct **only** **when** the existing Metamodel cannot preserve the required operational distinction.
+the ANECHOIC Metamodel **must** admit a durable construct **only** **when** the existing Metamodel cannot preserve the required operational distinction.

@@ -29,8 +29,8 @@ from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
 from scope_unit_declarations import ScopeDeclarationError, ScopeUnitDeclarations, read_scope_unit_declarations
 
 
-SETTINGS_FILENAME = "caprmedio_project_settings.toml"
-_CONTROL_PREFIX = ".caprmedio_"
+SETTINGS_FILENAME = "anechoic_project_settings.toml"
+_CONTROL_PREFIX = ".anechoic_"
 _IDENTITY = re.compile(r"[0-9a-f]{64}\Z")
 
 
@@ -86,13 +86,13 @@ class ProjectSelection:
 
     @property
     def compose_project(self) -> str:
-        return "caprmedio-mcp-" + self.instance_id[:24]
+        return "anechoic-mcp-" + self.instance_id[:24]
 
     @property
     def launcher_state(self) -> Path:
-        return self.root / ".caprmedio_runtime" / "runtime" / "project_mcp" / self.instance_id
+        return self.root / ".anechoic_runtime" / "runtime" / "project_mcp" / self.instance_id
 
-_SELECTION: ContextVar[ProjectSelection | None] = ContextVar("caprmedio_project_selection", default=None)
+_SELECTION: ContextVar[ProjectSelection | None] = ContextVar("anechoic_project_selection", default=None)
 
 
 def _project_root(value: str | Path) -> Path:

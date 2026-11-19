@@ -60,7 +60,7 @@ class RoleDirectorySourceTests(unittest.TestCase):
         rules = ((self.generic,) if generic else ()) + self.status
         (self.root / 'CA-D-7913.md').write_text(
             '---\natom_id: CA-D-7913\nrole: Delivery\nform: File Layout\nstatus: Active\nversion: 2\n'
-            'topics:\n  main_subject: CAPRMEDIO_MODEL <+ Carrier\n---\n' + native_body(rules))
+            'topics:\n  main_subject: ANECHOIC_MODEL <+ Carrier\n---\n' + native_body(rules))
 
     def test_generic_delivery_and_role_orders_compile_from_arbitrary_pins(self):
         self.write_sources()

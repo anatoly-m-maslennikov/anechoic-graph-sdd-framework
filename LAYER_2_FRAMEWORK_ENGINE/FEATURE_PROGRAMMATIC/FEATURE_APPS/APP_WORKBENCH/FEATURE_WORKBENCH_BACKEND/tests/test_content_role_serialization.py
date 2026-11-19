@@ -48,7 +48,7 @@ class CarrierSerializationTests(unittest.TestCase):
 
     def test_current_model_presentation_headings_do_not_create_columns(self):
         model = Path.cwd() / (
-            ".caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/"
+            ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/"
             "CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement"
         )
         declarations = []
@@ -211,7 +211,7 @@ class CarrierSerializationTests(unittest.TestCase):
         self.assertFalse(state.update({"plan.md": first}))
 
     def test_current_and_draft_in_both_schema_modes(self):
-        temporary_root = Path.cwd() / ".caprmedio_tmp" / "tests"
+        temporary_root = Path.cwd() / ".anechoic_tmp" / "tests"
         temporary_root.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=temporary_root) as directory:
             root = Path(directory)
@@ -251,7 +251,7 @@ class CarrierSerializationTests(unittest.TestCase):
                 )
 
     def test_declared_schema_refresh_is_visible_in_sql_for_both_modes(self):
-        temporary_root = Path.cwd() / ".caprmedio_tmp" / "tests"
+        temporary_root = Path.cwd() / ".anechoic_tmp" / "tests"
         temporary_root.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=temporary_root) as directory:
             root = Path(directory)

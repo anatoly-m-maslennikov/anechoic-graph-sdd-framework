@@ -6,7 +6,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from contract_graph import compose_contract_graph
 
 def carrier(n, subject, cls, base, entity):
-    text=f'from caprmedio.formal_claims import declare_entity\nfrom caprmedio.model import {base}\n\nclass {cls}({base}):\n    pass\n\ndeclare_entity(entity_class={cls}, entity_name={entity!r})'
+    text=f'from anechoic.formal_claims import declare_entity\nfrom anechoic.model import {base}\n\nclass {cls}({base}):\n    pass\n\ndeclare_entity(entity_class={cls}, entity_name={entity!r})'
     return {'source':{'atom_id':f'CA-R-{n}','version':1,'path':f'{n}.md'}, 'subjects':{'active':subject,'passive':[]}, 'body':f'## Claim\n\n### Formal Claim\n\n```python\n{text}\n```\n', 'read_view':{'content_role':'Requirement','type':'Declaration'}}
 def edge_set(graph):
     nodes={n['id']:n['identity'] for n in graph['nodes']}

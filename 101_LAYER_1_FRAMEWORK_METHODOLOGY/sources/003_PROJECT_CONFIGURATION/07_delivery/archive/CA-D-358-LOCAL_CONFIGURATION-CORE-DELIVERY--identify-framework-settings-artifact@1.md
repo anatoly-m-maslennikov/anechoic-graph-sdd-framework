@@ -17,4 +17,4 @@ relations:
 ---
 # Identify Framework Settings Artifact
 
-the Identifier of the authoritative Project Configuration Artifact **must** be `caprmedio_framework_settings`.
+the Identifier of the authoritative Project Configuration Artifact **must** be `anechoic_framework_settings`.

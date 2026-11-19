@@ -6,12 +6,12 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Context.Tier
+  main_subject: ANECHOIC_MODEL <+ Atom.Header.Context.Tier
   dependencies:
-  - CAPRMEDIO_MODEL <+ Project
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Form := Goal)
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics.Main Subject
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Tier
+  - ANECHOIC_MODEL <+ Project
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Form := Goal)
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Topics.Main Subject
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Tier
 tier: 3
 relations:
   child_of:
@@ -22,11 +22,11 @@ updated_at: 2026-11-04 09:19:08 +0400
 carrier_destination:
   file:
     name: CA-R-2428-CORE_META_MODEL-RULE--admit-numeric-tiers-in-scope-units.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2428-CORE_META_MODEL-RULE--admit-numeric-tiers-in-scope-units.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2428-CORE_META_MODEL-RULE--admit-numeric-tiers-in-scope-units.md
   source_atom_id: CA-R-2428
   source_atom_revision: 3
   source_sha256: 068b5c405c248d1ce5def283e8a7356417d79672f1fe7600e93407db246ff28e

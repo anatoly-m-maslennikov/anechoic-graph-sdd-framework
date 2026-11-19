@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Requirement
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Context.Tier
+  main_subject: ANECHOIC_MODEL <+ Atom.Header.Context.Tier
 tier: 3
 status: Active
 version: 2
@@ -14,9 +14,9 @@ updated_at: "2026-11-07 15:18:44 +0400"
 carrier_destination:
   file:
     name: CA-R-3000-CORE_META_MODEL-REQUIREMENT--define-tier-zero-within-a-scope-unit.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-3000-CORE_META_MODEL-REQUIREMENT--define-tier-zero-within-a-scope-unit.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-3000-CORE_META_MODEL-REQUIREMENT--define-tier-zero-within-a-scope-unit.md
   source_atom_id: CA-R-3000
   source_atom_revision: 2
   source_sha256: 3721d7f5bb2213b7f9abf5b005a169219cfe848df6f84cad48aa8d1ed24efeb9

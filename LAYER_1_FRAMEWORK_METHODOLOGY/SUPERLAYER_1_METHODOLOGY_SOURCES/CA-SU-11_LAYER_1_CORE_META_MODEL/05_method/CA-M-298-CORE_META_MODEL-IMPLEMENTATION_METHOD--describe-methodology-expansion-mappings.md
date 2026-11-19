@@ -6,11 +6,11 @@ container:
 role: Method
 form: Implementation Method
 topics:
-  main_subject: "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring"
+  main_subject: "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring"
   dependencies:
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_STRUCTURE <+ Scope Unit//PROJECT_CONFIGURATION
-  - CAPRMEDIO_STRUCTURE <+ Scope Unit//CORE_META_MODEL
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_STRUCTURE <+ Scope Unit//PROJECT_CONFIGURATION
+  - ANECHOIC_STRUCTURE <+ Scope Unit//CORE_META_MODEL
 tier: 2
 relations:
   child_of:

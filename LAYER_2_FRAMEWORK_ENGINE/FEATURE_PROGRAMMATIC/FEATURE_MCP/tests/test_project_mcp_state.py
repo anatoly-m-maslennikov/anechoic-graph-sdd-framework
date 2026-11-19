@@ -15,14 +15,14 @@ from scope_declaration_test_support import write_scope_unit_declarations
 
 class ProjectStateTests(unittest.TestCase):
     def test_two_nested_projects_have_distinct_mcp_runtime_namespaces(self):
-        parent = Path(tempfile.mkdtemp(dir=APP.parents[2] / '.caprmedio_tmp'))
+        parent = Path(tempfile.mkdtemp(dir=APP.parents[2] / '.anechoic_tmp'))
         selections = []
         for name in ('alpha', 'beta'):
             root = parent / 'repository' / 'projects' / name
-            control = root / f'.caprmedio_{name}'
+            control = root / f'.anechoic_{name}'
             control.mkdir(parents=True)
-            (control / 'caprmedio_project_settings.toml').write_text(
-                f'[paths]\ncontrol_root=".caprmedio_{name}"\n[project]\nname="{name}"\n'
+            (control / 'anechoic_project_settings.toml').write_text(
+                f'[paths]\ncontrol_root=".anechoic_{name}"\n[project]\nname="{name}"\n'
                 f'[project_mcp]\nhttp_port={56317 if name == "alpha" else 56318}\n')
             write_scope_unit_declarations(root, control_root=control)
             selections.append(resolve_project(root))
@@ -40,10 +40,10 @@ class ProjectStateTests(unittest.TestCase):
         self.assertEqual({'mcp-http'}, set(spec['services']))
         service = spec['services']['mcp-http']
         self.assertEqual('420s', service['healthcheck']['start_period'])
-        self.assertIn('http://127.0.0.1:8092/caprmedio/health', service['healthcheck']['test'][-1])
+        self.assertIn('http://127.0.0.1:8092/anechoic/health', service['healthcheck']['test'][-1])
         self.assertEqual(['mcp-http'], service['command'])
-        self.assertEqual(['127.0.0.1:${CAPRMEDIO_MCP_HTTP_PORT:?Project Settings HTTP port is required}:8092'], service['ports'])
-        self.assertEqual([{'type': 'bind', 'source': '${CAPRMEDIO_PROJECT_ROOT}',
+        self.assertEqual(['127.0.0.1:${ANECHOIC_MCP_HTTP_PORT:?Project Settings HTTP port is required}:8092'], service['ports'])
+        self.assertEqual([{'type': 'bind', 'source': '${ANECHOIC_PROJECT_ROOT}',
                           'target': '/project'}], service['volumes'])
         self.assertTrue(service['read_only'])
         self.assertEqual('no', service['restart'])

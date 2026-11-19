@@ -6,20 +6,20 @@ container:
 role: Evaluation
 form: Eval Policy
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom
+  main_subject: ANECHOIC_MODEL <+ Atom
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
-  - CAPRMEDIO_MODEL <+ Atom.Content
-  - CAPRMEDIO_MODEL <+ Atom.Target Scope Unit
-  - CAPRMEDIO_MODEL <+ Atom.Content.Details
-  - CAPRMEDIO_MODEL <+ Atom.Content.Summary
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Role
-  - CAPRMEDIO_MODEL <+ Term//Property
-  - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Actor/Operator
-  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Product
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role: Operations)/(.Header.Context.Form:
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Topics
+  - ANECHOIC_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ Atom.Target Scope Unit
+  - ANECHOIC_MODEL <+ Atom.Content.Details
+  - ANECHOIC_MODEL <+ Atom.Content.Summary
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Role
+  - ANECHOIC_MODEL <+ Term//Property
+  - ANECHOIC_MODEL <+ Entity
+  - ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Actor/Operator
+  - ANECHOIC_STRUCTURE <+ Aspects <+ Product
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role: Operations)/(.Header.Context.Form:
     Workflow)'
 tier: 5
 relations:
@@ -44,7 +44,7 @@ updated_at: '2026-11-13T18:56:30.485939+00:00'
 carrier_destination:
   file:
     name: CA-E-520-CORE_META_MODEL-EVAL_POLICY--check-rmed-atom-coherence.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---

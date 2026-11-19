@@ -18,4 +18,4 @@ relations:
 ---
 # Serialize Framework Settings Content in TOML
 
-the authoritative caprmedio_framework_settings TOML Carrier **must** encode operator-editable confidence thresholds, the framework control-root locator, **`>=1`** code-root locators, active **and** background Tools with their settings, **and** enabled **or** disabled Extensions with retained per-Extension settings; it **must not** contain Project identity, Project Prefix, Authority Modes, Atom Frontmatter, Atom ID, Atom Revision metadata, Atom relations, rationale, **or** provenance.
+the authoritative anechoic_framework_settings TOML Carrier **must** encode operator-editable confidence thresholds, the framework control-root locator, **`>=1`** code-root locators, active **and** background Tools with their settings, **and** enabled **or** disabled Extensions with retained per-Extension settings; it **must not** contain Project identity, Project Prefix, Authority Modes, Atom Frontmatter, Atom ID, Atom Revision metadata, Atom relations, rationale, **or** provenance.

@@ -6,7 +6,7 @@ version: 1
 updated_at: 2026-08-22 07:44:21
 relations:
   replacement_of:
-    - CAPRMEDIO-META-REQU-133
+    - ANECHOIC-META-REQU-133
   child_of:
     - CA-R-126
 ---

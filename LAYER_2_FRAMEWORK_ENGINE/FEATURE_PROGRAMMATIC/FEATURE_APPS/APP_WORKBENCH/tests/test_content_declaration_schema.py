@@ -400,7 +400,7 @@ Keep this heading.""",
         return [
             cls._current_declaration(path)
             for path in (
-                REPOSITORY_ROOT / ".caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/"
+                REPOSITORY_ROOT / ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/"
                 "CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement"
             ).glob("*.md")
             if not {"archive", "archived", "draft", "drafts"} & {part.casefold() for part in path.parts}
@@ -410,7 +410,7 @@ Keep this heading.""",
     @staticmethod
     def _prepared_reference_transform():
         path = (
-            REPOSITORY_ROOT / ".caprmedio_caprmedio/02_analysis_and_advisory/000_draft/"
+            REPOSITORY_ROOT / ".anechoic_anechoic/02_analysis_and_advisory/000_draft/"
             "header-groups-20261106/references/prepare_reference_impact.py"
         )
         spec = spec_from_file_location("prepared_header_impact", path)

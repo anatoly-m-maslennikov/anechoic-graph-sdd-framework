@@ -19,4 +19,4 @@ llm_session_ids:
 ---
 # Store Default Settings with the Core Meta-Model source
 
-the Default Settings Artifact **must** use `caprmedio_framework_default_settings.toml` **at** the root of the CORE_META_MODEL source Scope Unit as its **`=1`** authoritative TOML File Carrier.
+the Default Settings Artifact **must** use `anechoic_framework_default_settings.toml` **at** the root of the CORE_META_MODEL source Scope Unit as its **`=1`** authoritative TOML File Carrier.

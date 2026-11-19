@@ -6,11 +6,11 @@ container:
 role: Method
 form: Term Definition
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Term//Change Content Roles
+  main_subject: ANECHOIC_MODEL <+ Term//Change Content Roles
   dependencies:
-  - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ Term
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Method)/(.Header.Context.Form := Term Definition)
+  - ANECHOIC_MODEL <+ Entity
+  - ANECHOIC_MODEL <+ Term
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Method)/(.Header.Context.Form := Term Definition)
 tier: 1
 status: Active
 version: 5
@@ -18,7 +18,7 @@ updated_at: 2026-11-04 18:28:33 +0400
 carrier_destination:
   file:
     name: CA-M-455-CORE_META_MODEL-TERM_DEFINITION--define-change-content-roles.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
 ---
 ## Summary
 

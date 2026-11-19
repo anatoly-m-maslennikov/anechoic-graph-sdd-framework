@@ -13,8 +13,8 @@ from FEATURE_FORMAL_MODEL_ENGINE.scope_levels import check_scope_levels
 from scope_declaration_parse import ScopeUnitDeclaration
 
 
-CLAIM = """from caprmedio.formal_claims import declare_entity
-from caprmedio.model import ScopeUnit
+CLAIM = """from anechoic.formal_claims import declare_entity
+from anechoic.model import ScopeUnit
 
 def check_structural_level(unit: ScopeUnit) -> bool:
     return unit.structural_level == (0 if unit.container is None else unit.container.structural_level + 1)

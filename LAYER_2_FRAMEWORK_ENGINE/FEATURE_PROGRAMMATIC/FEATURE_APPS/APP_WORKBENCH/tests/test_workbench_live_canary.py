@@ -33,12 +33,12 @@ from scope_unit_declarations import read_scope_unit_declarations  # noqa: E402
 from project_settings_values import control_root  # noqa: E402
 
 
-CANARY_FLAG = "CAPRMEDIO_LIVE_CANARY"
-ROOT_FLAG = "CAPRMEDIO_LIVE_CANARY_ROOT"
-URL_FLAG = "CAPRMEDIO_LIVE_CANARY_URL"
-DRY_RUN_FLAG = "CAPRMEDIO_LIVE_CANARY_DRY_RUN"
+CANARY_FLAG = "ANECHOIC_LIVE_CANARY"
+ROOT_FLAG = "ANECHOIC_LIVE_CANARY_ROOT"
+URL_FLAG = "ANECHOIC_LIVE_CANARY_URL"
+DRY_RUN_FLAG = "ANECHOIC_LIVE_CANARY_DRY_RUN"
 PARENT_SCOPE = "WORKBENCH_BACKEND"
-REPORT_DIRECTORY = REPOSITORY / ".caprmedio_tmp" / "workbench" / "live-canary"
+REPORT_DIRECTORY = REPOSITORY / ".anechoic_tmp" / "workbench" / "live-canary"
 
 
 from workbench_live_canary_support import (  # noqa: E402
@@ -72,7 +72,7 @@ class WorkbenchLiveCanary(unittest.TestCase):
 
     @staticmethod
     def _project_name(control: Path) -> str:
-        settings = tomllib.loads((control / "caprmedio_project_settings.toml").read_text(encoding="utf-8"))
+        settings = tomllib.loads((control / "anechoic_project_settings.toml").read_text(encoding="utf-8"))
         name = settings.get("project", {}).get("name")
         if not isinstance(name, str) or not name:
             raise LiveCanaryError("Project Settings lacks project.name")

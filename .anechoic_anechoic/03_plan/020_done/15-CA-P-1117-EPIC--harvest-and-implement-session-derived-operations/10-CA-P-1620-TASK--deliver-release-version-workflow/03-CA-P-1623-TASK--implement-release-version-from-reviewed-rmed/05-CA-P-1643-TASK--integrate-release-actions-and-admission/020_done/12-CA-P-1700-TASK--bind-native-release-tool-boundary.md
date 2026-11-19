@@ -1,0 +1,53 @@
+---
+atom_id: CA-P-1700
+ref_id: CA-P-1700
+container:
+  atom: CA-P-1643
+role: Plan
+form: Plan
+label: Task
+topics:
+  main_subject: Subject/Graph Node/Engineering/Release
+  dependencies:
+  - Subject/Graph Node/Engineering/Continuant/Tool
+  - Subject/Graph Node/Engineering/Manifest
+  - Subject/Graph Node/Engineering/Action
+  - Subject/Graph Node/Engineering/Evaluation
+tier: 3
+relations:
+  is_decomposition_of:
+  - CA-P-1643
+  blocks:
+  - CA-P-1644
+status: Done
+version: 7
+updated_at: 2026-10-25 17:32:27 +0400
+carrier_destination:
+  file:
+    name: 12-CA-P-1700-TASK--bind-native-release-tool-boundary.md
+    path: .anechoic_anechoic/03_plan/done/15-CA-P-1117-EPIC--harvest-and-implement-session-derived-operations/10-CA-P-1620-TASK--deliver-release-version-workflow/3-CA-P-1623-TASK--implement-release-version-from-reviewed-rmed/5-CA-P-1643-TASK--integrate-release-actions-and-admission/done
+work_sequence_number: 12
+current_scope_unit: anechoic
+author: Anatoly Maslennikov
+assignee: AI Agent
+autonomous_confidence_threshold: 90
+---
+# Summary
+
+Bind native Release Tool boundary
+
+## Objective
+
+Within <=15 minutes, implement the strict D560 native request/result boundary and locally observed effect-free preparation.
+
+## Details
+
+Own only RELEASE_VERSION/release_version.py and tests/test_release_version.py. Read accepted D560, D566/D567, R1876 and the existing contract/handoff helpers. Parse the exact closed request fields and conditional recording-recovery reference; refuse unknown overrides, malformed manifests and stale local N/source/structure/settings/frontier bindings. Prepare constructs the locally observed validated candidate and complete D560 result without effects. Reserve a private typed selected-Action execution interface for the separate provider phase integration; no caller-controlled phase or unguarded all-phase apply. Apply/recovery without admitted provider context must return truthful blocked/incomplete outcomes rather than claim execution. Golden-first actual disposable prepare/refusal cases must preserve whole-Project bytes and cover the result shape. No source/manifest/registry changes, real Project release, actual image operations, permission workaround or Journal fabrication. Preserve other Agents' changes.
+
+## Definition of Done
+
+The exact request/result and effect-free prepare/refusal cases pass with source/code/test hashes. The selected-Action provider and recording recovery remain explicit required integration, not a completed Release claim.
+
+### Current bounded completion
+
+release_version.py a611d97a5a32c1ce03c9a0bb30746c7d935e48d63760eba24dc52476490c7564 and tests5c5d67b4fd5ac3abdd9dad7707abbeb0c057ded00bbee923f8bf456d5cdd55e6 pass4 focused methods. The exact closed D560 request rebuilds local candidate inventory/currentness, rejects unknown phase/path/Journal and stale local bindings, and returns exactly the twelve required result fields. Prepare preserves all Project bytes. Apply and recording recovery without the private selected provider context return blocked without effects/replay. This accepted boundary is not a working Release phase/provider or recording-recovery implementation.

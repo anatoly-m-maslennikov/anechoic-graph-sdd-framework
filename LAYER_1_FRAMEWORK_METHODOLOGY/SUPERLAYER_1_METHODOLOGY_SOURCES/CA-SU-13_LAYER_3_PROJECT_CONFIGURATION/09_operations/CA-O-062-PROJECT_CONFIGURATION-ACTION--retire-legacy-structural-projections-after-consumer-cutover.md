@@ -6,15 +6,15 @@ container:
 role: Operations
 form: Action
 topics:
-  main_subject: Subject/CAPRMEDIO/Graph/Node/Project Model/Projection
+  main_subject: Subject/ANECHOIC/Graph/Node/Project Model/Projection
   dependencies:
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Operations/Type:
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Atom/Content Role: Operations/Type:
     Action'
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Projection
+  - Subject/ANECHOIC/Graph/Node/Project Model/Projection
   - Scope Unit
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Projection//PROJECT_SCOPE_UNIT_GRAPH
-  - Subject/CAPRMEDIO/Carrier
-  - CAPRMEDIO_STRUCTURE <+ Projection//PROJECT_SCOPE_UNIT_GRAPH
+  - Subject/ANECHOIC/Graph/Node/Project Model/Projection//PROJECT_SCOPE_UNIT_GRAPH
+  - Subject/ANECHOIC/Carrier
+  - ANECHOIC_STRUCTURE <+ Projection//PROJECT_SCOPE_UNIT_GRAPH
 tier: 3
 status: Active
 version: 14

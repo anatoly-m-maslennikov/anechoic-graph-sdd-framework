@@ -26,36 +26,36 @@ def _scope_subject(value: str) -> str:
     try:
         expression = notation.parse_subject_expression(value, subject_profile="approved").expression
     except notation.SubjectNotationError:
-        if re.match(r"^\s*(?:CAPRMEDIO_STRUCTURE|CAPRMEDIO\s*<\+\s*STRUCTURE)\s*<\+", value):
+        if re.match(r"^\s*(?:ANECHOIC_STRUCTURE|ANECHOIC\s*<\+\s*STRUCTURE)\s*<\+", value):
             return "structure"
-        return "model" if re.match(r"^\s*(?:CAPRMEDIO_MODEL|CAPRMEDIO\s*<\+\s*MODEL)\s*<\+", value) else "unresolved"
+        return "model" if re.match(r"^\s*(?:ANECHOIC_MODEL|ANECHOIC\s*<\+\s*MODEL)\s*<\+", value) else "unresolved"
 
     def root(expr: notation.Path | notation.RelationChain) -> str | None:
         if isinstance(expr, notation.RelationChain):
             first = expr.endpoints[0]
-            if isinstance(first.head, notation.Name) and first.head.value in {"CAPRMEDIO_MODEL", "CAPRMEDIO_STRUCTURE"}:
+            if isinstance(first.head, notation.Name) and first.head.value in {"ANECHOIC_MODEL", "ANECHOIC_STRUCTURE"}:
                 return first.head.value if notation.namespace_local_expression(expr) is not None else None
-            if (isinstance(first.head, notation.Name) and first.head.value == "CAPRMEDIO"
+            if (isinstance(first.head, notation.Name) and first.head.value == "ANECHOIC"
                     and len(expr.endpoints) > 1 and isinstance(expr.endpoints[1].head, notation.Name)
                     and notation.namespace_local_expression(expr) is not None):
-                return "CAPRMEDIO_" + expr.endpoints[1].head.value
+                return "ANECHOIC_" + expr.endpoints[1].head.value
             return None
         return root(expr.head) if isinstance(expr.head, (notation.Path, notation.RelationChain)) else None
 
     namespace = root(expression)
-    if namespace == "CAPRMEDIO_STRUCTURE":
+    if namespace == "ANECHOIC_STRUCTURE":
         return "structure"
-    if namespace != "CAPRMEDIO_MODEL":
+    if namespace != "ANECHOIC_MODEL":
         if isinstance(expression, notation.Path) and isinstance(expression.head, notation.Name):
-            if expression.head.value == "CAPRMEDIO_MODEL" and expression.steps:
+            if expression.head.value == "ANECHOIC_MODEL" and expression.steps:
                 target = _contract_target(expression)
                 if target is not None and target[0] == "relation":
                     return "model"
             if expression.steps:
                 return "unresolved"
-            if expression.head.value == "CAPRMEDIO_MODEL":
+            if expression.head.value == "ANECHOIC_MODEL":
                 return "model"
-            if expression.head.value == "CAPRMEDIO_STRUCTURE":
+            if expression.head.value == "ANECHOIC_STRUCTURE":
                 return "structure"
         return "unresolved"
 
@@ -190,7 +190,7 @@ def _local_target(subject: str) -> tuple[str, str] | None:
     if _has_selection(expression):
         return None
     if (isinstance(expression, notation.Path) and isinstance(expression.head, notation.Name)
-            and expression.head.value in {"CAPRMEDIO_MODEL", "CAPRMEDIO_STRUCTURE"} and not expression.steps):
+            and expression.head.value in {"ANECHOIC_MODEL", "ANECHOIC_STRUCTURE"} and not expression.steps):
         return None
     target = _contract_target(expression)
     if target is not None:

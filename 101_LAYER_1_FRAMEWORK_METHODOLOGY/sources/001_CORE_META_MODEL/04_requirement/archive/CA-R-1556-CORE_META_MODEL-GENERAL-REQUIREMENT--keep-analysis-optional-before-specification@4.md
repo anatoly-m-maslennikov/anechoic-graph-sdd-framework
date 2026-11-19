@@ -10,7 +10,7 @@ subjects:
     - "Atom/Content Role: Analysis/Type: Analysis Report"
 version: 4
 updated_at: "2026-09-21 00:39:50 +0000"
-relations: {"child_of":["CAPRMEDIO-META-REQU-114"]}
+relations: {"child_of":["ANECHOIC-META-REQU-114"]}
 atom_id: "CA-R-1556"
 content_role: "Requirement"
 current_scope_unit: "CORE_META_MODEL"

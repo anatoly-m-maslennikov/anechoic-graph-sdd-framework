@@ -20,4 +20,4 @@ type: "Delivery"
 ---
 # Serialize Project Settings Filename
 
-the authoritative Project Settings TOML File Carrier filename **must** match `caprmedio_<project_name>_settings.toml`, **where** `<project_name>` is the exact lowercase Project name.
+the authoritative Project Settings TOML File Carrier filename **must** match `anechoic_<project_name>_settings.toml`, **where** `<project_name>` is the exact lowercase Project name.

@@ -12,4 +12,4 @@ relations: {}
 ---
 # Define Entity
 
-an Entity **means** one independently identified **or** bearer-qualified participant represented **in** a CAPRMEDIO Graph.
+an Entity **means** one independently identified **or** bearer-qualified participant represented **in** a ANECHOIC Graph.

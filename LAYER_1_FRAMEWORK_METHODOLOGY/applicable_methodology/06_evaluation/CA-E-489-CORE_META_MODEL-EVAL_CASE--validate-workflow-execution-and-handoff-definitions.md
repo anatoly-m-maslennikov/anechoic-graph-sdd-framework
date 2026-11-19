@@ -6,13 +6,13 @@ container:
 role: Evaluation
 form: Eval Case
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role:=Operations)/Workflow
+  main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role:=Operations)/Workflow
   dependencies:
-  - CAPRMEDIO_MODEL <+ Entity/Object/Occurrent/Execution/Workflow Run
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow) >{1+} Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Step)'
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role:=Operations)/Action
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Actor/Operator
+  - ANECHOIC_MODEL <+ Entity/Object/Occurrent/Execution/Workflow Run
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow) >{1+} Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Step)'
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role:=Operations)/Action
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Actor/Operator
 tier: 3
 relations:
   evaluation_for:
@@ -24,11 +24,11 @@ updated_at: 2026-11-02 08:06:47 +0400
 carrier_destination:
   file:
     name: CA-E-489-CORE_META_MODEL-EVAL_CASE--validate-workflow-execution-and-handoff-definitions.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-489-CORE_META_MODEL-EVAL_CASE--validate-workflow-execution-and-handoff-definitions.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-489-CORE_META_MODEL-EVAL_CASE--validate-workflow-execution-and-handoff-definitions.md
   source_atom_id: CA-E-489
   source_atom_revision: 23
   source_sha256: da166429d44ee0886f2ac71a0de8ea0541a836b8e1c6d21ade2c64f047e44d35

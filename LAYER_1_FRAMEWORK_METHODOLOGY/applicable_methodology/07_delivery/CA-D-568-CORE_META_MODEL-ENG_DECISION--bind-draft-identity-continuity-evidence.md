@@ -6,12 +6,12 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Identity.ID
+  main_subject: ANECHOIC_MODEL <+ Atom.Header.Identity.ID
   dependencies:
-  - 'CAPRMEDIO_MODEL <+ Atom.Header.State.Status: Draft'
-  - CAPRMEDIO_MODEL <+ Atom.Header.State.Version
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Carrier/File
+  - 'ANECHOIC_MODEL <+ Atom.Header.State.Status: Draft'
+  - ANECHOIC_MODEL <+ Atom.Header.State.Version
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Carrier/File
 tier: 4
 status: active
 version: 21
@@ -19,11 +19,11 @@ updated_at: 2026-11-09 00:57:07 +0400
 carrier_destination:
   file:
     name: CA-D-568-CORE_META_MODEL-ENG_DECISION--bind-draft-identity-continuity-evidence.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-568-CORE_META_MODEL-ENG_DECISION--bind-draft-identity-continuity-evidence.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-568-CORE_META_MODEL-ENG_DECISION--bind-draft-identity-continuity-evidence.md
   source_atom_id: CA-D-568
   source_atom_revision: 21
   source_sha256: 7e3e981800f7bee1b4c2fea3189bc7d35364c74eb183143da1b243fbefac260d

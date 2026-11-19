@@ -93,7 +93,7 @@ class CompilerTest(unittest.TestCase):
 
     def test_current_term_definition_requires_a_flat_term_subject(self) -> None:
         for subject in ("", "Term", "Entity//Shared Term", "Term//Shared Term/Other",
-                        "CAPRMEDIO_STRUCTURE <+ Term//Shared Term"):
+                        "ANECHOIC_STRUCTURE <+ Term//Shared Term"):
             with self.subTest(subject=subject):
                 frontmatter, _ = module.split_frontmatter(term_definition_carrier("CA-M-010", subject), "test.md")
                 with self.assertRaises(module.CompileError) as error:
@@ -106,8 +106,8 @@ class CompilerTest(unittest.TestCase):
         )
 
     def test_term_definition_preserves_model_identity(self) -> None:
-        for subject in ("Term//ID", "CAPRMEDIO_MODEL <+ Term//ID", "MODEL//CAPRMEDIO <+ Term//ID",
-                        "CAPRMEDIO <+ MODEL <+ Term//ID"):
+        for subject in ("Term//ID", "ANECHOIC_MODEL <+ Term//ID", "MODEL//ANECHOIC <+ Term//ID",
+                        "ANECHOIC <+ MODEL <+ Term//ID"):
             with self.subTest(subject=subject):
                 frontmatter, _ = module.split_frontmatter(term_definition_carrier("CA-M-010", subject), "test.md")
                 self.assertEqual(("ID", subject, ""), module.definition_subject(frontmatter, "test.md"))
@@ -123,21 +123,21 @@ class CompilerTest(unittest.TestCase):
         ):
             self.assertEqual("CA-M-120", module.derive_atom_id(Path(name), "version: 1"))
         self.assertEqual(
-            "CAPRMEDIO-E-169-EVAL_APPROACH",
-            module.derive_atom_id(Path("CAPRMEDIO-E-169-CORE-EVAL_APPROACH--new.md"),
-                                 'atom_id: "CAPRMEDIO-E-169-EVAL_APPROACH"'),
+            "ANECHOIC-E-169-EVAL_APPROACH",
+            module.derive_atom_id(Path("ANECHOIC-E-169-CORE-EVAL_APPROACH--new.md"),
+                                 'atom_id: "ANECHOIC-E-169-EVAL_APPROACH"'),
         )
 
     def setUp(self) -> None:
         from scope_declaration_test_support import write_scope_unit_declarations
 
-        temporary = Path.cwd() / ".caprmedio_tmp/compiler-tests"
+        temporary = Path.cwd() / ".anechoic_tmp/compiler-tests"
         temporary.mkdir(parents=True, exist_ok=True)
         self.temp = Path(tempfile.mkdtemp(prefix="case-", dir=temporary))
         settings = self.temp / module.SETTINGS_PATH
         settings.parent.mkdir(parents=True, exist_ok=True)
         settings.write_text(
-            '[project]\nname = "caprmedio"\n[paths]\ncontrol_root = ".caprmedio_caprmedio"\n'
+            '[project]\nname = "anechoic"\n[paths]\ncontrol_root = ".anechoic_anechoic"\n'
         )
         self.declarations = write_scope_unit_declarations(
             self.temp,
@@ -314,7 +314,7 @@ class CompilerTest(unittest.TestCase):
         places = module.methodology_paths(self.temp)
         _, candidates, snapshot = module.compile_report(self.temp, places)
         (self.temp / module.SETTINGS_PATH).write_text(
-            '[project]\nname = "caprmedio"\n[paths]\ncontrol_root = ".caprmedio_other_project"\n'
+            '[project]\nname = "anechoic"\n[paths]\ncontrol_root = ".anechoic_other_project"\n'
         )
 
         with self.assertRaises(module.CompileError) as raised:
@@ -322,7 +322,7 @@ class CompilerTest(unittest.TestCase):
 
         self.assertEqual("source-frontier-changed", raised.exception.code)
         self.assertFalse((self.temp / places.output / "05_method").exists())
-        self.assertFalse((self.temp / ".caprmedio_other_project").exists())
+        self.assertFalse((self.temp / ".anechoic_other_project").exists())
 
     def test_explicit_release_child_places_remain_independent_of_canonical_target(self) -> None:
         original = self.write("001_CORE_META_MODEL", "05_method", "CA-M-001--one.md", carrier("CA-M-001"))
@@ -383,14 +383,14 @@ class CompilerTest(unittest.TestCase):
         self.assertFalse(applied["can_apply"])
 
     def test_current_and_legacy_term_definitions_conflict(self) -> None:
-        current_subject = "CAPRMEDIO_MODEL <+ Term//Shared Term"
+        current_subject = "ANECHOIC_MODEL <+ Term//Shared Term"
         self.write("001_CORE_META_MODEL", "05_method", "CA-M-010--define.md",
                    term_definition_carrier("CA-M-010", current_subject))
         self.write("003_PROJECT_CONFIGURATION", "05_method", "CA-M-011--define.md",
                    term_definition_carrier("CA-M-011", "Term//Shared Term"))
         self.write("003_PROJECT_CONFIGURATION", "04_requirement", "CA-R-012--define.md",
                    definition_carrier("CA-R-012", "Shared Term"))
-        legacy_subject = "CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Term//Shared Term"
+        legacy_subject = "ANECHOIC_MODEL <+ Entity/Object/Continuant/Term//Shared Term"
         self.write("001_CORE_META_MODEL", "04_requirement", "CA-R-013--define.md", (
             "---\natom_id: CA-R-013\nrole: Requirement\nform: Term Definition\n"
             f"subjects:\n  active: {legacy_subject}\n"
@@ -412,7 +412,7 @@ class CompilerTest(unittest.TestCase):
 
     def test_separate_model_term_definitions_do_not_conflict(self) -> None:
         self.write("001_CORE_META_MODEL", "05_method", "CA-M-010--define.md",
-                   term_definition_carrier("CA-M-010", "CAPRMEDIO_MODEL <+ Term//ID"))
+                   term_definition_carrier("CA-M-010", "ANECHOIC_MODEL <+ Term//ID"))
         self.write("003_PROJECT_CONFIGURATION", "05_method", "CA-M-011--define.md",
                    term_definition_carrier("CA-M-011", "MODEL//Other <+ Term//ID"))
 

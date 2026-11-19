@@ -29,7 +29,7 @@ export class HttpOperationCaller implements OperationCaller {
   }
 
   private async post<T>(path: string, body: Record<string, unknown>): Promise<T> {
-    const apiBase = this.base.replace(/^\/caprmedio\/workbench\/([^/]+)$/, '/caprmedio/$1/api');
+    const apiBase = this.base.replace(/^\/anechoic\/workbench\/([^/]+)$/, '/anechoic/$1/api');
     const response = await fetch(`${apiBase}/${path}`, {
       method: 'POST', headers: { 'content-type': 'application/json' },
       body: JSON.stringify(this.projectRoot ? { ...body, project_root: this.projectRoot } : body),

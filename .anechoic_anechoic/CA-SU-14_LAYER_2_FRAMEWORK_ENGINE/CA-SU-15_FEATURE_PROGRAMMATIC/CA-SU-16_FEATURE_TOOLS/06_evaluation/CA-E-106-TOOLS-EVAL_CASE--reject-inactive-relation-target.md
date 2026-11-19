@@ -1,0 +1,35 @@
+---
+atom_id: CA-E-106
+ref_id: CA-E-106
+container:
+  scope_unit: CA-SU-16
+role: Evaluation
+form: Eval Case
+topics:
+  main_subject: Subject/ANECHOIC/Graph/Relation.Target Reference
+  dependencies:
+  - Subject/ANECHOIC/Graph/Node/Project Model/Atom/Content Role
+  - Subject/ANECHOIC/Graph/Node/Project Model/Atom.Header.State.Status
+  - Subject/ANECHOIC/Graph/Relation
+tier: 2
+relations:
+  evaluation_for:
+  - ANECHOIC-GOV-REQU-767
+  - ANECHOIC-GOV-EVAL-005
+  - CA-R-1137
+status: Active
+version: 21
+updated_at: 2026-10-27 19:59:28 +0400
+llm_session_ids:
+- codex:019f591f-04f6-70f2-8de7-828b7cccc69d
+- codex:01a02650-eff7-7453-8c37-0699b36773c6
+author: Anatoly Maslennikov
+current_scope_unit: TOOLS
+---
+# Reject inactive relation target
+
+## Test case
+
+**Fixture:** point a direct Relation authored by an Active RMED Atom at an Archived RMED Atom under ANECHOIC-GOV-REQU-767. also include an admitted Task dependency on a Done prerequisite Task as a control outside the RMED-to-RMED restriction.
+
+**Expected result:** fail the Active RMED-to-Archived RMED fixture with the stable inactive-relation-target diagnostic **and** a non-zero exit. accept the admitted Done prerequisite with respect **to** this restriction; retain **all** other applicable Relation constraints under ANECHOIC-GOV-EVAL-005.

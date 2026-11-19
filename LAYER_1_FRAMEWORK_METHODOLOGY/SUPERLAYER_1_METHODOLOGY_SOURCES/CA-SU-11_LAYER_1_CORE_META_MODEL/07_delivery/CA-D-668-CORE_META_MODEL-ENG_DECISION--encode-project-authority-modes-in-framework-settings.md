@@ -4,7 +4,7 @@ ref_id: CA-D-668
 role: Delivery
 form: Eng Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Project.Settings.Authority Modes
+  main_subject: ANECHOIC_MODEL <+ Project.Settings.Authority Modes
 tier: 3
 status: Active
 version: 2

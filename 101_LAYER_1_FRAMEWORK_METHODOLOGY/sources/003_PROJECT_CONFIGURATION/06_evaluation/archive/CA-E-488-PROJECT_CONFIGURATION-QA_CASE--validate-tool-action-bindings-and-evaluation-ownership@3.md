@@ -22,7 +22,7 @@ relations:
 ---
 # Validate Tool Action bindings and Evaluation ownership
 
-the Evaluation of a caprmedio Tool's methodology binding **must** check the canonical Action owner, binding cardinality, **and** division of Evaluation responsibility under CA-R-1515 through CA-R-1518.
+the Evaluation of a anechoic Tool's methodology binding **must** check the canonical Action owner, binding cardinality, **and** division of Evaluation responsibility under CA-R-1515 through CA-R-1518.
 
 ## Cases and expected results
 

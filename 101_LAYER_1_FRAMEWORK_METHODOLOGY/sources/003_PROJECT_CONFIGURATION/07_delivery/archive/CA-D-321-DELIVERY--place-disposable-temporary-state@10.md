@@ -1,6 +1,6 @@
 ---
 subjects:
-  governs: "CAPRMEDIO/Temporary State Carrier Root"
+  governs: "ANECHOIC/Temporary State Carrier Root"
   depends_on: []
 version: 10
 updated_at: "2026-09-15 03:15:32 +0400"
@@ -16,6 +16,6 @@ type: "Delivery"
 ---
 # Place Disposable Temporary State
 
-the caprmedio Project **must** place disposable scratch, staging, test cache, atomic-write intermediate, build intermediate, **and** interrupted-cleanup Carriers under `.caprmedio_tmp/`.
+the anechoic Project **must** place disposable scratch, staging, test cache, atomic-write intermediate, build intermediate, **and** interrupted-cleanup Carriers under `.anechoic_tmp/`.
 
-deleting `.caprmedio_tmp/` **must not** delete governed authority, Project Journal history, installed Framework Engine releases, runtime logs, sessions, databases, service state, **or** resumable state.
+deleting `.anechoic_tmp/` **must not** delete governed authority, Project Journal history, installed Framework Engine releases, runtime logs, sessions, databases, service state, **or** resumable state.

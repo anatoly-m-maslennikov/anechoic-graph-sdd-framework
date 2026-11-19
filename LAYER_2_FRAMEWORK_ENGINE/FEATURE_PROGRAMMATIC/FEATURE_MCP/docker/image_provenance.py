@@ -33,17 +33,17 @@ class ImageBuildProvenance:
             or not PurePosixPath(self.project_root).is_absolute()
             or ".." in PurePosixPath(self.project_root).parts
             or len(PurePosixPath(self.control_root).parts) != 1
-            or not self.control_root.startswith(".caprmedio_")
+            or not self.control_root.startswith(".anechoic_")
         ):
             raise ValueError("Image build provenance is invalid")
 
     def labels(self) -> dict[str, str]:
         return {
-            "org.caprmedio.project": self.project_id,
-            "org.caprmedio.host_project_root": self.project_root,
-            "org.caprmedio.control_root": self.control_root,
-            "org.caprmedio.project.name": self.project_name,
-            "org.caprmedio.source.head_commit": self.head_commit,
+            "org.anechoic.project": self.project_id,
+            "org.anechoic.host_project_root": self.project_root,
+            "org.anechoic.control_root": self.control_root,
+            "org.anechoic.project.name": self.project_name,
+            "org.anechoic.source.head_commit": self.head_commit,
         }
 
 

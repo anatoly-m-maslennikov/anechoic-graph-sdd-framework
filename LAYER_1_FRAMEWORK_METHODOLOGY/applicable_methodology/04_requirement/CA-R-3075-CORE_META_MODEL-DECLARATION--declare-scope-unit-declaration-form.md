@@ -8,7 +8,7 @@ context:
   role: requirement
   form: declaration
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Requirement)/(.Header.Context.Form
+    main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Requirement)/(.Header.Context.Form
       := Scope Unit Declaration)
   tier: 3
 relations:
@@ -21,9 +21,9 @@ state:
 destination:
   file:
     name: CA-R-3075-CORE_META_MODEL-DECLARATION--declare-scope-unit-declaration-form.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-3075-CORE_META_MODEL-DECLARATION--declare-scope-unit-declaration-form.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-3075-CORE_META_MODEL-DECLARATION--declare-scope-unit-declaration-form.md
   source_atom_id: CA-R-3075
   source_atom_revision: 2
   source_sha256: 4a0ca350e71a8e3e925bb7892b51602d7fe52d7769f6a7abdc12fd05c247fded
@@ -42,8 +42,8 @@ Scope Unit Declaration is a Requirement Form. Its active Subject identifies one 
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_entity
-from caprmedio.model import Requirement
+from anechoic.formal_claims import declare_entity
+from anechoic.model import Requirement
 
 class ScopeUnitDeclaration(Requirement):
     pass

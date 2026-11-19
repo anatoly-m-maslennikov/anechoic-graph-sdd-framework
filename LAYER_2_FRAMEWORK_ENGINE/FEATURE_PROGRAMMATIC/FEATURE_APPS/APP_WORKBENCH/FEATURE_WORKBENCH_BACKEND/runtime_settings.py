@@ -21,7 +21,7 @@ DEFAULT_SCHEMA_MODE = 2
 
 def result_ttl_seconds(root: Path) -> int:
     """Return the declared positive TTL without changing runtime settings."""
-    path = Path(root) / ".caprmedio_runtime" / "caprmedio_runtime_settings.toml"
+    path = Path(root) / ".anechoic_runtime" / "anechoic_runtime_settings.toml"
     if not path.exists():
         return DEFAULT_RESULT_TTL_SECONDS
     try:
@@ -39,7 +39,7 @@ def result_ttl_seconds(root: Path) -> int:
 
 def schema_mode(root: Path) -> int:
     """Return the selected cold-start schema mode without a public query option."""
-    path = Path(root) / ".caprmedio_runtime" / "caprmedio_runtime_settings.toml"
+    path = Path(root) / ".anechoic_runtime" / "anechoic_runtime_settings.toml"
     if not path.exists():
         return DEFAULT_SCHEMA_MODE
     try:

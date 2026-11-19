@@ -14,4 +14,4 @@ relations:
 ---
 # Separate Project Settings from the Project Scope Unit Graph
 
-the CAPRMEDIO Framework **must** distinguish authoritative Project initialization Settings, Framework Instance behavior Settings, **and** Project Structure declarations from read-only Project Scope Unit Graph Projections. structural observations **and** generated effective values **must not** become independent Settings **or** Project Structure authority.
+the ANECHOIC Framework **must** distinguish authoritative Project initialization Settings, Framework Instance behavior Settings, **and** Project Structure declarations from read-only Project Scope Unit Graph Projections. structural observations **and** generated effective values **must not** become independent Settings **or** Project Structure authority.

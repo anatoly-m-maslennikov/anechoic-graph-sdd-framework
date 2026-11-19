@@ -11,7 +11,7 @@ subjects:
     - "Journal/Record"
 version: 4
 updated_at: "2026-09-20 15:47:25 +0000"
-relations: {"relates_to": ["CA-R-1452", "CA-R-1509", "CA-R-1511", "CAPRMEDIO-META-REQU-158"]}
+relations: {"relates_to": ["CA-R-1452", "CA-R-1509", "CA-R-1511", "ANECHOIC-META-REQU-158"]}
 atom_id: "CA-R-1528"
 content_role: "Requirement"
 current_scope_unit: "CORE_META_MODEL"

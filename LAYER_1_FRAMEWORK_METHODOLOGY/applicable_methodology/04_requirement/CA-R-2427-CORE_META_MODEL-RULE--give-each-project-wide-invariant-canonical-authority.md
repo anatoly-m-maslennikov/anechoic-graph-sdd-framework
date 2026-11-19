@@ -6,9 +6,9 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Project
+  main_subject: ANECHOIC_MODEL <+ Project
   dependencies:
-  - CAPRMEDIO_MODEL <+ Project
+  - ANECHOIC_MODEL <+ Project
 tier: 3
 relations:
   child_of:
@@ -19,11 +19,11 @@ updated_at: 2026-11-02 00:18:22 +0400
 carrier_destination:
   file:
     name: CA-R-2427-CORE_META_MODEL-RULE--give-each-project-wide-invariant-canonical-authority.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2427-CORE_META_MODEL-RULE--give-each-project-wide-invariant-canonical-authority.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2427-CORE_META_MODEL-RULE--give-each-project-wide-invariant-canonical-authority.md
   source_atom_id: CA-R-2427
   source_atom_revision: 2
   source_sha256: e3da1f7689d8f6e694724ab3cf510776ffec401c57c87605e78576b20f27505b

@@ -1,11 +1,11 @@
 ---
 subjects:
-  active: CAPRMEDIO_MODEL <+ CFEL <+ Relation//GOVERNS
+  active: ANECHOIC_MODEL <+ CFEL <+ Relation//GOVERNS
   passive:
-  - CAPRMEDIO_MODEL <+ CFEL > Relation
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ CFEL > Relation
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Entity
+  - ANECHOIC_MODEL <+ Atom.Content
 version: 37
 updated_at: 2026-11-03 20:00:05 +0400
 atom_id: CA-R-1199
@@ -18,7 +18,7 @@ form: Declaration
 carrier_destination:
   file:
     name: CA-R-1199-CORE_META_MODEL-DECLARATION--define-governs-subject-relation-kind.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 ---
 ## Summary
 

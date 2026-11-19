@@ -17,9 +17,9 @@ llm_session_ids:
 relations:
   child_of:
     - CA-R-118
-    - CAPRMEDIO-META-REQU-107--bind-traceability-to-exact-claims-and-revisions
-    - CAPRMEDIO-META-REQU-128--separate-artifact-carrier-and-revision
-    - CAPRMEDIO-META-REQU-643--assign-one-authoritative-owner-to-each-governed-claim
+    - ANECHOIC-META-REQU-107--bind-traceability-to-exact-claims-and-revisions
+    - ANECHOIC-META-REQU-128--separate-artifact-carrier-and-revision
+    - ANECHOIC-META-REQU-643--assign-one-authoritative-owner-to-each-governed-claim
 ---
 # Store each semantic relation once
 

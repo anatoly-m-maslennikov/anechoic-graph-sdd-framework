@@ -1,0 +1,55 @@
+---
+atom_id: CA-P-2330
+ref_id: CA-P-2330
+container:
+  atom: CA-P-2307
+role: Plan
+form: Plan
+label: Task
+topics:
+  main_subject: Subject/Graph Node/Engineering/Continuant/Tool
+  dependencies:
+  - Subject/Graph Node/Domain/Continuant/Atom
+  - 'Subject/Graph Node/Domain/Continuant/Atom/Content Role: Method'
+  - 'Subject/Graph Node/Domain/Continuant/Atom/Content Role: Delivery'
+  - 'Subject/Graph Node/Domain/Continuant/Atom/Content Role: Plan'
+tier: 3
+relations:
+  is_decomposition_of:
+  - CA-P-2307
+status: Done
+version: 7
+updated_at: 2026-10-25 17:32:27 +0400
+carrier_destination:
+  file:
+    name: 6-CA-P-2330-TASK--remove-redundant-toml-rule-types.md
+    path: .anechoic_anechoic/03_plan/30-CA-P-2167-EPIC--finish-tools-before-stage-2-execution/21-CA-P-2256-TASK--implement-toml-item-and-full-set-edits/done/2-CA-P-2307-TASK--select-tomlkit-for-preserving-configuration-text/done
+work_sequence_number: 6
+current_scope_unit: anechoic
+claim_target_scope_unit: anechoic
+author: Anatoly Maslennikov
+assignee: AI Agent
+---
+# Summary
+
+Remove redundant TOML rule Types
+
+## Objective
+
+Remove only the unsupported Type fields from CA-M-383 and CA-D-632, as explicitly approved by the Operator.
+
+## Details
+
+Estimated own work: up to 15 minutes. Their Content Roles remain Method and Delivery. Preserve exact predecessor archives, increment Version once and record actual Updated At. Preserve Summary, Subjects, relations and body. Refresh only affected current pins after independent comparison; keep historical receipts unchanged.
+
+Independently review the exact two-header correction and rerun the same explicit PRMEDO finite diagnostic. C/A remains deferred. No validator exception, new Type, legacy fallback, configuration write, dependency implementation or whole-Project admission follows from this Task.
+
+### Definition of Done
+
+The Plan is not Done if the permitted diff or exact archives fail independent review, affected current pins are stale, scoped checks are not rerun, or remaining failures are hidden.
+
+### Completed bounded outcome — 2026-10-13
+
+The exact two Type-field removals and predecessor archives passed current independent comparison. Subsequent typed-relation changes have separate acceptance; no current production pin consumer requires another refresh.
+
+Evidence: [bounded cleanup Task closure](../../../../../../_projection/core-entity-review/stage2/tools-first/bounded-cleanup-task-closure.md). Receiving integration, full-Project/runtime admission and deferred C/A migration remain separate.

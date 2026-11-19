@@ -20,4 +20,4 @@ relations:
 ---
 # Separate Project Settings from the Project Scope Unit Graph
 
-the CAPRMEDIO Framework **must** distinguish the human-editable Project Settings Artifact from generated Project Scope Unit Graph Projections. **only** the Project Settings Artifact owns Operator-selected Project values, while the Framework Instance Settings Artifact owns Framework Instance values; Project Scope Unit Graph Projections are read-only derived views **and** never configuration authority.
+the ANECHOIC Framework **must** distinguish the human-editable Project Settings Artifact from generated Project Scope Unit Graph Projections. **only** the Project Settings Artifact owns Operator-selected Project values, while the Framework Instance Settings Artifact owns Framework Instance values; Project Scope Unit Graph Projections are read-only derived views **and** never configuration authority.

@@ -8,10 +8,10 @@ context:
   role: Operations
   form: Action
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/Action
+    main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/Action
     dependencies:
-    - CAPRMEDIO_MODEL <+ Atom
-    - CAPRMEDIO_STRUCTURE <+ Scope Unit//PROJECT_CONFIGURATION
+    - ANECHOIC_MODEL <+ Atom
+    - ANECHOIC_STRUCTURE <+ Scope Unit//PROJECT_CONFIGURATION
   tier: 3
 state:
   status: Active
@@ -20,9 +20,9 @@ state:
 destination:
   file:
     name: CA-O-10002-PROJECT_CONFIGURATION-ACTION--check-draft-input-formats-and-allowed-values.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-10002-PROJECT_CONFIGURATION-ACTION--check-draft-input-formats-and-allowed-values.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-10002-PROJECT_CONFIGURATION-ACTION--check-draft-input-formats-and-allowed-values.md
   source_atom_id: CA-O-10002
   source_atom_revision: 2
   source_sha256: 149ab74a735c2db4baae49c20e3ea2134dc3e82682fbd7a4a35db15a67fa2ba3

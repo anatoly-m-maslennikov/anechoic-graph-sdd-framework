@@ -13,4 +13,4 @@ relations: {}
 ---
 # Make Every Governed Artifact Self-Describing
 
-**every** CAPRMEDIO Governed Artifact **must** carry **in** its own authoritative Carrier a complete explicit representation of **every** applicable registered Artifact/Property needed **to** identify, classify, locate, interpret, **and** validate that Artifact, including each applicable Property also derivable from its Carrier/Canonical Address.
+**every** ANECHOIC Governed Artifact **must** carry **in** its own authoritative Carrier a complete explicit representation of **every** applicable registered Artifact/Property needed **to** identify, classify, locate, interpret, **and** validate that Artifact, including each applicable Property also derivable from its Carrier/Canonical Address.

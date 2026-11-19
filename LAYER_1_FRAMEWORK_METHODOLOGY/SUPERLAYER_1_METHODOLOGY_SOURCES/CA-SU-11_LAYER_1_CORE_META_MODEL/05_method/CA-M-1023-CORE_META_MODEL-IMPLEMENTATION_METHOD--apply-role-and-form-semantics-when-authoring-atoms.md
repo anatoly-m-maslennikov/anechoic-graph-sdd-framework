@@ -7,10 +7,10 @@ context:
   form: Implementation Method
   tier: 4
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ Atom
+    main_subject: ANECHOIC_MODEL <+ Atom
     dependencies:
-    - CAPRMEDIO_MODEL <+ Atom.Header.Context.Role
-    - CAPRMEDIO_MODEL <+ Atom.Content
+    - ANECHOIC_MODEL <+ Atom.Header.Context.Role
+    - ANECHOIC_MODEL <+ Atom.Content
   container:
     scope_unit: CA-SU-11
 state:
@@ -20,7 +20,7 @@ state:
 destination:
   file:
     name: CA-M-1023-CORE_META_MODEL-IMPLEMENTATION_METHOD--apply-role-and-form-semantics-when-authoring-atoms.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
 ---
 ## Summary
 

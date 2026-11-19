@@ -9,7 +9,7 @@ version: 22
 updated_at: "2026-10-03 01:35:00 +0400"
 relations:
   child_of:
-    - CAPRMEDIO-REQU-035-CORE-REQUIREMENT--identify-necessary-information-by-confidence
+    - ANECHOIC-REQU-035-CORE-REQUIREMENT--identify-necessary-information-by-confidence
   relates_to:
     - CA-M-279
 atom_id: "CA-R-1652"

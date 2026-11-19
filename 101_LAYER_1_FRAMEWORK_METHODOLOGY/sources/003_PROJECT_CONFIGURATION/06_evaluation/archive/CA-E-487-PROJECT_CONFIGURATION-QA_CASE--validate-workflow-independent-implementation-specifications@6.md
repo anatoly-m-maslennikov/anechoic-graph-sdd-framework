@@ -26,7 +26,7 @@ type: "QA Case"
 ---
 # Validate Workflow-independent Implementation specifications
 
-the Evaluation of a caprmedio implementation Spec **must** reject dependence on a production Workflow under CA-R-1514.
+the Evaluation of a anechoic implementation Spec **must** reject dependence on a production Workflow under CA-R-1514.
 
 ## Cases and expected results
 

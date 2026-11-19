@@ -18,7 +18,7 @@ relations:
 ---
 # Separate methodology and Tool Evaluation responsibilities
 
-**in** the caprmedio Project, Evaluation responsibility for operational definitions **and** their Tool implementations **must** follow this allocation:
+**in** the anechoic Project, Evaluation responsibility for operational definitions **and** their Tool implementations **must** follow this allocation:
 
 - methodology source Scope Units own Evaluations of Action **and** Workflow definitions, including valid Action references, Step inputs, typed transitions, **and** termination **or** bounded retry conditions. these Evaluations **may** directly check O authority under CA-R-1018; checks for Steps **and** Runs reuse CA-E-486 **when** applicable.
 - TOOLS **and** its Tool Scope Units own Evaluations of Tools: implementation behavior, interfaces, failures, **and** conformance **to** the Action implemented by the Tool. these Evaluations **must not** independently define the correctness rules of the referenced Action **or** Workflow.

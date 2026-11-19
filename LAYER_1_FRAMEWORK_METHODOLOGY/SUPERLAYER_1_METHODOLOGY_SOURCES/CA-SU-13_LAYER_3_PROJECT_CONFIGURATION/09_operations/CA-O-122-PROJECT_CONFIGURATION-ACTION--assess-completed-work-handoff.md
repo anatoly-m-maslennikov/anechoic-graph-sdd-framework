@@ -6,20 +6,20 @@ container:
 role: Operations
 form: Action
 topics:
-  main_subject: 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Plan'
+  main_subject: 'Subject/ANECHOIC/Graph/Node/Project Model/Atom/Content Role: Plan'
   dependencies:
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Operations/Type:
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Atom/Content Role: Operations/Type:
     Action'
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Plan.Definition
+  - Subject/ANECHOIC/Graph/Node/Project Model/Atom
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Atom/Content Role: Plan.Definition
     of Done'
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Plan.Status'
-  - Subject/CAPRMEDIO/Graph/Relation
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Actor/Type: Operator'
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Execution/Workflow Run
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/History/Journal
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role:=Plan).Content.Definition of Done
-  - CAPRMEDIO_MODEL <+ Relation//BLOCKS
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Atom/Content Role: Plan.Status'
+  - Subject/ANECHOIC/Graph/Relation
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Actor/Type: Operator'
+  - Subject/ANECHOIC/Graph/Node/Project Model/Execution/Workflow Run
+  - Subject/ANECHOIC/Graph/Node/Project Model/History/Journal
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role:=Plan).Content.Definition of Done
+  - ANECHOIC_MODEL <+ Relation//BLOCKS
 tier: 3
 status: Active
 version: 16
@@ -27,7 +27,7 @@ updated_at: 2026-10-29 22:26:57 +0400
 carrier_destination:
   file:
     name: CA-O-122-PROJECT_CONFIGURATION-ACTION--assess-completed-work-handoff.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: PROJECT_CONFIGURATION
 author: Anatoly Maslennikov

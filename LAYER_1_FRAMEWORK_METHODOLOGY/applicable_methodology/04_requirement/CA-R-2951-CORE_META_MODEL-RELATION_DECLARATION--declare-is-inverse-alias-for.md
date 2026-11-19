@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Relation Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Relation//IS_INVERSE_ALIAS_FOR
+  main_subject: ANECHOIC_MODEL <+ Relation//IS_INVERSE_ALIAS_FOR
 tier: 3
 status: active
 version: 2
@@ -14,9 +14,9 @@ updated_at: '2026-11-12T12:33:04.158402+00:00'
 carrier_destination:
   file:
     name: CA-R-2951-CORE_META_MODEL-RELATION_DECLARATION--declare-is-inverse-alias-for.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2951-CORE_META_MODEL-RELATION_DECLARATION--declare-is-inverse-alias-for.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2951-CORE_META_MODEL-RELATION_DECLARATION--declare-is-inverse-alias-for.md
   source_atom_id: CA-R-2951
   source_atom_revision: 2
   source_sha256: 94eb36a9ffcfbdd34c525a898da85b26cf3ea55b1fe3297c8d8313fe1abd693a
@@ -36,7 +36,7 @@ IS_INVERSE_ALIAS_FOR binds an inverse alias model address to its canonical Relat
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_relation
+from anechoic.formal_claims import declare_relation
 
 declare_relation(
     relation_name='IS_INVERSE_ALIAS_FOR',

@@ -1,10 +1,10 @@
 ---
 subjects:
-  governs: "CAPRMEDIO Routing Tree"
+  governs: "ANECHOIC Routing Tree"
   depends_on: []
 version: 3
 updated_at: "2026-09-17 15:07:45 +0000"
-relations: {"evaluation_for":["CAPRMEDIO-GOV-REQU-333"]}
+relations: {"evaluation_for":["ANECHOIC-GOV-REQU-333"]}
 atom_id: "CA-E-483"
 content_role: "Evaluation"
 current_scope_unit: "PROJECT_CONFIGURATION"
@@ -16,7 +16,7 @@ type: "Evaluation"
 ---
 # Validate the routing tree
 
-the Evaluation of the CAPRMEDIO Routing Tree registered under CAPRMEDIO-GOV-REQU-333 **must** reject a routing tree **when** **any** of the following is present:
+the Evaluation of the ANECHOIC Routing Tree registered under ANECHOIC-GOV-REQU-333 **must** reject a routing tree **when** **any** of the following is present:
 
 - an invalid schema;
 - an unknown target;

@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Relation//HAS_ACTIVE_SUBJECT
+  main_subject: ANECHOIC_MODEL <+ Relation//HAS_ACTIVE_SUBJECT
 tier: 3
 status: active
 version: 4
@@ -14,7 +14,7 @@ updated_at: 2026-11-05 14:25:52 +0400
 carrier_destination:
   file:
     name: CA-R-2618-CORE_META_MODEL-DECLARATION--declare-has-active-subject.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 ---
 ## Summary
 
@@ -32,7 +32,7 @@ Forward `Host ((HAS_ACTIVE_SUBJECT)) Target` and reverse `Target <((HAS_ACTIVE_S
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_relation
+from anechoic.formal_claims import declare_relation
 
 declare_relation(
     relation_name='HAS_ACTIVE_SUBJECT',

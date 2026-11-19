@@ -69,7 +69,7 @@ class CodexBridge:
             if self.thread_id is None:
                 value = self.client.request(
                     "thread/start",
-                    {"cwd": str(self.root), "developerInstructions": f"CAPRMEDIO project_root: {self.root}"},
+                    {"cwd": str(self.root), "developerInstructions": f"ANECHOIC project_root: {self.root}"},
                 )
                 thread = value.get("thread", value)
                 self.thread_id = thread.get("id") if isinstance(thread, dict) else None

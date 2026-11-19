@@ -6,10 +6,10 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Entity
+  main_subject: ANECHOIC_MODEL <+ Entity
   dependencies:
-  - CAPRMEDIO_STRUCTURE <+ Entity/Object/Continuant/Selection//Extension Sources
-  - CAPRMEDIO_STRUCTURE <+ Scope Unit//PROJECT_CONFIGURATION
+  - ANECHOIC_STRUCTURE <+ Entity/Object/Continuant/Selection//Extension Sources
+  - ANECHOIC_STRUCTURE <+ Scope Unit//PROJECT_CONFIGURATION
 tier: 1
 status: Active
 version: 25
@@ -17,11 +17,11 @@ updated_at: 2026-11-02 00:18:22 +0400
 carrier_destination:
   file:
     name: CA-R-1286-CORE_META_MODEL-RULE--keep-qualified-type-domains-open.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1286-CORE_META_MODEL-RULE--keep-qualified-type-domains-open.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1286-CORE_META_MODEL-RULE--keep-qualified-type-domains-open.md
   source_atom_id: CA-R-1286
   source_atom_revision: 25
   source_sha256: 3e1c764e6dd17b453903707944b5e6cd128195d5f2d7578423096c51b7b20ea6

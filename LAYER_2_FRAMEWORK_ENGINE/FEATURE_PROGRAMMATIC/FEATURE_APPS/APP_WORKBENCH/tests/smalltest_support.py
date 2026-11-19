@@ -14,17 +14,17 @@ from typing import Any
 def extension_directory(root: Path) -> Path:
     """Use the suite-prepared DuckPGQ cache, overridable for local runs."""
     return Path(os.environ.get(
-        "CAPRMEDIO_DUCKPGQ_EXTENSION_DIRECTORY",
-        root / ".caprmedio_tmp" / "workbench" / "extensions",
+        "ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY",
+        root / ".anechoic_tmp" / "workbench" / "extensions",
     ))
 
 
 def write_settings(root: Path) -> Path:
-    control = root / ".caprmedio_caprmedio"
+    control = root / ".anechoic_anechoic"
     control.mkdir()
-    (control / "caprmedio_project_settings.toml").write_text(
+    (control / "anechoic_project_settings.toml").write_text(
         '[project]\nname = "fixture"\n[artifacts.identity]\nproject_prefix = "CA"\n'
-        '[paths]\ncontrol_root = ".caprmedio_caprmedio"\n',
+        '[paths]\ncontrol_root = ".anechoic_anechoic"\n',
         encoding="utf-8",
     )
     return control

@@ -6,13 +6,13 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Context.Tier
+  main_subject: ANECHOIC_MODEL <+ Atom.Header.Context.Tier
   dependencies:
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ Project
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Form := Goal)
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics.Main Subject
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Tier
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Project
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Form := Goal)
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Topics.Main Subject
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Tier
 tier: 2
 status: Active
 version: 11
@@ -20,7 +20,7 @@ updated_at: 2026-11-04 09:19:08 +0400
 carrier_destination:
   file:
     name: CA-R-2131-CORE_META_MODEL-RULE--admit-numeric-tiers-in-non-project-scope-units.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---

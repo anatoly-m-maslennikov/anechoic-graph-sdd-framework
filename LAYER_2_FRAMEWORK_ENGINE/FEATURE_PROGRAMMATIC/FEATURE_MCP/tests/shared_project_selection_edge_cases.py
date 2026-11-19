@@ -18,14 +18,14 @@ from project_selection import ProjectSelectionError, rebind_selection, resolve_p
 
 class ProjectSelectionEdgeCases(unittest.TestCase):
     def setUp(self) -> None:
-        parent = APP.parents[2] / ".caprmedio_tmp" / "launcher-epic-1829" / "selection"
+        parent = APP.parents[2] / ".anechoic_tmp" / "launcher-epic-1829" / "selection"
         parent.mkdir(parents=True, exist_ok=True)
         self.fixture = Path(tempfile.mkdtemp(dir=parent))
         self.root = self.fixture / "project"
-        self.control = self.root / ".caprmedio_demo"
+        self.control = self.root / ".anechoic_demo"
         self.control.mkdir(parents=True)
-        (self.control / "caprmedio_project_settings.toml").write_text(
-            '[paths]\ncontrol_root=".caprmedio_demo"\n[project]\nname="demo"\n', encoding="utf-8")
+        (self.control / "anechoic_project_settings.toml").write_text(
+            '[paths]\ncontrol_root=".anechoic_demo"\n[project]\nname="demo"\n', encoding="utf-8")
         self.declarations = write_scope_unit_declarations(
             self.root,
             ({"scope_unit_name": "DECLARED", "parent": "PROJECT", "scope_unit_type": "Unordered"},),
@@ -45,7 +45,7 @@ class ProjectSelectionEdgeCases(unittest.TestCase):
         self.declaration.write_text(contents, encoding="utf-8")
 
     def identity(self, host: str | Path) -> str:
-        return hashlib.sha256(f"{host}\0.caprmedio_demo".encode()).hexdigest()
+        return hashlib.sha256(f"{host}\0.anechoic_demo".encode()).hexdigest()
 
     def test_declaration_authority_refuses_authored_escape_and_symlink_but_allows_derived_paths(self) -> None:
         sibling = self.fixture / "sibling"

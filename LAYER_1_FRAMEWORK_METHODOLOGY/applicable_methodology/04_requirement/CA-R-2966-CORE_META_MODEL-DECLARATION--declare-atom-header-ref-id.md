@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Identity.Ref ID
+  main_subject: ANECHOIC_MODEL <+ Atom.Header.Identity.Ref ID
 tier: 3
 status: active
 version: 3
@@ -14,9 +14,9 @@ updated_at: '2026-11-12T17:23:54+00:00'
 carrier_destination:
   file:
     name: CA-R-2966-CORE_META_MODEL-DECLARATION--declare-atom-header-ref-id.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2966-CORE_META_MODEL-DECLARATION--declare-atom-header-ref-id.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2966-CORE_META_MODEL-DECLARATION--declare-atom-header-ref-id.md
   source_atom_id: CA-R-2966
   source_atom_revision: 3
   source_sha256: 79abad838cf65655af365c810e7fc049c4760a455a49cf7139b32eeb183b62c6
@@ -36,7 +36,7 @@ For an Atom in the Current or Backlog Status Group, Ref ID is its base Atom ID. 
 
 ```python
 # model
-from caprmedio.formal_claims import declare_entity
+from anechoic.formal_claims import declare_entity
 
 declare_entity(
     entity_name='Ref ID',

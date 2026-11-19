@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Relation
+  main_subject: ANECHOIC_MODEL <+ Relation
 tier: 1
 relations:
   child_of:
@@ -17,7 +17,7 @@ updated_at: 2026-11-11 15:00:27 +0400
 carrier_destination:
   file:
     name: CA-R-1697-CORE_META_MODEL-RULE--bind-traceability-to-exact-claims-and-revisions.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---
@@ -30,10 +30,10 @@ Bind traceability to exact claims and revisions
 ### Prose Claim
 
 
-CAPRMEDIO traceability assertions.
+ANECHOIC traceability assertions.
 
 
-**every** CAPRMEDIO traceability assertion **must** identify the exact governed claim revision on which a receiving artifact, implementation target, evaluation use, delivery action, operational observation, **or** other governed result relies.
+**every** ANECHOIC traceability assertion **must** identify the exact governed claim revision on which a receiving artifact, implementation target, evaluation use, delivery action, operational observation, **or** other governed result relies.
 
 ## Details
 

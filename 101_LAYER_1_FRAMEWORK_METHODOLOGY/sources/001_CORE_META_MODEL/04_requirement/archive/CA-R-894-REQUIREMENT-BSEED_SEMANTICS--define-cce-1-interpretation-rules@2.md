@@ -5,8 +5,8 @@ relations:
   child_of:
     - CA-R-892
     - CA-R-893
-    - CAPRMEDIO-META-REQU-126--govern-canonical-scoped-vocabulary
-    - CAPRMEDIO-META-REQU-131--use-canonical-terms-for-governed-concepts
+    - ANECHOIC-META-REQU-126--govern-canonical-scoped-vocabulary
+    - ANECHOIC-META-REQU-131--use-canonical-terms-for-governed-concepts
 version: 2
 updated_at: 2026-08-22 02:56:25
 ---

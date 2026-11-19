@@ -6,11 +6,11 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Context.Tier
+  main_subject: ANECHOIC_MODEL <+ Atom.Header.Context.Tier
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Tier
-  - CAPRMEDIO_MODEL <+ Projection
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Tier
+  - ANECHOIC_MODEL <+ Projection
 tier: 4
 relations:
   delivery_for:
@@ -21,11 +21,11 @@ updated_at: 2026-11-02 00:18:22 +0400
 carrier_destination:
   file:
     name: CA-D-652-CORE_META_MODEL-DECISION--omit-default-numeric-tier-tokens-from-filenames.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-652-CORE_META_MODEL-ENG_DECISION--omit-default-numeric-tier-tokens-from-filenames.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-652-CORE_META_MODEL-ENG_DECISION--omit-default-numeric-tier-tokens-from-filenames.md
   source_atom_id: CA-D-652
   source_atom_revision: 13
   source_sha256: 3ae66c082b89d65b23fae71f91a8468f77e84bda4d47539a98593012dcbaa0f3

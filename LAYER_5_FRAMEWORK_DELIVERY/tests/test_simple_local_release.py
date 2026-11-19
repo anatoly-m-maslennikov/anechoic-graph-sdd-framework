@@ -37,10 +37,10 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name).resolve()
-        self.control = self.root / ".caprmedio_caprmedio"
+        self.control = self.root / ".anechoic_anechoic"
         self.control.mkdir()
-        (self.control / "caprmedio_project_settings.toml").write_text(
-            '[project]\nname = "caprmedio"\n[paths]\ncontrol_root = ".caprmedio_caprmedio"\n', encoding="utf-8")
+        (self.control / "anechoic_project_settings.toml").write_text(
+            '[project]\nname = "anechoic"\n[paths]\ncontrol_root = ".anechoic_anechoic"\n', encoding="utf-8")
         declared = write_scope_unit_declarations(self.root, (
             {"scope_unit_name": "FRAMEWORK_METHODOLOGY", "scope_unit_type": "Unordered"},
             {"scope_unit_name": "METHODOLOGY_SOURCES", "parent": "FRAMEWORK_METHODOLOGY", "scope_unit_type": "Unordered"},
@@ -60,10 +60,10 @@ class SimpleLocalReleaseTests(unittest.TestCase):
                 historical = unit / directory / "active.md"
                 historical.parent.mkdir()
                 historical.write_text("---\nstatus: Active\n---\nold\n", encoding="utf-8")
-        (self.root / ".gitignore").write_text(".caprmedio_tmp/\n", encoding="utf-8")
+        (self.root / ".gitignore").write_text(".anechoic_tmp/\n", encoding="utf-8")
         self.product = self.root / "LAYER_1_FRAMEWORK_METHODOLOGY"
-        self.installed = self.control / "000_CAPRMEDIO_framework"
-        self.runtime = self.root / ".caprmedio_runtime"
+        self.installed = self.control / "000_ANECHOIC_framework"
+        self.runtime = self.root / ".anechoic_runtime"
         delivery = self.root / "LAYER_5_FRAMEWORK_DELIVERY/PUBLIC_RELEASE"
         delivery.mkdir(parents=True)
         (delivery / "public_release.py").write_text("# release source\n", encoding="utf-8")
@@ -161,7 +161,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.addCleanup(lifecycle_assets.stop)
         provenance = patch("local_release.release_image_provenance", return_value={
             "project_id": "c" * 64, "project_root": str(self.root),
-            "control_root": ".caprmedio_caprmedio", "project_name": "Fixture",
+            "control_root": ".anechoic_anechoic", "project_name": "Fixture",
             "head_commit": "d" * 40,
         })
         self.provenance = provenance.start()
@@ -240,7 +240,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
 
     def test_failed_asset_publication_restores_checkout(self):
         first, second, *_ = sorted(_GENERATED_ASSETS)
-        package = self.root / ".caprmedio_tmp/package"
+        package = self.root / ".anechoic_tmp/package"
         previous = {}
         expected = {}
         for relative in (first, second):
@@ -278,7 +278,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         old_image = "sha256:" + "c" * 64
         payload = {"project_root": str(self.root), "control_root": str(self.control),
                    "project_id": selection.instance_id, "image_id": old_image}
-        legacy = self.root / ".caprmedio_install/project_mcp" / selection.instance_id / "last_launch.json"
+        legacy = self.root / ".anechoic_install/project_mcp" / selection.instance_id / "last_launch.json"
         legacy.parent.mkdir(parents=True)
         legacy.write_text(json.dumps(payload), encoding="utf-8")
         retained = legacy.read_bytes()
@@ -299,7 +299,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertEqual(retained, legacy.read_bytes())
 
     def test_active_sources_replace_product_and_installed_copy_preserves_config(self):
-        protected = ("settings.toml", "project_settings.toml", "caprmedio_framework_settings.toml",
+        protected = ("settings.toml", "project_settings.toml", "anechoic_framework_settings.toml",
                      "operators_registry.toml", "operator_registry/entry.txt")
         for target in (self.product, self.installed):
             for relative in protected:
@@ -327,13 +327,13 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         nested = self.root / "LAYER_5_FRAMEWORK_DELIVERY" / ".anechoic_nested" / "ordinary.txt"
         nested.parent.mkdir()
         nested.write_text("ordinary package file\n", encoding="utf-8")
-        transient = self.root / ".caprmedio_install" / "workflow_orchestrator" / "runtime.txt"
+        transient = self.root / ".anechoic_install" / "workflow_orchestrator" / "runtime.txt"
         transient.parent.mkdir(parents=True)
         transient.write_text("runtime state\n", encoding="utf-8")
-        nested_install = self.root / "LAYER_5_FRAMEWORK_DELIVERY" / ".caprmedio_install" / "ordinary.txt"
+        nested_install = self.root / "LAYER_5_FRAMEWORK_DELIVERY" / ".anechoic_install" / "ordinary.txt"
         nested_install.parent.mkdir()
         nested_install.write_text("ordinary package file\n", encoding="utf-8")
-        similar = self.root / ".caprmedio_install_extra" / "ordinary.txt"
+        similar = self.root / ".anechoic_install_extra" / "ordinary.txt"
         similar.parent.mkdir()
         similar.write_text("ordinary package file\n", encoding="utf-8")
         self.assertEqual(selected_before, _release_sources(self.root))
@@ -391,7 +391,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             self.assertTrue((package / nested.relative_to(self.root)).is_file())
             self.assertTrue((package / nested_install.relative_to(self.root)).is_file())
             self.assertTrue((package / similar.relative_to(self.root)).is_file())
-            for excluded in (".caprmedio_caprmedio", ".caprmedio_runtime", ".caprmedio_tmp", ".anechoic_anechoic", ".caprmedio_install"):
+            for excluded in (".anechoic_anechoic", ".anechoic_runtime", ".anechoic_tmp", ".anechoic_anechoic", ".anechoic_install"):
                 self.assertFalse((package / excluded).exists())
             self.assertEqual("retained implementation skill\n", (packaged_tools / "retained/SKILL.md").read_text())
         self.assertEqual("ca skill", (self.root / ".agents/skills/ca/SKILL.md").read_text())
@@ -399,7 +399,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertIn('version = "0.4.1.1"', (self.runtime / "simple_local_release/package/version.toml").read_text())
         self.assertEqual(1, sum(self._is_mcp_bootstrap(argv) for argv in calls))
         self.assertEqual("runtime state\n", transient.read_text(encoding="utf-8"))
-        self.assertEqual([], list((self.root / ".caprmedio_tmp/simple_local_release").iterdir()))
+        self.assertEqual([], list((self.root / ".anechoic_tmp/simple_local_release").iterdir()))
 
     def test_release_sources_accept_nested_and_lowercase_active_status(self):
         core = self.source_units["CORE_META_MODEL"]
@@ -620,7 +620,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertEqual(1, sum(any(item.endswith("run_full_test_suite.py") for item in argv) for argv in calls))
         self.assertEqual(2, sum(argv[:2] == ("git", "commit") for argv in calls))
         report = (self.root / result["report_path"]).read_text()
-        logs = list((self.root / ".caprmedio_tmp/simple_local_release").glob("tests-failed-tests-*.log"))
+        logs = list((self.root / ".anechoic_tmp/simple_local_release").glob("tests-failed-tests-*.log"))
         self.assertEqual(1, len(logs))
         self.assertIn(f"Complete test output: `{logs[0].relative_to(self.root).as_posix()}`", report)
         self.assertEqual(f"stdout:\n{stdout}\nstderr:\n{stderr}", logs[0].read_text())
@@ -724,7 +724,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertEqual("completed", result["outcome"])
         self.assertEqual("", git("status", "--porcelain").stdout)
         self.assertEqual("chore(release): simple local final", git("log", "-1", "--format=%s").stdout.strip())
-        receipt = ".caprmedio_runtime/simple_local_release/reports/real-git.md"
+        receipt = ".anechoic_runtime/simple_local_release/reports/real-git.md"
         self.assertIn("http://localhost:12345/mcp", git("show", f"HEAD:{receipt}").stdout)
         self.assertEqual(6, int(git("rev-list", "--count", "HEAD").stdout))
         for relative in _GENERATED_ASSETS:
@@ -757,7 +757,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
                 self.assertFalse(any(self._is_mcp_bootstrap(argv) for argv in calls))
                 for target, snapshot in before.items():
                     self.assertEqual(snapshot, inventory(target))
-                self.assertEqual([], list((self.root / ".caprmedio_tmp/simple_local_release").iterdir()))
+                self.assertEqual([], list((self.root / ".anechoic_tmp/simple_local_release").iterdir()))
 
     def test_package_byte_or_mode_drift_refuses_before_installed_clear(self):
         import local_release
@@ -821,7 +821,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         prepare = local_release._prepare_package
         stages = []
         def capture(root, product, package, **kwargs):
-            self.assertTrue(package.is_relative_to(root / ".caprmedio_tmp/simple_local_release"))
+            self.assertTrue(package.is_relative_to(root / ".anechoic_tmp/simple_local_release"))
             self.assertTrue(package.parent.name.startswith("private-"))
             self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
             stages.append(package)
@@ -832,7 +832,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertEqual("completed", result["outcome"])
         self.assertEqual(1, len(stages))
         self.assertFalse(stages[0].exists())
-        self.assertFalse((self.root / ".caprmedio_install").exists())
+        self.assertFalse((self.root / ".anechoic_install").exists())
 
     def test_image_is_verified_before_replacement_and_installed_launch_cannot_build(self):
         events = []
@@ -865,7 +865,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertEqual(2, self.image_factory.call_count)
         self.assertEqual([unittest.mock.call(use_packaged_assets=True)] * 3, self.image.identity.call_args_list)
         source, temporary = self.image_factory.call_args_list[0].args
-        self.assertTrue(source.is_relative_to(self.root / ".caprmedio_tmp/simple_local_release"))
+        self.assertTrue(source.is_relative_to(self.root / ".anechoic_tmp/simple_local_release"))
         self.assertEqual(source.parent / "image_builds", temporary)
         self.assertEqual(self.runtime / "simple_local_release/package", self.image_factory.call_args_list[1].args[0])
         launch = next(argv for argv in calls if self._is_mcp_bootstrap(argv))

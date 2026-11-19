@@ -9,7 +9,7 @@ version: 1
 updated_at: 2026-08-23 02:34:00
 relations:
   child_of:
-    - CAPRMEDIO-GOV-REQU-312--lineage-impact-analysis-records
+    - ANECHOIC-GOV-REQU-312--lineage-impact-analysis-records
 ---
 # Permit multiple child rows in one Lineage Impact Analysis
 

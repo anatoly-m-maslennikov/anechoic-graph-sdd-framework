@@ -65,10 +65,10 @@ class SharedGatewayHealthTests(unittest.IsolatedAsyncioTestCase):
 
     def _project(self, name):
         root = self.projects / name
-        control = root / f".caprmedio_{name}"
+        control = root / f".anechoic_{name}"
         control.mkdir(parents=True)
-        (control / "caprmedio_project_settings.toml").write_text(
-            f'[project]\nname="{name}"\n[paths]\ncontrol_root=".caprmedio_{name}"\n'
+        (control / "anechoic_project_settings.toml").write_text(
+            f'[project]\nname="{name}"\n[paths]\ncontrol_root=".anechoic_{name}"\n'
             f'[artifacts.identity]\nproject_prefix="{name.upper()}"\n'
         )
         write_scope_unit_declarations(root, control_root=control)

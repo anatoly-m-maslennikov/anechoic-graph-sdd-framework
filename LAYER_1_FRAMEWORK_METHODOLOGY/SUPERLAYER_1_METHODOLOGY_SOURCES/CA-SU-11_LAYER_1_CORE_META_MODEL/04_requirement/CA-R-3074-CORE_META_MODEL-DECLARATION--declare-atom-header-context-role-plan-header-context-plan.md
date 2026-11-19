@@ -8,7 +8,7 @@ context:
   role: requirement
   form: declaration
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.Context.Plan
+    main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.Context.Plan
   tier: 3
 state:
   status: active
@@ -17,7 +17,7 @@ state:
 destination:
   file:
     name: CA-R-3074-CORE_META_MODEL-DECLARATION--declare-atom-header-context-role-plan-header-context-plan.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 ---
 
 ## Summary
@@ -33,8 +33,8 @@ The Plan group is present only for an Atom with Plan Role and is omitted when it
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import Cardinality, declare_entity
-from caprmedio.model import Plan
+from anechoic.formal_claims import Cardinality, declare_entity
+from anechoic.model import Plan
 
 declare_entity(
     entity_name='Plan',

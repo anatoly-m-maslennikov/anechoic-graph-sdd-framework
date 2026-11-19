@@ -8,7 +8,7 @@ relations:
     - CA-R-914
     - CA-R-915
     - CA-R-916
-    - CAPRMEDIO-GOV-REQU-345--represent-accepted-meaning-faithfully
+    - ANECHOIC-GOV-REQU-345--represent-accepted-meaning-faithfully
 ---
 # Validate forward explicit ordered dependencies
 

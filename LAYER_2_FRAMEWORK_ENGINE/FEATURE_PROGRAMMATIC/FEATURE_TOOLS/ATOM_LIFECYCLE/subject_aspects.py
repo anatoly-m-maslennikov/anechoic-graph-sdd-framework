@@ -132,9 +132,9 @@ def _aspect_address(selection, expression, *, allow_named=False):
     if not isinstance(expression, notation.RelationChain):
         return None
     root, *parts = expression.endpoints
-    if (isinstance(root.head, notation.Name) and root.head.value == "CAPRMEDIO" and not root.steps
+    if (isinstance(root.head, notation.Name) and root.head.value == "ANECHOIC" and not root.steps
             and isinstance(parts[0].head, notation.Name) and parts[0].head.value == "STRUCTURE"):
-        if selection.settings["project"]["name"].casefold() != "caprmedio":
+        if selection.settings["project"]["name"].casefold() != "anechoic":
             return None
         root, *parts = parts
     if any(link.operator != "<+" or link.relation_type is not None
@@ -164,10 +164,10 @@ def _named_aspect(path):
 def _project_root(root, project):
     if not isinstance(root.head, notation.Name) or root.value_format or root.value_cardinality:
         return False
-    if root.head.value == "CAPRMEDIO_STRUCTURE" and not root.steps:
-        return project.casefold() == "caprmedio"
+    if root.head.value == "ANECHOIC_STRUCTURE" and not root.steps:
+        return project.casefold() == "anechoic"
     if root.head.value == "STRUCTURE" and not root.steps:
-        return project.casefold() == "caprmedio"
+        return project.casefold() == "anechoic"
     return (root.head.value == "PROJECT STRUCTURE" and len(root.steps) == 1
             and root.steps[0].operator == "//" and isinstance(root.steps[0].operand, notation.Name)
             and root.steps[0].operand.value.casefold() == project.casefold())

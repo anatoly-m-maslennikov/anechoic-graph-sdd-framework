@@ -53,8 +53,8 @@ class NativeProjectSelectionTests(unittest.TestCase):
         claim_lenses = f", lens_whitelist={lens_whitelist!r}" if lens_whitelist is not None else ""
         path.write_text(f"---\n{yaml.safe_dump(header)}---\n\n## Summary\n\nDeclare Anechoic\n\n"
                         "## Claim\n\n### Formal Claim\n\n```python\n"
-                        "from caprmedio.formal_claims import declare_entity\n"
-                        "from caprmedio.model import ProjectManifest\n"
+                        "from anechoic.formal_claims import declare_entity\n"
+                        "from anechoic.model import ProjectManifest\n"
                         f"declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name={name!r}, "
                         f"prefix={prefix!r}{claim_lenses}))\n```\n", encoding="utf-8")
         return path
@@ -63,11 +63,11 @@ class NativeProjectSelectionTests(unittest.TestCase):
         return resolve_native_project(self.root, self.native.name, validate_manifest=validate_manifest)
 
     def test_explicit_binding_pins_one_native_manifest_during_legacy_coexistence(self):
-        legacy = self.root / ".caprmedio_legacy"
+        legacy = self.root / ".anechoic_legacy"
         legacy.mkdir()
-        (legacy / "caprmedio_project_settings.toml").write_text(
+        (legacy / "anechoic_project_settings.toml").write_text(
             '[project]\nname="legacy"\nkey="legacy"\nrepository_slug="legacy"\n'
-            '[paths]\ncontrol_root=".caprmedio_legacy"\n[artifacts.identity]\nproject_prefix="CA"\n',
+            '[paths]\ncontrol_root=".anechoic_legacy"\n[artifacts.identity]\nproject_prefix="CA"\n',
             encoding="utf-8",
         )
         write_scope_unit_declarations(self.root, control_root=legacy)
@@ -81,7 +81,7 @@ class NativeProjectSelectionTests(unittest.TestCase):
         legacy_default = resolve_project(self.root)
         self.assertEqual(legacy, legacy_default.control_root)
         self.assertNotEqual(legacy_default.instance_id, native.instance_id)
-        self.assertFalse((self.root / ".caprmedio_runtime").exists())
+        self.assertFalse((self.root / ".anechoic_runtime").exists())
 
     def test_refuses_missing_and_ambiguous_active_manifest(self):
         self.carrier(status="draft")

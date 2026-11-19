@@ -20,10 +20,10 @@ Requirement — Bound effect guarantees
 
 ## Scope
 
-CAPRMEDIO effect guarantees.
+ANECHOIC effect guarantees.
 
 ## Claim
 
-CAPRMEDIO permits an effect guarantee **only** **when** its scope, assumptions, owner, temporal boundary, **and** enforcement conditions are explicit. a bounded local guarantee **must** never be presented as universal exactly-once execution.
+ANECHOIC permits an effect guarantee **only** **when** its scope, assumptions, owner, temporal boundary, **and** enforcement conditions are explicit. a bounded local guarantee **must** never be presented as universal exactly-once execution.
 
 ## Details

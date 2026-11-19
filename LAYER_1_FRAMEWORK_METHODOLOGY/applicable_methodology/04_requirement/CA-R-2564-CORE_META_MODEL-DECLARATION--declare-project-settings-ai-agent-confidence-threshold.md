@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Project.Settings.AI Agent Confidence Threshold
+  main_subject: ANECHOIC_MODEL <+ Project.Settings.AI Agent Confidence Threshold
 tier: 3
 status: active
 version: 5
@@ -14,9 +14,9 @@ updated_at: '2026-11-13T03:59:30.052668+00:00'
 carrier_destination:
   file:
     name: CA-R-2564-CORE_META_MODEL-DECLARATION--declare-project-settings-ai-agent-confidence-threshold.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2564-CORE_META_MODEL-DECLARATION--declare-project-settings-ai-agent-confidence-threshold.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2564-CORE_META_MODEL-DECLARATION--declare-project-settings-ai-agent-confidence-threshold.md
   source_atom_id: CA-R-2564
   source_atom_revision: 5
   source_sha256: 46f669f4036a974ee00681cc4b1d1b3f44cdedeca0627e19a2cbc6c1b8de24cc
@@ -31,7 +31,7 @@ Declare Project.Settings.AI Agent Confidence Threshold
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_entity
+from anechoic.formal_claims import declare_entity
 
 declare_entity(
     entity_name="AI Agent Confidence Threshold",

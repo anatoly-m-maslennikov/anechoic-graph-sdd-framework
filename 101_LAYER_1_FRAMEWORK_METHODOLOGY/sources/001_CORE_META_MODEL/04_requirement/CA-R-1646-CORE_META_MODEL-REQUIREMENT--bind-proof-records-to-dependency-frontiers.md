@@ -10,7 +10,7 @@ version: 18
 updated_at: "2026-10-03 01:31:08 +0400"
 relations:
   resolution_of:
-    - "CAPRMEDIO-GOV-CONC-054--how-should-proof-currentness-be-represented"
+    - "ANECHOIC-GOV-CONC-054--how-should-proof-currentness-be-represented"
   relates_to:
     - "CA-D-329"
 atom_id: "CA-R-1646"

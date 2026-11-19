@@ -1,5 +1,5 @@
 {
-  "scope": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103",
+  "scope": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103",
   "rules": {
     "same_atom_id_current_archived": "Summary must remain identical",
     "summary_changed": "fresh ID and retirement of old authority required",
@@ -51,8 +51,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2488",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2488-CORE_META_MODEL-DECLARATION--declare-atom-status.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2488-CORE_META_MODEL-DECLARATION--declare-atom-status@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2488-CORE_META_MODEL-DECLARATION--declare-atom-status.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2488-CORE_META_MODEL-DECLARATION--declare-atom-status@3-draft.md",
       "source_sha256_expected": "38472bf5fd0ddad482ab716c7185685a7ab701c8fa66696edb2639cb4084b553",
       "source_sha256_actual": "38472bf5fd0ddad482ab716c7185685a7ab701c8fa66696edb2639cb4084b553",
       "source_hash_matches": true,
@@ -72,8 +72,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2489",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2489-CORE_META_MODEL-DECLARATION--declare-atom-updated-at.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2489-CORE_META_MODEL-DECLARATION--declare-atom-updated-at@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2489-CORE_META_MODEL-DECLARATION--declare-atom-updated-at.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2489-CORE_META_MODEL-DECLARATION--declare-atom-updated-at@3-draft.md",
       "source_sha256_expected": "9ba95c7d9a61eaa8eace1e896dc75ff69c9e88f5cde19dd99fefcd93b5e07a6f",
       "source_sha256_actual": "9ba95c7d9a61eaa8eace1e896dc75ff69c9e88f5cde19dd99fefcd93b5e07a6f",
       "source_hash_matches": true,
@@ -93,8 +93,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2490",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2490-CORE_META_MODEL-DECLARATION--declare-atom-relations-contained-by.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2490-CORE_META_MODEL-DECLARATION--declare-atom-relations-contained-by@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2490-CORE_META_MODEL-DECLARATION--declare-atom-relations-contained-by.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2490-CORE_META_MODEL-DECLARATION--declare-atom-relations-contained-by@3-draft.md",
       "source_sha256_expected": "5b3ed19dcecc6adb5f09fb638f14e102d5476dbb04f10f5b731db6c29d4c074e",
       "source_sha256_actual": "5b3ed19dcecc6adb5f09fb638f14e102d5476dbb04f10f5b731db6c29d4c074e",
       "source_hash_matches": true,
@@ -114,8 +114,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2491",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2491-CORE_META_MODEL-DECLARATION--declare-atom-relations-contained-by-atom.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2491-CORE_META_MODEL-DECLARATION--declare-atom-relations-contained-by-atom@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2491-CORE_META_MODEL-DECLARATION--declare-atom-relations-contained-by-atom.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2491-CORE_META_MODEL-DECLARATION--declare-atom-relations-contained-by-atom@3-draft.md",
       "source_sha256_expected": "b6849ad2df577e896422935c3e0c4fb0d247dd63022dfebe943dfea9bc6ddde7",
       "source_sha256_actual": "b6849ad2df577e896422935c3e0c4fb0d247dd63022dfebe943dfea9bc6ddde7",
       "source_hash_matches": true,
@@ -135,8 +135,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2492",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2492-CORE_META_MODEL-DECLARATION--declare-atom-relations-contained-by-scope-unit.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2492-CORE_META_MODEL-DECLARATION--declare-atom-relations-contained-by-scope-unit@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2492-CORE_META_MODEL-DECLARATION--declare-atom-relations-contained-by-scope-unit.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2492-CORE_META_MODEL-DECLARATION--declare-atom-relations-contained-by-scope-unit@3-draft.md",
       "source_sha256_expected": "475d1e9ec319386e795aa778289aa39241496f67030bd3708850551fc30b61b9",
       "source_sha256_actual": "475d1e9ec319386e795aa778289aa39241496f67030bd3708850551fc30b61b9",
       "source_hash_matches": true,
@@ -156,8 +156,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2493",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2493-CORE_META_MODEL-DECLARATION--declare-atom-id.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2493-CORE_META_MODEL-DECLARATION--declare-atom-id@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2493-CORE_META_MODEL-DECLARATION--declare-atom-id.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2493-CORE_META_MODEL-DECLARATION--declare-atom-id@3-draft.md",
       "source_sha256_expected": "11386002300041ff210956be19f2cbad4ec38f7242f09febbfb014973b6978b8",
       "source_sha256_actual": "11386002300041ff210956be19f2cbad4ec38f7242f09febbfb014973b6978b8",
       "source_hash_matches": true,
@@ -177,8 +177,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2494",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2494-CORE_META_MODEL-DECLARATION--declare-atom-role.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2494-CORE_META_MODEL-DECLARATION--declare-atom-role@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2494-CORE_META_MODEL-DECLARATION--declare-atom-role.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2494-CORE_META_MODEL-DECLARATION--declare-atom-role@3-draft.md",
       "source_sha256_expected": "f58290b2d99a945a7a134938ce7b9a459c659026587323f0bacfb029d154be19",
       "source_sha256_actual": "f58290b2d99a945a7a134938ce7b9a459c659026587323f0bacfb029d154be19",
       "source_hash_matches": true,
@@ -198,8 +198,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2495",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2495-CORE_META_MODEL-DECLARATION--declare-atom-form.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2495-CORE_META_MODEL-DECLARATION--declare-atom-form@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2495-CORE_META_MODEL-DECLARATION--declare-atom-form.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2495-CORE_META_MODEL-DECLARATION--declare-atom-form@3-draft.md",
       "source_sha256_expected": "b0eb2b42f3a43ab6d233cbca11b8524deb7bb9642df0e2c98b8f782f9c71d7fd",
       "source_sha256_actual": "b0eb2b42f3a43ab6d233cbca11b8524deb7bb9642df0e2c98b8f782f9c71d7fd",
       "source_hash_matches": true,
@@ -219,8 +219,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2496",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2496-CORE_META_MODEL-DECLARATION--declare-atom-version.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2496-CORE_META_MODEL-DECLARATION--declare-atom-version@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2496-CORE_META_MODEL-DECLARATION--declare-atom-version.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2496-CORE_META_MODEL-DECLARATION--declare-atom-version@3-draft.md",
       "source_sha256_expected": "06736c88358227e8ff046f909dafb6b4e2cae49850269c3fa69ba37b6132f757",
       "source_sha256_actual": "06736c88358227e8ff046f909dafb6b4e2cae49850269c3fa69ba37b6132f757",
       "source_hash_matches": true,
@@ -240,8 +240,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2497",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2497-CORE_META_MODEL-DECLARATION--declare-atom-label.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2497-CORE_META_MODEL-DECLARATION--declare-atom-label@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2497-CORE_META_MODEL-DECLARATION--declare-atom-label.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2497-CORE_META_MODEL-DECLARATION--declare-atom-label@3-draft.md",
       "source_sha256_expected": "64b9e2fc1cd0bb3b8dd31693399fe716faae6c78b758c6e043859604bb74b495",
       "source_sha256_actual": "64b9e2fc1cd0bb3b8dd31693399fe716faae6c78b758c6e043859604bb74b495",
       "source_hash_matches": true,
@@ -261,8 +261,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2504",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2504-CORE_META_MODEL-DECLARATION--declare-atom-tier.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2504-CORE_META_MODEL-DECLARATION--declare-atom-tier@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2504-CORE_META_MODEL-DECLARATION--declare-atom-tier.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2504-CORE_META_MODEL-DECLARATION--declare-atom-tier@3-draft.md",
       "source_sha256_expected": "81c557e173bac08a96386b4a9772d80e9fd4887e75ded68cbd264385477c1367",
       "source_sha256_actual": "81c557e173bac08a96386b4a9772d80e9fd4887e75ded68cbd264385477c1367",
       "source_hash_matches": true,
@@ -282,8 +282,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2505",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2505-CORE_META_MODEL-DECLARATION--declare-atom-tier-label.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2505-CORE_META_MODEL-DECLARATION--declare-atom-tier-label@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2505-CORE_META_MODEL-DECLARATION--declare-atom-tier-label.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2505-CORE_META_MODEL-DECLARATION--declare-atom-tier-label@3-draft.md",
       "source_sha256_expected": "4a6ec2e9db535321899f54ad685f9e852e74b3019310f6c22f04cbc760548af8",
       "source_sha256_actual": "4a6ec2e9db535321899f54ad685f9e852e74b3019310f6c22f04cbc760548af8",
       "source_hash_matches": true,
@@ -303,8 +303,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2506",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2506-CORE_META_MODEL-DECLARATION--declare-atom-subjects-passive.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2506-CORE_META_MODEL-DECLARATION--declare-atom-subjects-passive@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2506-CORE_META_MODEL-DECLARATION--declare-atom-subjects-passive.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2506-CORE_META_MODEL-DECLARATION--declare-atom-subjects-passive@3-draft.md",
       "source_sha256_expected": "cce6c7f625825c2e4dec32c88af33c931f307e81463419136f96759df196b88d",
       "source_sha256_actual": "cce6c7f625825c2e4dec32c88af33c931f307e81463419136f96759df196b88d",
       "source_hash_matches": true,
@@ -324,8 +324,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2507",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2507-CORE_META_MODEL-DECLARATION--declare-atom-relations.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2507-CORE_META_MODEL-DECLARATION--declare-atom-relations@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2507-CORE_META_MODEL-DECLARATION--declare-atom-relations.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2507-CORE_META_MODEL-DECLARATION--declare-atom-relations@3-draft.md",
       "source_sha256_expected": "c95ca396aac7899ea6f20509ca8f64d1c2fe2f1422da826921d9b802f1e3e6a8",
       "source_sha256_actual": "c95ca396aac7899ea6f20509ca8f64d1c2fe2f1422da826921d9b802f1e3e6a8",
       "source_hash_matches": true,
@@ -345,8 +345,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2518",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2518-CORE_META_MODEL-DECLARATION--declare-concern-priority.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2518-CORE_META_MODEL-DECLARATION--declare-concern-priority@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2518-CORE_META_MODEL-DECLARATION--declare-concern-priority.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2518-CORE_META_MODEL-DECLARATION--declare-concern-priority@3-draft.md",
       "source_sha256_expected": "01f72d5838c9a687f9f68fd83aba6f4ff180a26b56108083325966196b5ac525",
       "source_sha256_actual": "01f72d5838c9a687f9f68fd83aba6f4ff180a26b56108083325966196b5ac525",
       "source_hash_matches": true,
@@ -366,8 +366,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2519",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2519-CORE_META_MODEL-DECLARATION--declare-plan-ai-agent-confidence-threshold.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2519-CORE_META_MODEL-DECLARATION--declare-plan-ai-agent-confidence-threshold@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2519-CORE_META_MODEL-DECLARATION--declare-plan-ai-agent-confidence-threshold.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2519-CORE_META_MODEL-DECLARATION--declare-plan-ai-agent-confidence-threshold@3-draft.md",
       "source_sha256_expected": "5fc6051b07d239471e37e74227b8ac8009b1ec432b9451e4d6412b131e0b41d5",
       "source_sha256_actual": "5fc6051b07d239471e37e74227b8ac8009b1ec432b9451e4d6412b131e0b41d5",
       "source_hash_matches": true,
@@ -387,8 +387,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2520",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2520-CORE_META_MODEL-DECLARATION--declare-plan-work-sequence-number.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2520-CORE_META_MODEL-DECLARATION--declare-plan-work-sequence-number@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2520-CORE_META_MODEL-DECLARATION--declare-plan-work-sequence-number.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2520-CORE_META_MODEL-DECLARATION--declare-plan-work-sequence-number@3-draft.md",
       "source_sha256_expected": "3520fc67f91bc41af713402584d4b5e8289d186720e45797426a8cae3f2ddbce",
       "source_sha256_actual": "3520fc67f91bc41af713402584d4b5e8289d186720e45797426a8cae3f2ddbce",
       "source_hash_matches": true,
@@ -408,8 +408,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2545",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2545-CORE_META_MODEL-DECLARATION--declare-atom-subjects.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2545-CORE_META_MODEL-DECLARATION--declare-atom-subjects@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2545-CORE_META_MODEL-DECLARATION--declare-atom-subjects.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2545-CORE_META_MODEL-DECLARATION--declare-atom-subjects@3-draft.md",
       "source_sha256_expected": "c58e2c493552cf6d33670e612ffdaaf3a4f400b69e79eb38ca3079e7ff8916a8",
       "source_sha256_actual": "c58e2c493552cf6d33670e612ffdaaf3a4f400b69e79eb38ca3079e7ff8916a8",
       "source_hash_matches": true,
@@ -429,8 +429,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2546",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2546-CORE_META_MODEL-DECLARATION--declare-atom-subjects-active.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2546-CORE_META_MODEL-DECLARATION--declare-atom-subjects-active@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2546-CORE_META_MODEL-DECLARATION--declare-atom-subjects-active.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2546-CORE_META_MODEL-DECLARATION--declare-atom-subjects-active@3-draft.md",
       "source_sha256_expected": "24abbc74f6464f318b08a8850ca4fa46630c2821194392adbb4ac81275b6c699",
       "source_sha256_actual": "24abbc74f6464f318b08a8850ca4fa46630c2821194392adbb4ac81275b6c699",
       "source_hash_matches": true,
@@ -450,8 +450,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2692",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2692-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2692-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination@2-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2692-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2692-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination@2-draft.md",
       "source_sha256_expected": "2596f0e5ecc167591837594e955ea1eb4011642e2dc8ddb29f2726051349c77a",
       "source_sha256_actual": "2596f0e5ecc167591837594e955ea1eb4011642e2dc8ddb29f2726051349c77a",
       "source_hash_matches": true,
@@ -471,8 +471,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2693",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2693-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination-file.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2693-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination-file@2-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2693-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination-file.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2693-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination-file@2-draft.md",
       "source_sha256_expected": "e5ac33aad7a63866362500451e457612187d9106293d2443109fc2321ecc5ca2",
       "source_sha256_actual": "e5ac33aad7a63866362500451e457612187d9106293d2443109fc2321ecc5ca2",
       "source_hash_matches": true,
@@ -492,8 +492,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2694",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2694-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination-file-name.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2694-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination-file-name@2-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2694-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination-file-name.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2694-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination-file-name@2-draft.md",
       "source_sha256_expected": "3e935fd80d4263f542fa7d1b156c3d96ea9dbd89e62badb06766c1ca1b001bd7",
       "source_sha256_actual": "3e935fd80d4263f542fa7d1b156c3d96ea9dbd89e62badb06766c1ca1b001bd7",
       "source_hash_matches": true,
@@ -513,8 +513,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2695",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2695-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination-file-path.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2695-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination-file-path@2-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2695-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination-file-path.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2695-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination-file-path@2-draft.md",
       "source_sha256_expected": "2add98f45ea245847ebfbfe727f8a5c274aad7bbc0616a17aa107bf81e4cb41a",
       "source_sha256_actual": "2add98f45ea245847ebfbfe727f8a5c274aad7bbc0616a17aa107bf81e4cb41a",
       "source_hash_matches": true,
@@ -535,7 +535,7 @@
   "new_candidates": [
     {
       "lane": "header",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-draft.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-draft.md",
       "candidate_sha256_expected": "cb6f64322c7b4875e1a14a5f9e370ed628b318e24bb780304f10a0d584b98462",
       "candidate_sha256_actual": "cb6f64322c7b4875e1a14a5f9e370ed628b318e24bb780304f10a0d584b98462",
       "candidate_hash_matches": true,
@@ -547,7 +547,7 @@
     },
     {
       "lane": "relations",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/NEW--declare-cfel-operator-alias.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/NEW--declare-cfel-operator-alias.md",
       "candidate_sha256_expected": "02f37b70ed7a5d9ce1e7fbdcfb048554d19c01655086a015d8b8d28222ab844b",
       "candidate_sha256_actual": "02f37b70ed7a5d9ce1e7fbdcfb048554d19c01655086a015d8b8d28222ab844b",
       "candidate_hash_matches": true,
@@ -559,7 +559,7 @@
     },
     {
       "lane": "claim",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/NEW-formal-claim.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/NEW-formal-claim.md",
       "candidate_sha256_actual": "c399fd476c6c967f6073bc2ee67d6091ffa3d53e52968d7ea5ba7808ba69dd02",
       "candidate_hash_matches": null,
       "candidate_atom_id": "CA-R-draft",
@@ -570,7 +570,7 @@
     },
     {
       "lane": "claim",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/NEW-prose-claim.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/NEW-prose-claim.md",
       "candidate_sha256_actual": "2deb4374dd5524c34307e76e95ebf3eb60641c06a19374dc17015dc93d5db5ac",
       "candidate_hash_matches": null,
       "candidate_atom_id": "CA-R-draft",
@@ -583,169 +583,169 @@
   "fake_draft_markers": [
     {
       "lane": "header",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2488-CORE_META_MODEL-DECLARATION--declare-atom-status@3-draft.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2488-CORE_META_MODEL-DECLARATION--declare-atom-status@3-draft.md",
       "candidate_atom_id": "CA-R-2488@3-draft",
       "marker": "Draft-suffixed candidate atom_id is not an allocated identity"
     },
     {
       "lane": "header",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2489-CORE_META_MODEL-DECLARATION--declare-atom-updated-at@3-draft.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2489-CORE_META_MODEL-DECLARATION--declare-atom-updated-at@3-draft.md",
       "candidate_atom_id": "CA-R-2489@3-draft",
       "marker": "Draft-suffixed candidate atom_id is not an allocated identity"
     },
     {
       "lane": "header",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2490-CORE_META_MODEL-DECLARATION--declare-atom-relations-contained-by@3-draft.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2490-CORE_META_MODEL-DECLARATION--declare-atom-relations-contained-by@3-draft.md",
       "candidate_atom_id": "CA-R-2490@3-draft",
       "marker": "Draft-suffixed candidate atom_id is not an allocated identity"
     },
     {
       "lane": "header",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2491-CORE_META_MODEL-DECLARATION--declare-atom-relations-contained-by-atom@3-draft.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2491-CORE_META_MODEL-DECLARATION--declare-atom-relations-contained-by-atom@3-draft.md",
       "candidate_atom_id": "CA-R-2491@3-draft",
       "marker": "Draft-suffixed candidate atom_id is not an allocated identity"
     },
     {
       "lane": "header",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2492-CORE_META_MODEL-DECLARATION--declare-atom-relations-contained-by-scope-unit@3-draft.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2492-CORE_META_MODEL-DECLARATION--declare-atom-relations-contained-by-scope-unit@3-draft.md",
       "candidate_atom_id": "CA-R-2492@3-draft",
       "marker": "Draft-suffixed candidate atom_id is not an allocated identity"
     },
     {
       "lane": "header",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2493-CORE_META_MODEL-DECLARATION--declare-atom-id@3-draft.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2493-CORE_META_MODEL-DECLARATION--declare-atom-id@3-draft.md",
       "candidate_atom_id": "CA-R-2493@3-draft",
       "marker": "Draft-suffixed candidate atom_id is not an allocated identity"
     },
     {
       "lane": "header",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2494-CORE_META_MODEL-DECLARATION--declare-atom-role@3-draft.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2494-CORE_META_MODEL-DECLARATION--declare-atom-role@3-draft.md",
       "candidate_atom_id": "CA-R-2494@3-draft",
       "marker": "Draft-suffixed candidate atom_id is not an allocated identity"
     },
     {
       "lane": "header",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2495-CORE_META_MODEL-DECLARATION--declare-atom-form@3-draft.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2495-CORE_META_MODEL-DECLARATION--declare-atom-form@3-draft.md",
       "candidate_atom_id": "CA-R-2495@3-draft",
       "marker": "Draft-suffixed candidate atom_id is not an allocated identity"
     },
     {
       "lane": "header",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2496-CORE_META_MODEL-DECLARATION--declare-atom-version@3-draft.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2496-CORE_META_MODEL-DECLARATION--declare-atom-version@3-draft.md",
       "candidate_atom_id": "CA-R-2496@3-draft",
       "marker": "Draft-suffixed candidate atom_id is not an allocated identity"
     },
     {
       "lane": "header",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2497-CORE_META_MODEL-DECLARATION--declare-atom-label@3-draft.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2497-CORE_META_MODEL-DECLARATION--declare-atom-label@3-draft.md",
       "candidate_atom_id": "CA-R-2497@3-draft",
       "marker": "Draft-suffixed candidate atom_id is not an allocated identity"
     },
     {
       "lane": "header",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2504-CORE_META_MODEL-DECLARATION--declare-atom-tier@3-draft.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2504-CORE_META_MODEL-DECLARATION--declare-atom-tier@3-draft.md",
       "candidate_atom_id": "CA-R-2504@3-draft",
       "marker": "Draft-suffixed candidate atom_id is not an allocated identity"
     },
     {
       "lane": "header",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2505-CORE_META_MODEL-DECLARATION--declare-atom-tier-label@3-draft.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2505-CORE_META_MODEL-DECLARATION--declare-atom-tier-label@3-draft.md",
       "candidate_atom_id": "CA-R-2505@3-draft",
       "marker": "Draft-suffixed candidate atom_id is not an allocated identity"
     },
     {
       "lane": "header",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2506-CORE_META_MODEL-DECLARATION--declare-atom-subjects-passive@3-draft.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2506-CORE_META_MODEL-DECLARATION--declare-atom-subjects-passive@3-draft.md",
       "candidate_atom_id": "CA-R-2506@3-draft",
       "marker": "Draft-suffixed candidate atom_id is not an allocated identity"
     },
     {
       "lane": "header",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2507-CORE_META_MODEL-DECLARATION--declare-atom-relations@3-draft.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2507-CORE_META_MODEL-DECLARATION--declare-atom-relations@3-draft.md",
       "candidate_atom_id": "CA-R-2507@3-draft",
       "marker": "Draft-suffixed candidate atom_id is not an allocated identity"
     },
     {
       "lane": "header",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2518-CORE_META_MODEL-DECLARATION--declare-concern-priority@3-draft.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2518-CORE_META_MODEL-DECLARATION--declare-concern-priority@3-draft.md",
       "candidate_atom_id": "CA-R-2518@3-draft",
       "marker": "Draft-suffixed candidate atom_id is not an allocated identity"
     },
     {
       "lane": "header",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2519-CORE_META_MODEL-DECLARATION--declare-plan-ai-agent-confidence-threshold@3-draft.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2519-CORE_META_MODEL-DECLARATION--declare-plan-ai-agent-confidence-threshold@3-draft.md",
       "candidate_atom_id": "CA-R-2519@3-draft",
       "marker": "Draft-suffixed candidate atom_id is not an allocated identity"
     },
     {
       "lane": "header",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2520-CORE_META_MODEL-DECLARATION--declare-plan-work-sequence-number@3-draft.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2520-CORE_META_MODEL-DECLARATION--declare-plan-work-sequence-number@3-draft.md",
       "candidate_atom_id": "CA-R-2520@3-draft",
       "marker": "Draft-suffixed candidate atom_id is not an allocated identity"
     },
     {
       "lane": "header",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2545-CORE_META_MODEL-DECLARATION--declare-atom-subjects@3-draft.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2545-CORE_META_MODEL-DECLARATION--declare-atom-subjects@3-draft.md",
       "candidate_atom_id": "CA-R-2545@3-draft",
       "marker": "Draft-suffixed candidate atom_id is not an allocated identity"
     },
     {
       "lane": "header",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2546-CORE_META_MODEL-DECLARATION--declare-atom-subjects-active@3-draft.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2546-CORE_META_MODEL-DECLARATION--declare-atom-subjects-active@3-draft.md",
       "candidate_atom_id": "CA-R-2546@3-draft",
       "marker": "Draft-suffixed candidate atom_id is not an allocated identity"
     },
     {
       "lane": "header",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2692-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination@2-draft.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2692-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination@2-draft.md",
       "candidate_atom_id": "CA-R-2692@2-draft",
       "marker": "Draft-suffixed candidate atom_id is not an allocated identity"
     },
     {
       "lane": "header",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2693-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination-file@2-draft.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2693-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination-file@2-draft.md",
       "candidate_atom_id": "CA-R-2693@2-draft",
       "marker": "Draft-suffixed candidate atom_id is not an allocated identity"
     },
     {
       "lane": "header",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2694-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination-file-name@2-draft.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2694-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination-file-name@2-draft.md",
       "candidate_atom_id": "CA-R-2694@2-draft",
       "marker": "Draft-suffixed candidate atom_id is not an allocated identity"
     },
     {
       "lane": "header",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2695-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination-file-path@2-draft.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2695-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination-file-path@2-draft.md",
       "candidate_atom_id": "CA-R-2695@2-draft",
       "marker": "Draft-suffixed candidate atom_id is not an allocated identity"
     },
     {
       "lane": "header",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2508-CORE_META_MODEL-DECLARATION--declare-atom@3-draft.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2508-CORE_META_MODEL-DECLARATION--declare-atom@3-draft.md",
       "candidate_atom_id": "CA-R-2508@3-draft",
       "marker": "Draft-suffixed candidate atom_id is not an allocated identity"
     },
     {
       "lane": "header",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-draft.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-draft.md",
       "candidate_atom_id": "CA-R-draft",
       "marker": "new candidate carries an unallocated placeholder id"
     },
     {
       "lane": "relations",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/NEW--declare-cfel-operator-alias.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/NEW--declare-cfel-operator-alias.md",
       "candidate_atom_id": "CA-R-draft",
       "marker": "new candidate carries an unallocated placeholder id"
     },
     {
       "lane": "claim",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/NEW-formal-claim.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/NEW-formal-claim.md",
       "candidate_atom_id": "CA-R-draft",
       "marker": "new candidate carries an unallocated placeholder id"
     },
     {
       "lane": "claim",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/NEW-prose-claim.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/NEW-prose-claim.md",
       "candidate_atom_id": "CA-R-draft",
       "marker": "new candidate carries an unallocated placeholder id"
     }
@@ -754,15 +754,15 @@
     {
       "lane": "relations",
       "atom_id": "CA-R-2595",
-      "source": ".caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2595-CORE_META_MODEL-DECLARATION--declare-cfel-operator.md",
+      "source": ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2595-CORE_META_MODEL-DECLARATION--declare-cfel-operator.md",
       "source_version": 1,
       "source_sha256": "28a6b2e57c0ecb029d899fc476acd6772fcd393ad9dfb6af4324ce7b4d1d81c9",
       "descriptor": "Operator//DeclaredReference",
       "disposition": "retire current reference-operator declaration on adoption; preserve historical revisions",
       "reason": "Bare qualified addresses reference declared objects; @ reference operator removed. Identity/version @N tags preserved.",
       "source_sha256_before_namespace": "7ec1a4c3fbb1bb29db4bdb50de475afa8b5e6ead2a338164d843e0ac39c87c0e",
-      "source_rebase_receipt": ".caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/root-subject-migration-20261103/application-receipt.json",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2595-CORE_META_MODEL-DECLARATION--declare-cfel-operator.md",
+      "source_rebase_receipt": ".anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/root-subject-migration-20261103/application-receipt.json",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2595-CORE_META_MODEL-DECLARATION--declare-cfel-operator.md",
       "source_sha256_actual": "28a6b2e57c0ecb029d899fc476acd6772fcd393ad9dfb6af4324ce7b4d1d81c9",
       "source_hash_matches": true
     },
@@ -770,14 +770,14 @@
       "lane": "claim",
       "atom_id": "CA-R-2501",
       "reason": "proposed retirement; no replacement carrier",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2501-CORE_META_MODEL-DECLARATION--declare-atom-content-claim-scope.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2501-CORE_META_MODEL-DECLARATION--declare-atom-content-claim-scope.md",
       "source_sha256_expected": "fb3675612c07a867820f16219c36f8c10d6aeecc8144f944552dcd9599b98c3e",
       "source_sha256_actual": "fb3675612c07a867820f16219c36f8c10d6aeecc8144f944552dcd9599b98c3e",
       "source_hash_matches": true
     },
     {
       "atom_id": "CA-D-482",
-      "source_path": ".caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-482-CORE_META_MODEL-ENG_DECISION--carry-the-resolved-claim-target-scope-unit.md",
+      "source_path": ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-482-CORE_META_MODEL-ENG_DECISION--carry-the-resolved-claim-target-scope-unit.md",
       "reason": "Resolved target comes from active Subject; separate Target Scope Unit Property and Operator ownership requirement were removed",
       "source_sha256": "1cca5d774d3920025dfaa2455de2b83a0f887bfb19b2f79f5e7c775243f4ea02"
     }
@@ -785,7 +785,7 @@
   "source_hash_mismatches": [],
   "candidate_hash_mismatches": [],
   "canonical_source_audit": {
-    "canonical_root": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL",
+    "canonical_root": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL",
     "all_sources_canonical": true,
     "noncanonical_source_ids": []
   },
@@ -793,8 +793,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2488",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2488-CORE_META_MODEL-DECLARATION--declare-atom-status.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2488-CORE_META_MODEL-DECLARATION--declare-atom-status@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2488-CORE_META_MODEL-DECLARATION--declare-atom-status.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2488-CORE_META_MODEL-DECLARATION--declare-atom-status@3-draft.md",
       "source_sha256_expected": "38472bf5fd0ddad482ab716c7185685a7ab701c8fa66696edb2639cb4084b553",
       "source_sha256_actual": "38472bf5fd0ddad482ab716c7185685a7ab701c8fa66696edb2639cb4084b553",
       "source_hash_matches": true,
@@ -814,8 +814,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2489",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2489-CORE_META_MODEL-DECLARATION--declare-atom-updated-at.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2489-CORE_META_MODEL-DECLARATION--declare-atom-updated-at@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2489-CORE_META_MODEL-DECLARATION--declare-atom-updated-at.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2489-CORE_META_MODEL-DECLARATION--declare-atom-updated-at@3-draft.md",
       "source_sha256_expected": "9ba95c7d9a61eaa8eace1e896dc75ff69c9e88f5cde19dd99fefcd93b5e07a6f",
       "source_sha256_actual": "9ba95c7d9a61eaa8eace1e896dc75ff69c9e88f5cde19dd99fefcd93b5e07a6f",
       "source_hash_matches": true,
@@ -835,8 +835,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2490",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2490-CORE_META_MODEL-DECLARATION--declare-atom-relations-contained-by.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2490-CORE_META_MODEL-DECLARATION--declare-atom-relations-contained-by@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2490-CORE_META_MODEL-DECLARATION--declare-atom-relations-contained-by.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2490-CORE_META_MODEL-DECLARATION--declare-atom-relations-contained-by@3-draft.md",
       "source_sha256_expected": "5b3ed19dcecc6adb5f09fb638f14e102d5476dbb04f10f5b731db6c29d4c074e",
       "source_sha256_actual": "5b3ed19dcecc6adb5f09fb638f14e102d5476dbb04f10f5b731db6c29d4c074e",
       "source_hash_matches": true,
@@ -856,8 +856,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2491",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2491-CORE_META_MODEL-DECLARATION--declare-atom-relations-contained-by-atom.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2491-CORE_META_MODEL-DECLARATION--declare-atom-relations-contained-by-atom@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2491-CORE_META_MODEL-DECLARATION--declare-atom-relations-contained-by-atom.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2491-CORE_META_MODEL-DECLARATION--declare-atom-relations-contained-by-atom@3-draft.md",
       "source_sha256_expected": "b6849ad2df577e896422935c3e0c4fb0d247dd63022dfebe943dfea9bc6ddde7",
       "source_sha256_actual": "b6849ad2df577e896422935c3e0c4fb0d247dd63022dfebe943dfea9bc6ddde7",
       "source_hash_matches": true,
@@ -877,8 +877,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2492",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2492-CORE_META_MODEL-DECLARATION--declare-atom-relations-contained-by-scope-unit.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2492-CORE_META_MODEL-DECLARATION--declare-atom-relations-contained-by-scope-unit@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2492-CORE_META_MODEL-DECLARATION--declare-atom-relations-contained-by-scope-unit.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2492-CORE_META_MODEL-DECLARATION--declare-atom-relations-contained-by-scope-unit@3-draft.md",
       "source_sha256_expected": "475d1e9ec319386e795aa778289aa39241496f67030bd3708850551fc30b61b9",
       "source_sha256_actual": "475d1e9ec319386e795aa778289aa39241496f67030bd3708850551fc30b61b9",
       "source_hash_matches": true,
@@ -898,8 +898,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2493",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2493-CORE_META_MODEL-DECLARATION--declare-atom-id.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2493-CORE_META_MODEL-DECLARATION--declare-atom-id@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2493-CORE_META_MODEL-DECLARATION--declare-atom-id.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2493-CORE_META_MODEL-DECLARATION--declare-atom-id@3-draft.md",
       "source_sha256_expected": "11386002300041ff210956be19f2cbad4ec38f7242f09febbfb014973b6978b8",
       "source_sha256_actual": "11386002300041ff210956be19f2cbad4ec38f7242f09febbfb014973b6978b8",
       "source_hash_matches": true,
@@ -919,8 +919,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2494",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2494-CORE_META_MODEL-DECLARATION--declare-atom-role.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2494-CORE_META_MODEL-DECLARATION--declare-atom-role@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2494-CORE_META_MODEL-DECLARATION--declare-atom-role.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2494-CORE_META_MODEL-DECLARATION--declare-atom-role@3-draft.md",
       "source_sha256_expected": "f58290b2d99a945a7a134938ce7b9a459c659026587323f0bacfb029d154be19",
       "source_sha256_actual": "f58290b2d99a945a7a134938ce7b9a459c659026587323f0bacfb029d154be19",
       "source_hash_matches": true,
@@ -940,8 +940,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2495",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2495-CORE_META_MODEL-DECLARATION--declare-atom-form.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2495-CORE_META_MODEL-DECLARATION--declare-atom-form@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2495-CORE_META_MODEL-DECLARATION--declare-atom-form.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2495-CORE_META_MODEL-DECLARATION--declare-atom-form@3-draft.md",
       "source_sha256_expected": "b0eb2b42f3a43ab6d233cbca11b8524deb7bb9642df0e2c98b8f782f9c71d7fd",
       "source_sha256_actual": "b0eb2b42f3a43ab6d233cbca11b8524deb7bb9642df0e2c98b8f782f9c71d7fd",
       "source_hash_matches": true,
@@ -961,8 +961,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2496",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2496-CORE_META_MODEL-DECLARATION--declare-atom-version.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2496-CORE_META_MODEL-DECLARATION--declare-atom-version@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2496-CORE_META_MODEL-DECLARATION--declare-atom-version.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2496-CORE_META_MODEL-DECLARATION--declare-atom-version@3-draft.md",
       "source_sha256_expected": "06736c88358227e8ff046f909dafb6b4e2cae49850269c3fa69ba37b6132f757",
       "source_sha256_actual": "06736c88358227e8ff046f909dafb6b4e2cae49850269c3fa69ba37b6132f757",
       "source_hash_matches": true,
@@ -982,8 +982,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2497",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2497-CORE_META_MODEL-DECLARATION--declare-atom-label.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2497-CORE_META_MODEL-DECLARATION--declare-atom-label@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2497-CORE_META_MODEL-DECLARATION--declare-atom-label.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2497-CORE_META_MODEL-DECLARATION--declare-atom-label@3-draft.md",
       "source_sha256_expected": "64b9e2fc1cd0bb3b8dd31693399fe716faae6c78b758c6e043859604bb74b495",
       "source_sha256_actual": "64b9e2fc1cd0bb3b8dd31693399fe716faae6c78b758c6e043859604bb74b495",
       "source_hash_matches": true,
@@ -1003,8 +1003,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2504",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2504-CORE_META_MODEL-DECLARATION--declare-atom-tier.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2504-CORE_META_MODEL-DECLARATION--declare-atom-tier@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2504-CORE_META_MODEL-DECLARATION--declare-atom-tier.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2504-CORE_META_MODEL-DECLARATION--declare-atom-tier@3-draft.md",
       "source_sha256_expected": "81c557e173bac08a96386b4a9772d80e9fd4887e75ded68cbd264385477c1367",
       "source_sha256_actual": "81c557e173bac08a96386b4a9772d80e9fd4887e75ded68cbd264385477c1367",
       "source_hash_matches": true,
@@ -1024,8 +1024,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2505",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2505-CORE_META_MODEL-DECLARATION--declare-atom-tier-label.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2505-CORE_META_MODEL-DECLARATION--declare-atom-tier-label@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2505-CORE_META_MODEL-DECLARATION--declare-atom-tier-label.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2505-CORE_META_MODEL-DECLARATION--declare-atom-tier-label@3-draft.md",
       "source_sha256_expected": "4a6ec2e9db535321899f54ad685f9e852e74b3019310f6c22f04cbc760548af8",
       "source_sha256_actual": "4a6ec2e9db535321899f54ad685f9e852e74b3019310f6c22f04cbc760548af8",
       "source_hash_matches": true,
@@ -1045,8 +1045,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2506",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2506-CORE_META_MODEL-DECLARATION--declare-atom-subjects-passive.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2506-CORE_META_MODEL-DECLARATION--declare-atom-subjects-passive@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2506-CORE_META_MODEL-DECLARATION--declare-atom-subjects-passive.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2506-CORE_META_MODEL-DECLARATION--declare-atom-subjects-passive@3-draft.md",
       "source_sha256_expected": "cce6c7f625825c2e4dec32c88af33c931f307e81463419136f96759df196b88d",
       "source_sha256_actual": "cce6c7f625825c2e4dec32c88af33c931f307e81463419136f96759df196b88d",
       "source_hash_matches": true,
@@ -1066,8 +1066,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2507",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2507-CORE_META_MODEL-DECLARATION--declare-atom-relations.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2507-CORE_META_MODEL-DECLARATION--declare-atom-relations@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2507-CORE_META_MODEL-DECLARATION--declare-atom-relations.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2507-CORE_META_MODEL-DECLARATION--declare-atom-relations@3-draft.md",
       "source_sha256_expected": "c95ca396aac7899ea6f20509ca8f64d1c2fe2f1422da826921d9b802f1e3e6a8",
       "source_sha256_actual": "c95ca396aac7899ea6f20509ca8f64d1c2fe2f1422da826921d9b802f1e3e6a8",
       "source_hash_matches": true,
@@ -1087,8 +1087,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2518",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2518-CORE_META_MODEL-DECLARATION--declare-concern-priority.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2518-CORE_META_MODEL-DECLARATION--declare-concern-priority@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2518-CORE_META_MODEL-DECLARATION--declare-concern-priority.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2518-CORE_META_MODEL-DECLARATION--declare-concern-priority@3-draft.md",
       "source_sha256_expected": "01f72d5838c9a687f9f68fd83aba6f4ff180a26b56108083325966196b5ac525",
       "source_sha256_actual": "01f72d5838c9a687f9f68fd83aba6f4ff180a26b56108083325966196b5ac525",
       "source_hash_matches": true,
@@ -1108,8 +1108,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2519",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2519-CORE_META_MODEL-DECLARATION--declare-plan-ai-agent-confidence-threshold.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2519-CORE_META_MODEL-DECLARATION--declare-plan-ai-agent-confidence-threshold@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2519-CORE_META_MODEL-DECLARATION--declare-plan-ai-agent-confidence-threshold.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2519-CORE_META_MODEL-DECLARATION--declare-plan-ai-agent-confidence-threshold@3-draft.md",
       "source_sha256_expected": "5fc6051b07d239471e37e74227b8ac8009b1ec432b9451e4d6412b131e0b41d5",
       "source_sha256_actual": "5fc6051b07d239471e37e74227b8ac8009b1ec432b9451e4d6412b131e0b41d5",
       "source_hash_matches": true,
@@ -1129,8 +1129,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2520",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2520-CORE_META_MODEL-DECLARATION--declare-plan-work-sequence-number.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2520-CORE_META_MODEL-DECLARATION--declare-plan-work-sequence-number@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2520-CORE_META_MODEL-DECLARATION--declare-plan-work-sequence-number.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2520-CORE_META_MODEL-DECLARATION--declare-plan-work-sequence-number@3-draft.md",
       "source_sha256_expected": "3520fc67f91bc41af713402584d4b5e8289d186720e45797426a8cae3f2ddbce",
       "source_sha256_actual": "3520fc67f91bc41af713402584d4b5e8289d186720e45797426a8cae3f2ddbce",
       "source_hash_matches": true,
@@ -1150,8 +1150,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2545",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2545-CORE_META_MODEL-DECLARATION--declare-atom-subjects.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2545-CORE_META_MODEL-DECLARATION--declare-atom-subjects@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2545-CORE_META_MODEL-DECLARATION--declare-atom-subjects.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2545-CORE_META_MODEL-DECLARATION--declare-atom-subjects@3-draft.md",
       "source_sha256_expected": "c58e2c493552cf6d33670e612ffdaaf3a4f400b69e79eb38ca3079e7ff8916a8",
       "source_sha256_actual": "c58e2c493552cf6d33670e612ffdaaf3a4f400b69e79eb38ca3079e7ff8916a8",
       "source_hash_matches": true,
@@ -1171,8 +1171,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2546",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2546-CORE_META_MODEL-DECLARATION--declare-atom-subjects-active.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2546-CORE_META_MODEL-DECLARATION--declare-atom-subjects-active@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2546-CORE_META_MODEL-DECLARATION--declare-atom-subjects-active.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2546-CORE_META_MODEL-DECLARATION--declare-atom-subjects-active@3-draft.md",
       "source_sha256_expected": "24abbc74f6464f318b08a8850ca4fa46630c2821194392adbb4ac81275b6c699",
       "source_sha256_actual": "24abbc74f6464f318b08a8850ca4fa46630c2821194392adbb4ac81275b6c699",
       "source_hash_matches": true,
@@ -1192,8 +1192,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2692",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2692-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2692-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination@2-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2692-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2692-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination@2-draft.md",
       "source_sha256_expected": "2596f0e5ecc167591837594e955ea1eb4011642e2dc8ddb29f2726051349c77a",
       "source_sha256_actual": "2596f0e5ecc167591837594e955ea1eb4011642e2dc8ddb29f2726051349c77a",
       "source_hash_matches": true,
@@ -1213,8 +1213,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2693",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2693-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination-file.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2693-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination-file@2-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2693-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination-file.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2693-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination-file@2-draft.md",
       "source_sha256_expected": "e5ac33aad7a63866362500451e457612187d9106293d2443109fc2321ecc5ca2",
       "source_sha256_actual": "e5ac33aad7a63866362500451e457612187d9106293d2443109fc2321ecc5ca2",
       "source_hash_matches": true,
@@ -1234,8 +1234,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2694",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2694-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination-file-name.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2694-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination-file-name@2-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2694-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination-file-name.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2694-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination-file-name@2-draft.md",
       "source_sha256_expected": "3e935fd80d4263f542fa7d1b156c3d96ea9dbd89e62badb06766c1ca1b001bd7",
       "source_sha256_actual": "3e935fd80d4263f542fa7d1b156c3d96ea9dbd89e62badb06766c1ca1b001bd7",
       "source_hash_matches": true,
@@ -1255,8 +1255,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2695",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2695-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination-file-path.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2695-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination-file-path@2-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2695-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination-file-path.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2695-CORE_META_MODEL-DECLARATION--declare-atom-carrier-destination-file-path@2-draft.md",
       "source_sha256_expected": "2add98f45ea245847ebfbfe727f8a5c274aad7bbc0616a17aa107bf81e4cb41a",
       "source_sha256_actual": "2add98f45ea245847ebfbfe727f8a5c274aad7bbc0616a17aa107bf81e4cb41a",
       "source_hash_matches": true,
@@ -1276,8 +1276,8 @@
     {
       "lane": "header",
       "source_id": "CA-R-2508",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2508-CORE_META_MODEL-DECLARATION--declare-atom.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2508-CORE_META_MODEL-DECLARATION--declare-atom@3-draft.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2508-CORE_META_MODEL-DECLARATION--declare-atom.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/header/CA-R-2508-CORE_META_MODEL-DECLARATION--declare-atom@3-draft.md",
       "source_sha256_expected": "721939245dcc9a41e7150346d932ecf2153eef85b8a133b4717ea6fa03f55e95",
       "source_sha256_actual": "721939245dcc9a41e7150346d932ecf2153eef85b8a133b4717ea6fa03f55e95",
       "source_hash_matches": true,
@@ -1297,8 +1297,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-796",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-796-CORE_META_MODEL-DECLARATION--keep-tier-parent-relations-within-atom-scope.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-796-CORE_META_MODEL-DECLARATION--keep-tier-parent-relations-within-atom-scope.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-796-CORE_META_MODEL-DECLARATION--keep-tier-parent-relations-within-atom-scope.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-796-CORE_META_MODEL-DECLARATION--keep-tier-parent-relations-within-atom-scope.md",
       "source_sha256_expected": "61320a6072aca9f0857f1cccce4fd55d33ed9e96b6792b6efd4a2d51f247dda0",
       "source_sha256_actual": "61320a6072aca9f0857f1cccce4fd55d33ed9e96b6792b6efd4a2d51f247dda0",
       "source_hash_matches": true,
@@ -1321,8 +1321,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-1016",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1016-CORE_META_MODEL-DECLARATION--register-rationale-for-relation.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-1016-CORE_META_MODEL-DECLARATION--register-rationale-for-relation.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1016-CORE_META_MODEL-DECLARATION--register-rationale-for-relation.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-1016-CORE_META_MODEL-DECLARATION--register-rationale-for-relation.md",
       "source_sha256_expected": "8b89a2ad9d61917262ca3c815d042bcaad3b5a863a9ec01a3e48faa9599929b7",
       "source_sha256_actual": "8b89a2ad9d61917262ca3c815d042bcaad3b5a863a9ec01a3e48faa9599929b7",
       "source_hash_matches": true,
@@ -1345,8 +1345,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-1017",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1017-CORE_META_MODEL-DECLARATION--register-method-for-relation.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-1017-CORE_META_MODEL-DECLARATION--register-method-for-relation.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1017-CORE_META_MODEL-DECLARATION--register-method-for-relation.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-1017-CORE_META_MODEL-DECLARATION--register-method-for-relation.md",
       "source_sha256_expected": "bff4410324d6325ca3d3560bb1c61e823293eb147e48d9b59c89d16adc84992b",
       "source_sha256_actual": "bff4410324d6325ca3d3560bb1c61e823293eb147e48d9b59c89d16adc84992b",
       "source_hash_matches": true,
@@ -1369,8 +1369,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-1018",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1018-CORE_META_MODEL-DECLARATION--register-evaluation-targets.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-1018-CORE_META_MODEL-DECLARATION--register-evaluation-targets.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1018-CORE_META_MODEL-DECLARATION--register-evaluation-targets.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-1018-CORE_META_MODEL-DECLARATION--register-evaluation-targets.md",
       "source_sha256_expected": "25867d201522d82862a245c7dbabd99b256590befa22835a7b0af983511a27c4",
       "source_sha256_actual": "25867d201522d82862a245c7dbabd99b256590befa22835a7b0af983511a27c4",
       "source_hash_matches": true,
@@ -1393,8 +1393,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-1019",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1019-CORE_META_MODEL-DECLARATION--register-delivery-for-relation.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-1019-CORE_META_MODEL-DECLARATION--register-delivery-for-relation.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1019-CORE_META_MODEL-DECLARATION--register-delivery-for-relation.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-1019-CORE_META_MODEL-DECLARATION--register-delivery-for-relation.md",
       "source_sha256_expected": "3b004e1271c75c0e870fe3993a4a1e23ac42ac6874451e56523d8512a87c5038",
       "source_sha256_actual": "3b004e1271c75c0e870fe3993a4a1e23ac42ac6874451e56523d8512a87c5038",
       "source_hash_matches": true,
@@ -1417,8 +1417,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-1020",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1020-CORE_META_MODEL-DECLARATION--register-implementation-of-relation.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-1020-CORE_META_MODEL-DECLARATION--register-implementation-of-relation.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1020-CORE_META_MODEL-DECLARATION--register-implementation-of-relation.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-1020-CORE_META_MODEL-DECLARATION--register-implementation-of-relation.md",
       "source_sha256_expected": "5aa9c9f714e52801f52bba8ca7b5aa4c748aef695e28c94d518512af707bdacd",
       "source_sha256_actual": "5aa9c9f714e52801f52bba8ca7b5aa4c748aef695e28c94d518512af707bdacd",
       "source_hash_matches": true,
@@ -1441,8 +1441,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-1021",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1021-CORE_META_MODEL-DECLARATION--register-evidence-for-relation.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-1021-CORE_META_MODEL-DECLARATION--register-evidence-for-relation.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1021-CORE_META_MODEL-DECLARATION--register-evidence-for-relation.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-1021-CORE_META_MODEL-DECLARATION--register-evidence-for-relation.md",
       "source_sha256_expected": "4f2bc15b0c2ff186702fc58a2b3c6c04a1965893b82c636a3f19facd61f5ceda",
       "source_sha256_actual": "4f2bc15b0c2ff186702fc58a2b3c6c04a1965893b82c636a3f19facd61f5ceda",
       "source_hash_matches": true,
@@ -1465,8 +1465,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-1022",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1022-CORE_META_MODEL-DECLARATION--register-concern-about-relation.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-1022-CORE_META_MODEL-DECLARATION--register-concern-about-relation.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1022-CORE_META_MODEL-DECLARATION--register-concern-about-relation.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-1022-CORE_META_MODEL-DECLARATION--register-concern-about-relation.md",
       "source_sha256_expected": "b65f2017bd6e72aaf253858dd9a54f7ff692f4211ee678b131ff4a4a40b08c26",
       "source_sha256_actual": "b65f2017bd6e72aaf253858dd9a54f7ff692f4211ee678b131ff4a4a40b08c26",
       "source_hash_matches": true,
@@ -1489,8 +1489,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-1026",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1026-CORE_META_MODEL-DECLARATION--register-depends-on-and-required-by-relation-pair.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-1026-CORE_META_MODEL-DECLARATION--register-depends-on-and-required-by-relation-pair.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1026-CORE_META_MODEL-DECLARATION--register-depends-on-and-required-by-relation-pair.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-1026-CORE_META_MODEL-DECLARATION--register-depends-on-and-required-by-relation-pair.md",
       "source_sha256_expected": "32238099417f8feab8169fa51b8611c32b0db011f3d8340d170f9f9bbe4beb78",
       "source_sha256_actual": "32238099417f8feab8169fa51b8611c32b0db011f3d8340d170f9f9bbe4beb78",
       "source_hash_matches": true,
@@ -1513,8 +1513,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-1199",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1199-CORE_META_MODEL-DECLARATION--define-governs-subject-relation-kind.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-1199-CORE_META_MODEL-DECLARATION--define-governs-subject-relation-kind.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1199-CORE_META_MODEL-DECLARATION--define-governs-subject-relation-kind.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-1199-CORE_META_MODEL-DECLARATION--define-governs-subject-relation-kind.md",
       "source_sha256_expected": "de68fb2cd9ff9beb4c7392adeb1ff68f0fea2b53ac1894907be6055a5a96dd0e",
       "source_sha256_actual": "de68fb2cd9ff9beb4c7392adeb1ff68f0fea2b53ac1894907be6055a5a96dd0e",
       "source_hash_matches": true,
@@ -1537,8 +1537,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-1200",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1200-CORE_META_MODEL-DECLARATION--define-depends-on-subject-relation-kind.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-1200-CORE_META_MODEL-DECLARATION--define-depends-on-subject-relation-kind.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1200-CORE_META_MODEL-DECLARATION--define-depends-on-subject-relation-kind.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-1200-CORE_META_MODEL-DECLARATION--define-depends-on-subject-relation-kind.md",
       "source_sha256_expected": "1f3423a4b5010fe20c4d737201d15199a5b1ca358325a476c90e761569e0cae9",
       "source_sha256_actual": "1f3423a4b5010fe20c4d737201d15199a5b1ca358325a476c90e761569e0cae9",
       "source_hash_matches": true,
@@ -1561,8 +1561,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-1580",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1580-CORE_META_MODEL-DECLARATION--define-plan-blocking.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-1580-CORE_META_MODEL-DECLARATION--define-plan-blocking.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1580-CORE_META_MODEL-DECLARATION--define-plan-blocking.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-1580-CORE_META_MODEL-DECLARATION--define-plan-blocking.md",
       "source_sha256_expected": "2f473f8d4be1bb270aca06e7013b380fe1e13a8af263cdda5be4333f3b03ca84",
       "source_sha256_actual": "2f473f8d4be1bb270aca06e7013b380fe1e13a8af263cdda5be4333f3b03ca84",
       "source_hash_matches": true,
@@ -1585,8 +1585,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-1639",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1639-CORE_META_MODEL-DECLARATION--register-derived-from-relation.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-1639-CORE_META_MODEL-DECLARATION--register-derived-from-relation.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1639-CORE_META_MODEL-DECLARATION--register-derived-from-relation.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-1639-CORE_META_MODEL-DECLARATION--register-derived-from-relation.md",
       "source_sha256_expected": "060c231f7fad70b25b54b637ecbdde9de045247008afdc7132f316d88e3cfc6c",
       "source_sha256_actual": "060c231f7fad70b25b54b637ecbdde9de045247008afdc7132f316d88e3cfc6c",
       "source_hash_matches": true,
@@ -1609,8 +1609,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-1654",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1654-CORE_META_MODEL-DECLARATION--register-feature-realization-relation-kind.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-1654-CORE_META_MODEL-DECLARATION--register-feature-realization-relation-kind.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1654-CORE_META_MODEL-DECLARATION--register-feature-realization-relation-kind.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-1654-CORE_META_MODEL-DECLARATION--register-feature-realization-relation-kind.md",
       "source_sha256_expected": "4174899974b3a564086a6795ad50d827381df0264c71e53fcc97d964d1d50f2a",
       "source_sha256_actual": "4174899974b3a564086a6795ad50d827381df0264c71e53fcc97d964d1d50f2a",
       "source_hash_matches": true,
@@ -1633,8 +1633,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-1660",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1660-CORE_META_MODEL-DECLARATION--register-structural-parent-relation.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-1660-CORE_META_MODEL-DECLARATION--register-structural-parent-relation.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1660-CORE_META_MODEL-DECLARATION--register-structural-parent-relation.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-1660-CORE_META_MODEL-DECLARATION--register-structural-parent-relation.md",
       "source_sha256_expected": "f4e153afbd50c60b8045cc61a0c5e4c0ac29a1eeb438a8cb318b068dfd2baad1",
       "source_sha256_actual": "f4e153afbd50c60b8045cc61a0c5e4c0ac29a1eeb438a8cb318b068dfd2baad1",
       "source_hash_matches": true,
@@ -1657,8 +1657,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-1993",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1993-CORE_META_MODEL-DECLARATION--define-carries.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-1993-CORE_META_MODEL-DECLARATION--define-carries.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1993-CORE_META_MODEL-DECLARATION--define-carries.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-1993-CORE_META_MODEL-DECLARATION--define-carries.md",
       "source_sha256_expected": "befaa973c170ca043cc7f24cb7109cb638dc2c081f319215bff266e29ef308a1",
       "source_sha256_actual": "befaa973c170ca043cc7f24cb7109cb638dc2c081f319215bff266e29ef308a1",
       "source_hash_matches": true,
@@ -1681,8 +1681,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-2170",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2170-CORE_META_MODEL-DECLARATION--define-is-derived-relation-of-relation.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2170-CORE_META_MODEL-DECLARATION--define-is-derived-relation-of-relation.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2170-CORE_META_MODEL-DECLARATION--define-is-derived-relation-of-relation.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2170-CORE_META_MODEL-DECLARATION--define-is-derived-relation-of-relation.md",
       "source_sha256_expected": "d36d5a00e5718276ac16672add9c60cc9b3deebc2707af219bc848cfa1059a7b",
       "source_sha256_actual": "d36d5a00e5718276ac16672add9c60cc9b3deebc2707af219bc848cfa1059a7b",
       "source_hash_matches": true,
@@ -1705,8 +1705,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-2245",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2245-CORE_META_MODEL-DECLARATION--define-is-execution-of-relation.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2245-CORE_META_MODEL-DECLARATION--define-is-execution-of-relation.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2245-CORE_META_MODEL-DECLARATION--define-is-execution-of-relation.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2245-CORE_META_MODEL-DECLARATION--define-is-execution-of-relation.md",
       "source_sha256_expected": "17e9c601bafeb7f00bcd9e1294cd186846344648edc44a79dd4d670ec1219833",
       "source_sha256_actual": "17e9c601bafeb7f00bcd9e1294cd186846344648edc44a79dd4d670ec1219833",
       "source_hash_matches": true,
@@ -1729,8 +1729,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-2246",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2246-CORE_META_MODEL-DECLARATION--define-records-relation.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2246-CORE_META_MODEL-DECLARATION--define-records-relation.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2246-CORE_META_MODEL-DECLARATION--define-records-relation.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2246-CORE_META_MODEL-DECLARATION--define-records-relation.md",
       "source_sha256_expected": "7db7a86b72cb7754aa3a8ccde9ffd12afd12464c3b341a18e7f763fd31dbfba6",
       "source_sha256_actual": "7db7a86b72cb7754aa3a8ccde9ffd12afd12464c3b341a18e7f763fd31dbfba6",
       "source_hash_matches": true,
@@ -1753,8 +1753,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-2247",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2247-CORE_META_MODEL-ENTITY_DEFINITION--define-relation.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2247-CORE_META_MODEL-ENTITY_DEFINITION--define-relation.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2247-CORE_META_MODEL-ENTITY_DEFINITION--define-relation.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2247-CORE_META_MODEL-ENTITY_DEFINITION--define-relation.md",
       "source_sha256_expected": "bfae573809b00297a490b582cfd68887f4c592d811d1afbe819849c432b0ecfe",
       "source_sha256_actual": "bfae573809b00297a490b582cfd68887f4c592d811d1afbe819849c432b0ecfe",
       "source_hash_matches": true,
@@ -1777,8 +1777,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-2255",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2255-CORE_META_MODEL-DECLARATION--define-executes-relation.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2255-CORE_META_MODEL-DECLARATION--define-executes-relation.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2255-CORE_META_MODEL-DECLARATION--define-executes-relation.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2255-CORE_META_MODEL-DECLARATION--define-executes-relation.md",
       "source_sha256_expected": "904e4659b1b95a8d6f39725f23aeb378c36850a759fb25d2266ddd3c34ecae60",
       "source_sha256_actual": "904e4659b1b95a8d6f39725f23aeb378c36850a759fb25d2266ddd3c34ecae60",
       "source_hash_matches": true,
@@ -1801,8 +1801,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-2279",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2279-CORE_META_MODEL-DECLARATION--define-derived-is-defined-by-relation.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2279-CORE_META_MODEL-DECLARATION--define-derived-is-defined-by-relation.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2279-CORE_META_MODEL-DECLARATION--define-derived-is-defined-by-relation.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2279-CORE_META_MODEL-DECLARATION--define-derived-is-defined-by-relation.md",
       "source_sha256_expected": "8de735b4b9a1dcc830adb79c1ddb6aa2e3c51c1c769f938b3464a9b914925144",
       "source_sha256_actual": "8de735b4b9a1dcc830adb79c1ddb6aa2e3c51c1c769f938b3464a9b914925144",
       "source_hash_matches": true,
@@ -1825,8 +1825,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-2417",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2417-CORE_META_MODEL-DECLARATION--define-has-execution-relation.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2417-CORE_META_MODEL-DECLARATION--define-has-execution-relation.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2417-CORE_META_MODEL-DECLARATION--define-has-execution-relation.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2417-CORE_META_MODEL-DECLARATION--define-has-execution-relation.md",
       "source_sha256_expected": "983ac03af06094b95bb01dbc944a2a835e6fabf22b0c6e78a9df0fefb1bd3d89",
       "source_sha256_actual": "983ac03af06094b95bb01dbc944a2a835e6fabf22b0c6e78a9df0fefb1bd3d89",
       "source_hash_matches": true,
@@ -1849,8 +1849,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-2418",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2418-CORE_META_MODEL-DECLARATION--define-is-carried-by-relation.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2418-CORE_META_MODEL-DECLARATION--define-is-carried-by-relation.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2418-CORE_META_MODEL-DECLARATION--define-is-carried-by-relation.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2418-CORE_META_MODEL-DECLARATION--define-is-carried-by-relation.md",
       "source_sha256_expected": "41c4d10bbfe278d4cc3c7d52ee7ed1d791d9c1e44894047a60728b6eb90344a4",
       "source_sha256_actual": "41c4d10bbfe278d4cc3c7d52ee7ed1d791d9c1e44894047a60728b6eb90344a4",
       "source_hash_matches": true,
@@ -1873,8 +1873,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-2420",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2420-CORE_META_MODEL-DECLARATION--define-is-executed-by-relation.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2420-CORE_META_MODEL-DECLARATION--define-is-executed-by-relation.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2420-CORE_META_MODEL-DECLARATION--define-is-executed-by-relation.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2420-CORE_META_MODEL-DECLARATION--define-is-executed-by-relation.md",
       "source_sha256_expected": "cb39f806f20a0c447131cdb9d6e12023133425952ee1b28b6b713612f9dd36b0",
       "source_sha256_actual": "cb39f806f20a0c447131cdb9d6e12023133425952ee1b28b6b713612f9dd36b0",
       "source_hash_matches": true,
@@ -1897,8 +1897,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-2421",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2421-CORE_META_MODEL-DECLARATION--define-is-recorded-by-relation.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2421-CORE_META_MODEL-DECLARATION--define-is-recorded-by-relation.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2421-CORE_META_MODEL-DECLARATION--define-is-recorded-by-relation.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2421-CORE_META_MODEL-DECLARATION--define-is-recorded-by-relation.md",
       "source_sha256_expected": "bf2871e55ecff10a680e18b3e6da574d440a51f66edf5bce0eee06e215c8dc6a",
       "source_sha256_actual": "bf2871e55ecff10a680e18b3e6da574d440a51f66edf5bce0eee06e215c8dc6a",
       "source_hash_matches": true,
@@ -1921,8 +1921,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-2422",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2422-CORE_META_MODEL-DECLARATION--define-required-by-relation.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2422-CORE_META_MODEL-DECLARATION--define-required-by-relation.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2422-CORE_META_MODEL-DECLARATION--define-required-by-relation.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2422-CORE_META_MODEL-DECLARATION--define-required-by-relation.md",
       "source_sha256_expected": "5aba6971564f5c5b86fcf50df34f2f3503c5a29aca02b56f5928d1a9d33e33cf",
       "source_sha256_actual": "5aba6971564f5c5b86fcf50df34f2f3503c5a29aca02b56f5928d1a9d33e33cf",
       "source_hash_matches": true,
@@ -1945,8 +1945,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-2473",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2473-CORE_META_MODEL-DECLARATION--define-property-bearing-and-its-inverse.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2473-CORE_META_MODEL-DECLARATION--define-property-bearing-and-its-inverse.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2473-CORE_META_MODEL-DECLARATION--define-property-bearing-and-its-inverse.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2473-CORE_META_MODEL-DECLARATION--define-property-bearing-and-its-inverse.md",
       "source_sha256_expected": "39f50eddca7017bc1465f4ef4a8d00af9d872a373bf5ad226bbec16c8567ca48",
       "source_sha256_actual": "39f50eddca7017bc1465f4ef4a8d00af9d872a373bf5ad226bbec16c8567ca48",
       "source_hash_matches": true,
@@ -1969,8 +1969,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-2475",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2475-CORE_META_MODEL-DECLARATION--define-narrower-than.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2475-CORE_META_MODEL-DECLARATION--define-narrower-than.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2475-CORE_META_MODEL-DECLARATION--define-narrower-than.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2475-CORE_META_MODEL-DECLARATION--define-narrower-than.md",
       "source_sha256_expected": "a837630f111159b4b99d5e716d62d6b7817b297ddb8bb9350f27af20935695f3",
       "source_sha256_actual": "a837630f111159b4b99d5e716d62d6b7817b297ddb8bb9350f27af20935695f3",
       "source_hash_matches": true,
@@ -1993,8 +1993,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-2476",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2476-CORE_META_MODEL-DECLARATION--define-instance-of.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2476-CORE_META_MODEL-DECLARATION--define-instance-of.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2476-CORE_META_MODEL-DECLARATION--define-instance-of.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2476-CORE_META_MODEL-DECLARATION--define-instance-of.md",
       "source_sha256_expected": "95ae017334cae0d30000f359754ed5eba7f73ab1dd9ef4075ca1ed3cc8709cd6",
       "source_sha256_actual": "95ae017334cae0d30000f359754ed5eba7f73ab1dd9ef4075ca1ed3cc8709cd6",
       "source_hash_matches": true,
@@ -2017,8 +2017,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-2477",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2477-CORE_META_MODEL-DECLARATION--define-classification-and-its-written-reverse.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2477-CORE_META_MODEL-DECLARATION--define-classification-and-its-written-reverse.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2477-CORE_META_MODEL-DECLARATION--define-classification-and-its-written-reverse.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2477-CORE_META_MODEL-DECLARATION--define-classification-and-its-written-reverse.md",
       "source_sha256_expected": "1b63f38e23eac908f15108dc8288decd7250dc2a3b6649ae4a8b29fcc50db3ac",
       "source_sha256_actual": "1b63f38e23eac908f15108dc8288decd7250dc2a3b6649ae4a8b29fcc50db3ac",
       "source_hash_matches": true,
@@ -2041,8 +2041,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-2478",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2478-CORE_META_MODEL-DECLARATION--define-composition-and-its-inverse.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2478-CORE_META_MODEL-DECLARATION--define-composition-and-its-inverse.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2478-CORE_META_MODEL-DECLARATION--define-composition-and-its-inverse.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2478-CORE_META_MODEL-DECLARATION--define-composition-and-its-inverse.md",
       "source_sha256_expected": "886f13d220dd4604aabef5a7a9bc915fbbc1f773e451c40fd899055b8e034e85",
       "source_sha256_actual": "886f13d220dd4604aabef5a7a9bc915fbbc1f773e451c40fd899055b8e034e85",
       "source_hash_matches": true,
@@ -2065,8 +2065,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-2485",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2485-CORE_META_MODEL-DECLARATION--define-has-inverse.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2485-CORE_META_MODEL-DECLARATION--define-has-inverse.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2485-CORE_META_MODEL-DECLARATION--define-has-inverse.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2485-CORE_META_MODEL-DECLARATION--define-has-inverse.md",
       "source_sha256_expected": "ebb1a63ccb151407f0a004922f4a5951a1351224aeffa8ef3f5c36763485b247",
       "source_sha256_actual": "ebb1a63ccb151407f0a004922f4a5951a1351224aeffa8ef3f5c36763485b247",
       "source_hash_matches": true,
@@ -2089,8 +2089,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-2486",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2486-CORE_META_MODEL-RULE--declare-relation-endpoints.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2486-CORE_META_MODEL-RULE--declare-relation-endpoints.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2486-CORE_META_MODEL-RULE--declare-relation-endpoints.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2486-CORE_META_MODEL-RULE--declare-relation-endpoints.md",
       "source_sha256_expected": "b9400b3010d4fc6481f1d81f371f650bb108c32c9a48e1f881c4c77e2e7fc918",
       "source_sha256_actual": "b9400b3010d4fc6481f1d81f371f650bb108c32c9a48e1f881c4c77e2e7fc918",
       "source_hash_matches": true,
@@ -2113,8 +2113,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-2487",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2487-CORE_META_MODEL-ENTITY_DEFINITION--define-cfel.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2487-CORE_META_MODEL-ENTITY_DEFINITION--define-cfel.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2487-CORE_META_MODEL-ENTITY_DEFINITION--define-cfel.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2487-CORE_META_MODEL-ENTITY_DEFINITION--define-cfel.md",
       "source_sha256_expected": "43a1659fba82be1a1f7ff4303abb7e5eb847c7142517264622a6f24358fd7ee8",
       "source_sha256_actual": "43a1659fba82be1a1f7ff4303abb7e5eb847c7142517264622a6f24358fd7ee8",
       "source_hash_matches": true,
@@ -2137,8 +2137,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-2583",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2583-CORE_META_MODEL-DECLARATION--define-has-event-author.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2583-CORE_META_MODEL-DECLARATION--define-has-event-author.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2583-CORE_META_MODEL-DECLARATION--define-has-event-author.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2583-CORE_META_MODEL-DECLARATION--define-has-event-author.md",
       "source_sha256_expected": "7b1ba9f02ff8d427a77180da3273afd3b4e70b5920286cb8c9adf7306f0cb95c",
       "source_sha256_actual": "7b1ba9f02ff8d427a77180da3273afd3b4e70b5920286cb8c9adf7306f0cb95c",
       "source_hash_matches": true,
@@ -2161,8 +2161,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-2588",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2588-CORE_META_MODEL-CFEL--apply-default-relation-cardinalities.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2588-CORE_META_MODEL-CFEL--apply-default-relation-cardinalities.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2588-CORE_META_MODEL-CFEL--apply-default-relation-cardinalities.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2588-CORE_META_MODEL-CFEL--apply-default-relation-cardinalities.md",
       "source_sha256_expected": "d3701f1250242baca0a315ac5a5537d7fe74acaf43372c43bc6ea6f1cc51c05c",
       "source_sha256_actual": "d3701f1250242baca0a315ac5a5537d7fe74acaf43372c43bc6ea6f1cc51c05c",
       "source_hash_matches": true,
@@ -2185,8 +2185,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-2609",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2609-CORE_META_MODEL-DECLARATION--declare-cfel-operator-named-relation-direction.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2609-CORE_META_MODEL-DECLARATION--declare-cfel-operator-named-relation-direction.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2609-CORE_META_MODEL-DECLARATION--declare-cfel-operator-named-relation-direction.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2609-CORE_META_MODEL-DECLARATION--declare-cfel-operator-named-relation-direction.md",
       "source_sha256_expected": "f795bea622850034f6b8a373e1ace12a3730094177f9e78f3c87c44cdcb50417",
       "source_sha256_actual": "f795bea622850034f6b8a373e1ace12a3730094177f9e78f3c87c44cdcb50417",
       "source_hash_matches": true,
@@ -2209,8 +2209,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-2617",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2617-CORE_META_MODEL-DECLARATION--declare-contains.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2617-CORE_META_MODEL-DECLARATION--declare-contains.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2617-CORE_META_MODEL-DECLARATION--declare-contains.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2617-CORE_META_MODEL-DECLARATION--declare-contains.md",
       "source_sha256_expected": "d76e54fe285093b583fdefafea44c5358dd61933b0218c04475c05d24414a21f",
       "source_sha256_actual": "d76e54fe285093b583fdefafea44c5358dd61933b0218c04475c05d24414a21f",
       "source_hash_matches": true,
@@ -2233,8 +2233,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-2618",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2618-CORE_META_MODEL-DECLARATION--declare-has-active-subject.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2618-CORE_META_MODEL-DECLARATION--declare-has-active-subject.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2618-CORE_META_MODEL-DECLARATION--declare-has-active-subject.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2618-CORE_META_MODEL-DECLARATION--declare-has-active-subject.md",
       "source_sha256_expected": "ec7fcfa1abeecc1fc5d96b62c28dc6fb9aacae61048f14a0d659bbd8aa496abf",
       "source_sha256_actual": "ec7fcfa1abeecc1fc5d96b62c28dc6fb9aacae61048f14a0d659bbd8aa496abf",
       "source_hash_matches": true,
@@ -2257,8 +2257,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-2619",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2619-CORE_META_MODEL-DECLARATION--declare-has-instance.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2619-CORE_META_MODEL-DECLARATION--declare-has-instance.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2619-CORE_META_MODEL-DECLARATION--declare-has-instance.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2619-CORE_META_MODEL-DECLARATION--declare-has-instance.md",
       "source_sha256_expected": "9e4079db57980cfbf7d8d3fd20d28dc523c457d8e3b30373b3b858cef2e09882",
       "source_sha256_actual": "9e4079db57980cfbf7d8d3fd20d28dc523c457d8e3b30373b3b858cef2e09882",
       "source_hash_matches": true,
@@ -2281,8 +2281,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-2620",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2620-CORE_META_MODEL-DECLARATION--declare-has-narrower.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2620-CORE_META_MODEL-DECLARATION--declare-has-narrower.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2620-CORE_META_MODEL-DECLARATION--declare-has-narrower.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2620-CORE_META_MODEL-DECLARATION--declare-has-narrower.md",
       "source_sha256_expected": "89ebb0b1cdd142e24ee9f1b9aa0be0bf7995044443f62a7428fa60c8d382daaf",
       "source_sha256_actual": "89ebb0b1cdd142e24ee9f1b9aa0be0bf7995044443f62a7428fa60c8d382daaf",
       "source_hash_matches": true,
@@ -2305,8 +2305,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-2621",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2621-CORE_META_MODEL-DECLARATION--declare-has-property.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2621-CORE_META_MODEL-DECLARATION--declare-has-property.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2621-CORE_META_MODEL-DECLARATION--declare-has-property.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2621-CORE_META_MODEL-DECLARATION--declare-has-property.md",
       "source_sha256_expected": "d07ae251fe9e4779d9288df35e1395c9f95beb65c8f12e721a8c0f93e02639f2",
       "source_sha256_actual": "d07ae251fe9e4779d9288df35e1395c9f95beb65c8f12e721a8c0f93e02639f2",
       "source_hash_matches": true,
@@ -2329,8 +2329,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-2622",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2622-CORE_META_MODEL-DECLARATION--declare-is-event-author-of.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2622-CORE_META_MODEL-DECLARATION--declare-is-event-author-of.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2622-CORE_META_MODEL-DECLARATION--declare-is-event-author-of.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2622-CORE_META_MODEL-DECLARATION--declare-is-event-author-of.md",
       "source_sha256_expected": "c2d7cee156d10c914ced9012986d6c8e39fc504ef8d61fab9dee79d108e48ec7",
       "source_sha256_actual": "c2d7cee156d10c914ced9012986d6c8e39fc504ef8d61fab9dee79d108e48ec7",
       "source_hash_matches": true,
@@ -2353,8 +2353,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-2623",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2623-CORE_META_MODEL-DECLARATION--declare-is-run-by.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2623-CORE_META_MODEL-DECLARATION--declare-is-run-by.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2623-CORE_META_MODEL-DECLARATION--declare-is-run-by.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2623-CORE_META_MODEL-DECLARATION--declare-is-run-by.md",
       "source_sha256_expected": "909756520f8c49f0f5e9b8825f571a7bbaca3b2a991321e10ea5a6f753385a76",
       "source_sha256_actual": "909756520f8c49f0f5e9b8825f571a7bbaca3b2a991321e10ea5a6f753385a76",
       "source_hash_matches": true,
@@ -2377,8 +2377,8 @@
     {
       "lane": "relations",
       "source_id": "CA-R-2638",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2638-CORE_META_MODEL-DECLARATION--define-runs.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2638-CORE_META_MODEL-DECLARATION--define-runs.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2638-CORE_META_MODEL-DECLARATION--define-runs.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/relations/candidates/CA-R-2638-CORE_META_MODEL-DECLARATION--define-runs.md",
       "source_sha256_expected": "dd0a69c31d4f61a5f71981b10afcb5ef5329405a7fe3930ab1fd7c8ef0655f3c",
       "source_sha256_actual": "dd0a69c31d4f61a5f71981b10afcb5ef5329405a7fe3930ab1fd7c8ef0655f3c",
       "source_hash_matches": true,
@@ -2401,8 +2401,8 @@
     {
       "lane": "claim",
       "source_id": "CA-R-2498",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2498-CORE_META_MODEL-DECLARATION--declare-atom-content-content.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/CA-R-2498-CORE_META_MODEL-DECLARATION--declare-atom-content-content.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2498-CORE_META_MODEL-DECLARATION--declare-atom-content-content.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/CA-R-2498-CORE_META_MODEL-DECLARATION--declare-atom-content-content.md",
       "source_sha256_expected": "2e34aa353b76a6363a8143ec89b2ae3c026295d13ba950ef6c983e93cb92e917",
       "source_sha256_actual": "2e34aa353b76a6363a8143ec89b2ae3c026295d13ba950ef6c983e93cb92e917",
       "source_hash_matches": true,
@@ -2422,8 +2422,8 @@
     {
       "lane": "claim",
       "source_id": "CA-R-2499",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2499-CORE_META_MODEL-DECLARATION--declare-atom-content-summary.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/CA-R-2499-CORE_META_MODEL-DECLARATION--declare-atom-content-summary.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2499-CORE_META_MODEL-DECLARATION--declare-atom-content-summary.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/CA-R-2499-CORE_META_MODEL-DECLARATION--declare-atom-content-summary.md",
       "source_sha256_expected": "e7aa69a64ccad0520a1f36d52aed2bfc6974d24b0d71bcb0b9390b4e324c6ecd",
       "source_sha256_actual": "e7aa69a64ccad0520a1f36d52aed2bfc6974d24b0d71bcb0b9390b4e324c6ecd",
       "source_hash_matches": true,
@@ -2443,8 +2443,8 @@
     {
       "lane": "claim",
       "source_id": "CA-R-2500",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2500-CORE_META_MODEL-DECLARATION--declare-atom-content-claim.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/CA-R-2500-CORE_META_MODEL-DECLARATION--declare-atom-content-claim.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2500-CORE_META_MODEL-DECLARATION--declare-atom-content-claim.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/CA-R-2500-CORE_META_MODEL-DECLARATION--declare-atom-content-claim.md",
       "source_sha256_expected": "b09afc863b2c5291c35deb3d4da1cec8434774c99427912f5606b553550e1750",
       "source_sha256_actual": "b09afc863b2c5291c35deb3d4da1cec8434774c99427912f5606b553550e1750",
       "source_hash_matches": true,
@@ -2464,8 +2464,8 @@
     {
       "lane": "claim",
       "source_id": "CA-R-2502",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2502-CORE_META_MODEL-DECLARATION--declare-atom-content-semantics.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/CA-R-2502-CORE_META_MODEL-DECLARATION--declare-atom-content-semantics.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2502-CORE_META_MODEL-DECLARATION--declare-atom-content-semantics.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/CA-R-2502-CORE_META_MODEL-DECLARATION--declare-atom-content-semantics.md",
       "source_sha256_expected": "5895c33f11d90e6a71ab5f2b304112e5d56881be460bc8e402fece5de002f5c8",
       "source_sha256_actual": "5895c33f11d90e6a71ab5f2b304112e5d56881be460bc8e402fece5de002f5c8",
       "source_hash_matches": true,
@@ -2485,8 +2485,8 @@
     {
       "lane": "claim",
       "source_id": "CA-R-2503",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2503-CORE_META_MODEL-DECLARATION--declare-atom-content-details.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/CA-R-2503-CORE_META_MODEL-DECLARATION--declare-atom-content-details.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2503-CORE_META_MODEL-DECLARATION--declare-atom-content-details.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/CA-R-2503-CORE_META_MODEL-DECLARATION--declare-atom-content-details.md",
       "source_sha256_expected": "2c03b78e3e1ee79468197ed2c38f66a6e367b6538f1b16e05dc262bc178dd8fc",
       "source_sha256_actual": "2c03b78e3e1ee79468197ed2c38f66a6e367b6538f1b16e05dc262bc178dd8fc",
       "source_hash_matches": true,
@@ -2506,8 +2506,8 @@
     {
       "lane": "claim",
       "source_id": "CA-R-1417",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1417-CORE_META_MODEL-RULE--give-every-atom-revision-one-content.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/CA-R-1417-CORE_META_MODEL-RULE--give-every-atom-revision-one-content.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1417-CORE_META_MODEL-RULE--give-every-atom-revision-one-content.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/CA-R-1417-CORE_META_MODEL-RULE--give-every-atom-revision-one-content.md",
       "source_sha256_expected": "8f662d21a2e88a80140a02d2a3e2a5f1ca74abb0f895d8b6525e43e479f52bcd",
       "source_sha256_actual": "8f662d21a2e88a80140a02d2a3e2a5f1ca74abb0f895d8b6525e43e479f52bcd",
       "source_hash_matches": true,
@@ -2527,8 +2527,8 @@
     {
       "lane": "claim",
       "source_id": "CA-R-2102",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2102-CORE_META_MODEL-RULE--require-the-base-properties-of-every-current-atom.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/CA-R-2102-CORE_META_MODEL-RULE--require-the-base-properties-of-every-current-atom.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2102-CORE_META_MODEL-RULE--require-the-base-properties-of-every-current-atom.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/CA-R-2102-CORE_META_MODEL-RULE--require-the-base-properties-of-every-current-atom.md",
       "source_sha256_expected": "d2b5d44d3bc4fd9df5f7d7e59ee68e0b7ffe863ff80457403e53808479c7b140",
       "source_sha256_actual": "d2b5d44d3bc4fd9df5f7d7e59ee68e0b7ffe863ff80457403e53808479c7b140",
       "source_hash_matches": true,
@@ -2548,8 +2548,8 @@
     {
       "lane": "claim",
       "source_id": "CA-R-2471",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2471-CORE_META_MODEL-RULE--use-distinct-graph-notation-for-node-relations.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/CA-R-2471-CORE_META_MODEL-RULE--use-distinct-graph-notation-for-node-relations.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2471-CORE_META_MODEL-RULE--use-distinct-graph-notation-for-node-relations.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/CA-R-2471-CORE_META_MODEL-RULE--use-distinct-graph-notation-for-node-relations.md",
       "source_sha256_expected": "0655ea7fc448597c8d7381533f692327ecae13d1cc347fba0a50bc34406e6e26",
       "source_sha256_actual": "0655ea7fc448597c8d7381533f692327ecae13d1cc347fba0a50bc34406e6e26",
       "source_hash_matches": true,
@@ -2569,8 +2569,8 @@
     {
       "lane": "claim",
       "source_id": "CA-D-479",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-479-CORE_META_MODEL-ENG_DECISION--use-stable-headings-for-atom-body-properties.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/CA-D-479-CORE_META_MODEL-ENG_DECISION--use-stable-headings-for-atom-body-properties.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-479-CORE_META_MODEL-ENG_DECISION--use-stable-headings-for-atom-body-properties.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/CA-D-479-CORE_META_MODEL-ENG_DECISION--use-stable-headings-for-atom-body-properties.md",
       "source_sha256_expected": "c6cb26f4876ddf9bc299de08032268b11eef5b89d6e8296009b3a4f468d4f051",
       "source_sha256_actual": "c6cb26f4876ddf9bc299de08032268b11eef5b89d6e8296009b3a4f468d4f051",
       "source_hash_matches": true,
@@ -2590,8 +2590,8 @@
     {
       "lane": "claim",
       "source_id": "CA-D-495",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-495-CORE_META_MODEL-ENG_DECISION--carry-applicability-in-the-registered-body-sections.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/CA-D-495-CORE_META_MODEL-ENG_DECISION--carry-applicability-in-the-registered-body-sections.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-495-CORE_META_MODEL-ENG_DECISION--carry-applicability-in-the-registered-body-sections.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/CA-D-495-CORE_META_MODEL-ENG_DECISION--carry-applicability-in-the-registered-body-sections.md",
       "source_sha256_expected": "3995db8f5a9e833e8dcf52c7611f42a7adaa6717c3ef8ddd09627c77d92e42dc",
       "source_sha256_actual": "3995db8f5a9e833e8dcf52c7611f42a7adaa6717c3ef8ddd09627c77d92e42dc",
       "source_hash_matches": true,
@@ -2611,8 +2611,8 @@
     {
       "lane": "claim",
       "source_id": "CA-M-228",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-228-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-subject-expressions-with-bearer-and-value-qualification.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/CA-M-228-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-subject-expressions-with-bearer-and-value-qualification.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-228-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-subject-expressions-with-bearer-and-value-qualification.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/CA-M-228-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-subject-expressions-with-bearer-and-value-qualification.md",
       "source_sha256_expected": "fd417653a0a29251caf6aba05b09a34769623a137b80f0d34dfcdb064869e4e2",
       "source_sha256_actual": "fd417653a0a29251caf6aba05b09a34769623a137b80f0d34dfcdb064869e4e2",
       "source_hash_matches": true,
@@ -2632,8 +2632,8 @@
     {
       "lane": "claim",
       "source_id": "CA-M-264",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-264-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-evaluations-with-reproducible-falsification.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/CA-M-264-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-evaluations-with-reproducible-falsification.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-264-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-evaluations-with-reproducible-falsification.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/CA-M-264-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-evaluations-with-reproducible-falsification.md",
       "source_sha256_expected": "96058da014c70f01b5fa350738ec6d3d4c264eb97c93ea40bcd6b4d05ceb0ee2",
       "source_sha256_actual": "96058da014c70f01b5fa350738ec6d3d4c264eb97c93ea40bcd6b4d05ceb0ee2",
       "source_hash_matches": true,
@@ -2653,8 +2653,8 @@
     {
       "lane": "claim",
       "source_id": "CA-E-240",
-      "source_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-240-CORE_META_MODEL-EVAL_CASE--validate-atom-scope-and-claim-scope.md",
-      "candidate_path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/CA-E-240-CORE_META_MODEL-EVAL_CASE--validate-atom-scope-and-claim-scope.md",
+      "source_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-240-CORE_META_MODEL-EVAL_CASE--validate-atom-scope-and-claim-scope.md",
+      "candidate_path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/model-header-content-20261103/claim/carriers/CA-E-240-CORE_META_MODEL-EVAL_CASE--validate-atom-scope-and-claim-scope.md",
       "source_sha256_expected": "0176a44433d0054b88b3b80cca8d7b3ed22326dc17bc0d2acd1ae45b6f45848d",
       "source_sha256_actual": "0176a44433d0054b88b3b80cca8d7b3ed22326dc17bc0d2acd1ae45b6f45848d",
       "source_hash_matches": true,
@@ -2673,7 +2673,7 @@
     }
   ],
   "subject_prefix_migration_receipt": {
-    "path": "/Users/am/Documents/My_Repos/caprmedio-graph-driven-framework/.caprmedio_caprmedio/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/root-subject-migration-20261103/application-receipt.json",
+    "path": "/Users/am/Documents/My_Repos/anechoic-graph-driven-framework/.anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/root-subject-migration-20261103/application-receipt.json",
     "status": "APPLIED_VERIFIED",
     "task_id": "CA-P-2709",
     "files": 1178,

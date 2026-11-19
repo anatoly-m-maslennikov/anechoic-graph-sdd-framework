@@ -14,7 +14,7 @@ version: 6
 updated_at: 2026-09-06 01:45:12 +0400
 relations:
   child_of:
-    - CAPRMEDIO-GOV-REQU-310-CORE_META_MODEL-REQUIREMENT--classify-lineage-impact-with-four-dispositions
+    - ANECHOIC-GOV-REQU-310-CORE_META_MODEL-REQUIREMENT--classify-lineage-impact-with-four-dispositions
 ---
 # Define replacement_required Lineage Impact disposition
 

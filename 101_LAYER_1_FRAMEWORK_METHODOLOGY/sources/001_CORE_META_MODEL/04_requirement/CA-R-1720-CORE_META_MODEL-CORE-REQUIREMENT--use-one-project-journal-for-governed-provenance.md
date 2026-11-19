@@ -17,7 +17,7 @@ version: 18
 updated_at: "2026-10-04 22:05:34 +0000"
 relations:
   child_of:
-    - CAPRMEDIO-REQU-007-CORE-REQUIREMENT--full-minimal-traceability
+    - ANECHOIC-REQU-007-CORE-REQUIREMENT--full-minimal-traceability
 atom_id: "CA-R-1720"
 content_role: "Requirement"
 current_scope_unit: "CORE_META_MODEL"
@@ -33,11 +33,11 @@ Use one Project Journal for governed provenance
 
 ## Scope
 
-CAPRMEDIO-governed provenance events in a Project.
+ANECHOIC-governed provenance events in a Project.
 
 ## Claim
 
-**every** Project **must** use **`=1`** authoritative Work Journal for **all** CAPRMEDIO-governed provenance events, including Artifact changes, Workflow Runs, Step Runs, Action executions, **and** Implementation lifecycle events. **every** admitted event record **must** retain **`=1`** canonical Event identity **and** be recorded **only** once as historical authority; another log **or** view references that record instead of independently recording the same historical fact. distinct events **in** the same execution remain distinct records.
+**every** Project **must** use **`=1`** authoritative Work Journal for **all** ANECHOIC-governed provenance events, including Artifact changes, Workflow Runs, Step Runs, Action executions, **and** Implementation lifecycle events. **every** admitted event record **must** retain **`=1`** canonical Event identity **and** be recorded **only** once as historical authority; another log **or** view references that record instead of independently recording the same historical fact. distinct events **in** the same execution remain distinct records.
 
 the Work Journal's append-only history **must** remain replayable, checkable, **and** recoverable independently of a version-control system **or** another secondary record. its logical event table does **not** require **`=1`** physical file **or** a database table; Carrier representation remains governed by Delivery authority.
 

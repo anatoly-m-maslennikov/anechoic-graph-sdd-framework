@@ -13,7 +13,7 @@ version: 7
 updated_at: "2026-09-10 07:34:05 +0400"
 relations:
   child_of:
-    - CAPRMEDIO-GOV-REQU-312
+    - ANECHOIC-GOV-REQU-312
 ---
 # Permit multiple child rows in one Lineage Impact Analysis
 

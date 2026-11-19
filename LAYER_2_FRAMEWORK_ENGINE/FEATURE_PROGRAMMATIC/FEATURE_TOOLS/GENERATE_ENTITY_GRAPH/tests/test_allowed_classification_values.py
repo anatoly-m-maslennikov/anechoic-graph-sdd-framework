@@ -23,12 +23,12 @@ Node >| Container: yes;
 Node >| Container: no
 ```
 """
-        python = ('from caprmedio.formal_claims import declare_entity\n'
+        python = ('from anechoic.formal_claims import declare_entity\n'
                   'declare_entity(entity_name="Node", allowed_classification_values={"Container": ("yes", "no")})\n')
         new_body = re.sub(r'```CFEL\n.*?```', '```python\n' + python + '```', old_body, count=1, flags=re.S)
         self.assertNotEqual(new_body, old_body)
         row = {'source': {'atom_id': 'CA-R-2484', 'version': 2, 'path': 'R2484.md', 'sha256': 'a'*64},
-               'subjects': {'active': 'CAPRMEDIO_MODEL <+ Node >| Container', 'passive': []},
+               'subjects': {'active': 'ANECHOIC_MODEL <+ Node >| Container', 'passive': []},
                'read_view': {'content_role': 'Requirement', 'type': 'Rule'}, 'body': old_body}
         changed = deepcopy(row)
         changed['body'] = new_body

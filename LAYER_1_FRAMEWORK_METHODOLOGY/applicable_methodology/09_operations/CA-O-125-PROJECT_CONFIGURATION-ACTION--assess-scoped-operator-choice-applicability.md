@@ -6,14 +6,14 @@ container:
 role: Operations
 form: Action
 topics:
-  main_subject: "Subject/CAPRMEDIO/Graph/Node/Aspect/Engineering/Operation/Data Handling/Source Selection"
+  main_subject: "Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Source Selection"
   dependencies:
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Operations/Type: Action'
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Actor/Type: Operator'
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Actor/Type: AI Agent'
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Term//Artifact
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/History/Journal
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Atom/Content Role: Operations/Type: Action'
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Actor/Type: Operator'
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Actor/Type: AI Agent'
+  - Subject/ANECHOIC/Graph/Node/Project Model/Atom
+  - Subject/ANECHOIC/Graph/Node/Project Model/Term//Artifact
+  - Subject/ANECHOIC/Graph/Node/Project Model/History/Journal
 tier: 3
 status: Active
 version: 14
@@ -21,12 +21,12 @@ updated_at: 2026-10-29 22:26:57 +0400
 carrier_destination:
   file:
     name: CA-O-125-PROJECT_CONFIGURATION-ACTION--assess-scoped-operator-choice-applicability.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: PROJECT_CONFIGURATION
 author: Anatoly Maslennikov
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-125-PROJECT_CONFIGURATION-ACTION--assess-scoped-operator-choice-applicability.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-125-PROJECT_CONFIGURATION-ACTION--assess-scoped-operator-choice-applicability.md
   source_atom_id: CA-O-125
   source_atom_revision: 14
   source_sha256: 0eff6d710499c3ac9e4dbb8e52c54b5a85ef9f7b0d0e4b33d6555f8bcd175c75

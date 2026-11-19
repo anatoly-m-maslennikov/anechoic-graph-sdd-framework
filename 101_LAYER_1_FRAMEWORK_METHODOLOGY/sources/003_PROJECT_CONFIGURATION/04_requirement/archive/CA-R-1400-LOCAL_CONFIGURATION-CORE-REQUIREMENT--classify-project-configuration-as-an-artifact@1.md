@@ -13,7 +13,7 @@ version: 1
 updated_at: 2026-09-04 03:52:00 +0400
 relations:
   child_of:
-    - CAPRMEDIO-META-REQU-619
+    - ANECHOIC-META-REQU-619
 ---
 # Classify Project Configuration as an Artifact
 

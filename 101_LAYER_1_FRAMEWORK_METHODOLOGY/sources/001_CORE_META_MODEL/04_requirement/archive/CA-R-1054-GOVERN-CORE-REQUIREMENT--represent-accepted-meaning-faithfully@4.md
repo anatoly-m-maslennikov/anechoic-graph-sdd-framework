@@ -8,8 +8,8 @@ llm_session_ids:
 relations:
   child_of:
     - CA-R-1057
-    - CAPRMEDIO-META-REQU-152--preserve-strict-semantic-distinctions
-    - CAPRMEDIO-META-REQU-154--semantic-irreducibility
+    - ANECHOIC-META-REQU-152--preserve-strict-semantic-distinctions
+    - ANECHOIC-META-REQU-154--semantic-irreducibility
 ---
 # Represent accepted meaning faithfully
 

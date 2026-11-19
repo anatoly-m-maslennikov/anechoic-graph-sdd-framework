@@ -15,7 +15,7 @@ relations:
 ---
 # Classify every Atomic Artifact change
 
-**before** changing an admitted Atomic Artifact, CAPRMEDIO assigns **`=1`** change class:
+**before** changing an admitted Atomic Artifact, ANECHOIC assigns **`=1`** change class:
 
 | Change class | Boundary | Identity result | Required review |
 |---|---|---|---|

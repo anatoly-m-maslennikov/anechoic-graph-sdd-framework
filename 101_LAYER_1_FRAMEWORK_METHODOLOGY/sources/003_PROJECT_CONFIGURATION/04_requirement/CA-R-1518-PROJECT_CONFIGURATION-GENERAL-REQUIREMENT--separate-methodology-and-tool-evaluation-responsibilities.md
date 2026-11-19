@@ -34,7 +34,7 @@ Evaluation responsibility for operational definitions and their Tool implementat
 
 ## Claim
 
-**in** the CAPRMEDIO Project, Evaluation responsibility for operational definitions **and** their Tool implementations **must** follow this allocation:
+**in** the ANECHOIC Project, Evaluation responsibility for operational definitions **and** their Tool implementations **must** follow this allocation:
 
 ## Details
 

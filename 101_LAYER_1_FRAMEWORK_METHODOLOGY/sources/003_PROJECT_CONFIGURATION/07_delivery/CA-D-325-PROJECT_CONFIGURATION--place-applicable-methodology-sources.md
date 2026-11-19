@@ -1,6 +1,6 @@
 ---
 subjects:
-  governs: "CAPRMEDIO/Applicable Methodology/Methodology Source Carrier"
+  governs: "ANECHOIC/Applicable Methodology/Methodology Source Carrier"
   depends_on: []
 version: 13
 updated_at: "2026-10-02 19:18:22 +0400"
@@ -20,10 +20,10 @@ Place Applicable Methodology Sources
 
 ## Scope
 
-the CORE_META_MODEL **and** PROJECT_CONFIGURATION Scope Units of the CAPRMEDIO Project.
+the CORE_META_MODEL **and** PROJECT_CONFIGURATION Scope Units of the ANECHOIC Project.
 
 ## Claim
 
-the CORE_META_MODEL **and** PROJECT_CONFIGURATION Scope Units of the CAPRMEDIO Project **must** use authority Directory Carriers under `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/` **and** `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/003_PROJECT_CONFIGURATION/` respectively.
+the CORE_META_MODEL **and** PROJECT_CONFIGURATION Scope Units of the ANECHOIC Project **must** use authority Directory Carriers under `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/` **and** `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/003_PROJECT_CONFIGURATION/` respectively.
 
 ## Details

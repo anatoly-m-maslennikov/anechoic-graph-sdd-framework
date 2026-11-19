@@ -27,11 +27,11 @@ Register Project Current-Scope Content Role Directories
 
 ## Scope
 
-administrative Content Role directory placement at the CAPRMEDIO Project root **and** **in** **every** descendant Scope Unit, including `CORE_META_MODEL`, `INSTALLED_EXTENSIONS`, **and** `PROJECT_CONFIGURATION`.
+administrative Content Role directory placement at the ANECHOIC Project root **and** **in** **every** descendant Scope Unit, including `CORE_META_MODEL`, `INSTALLED_EXTENSIONS`, **and** `PROJECT_CONFIGURATION`.
 
 ## Claim
 
-**every** Scope Unit **in** the CAPRMEDIO Project **must** use the same administrative Content Role directory mapping directly under its own authority directory for current-scope placement:
+**every** Scope Unit **in** the ANECHOIC Project **must** use the same administrative Content Role directory mapping directly under its own authority directory for current-scope placement:
 
 - Concern: `01_concern/`;
 - Analysis: `02_analysis/`;
@@ -47,6 +47,6 @@ materialize these directories under `CA-D-296-CORE_META_MODEL-DELIVERY--material
 
 ## Details
 
-the Project Scope Unit uses `.caprmedio_caprmedio/` as its authority directory. **every** descendant uses its own declared authority directory **and** reuses this mapping rather than independently defining it.
+the Project Scope Unit uses `.anechoic_anechoic/` as its authority directory. **every** descendant uses its own declared authority directory **and** reuses this mapping rather than independently defining it.
 
 these administrative directories provide placement; they do **not** become Structural Entities **or** Directory Carriers under `CA-D-451-CORE_META_MODEL-DELIVERY--classify-folders-by-their-carrier-responsibility`.

@@ -6,16 +6,16 @@ container:
 role: Method
 form: Implementation Method
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Projection
+  main_subject: ANECHOIC_MODEL <+ Projection
   dependencies:
-  - CAPRMEDIO_MODEL <+ Projection/(.Form:=Catalog)
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Method)/(.Header.Context.Form := Term Definition)
-  - CAPRMEDIO_MODEL <+ Term
-  - CAPRMEDIO_MODEL <+ Project
-  - CAPRMEDIO_MODEL <+ Atom.Content
-  - CAPRMEDIO_MODEL <+ Entity
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role: Operations)/(.Header.Context.Form: Action)'
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role: Operations)/(.Header.Context.Form: Workflow)'
+  - ANECHOIC_MODEL <+ Projection/(.Form:=Catalog)
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Method)/(.Header.Context.Form := Term Definition)
+  - ANECHOIC_MODEL <+ Term
+  - ANECHOIC_MODEL <+ Project
+  - ANECHOIC_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ Entity
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role: Operations)/(.Header.Context.Form: Action)'
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role: Operations)/(.Header.Context.Form: Workflow)'
 tier: 3
 status: Active
 version: 44
@@ -23,7 +23,7 @@ updated_at: 2026-11-04 18:28:33 +0400
 carrier_destination:
   file:
     name: CA-M-114-IMPLEMENTATION_METHOD--derive-terminology-projection-from-definition-atoms.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
 ---
 ## Summary
 

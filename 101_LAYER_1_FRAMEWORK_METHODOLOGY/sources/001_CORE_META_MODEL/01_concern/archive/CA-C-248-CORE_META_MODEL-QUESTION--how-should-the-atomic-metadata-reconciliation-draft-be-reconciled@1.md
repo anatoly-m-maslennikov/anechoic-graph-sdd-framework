@@ -21,7 +21,7 @@ how should the identified Draft Atom be reconciled **with** active authority **a
 
 ## Draft under review
 
-- Carrier: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/drafts/CA-M--MMODEL-METHOD--reconcile-artifact-metadata-and-carrier-address-atomically.md`.
+- Carrier: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/drafts/CA-M--MMODEL-METHOD--reconcile-artifact-metadata-and-carrier-address-atomically.md`.
 - inspected SHA-256: `18357c445b6459f669eb0283bae500f222a69ad8da5b113717791dafc892b8f4`.
 - review point: 39 of 79; campaign `draft-review-8afeac79`.
 
@@ -33,16 +33,16 @@ how should the identified Draft Atom be reconciled **with** active authority **a
 
 ## Active authority cited by the review
 
-- `CA-D-267@8`: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/07_delivery/CA-D-267-CORE_META_MODEL-DELIVERY--derive-address-facts-without-duplicated-frontmatter.md`; SHA-256 `d186c63788a393e2d20076b2a6138da43516248a7d9862ccc214d0589b425d40`.
-- `CA-M-115@17`: `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/CA-M-115-CORE_META_MODEL-METHOD--author-one-cce-claim-per-atom.md`; SHA-256 `e4f47eadb633c5bd01e0e5d2e79e6146250843784965dc7e50f912924bd527a5`.
+- `CA-D-267@8`: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/07_delivery/CA-D-267-CORE_META_MODEL-DELIVERY--derive-address-facts-without-duplicated-frontmatter.md`; SHA-256 `d186c63788a393e2d20076b2a6138da43516248a7d9862ccc214d0589b425d40`.
+- `CA-M-115@17`: `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL/05_method/CA-M-115-CORE_META_MODEL-METHOD--author-one-cce-claim-per-atom.md`; SHA-256 `e4f47eadb633c5bd01e0e5d2e79e6146250843784965dc7e50f912924bd527a5`.
 
 ## Principles to apply
 
-- [CA-M-002](.caprmedio_caprmedio/05_method/CA-M-002-PRINCIPLE-METHOD--dry-don-t-repeat-yourself.md).
-- [CA-M-005](.caprmedio_caprmedio/05_method/CA-M-005-PRINCIPLE-METHOD--add-complexity-only-when-necessary.md).
-- [CA-M-006](.caprmedio_caprmedio/05_method/CA-M-006-PRINCIPLE-METHOD--keep-the-whole-project-coherent.md).
-- [CA-R-1490](.caprmedio_caprmedio/04_requirement/CA-R-1490-PRINCIPLE-REQUIREMENT--preserve-valuable-information.md).
-- [CA-E-001](.caprmedio_caprmedio/06_evaluation/CA-E-001-PRINCIPLE-EVALUATION--make-governed-commitments-and-results-checkable.md).
+- [CA-M-002](.anechoic_anechoic/05_method/CA-M-002-PRINCIPLE-METHOD--dry-don-t-repeat-yourself.md).
+- [CA-M-005](.anechoic_anechoic/05_method/CA-M-005-PRINCIPLE-METHOD--add-complexity-only-when-necessary.md).
+- [CA-M-006](.anechoic_anechoic/05_method/CA-M-006-PRINCIPLE-METHOD--keep-the-whole-project-coherent.md).
+- [CA-R-1490](.anechoic_anechoic/04_requirement/CA-R-1490-PRINCIPLE-REQUIREMENT--preserve-valuable-information.md).
+- [CA-E-001](.anechoic_anechoic/06_evaluation/CA-E-001-PRINCIPLE-EVALUATION--make-governed-commitments-and-results-checkable.md).
 
 ## Resolution
 

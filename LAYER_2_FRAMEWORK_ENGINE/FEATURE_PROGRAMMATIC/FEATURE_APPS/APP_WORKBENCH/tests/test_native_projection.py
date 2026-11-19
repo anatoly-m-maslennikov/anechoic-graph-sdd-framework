@@ -50,9 +50,9 @@ class NativeProjectionTests(NativeCaptureTests):
         bindings = dict(relation_types={"CONTAINED_BY", "CONTAINS"},
                         inverses={"CONTAINED_BY": "CONTAINS"})
         refs = [
-            ("CA-O-188@2", ".caprmedio_c/09_operations/archive/first.md", "AN-T-09@2"),
-            ("CA-O-188@2", ".caprmedio_c/09_operations/archive/second.md", "AN-T-10@2"),
-            ("CA-I-9@2-draft", ".caprmedio_c/archive/withdrawn.md", "AN-T-09@2"),
+            ("CA-O-188@2", ".anechoic_c/09_operations/archive/first.md", "AN-T-09@2"),
+            ("CA-O-188@2", ".anechoic_c/09_operations/archive/second.md", "AN-T-10@2"),
+            ("CA-I-9@2-draft", ".anechoic_c/archive/withdrawn.md", "AN-T-09@2"),
         ]
         project_native(store, capture, migration_refs=refs, **bindings)
         query = (
@@ -75,7 +75,7 @@ class NativeProjectionTests(NativeCaptureTests):
         capture = capture_native(self.selection)
         bindings = dict(relation_types={"CONTAINED_BY", "CONTAINS"},
                         inverses={"CONTAINED_BY": "CONTAINS"})
-        path = ".caprmedio_c/archive/first.md"
+        path = ".anechoic_c/archive/first.md"
         refs = [("CA-P-2@2", path, "AN-T-09@2"), (None, path, "AN-T-09@2")]
         project_native(store, capture, migration_refs=refs, **bindings)
         with self.assertRaisesRegex(ValueError, "Conflicting exact references"):

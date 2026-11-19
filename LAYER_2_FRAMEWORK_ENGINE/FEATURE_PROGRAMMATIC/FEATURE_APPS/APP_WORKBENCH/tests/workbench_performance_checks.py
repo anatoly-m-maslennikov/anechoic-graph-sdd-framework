@@ -83,7 +83,7 @@ class WorkbenchPerformanceDockerMixin:
                     scalar(
                         "SELECT count(*)\n"
                         "FROM GRAPH_TABLE (\n"
-                        f"  caprmedio MATCH (a:Reference)-[e:{relation}]->(b:Reference)\n"
+                        f"  anechoic MATCH (a:Reference)-[e:{relation}]->(b:Reference)\n"
                         "  COLUMNS (a.ref AS source, b.ref AS target)\n"
                         ")"
                         f"{where}\n;"
@@ -335,8 +335,8 @@ class WorkbenchPerformanceDockerMixin:
                 self._stop_performance_container(handle)
 
     def _start_performance_container(self, root: Path, state: Path):
-        (root / ".caprmedio_runtime" / "workbench").mkdir(parents=True, exist_ok=True)
-        name = f"caprmedio-workbench-performance-{uuid4().hex}"
+        (root / ".anechoic_runtime" / "workbench").mkdir(parents=True, exist_ok=True)
+        name = f"anechoic-workbench-performance-{uuid4().hex}"
         port = free_port()
         url = f"http://127.0.0.1:{port}"
         stdout = tempfile.TemporaryFile(mode="w+t", encoding="utf-8")
@@ -349,7 +349,7 @@ class WorkbenchPerformanceDockerMixin:
                 "--name",
                 name,
                 "--label",
-                "caprmedio.test=workbench-performance",
+                "anechoic.test=workbench-performance",
                 "--memory=1536m",
                 "--memory-swap=1536m",
                 "--tmpfs",
@@ -359,7 +359,7 @@ class WorkbenchPerformanceDockerMixin:
                 "-v",
                 f"{root}:/project:rw",
                 "-v",
-                f"{state}:/project/.caprmedio_runtime/workbench:rw",
+                f"{state}:/project/.anechoic_runtime/workbench:rw",
                 self.image,
                 "mcp-http",
             ],

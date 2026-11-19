@@ -7,7 +7,7 @@ version: 15
 updated_at: "2026-10-03 02:56:00 +0400"
 relations:
   child_of:
-    - CAPRMEDIO-REQU-637-REQUIREMENT--establish-recurrence-protection
+    - ANECHOIC-REQU-637-REQUIREMENT--establish-recurrence-protection
 atom_id: "CA-R-1741"
 content_role: "Requirement"
 current_scope_unit: "CORE_META_MODEL"

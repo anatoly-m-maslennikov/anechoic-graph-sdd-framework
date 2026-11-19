@@ -134,10 +134,10 @@ def _local_subject(active: str, path: Path) -> str:
         return active
     root = expression.endpoints[0]
     new_root = isinstance(root.head, notation.Name) and (
-        root.head.value.startswith("CAPRMEDIO_") or root.head.value in {"MODEL", "PROJECT STRUCTURE"}
+        root.head.value.startswith("ANECHOIC_") or root.head.value in {"MODEL", "PROJECT STRUCTURE"}
     )
     namespace = root if new_root else expression.endpoints[1]
-    expected = {"CAPRMEDIO_STRUCTURE", "PROJECT STRUCTURE"} if new_root else {_NAMESPACE_BRANCH}
+    expected = {"ANECHOIC_STRUCTURE", "PROJECT STRUCTURE"} if new_root else {_NAMESPACE_BRANCH}
     if not isinstance(namespace.head, notation.Name) or namespace.head.value not in expected:
         raise ScopeDeclarationError(f"{path}: declaration active Subject uses an invalid namespace branch")
     if any(
@@ -165,8 +165,8 @@ def _native_scope(text: str, path: Path) -> tuple[str, dict[str, Any]] | None:
     instance = result["arguments"].get("instance")
     if result["kind"] != "entity" or instance is None:
         raise ScopeDeclarationError(f"{path}: native Scope declaration requires an instance")
-    if result["imports"] != {"declare_entity": "caprmedio.formal_claims",
-                              instance["type"]: "caprmedio.model"}:
+    if result["imports"] != {"declare_entity": "anechoic.formal_claims",
+                              instance["type"]: "anechoic.model"}:
         raise ScopeDeclarationError(f"{path}: unsupported native Scope imports")
     fields = instance["fields"]
     if result["arguments"]["entity_name"] != fields.get("name"):
@@ -266,9 +266,9 @@ def parse_scope_unit_declaration(raw: bytes, source: Path) -> ScopeUnitDeclarati
     metadata, body = _carrier(raw, source)
     atom_id, version, active, form, role = _metadata(metadata, source)
     topic_path = None
-    if active == "CAPRMEDIO_STRUCTURE" or (active and active.startswith("CAPRMEDIO_STRUCTURE/")):
+    if active == "ANECHOIC_STRUCTURE" or (active and active.startswith("ANECHOIC_STRUCTURE/")):
         parts = active.split("/")
-        if parts[0] != "CAPRMEDIO_STRUCTURE" or any(not part or _safe_component(part, "Topic component") != part for part in parts[1:]):
+        if parts[0] != "ANECHOIC_STRUCTURE" or any(not part or _safe_component(part, "Topic component") != part for part in parts[1:]):
             raise ScopeDeclarationError(f"{source}: invalid Structure Topic path")
         topic_path = tuple(parts[1:])
     native = _claim(body, source, delegation=form == "Scope Delegation")
@@ -296,7 +296,7 @@ def parse_scope_unit_declaration(raw: bytes, source: Path) -> ScopeUnitDeclarati
     if kind == "Project":
         if "id" in fields and fields["id"] != atom_id.split("-", 1)[0] + "-SU-00":
             raise ScopeDeclarationError(f"{source}: invalid Project Scope Unit ID")
-        if active is not None and active != f"Project//{name}" and not (topic_path == () and name.casefold() == "caprmedio"):
+        if active is not None and active != f"Project//{name}" and not (topic_path == () and name.casefold() == "anechoic"):
             raise ScopeDeclarationError(f"{source}: root declaration identity is contradictory")
         return ScopeUnitDeclaration(name=name, atom_id=atom_id, version=version, source=source,
                                     form=form, structural_level=level, topic_path=topic_path)

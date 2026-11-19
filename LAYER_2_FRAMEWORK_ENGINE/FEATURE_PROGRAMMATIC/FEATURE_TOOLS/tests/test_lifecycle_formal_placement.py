@@ -36,10 +36,10 @@ def native_body(rules):
 def role_source(root, name, number, atom_id):
     class_name = name.replace(' ', '')
     order = f', classifications={{"Role Order Number": {number}}}' if number is not None else ''
-    code = (f'from caprmedio.model import Atom\nfrom caprmedio.formal_claims import declare_entity\nclass {class_name}(Atom):\n    pass\n'
+    code = (f'from anechoic.model import Atom\nfrom anechoic.formal_claims import declare_entity\nclass {class_name}(Atom):\n    pass\n'
             f'declare_entity(entity_class={class_name}, entity_name={name!r}, '
             f'qualification_property_path="Atom.Header.Context.Role"{order})')
-    subject = f"CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := {name})"
+    subject = f"ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := {name})"
     (root / f"{atom_id}.md").write_text(carrier(atom_id, "Requirement", "Active",
         f"## Claim\n### Formal Claim\n```python\n{code}\n```\n", subject))
 
@@ -51,11 +51,11 @@ class FormalPlacementTests(unittest.TestCase):
         self.root = Path(self.tmp.name)
         (self.root / 'CA-R-1.md').write_text(carrier('CA-R-1', 'Requirement', 'Active',
             "## Claim\n### Formal Claim\n```python\n"
-            "from caprmedio.formal_claims import declare_entity\n"
+            "from anechoic.formal_claims import declare_entity\n"
             "declare_entity(entity_name='Form', relation_name='IS_PROPERTY_OF', base_path='Atom.Header.Context', allowed_values=('Plan',))\n```\n",
-            'CAPRMEDIO_MODEL <+ Atom.Header.Context.Form'))
+            'ANECHOIC_MODEL <+ Atom.Header.Context.Form'))
 
-    def delivery(self, rules=RULES, atom_id='CA-D-747', subject='CAPRMEDIO_MODEL <+ Carrier', status='Active'):
+    def delivery(self, rules=RULES, atom_id='CA-D-747', subject='ANECHOIC_MODEL <+ Carrier', status='Active'):
         (self.root / f'{atom_id}.md').write_text(carrier(atom_id, 'Delivery', status,
             '## Claim\n### Prose Claim\n```python\nplacement_rules = ()\n```\n' + native_body(rules).removeprefix('## Claim\n'), subject))
 
@@ -68,14 +68,14 @@ class FormalPlacementTests(unittest.TestCase):
     def test_formal_rules_compile_and_ignore_prose_comments_and_archived(self):
         role_source(self.root, 'Concern', 77, 'CA-R-77')
         role_source(self.root, 'Plan', 3, 'CA-R-78')
-        self.delivery(RULES[:1], 'CA-D-747', 'CAPRMEDIO_MODEL <+ Atom.Header.Context.Role')
-        self.delivery(RULES[1:5], 'CA-D-9123', 'CAPRMEDIO_MODEL <+ Atom.Header.State.Status')
-        self.delivery(RULES[5:], 'CA-D-98236', 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.State.Status >| Status Group := Backlog')
-        self.delivery(RULES[5:], 'CA-D-8890', 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.State.Status >| Status Group := Other')
-        self.delivery(RULES, 'CA-D-8888', 'CAPRMEDIO_MODEL <+ Unrelated')
-        self.delivery(RULES, 'CA-D-8889', 'CAPRMEDIO_MODEL <+ Carrier <+ Unrelated')
+        self.delivery(RULES[:1], 'CA-D-747', 'ANECHOIC_MODEL <+ Atom.Header.Context.Role')
+        self.delivery(RULES[1:5], 'CA-D-9123', 'ANECHOIC_MODEL <+ Atom.Header.State.Status')
+        self.delivery(RULES[5:], 'CA-D-98236', 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.State.Status >| Status Group := Backlog')
+        self.delivery(RULES[5:], 'CA-D-8890', 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.State.Status >| Status Group := Other')
+        self.delivery(RULES, 'CA-D-8888', 'ANECHOIC_MODEL <+ Unrelated')
+        self.delivery(RULES, 'CA-D-8889', 'ANECHOIC_MODEL <+ Carrier <+ Unrelated')
         for atom_id, status in [('CA-D-2', 'Archived'), ('CA-D-3', 'Draft')]:
-            self.delivery(RULES, atom_id, 'CAPRMEDIO_MODEL <+ Carrier', status)
+            self.delivery(RULES, atom_id, 'ANECHOIC_MODEL <+ Carrier', status)
         rules = self.compile().placement
         self.assertEqual('77_concern', rules.role_folder('Concern'))
         self.assertEqual(('container', ''), rules.placement('Plan', 'Active'))

@@ -10,10 +10,10 @@ subjects:
   - CFEL <+ Relation
   - Atom
   - Projection
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/(.Form:Entities Graph)
-  - CAPRMEDIO_MODEL <+ Projection.Updated At
-  - CAPRMEDIO_MODEL <+ Carrier/Directory
-  - CAPRMEDIO_MODEL <+ Projection
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Projection/(.Form:Entities Graph)
+  - ANECHOIC_MODEL <+ Projection.Updated At
+  - ANECHOIC_MODEL <+ Carrier/Directory
+  - ANECHOIC_MODEL <+ Projection
 version: 23
 updated_at: 2026-11-02 08:06:47 +0400
 tier: 5
@@ -26,10 +26,10 @@ context:
     - CFEL <+ Relation
     - Atom
     - Projection
-    - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/(.Form:Entities Graph)
-    - CAPRMEDIO_MODEL <+ Projection.Updated At
-    - CAPRMEDIO_MODEL <+ Carrier/Directory
-    - CAPRMEDIO_MODEL <+ Projection
+    - ANECHOIC_MODEL <+ Entity/Object/Continuant/Projection/(.Form:Entities Graph)
+    - ANECHOIC_MODEL <+ Projection.Updated At
+    - ANECHOIC_MODEL <+ Carrier/Directory
+    - ANECHOIC_MODEL <+ Projection
 ---
 ## Summary
 

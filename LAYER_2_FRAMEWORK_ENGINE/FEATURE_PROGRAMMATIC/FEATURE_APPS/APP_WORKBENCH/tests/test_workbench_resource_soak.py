@@ -5,9 +5,9 @@ import unittest
 from workbench_resource_docker import run_resource_case
 
 
-@unittest.skipUnless(os.environ.get("CAPRMEDIO_WORKBENCH_SOAK_SECONDS"), "30-minute soak is opt-in")
+@unittest.skipUnless(os.environ.get("ANECHOIC_WORKBENCH_SOAK_SECONDS"), "30-minute soak is opt-in")
 class WorkbenchResourceSoakTests(unittest.TestCase):
     def test_leak_soak(self):
-        seconds = int(os.environ["CAPRMEDIO_WORKBENCH_SOAK_SECONDS"])
+        seconds = int(os.environ["ANECHOIC_WORKBENCH_SOAK_SECONDS"])
         self.assertGreaterEqual(seconds, 1800, "acceptance needs 30 real minutes")
         run_resource_case(self, seconds)

@@ -9,7 +9,7 @@ relations:
     - CA-E-206-EVAL_APPROACH--require-usable-inputs-for-reliance
   evaluation_for:
     - CA-R-886-REQUIREMENT-BSEED_SEMANTICS--resolve-scope-unit-references-relative-to-the-owning-scope
-    - CAPRMEDIO-GOV-REQU-326--encode-relations-as-relation-kind-maps
+    - ANECHOIC-GOV-REQU-326--encode-relations-as-relation-kind-maps
 ---
 # Validate relative Scope Unit references
 

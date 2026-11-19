@@ -6,10 +6,10 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Identity.ID
+  main_subject: ANECHOIC_MODEL <+ Atom.Header.Identity.ID
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom.Header.State.Version
-  - 'CAPRMEDIO_MODEL <+ Atom.Header.State.Status: Draft'
+  - ANECHOIC_MODEL <+ Atom.Header.State.Version
+  - 'ANECHOIC_MODEL <+ Atom.Header.State.Status: Draft'
 tier: 1
 status: active
 version: 30
@@ -17,7 +17,7 @@ updated_at: 2026-11-09 00:51:00 +0400
 carrier_destination:
   file:
     name: CA-D-446-CORE_META_MODEL-ENG_DECISION--give-every-non-draft-atom-revision-one-identifier.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---

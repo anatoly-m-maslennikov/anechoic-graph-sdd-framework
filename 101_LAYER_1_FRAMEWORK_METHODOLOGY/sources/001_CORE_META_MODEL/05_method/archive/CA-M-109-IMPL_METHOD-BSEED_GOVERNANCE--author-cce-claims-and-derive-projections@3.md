@@ -3,7 +3,7 @@ subject_scopes:
   - language
 relations:
   child_of:
-    - CAPRMEDIO-M-087-IMPL_METHOD--author-in-canonical-framework-language
+    - ANECHOIC-M-087-IMPL_METHOD--author-in-canonical-framework-language
   method_for:
     - CA-R-892
     - CA-R-894

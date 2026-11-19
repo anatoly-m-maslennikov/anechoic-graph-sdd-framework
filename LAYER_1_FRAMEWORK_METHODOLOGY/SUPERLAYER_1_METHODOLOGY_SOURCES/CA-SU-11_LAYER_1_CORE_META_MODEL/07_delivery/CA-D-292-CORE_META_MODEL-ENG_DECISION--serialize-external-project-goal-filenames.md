@@ -6,11 +6,11 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role: Requirement)/(.Header.Context.Form: Project Goal)'
+  main_subject: 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role: Requirement)/(.Header.Context.Form: Project Goal)'
   dependencies:
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Actor/Operator
-  - CAPRMEDIO_MODEL <+ Project.Settings.Name
-  - CAPRMEDIO_MODEL <+ Project
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Actor/Operator
+  - ANECHOIC_MODEL <+ Project.Settings.Name
+  - ANECHOIC_MODEL <+ Project
 tier: 3
 status: Active
 version: 35
@@ -18,7 +18,7 @@ updated_at: 2026-11-02 19:46:47 +0400
 carrier_destination:
   file:
     name: CA-D-292-CORE_META_MODEL-DECISION--serialize-external-project-goal-filenames.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---
@@ -40,4 +40,4 @@ The `<OPERATOR_NAMES>` filename token **must** identify the registered Operator;
 
 ### Current source pin
 
-Proposed N+1 successor of `.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-292-CORE_META_MODEL-ENG_DECISION--serialize-external-project-goal-filenames.md`, CA-D-292@32, SHA-256 `244cc4f2eca9145cf1e314263f31c9e1cc3d4031a0059f1204d5de1f098c00ed`. Current bytes remain unchanged; this Draft performs no promotion or filename migration.
+Proposed N+1 successor of `.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-292-CORE_META_MODEL-ENG_DECISION--serialize-external-project-goal-filenames.md`, CA-D-292@32, SHA-256 `244cc4f2eca9145cf1e314263f31c9e1cc3d4031a0059f1204d5de1f098c00ed`. Current bytes remain unchanged; this Draft performs no promotion or filename migration.

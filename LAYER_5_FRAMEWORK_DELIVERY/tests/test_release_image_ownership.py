@@ -32,7 +32,7 @@ class ReleaseImageOwnershipTests(unittest.TestCase):
     def test_ready_predecessor_is_kept_and_older_owned_image_removed(self) -> None:
         docker = OwnedDocker()
         prior, older = ("sha256:" + char * 64 for char in ("1", "2"))
-        owner = owner_labels(fixtures.ROOT, "c" * 64, ".caprmedio_caprmedio")
+        owner = owner_labels(fixtures.ROOT, "c" * 64, ".anechoic_anechoic")
         for image in (prior, older):
             docker.images[image] = fixtures.FINGER
             docker.metadata_overrides[image] = owner
@@ -47,7 +47,7 @@ class ReleaseImageOwnershipTests(unittest.TestCase):
         docker = OwnedDocker()
         image = "sha256:" + "1" * 64
         docker.images[image] = "1" * 64
-        owner = owner_labels(fixtures.ROOT, "c" * 64, ".caprmedio_caprmedio")
+        owner = owner_labels(fixtures.ROOT, "c" * 64, ".anechoic_anechoic")
         docker.metadata_overrides[image] = owner
         cleanup = Cleanup(owner=owner)
         cleanup_obsolete_images(
@@ -57,11 +57,11 @@ class ReleaseImageOwnershipTests(unittest.TestCase):
         self.assertFalse(cleanup.pending)
 
     def test_unlabelled_partial_or_conflicting_owner_is_retained_pending(self) -> None:
-        owner = owner_labels(fixtures.ROOT, "c" * 64, ".caprmedio_caprmedio")
+        owner = owner_labels(fixtures.ROOT, "c" * 64, ".anechoic_anechoic")
         for metadata in (
             {},
-            {"org.caprmedio.project": "c" * 64},
-            {**owner, "org.caprmedio.host_project_root": "/different"},
+            {"org.anechoic.project": "c" * 64},
+            {**owner, "org.anechoic.host_project_root": "/different"},
         ):
             for linked in (False, True):
                 if linked and not metadata:
@@ -82,8 +82,8 @@ class ReleaseImageOwnershipTests(unittest.TestCase):
         docker = OwnedDocker()
         image = "sha256:" + "1" * 64
         docker.images[image] = "1" * 64
-        owner = owner_labels(fixtures.ROOT, "c" * 64, ".caprmedio_caprmedio")
-        docker.metadata_overrides[image] = owner_labels(Path("/foreign"), "f" * 64, ".caprmedio_foreign")
+        owner = owner_labels(fixtures.ROOT, "c" * 64, ".anechoic_anechoic")
+        docker.metadata_overrides[image] = owner_labels(Path("/foreign"), "f" * 64, ".anechoic_foreign")
         cleanup = Cleanup(owner=owner, images={image})
         cleanup_obsolete_images(
             fixtures.ROOT, fixtures.CURRENT, fixtures.FINGER, cleanup, docker.run
@@ -95,7 +95,7 @@ class ReleaseImageOwnershipTests(unittest.TestCase):
         docker = OwnedDocker()
         image = "sha256:" + "1" * 64
         docker.images[image] = fixtures.FINGER
-        owner = owner_labels(fixtures.ROOT, "c" * 64, ".caprmedio_caprmedio")
+        owner = owner_labels(fixtures.ROOT, "c" * 64, ".anechoic_anechoic")
         docker.metadata_overrides[image] = owner
         cleanup = Cleanup(owner=owner)
         cleanup_obsolete_images(
@@ -108,7 +108,7 @@ class ReleaseImageOwnershipTests(unittest.TestCase):
         docker = OwnedDocker()
         image = "sha256:" + "1" * 64
         docker.images[image] = fixtures.FINGER
-        owner = owner_labels(fixtures.ROOT, "c" * 64, ".caprmedio_caprmedio")
+        owner = owner_labels(fixtures.ROOT, "c" * 64, ".anechoic_anechoic")
         docker.metadata_overrides[image] = owner
         cleanup = Cleanup(owner=owner, images={fixtures.CURRENT, image})
         cleanup_obsolete_images(
@@ -123,7 +123,7 @@ class ReleaseImageOwnershipTests(unittest.TestCase):
                 docker = OwnedDocker()
                 image = "sha256:" + "1" * 64
                 docker.images[image] = "1" * 64
-                cleanup = Cleanup(owner=owner_labels(fixtures.ROOT, "c" * 64, ".caprmedio_caprmedio"))
+                cleanup = Cleanup(owner=owner_labels(fixtures.ROOT, "c" * 64, ".anechoic_anechoic"))
                 if linked:
                     cleanup.images.add(image)
                 cleanup_obsolete_images(
@@ -137,7 +137,7 @@ class ReleaseImageOwnershipTests(unittest.TestCase):
         image = "sha256:" + "1" * 64
         docker.images[image] = "1" * 64
         docker.references.add(image)
-        owner = owner_labels(fixtures.ROOT, "c" * 64, ".caprmedio_caprmedio")
+        owner = owner_labels(fixtures.ROOT, "c" * 64, ".anechoic_anechoic")
         docker.metadata_overrides[image] = owner
         cleanup = Cleanup(owner=owner)
         cleanup_obsolete_images(

@@ -17,21 +17,21 @@ from scope_declaration_test_support import write_scope_unit_declarations
 
 def model_carrier(identifier, subject, claim):
     return (f"---\natom_id: {identifier}\nrole: Requirement\nform: Declaration\n"
-            f"status: Active\nversion: 1\nsubjects:\n  active: CAPRMEDIO_MODEL <+ {subject}\n"
+            f"status: Active\nversion: 1\nsubjects:\n  active: ANECHOIC_MODEL <+ {subject}\n"
             f"---\n## Claim\n### Formal Claim\n```python\n{claim}\n```\n")
 
 
 def entity(name, parent=None):
     base = f"({parent})" if parent else ""
-    imports = f"from caprmedio.model import {parent}\n" if parent else ""
-    return ("from caprmedio.formal_claims import declare_entity\n" + imports
+    imports = f"from anechoic.model import {parent}\n" if parent else ""
+    return ("from anechoic.formal_claims import declare_entity\n" + imports
             + f"class {name}{base}:\n    pass\n"
             + f"declare_entity(entity_name='{name}', entity_class={name})")
 
 
 class GenerateModelTests(unittest.TestCase):
     def test_real_build_errors_report_and_preserve_existing_model(self):
-        relation = ("from caprmedio.formal_claims import declare_relation\n"
+        relation = ("from anechoic.formal_claims import declare_relation\n"
                     "declare_relation(relation_name='LINKS', "
                     "source_endpoint={'level': 'instances', 'entity_paths': ('Atom',)}, "
                     "target_endpoint={'level': 'instances', 'entity_paths': ('Missing',)})")
@@ -46,11 +46,11 @@ class GenerateModelTests(unittest.TestCase):
         for label, declarations, expected in cases:
             with self.subTest(case=label), TemporaryDirectory() as directory:
                 root = Path(directory).resolve()
-                control = root / ".caprmedio_test"
+                control = root / ".anechoic_test"
                 control.mkdir()
-                (control / "caprmedio_project_settings.toml").write_text(
+                (control / "anechoic_project_settings.toml").write_text(
                     '[project]\nname="TEST"\n[artifacts.identity]\nproject_prefix="CA"\n'
-                    '[paths]\ncontrol_root=".caprmedio_test"\n', encoding="utf-8",
+                    '[paths]\ncontrol_root=".anechoic_test"\n', encoding="utf-8",
                 )
                 write_scope_unit_declarations(root, control_root=control)
                 requirements = control / "04_requirement"
@@ -77,13 +77,13 @@ class GenerateModelTests(unittest.TestCase):
 
     def test_build_uses_declared_scope_sources(self):
         root = Path("/project")
-        authority = Path(".caprmedio_project/SCOPE")
+        authority = Path(".anechoic_project/SCOPE")
         selection = SimpleNamespace(
             root=root, control_root=root / authority.parent,
             structure={"scope_units": [{"authority_path": str(authority)}]},
         )
         selected = {"source": {"path": str(authority / "04_requirement/CA-R-1.md")}}
-        copy = {"source": {"path": ".caprmedio_project/EXPORT/04_requirement/CA-R-1.md"}}
+        copy = {"source": {"path": ".anechoic_project/EXPORT/04_requirement/CA-R-1.md"}}
 
         def read_sources(_control, project, *, include_source):
             return [row for row in (copy, selected) if include_source(project / row["source"]["path"])]

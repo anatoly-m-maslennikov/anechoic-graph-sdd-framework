@@ -8,9 +8,9 @@ version: 6
 updated_at: "2026-09-10 20:55:13 +0400"
 relations:
   child_of:
-    - "CAPRMEDIO-META-REQU-100"
-    - "CAPRMEDIO-META-REQU-740--separate-content-role-from-artifact-type"
-    - "CAPRMEDIO-META-REQU-742--permit-one-internal-default-type-per-content-role"
+    - "ANECHOIC-META-REQU-100"
+    - "ANECHOIC-META-REQU-740--separate-content-role-from-artifact-type"
+    - "ANECHOIC-META-REQU-742--permit-one-internal-default-type-per-content-role"
 atom_id: "CA-D-393"
 content_role: "Delivery"
 current_scope_unit: "CORE_META_MODEL"

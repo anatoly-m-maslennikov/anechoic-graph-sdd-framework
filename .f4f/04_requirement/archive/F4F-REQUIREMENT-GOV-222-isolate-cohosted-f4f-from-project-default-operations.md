@@ -13,4 +13,4 @@ relations:
 
 # Isolate cohosted F4F from project-default operations
 
-A cohosted F4F seed must live under the repository-root `.f4f/` boundary and remain outside default CAPRMEDIO discovery, validation, migration, and Projection generation unless an operation explicitly selects F4F as its target.
+A cohosted F4F seed must live under the repository-root `.f4f/` boundary and remain outside default ANECHOIC discovery, validation, migration, and Projection generation unless an operation explicitly selects F4F as its target.

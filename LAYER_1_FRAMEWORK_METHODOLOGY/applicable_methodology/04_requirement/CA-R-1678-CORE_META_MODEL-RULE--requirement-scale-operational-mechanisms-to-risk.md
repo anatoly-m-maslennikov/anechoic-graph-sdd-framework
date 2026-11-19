@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Execution Control"
+  main_subject: "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Execution Control"
 tier: 2
 relations:
   child_of:
@@ -17,11 +17,11 @@ updated_at: 2026-11-02 18:35:20 +0400
 carrier_destination:
   file:
     name: CA-R-1678-CORE_META_MODEL-RULE--requirement-scale-operational-mechanisms-to-risk.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1678-CORE_META_MODEL-RULE--requirement-scale-operational-mechanisms-to-risk.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1678-CORE_META_MODEL-RULE--requirement-scale-operational-mechanisms-to-risk.md
   source_atom_id: CA-R-1678
   source_atom_revision: 31
   source_sha256: 3ad060e7f3c481b83a946b8698a68431eb47ec45cb036ec9aaea31350494c4c9
@@ -36,7 +36,7 @@ Requirement — Scale operational mechanisms to risk
 ### Prose Claim
 
 
-operational mechanisms within CAPRMEDIO.
+operational mechanisms within ANECHOIC.
 
 
-CAPRMEDIO **must** require operational mechanisms **to** be proportional **to** explicit failure risk **and** a declared authoritative-state boundary. CAPRMEDIO **must not** mandate one recovery **or** durability mechanism for **every** Project.
+ANECHOIC **must** require operational mechanisms **to** be proportional **to** explicit failure risk **and** a declared authoritative-state boundary. ANECHOIC **must not** mandate one recovery **or** durability mechanism for **every** Project.

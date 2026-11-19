@@ -1,0 +1,54 @@
+---
+atom_id: CA-P-1590
+ref_id: CA-P-1590
+container:
+  atom: CA-P-1137
+role: Plan
+form: Plan
+label: Task
+topics:
+  main_subject: Subject/Graph Node/Engineering/Implementation Evaluation
+  dependencies:
+  - Subject/Graph Node/Engineering/Workflow
+  - Subject/Graph Node/Engineering/Action
+  - Subject/Graph Node/Engineering/Implementation
+  - Subject/Graph Node/Engineering/Implementation Evaluation
+  - Subject/Graph Node/Domain/Continuant/History/Journal
+tier: 3
+relations:
+  is_decomposition_of:
+  - CA-P-1137
+  blocks:
+  - CA-P-1519
+status: Done
+version: 9
+updated_at: 2026-10-25 17:32:27 +0400
+carrier_destination:
+  file:
+    name: 47-CA-P-1590-TASK--prove-native-selected-implementation-route.md
+    path: .anechoic_anechoic/03_plan/done/15-CA-P-1117-EPIC--harvest-and-implement-session-derived-operations/done/5-CA-P-1122-TASK--implement-and-verify-adopted-capabilities/1-CA-P-1137-TASK--implement-one-programmatic-capability-slice/done
+work_sequence_number: 47
+current_scope_unit: anechoic
+claim_target_scope_unit: WORKFLOW_ORCHESTRATOR
+author: Anatoly Maslennikov
+assignee: AI Agent
+---
+# Summary
+
+Prove native selected Implementation route
+
+## Objective
+
+Within <=15 minutes, prove W09's full selected graph through the admitted executable mock and actual shared recorder.
+
+## Details
+
+- Own only a new test_selected_native_implementation_route.py. Use current GoldenProject, actual preview/freeze/dispatch, explicit ImplementationMockAgent selected-root binding and four declared O091 visits. Verify real test-first baseline failure, candidate creation and assertion pass plus exact Workflow/Step/Action sealed facts/current source bindings. Mark mock-not-live-llm and keep invalid source/permission denial separate. Do not edit production, fixture, source, Plans, Journal, code outside the test, or commits. Docker development-worker proof is not image/MCP/queue proof. No FPF, harvesting, paid call or live effects; apply patch, preserve others and inherit 90%.
+
+## Saved result
+
+Saved test_selected_native_implementation_route.py. Focused local and development-worker runs passed 3/3. Actual W09 preview/freeze/dispatch with the bounded mock traversed four O091 visits, baseline failure, candidate creation and passing assertions, with exact source bindings and shared Run facts. Permission and stale-source cases remain separate; this is not immutable-image or live-Agent proof.
+
+## Definition of Done
+
+Strict full native W09 mocked functional proof is saved, or an exact protected native/runtime/input remainder is retained.

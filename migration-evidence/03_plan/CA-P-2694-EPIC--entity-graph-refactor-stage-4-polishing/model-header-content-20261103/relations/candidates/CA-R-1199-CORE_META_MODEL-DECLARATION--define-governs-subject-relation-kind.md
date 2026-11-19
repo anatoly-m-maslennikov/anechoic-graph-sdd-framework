@@ -1,11 +1,11 @@
 ---
 subjects:
-  active: CAPRMEDIO_MODEL <+ CFEL <+ Relation//GOVERNS
+  active: ANECHOIC_MODEL <+ CFEL <+ Relation//GOVERNS
   passive:
-  - CAPRMEDIO_MODEL <+ CFEL > Relation
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ CFEL > Relation
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Entity
+  - ANECHOIC_MODEL <+ Atom.Content
 version: 36
 updated_at: 2026-11-02 08:06:47 +0400
 atom_id: CA-R-1199

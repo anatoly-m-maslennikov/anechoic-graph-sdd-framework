@@ -6,13 +6,13 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations).Header.State.Status'
+  main_subject: 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations).Header.State.Status'
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations).Header.Context.Form'
-  - CAPRMEDIO_MODEL <+ Atom.Header.State.Status
-  - CAPRMEDIO_STRUCTURE <+ Entity/Object/Continuant/Selection//Extension Sources
-  - CAPRMEDIO_STRUCTURE <+ Scope Unit//PROJECT_CONFIGURATION
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations).Header.Context.Form'
+  - ANECHOIC_MODEL <+ Atom.Header.State.Status
+  - ANECHOIC_STRUCTURE <+ Entity/Object/Continuant/Selection//Extension Sources
+  - ANECHOIC_STRUCTURE <+ Scope Unit//PROJECT_CONFIGURATION
 tier: 2
 status: Active
 version: 19
@@ -20,11 +20,11 @@ updated_at: 2026-11-02 00:18:22 +0400
 carrier_destination:
   file:
     name: CA-R-1874-CORE_META_MODEL-RULE--register-core-operations-status-values.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1874-CORE_META_MODEL-RULE--register-core-operations-status-values.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1874-CORE_META_MODEL-RULE--register-core-operations-status-values.md
   source_atom_id: CA-R-1874
   source_atom_revision: 19
   source_sha256: d658584c5acf6d7d019982a591507455e168b319a4feba2bbf3c3958e532301d

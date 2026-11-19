@@ -11,4 +11,4 @@ relations:
 ---
 # Validate Principle Content-role semantics
 
-Classify a Plan Principle only when its meaning can be faithfully paraphrased as who MAY perform or authorize governed actions, classify a Requirement, Delivery, or Ops Principle only when its meaning can be faithfully paraphrased as what CAPRMEDIO provides, and classify a Method or Evaluation Principle only when its meaning can be faithfully paraphrased as how CAPRMEDIO provides its capabilities; the paraphrase is a semantic test and does not require a literal wording template.
+Classify a Plan Principle only when its meaning can be faithfully paraphrased as who MAY perform or authorize governed actions, classify a Requirement, Delivery, or Ops Principle only when its meaning can be faithfully paraphrased as what ANECHOIC provides, and classify a Method or Evaluation Principle only when its meaning can be faithfully paraphrased as how ANECHOIC provides its capabilities; the paraphrase is a semantic test and does not require a literal wording template.

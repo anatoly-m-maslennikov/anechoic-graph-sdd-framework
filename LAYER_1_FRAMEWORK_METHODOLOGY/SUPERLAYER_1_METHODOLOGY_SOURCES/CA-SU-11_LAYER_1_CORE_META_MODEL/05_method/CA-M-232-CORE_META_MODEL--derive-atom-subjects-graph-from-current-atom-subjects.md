@@ -6,14 +6,14 @@ container:
 role: Method
 form: Implementation Method
 topics:
-  main_subject: 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Subject Graph)'
+  main_subject: 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Subject Graph)'
   dependencies:
-  - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Atom Subjects Graph)'
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
-  - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Relation//GOVERNS
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics.Dependencies
+  - 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Atom Subjects Graph)'
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Topics
+  - ANECHOIC_MODEL <+ Entity
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Relation//GOVERNS
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Topics.Dependencies
 tier: 1
 status: Active
 version: 34
@@ -21,7 +21,7 @@ updated_at: 2026-11-02 19:46:47 +0400
 carrier_destination:
   file:
     name: CA-M-232-CORE_META_MODEL-IMPLEMENTATION_METHOD--derive-atom-subjects-graph-from-current-atom-subjects.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---
@@ -87,4 +87,4 @@ The Property Relation view uses direct IS_PROPERTY_OF from Property to immediate
 
 ### Current source pin and pending adoption
 
-Proposed N+1 successor of `.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-232-CORE_META_MODEL--derive-atom-subjects-graph-from-current-atom-subjects.md`, Version 31, SHA-256 `a91f896c0bd3f79a90ace9abc800a691e603847095b48638eaccdc9e0cae743e`. Current bytes remain unchanged. The new Relation names depend on the pending IS_PROPERTY_OF / HAS_PROPERTY Relation Definition Drafts; this source does not admit them through a renamed token alone. This preparation performs no runtime change, generated-view refresh or promotion.
+Proposed N+1 successor of `.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-232-CORE_META_MODEL--derive-atom-subjects-graph-from-current-atom-subjects.md`, Version 31, SHA-256 `a91f896c0bd3f79a90ace9abc800a691e603847095b48638eaccdc9e0cae743e`. Current bytes remain unchanged. The new Relation names depend on the pending IS_PROPERTY_OF / HAS_PROPERTY Relation Definition Drafts; this source does not admit them through a renamed token alone. This preparation performs no runtime change, generated-view refresh or promotion.

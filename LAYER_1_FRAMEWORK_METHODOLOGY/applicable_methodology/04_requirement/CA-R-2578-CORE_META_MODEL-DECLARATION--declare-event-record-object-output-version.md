@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Event Record.object_output.version
+  main_subject: ANECHOIC_MODEL <+ Event Record.object_output.version
 tier: 3
 status: active
 version: 4
@@ -14,11 +14,11 @@ updated_at: '2026-11-12T12:33:04.158402+00:00'
 carrier_destination:
   file:
     name: CA-R-2578-CORE_META_MODEL-DECLARATION--declare-event-record-object-output-version.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2578-CORE_META_MODEL-DECLARATION--declare-event-record-object-output-version.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2578-CORE_META_MODEL-DECLARATION--declare-event-record-object-output-version.md
   source_atom_id: CA-R-2578
   source_atom_revision: 4
   source_sha256: 5b2b98ab9832b4d6a30fdfcc3e6f2432bff7ac1d47fe2f5ad9cda2920bc8981b
@@ -33,7 +33,7 @@ Declare Event Record.object_output.version
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import Cardinality, declare_entity
+from anechoic.formal_claims import Cardinality, declare_entity
 
 declare_entity(
     entity_name='version',

@@ -24,14 +24,14 @@ class StateActionsTest(unittest.TestCase):
         binding = bind_placement(fixture_rules())
         binding.__enter__()
         self.addCleanup(binding.__exit__, None, None, None)
-        scratch = TOOLS.parents[2] / '.caprmedio_tmp/CA-P-2791/CA-P-2934/state-actions'
+        scratch = TOOLS.parents[2] / '.anechoic_tmp/CA-P-2791/CA-P-2934/state-actions'
         scratch.mkdir(parents=True, exist_ok=True)
         self.tmp = tempfile.TemporaryDirectory(dir=scratch)
         self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name)
-        control = self.root / '.caprmedio_test'
+        control = self.root / '.anechoic_test'
         control.mkdir()
-        (control / 'caprmedio_project_settings.toml').write_text('[project]\nname="TEST"\n[artifacts.identity]\nproject_prefix="CA"\n[paths]\ncontrol_root=".caprmedio_test"\n')
+        (control / 'anechoic_project_settings.toml').write_text('[project]\nname="TEST"\n[artifacts.identity]\nproject_prefix="CA"\n[paths]\ncontrol_root=".anechoic_test"\n')
         write_scope_unit_declarations(self.root, control_root=control, rows=[{'scope_unit_name': 'OTHER', 'atom_id': 'CA-R-990001', 'scope_unit_id': 'CA-SU-1'}])
         self.folder = control / '04_requirement'
         self.folder.mkdir(exist_ok=True)

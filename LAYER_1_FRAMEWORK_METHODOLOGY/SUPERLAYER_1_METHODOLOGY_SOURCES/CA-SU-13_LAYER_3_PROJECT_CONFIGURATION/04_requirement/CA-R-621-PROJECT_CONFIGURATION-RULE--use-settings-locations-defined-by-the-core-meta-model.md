@@ -6,9 +6,9 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Carrier/File
+  main_subject: ANECHOIC_MODEL <+ Carrier/File
   dependencies:
-  - CAPRMEDIO_MODEL <+ Project.Settings
+  - ANECHOIC_MODEL <+ Project.Settings
 tier: 2
 relations:
   child_of:
@@ -22,7 +22,7 @@ llm_session_ids:
 - codex:019f591f-04f6-70f2-8de7-828b7cccc69d
 - codex:01a02650-eff7-7453-8c37-0699b36773c6
 current_scope_unit: PROJECT_CONFIGURATION
-claim_target_scope_unit: caprmedio
+claim_target_scope_unit: anechoic
 ---
 ## Summary
 Use settings locations defined by the Core Meta-Model
@@ -32,4 +32,4 @@ Use settings locations defined by the Core Meta-Model
 ### Prose Claim
 
 
-the caprmedio Implementation **must** resolve both Settings Artifacts through the Core Meta-Model Carrier rules CA-D-359 **and** CA-D-364 **without** defining a Project-specific competing location.
+the anechoic Implementation **must** resolve both Settings Artifacts through the Core Meta-Model Carrier rules CA-D-359 **and** CA-D-364 **without** defining a Project-specific competing location.

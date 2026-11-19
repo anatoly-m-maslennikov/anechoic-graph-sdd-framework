@@ -34,8 +34,8 @@ class NativeWorkflowDefinitionTests(unittest.TestCase):
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_entity
-from caprmedio.model import ProjectManifest
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ProjectManifest
 declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="Anechoic", prefix="AN"))
 ```
 """)
@@ -85,7 +85,7 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
 
     def test_refuses_wrong_tree_and_noncurrent_paths(self):
         for directory in (f"{self.control}/SPEC", f"{self.control}/_PMETA/draft",
-                          f"{self.control}/_PMETA/archived", ".caprmedio_legacy/_PMETA"):
+                          f"{self.control}/_PMETA/archived", ".anechoic_legacy/_PMETA"):
             with self.subTest(directory=directory):
                 pin = self._pin("workflow", "AN-P-1", 3, relative=f"{directory}/AN-P-1-WORKFLOW--fixture.md")
                 with self.assertRaisesRegex(NativeWorkflowDefinitionError, "Invalid native PMETA pin"):
@@ -112,7 +112,7 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
     def test_recheck_refuses_missing_or_symlinked_source_even_with_same_bytes(self):
         check = self._bind()
         action = self.root / self.action.relative_path
-        moved = self.root / ".caprmedio_legacy" / action.name
+        moved = self.root / ".anechoic_legacy" / action.name
         moved.parent.mkdir()
         action.rename(moved)
         with self.assertRaisesRegex(NativeWorkflowDefinitionError, "AN-P-3@1 is unavailable"):

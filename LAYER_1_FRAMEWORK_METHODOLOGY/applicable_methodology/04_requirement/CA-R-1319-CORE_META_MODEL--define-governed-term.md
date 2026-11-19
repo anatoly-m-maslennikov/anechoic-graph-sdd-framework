@@ -6,12 +6,12 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Term
+  main_subject: ANECHOIC_MODEL <+ Term
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Method)/(.Header.Context.Form := Term Definition)
-  - CAPRMEDIO_MODEL <+ Project
-  - CAPRMEDIO_MODEL <+ Term//Empty
-  - CAPRMEDIO_MODEL <+ Term//ID
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Method)/(.Header.Context.Form := Term Definition)
+  - ANECHOIC_MODEL <+ Project
+  - ANECHOIC_MODEL <+ Term//Empty
+  - ANECHOIC_MODEL <+ Term//ID
 tier: 1
 status: Active
 version: 31
@@ -19,9 +19,9 @@ updated_at: 2026-11-04 18:28:33 +0400
 carrier_destination:
   file:
     name: CA-R-1319-RULE--define-governed-term.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1319-CORE_META_MODEL--define-governed-term.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1319-CORE_META_MODEL--define-governed-term.md
   source_atom_id: CA-R-1319
   source_atom_revision: 31
   source_sha256: d7ffe557d8272aeb0dbc87e529e51588c55d01527add8ba4831f6a48b8b8ca66

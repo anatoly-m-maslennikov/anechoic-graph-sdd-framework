@@ -6,9 +6,9 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Relation//structural_parent
+  main_subject: ANECHOIC_MODEL <+ Relation//structural_parent
   dependencies:
-  - CAPRMEDIO_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Scope Unit
 tier: 1
 status: active
 version: 38
@@ -16,11 +16,11 @@ updated_at: '2026-11-12T20:21:10.600815+00:00'
 carrier_destination:
   file:
     name: CA-R-1660-CORE_META_MODEL-DECLARATION--register-structural-parent-relation.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1660-CORE_META_MODEL-DECLARATION--register-structural-parent-relation.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1660-CORE_META_MODEL-DECLARATION--register-structural-parent-relation.md
   source_atom_id: CA-R-1660
   source_atom_revision: 38
   source_sha256: 0399f43db9ebffdacc020796777a50186a21d959c6f7805908a36156263ba611
@@ -45,7 +45,7 @@ structural_parent relates structural child to immediate structural parent.
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_relation
+from anechoic.formal_claims import declare_relation
 
 declare_relation(
     relation_name='structural_parent',

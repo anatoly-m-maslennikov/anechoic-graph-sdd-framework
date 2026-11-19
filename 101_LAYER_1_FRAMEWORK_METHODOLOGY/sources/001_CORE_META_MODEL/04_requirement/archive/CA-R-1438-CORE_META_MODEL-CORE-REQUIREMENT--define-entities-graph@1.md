@@ -11,11 +11,11 @@ subjects:
       - "Entity"
       - "Relation Kind"
       - "Relation"
-      - "CAPRMEDIO Graph"
+      - "ANECHOIC Graph"
 version: 1
 updated_at: "2026-09-11 05:44:27 +0400"
 relations: {}
 ---
 # Define Entities Graph
 
-an Entities Graph **means** a CAPRMEDIO Graph whose nodes are Entities **and** whose edges represent Relations admitted for that graph kind by their governing authority.
+an Entities Graph **means** a ANECHOIC Graph whose nodes are Entities **and** whose edges represent Relations admitted for that graph kind by their governing authority.

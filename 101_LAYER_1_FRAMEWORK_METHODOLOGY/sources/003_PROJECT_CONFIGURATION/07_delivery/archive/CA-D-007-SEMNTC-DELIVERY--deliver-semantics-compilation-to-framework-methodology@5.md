@@ -6,8 +6,8 @@ version: 5
 updated_at: 2026-08-22 07:44:21
 relations:
   delivery_for:
-    - CAPRMEDIO-META-REQU-722
-    - CAPRMEDIO-CNTR-025
+    - ANECHOIC-META-REQU-722
+    - ANECHOIC-CNTR-025
 ---
 # Deliver SEMANTICS compilation to FRAMEWORK_METHODOLOGY
 

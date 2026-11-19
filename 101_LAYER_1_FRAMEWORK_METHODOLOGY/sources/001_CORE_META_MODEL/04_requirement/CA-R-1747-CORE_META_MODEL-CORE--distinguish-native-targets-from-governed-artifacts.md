@@ -24,6 +24,6 @@ native project targets **and** governed Artifacts.
 
 ## Claim
 
-a native project target is Implementation rather than a governed Artifact **unless** CAPRMEDIO separately admits an Artifact identity that represents **or** binds it.
+a native project target is Implementation rather than a governed Artifact **unless** ANECHOIC separately admits an Artifact identity that represents **or** binds it.
 
 ## Details

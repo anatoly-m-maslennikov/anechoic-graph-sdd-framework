@@ -124,7 +124,7 @@ def _public_result(result):
         public["environment"] = {
             key: value
             for key, value in result["environment"].items()
-            if key.startswith("CAPRMEDIO_")
+            if key.startswith("ANECHOIC_")
         }
     return public
 

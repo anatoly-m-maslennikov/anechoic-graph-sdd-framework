@@ -24,7 +24,7 @@ class RuntimeSettingsTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
-        self.path = self.root / ".caprmedio_runtime" / "caprmedio_runtime_settings.toml"
+        self.path = self.root / ".anechoic_runtime" / "anechoic_runtime_settings.toml"
 
     def test_missing_file_uses_the_declared_default(self) -> None:
         self.assertEqual(DEFAULT_RESULT_TTL_SECONDS, result_ttl_seconds(self.root))

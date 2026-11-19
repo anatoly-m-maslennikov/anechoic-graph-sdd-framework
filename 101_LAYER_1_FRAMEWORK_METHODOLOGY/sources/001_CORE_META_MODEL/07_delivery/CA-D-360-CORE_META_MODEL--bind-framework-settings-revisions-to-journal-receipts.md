@@ -24,10 +24,10 @@ Bind Framework Settings Revisions to Journal Receipts
 
 ## Scope
 
-the current `caprmedio_framework_settings` Revision and SHA-256 Digest.
+the current `anechoic_framework_settings` Revision and SHA-256 Digest.
 
 ## Claim
 
-the current caprmedio_framework_settings Revision **and** SHA-256 Digest **must** bind **to** its authoritative TOML Carrier through the canonical completed governed-change Work Journal receipt; absence, ambiguity, **or** mismatch **must** leave its currentness unknown.
+the current anechoic_framework_settings Revision **and** SHA-256 Digest **must** bind **to** its authoritative TOML Carrier through the canonical completed governed-change Work Journal receipt; absence, ambiguity, **or** mismatch **must** leave its currentness unknown.
 
 ## Details

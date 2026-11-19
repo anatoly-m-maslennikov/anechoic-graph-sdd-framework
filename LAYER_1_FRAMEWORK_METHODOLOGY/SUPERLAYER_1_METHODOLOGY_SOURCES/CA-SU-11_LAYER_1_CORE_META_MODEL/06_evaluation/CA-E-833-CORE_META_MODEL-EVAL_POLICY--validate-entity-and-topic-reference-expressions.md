@@ -6,18 +6,18 @@ container:
 role: Evaluation
 form: Eval Policy
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Entity
+  main_subject: ANECHOIC_MODEL <+ Entity
   dependencies:
-  - 'CAPRMEDIO_MODEL <+ Atom.Header.State.Status: Active'
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Actor/Operator
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Method)
-  - CAPRMEDIO_MODEL <+ Term
-  - CAPRMEDIO_MODEL <+ Term//Property
-  - CAPRMEDIO_MODEL <+ Atom.Header.Relations
-  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+
+  - 'ANECHOIC_MODEL <+ Atom.Header.State.Status: Active'
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Actor/Operator
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Method)
+  - ANECHOIC_MODEL <+ Term
+  - ANECHOIC_MODEL <+ Term//Property
+  - ANECHOIC_MODEL <+ Atom.Header.Relations
+  - ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+
     Data Validation
-  - CAPRMEDIO_MODEL <+ Atom.Content
-  - CAPRMEDIO_MODEL <+ Scope Unit.Name
+  - ANECHOIC_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ Scope Unit.Name
 tier: 4
 relations:
   evaluation_for:
@@ -35,7 +35,7 @@ updated_at: '2026-11-13T19:25:42.141751+00:00'
 carrier_destination:
   file:
     name: CA-E-833-CORE_META_MODEL-EVAL_POLICY--validate-entity-and-topic-reference-expressions.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---

@@ -23,10 +23,10 @@ Preserve GitHub File Preview Compatibility
 
 ## Scope
 
-CAPRMEDIO-owned Markdown, TOML, and YAML File Carrier repository previews.
+ANECHOIC-owned Markdown, TOML, and YAML File Carrier repository previews.
 
 ## Claim
 
-**every** CAPRMEDIO-owned Markdown, TOML, **or** YAML File Carrier **must** remain valid, legible, **and** navigable **in** GitHub repository file preview **without** relying on editor-specific syntax for required content.
+**every** ANECHOIC-owned Markdown, TOML, **or** YAML File Carrier **must** remain valid, legible, **and** navigable **in** GitHub repository file preview **without** relying on editor-specific syntax for required content.
 
 ## Details

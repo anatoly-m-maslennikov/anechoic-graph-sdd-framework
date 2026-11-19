@@ -1,6 +1,6 @@
 ---
 subjects:
-  governs: "CAPRMEDIO Routing Tree"
+  governs: "ANECHOIC Routing Tree"
   depends_on: []
 version: 5
 updated_at: "2026-09-17 15:07:45 +0000"
@@ -17,7 +17,7 @@ global_tier: 10
 ---
 # Validate the routing tree
 
-the Evaluation of the CAPRMEDIO Routing Tree registered under CA-R-1640 **must** reject a routing tree **when** **any** of the following is present:
+the Evaluation of the ANECHOIC Routing Tree registered under CA-R-1640 **must** reject a routing tree **when** **any** of the following is present:
 
 - an invalid schema;
 - an unknown target;

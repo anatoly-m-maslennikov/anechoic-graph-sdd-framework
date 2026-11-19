@@ -6,11 +6,11 @@ container:
 role: Method
 form: Implementation Method
 topics:
-  main_subject: 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Requirement).Content.Claim'
+  main_subject: 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Requirement).Content.Claim'
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Requirement)
-  - "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled English"
-  - CAPRMEDIO_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Requirement)
+  - "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled English"
+  - ANECHOIC_MODEL <+ Atom.Content
 tier: 6
 relations:
   child_of:
@@ -21,11 +21,11 @@ updated_at: 2026-11-02 18:35:20 +0400
 carrier_destination:
   file:
     name: CA-M-310-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-requirement-claims-with-the-requirement-cce-profile.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-310-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-requirement-claims-with-the-requirement-cce-profile.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-310-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-requirement-claims-with-the-requirement-cce-profile.md
   source_atom_id: CA-M-310
   source_atom_revision: 25
   source_sha256: 6bb02f25f646a6861202803418dc55a40f31b7b4c78fbc48e9988223c0a4c90c

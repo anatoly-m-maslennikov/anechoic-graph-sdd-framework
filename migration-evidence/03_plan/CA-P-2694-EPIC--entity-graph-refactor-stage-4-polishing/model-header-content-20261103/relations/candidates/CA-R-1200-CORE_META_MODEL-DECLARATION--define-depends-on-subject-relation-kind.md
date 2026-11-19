@@ -1,13 +1,13 @@
 ---
 subjects:
-  active: CAPRMEDIO_MODEL <+ CFEL <+ Relation//DEPENDS_ON
+  active: ANECHOIC_MODEL <+ CFEL <+ Relation//DEPENDS_ON
   passive:
-  - CAPRMEDIO_MODEL <+ CFEL > Relation
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Entity
-  - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom/Content Role: Plan/Type: Plan'
-  - CAPRMEDIO_MODEL <+ Atom.Content
-  - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom/Content Role: Operations/Type: Workflow'
+  - ANECHOIC_MODEL <+ CFEL > Relation
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Entity
+  - 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom/Content Role: Plan/Type: Plan'
+  - ANECHOIC_MODEL <+ Atom.Content
+  - 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom/Content Role: Operations/Type: Workflow'
 version: 39
 updated_at: 2026-11-02 08:06:47 +0400
 relations:

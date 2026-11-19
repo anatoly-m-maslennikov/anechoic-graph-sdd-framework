@@ -64,7 +64,7 @@ class SharedProjectPool:
             operation=operation,
         )
         if secondary is not None:
-            self._stderr("caprmedio: technical diagnostics unavailable\n")
+            self._stderr("anechoic: technical diagnostics unavailable\n")
 
     async def _close_gateway(
         self, selection: ProjectSelection | None, gateway: Any, operation: str

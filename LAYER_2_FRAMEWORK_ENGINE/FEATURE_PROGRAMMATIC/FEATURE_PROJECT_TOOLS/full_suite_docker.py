@@ -16,7 +16,7 @@ APP = Path("LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_MCP")
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / APP / "docker"))
 from runtime_images import ImageManager, _bounded_run  # noqa: E402
 
-ATTEMPT_LABEL = "org.caprmedio.full-test-suite.attempt"
+ATTEMPT_LABEL = "org.anechoic.full-test-suite.attempt"
 
 
 def _executor(attempt: str):
@@ -68,8 +68,8 @@ def _remove_owned_image(root: Path, image: str, attempt: str) -> None:
 @contextmanager
 def current_code_test_image(root: Path, *, use_packaged_assets: bool = False):
     print("Test image START: preparing current source", flush=True)
-    parent = root / ".caprmedio_tmp/tests/full-suite-integration"
-    for component in (root / ".caprmedio_tmp", parent.parent, parent):
+    parent = root / ".anechoic_tmp/tests/full-suite-integration"
+    for component in (root / ".anechoic_tmp", parent.parent, parent):
         if component.is_symlink():
             raise OSError("test scratch must remain inside the selected Project")
     parent.mkdir(parents=True, exist_ok=True)
@@ -82,12 +82,12 @@ def current_code_test_image(root: Path, *, use_packaged_assets: bool = False):
     image = manager._build(identity, use_packaged_assets=use_packaged_assets)
     print(f"Test image FINISH: {image}", flush=True)
     environment = {
-        "CAPRMEDIO_IMAGE": image,
-        "CAPRMEDIO_FIRST_CUT_HTTP_IMAGE": image,
-        "CAPRMEDIO_FIRST_CUT_HTTP_SCRATCH": str(scratch),
-        "CAPRMEDIO_DOCKER_QUERY_IMAGE": image,
+        "ANECHOIC_IMAGE": image,
+        "ANECHOIC_FIRST_CUT_HTTP_IMAGE": image,
+        "ANECHOIC_FIRST_CUT_HTTP_SCRATCH": str(scratch),
+        "ANECHOIC_DOCKER_QUERY_IMAGE": image,
         "TMPDIR": str(scratch),
-        "CAPRMEDIO_PROJECT_LAUNCHER_DOCKER_E2E": "1",
+        "ANECHOIC_PROJECT_LAUNCHER_DOCKER_E2E": "1",
     }
     try:
         yield environment

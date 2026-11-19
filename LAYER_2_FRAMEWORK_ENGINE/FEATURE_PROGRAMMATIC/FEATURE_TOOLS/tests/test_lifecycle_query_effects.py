@@ -32,7 +32,7 @@ class Reader:
 
 @contextmanager
 def carrier_dir():
-    base = ROOT / ".caprmedio_tmp/CA-P-2791/CA-P-2934/carrier-effects"
+    base = ROOT / ".anechoic_tmp/CA-P-2791/CA-P-2934/carrier-effects"
     base.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=base) as directory:
         yield Path(directory)

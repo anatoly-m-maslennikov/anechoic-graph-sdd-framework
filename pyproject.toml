@@ -1,7 +1,7 @@
 # This repository is not declared as a buildable or distributable Python package.
 # The framework release version remains canonical in version.toml.
 
-[tool.caprmedio.framework_engine_software]
+[tool.anechoic.framework_engine_software]
 authority_atoms = ["CA-R-1047", "CA-M-415", "CA-E-250", "CA-D-250"]
 version_source = "version.toml"
 
@@ -12,16 +12,16 @@ support_evidence = ".github/workflows/publish-release.yml:python-version=3.14"
 
 # The default runtime is deliberately standard-library-only.
 required_runtime_dependencies = []
-dependency_exception_delivery_root = ".caprmedio_framework/00_APPLICABLE_METHODOLOGY/07_delivery"
-dependency_exception_evaluation_root = ".caprmedio_framework/00_APPLICABLE_METHODOLOGY/06_evaluation"
+dependency_exception_delivery_root = ".anechoic_framework/00_APPLICABLE_METHODOLOGY/07_delivery"
+dependency_exception_evaluation_root = ".anechoic_framework/00_APPLICABLE_METHODOLOGY/06_evaluation"
 exception_recording_rule = "Record each admitted third-party dependency or non-Python carrier in an active Delivery Atom under the delivery root, with its acceptance evidence in an active Evaluation Atom under the evaluation root."
 
 [tool.pytest.ini_options]
 # Keep pytest's disposable cache and atomic staging inside project temporary state.
-cache_dir = ".caprmedio_tmp/cache/pytest"
+cache_dir = ".anechoic_tmp/cache/pytest"
 
 [tool.uv]
-cache-dir = ".caprmedio_tmp/cache/uv"
+cache-dir = ".anechoic_tmp/cache/uv"
 
 
 [dependency-groups]
@@ -38,7 +38,7 @@ workbench = [
 [tool.ruff]
 target-version = "py314"
 line-length = 100
-cache-dir = ".caprmedio_tmp/cache/ruff"
+cache-dir = ".anechoic_tmp/cache/ruff"
 
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F", "C901"]
@@ -49,7 +49,7 @@ max-complexity = 10
 [tool.mypy]
 python_version = "3.14"
 strict = true
-cache_dir = ".caprmedio_tmp/cache/mypy"
+cache_dir = ".anechoic_tmp/cache/mypy"
 mypy_path = [
   "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS",
 ]

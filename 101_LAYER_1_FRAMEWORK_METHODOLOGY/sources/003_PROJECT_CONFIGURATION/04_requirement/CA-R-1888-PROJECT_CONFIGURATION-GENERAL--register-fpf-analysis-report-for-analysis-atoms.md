@@ -23,11 +23,11 @@ Register FPF Analysis Report for Analysis Atoms
 
 ## Scope
 
-the CAPRMEDIO Project Configuration contribution to `Atom/Content Role: Analysis/Type`.
+the ANECHOIC Project Configuration contribution to `Atom/Content Role: Analysis/Type`.
 
 ## Claim
 
-the CAPRMEDIO Project Configuration **must** register FPF Analysis Report as an additional value of `Atom/Content Role: Analysis/Type` under CA-R-1286. this registration does **not** change the Core contribution under CA-R-1232 **or** create another Type Property.
+the ANECHOIC Project Configuration **must** register FPF Analysis Report as an additional value of `Atom/Content Role: Analysis/Type` under CA-R-1286. this registration does **not** change the Core contribution under CA-R-1232 **or** create another Type Property.
 
 ## Details
 

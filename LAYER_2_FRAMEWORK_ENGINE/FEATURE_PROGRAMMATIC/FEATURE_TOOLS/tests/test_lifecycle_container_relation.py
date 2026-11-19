@@ -79,11 +79,11 @@ class ContainerRelationTests(unittest.TestCase):
 
         with TemporaryDirectory() as directory, bind_placement(fixture_rules()):
             root = Path(directory).resolve()
-            control = root / ".caprmedio_test"
+            control = root / ".anechoic_test"
             control.mkdir()
-            (control / "caprmedio_project_settings.toml").write_text(
+            (control / "anechoic_project_settings.toml").write_text(
                 '[project]\nname="TEST"\n[artifacts.identity]\nproject_prefix="CA"\n'
-                '[paths]\ncontrol_root=".caprmedio_test"\n'
+                '[paths]\ncontrol_root=".anechoic_test"\n'
             )
             write_scope_unit_declarations(root, control_root=control)
             folder = control / "09_operations"

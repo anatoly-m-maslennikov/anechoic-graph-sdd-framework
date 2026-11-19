@@ -7,7 +7,7 @@ version: 13
 updated_at: "2026-09-10 07:34:05 +0400"
 relations:
   child_of:
-    - CAPRMEDIO-GOV-REQU-312
+    - ANECHOIC-GOV-REQU-312
 atom_id: "CA-R-1038"
 content_role: "Requirement"
 current_scope_unit: "CORE_META_MODEL"

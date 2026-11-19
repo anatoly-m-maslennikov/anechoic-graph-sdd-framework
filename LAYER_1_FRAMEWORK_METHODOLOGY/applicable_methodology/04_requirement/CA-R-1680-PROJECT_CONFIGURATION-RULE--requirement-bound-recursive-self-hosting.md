@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Project
+  main_subject: ANECHOIC_MODEL <+ Project
 tier: 3
 relations:
   child_of:
@@ -19,11 +19,11 @@ updated_at: 2026-11-02 19:44:26 +0400
 carrier_destination:
   file:
     name: CA-R-1680-PROJECT_CONFIGURATION-RULE--requirement-bound-recursive-self-hosting.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: PROJECT_CONFIGURATION
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement/CA-R-1680-PROJECT_CONFIGURATION-RULE--requirement-bound-recursive-self-hosting.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement/CA-R-1680-PROJECT_CONFIGURATION-RULE--requirement-bound-recursive-self-hosting.md
   source_atom_id: CA-R-1680
   source_atom_revision: 31
   source_sha256: 1cbe9dbaa0f29081725a7b24d11441e8baccffeeb5748bae905500d59149d9c8
@@ -38,10 +38,10 @@ Requirement — Bound recursive self-hosting
 ### Prose Claim
 
 
-CAPRMEDIO's own repository.
+ANECHOIC's own repository.
 
 
-CAPRMEDIO applies the same structural constitution **and** governance semantics **to** its own repository while keeping native reusable framework source, project authority, **and** non-authoritative convenience locators under distinct owners.
+ANECHOIC applies the same structural constitution **and** governance semantics **to** its own repository while keeping native reusable framework source, project authority, **and** non-authoritative convenience locators under distinct owners.
 
 ## Details
 

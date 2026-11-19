@@ -1,0 +1,31 @@
+---
+subjects:
+  governs: "ANECHOIC Direct Route Skill Addition"
+  depends_on:
+    - "Operator"
+    - "ANECHOIC Direct Route Skill"
+version: 4
+updated_at: "2026-10-03 00:22:56 +0400"
+relations: {}
+atom_id: CA-R-1560@4
+content_role: "Requirement"
+current_scope_unit: "PROJECT_CONFIGURATION"
+claim_target_scope_unit: "PROJECT_CONFIGURATION"
+local_tier: "General"
+status: Archived
+author: "Anatoly Maslennikov"
+global_tier: 10
+---
+# Summary
+
+Permit Operator-Defined Direct Route Skills
+
+## Scope
+
+Operator-defined ANECHOIC Direct Route Skills.
+
+## Claim
+
+the Operator **may** add a ANECHOIC Direct Route Skill.
+
+## Details

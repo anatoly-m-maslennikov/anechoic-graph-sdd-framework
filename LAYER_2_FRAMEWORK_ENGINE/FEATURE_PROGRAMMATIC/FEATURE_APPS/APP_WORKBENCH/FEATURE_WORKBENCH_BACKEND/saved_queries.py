@@ -32,7 +32,7 @@ class SavedQueryStore:
 
     def __init__(self, root: Path) -> None:
         self._root = Path(root)
-        self._legacy_directory = self._root / ".caprmedio_runtime" / "workbench" / "saved_queries"
+        self._legacy_directory = self._root / ".anechoic_runtime" / "workbench" / "saved_queries"
 
     @staticmethod
     def _sql(value: object) -> str:

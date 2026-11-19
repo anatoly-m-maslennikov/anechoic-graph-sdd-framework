@@ -3,13 +3,13 @@
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CAPRMEDIO UI compatibility probe</title>
+<title>ANECHOIC UI compatibility probe</title>
 <style>
   :root { color-scheme: light dark; font: 14px system-ui; }
   body { margin: 0; padding: 16px; }
   button { font: inherit; padding: 6px 10px; }
 </style>
-<h1>CAPRMEDIO UI probe</h1>
+<h1>ANECHOIC UI probe</h1>
 <p id="status" role="status">HTML rendered; waiting for host bridge.</p>
 <p id="result">Waiting for the host tool result.</p>
 <button id="ping" disabled>Test tool bridge</button>
@@ -92,7 +92,7 @@
     }
   };
   request('ui/initialize', {
-    appInfo: { name: 'CAPRMEDIO UI compatibility probe', version: '0.0.2' },
+    appInfo: { name: 'ANECHOIC UI compatibility probe', version: '0.0.2' },
     appCapabilities: { availableDisplayModes: ['inline', 'fullscreen'] },
     protocolVersion: '2026-01-26',
   }).then(result => {

@@ -13,15 +13,15 @@ def row(source, claim):
 
 
 def role(name, cls):
-    return (f'from caprmedio.formal_claims import declare_entity\n'
+    return (f'from anechoic.formal_claims import declare_entity\n'
             f'class {cls}:\n    pass\n'
             f'declare_entity(entity_name={name!r}, entity_class={cls}, '
             f'qualification_property_path="Atom.Header.Context.Role")')
 
 
 def form(name, cls, base, extra=''):
-    return (f'from caprmedio.formal_claims import declare_entity\n'
-            f'from caprmedio.model import {base}\nclass {cls}({base}):\n    pass\n'
+    return (f'from anechoic.formal_claims import declare_entity\n'
+            f'from anechoic.model import {base}\nclass {cls}({base}):\n    pass\n'
             f'declare_entity(entity_name={name!r}, entity_class={cls}, '
             f'qualification_property_path="Atom.Header.Context.Form"{extra})')
 
@@ -44,7 +44,7 @@ class RoleFormCompilationTests(unittest.TestCase):
             schema.validate('Analysis and Advisory', 'Decision')
 
     def test_property_form_roles_and_unknown_role_base(self):
-        claim = ('from caprmedio.formal_claims import declare_entity\n'
+        claim = ('from anechoic.formal_claims import declare_entity\n'
                  'declare_entity(entity_name="Form", relation_name="IS_PROPERTY_OF", '
                  'base_path="Atom.Header.Context", allowed_values=("Scope Delegation",), '
                  'form_roles=("Method",))')
@@ -54,8 +54,8 @@ class RoleFormCompilationTests(unittest.TestCase):
             compile_role_form([row('R2', form('Decision', 'MethodDecision', 'Method'))])
 
     def test_form_inherits_role_through_another_declared_class(self):
-        parent = ('from caprmedio.formal_claims import declare_entity\n'
-                  'from caprmedio.model import Method\nclass Intermediate(Method):\n    pass\n'
+        parent = ('from anechoic.formal_claims import declare_entity\n'
+                  'from anechoic.model import Method\nclass Intermediate(Method):\n    pass\n'
                   'declare_entity(entity_name="Intermediate", entity_class=Intermediate)')
         records = compile_role_form([row('R1', role('Method', 'Method')), row('R2', parent),
                                      row('R3', form('Decision', 'MethodDecision', 'Intermediate'))])

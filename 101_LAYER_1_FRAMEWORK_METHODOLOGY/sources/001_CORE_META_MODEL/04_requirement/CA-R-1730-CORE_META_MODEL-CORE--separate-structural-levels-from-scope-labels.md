@@ -11,7 +11,7 @@ version: 19
 updated_at: "2026-10-03 02:39:08 +0400"
 relations:
   child_of:
-    - CAPRMEDIO-REQU-031-CORE-REQUIREMENT--model-project-structure-as-numbered-levels
+    - ANECHOIC-REQU-031-CORE-REQUIREMENT--model-project-structure-as-numbered-levels
     - CA-R-1776
 atom_id: "CA-R-1730"
 content_role: "Requirement"

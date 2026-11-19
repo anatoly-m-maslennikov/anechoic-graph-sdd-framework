@@ -19,4 +19,4 @@ relations:
 ---
 # Place Project Jobs by lifecycle
 
-GOVERNANCE MUST place active external Project Job Atoms in `.caprmedio/`, drafts in `.caprmedio/jobs_drafts/`, and archived revisions in `.caprmedio/jobs_archive/`.
+GOVERNANCE MUST place active external Project Job Atoms in `.anechoic/`, drafts in `.anechoic/jobs_drafts/`, and archived revisions in `.anechoic/jobs_archive/`.

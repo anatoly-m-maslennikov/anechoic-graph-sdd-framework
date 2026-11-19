@@ -23,7 +23,7 @@ Journal Carriers belonging to a Project.
 
 ## Claim
 
-**all** persistent Journal Carriers of a Project **must** reside under **`=1`** Directory Carrier: `.caprmedio_<project_name>/_journal/`.
+**all** persistent Journal Carriers of a Project **must** reside under **`=1`** Directory Carrier: `.anechoic_<project_name>/_journal/`.
 
 ## Details
 

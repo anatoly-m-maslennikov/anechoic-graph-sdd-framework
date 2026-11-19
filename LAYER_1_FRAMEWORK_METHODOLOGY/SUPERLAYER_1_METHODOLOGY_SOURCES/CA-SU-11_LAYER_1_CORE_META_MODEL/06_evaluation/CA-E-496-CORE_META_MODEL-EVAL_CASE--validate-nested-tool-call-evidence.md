@@ -6,16 +6,16 @@ container:
 role: Evaluation
 form: Eval Case
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Carrier/File
+  main_subject: ANECHOIC_MODEL <+ Carrier/File
   dependencies:
-  - CAPRMEDIO_MODEL <+ Carrier
-  - CAPRMEDIO_MODEL <+ Journal
-  - CAPRMEDIO_MODEL <+ Step Run
-  - CAPRMEDIO_MODEL <+ Workflow Run
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/Workflow
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/Step
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/Action
-  - CAPRMEDIO_MODEL <+ Projection
+  - ANECHOIC_MODEL <+ Carrier
+  - ANECHOIC_MODEL <+ Journal
+  - ANECHOIC_MODEL <+ Step Run
+  - ANECHOIC_MODEL <+ Workflow Run
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/Workflow
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/Step
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/Action
+  - ANECHOIC_MODEL <+ Projection
 tier: 3
 relations:
   evaluation_for:
@@ -27,7 +27,7 @@ updated_at: 2026-11-03 23:25:51 +0400
 carrier_destination:
   file:
     name: CA-E-496-CORE_META_MODEL-EVAL_CASE--validate-nested-tool-call-evidence.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---

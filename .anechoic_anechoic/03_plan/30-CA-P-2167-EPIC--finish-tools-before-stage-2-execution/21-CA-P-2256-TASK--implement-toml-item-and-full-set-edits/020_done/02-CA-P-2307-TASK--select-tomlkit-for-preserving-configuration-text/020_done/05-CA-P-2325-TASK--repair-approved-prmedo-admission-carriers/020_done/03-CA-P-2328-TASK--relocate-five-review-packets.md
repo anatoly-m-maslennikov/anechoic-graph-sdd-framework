@@ -1,0 +1,55 @@
+---
+atom_id: CA-P-2328
+ref_id: CA-P-2328
+container:
+  atom: CA-P-2325
+role: Plan
+form: Plan
+label: Task
+topics:
+  main_subject: Subject/Graph Node/Engineering/Continuant/Tool
+  dependencies:
+  - Subject/Graph Node/Domain/Continuant/Atom
+  - 'Subject/Graph Node/Domain/Continuant/Atom/Content Role: Plan'
+tier: 3
+relations:
+  is_decomposition_of:
+  - CA-P-2325
+status: Done
+version: 8
+updated_at: 2026-10-25 17:32:27 +0400
+carrier_destination:
+  file:
+    name: 3-CA-P-2328-TASK--relocate-five-review-packets.md
+    path: .anechoic_anechoic/03_plan/30-CA-P-2167-EPIC--finish-tools-before-stage-2-execution/21-CA-P-2256-TASK--implement-toml-item-and-full-set-edits/done/2-CA-P-2307-TASK--select-tomlkit-for-preserving-configuration-text/done/5-CA-P-2325-TASK--repair-approved-prmedo-admission-carriers/done
+work_sequence_number: 3
+current_scope_unit: anechoic
+claim_target_scope_unit: anechoic
+author: Anatoly Maslennikov
+assignee: AI Agent
+---
+# Summary
+
+Relocate five review packets
+
+## Objective
+
+Move ANECHOIC-PLAN-001 through ANECHOIC-PLAN-005 external review packets from the canceled Plan folder to the Project projection area.
+
+## Details
+
+Estimated own work: up to 15 minutes; split further work before exceeding this bound. Root owns Git and tracking Plans. Concurrent workers own disjoint targets.
+
+Destination: .anechoic_anechoic/_projection/external-review-packets, preserving filenames and exact bytes. These are review packets, not Atoms; do not create Atom identity, Status or Version metadata. Do not migrate any C/A carrier.
+
+No live Core Subject/content migration, runtime activation or configuration publication is included.
+
+### Definition of Done
+
+The Plan is not Done until the bounded outcome has actual evidence and independent acceptance, or if unrelated legacy sources were changed, history was lost, validation was bypassed or complete Project readiness was inferred.
+
+### Completed bounded outcome — 2026-10-13
+
+All five review packets remain byte-identical at their approved projection destinations; their old current paths are absent and no Atom metadata was invented.
+
+Evidence: [bounded cleanup Task closure](../../../../../../../../_projection/core-entity-review/stage2/tools-first/bounded-cleanup-task-closure.md). Receiving integration, full-Project/runtime admission and deferred C/A migration remain separate.

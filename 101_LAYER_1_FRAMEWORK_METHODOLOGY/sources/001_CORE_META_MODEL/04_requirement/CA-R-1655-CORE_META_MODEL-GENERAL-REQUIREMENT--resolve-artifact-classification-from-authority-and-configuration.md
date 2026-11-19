@@ -33,7 +33,7 @@ Artifact classifications resolved from Applicable Methodology and Project Config
 
 ## Claim
 
-CAPRMEDIO **must** resolve **every** Artifact's applicable classification from Applicable Methodology **and** Project Configuration, with structural context from authoritative Project Structure:
+ANECHOIC **must** resolve **every** Artifact's applicable classification from Applicable Methodology **and** Project Configuration, with structural context from authoritative Project Structure:
 
 - resolve Artifact Type under the applicable Type authority.
 - resolve Content Role **only** for an Atom; do **not** require a Journal **or** Projection **to** have an Atom Content Role.

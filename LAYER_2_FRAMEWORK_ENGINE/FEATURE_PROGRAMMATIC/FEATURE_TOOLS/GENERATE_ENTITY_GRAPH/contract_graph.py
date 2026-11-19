@@ -41,9 +41,9 @@ _DECLARED_INSTANCE_KINDS = frozenset({"Scope Unit", "Project"})
 _KNOWN_NAMED_CONTRACT_CONTEXTS = {
     "Projection//PROJECT_SCOPE_UNIT_GRAPH": "Projection",
     "NamedSelection//ExtensionSources": "Named Selection",
-    "PROJECTSTRUCTURE//CAPRMEDIO": "PROJECT STRUCTURE",
+    "PROJECTSTRUCTURE//ANECHOIC": "PROJECT STRUCTURE",
 }
-_NAMESPACED_SELECTOR = re.compile(r"^\s*(?:CAPRMEDIO\s*<\+\s*(?:MODEL|STRUCTURE)|CAPRMEDIO_(?:MODEL|STRUCTURE))\s*<\+\s*(.+?)\s*$")
+_NAMESPACED_SELECTOR = re.compile(r"^\s*(?:ANECHOIC\s*<\+\s*(?:MODEL|STRUCTURE)|ANECHOIC_(?:MODEL|STRUCTURE))\s*<\+\s*(.+?)\s*$")
 _METADATA = re.compile(
     r"^\s*\(\((?P<name>[A-Za-z][A-Za-z0-9_]*)\)\)\s*"
     r"(?:(?P<notation>==)\s*(?P<short>[^;\r\n]+)|>\|\s*Derivation\s*==\s*(?P<derivation>Direct|Derived))\s*;?\s*$",
@@ -161,7 +161,7 @@ def _target(expression: notation.Path | notation.RelationChain) -> tuple[str, st
     """Map an exact active Subject to one already-declarable target category."""
 
     if (isinstance(expression, notation.Path) and isinstance(expression.head, notation.Name)
-            and expression.head.value == "CAPRMEDIO_MODEL" and not expression.steps):
+            and expression.head.value == "ANECHOIC_MODEL" and not expression.steps):
         return "namespace", expression.head.value
     expression = namespace_local_expression(expression) or expression
     if _has_selection(expression):

@@ -13,7 +13,7 @@ llm_session_ids:
 relations:
   child_of:
     - CA-R-835-REQUIREMENT-BSEED_SEMANTICS--scope-artifacts-through-scope-units
-    - CAPRMEDIO-GOV-REQU-736--derive-atom-classification-from-carrier-address
+    - ANECHOIC-GOV-REQU-736--derive-atom-classification-from-carrier-address
 ---
 # Materialize Content-role carriers on first Artifact
 

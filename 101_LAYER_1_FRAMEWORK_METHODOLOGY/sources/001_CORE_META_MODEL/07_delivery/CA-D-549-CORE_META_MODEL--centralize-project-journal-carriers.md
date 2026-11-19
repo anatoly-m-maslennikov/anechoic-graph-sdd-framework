@@ -23,7 +23,7 @@ persistent File Carriers of a Project's shared Work Journal and other project-co
 
 ## Claim
 
-**all** persistent project-control Journal File Carriers of a Project **must** reside under **`=1`** Directory Carrier: `.caprmedio_<project_name>/_journal/`.
+**all** persistent project-control Journal File Carriers of a Project **must** reside under **`=1`** Directory Carrier: `.anechoic_<project_name>/_journal/`.
 
 ## Details
 

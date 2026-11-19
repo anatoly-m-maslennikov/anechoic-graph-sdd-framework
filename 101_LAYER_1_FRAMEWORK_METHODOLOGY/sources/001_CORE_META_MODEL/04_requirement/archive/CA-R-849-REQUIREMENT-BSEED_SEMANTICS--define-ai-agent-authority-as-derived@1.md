@@ -7,7 +7,7 @@ version: 1
 updated_at: 2026-08-21 02:55:24
 relations:
   child_of:
-    - CA-R-847-REQUIREMENT-BSEED_METAMODEL--define-caprmedio-actor-types
+    - CA-R-847-REQUIREMENT-BSEED_METAMODEL--define-anechoic-actor-types
 ---
 # Define AI Agent authority as derived
 

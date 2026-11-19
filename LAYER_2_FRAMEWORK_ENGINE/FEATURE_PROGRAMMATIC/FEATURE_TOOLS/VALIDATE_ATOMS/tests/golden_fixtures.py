@@ -14,7 +14,7 @@ from typing import Any
 import warnings
 
 HERE = Path(__file__).resolve().parent
-TEMP_PARENT = HERE.parents[4] / ".caprmedio_tmp"
+TEMP_PARENT = HERE.parents[4] / ".anechoic_tmp"
 
 
 @contextmanager

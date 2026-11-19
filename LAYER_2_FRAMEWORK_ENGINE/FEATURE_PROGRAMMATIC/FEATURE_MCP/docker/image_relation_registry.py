@@ -44,11 +44,11 @@ def _compile_generated_asset(source_root: Path, project_root: Path, compiler_pat
                              asset_name: str, *, timeout: float, max_output: int) -> bytes:
     """Run one selected-Framework asset compiler in private Project staging."""
     compiler = source_root / compiler_path
-    temporary = project_root / ".caprmedio_tmp"
+    temporary = project_root / ".anechoic_tmp"
     if (compiler.is_symlink() or not compiler.is_file() or temporary.is_symlink()
             or not temporary.is_dir()):
         raise ValueError("generated asset compiler or staging root is unavailable")
-    with tempfile.TemporaryDirectory(prefix="caprmedio-generated-asset-", dir=temporary) as stage:
+    with tempfile.TemporaryDirectory(prefix="anechoic-generated-asset-", dir=temporary) as stage:
         output = Path(stage) / asset_name
         result = subprocess.run(
             [sys.executable, "-B", str(compiler), "--project-root", str(project_root), "--output", str(output)],
@@ -89,7 +89,7 @@ def compile_tool_registry(source_root: Path, *, timeout: float, max_output: int)
     if (compiler.is_symlink() or not compiler.is_file() or providers.is_symlink()
             or not providers.is_file()):
         raise ValueError("tool registry compiler or providers are unavailable")
-    with tempfile.TemporaryDirectory(prefix="caprmedio-tool-registry-") as stage:
+    with tempfile.TemporaryDirectory(prefix="anechoic-tool-registry-") as stage:
         package = Path(stage) / "package"
         shutil.copytree(
             source_root / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC",
@@ -198,7 +198,7 @@ def _placement_selection(source_root: Path, model: Path, stage: Path, image: str
         value = records[0] if isinstance(records, list) and len(records) == 1 else {}
         if (value.get("Id") != image or value.get("Os") != "linux"
                 or not isinstance(value.get("Architecture"), str)
-                or value.get("Config", {}).get("Labels", {}).get("org.caprmedio.runtime.schema") != "1"):
+                or value.get("Config", {}).get("Labels", {}).get("org.anechoic.runtime.schema") != "1"):
             raise ValueError("previous image inspection failed")
     except (ValueError, TypeError, AttributeError) as error:
         raise ValueError("previous image inspection failed") from error
@@ -229,10 +229,10 @@ def _placement_selection(source_root: Path, model: Path, stage: Path, image: str
 def compile_lifecycle_assets(source_root: Path, project_root: Path, *, timeout: float,
                              max_output: int, previous_image: str | None = None) -> tuple[bytes, bytes]:
     """Compile from the same admitted active source layers as local release."""
-    temporary = project_root / ".caprmedio_tmp"
+    temporary = project_root / ".anechoic_tmp"
     if temporary.is_symlink() or not temporary.is_dir():
         raise ValueError("lifecycle staging root is unavailable")
-    with tempfile.TemporaryDirectory(prefix="caprmedio-lifecycle-", dir=temporary) as stage:
+    with tempfile.TemporaryDirectory(prefix="anechoic-lifecycle-", dir=temporary) as stage:
         stage = Path(stage)
         model = _lifecycle_model(source_root, stage, timeout=timeout)
         if previous_image is not None and model != stage / "model":

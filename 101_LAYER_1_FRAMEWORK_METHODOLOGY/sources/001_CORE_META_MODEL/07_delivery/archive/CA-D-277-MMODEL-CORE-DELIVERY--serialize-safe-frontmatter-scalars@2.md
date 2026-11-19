@@ -12,4 +12,4 @@ relations: {}
 ---
 # Serialize Safe Frontmatter Scalars
 
-CAPRMEDIO-authored frontmatter **must** serialize registered YAML-safe controlled string values as plain scalars **and** **must** place uncontrolled human prose **in** main content.
+ANECHOIC-authored frontmatter **must** serialize registered YAML-safe controlled string values as plain scalars **and** **must** place uncontrolled human prose **in** main content.

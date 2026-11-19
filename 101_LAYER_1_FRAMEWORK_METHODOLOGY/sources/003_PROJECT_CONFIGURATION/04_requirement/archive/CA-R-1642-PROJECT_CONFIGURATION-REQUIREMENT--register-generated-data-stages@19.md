@@ -27,6 +27,6 @@ the following ordered generated-data pipeline stages **must** be registered, ref
 | `src` | canonical Journal input; authority comes from the Journal, **not** the prefix. |
 | `stg` | deterministic, lossless Projection of a bounded `src` frontier. |
 | `mrt` | consumer-ready semantic Projection, including Requirement groupings by scope **and** tier **or** Mermaid relation maps. |
-| `biz` | aggregated CAPRMEDIO artifact **and** implementation metrics, including point-in-time snapshots **and** historical trends. |
+| `biz` | aggregated ANECHOIC artifact **and** implementation metrics, including point-in-time snapshots **and** historical trends. |
 
 dependencies **must** move forward through `src → stg → mrt → biz`; a stage **may** depend on **any** earlier registered stage but **must not** depend on a later stage.

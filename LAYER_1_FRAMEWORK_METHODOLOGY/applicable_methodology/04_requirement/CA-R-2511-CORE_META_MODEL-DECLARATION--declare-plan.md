@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)
+  main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan)
 tier: 3
 status: active
 version: 14
@@ -14,9 +14,9 @@ updated_at: '2026-11-13T22:57:24.985880+00:00'
 carrier_destination:
   file:
     name: CA-R-2511-CORE_META_MODEL-DECLARATION--declare-plan.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2511-CORE_META_MODEL-DECLARATION--declare-plan.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2511-CORE_META_MODEL-DECLARATION--declare-plan.md
   source_atom_id: CA-R-2511
   source_atom_revision: 14
   source_sha256: 8d35523543068a627e9466333b88229b5228cab2a08f9bf2f118bc43110dc10d
@@ -38,8 +38,8 @@ A Done or Canceled Plan may not recursively contain a Plan whose Status Group is
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import Cardinality, declare_entity
-from caprmedio.model import Atom
+from anechoic.formal_claims import Cardinality, declare_entity
+from anechoic.model import Atom
 
 class Plan(Atom):
     pass

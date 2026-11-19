@@ -1,0 +1,36 @@
+---
+atom_id: CA-R-1356
+ref_id: CA-R-1356
+container:
+  scope_unit: CA-SU-13
+role: Requirement
+form: Rule
+topics:
+  main_subject: "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Execution Control <+ Effect Authorization"
+  dependencies:
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Actor/Operator
+  - ANECHOIC_STRUCTURE <+ Aspects <+ Engineering
+tier: 1
+status: Active
+version: 26
+updated_at: 2026-11-02 18:35:20 +0400
+carrier_destination:
+  file:
+    name: CA-R-1356-PROJECT_CONFIGURATION-RULE--define-anechoic-direct-route-skill.md
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement
+current_scope_unit: PROJECT_CONFIGURATION
+claim_target_scope_unit: PROJECT_CONFIGURATION
+---
+## Summary
+
+Define ANECHOIC Direct Route Skill
+
+## Claim
+
+### Prose Claim
+
+
+ANECHOIC Direct Route Skills.
+
+
+A ANECHOIC Direct Route Skill **must** be an Operator-defined Skill bound **to** **`=1`** branch **or** leaf registered **in** the ANECHOIC Routing Tree **and** **must** invoke **only** that bound target.

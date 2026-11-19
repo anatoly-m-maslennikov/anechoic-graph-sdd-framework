@@ -6,11 +6,11 @@ container:
 role: Evaluation
 form: Eval Policy
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Requirement)
+  main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Requirement)
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Requirement)
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
-  - CAPRMEDIO_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Requirement)
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
+  - ANECHOIC_MODEL <+ Atom
 tier: 3
 relations:
   child_of:
@@ -21,7 +21,7 @@ updated_at: 2026-11-11 06:01:45 +0400
 carrier_destination:
   file:
     name: CA-E-434-CORE_META_MODEL-POLICY--evaluate-requirement-checkability.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
 cce_version: cce_1
 cce_form: evaluation
 llm_session_ids:
@@ -29,7 +29,7 @@ llm_session_ids:
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-434-CORE_META_MODEL-POLICY--evaluate-requirement-checkability.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-434-CORE_META_MODEL-POLICY--evaluate-requirement-checkability.md
   source_atom_id: CA-E-434
   source_atom_revision: 26
   source_sha256: 3e90664435e9b51a83438c7f9992e7f7057059ce58eb6334d0fabaa257b8a3a4

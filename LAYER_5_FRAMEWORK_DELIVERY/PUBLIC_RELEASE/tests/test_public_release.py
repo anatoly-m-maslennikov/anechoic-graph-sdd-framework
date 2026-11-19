@@ -16,7 +16,7 @@ from public_release import run_public_release
 class PublicReleaseFixture(unittest.TestCase):
     def setUp(self) -> None:
         temp_root = (
-            Path(__file__).resolve().parents[3] / ".caprmedio_tmp/verification/public-release-tests"
+            Path(__file__).resolve().parents[3] / ".anechoic_tmp/verification/public-release-tests"
         )
         temp_root.mkdir(parents=True, exist_ok=True)
         self.temp = tempfile.TemporaryDirectory(dir=temp_root, ignore_cleanup_errors=True)
@@ -25,7 +25,7 @@ class PublicReleaseFixture(unittest.TestCase):
         (self.root / "version.toml").write_text('[framework]\nversion = "0.4.2.1"\n')
         (self.root / "README.md").write_text("# Project\n")
         (self.root / "VERSION_HISTORY.md").write_text("# Version History\n")
-        settings = self.root / ".caprmedio_caprmedio/caprmedio_project_settings.toml"
+        settings = self.root / ".anechoic_anechoic/anechoic_project_settings.toml"
         settings.parent.mkdir()
         settings.write_text(
             '[project]\nkey="fixture"\nname="fixture"\nrepository_slug="project"\n[artifacts.identity]\nproject_prefix="FX"\n'

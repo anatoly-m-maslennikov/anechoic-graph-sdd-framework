@@ -15,4 +15,4 @@ relations:
 ---
 # Separate Project Configuration from the Project Scope Unit Graph
 
-CAPRMEDIO **must** distinguish the human-editable Project Configuration Atom from generated Project Scope Unit Graph Projections. **only** the Configuration Atom is settings **and** owns operator-selected values; Project Scope Unit Graph Projections are read-only derived views **and** never configuration authority.
+ANECHOIC **must** distinguish the human-editable Project Configuration Atom from generated Project Scope Unit Graph Projections. **only** the Configuration Atom is settings **and** owns operator-selected values; Project Scope Unit Graph Projections are read-only derived views **and** never configuration authority.

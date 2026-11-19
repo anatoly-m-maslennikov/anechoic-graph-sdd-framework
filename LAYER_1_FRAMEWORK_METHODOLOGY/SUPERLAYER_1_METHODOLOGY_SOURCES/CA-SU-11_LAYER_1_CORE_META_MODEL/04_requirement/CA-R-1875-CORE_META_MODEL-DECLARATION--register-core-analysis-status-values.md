@@ -6,13 +6,13 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := "Analysis and Advisory").Header.State.Status
+  main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := "Analysis and Advisory").Header.State.Status
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := "Analysis and Advisory")
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := "Analysis and Advisory").Header.Context.Form
-  - CAPRMEDIO_MODEL <+ Atom.Header.State.Status
-  - CAPRMEDIO_STRUCTURE <+ Entity/Object/Continuant/Selection//Extension Sources
-  - CAPRMEDIO_STRUCTURE <+ Scope Unit//PROJECT_CONFIGURATION
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := "Analysis and Advisory")
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := "Analysis and Advisory").Header.Context.Form
+  - ANECHOIC_MODEL <+ Atom.Header.State.Status
+  - ANECHOIC_STRUCTURE <+ Entity/Object/Continuant/Selection//Extension Sources
+  - ANECHOIC_STRUCTURE <+ Scope Unit//PROJECT_CONFIGURATION
 tier: 2
 status: active
 version: 25
@@ -20,7 +20,7 @@ updated_at: '2026-11-12T21:17:00.590287+00:00'
 carrier_destination:
   file:
     name: CA-R-1875-CORE_META_MODEL-DECLARATION--register-core-analysis-status-values.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---
@@ -41,7 +41,7 @@ the Core Analysis and Advisory Status model **must** inherit the allowed values 
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_entity
+from anechoic.formal_claims import declare_entity
 
 declare_entity(
     entity_name="Status",

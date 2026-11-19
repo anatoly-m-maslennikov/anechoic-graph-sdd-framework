@@ -2,7 +2,7 @@
 
 ## Source boundary
 
-`source-map.json` pins exact Current source bytes and candidate bytes. Candidates retain physical flat YAML fields: Header is the model Property group, and this packet does not infer a physical YAML wrapper migration. Candidate model Subject roots use `CAPRMEDIO_MODEL`; role/form selectors qualify `Header`. No Current, projection, runtime, Git index or release state is modified by this packet.
+`source-map.json` pins exact Current source bytes and candidate bytes. Candidates retain physical flat YAML fields: Header is the model Property group, and this packet does not infer a physical YAML wrapper migration. Candidate model Subject roots use `ANECHOIC_MODEL`; role/form selectors qualify `Header`. No Current, projection, runtime, Git index or release state is modified by this packet.
 
 ## Proposed contract
 

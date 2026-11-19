@@ -6,10 +6,10 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.State.Status
+  main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.State.Status
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)
-  - CAPRMEDIO_MODEL <+ Atom.Header.State.Status
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan)
+  - ANECHOIC_MODEL <+ Atom.Header.State.Status
 tier: 2
 status: active
 version: 26
@@ -17,7 +17,7 @@ updated_at: '2026-11-12T21:16:58.190634+00:00'
 carrier_destination:
   file:
     name: CA-R-1539-CORE_META_MODEL-DECLARATION--register-core-plan-status-values.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---
@@ -38,8 +38,8 @@ the Core Plan Status model **must** inherit the allowed values of Atom.Header.St
 ### Formal Claim
 
 ```python
-from caprmedio.model import Plan
-from caprmedio.formal_claims import declare_entity
+from anechoic.model import Plan
+from anechoic.formal_claims import declare_entity
 
 declare_entity(
     entity_name="Status",

@@ -22,10 +22,10 @@ Requirement — Scale operational mechanisms to risk
 
 ## Scope
 
-operational mechanisms within CAPRMEDIO.
+operational mechanisms within ANECHOIC.
 
 ## Claim
 
-CAPRMEDIO **must** require operational mechanisms **to** be proportional **to** explicit failure risk **and** a declared authoritative-state boundary. CAPRMEDIO **must not** mandate one recovery **or** durability mechanism for **every** Project.
+ANECHOIC **must** require operational mechanisms **to** be proportional **to** explicit failure risk **and** a declared authoritative-state boundary. ANECHOIC **must not** mandate one recovery **or** durability mechanism for **every** Project.
 
 ## Details

@@ -18,4 +18,4 @@ relations:
 ---
 # Encode Scope Unit authority directory names
 
-EVERY Project-internal Scope Unit authority directory under `.caprmedio/` MUST encode its Structural Level, effective Navigational Order Number, effective Unit Type Name, applicable Local Order, and Unit Name in that order.
+EVERY Project-internal Scope Unit authority directory under `.anechoic/` MUST encode its Structural Level, effective Navigational Order Number, effective Unit Type Name, applicable Local Order, and Unit Name in that order.

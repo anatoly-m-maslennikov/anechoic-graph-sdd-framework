@@ -76,7 +76,7 @@ class ReleaseCliTests(unittest.TestCase):
         )
 
     def test_public_dispatch_and_failed_result(self) -> None:
-        temporary = REPOSITORY / ".caprmedio_tmp/verification/release-cli"
+        temporary = REPOSITORY / ".anechoic_tmp/verification/release-cli"
         temporary.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=temporary) as directory:
             draft = Path(directory) / "draft.json"
@@ -106,7 +106,7 @@ class ReleaseCliTests(unittest.TestCase):
         self.record.assert_not_called()
 
     def test_malformed_drafts_do_not_dispatch(self) -> None:
-        temporary = REPOSITORY / ".caprmedio_tmp/verification/release-cli"
+        temporary = REPOSITORY / ".anechoic_tmp/verification/release-cli"
         temporary.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=temporary) as directory:
             draft = Path(directory) / "draft.json"
@@ -214,7 +214,7 @@ class ReleaseCliTests(unittest.TestCase):
                         str(REPOSITORY / "LAYER_5_FRAMEWORK_DELIVERY/release.py"),
                         *arguments,
                     ],
-                    cwd=REPOSITORY / ".caprmedio_tmp",
+                    cwd=REPOSITORY / ".anechoic_tmp",
                     capture_output=True,
                     text=True,
                     timeout=20,

@@ -6,12 +6,12 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role:=Operations)/Workflow
+  main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role:=Operations)/Workflow
   dependencies:
-  - CAPRMEDIO_MODEL <+ Carrier/Directory
-  - CAPRMEDIO_MODEL <+ Carrier
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role:=Operations)/Workflow
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/Step
+  - ANECHOIC_MODEL <+ Carrier/Directory
+  - ANECHOIC_MODEL <+ Carrier
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role:=Operations)/Workflow
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/Step
 tier: 3
 relations:
   delivery_for:
@@ -23,7 +23,7 @@ updated_at: '2026-11-11T17:45:31+04:00'
 carrier_destination:
   file:
     name: CA-D-467-CORE_META_MODEL-DECISION--store-workflow-graphs-and-steps-in-separate-carriers.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---

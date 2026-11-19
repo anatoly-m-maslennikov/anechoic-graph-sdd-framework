@@ -20,7 +20,7 @@ class DefaultMCPRuntimeTests(unittest.IsolatedAsyncioTestCase):
     async def test_selected_project_checks_consistency_before_ready(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory).resolve()
-            selection = ProjectSelection(root, root / '.caprmedio_test', Path('.caprmedio_test'),
+            selection = ProjectSelection(root, root / '.anechoic_test', Path('.anechoic_test'),
                                          'a' * 64, {}, {}, (), {}, '')
             gateway = DirectGateway(root, selection=selection)
             output = StringIO()
@@ -44,7 +44,7 @@ class DefaultMCPRuntimeTests(unittest.IsolatedAsyncioTestCase):
     async def test_consistency_failure_prevents_ready(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory).resolve()
-            selection = ProjectSelection(root, root / '.caprmedio_test', Path('.caprmedio_test'),
+            selection = ProjectSelection(root, root / '.anechoic_test', Path('.anechoic_test'),
                                          'a' * 64, {}, {}, (), {}, '')
             gateway = DirectGateway(root, selection=selection)
             registry = MagicMock(global_blacklist=frozenset(), tools=(), close=AsyncMock())

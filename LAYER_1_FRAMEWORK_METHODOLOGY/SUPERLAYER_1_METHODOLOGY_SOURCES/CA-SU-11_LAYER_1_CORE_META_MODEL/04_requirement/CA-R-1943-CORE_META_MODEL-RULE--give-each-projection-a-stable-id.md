@@ -6,13 +6,13 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Projection.ID
+  main_subject: ANECHOIC_MODEL <+ Projection.ID
   dependencies:
-  - CAPRMEDIO_MODEL <+ Projection
-  - CAPRMEDIO_MODEL <+ Projection.Form
-  - CAPRMEDIO_MODEL <+ Projection.Scope Unit
-  - CAPRMEDIO_MODEL <+ Projection.Source.Named Selection
-  - CAPRMEDIO_MODEL <+ Projection.Source.Atoms
+  - ANECHOIC_MODEL <+ Projection
+  - ANECHOIC_MODEL <+ Projection.Form
+  - ANECHOIC_MODEL <+ Projection.Scope Unit
+  - ANECHOIC_MODEL <+ Projection.Source.Named Selection
+  - ANECHOIC_MODEL <+ Projection.Source.Atoms
 tier: 3
 status: Active
 version: 16
@@ -20,7 +20,7 @@ updated_at: 2026-11-04 07:51:19 +0400
 carrier_destination:
   file:
     name: CA-R-1943-CORE_META_MODEL-RULE--give-each-projection-a-stable-id.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---

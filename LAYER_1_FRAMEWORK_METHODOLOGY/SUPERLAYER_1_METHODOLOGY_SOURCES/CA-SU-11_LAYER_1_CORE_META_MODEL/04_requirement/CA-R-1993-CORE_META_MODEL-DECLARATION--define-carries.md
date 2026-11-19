@@ -6,11 +6,11 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Relation//CARRIES
+  main_subject: ANECHOIC_MODEL <+ Relation//CARRIES
   dependencies:
-  - CAPRMEDIO_MODEL <+ Carrier
-  - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ Relation
+  - ANECHOIC_MODEL <+ Carrier
+  - ANECHOIC_MODEL <+ Entity
+  - ANECHOIC_MODEL <+ Relation
 tier: 1
 relations:
   child_of:
@@ -21,7 +21,7 @@ updated_at: '2026-11-12T12:33:04.158402+00:00'
 carrier_destination:
   file:
     name: CA-R-1993-CORE_META_MODEL-DECLARATION--define-carries.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---
@@ -47,7 +47,7 @@ IS_CARRIED_BY **means** the inverse of CARRIES, directed from a non-ephemeral En
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_relation
+from anechoic.formal_claims import declare_relation
 
 declare_relation(
     relation_name='CARRIES',

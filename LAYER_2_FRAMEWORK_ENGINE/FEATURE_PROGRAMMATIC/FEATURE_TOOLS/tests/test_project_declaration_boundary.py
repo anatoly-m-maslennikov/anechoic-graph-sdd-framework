@@ -17,16 +17,16 @@ from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
 
 class DeclarationBoundaryAuthorTests(unittest.TestCase):
     def setUp(self):
-        scratch = Path.cwd() / ".caprmedio_tmp"
+        scratch = Path.cwd() / ".anechoic_tmp"
         scratch.mkdir(exist_ok=True)
         temporary = tempfile.TemporaryDirectory(dir=scratch)
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name).resolve()
-        self.control = ".caprmedio_own"
+        self.control = ".anechoic_own"
         self.settings = self.marker(self.control)
 
     def marker(self, relative, name="own", declared=None):
-        path = self.root / relative / "caprmedio_project_settings.toml"
+        path = self.root / relative / "anechoic_project_settings.toml"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(f'[project]\nname="{name}"\n[paths]\ncontrol_root="{declared or path.parent.name}"\n')
         return path
@@ -36,43 +36,43 @@ class DeclarationBoundaryAuthorTests(unittest.TestCase):
             [{"authority_path": authority, "delivery_path": delivery}], **kwargs)
 
     def test_owning_absent_and_lookalike_paths_are_effect_free(self):
-        (self.root / ".caprmedio_lookalike").mkdir()
+        (self.root / ".anechoic_lookalike").mkdir()
         before = self.settings.read_bytes()
-        proof = self.proof(f"{self.control}/units", ".caprmedio_lookalike/delivery")
-        self.assertEqual(proof.marker_pins[f"{self.control}/caprmedio_project_settings.toml"],
+        proof = self.proof(f"{self.control}/units", ".anechoic_lookalike/delivery")
+        self.assertEqual(proof.marker_pins[f"{self.control}/anechoic_project_settings.toml"],
                          hashlib.sha256(before).hexdigest())
-        self.assertIsNone(proof.marker_pins[".caprmedio_lookalike/caprmedio_project_settings.toml"])
+        self.assertIsNone(proof.marker_pins[".anechoic_lookalike/anechoic_project_settings.toml"])
         proof.revalidate()
         self.assertEqual(self.settings.read_bytes(), before)
         with self.assertRaises(TypeError):
             proof.marker_pins["changed"] = None
 
     def test_foreign_same_name_control_and_descendants_refuse_both_fields(self):
-        self.marker("vendor/.caprmedio_foreign")
+        self.marker("vendor/.anechoic_foreign")
         for field in ("authority", "delivery"):
-            for path in ("vendor/.caprmedio_foreign", "vendor/.caprmedio_foreign/unit"):
+            for path in ("vendor/.anechoic_foreign", "vendor/.anechoic_foreign/unit"):
                 with self.subTest(field=field, path=path), self.assertRaisesRegex(ProjectSelectionError, "another Project"):
                     self.proof(**{field: path})
 
     def test_foreign_project_directory_does_not_forbid_ordinary_sibling_delivery(self):
-        self.marker("vendor/.caprmedio_foreign", name="other")
+        self.marker("vendor/.anechoic_foreign", name="other")
         self.proof("vendor/source", "vendor/delivery").revalidate()
 
     def test_malformed_and_contradictory_markers_refuse(self):
-        path = self.marker("vendor/.caprmedio_foreign")
-        for raw in (b"[project\n", b'[project]\nname=""\n[paths]\ncontrol_root=".caprmedio_foreign"\n',
-                    b'[project]\nname="other"\n[paths]\ncontrol_root=".caprmedio_different"\n'):
+        path = self.marker("vendor/.anechoic_foreign")
+        for raw in (b"[project\n", b'[project]\nname=""\n[paths]\ncontrol_root=".anechoic_foreign"\n',
+                    b'[project]\nname="other"\n[paths]\ncontrol_root=".anechoic_different"\n'):
             path.write_bytes(raw)
             with self.subTest(raw=raw), self.assertRaises(ProjectSelectionError):
-                self.proof("vendor/.caprmedio_foreign/unit")
+                self.proof("vendor/.anechoic_foreign/unit")
 
     def test_marker_and_path_symlinks_refuse(self):
-        directory = self.root / "vendor/.caprmedio_foreign"
+        directory = self.root / "vendor/.anechoic_foreign"
         directory.mkdir(parents=True)
-        link = directory / "caprmedio_project_settings.toml"
+        link = directory / "anechoic_project_settings.toml"
         link.symlink_to(self.settings)
         with self.assertRaises(ProjectSelectionError):
-            self.proof("vendor/.caprmedio_foreign")
+            self.proof("vendor/.anechoic_foreign")
         link.unlink()
         shortcut = self.root / "shortcut"
         shortcut.symlink_to(self.settings.parent, target_is_directory=True)
@@ -80,9 +80,9 @@ class DeclarationBoundaryAuthorTests(unittest.TestCase):
             self.proof("shortcut/unit")
 
     def test_absent_marker_introduction_is_stale_without_resealing(self):
-        proof = self.proof("vendor/.caprmedio_lookalike/unit")
+        proof = self.proof("vendor/.anechoic_lookalike/unit")
         before = dict(proof.marker_pins)
-        self.marker("vendor/.caprmedio_lookalike", name="foreign")
+        self.marker("vendor/.anechoic_lookalike", name="foreign")
         with self.assertRaisesRegex(ProjectSelectionError, "changed"):
             proof.revalidate()
         self.assertEqual(dict(proof.marker_pins), before)

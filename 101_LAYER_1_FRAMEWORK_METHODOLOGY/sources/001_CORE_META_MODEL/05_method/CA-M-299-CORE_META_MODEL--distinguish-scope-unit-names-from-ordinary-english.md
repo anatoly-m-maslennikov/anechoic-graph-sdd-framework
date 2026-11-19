@@ -22,7 +22,7 @@ Distinguish Scope Unit Names from Ordinary English
 
 ## Scope
 
-Scope Unit references in CAPRMEDIO content.
+Scope Unit references in ANECHOIC content.
 
 ## Claim
 

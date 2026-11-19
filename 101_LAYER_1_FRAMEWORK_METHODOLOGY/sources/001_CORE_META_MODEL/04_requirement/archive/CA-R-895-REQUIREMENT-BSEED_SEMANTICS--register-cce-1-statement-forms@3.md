@@ -6,7 +6,7 @@ relations:
     - CA-R-892
     - CA-R-893
     - CA-R-894
-    - CAPRMEDIO-META-REQU-132--define-role-specific-atom-atomicity
+    - ANECHOIC-META-REQU-132--define-role-specific-atom-atomicity
 version: 3
 updated_at: 2026-08-22 02:58:48
 ---

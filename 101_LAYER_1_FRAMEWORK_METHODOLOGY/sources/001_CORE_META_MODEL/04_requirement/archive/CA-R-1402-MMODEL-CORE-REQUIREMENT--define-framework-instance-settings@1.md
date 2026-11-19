@@ -15,4 +15,4 @@ relations: {}
 ---
 # Define Framework Instance Settings
 
-the Term Framework Instance Settings **means** the authoritative Artifact that contains operator-selected settings for **`=1`** running CAPRMEDIO instance.
+the Term Framework Instance Settings **means** the authoritative Artifact that contains operator-selected settings for **`=1`** running ANECHOIC instance.

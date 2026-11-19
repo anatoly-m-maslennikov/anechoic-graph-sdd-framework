@@ -1,0 +1,45 @@
+---
+atom_id: CA-P-2471
+ref_id: CA-P-2471
+container:
+  atom: CA-P-2463
+role: Plan
+form: Plan
+label: Task
+topics:
+  main_subject: Subject/Graph Node/Domain/Continuant/Atom
+tier: 3
+relations:
+  is_decomposition_of:
+  - CA-P-2463
+status: Done
+version: 5
+updated_at: 2026-10-25 17:32:27 +0400
+carrier_destination:
+  file:
+    name: 1-CA-P-2471-TASK--admit-id-free-reviewed-edit-draft-inputs.md
+    path: .anechoic_anechoic/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/03_plan/5-CA-P-2401-EPIC--make-atom-and-scope-unit-actions-good/done/52-CA-P-2463-TASK--implement-edit-draft-staging-compatibility/done
+work_sequence_number: 1
+current_scope_unit: PROGRAMMATIC
+claim_target_scope_unit: PROGRAMMATIC
+author: Anatoly Maslennikov
+---
+# Summary
+
+Admit ID-free reviewed edit Draft inputs
+
+## Objective
+
+Fix the independent review finding: source-pinned reviewed edit Drafts may omit atom_id with an aligned empty-number filename; staged output may still prefer version-qualified markers.
+
+## Details
+
+At most 15 minutes own work. Preserve exact packet/source/draft pins, candidate bytes, currentness, no-op semantics and conditional cleanup. No guessed identity, canonical lookup broadening, Journal/history gate, live staging, deployment or replay. Parent P2463 owns the staging increment; this child owns its newly detected compatibility fix.
+
+### Definition of Done
+
+A synthetic round-trip load/candidate/publication case admits the ID-omitted input and preserves exact canonical predecessor, while mismatched markers/filenames and tampered candidates remain rejected. Independent review closes this finding.
+
+### Verified execution checkpoint
+
+ID-free/empty-number reviewed edit Draft support passed the staging focused suites (13 draft checks, 5 contract checks, 10 workflow checks, 9 source checks and 4 manifest checks). Independent review confirmed the optional-ID reconstruction preserves candidate bytes and source pins. A distinct qualified-marker/carried-YAML-Version finding is assigned to P2473, not hidden by this bounded completion.

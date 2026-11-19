@@ -23,7 +23,7 @@ _STARTUP_TIMEOUT_SECONDS = 5.0
 
 
 def _state_path(root: Path) -> Path:
-    return root / ".caprmedio_runtime" / "workbench" / "codex" / "bridge.json"
+    return root / ".anechoic_runtime" / "workbench" / "codex" / "bridge.json"
 
 
 def _read_state(path: Path) -> dict[str, Any]:

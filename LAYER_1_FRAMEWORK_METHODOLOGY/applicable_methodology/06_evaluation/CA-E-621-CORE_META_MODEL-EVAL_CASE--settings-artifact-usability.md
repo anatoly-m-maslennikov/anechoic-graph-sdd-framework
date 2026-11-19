@@ -4,9 +4,9 @@ ref_id: CA-E-621
 role: Evaluation
 form: Eval Case
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Project.Settings
+  main_subject: ANECHOIC_MODEL <+ Project.Settings
   dependencies:
-  - CAPRMEDIO_MODEL <+ Project.Settings
+  - ANECHOIC_MODEL <+ Project.Settings
   - Entity/Object/Continuant/Actor/Operator
 tier: 3
 status: Active
@@ -17,9 +17,9 @@ container:
 carrier_destination:
   file:
     name: CA-E-621-CORE_META_MODEL-EVAL_CASE--settings-artifact-usability.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-621-CORE_META_MODEL-EVAL_CASE--settings-artifact-usability.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-621-CORE_META_MODEL-EVAL_CASE--settings-artifact-usability.md
   source_atom_id: CA-E-621
   source_atom_revision: 39
   source_sha256: 9c3b395a267d595b5a68337710517d179a82cded687ad00a5f55607f7a0876e9

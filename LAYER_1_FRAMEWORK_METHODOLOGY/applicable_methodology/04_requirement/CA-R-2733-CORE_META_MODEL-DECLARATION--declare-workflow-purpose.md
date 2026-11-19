@@ -4,7 +4,7 @@ ref_id: CA-R-2733
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/Workflow.Purpose
+  main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/Workflow.Purpose
 tier: 3
 status: active
 version: 3
@@ -14,9 +14,9 @@ container:
 destination:
   file:
     name: CA-R-2733-CORE_META_MODEL-DECLARATION--declare-workflow-purpose.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2733-CORE_META_MODEL-DECLARATION--declare-workflow-purpose.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2733-CORE_META_MODEL-DECLARATION--declare-workflow-purpose.md
   source_atom_id: CA-R-2733
   source_atom_revision: 3
   source_sha256: ea823ff146578403f2baf79ac9118bd08e62c834e765ededa498f8c9c882829b
@@ -33,7 +33,7 @@ Declare Workflow.Purpose
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_entity
+from anechoic.formal_claims import declare_entity
 
 declare_entity(
     entity_name="Purpose",

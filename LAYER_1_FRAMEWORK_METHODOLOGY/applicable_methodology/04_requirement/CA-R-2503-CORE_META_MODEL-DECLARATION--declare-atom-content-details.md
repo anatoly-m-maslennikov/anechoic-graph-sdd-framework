@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Content.Details
+  main_subject: ANECHOIC_MODEL <+ Atom.Content.Details
 tier: 3
 status: active
 version: 6
@@ -14,11 +14,11 @@ updated_at: '2026-11-12T12:33:04.158402+00:00'
 carrier_destination:
   file:
     name: CA-R-2503-CORE_META_MODEL-DECLARATION--declare-atom-content-details.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2503-CORE_META_MODEL-DECLARATION--declare-atom-content-details.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2503-CORE_META_MODEL-DECLARATION--declare-atom-content-details.md
   source_atom_id: CA-R-2503
   source_atom_revision: 6
   source_sha256: bf333da0c6b656fe9baf23edc1c33d8cd96f8e7fe53277cfdcf23b86f3ce9d13
@@ -33,8 +33,8 @@ Declare Atom.Content.Details
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import Cardinality, declare_entity
-from caprmedio.model import Delivery, Evaluation, Method, Requirement
+from anechoic.formal_claims import Cardinality, declare_entity
+from anechoic.model import Delivery, Evaluation, Method, Requirement
 
 declare_entity(
     entity_name='Details',

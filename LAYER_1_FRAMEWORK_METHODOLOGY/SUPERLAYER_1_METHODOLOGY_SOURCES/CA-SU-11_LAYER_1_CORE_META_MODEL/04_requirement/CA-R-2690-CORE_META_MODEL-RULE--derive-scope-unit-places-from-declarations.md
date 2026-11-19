@@ -4,10 +4,10 @@ ref_id: CA-R-2690
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Scope Unit
+  main_subject: ANECHOIC_MODEL <+ Scope Unit
   dependencies:
-  - CAPRMEDIO_MODEL <+ Carrier/Directory
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Delivery)
+  - ANECHOIC_MODEL <+ Carrier/Directory
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Delivery)
 tier: 3
 status: Active
 version: 3
@@ -17,7 +17,7 @@ container:
 carrier_destination:
   file:
     name: CA-R-2690-CORE_META_MODEL-RULE--derive-scope-unit-places-from-declarations.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 ---
 
 ## Summary

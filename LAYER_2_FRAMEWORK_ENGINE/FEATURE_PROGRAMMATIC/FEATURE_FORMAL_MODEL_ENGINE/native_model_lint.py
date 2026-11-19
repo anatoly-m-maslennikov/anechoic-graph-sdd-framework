@@ -116,14 +116,14 @@ def lint_native_model_claim(declaration: dict, *, declared_addresses: Collection
     if check is not None:
         model_type = check["parameter_type"]
         local_classes = {item["name"] for item in declaration["classes"]}
-        if model_type not in local_classes and declaration["imports"].get(model_type) != "caprmedio.model":
+        if model_type not in local_classes and declaration["imports"].get(model_type) != "anechoic.model":
             return error(f"instance check requires a Model class: {model_type}")
         entity_class = args.get("entity_class")
         if entity_class is not None and model_type != entity_class:
             return error(f"instance check does not match entity_class: {model_type}")
 
     for name, module in declaration["imports"].items():
-        if module == "caprmedio.model":
+        if module == "anechoic.model":
             if python_class_bindings is not None and name in python_class_bindings:
                 targets = python_class_bindings[name]
                 if isinstance(targets, str) or not isinstance(targets, Collection):

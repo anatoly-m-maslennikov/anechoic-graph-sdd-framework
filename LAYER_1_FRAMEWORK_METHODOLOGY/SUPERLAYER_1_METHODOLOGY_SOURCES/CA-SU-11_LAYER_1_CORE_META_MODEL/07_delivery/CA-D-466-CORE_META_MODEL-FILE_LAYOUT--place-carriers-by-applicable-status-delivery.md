@@ -6,10 +6,10 @@ container:
 role: Delivery
 form: file_layout
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.State.Status >| Status Group := Current
+  main_subject: ANECHOIC_MODEL <+ Atom.Header.State.Status >| Status Group := Current
   dependencies:
-  - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Delivery)
+  - ANECHOIC_MODEL <+ Entity
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Delivery)
 tier: 3
 status: active
 version: 28
@@ -17,7 +17,7 @@ updated_at: '2026-11-12T19:34:42.119749+00:00'
 carrier_destination:
   file:
     name: CA-D-466-CORE_META_MODEL-FILE_LAYOUT--place-carriers-by-applicable-status-delivery.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---

@@ -17,4 +17,4 @@ global_tier: 9
 ---
 # Admit Atoms only where a role has an atomic unit
 
-a Content Role admits a Type value for an Atom **only** **when** that role has an independently governed atomic unit that benefits from stable identity, admission, **and** whole-unit lifecycle; CAPRMEDIO **must not** create a placeholder Type value merely **to** fill a semantic coordinate.
+a Content Role admits a Type value for an Atom **only** **when** that role has an independently governed atomic unit that benefits from stable identity, admission, **and** whole-unit lifecycle; ANECHOIC **must not** create a placeholder Type value merely **to** fill a semantic coordinate.

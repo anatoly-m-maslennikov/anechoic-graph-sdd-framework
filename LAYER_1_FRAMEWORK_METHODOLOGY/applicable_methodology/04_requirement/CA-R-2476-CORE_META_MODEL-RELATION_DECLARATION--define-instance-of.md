@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: relation_declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Relation//INSTANCE_OF
+  main_subject: ANECHOIC_MODEL <+ Relation//INSTANCE_OF
 tier: 3
 status: active
 version: 9
@@ -14,11 +14,11 @@ updated_at: '2026-11-13T20:36:43.416800+00:00'
 carrier_destination:
   file:
     name: CA-R-2476-CORE_META_MODEL-RELATION_DECLARATION--define-instance-of.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2476-CORE_META_MODEL-RELATION_DECLARATION--define-instance-of.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2476-CORE_META_MODEL-RELATION_DECLARATION--define-instance-of.md
   source_atom_id: CA-R-2476
   source_atom_revision: 9
   source_sha256: 7a55d4d0aeca890c031fbfdcd38f8d0be2c05bed3729b273de0c2fd2791f8812
@@ -41,7 +41,7 @@ For a declared Model entity `x`, `$a[<x>] ((INSTANCE_OF)) x` is a generic exampl
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_relation
+from anechoic.formal_claims import declare_relation
 
 declare_relation(
     relation_name="INSTANCE_OF",

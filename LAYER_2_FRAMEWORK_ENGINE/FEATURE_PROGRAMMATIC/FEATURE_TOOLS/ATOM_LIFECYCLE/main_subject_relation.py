@@ -54,16 +54,16 @@ def _resolve_subject(selection, rules, model_types, subject, *, strict, proposed
     address = notation.render_subject(local)
     namespace = _namespace(expression)
     if (isinstance(expression, notation.Path) and isinstance(expression.head, notation.Name)
-            and expression.head.value == "CAPRMEDIO_STRUCTURE"
+            and expression.head.value == "ANECHOIC_STRUCTURE"
             and expression.value_format is None and expression.value_cardinality is None
             and all(step.operator == "/" and isinstance(step.operand, notation.Name) for step in expression.steps)):
         return _resolve_structure_scope(selection, tuple(step.operand.value for step in expression.steps))
     if _is_scope_unit(local):
-        if namespace in {"CAPRMEDIO_MODEL", "MODEL"}:
+        if namespace in {"ANECHOIC_MODEL", "MODEL"}:
             return None
         kind = _resolve_scope_unit(selection, local.head.value, local.steps[0].operand.value)
         return kind, "instances"
-    if namespace in {"CAPRMEDIO_STRUCTURE", "PROJECT STRUCTURE", "STRUCTURE"}:
+    if namespace in {"ANECHOIC_STRUCTURE", "PROJECT STRUCTURE", "STRUCTURE"}:
         if strict:
             aspect = resolve_aspect(selection, expression, proposed_body=proposed_body)
             if aspect is not None:
@@ -84,8 +84,8 @@ def _is_project_structure(selection, expression):
     if not isinstance(expression, notation.Path) or not isinstance(expression.head, notation.Name):
         return False
     project = selection.settings["project"]["name"]
-    if expression.head.value == "CAPRMEDIO_STRUCTURE" and not expression.steps:
-        return project.casefold() == "caprmedio"
+    if expression.head.value == "ANECHOIC_STRUCTURE" and not expression.steps:
+        return project.casefold() == "anechoic"
     return (expression.head.value == "PROJECT STRUCTURE" and len(expression.steps) == 1
             and expression.steps[0].operator == "//" and isinstance(expression.steps[0].operand, notation.Name)
             and expression.steps[0].operand.value.casefold() == project.casefold())
@@ -94,7 +94,7 @@ def _is_project_structure(selection, expression):
 def _namespace(expression):
     root = expression.endpoints[0] if isinstance(expression, notation.RelationChain) else expression
     if isinstance(root.head, notation.Name):
-        if root.head.value == "CAPRMEDIO" and isinstance(expression, notation.RelationChain):
+        if root.head.value == "ANECHOIC" and isinstance(expression, notation.RelationChain):
             legacy = expression.endpoints[1].head
             return legacy.value if isinstance(legacy, notation.Name) else None
         return root.head.value
@@ -117,7 +117,7 @@ def _resolve_scope_unit(selection, kind, name):
 
 def _resolve_structure_scope(selection, path):
     rows = selection.structure["scope_units"]
-    matches = [row for row in rows if row["parent"] == "PROJECT" and row["scope_unit_name"].casefold() == "caprmedio"]
+    matches = [row for row in rows if row["parent"] == "PROJECT" and row["scope_unit_name"].casefold() == "anechoic"]
     for name in path:
         if len(matches) != 1:
             break

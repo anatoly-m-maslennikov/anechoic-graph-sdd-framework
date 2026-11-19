@@ -16,7 +16,7 @@ class ReleaseImageProvenanceTests(unittest.TestCase):
         root = Path("/owning-repository")
         selection = SimpleNamespace(
             instance_id="c" * 64,
-            control_relative=Path(".caprmedio_caprmedio"),
+            control_relative=Path(".anechoic_anechoic"),
             settings={"project": {"name": "Named Project"}},
         )
         runner = Mock(return_value=subprocess.CompletedProcess([], 0, "d" * 40 + "\n", ""))
@@ -27,7 +27,7 @@ class ReleaseImageProvenanceTests(unittest.TestCase):
             {
                 "project_id": "c" * 64,
                 "project_root": str(root),
-                "control_root": ".caprmedio_caprmedio",
+                "control_root": ".anechoic_anechoic",
                 "project_name": "Named Project",
                 "head_commit": "d" * 40,
             },
@@ -36,7 +36,7 @@ class ReleaseImageProvenanceTests(unittest.TestCase):
     def test_missing_name_bad_head_and_failed_git_refuse(self) -> None:
         selection = SimpleNamespace(
             instance_id="c" * 64,
-            control_relative=Path(".caprmedio_caprmedio"),
+            control_relative=Path(".anechoic_anechoic"),
             settings={"project": {"name": "Named Project"}},
         )
         for status, output in ((0, "short-sha"), (1, "d" * 40), (0, "")):

@@ -14,7 +14,7 @@ version: 12
 updated_at: "2026-09-09 16:14:03 +0400"
 relations:
   delivery_for:
-    - CAPRMEDIO-META-REQU-722
+    - ANECHOIC-META-REQU-722
 ---
 # Deliver SEMANTICS compilation to FRAMEWORK_METHODOLOGY
 

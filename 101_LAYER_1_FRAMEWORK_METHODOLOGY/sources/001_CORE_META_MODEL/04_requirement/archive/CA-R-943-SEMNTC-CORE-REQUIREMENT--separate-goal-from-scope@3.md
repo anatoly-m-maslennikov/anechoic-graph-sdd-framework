@@ -13,7 +13,7 @@ updated_at: 2026-08-23 15:00:38
 relations:
   replacement_of:
     - CA-R-820
-    - CAPRMEDIO-META-REQU-780
+    - ANECHOIC-META-REQU-780
   child_of:
     - CA-R-925
     - CA-R-931

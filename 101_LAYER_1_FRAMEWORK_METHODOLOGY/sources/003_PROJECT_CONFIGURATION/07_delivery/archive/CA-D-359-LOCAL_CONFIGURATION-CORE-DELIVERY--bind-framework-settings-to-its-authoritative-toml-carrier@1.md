@@ -18,4 +18,4 @@ relations:
 ---
 # Bind Framework Settings to Its Authoritative TOML Carrier
 
-caprmedio_framework_settings **must** use `.caprmedio_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/003_LOCAL_CONFIGURATION/caprmedio_framework_settings.toml` as its **`=1`** authoritative TOML File Carrier.
+anechoic_framework_settings **must** use `.anechoic_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/003_LOCAL_CONFIGURATION/anechoic_framework_settings.toml` as its **`=1`** authoritative TOML File Carrier.

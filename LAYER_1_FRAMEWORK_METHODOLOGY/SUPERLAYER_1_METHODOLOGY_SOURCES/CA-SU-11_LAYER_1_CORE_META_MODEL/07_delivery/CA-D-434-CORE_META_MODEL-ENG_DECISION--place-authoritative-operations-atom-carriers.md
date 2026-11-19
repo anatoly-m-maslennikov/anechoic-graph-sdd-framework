@@ -6,10 +6,10 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Carrier
+  main_subject: ANECHOIC_MODEL <+ Carrier
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)
-  - CAPRMEDIO_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)
+  - ANECHOIC_MODEL <+ Scope Unit
 tier: 3
 status: Active
 version: 27
@@ -17,7 +17,7 @@ updated_at: '2026-11-11T18:56:17+04:00'
 carrier_destination:
   file:
     name: CA-D-434-CORE_META_MODEL-DECISION--place-authoritative-operations-atom-carriers.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---

@@ -33,7 +33,7 @@ import subject_notation as notation
 
 
 DEFAULT_CONTROL_ROOT = SETTINGS_PATH.parent
-FRAMEWORK_APPLICABLE_RELATIVE = Path("000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY")
+FRAMEWORK_APPLICABLE_RELATIVE = Path("000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY")
 OUTPUT_RELATIVE = DEFAULT_CONTROL_ROOT / FRAMEWORK_APPLICABLE_RELATIVE
 SOURCE_RELATIVE = OUTPUT_RELATIVE / "000_APPLICABLE_MTHD_sources"
 LAYERS = (
@@ -55,8 +55,8 @@ RELATION_KINDS = {
     "replacement": {"replacement_of", "replaces"},
     "incompatible": {"incompatible_with", "incompatibility_with"},
 }
-DEFAULT_SETTINGS_NAME = "caprmedio_framework_default_settings.toml"
-INSTANCE_SETTINGS_RELATIVE = Path("000_CAPRMEDIO_framework/caprmedio_framework_settings.toml")
+DEFAULT_SETTINGS_NAME = "anechoic_framework_default_settings.toml"
+INSTANCE_SETTINGS_RELATIVE = Path("000_ANECHOIC_framework/anechoic_framework_settings.toml")
 
 
 @dataclass(frozen=True)
@@ -381,7 +381,7 @@ def source_state_snapshot(root: Path, places: MethodologyPaths | None = None) ->
         if path.is_file() and not path.is_symlink():
             snapshot[repo_relative(root, path)] = sha256_bytes(path.read_bytes())
     snapshot.update(declaration_source_pins(root, places))
-    project_settings = root / places.control_root / "caprmedio_project_settings.toml"
+    project_settings = root / places.control_root / "anechoic_project_settings.toml"
     if project_settings.is_file() and not project_settings.is_symlink():
         snapshot[repo_relative(root, project_settings)] = sha256_bytes(project_settings.read_bytes())
     for settings_carrier in framework_settings_carriers(root, places):
@@ -539,7 +539,7 @@ def term_definition_subject(frontmatter: str, path: str, role: str | None) -> tu
                    or link.forward_cardinality is not None or link.reverse_cardinality is not None
                    for link in expression.links):
                 raise notation.SubjectNotationError("invalid-namespace", "Invalid Term namespace")
-            if roots in (["CAPRMEDIO_MODEL"], ["MODEL//CAPRMEDIO"], ["CAPRMEDIO", "MODEL"]):
+            if roots in (["ANECHOIC_MODEL"], ["MODEL//ANECHOIC"], ["ANECHOIC", "MODEL"]):
                 pass
             elif (len(roots) == 1 and isinstance(expression.endpoints[0].head, notation.Name)
                   and expression.endpoints[0].head.value == "MODEL"
@@ -897,7 +897,7 @@ def validate_projection_source_preservation(
 
 def stage_outputs(root: Path, candidates: list[Candidate], source_snapshot: dict[str, str], places: MethodologyPaths | None = None) -> Path:
     output_root = root / (places or methodology_paths(root)).output
-    temporary_staging = root / ".caprmedio_runtime/compile_applicable_methodology"
+    temporary_staging = root / ".anechoic_runtime/compile_applicable_methodology"
     temporary_staging.mkdir(parents=True, exist_ok=True)
     staging = Path(tempfile.mkdtemp(prefix="transaction-", dir=temporary_staging))
     new_root = staging / "new"

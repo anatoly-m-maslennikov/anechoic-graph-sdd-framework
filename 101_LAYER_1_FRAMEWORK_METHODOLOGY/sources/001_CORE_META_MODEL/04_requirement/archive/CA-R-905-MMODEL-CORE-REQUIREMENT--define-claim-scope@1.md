@@ -6,7 +6,7 @@ version: 1
 updated_at: 2026-08-22 06:00:00
 relations:
   child_of: [CA-R-904]
-  replacement_of: [CAPRMEDIO-META-REQU-084]
+  replacement_of: [ANECHOIC-META-REQU-084]
 ---
 # Define Claim Scope
 

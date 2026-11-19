@@ -25,7 +25,7 @@ Deliver and compile candidate Methodology **means** the Action that performs one
 
 ## Scope
 
-`deliver_sources` copies the complete selected candidate Methodology source set, with every source identity, revision and digest, only to the selected staged `101_LAYER_1_FRAMEWORK_METHODOLOGY/sources` delivery target; it never changes or substitutes `METHODOLOGY_SOURCES.authority_path`. `compile` uses the required reviewed selected-snapshot compiler Tool boundary and the delivered, still-matching candidate frontier to produce the canonical candidate Applicable Methodology Projection; the runtime Methodology under `.caprmedio_caprmedio/000_CAPRMEDIO_framework` is a later derived delivery of that canonical Projection.
+`deliver_sources` copies the complete selected candidate Methodology source set, with every source identity, revision and digest, only to the selected staged `101_LAYER_1_FRAMEWORK_METHODOLOGY/sources` delivery target; it never changes or substitutes `METHODOLOGY_SOURCES.authority_path`. `compile` uses the required reviewed selected-snapshot compiler Tool boundary and the delivered, still-matching candidate frontier to produce the canonical candidate Applicable Methodology Projection; the runtime Methodology under `.anechoic_anechoic/000_ANECHOIC_framework` is a later derived delivery of that canonical Projection.
 
 ## Details
 

@@ -25,15 +25,15 @@ class ProjectSelectionGoldenTests(unittest.TestCase):
     """Fixtures are deliberately retained: sandbox cleanup is not test evidence."""
 
     def setUp(self) -> None:
-        parent = APP.parents[2] / ".caprmedio_tmp" / "launcher-epic-1829" / "selection"
+        parent = APP.parents[2] / ".anechoic_tmp" / "launcher-epic-1829" / "selection"
         parent.mkdir(parents=True, exist_ok=True)
         self.fixture_root = Path(tempfile.mkdtemp(dir=parent))
 
-    def project(self, name: str, *, control: str = ".caprmedio_demo", port: int = 56317) -> Path:
+    def project(self, name: str, *, control: str = ".anechoic_demo", port: int = 56317) -> Path:
         root = self.fixture_root / name
         carrier = root / control
         carrier.mkdir(parents=True)
-        (carrier / "caprmedio_project_settings.toml").write_text(
+        (carrier / "anechoic_project_settings.toml").write_text(
             f'[paths]\ncontrol_root = "{control}"\n[project]\nname = "{root.name}"\n'
             f'[project_mcp]\nhttp_port = {port}\n',
             encoding="utf-8",
@@ -61,12 +61,12 @@ class ProjectSelectionGoldenTests(unittest.TestCase):
 
         self.assertEqual(alpha.resolve(), selected_alpha.root)
         self.assertEqual(beta.resolve(), selected_beta.root)
-        self.assertEqual(Path(".caprmedio_demo"), selected_alpha.control_relative)
+        self.assertEqual(Path(".anechoic_demo"), selected_alpha.control_relative)
         self.assertNotEqual(selected_alpha.instance_id, selected_beta.instance_id)
         self.assertEqual(56317, selected_alpha.settings["project_mcp"]["http_port"])
         self.assertEqual(
             hashlib.sha256(
-                f"{alpha.resolve()}\0.caprmedio_demo".encode("utf-8")
+                f"{alpha.resolve()}\0.anechoic_demo".encode("utf-8")
             ).hexdigest(),
             selected_alpha.instance_id,
         )
@@ -83,28 +83,28 @@ class ProjectSelectionGoldenTests(unittest.TestCase):
     def test_explicit_direct_control_root_is_allowed_but_ambiguous_or_unsafe_selectors_refuse(self) -> None:
         project = self.project("one")
         self.assertEqual(
-            project / ".caprmedio_demo",
-            resolve_project(project, ".caprmedio_demo").control_root,
+            project / ".anechoic_demo",
+            resolve_project(project, ".anechoic_demo").control_root,
         )
-        self.project("one", control=".caprmedio_other")
+        self.project("one", control=".anechoic_other")
         with self.assertRaises(ValueError):
             resolve_project(project)
-        for unsafe in ("../.caprmedio_demo", "/tmp/not-a-control-root", ".caprmedio_demo/nested"):
+        for unsafe in ("../.anechoic_demo", "/tmp/not-a-control-root", ".anechoic_demo/nested"):
             with self.subTest(selector=unsafe), self.assertRaises(ValueError):
                 resolve_project(project, unsafe)
 
     def test_symlink_and_contradictory_control_bindings_refuse_without_sibling_fallback(self) -> None:
         project = self.project("selected")
         sibling = self.project("sibling")
-        alias = project / ".caprmedio_alias"
-        alias.symlink_to(sibling / ".caprmedio_demo", target_is_directory=True)
+        alias = project / ".anechoic_alias"
+        alias.symlink_to(sibling / ".anechoic_demo", target_is_directory=True)
         with self.assertRaises(ValueError):
-            resolve_project(project, ".caprmedio_alias")
+            resolve_project(project, ".anechoic_alias")
 
-        settings = project / ".caprmedio_demo" / "caprmedio_project_settings.toml"
-        settings.write_text('[paths]\ncontrol_root = ".caprmedio_other"\n', encoding="utf-8")
+        settings = project / ".anechoic_demo" / "anechoic_project_settings.toml"
+        settings.write_text('[paths]\ncontrol_root = ".anechoic_other"\n', encoding="utf-8")
         with self.assertRaises(ValueError):
-            resolve_project(project, ".caprmedio_demo")
+            resolve_project(project, ".anechoic_demo")
 
     def test_foreign_active_selection_context_refuses_without_substitution(self) -> None:
         alpha = self.project("repository/projects/alpha")

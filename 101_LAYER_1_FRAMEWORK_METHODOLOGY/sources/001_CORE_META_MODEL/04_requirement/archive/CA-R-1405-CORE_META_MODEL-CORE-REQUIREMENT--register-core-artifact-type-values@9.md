@@ -10,7 +10,7 @@ version: 9
 updated_at: "2026-09-11 19:51:42 +0400"
 relations:
   child_of:
-    - CAPRMEDIO-META-REQU-741--prohibit-artifact-subtypes
+    - ANECHOIC-META-REQU-741--prohibit-artifact-subtypes
 atom_id: "CA-R-1405"
 content_role: "Requirement"
 current_scope_unit: "CORE_META_MODEL"

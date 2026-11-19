@@ -57,7 +57,7 @@ class MCPAppProbeTests(unittest.TestCase):
 
     def test_probe_contract_is_retained(self) -> None:
         self.assertEqual(("workbench_ui_probe", "workbench_ui_ping"), mcp_app_probe.TOOL_NAMES)
-        self.assertEqual({"message": "CAPRMEDIO MCP App resource loaded"},
+        self.assertEqual({"message": "ANECHOIC MCP App resource loaded"},
                          mcp_app_probe.call("workbench_ui_probe"))
         self.assertEqual({"message": "Tool bridge passed"}, mcp_app_probe.call("workbench_ui_ping"))
 

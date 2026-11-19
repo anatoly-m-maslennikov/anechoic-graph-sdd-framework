@@ -27,16 +27,16 @@ def read_records(directory: Path) -> list[object]:
 
 class PlainJournalTests(unittest.TestCase):
     def setUp(self) -> None:
-        temporary_root = PROJECT / ".caprmedio_tmp/tests/work_journal_plain_append"
+        temporary_root = PROJECT / ".anechoic_tmp/tests/work_journal_plain_append"
         temporary_root.mkdir(parents=True, exist_ok=True)
         temporary = tempfile.TemporaryDirectory(dir=temporary_root)
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name)
-        control = self.root / ".caprmedio_caprmedio"
+        control = self.root / ".anechoic_anechoic"
         control.mkdir()
-        (control / "caprmedio_project_settings.toml").write_text(
-            '[paths]\ncontrol_root = ".caprmedio_caprmedio"\n'
-            'journal_root = ".caprmedio_caprmedio/_journal"\n',
+        (control / "anechoic_project_settings.toml").write_text(
+            '[paths]\ncontrol_root = ".anechoic_anechoic"\n'
+            'journal_root = ".anechoic_anechoic/_journal"\n',
             encoding="utf-8",
         )
         self.partition = {"author": "observer", "local_date": "2026-10-14", "timezone": "UTC"}
@@ -71,7 +71,7 @@ class PlainJournalTests(unittest.TestCase):
         rows = [{"action_type": "UPDATE"}, {"action_type": "MOVE+UPDATE"}]
         self.append(rows)
         self.assertEqual(rows, read_records(self.directory))
-        self.assertFalse((self.root / ".caprmedio_runtime").exists())
+        self.assertFalse((self.root / ".anechoic_runtime").exists())
 
     def test_read_returns_stored_json_values_without_shape_filtering(self) -> None:
         rows = [5, "stored string", ["stored", "list"], {"unknown": True}]

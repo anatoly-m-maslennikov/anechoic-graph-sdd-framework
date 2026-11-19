@@ -16,4 +16,4 @@ relations: {}
 ---
 # Define Governed Term
 
-a Governed Term **means** a Term whose CAPRMEDIO-specific meaning is owned by **`=1`** active Definition Atom.
+a Governed Term **means** a Term whose ANECHOIC-specific meaning is owned by **`=1`** active Definition Atom.

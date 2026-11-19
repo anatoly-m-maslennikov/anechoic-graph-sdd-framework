@@ -6,13 +6,13 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Journal
+  main_subject: ANECHOIC_MODEL <+ Journal
   dependencies:
-  - CAPRMEDIO_MODEL <+ Project
-  - CAPRMEDIO_MODEL <+ Journal
-  - CAPRMEDIO_MODEL <+ Carrier
-  - CAPRMEDIO_MODEL <+ Projection
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow)'
+  - ANECHOIC_MODEL <+ Project
+  - ANECHOIC_MODEL <+ Journal
+  - ANECHOIC_MODEL <+ Carrier
+  - ANECHOIC_MODEL <+ Projection
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow)'
 tier: 3
 status: Active
 version: 19
@@ -20,7 +20,7 @@ updated_at: 2026-11-02 00:18:22 +0400
 carrier_destination:
   file:
     name: CA-D-549-CORE_META_MODEL-DECISION--centralize-project-journal-carriers.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---
@@ -36,7 +36,7 @@ Centralize Project Journal Carriers
 persistent File Carriers of a Project's shared Work Journal and other project-control Journals.
 
 
-**all** persistent project-control Journal File Carriers of a Project **must** reside under **`=1`** Directory Carrier: `.caprmedio_<project_name>/_journal/`.
+**all** persistent project-control Journal File Carriers of a Project **must** reside under **`=1`** Directory Carrier: `.anechoic_<project_name>/_journal/`.
 
 ## Details
 

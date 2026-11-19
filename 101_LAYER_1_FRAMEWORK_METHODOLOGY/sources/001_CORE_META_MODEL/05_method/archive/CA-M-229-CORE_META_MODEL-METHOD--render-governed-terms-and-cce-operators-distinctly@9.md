@@ -21,7 +21,7 @@ llm_session_ids:
 ---
 # Render Governed Terms and CCE Operators Distinctly
 
-**to** render CAPRMEDIO content, the Author **must** apply the following lexical-case rules:
+**to** render ANECHOIC content, the Author **must** apply the following lexical-case rules:
 
 - start **every** Governed Term with a capital letter.
 - start **every** General Term with a lowercase letter.

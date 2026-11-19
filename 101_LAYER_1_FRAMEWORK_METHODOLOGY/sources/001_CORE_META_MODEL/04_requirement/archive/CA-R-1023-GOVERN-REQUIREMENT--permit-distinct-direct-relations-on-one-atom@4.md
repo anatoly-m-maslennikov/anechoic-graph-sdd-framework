@@ -13,7 +13,7 @@ version: 4
 updated_at: 2026-08-29 01:16:37 +0400
 relations:
   child_of:
-    - CAPRMEDIO-META-REQU-117--store-each-semantic-relation-once
+    - ANECHOIC-META-REQU-117--store-each-semantic-relation-once
 ---
 # Permit distinct direct relations on one Atom
 

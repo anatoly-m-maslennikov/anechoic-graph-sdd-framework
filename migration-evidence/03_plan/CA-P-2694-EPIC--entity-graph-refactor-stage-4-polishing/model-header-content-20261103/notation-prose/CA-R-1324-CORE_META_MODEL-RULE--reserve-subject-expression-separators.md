@@ -1,8 +1,8 @@
 ---
 subjects:
-  active: CAPRMEDIO_MODEL <+ Term.Name
+  active: ANECHOIC_MODEL <+ Term.Name
   passive:
-  - CAPRMEDIO_MODEL <+ Entity
+  - ANECHOIC_MODEL <+ Entity
 version: 27
 updated_at: 2026-11-02 00:18:22 +0400
 relations: {}

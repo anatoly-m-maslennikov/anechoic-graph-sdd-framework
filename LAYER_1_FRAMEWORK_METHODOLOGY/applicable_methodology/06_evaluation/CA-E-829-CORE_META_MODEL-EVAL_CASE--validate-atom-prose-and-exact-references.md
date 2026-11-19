@@ -7,12 +7,12 @@ context:
   form: Eval Case
   tier: 4
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ Term
+    main_subject: ANECHOIC_MODEL <+ Term
     dependencies:
-    - CAPRMEDIO_MODEL <+ Atom
-    - CAPRMEDIO_MODEL <+ Atom.Content
-    - CAPRMEDIO_MODEL <+ Scope Unit.Name
-    - CAPRMEDIO_MODEL <+ Carrier/File
+    - ANECHOIC_MODEL <+ Atom
+    - ANECHOIC_MODEL <+ Atom.Content
+    - ANECHOIC_MODEL <+ Scope Unit.Name
+    - ANECHOIC_MODEL <+ Carrier/File
   container:
     scope_unit: CA-SU-11
 relations:
@@ -27,9 +27,9 @@ state:
 destination:
   file:
     name: CA-E-829-CORE_META_MODEL-EVAL_CASE--validate-atom-prose-and-exact-references.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-829-CORE_META_MODEL-EVAL_CASE--validate-atom-prose-and-exact-references.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-829-CORE_META_MODEL-EVAL_CASE--validate-atom-prose-and-exact-references.md
   source_atom_id: CA-E-829
   source_atom_revision: 1
   source_sha256: 116126bb3f43c94b6b3c96aabc54b9721680e1031627d2770eb0a503aaedbb83

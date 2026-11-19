@@ -8,8 +8,8 @@ version: 2
 updated_at: 2026-08-23 01:44:00
 relations:
   child_of:
-    - CAPRMEDIO-META-REQU-709
-    - CAPRMEDIO-META-REQU-713
+    - ANECHOIC-META-REQU-709
+    - ANECHOIC-META-REQU-713
 ---
 # Default Scope Units to Feature
 

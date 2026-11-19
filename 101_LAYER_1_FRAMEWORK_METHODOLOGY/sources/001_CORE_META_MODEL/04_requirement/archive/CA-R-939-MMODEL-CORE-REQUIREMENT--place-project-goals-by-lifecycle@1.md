@@ -11,4 +11,4 @@ relations:
 ---
 # Place Project Goals by lifecycle
 
-THE Project Goal Atom MUST use `.caprmedio/` when active, `.caprmedio/goals_drafts/` when draft, and `.caprmedio/goals_archive/` when archived.
+THE Project Goal Atom MUST use `.anechoic/` when active, `.anechoic/goals_drafts/` when draft, and `.anechoic/goals_archive/` when archived.

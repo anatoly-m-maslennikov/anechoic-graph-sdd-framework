@@ -11,10 +11,10 @@ version: 3
 updated_at: 2026-08-23 01:44:00
 relations:
   replacement_of:
-    - CAPRMEDIO-META-REQU-288--give-atoms-explicit-revision-ordinals
+    - ANECHOIC-META-REQU-288--give-atoms-explicit-revision-ordinals
   child_of:
-    - CAPRMEDIO-META-REQU-125--three-artifact-forms-with-generated-projections
-    - CAPRMEDIO-META-REQU-128--separate-artifact-carrier-and-revision
+    - ANECHOIC-META-REQU-125--three-artifact-forms-with-generated-projections
+    - ANECHOIC-META-REQU-128--separate-artifact-carrier-and-revision
 ---
 # Give every Atom Revision version and updated at
 

@@ -6,21 +6,21 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Entities Graph)'
+  main_subject: 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Entities Graph)'
   dependencies:
-  - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ Atom.Content
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Relation
-  - CAPRMEDIO_MODEL <+ Relation//IS_PROPERTY_OF
-  - CAPRMEDIO_MODEL <+ Relation//HAS_PROPERTY
-  - CAPRMEDIO_MODEL <+ CFEL<+Operator//AllowedValue
-  - CAPRMEDIO_MODEL <+ Projection
-  - CAPRMEDIO_MODEL <+ Term
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ Journal
-  - CAPRMEDIO_MODEL <+ Carrier
+  - ANECHOIC_MODEL <+ Entity
+  - ANECHOIC_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Topics
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Relation
+  - ANECHOIC_MODEL <+ Relation//IS_PROPERTY_OF
+  - ANECHOIC_MODEL <+ Relation//HAS_PROPERTY
+  - ANECHOIC_MODEL <+ CFEL<+Operator//AllowedValue
+  - ANECHOIC_MODEL <+ Projection
+  - ANECHOIC_MODEL <+ Term
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Journal
+  - ANECHOIC_MODEL <+ Carrier
 tier: 3
 relations:
   child_of:
@@ -34,11 +34,11 @@ updated_at: 2026-11-02 08:06:47 +0400
 carrier_destination:
   file:
     name: CA-R-1456-CORE_META_MODEL-RULE--derive-entities-views-from-selected-authority.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1456-CORE_META_MODEL-RULE--derive-entities-views-from-selected-authority.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1456-CORE_META_MODEL-RULE--derive-entities-views-from-selected-authority.md
   source_atom_id: CA-R-1456
   source_atom_revision: 39
   source_sha256: b007af293222da4c8c98927ea8a9b8cff68c5009685fb28507b4300645701a8f

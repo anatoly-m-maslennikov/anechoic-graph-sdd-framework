@@ -14,7 +14,7 @@ updated_at: 2026-09-02 03:30:00 +0400
 relations:
   replacement_of:
     - CA-R-909
-    - CAPRMEDIO-META-REQU-717
+    - ANECHOIC-META-REQU-717
   child_of:
     - CA-R-925
 ---

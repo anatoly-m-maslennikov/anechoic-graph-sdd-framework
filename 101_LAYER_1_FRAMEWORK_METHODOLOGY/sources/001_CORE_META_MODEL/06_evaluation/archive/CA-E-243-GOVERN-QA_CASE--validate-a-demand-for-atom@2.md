@@ -13,7 +13,7 @@ relations:
     - CA-R-907
     - CA-R-908
     - CA-R-912
-    - CAPRMEDIO-GOV-REQU-747--register-external-and-relational-atom-types
+    - ANECHOIC-GOV-REQU-747--register-external-and-relational-atom-types
     - CA-R-859
   replacement_of:
     - CA-E-238

@@ -9,7 +9,7 @@ from typing import Any
 from readable_entity_tree_data import primary_tree, read_edges, read_nodes
 
 
-_NAMESPACE = re.compile(r"^(CAPRMEDIO_MODEL|CAPRMEDIO_STRUCTURE|CAPRMEDIO\s*<\+\s*(?:MODEL|STRUCTURE))(?:\s*<\+\s*(.+))?$")
+_NAMESPACE = re.compile(r"^(ANECHOIC_MODEL|ANECHOIC_STRUCTURE|ANECHOIC\s*<\+\s*(?:MODEL|STRUCTURE))(?:\s*<\+\s*(.+))?$")
 
 
 def _source_ref(value: object) -> str | None:

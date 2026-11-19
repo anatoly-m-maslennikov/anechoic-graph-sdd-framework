@@ -4,10 +4,10 @@ current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 status: Active
 subjects:
-  active: CAPRMEDIO_MODEL <+ CFEL <+ Relation//RECORDS
+  active: ANECHOIC_MODEL <+ CFEL <+ Relation//RECORDS
   passive:
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/History/Journal > Event Record
-  - CAPRMEDIO_MODEL <+ Entity/Object/Occurrent/Execution/Workflow Run
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/History/Journal > Event Record
+  - ANECHOIC_MODEL <+ Entity/Object/Occurrent/Execution/Workflow Run
 version: 7
 relations: {}
 tier: 1

@@ -25,7 +25,7 @@ Freeze and validate release boundary **means** the Action that first freezes the
 
 ## Scope
 
-The `freeze` phase records N's current Framework/Methodology revisions, source frontier and rollback identity and records N+1's distinct source revisions, digests and candidate identity. The `validate` phase checks the selected staged source-delivery destination, the explicit pinned-snapshot compiler Tool boundary, the private child-materialization contract and preservation of the source-bound canonical Projection, `.caprmedio_runtime` package manifest, CA-D-563's complete hook-free project-local `ca` Skill directory target `.agents/skills/ca`, complete test declaration, candidate image identity, exact prior-image identity, permissions and canonical Journal capability.
+The `freeze` phase records N's current Framework/Methodology revisions, source frontier and rollback identity and records N+1's distinct source revisions, digests and candidate identity. The `validate` phase checks the selected staged source-delivery destination, the explicit pinned-snapshot compiler Tool boundary, the private child-materialization contract and preservation of the source-bound canonical Projection, `.anechoic_runtime` package manifest, CA-D-563's complete hook-free project-local `ca` Skill directory target `.agents/skills/ca`, complete test declaration, candidate image identity, exact prior-image identity, permissions and canonical Journal capability.
 
 ## Details
 

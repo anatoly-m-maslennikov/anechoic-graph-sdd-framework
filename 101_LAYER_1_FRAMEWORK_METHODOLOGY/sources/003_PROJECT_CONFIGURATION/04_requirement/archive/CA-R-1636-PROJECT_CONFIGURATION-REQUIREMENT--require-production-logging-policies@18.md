@@ -8,7 +8,7 @@ version: 18
 updated_at: "2026-09-15 05:51:38"
 relations:
   relates_to:
-    - CAPRMEDIO-GOV-REQU-338--register-the-project-work-journal
+    - ANECHOIC-GOV-REQU-338--register-the-project-work-journal
 atom_id: "CA-R-1636"
 content_role: "Requirement"
 current_scope_unit: "PROJECT_CONFIGURATION"
@@ -50,7 +50,7 @@ Logs **must** never contain passwords, API keys, access tokens, session secrets,
 
 the policy defines retention, access, sampling, rotation, maximum size, back-pressure, unavailable-sink behavior, **and** disk-pressure behavior. Logging **must not** make the primary operation silently fail, **and** loss **or** suppression of required records **must** itself produce an observable failure signal.
 
-production logs use the deployment environment's governed logging sink. Governed CAPRMEDIO workflow **and** local project-control Journals are **not** a substitute for the production system's log platform.
+production logs use the deployment environment's governed logging sink. Governed ANECHOIC workflow **and** local project-control Journals are **not** a substitute for the production system's log platform.
 
 Important health counters, thresholds, **and** service-level signals receive explicit monitors. a production evaluation decision **must not** depend solely on parsing free-form log prose.
 

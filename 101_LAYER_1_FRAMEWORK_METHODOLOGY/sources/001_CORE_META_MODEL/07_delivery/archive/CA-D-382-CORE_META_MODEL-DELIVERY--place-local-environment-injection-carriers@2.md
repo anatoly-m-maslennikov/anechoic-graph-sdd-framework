@@ -16,4 +16,4 @@ relations: {}
 ---
 # Place Local Environment Injection Carriers
 
-for local development, secret values **may** be injected from a repository-local `.env` File Carrier outside **every** applicable Project authority Carrier root. **every** real `.env` variant **must** be excluded from durable **or** shared history **and** from CAPRMEDIO discovery. a tracked `.env.example` **may** contain variable names **and** unmistakable dummy placeholders **only**. mutable runtime configuration identifiers **must** receive their runtime values through the local environment Carrier.
+for local development, secret values **may** be injected from a repository-local `.env` File Carrier outside **every** applicable Project authority Carrier root. **every** real `.env` variant **must** be excluded from durable **or** shared history **and** from ANECHOIC discovery. a tracked `.env.example` **may** contain variable names **and** unmistakable dummy placeholders **only**. mutable runtime configuration identifiers **must** receive their runtime values through the local environment Carrier.

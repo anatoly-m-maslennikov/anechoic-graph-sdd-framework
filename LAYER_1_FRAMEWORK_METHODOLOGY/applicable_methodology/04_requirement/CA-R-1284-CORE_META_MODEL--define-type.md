@@ -6,12 +6,12 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Entity
+  main_subject: ANECHOIC_MODEL <+ Entity
   dependencies:
-  - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Applicable Methodology)'
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ Term//Type
-  - CAPRMEDIO_MODEL <+ Entity/Property
+  - 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Applicable Methodology)'
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Term//Type
+  - ANECHOIC_MODEL <+ Entity/Property
 tier: 1
 status: Active
 version: 27
@@ -19,11 +19,11 @@ updated_at: 2026-11-02 19:46:47 +0400
 carrier_destination:
   file:
     name: CA-R-1284-CORE_META_MODEL-RULE--define-type.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1284-CORE_META_MODEL--define-type.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1284-CORE_META_MODEL--define-type.md
   source_atom_id: CA-R-1284
   source_atom_revision: 27
   source_sha256: 4d5824d02fd74f06e2a5ca2a21f88c82e662fb7391231b065b9e699f1d54923c
@@ -85,4 +85,4 @@ syntax and parser effects are not established by this interpretation.
 
 ### Current source pin
 
-Proposed successor of `.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1284-CORE_META_MODEL--define-type.md`, Version 23, SHA-256 `ed846912a5858e8103dfb5189cf574379488dcfde81d52521fafe48a4c7d0622`. This interpretation changes no Current carrier, allocates no identity and performs no promotion.
+Proposed successor of `.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1284-CORE_META_MODEL--define-type.md`, Version 23, SHA-256 `ed846912a5858e8103dfb5189cf574379488dcfde81d52521fafe48a4c7d0622`. This interpretation changes no Current carrier, allocates no identity and performs no promotion.

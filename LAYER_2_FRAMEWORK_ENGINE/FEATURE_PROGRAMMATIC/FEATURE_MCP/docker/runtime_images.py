@@ -74,8 +74,8 @@ LIFECYCLE_ROOT = ENGINE_ROOT + "/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_LIFECYC
 STATUS_MODEL = LIFECYCLE_ROOT + "status_model.json"
 CANDIDATE_SCHEMA = LIFECYCLE_ROOT + "candidate_schema.json"
 _GENERATED_ASSETS = frozenset({RELATION_REGISTRY, WORKBENCH_SCHEMA, TOOL_REGISTRY, STATUS_MODEL, CANDIDATE_SCHEMA})
-SCHEMA_LABEL = "org.caprmedio.runtime.schema"
-FINGERPRINT_LABEL = "org.caprmedio.runtime.fingerprint"
+SCHEMA_LABEL = "org.anechoic.runtime.schema"
+FINGERPRINT_LABEL = "org.anechoic.runtime.fingerprint"
 SCHEMA = "1"
 _REQUIRED = ("pyproject.toml", "uv.lock", "version.toml", DOCKERFILE, DOCKERIGNORE)
 _TRANSIENT_DIRECTORIES = frozenset({
@@ -136,7 +136,7 @@ def _canonical(value: object) -> bytes:
 
 def _excluded_directory(name: str) -> bool:
     return (name in _TRANSIENT_DIRECTORIES or name in _CREDENTIAL_DIRECTORIES
-            or name.startswith(".caprmedio_"))
+            or name.startswith(".anechoic_"))
 
 
 def _excluded_file(name: str) -> bool:
@@ -248,7 +248,7 @@ class ImageManager:
             return self.previous_image
         root = self._project_root()
         state = root
-        for part in (".caprmedio_runtime", "runtime", "project_mcp"):
+        for part in (".anechoic_runtime", "runtime", "project_mcp"):
             state = state / part
             if not os.path.lexists(state):
                 self._previous_image_resolved = True
@@ -296,7 +296,7 @@ class ImageManager:
         return registry, schema, tools, status, candidate
 
     def _build_parent(self) -> Path:
-        temporary = self._project_root() / ".caprmedio_tmp"
+        temporary = self._project_root() / ".anechoic_tmp"
         parent = self.build_temp_root or temporary
         try:
             if (temporary.is_symlink() or not temporary.is_dir()
@@ -386,7 +386,7 @@ class ImageManager:
                    "build_arguments": {"RUNTIME_UID": self.uid, "RUNTIME_GID": self.gid},
                    "files": [[row.path, row.sha256, row.mode] for row in rows]}
         fingerprint = hashlib.sha256(_canonical(payload)).hexdigest()
-        return ImageIdentity(fingerprint, "caprmedio-runtime:inputs-" + fingerprint, version,
+        return ImageIdentity(fingerprint, "anechoic-runtime:inputs-" + fingerprint, version,
                              self.platform, rows, self.uid, self.gid, registry, schema, tools, status, candidate)
 
     def _run(self, argv, *, code="IMAGE_REFUSED", cwd=None, buildx_config=None,
@@ -501,7 +501,7 @@ class ImageManager:
             # Retain one private attempt as build evidence.  Cleanup must never
             # mask a build result or retry a denied directory deletion.
             parent = self._build_parent()
-            attempt = Path(tempfile.mkdtemp(prefix="caprmedio-runtime-image-", dir=parent))
+            attempt = Path(tempfile.mkdtemp(prefix="anechoic-runtime-image-", dir=parent))
             attempt.chmod(0o700)
             context = attempt / "context"
             context.mkdir()

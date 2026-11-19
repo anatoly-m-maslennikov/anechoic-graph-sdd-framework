@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Projection/(.Form := Primary Entities Tree)
+  main_subject: ANECHOIC_MODEL <+ Projection/(.Form := Primary Entities Tree)
 tier: 3
 status: active
 version: 3
@@ -14,11 +14,11 @@ updated_at: '2026-11-12T18:49:23.370786+00:00'
 carrier_destination:
   file:
     name: CA-R-2740-CORE_META_MODEL-DECLARATION--declare-projection-form-primary-entities-tree.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2740-CORE_META_MODEL-DECLARATION--declare-projection-form-primary-entities-tree.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2740-CORE_META_MODEL-DECLARATION--declare-projection-form-primary-entities-tree.md
   source_atom_id: CA-R-2740
   source_atom_revision: 3
   source_sha256: 5d33c9f22d1d11daaa9eb1532602fbe939fe2211f09a527d8c892fd48ad0bd8b
@@ -33,8 +33,8 @@ Declare Projection/(.Form := Primary Entities Tree)
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_entity
-from caprmedio.model import Projection
+from anechoic.formal_claims import declare_entity
+from anechoic.model import Projection
 
 class PrimaryEntitiesTree(Projection):
     pass

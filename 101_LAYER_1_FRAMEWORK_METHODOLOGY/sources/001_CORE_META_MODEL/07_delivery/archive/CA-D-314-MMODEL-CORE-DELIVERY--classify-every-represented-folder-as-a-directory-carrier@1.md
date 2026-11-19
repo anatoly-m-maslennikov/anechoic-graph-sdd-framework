@@ -15,4 +15,4 @@ relations: {}
 ---
 # Classify Every Represented Folder as a Directory Carrier
 
-every filesystem Folder represented in CAPRMEDIO **must** be a Directory Carrier.
+every filesystem Folder represented in ANECHOIC **must** be a Directory Carrier.

@@ -16,7 +16,7 @@ llm_session_ids:
   - codex:019f591f-04f6-70f2-8de7-828b7cccc69d
 relations:
   child_of:
-    - CAPRMEDIO-META-REQU-098-CORE_META_MODEL-CORE-REQUIREMENT--scope-path-does-not-change-semantic-coordinates
+    - ANECHOIC-META-REQU-098-CORE_META_MODEL-CORE-REQUIREMENT--scope-path-does-not-change-semantic-coordinates
 ---
 # Define Project Atom ID
 

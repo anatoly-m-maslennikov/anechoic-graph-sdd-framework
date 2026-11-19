@@ -41,26 +41,26 @@ class MainSubjectRelationTests(unittest.TestCase):
 
     def test_accepts_model_class_property_and_relation(self):
         for subject in ("Atom", "Atom.Header.Context", "CFEL <+ Relation//SPECIALIZES"):
-            self.check("CAPRMEDIO_MODEL <+ " + subject)
+            self.check("ANECHOIC_MODEL <+ " + subject)
 
     def test_scope_unit_declaration_checks_its_target_kind(self):
         form = "Scope Unit Declaration"
-        self.check("CAPRMEDIO_STRUCTURE <+ Scope Unit//TOOLS", form)
-        self.check("CAPRMEDIO_STRUCTURE <+ Project//test", form)
+        self.check("ANECHOIC_STRUCTURE <+ Scope Unit//TOOLS", form)
+        self.check("ANECHOIC_STRUCTURE <+ Project//test", form)
         with self.assertRaisesRegex(InputError, "Scope Unit instance"):
-            self.check("CAPRMEDIO_MODEL <+ Atom", form)
+            self.check("ANECHOIC_MODEL <+ Atom", form)
         with self.assertRaisesRegex(InputError, "Scope Unit instance"):
-            self.check("CAPRMEDIO_MODEL <+ Scope Unit", form)
+            self.check("ANECHOIC_MODEL <+ Scope Unit", form)
         with self.assertRaisesRegex(InputError, "missing or ambiguous"):
-            self.check("CAPRMEDIO_STRUCTURE <+ Project//TOOLS", form)
+            self.check("ANECHOIC_STRUCTURE <+ Project//TOOLS", form)
 
     def test_unknown_topic_is_rejected_when_authored(self):
-        self.check("CAPRMEDIO_MODEL <+ Former Node", strict=False)
+        self.check("ANECHOIC_MODEL <+ Former Node", strict=False)
         with self.assertRaisesRegex(InputError, "one declared endpoint"):
-            self.check("CAPRMEDIO_MODEL <+ Former Node")
+            self.check("ANECHOIC_MODEL <+ Former Node")
 
     def test_new_project_local_aspect_must_be_declared(self):
-        subject = "CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering"
+        subject = "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering"
         with patch("ATOM_LIFECYCLE.main_subject_relation.resolve_aspect", return_value=True) as lookup:
             self.check(subject)
             lookup.assert_called_once()
@@ -77,15 +77,15 @@ class MainSubjectRelationTests(unittest.TestCase):
 
     def test_structure_scope_resolves_full_selected_containment(self):
         self.selection.structure["scope_units"] = [
-            {"scope_unit_name": "caprmedio", "parent": "PROJECT"},
-            {"scope_unit_name": "PARENT", "parent": "caprmedio"},
+            {"scope_unit_name": "anechoic", "parent": "PROJECT"},
+            {"scope_unit_name": "PARENT", "parent": "anechoic"},
             {"scope_unit_name": "CHILD", "parent": "PARENT"},
         ]
         form = "Scope Unit Declaration"
-        self.check("CAPRMEDIO_STRUCTURE", form)
-        self.check("CAPRMEDIO_STRUCTURE/PARENT/CHILD", form)
+        self.check("ANECHOIC_STRUCTURE", form)
+        self.check("ANECHOIC_STRUCTURE/PARENT/CHILD", form)
         with self.assertRaisesRegex(InputError, "one declared endpoint"):
-            self.check("CAPRMEDIO_STRUCTURE/WRONG/CHILD", form)
+            self.check("ANECHOIC_STRUCTURE/WRONG/CHILD", form)
         self.selection.structure["scope_units"].append({"scope_unit_name": "CHILD", "parent": "PARENT"})
         with self.assertRaisesRegex(InputError, "one declared endpoint"):
-            self.check("CAPRMEDIO_STRUCTURE/PARENT/CHILD", form)
+            self.check("ANECHOIC_STRUCTURE/PARENT/CHILD", form)

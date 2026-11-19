@@ -1,0 +1,45 @@
+---
+atom_id: CA-P-2515
+ref_id: CA-P-2515
+container:
+  atom: CA-P-2401
+role: Plan
+form: Plan
+label: Task
+topics:
+  main_subject: Subject/Graph Node/Engineering/Continuant/Carrier/File Carrier.Filename
+tier: 3
+relations:
+  is_decomposition_of:
+  - CA-P-2401
+status: Done
+version: 6
+updated_at: 2026-10-25 17:32:27 +0400
+carrier_destination:
+  file:
+    name: 75-CA-P-2515-TASK--repair-plan-bundle-ownership-and-flat-history-fixtures.md
+    path: .anechoic_anechoic/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/03_plan/5-CA-P-2401-EPIC--make-atom-and-scope-unit-actions-good/done
+work_sequence_number: 75
+current_scope_unit: PROGRAMMATIC
+claim_target_scope_unit: PROGRAMMATIC
+author: Anatoly Maslennikov
+---
+# Summary
+
+Repair Plan bundle ownership and flat history fixtures
+
+## Objective
+
+Close the bounded C557 full-release fixture gap without changing production semantics.
+
+## Details
+
+At most15 minutes own work; split before extending. Depends on the current failed full suite finishing and independent diagnosis. Own only201_TOOLS/tests/test_status_bundle_publication.py and test_status_bundle_publication_independent.py. Declare the exact synthetic amber Scope Unit in the primary fixture, preserving strict production ownership validation. Route only Plan predecessor assertions, collision targets and fault-injection history variables to the owning Scope Unit shared03_plan/archived; keep nested current Done paths and Operations/Step local history unchanged. Preserve all injection-reached assertions, exceptions, snapshots, exact bytes and foreign-state safety. No production/test source edits while that suite collects results. Acceptance: Both named suites plus test_flat_plan_archive pass; independent exact-diff review confirms no weakened recovery checks or production changes. After completion review and update dependent P2513 before a fresh complete normal local release; no waived checks, live corpus fallback, production mutation testing or held/uncertain replay.
+
+### Complete gate result and execution review
+
+The full run local-20261021-mcp-health-verified-env has finished:424 modules,3796 tests,zero skips,six failed modules; launcher integration passed. No install/startup phase ran. Source repair may now begin under the exclusive scope below, followed by independent diff review and fresh focused/full checks. No failed receipt is reused as acceptance.
+
+### Verified completion and next dependency review
+
+Frozen two-file fixture repair declares exact amber ownership under a distinct synthetic Project identity, re-resolves/rebinds current selection and corrects only Plan predecessor/collision/fault history targets to owning shared03_plan/archived. Release virtualenv checks:24/24 status-bundle and14/14 flat archive pass. Independent final setup/diff review APPROVE; all fault reachability, exact recovery/foreign-state, Operations-local and legacy-byte checks remain. Hashesd6da940b0d62cebe4435ae1f985da7ea467104bf45670304c493be36a03f9a66 andc6c34cd1608bcd522fa1a62407076cf1f256e1c29b71165b4cac2711f64e733f. Review dependent P2513; no deployed/full-release claim.

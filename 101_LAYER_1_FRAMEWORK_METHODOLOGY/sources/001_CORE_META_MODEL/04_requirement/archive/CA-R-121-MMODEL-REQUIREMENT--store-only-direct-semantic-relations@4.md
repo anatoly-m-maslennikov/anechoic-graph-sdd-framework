@@ -9,7 +9,7 @@ llm_session_ids:
 relations:
   child_of:
     - CA-R-118
-    - CAPRMEDIO-META-REQU-107--bind-traceability-to-exact-claims-and-revisions
+    - ANECHOIC-META-REQU-107--bind-traceability-to-exact-claims-and-revisions
 ---
 # Store only direct semantic relations
 

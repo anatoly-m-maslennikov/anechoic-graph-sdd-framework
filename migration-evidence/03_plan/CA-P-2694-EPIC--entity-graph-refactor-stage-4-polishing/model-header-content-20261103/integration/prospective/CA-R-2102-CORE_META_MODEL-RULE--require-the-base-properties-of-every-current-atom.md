@@ -1,6 +1,6 @@
 ---
 subjects:
-  active: CAPRMEDIO_MODEL <+ Atom
+  active: ANECHOIC_MODEL <+ Atom
 version: 17
 updated_at: 2026-11-03 20:00:05 +0400
 relations: {}
@@ -14,7 +14,7 @@ form: Rule
 carrier_destination:
   file:
     name: CA-R-2102-CORE_META_MODEL-RULE--require-the-base-properties-of-every-current-atom.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 ---
 ## Summary
 

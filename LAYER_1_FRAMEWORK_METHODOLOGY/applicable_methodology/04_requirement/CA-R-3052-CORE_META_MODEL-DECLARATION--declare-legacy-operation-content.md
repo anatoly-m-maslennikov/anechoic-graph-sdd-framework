@@ -8,7 +8,7 @@ context:
   role: Requirement
   form: Declaration
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations).Content.Operation
+    main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations).Content.Operation
   tier: 4
 state:
   status: active
@@ -17,10 +17,10 @@ state:
 destination:
   file:
     name: CA-R-3052-CORE_META_MODEL-DECLARATION--declare-legacy-operation-content.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 author: Anatoly Maslennikov
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-3052-CORE_META_MODEL-DECLARATION--declare-legacy-operation-content.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-3052-CORE_META_MODEL-DECLARATION--declare-legacy-operation-content.md
   source_atom_id: CA-R-3052
   source_atom_revision: 3
   source_sha256: 9fc3fe70cebb56189414feb65834d0d024842a69e480fe0ee9dabc6b8c9360eb
@@ -40,7 +40,7 @@ An Operations Atom may retain its legacy Operation section during migration. Ope
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import Cardinality, declare_entity
+from anechoic.formal_claims import Cardinality, declare_entity
 
 declare_entity(
     entity_name='Operation',

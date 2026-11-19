@@ -15,4 +15,4 @@ relations: {}
 ---
 # Serialize Atomic Admission Strictness
 
-the Framework Instance Settings TOML Carrier **must** encode atomic admission strictness as `creation_strictness` **in** `[artifacts]`, using the allowed values **and** default governed by CAPRMEDIO-GOV-REQU-302.
+the Framework Instance Settings TOML Carrier **must** encode atomic admission strictness as `creation_strictness` **in** `[artifacts]`, using the allowed values **and** default governed by ANECHOIC-GOV-REQU-302.

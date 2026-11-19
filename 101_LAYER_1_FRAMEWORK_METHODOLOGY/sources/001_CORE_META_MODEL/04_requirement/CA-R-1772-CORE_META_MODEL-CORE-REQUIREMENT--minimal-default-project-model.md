@@ -12,7 +12,7 @@ subjects:
     - "Atom/Content Role: Implementation"
     - "Atom"
     - "Structural Level"
-    - "CAPRMEDIO Framework Instance"
+    - "ANECHOIC Framework Instance"
 
 atom_id: "CA-R-1772"
 content_role: "Requirement"
@@ -33,6 +33,6 @@ Project models.
 
 ## Claim
 
-CAPRMEDIO **must** use Project-scope Requirement authority plus its real Implementation as the minimum Project model, **must not** require an Implementation Atom, **and** **may** enable other Atom roles, applicability tiers, Structural Levels, descendant scopes, **or** automation **only** **when** necessary.
+ANECHOIC **must** use Project-scope Requirement authority plus its real Implementation as the minimum Project model, **must not** require an Implementation Atom, **and** **may** enable other Atom roles, applicability tiers, Structural Levels, descendant scopes, **or** automation **only** **when** necessary.
 
 ## Details

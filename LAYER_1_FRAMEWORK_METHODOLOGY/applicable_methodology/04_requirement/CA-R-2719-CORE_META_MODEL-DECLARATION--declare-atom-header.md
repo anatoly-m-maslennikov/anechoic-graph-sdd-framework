@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header
+  main_subject: ANECHOIC_MODEL <+ Atom.Header
 tier: 3
 status: active
 version: 5
@@ -14,11 +14,11 @@ updated_at: '2026-11-13T01:11:43.332082+00:00'
 carrier_destination:
   file:
     name: CA-R-2719-CORE_META_MODEL-DECLARATION--declare-atom-header.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2719-CORE_META_MODEL-DECLARATION--declare-atom-header.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2719-CORE_META_MODEL-DECLARATION--declare-atom-header.md
   source_atom_id: CA-R-2719
   source_atom_revision: 5
   source_sha256: 6dc2fdc36d5e64fdc343c1f3cd9c662bcc52c0d6e87659e37ad67c31ff97a0f6
@@ -37,7 +37,7 @@ Atom.Header groups the Atom Properties carried in YAML frontmatter, including fo
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import Cardinality, declare_entity
+from anechoic.formal_claims import Cardinality, declare_entity
 
 declare_entity(
     entity_name="Header",

@@ -56,7 +56,7 @@ class SourceWatcherTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
-        self.control = self.root / ".caprmedio_example"
+        self.control = self.root / ".anechoic_example"
         self.control.mkdir()
         self.observer = _Observer()
         self.watcher = SourceWatcher(
@@ -78,9 +78,9 @@ class SourceWatcherTests(unittest.TestCase):
         self.observer.handler.on_deleted(self.event(path))
 
         self.assertEqual([
-            {"operation": "create", "old_path": None, "new_path": ".caprmedio_example/04_requirement/CA-R-1.md"},
-            {"operation": "update", "old_path": None, "new_path": ".caprmedio_example/04_requirement/CA-R-1.md"},
-            {"operation": "remove", "old_path": ".caprmedio_example/04_requirement/CA-R-1.md", "new_path": None},
+            {"operation": "create", "old_path": None, "new_path": ".anechoic_example/04_requirement/CA-R-1.md"},
+            {"operation": "update", "old_path": None, "new_path": ".anechoic_example/04_requirement/CA-R-1.md"},
+            {"operation": "remove", "old_path": ".anechoic_example/04_requirement/CA-R-1.md", "new_path": None},
         ], self.watcher.changes(0))
 
     def test_moves_keep_native_boundary_and_parent_meaning(self) -> None:
@@ -95,10 +95,10 @@ class SourceWatcherTests(unittest.TestCase):
         self.observer.handler.on_moved(self.event(outside, destination=self.root / "elsewhere.md"))
 
         self.assertEqual([
-            {"operation": "rename", "old_path": ".caprmedio_example/04_requirement/CA-R-1.md", "new_path": ".caprmedio_example/04_requirement/CA-R-2.md"},
-            {"operation": "move", "old_path": ".caprmedio_example/04_requirement/CA-R-2.md", "new_path": ".caprmedio_example/05_method/CA-R-2.md"},
-            {"operation": "create", "old_path": None, "new_path": ".caprmedio_example/04_requirement/CA-R-1.md"},
-            {"operation": "remove", "old_path": ".caprmedio_example/05_method/CA-R-2.md", "new_path": None},
+            {"operation": "rename", "old_path": ".anechoic_example/04_requirement/CA-R-1.md", "new_path": ".anechoic_example/04_requirement/CA-R-2.md"},
+            {"operation": "move", "old_path": ".anechoic_example/04_requirement/CA-R-2.md", "new_path": ".anechoic_example/05_method/CA-R-2.md"},
+            {"operation": "create", "old_path": None, "new_path": ".anechoic_example/04_requirement/CA-R-1.md"},
+            {"operation": "remove", "old_path": ".anechoic_example/05_method/CA-R-2.md", "new_path": None},
         ], self.watcher.changes(0))
 
     def test_directory_create_move_remove_are_kept_but_modify_is_ignored(self) -> None:
@@ -110,9 +110,9 @@ class SourceWatcherTests(unittest.TestCase):
         self.observer.handler.on_deleted(self.event(other, directory=True))
 
         self.assertEqual([
-            {"operation": "create", "old_path": None, "new_path": ".caprmedio_example/04_requirement"},
-            {"operation": "move", "old_path": ".caprmedio_example/04_requirement", "new_path": ".caprmedio_example/nested/05_method"},
-            {"operation": "remove", "old_path": ".caprmedio_example/nested/05_method", "new_path": None},
+            {"operation": "create", "old_path": None, "new_path": ".anechoic_example/04_requirement"},
+            {"operation": "move", "old_path": ".anechoic_example/04_requirement", "new_path": ".anechoic_example/nested/05_method"},
+            {"operation": "remove", "old_path": ".anechoic_example/nested/05_method", "new_path": None},
         ], self.watcher.changes(0))
 
     def test_directory_reported_as_file_gets_a_child_watch_and_removal_cleans_it_up(self) -> None:
@@ -156,8 +156,8 @@ class SourceWatcherTests(unittest.TestCase):
         self.assertEqual([
             {
                 "operation": "move",
-                "old_path": ".caprmedio_example/source/batch",
-                "new_path": ".caprmedio_example/target/batch",
+                "old_path": ".anechoic_example/source/batch",
+                "new_path": ".anechoic_example/target/batch",
             },
         ], self.watcher.changes(0))
 
@@ -178,7 +178,7 @@ class SourceWatcherTests(unittest.TestCase):
         self.assertEqual([
             {
                 "operation": "remove",
-                "old_path": ".caprmedio_example/source",
+                "old_path": ".anechoic_example/source",
                 "new_path": None,
             },
         ], self.watcher.changes(0))
@@ -193,7 +193,7 @@ class SourceWatcherTests(unittest.TestCase):
 
         self.assertIn((str(destination.resolve()), False), self.observer.schedules)
         self.assertEqual([
-            {"operation": "create", "old_path": None, "new_path": ".caprmedio_example/moved"},
+            {"operation": "create", "old_path": None, "new_path": ".anechoic_example/moved"},
         ], self.watcher.changes(0))
 
     def test_close_stops_the_native_observer(self) -> None:
@@ -202,11 +202,11 @@ class SourceWatcherTests(unittest.TestCase):
         self.assertTrue(self.observer.joined)
 
     def test_positive_timeout_collects_one_fixed_event_window(self) -> None:
-        self.watcher._record("create", None, ".caprmedio_example/first.md")
+        self.watcher._record("create", None, ".anechoic_example/first.md")
 
         def add_update() -> None:
             time.sleep(0.01)
-            self.watcher._record("update", None, ".caprmedio_example/first.md")
+            self.watcher._record("update", None, ".anechoic_example/first.md")
 
         worker = threading.Thread(target=add_update)
         worker.start()

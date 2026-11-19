@@ -8,7 +8,7 @@ subjects:
     - "AI Agent Delegation"
 version: 3
 updated_at: "2026-09-21 00:39:50 +0000"
-relations: {"child_of":["CAPRMEDIO-META-REQU-144"]}
+relations: {"child_of":["ANECHOIC-META-REQU-144"]}
 atom_id: "CA-R-1555"
 content_role: "Requirement"
 current_scope_unit: "CORE_META_MODEL"

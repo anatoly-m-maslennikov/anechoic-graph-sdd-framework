@@ -63,7 +63,7 @@ class DockerLoggingTests(unittest.TestCase):
         dockerfile = (DOCKER / "Dockerfile").read_text(encoding="utf-8")
         self.assertIn("COPY version.toml ./", dockerfile)
         self.assertIn("COPY pyproject.toml uv.lock ./", dockerfile)
-        self.assertIn("--mount=type=cache,id=caprmedio-uv,target=/tmp/uv-cache uv sync --locked", dockerfile)
+        self.assertIn("--mount=type=cache,id=anechoic-uv,target=/tmp/uv-cache uv sync --locked", dockerfile)
         self.assertGreater(dockerfile.index("COPY version.toml ./"), dockerfile.index(" uv sync --locked"))
 
 

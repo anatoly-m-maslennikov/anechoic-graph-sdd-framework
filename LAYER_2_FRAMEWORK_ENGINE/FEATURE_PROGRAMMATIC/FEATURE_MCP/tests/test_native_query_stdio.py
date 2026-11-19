@@ -25,8 +25,8 @@ from smalltest_support import extension_directory  # noqa: E402
 
 CONTROL = ".anechoic_anechoic"
 MANIFEST = "SPEC/AN-S-001-PROJECT_MANIFEST--declare-anechoic.md"
-OLD_PATH = ".caprmedio_legacy/03_plan/CA-P-9--old-task.md"
-UNNUMBERED_PATH = ".caprmedio_legacy/03_plan/archive/old-task.md"
+OLD_PATH = ".anechoic_legacy/03_plan/CA-P-9--old-task.md"
+UNNUMBERED_PATH = ".anechoic_legacy/03_plan/archive/old-task.md"
 STAGING_COPY_PATH = "migration-evidence/03_plan/old-task-copy.md"
 
 
@@ -39,7 +39,7 @@ def _launch_server():
     model = ModuleType("compiled_mcp_fixture")
     sys.modules[model.__name__] = model
     source = assemble_model_classes(["""
-from caprmedio.formal_claims import declare_entity
+from anechoic.formal_claims import declare_entity
 from dataclasses import field
 
 class ProjectManifest:
@@ -86,8 +86,8 @@ Declare the native Project.
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_entity
-from caprmedio.model import ProjectManifest
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ProjectManifest
 declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="Anechoic", prefix="AN"))
 ```
 """)
@@ -101,7 +101,7 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
         unnumbered = self.root / UNNUMBERED_PATH
         unnumbered.parent.mkdir()
         unnumbered.write_text("## Summary\n\nArchived task with no legacy ID.\n", encoding="utf-8")
-        (self.root / ".caprmedio_legacy" / "caprmedio_project_settings.toml").write_text(
+        (self.root / ".anechoic_legacy" / "anechoic_project_settings.toml").write_text(
             '[project_mcp]\nhttp_port = 18000\ntool_blacklist = ["query_run"]\n', encoding="utf-8",
         )
         self.args = [str(Path(__file__).resolve()), "--project-root", str(self.root), "--control-root", CONTROL]

@@ -11,7 +11,7 @@ from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_relation_endpoints import vali
 
 def relation(arguments):
     return parse_native_model_claim(
-        "from caprmedio.formal_claims import declare_relation\n"
+        "from anechoic.formal_claims import declare_relation\n"
         f"declare_relation(relation_name='R', inverse_alias='REVERSE', {arguments})\n"
     )
 

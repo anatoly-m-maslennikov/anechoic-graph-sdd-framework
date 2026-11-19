@@ -28,23 +28,23 @@ REPOSITORY = Path(__file__).resolve().parents[5]
 
 class WorkbenchProfilerTest(unittest.TestCase):
     def setUp(self) -> None:
-        temporary_root = REPOSITORY / ".caprmedio_tmp/tests/workbench-profiler"
+        temporary_root = REPOSITORY / ".anechoic_tmp/tests/workbench-profiler"
         temporary_root.mkdir(parents=True, exist_ok=True)
         self.temporary = tempfile.TemporaryDirectory(dir=temporary_root)
         self.addCleanup(self.temporary.cleanup)
         self.project = Path(self.temporary.name) / "project"
-        self.control = self.project / ".caprmedio_caprmedio"
+        self.control = self.project / ".anechoic_anechoic"
         self.control.mkdir(parents=True)
-        (self.control / "caprmedio_project_settings.toml").write_text(
+        (self.control / "anechoic_project_settings.toml").write_text(
             "[project]\nname = 'fixture'\n[artifacts.identity]\nproject_prefix = 'CA'\n[paths]\n"
-            "control_root = '.caprmedio_caprmedio'\ntemporary_root = '.caprmedio_tmp'\n",
+            "control_root = '.anechoic_anechoic'\ntemporary_root = '.anechoic_tmp'\n",
             encoding="utf-8",
         )
         write_scope_unit_declarations(self.project, (), control_root=self.control)
 
     def test_output_stays_under_project_temporary_root(self) -> None:
-        output = output_directory(self.project, self.project / ".caprmedio_tmp/reports/run")
-        self.assertEqual((self.project / ".caprmedio_tmp/reports/run").resolve(), output)
+        output = output_directory(self.project, self.project / ".anechoic_tmp/reports/run")
+        self.assertEqual((self.project / ".anechoic_tmp/reports/run").resolve(), output)
         with self.assertRaisesRegex(ValueError, "temporary root"):
             output_directory(self.project, self.project / "outside")
 
@@ -68,7 +68,7 @@ class WorkbenchProfilerTest(unittest.TestCase):
         output = output_directory(self.project, None)
         with patch.dict(
             os.environ,
-            {"CAPRMEDIO_DUCKPGQ_EXTENSION_DIRECTORY": str(extension_directory(REPOSITORY))},
+            {"ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY": str(extension_directory(REPOSITORY))},
         ):
             report = profile(self.project, output)
         self.assertEqual(3, report["rebuild_cycles"])
@@ -95,7 +95,7 @@ class WorkbenchProfilerTest(unittest.TestCase):
         source_bytes = source.read_bytes()
         output = output_directory(self.project, None)
         with (
-            patch.dict(os.environ, {"CAPRMEDIO_DUCKPGQ_EXTENSION_DIRECTORY": str(extension_directory(REPOSITORY))}),
+            patch.dict(os.environ, {"ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY": str(extension_directory(REPOSITORY))}),
             patch("profile_workbench.shutil.rmtree", side_effect=OSError("denied")),
         ):
             report = profile(self.project, output)

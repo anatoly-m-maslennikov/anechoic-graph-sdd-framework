@@ -38,10 +38,10 @@ class DockerFixture:
     def add(self, digit: str, **changes: object) -> tuple[str, str]:
         identifier, image = digit * 64, "sha256:" + digit * 64
         labels = {
-            "org.caprmedio.project": self.project_id,
-            "org.caprmedio.service": "mcp-http",
-            "org.caprmedio.control_root": ".caprmedio_caprmedio",
-            "org.caprmedio.host_project_root": str(self.root),
+            "org.anechoic.project": self.project_id,
+            "org.anechoic.service": "mcp-http",
+            "org.anechoic.control_root": ".anechoic_anechoic",
+            "org.anechoic.host_project_root": str(self.root),
             FINGERPRINT: digit * 64,
         }
         row: dict[str, object] = {
@@ -54,9 +54,9 @@ class DockerFixture:
         if row["Image"] == image:
             self.images[image] = digit * 64
             self.image_owner_labels[image] = {
-                "org.caprmedio.project": self.project_id,
-                "org.caprmedio.control_root": ".caprmedio_caprmedio",
-                "org.caprmedio.host_project_root": str(self.root),
+                "org.anechoic.project": self.project_id,
+                "org.anechoic.control_root": ".anechoic_anechoic",
+                "org.anechoic.host_project_root": str(self.root),
             }
         return identifier, image
 
@@ -99,7 +99,7 @@ class DockerFixture:
 class ReleaseCleanupTests(unittest.TestCase):
     def sweep(self, docker: DockerFixture) -> Cleanup:
         return cleanup_stopped_containers(
-            ROOT, "project", ".caprmedio_caprmedio", CURRENT, FINGER, docker.run
+            ROOT, "project", ".anechoic_anechoic", CURRENT, FINGER, docker.run
         )
 
     def test_multiple_obsolete_resources_and_unproven_orphans(self) -> None:
@@ -130,7 +130,7 @@ class ReleaseCleanupTests(unittest.TestCase):
         docker = DockerFixture()
         docker.add("1", State={"Running": True, "Status": "running"})
         docker.add("2", Image=CURRENT)
-        docker.add("4", Config={"Labels": {"org.caprmedio.project": "other"}})
+        docker.add("4", Config={"Labels": {"org.anechoic.project": "other"}})
         docker.add("5", State={"Running": False, "Status": "paused"})
         docker.add("6", State={"Running": "false", "Status": "exited"})
         cleanup = self.sweep(docker)
@@ -199,7 +199,7 @@ class ReleaseCleanupTests(unittest.TestCase):
             return_value=subprocess.CompletedProcess([], 0, "", ""),
         ) as run:
             cleanup = cleanup_stopped_containers(
-                ROOT, "project", ".caprmedio_caprmedio", CURRENT, FINGER
+                ROOT, "project", ".anechoic_anechoic", CURRENT, FINGER
             )
         self.assertFalse(cleanup.pending)
         self.assertEqual(run.call_args.kwargs["timeout"], 30)
@@ -213,7 +213,7 @@ class ReleaseCleanupTests(unittest.TestCase):
         cleanup_stopped_containers(
             ROOT,
             "project",
-            ".caprmedio_caprmedio",
+            ".anechoic_anechoic",
             CURRENT,
             FINGER,
             docker.run,

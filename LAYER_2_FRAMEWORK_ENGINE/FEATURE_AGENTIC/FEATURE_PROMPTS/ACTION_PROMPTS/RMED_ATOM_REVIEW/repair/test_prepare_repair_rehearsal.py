@@ -55,7 +55,7 @@ class PrepareRepairRehearsalTests(unittest.TestCase):
             for identifier in REPAIR_AUTHORITY_IDS
         ]
         baseline = authority, [row["binding"] for row in authority]
-        temporary_root = REPOSITORY_ROOT / ".caprmedio_tmp"
+        temporary_root = REPOSITORY_ROOT / ".anechoic_tmp"
         with (
             tempfile.TemporaryDirectory(
                 dir=temporary_root, ignore_cleanup_errors=True

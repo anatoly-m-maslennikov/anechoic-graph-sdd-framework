@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Project.Settings.Interaction
+  main_subject: ANECHOIC_MODEL <+ Project.Settings.Interaction
 tier: 3
 relations:
   child_of:
@@ -17,11 +17,11 @@ updated_at: '2026-11-12T17:23:54+00:00'
 carrier_destination:
   file:
     name: CA-R-1982-CORE_META_MODEL-DECLARATION--define-project-framework-settings-interaction.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1982-CORE_META_MODEL-DECLARATION--define-project-framework-settings-interaction.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1982-CORE_META_MODEL-DECLARATION--define-project-framework-settings-interaction.md
   source_atom_id: CA-R-1982
   source_atom_revision: 16
   source_sha256: e3391b9241205b1277e3f06c37fd30ce053f7eb12d152291f5d49f19470d30d1
@@ -44,7 +44,7 @@ the Interaction grouping in the Project's Framework Settings.
 
 ```python
 # model
-from caprmedio.formal_claims import Cardinality, declare_entity
+from anechoic.formal_claims import Cardinality, declare_entity
 
 declare_entity(
     entity_name='Interaction',
@@ -59,4 +59,4 @@ declare_entity(
 
 ## Details
 
-Evidence: CA-R-1628 defines reporting-mode values; CA-R-1439 limits effects to presentation; CA-R-1440 preserves mandatory information. These define the child setting and its constraints, not the parent grouping. Candidate #6 keeps concrete CAPRMEDIO mechanisms in Project Configuration. This grouping adds no authorization, workflow, validation or safety behavior.
+Evidence: CA-R-1628 defines reporting-mode values; CA-R-1439 limits effects to presentation; CA-R-1440 preserves mandatory information. These define the child setting and its constraints, not the parent grouping. Candidate #6 keeps concrete ANECHOIC mechanisms in Project Configuration. This grouping adds no authorization, workflow, validation or safety behavior.

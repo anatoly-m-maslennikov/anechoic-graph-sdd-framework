@@ -25,25 +25,25 @@ class StatusOrderPlacementTests(unittest.TestCase):
         self.root = Path(self.tmp.name)
         self.orders = {'Draft': 7, 'Active': 12, 'Backlog': 14, 'Done': 31, 'Archived': 115}
         self.write_requirements()
-        self.delivery('CA-D-881', 'CAPRMEDIO_MODEL <+ Carrier',
+        self.delivery('CA-D-881', 'ANECHOIC_MODEL <+ Carrier',
                       {'kind': 'role_root'})
-        prefix = 'CAPRMEDIO_MODEL <+ Atom.Header.State.Status >| Status Group := '
+        prefix = 'ANECHOIC_MODEL <+ Atom.Header.State.Status >| Status Group := '
         self.delivery('CA-D-882', prefix + 'Draft', status_path('Draft', '<owning scope unit>/<role folder>/<status folder>'))
         self.delivery('CA-D-883', prefix + 'Archived', status_path('Archived', '<owning scope unit>/<role folder>/<status folder>'))
         self.delivery('CA-D-884', prefix + 'Current', [status_rule('*', 'container', '<status folder>'), status_path('Active', '<container>')])
         self.delivery('CA-D-885',
-                      'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.State.Status >| Status Group := Backlog',
+                      'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.State.Status >| Status Group := Backlog',
                       status_path('Backlog', '<owning scope unit>/<role folder>/<status folder>', plan=True))
 
     def write_requirements(self, orders=None):
         orders = self.orders if orders is None else orders
         role_source(self.root, 'Plan', 3, 'CA-R-71591')
-        code = ('from caprmedio.formal_claims import declare_entity\n'
+        code = ('from anechoic.formal_claims import declare_entity\n'
                 'declare_entity(entity_name="Status", relation_name="IS_PROPERTY_OF", '
                 f'base_path="Atom.Header.State", allowed_values={tuple(orders)!r}, status_order_numbers={orders!r})')
         (self.root / 'CA-R-71593.md').write_text(carrier('CA-R-71593', 'Requirement', 'Active',
             f'## Claim\n### Formal Claim\n```python\n{code}\n```\n',
-            'CAPRMEDIO_MODEL <+ Atom.Header.State.Status'))
+            'ANECHOIC_MODEL <+ Atom.Header.State.Status'))
 
     def delivery(self, atom_id, subject, claim):
         (self.root / f'{atom_id}.md').write_text(

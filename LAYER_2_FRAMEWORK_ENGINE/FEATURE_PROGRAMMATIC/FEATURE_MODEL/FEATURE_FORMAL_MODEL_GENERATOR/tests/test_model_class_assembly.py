@@ -20,9 +20,9 @@ from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_cl
 
 
 def declaration(name, parent=None):
-    base_import = f"from caprmedio.model import {parent}\n" if parent else ""
+    base_import = f"from anechoic.model import {parent}\n" if parent else ""
     base = f"({parent})" if parent else ""
-    return ("from caprmedio.formal_claims import declare_entity\n"
+    return ("from anechoic.formal_claims import declare_entity\n"
             "from dataclasses import dataclass\n" + base_import +
             f"@dataclass\nclass {name}{base}:\n    pass\n"
             f"declare_entity(entity_name='{name}', entity_class={name})\n")
@@ -43,7 +43,7 @@ class ModelClassAssemblyTests(unittest.TestCase):
         self.assertTrue(issubclass(Plan, Atom))
 
     def test_atom_state_fields_and_bound_come_from_property_declarations(self):
-        imports = "from caprmedio.formal_claims import declare_entity\n"
+        imports = "from anechoic.formal_claims import declare_entity\n"
         group = imports + (
             "declare_entity(entity_name='State', relation_name='IS_PROPERTY_OF', base_path='Atom.Header', "
             "property_occurrence_cardinality=1, value_cardinality=0, dependent_property_cardinality=1, "
@@ -74,7 +74,7 @@ class ModelClassAssemblyTests(unittest.TestCase):
         namespace = {}
         exec(compile(source, "model.py", "exec"), namespace)
         self.assertTrue(issubclass(namespace["Project"], namespace["ScopeUnit"]))
-        self.assertNotIn("caprmedio.model", source)
+        self.assertNotIn("anechoic.model", source)
 
     def test_missing_parent_and_cycle_are_rejected(self):
         with self.assertRaisesRegex(ValueError, "Missing Model parent"):
@@ -97,9 +97,9 @@ class ModelClassAssemblyTests(unittest.TestCase):
                 "body": f"## Claim\n### Formal Claim\n```python\n{claim}```\n",
             }
         source = build_model_class_source([
-            carrier("Project", "CAPRMEDIO_MODEL", declaration("Project", "ScopeUnit")),
-            carrier("ScopeUnit", "CAPRMEDIO_MODEL", declaration("ScopeUnit")),
-            carrier("Engine", "CAPRMEDIO_STRUCTURE", "invalid Python\n"),
+            carrier("Project", "ANECHOIC_MODEL", declaration("Project", "ScopeUnit")),
+            carrier("ScopeUnit", "ANECHOIC_MODEL", declaration("ScopeUnit")),
+            carrier("Engine", "ANECHOIC_STRUCTURE", "invalid Python\n"),
         ])
         namespace = {}
         exec(source, namespace)
@@ -113,7 +113,7 @@ class ModelClassAssemblyTests(unittest.TestCase):
 
     def test_plain_claim_class_becomes_dataclass(self):
         claim = (
-            "from caprmedio.formal_claims import declare_entity\n"
+            "from anechoic.formal_claims import declare_entity\n"
             "class Item:\n    name: str\n"
             "declare_entity(entity_name='Item', entity_class=Item)\n"
         )
@@ -135,7 +135,7 @@ class ModelClassAssemblyTests(unittest.TestCase):
     def test_field_cardinality_is_materialized_without_a_claim_helper_import(self):
         claim = (
             "from dataclasses import dataclass, field\n"
-            "from caprmedio.formal_claims import Cardinality, declare_entity\n"
+            "from anechoic.formal_claims import Cardinality, declare_entity\n"
             "@dataclass\nclass Item:\n"
             "    name: str = field(metadata={'values': Cardinality(minimum=1, maximum=1)})\n"
             "declare_entity(entity_name='Item', entity_class=Item)\n"
@@ -143,7 +143,7 @@ class ModelClassAssemblyTests(unittest.TestCase):
         source = assemble_model_classes([claim])
         namespace = {}
         exec(source, namespace)
-        self.assertNotIn("caprmedio.formal_claims", source)
+        self.assertNotIn("anechoic.formal_claims", source)
         field = namespace["Item"].__dataclass_fields__["name"]
         self.assertEqual(field.metadata["values"], {"minimum": 1, "maximum": 1})
 
@@ -165,11 +165,11 @@ class ModelClassAssemblyTests(unittest.TestCase):
             "entity_class=Node)", "entity_class=Node, population_unique_constraints=({'keys': ('Identity',)},))"
         )
         property_claim = (
-            "from caprmedio.formal_claims import declare_entity\n"
+            "from anechoic.formal_claims import declare_entity\n"
             "declare_entity(entity_name='Identity', relation_name='IS_PROPERTY_OF', base_path='Node')\n"
         )
         relation_claim = (
-            "from caprmedio.formal_claims import declare_relation\n"
+            "from anechoic.formal_claims import declare_relation\n"
             "declare_relation(relation_name='IS_PROPERTY_OF', "
             "source_endpoint={'level': 'model_entities'}, target_endpoint={'level': 'model_entities'})\n"
         )
@@ -177,7 +177,7 @@ class ModelClassAssemblyTests(unittest.TestCase):
             return {
                 "source": {"path": subject + ".md", "atom_id": subject},
                 "read_view": {"status": "active", "content_role": "Requirement"},
-                "subjects": {"governs": "CAPRMEDIO_MODEL <+ " + subject},
+                "subjects": {"governs": "ANECHOIC_MODEL <+ " + subject},
                 "body": f"## Claim\n### Formal Claim\n```python\n{claim}```\n",
             }
         rows = [carrier("Node", node_claim), carrier("Node.Identity", property_claim),

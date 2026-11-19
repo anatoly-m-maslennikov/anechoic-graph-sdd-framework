@@ -14,7 +14,7 @@ version: 3
 updated_at: 2026-08-23 15:24:07
 relations:
   child_of:
-    - CAPRMEDIO-META-REQU-097--provenance-does-not-establish-ops-evidence
+    - ANECHOIC-META-REQU-097--provenance-does-not-establish-ops-evidence
 ---
 # Prohibit Lineage Impact Analysis from serving as Ops Evidence
 

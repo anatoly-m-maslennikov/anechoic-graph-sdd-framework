@@ -1,0 +1,59 @@
+---
+atom_id: CA-P-1825
+ref_id: CA-P-1825
+container:
+  atom: CA-P-1820
+role: Plan
+form: Plan
+label: Task
+topics:
+  main_subject: Subject/Graph Node/Engineering/Evaluation Implementation
+  dependencies:
+  - Subject/Graph Node/Engineering/Action
+  - Subject/Graph Node/Engineering/Continuant/Tool
+  - Subject/Graph Node/Engineering/Framework Package
+  - Subject/Graph Node/Engineering/Image
+  - Subject/Graph Node/Domain/Continuant/History/Journal
+  - 'Subject/Graph Node/Domain/Continuant/Actor/Type: Operator'
+tier: 3
+relations:
+  is_decomposition_of:
+  - CA-P-1820
+  blocks:
+  - CA-P-1822
+  - CA-P-1823
+  - CA-P-1824
+status: Done
+version: 10
+updated_at: 2026-10-25 17:32:27 +0400
+carrier_destination:
+  file:
+    name: 2-CA-P-1825-TASK--write-restoration-golden-and-regression-tests.md
+    path: .anechoic_anechoic/03_plan/done/15-CA-P-1117-EPIC--harvest-and-implement-session-derived-operations/10-CA-P-1620-TASK--deliver-release-version-workflow/6-CA-P-1820-TASK--restore-the-selected-retained-baseline-image/done
+work_sequence_number: 2
+current_scope_unit: anechoic
+author: Anatoly Maslennikov
+assignee: AI Agent
+autonomous_confidence_threshold: 90
+---
+# Summary
+
+Write restoration golden and regression tests
+
+## Objective
+
+Create real-byte retained-N golden fixtures and tests for the accepted restoration ABI before implementation; observe expected initial failures, then retain complete success/refusal/partial/recovery and existing-boundary regression coverage.
+
+## Details
+
+The Operator explicitly approved rebuilding the missing selected image from verified retained N and registering its verified image digest. Preserve N's package, Version, public ca Skill, original proof and historical Journal. N21 remains unknown and is not replayed. No release gate is waived. Root owns Git, source admission and serialized runtime effects; independent workers own their assigned source scopes.
+
+Work estimate: <=15 minutes; add a necessary remainder before expanding beyond this bound. Source RMED is reviewed before implementation. Test-first acceptance uses honest local doubles separately from actual Docker proof.
+
+## Definition of Done
+
+Tests and golden fixtures cover unchanged package/Skill, same and different image IDs, filtered context, tamper/drift/shared-lock cases, timeout/partial/recording recovery and O180 preservation. An initial run demonstrates the expected missing-implementation failure, and review accepts that the saved tests express the source contract. This authoring Task can then complete before implementation. Final passing focused/regression tests and actual Docker proof are required by CA-P-1826, not prerequisites for authoring the tests.
+
+## Result
+
+Initial missing-implementation failures were retained before code. The final corpus covers both image-ID branches, admission/refusal, partial/uncertain outcomes and exact pending Journal recovery. Thirteen focused coordinator tests pass; all command-boundary doubles remain explicitly non-live evidence.

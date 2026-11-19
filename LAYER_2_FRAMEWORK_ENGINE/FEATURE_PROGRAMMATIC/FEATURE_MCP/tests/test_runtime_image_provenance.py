@@ -25,14 +25,14 @@ def _display_tag_executor(executor):
             tagged.add(command[-1])
             sources[command[-1]] = command[-2]
             return subprocess.CompletedProcess(argv, 0, "", "")
-        if command[:3] == ("docker", "image", "inspect") and command[-1].startswith("caprmedio-runtime:"):
+        if command[:3] == ("docker", "image", "inspect") and command[-1].startswith("anechoic-runtime:"):
             tag = command[-1]
             if tag not in tagged:
                 return subprocess.CompletedProcess(argv, 1, "", "")
             value = json.loads(inspections[sources[tag]])
             value[0]["RepoTags"] = [tag]
             return subprocess.CompletedProcess(argv, 0, json.dumps(value), "")
-        if command[:3] == ("docker", "image", "ls") and command[-1].startswith("caprmedio-runtime:"):
+        if command[:3] == ("docker", "image", "ls") and command[-1].startswith("anechoic-runtime:"):
             return subprocess.CompletedProcess(argv, 0, "", "")
         result = executor(argv, **kwargs)
         if command[:3] == ("docker", "image", "inspect") and result.returncode == 0:
@@ -51,7 +51,7 @@ class ImageProvenanceTests(unittest.TestCase):
         self.owner = ImageBuildProvenance(
             "c" * 64,
             "/owning-repository",
-            ".caprmedio_caprmedio",
+            ".anechoic_anechoic",
             "Named Project",
             "d" * 40,
         )
@@ -111,7 +111,7 @@ class ImageProvenanceTests(unittest.TestCase):
         self.assertEqual(sum("build" in call for call in calls), 1)
 
     def test_cached_unlabelled_and_foreign_images_are_reused_without_claiming_owner(self) -> None:
-        for metadata in ({}, {"org.caprmedio.project": "f" * 64}):
+        for metadata in ({}, {"org.anechoic.project": "f" * 64}):
             with self.subTest(metadata=metadata):
                 calls: list[list[str]] = []
                 manager = ImageManager(
@@ -148,7 +148,7 @@ class ImageProvenanceTests(unittest.TestCase):
                 manager.executor = _display_tag_executor(executor)
                 self.assertEqual(manager.resolve(), fixtures.IMAGE_ID)
                 self.assertFalse(any("build" in call for call in calls))
-                self.assertNotIn("org.caprmedio.source.head_commit", labels)
+                self.assertNotIn("org.anechoic.source.head_commit", labels)
 
     def test_fresh_build_with_missing_provenance_label_is_refused(self) -> None:
         labels: dict[str, str] = {}
@@ -164,7 +164,7 @@ class ImageProvenanceTests(unittest.TestCase):
                         if value == "--label"
                     )
                 )
-                labels.pop("org.caprmedio.source.head_commit")
+                labels.pop("org.anechoic.source.head_commit")
                 Path(argv[argv.index("--iidfile") + 1]).write_text(fixtures.IMAGE_ID)
             return subprocess.CompletedProcess(
                 argv,

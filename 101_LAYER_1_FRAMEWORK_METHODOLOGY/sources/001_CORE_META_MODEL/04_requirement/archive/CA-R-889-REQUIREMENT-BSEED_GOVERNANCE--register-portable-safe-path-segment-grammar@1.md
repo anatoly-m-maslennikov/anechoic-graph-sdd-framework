@@ -8,7 +8,7 @@ llm_session_ids:
 relations:
   child_of:
     - CA-R-888
-    - CAPRMEDIO-GOV-REQU-345--represent-accepted-meaning-faithfully
+    - ANECHOIC-GOV-REQU-345--represent-accepted-meaning-faithfully
 ---
 # Register portable-safe path-segment grammar
 

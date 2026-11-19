@@ -30,12 +30,12 @@ class SettingsCarrierTest(unittest.TestCase):
     def test_project_schema_write_rejects_unsupported_fields(self):
         valid = ('schema_version = "2.0"\n[project]\nname = "demo"\n'
                  '[artifacts.identity]\nproject_prefix = "DEMO"\n'
-                 '[paths]\ncontrol_root = ".caprmedio_demo"\n')
+                 '[paths]\ncontrol_root = ".anechoic_demo"\n')
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "settings.toml"
             write_settings_carrier(path, valid, validate=_parse_settings)
             self.assertEqual(_parse_settings(read_settings_carrier(path))[:3],
-                             ("demo", "DEMO", ".caprmedio_demo"))
+                             ("demo", "DEMO", ".anechoic_demo"))
             before = path.read_bytes()
             with self.assertRaises(ValueError):
                 write_settings_carrier(path, valid + '[historical]\nvalue = 1\n', validate=_parse_settings)

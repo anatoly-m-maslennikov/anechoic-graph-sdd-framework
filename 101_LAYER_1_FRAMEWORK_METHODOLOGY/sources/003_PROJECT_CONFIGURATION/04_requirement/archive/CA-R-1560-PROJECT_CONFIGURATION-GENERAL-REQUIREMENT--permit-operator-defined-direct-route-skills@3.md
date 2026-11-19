@@ -1,9 +1,9 @@
 ---
 subjects:
-  governs: "CAPRMEDIO Direct Route Skill Addition"
+  governs: "ANECHOIC Direct Route Skill Addition"
   depends_on:
     - "Operator"
-    - "CAPRMEDIO Direct Route Skill"
+    - "ANECHOIC Direct Route Skill"
 version: 3
 updated_at: "2026-09-21 00:39:50 +0000"
 relations: {}
@@ -18,4 +18,4 @@ type: "Requirement"
 ---
 # Permit Operator-Defined Direct Route Skills
 
-the Operator **may** add a CAPRMEDIO Direct Route Skill.
+the Operator **may** add a ANECHOIC Direct Route Skill.

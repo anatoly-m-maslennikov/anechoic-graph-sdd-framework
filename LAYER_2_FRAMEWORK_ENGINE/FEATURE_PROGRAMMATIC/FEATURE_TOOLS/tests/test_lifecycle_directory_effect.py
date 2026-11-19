@@ -14,7 +14,7 @@ from ATOM_LIFECYCLE import directory_effect, effects  # noqa: E402
 
 class DirectoryEffectTest(unittest.TestCase):
     def setUp(self):
-        parent = ROOT / ".caprmedio_tmp/CA-P-2791/CA-P-2934/carrier-effects"
+        parent = ROOT / ".anechoic_tmp/CA-P-2791/CA-P-2934/carrier-effects"
         parent.mkdir(parents=True, exist_ok=True)
         self.temp = tempfile.TemporaryDirectory(dir=parent)
         self.base = Path(self.temp.name)

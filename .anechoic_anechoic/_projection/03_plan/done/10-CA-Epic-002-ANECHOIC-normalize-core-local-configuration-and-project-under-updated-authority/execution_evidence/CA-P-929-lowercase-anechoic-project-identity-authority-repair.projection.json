@@ -1,0 +1,52 @@
+{
+  "authority": "non_authoritative_execution_evidence",
+  "completed_at": "2026-08-30T19:44:59+04:00",
+  "schema": "anechoic.project_identity_authority_repair.execution.v1",
+  "task_atom_id": "CA-P-929",
+  "result": "anechoic_project_identity_authority_repaired",
+  "identity_distinction": {
+    "framework_name": "ANECHOIC",
+    "project_key": "anechoic",
+    "project_name": "anechoic",
+    "project_atom_id_prefix": "CA",
+    "immutable_admitted_atom_ids": "unchanged"
+  },
+  "changed_authority_atoms": [
+    {
+      "atom_id": "ANECHOIC-REQU-051",
+      "revision": 5,
+      "carrier_path": ".anechoic_anechoic/04_requirement/ANECHOIC-REQU-051--use-anechoic-as-the-canonical-project-name.md",
+      "predecessor_archive": ".anechoic_anechoic/04_requirement/archive/ANECHOIC-REQU-051--use-anechoic-as-the-canonical-project-name@4.md"
+    },
+    {
+      "atom_id": "CA-R-1223",
+      "revision": 2,
+      "carrier_path": ".anechoic_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/003_LOCAL_CONFIGURATION/04_requirement/CA-R-1223-REQUIREMENT--identify-anechoic-as-the-current-project.md",
+      "predecessor_archive": ".anechoic_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/003_LOCAL_CONFIGURATION/04_requirement/archive/CA-R-1223-REQUIREMENT--identify-anechoic-as-the-current-project@1.md"
+    }
+  ],
+  "native_project_configuration": {
+    "atom_id": "ANECHOIC-I-001",
+    "revision": 4,
+    "carrier_path": ".anechoic_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/003_LOCAL_CONFIGURATION/anechoic_framework_settings.toml",
+    "sha256": "78d6669cb1d13cd4098ba182144633e339eb08d16b72decb3d52853521e1b306"
+  },
+  "revision_digest_receipt": {
+    "carrier_path": ".anechoic_anechoic/work_journal/anatoly-m-maslennikov-2026-08-30-part-1.ndjson",
+    "event_id": "59613820628308f1ee20b996b6af1bc77dc04539e6e001e922b022474e5ec10c",
+    "event": "completed",
+    "kind": "governed_project_change",
+    "action_type": "UPDATE",
+    "schema_version": 3,
+    "receipt_bound": true
+  },
+  "validation": {
+    "active_uppercase_project_identity_authorities": 0,
+    "native_carrier_sha256_matches_receipt": true,
+    "project_key_equals_project_name": true,
+    "project_key_and_name_are_lowercase_anechoic": true,
+    "framework_name_unchanged": true,
+    "project_atom_id_prefix_unchanged": true,
+    "predecessor_archives_exact": true
+  }
+}

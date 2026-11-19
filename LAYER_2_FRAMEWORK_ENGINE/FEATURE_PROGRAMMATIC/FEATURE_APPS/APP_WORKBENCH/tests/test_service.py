@@ -73,26 +73,26 @@ class ServiceTests(unittest.TestCase):
         with patch("APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service.SourceReader"):
             service = WorkbenchService(Path("/project"), **empty_assets())
 
-        with patch("APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service.configured_journal_root", return_value=Path(".caprmedio_caprmedio/_journal")):
+        with patch("APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service.configured_journal_root", return_value=Path(".anechoic_anechoic/_journal")):
             self.assertTrue(service._journal_only([
-                {"operation": "update", "old_path": None, "new_path": ".caprmedio_caprmedio/_journal/workbench-saved-items.ndjson"},
+                {"operation": "update", "old_path": None, "new_path": ".anechoic_anechoic/_journal/workbench-saved-items.ndjson"},
             ]))
             self.assertFalse(service._journal_only([
-                {"operation": "update", "old_path": None, "new_path": ".caprmedio_caprmedio/_journal/workbench-saved-items.ndjson"},
-                {"operation": "update", "old_path": None, "new_path": ".caprmedio_caprmedio/04_requirement/CA-R-1.md"},
+                {"operation": "update", "old_path": None, "new_path": ".anechoic_anechoic/_journal/workbench-saved-items.ndjson"},
+                {"operation": "update", "old_path": None, "new_path": ".anechoic_anechoic/04_requirement/CA-R-1.md"},
             ]))
             self.assertFalse(service._journal_only([
                 {
                     "operation": "move",
-                    "old_path": ".caprmedio_caprmedio/_journal/workbench-saved-items.ndjson",
-                    "new_path": ".caprmedio_caprmedio/04_requirement/CA-R-1.md",
+                    "old_path": ".anechoic_anechoic/_journal/workbench-saved-items.ndjson",
+                    "new_path": ".anechoic_anechoic/04_requirement/CA-R-1.md",
                 },
             ]))
 
     def test_watcher_rejects_sources_outside_the_selected_repository(self):
         reader = unittest.mock.Mock()
         reader.root = Path("/mounted/current-repo")
-        reader.control_root = Path("/mounted/another-repo/.caprmedio_another")
+        reader.control_root = Path("/mounted/another-repo/.anechoic_another")
         with (
             patch("APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service.SourceReader", return_value=reader),
             redirect_stderr(StringIO()) as errors,
@@ -107,8 +107,8 @@ class ServiceTests(unittest.TestCase):
     def test_watcher_batch_logs_then_refreshes_on_the_owner_thread(self):
         reader = unittest.mock.Mock()
         reader.root = Path("/project")
-        reader.control_root = Path("/project/.caprmedio_project")
-        event = {"operation": "update", "old_path": None, "new_path": ".caprmedio_project/04_requirement/CA-R-1.md"}
+        reader.control_root = Path("/project/.anechoic_project")
+        event = {"operation": "update", "old_path": None, "new_path": ".anechoic_project/04_requirement/CA-R-1.md"}
         reader._source_paths = {reader.root / event["new_path"]}
         reader._archive_paths = set()
         watcher = unittest.mock.Mock()
@@ -117,7 +117,7 @@ class ServiceTests(unittest.TestCase):
         with (
             patch("APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service.SourceReader", return_value=reader),
             patch("APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service.SourceWatcher", return_value=watcher),
-            patch("APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service.configured_journal_root", return_value=Path(".caprmedio_project/_journal")),
+            patch("APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service.configured_journal_root", return_value=Path(".anechoic_project/_journal")),
         ):
             service = WorkbenchService(reader.root, **empty_assets())
             service._store = unittest.mock.Mock()
@@ -149,8 +149,8 @@ class ServiceTests(unittest.TestCase):
     def test_watcher_logs_unchanged_file_without_refreshing_it(self):
         reader = unittest.mock.Mock()
         reader.root = Path("/project")
-        reader.control_root = Path("/project/.caprmedio_project")
-        event = {"operation": "update", "old_path": None, "new_path": ".caprmedio_project/04_requirement/CA-R-1.md"}
+        reader.control_root = Path("/project/.anechoic_project")
+        event = {"operation": "update", "old_path": None, "new_path": ".anechoic_project/04_requirement/CA-R-1.md"}
         path = reader.root / event["new_path"]
         signature = (1, 2, 3, 4, 5)
         reader._source_paths = {path}
@@ -163,7 +163,7 @@ class ServiceTests(unittest.TestCase):
             patch("APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service.SourceReader", return_value=reader),
             patch("APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service.SourceWatcher", return_value=watcher),
             patch("APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service.file_signature", return_value=signature),
-            patch("APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service.configured_journal_root", return_value=Path(".caprmedio_project/_journal")),
+            patch("APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service.configured_journal_root", return_value=Path(".anechoic_project/_journal")),
         ):
             service = WorkbenchService(reader.root, **empty_assets())
             service._store = unittest.mock.Mock()
@@ -278,7 +278,7 @@ class ServiceTests(unittest.TestCase):
     def test_existing_invalid_runtime_ttl_stops_startup(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            settings = root / ".caprmedio_runtime" / "caprmedio_runtime_settings.toml"
+            settings = root / ".anechoic_runtime" / "anechoic_runtime_settings.toml"
             settings.parent.mkdir()
             settings.write_text("[workbench]\nresult_ttl_seconds = 0\n", encoding="utf-8")
             with (

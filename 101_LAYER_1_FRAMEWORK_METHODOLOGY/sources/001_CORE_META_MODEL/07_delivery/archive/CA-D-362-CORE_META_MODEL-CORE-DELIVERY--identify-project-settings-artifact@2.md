@@ -13,8 +13,8 @@ version: 2
 updated_at: "2026-09-09 23:04:14 +0400"
 relations:
   child_of:
-    - CAPRMEDIO-META-REQU-619
+    - ANECHOIC-META-REQU-619
 ---
 # Identify Project Settings Artifact
 
-the Identifier of Project Settings for a Project named `<project_name>` **must** be `caprmedio_<project_name>_settings`.
+the Identifier of Project Settings for a Project named `<project_name>` **must** be `anechoic_<project_name>_settings`.

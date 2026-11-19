@@ -16,4 +16,4 @@ type: "Delivery"
 ---
 # Classify Carriers by Ownership
 
-**every** internal CAPRMEDIO Carrier **must** have **`=1`** Ownership Class **in** (Framework-Owned, Project-Owned, Runtime State).
+**every** internal ANECHOIC Carrier **must** have **`=1`** Ownership Class **in** (Framework-Owned, Project-Owned, Runtime State).

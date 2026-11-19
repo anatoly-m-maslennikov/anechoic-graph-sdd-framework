@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL
+  main_subject: ANECHOIC_MODEL
 tier: 3
 status: active
 version: 3
@@ -14,7 +14,7 @@ updated_at: 2026-11-05 14:25:52 +0400
 carrier_destination:
   file:
     name: CA-R-2768-CORE_META_MODEL-RULE--assign-a-default-when-an-object-property-is-absent.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 ---
 ## Summary
 

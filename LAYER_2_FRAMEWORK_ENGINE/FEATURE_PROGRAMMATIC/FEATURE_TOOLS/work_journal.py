@@ -25,26 +25,26 @@ from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
 
 MODULE_PATH = Path(__file__).resolve()
 for _parent in MODULE_PATH.parents:
-    if _parent.name == ".caprmedio_runtime":
-        sys.pycache_prefix = str(_parent.parent / ".caprmedio_tmp" / "cache" / "python")
+    if _parent.name == ".anechoic_runtime":
+        sys.pycache_prefix = str(_parent.parent / ".anechoic_tmp" / "cache" / "python")
         break
-    if _parent.name == ".caprmedio_install":
-        sys.pycache_prefix = str(_parent.parent / ".caprmedio_tmp" / "cache" / "python")
+    if _parent.name == ".anechoic_install":
+        sys.pycache_prefix = str(_parent.parent / ".anechoic_tmp" / "cache" / "python")
         break
-    if _parent.name == ".caprmedio":
-        sys.pycache_prefix = str(_parent.parent / ".caprmedio_tmp" / "cache" / "python")
+    if _parent.name == ".anechoic":
+        sys.pycache_prefix = str(_parent.parent / ".anechoic_tmp" / "cache" / "python")
         break
 
 
-SETTINGS_PATH = Path(".caprmedio_caprmedio/caprmedio_project_settings.toml")
+SETTINGS_PATH = Path(".anechoic_anechoic/anechoic_project_settings.toml")
 MAX_EVENTS_PER_PART = 1000
 AUTHOR_RE = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$")
 
 
 def _settings_control_relative(value: str | Path) -> Path:
     path = Path(value)
-    if (path.is_absolute() or len(path.parts) != 1 or path.name == ".caprmedio_"
-            or not path.name.startswith(".caprmedio_") or str(value) != path.as_posix()
+    if (path.is_absolute() or len(path.parts) != 1 or path.name == ".anechoic_"
+            or not path.name.startswith(".anechoic_") or str(value) != path.as_posix()
             or protected(path)):
         raise RuntimeError("paths.control_root must name one normalized direct Project child")
     return path
@@ -67,12 +67,12 @@ def _read_project_settings(root: Path, control_root: str | Path | None = None) -
                 candidates = []
                 with os.scandir(descriptor) as entries:
                     for entry in entries:
-                        if not entry.name.startswith(".caprmedio_"):
+                        if not entry.name.startswith(".anechoic_"):
                             continue
                         if entry.is_symlink():
                             raise RuntimeError("Project control candidates must not be symlinks")
                         if entry.is_dir(follow_symlinks=False) and os.path.lexists(
-                            project / entry.name / "caprmedio_project_settings.toml"
+                            project / entry.name / "anechoic_project_settings.toml"
                         ):
                             candidates.append(_settings_control_relative(entry.name))
                 if len(candidates) != 1:
@@ -82,7 +82,7 @@ def _read_project_settings(root: Path, control_root: str | Path | None = None) -
                 relative = _settings_control_relative(control_root)
         finally:
             os.close(descriptor)
-        settings_path = project / relative / "caprmedio_project_settings.toml"
+        settings_path = project / relative / "anechoic_project_settings.toml"
         reader = ReadContext(roots=[str(project)], limits=dict(CEILINGS))
         settings = read_settings_carrier(settings_path, read_bytes=reader.read)
         paths = settings.get("paths")

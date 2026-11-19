@@ -8,7 +8,7 @@ context:
   role: Requirement
   form: Rule
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ Relation
+    main_subject: ANECHOIC_MODEL <+ Relation
   tier: 1
 state:
   status: Active
@@ -17,11 +17,11 @@ state:
 destination:
   file:
     name: CA-R-807-CORE_META_MODEL-RULE--record-replacement-transitions-in-the-journal.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-807-CORE_META_MODEL-RULE--record-replacement-transitions-in-the-journal.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-807-CORE_META_MODEL-RULE--record-replacement-transitions-in-the-journal.md
   source_atom_id: CA-R-807
   source_atom_revision: 36
   source_sha256: 08ab68f016ace5c712e54160fb5c8c56b7f3647d13a7964d06e3d5f96950a6e6

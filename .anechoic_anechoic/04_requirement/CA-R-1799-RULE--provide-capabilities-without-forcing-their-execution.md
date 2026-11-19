@@ -1,0 +1,47 @@
+---
+atom_id: CA-R-1799
+ref_id: CA-R-1799
+container:
+  scope_unit: CA-SU-00
+role: Requirement
+form: Rule
+topics:
+  main_subject: ANECHOIC_STRUCTURE <+ Aspects <+ Product
+  dependencies:
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Actor/Operator
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Requirement)
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow)'
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Action)'
+tier: 4
+relations:
+  child_of:
+  - CA-R-2157
+status: Active
+version: 20
+updated_at: 2026-11-02 18:35:20 +0400
+carrier_destination:
+  file:
+    name: CA-R-1799-ANECHOIC-RULE--provide-capabilities-without-forcing-their-execution.md
+    path: .anechoic_anechoic/04_requirement
+current_scope_unit: anechoic
+claim_target_scope_unit: anechoic
+---
+## Summary
+
+Provide capabilities **without** forcing their execution
+
+## Claim
+
+### Prose Claim
+
+
+capabilities provided by the ANECHOIC Framework Instance.
+
+
+the ANECHOIC Framework Instance **must** provide capabilities for the Operator **without** initiating **or** forcing their execution independently of Operator authorization.
+
+## Details
+
+- a Requirement **to** provide a capability specifies what is available **to** the Operator; it does **not** itself authorize **or** trigger execution.
+- execution follows direct Operator instruction **or** explicit prior authorization. prior authorization **may** cover a Workflow **or** automation **and** its Actions within the authorized targets **and** constraints; separate approval for **every** covered Action is **not** required.
+- required outcomes, validation gates, **and** safeguards remain binding **when** an authorized capability executes. capability wording does **not** make those conditions optional.

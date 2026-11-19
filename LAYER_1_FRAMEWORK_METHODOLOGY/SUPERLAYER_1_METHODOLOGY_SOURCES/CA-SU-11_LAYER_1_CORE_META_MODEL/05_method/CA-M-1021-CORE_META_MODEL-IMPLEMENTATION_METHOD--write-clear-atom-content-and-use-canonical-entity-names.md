@@ -7,11 +7,11 @@ context:
   form: Implementation Method
   tier: 4
   topics:
-    main_subject: CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+
+    main_subject: ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+
       Authoring
     dependencies:
-    - CAPRMEDIO_MODEL <+ Actor
-    - CAPRMEDIO_MODEL <+ Atom.Content
+    - ANECHOIC_MODEL <+ Actor
+    - ANECHOIC_MODEL <+ Atom.Content
   container:
     scope_unit: CA-SU-11
 state:
@@ -21,7 +21,7 @@ state:
 destination:
   file:
     name: CA-M-1021-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-clear-atom-content-and-use-canonical-entity-names.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
 ---
 ## Summary
 

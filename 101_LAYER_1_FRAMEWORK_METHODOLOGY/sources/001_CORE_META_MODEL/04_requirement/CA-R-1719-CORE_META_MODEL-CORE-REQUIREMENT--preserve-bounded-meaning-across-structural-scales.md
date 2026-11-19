@@ -22,10 +22,10 @@ Preserve bounded meaning across structural scales
 
 ## Scope
 
-recursive application of CAPRMEDIO meanings at structural scales.
+recursive application of ANECHOIC meanings at structural scales.
 
 ## Claim
 
-a CAPRMEDIO invariant, claim, relation, **or** classification retains the same meaning **when** applied recursively at the Project root **or** **any** configured descendant structural scope. **every** use remains bounded **to** its declared scope **and** applicability; recursion does **not** widen authority, evidence, evaluation, **or** implementation coverage.
+a ANECHOIC invariant, claim, relation, **or** classification retains the same meaning **when** applied recursively at the Project root **or** **any** configured descendant structural scope. **every** use remains bounded **to** its declared scope **and** applicability; recursion does **not** widen authority, evidence, evaluation, **or** implementation coverage.
 
 ## Details

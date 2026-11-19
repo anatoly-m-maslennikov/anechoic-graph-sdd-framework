@@ -12,7 +12,7 @@ version: 16
 updated_at: "2026-10-03 02:57:13 +0400"
 relations:
   child_of:
-    - CAPRMEDIO-REQU-033-REQUIREMENT--preserve-ancestor-core-authority-across-structural-levels
+    - ANECHOIC-REQU-033-REQUIREMENT--preserve-ancestor-core-authority-across-structural-levels
 atom_id: "CA-R-1748"
 content_role: "Requirement"
 current_scope_unit: "CORE_META_MODEL"
@@ -35,7 +35,7 @@ Applicable inherited authority in descendant Scope Units and specializations wit
 applicable inherited authority **must** remain effective **in** a descendant Scope Unit **unless** that authority explicitly permits a specialization **and** the specialization stays within the permitted boundary.
 
 - the specialization **must not** change the parent meaning outside its declared descendant scope.
-- ancestor Core authority remains protected under CAPRMEDIO-REQU-033-REQUIREMENT--preserve-ancestor-core-authority-across-structural-levels; a child declaration **or** an override label does **not** grant permission **to** weaken it.
+- ancestor Core authority remains protected under ANECHOIC-REQU-033-REQUIREMENT--preserve-ancestor-core-authority-across-structural-levels; a child declaration **or** an override label does **not** grant permission **to** weaken it.
 - Extension **and** Project Configuration additions **must** also preserve Core Meta-Model authority at **every** Local Tier under CA-R-1375-CORE_META_MODEL-CORE--restrict-methodology-source-expansion-to-core-permission. changing the descendant's local rank **or** retaining unchanged Core Carrier bytes does **not** bypass that boundary.
 
 ## Details

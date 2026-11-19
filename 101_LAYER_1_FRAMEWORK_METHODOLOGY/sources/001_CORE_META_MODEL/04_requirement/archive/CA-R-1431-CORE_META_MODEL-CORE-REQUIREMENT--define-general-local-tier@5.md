@@ -18,6 +18,6 @@ llm_session_ids:
 ---
 # Define General Local Tier
 
-the Local Tier value General **means** the Spec tier of reusable rules governing Standard content across CAPRMEDIO, subject **to** Core foundations.
+the Local Tier value General **means** the Spec tier of reusable rules governing Standard content across ANECHOIC, subject **to** Core foundations.
 
 such a rule constrains permitted properties, relationships, behavior, construction, checks, **or** representation **without** becoming the particular Concern, Analysis, Plan, Workflow, Action, **or** Implementation it governs.

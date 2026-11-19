@@ -23,7 +23,7 @@ class AppServer:
         self._events, self._next_id = on_event, 1
         self._responses: dict[int | str, dict[str, Any]] = {}
         self._waiting = threading.Condition()
-        override = f"mcp_servers.caprmedio.url={json.dumps(mcp_url)}"
+        override = f"mcp_servers.anechoic.url={json.dumps(mcp_url)}"
         self.process = subprocess.Popen(
             [codex, "-c", override, "app-server"],
             cwd=project_root,
@@ -35,7 +35,7 @@ class AppServer:
         )
         self._reader = threading.Thread(target=self._read, daemon=True)
         self._reader.start()
-        self.request("initialize", {"clientInfo": {"name": "caprmedio-workbench", "version": "1"}})
+        self.request("initialize", {"clientInfo": {"name": "anechoic-workbench", "version": "1"}})
         self._write({"jsonrpc": "2.0", "method": "initialized", "params": {}})
 
     def _read(self) -> None:

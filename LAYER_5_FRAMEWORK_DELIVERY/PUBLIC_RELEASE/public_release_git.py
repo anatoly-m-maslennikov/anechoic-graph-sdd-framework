@@ -96,7 +96,7 @@ def _create_pr(command: Command, repository: str, description: str) -> str:
             "--base",
             "main",
             "--title",
-            "CAPRMEDIO public release",
+            "ANECHOIC public release",
             "--body",
             description,
         )

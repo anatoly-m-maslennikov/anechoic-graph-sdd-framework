@@ -10,7 +10,7 @@ updated_at: "2026-10-03 02:39:08 +0400"
 relations:
   child_of:
     - CA-R-831-CORE-REQUIREMENT--add-reusable-capabilities-through-extensions
-    - CAPRMEDIO-REQU-686-CORE-REQUIREMENT--separate-core-extension-and-project-configuration-authority
+    - ANECHOIC-REQU-686-CORE-REQUIREMENT--separate-core-extension-and-project-configuration-authority
 atom_id: "CA-R-1722"
 content_role: "Requirement"
 current_scope_unit: "CORE_META_MODEL"

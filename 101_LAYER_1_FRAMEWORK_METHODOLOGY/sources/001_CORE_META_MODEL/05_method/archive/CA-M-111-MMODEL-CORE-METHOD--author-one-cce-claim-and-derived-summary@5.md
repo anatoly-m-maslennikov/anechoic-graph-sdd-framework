@@ -15,8 +15,8 @@ relations:
 ---
 # Author one CCE Claim and derived Summary
 
-TO author one CAPRMEDIO Atom Claim, the Author MUST PERFORM ALL OF:
+TO author one ANECHOIC Atom Claim, the Author MUST PERFORM ALL OF:
 
-1. Write exactly one authority-bearing Claim in human-readable CAPRMEDIO Controlled English.
+1. Write exactly one authority-bearing Claim in human-readable ANECHOIC Controlled English.
 2. Use one registered statement form with one precise interpretation.
 3. Derive the H1, Summary, filename Summary slug, and any Translation from the Claim.

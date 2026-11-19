@@ -14,7 +14,7 @@ class NativeModelClaimError(ValueError):
 _DECLARATIONS = {"declare_entity": "entity", "declare_relation": "relation"}
 _BUILTINS = {"str", "int", "bool", "float", "bytes", "list", "tuple", "dict", "set", "object"}
 _IMPORTS = {
-    "caprmedio.formal_claims": {"declare_entity", "declare_relation", "Cardinality"},
+    "anechoic.formal_claims": {"declare_entity", "declare_relation", "Cardinality"},
     "datetime": {"date", "datetime", "time", "timedelta"},
     "dataclasses": {"dataclass", "field"},
     "typing": {"Annotated", "ClassVar", "Literal", "Optional"},
@@ -359,7 +359,7 @@ def parse_native_model_claim(text: str) -> dict[str, Any] | None:  # noqa: C901
     for item in tree.body:
         if isinstance(item, ast.ImportFrom) and item.level == 0 and item.module:
             allowed = _IMPORTS.get(item.module)
-            if allowed is None and item.module != "caprmedio.model":
+            if allowed is None and item.module != "anechoic.model":
                 _fail(item, f"unsupported import: {item.module}")
             for alias in item.names:
                 if alias.asname or alias.name == "*" or (allowed is not None and alias.name not in allowed):
@@ -388,7 +388,7 @@ def parse_native_model_claim(text: str) -> dict[str, Any] | None:  # noqa: C901
     if declaration is None:
         raise NativeModelClaimError("declaration must be a top-level call")
     function = declaration.func.id
-    if imports.get(function) != "caprmedio.formal_claims":
+    if imports.get(function) != "anechoic.formal_claims":
         _fail(declaration, f"{function} must be imported")
     keywords = _keywords(declaration)
     if unknown := keywords.keys() - _DECLARATION_KEYS[function]:
@@ -401,7 +401,7 @@ def parse_native_model_claim(text: str) -> dict[str, Any] | None:  # noqa: C901
         if (function != "declare_entity" or not isinstance(value, ast.Call)
                 or not isinstance(value.func, ast.Name)
                 or value.func.id not in {"ScopeUnit", "Project", "Aspect", "ProjectManifest"}
-                or imports.get(value.func.id) != "caprmedio.model"):
+                or imports.get(value.func.id) != "anechoic.model"):
             _fail(value, "instance requires an imported ScopeUnit, Project, Aspect, or ProjectManifest")
         fields = {}
         for field, field_value in _keywords(value).items():
@@ -512,7 +512,7 @@ def parse_native_model_claim(text: str) -> dict[str, Any] | None:  # noqa: C901
                 or check.id not in {item["name"] for item in functions}):
             _fail(check, "instance_check must name a function declared in this Claim")
         model_types = {item["name"] for item in classes} | {
-            name for name, module in imports.items() if module == "caprmedio.model"
+            name for name, module in imports.items() if module == "anechoic.model"
         }
         callback = next(item for item in functions if item["name"] == check.id)
         if callback["parameter_type"] not in model_types:
@@ -706,7 +706,7 @@ def parse_native_model_claim(text: str) -> dict[str, Any] | None:  # noqa: C901
     result = {"kind": _DECLARATIONS[function], "arguments": arguments, "classes": tuple(classes),
               "imports": imports, "line": declaration.lineno}
     value_format_node = keywords.get("value_format")
-    if isinstance(value_format_node, ast.Name) and imports.get(value_format_node.id) == "caprmedio.model":
+    if isinstance(value_format_node, ast.Name) and imports.get(value_format_node.id) == "anechoic.model":
         result["model_value_format"] = value_format_node.id
     if functions:
         result["instance_check"] = functions[0]

@@ -15,7 +15,7 @@ version: 1
 updated_at: "2026-09-09 23:04:14 +0400"
 relations:
   child_of:
-    - "CAPRMEDIO-META-REQU-675"
+    - "ANECHOIC-META-REQU-675"
 ---
 # Separate settings boundaries from field specifications
 

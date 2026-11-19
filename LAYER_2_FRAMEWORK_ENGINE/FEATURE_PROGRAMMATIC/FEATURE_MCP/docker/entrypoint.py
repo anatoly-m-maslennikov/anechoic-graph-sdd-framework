@@ -45,7 +45,7 @@ def _process_failure(mode, error):
 
 
 def _shared_mcp_command():
-    settings = os.environ.get("CAPRMEDIO_HOST_SETTINGS")
+    settings = os.environ.get("ANECHOIC_HOST_SETTINGS")
     if not settings:
         raise ExplicitBlockingRuntimeFailure(
             "shared_host_settings_unavailable", "shared host settings are unavailable"
@@ -73,9 +73,9 @@ def _exec_service(mode):
             command += ["--transport", "streamable-http"]
         if mode in {"mcp", "mcp-http"}:
             for flag, key in (
-                ("--control-root", "CAPRMEDIO_CONTROL_ROOT"),
-                ("--instance-id", "CAPRMEDIO_PROJECT_INSTANCE_ID"),
-                ("--host-project-root", "CAPRMEDIO_HOST_PROJECT_ROOT"),
+                ("--control-root", "ANECHOIC_CONTROL_ROOT"),
+                ("--instance-id", "ANECHOIC_PROJECT_INSTANCE_ID"),
+                ("--host-project-root", "ANECHOIC_HOST_PROJECT_ROOT"),
             ):
                 if key in os.environ:
                     command += [flag, os.environ[key]]

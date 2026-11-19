@@ -7,7 +7,7 @@ context:
   form: Implementation Method
   tier: 4
   topics:
-    main_subject: CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+
+    main_subject: ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+
       Authoring
   container:
     scope_unit: CA-SU-11
@@ -18,9 +18,9 @@ state:
 destination:
   file:
     name: CA-M-1014-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-concise-prose-aligned-with-asd-ste100.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-1014-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-concise-prose-aligned-with-asd-ste100.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-1014-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-concise-prose-aligned-with-asd-ste100.md
   source_atom_id: CA-M-1014
   source_atom_revision: 2
   source_sha256: d9c3b3e71d3e88fde1e530d94dc4086be561bfd6f4db7208f89a28e93a2b6924

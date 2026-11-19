@@ -3,7 +3,7 @@ atom_id: CA-E-466
 cce_version: cce_1
 cce_form: evaluation
 subjects:
-  governs: "CAPRMEDIO Graph"
+  governs: "ANECHOIC Graph"
   depends_on:
     - "Single Source of Truth"
     - "Projection"
@@ -20,7 +20,7 @@ relations:
     - CA-R-1470
     - CA-R-1471
     - CA-R-1437
-    - CAPRMEDIO-META-REQU-657
+    - ANECHOIC-META-REQU-657
 ---
 # Validate Single Source of Truth in secondary graphs
 

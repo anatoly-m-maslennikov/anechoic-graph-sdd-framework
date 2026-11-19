@@ -210,7 +210,7 @@ class WorkbenchFunctionalTests(unittest.TestCase):
             ("reverse.md", "CA-R-511", "CONTAINS", "## Claim\n\n### Formal Claim\n\n```python\nrelation(source=\"Relation//CONTAINS\", name=\"HAS_INVERSE\", target=\"Relation//IS_CONTAINED_BY\", reverse=True)\n```\n"),
         )
         for name, atom_id, relation, body in declarations:
-            self.atom(name, atom_id, body=body, subjects=f"{{active: 'CAPRMEDIO_MODEL <+ CFEL <+ Relation//{relation}'}}")
+            self.atom(name, atom_id, body=body, subjects=f"{{active: 'ANECHOIC_MODEL <+ CFEL <+ Relation//{relation}'}}")
         self.service.close()
         self.service = WorkbenchService(self.root, extension_directory=extension_directory(APP_ROOT.parents[2]),
                                         archive_placement=fixture_rules(), **built_assets(self.root))
@@ -226,7 +226,7 @@ class WorkbenchFunctionalTests(unittest.TestCase):
         self.refresh()
         self.service.load_archives([{"scope_unit": "ENGINE", "role": "Requirement"}])
         self.assertEqual([["ENGINE", "CA-R-518"]], self.service.run(
-            "SELECT * FROM GRAPH_TABLE (caprmedio MATCH (a:Reference)-[e:CONTAINS]->(b:Reference) "
+            "SELECT * FROM GRAPH_TABLE (anechoic MATCH (a:Reference)-[e:CONTAINS]->(b:Reference) "
             "COLUMNS (a.ref AS owner, b.ref AS child)) WHERE child = 'CA-R-518'",
             result_delivery="inline",
         )["rows"])
@@ -245,7 +245,7 @@ class WorkbenchFunctionalTests(unittest.TestCase):
         )["rows"])
         before = self.service.run("SELECT hash FROM atoms WHERE \"header.atom_id\" = 'CA-P-512'", result_delivery="inline")["rows"][0][0]
         self.assertEqual([["CA-P-512", "CA-P-513", True]], self.service.run(
-            "SELECT * FROM GRAPH_TABLE (caprmedio MATCH (a:Reference)-[e:CONTAINS]->(b:Reference) "
+            "SELECT * FROM GRAPH_TABLE (anechoic MATCH (a:Reference)-[e:CONTAINS]->(b:Reference) "
             "COLUMNS (a.ref AS source_ref, b.ref AS target_ref, e.derived AS derived)) WHERE source_ref = 'CA-P-512'",
             result_delivery="inline",
         )["rows"])

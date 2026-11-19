@@ -16,7 +16,7 @@ def _claim_rows(rows):
 
     for row in rows:
         _, subject = header_value(row["header_json"], "topics.main_subject")
-        if not isinstance(subject, str) or not subject.startswith("CAPRMEDIO_MODEL"):
+        if not isinstance(subject, str) or not subject.startswith("ANECHOIC_MODEL"):
             continue
         source = row["source_path"]
         subject = _model_subject(subject, source)

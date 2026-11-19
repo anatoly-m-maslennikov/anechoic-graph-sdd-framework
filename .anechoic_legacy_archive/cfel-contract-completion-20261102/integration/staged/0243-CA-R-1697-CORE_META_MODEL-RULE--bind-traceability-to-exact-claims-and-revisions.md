@@ -21,11 +21,11 @@ Bind traceability to exact claims and revisions
 
 ## Claim scope
 
-CAPRMEDIO traceability assertions.
+ANECHOIC traceability assertions.
 
 ## Claim
 
-**every** CAPRMEDIO traceability assertion **must** identify the exact governed claim revision on which a receiving artifact, implementation target, evaluation use, delivery action, operational observation, **or** other governed result relies.
+**every** ANECHOIC traceability assertion **must** identify the exact governed claim revision on which a receiving artifact, implementation target, evaluation use, delivery action, operational observation, **or** other governed result relies.
 
 ## Details
 

@@ -6,11 +6,11 @@ container:
 role: Evaluation
 form: Eval Policy
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Carrier/File
+  main_subject: ANECHOIC_MODEL <+ Carrier/File
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Carrier/File
-  - CAPRMEDIO_MODEL <+ Project
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Carrier/File
+  - ANECHOIC_MODEL <+ Project
 tier: 4
 relations:
   evaluation_for:
@@ -24,11 +24,11 @@ updated_at: 2026-11-02 00:18:22 +0400
 carrier_destination:
   file:
     name: CA-E-457-CORE_META_MODEL-EVAL_POLICY--validate-authoritative-markdown-atom-carriers.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-457-CORE_META_MODEL-POLICY--validate-authoritative-markdown-atom-carriers.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-457-CORE_META_MODEL-POLICY--validate-authoritative-markdown-atom-carriers.md
   source_atom_id: CA-E-457
   source_atom_revision: 34
   source_sha256: 48c2c9d931304bcb879c66a965b3604085ee2cc252be4c916ffbf32620f79c21

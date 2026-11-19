@@ -6,8 +6,8 @@ version: 2
 updated_at: 2026-08-22 01:56:15
 relations:
   child_of:
-    - CAPRMEDIO-REQU-045--separate-hierarchy-dimensions
-    - CAPRMEDIO-META-REQU-718--separate-structural-ownership-from-cross-unit-flow
+    - ANECHOIC-REQU-045--separate-hierarchy-dimensions
+    - ANECHOIC-META-REQU-718--separate-structural-ownership-from-cross-unit-flow
 ---
 # Separate control, dependency, and result flow
 

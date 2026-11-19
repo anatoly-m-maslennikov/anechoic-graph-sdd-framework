@@ -6,14 +6,14 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
+  main_subject: ANECHOIC_MODEL <+ Atom.Header.Context.Topics
   dependencies:
-  - CAPRMEDIO_MODEL <+ Term//Property
-  - CAPRMEDIO_MODEL <+ Entity/Property
-  - CAPRMEDIO_MODEL <+ Relation//IS_PROPERTY_OF
-  - CAPRMEDIO_MODEL <+ Relation//HAS_CLASSIFICATION
-  - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Package <+ Module <+ Code Unit
+  - ANECHOIC_MODEL <+ Term//Property
+  - ANECHOIC_MODEL <+ Entity/Property
+  - ANECHOIC_MODEL <+ Relation//IS_PROPERTY_OF
+  - ANECHOIC_MODEL <+ Relation//HAS_CLASSIFICATION
+  - ANECHOIC_MODEL <+ Entity
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Package <+ Module <+ Code Unit
 tier: 3
 status: Active
 version: 20
@@ -21,11 +21,11 @@ updated_at: '2026-11-11T18:31:44+04:00'
 carrier_destination:
   file:
     name: CA-R-1931-CORE_META_MODEL-RULE--use-subject-path-separators-for-broader-to-narrower-and-bearer-to-dependent.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1931-CORE_META_MODEL-RULE--use-subject-path-separators-for-broader-to-narrower-and-bearer-to-dependent.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1931-CORE_META_MODEL-RULE--use-subject-path-separators-for-broader-to-narrower-and-bearer-to-dependent.md
   source_atom_id: CA-R-1931
   source_atom_revision: 20
   source_sha256: 3578cd117b6c576df7972b3ab138734ccbf2b7bd2822870109ad1265dc859d5b

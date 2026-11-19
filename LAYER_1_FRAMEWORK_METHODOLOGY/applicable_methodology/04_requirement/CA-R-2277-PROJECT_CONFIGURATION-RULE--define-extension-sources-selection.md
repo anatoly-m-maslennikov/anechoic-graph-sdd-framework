@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_STRUCTURE <+ Named Selection//Extension Sources
+  main_subject: ANECHOIC_STRUCTURE <+ Named Selection//Extension Sources
 tier: 1
 status: active
 version: 5
@@ -14,10 +14,10 @@ updated_at: '2026-11-13T05:19:34.086915+00:00'
 carrier_destination:
   file:
     name: CA-R-2277-PROJECT_CONFIGURATION-RULE--define-extension-sources-selection.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement
 current_scope_unit: PROJECT_CONFIGURATION
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement/CA-R-2277-PROJECT_CONFIGURATION-RULE--define-extension-sources-selection.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement/CA-R-2277-PROJECT_CONFIGURATION-RULE--define-extension-sources-selection.md
   source_atom_id: CA-R-2277
   source_atom_revision: 5
   source_sha256: 9e64bde2e4039afe3fcbe13acd6b34c0c9d3fb5b987aced71bc76462e78e338d

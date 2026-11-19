@@ -6,12 +6,12 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Projection/(.Form:=Scope Unit Graph)
+  main_subject: ANECHOIC_MODEL <+ Projection/(.Form:=Scope Unit Graph)
   dependencies:
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework Settings
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Journal
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Structural Unit/Scope Unit/Project.Framework Settings
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Journal
 tier: 3
 relations:
   child_of:
@@ -23,11 +23,11 @@ updated_at: 2026-11-11 15:00:27 +0400
 carrier_destination:
   file:
     name: CA-R-1740-CORE_META_MODEL-RULE--bind-every-project-scope-unit-graph-value-to-exact-sources.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1740-CORE_META_MODEL-RULE--bind-every-project-scope-unit-graph-value-to-exact-sources.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1740-CORE_META_MODEL-RULE--bind-every-project-scope-unit-graph-value-to-exact-sources.md
   source_atom_id: CA-R-1740
   source_atom_revision: 42
   source_sha256: 43c296383d77dceb24b0b347f3874827ac3c271dd63f0587f2fcbd2558f40c46

@@ -6,7 +6,7 @@ version: 18
 updated_at: "2026-10-03 01:31:08 +0400"
 relations:
   resolution_of:
-    - CAPRMEDIO-GOV-CONC-054--how-should-proof-currentness-be-represented
+    - ANECHOIC-GOV-CONC-054--how-should-proof-currentness-be-represented
 atom_id: "CA-R-1647"
 content_role: "Requirement"
 current_scope_unit: "CORE_META_MODEL"
@@ -26,6 +26,6 @@ proof-currentness Catalogs generated from governed proof dependency frontiers an
 
 ## Claim
 
-CAPRMEDIO generates a non-authoritative proof-currentness Catalog from governed proof dependency frontiers encoded under GOV REQU 010 **and** their additional invalidation conditions. the Catalog reports **every** proof as `current`, `stale`, **or** `unknown`, marks **only** the smallest direct **and** transitive dependency closure affected by a change, never infers currentness from timestamps alone, **and** never mutates the historical proof record.
+ANECHOIC generates a non-authoritative proof-currentness Catalog from governed proof dependency frontiers encoded under GOV REQU 010 **and** their additional invalidation conditions. the Catalog reports **every** proof as `current`, `stale`, **or** `unknown`, marks **only** the smallest direct **and** transitive dependency closure affected by a change, never infers currentness from timestamps alone, **and** never mutates the historical proof record.
 
 ## Details

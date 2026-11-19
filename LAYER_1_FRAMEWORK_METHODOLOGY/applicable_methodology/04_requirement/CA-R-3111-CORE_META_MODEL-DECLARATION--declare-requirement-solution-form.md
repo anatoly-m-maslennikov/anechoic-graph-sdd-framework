@@ -8,7 +8,7 @@ context:
   container:
     scope_unit: CA-SU-11
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Requirement)/(.Header.Context.Form
+    main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Requirement)/(.Header.Context.Form
       := Solution)
   tier: 3
 relations:
@@ -21,9 +21,9 @@ state:
 destination:
   file:
     name: CA-R-3111-CORE_META_MODEL-DECLARATION--declare-requirement-solution-form.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-3111-CORE_META_MODEL-DECLARATION--declare-requirement-solution-form.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-3111-CORE_META_MODEL-DECLARATION--declare-requirement-solution-form.md
   source_atom_id: CA-R-3111
   source_atom_revision: 1
   source_sha256: 4b776231e7e1dbd43870473f9edabc29f611537c252ab87e92958aa1a0ef5500
@@ -39,8 +39,8 @@ Declare Requirement Solution Form
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_entity
-from caprmedio.model import Requirement
+from anechoic.formal_claims import declare_entity
+from anechoic.model import Requirement
 
 class RequirementSolution(Requirement):
     pass

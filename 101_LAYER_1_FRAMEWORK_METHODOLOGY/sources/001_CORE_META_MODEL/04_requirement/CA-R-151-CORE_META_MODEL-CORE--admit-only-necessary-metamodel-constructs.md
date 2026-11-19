@@ -23,10 +23,10 @@ Admit only necessary Metamodel constructs
 
 ## Scope
 
-CAPRMEDIO Metamodel constructs.
+ANECHOIC Metamodel constructs.
 
 ## Claim
 
-the CAPRMEDIO Metamodel **must** admit a durable construct **only** **when** the existing Metamodel cannot preserve the required operational distinction.
+the ANECHOIC Metamodel **must** admit a durable construct **only** **when** the existing Metamodel cannot preserve the required operational distinction.
 
 ## Details

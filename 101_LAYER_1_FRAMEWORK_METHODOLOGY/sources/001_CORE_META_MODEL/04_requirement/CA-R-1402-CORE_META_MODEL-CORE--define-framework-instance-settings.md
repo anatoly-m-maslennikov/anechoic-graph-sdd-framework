@@ -23,10 +23,10 @@ Define Framework Instance Settings
 
 ## Scope
 
-Framework Instance Settings for a CAPRMEDIO Framework Instance serving a Project.
+Framework Instance Settings for a ANECHOIC Framework Instance serving a Project.
 
 ## Claim
 
-the Term Framework Instance Settings **means** the authoritative Artifact containing explicit Operator-selected behavior **and** configuration choices for **`=1`** CAPRMEDIO Framework Instance serving **`=1`** Project.
+the Term Framework Instance Settings **means** the authoritative Artifact containing explicit Operator-selected behavior **and** configuration choices for **`=1`** ANECHOIC Framework Instance serving **`=1`** Project.
 
 ## Details

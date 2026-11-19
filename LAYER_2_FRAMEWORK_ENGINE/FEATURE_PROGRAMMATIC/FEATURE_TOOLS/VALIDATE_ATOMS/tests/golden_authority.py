@@ -68,7 +68,7 @@ def frozen_entry(identifier: str, *, graph: bool = False) -> dict[str, Any]:
     group, row = _entry(identifier, graph=graph)
     return {
         "source_path": (
-            ".caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/"
+            ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/"
             f"METHODOLOGY_SOURCES/frozen-authority/{identifier}.md"
         ),
         "version": row["version"],
@@ -114,7 +114,7 @@ def frozen_sources(
             # R-793's historical identifier remains directly addressable for
             # legacy regressions, but it is no longer part of the current
             # governed-source inventory after normalization.
-            if identifier == "CAPRMEDIO-R-793":
+            if identifier == "ANECHOIC-R-793":
                 continue
             if not retain_first:
                 selected[identifier] = (group, row)
@@ -141,6 +141,6 @@ def write_frozen_authority(
         for graph in variants:
             entry = frozen_entry(identifier, graph=graph)
             relative = Path(entry["source_path"])
-            destination = root / control / relative.relative_to(".caprmedio_caprmedio")
+            destination = root / control / relative.relative_to(".anechoic_anechoic")
             destination.parent.mkdir(parents=True, exist_ok=True)
             destination.write_bytes(frozen_authority_fixture_bytes(identifier, graph=graph))

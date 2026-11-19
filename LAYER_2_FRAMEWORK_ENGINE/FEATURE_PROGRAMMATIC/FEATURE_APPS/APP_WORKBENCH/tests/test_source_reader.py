@@ -54,11 +54,11 @@ class SourceReaderTests(unittest.TestCase):
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name) / "project"
         self.root.mkdir()
-        self.control = self.root / ".caprmedio_caprmedio"
+        self.control = self.root / ".anechoic_anechoic"
         self.control.mkdir()
-        (self.control / "caprmedio_project_settings.toml").write_text(
+        (self.control / "anechoic_project_settings.toml").write_text(
             '[project]\nname = "fixture"\n[artifacts.identity]\nproject_prefix = "CA"\n'
-            '[paths]\ncontrol_root = ".caprmedio_caprmedio"\n',
+            '[paths]\ncontrol_root = ".anechoic_anechoic"\n',
             encoding="utf-8",
         )
         self.declarations = write_scope_unit_declarations(
@@ -78,7 +78,7 @@ class SourceReaderTests(unittest.TestCase):
         self.reader = SourceReader(self.root)
 
     def _path(self, scope: str, role: str, filename: str, *parts: str) -> Path:
-        if not filename.startswith(("CA-", "CAPRMEDIO-")) and filename not in {"README.md", "REPORT.md"}:
+        if not filename.startswith(("CA-", "ANECHOIC-")) and filename not in {"README.md", "REPORT.md"}:
             filename = "CA-R-" + filename
         path = Path(self.declarations[scope]["authority_path"]) / role
         if parts:
@@ -241,10 +241,10 @@ class SourceReaderTests(unittest.TestCase):
         self.assertEqual(public["header.relations"]["IS_CONTAINED_BY"],
                          [{"kind": "Scope Unit", "reference": "CA-SU--1", "derived": False}])
 
-        settings = self.control / "caprmedio_project_settings.toml"
+        settings = self.control / "anechoic_project_settings.toml"
         settings_text = settings.read_text()
         for old, new in (('name = "fixture"', 'name = "different"'),
-                         ('control_root = ".caprmedio_caprmedio"', 'control_root = ".caprmedio_other"')):
+                         ('control_root = ".anechoic_anechoic"', 'control_root = ".anechoic_other"')):
             with self.subTest(settings=new):
                 settings.write_text(settings_text.replace(old, new))
                 atoms, _ = self.reader.capture()
@@ -367,17 +367,17 @@ Atom.Content.Summary{::1}:: {::1};
         )
 
     def test_other_project_and_legacy_role_markers_are_not_current_atom_filenames(self) -> None:
-        legacy_concern = self._path("fixture", "01_concern", "CAPRMEDIO-CONC-004--legacy.md")
+        legacy_concern = self._path("fixture", "01_concern", "ANECHOIC-CONC-004--legacy.md")
         legacy_concern.write_text(
-            "---\natom_id: CAPRMEDIO-CONC-004\nversion: 1\n---\n# Legacy concern\n",
+            "---\natom_id: ANECHOIC-CONC-004\nversion: 1\n---\n# Legacy concern\n",
             encoding="utf-8",
         )
-        legacy_analysis = self._path("fixture", "02_analysis", "CAPRMEDIO-ANRP-003--legacy.md")
+        legacy_analysis = self._path("fixture", "02_analysis", "ANECHOIC-ANRP-003--legacy.md")
         legacy_analysis.write_text(
-            "---\natom_id: CAPRMEDIO-ANRP-003\nversion: 2\n---\n# Legacy analysis\n",
+            "---\natom_id: ANECHOIC-ANRP-003\nversion: 2\n---\n# Legacy analysis\n",
             encoding="utf-8",
         )
-        draft = self._path("fixture", "04_requirement", "CAPRMEDIO-REQU-DRAFT--legacy.md", "drafts")
+        draft = self._path("fixture", "04_requirement", "ANECHOIC-REQU-DRAFT--legacy.md", "drafts")
         draft.write_text("---\nversion: 1\n---\n# Legacy draft\n", encoding="utf-8")
 
         atoms, _scopes, stderr = self._capture()
@@ -799,11 +799,11 @@ Atom.Header.Tier:: [int]{::1};
         for parent_name in ("archive", "archived", "draft", "drafts"):
             root = self.root.parent / parent_name / "project"
             root.mkdir(parents=True)
-            control = root / ".caprmedio_caprmedio"
+            control = root / ".anechoic_anechoic"
             control.mkdir()
-            (control / "caprmedio_project_settings.toml").write_text(
+            (control / "anechoic_project_settings.toml").write_text(
                 '[project]\nname = "fixture"\n[artifacts.identity]\nproject_prefix = "CA"\n'
-                '[paths]\ncontrol_root = ".caprmedio_caprmedio"\n',
+                '[paths]\ncontrol_root = ".anechoic_anechoic"\n',
                 encoding="utf-8",
             )
             declarations = write_scope_unit_declarations(
@@ -889,7 +889,7 @@ Atom.Header.Tier:: [int]{::1};
 
     def test_explicit_control_root_uses_uppercase_configured_project_prefix(self) -> None:
         source = self._write_atom("MAIN", "04_requirement", "explicit.md", atom_id="CA-R-501")
-        settings = self.control / "caprmedio_project_settings.toml"
+        settings = self.control / "anechoic_project_settings.toml"
         settings.write_text(settings.read_text().replace('project_prefix = "CA"', 'project_prefix = "demo"'))
         source = source.rename(source.with_name("demo-R-explicit.md"))
 
@@ -904,7 +904,7 @@ Atom.Header.Tier:: [int]{::1};
     def test_project_scope_id_requires_configured_prefix(self) -> None:
         from project_settings_values import ProjectSettingsValueError
 
-        (self.control / "caprmedio_project_settings.toml").unlink()
+        (self.control / "anechoic_project_settings.toml").unlink()
         with self.assertRaisesRegex(ProjectSettingsValueError, "current Project Settings") as raised:
             SourceReader(self.root, self.control).capture()
         self.assertEqual("project-settings-unavailable", raised.exception.code)

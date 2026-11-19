@@ -1,11 +1,11 @@
 ---
 subjects:
-  active: CAPRMEDIO_MODEL <+ CFEL <+ Relation//child_of
+  active: ANECHOIC_MODEL <+ CFEL <+ Relation//child_of
   passive:
-  - CAPRMEDIO_MODEL <+ Atom.Header.Tier
-  - CAPRMEDIO_MODEL <+ Atom.Local Scope Unit
-  - CAPRMEDIO_MODEL <+ Atom.Target Scope Unit
-  - CAPRMEDIO_MODEL <+ Atom.Content.Claim.Prose Claim
+  - ANECHOIC_MODEL <+ Atom.Header.Tier
+  - ANECHOIC_MODEL <+ Atom.Local Scope Unit
+  - ANECHOIC_MODEL <+ Atom.Target Scope Unit
+  - ANECHOIC_MODEL <+ Atom.Content.Claim.Prose Claim
 version: 44
 updated_at: 2026-11-03 20:00:05 +0400
 relations:
@@ -21,7 +21,7 @@ form: Declaration
 carrier_destination:
   file:
     name: CA-R-796-CORE_META_MODEL-DECLARATION--keep-tier-parent-relations-within-atom-scope.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 ---
 ## Summary
 

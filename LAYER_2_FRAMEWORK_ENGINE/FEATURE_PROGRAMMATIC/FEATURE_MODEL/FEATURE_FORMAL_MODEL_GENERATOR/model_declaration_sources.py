@@ -39,12 +39,12 @@ def _model_subject(subject: object, source: str) -> str | None:
         raise ValueError(f"{source}: invalid Main Subject: {error}") from error
     if isinstance(expression, notation.RelationChain):
         first = expression.endpoints[0]
-        if not (isinstance(first.head, notation.Name) and first.head.value == "CAPRMEDIO_MODEL"
+        if not (isinstance(first.head, notation.Name) and first.head.value == "ANECHOIC_MODEL"
                 and not first.steps and expression.links[0].operator == "<+"
                 and expression.links[0].relation_type is None):
             return None
     elif not (isinstance(expression.head, notation.Name)
-              and expression.head.value == "CAPRMEDIO_MODEL" and not expression.steps):
+              and expression.head.value == "ANECHOIC_MODEL" and not expression.steps):
         return None
     # Legacy Claim syntax remains available to its transitional consumers.
     if _is_claim_language_reference(expression):
@@ -250,7 +250,7 @@ def _check_relation_references(records: list[tuple[str, str, str]]) -> None:
 
 
 def select_model_declarations(carriers: Iterable[Mapping[str, Any]]) -> tuple[tuple[str, str, str], ...]:
-    """Read Current Requirement Declaration carriers under CAPRMEDIO_MODEL.
+    """Read Current Requirement Declaration carriers under ANECHOIC_MODEL.
 
     The caller selects Declaration forms. Input records use the existing current
     carrier reader shape, including source, read_view, subjects and body.
@@ -289,7 +289,7 @@ def select_model_declarations(carriers: Iterable[Mapping[str, Any]]) -> tuple[tu
         claim = _native_claim(carrier.get("body"), path, subject)
         records.append((path, subject, claim))
     if not records:
-        raise ValueError("No Current CAPRMEDIO_MODEL Declarations were selected")
+        raise ValueError("No Current ANECHOIC_MODEL Declarations were selected")
     _check_relation_references(records)
     return tuple(records)
 

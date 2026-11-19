@@ -357,10 +357,10 @@ class ToolRegistryTests(unittest.IsolatedAsyncioTestCase):
         installed = json.loads(registry_path.read_text(encoding="utf-8"))
         descriptor = next(t for t in installed["providers"][0]["tools"] if t["name"] == "demo")
         root = Path(self.temporary.name).resolve()
-        control = root / ".caprmedio_fixture"
+        control = root / ".anechoic_fixture"
         control.mkdir()
-        (control / "caprmedio_project_settings.toml").write_text(
-            '[paths]\ncontrol_root = ".caprmedio_fixture"\n'
+        (control / "anechoic_project_settings.toml").write_text(
+            '[paths]\ncontrol_root = ".anechoic_fixture"\n'
             '[project_mcp]\ntool_blacklist = ["project_blocked"]\n', encoding="utf-8",
         )
 
@@ -496,10 +496,10 @@ class ToolRegistryTests(unittest.IsolatedAsyncioTestCase):
     async def test_project_blacklist_cannot_reenable_a_global_deny(self) -> None:
         generate(self.package)
         root = Path(self.temporary.name).resolve()
-        control = root / ".caprmedio_fixture"
+        control = root / ".anechoic_fixture"
         control.mkdir()
-        (control / "caprmedio_project_settings.toml").write_text(
-            '[paths]\ncontrol_root = ".caprmedio_fixture"\n'
+        (control / "anechoic_project_settings.toml").write_text(
+            '[paths]\ncontrol_root = ".anechoic_fixture"\n'
             '[project_mcp]\ntool_blacklist = ["demo"]\n', encoding="utf-8",
         )
 

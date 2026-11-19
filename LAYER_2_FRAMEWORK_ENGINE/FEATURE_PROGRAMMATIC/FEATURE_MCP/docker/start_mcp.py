@@ -24,8 +24,8 @@ def _source_root(script_path: Path) -> Path | None:
 
 
 def _installed_source_root(project_root: Path) -> Path:
-    selector = project_root / ".caprmedio_install" / "current.toml"
-    local_package = project_root / ".caprmedio_runtime" / "simple_local_release" / "package"
+    selector = project_root / ".anechoic_install" / "current.toml"
+    local_package = project_root / ".anechoic_runtime" / "simple_local_release" / "package"
     try:
         if any(path.is_symlink() for path in (local_package, local_package.parent, local_package.parent.parent)):
             raise ValueError()
@@ -42,7 +42,7 @@ def _installed_source_root(project_root: Path) -> Path:
             release = document.get("release_relpath")
             if not isinstance(release, str) or _RELEASE.fullmatch(release) is None:
                 raise ValueError()
-            package = project_root / ".caprmedio_install" / release
+            package = project_root / ".anechoic_install" / release
         elif selector.exists() or selector.is_symlink():
             raise ValueError()
         else:
@@ -59,13 +59,13 @@ def _installed_source_root(project_root: Path) -> Path:
 
 def main(argv=None):
     script_path = Path(__file__).resolve()
-    script_source = None if script_path.parent.name == ".caprmedio_runtime" else _source_root(script_path)
+    script_source = None if script_path.parent.name == ".anechoic_runtime" else _source_root(script_path)
     default_root = script_source or script_path.parent.parent
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project-root", type=Path, default=default_root)
     parser.add_argument("--source-root", type=Path,
                         help="Framework source checkout (defaults to the selected installed package)")
-    parser.add_argument("--control-root", help="Optional direct .caprmedio_<project> folder")
+    parser.add_argument("--control-root", help="Optional direct .anechoic_<project> folder")
     parser.add_argument("--port", type=int, help="Assert the Project Settings localhost port")
     parser.add_argument("--no-build", action="store_true", help="Use a matching existing image only")
     args = parser.parse_args(argv)
@@ -99,11 +99,11 @@ def main(argv=None):
     command.append("project-mcp")
     environment = dict(os.environ)
     for name in ("PYTHONHOME", "PYTHONPATH", "VIRTUAL_ENV", "CONDA_PREFIX",
-                 "CAPRMEDIO_MCP_HTTP_SECRET_TOKEN"):
+                 "ANECHOIC_MCP_HTTP_SECRET_TOKEN"):
         environment.pop(name, None)
     environment["UV_PROJECT_ENVIRONMENT"] = str(
-        project / ".caprmedio_runtime" / "launcher-venv")
-    environment["UV_CACHE_DIR"] = str(project / ".caprmedio_tmp" / "cache" / "uv")
+        project / ".anechoic_runtime" / "launcher-venv")
+    environment["UV_CACHE_DIR"] = str(project / ".anechoic_tmp" / "cache" / "uv")
     environment["PYTHONNOUSERSITE"] = "1"
     try:
         return subprocess.run(command, check=False, env=environment, timeout=1800).returncode

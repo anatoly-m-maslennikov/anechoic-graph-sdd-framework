@@ -35,11 +35,11 @@ class HostRuntimeConfigTests(unittest.TestCase):
 
     def _make_project(self, name: str, prefix: str = "DUP") -> Path:
         root = self.projects / name
-        control = root / f".caprmedio_{name}"
+        control = root / f".anechoic_{name}"
         control.mkdir(parents=True)
-        (control / "caprmedio_project_settings.toml").write_text(
+        (control / "anechoic_project_settings.toml").write_text(
             f'[project]\nname = "{name}"\n[artifacts.identity]\nproject_prefix = "{prefix}"\n'
-            f'[paths]\ncontrol_root = ".caprmedio_{name}"\n',
+            f'[paths]\ncontrol_root = ".anechoic_{name}"\n',
             encoding="utf-8",
         )
         write_scope_unit_declarations(root, control_root=control)
@@ -73,12 +73,12 @@ class HostRuntimeConfigTests(unittest.TestCase):
         )
         self.assertEqual(64, load_host_runtime_config(path).max_loaded_projects)
         xdg = self.base / "xdg"
-        default = xdg / "caprmedio/runtime.toml"
+        default = xdg / "anechoic/runtime.toml"
         self._write_config(path=default)
         with patch.dict(os.environ, {"XDG_CONFIG_HOME": str(xdg)}):
             config = load_host_runtime_config()
         self.assertEqual(default, config.source_path)
-        self.assertFalse((xdg / "caprmedio/runtime.toml.tmp").exists())
+        self.assertFalse((xdg / "anechoic/runtime.toml.tmp").exists())
         with self.assertRaises(HostRuntimeConfigError):
             load_host_runtime_config(self.base / "missing.toml")
 

@@ -48,8 +48,8 @@ class SharedHostLauncherTests(unittest.TestCase):
         result = SharedMcpLauncher(runner=runner).prepare(self.settings, IMAGE)
         self.assertEqual("dry-run", result["mode"])
         self.assertEqual("shared-mcp", result["service"])
-        self.assertEqual("54321", result["environment"]["CAPRMEDIO_MCP_HTTP_PORT"])
-        self.assertNotIn("CAPRMEDIO_PROJECT_ROOT", result["environment"])
+        self.assertEqual("54321", result["environment"]["ANECHOIC_MCP_HTTP_PORT"])
+        self.assertNotIn("ANECHOIC_PROJECT_ROOT", result["environment"])
         self.assertEqual([], runner.call_args_list)
 
     def test_cli_dry_run_exits_success_without_docker(self):
@@ -77,12 +77,12 @@ class SharedHostLauncherTests(unittest.TestCase):
         public = json.loads(output.getvalue())
         self.assertNotIn(secret_proxy, output.getvalue())
         self.assertNotIn("proxy-password", output.getvalue())
-        self.assertTrue(all(key.startswith("CAPRMEDIO_") for key in public["environment"]))
+        self.assertTrue(all(key.startswith("ANECHOIC_") for key in public["environment"]))
 
     def test_requires_explicit_immutable_image_without_docker(self):
         runner = unittest.mock.Mock()
         with self.assertRaises(ValueError):
-            SharedMcpLauncher(runner=runner).prepare(self.settings, "caprmedio-runtime:local")
+            SharedMcpLauncher(runner=runner).prepare(self.settings, "anechoic-runtime:local")
         runner.assert_not_called()
 
     def test_compose_is_one_loopback_service_with_two_exact_bind_mounts(self):
@@ -95,7 +95,7 @@ class SharedHostLauncherTests(unittest.TestCase):
         self.assertEqual({"bind"}, {item["type"] for item in service["volumes"]})
         self.assertNotIn("docker.sock", compose.read_text(encoding="utf-8"))
         self.assertEqual(
-            ["127.0.0.1:${CAPRMEDIO_MCP_HTTP_PORT:?Shared HTTP port is required}:8092"],
+            ["127.0.0.1:${ANECHOIC_MCP_HTTP_PORT:?Shared HTTP port is required}:8092"],
             service["ports"],
         )
 

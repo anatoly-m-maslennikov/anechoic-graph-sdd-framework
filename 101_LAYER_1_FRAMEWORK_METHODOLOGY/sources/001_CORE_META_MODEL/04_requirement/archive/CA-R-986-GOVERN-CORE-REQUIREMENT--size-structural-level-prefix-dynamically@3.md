@@ -10,7 +10,7 @@ version: 3
 updated_at: 2026-08-23 15:00:38
 relations:
   child_of:
-    - CAPRMEDIO-META-REQU-679
+    - ANECHOIC-META-REQU-679
     - CA-R-978
 ---
 # Size the Structural Level prefix dynamically

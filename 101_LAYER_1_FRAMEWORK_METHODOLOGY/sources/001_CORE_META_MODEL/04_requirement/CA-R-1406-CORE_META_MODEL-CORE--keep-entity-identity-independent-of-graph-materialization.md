@@ -3,7 +3,7 @@ subjects:
   governs: "Entity/Identity"
   depends_on:
     - "Entity"
-    - "CAPRMEDIO Graph"
+    - "ANECHOIC Graph"
     - "Projection"
 version: 9
 updated_at: "2026-10-02 22:41:14 +0400"

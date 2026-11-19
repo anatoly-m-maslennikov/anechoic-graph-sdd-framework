@@ -17,4 +17,4 @@ relations: {}
 ---
 # Serialize Interaction Reporting Mode
 
-the Framework Instance Settings TOML Carrier **must** serialize its Operator-selected instance reporting default as `reporting_mode` **in** the `[interaction]` section, using an allowed value governed by CAPRMEDIO-GOV-REQU-294; the selected default **must not** be derived from an Atom-fixed value.
+the Framework Instance Settings TOML Carrier **must** serialize its Operator-selected instance reporting default as `reporting_mode` **in** the `[interaction]` section, using an allowed value governed by ANECHOIC-GOV-REQU-294; the selected default **must not** be derived from an Atom-fixed value.

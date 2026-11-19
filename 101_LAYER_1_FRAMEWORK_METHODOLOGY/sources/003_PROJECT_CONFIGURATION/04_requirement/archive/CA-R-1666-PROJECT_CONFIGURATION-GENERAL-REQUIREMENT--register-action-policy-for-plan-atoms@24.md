@@ -23,4 +23,4 @@ global_tier: 10
 ---
 # Register Action Policy for Plan Atoms
 
-the CAPRMEDIO Project Configuration **must** register Action Policy as an additional value of `Atom/Content Role: Plan/Type`; Plan retains its canonical admission under CA-R-1574; navigation Labels do **not** add further Type values.
+the ANECHOIC Project Configuration **must** register Action Policy as an additional value of `Atom/Content Role: Plan/Type`; Plan retains its canonical admission under CA-R-1574; navigation Labels do **not** add further Type values.

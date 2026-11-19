@@ -1,0 +1,47 @@
+---
+atom_id: CA-P-2625
+ref_id: CA-P-2625
+container:
+  atom: CA-P-2613
+role: Plan
+form: Plan
+label: Task
+topics:
+  main_subject: Subject/Graph Node/Engineering/MCP.selected Workflow capability routes
+tier: 3
+relations:
+  is_decomposition_of:
+  - CA-P-2613
+  relates_to:
+  - CA-O-016
+  - CA-O-127
+  - CA-R-1847
+  - CA-E-567
+  - CA-C-576
+status: Active
+version: 5
+updated_at: 2026-10-25 17:32:27 +0400
+carrier_destination:
+  file:
+    name: 12-CA-P-2625-TASK--inventory-the-public-mcp-and-project-operation-frontiers.md
+    path: .anechoic_anechoic/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/03_plan/5-CA-P-2401-EPIC--make-atom-and-scope-unit-actions-good/96-CA-P-2577-TASK--implement-the-shared-context-native-workflow/5-CA-P-2582-TASK--reconcile-current-workflow-bindings-and-frozen-fixtures/2-CA-P-2613-TASK--prepare-the-detached-candidate-and-registry-drift-validation
+work_sequence_number: 12
+current_scope_unit: PROGRAMMATIC
+claim_target_scope_unit: PROGRAMMATIC
+author: Anatoly Maslennikov
+---
+# Summary
+
+Inventory the public MCP and Project operation frontiers
+
+## Objective
+
+Produce a fresh read-only inventory of the public MCP declarations, current Project operation manifest and selected route specification implicated by CA-C-584. Preserve the exact 15-operation R1847/E567 contract and separately record the Project/code optional move_atom extension.
+
+## Details
+
+This is one Task with at most 15 minutes of own work. Compare current source pins, operation names, schemas, route declarations, ordering and admission flags for R1847@16, E567@7, O127, the Project manifest and selected_route_spec.py. Keep the protected source bodies and A1142/W09 registry distinction unchanged. Do not rename or rewrite source Atoms, manifests, projections, bindings, runtime code or Docker state. No candidate publication, live MCP mutation, Scope Unit implementation, release, deployment, replay or full-suite run.
+
+## Definition of Done
+
+Return a compact mechanical and semantic frontier inventory that distinguishes an exact public 15-operation declaration from the Project/code 16-operation surface and states which source owner must decide. Inventory completion does not resolve CA-C-584 or admit a candidate.

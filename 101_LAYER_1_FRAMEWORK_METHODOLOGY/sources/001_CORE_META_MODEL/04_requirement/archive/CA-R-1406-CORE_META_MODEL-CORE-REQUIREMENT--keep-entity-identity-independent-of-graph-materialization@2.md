@@ -9,7 +9,7 @@ subjects:
   depends_on:
     continuant:
       - Entity
-      - CAPRMEDIO Graph
+      - ANECHOIC Graph
       - Projection
 version: 2
 updated_at: 2026-09-06 01:45:12 +0400

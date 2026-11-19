@@ -1,6 +1,6 @@
 # CA-M-422@13
 
-"""Shared CAPRMEDIO runtime and temporary-path boundaries."""
+"""Shared ANECHOIC runtime and temporary-path boundaries."""
 
 from __future__ import annotations
 
@@ -10,8 +10,8 @@ import tempfile
 from pathlib import Path
 
 
-RUNTIME_DIRECTORY = Path(".caprmedio_runtime")
-TEMPORARY_DIRECTORY = Path(".caprmedio_tmp")
+RUNTIME_DIRECTORY = Path(".anechoic_runtime")
+TEMPORARY_DIRECTORY = Path(".anechoic_tmp")
 OWNER = re.compile(r"[a-z0-9][a-z0-9_-]{0,63}\Z")
 
 
@@ -54,7 +54,7 @@ def _existing_directory(path: Path) -> Path:
 
 
 def repository_root(reference: Path | str) -> Path:
-    """Resolve the nearest checkout or self-contained CAPRMEDIO Project.
+    """Resolve the nearest checkout or self-contained ANECHOIC Project.
 
     Installed and sealed Projects need not contain Git administration data.
     Their Settings and current Scope Unit Declarations identify the boundary.
@@ -72,10 +72,10 @@ def repository_root(reference: Path | str) -> Path:
     for root in (candidate, *candidate.parents):
         if (root / ".git").exists():
             return root
-        for control in root.glob(".caprmedio_*"):
+        for control in root.glob(".anechoic_*"):
             if control.is_symlink() or not control.is_dir():
                 continue
-            marker = control / "caprmedio_project_settings.toml"
+            marker = control / "anechoic_project_settings.toml"
             if not marker.is_file() or marker.is_symlink():
                 continue
             try:

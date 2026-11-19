@@ -10,7 +10,7 @@ sys.path[:0] = [str(PROGRAMMATIC), str(TOOLS), str(TOOLS / "GENERATE_ENTITY_GRAP
 from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim, NativeModelClaimError
 from FEATURE_FORMAL_MODEL_ENGINE.compiler_claim import compiler_model_statements
 from cfel_claim_constraints import _native_constraints
-CLAIM='''from caprmedio.formal_claims import declare_entity
+CLAIM='''from anechoic.formal_claims import declare_entity
 declare_entity(entity_name="AI Agent Confidence Threshold", relation_name="IS_PROPERTY_OF", base_path="Project.Settings", property_occurrence_cardinality=1, value_format=int, value_cardinality=1, dependent_property_cardinality=0, minimum_value=0, maximum_value=100, fallback_value=90)
 '''
 class ThresholdTests(unittest.TestCase):

@@ -6,7 +6,7 @@ version: 16
 updated_at: "2026-10-03 01:51:15 +0400"
 relations:
   child_of:
-    - CAPRMEDIO-REQU-037-REQUIREMENT--require-parent-coverage-without-claiming-topology-completeness
+    - ANECHOIC-REQU-037-REQUIREMENT--require-parent-coverage-without-claiming-topology-completeness
     - "CA-R-1767"
 atom_id: "CA-R-1671"
 content_role: "Requirement"

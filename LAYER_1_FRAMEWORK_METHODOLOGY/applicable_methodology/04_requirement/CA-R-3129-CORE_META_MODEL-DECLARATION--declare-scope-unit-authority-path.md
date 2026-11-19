@@ -9,7 +9,7 @@ context:
     scope_unit: CA-SU-11
   tier: 3
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ Scope Unit.Paths.Authority
+    main_subject: ANECHOIC_MODEL <+ Scope Unit.Paths.Authority
 state:
   version: 1
   status: active
@@ -17,9 +17,9 @@ state:
 destination:
   file:
     name: CA-R-3129-CORE_META_MODEL-DECLARATION--declare-scope-unit-authority-path.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-3129-CORE_META_MODEL-DECLARATION--declare-scope-unit-authority-path.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-3129-CORE_META_MODEL-DECLARATION--declare-scope-unit-authority-path.md
   source_atom_id: CA-R-3129
   source_atom_revision: 1
   source_sha256: 84bd843e8a50245890d7eab6bf16e77ddac1a21fe70d21cd4326eb64ac0667ac
@@ -33,12 +33,12 @@ Declare Scope Unit Authority Path
 
 ### Prose Claim
 
-Authority is the Project-root-relative path to the Scope Unit’s Atom folder in the Project’s `.caprmedio_<project name>` tree. Use the actual folder names.
+Authority is the Project-root-relative path to the Scope Unit’s Atom folder in the Project’s `.anechoic_<project name>` tree. Use the actual folder names.
 
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_entity
+from anechoic.formal_claims import declare_entity
 
 declare_entity(
     entity_name="Authority",

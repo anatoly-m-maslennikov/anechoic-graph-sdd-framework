@@ -31,4 +31,4 @@ Project.Settings.Code-Root Locators.*[]{:0}
 
 ## Details
 
-Evidence: CA-D-371 requires code-root locators in Framework Settings. Candidate #6 keeps concrete CAPRMEDIO mechanisms in Project Configuration. This definition adds no discovery procedure, new root or locator count.
+Evidence: CA-D-371 requires code-root locators in Framework Settings. Candidate #6 keeps concrete ANECHOIC mechanisms in Project Configuration. This definition adds no discovery procedure, new root or locator count.

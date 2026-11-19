@@ -25,7 +25,7 @@ Deliver and compile candidate Methodology **means** the Action that performs one
 
 ## Scope
 
-`deliver_sources` copies the complete selected candidate Methodology source set, with every source identity, revision and digest, only to the selected staged `101_LAYER_1_FRAMEWORK_METHODOLOGY/sources` delivery target; it never changes or substitutes `METHODOLOGY_SOURCES.authority_path`. `compile` uses the required reviewed selected-snapshot compiler Tool boundary and the delivered, still-matching candidate frontier to materialize only the sealed child `.caprmedio_caprmedio/000_CAPRMEDIO_framework/00_APPLICABLE_METHODOLOGY/_release_materialized/<candidateSnapshotManifest.sha256>/`. It neither produces nor replaces canonical `_projection/APPLICABLE_METHODOLOGY`; the runtime Methodology is a later derived delivery, not compiler output authority.
+`deliver_sources` copies the complete selected candidate Methodology source set, with every source identity, revision and digest, only to the selected staged `101_LAYER_1_FRAMEWORK_METHODOLOGY/sources` delivery target; it never changes or substitutes `METHODOLOGY_SOURCES.authority_path`. `compile` uses the required reviewed selected-snapshot compiler Tool boundary and the delivered, still-matching candidate frontier to materialize only the sealed child `.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/_release_materialized/<candidateSnapshotManifest.sha256>/`. It neither produces nor replaces canonical `_projection/APPLICABLE_METHODOLOGY`; the runtime Methodology is a later derived delivery, not compiler output authority.
 
 ## Details
 

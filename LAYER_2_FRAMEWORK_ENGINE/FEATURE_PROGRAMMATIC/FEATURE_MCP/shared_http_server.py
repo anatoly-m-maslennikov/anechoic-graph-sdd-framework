@@ -51,7 +51,7 @@ def _snapshot_failure() -> None:
     )
     if secondary is not None:
         try:
-            sys.stderr.write("caprmedio: host health snapshot unavailable\n")
+            sys.stderr.write("anechoic: host health snapshot unavailable\n")
             sys.stderr.flush()
         except Exception:
             pass

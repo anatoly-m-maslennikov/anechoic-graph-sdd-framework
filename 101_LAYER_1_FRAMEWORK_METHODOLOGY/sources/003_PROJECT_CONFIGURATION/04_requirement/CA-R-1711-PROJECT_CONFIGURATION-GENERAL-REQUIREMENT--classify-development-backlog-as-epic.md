@@ -26,6 +26,6 @@ Development Backlog and its Epic classification.
 
 ## Claim
 
-the caprmedio Project **must** classify the Development Backlog as an Epic whose direct Task members are accepted intended actions that have no narrower Epic.
+the anechoic Project **must** classify the Development Backlog as an Epic whose direct Task members are accepted intended actions that have no narrower Epic.
 
 ## Details

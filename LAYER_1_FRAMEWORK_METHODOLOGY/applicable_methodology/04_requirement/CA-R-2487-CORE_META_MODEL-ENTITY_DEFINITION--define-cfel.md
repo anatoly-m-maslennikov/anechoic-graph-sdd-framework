@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ CFEL
+  main_subject: ANECHOIC_MODEL <+ CFEL
 tier: 3
 status: Active
 version: 16
@@ -14,9 +14,9 @@ updated_at: '2026-11-11 14:06:22 +0400'
 carrier_destination:
   file:
     name: CA-R-2487-DECLARATION--define-cfel.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2487-CORE_META_MODEL-ENTITY_DEFINITION--define-cfel.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2487-CORE_META_MODEL-ENTITY_DEFINITION--define-cfel.md
   source_atom_id: CA-R-2487
   source_atom_revision: 16
   source_sha256: 2f032910a1f40d09c8d064fef361f9f8da1a7d124890b63829e286dc040b3394
@@ -30,7 +30,7 @@ Define CFEL
 
 ### Prose Claim
 
-CFEL (CAPRMEDIO Formal Expression Language) is the formal notation for
+CFEL (ANECHOIC Formal Expression Language) is the formal notation for
 Subject addresses and fenced Formal Claims. CFEL is a model component beside
 Graph and Carrier: Graph contains Nodes and Relations; CFEL addresses and
 constrains them. CFEL syntax neither creates a Node, Relation, Property,

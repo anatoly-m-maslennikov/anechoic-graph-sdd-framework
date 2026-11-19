@@ -12,7 +12,7 @@ version: 2
 updated_at: 2026-08-23 15:00:38
 relations:
   replacement_of:
-    - CAPRMEDIO-META-REQU-175--use-canonical-meta-subject-scopes
+    - ANECHOIC-META-REQU-175--use-canonical-meta-subject-scopes
   child_of:
     - CA-R-1012
 ---

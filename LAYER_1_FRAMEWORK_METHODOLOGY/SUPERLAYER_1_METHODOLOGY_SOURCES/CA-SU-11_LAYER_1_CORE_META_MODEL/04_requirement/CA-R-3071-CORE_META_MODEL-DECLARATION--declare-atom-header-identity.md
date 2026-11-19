@@ -8,7 +8,7 @@ context:
   role: requirement
   form: declaration
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Identity
+    main_subject: ANECHOIC_MODEL <+ Atom.Header.Identity
   tier: 3
 state:
   status: active
@@ -17,7 +17,7 @@ state:
 destination:
   file:
     name: CA-R-3071-CORE_META_MODEL-DECLARATION--declare-atom-header-identity.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 ---
 
 
@@ -30,7 +30,7 @@ Declare Atom.Header.Identity
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_entity
+from anechoic.formal_claims import declare_entity
 
 declare_entity(
     entity_name='Identity',

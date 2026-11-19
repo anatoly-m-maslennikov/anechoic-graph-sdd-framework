@@ -6,7 +6,7 @@ if (!baseURL) throw new Error('WORKBENCH_E2E_URL is required for Workbench brows
 
 export default defineConfig({
   testDir: './tests',
-  outputDir: '../../../../../.caprmedio_tmp/workbench/browser-results',
+  outputDir: '../../../../../.anechoic_tmp/workbench/browser-results',
   timeout: 120_000,
   workers: 1,
   retries: 0,

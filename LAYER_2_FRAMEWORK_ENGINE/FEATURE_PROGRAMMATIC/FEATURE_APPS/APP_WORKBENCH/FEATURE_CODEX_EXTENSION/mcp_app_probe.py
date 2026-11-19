@@ -8,8 +8,8 @@ from typing import Any
 
 from mcp import MCPError, types
 
-URI = "ui://caprmedio/workbench-compatibility-v2.html"
-WORKBENCH_URI = "ui://caprmedio/workbench.html"
+URI = "ui://anechoic/workbench-compatibility-v2.html"
+WORKBENCH_URI = "ui://anechoic/workbench.html"
 MIME_TYPE = "text/html;profile=mcp-app"
 TOOL_NAMES = ("workbench_ui_probe", "workbench_ui_ping")
 WORKBENCH_HTML = (Path(__file__).resolve().parent.parent / "FEATURE_WORKBENCH_FRONTEND" / "dist" / "mcp-app.html")
@@ -18,7 +18,7 @@ WORKBENCH_HTML = (Path(__file__).resolve().parent.parent / "FEATURE_WORKBENCH_FR
 def tools() -> tuple[types.Tool, ...]:
     return tuple(types.Tool(
         name=name,
-        description=("Render the CAPRMEDIO MCP App compatibility probe without a browser or project data."
+        description=("Render the ANECHOIC MCP App compatibility probe without a browser or project data."
                      if name == TOOL_NAMES[0] else "Read-only check of the MCP App tool bridge."),
         input_schema={"type": "object", "properties": {}, "additionalProperties": False},
         output_schema={"type": "object", "properties": {"message": {"type": "string"}},
@@ -32,13 +32,13 @@ def tools() -> tuple[types.Tool, ...]:
 def call(name: str) -> dict[str, str]:
     if name not in TOOL_NAMES:
         raise ValueError("Unknown UI probe tool")
-    return {"message": "CAPRMEDIO MCP App resource loaded" if name == TOOL_NAMES[0] else "Tool bridge passed"}
+    return {"message": "ANECHOIC MCP App resource loaded" if name == TOOL_NAMES[0] else "Tool bridge passed"}
 
 
 async def list_resources(_context: Any, _params: Any) -> types.ListResourcesResult:
     return types.ListResourcesResult(resources=[
-        types.Resource(name="CAPRMEDIO UI compatibility probe", uri=URI, mime_type=MIME_TYPE),
-        types.Resource(name="CAPRMEDIO Workbench", uri=WORKBENCH_URI, mime_type=MIME_TYPE),
+        types.Resource(name="ANECHOIC UI compatibility probe", uri=URI, mime_type=MIME_TYPE),
+        types.Resource(name="ANECHOIC Workbench", uri=WORKBENCH_URI, mime_type=MIME_TYPE),
     ])
 
 

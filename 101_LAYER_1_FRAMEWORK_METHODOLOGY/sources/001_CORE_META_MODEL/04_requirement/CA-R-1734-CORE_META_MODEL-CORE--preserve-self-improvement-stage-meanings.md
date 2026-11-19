@@ -6,7 +6,7 @@ version: 15
 updated_at: "2026-10-03 02:49:38 +0400"
 relations:
   child_of:
-    - CAPRMEDIO-REQU-047-CORE-REQUIREMENT--separate-self-improvement-stages
+    - ANECHOIC-REQU-047-CORE-REQUIREMENT--separate-self-improvement-stages
 atom_id: "CA-R-1734"
 content_role: "Requirement"
 current_scope_unit: "CORE_META_MODEL"

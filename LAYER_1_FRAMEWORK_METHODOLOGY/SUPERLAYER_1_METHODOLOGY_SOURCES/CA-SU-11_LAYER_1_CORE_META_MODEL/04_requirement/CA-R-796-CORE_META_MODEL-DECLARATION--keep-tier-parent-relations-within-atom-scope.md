@@ -6,12 +6,12 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Relation//child_of
+  main_subject: ANECHOIC_MODEL <+ Relation//child_of
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Tier
-  - CAPRMEDIO_MODEL <+ Atom.Local Scope Unit
-  - CAPRMEDIO_MODEL <+ Atom.Target Scope Unit
-  - CAPRMEDIO_MODEL <+ Atom.Content.Claim.Prose Claim
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Tier
+  - ANECHOIC_MODEL <+ Atom.Local Scope Unit
+  - ANECHOIC_MODEL <+ Atom.Target Scope Unit
+  - ANECHOIC_MODEL <+ Atom.Content.Claim.Prose Claim
 tier: 1
 relations:
   child_of:
@@ -22,7 +22,7 @@ updated_at: '2026-11-12T18:18:59.524584+00:00'
 carrier_destination:
   file:
     name: CA-R-796-CORE_META_MODEL-DECLARATION--keep-tier-parent-relations-within-atom-scope.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---
@@ -44,7 +44,7 @@ child_of relates child Atom to parent Atom.
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_relation
+from anechoic.formal_claims import declare_relation
 
 declare_relation(
     relation_name='child_of',

@@ -16,9 +16,9 @@ class NamedSelectionTests(TestCase):
             body = f"---\natom_id: CA-R-1\n---\n\n## Claim\n\n### Formal Claim\n\n```python\n{claim}\n```\n"
             return SimpleNamespace(metadata=metadata, raw=body.encode(), path=Path("CA-R-1.md"))
 
-        subject = "CAPRMEDIO_STRUCTURE <+ Named Selection//Extension Sources"
+        subject = "ANECHOIC_STRUCTURE <+ Named Selection//Extension Sources"
         expression = notation.parse_subject_expression(subject, subject_profile="approved").expression
-        selection = SimpleNamespace(settings={"project": {"name": "caprmedio"}})
+        selection = SimpleNamespace(settings={"project": {"name": "anechoic"}})
         reader = SimpleNamespace(run=lambda *args, **kw: {"rows": [["CA-R-1"]], "has_more": False})
         with bind_query_reader(reader), patch("ATOM_LIFECYCLE.subject_selections.select_current_sources") as sources:
             sources.return_value = {"CA-R-1": pin('subject_path(address="Named Selection//Extension Sources")')}

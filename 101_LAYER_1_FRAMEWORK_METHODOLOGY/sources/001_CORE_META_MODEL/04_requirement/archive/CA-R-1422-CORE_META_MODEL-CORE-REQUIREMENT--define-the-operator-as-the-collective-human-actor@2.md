@@ -10,7 +10,7 @@ subjects:
     continuant:
       - Actor
       - Project
-      - CAPRMEDIO Framework Instance
+      - ANECHOIC Framework Instance
 version: 2
 updated_at: "2026-09-14 23:34:13 +0000"
 relations:
@@ -19,4 +19,4 @@ relations:
 ---
 # Define the Operator as the collective human Actor
 
-the Operator **means** the collective Actor formed by **`>=1`** identified human participants for the Project **and** its CAPRMEDIO Framework Instance.
+the Operator **means** the collective Actor formed by **`>=1`** identified human participants for the Project **and** its ANECHOIC Framework Instance.

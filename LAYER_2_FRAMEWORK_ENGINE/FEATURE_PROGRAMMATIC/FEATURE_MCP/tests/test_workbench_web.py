@@ -29,9 +29,9 @@ from workbench_web import routes  # noqa: E402
 from operation_error_boundary import ExplicitBlockingRuntimeFailure  # noqa: E402
 
 
-PROJECT_NAME = "caprmedio"
+PROJECT_NAME = "anechoic"
 PROJECT_PATH = f"{WORKBENCH_PATH}/{PROJECT_NAME}"
-API_PATH = f"/caprmedio/{PROJECT_NAME}/api"
+API_PATH = f"/anechoic/{PROJECT_NAME}/api"
 
 
 class FakeWorkbench:
@@ -208,7 +208,7 @@ class WorkbenchWebTests(unittest.TestCase):
                 legacy = client.post(f"{PROJECT_PATH}/{path}", json=body)
                 self.assertEqual(200, canonical.status_code, path)
                 self.assertEqual(canonical.json(), legacy.json(), path)
-                self.assertEqual(404, client.post(f"/caprmedio/other/api/{path}", json=body).status_code)
+                self.assertEqual(404, client.post(f"/anechoic/other/api/{path}", json=body).status_code)
                 self.assertEqual(400, client.post(f"{API_PATH}/{path}", json={**body, "project_root": "/invalid"}).status_code)
 
     def test_diagnostic_failure_preserves_original_error(self):
@@ -311,7 +311,7 @@ class WorkbenchWebTests(unittest.TestCase):
             })
             self.assertEqual(200, opened.status_code)
             self.assertEqual(
-                "http://workbench.test/caprmedio/workbench/caprmedio?workspace=session-1",
+                "http://workbench.test/anechoic/workbench/anechoic?workspace=session-1",
                 opened.json()["workspace_url"],
             )
             self.assertEqual(PROJECT_NAME, opened.json()["project_name"])
@@ -358,7 +358,7 @@ class WorkbenchWebTests(unittest.TestCase):
             self.assertEqual("view", view["name"])
             saved = client.post(f"{PROJECT_PATH}/run", json={"sql": "SELECT 1", "save": True}).json()
             self.assertEqual(
-                "http://workbench.test/caprmedio/workbench/caprmedio?query=q_1", saved["saved_query_url"],
+                "http://workbench.test/anechoic/workbench/anechoic?query=q_1", saved["saved_query_url"],
             )
             named = client.post(f"{PROJECT_PATH}/run", json={"sql": "SELECT 1", "save": True, "name": "named"}).json()
             self.assertEqual("named", named["name"])

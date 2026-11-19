@@ -6,13 +6,13 @@ container:
 role: Method
 form: Implementation Method
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Content
+  main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan).Content
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan)/(.Header.Context.Form :=
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan)
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan)/(.Header.Context.Form :=
     Plan)
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Plan).Content.Definition of Done
-  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan).Content.Definition of Done
+  - ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Controlled
     English
 tier: 6
 relations:
@@ -24,11 +24,11 @@ updated_at: 2026-11-08 19:06:46 +0400
 carrier_destination:
   file:
     name: CA-M-309-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-plan-claims-with-the-plan-cce-profile.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-309-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-plan-claims-with-the-plan-cce-profile.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-309-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-plan-claims-with-the-plan-cce-profile.md
   source_atom_id: CA-M-309
   source_atom_revision: 25
   source_sha256: 4ce3d00b35ac7345405e4df771756363c579ff73d1dfe3faebe4a3f1687c9f4c

@@ -10,7 +10,7 @@ subjects:
     - "Operator"
     - "Project"
     - "Scope"
-    - "CAPRMEDIO Framework Instance"
+    - "ANECHOIC Framework Instance"
 atom_id: "CA-R-1487"
 content_role: "Requirement"
 current_scope_unit: "CORE_META_MODEL"
@@ -22,7 +22,7 @@ type: "Requirement"
 ---
 # Follow the Operator-selected priority model
 
-the CAPRMEDIO Framework Instance **must** support the admissible priority model established by the Operator for the affected Scope **and** Project stage. **every** resulting alternative selection **must** satisfy **all** of the following:
+the ANECHOIC Framework Instance **must** support the admissible priority model established by the Operator for the affected Scope **and** Project stage. **every** resulting alternative selection **must** satisfy **all** of the following:
 
 - respect applicable authority **and** non-negotiable constraints.
 - conform **to** that model, its effective parameters, **and** its active criteria **without** substituting another comparison algorithm.

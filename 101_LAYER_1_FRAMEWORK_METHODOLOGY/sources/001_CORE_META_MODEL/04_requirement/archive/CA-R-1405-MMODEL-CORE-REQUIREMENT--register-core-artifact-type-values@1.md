@@ -15,7 +15,7 @@ version: 1
 updated_at: 2026-09-04 14:07:21 +0400
 relations:
   child_of:
-    - CAPRMEDIO-META-REQU-741--prohibit-artifact-subtypes
+    - ANECHOIC-META-REQU-741--prohibit-artifact-subtypes
 ---
 # Register Core Artifact Type Values
 

@@ -1,0 +1,31 @@
+---
+cce_version: cce_1
+cce_form: method
+subjects:
+  active: ANECHOIC_MODEL <+ Project
+  passive:
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Term
+  - ANECHOIC_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ Package/Implementation
+version: 31
+updated_at: 2026-11-02 00:18:22 +0400
+relations:
+  child_of:
+  - CA-R-2452
+atom_id: CA-M-006
+status: Active
+current_scope_unit: anechoic
+tier: 0
+role: Method
+form: Eng Policy
+---
+## Summary
+
+Keep the whole project coherent
+
+## Claim
+
+### Prose Claim
+
+
+**to** govern the Project, keep its Terms, Claims, rules, structure, **and** Implementation mutually coherent **where** they share authority **or** interact.

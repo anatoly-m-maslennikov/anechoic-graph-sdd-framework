@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Scope Unit
+  main_subject: ANECHOIC_MODEL <+ Scope Unit
 tier: 3
 status: active
 version: 6
@@ -14,9 +14,9 @@ updated_at: '2026-11-13T22:57:24.985880+00:00'
 carrier_destination:
   file:
     name: CA-R-2523-CORE_META_MODEL-DECLARATION--declare-scope-unit.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2523-CORE_META_MODEL-DECLARATION--declare-scope-unit.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2523-CORE_META_MODEL-DECLARATION--declare-scope-unit.md
   source_atom_id: CA-R-2523
   source_atom_revision: 6
   source_sha256: d6a1ffb57a4ae0268c027689e746e6265f0013db793eece0e47fc3d48e1ab15e
@@ -37,8 +37,8 @@ Each Scope Unit other than a Project and CA-SU--1 has exactly one IS_CONTAINED_B
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import Cardinality, declare_entity
-from caprmedio.model import Continuant
+from anechoic.formal_claims import Cardinality, declare_entity
+from anechoic.model import Continuant
 
 class ScopeUnit(Continuant):
     pass

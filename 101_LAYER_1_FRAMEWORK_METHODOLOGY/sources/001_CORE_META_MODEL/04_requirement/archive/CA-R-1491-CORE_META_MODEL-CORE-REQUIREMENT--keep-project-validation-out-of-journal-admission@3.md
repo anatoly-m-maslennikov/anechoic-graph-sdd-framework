@@ -14,7 +14,7 @@ relations:
   child_of:
     - CA-R-1490
   relates_to:
-    - CAPRMEDIO-META-REQU-656
+    - ANECHOIC-META-REQU-656
 ---
 # Keep Project validation out of Journal admission
 

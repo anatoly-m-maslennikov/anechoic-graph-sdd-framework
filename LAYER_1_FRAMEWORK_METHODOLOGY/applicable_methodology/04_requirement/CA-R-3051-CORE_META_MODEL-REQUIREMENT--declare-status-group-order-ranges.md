@@ -8,7 +8,7 @@ context:
   role: requirement
   form: requirement
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ Atom.Header.State.Status >| Status Group
+    main_subject: ANECHOIC_MODEL <+ Atom.Header.State.Status >| Status Group
   tier: 3
 state:
   status: active
@@ -17,9 +17,9 @@ state:
 destination:
   file:
     name: CA-R-3051-CORE_META_MODEL-REQUIREMENT--declare-status-group-order-ranges.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-3051-CORE_META_MODEL-REQUIREMENT--declare-status-group-order-ranges.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-3051-CORE_META_MODEL-REQUIREMENT--declare-status-group-order-ranges.md
   source_atom_id: CA-R-3051
   source_atom_revision: 2
   source_sha256: 2e05734265e72a02f0b444f4933dace5a88c3de9529bcf0450b7f2064ef5e2a1

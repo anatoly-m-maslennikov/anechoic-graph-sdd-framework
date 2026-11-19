@@ -6,7 +6,7 @@ version: 1
 updated_at: 2026-08-22 08:09:26
 relations:
   replacement_of:
-    - CAPRMEDIO-GOV-REQU-346
+    - ANECHOIC-GOV-REQU-346
 ---
 # Write Markdown prose as unwrapped lines
 

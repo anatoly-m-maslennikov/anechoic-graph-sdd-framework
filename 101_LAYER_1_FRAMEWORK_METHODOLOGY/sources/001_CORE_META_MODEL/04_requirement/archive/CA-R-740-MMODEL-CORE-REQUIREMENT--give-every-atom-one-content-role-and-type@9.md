@@ -15,7 +15,7 @@ relations:
     - CA-M-001-PRINCIPLE-METHOD--mece_mutually-exclusive-collectively-exhaustive
     - CA-M-002-PRINCIPLE-METHOD--dry_dont-repeat-yourself
   replacement_of:
-    - CAPRMEDIO-META-REQU-726--derive-atom-type-from-content-role
+    - ANECHOIC-META-REQU-726--derive-atom-type-from-content-role
 ---
 # Give Every Atom One Content Role
 

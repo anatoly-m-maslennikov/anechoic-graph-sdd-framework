@@ -12,7 +12,7 @@ relations: {"relates_to":["CA-D-296","CA-D-451"]}
 ---
 # Register Project Current-Scope Content Role Directories
 
-the caprmedio Project **must** use the following administrative Content Role directories directly under `.caprmedio_caprmedio/` for its current-scope Artifact placement:
+the anechoic Project **must** use the following administrative Content Role directories directly under `.anechoic_anechoic/` for its current-scope Artifact placement:
 
 - `01_concern/`;
 - `02_analysis/`;

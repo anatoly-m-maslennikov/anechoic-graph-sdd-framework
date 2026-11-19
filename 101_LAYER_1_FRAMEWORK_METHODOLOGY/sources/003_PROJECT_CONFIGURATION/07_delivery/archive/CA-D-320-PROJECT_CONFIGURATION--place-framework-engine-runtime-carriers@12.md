@@ -1,6 +1,6 @@
 ---
 subjects:
-  governs: "CAPRMEDIO/Framework Engine Runtime Carrier Root"
+  governs: "ANECHOIC/Framework Engine Runtime Carrier Root"
   depends_on: []
 version: 12
 updated_at: "2026-10-02 19:05:39 +0400"
@@ -20,11 +20,11 @@ Place Framework Engine Runtime Carriers
 
 ## Scope
 
-Framework Engine Runtime Carriers in a CAPRMEDIO Project.
+Framework Engine Runtime Carriers in a ANECHOIC Project.
 
 ## Claim
 
-the CAPRMEDIO Project **must** place its selected running Framework Engine releases, stable launchers, Tools, Apps, Skills, logs, sessions, databases, service state, **and** resumable execution state under `.caprmedio_runtime/`.
+the ANECHOIC Project **must** place its selected running Framework Engine releases, stable launchers, Tools, Apps, Skills, logs, sessions, databases, service state, **and** resumable execution state under `.anechoic_runtime/`.
 
 ## Details
 

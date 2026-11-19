@@ -43,7 +43,7 @@ export class McpAppTransport implements OperationCaller {
   async initialize(): Promise<NativeBootstrap> {
     try {
       await this.request('ui/initialize', {
-        appInfo: { name: 'CAPRMEDIO Workbench', version: '0.0.1' },
+        appInfo: { name: 'ANECHOIC Workbench', version: '0.0.1' },
         appCapabilities: {}, protocolVersion: '2026-01-26',
       });
       this.initialized = true;

@@ -22,6 +22,6 @@ released, executed, **and** planning-allocation history from Development Backlog
 
 ## Claim
 
-CAPRMEDIO **must** preserve delivered work, executed work, **and** planning-allocation changes **in** Release Records, Plans under `done/`, **and** Git history.
+ANECHOIC **must** preserve delivered work, executed work, **and** planning-allocation changes **in** Release Records, Plans under `done/`, **and** Git history.
 
 ## Details

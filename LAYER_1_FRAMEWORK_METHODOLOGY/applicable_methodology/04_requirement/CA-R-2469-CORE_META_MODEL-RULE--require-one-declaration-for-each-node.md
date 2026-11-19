@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ (Node, Node.**)
+  main_subject: ANECHOIC_MODEL <+ (Node, Node.**)
 tier: 3
 status: active
 version: 5
@@ -14,11 +14,11 @@ updated_at: '2026-11-13T05:43:18.146686+00:00'
 carrier_destination:
   file:
     name: CA-R-2469-CORE_META_MODEL-RULE--require-one-declaration-for-each-node.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2469-CORE_META_MODEL-RULE--require-one-declaration-for-each-node.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2469-CORE_META_MODEL-RULE--require-one-declaration-for-each-node.md
   source_atom_id: CA-R-2469
   source_atom_revision: 5
   source_sha256: 7bf9d9a14490f6e52386ba0ec544bc965cdd762712ca2c709a1c4e36d8df61ec

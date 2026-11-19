@@ -14,7 +14,7 @@ relations:
 
 # Atomize carrier transitions
 
-Moving a Carrier between directories while preserving its bytes and assigned Atom-ID filename segment is not a semantic transition and creates no semantic location authority. The identity resolver finds the current Carrier by deriving Atom ID from that immutable filename segment inside the selected `.caprmedio`; its governed Journal and Git provenance may record the old and new carrier addresses.
+Moving a Carrier between directories while preserving its bytes and assigned Atom-ID filename segment is not a semantic transition and creates no semantic location authority. The identity resolver finds the current Carrier by deriving Atom ID from that immutable filename segment inside the selected `.anechoic`; its governed Journal and Git provenance may record the old and new carrier addresses.
 
 A carrier-name or representation migration is one immutable governed transition,
 not a separate semantic location record. Its Journal and Git evidence record the Atom ID, old and new Carrier names, old and new digests, semantic-equivalence proof, Git return identity,

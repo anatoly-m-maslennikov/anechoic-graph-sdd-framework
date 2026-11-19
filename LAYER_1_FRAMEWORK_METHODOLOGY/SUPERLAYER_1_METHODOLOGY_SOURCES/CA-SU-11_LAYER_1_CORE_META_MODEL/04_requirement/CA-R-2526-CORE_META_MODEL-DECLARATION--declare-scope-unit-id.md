@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Scope Unit.ID
+  main_subject: ANECHOIC_MODEL <+ Scope Unit.ID
 tier: 3
 status: active
 version: 7
@@ -14,7 +14,7 @@ updated_at: '2026-11-12T22:08:11.294473+00:00'
 carrier_destination:
   file:
     name: CA-R-2526-CORE_META_MODEL-DECLARATION--declare-scope-unit-id.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 ---
 
 ## Summary
@@ -26,7 +26,7 @@ Declare Scope Unit ID
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_entity
+from anechoic.formal_claims import declare_entity
 
 declare_entity(
     entity_name="ID",

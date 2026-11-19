@@ -25,7 +25,7 @@ Stage candidate runtime package and Skill **means** the Action that performs the
 
 ## Scope
 
-`stage_candidate` prepares the complete declared candidate Framework package at its reviewed non-active `.caprmedio_runtime` candidate package target, including the matching runtime Methodology delivery derived from the canonical candidate Projection and declared package members rather than Engine binaries alone. It also stages CA-D-563's complete hook-free `ca` directory payload for eventual project-local target `.agents/skills/ca`, without replacing N's active project-local Skill.
+`stage_candidate` prepares the complete declared candidate Framework package at its reviewed non-active `.anechoic_runtime` candidate package target, including the matching runtime Methodology delivery derived from the canonical candidate Projection and declared package members rather than Engine binaries alone. It also stages CA-D-563's complete hook-free `ca` directory payload for eventual project-local target `.agents/skills/ca`, without replacing N's active project-local Skill.
 
 ## Details
 

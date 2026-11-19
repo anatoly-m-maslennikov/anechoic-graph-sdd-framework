@@ -26,7 +26,7 @@ def claim(*lines):
 
 
 def native_property(name, base, *arguments):
-    return claim("```python", "from caprmedio.formal_claims import Cardinality, declare_entity",
+    return claim("```python", "from anechoic.formal_claims import Cardinality, declare_entity",
                  f"declare_entity(entity_name={name!r}, relation_name='IS_PROPERTY_OF', base_path={base!r},",
                  *(f"    {argument}," for argument in arguments), ")", "```")
 
@@ -49,7 +49,7 @@ def carriers():
         carrier(
             "CA-M-POISON", "Node.Poison",
             claim("### Formal Claim", "", "```python",
-                  "from caprmedio.formal_claims import declare_entity",
+                  "from anechoic.formal_claims import declare_entity",
                   "declare_entity(entity_name='Poison', relation_name='IS_PROPERTY_OF', base_path='Node')", "```"),
             role="Method", form="Policy",
         ),
@@ -59,13 +59,13 @@ def carriers():
 def projection(*, namespace=False):
     rows = carriers()
     if namespace:
-        rows.append(carrier("CA-R-NS", "CAPRMEDIO <+ MODEL", claim("Namespace declaration.")))
+        rows.append(carrier("CA-R-NS", "ANECHOIC <+ MODEL", claim("Namespace declaration.")))
     data = build_subject_projection_data(rows)
     if namespace:
         # ``namespaces`` is the canonical optional namespace record in the
         # projection API; its source is one of the helper input carriers.
         data.setdefault("namespaces", []).append({
-            "subject": "CAPRMEDIO <+ MODEL",
+            "subject": "ANECHOIC <+ MODEL",
             "source": {"atom_id": "CA-R-NS", "version": 1},
         })
     return data
@@ -76,7 +76,7 @@ class SubjectProjectionViewTests(unittest.TestCase):
         prefix = "Project.Settings.Authority Modes"
         children = ("Default Scope Unit Authority Mode", "Project Authority Mode")
         python_claim = claim(
-            "```python", "from caprmedio.formal_claims import declare_entity",
+            "```python", "from anechoic.formal_claims import declare_entity",
             "declare_entity(entity_name='Authority Modes', relation_name='IS_PROPERTY_OF',",
             "    base_path='Project.Settings', dependent_property_cardinality=2,",
             "    allowed_dependent_property_names=('Default Scope Unit Authority Mode', 'Project Authority Mode'),",
@@ -104,7 +104,7 @@ class SubjectProjectionViewTests(unittest.TestCase):
         data = build_subject_projection_data([
             carrier("CA-R-1", "Node", claim("Node.")),
             carrier("CA-R-2", "Node.Name", claim(
-                "```python", "from caprmedio.formal_claims import declare_entity",
+                "```python", "from anechoic.formal_claims import declare_entity",
                 "declare_entity(entity_name='Name', relation_name='IS_PROPERTY_OF',",
                 "    base_path='Node', value_format=str, value_cardinality=1)", "```")),
         ])
@@ -175,13 +175,13 @@ class SubjectProjectionViewTests(unittest.TestCase):
     def test_explicit_new_namespace_roots_render_without_invented_parent(self):
         data = projection()
         data["namespaces"] = [
-            {"subject": "CAPRMEDIO_MODEL", "source": {"atom_id": "CA-R-1", "version": 1}},
-            {"subject": "CAPRMEDIO_STRUCTURE <+ Project", "source": {"atom_id": "CA-R-2", "version": 1}},
+            {"subject": "ANECHOIC_MODEL", "source": {"atom_id": "CA-R-1", "version": 1}},
+            {"subject": "ANECHOIC_STRUCTURE <+ Project", "source": {"atom_id": "CA-R-2", "version": 1}},
         ]
         document = views.render_primary_projection(data, 1)
-        self.assertIn("\nCAPRMEDIO_MODEL\n", document)
-        self.assertIn("\nCAPRMEDIO_STRUCTURE\n  <+ Project", document)
-        self.assertNotIn("\nCAPRMEDIO\n", document)
+        self.assertIn("\nANECHOIC_MODEL\n", document)
+        self.assertIn("\nANECHOIC_STRUCTURE\n  <+ Project", document)
+        self.assertNotIn("\nANECHOIC\n", document)
 
     def test_level_one_keeps_primary_tree_and_source_backed_namespace(self):
         document = views.render_primary_projection(projection(namespace=True), 1)

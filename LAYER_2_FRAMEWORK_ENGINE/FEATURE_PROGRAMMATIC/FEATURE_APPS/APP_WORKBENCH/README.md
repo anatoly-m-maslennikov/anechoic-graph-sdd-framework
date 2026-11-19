@@ -1,9 +1,9 @@
 # Workbench
 
-Open `/caprmedio/workbench/<project_name>` (here, `/caprmedio/workbench/caprmedio`) on the Project MCP server. Run executes SQL once
+Open `/anechoic/workbench/<project_name>` (here, `/anechoic/workbench/anechoic`) on the Project MCP server. Run executes SQL once
 and returns the first page and exact total counts. Previous and Next fetch
 pages from that stable result; Check returns exact row and column counts.
-The MCP endpoint is `/caprmedio/mcp`; health is `/caprmedio/health`.
+The MCP endpoint is `/anechoic/mcp`; health is `/anechoic/health`.
 
 MCP tools:
 
@@ -43,21 +43,21 @@ that remains invalid causes an explicit unavailable error; correct it and call
 `workbench_restart()` again. Restart does not retry automatically, control Docker,
 run shell commands, or write a Business Journal event.
 
-The native health form posts only to `/caprmedio/health/workbench-restart`.
+The native health form posts only to `/anechoic/health/workbench-restart`.
 On a shared host it requires exactly one `project_root` Project folder; a
 single-project host accepts an empty form only. It uses the same MCP tool
 boundary as direct callers. The ordinary health GET and JSON readiness response
 remain read-only.
 
 The health-page `Full reread` button posts to
-`/caprmedio/health/workbench-reread` through the same MCP operation. It closes
+`/anechoic/health/workbench-reread` through the same MCP operation. It closes
 Workbench, removes only its derived database, WAL and temporary files, then
 creates a fresh database and reads Current and Draft sources. Old tables,
 columns and query-result IDs do not survive. Source files, saved queries,
 Views and their Journal remain unchanged. Failure reports unavailable;
 there is no automatic retry or fallback to the old database.
 
-Ordinary Run and Check do not create permanent saved-item IDs. Every actual Run records SQL, success/fail, error and row/column counts in the separate runtime query log; Check does not. Log records expire after two days (48 hours) on use and contain no result rows. New records append directly to UTC-hour NDJSON batches under `.caprmedio_runtime/workbench/query_log/`; retained entries in the old `query-log.json` remain readable without rewriting that file. Saved Views do not expire. Run & Save and Save View
+Ordinary Run and Check do not create permanent saved-item IDs. Every actual Run records SQL, success/fail, error and row/column counts in the separate runtime query log; Check does not. Log records expire after two days (48 hours) on use and contain no result rows. New records append directly to UTC-hour NDJSON batches under `.anechoic_runtime/workbench/query_log/`; retained entries in the old `query-log.json` remain readable without rewriting that file. Saved Views do not expire. Run & Save and Save View
 create immutable entries in the configured Project Journal, in date-partitioned
 `workbench-saved-items-…-part-N.ndjson` files. Each entry has a canonical UUIDv7,
 kind, exact SQL, optional name and save timestamp. Parts hold about 1,000 entries
@@ -89,7 +89,7 @@ across the whole result. Zero and false remain visible. `columns[].has_values`
 is stable across pages; SQL rows and total column counts remain complete.
 
 A Codex plugin package is in `FEATURE_CODEX_EXTENSION/plugin`. It uses a native
-SessionStart session ID and the existing CAPRMEDIO MCP connection; it adds no
+SessionStart session ID and the existing ANECHOIC MCP connection; it adds no
 standalone chat or second server. Local packaging does not install or trust it
 in Codex automatically.
 
@@ -107,10 +107,10 @@ read retained run records.
 The shared HTTP representation is POST `/interface` under the Project Workbench
 URL, with `{operation, arguments}` and the existing outer Project binding.
 
-Web POST endpoints are `/caprmedio/workbench/<project_name>/run`, `/page`, `/check`,
+Web POST endpoints are `/anechoic/workbench/<project_name>/run`, `/page`, `/check`,
 `/schema`, `/status`, `/view-save`, `/load` and `/saved-list`. Run & Save uses `/run`
 with `save=true`; there is no separate `/save` or MCP `query_save` operation.
-A mismatched Project name returns 404. Static assets stay under `/caprmedio/workbench/assets`.
+A mismatched Project name returns 404. Static assets stay under `/anechoic/workbench/assets`.
 A shared MCP server also requires `project_root`.
 
 Default query style: uppercase `SELECT` on its own line; two-space indentation;
@@ -155,7 +155,7 @@ order by "name"
 
 ```sql
 FROM GRAPH_TABLE (
-    caprmedio MATCH (parent:Reference)-[edge:CONTAINS]->(child:Reference)
+    anechoic MATCH (parent:Reference)-[edge:CONTAINS]->(child:Reference)
     COLUMNS (parent.ref AS parent, child.ref AS child, edge.derived AS derived)
 );
 ```
@@ -167,7 +167,7 @@ properties, the fixed union of declared `content.*` Markdown values, outgoing
 outgoing `relations`, and a hash. It does not expose parser-only YAML, raw Markdown,
 or raw edge JSON. Graph traversal remains available through `GRAPH_TABLE`.
 The index stores parsed YAML, Markdown sections and derived relations in the rebuildable
-`.caprmedio_runtime/workbench/projection.duckdb` database. Query results stay
+`.anechoic_runtime/workbench/projection.duckdb` database. Query results stay
 stable across source refresh and are discarded at restart. Spill files remain
 in the same owned runtime directory; source files stay authoritative.
 
@@ -186,7 +186,7 @@ and the former underscore-flattened Header names are not retained. Existing
 saved SQL is not rewritten; use `/schema` for the actual available paths.
 
 The cold-start setting `workbench.schema_mode` in
-`.caprmedio_runtime/caprmedio_runtime_settings.toml` selects:
+`.anechoic_runtime/anechoic_runtime_settings.toml` selects:
 
 - `1`: model-declared Header properties and model-declared Content properties.
   Header names bind through the existing carrier adapter; accepted historical
@@ -207,7 +207,7 @@ of the source tables. Same-shape Declaration version or path changes refresh
 provenance without rebuilding tables. An undeclared observed Header property
 does not change Mode 1 columns.
 
-`watchdog` watches only the selected repository's CAPRMEDIO source folder,
+`watchdog` watches only the selected repository's ANECHOIC source folder,
 even when a larger parent folder is mounted.
 Invalid or ambiguous Atom sources are excluded and reported to stderr. Invalid Current Scope Unit Declarations stop indexing until corrected and explicitly restarted. Native watcher events are retained in the technical `change_log` table and NDJSON log for 48 hours or 100,000 rows, whichever removes them first. Moves and renames come from native watcher events. The header shows synchronization status and the last successful sync in local time.
 
@@ -226,7 +226,7 @@ The Docker build installs DuckPGQ. Native tests need the host extension too:
 
 ```sh
 uv sync --group rmed-workflow-mcp
-.venv/bin/python -c "import duckdb; c=duckdb.connect(config={'extension_directory':'.caprmedio_tmp/workbench/extensions'}); c.execute('INSTALL duckpgq FROM community'); c.close()"
+.venv/bin/python -c "import duckdb; c=duckdb.connect(config={'extension_directory':'.anechoic_tmp/workbench/extensions'}); c.execute('INSTALL duckpgq FROM community'); c.close()"
 ```
 
 Run the repository's full test suite to build one disposable image and run the
@@ -243,7 +243,7 @@ Install the development browser once from `FEATURE_WORKBENCH_FRONTEND`:
 
 ```sh
 npm ci
-PLAYWRIGHT_BROWSERS_PATH="$(git rev-parse --show-toplevel)/.caprmedio_tmp/workbench/playwright-browsers" npx playwright install chromium
+PLAYWRIGHT_BROWSERS_PATH="$(git rev-parse --show-toplevel)/.anechoic_tmp/workbench/playwright-browsers" npx playwright install chromium
 ```
 
 The Docker E2E test sets the browser URL and uses that cache automatically.
@@ -251,7 +251,7 @@ A standalone browser run requires an explicit `WORKBENCH_E2E_URL` and the same
 `PLAYWRIGHT_BROWSERS_PATH`, then `npm run test:e2e`. It creates saved-item Journal
 entries in the selected test Project. No live-server URL is assumed.
 
-Browser test artifacts are written to `.caprmedio_tmp/workbench/browser-results`, outside application/image inputs.
+Browser test artifacts are written to `.anechoic_tmp/workbench/browser-results`, outside application/image inputs.
 
 Result table headers show column names on their own line, with SQL types below in smaller muted text.
 
@@ -263,7 +263,7 @@ Right-click a cell to copy or show its full value, a row to copy it, or a column
 
 Each cached result is kept while younger than the configured TTL **or** its View remains open. Closing a View unpins it; editing SQL preserves its last result. A valid rerun drops the prior result before execution, including when the new query fails. Restart clears transient results but preserves saved items.
 
-The shared backend reads `.caprmedio_runtime/caprmedio_runtime_settings.toml` on start:
+The shared backend reads `.anechoic_runtime/anechoic_runtime_settings.toml` on start:
 
 ```toml
 [workbench]
@@ -273,4 +273,4 @@ result_ttl_seconds = 3600
 The TTL must be a positive integer. Apply file edits with Workbench restart or full reread; this setting has no MCP editor or hot reload. Query-log retention is separate and fixed at two days.
 
 
-Code hot reload is disabled by default. Vite development HMR and its filesystem watcher require `CAPRMEDIO_HOT_RELOAD=1`; ordinary builds remain static. Workbench source-data synchronization continues independently.
+Code hot reload is disabled by default. Vite development HMR and its filesystem watcher require `ANECHOIC_HOT_RELOAD=1`; ordinary builds remain static. Workbench source-data synchronization continues independently.

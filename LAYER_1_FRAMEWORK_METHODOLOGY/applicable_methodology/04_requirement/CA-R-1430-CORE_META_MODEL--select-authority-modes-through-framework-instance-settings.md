@@ -4,18 +4,18 @@ ref_id: CA-R-1430
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Project.Settings.Authority Modes
+  main_subject: ANECHOIC_MODEL <+ Project.Settings.Authority Modes
   dependencies:
-  - CAPRMEDIO_MODEL <+ Project.Settings
-  - CAPRMEDIO_MODEL <+ Scope Unit/Project
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Project.Settings
+  - ANECHOIC_MODEL <+ Scope Unit/Project
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Atom
 tier: 2
 status: Active
 version: 27
 updated_at: 2026-11-02 20:07:03 +0400
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1430-CORE_META_MODEL--select-authority-modes-through-framework-instance-settings.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1430-CORE_META_MODEL--select-authority-modes-through-framework-instance-settings.md
   source_atom_id: CA-R-1430
   source_atom_revision: 27
   source_sha256: a8d4c1ce05fc223ad9a8353e103e9c561deba1949cdadd25766fac3b2b80979e

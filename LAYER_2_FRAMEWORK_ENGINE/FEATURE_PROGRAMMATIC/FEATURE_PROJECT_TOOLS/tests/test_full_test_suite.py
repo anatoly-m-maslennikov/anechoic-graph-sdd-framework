@@ -28,7 +28,7 @@ PASSED_COUNT = full.RESULT_MARKER + '{"tests":1,"skipped":0}\n'
 
 class FullTestSuiteTests(unittest.TestCase):
     def setUp(self) -> None:
-        temporary = TOOLS.parent / ".caprmedio_tmp/tests/full-test-suite"
+        temporary = TOOLS.parent / ".anechoic_tmp/tests/full-test-suite"
         temporary.mkdir(parents=True, exist_ok=True)
         directory = tempfile.TemporaryDirectory(dir=temporary)
         self.addCleanup(directory.cleanup)
@@ -57,7 +57,7 @@ class FullTestSuiteTests(unittest.TestCase):
             self.file("LAYER_5_FRAMEWORK_DELIVERY/PUBLIC_RELEASE/tests/test_public.py"),
         ]
         for relative in (
-            "LAYER_2_FRAMEWORK_ENGINE/.caprmedio_tmp/test_generated.py",
+            "LAYER_2_FRAMEWORK_ENGINE/.anechoic_tmp/test_generated.py",
             "LAYER_2_FRAMEWORK_ENGINE/component/tests/fixture/project/tests/test_copied.py",
             "LAYER_2_FRAMEWORK_ENGINE/component/tests/golden/test_engine.v1.py",
             "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/__pycache__/test_cache.py",
@@ -143,7 +143,7 @@ class FullTestSuiteTests(unittest.TestCase):
         result = subprocess.CompletedProcess([], 0, PASSED_COUNT, "")
         with (
             patch.dict(full.os.environ, {
-                "CAPRMEDIO_DOCKER_QUERY_IMAGE": "actual-image",
+                "ANECHOIC_DOCKER_QUERY_IMAGE": "actual-image",
                 "PYTHONPATH": "existing-pythonpath",
             }),
             patch.object(full.subprocess, "run", return_value=result) as command,
@@ -157,9 +157,9 @@ class FullTestSuiteTests(unittest.TestCase):
             environment = command.call_args.kwargs["env"]
             self.assertNotIn("start_new_session", command.call_args.kwargs)
             self.assertNotIn("process_group", command.call_args.kwargs)
-            self.assertEqual("1", environment["CAPRMEDIO_DOCKER_E2E"])
-            self.assertEqual("1", environment["CAPRMEDIO_DOCKER_QUERY_E2E"])
-            self.assertEqual("actual-image", environment["CAPRMEDIO_DOCKER_QUERY_IMAGE"])
+            self.assertEqual("1", environment["ANECHOIC_DOCKER_E2E"])
+            self.assertEqual("1", environment["ANECHOIC_DOCKER_QUERY_E2E"])
+            self.assertEqual("actual-image", environment["ANECHOIC_DOCKER_QUERY_IMAGE"])
             programmatic = self.root / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC"
             apps = programmatic / "FEATURE_APPS"
             self.assertEqual(

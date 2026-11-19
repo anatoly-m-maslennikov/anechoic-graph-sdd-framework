@@ -8,11 +8,11 @@ subjects:
       - Term System
   depends_on:
     continuant:
-      - CAPRMEDIO Graph
+      - ANECHOIC Graph
 version: 5
 updated_at: 2026-09-06 01:45:12 +0400
 relations: {}
 ---
 # Keep Term-System Relations Graph-Specific
 
-the Term System **must not** treat INSTANCE_OF **or** **any** relation from another CAPRMEDIO Graph as SUBKIND_OF, IS_BORNE_BY, **or** IS_ALLOWED_VALUE_OF.
+the Term System **must not** treat INSTANCE_OF **or** **any** relation from another ANECHOIC Graph as SUBKIND_OF, IS_BORNE_BY, **or** IS_ALLOWED_VALUE_OF.

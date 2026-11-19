@@ -31,7 +31,7 @@ class MetaForwardingTests(unittest.IsolatedAsyncioTestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             selection = ProjectSelection(
-                root, root / ".caprmedio_fixture", Path(".caprmedio_fixture"), "a" * 64,
+                root, root / ".anechoic_fixture", Path(".anechoic_fixture"), "a" * 64,
                 {"artifacts": {"identity": {"project_prefix": "TEST"}}}, {}, (), {}, "",
             )
             inner = SimpleNamespace(call=AsyncMock(return_value=types.CallToolResult(content=[])))

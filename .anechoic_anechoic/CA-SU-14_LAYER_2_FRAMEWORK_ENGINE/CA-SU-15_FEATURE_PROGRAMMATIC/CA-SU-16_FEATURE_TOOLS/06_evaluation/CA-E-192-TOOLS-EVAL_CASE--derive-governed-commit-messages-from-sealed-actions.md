@@ -1,0 +1,45 @@
+---
+atom_id: CA-E-192
+ref_id: CA-E-192
+container:
+  scope_unit: CA-SU-16
+role: Evaluation
+form: Eval Case
+topics:
+  main_subject: Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Delivery
+  dependencies:
+  - "Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control"
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Atom/Content Role: Operations/Type: Action'
+  - Subject/ANECHOIC/Graph/Node/Project Model/History/Journal
+tier: 2
+relations:
+  evaluation_for:
+  - CA-D-334
+  - CA-R-805
+  - CA-R-812
+  - CA-D-417
+status: Active
+version: 26
+updated_at: 2026-10-27 19:59:30 +0400
+llm_session_ids:
+- codex:01a02650-eff7-7453-8c37-0699b36773c6
+author: Anatoly Maslennikov
+current_scope_unit: TOOLS
+---
+# Derive Governed Commit Messages from Sealed Actions
+
+## Claim checked
+
+the canonical Git commit message is a deterministic Projection of **=1** sealed Git-effect action: an Initiative-based real-change action **or** a distinct Journal-only batch action.
+
+## Test case
+
+prepare one sealed real-change action whose Initiative comes from human input **and** one sealed Journal-only batch action. independently render `<initiative-summary> | <CHANGE_CLASS> | <affected-subject>` **and** `JOURNAL BATCH | APPEND | <journal-batch-id>`, **then** compare both renderings with the corresponding Git commit subjects.
+
+## Acceptance criteria
+
+**every** Git commit subject is byte-identical **to** its independently rendered Projection, **contains** no added prefix, suffix, quoting, normalization, line wrapping, **or** technical-parent substitution, **and** neither action accepts the other message class.
+
+## Failure disposition
+
+reject the flow at the first rendering mismatch, technical-parent substitution, **or** cross-class impersonation **and** report the sealed action **and** divergent output.

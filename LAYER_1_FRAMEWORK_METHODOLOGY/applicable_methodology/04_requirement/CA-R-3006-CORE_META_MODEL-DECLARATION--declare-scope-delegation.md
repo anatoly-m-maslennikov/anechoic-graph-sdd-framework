@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Form := Scope Delegation)
+  main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Form := Scope Delegation)
 tier: 3
 status: active
 version: 15
@@ -14,9 +14,9 @@ updated_at: '2026-11-14T13:56:40.432945+00:00'
 carrier_destination:
   file:
     name: CA-R-3006-CORE_META_MODEL-DECLARATION--declare-scope-delegation.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-3006-CORE_META_MODEL-DECLARATION--declare-scope-delegation.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-3006-CORE_META_MODEL-DECLARATION--declare-scope-delegation.md
   source_atom_id: CA-R-3006
   source_atom_revision: 15
   source_sha256: aea7c13b628f6461f469791c99cd5173ce6210b2636f5bc30dec96b711ac3dea
@@ -65,7 +65,7 @@ For local admission, the Atom's Container resolves to the receiving Scope Unit. 
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_entity
+from anechoic.formal_claims import declare_entity
 
 declare_entity(
     entity_name='Form', relation_name='IS_PROPERTY_OF',

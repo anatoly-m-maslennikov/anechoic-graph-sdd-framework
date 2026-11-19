@@ -1,13 +1,13 @@
 ---
 subjects:
-  active: CAPRMEDIO_MODEL <+ Carrier/File.Main Content
+  active: ANECHOIC_MODEL <+ Carrier/File.Main Content
   passive:
-  - CAPRMEDIO_MODEL <+ Atom.Content.Summary
-  - CAPRMEDIO_MODEL <+ Atom.Content
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom.Content Role
-  - CAPRMEDIO_MODEL <+ Atom.Content.Details
-  - CAPRMEDIO_MODEL <+ Term//Property
-  - CAPRMEDIO_MODEL <+ Carrier/File
+  - ANECHOIC_MODEL <+ Atom.Content.Summary
+  - ANECHOIC_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom.Content Role
+  - ANECHOIC_MODEL <+ Atom.Content.Details
+  - ANECHOIC_MODEL <+ Term//Property
+  - ANECHOIC_MODEL <+ Carrier/File
 version: 28
 updated_at: 2026-11-02 00:18:22 +0400
 relations: {}

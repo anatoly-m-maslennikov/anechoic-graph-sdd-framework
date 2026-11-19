@@ -6,17 +6,17 @@ container:
 role: Operations
 form: Action
 topics:
-  main_subject: "Subject/CAPRMEDIO/Graph/Node/Aspect/Engineering/Operation/Data Handling/Data Transformation"
+  main_subject: "Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Data Transformation"
   dependencies:
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Operations/Type: Action'
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom.Content
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom.Summary
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Projection
-  - "Subject/CAPRMEDIO/Graph/Node/Aspect/Engineering/Development/Authoring/Controlled English"
-  - "Subject/CAPRMEDIO/Graph/Node/Aspect/Engineering/Operation/Execution Control/Decision Confidence"
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Actor/Type: Operator'
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Actor/Type: AI Agent'
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Atom/Content Role: Operations/Type: Action'
+  - Subject/ANECHOIC/Graph/Node/Project Model/Atom
+  - Subject/ANECHOIC/Graph/Node/Project Model/Atom.Content
+  - Subject/ANECHOIC/Graph/Node/Project Model/Atom.Summary
+  - Subject/ANECHOIC/Graph/Node/Project Model/Projection
+  - "Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Controlled English"
+  - "Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Decision Confidence"
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Actor/Type: Operator'
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Actor/Type: AI Agent'
 tier: 3
 relations:
   child_of:
@@ -28,12 +28,12 @@ updated_at: 2026-10-29 23:58:03 +0400
 carrier_destination:
   file:
     name: CA-O-053-PROJECT_CONFIGURATION-ACTION--migrate-atoms-to-a-current-cce-version.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: PROJECT_CONFIGURATION
 author: Anatoly Maslennikov
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-053-PROJECT_CONFIGURATION-ACTION--migrate-atoms-to-a-current-cce-version.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-053-PROJECT_CONFIGURATION-ACTION--migrate-atoms-to-a-current-cce-version.md
   source_atom_id: CA-O-053
   source_atom_revision: 21
   source_sha256: df39f2ba20b1d62e5e2bf1baf4a50e4c3f61761528f4034c58e60edb2c5bf497

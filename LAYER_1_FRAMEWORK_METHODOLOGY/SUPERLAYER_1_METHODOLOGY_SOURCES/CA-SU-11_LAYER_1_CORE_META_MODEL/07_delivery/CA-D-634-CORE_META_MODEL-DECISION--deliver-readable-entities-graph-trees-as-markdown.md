@@ -6,15 +6,15 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Projection/(.Form:=Entities Graph)
+  main_subject: ANECHOIC_MODEL <+ Projection/(.Form:=Entities Graph)
   dependencies:
-  - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ Relation
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Projection
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/(.Form:Entities Graph)
-  - CAPRMEDIO_MODEL <+ Projection.Updated At
-  - CAPRMEDIO_MODEL <+ Carrier/Directory
+  - ANECHOIC_MODEL <+ Entity
+  - ANECHOIC_MODEL <+ Relation
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Projection
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Projection/(.Form:Entities Graph)
+  - ANECHOIC_MODEL <+ Projection.Updated At
+  - ANECHOIC_MODEL <+ Carrier/Directory
 tier: 5
 status: Active
 version: 23
@@ -22,7 +22,7 @@ updated_at: 2026-11-02 08:06:47 +0400
 carrier_destination:
   file:
     name: CA-D-634-CORE_META_MODEL-DECISION--deliver-readable-entities-graph-trees-as-markdown.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---

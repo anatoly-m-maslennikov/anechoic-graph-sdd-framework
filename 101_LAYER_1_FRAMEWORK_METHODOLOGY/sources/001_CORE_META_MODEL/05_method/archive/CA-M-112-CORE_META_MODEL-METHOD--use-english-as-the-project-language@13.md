@@ -19,4 +19,4 @@ type: "Method"
 ---
 # Use English as the Project language
 
-**to** express CAPRMEDIO Project meaning, the Author **must** use English as the base language.
+**to** express ANECHOIC Project meaning, the Author **must** use English as the base language.

@@ -6,7 +6,7 @@ container:
 role: Evaluation
 form: Eval Policy
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Node
+  main_subject: ANECHOIC_MODEL <+ Node
 tier: 3
 status: Active
 version: 4
@@ -14,7 +14,7 @@ updated_at: 2026-11-02 17:54:42 +0400
 carrier_destination:
   file:
     name: CA-E-669-CORE_META_MODEL-EVAL_POLICY--check-node-declaration-migration-readiness.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---
@@ -31,7 +31,7 @@ A migration packet passes only when its selected Node inventory, predecessor dis
 
 ## Details
 
-Check the proposed governing Drafts and exact selected source versions in the selected effective MODEL. Resolve explicit local overrides first. The following checklist states CAPRMEDIO's base rules; an explicit override changes the corresponding criterion in that MODEL:
+Check the proposed governing Drafts and exact selected source versions in the selected effective MODEL. Resolve explicit local overrides first. The following checklist states ANECHOIC's base rules; an explicit override changes the corresponding criterion in that MODEL:
 
 - Declaration is Requirement/Form: Declaration, with the R prefix; Role and Form remain separate. Every declared member of (Node, Node/**, .**) has exactly one effective Current Declaration after MODEL override resolution and each such Declaration has one matching active Subject. Count only that Form, not all RMED addressing the Node. Drafts and archives do not add Current owners.
 - A Node Declaration states its normative constraints in its Claim, preferring admitted formal notation and using prose where existing notation cannot express a constraint without a single-use extension. The Node Claim explicitly forbids IS_PROPERTY_OF cycles, including self-loops; no dedicated acyclicity predicate is required. A repetitive prose Claim or Semantics is not mandatory. CFEL retains a Claim and may have Semantics. Unchanged inherited Properties reuse their original Declaration. Explicit local MODEL replacements are selected in that MODEL; the base remains unchanged. Effective inherited rules do not create new declaration responsibilities.

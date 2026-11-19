@@ -31,7 +31,7 @@ the classification of admitted Atom changes by semantic effect.
 
 ## Claim
 
-**before** changing an admitted Atom, CAPRMEDIO **must** assign **`=1`** change class using these boundaries, identity results, **and** required reviews:
+**before** changing an admitted Atom, ANECHOIC **must** assign **`=1`** change class using these boundaries, identity results, **and** required reviews:
 
 | Change class | Boundary | Identity result | Required review |
 |---|---|---|---|

@@ -1,0 +1,57 @@
+---
+atom_id: CA-P-1140
+ref_id: CA-P-1140
+container:
+  atom: CA-P-1122
+role: Plan
+form: Plan
+label: Task
+topics:
+  main_subject: Subject/Graph Node/Engineering/Implementation Evaluation
+  dependencies:
+  - Subject/Graph Node/Engineering/Operations
+  - Subject/Graph Node/Engineering/Implementation
+tier: 3
+relations:
+  is_decomposition_of:
+  - CA-P-1122
+status: Active
+version: 6
+updated_at: 2026-10-25 17:32:27 +0400
+carrier_destination:
+  file:
+    name: 4-CA-P-1140-TASK--review-and-functionally-verify-one-implementation-slice.md
+    path: .anechoic_anechoic/03_plan/done/15-CA-P-1117-EPIC--harvest-and-implement-session-derived-operations/done/5-CA-P-1122-TASK--implement-and-verify-adopted-capabilities
+work_sequence_number: 4
+current_scope_unit: anechoic
+claim_target_scope_unit: FRAMEWORK_ENGINE
+author: Anatoly Maslennikov
+assignee: AI Agent
+---
+# Summary
+
+Review and functionally verify one implementation slice
+
+## Objective
+
+The assigned AI Agent must complete one bounded work packet for review and functionally verify one implementation slice, using the stated inputs and ownership restrictions, and record the required output without extending this leaf's scope.
+
+### Inputs and bounded ownership
+
+Assign an independent subagent a bounded changed capability slice and current RMED. Prefer integration/functional/E2E/canary checks over implementation-coupled unit tests; add units only for isolated logic not sufficiently proved by larger checks. Select at most three public scenarios per leaf.
+
+### Required output
+
+Recorded review findings/dispositions, typed Concerns, passing source-bound functional evidence, and updated dependent packaging tasks. Remaining slices/scenarios receive new leaves; all adopted capabilities must be covered before the parent finishes.
+
+### Composite packet and execution gate
+
+This packet Plan is composite. Its initial preflight child has an estimate of <=15 minutes; actual execution children are created only after their inputs, ownership, output and verification are bound. Composite roll-up effort depends on the resulting decomposition. Before execution, the parent/preceding-task review must bind the exact evidence packet or capability IDs, live governing revisions, target file paths, output and verification command/scenario in this file. If they cannot be bound safely or exceed the estimate, create narrower subtasks before execution rather than starting an underspecified leaf. A remainder is represented by new Plan files and explicit dependency edges, not an untracked promise.
+
+Inherit CA-P-1117 controls and the 90% confidence threshold through IS_DECOMPOSITION_OF. Every issue requires a typed C atom: blocker/failure -> Problem; unresolved choice -> Question; incompatible authority -> Conflict. Postpone a blocked task and work on another independent ready task. After completion, reassess and update affected dependent tasks before they start. Retain durable source/result/provenance evidence; do not mark the parent Done merely because this first packet is Done.
+
+## Details
+
+### Definition of Done
+
+This Plan is not Done if the bound packet's required output or verification evidence is missing; any encountered issue lacks its typed Concern and disposition; any remaining work lacks explicit child/remainder tasks and appropriate BLOCKS edges; governing sources or authority boundaries were bypassed; or the affected dependent task(s) were not reviewed and updated from the completed result. A blocked or timed-out packet is not Done.

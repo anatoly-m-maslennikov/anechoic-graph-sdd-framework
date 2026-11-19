@@ -32,7 +32,7 @@ def validate_dependencies_claim(declaration):
             or args.get("relation_name") != "IS_PROPERTY_OF"
             or not check or check.get("name") != "dependencies_are_distinct"
             or check.get("parameter_type") != "Atom"
-            or declaration.get("imports", {}).get("Atom") != "caprmedio.model"
+            or declaration.get("imports", {}).get("Atom") != "anechoic.model"
             or sha256(check["source"].encode()).hexdigest() != DEPENDENCIES_CHECK_SOURCE_SHA256
             or args.get("property_occurrence_cardinality") != {"minimum": 0, "maximum": 1}
             or args.get("value_format") != "str"

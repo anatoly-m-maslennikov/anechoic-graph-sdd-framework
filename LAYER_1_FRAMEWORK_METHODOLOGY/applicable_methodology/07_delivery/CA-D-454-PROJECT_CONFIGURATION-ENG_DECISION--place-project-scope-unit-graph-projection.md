@@ -6,10 +6,10 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: CAPRMEDIO_STRUCTURE <+ Projection//PROJECT_SCOPE_UNIT_GRAPH
+  main_subject: ANECHOIC_STRUCTURE <+ Projection//PROJECT_SCOPE_UNIT_GRAPH
   dependencies:
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ Carrier
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Carrier
 tier: 3
 status: Active
 version: 20
@@ -17,11 +17,11 @@ updated_at: 2026-11-02 19:44:26 +0400
 carrier_destination:
   file:
     name: CA-D-454-PROJECT_CONFIGURATION-DECISION--place-project-scope-unit-graph-projection.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/07_delivery
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: PROJECT_CONFIGURATION
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/07_delivery/CA-D-454-PROJECT_CONFIGURATION-ENG_DECISION--place-project-scope-unit-graph-projection.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/07_delivery/CA-D-454-PROJECT_CONFIGURATION-ENG_DECISION--place-project-scope-unit-graph-projection.md
   source_atom_id: CA-D-454
   source_atom_revision: 20
   source_sha256: b0a476f118804567d7d908a8349ddc31e6b45164d1ba99a8d26fddd036ca5806
@@ -39,7 +39,7 @@ Place Project Scope Unit Graph Projection
 the historical versionless Project Scope Unit Graph Projection.
 
 
-**if** the CAPRMEDIO Project's versionless Project Scope Unit Graph Projection is retained as historical migration evidence, **then** it **must** use its centralized Carrier location at `.caprmedio_caprmedio/_projection/project_scope_unit_graph.projection.toml`.
+**if** the ANECHOIC Project's versionless Project Scope Unit Graph Projection is retained as historical migration evidence, **then** it **must** use its centralized Carrier location at `.anechoic_anechoic/_projection/project_scope_unit_graph.projection.toml`.
 
 ## Details
 

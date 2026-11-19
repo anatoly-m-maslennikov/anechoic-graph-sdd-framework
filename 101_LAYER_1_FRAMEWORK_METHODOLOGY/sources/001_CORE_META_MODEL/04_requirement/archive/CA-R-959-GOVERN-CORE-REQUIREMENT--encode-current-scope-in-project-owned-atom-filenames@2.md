@@ -15,4 +15,4 @@ relations:
 ---
 # Encode Current Scope in Project-owned Atom filenames
 
-EVERY Project-owned Atom filename MUST encode its non-Project Current Scope once and MUST omit the Current Scope segment when CAPRMEDIO is the Current Scope.
+EVERY Project-owned Atom filename MUST encode its non-Project Current Scope once and MUST omit the Current Scope segment when ANECHOIC is the Current Scope.

@@ -4,14 +4,14 @@ current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 status: Active
 subjects:
-  active: CAPRMEDIO_MODEL <+ CFEL
+  active: ANECHOIC_MODEL <+ CFEL
   passive:
-  - CAPRMEDIO_MODEL <+ Term//Property
-  - CAPRMEDIO_MODEL <+ Entity/Property
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_PROPERTY_OF
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//HAS_CLASSIFICATION
-  - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Package <+ Module <+ Code Unit
+  - ANECHOIC_MODEL <+ Term//Property
+  - ANECHOIC_MODEL <+ Entity/Property
+  - ANECHOIC_MODEL <+ CFEL <+ Relation//IS_PROPERTY_OF
+  - ANECHOIC_MODEL <+ CFEL <+ Relation//HAS_CLASSIFICATION
+  - ANECHOIC_MODEL <+ Entity
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Package <+ Module <+ Code Unit
 version: 18
 relations: {}
 tier: 3

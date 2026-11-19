@@ -6,30 +6,30 @@ container:
 role: Evaluation
 form: Eval Case
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom
+  main_subject: ANECHOIC_MODEL <+ Atom
   dependencies:
-  - CAPRMEDIO_MODEL <+ Package
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Package/Eval Package
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Package/Runtime Package
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Package <+ Module
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Package <+ Module <+ Code Unit
-  - CAPRMEDIO_MODEL <+ Term//Entity
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Method)/(.Header.Context.Form
+  - ANECHOIC_MODEL <+ Package
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Package/Eval Package
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Package/Runtime Package
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Package <+ Module
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Package <+ Module <+ Code Unit
+  - ANECHOIC_MODEL <+ Term//Entity
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Method)/(.Header.Context.Form
     := Term Definition)
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
-  - CAPRMEDIO_MODEL <+ Term
-  - CAPRMEDIO_MODEL <+ Project
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role: Requirement)/(.Header.Context.Form:
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Topics
+  - ANECHOIC_MODEL <+ Term
+  - ANECHOIC_MODEL <+ Project
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role: Requirement)/(.Header.Context.Form:
     Entity Definition)'
-  - CAPRMEDIO_MODEL <+ Atom.Content
-  - CAPRMEDIO_MODEL <+ Entity
-  - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Terms Graph)'
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Concern)
-  - CAPRMEDIO_MODEL <+ Term//Artifact
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ Actor
-  - CAPRMEDIO_MODEL <+ Projection
-  - CAPRMEDIO_MODEL <+ Relation
+  - ANECHOIC_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ Entity
+  - 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Terms Graph)'
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Concern)
+  - ANECHOIC_MODEL <+ Term//Artifact
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Actor
+  - ANECHOIC_MODEL <+ Projection
+  - ANECHOIC_MODEL <+ Relation
 tier: 4
 relations:
   evaluation_for:
@@ -44,7 +44,7 @@ updated_at: '2026-11-13T18:55:54.474187+00:00'
 carrier_destination:
   file:
     name: CA-E-444-CORE_META_MODEL-EVAL_CASE--validate-project-specific-term-meaning.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
 ---
 ## Summary
 

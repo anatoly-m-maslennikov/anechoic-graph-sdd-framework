@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Session
+  main_subject: ANECHOIC_MODEL <+ Session
 tier: 3
 status: active
 version: 1
@@ -14,9 +14,9 @@ updated_at: 2026-11-04 16:07:35 +0400
 carrier_destination:
   file:
     name: CA-R-2754-CORE_META_MODEL-DECLARATION--declare-session.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2754-CORE_META_MODEL-DECLARATION--declare-session.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2754-CORE_META_MODEL-DECLARATION--declare-session.md
   source_atom_id: CA-R-2754
   source_atom_revision: 1
   source_sha256: d9904995f157de9b3265e248fa8fcdc91c128b168f4d85f3fe6107c68217fb7c
@@ -31,8 +31,8 @@ Declare Session
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_entity
-from caprmedio.model import ExternalRemoteRuntime
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ExternalRemoteRuntime
 
 class Session(ExternalRemoteRuntime):
     pass

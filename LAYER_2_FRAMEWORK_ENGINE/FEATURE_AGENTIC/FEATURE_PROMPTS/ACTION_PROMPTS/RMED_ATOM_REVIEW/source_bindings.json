@@ -17,90 +17,90 @@
     {
       "atom_id": "CA-D-509",
       "version": 15,
-      "path": ".caprmedio_caprmedio/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-22_FEATURE_AGENTIC/CA-SU-24_FEATURE_PROMPTS/07_delivery/CA-D-509-PROMPTS-DECISION--store-the-rmed-review-prompt-package.md",
-      "sha256": "0064437d0f947a1b262bd3880ad16b08d2322b0dda027af13a5b13279d858b15"
+      "path": ".anechoic_anechoic/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-22_FEATURE_AGENTIC/CA-SU-24_FEATURE_PROMPTS/07_delivery/CA-D-509-PROMPTS-DECISION--store-the-rmed-review-prompt-package.md",
+      "sha256": "37fd9d2a59160dc1aae14e3dfed8c64119b7d8ce93dbaa0397e033dc8c62990f"
     },
     {
       "atom_id": "CA-D-510",
       "version": 18,
-      "path": ".caprmedio_caprmedio/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-22_FEATURE_AGENTIC/CA-SU-24_FEATURE_PROMPTS/07_delivery/CA-D-510-PROMPTS-DECISION--serialize-review-coverage-and-correction-outcomes-separately.md",
-      "sha256": "21ba686d4aca0cb13d019ad3a5ebb7dab89f6d981fbf7d2eb14796256e484941"
+      "path": ".anechoic_anechoic/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-22_FEATURE_AGENTIC/CA-SU-24_FEATURE_PROMPTS/07_delivery/CA-D-510-PROMPTS-DECISION--serialize-review-coverage-and-correction-outcomes-separately.md",
+      "sha256": "343fd3fb29848f69bdd48d312a1f5cb67286c15288b489a1d43ab519730bd7b9"
     },
     {
       "atom_id": "CA-D-511",
       "version": 16,
-      "path": ".caprmedio_caprmedio/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-22_FEATURE_AGENTIC/CA-SU-24_FEATURE_PROMPTS/07_delivery/CA-D-511-PROMPTS-DECISION--store-full-review-run-reports-in-markdown.md",
-      "sha256": "3969b5d0929e24e2a270d06e2eee8b028fc33afa00296fb7e4b2b736affdf0c5"
+      "path": ".anechoic_anechoic/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-22_FEATURE_AGENTIC/CA-SU-24_FEATURE_PROMPTS/07_delivery/CA-D-511-PROMPTS-DECISION--store-full-review-run-reports-in-markdown.md",
+      "sha256": "3cdc837ac1eb830dc1644ff804d311908bfb538917fde49dd56fb43611821cb3"
     },
     {
       "atom_id": "CA-E-520",
       "version": 35,
-      "path": ".caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-520-CORE_META_MODEL-EVAL_POLICY--check-rmed-atom-coherence.md",
-      "sha256": "a55ff7ccd400f593133c9118624e707d1b60e17994eb21bbe7a51baedba85f6d"
+      "path": ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-520-CORE_META_MODEL-EVAL_POLICY--check-rmed-atom-coherence.md",
+      "sha256": "671e7dabc5b2087673401e2d49b189f125ff106606ec435e2d0f8a1ec3c76502"
     },
     {
       "atom_id": "CA-E-524",
       "version": 22,
-      "path": ".caprmedio_caprmedio/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-22_FEATURE_AGENTIC/CA-SU-24_FEATURE_PROMPTS/06_evaluation/CA-E-524-PROMPTS-EVAL_CASE--verify-rmed-review-prompt-coverage-and-completion.md",
-      "sha256": "bcce4e3f2ca2b0efdd2c570414871b73ec7978757e2b198c35c49f794a4b89d8"
+      "path": ".anechoic_anechoic/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-22_FEATURE_AGENTIC/CA-SU-24_FEATURE_PROMPTS/06_evaluation/CA-E-524-PROMPTS-EVAL_CASE--verify-rmed-review-prompt-coverage-and-completion.md",
+      "sha256": "3ad167bb23958031f77a9d53c3937b59dc0c25c34af274c9b035b19657fcb755"
     },
     {
       "atom_id": "CA-M-1014",
       "version": 2,
-      "path": ".caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-1014-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-concise-prose-aligned-with-asd-ste100.md",
-      "sha256": "d9c3b3e71d3e88fde1e530d94dc4086be561bfd6f4db7208f89a28e93a2b6924"
+      "path": ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-1014-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-concise-prose-aligned-with-asd-ste100.md",
+      "sha256": "d54e3fe22dac2e5df4d970195bf180ed28589a34dfa12f7e3bb3b6b421496948"
     },
     {
       "atom_id": "CA-M-317",
       "version": 19,
-      "path": ".caprmedio_caprmedio/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-22_FEATURE_AGENTIC/CA-SU-24_FEATURE_PROMPTS/05_method/CA-M-317-PROMPTS-SOLUTION--separate-content-assessment-from-heading-recognition.md",
-      "sha256": "57d12984eadda62737f1a4a022f713a0c470e8cb202336129ad227767727dd6f"
+      "path": ".anechoic_anechoic/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-22_FEATURE_AGENTIC/CA-SU-24_FEATURE_PROMPTS/05_method/CA-M-317-PROMPTS-SOLUTION--separate-content-assessment-from-heading-recognition.md",
+      "sha256": "256c8dcb65a546d4185d45fc52032e8151f60cbb8ad2e7878076cbfe18138df6"
     },
     {
       "atom_id": "CA-R-1799",
       "version": 20,
-      "path": ".caprmedio_caprmedio/04_requirement/CA-R-1799-RULE--provide-capabilities-without-forcing-their-execution.md",
-      "sha256": "93ee4f7ec071c0122b44709a99b3bbd22ad3bf2dad96ac6f965f60ccfb54fa10"
+      "path": ".anechoic_anechoic/04_requirement/CA-R-1799-RULE--provide-capabilities-without-forcing-their-execution.md",
+      "sha256": "7d8f4c46df21f41c993478d2de8b5b8e1d121b32805128b4c1d082430d9c7732"
     },
     {
       "atom_id": "CA-R-1801",
       "version": 18,
-      "path": ".caprmedio_caprmedio/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-22_FEATURE_AGENTIC/CA-SU-24_FEATURE_PROMPTS/04_requirement/CA-R-1801-PROMPTS-RULE--provide-complete-local-rmed-review-capability.md",
-      "sha256": "92a9ee1daec9315e3f44267c0cca806aaa3e1ba09e32fdd56e3e0fca85ecbdfc"
+      "path": ".anechoic_anechoic/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-22_FEATURE_AGENTIC/CA-SU-24_FEATURE_PROMPTS/04_requirement/CA-R-1801-PROMPTS-RULE--provide-complete-local-rmed-review-capability.md",
+      "sha256": "1e4702dacdd8fb78d172a1cdcfeac0ba83712fdd1bd115df4d04b6215cc2c603"
     },
     {
       "atom_id": "CA-R-1802",
       "version": 17,
-      "path": ".caprmedio_caprmedio/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-22_FEATURE_AGENTIC/CA-SU-24_FEATURE_PROMPTS/04_requirement/CA-R-1802-PROMPTS-RULE--keep-review-completion-separate-from-applied-edits.md",
-      "sha256": "f9b614b3a3ae7a1650e2a870181863cd7387ee88d2da8af9772dd027b8b57662"
+      "path": ".anechoic_anechoic/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-22_FEATURE_AGENTIC/CA-SU-24_FEATURE_PROMPTS/04_requirement/CA-R-1802-PROMPTS-RULE--keep-review-completion-separate-from-applied-edits.md",
+      "sha256": "325eab390855a38675d4e0dc0a9f856250c67785a6b7c841163ad79764107216"
     },
     {
       "atom_id": "CA-R-2500",
       "version": 8,
-      "path": ".caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2500-CORE_META_MODEL-DECLARATION--declare-atom-content-claim.md",
-      "sha256": "033f4f93b5ec64953f32ad2c1f196713a326a2be7a1b90de611971afd78280bd"
+      "path": ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2500-CORE_META_MODEL-DECLARATION--declare-atom-content-claim.md",
+      "sha256": "4692f6320dcc5187edb45363d656aed60b78a9c349665981ed1138578698bc11"
     },
     {
       "atom_id": "CA-D-479",
       "version": 36,
-      "path": ".caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-479-CORE_META_MODEL-ENG_DECISION--use-stable-headings-for-atom-body-properties.md",
-      "sha256": "c5e96e66a4782c6a1f0988253ec99d211f48fc83e291cb0fe24a54000e2a208e"
+      "path": ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-479-CORE_META_MODEL-ENG_DECISION--use-stable-headings-for-atom-body-properties.md",
+      "sha256": "90139b8066d8508e2c2885a5ccd62b182cd5fe7c684da36c481c479d2a1dddb6"
     },
     {
       "atom_id": "CA-D-496",
       "version": 24,
-      "path": ".caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/07_delivery/CA-D-496-PROJECT_CONFIGURATION-ENG_DECISION--store-one-review-report-per-source-atom.md",
-      "sha256": "690a8c45475d7e443689d9fcd09678259babe8f0e960317063e2da6cd30a5105"
+      "path": ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/07_delivery/CA-D-496-PROJECT_CONFIGURATION-ENG_DECISION--store-one-review-report-per-source-atom.md",
+      "sha256": "627f2f70edd40c1ed75b39432e5fabaefd4eadb6567b7e574354987e1ef176b1"
     }
   ],
   "settings": [
     {
-      "path": ".caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/caprmedio_framework_default_settings.toml",
-      "sha256": "f8fda1107671ad6c3fd02653ada4f16ffe01ce0a3f57b4a732d7eac39d4e3851"
+      "path": ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/anechoic_framework_default_settings.toml",
+      "sha256": "8c0fafe6c8d0b05dbe4262f48dc907fd3fcfb9213e44d0bc6b9d686b7c1e1f5b"
     },
     {
-      "path": ".caprmedio_caprmedio/000_CAPRMEDIO_framework/caprmedio_framework_settings.toml",
-      "sha256": "ffebca4931bd3b62a2c5027ff860829b1524db02c0a03ce2b136519f43ad61ce"
+      "path": ".anechoic_anechoic/000_ANECHOIC_framework/anechoic_framework_settings.toml",
+      "sha256": "a2fa1e2b1f6178f72112be62be0c336d5e8cccf0a61df4254f2a76db03fa5a6f"
     }
   ],
   "evaluators": {

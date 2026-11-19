@@ -7,10 +7,10 @@ context:
   form: Implementation Method
   tier: 3
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ Projection
+    main_subject: ANECHOIC_MODEL <+ Projection
     dependencies:
-    - CAPRMEDIO_MODEL <+ Atom.Content
-    - CAPRMEDIO_MODEL <+ Atom.Content.Summary
+    - ANECHOIC_MODEL <+ Atom.Content
+    - ANECHOIC_MODEL <+ Atom.Content.Summary
   container:
     scope_unit: CA-SU-11
 state:
@@ -20,7 +20,7 @@ state:
 destination:
   file:
     name: CA-M-1025-CORE_META_MODEL-IMPLEMENTATION_METHOD--derive-navigation-values-from-authoritative-atom-content.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
 ---
 ## Summary
 

@@ -16,8 +16,8 @@ llm_session_ids:
   - codex:019f591f-04f6-70f2-8de7-828b7cccc69d
 relations:
   child_of:
-    - CAPRMEDIO-REQU-045-CORE-REQUIREMENT--separate-graph-dimensions
-    - CAPRMEDIO-META-REQU-706-CORE_META_MODEL-REQUIREMENT--make-scope-unit-ownership-immediate-and-recursive
+    - ANECHOIC-REQU-045-CORE-REQUIREMENT--separate-graph-dimensions
+    - ANECHOIC-META-REQU-706-CORE_META_MODEL-REQUIREMENT--make-scope-unit-ownership-immediate-and-recursive
 ---
 # Separate Structural ownership from cross-unit flow
 

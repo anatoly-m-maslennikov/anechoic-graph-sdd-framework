@@ -12,7 +12,7 @@ version: 10
 updated_at: 2026-09-06 01:45:12 +0400
 relations:
   child_of:
-    - CAPRMEDIO-GOV-REQU-767-CORE_META_MODEL-CORE-REQUIREMENT--keep-active-prmedo-relations-within-active-authority
+    - ANECHOIC-GOV-REQU-767-CORE_META_MODEL-CORE-REQUIREMENT--keep-active-prmedo-relations-within-active-authority
 ---
 # Apply relation direction within its ordering domain
 

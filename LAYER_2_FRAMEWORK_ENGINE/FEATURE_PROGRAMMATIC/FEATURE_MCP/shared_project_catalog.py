@@ -70,7 +70,7 @@ def _has_marker(root: Path, frontier: SharedToolFrontier) -> bool:
                 if index >= MAX_PROJECT_CANDIDATES:
                     frontier.warning("PROJECT_MARKER_SCAN_BOUND_REACHED")
                     break
-                if entry.name.startswith(".caprmedio_"):
+                if entry.name.startswith(".anechoic_"):
                     return True
     except OSError:
         frontier.warning("PROJECT_CANDIDATE_UNAVAILABLE")

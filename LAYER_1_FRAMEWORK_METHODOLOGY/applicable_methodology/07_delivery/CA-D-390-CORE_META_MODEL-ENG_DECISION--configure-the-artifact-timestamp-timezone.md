@@ -6,10 +6,10 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Project.Settings.Artifact Timestamp Timezone
+  main_subject: ANECHOIC_MODEL <+ Project.Settings.Artifact Timestamp Timezone
   dependencies:
-  - CAPRMEDIO_MODEL <+ Project.Settings
-  - CAPRMEDIO_MODEL <+ Carrier
+  - ANECHOIC_MODEL <+ Project.Settings
+  - ANECHOIC_MODEL <+ Carrier
 tier: 3
 relations:
   child_of:
@@ -21,11 +21,11 @@ updated_at: 2026-11-04 09:30:21 +0400
 carrier_destination:
   file:
     name: CA-D-390-CORE_META_MODEL-DECISION--configure-the-artifact-timestamp-timezone.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-390-CORE_META_MODEL-ENG_DECISION--configure-the-artifact-timestamp-timezone.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-390-CORE_META_MODEL-ENG_DECISION--configure-the-artifact-timestamp-timezone.md
   source_atom_id: CA-D-390
   source_atom_revision: 28
   source_sha256: 38897a672e9c3dc2c692b88b85aacd5e071cbac99b5d714b7b2a4b2c2dd81022

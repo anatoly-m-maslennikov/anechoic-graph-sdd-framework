@@ -10,7 +10,7 @@ from FEATURE_FORMAL_MODEL_ENGINE.compiler_claim import compiler_model_statements
 from lint_python_model_claim import lint_python_model_claim
 from cfel_claim_constraints import _native_constraints
 from contract_graph import _clause
-CLAIM='''from caprmedio.formal_claims import declare_entity
+CLAIM='''from anechoic.formal_claims import declare_entity
 declare_entity(entity_name="Summary", relation_name="IS_PROPERTY_OF", base_path="Atom.Content",
  property_occurrence_cardinality=1, value_cardinality=1, dependent_property_cardinality=0,
  population_entity_path="Atom", population_functional_dependencies=(

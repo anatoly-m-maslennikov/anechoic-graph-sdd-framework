@@ -12,4 +12,4 @@ relations: {}
 ---
 # Place Project-Owned Persistent Carriers
 
-every governed Project **must** place its persistent Artifacts and evidence under `.caprmedio_<PROJECT_NAME>/`.
+every governed Project **must** place its persistent Artifacts and evidence under `.anechoic_<PROJECT_NAME>/`.

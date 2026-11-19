@@ -17,7 +17,7 @@ class SimplePublicReleaseTests(PublicReleaseFixture):
         self.assertEqual(
             '[framework]\nversion = "0.4.2.1"\n', (self.root / "version.toml").read_text()
         )
-        self.assertFalse((self.root / ".caprmedio_tmp").exists())
+        self.assertFalse((self.root / ".anechoic_tmp").exists())
 
     def test_failed_test_retains_prepared_materials_and_writes_issue(self) -> None:
         runner, calls = self._runner(fail_tests=True)

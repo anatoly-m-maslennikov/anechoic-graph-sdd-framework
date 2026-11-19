@@ -20,7 +20,7 @@ from python_model_claim import parse_structured_python_model_claim
 class RoleFolderTests(unittest.TestCase):
     def test_formal_folders_round_trip_and_control_audit(self):
         analysis = parse_native_model_claim('''
-from caprmedio.formal_claims import declare_entity
+from anechoic.formal_claims import declare_entity
 declare_entity(entity_name="Analysis and Advisory", qualification_property_path="Atom.Header.Context.Role",
                classifications={"Role Order Number": 2})
 ''')

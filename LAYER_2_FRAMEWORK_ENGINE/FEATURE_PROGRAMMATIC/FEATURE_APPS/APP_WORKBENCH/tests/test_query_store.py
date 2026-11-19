@@ -430,7 +430,7 @@ class QueryStoreTest(unittest.TestCase):
         scopes = [self.scope("A", [self.edge("Scope Unit", "A", "Atom", "A", "OWNS")])]
         self.store.replace(atoms, scopes)
         direct = self.store.run(
-            "FROM GRAPH_TABLE (caprmedio "
+            "FROM GRAPH_TABLE (anechoic "
             "MATCH (a:Reference)-[e:CONTAINS]->(b:Reference) "
             "COLUMNS (a.kind AS source_kind, a.ref AS source_ref, "
             "b.kind AS target_kind, b.ref AS target_ref, "
@@ -476,7 +476,7 @@ class QueryStoreTest(unittest.TestCase):
             json.loads(self.store.run("SELECT relations FROM scope_units WHERE name = 'A'")["rows"][0][0]),
         )
         mapping_hashes = self.store.run(
-            "SELECT * FROM GRAPH_TABLE (caprmedio "
+            "SELECT * FROM GRAPH_TABLE (anechoic "
             "MATCH (a:Reference)-[e:CONTAINS]->(b:Reference) "
             "COLUMNS (a.hash AS source_hash, b.hash AS target_hash, e.hash AS edge_hash, "
             "a.ref AS source_ref, b.ref AS target_ref)) "
@@ -496,7 +496,7 @@ class QueryStoreTest(unittest.TestCase):
         self.assertEqual(
             mapping_hashes,
             self.store.run(
-                "SELECT * FROM GRAPH_TABLE (caprmedio "
+                "SELECT * FROM GRAPH_TABLE (anechoic "
                 "MATCH (a:Reference)-[e:CONTAINS]->(b:Reference) "
                 "COLUMNS (a.hash AS source_hash, b.hash AS target_hash, e.hash AS edge_hash, "
                 "a.ref AS source_ref, b.ref AS target_ref)) "
@@ -504,26 +504,26 @@ class QueryStoreTest(unittest.TestCase):
             )["rows"],
         )
         inverse = self.store.run(
-            "SELECT * FROM GRAPH_TABLE (caprmedio "
+            "SELECT * FROM GRAPH_TABLE (anechoic "
             "MATCH (target:Reference)<-[e:CONTAINS]-(source:Reference) "
             "COLUMNS (target.ref AS target_ref, source.ref AS source_ref, e.derived AS derived)) "
             "WHERE target_ref = 'B'"
         )["rows"]
         self.assertEqual([["B", "A", False]], inverse)
         draft = self.store.run(
-            "FROM GRAPH_TABLE (caprmedio "
+            "FROM GRAPH_TABLE (anechoic "
             "MATCH (a:Reference)-[e:DRAFT_LINK]->(b:Reference) "
             "COLUMNS (a.kind AS source_kind, a.ref AS source_ref, b.kind AS target_kind, b.ref AS target_ref))"
         )["rows"]
         self.assertEqual([["Atom", "B", "Atom", "A@2-draft"]], draft)
         owned = self.store.run(
-            "FROM GRAPH_TABLE (caprmedio "
+            "FROM GRAPH_TABLE (anechoic "
             "MATCH (a:Reference)-[e:OWNS]->(b:Reference) "
             "COLUMNS (a.kind AS source_kind, a.ref AS source_ref, b.kind AS target_kind, b.ref AS target_ref))"
         )["rows"]
         self.assertEqual([["Scope Unit", "A", "Atom", "A"]], owned)
         reachable = self.store.run(
-            "WITH RECURSIVE edges AS (FROM GRAPH_TABLE (caprmedio "
+            "WITH RECURSIVE edges AS (FROM GRAPH_TABLE (anechoic "
             "MATCH (a:Reference)-[e:CONTAINS]->(b:Reference) "
             "COLUMNS (a.kind AS source_kind, a.ref AS source_ref, b.kind AS target_kind, b.ref AS target_ref))), "
             "reach(kind, ref) AS (SELECT 'Atom', 'A' UNION "
@@ -546,7 +546,7 @@ class QueryStoreTest(unittest.TestCase):
         ]
         self.store.replace(atoms, [])
         multi_label_direction = self.store.run(
-            "WITH selected AS (FROM GRAPH_TABLE (caprmedio "
+            "WITH selected AS (FROM GRAPH_TABLE (anechoic "
             "MATCH (seed:Reference)<-[draft:DRAFT_LINK]-(middle:Reference)-[contains:CONTAINS]->(target:Reference) "
             "WHERE seed.ref = 'A@2-draft' "
             "COLUMNS (seed.kind AS seed_kind, seed.ref AS seed_ref, "
@@ -559,7 +559,7 @@ class QueryStoreTest(unittest.TestCase):
             multi_label_direction,
         )
         isolated = self.store.run(
-            "WITH RECURSIVE edges AS (FROM GRAPH_TABLE (caprmedio "
+            "WITH RECURSIVE edges AS (FROM GRAPH_TABLE (anechoic "
             "MATCH (source:Reference)-[e:CONTAINS]->(target:Reference) "
             "COLUMNS (source.kind AS source_kind, source.ref AS source_ref, "
             "target.kind AS target_kind, target.ref AS target_ref))), "
@@ -570,7 +570,7 @@ class QueryStoreTest(unittest.TestCase):
         )["rows"]
         self.assertEqual([["Atom", "ISOLATED"]], isolated)
         aggregate = self.store.run(
-            "WITH graph_edges AS (FROM GRAPH_TABLE (caprmedio "
+            "WITH graph_edges AS (FROM GRAPH_TABLE (anechoic "
             "MATCH (source:Reference)-[e:CONTAINS]->(target:Reference) "
             "COLUMNS (source.ref AS source_ref, target.ref AS target_ref))) "
             "SELECT graph_edges.source_ref, count(*) AS edge_count FROM graph_edges "

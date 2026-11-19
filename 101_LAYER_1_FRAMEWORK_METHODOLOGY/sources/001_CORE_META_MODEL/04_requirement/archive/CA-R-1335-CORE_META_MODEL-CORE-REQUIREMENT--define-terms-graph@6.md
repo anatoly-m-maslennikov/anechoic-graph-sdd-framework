@@ -11,11 +11,11 @@ subjects:
       - "Term"
       - "Relation Kind"
       - "Relation"
-      - "CAPRMEDIO Graph"
+      - "ANECHOIC Graph"
 version: 6
 updated_at: "2026-09-11 05:44:27 +0400"
 relations: {}
 ---
 # Define Terms Graph
 
-a Terms Graph **means** a CAPRMEDIO Graph whose nodes are Terms **and** whose edges represent Relations admitted for that graph kind by their governing authority.
+a Terms Graph **means** a ANECHOIC Graph whose nodes are Terms **and** whose edges represent Relations admitted for that graph kind by their governing authority.

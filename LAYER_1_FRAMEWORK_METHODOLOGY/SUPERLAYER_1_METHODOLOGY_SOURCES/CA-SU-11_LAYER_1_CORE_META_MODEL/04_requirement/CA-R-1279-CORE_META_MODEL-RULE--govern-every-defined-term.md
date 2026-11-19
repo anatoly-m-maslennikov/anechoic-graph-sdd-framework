@@ -6,12 +6,12 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Relation//GOVERNS
+  main_subject: ANECHOIC_MODEL <+ Relation//GOVERNS
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom.Content.Semantics
-  - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ Term
-  - CAPRMEDIO_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ Atom.Content.Semantics
+  - ANECHOIC_MODEL <+ Entity
+  - ANECHOIC_MODEL <+ Term
+  - ANECHOIC_MODEL <+ Atom.Content
 tier: 1
 status: Active
 version: 32
@@ -19,7 +19,7 @@ updated_at: 2026-11-02 00:18:22 +0400
 carrier_destination:
   file:
     name: CA-R-1279-CORE_META_MODEL-RULE--govern-every-defined-term.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---

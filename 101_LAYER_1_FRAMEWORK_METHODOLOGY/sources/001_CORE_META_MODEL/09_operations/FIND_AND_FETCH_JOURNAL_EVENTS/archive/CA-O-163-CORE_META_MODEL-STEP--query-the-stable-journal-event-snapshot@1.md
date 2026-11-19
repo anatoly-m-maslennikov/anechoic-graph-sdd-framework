@@ -26,7 +26,7 @@ This Step is the query node of CA-O-161 and invokes exactly one Action, CA-O-162
 
 ### Inputs and parameters
 
-Before Action dispatch, bind the selected Project's canonical `.caprmedio_<project name>/_journal/` Event carriers into one opaque snapshot token that identifies the complete ordered source frontier. Bind the literal filter expression, requested result mode (`ids`, selected `fields`, or `full_events`), selected fields when applicable, and bounded page request. The token's frontier excludes this invocation's later Run/Event records and remains fixed even if append occurs while the query is read.
+Before Action dispatch, bind the selected Project's canonical `.anechoic_<project name>/_journal/` Event carriers into one opaque snapshot token that identifies the complete ordered source frontier. Bind the literal filter expression, requested result mode (`ids`, selected `fields`, or `full_events`), selected fields when applicable, and bounded page request. The token's frontier excludes this invocation's later Run/Event records and remains fixed even if append occurs while the query is read.
 
 ## Details
 

@@ -63,7 +63,7 @@ class FullTestSuiteParallelTests(unittest.TestCase):
             self.assertTrue(release.wait(5))
             with lock:
                 active[lane] -= 1
-            self.assertEqual("one-image", environment["CAPRMEDIO_IMAGE"])
+            self.assertEqual("one-image", environment["ANECHOIC_IMAGE"])
             return True, 1, 0, f"output:{module.name}\n", f"errors:{module.name}\n", 0.25, None
 
         with (
@@ -71,7 +71,7 @@ class FullTestSuiteParallelTests(unittest.TestCase):
             patch.object(
                 full,
                 "current_code_test_image",
-                return_value=nullcontext({"CAPRMEDIO_IMAGE": "one-image"}),
+                return_value=nullcontext({"ANECHOIC_IMAGE": "one-image"}),
             ) as image,
             ThreadPoolExecutor(max_workers=1) as driver,
         ):

@@ -13,7 +13,7 @@ def declaration(ref, code):
     return {'status_group': 'Current', 'role': 'Requirement', 'form': 'Declaration',
             'id': ref, 'ref': ref, 'version': 1, 'source_path': ref + '.md',
             '_content_bytes': ('## Claim\n### Formal Claim\n```python\n'
-                               'from caprmedio.formal_claims import Cardinality, declare_entity\n'
+                               'from anechoic.formal_claims import Cardinality, declare_entity\n'
                                + code + '\n```\n').encode()}
 
 
@@ -47,9 +47,9 @@ class ContentConstraintsTests(unittest.TestCase):
 
     def test_named_form_content_compiles_without_translation(self):
         rows = [
-            declaration('CA-R-1', "from caprmedio.model import Operations\nclass Workflow(Operations):\n    pass\ndeclare_entity(entity_name='Workflow', entity_class=Workflow, qualification_property_path='Atom.Header.Context.Form', project_form_content=True)"),
+            declaration('CA-R-1', "from anechoic.model import Operations\nclass Workflow(Operations):\n    pass\ndeclare_entity(entity_name='Workflow', entity_class=Workflow, qualification_property_path='Atom.Header.Context.Form', project_form_content=True)"),
             declaration('CA-R-2', "declare_entity(entity_name='Mermaid Scheme', relation_name='IS_PROPERTY_OF', base_path='Workflow.Content.Claim', property_occurrence_cardinality=1, value_cardinality=1, value_format='markdown', dependent_property_cardinality=0)"),
-            declaration('CA-R-3', "from caprmedio.model import Plan\nclass WorkReport(Plan):\n    pass\ndeclare_entity(entity_name='Work Report', entity_class=WorkReport, qualification_property_path='Atom.Header.Context.Form', form_roles=('Plan',), form_content={'required_value': 'Details', 'no_children': 'Details', 'after': 'Summary'})"),
+            declaration('CA-R-3', "from anechoic.model import Plan\nclass WorkReport(Plan):\n    pass\ndeclare_entity(entity_name='Work Report', entity_class=WorkReport, qualification_property_path='Atom.Header.Context.Form', form_roles=('Plan',), form_content={'required_value': 'Details', 'no_children': 'Details', 'after': 'Summary'})"),
         ]
         with patch('python_model_claim.compile_python_model_claim', side_effect=AssertionError('translated')):
             records = compile_content_constraints(rows)
@@ -61,7 +61,7 @@ class ContentConstraintsTests(unittest.TestCase):
         self.assertTrue(all(r['roles'] == ['Plan'] and r['forms'] == ['Work Report'] for r in report))
 
     def test_prose_heading_is_markdown_not_a_property(self):
-        row = declaration('CA-R-1', "from caprmedio.model import Requirement\ndeclare_entity(entity_name='Prose Claim', relation_name='IS_PROPERTY_OF', base_path='Atom.Content.Claim', applies_to_entity_classes=(Requirement,), value_cardinality=Cardinality(minimum=0, maximum=1), dependent_property_cardinality=0)")
+        row = declaration('CA-R-1', "from anechoic.model import Requirement\ndeclare_entity(entity_name='Prose Claim', relation_name='IS_PROPERTY_OF', base_path='Atom.Content.Claim', applies_to_entity_classes=(Requirement,), value_cardinality=Cardinality(minimum=0, maximum=1), dependent_property_cardinality=0)")
         schema = load_content_constraints(compile_content_constraints([row]), {'CA-R-1'})
         schema.validate({'role': 'Requirement', 'form': 'Declaration',
                          'content_markdown': '## Claim\n### Prose Claim\n#### Applicability\nText\n'})

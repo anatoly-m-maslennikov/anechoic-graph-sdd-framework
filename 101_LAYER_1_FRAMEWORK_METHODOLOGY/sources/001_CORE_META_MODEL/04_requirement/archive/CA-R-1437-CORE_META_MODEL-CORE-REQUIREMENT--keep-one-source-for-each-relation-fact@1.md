@@ -9,7 +9,7 @@ subjects:
   depends_on:
     continuant:
       - Relation
-      - CAPRMEDIO Graph
+      - ANECHOIC Graph
       - Projection
 version: 1
 updated_at: "2026-09-11 05:04:26 +0400"
@@ -17,4 +17,4 @@ relations: {}
 ---
 # Keep one source for each relation fact
 
-a Relation fact **must** have **`=1`** authoritative source declaration. its representation **in** multiple CAPRMEDIO Graph views **must** remain a reference **or** derived Projection of that declaration **and** **must not** create another independently maintained source of authority.
+a Relation fact **must** have **`=1`** authoritative source declaration. its representation **in** multiple ANECHOIC Graph views **must** remain a reference **or** derived Projection of that declaration **and** **must not** create another independently maintained source of authority.

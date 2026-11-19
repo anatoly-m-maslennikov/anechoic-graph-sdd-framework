@@ -14,7 +14,7 @@ version: 6
 updated_at: 2026-09-06 01:45:12 +0400
 relations:
   child_of:
-    - CAPRMEDIO-META-REQU-097-CORE_META_MODEL-REQUIREMENT--requirement-keep-provenance-separate-from-evidence
+    - ANECHOIC-META-REQU-097-CORE_META_MODEL-REQUIREMENT--requirement-keep-provenance-separate-from-evidence
 ---
 # Prohibit Lineage Impact Analysis from serving as Ops Evidence
 

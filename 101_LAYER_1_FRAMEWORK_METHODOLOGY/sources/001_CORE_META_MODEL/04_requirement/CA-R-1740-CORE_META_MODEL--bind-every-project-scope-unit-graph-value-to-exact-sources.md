@@ -13,7 +13,7 @@ updated_at: "2026-10-03 02:55:00 +0400"
 relations:
   child_of:
     - CA-R-1052
-    - CAPRMEDIO-REQU-007-CORE-REQUIREMENT--full-minimal-traceability
+    - ANECHOIC-REQU-007-CORE-REQUIREMENT--full-minimal-traceability
 atom_id: "CA-R-1740"
 content_role: "Requirement"
 current_scope_unit: "CORE_META_MODEL"

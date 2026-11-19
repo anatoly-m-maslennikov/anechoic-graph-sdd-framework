@@ -9,9 +9,9 @@ llm_session_ids:
   - codex:019f591f-04f6-70f2-8de7-828b7cccc69d
 relations:
   child_of:
-    - CAPRMEDIO-META-REQU-712--define-ordered-unit-structural-kind
-    - CAPRMEDIO-META-REQU-715--define-local-order
-    - CAPRMEDIO-META-REQU-718--separate-structural-ownership-from-cross-unit-flow
+    - ANECHOIC-META-REQU-712--define-ordered-unit-structural-kind
+    - ANECHOIC-META-REQU-715--define-local-order
+    - ANECHOIC-META-REQU-718--separate-structural-ownership-from-cross-unit-flow
 ---
 # Define ordered upstream unit
 

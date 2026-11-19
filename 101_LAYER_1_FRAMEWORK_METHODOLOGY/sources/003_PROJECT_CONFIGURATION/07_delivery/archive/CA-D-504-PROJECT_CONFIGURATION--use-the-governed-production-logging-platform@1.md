@@ -25,7 +25,7 @@ production logs emitted by production-relevant components.
 
 ## Claim
 
-production logs use the deployment environment's governed logging sink. governed CAPRMEDIO workflow Journals **and** local project-control Journals are **not** substitutes for the production system's log platform.
+production logs use the deployment environment's governed logging sink. governed ANECHOIC workflow Journals **and** local project-control Journals are **not** substitutes for the production system's log platform.
 
 ## Details
 

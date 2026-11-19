@@ -8,7 +8,7 @@ context:
   role: Requirement
   form: Declaration
   topics:
-    main_subject: MODEL//CAPRMEDIO <+ (Workspace, Workspace.native_thread_id, Workspace.project_root)
+    main_subject: MODEL//ANECHOIC <+ (Workspace, Workspace.native_thread_id, Workspace.project_root)
   tier: 3
 state:
   status: active
@@ -17,12 +17,12 @@ state:
 destination:
   file:
     name: CA-R-2792-CORE_META_MODEL-DECLARATION--define-workspace.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 author: Anatoly Maslennikov
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2792-CORE_META_MODEL-DECLARATION--define-workspace.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2792-CORE_META_MODEL-DECLARATION--define-workspace.md
   source_atom_id: CA-R-2792
   source_atom_revision: 5
   source_sha256: b66fe308f21f87d7cf5a6ce5a9f6ab74f4d86344c6a8c73085c5f72d46352e94
@@ -42,7 +42,7 @@ A Workspace is the Workbench context for one selected Project. In an existing na
 
 ```python
 from dataclasses import dataclass, field
-from caprmedio.formal_claims import Cardinality, declare_entity
+from anechoic.formal_claims import Cardinality, declare_entity
 
 
 @dataclass

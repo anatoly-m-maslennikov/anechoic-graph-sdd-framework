@@ -11,7 +11,7 @@ subjects:
     - "Operator"
     - "Project"
     - "Scope"
-    - "CAPRMEDIO Framework Instance"
+    - "ANECHOIC Framework Instance"
     - "Project/priority model application"
 atom_id: "CA-O-022"
 content_role: "Operations"
@@ -32,7 +32,7 @@ Resolve Operator Priorities **means** the Action that turns applicable Operator 
 1. identify the affected Scope **and** Project stage from the Operator input **and** its applicable context.
 2. resolve the Operator-selected model, effective parameters, active criteria, applicable authority, **and** non-negotiable constraints. retain **every** applicable criterion **without** imposing a fixed catalog **or** comparison by priority order on another model.
 3. check whether the input determines an admissible model **and** the parameters needed **to** apply it.
-4. **if** that resolution succeeds, activate the resolved priorities **in** the CAPRMEDIO Framework Instance for the identified context **and** return them as the Action result.
+4. **if** that resolution succeeds, activate the resolved priorities **in** the ANECHOIC Framework Instance for the identified context **and** return them as the Action result.
 
 ## unresolved input
 

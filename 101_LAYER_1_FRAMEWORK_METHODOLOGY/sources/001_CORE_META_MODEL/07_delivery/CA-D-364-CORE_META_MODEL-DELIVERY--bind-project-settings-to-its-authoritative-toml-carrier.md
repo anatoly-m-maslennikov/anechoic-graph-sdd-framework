@@ -27,6 +27,6 @@ the authoritative TOML File Carrier for Project Settings of a Project named `<pr
 
 ## Claim
 
-the Project Settings Artifact for a Project named `<project_name>` **must** use `.caprmedio_<project_name>/caprmedio_<project_name>_settings.toml` as its **`=1`** authoritative TOML File Carrier.
+the Project Settings Artifact for a Project named `<project_name>` **must** use `.anechoic_<project_name>/anechoic_<project_name>_settings.toml` as its **`=1`** authoritative TOML File Carrier.
 
 ## Details

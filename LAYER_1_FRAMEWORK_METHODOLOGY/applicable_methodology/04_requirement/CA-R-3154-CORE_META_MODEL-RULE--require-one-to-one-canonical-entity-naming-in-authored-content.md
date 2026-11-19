@@ -6,10 +6,10 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Entity
+  main_subject: ANECHOIC_MODEL <+ Entity
   dependencies:
-  - CAPRMEDIO_MODEL <+ Term
-  - CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring
+  - ANECHOIC_MODEL <+ Term
+  - ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring
 tier: 1
 status: active
 version: 1
@@ -17,11 +17,11 @@ updated_at: '2026-11-13T18:35:27.721303+00:00'
 carrier_destination:
   file:
     name: CA-R-3154-CORE_META_MODEL-RULE--require-one-to-one-canonical-entity-naming-in-authored-content.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-3154-CORE_META_MODEL-RULE--require-one-to-one-canonical-entity-naming-in-authored-content.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-3154-CORE_META_MODEL-RULE--require-one-to-one-canonical-entity-naming-in-authored-content.md
   source_atom_id: CA-R-3154
   source_atom_revision: 1
   source_sha256: 56f96ad147101a281f5e32f1bd24f9873cf58ca09cab107f94f247f87cab4780
@@ -36,7 +36,7 @@ Require one-to-one canonical entity naming in authored content
 ### Prose Claim
 
 
-Every entity represented in the Subject Graph, every declared Relation Type entity, and every authored occurrence mentioning one of those entities in CAPRMEDIO content.
+Every entity represented in the Subject Graph, every declared Relation Type entity, and every authored occurrence mentioning one of those entities in ANECHOIC content.
 
 
 **every** entity represented **in** the Subject Graph **and** **every** declared Relation Type entity **must** have **`=1`** complete canonical name formed from reusable Terms **and** any applicable registered qualification syntax **and** used exactly **in** **every** authored occurrence that mentions it. **every** such complete name **must** identify **`=1`** entity, distinct complete names **must not** identify the same entity, **and** the same complete name **must not** identify distinct entities. Outside `Term`, the complete canonical name **must** be the full admitted expression, **not** a single registered Term; the Subject root `Entity` is the sole exception.

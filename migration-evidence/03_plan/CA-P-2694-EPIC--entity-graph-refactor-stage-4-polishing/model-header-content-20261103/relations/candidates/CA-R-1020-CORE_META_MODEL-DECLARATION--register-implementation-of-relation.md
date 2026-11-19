@@ -1,8 +1,8 @@
 ---
 subjects:
-  active: CAPRMEDIO_MODEL <+ CFEL <+ Relation//implementation_of
+  active: ANECHOIC_MODEL <+ CFEL <+ Relation//implementation_of
   passive:
-  - CAPRMEDIO_MODEL <+ CFEL > Relation
+  - ANECHOIC_MODEL <+ CFEL > Relation
 version: 29
 updated_at: 2026-11-02 08:06:47 +0400
 relations: {}

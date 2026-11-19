@@ -1,0 +1,13 @@
+{
+  "state": "complete",
+  "writer": ".anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/atom-content.prompt.md",
+  "optional_reviewer": ".anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/atom-content.eval.prompt.md",
+  "usage": ".anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/atom-content-prompts.md",
+  "test_report": ".anechoic_anechoic/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing/unified-content-prompt-test.md",
+  "cases": 12,
+  "source_fidelity_pass": 12,
+  "joint_style_pass": 12,
+  "external_repair_rounds": 0,
+  "source_atoms_changed": 0,
+  "runtime_changed": false
+}

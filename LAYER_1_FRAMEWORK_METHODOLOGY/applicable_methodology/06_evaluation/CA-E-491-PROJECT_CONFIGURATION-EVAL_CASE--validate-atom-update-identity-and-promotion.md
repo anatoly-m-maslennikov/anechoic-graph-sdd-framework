@@ -6,15 +6,15 @@ container:
 role: Evaluation
 form: Eval Case
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role:=Operations)/Workflow
+  main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role:=Operations)/Workflow
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role:=Operations)/Action
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow) >{1+} Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Step)
-  - CAPRMEDIO_STRUCTURE <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Action)//Assess Atom Update Identity
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Atom.Content.Summary
-  - CAPRMEDIO_MODEL <+ Entity/Object/Occurrent/Execution/Workflow Run
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Actor/Operator
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role:=Operations)/Action
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Workflow) >{1+} Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Step)
+  - ANECHOIC_STRUCTURE <+ Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Action)//Assess Atom Update Identity
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Atom.Content.Summary
+  - ANECHOIC_MODEL <+ Entity/Object/Occurrent/Execution/Workflow Run
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Actor/Operator
 tier: 4
 relations:
   evaluation_for:
@@ -30,7 +30,7 @@ updated_at: 2026-11-11 14:09:10 +0400
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation/CA-E-491-PROJECT_CONFIGURATION-EVAL_CASE--validate-atom-update-identity-and-promotion.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation/CA-E-491-PROJECT_CONFIGURATION-EVAL_CASE--validate-atom-update-identity-and-promotion.md
   source_atom_id: CA-E-491
   source_atom_revision: 26
   source_sha256: bdb56870b495b26ab86e018b7e224b13ad386b73f410702da8ac13f7188c678f

@@ -68,7 +68,7 @@ class IncrementalIndexingTests(unittest.TestCase):
 
     def graph(self):
         return self.store.run(
-            "FROM GRAPH_TABLE (caprmedio MATCH (a:Reference)-[e:BLOCKS]->(b:Reference) "
+            "FROM GRAPH_TABLE (anechoic MATCH (a:Reference)-[e:BLOCKS]->(b:Reference) "
             "COLUMNS (a.ref AS source, b.ref AS target)) ORDER BY source, target"
         )["rows"]
 
@@ -122,7 +122,7 @@ class IncrementalIndexingTests(unittest.TestCase):
             watcher = unittest.mock.Mock()
             watcher.changes.side_effect = lambda timeout: (self.service._stop.set() or [event])
             with patch(BACKEND + "service.SourceWatcher", return_value=watcher), \
-                    patch(BACKEND + "service.configured_journal_root", return_value=Path(".caprmedio_caprmedio/_journal")):
+                    patch(BACKEND + "service.configured_journal_root", return_value=Path(".anechoic_anechoic/_journal")):
                 self.service._index()
             self.assertIsNone(self.service._failure)
 
@@ -152,7 +152,7 @@ class IncrementalIndexingTests(unittest.TestCase):
         selection = SimpleNamespace(root=self.root.resolve(), control_root=control)
         atom_id = "CA-R-100002"
         current = authority / "04_requirement" / f"{atom_id}-current.md"
-        installed = self.root / ".caprmedio_caprmedio" / "000_installed_framework" / "04_requirement" / f"{atom_id}-copy.md"
+        installed = self.root / ".anechoic_anechoic" / "000_installed_framework" / "04_requirement" / f"{atom_id}-copy.md"
         evidence = authority / "03_plan" / "evidence" / "04_requirement" / f"{atom_id}-evidence.md"
         second = authority / "04_requirement" / "another" / f"{atom_id}-other.md"
         task = authority / "03_plan" / "CA-P-100003-epic" / "CA-P-100004-task.md"
@@ -167,7 +167,7 @@ class IncrementalIndexingTests(unittest.TestCase):
             watcher.changes.side_effect = lambda timeout: (self.service._stop.set() or [event])
             with patch.object(self.service._reader, "_inventory_paths", side_effect=AssertionError("full scan")), \
                     patch(BACKEND + "service.SourceWatcher", return_value=watcher), \
-                    patch(BACKEND + "service.configured_journal_root", return_value=Path(".caprmedio_caprmedio/_journal")):
+                    patch(BACKEND + "service.configured_journal_root", return_value=Path(".anechoic_anechoic/_journal")):
                 self.service._index()
             self.assertIsNone(self.service._failure)
 

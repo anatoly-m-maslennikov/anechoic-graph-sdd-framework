@@ -8,7 +8,7 @@ context:
   role: delivery
   form: file_layout
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ Atom.Header.State.Status
+    main_subject: ANECHOIC_MODEL <+ Atom.Header.State.Status
   tier: 3
 state:
   status: active
@@ -17,9 +17,9 @@ state:
 destination:
   file:
     name: CA-D-717-CORE_META_MODEL-FILE_LAYOUT--derive-status-folder-names.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-717-CORE_META_MODEL-FILE_LAYOUT--derive-status-folder-names.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-717-CORE_META_MODEL-FILE_LAYOUT--derive-status-folder-names.md
   source_atom_id: CA-D-717
   source_atom_revision: 1
   source_sha256: e6d56d3bee3d0e936b539712805f6dceeccf8baa316843a142ecea5d0cd4fc39

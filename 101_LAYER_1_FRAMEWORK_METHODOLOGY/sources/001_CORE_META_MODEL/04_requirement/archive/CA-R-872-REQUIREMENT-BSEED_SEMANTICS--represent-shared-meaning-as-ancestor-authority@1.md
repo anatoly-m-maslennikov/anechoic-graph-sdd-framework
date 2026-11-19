@@ -10,4 +10,4 @@ relations:
 ---
 # Represent shared meaning as ancestor authority
 
-Meaning that applies uniformly to several descendant Scope Units belongs to one ordinary RMEDO Atom at their narrowest common ancestor scope. Applicable descendant Atoms specialize or realize that authority through the normal hierarchy; CAPRMEDIO does not create an alignment, consensus, or relational Atom for the shared meaning.
+Meaning that applies uniformly to several descendant Scope Units belongs to one ordinary RMEDO Atom at their narrowest common ancestor scope. Applicable descendant Atoms specialize or realize that authority through the normal hierarchy; ANECHOIC does not create an alignment, consensus, or relational Atom for the shared meaning.

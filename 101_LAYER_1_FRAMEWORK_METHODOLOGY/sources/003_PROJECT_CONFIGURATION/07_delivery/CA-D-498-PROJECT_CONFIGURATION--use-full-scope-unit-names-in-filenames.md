@@ -27,7 +27,7 @@ Use full Scope Unit names in filenames
 
 ## Scope
 
-Scope Unit references serialized **in** Atom filenames **in** the CAPRMEDIO Project.
+Scope Unit references serialized **in** Atom filenames **in** the ANECHOIC Project.
 
 ## Claim
 

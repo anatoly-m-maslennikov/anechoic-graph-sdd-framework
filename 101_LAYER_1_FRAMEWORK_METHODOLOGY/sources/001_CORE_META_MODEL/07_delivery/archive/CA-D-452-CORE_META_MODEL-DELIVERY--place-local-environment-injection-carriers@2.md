@@ -18,7 +18,7 @@ secret values **must** be stored **only** **in**:
 ## file placement
 
 - a repository-local `.env` File Carrier **must** remain outside **every** applicable Project authority Carrier root.
-- **every** real `.env` variant **must** be gitignored, untracked, **and** excluded from durable **or** shared Git history **and** CAPRMEDIO discovery. a Git ignore rule does **not** remove a previously tracked secret from history.
+- **every** real `.env` variant **must** be gitignored, untracked, **and** excluded from durable **or** shared Git history **and** ANECHOIC discovery. a Git ignore rule does **not** remove a previously tracked secret from history.
 - a tracked `.env.example` **may** contain variable names **and** unmistakable dummy placeholders **only**.
 
 ## runtime injection

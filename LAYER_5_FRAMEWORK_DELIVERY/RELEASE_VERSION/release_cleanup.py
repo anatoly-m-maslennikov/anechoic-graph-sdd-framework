@@ -31,10 +31,10 @@ def _owned(row: Container, root: Path, project_id: str, control: str) -> bool:
     return all(
         labels.get(key) == value
         for key, value in {
-            "org.caprmedio.project": project_id,
-            "org.caprmedio.service": "mcp-http",
-            "org.caprmedio.control_root": control,
-            "org.caprmedio.host_project_root": str(root),
+            "org.anechoic.project": project_id,
+            "org.anechoic.service": "mcp-http",
+            "org.anechoic.control_root": control,
+            "org.anechoic.host_project_root": str(root),
         }.items()
     )
 
@@ -100,7 +100,7 @@ def cleanup_stopped_containers(
                 "--all",
                 "--no-trunc",
                 "--filter",
-                f"label=org.caprmedio.project={project_id}",
+                f"label=org.anechoic.project={project_id}",
                 "--quiet",
             ),
             IDENTIFIER,

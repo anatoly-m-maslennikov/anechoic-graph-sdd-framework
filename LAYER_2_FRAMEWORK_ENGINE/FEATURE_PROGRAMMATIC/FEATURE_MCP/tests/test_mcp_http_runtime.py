@@ -17,14 +17,14 @@ IMAGE = "sha256:" + "a" * 64
 
 class MCPHTTPRuntimeTests(unittest.TestCase):
     def setUp(self):
-        self.temporary = APP.parents[2] / ".caprmedio_tmp/tests/mcp-http-runtime"
+        self.temporary = APP.parents[2] / ".anechoic_tmp/tests/mcp-http-runtime"
         self.temporary.mkdir(parents=True, exist_ok=True)
 
     def root(self):
         directory = tempfile.TemporaryDirectory(dir=self.temporary, ignore_cleanup_errors=True)
         self.addCleanup(directory.cleanup)
         root = Path(directory.name)
-        (root / ".caprmedio_caprmedio").mkdir()
+        (root / ".anechoic_anechoic").mkdir()
         (root / ".git").mkdir()
         return root
 
@@ -43,9 +43,9 @@ class MCPHTTPRuntimeTests(unittest.TestCase):
     def test_explicit_port_is_required_without_a_token_or_agent_auth(self):
         runtime = Runtime(self.root(), image=IMAGE)
         with patch.dict(os.environ, {}, clear=True):
-            with self.assertRaisesRegex(ValueError, "CAPRMEDIO_MCP_HTTP_PORT"):
+            with self.assertRaisesRegex(ValueError, "ANECHOIC_MCP_HTTP_PORT"):
                 runtime.mcp_http_start()
-        with patch.dict(os.environ, {"CAPRMEDIO_MCP_HTTP_PORT": "8099"}, clear=True):
+        with patch.dict(os.environ, {"ANECHOIC_MCP_HTTP_PORT": "8099"}, clear=True):
             with patch.object(runtime, "call", return_value="") as call, \
                     patch.object(runtime, "mcp_http_status", return_value=self._published_status()):
                 result = runtime.mcp_http_start()
@@ -55,7 +55,7 @@ class MCPHTTPRuntimeTests(unittest.TestCase):
 
     def test_startup_deadlines_cover_generation_readiness_budget(self):
         runtime = Runtime(self.root(), image=IMAGE)
-        with patch.dict(os.environ, {"CAPRMEDIO_MCP_HTTP_PORT": "8099"}, clear=True), \
+        with patch.dict(os.environ, {"ANECHOIC_MCP_HTTP_PORT": "8099"}, clear=True), \
                 patch.object(runtime, "call", return_value="") as call, \
                 patch.object(runtime, "mcp_http_status", return_value=self._published_status()):
             runtime.mcp_http_start()
@@ -87,7 +87,7 @@ class MCPHTTPRuntimeTests(unittest.TestCase):
         }
         for name, status in cases.items():
             with self.subTest(name=name), \
-                    patch.dict(os.environ, {"CAPRMEDIO_MCP_HTTP_PORT": "8099"}, clear=True):
+                    patch.dict(os.environ, {"ANECHOIC_MCP_HTTP_PORT": "8099"}, clear=True):
                 runtime = Runtime(self.root(), image=IMAGE)
                 with patch.object(runtime, "call", return_value=""), \
                         patch.object(runtime, "mcp_http_status", return_value=status):
@@ -96,8 +96,8 @@ class MCPHTTPRuntimeTests(unittest.TestCase):
 
     def test_overlay_is_loopback_only_and_has_no_agent_or_socket(self):
         text = (APP / "docker/mcp-http.compose.yaml").read_text()
-        self.assertIn("127.0.0.1:${CAPRMEDIO_MCP_HTTP_PORT", text)
-        self.assertNotIn("CAPRMEDIO_MCP_HTTP_SECRET_TOKEN", text)
+        self.assertIn("127.0.0.1:${ANECHOIC_MCP_HTTP_PORT", text)
+        self.assertNotIn("ANECHOIC_MCP_HTTP_SECRET_TOKEN", text)
         self.assertNotIn("/var/run/docker.sock", text)
         self.assertNotIn("agent_auth", text)
         self.assertIn("no-new-privileges:true", text)

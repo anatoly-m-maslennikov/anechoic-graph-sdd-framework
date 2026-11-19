@@ -9,4 +9,4 @@ relations:
 ---
 # Bind SEMANTICS Delivery place
 
-The root-level `SEMANTICS` Scope Unit uses authority place `.caprmedio/SEMANTICS` directly and delivers within the `FRAMEWORK_METHODOLOGY` authority place; its exact path relative to that Delivery parent is `TBD`.
+The root-level `SEMANTICS` Scope Unit uses authority place `.anechoic/SEMANTICS` directly and delivers within the `FRAMEWORK_METHODOLOGY` authority place; its exact path relative to that Delivery parent is `TBD`.

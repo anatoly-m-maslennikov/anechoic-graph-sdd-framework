@@ -31,4 +31,4 @@ Project.Settings.Framework Control-Root Locator.*[]{:0}
 
 ## Details
 
-Evidence: CA-D-370 requires the locator to resolve to the Directory Carrier prescribed by CA-D-317 without selecting another authority root. Candidate #6 keeps concrete CAPRMEDIO mechanisms in Project Configuration. This definition adds no path or alternative authority root; those remain Delivery rules.
+Evidence: CA-D-370 requires the locator to resolve to the Directory Carrier prescribed by CA-D-317 without selecting another authority root. Candidate #6 keeps concrete ANECHOIC mechanisms in Project Configuration. This definition adds no path or alternative authority root; those remain Delivery rules.

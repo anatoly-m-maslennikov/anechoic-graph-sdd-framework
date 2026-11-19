@@ -13,7 +13,7 @@ subjects:
       - "Root Term"
       - "NARROWER_THAN"
       - "Relation Kind"
-      - "CAPRMEDIO Graph"
+      - "ANECHOIC Graph"
 version: 10
 updated_at: "2026-09-11 05:44:27 +0400"
 relations:

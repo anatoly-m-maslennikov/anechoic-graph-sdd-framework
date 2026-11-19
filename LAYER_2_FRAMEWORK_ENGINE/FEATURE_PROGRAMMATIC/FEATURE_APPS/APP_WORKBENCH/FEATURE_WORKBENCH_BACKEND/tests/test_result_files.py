@@ -111,7 +111,7 @@ class ResultFileTests(unittest.TestCase):
                 )
                 self.assertEqual(result_format, descriptor["format"])
                 self.assertTrue(
-                    descriptor["path"].startswith(".caprmedio_tmp/workbench/query_results/")
+                    descriptor["path"].startswith(".anechoic_tmp/workbench/query_results/")
                 )
                 self.assertNotIn(descriptor["path"], paths)
                 paths.add(descriptor["path"])
@@ -158,14 +158,14 @@ class ResultFileTests(unittest.TestCase):
                     write_result_file(self.root, ["x"], [[object()]], result_format=result_format)
                 with self.assertRaisesRegex(ValueError, "row width"):
                     write_result_file(self.root, ["x"], [["a", "b"]], result_format=result_format)
-                directory = self.root / ".caprmedio_tmp/workbench/query_results"
+                directory = self.root / ".anechoic_tmp/workbench/query_results"
                 self.assertEqual([], list(directory.iterdir()))
 
     def test_symlinked_destination_components_do_not_write_outside_project(self) -> None:
         for relative in (
-            ".caprmedio_tmp",
-            ".caprmedio_tmp/workbench",
-            ".caprmedio_tmp/workbench/query_results",
+            ".anechoic_tmp",
+            ".anechoic_tmp/workbench",
+            ".anechoic_tmp/workbench/query_results",
         ):
             with self.subTest(component=relative), tempfile.TemporaryDirectory() as directory:
                 root = Path(directory).resolve()
@@ -179,7 +179,7 @@ class ResultFileTests(unittest.TestCase):
                 self.assertEqual([], list(outside.iterdir()))
 
     def test_existing_result_filename_is_not_followed_or_overwritten(self) -> None:
-        directory = self.root / ".caprmedio_tmp/workbench/query_results"
+        directory = self.root / ".anechoic_tmp/workbench/query_results"
         directory.mkdir(parents=True)
         outside = self.root / "outside.txt"
         outside.write_text("keep", encoding="utf-8")
@@ -197,7 +197,7 @@ class ResultFileTests(unittest.TestCase):
         for kwargs in ({"result_format": "bad"}, {"offset": -1}, {"offset": True}, {"has_more": 1}):
             with self.subTest(kwargs=kwargs), self.assertRaises(ValueError):
                 write_result_file(self.root, ["x"], [], **kwargs)
-        self.assertFalse((self.root / ".caprmedio_tmp").exists())
+        self.assertFalse((self.root / ".anechoic_tmp").exists())
 
     def test_relative_root_never_falls_back_to_the_current_directory(self) -> None:
         with self.assertRaisesRegex(ValueError, "absolute selected path"):

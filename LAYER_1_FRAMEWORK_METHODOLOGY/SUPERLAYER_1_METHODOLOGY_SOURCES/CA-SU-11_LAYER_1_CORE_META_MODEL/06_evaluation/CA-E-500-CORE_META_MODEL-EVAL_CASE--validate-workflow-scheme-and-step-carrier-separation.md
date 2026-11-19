@@ -6,12 +6,12 @@ container:
 role: Evaluation
 form: Eval Case
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role:=Operations)/Workflow
+  main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role:=Operations)/Workflow
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role:=Operations)/Workflow
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/Step
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role:=Operations)/Action
-  - CAPRMEDIO_MODEL <+ Carrier/Directory
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role:=Operations)/Workflow
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/Step
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role:=Operations)/Action
+  - ANECHOIC_MODEL <+ Carrier/Directory
 tier: 4
 relations:
   evaluation_for:
@@ -25,7 +25,7 @@ updated_at: 2026-11-02 17:54:42 +0400
 carrier_destination:
   file:
     name: CA-E-500-CORE_META_MODEL-EVAL_CASE--validate-workflow-scheme-and-step-carrier-separation.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---

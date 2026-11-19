@@ -91,7 +91,7 @@ def graph_relations(connection: Any, *, has_edges: bool) -> dict[tuple[str, str]
     """Read outgoing facts from the native graph without exposing its tables."""
     if not has_edges:
         return {}
-    descriptions = connection.execute("SELECT * FROM describe_property_graph('caprmedio')").fetchall()
+    descriptions = connection.execute("SELECT * FROM describe_property_graph('anechoic')").fetchall()
     relation_types = sorted(
         row[2] for row in descriptions
         if row[3] is False and isinstance(row[2], str)
@@ -99,7 +99,7 @@ def graph_relations(connection: Any, *, has_edges: bool) -> dict[tuple[str, str]
     outgoing: dict[tuple[str, str], dict[str, list[dict[str, object]]]] = defaultdict(dict)
     for relation_type in relation_types:
         rows = connection.execute(
-            "FROM GRAPH_TABLE (caprmedio "
+            "FROM GRAPH_TABLE (anechoic "
             f"MATCH (source:Reference)-[edge:{quote_identifier(relation_type)}]->(target:Reference) "
             "COLUMNS (source.kind AS source_kind, source.ref AS source_ref, "
             "target.kind AS target_kind, target.ref AS target_ref, edge.derived AS derived)) "
@@ -172,7 +172,7 @@ def build_graph(
             "DESTINATION KEY(target_kind, target_ref) REFERENCES internal.reference(kind, ref) "
             f"LABEL {label}"
         )
-    graph_sql = "CREATE PROPERTY GRAPH caprmedio VERTEX TABLES (internal.reference LABEL Reference)"
+    graph_sql = "CREATE PROPERTY GRAPH anechoic VERTEX TABLES (internal.reference LABEL Reference)"
     if edge_definitions:
         graph_sql += " EDGE TABLES (" + ", ".join(edge_definitions) + ")"
     connection.execute(graph_sql)
@@ -192,7 +192,7 @@ def update_graph(
 ) -> GraphState:
     """Apply changed graph facts; a changed relation type layout needs a new graph declaration."""
     if set(previous.edges) != set(current.edges):
-        connection.execute("DROP PROPERTY GRAPH caprmedio")
+        connection.execute("DROP PROPERTY GRAPH anechoic")
         connection.execute("DROP SCHEMA internal CASCADE")
         return build_graph(connection, atom_rows, scope_rows, set(current.edges))
     for relation_type, table in current.tables.items():

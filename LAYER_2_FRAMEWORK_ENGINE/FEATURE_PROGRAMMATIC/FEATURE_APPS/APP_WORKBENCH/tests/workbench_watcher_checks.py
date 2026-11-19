@@ -167,7 +167,7 @@ class WorkbenchWatcherDockerMixin:
                 self.fail(f"watcher did not refresh atom {atom_id}: expected={expected_rows}")
 
             def start_container():
-                name = f"caprmedio-workbench-watch-{uuid4().hex}"
+                name = f"anechoic-workbench-watch-{uuid4().hex}"
                 port = free_port()
                 url = f"http://127.0.0.1:{port}"
                 stdout = tempfile.TemporaryFile(mode="w+t", encoding="utf-8")
@@ -175,12 +175,12 @@ class WorkbenchWatcherDockerMixin:
                 process = subprocess.Popen(
                     [
                         "docker", "run", "--rm", "--name", name,
-                        "--label", "caprmedio.test=workbench-watch",
+                        "--label", "anechoic.test=workbench-watch",
                         "--memory=1536m", "--memory-swap=1536m",
                         "--tmpfs", "/tmp:rw,nosuid,nodev,size=256m",
-                        "--tmpfs", "/project/.caprmedio_runtime:rw,nosuid,nodev,size=64m,mode=1777",
+                        "--tmpfs", "/project/.anechoic_runtime:rw,nosuid,nodev,size=64m,mode=1777",
                         "-p", f"127.0.0.1:{port}:8092", "-v", f"{root}:/project:rw",
-                        "-v", f"{workbench_state}:/project/.caprmedio_runtime/workbench:rw",
+                        "-v", f"{workbench_state}:/project/.anechoic_runtime/workbench:rw",
                         self.image, "mcp-http",
                     ],
                     cwd=Path(__file__).resolve().parents[5], stdout=stdout, stderr=stderr, text=True,

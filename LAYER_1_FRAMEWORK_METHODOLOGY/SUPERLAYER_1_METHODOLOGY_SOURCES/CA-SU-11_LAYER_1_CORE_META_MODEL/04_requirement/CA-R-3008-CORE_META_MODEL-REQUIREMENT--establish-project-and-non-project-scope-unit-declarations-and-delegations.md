@@ -8,7 +8,7 @@ context:
   role: requirement
   form: requirement
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ Scope Unit
+    main_subject: ANECHOIC_MODEL <+ Scope Unit
   tier: 3
 state:
   status: active
@@ -17,7 +17,7 @@ state:
 destination:
   file:
     name: CA-R-3008-CORE_META_MODEL-REQUIREMENT--establish-project-and-non-project-scope-unit-declarations-and-delegations.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 ---
 
 ## Summary

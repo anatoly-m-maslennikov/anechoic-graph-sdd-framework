@@ -9,7 +9,7 @@ context:
     scope_unit: CA-SU-11
   tier: 3
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Method)/(.Header.Context.Form
+    main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Method)/(.Header.Context.Form
       := Decision)
 state:
   version: 1
@@ -18,12 +18,12 @@ state:
 destination:
   file:
     name: CA-R-3084-CORE_META_MODEL-DECLARATION--declare-method-decision-form.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 relations:
   IS_REPLACEMENT_FOR:
   - CA-R-3005
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-3084-CORE_META_MODEL-DECLARATION--declare-method-decision-form.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-3084-CORE_META_MODEL-DECLARATION--declare-method-decision-form.md
   source_atom_id: CA-R-3084
   source_atom_revision: 1
   source_sha256: 43d5053c803462b3b79c26495cb925f5c2b8e7281adbd7c2fe594b1e50feb7a3
@@ -39,8 +39,8 @@ Declare Method Decision Form
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_entity
-from caprmedio.model import Method
+from anechoic.formal_claims import declare_entity
+from anechoic.model import Method
 
 class MethodDecision(Method):
     pass

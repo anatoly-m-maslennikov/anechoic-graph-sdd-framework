@@ -27,6 +27,6 @@ Project Settings for a Project named `<project_name>`.
 
 ## Claim
 
-the Identifier of Project Settings for a Project named `<project_name>` **must** be `caprmedio_<project_name>_settings`.
+the Identifier of Project Settings for a Project named `<project_name>` **must** be `anechoic_<project_name>_settings`.
 
 ## Details

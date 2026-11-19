@@ -25,7 +25,7 @@ class PythonFormalClaimTest(unittest.TestCase):
     def test_native_property_reaches_content_compiler(self):
         cfel = 'Atom.Content.Semantics :: [markdown]{::0..1}'
         python = (
-            'from caprmedio.formal_claims import Cardinality, declare_entity\n'
+            'from anechoic.formal_claims import Cardinality, declare_entity\n'
             'declare_entity(entity_name="Semantics", relation_name="IS_PROPERTY_OF", '
             'base_path="Atom.Content", value_format="markdown", '
             'value_cardinality=Cardinality(minimum=0, maximum=1))'
@@ -47,7 +47,7 @@ class PythonFormalClaimTest(unittest.TestCase):
 
     def test_relation_inverse_is_visible_to_registry(self):
         native = (
-            'from caprmedio.formal_claims import declare_relation\n'
+            'from anechoic.formal_claims import declare_relation\n'
             'declare_relation(relation_name="PRECEDES", inverse_alias="FOLLOWS", '
             'source_endpoint={"level": "instances"}, target_endpoint={"level": "instances"})'
         )
@@ -58,7 +58,7 @@ class PythonFormalClaimTest(unittest.TestCase):
 
     def test_native_relation_registry_uses_endpoint_contract_without_translation(self):
         claim = (
-            'from caprmedio.formal_claims import declare_relation\n'
+            'from anechoic.formal_claims import declare_relation\n'
             'declare_relation(relation_name="PRECEDES", inverse_alias="FOLLOWS", '
             'source_endpoint={"level": %r}, target_endpoint={"level": %r})'
         )

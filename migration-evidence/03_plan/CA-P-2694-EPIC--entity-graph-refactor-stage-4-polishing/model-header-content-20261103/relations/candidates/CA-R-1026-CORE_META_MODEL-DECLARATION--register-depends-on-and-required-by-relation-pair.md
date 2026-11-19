@@ -1,10 +1,10 @@
 ---
 subjects:
-  active: CAPRMEDIO_MODEL <+ CFEL <+ Relation//depends_on
+  active: ANECHOIC_MODEL <+ CFEL <+ Relation//depends_on
   passive:
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation
-  - CAPRMEDIO_MODEL <+ Term//Artifact
-  - CAPRMEDIO_MODEL <+ CFEL <+ Relation//required_by
+  - ANECHOIC_MODEL <+ CFEL <+ Relation
+  - ANECHOIC_MODEL <+ Term//Artifact
+  - ANECHOIC_MODEL <+ CFEL <+ Relation//required_by
 version: 32
 updated_at: 2026-11-02 08:06:47 +0400
 relations: {}

@@ -6,31 +6,31 @@ container:
 role: Evaluation
 form: Eval Case
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics
+  main_subject: ANECHOIC_MODEL <+ Atom.Header.Context.Topics
   dependencies:
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role: Requirement)/(.Header.Context.Form:
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role: Requirement)/(.Header.Context.Form:
     Demand)'
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Entity
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics.Main Subject
-  - CAPRMEDIO_MODEL <+ Atom.Header.Context.Topics.Dependencies
-  - CAPRMEDIO_MODEL <+ Atom.Header.Relations
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role: Operations)/(.Header.Context.Form:
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Entity
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Topics.Main Subject
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Topics.Dependencies
+  - ANECHOIC_MODEL <+ Atom.Header.Relations
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role: Operations)/(.Header.Context.Form:
     Action)'
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role: Operations)/(.Header.Context.Form:
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role: Operations)/(.Header.Context.Form:
     Workflow)'
-  - CAPRMEDIO_MODEL <+ Term
-  - 'CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Atom Subjects
+  - ANECHOIC_MODEL <+ Term
+  - 'ANECHOIC_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Atom Subjects
     Graph)'
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Concern)
-  - CAPRMEDIO_MODEL <+ Atom.Content
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
-  - CAPRMEDIO_MODEL <+ Term//Property
-  - CAPRMEDIO_MODEL <+ Entity/Property
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ Atom.Local Scope Unit
-  - CAPRMEDIO_MODEL <+ Atom.Target Scope Unit
-  - CAPRMEDIO_MODEL <+ Atom.Content.Summary
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Concern)
+  - ANECHOIC_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
+  - ANECHOIC_MODEL <+ Term//Property
+  - ANECHOIC_MODEL <+ Entity/Property
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Atom.Local Scope Unit
+  - ANECHOIC_MODEL <+ Atom.Target Scope Unit
+  - ANECHOIC_MODEL <+ Atom.Content.Summary
 tier: 6
 relations:
   evaluation_for:
@@ -58,11 +58,11 @@ updated_at: '2026-11-13T19:07:45.911516+00:00'
 carrier_destination:
   file:
     name: CA-E-832-CORE_META_MODEL-EVAL_CASE--validate-atom-topic-references.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-832-CORE_META_MODEL-EVAL_CASE--validate-atom-topic-references.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-832-CORE_META_MODEL-EVAL_CASE--validate-atom-topic-references.md
   source_atom_id: CA-E-832
   source_atom_revision: 2
   source_sha256: 9e0721dcdc1908c61d4987754a3279c0d86d437342153be4494316f26d896dda

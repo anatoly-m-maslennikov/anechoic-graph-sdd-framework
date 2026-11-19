@@ -1,13 +1,13 @@
 ---
 subjects:
-  active: CAPRMEDIO_MODEL <+ CFEL <+ Relation//DEPENDS_ON
+  active: ANECHOIC_MODEL <+ CFEL <+ Relation//DEPENDS_ON
   passive:
-  - CAPRMEDIO_MODEL <+ CFEL > Relation
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Entity
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan)/(.Header.Form := Plan)'
-  - CAPRMEDIO_MODEL <+ Atom.Content
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Operations)/(.Header.Form := Workflow)'
+  - ANECHOIC_MODEL <+ CFEL > Relation
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Entity
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Role := Plan)/(.Header.Form := Plan)'
+  - ANECHOIC_MODEL <+ Atom.Content
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Role := Operations)/(.Header.Form := Workflow)'
 version: 40
 updated_at: 2026-11-03 20:00:05 +0400
 relations:
@@ -23,7 +23,7 @@ form: Declaration
 carrier_destination:
   file:
     name: CA-R-1200-CORE_META_MODEL-DECLARATION--define-depends-on-subject-relation-kind.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 ---
 ## Summary
 

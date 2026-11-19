@@ -63,7 +63,7 @@ class RelationValidationTests(unittest.TestCase):
 
     def test_endpoint_registry_enforces_paired_levels_and_inverse_direction(self):
         claim = parse_native_model_claim(
-            "from caprmedio.formal_claims import declare_relation\n"
+            "from anechoic.formal_claims import declare_relation\n"
             "declare_relation(relation_name='KIND', inverse_alias='KIND_OF', "
             "source_endpoint={'level': 'instances'}, target_endpoint={'level': 'model_entities'})"
         )["arguments"]
@@ -82,7 +82,7 @@ class RelationValidationTests(unittest.TestCase):
 
     def test_explicit_endpoint_pairs_do_not_create_cross_level_links(self):
         claim = parse_native_model_claim(
-            "from caprmedio.formal_claims import declare_relation\n"
+            "from anechoic.formal_claims import declare_relation\n"
             "declare_relation(relation_name='LINKS', endpoint_pairs=("
             "{'source_endpoint': {'level': 'model_entities'}, 'target_endpoint': {'level': 'model_entities'}},"
             "{'source_endpoint': {'level': 'instances'}, 'target_endpoint': {'level': 'instances'}},))"
@@ -100,7 +100,7 @@ class RelationValidationTests(unittest.TestCase):
 
     def test_endpoint_kinds_must_match_the_same_declared_pair(self):
         claim = parse_native_model_claim(
-            "from caprmedio.formal_claims import declare_relation\n"
+            "from anechoic.formal_claims import declare_relation\n"
             "declare_relation(relation_name='LINKS', inverse_alias='LINKED_BY', endpoint_pairs=("
             "{'source_endpoint': {'entity_paths': ('Node',)}, "
             "'target_endpoint': {'entity_paths': ('Item',)}},"

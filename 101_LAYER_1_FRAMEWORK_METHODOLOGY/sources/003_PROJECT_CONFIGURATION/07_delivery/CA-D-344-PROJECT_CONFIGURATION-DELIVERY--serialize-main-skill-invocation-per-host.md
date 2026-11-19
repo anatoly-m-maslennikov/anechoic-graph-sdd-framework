@@ -1,8 +1,8 @@
 ---
 subjects:
-  governs: "CAPRMEDIO Main Skill/Host Invocation"
+  governs: "ANECHOIC Main Skill/Host Invocation"
   depends_on:
-    - "CAPRMEDIO Main Skill"
+    - "ANECHOIC Main Skill"
 version: 9
 updated_at: "2026-10-01 21:24:59 +0400"
 relations: {}
@@ -21,10 +21,10 @@ Serialize Main Skill Invocation per Host
 
 ## Scope
 
-Host Invocations for the CAPRMEDIO Main Skill **and** separately authorized compatibility layers.
+Host Invocations for the ANECHOIC Main Skill **and** separately authorized compatibility layers.
 
 ## Claim
 
-for the CAPRMEDIO Main Skill, the Host Invocation **must** serialize as `$ca` **in** Codex; **if** a Claude compatibility Extension **or** Operator-provided compatibility layer is separately authorized by the Operator, **then** its Host Invocation **must** serialize as `/ca` **in** Claude.
+for the ANECHOIC Main Skill, the Host Invocation **must** serialize as `$ca` **in** Codex; **if** a Claude compatibility Extension **or** Operator-provided compatibility layer is separately authorized by the Operator, **then** its Host Invocation **must** serialize as `/ca` **in** Claude.
 
 ## Details

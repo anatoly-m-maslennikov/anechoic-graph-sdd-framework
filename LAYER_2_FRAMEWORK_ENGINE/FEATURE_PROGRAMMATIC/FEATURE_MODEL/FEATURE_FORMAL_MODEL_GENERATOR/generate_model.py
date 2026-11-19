@@ -1,4 +1,4 @@
-"""Generate Python classes from the Current CAPRMEDIO_MODEL Declarations."""
+"""Generate Python classes from the Current ANECHOIC_MODEL Declarations."""
 
 import argparse
 from pathlib import Path

@@ -1,11 +1,11 @@
 ---
 subjects:
-  active: CAPRMEDIO_MODEL <+ CFEL <+ Relation//child_of
+  active: ANECHOIC_MODEL <+ CFEL <+ Relation//child_of
   passive:
-  - CAPRMEDIO_MODEL <+ Atom.Header.Tier
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom.Local Scope Unit
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom.Target Scope Unit
-  - CAPRMEDIO_MODEL <+ Atom.Content.Claim Scope
+  - ANECHOIC_MODEL <+ Atom.Header.Tier
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom.Local Scope Unit
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Governing Objects/Atom.Target Scope Unit
+  - ANECHOIC_MODEL <+ Atom.Content.Claim Scope
 version: 43
 updated_at: 2026-11-02 08:06:47 +0400
 relations:

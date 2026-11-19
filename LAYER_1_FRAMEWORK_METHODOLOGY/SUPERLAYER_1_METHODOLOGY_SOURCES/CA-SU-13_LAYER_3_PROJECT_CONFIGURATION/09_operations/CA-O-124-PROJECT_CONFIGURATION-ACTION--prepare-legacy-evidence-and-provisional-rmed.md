@@ -6,16 +6,16 @@ container:
 role: Operations
 form: Action
 topics:
-  main_subject: Subject/caprmedio/Action//Legacy Evidence and Provisional RMED Preparation
+  main_subject: Subject/anechoic/Action//Legacy Evidence and Provisional RMED Preparation
   dependencies:
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Operations/Type: Action'
-  - "Subject/CAPRMEDIO/Graph/Node/Aspect/Engineering/Operation/Data Handling/Source Retrieval"
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Selection
-  - Subject/CAPRMEDIO/Graph/Node/Project Model/Atom
-  - "Subject/CAPRMEDIO/Graph/Node/Aspect/Engineering/Quality/Traceability"
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Atom/Content Role: Evaluation'
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Actor/Type: Operator'
-  - 'Subject/CAPRMEDIO/Graph/Node/Project Model/Actor/Type: AI Agent'
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Atom/Content Role: Operations/Type: Action'
+  - "Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Source Retrieval"
+  - Subject/ANECHOIC/Graph/Node/Project Model/Selection
+  - Subject/ANECHOIC/Graph/Node/Project Model/Atom
+  - "Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Traceability"
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Atom/Content Role: Evaluation'
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Actor/Type: Operator'
+  - 'Subject/ANECHOIC/Graph/Node/Project Model/Actor/Type: AI Agent'
 tier: 3
 status: Active
 version: 15
@@ -23,7 +23,7 @@ updated_at: 2026-10-27 19:59:46 +0400
 carrier_destination:
   file:
     name: CA-O-124-PROJECT_CONFIGURATION-ACTION--prepare-legacy-evidence-and-provisional-rmed.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: PROJECT_CONFIGURATION
 author: Anatoly Maslennikov

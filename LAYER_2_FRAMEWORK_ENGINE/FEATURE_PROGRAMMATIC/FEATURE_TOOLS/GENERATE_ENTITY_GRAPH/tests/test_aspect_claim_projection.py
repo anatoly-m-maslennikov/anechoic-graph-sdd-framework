@@ -31,8 +31,8 @@ def instance_edges(graph):
 
 class AspectClaimProjectionTests(unittest.TestCase):
     def test_grouped_formal_claim_preserves_full_identity_without_subject_fallback(self):
-        first = "PROJECT STRUCTURE//CAPRMEDIO <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Query Processing"
-        second = "PROJECT STRUCTURE//CAPRMEDIO <+ Aspects <+ Other <+ Query Processing"
+        first = "PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Query Processing"
+        second = "PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Other <+ Query Processing"
         graph, provenance = compose_enhanced_current_graph([
             carrier("CA-R-1", "Unrelated Main Subject", f"({first}) ((INSTANCE_OF)) Aspect"),
             carrier("CA-R-2", None, f"({second}) ((INSTANCE_OF)) Aspect"),
@@ -51,12 +51,12 @@ class AspectClaimProjectionTests(unittest.TestCase):
         self.assertIn(f"`INSTANCE_OF` `{second}` → `Aspect`", rendered)
 
     def test_typed_aspect_preserves_full_identity_and_provenance(self):
-        path = "PROJECT STRUCTURE//CAPRMEDIO <+ Aspects <+ Engineering <+ Query Processing"
+        path = "PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Engineering <+ Query Processing"
         old = carrier("CA-R-1", path, f"# project_structure\n{path};\n({path}) ((INSTANCE_OF)) Aspect")
         new = carrier("CA-R-1", path, "")
         new["body"] = ("## Claim\n### Formal Claim\n```python\n"
-                       "from caprmedio.formal_claims import declare_entity\n"
-                       "from caprmedio.model import Aspect\n"
+                       "from anechoic.formal_claims import declare_entity\n"
+                       "from anechoic.model import Aspect\n"
                        f"declare_entity(entity_name='Query Processing', instance=Aspect(address={path!r}))\n```\n")
         old_constraints, old_errors = extract_claim_constraints(old)
         new_constraints, new_errors = extract_claim_constraints(new)
@@ -70,21 +70,21 @@ class AspectClaimProjectionTests(unittest.TestCase):
         self.assertTrue(any(row.get("role") == "formal_claim" for row in provenance["occurrences"]))
 
     def test_typed_aspects_with_same_name_keep_distinct_paths(self):
-        paths = ["PROJECT STRUCTURE//CAPRMEDIO <+ Aspects <+ " + parent + " <+ Example"
+        paths = ["PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ " + parent + " <+ Example"
                  for parent in ("Engineering", "Product")]
         rows = []
         for index, path in enumerate(paths):
             row = carrier(f"CA-R-{index}", path, "")
             row["body"] = ("## Claim\n### Formal Claim\n```python\n"
-                           "from caprmedio.formal_claims import declare_entity\n"
-                           "from caprmedio.model import Aspect\n"
+                           "from anechoic.formal_claims import declare_entity\n"
+                           "from anechoic.model import Aspect\n"
                            f"declare_entity(entity_name='Example', instance=Aspect(address={path!r}))\n```\n")
             rows.append(row)
         graph, _ = compose_enhanced_current_graph(rows)
         self.assertTrue({(path, "Aspect") for path in paths} <= instance_edges(graph))
 
     def test_ordinary_claim_does_not_declare_aspect_membership(self):
-        path = "PROJECT STRUCTURE//CAPRMEDIO <+ Aspects <+ Example"
+        path = "PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Example"
         row = carrier("CA-R-3", None, f"({path}) ((INSTANCE_OF)) Aspect")
         row["read_view"]["type"] = "Requirement"
         graph, _ = compose_enhanced_current_graph([row])

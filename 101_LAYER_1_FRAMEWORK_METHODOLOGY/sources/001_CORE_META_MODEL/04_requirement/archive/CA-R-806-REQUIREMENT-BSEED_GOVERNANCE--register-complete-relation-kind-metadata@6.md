@@ -6,9 +6,9 @@ version: 6
 updated_at: 2026-08-23 01:44:00
 relations:
   child_of:
-    - CAPRMEDIO-GOV-REQU-345--represent-accepted-meaning-faithfully
-    - CAPRMEDIO-META-REQU-117--store-each-semantic-relation-once
-    - CAPRMEDIO-META-REQU-121--store-only-direct-semantic-relations
+    - ANECHOIC-GOV-REQU-345--represent-accepted-meaning-faithfully
+    - ANECHOIC-META-REQU-117--store-each-semantic-relation-once
+    - ANECHOIC-META-REQU-121--store-only-direct-semantic-relations
 ---
 # Register complete relation-kind metadata
 

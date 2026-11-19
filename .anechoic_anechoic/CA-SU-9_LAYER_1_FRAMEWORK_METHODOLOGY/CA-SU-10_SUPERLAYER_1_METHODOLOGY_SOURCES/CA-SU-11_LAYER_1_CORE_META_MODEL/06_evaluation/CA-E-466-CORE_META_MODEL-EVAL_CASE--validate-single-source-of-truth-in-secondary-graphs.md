@@ -1,0 +1,58 @@
+---
+atom_id: CA-E-466
+ref_id: CA-E-466
+container:
+  scope_unit: CA-SU-11
+role: Evaluation
+form: Eval Case
+topics:
+  main_subject: ANECHOIC_MODEL <+ Entity
+  dependencies:
+  - ANECHOIC_MODEL <+ Projection
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ Entity
+  - ANECHOIC_MODEL <+ Journal
+  - ANECHOIC_MODEL <+ Relation
+tier: 3
+relations:
+  evaluation_for:
+  - CA-R-1437
+  - CA-R-1470
+  - CA-R-1471
+  - CA-R-2535
+status: Active
+version: 28
+updated_at: 2026-11-02 00:18:22 +0400
+carrier_destination:
+  file:
+    name: CA-E-466-CORE_META_MODEL-EVAL_CASE--validate-single-source-of-truth-in-secondary-graphs.md
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
+current_scope_unit: CORE_META_MODEL
+claim_target_scope_unit: CORE_META_MODEL
+---
+## Summary
+Validate Single Source of Truth in secondary graphs
+
+## Claim
+
+### Prose Claim
+
+source authority **in** secondary graph representations.
+
+the Evaluation **must** distinguish authoritative source facts from their secondary graph representations **and** reject a Projection that acquires independent authority for a represented fact.
+
+### Test cases
+
+| Case | Expected result |
+|---|---|
+| **`=1`** source Claim represented **in** multiple graphs | pass **if** **all** representations retain the same source identity **and** applicable Revision |
+| two independently maintained authoritative declarations for the same fact **in** the same context, even **when** their values agree | fail |
+| different Claims **or** different source facts used by a derived result | no Single Source of Truth failure merely because there are multiple source Atoms |
+| a permitted derived Relation with identified derivation authority **and** source inputs, but no separately authored declaration for its computed result | pass this source-authority check |
+| a derived edge with no admitted derivation authority **or** missing required source evidence | fail **or** report unresolved evidence; do **not** invent a source declaration |
+| a source Atom reached through another Projection | pass **if** ultimate source traceability is retained |
+| a Journal event **or** structural fact represented **in** a graph | pass **if** its existing source authority remains intact; do **not** fabricate an Atom Claim as historical **or** observed evidence |
+| a projected fact corrected independently while its source **and** governing derivation remain unchanged | fail |
+
+passing this source-authority Evaluation does **not** establish graph-specific Relation validity, completeness, **or** the truth of a recorded outcome; those remain subject **to** their applicable Evaluations.

@@ -159,7 +159,7 @@ class HostRuntimeConfig:
 def _default_path() -> Path:
     try:
         base = os.environ.get("XDG_CONFIG_HOME") or str(Path.home() / ".config")
-        return Path(base) / "caprmedio" / "runtime.toml"
+        return Path(base) / "anechoic" / "runtime.toml"
     except (OSError, RuntimeError, TypeError, ValueError) as error:
         raise _error("Host runtime configuration default path is unavailable") from error
 

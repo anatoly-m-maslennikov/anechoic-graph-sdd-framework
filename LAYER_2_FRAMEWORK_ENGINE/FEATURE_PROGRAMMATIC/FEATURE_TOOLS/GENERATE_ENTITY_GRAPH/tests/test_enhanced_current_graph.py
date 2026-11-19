@@ -55,7 +55,7 @@ IF (A) THEN (B)
         self.assertEqual(["Atom/(.Header.Role: )//$bad", "IF (A) THEN (B)"], [row["expression"] for row in diagnostics])
 
     def test_selection_scopes_do_not_emit_entities_or_declarations(self) -> None:
-        values = ("Node.**", "Node//", "@(Node.**)", "CAPRMEDIO <+ MODEL <+ (Node,Node.**)")
+        values = ("Node.**", "Node//", "@(Node.**)", "ANECHOIC <+ MODEL <+ (Node,Node.**)")
         carriers = [carrier(f"CA-R-{i}", {"active": value, "passive": []}, declaration=True)
                     for i, value in enumerate(values, 1)]
         graph, provenance = compose_enhanced_current_graph(carriers)
@@ -417,10 +417,10 @@ Workflow {:2}<((IS_CONTAINED_BY)){:1} Step;
 
     def test_namespace_prefixes_add_containment_without_changing_local_targets(self) -> None:
         graph, _ = compose_enhanced_current_graph([
-            carrier("CA-R-1001", {"active": "CAPRMEDIO <+ MODEL <+ Node", "passive": []}, declaration=True),
-            carrier("CA-R-1002", {"active": "CAPRMEDIO <+ MODEL <+ Node.Property", "passive": []}, declaration=True),
-            carrier("CA-R-1003", {"active": "CAPRMEDIO <+ MODEL <+ Workflow//Daily", "passive": []}, declaration=True),
-            carrier("CA-R-1004", {"active": "CAPRMEDIO <+ MODEL <+ CFEL <+ Relation//RUN", "passive": []}, declaration=True, form="Relation Definition"),
+            carrier("CA-R-1001", {"active": "ANECHOIC <+ MODEL <+ Node", "passive": []}, declaration=True),
+            carrier("CA-R-1002", {"active": "ANECHOIC <+ MODEL <+ Node.Property", "passive": []}, declaration=True),
+            carrier("CA-R-1003", {"active": "ANECHOIC <+ MODEL <+ Workflow//Daily", "passive": []}, declaration=True),
+            carrier("CA-R-1004", {"active": "ANECHOIC <+ MODEL <+ CFEL <+ Relation//RUN", "passive": []}, declaration=True, form="Relation Definition"),
         ])
 
         self.assertEqual({"Node"}, {
@@ -434,7 +434,7 @@ Workflow {:2}<((IS_CONTAINED_BY)){:1} Step;
             (nodes[row["relation_source"]], nodes[row["relation_target"]])
             for row in graph["edges"] if row["kind"] == "IS_CONTAINED_BY"
         }
-        self.assertIn(("MODEL", "CAPRMEDIO"), containment)
+        self.assertIn(("MODEL", "ANECHOIC"), containment)
 
     def test_inverse_glyph_projects_distinct_relation_endpoints(self) -> None:
         nodes, facts, _ = subject_facts("Relation//NARROWER_THAN <--> Relation//BROADER_THAN")
@@ -454,17 +454,17 @@ Workflow {:2}<((IS_CONTAINED_BY)){:1} Step;
 
     def test_explicit_roots_are_not_model_nodes_and_grouped_selectors_project(self) -> None:
         graph, _ = compose_enhanced_current_graph([
-            carrier("CA-R-1001", {"active": "CAPRMEDIO_MODEL", "passive": []}, declaration=True),
-            carrier("CA-R-1002", {"active": "CAPRMEDIO_STRUCTURE", "passive": []}, declaration=True),
-            carrier("CA-R-1003", {"active": "CAPRMEDIO_MODEL <+ (Atom/(.Header.Role := Method))", "passive": []}, declaration=True),
-            carrier("CA-R-1004", {"active": "(CAPRMEDIO_MODEL <+ Atom)/(.Header.Form := Rule)", "passive": []}, declaration=True),
+            carrier("CA-R-1001", {"active": "ANECHOIC_MODEL", "passive": []}, declaration=True),
+            carrier("CA-R-1002", {"active": "ANECHOIC_STRUCTURE", "passive": []}, declaration=True),
+            carrier("CA-R-1003", {"active": "ANECHOIC_MODEL <+ (Atom/(.Header.Role := Method))", "passive": []}, declaration=True),
+            carrier("CA-R-1004", {"active": "(ANECHOIC_MODEL <+ Atom)/(.Header.Form := Rule)", "passive": []}, declaration=True),
         ])
         self.assertEqual({"Atom/(.Header.Role:=Method)", "Atom/(.Header.Form:=Rule)"},
                          {row["identity"] for row in graph["model"]["primary_nodes"]})
         self.assertEqual([], graph["diagnostics"])
 
     def test_post_cutover_role_form_frontier_keeps_catalogue_and_constraints_separate(self) -> None:
-        temporary_root = Path.cwd() / ".caprmedio_tmp/tests/test_enhanced_current_graph"
+        temporary_root = Path.cwd() / ".anechoic_tmp/tests/test_enhanced_current_graph"
         temporary_root.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=temporary_root) as temporary:
             root = Path(temporary)

@@ -4,7 +4,7 @@ current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 status: Active
 subjects:
-  active: CAPRMEDIO_MODEL <+ CFEL
+  active: ANECHOIC_MODEL <+ CFEL
 version: 8
 updated_at: 2026-11-02 17:54:42 +0400
 relations: {}
@@ -29,7 +29,7 @@ p.*[name format]{:immediate name count}: [value format]{:value count}
 
 ### Prose Claim
 
-CFEL (CAPRMEDIO Formal Expression Language) is the formal notation for
+CFEL (ANECHOIC Formal Expression Language) is the formal notation for
 Subject addresses and fenced Formal Claims. CFEL is a model component beside
 Graph and Carrier: Graph contains Nodes and Relations; CFEL addresses and
 constrains them. CFEL syntax neither creates a Node, Relation, Property,

@@ -1,0 +1,55 @@
+---
+atom_id: CA-P-2130
+ref_id: CA-P-2130
+container:
+  atom: CA-P-2045
+role: Plan
+form: Plan
+label: Task
+topics:
+  main_subject: Subject
+  dependencies:
+  - Subject/Graph Node/Domain/Continuant/Atom
+  - Subject
+  - Subject/Graph Node/Domain/Continuant/Projection
+  - 'Subject/Graph Node/Domain/Continuant/Actor/Type: Operator'
+tier: 3
+relations:
+  is_decomposition_of:
+  - CA-P-2045
+status: Done
+version: 6
+updated_at: 2026-10-25 17:32:27 +0400
+carrier_destination:
+  file:
+    name: 17-CA-P-2130-TASK--verify-remaining-subject-layers-independently.md
+    path: .anechoic_anechoic/03_plan/done/18-CA-P-1959-EPIC--improve-entity-model-stage-2/done/8-CA-P-1966-EPIC--map-current-core-subject-origins/done/53-CA-P-2043-TASK--integrate-current-subject-mapping-ledger/done/2-CA-P-2045-TASK--integrate-reviewed-current-subject-mappings/done
+work_sequence_number: 17
+current_scope_unit: anechoic
+claim_target_scope_unit: anechoic
+author: Anatoly Maslennikov
+assignee: AI Agent
+---
+# Summary
+
+Verify remaining Subject layers independently
+
+## Objective
+
+Independent checks reject wrong or missing subject-family layers while accepting exact prospective outputs.
+
+## Details
+
+Own work: at most fifteen minutes. Exclusive scope: support/verify_working_mapping_ledger.py and support/test_working_mapping_ledger.py.
+
+Read and follow `_projection/core-entity-review/stage2/working-ledger.followups-2121-2128.contract.md`. Extend the existing independent one-off verifier and its focused tests for the eight exact selected layers, without importing the producer. Enumerate current source origins and verify exact selected coverage, accepted report/receipt provenance, layer order, final target/confidence and complete quarantine/lineage preservation. Add valid-control adversarial cases for omitted layer, missing/extra or stale origin, wrong target and bad acceptance pins. No output replacement.
+
+Root owns integration, Plans, receipts and Git. No original Core, ordinary content, frozen/captured evidence, earlier raw report, Tool, runtime, MCP/FPF or native-admission changes. A completed leaf does not approve migration or complete mapping. Commit after this Task's actual acceptance.
+
+### Completion
+
+The independent fixed fourth-group verifier retains exact report/receipt/review/current-evidence and proof checks, and requires all eight layers when any real receipt exists. Independent code review,25 focused tests and Root's actual prospective control plus ten corrupt variants pass. No derived draft or original Core was written. Exact verification is recorded in `_projection/core-entity-review/stage2/task-2130.receipt.json`.
+
+### Definition of Done
+
+Not Done if any required report/receipt/current pin or independent gate is missing, wrong data is accepted, source writes occur, claims exceed evidence, or own work exceeds fifteen minutes without decomposition.

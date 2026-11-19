@@ -8,10 +8,10 @@ context:
   role: Operations
   form: Action
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Operations)/Action
+    main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Operations)/Action
     dependencies:
-    - CAPRMEDIO_MODEL <+ Atom
-    - CAPRMEDIO_STRUCTURE <+ Scope Unit//PROJECT_CONFIGURATION
+    - ANECHOIC_MODEL <+ Atom
+    - ANECHOIC_STRUCTURE <+ Scope Unit//PROJECT_CONFIGURATION
   tier: 3
 state:
   status: Active
@@ -20,9 +20,9 @@ state:
 destination:
   file:
     name: CA-O-10000-PROJECT_CONFIGURATION-ACTION--apply-one-direct-atom-update.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-10000-PROJECT_CONFIGURATION-ACTION--apply-one-direct-atom-update.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-10000-PROJECT_CONFIGURATION-ACTION--apply-one-direct-atom-update.md
   source_atom_id: CA-O-10000
   source_atom_revision: 1
   source_sha256: 25073ee170bc2d2c635d5b4a7cf4f90932f1484dded6f3a42e7ed5f122fc563a

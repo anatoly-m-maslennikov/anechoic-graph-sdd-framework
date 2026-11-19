@@ -25,17 +25,17 @@ RELATIVE = Path(
 
 class ProjectMcpBootstrapTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.temporary = tempfile.TemporaryDirectory(prefix="caprmedio-bootstrap-", ignore_cleanup_errors=True)
+        self.temporary = tempfile.TemporaryDirectory(prefix="anechoic-bootstrap-", ignore_cleanup_errors=True)
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name).resolve()
         self.target_root = self.root / "target"
         self.target_root.mkdir()
-        self.package = self.target_root / ".caprmedio_install" / "releases" / ("a" * 64)
+        self.package = self.target_root / ".anechoic_install" / "releases" / ("a" * 64)
         self.source = self.package / RELATIVE
         self.source.parent.mkdir(parents=True)
         self.source.write_bytes(b"#!/usr/bin/env python3\n# package bootstrap\n")
         self.source.chmod(0o755)
-        self.runtime = self.target_root / ".caprmedio_runtime"
+        self.runtime = self.target_root / ".anechoic_runtime"
         self.runtime.mkdir(parents=True)
         (self.runtime / "config.toml").write_text("keep = true\n", encoding="utf-8")
         (self.runtime / "state.json").write_text("retain state\n", encoding="utf-8")

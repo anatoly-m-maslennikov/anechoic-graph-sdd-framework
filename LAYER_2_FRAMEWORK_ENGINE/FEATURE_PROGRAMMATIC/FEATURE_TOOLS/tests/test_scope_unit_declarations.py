@@ -25,10 +25,10 @@ class ScopeUnitDeclarationReaderTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name).resolve()
-        self.control = self.root / ".caprmedio_demo"
+        self.control = self.root / ".anechoic_demo"
         self.control.mkdir()
-        (self.control / "caprmedio_project_settings.toml").write_text(
-            '[project]\nname = "demo"\n[paths]\ncontrol_root = ".caprmedio_demo"\n[artifacts.identity]\nproject_prefix = "ca"\n', encoding="utf-8",
+        (self.control / "anechoic_project_settings.toml").write_text(
+            '[project]\nname = "demo"\n[paths]\ncontrol_root = ".anechoic_demo"\n[artifacts.identity]\nproject_prefix = "ca"\n', encoding="utf-8",
         )
 
     def declaration(
@@ -89,11 +89,11 @@ class ScopeUnitDeclarationReaderTests(unittest.TestCase):
             end = text.index("\n```", start) + len("\n```")
             return text[:start] + "```python\n" + claim + "\n```" + text[end:]
 
-        root_claim = ('from caprmedio.model import Project\n'
-                      'from caprmedio.formal_claims import declare_entity\n'
+        root_claim = ('from anechoic.model import Project\n'
+                      'from anechoic.formal_claims import declare_entity\n'
                       'declare_entity(entity_name="demo", instance=Project(id="CA-SU-00", name="demo"))')
-        parent_claim = ('from caprmedio.model import ScopeUnit\n'
-                        'from caprmedio.formal_claims import declare_entity\n'
+        parent_claim = ('from anechoic.model import ScopeUnit\n'
+                        'from anechoic.formal_claims import declare_entity\n'
                         'declare_entity(entity_name="PARENT", instance=ScopeUnit('
                         'id="CA-SU-1", name="PARENT", label="LAYER", ordered=True, '
                         'order_number=1, container="demo"))')
@@ -145,11 +145,11 @@ class ScopeUnitDeclarationReaderTests(unittest.TestCase):
             "scope_unit_name": "demo", "parent": "PROJECT", "scope_unit_id": None,
             "scope_unit_label": None, "scope_unit_type": "Unordered",
             "admitted_role_forms": (),
-            "authority_path": ".caprmedio_demo", "delivery_path": ".",
+            "authority_path": ".anechoic_demo", "delivery_path": ".",
         })
-        self.assertEqual(rows["PARENT"]["authority_path"], ".caprmedio_demo/CA-SU-1_LAYER_1_PARENT")
+        self.assertEqual(rows["PARENT"]["authority_path"], ".anechoic_demo/CA-SU-1_LAYER_1_PARENT")
         self.assertEqual(rows["PARENT"]["delivery_path"], "LAYER_1_PARENT")
-        self.assertEqual(rows["CHILD"]["authority_path"], ".caprmedio_demo/CA-SU-1_LAYER_1_PARENT/CA-SU-2_FEATURE_CHILD")
+        self.assertEqual(rows["CHILD"]["authority_path"], ".anechoic_demo/CA-SU-1_LAYER_1_PARENT/CA-SU-2_FEATURE_CHILD")
         self.assertEqual(rows["CHILD"]["delivery_path"], "LAYER_1_PARENT/FEATURE_CHILD")
 
     def test_structure_topics_follow_discovered_names(self) -> None:
@@ -157,56 +157,56 @@ class ScopeUnitDeclarationReaderTests(unittest.TestCase):
         import re
         def topic(path, value):
             path.write_text(re.sub(r'(?m)^  active: .*$', f'  active: "{value}"', path.read_text()))
-        root.write_text(root.read_text().replace('entity_name="demo"', 'entity_name="caprmedio"').replace('name="demo"', 'name="caprmedio"'))
-        parent.write_text(parent.read_text().replace('container="demo"', 'container="caprmedio"'))
-        topic(root, 'CAPRMEDIO_STRUCTURE')
-        topic(parent, 'CAPRMEDIO_STRUCTURE/PARENT')
-        topic(child, 'CAPRMEDIO_STRUCTURE/PARENT/CHILD')
+        root.write_text(root.read_text().replace('entity_name="demo"', 'entity_name="anechoic"').replace('name="demo"', 'name="anechoic"'))
+        parent.write_text(parent.read_text().replace('container="demo"', 'container="anechoic"'))
+        topic(root, 'ANECHOIC_STRUCTURE')
+        topic(parent, 'ANECHOIC_STRUCTURE/PARENT')
+        topic(child, 'ANECHOIC_STRUCTURE/PARENT/CHILD')
         delegation = child.parent / 'CA-R-4-delegation.md'
         raw = child.read_text().replace('CA-R-3', 'CA-R-4').replace('form: Scope Unit Declaration', 'form: Scope Delegation')
         raw = raw[:raw.index('### Formal Claim')] + '### Prose Claim\n\nDelegated responsibility.\n'
         delegation.write_text(raw.replace('---\n', '---\ncontainer:\n  scope_unit: CA-SU-1\n', 1))
-        self.assertEqual({'caprmedio', 'PARENT', 'CHILD'}, set(read_scope_unit_declarations(self.root, self.control.name).by_name))
-        delegation.write_text(delegation.read_text().replace('CAPRMEDIO_STRUCTURE/PARENT/CHILD', 'CAPRMEDIO_STRUCTURE/WRONG/CHILD'))
+        self.assertEqual({'anechoic', 'PARENT', 'CHILD'}, set(read_scope_unit_declarations(self.root, self.control.name).by_name))
+        delegation.write_text(delegation.read_text().replace('ANECHOIC_STRUCTURE/PARENT/CHILD', 'ANECHOIC_STRUCTURE/WRONG/CHILD'))
         with self.assertRaisesRegex(ScopeDeclarationError, 'contradicts declared containment'):
             read_scope_unit_declarations(self.root, self.control.name)
         delegation.unlink()
-        child.write_text(child.read_text().replace('CAPRMEDIO_STRUCTURE/PARENT/CHILD', 'CAPRMEDIO_STRUCTURE/WRONG/CHILD'))
+        child.write_text(child.read_text().replace('ANECHOIC_STRUCTURE/PARENT/CHILD', 'ANECHOIC_STRUCTURE/WRONG/CHILD'))
         with self.assertRaisesRegex(ScopeDeclarationError, 'contradicts declared containment'):
             read_scope_unit_declarations(self.root, self.control.name)
 
     def test_prefixed_active_subjects_roundtrip_while_claims_stay_local(self) -> None:
         root_source = self.declaration(
-            "caprmedio", "CA-R-1", source=self.control / "CA-R-1-caprmedio.md",
-            project=True, project_name="caprmedio",
+            "anechoic", "CA-R-1", source=self.control / "CA-R-1-anechoic.md",
+            project=True, project_name="anechoic",
         )
         parent_source = self.declaration(
             "PARENT", "CA-R-2", scope_id="CA-SU-1", label="LAYER", ordered=True,
-            order_number=1, parent=PROJECT, project_name="caprmedio",
+            order_number=1, parent=PROJECT, project_name="anechoic",
         )
         child_source = self.declaration(
             "CHILD", "CA-R-3", source=self.control / "CA-SU-1_LAYER_1_PARENT" / "04_requirement" / "child.md",
-            scope_id="CA-SU-2", label="FEATURE", parent="PARENT", project_name="caprmedio",
+            scope_id="CA-SU-2", label="FEATURE", parent="PARENT", project_name="anechoic",
         )
 
         for source, local_subject in (
-            (root_source, "Project//caprmedio"),
+            (root_source, "Project//anechoic"),
             (parent_source, "Scope Unit//PARENT"),
             (child_source, "Scope Unit//CHILD"),
         ):
             text = source.read_text(encoding="utf-8")
-            self.assertIn(f'active: "CAPRMEDIO_STRUCTURE <+ {local_subject}"', text)
+            self.assertIn(f'active: "ANECHOIC_STRUCTURE <+ {local_subject}"', text)
             self.assertIn(f'entity_name="{local_subject.split("//", 1)[1]}"', text.split("## Claim", 1)[1])
-            self.assertNotIn("CAPRMEDIO", text.split("## Claim", 1)[1])
+            self.assertNotIn("ANECHOIC", text.split("## Claim", 1)[1])
             parsed = parse_scope_unit_declaration(text.encode(), source)
             self.assertEqual(parsed.name, local_subject.split("//", 1)[1])
 
     def test_legacy_bare_active_subject_remains_compatible(self) -> None:
         source = self.declaration(
-            "UNIT", "CA-R-2", scope_id="CA-SU-2", parent=PROJECT, project_name="caprmedio",
+            "UNIT", "CA-R-2", scope_id="CA-SU-2", parent=PROJECT, project_name="anechoic",
         )
         raw = source.read_text(encoding="utf-8").replace(
-            'CAPRMEDIO_STRUCTURE <+ Scope Unit//UNIT', "Scope Unit//UNIT",
+            'ANECHOIC_STRUCTURE <+ Scope Unit//UNIT', "Scope Unit//UNIT",
         )
         source.write_text(raw, encoding="utf-8")
 
@@ -214,7 +214,7 @@ class ScopeUnitDeclarationReaderTests(unittest.TestCase):
 
     def test_current_main_subject_replaces_legacy_active_subject(self) -> None:
         source = self.declaration(
-            "UNIT", "CA-R-2", scope_id="CA-SU-2", parent=PROJECT, project_name="caprmedio",
+            "UNIT", "CA-R-2", scope_id="CA-SU-2", parent=PROJECT, project_name="anechoic",
         )
         source.write_text(source.read_text(encoding="utf-8").replace(
             "subjects:\n  active:", "topics:\n  main_subject:",
@@ -224,18 +224,18 @@ class ScopeUnitDeclarationReaderTests(unittest.TestCase):
 
     def test_formal_identity_allows_missing_but_not_ambiguous_main_subject(self) -> None:
         source = self.declaration(
-            "UNIT", "CA-R-2", scope_id="CA-SU-2", parent=PROJECT, project_name="caprmedio",
+            "UNIT", "CA-R-2", scope_id="CA-SU-2", parent=PROJECT, project_name="anechoic",
         )
         current = source.read_text(encoding="utf-8")
         missing = current.replace(
-            'subjects:\n  active: "CAPRMEDIO_STRUCTURE <+ Scope Unit//UNIT"\n  passive: []\n', "",
+            'subjects:\n  active: "ANECHOIC_STRUCTURE <+ Scope Unit//UNIT"\n  passive: []\n', "",
         )
         equal_aliases = current.replace(
-            "subjects:\n", "topics:\n  main_subject: \"CAPRMEDIO_STRUCTURE <+ Scope Unit//UNIT\"\nsubjects:\n",
+            "subjects:\n", "topics:\n  main_subject: \"ANECHOIC_STRUCTURE <+ Scope Unit//UNIT\"\nsubjects:\n",
         )
         ambiguous = equal_aliases.replace(
-            'main_subject: "CAPRMEDIO_STRUCTURE <+ Scope Unit//UNIT"',
-            'main_subject: "CAPRMEDIO_STRUCTURE <+ Scope Unit//OTHER"',
+            'main_subject: "ANECHOIC_STRUCTURE <+ Scope Unit//UNIT"',
+            'main_subject: "ANECHOIC_STRUCTURE <+ Scope Unit//OTHER"',
         )
         invalid_current = current.replace(
             "subjects:\n", "topics:\n  main_subject: 1\nsubjects:\n",
@@ -250,11 +250,11 @@ class ScopeUnitDeclarationReaderTests(unittest.TestCase):
 
     def test_prefixed_active_subject_wrong_branch_refuses(self) -> None:
         source = self.declaration(
-            "UNIT", "CA-R-2", scope_id="CA-SU-2", parent=PROJECT, project_name="caprmedio",
+            "UNIT", "CA-R-2", scope_id="CA-SU-2", parent=PROJECT, project_name="anechoic",
         )
         source.write_text(source.read_text(encoding="utf-8").replace(
-            "CAPRMEDIO_STRUCTURE <+ Scope Unit//UNIT",
-            "CAPRMEDIO_MODEL <+ Scope Unit//UNIT",
+            "ANECHOIC_STRUCTURE <+ Scope Unit//UNIT",
+            "ANECHOIC_MODEL <+ Scope Unit//UNIT",
         ), encoding="utf-8")
 
         with self.assertRaisesRegex(ScopeDeclarationError, "namespace branch"):
@@ -262,11 +262,11 @@ class ScopeUnitDeclarationReaderTests(unittest.TestCase):
 
     def test_named_structure_namespace_is_read_without_changing_the_source(self) -> None:
         source = self.declaration(
-            "UNIT", "CA-R-2", scope_id="CA-SU-2", parent=PROJECT, project_name="caprmedio",
+            "UNIT", "CA-R-2", scope_id="CA-SU-2", parent=PROJECT, project_name="anechoic",
         )
         carrier = source.read_bytes().replace(
-            b"CAPRMEDIO_STRUCTURE <+ Scope Unit//UNIT",
-            b"PROJECT STRUCTURE//CAPRMEDIO <+ Scope Unit//UNIT",
+            b"ANECHOIC_STRUCTURE <+ Scope Unit//UNIT",
+            b"PROJECT STRUCTURE//ANECHOIC <+ Scope Unit//UNIT",
         )
         self.assertEqual("UNIT", parse_scope_unit_declaration(carrier, source).name)
         with self.assertRaisesRegex(ScopeDeclarationError, "namespace branch"):
@@ -274,11 +274,11 @@ class ScopeUnitDeclarationReaderTests(unittest.TestCase):
 
     def test_prefixed_active_subject_invalid_namespace_chain_refuses(self) -> None:
         source = self.declaration(
-            "UNIT", "CA-R-2", scope_id="CA-SU-2", parent=PROJECT, project_name="caprmedio",
+            "UNIT", "CA-R-2", scope_id="CA-SU-2", parent=PROJECT, project_name="anechoic",
         )
         source.write_text(source.read_text(encoding="utf-8").replace(
-            "CAPRMEDIO_STRUCTURE <+ Scope Unit//UNIT",
-            "CAPRMEDIO_STRUCTURE {1}<+ Scope Unit//UNIT",
+            "ANECHOIC_STRUCTURE <+ Scope Unit//UNIT",
+            "ANECHOIC_STRUCTURE {1}<+ Scope Unit//UNIT",
         ), encoding="utf-8")
 
         with self.assertRaisesRegex(ScopeDeclarationError, "namespace chain"):
@@ -566,11 +566,11 @@ parameters:
 
     def test_unsafe_control_root_refuses(self) -> None:
         with self.assertRaisesRegex(ScopeDeclarationError, "direct Project control"):
-            read_scope_unit_declarations(self.root, "../.caprmedio_demo")
+            read_scope_unit_declarations(self.root, "../.anechoic_demo")
 
     def test_non_ca_scope_id_and_spaced_project_name_remain_declaration_data(self) -> None:
-        (self.control / "caprmedio_project_settings.toml").write_text(
-            '[project]\nname = "Friendly Demo"\n[paths]\ncontrol_root = ".caprmedio_demo"\n', encoding="utf-8",
+        (self.control / "anechoic_project_settings.toml").write_text(
+            '[project]\nname = "Friendly Demo"\n[paths]\ncontrol_root = ".anechoic_demo"\n', encoding="utf-8",
         )
         self.declaration("Friendly Demo", "CA-R-1", source=self.control / "CA-R-1-demo.md", project=True)
         self.declaration("UNIT", "CA-R-2", scope_id="TEST-SU-1", parent="Friendly Demo")

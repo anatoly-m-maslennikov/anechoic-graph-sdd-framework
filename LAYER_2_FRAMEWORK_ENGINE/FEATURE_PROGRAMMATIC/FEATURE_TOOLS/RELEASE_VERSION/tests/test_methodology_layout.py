@@ -12,10 +12,10 @@ import methodology_layout  # noqa: E402
 class LayoutTests(unittest.TestCase):
     def _project(self):
         root = Path(tempfile.mkdtemp(prefix="release-methodology-layout-", dir=tempfile.gettempdir()))
-        control = root / ".caprmedio_demo"
+        control = root / ".anechoic_demo"
         control.mkdir()
-        (control / "caprmedio_project_settings.toml").write_text(
-            '[project]\nname = "demo"\n[paths]\ncontrol_root = ".caprmedio_demo"\n', encoding="utf-8",
+        (control / "anechoic_project_settings.toml").write_text(
+            '[project]\nname = "demo"\n[paths]\ncontrol_root = ".anechoic_demo"\n', encoding="utf-8",
         )
         rows = (
             {"scope_unit_name": "FRAMEWORK_METHODOLOGY", "scope_unit_type": "Unordered"},
@@ -31,8 +31,8 @@ class LayoutTests(unittest.TestCase):
         self.assertEqual("FRAMEWORK_METHODOLOGY", layout.product_root)
         self.assertEqual("FRAMEWORK_METHODOLOGY/METHODOLOGY_SOURCES", layout.source_copy_root)
         self.assertEqual("FRAMEWORK_METHODOLOGY/APPLICABLE_METHODOLOGY", layout.applicable_root)
-        self.assertEqual(".caprmedio_demo", layout.control_root)
-        self.assertEqual(".caprmedio_demo/000_CAPRMEDIO_framework", layout.installed_root)
+        self.assertEqual(".anechoic_demo", layout.control_root)
+        self.assertEqual(".anechoic_demo/000_ANECHOIC_framework", layout.installed_root)
         self.assertEqual(64, len(layout.declaration_sha256))
 
     def test_symlinked_source_ancestor_is_refused(self):

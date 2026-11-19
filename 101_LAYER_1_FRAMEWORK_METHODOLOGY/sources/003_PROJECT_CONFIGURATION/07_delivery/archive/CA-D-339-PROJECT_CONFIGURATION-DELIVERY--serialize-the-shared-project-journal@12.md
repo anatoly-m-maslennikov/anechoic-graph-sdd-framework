@@ -13,7 +13,7 @@ updated_at: "2026-09-14 06:21:07 +0400"
 relations:
   relates_to:
     - CA-D-308
-    - CAPRMEDIO-META-REQU-158
+    - ANECHOIC-META-REQU-158
 atom_id: "CA-D-339"
 content_role: "Delivery"
 current_scope_unit: "PROJECT_CONFIGURATION"

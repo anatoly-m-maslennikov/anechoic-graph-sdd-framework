@@ -6,12 +6,12 @@ container:
 role: Evaluation
 form: Eval Case
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Scope Unit
+  main_subject: ANECHOIC_MODEL <+ Scope Unit
   dependencies:
-  - CAPRMEDIO_MODEL <+ Project
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Context.Role := Requirement)/(.Header.Context.Form := Goal)
+  - ANECHOIC_MODEL <+ Project
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Requirement)/(.Header.Context.Form := Goal)
 tier: 4
 relations:
   evaluation_for:
@@ -27,13 +27,13 @@ cce_form: evaluation
 llm_session_ids:
 - codex:01a02650-eff7-7453-8c37-0699b36773c6
 current_scope_unit: PROJECT_CONFIGURATION
-claim_target_scope_unit: caprmedio
+claim_target_scope_unit: anechoic
 carrier_destination:
   file:
     name: CA-E-445-PROJECT_CONFIGURATION-EVAL_CASE--validate-methodology-membership-in-the-project.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation/CA-E-445-PROJECT_CONFIGURATION-EVAL_CASE--validate-methodology-membership-in-the-project.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/06_evaluation/CA-E-445-PROJECT_CONFIGURATION-EVAL_CASE--validate-methodology-membership-in-the-project.md
   source_atom_id: CA-E-445
   source_atom_revision: 31
   source_sha256: 6fd8bdcbefb53414d83f07480d9527285a8abd63c8b1514f1ff53a695d9e2f50
@@ -48,15 +48,15 @@ Validate Methodology membership in the Project
 
 ### Prose Claim
 
-The Methodology Scope Units belong to the caprmedio Project Scope Unit tree and remain governed by its applicable Project-owned Tier 0 Atoms.
+The Methodology Scope Units belong to the anechoic Project Scope Unit tree and remain governed by its applicable Project-owned Tier 0 Atoms.
 
 ## Test case
 
-Resolve the current Project Scope Unit tree from authoritative ownership declarations and locate FRAMEWORK_METHODOLOGY, METHODOLOGY_SOURCES, and its source Scope Units. Verify their ancestry to caprmedio and their authority Directory Carriers. Include their active Atoms in applicable Project Tier 0 alignment checks. Then place a Methodology Scope Unit outside that tree, author or persist a Structural Level property for a current caprmedio Scope Unit, register an unauthorized Bootstrap Scope Unit as part of the current caprmedio structure, exempt Methodology from an applicable Project-owned Tier 0 Atom, or represent an Atom's different Claim Target Scope Unit as an additional Scope Unit edge.
+Resolve the current Project Scope Unit tree from authoritative ownership declarations and locate FRAMEWORK_METHODOLOGY, METHODOLOGY_SOURCES, and its source Scope Units. Verify their ancestry to anechoic and their authority Directory Carriers. Include their active Atoms in applicable Project Tier 0 alignment checks. Then place a Methodology Scope Unit outside that tree, author or persist a Structural Level property for a current anechoic Scope Unit, register an unauthorized Bootstrap Scope Unit as part of the current anechoic structure, exempt Methodology from an applicable Project-owned Tier 0 Atom, or represent an Atom's different Claim Target Scope Unit as an additional Scope Unit edge.
 
 ## Acceptance criteria
 
-Every current Methodology Scope Unit has a parent chain to caprmedio. Any displayed ancestry depth or path is derived from that parent chain only and does not establish another authored source of ancestry. Its source Carrier placement does not exempt it from Project authority. Applicable Project Tier 0 checks include its active Atoms. All invalid fixtures fail. The predefined world Scope Unit is not an additional Scope Unit in the caprmedio Project structure. The external Project Goal's Tier `-1` remains valid and does not create or imply a Scope Unit depth. Archived Bootstrap records remain historical evidence without becoming current Scope Units.
+Every current Methodology Scope Unit has a parent chain to anechoic. Any displayed ancestry depth or path is derived from that parent chain only and does not establish another authored source of ancestry. Its source Carrier placement does not exempt it from Project authority. Applicable Project Tier 0 checks include its active Atoms. All invalid fixtures fail. The predefined world Scope Unit is not an additional Scope Unit in the anechoic Project structure. The external Project Goal's Tier `-1` remains valid and does not create or imply a Scope Unit depth. Archived Bootstrap records remain historical evidence without becoming current Scope Units.
 
 ## Failure disposition
 

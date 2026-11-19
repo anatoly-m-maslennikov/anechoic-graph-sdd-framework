@@ -33,7 +33,7 @@ class RuntimeTests(unittest.TestCase):
         factory.assert_called_once_with(create_temp=True, timeout=17)
 
     def setUp(self):
-        self.temporary = APP.parents[2] / ".caprmedio_tmp/tests/docker-runtime"
+        self.temporary = APP.parents[2] / ".anechoic_tmp/tests/docker-runtime"
         self.temporary.mkdir(parents=True, exist_ok=True)
 
     def test_compose_command_has_no_credential_input(self):
@@ -45,7 +45,7 @@ class RuntimeTests(unittest.TestCase):
             self.assertIn("--env-file", command)
             self.assertIn("/dev/null", command)
             self.assertNotIn("auth.compose.yaml", " ".join(command))
-            self.assertNotIn("CAPRMEDIO_CODEX_AUTH_FILE", runtime.environment())
+            self.assertNotIn("ANECHOIC_CODEX_AUTH_FILE", runtime.environment())
 
     def test_compose_inputs_enforce_service_boundaries_without_a_daemon(self):
         runtime = Runtime(APP.parents[2])
@@ -74,7 +74,7 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual({"mcp"}, set(services))
         mounts = services["mcp"]["volumes"]
         project = next(volume for volume in mounts if volume["target"] == "/project")
-        self.assertEqual(project["source"], "${CAPRMEDIO_PROJECT_ROOT}")
+        self.assertEqual(project["source"], "${ANECHOIC_PROJECT_ROOT}")
         self.assertFalse(project.get("read_only", False))
         self.assertEqual(
             {volume["target"] for volume in mounts if volume.get("read_only")},
@@ -85,8 +85,8 @@ class RuntimeTests(unittest.TestCase):
         ignored = (APP / "docker/Dockerfile.dockerignore").read_text()
         for value in (
             "**/.env", "**/.env.*", "**/*.env", "**/auth.json",
-            "**/.caprmedio_tmp", "**/.caprmedio_install",
-            "**/.caprmedio_runtime", "**/tmp", "**/tests", "**/fixtures",
+            "**/.anechoic_tmp", "**/.anechoic_install",
+            "**/.anechoic_runtime", "**/tmp", "**/tests", "**/fixtures",
             "**/*.md", "!**/SKILL.md",
         ):
             self.assertIn(value, ignored)
@@ -100,7 +100,7 @@ class RuntimeTests(unittest.TestCase):
         ):
             with self.subTest(compose=compose_name, service=service):
                 config = yaml.safe_load((APP / "docker" / compose_name).read_text())
-                self.assertNotIn("CAPRMEDIO_HOT_RELOAD", config["services"][service]["environment"])
+                self.assertNotIn("ANECHOIC_HOT_RELOAD", config["services"][service]["environment"])
 
     def test_mount_symlinks_rejected_before_mcp_start(self):
         with tempfile.TemporaryDirectory(
@@ -110,7 +110,7 @@ class RuntimeTests(unittest.TestCase):
             (root / ".git").mkdir()
             outside = root / "unmounted"
             outside.mkdir()
-            authority = root / ".caprmedio_caprmedio"
+            authority = root / ".anechoic_anechoic"
             authority.symlink_to(outside, target_is_directory=True)
             runtime = Runtime(root)
             with patch.object(runtime, "call") as operation:

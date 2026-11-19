@@ -19,7 +19,7 @@ Define CFEL
 
 ## Claim
 
-CFEL (CAPRMEDIO Formal Expression Language) is the formal notation for
+CFEL (ANECHOIC Formal Expression Language) is the formal notation for
 Subject addresses and fenced Formal Claims. CFEL is a model component beside
 Graph and Carrier: Graph contains Nodes and Relations; CFEL addresses and
 constrains them. CFEL syntax neither creates a Node, Relation, Property,

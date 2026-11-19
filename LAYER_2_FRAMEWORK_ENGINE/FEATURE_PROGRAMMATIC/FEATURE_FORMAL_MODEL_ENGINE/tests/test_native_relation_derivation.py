@@ -17,7 +17,7 @@ from subject_projection_data import _relation_declarations
 
 def claim(name, base=None):
     derivation = f', derived_from={base!r}' if base is not None else ''
-    return ('from caprmedio.formal_claims import declare_relation\n'
+    return ('from anechoic.formal_claims import declare_relation\n'
             f'declare_relation(relation_name={name!r}, source_endpoint={{"level": "instances"}}, '
             f'target_endpoint={{"level": "instances"}}{derivation})\n')
 
@@ -32,7 +32,7 @@ class NativeRelationDerivationTests(unittest.TestCase):
             with self.subTest(name=name):
                 code = claim(name, base)
                 carrier = {'source': {'atom_id': 'CA-R-1', 'version': 1, 'path': 'source.md'},
-                           'subjects': {'active': f'CAPRMEDIO_MODEL <+ Relation//{name}', 'passive': []},
+                           'subjects': {'active': f'ANECHOIC_MODEL <+ Relation//{name}', 'passive': []},
                            'read_view': {'content_role': 'Requirement', 'type': 'Declaration'}, 'body': body(code)}
                 clauses, errors = extract_claim_constraints(carrier)
                 self.assertEqual([], errors)

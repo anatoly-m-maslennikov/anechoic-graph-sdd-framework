@@ -1,0 +1,46 @@
+---
+atom_id: CA-P-2592
+ref_id: CA-P-2592
+container:
+  atom: CA-P-2591
+role: Plan
+form: Plan
+label: Task
+topics:
+  main_subject: Subject/Graph Node/Engineering/MCP.selected Workflow route contract
+tier: 3
+relations:
+  is_decomposition_of:
+  - CA-P-2591
+  relates_to:
+  - CA-P-2577
+  - CA-E-539
+status: Done
+version: 6
+updated_at: 2026-11-02 19:44:26 +0400
+carrier_destination:
+  file:
+    name: 1-CA-P-2592-TASK--extract-selected-request-and-pin-contract-validation.md
+    path: .anechoic_anechoic/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/03_plan/5-CA-P-2401-EPIC--make-atom-and-scope-unit-actions-good/96-CA-P-2577-TASK--implement-the-shared-context-native-workflow/done/9-CA-P-2591-TASK--refactor-selected-route-contract-validation/done
+work_sequence_number: 1
+current_scope_unit: PROGRAMMATIC
+claim_target_scope_unit: PROGRAMMATIC
+author: Anatoly Maslennikov
+---
+# Summary
+
+Extract selected request and pin contract validation
+
+## Objective
+
+Separate request/pin validation and canonical serialization into cohesive bounded modules, preserving closed schemas, exact digest/error behavior, source guards and all declared public/private compatibility imports.
+
+## Details
+
+The Operator explicitly refused a source-size exception and selected refactoring legacy files first. Every leaf is at most 15 minutes own work; split before expanding. New or materially changed Python files must meet the applicable <=200 physical-line target and small cohesive unit boundaries; no mixin/namespace class or imported-method facade substitutes for responsibility decomposition. Preserve the pinned C901/format/lint and applicable typing baseline. Use the locked Project virtual environment, disable bytecode writes and keep disposable test state below configured Project Temporary State. Do not revert other workers' changes. One Task per file, exact predecessor history; review/update dependants after each completed Task.
+
+Accepted request/pin extraction: canonical SelectedRouteError and all historic definitions remain import-compatible. Exact malformed versus stale definition_manifest failures are preserved and covered by a new functional regression test. The query admission mapping is externalized as an exact tuple-of-dicts JSON value and duplicate definition sequencing was removed. Independent architecture re-review closed all three findings. No terminal semantics or current manifest admission changed.
+
+### Definition of Done
+
+Retain actual before/after focused tests, changed paths, source/unit/complexity measurements and explicit unresolved limits. Preserve frozen test oracle bytes and current public behavior before new shared-context feature work. No production MCP, release, deployment, full suite, source-policy edits or Git publication.

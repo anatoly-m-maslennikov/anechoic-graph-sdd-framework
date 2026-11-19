@@ -8,7 +8,7 @@ context:
   role: Requirement
   form: Relation Declaration
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ Relation//IS_WORK_REPORT_FOR
+    main_subject: ANECHOIC_MODEL <+ Relation//IS_WORK_REPORT_FOR
   tier: 3
 state:
   status: active
@@ -17,7 +17,7 @@ state:
 destination:
   file:
     name: CA-R-3055-CORE_META_MODEL-RELATION_DECLARATION--declare-is-work-report-for.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 ---
 
 ## Summary
@@ -33,7 +33,7 @@ The Host is a Plan / Work Report. The Target is the reported work Plan with Form
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_relation
+from anechoic.formal_claims import declare_relation
 
 declare_relation(
     relation_name='IS_WORK_REPORT_FOR',

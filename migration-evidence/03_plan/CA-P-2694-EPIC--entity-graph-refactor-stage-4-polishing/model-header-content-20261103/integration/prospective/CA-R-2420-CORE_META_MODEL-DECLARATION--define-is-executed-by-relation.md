@@ -4,7 +4,7 @@ current_scope_unit: CORE_META_MODEL
 status: Active
 tier: 1
 subjects:
-  active: CAPRMEDIO_MODEL <+ CFEL <+ Relation//IS_EXECUTED_BY
+  active: ANECHOIC_MODEL <+ CFEL <+ Relation//IS_EXECUTED_BY
 relations: {}
 version: 5
 updated_at: 2026-11-03 20:00:05 +0400
@@ -14,7 +14,7 @@ form: Declaration
 carrier_destination:
   file:
     name: CA-R-2420-CORE_META_MODEL-DECLARATION--define-is-executed-by-relation.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 ---
 ## Summary
 

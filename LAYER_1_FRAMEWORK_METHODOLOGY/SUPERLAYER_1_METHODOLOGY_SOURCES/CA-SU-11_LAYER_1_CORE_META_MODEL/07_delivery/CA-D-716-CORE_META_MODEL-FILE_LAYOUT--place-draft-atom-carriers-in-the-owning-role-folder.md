@@ -8,9 +8,9 @@ context:
   role: delivery
   form: file_layout
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ Atom.Header.State.Status >| Status Group := Draft
+    main_subject: ANECHOIC_MODEL <+ Atom.Header.State.Status >| Status Group := Draft
     dependencies:
-    - CAPRMEDIO_MODEL <+ Carrier
+    - ANECHOIC_MODEL <+ Carrier
   tier: 3
 state:
   status: active
@@ -19,7 +19,7 @@ state:
 destination:
   file:
     name: CA-D-716-CORE_META_MODEL-FILE_LAYOUT--place-draft-atom-carriers-in-the-owning-role-folder.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
 ---
 ## Summary
 

@@ -34,7 +34,7 @@ class ReleaseInventoryTests(unittest.TestCase):
     def test_transient_state_is_not_exported(self):
         ordinary = self.file("tool.py")
         for name in (
-            ".caprmedio_tmp/report.json",
+            ".anechoic_tmp/report.json",
             "__pycache__/tool.pyc",
             ".venv/bin/python",
             ".pytest_cache/state",

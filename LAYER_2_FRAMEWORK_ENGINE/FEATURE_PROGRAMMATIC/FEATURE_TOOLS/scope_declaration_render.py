@@ -6,7 +6,7 @@ import json
 
 
 PROJECT = "PROJECT"
-_STRUCTURE_PREFIX = "CAPRMEDIO_STRUCTURE <+ "
+_STRUCTURE_PREFIX = "ANECHOIC_STRUCTURE <+ "
 
 
 def _quoted(value: object) -> str:
@@ -36,7 +36,7 @@ def render_scope_declaration(
     local_subject = f"Project//{name}" if project else f"Scope Unit//{name}"
     subject = (
         f"{_STRUCTURE_PREFIX}{local_subject}"
-        if project_name.casefold() == "caprmedio"
+        if project_name.casefold() == "anechoic"
         else local_subject
     )
     header = (
@@ -68,8 +68,8 @@ def render_scope_declaration(
         if parent:
             fields.append(f"container={_quoted(project_name if parent == PROJECT else parent)}")
     claim = (
-        f"from caprmedio.model import {kind}\n"
-        "from caprmedio.formal_claims import declare_entity\n"
+        f"from anechoic.model import {kind}\n"
+        "from anechoic.formal_claims import declare_entity\n"
         f"declare_entity(entity_name={_quoted(name)}, instance={kind}({', '.join(fields)}))"
     )
     return (

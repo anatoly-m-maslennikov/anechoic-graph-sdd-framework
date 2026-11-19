@@ -1,0 +1,54 @@
+---
+atom_id: CA-P-2103
+ref_id: CA-P-2103
+container:
+  atom: CA-P-1966
+role: Plan
+form: Plan
+label: Task
+topics:
+  main_subject: Subject
+  dependencies:
+  - Subject/Graph Node/Domain/Continuant/Atom
+  - Subject
+  - Subject/Graph Node/Domain/Continuant/Projection
+  - 'Subject/Graph Node/Domain/Continuant/Atom/Content Role: Plan'
+  - 'Subject/Graph Node/Domain/Continuant/Actor/Type: Operator'
+tier: 3
+relations:
+  is_decomposition_of:
+  - CA-P-1966
+status: Done
+version: 7
+updated_at: 2026-10-25 17:32:27 +0400
+carrier_destination:
+  file:
+    name: 79-CA-P-2103-TASK--review-next-unresolved-snapshot-fields.md
+    path: .anechoic_anechoic/03_plan/done/18-CA-P-1959-EPIC--improve-entity-model-stage-2/done/8-CA-P-1966-EPIC--map-current-core-subject-origins/done
+work_sequence_number: 79
+current_scope_unit: anechoic
+claim_target_scope_unit: anechoic
+author: Anatoly Maslennikov
+assignee: AI Agent
+---
+# Summary
+
+Review next unresolved snapshot fields
+
+## Objective
+
+Every assigned unresolved Subject origin is supported by current meaning evidence or remains explicitly null.
+
+## Details
+
+Estimated own work: at most 15 minutes. Follow `_projection/core-entity-review/stage2/followups-current-2103-2108.contract.md`. Own only its exact snapshot_fields manifest rows and `.anechoic_anechoic/_projection/core-entity-review/stage2/semantic-reviews/task-2103.research.json`. Read every owning Main Content and relevant current definitions. A missing display name is not itself a conflict. Do not infer selector adoption or change authoritative Subjects or content.
+
+Workers are not alone. Root owns independent acceptance, lifecycle and a commit after completion. Preserve original Core, captured evidence, prior ledgers/reports, unrelated work and later migration gates. No MCP/FPF/runtime/Tool/Git writes. Decompose work that exceeds the bound.
+
+### Completion
+
+All 26 assigned snapshot-field origins passed current pin/span/coverage checks and independent semantic acceptance after correcting one mixed current/history filename reference: twenty-three supported proposals and three explicit nulls. Current fields, procedural Actors, Project Prefix ownership and historical Revision remain distinct. No original Atom was changed. Exact verification is recorded in `_projection/core-entity-review/stage2/task-2103.receipt.json`.
+
+### Definition of Done
+
+Not Done if assigned rows or current pins/spans are missing, qualified meaning is lost, guesses become proposals, a source/captured artifact changes, independent acceptance fails, or own work exceeds the bound without decomposition.

@@ -28,11 +28,11 @@ class LifecycleRootContainerTests(unittest.TestCase):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         self.root = Path(tmp.name).resolve()
-        self.control = self.root / '.caprmedio_test'
+        self.control = self.root / '.anechoic_test'
         self.control.mkdir()
-        (self.control / 'caprmedio_project_settings.toml').write_text(
+        (self.control / 'anechoic_project_settings.toml').write_text(
             '[project]\nname="TEST"\n[artifacts.identity]\nproject_prefix="CA"\n'
-            '[paths]\ncontrol_root=".caprmedio_test"\n', encoding='utf-8',
+            '[paths]\ncontrol_root=".anechoic_test"\n', encoding='utf-8',
         )
         rows = write_scope_unit_declarations(self.root, rows=({'scope_unit_name': 'CHILD'},),
                                              control_root=self.control)

@@ -9,7 +9,7 @@ subjects:
     - "Projection/Authority"
 version: 2
 updated_at: "2026-09-21 00:57:42 +0000"
-relations: {"relates_to": ["CA-R-1548", "CA-R-1571", "CAPRMEDIO-META-REQU-115"]}
+relations: {"relates_to": ["CA-R-1548", "CA-R-1571", "ANECHOIC-META-REQU-115"]}
 ---
 # Permit Projections as Implementation outputs
 

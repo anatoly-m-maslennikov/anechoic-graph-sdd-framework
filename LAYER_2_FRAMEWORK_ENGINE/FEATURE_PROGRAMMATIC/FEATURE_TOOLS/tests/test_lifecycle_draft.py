@@ -25,16 +25,16 @@ class DraftTest(unittest.TestCase):
         binding = bind_placement(fixture_rules())
         binding.__enter__()
         self.addCleanup(binding.__exit__, None, None, None)
-        scratch = TOOLS.parents[2] / '.caprmedio_tmp/CA-P-2791/CA-P-2934/draft'
+        scratch = TOOLS.parents[2] / '.anechoic_tmp/CA-P-2791/CA-P-2934/draft'
         scratch.mkdir(parents=True, exist_ok=True)
         tmp = tempfile.TemporaryDirectory(dir=scratch)
         self.addCleanup(tmp.cleanup)
         self.root = Path(tmp.name)
-        control = self.root / '.caprmedio_test'
+        control = self.root / '.anechoic_test'
         control.mkdir()
-        (control / 'caprmedio_project_settings.toml').write_text(
+        (control / 'anechoic_project_settings.toml').write_text(
             '[project]\nname="TEST"\n[artifacts.identity]\nproject_prefix="CA"\n'
-            '[paths]\ncontrol_root=".caprmedio_test"\n')
+            '[paths]\ncontrol_root=".anechoic_test"\n')
         write_scope_unit_declarations(self.root, control_root=control, rows=[])
         self.selection = resolve_project(self.root)
         self.source = control / '04_requirement/CA-R-1-DECLARATION--example.md'
@@ -208,7 +208,7 @@ class DraftTest(unittest.TestCase):
 
     def test_create_draft_uses_ordinary_range_with_probe_present(self):
         self.allocation.stop()
-        settings = self.selection.control_root / 'caprmedio_project_settings.toml'
+        settings = self.selection.control_root / 'anechoic_project_settings.toml'
         settings.write_text(settings.read_text().replace('project_prefix="CA"',
                                                          'project_prefix="CA"\nautomatic_number_ceiling=2'))
         self.selection = resolve_project(self.root)

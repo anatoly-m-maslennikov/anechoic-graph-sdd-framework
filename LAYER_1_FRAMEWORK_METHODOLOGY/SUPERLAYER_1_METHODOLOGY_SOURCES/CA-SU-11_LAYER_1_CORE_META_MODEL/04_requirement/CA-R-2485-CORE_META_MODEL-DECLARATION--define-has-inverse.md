@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Relation//HAS_INVERSE
+  main_subject: ANECHOIC_MODEL <+ Relation//HAS_INVERSE
 tier: 3
 status: active
 version: 9
@@ -14,7 +14,7 @@ updated_at: '2026-11-13T00:36:29.288696+00:00'
 carrier_destination:
   file:
     name: CA-R-2485-CORE_META_MODEL-DECLARATION--define-has-inverse.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 ---
 ## Summary
 
@@ -31,7 +31,7 @@ HAS_INVERSE binds a canonical Relation to its reverse alias. The canonical Decla
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_relation
+from anechoic.formal_claims import declare_relation
 
 declare_relation(
     relation_name='HAS_INVERSE',

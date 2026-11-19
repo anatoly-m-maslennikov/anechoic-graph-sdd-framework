@@ -4,13 +4,13 @@ current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 status: Active
 subjects:
-  active: CAPRMEDIO_MODEL <+ Atom.Header.Subjects.Active
+  active: ANECHOIC_MODEL <+ Atom.Header.Subjects.Active
   passive:
-  - CAPRMEDIO_MODEL <+ Atom.Content
-  - CAPRMEDIO_MODEL <+ Atom.Local Scope Unit
-  - CAPRMEDIO_MODEL <+ Atom.Header.Subjects
-  - CAPRMEDIO_MODEL <+ Atom
-  - CAPRMEDIO_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ Atom.Local Scope Unit
+  - ANECHOIC_MODEL <+ Atom.Header.Subjects
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Scope Unit
 version: 23
 updated_at: 2026-11-02 00:18:22 +0400
 relations:

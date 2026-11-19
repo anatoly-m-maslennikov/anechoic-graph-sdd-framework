@@ -19,7 +19,7 @@ from settings_carrier import read_settings_carrier
 from collections.abc import Mapping
 
 
-SETTINGS_PATH = Path(".caprmedio_caprmedio/caprmedio_project_settings.toml")
+SETTINGS_PATH = Path(".anechoic_anechoic/anechoic_project_settings.toml")
 TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S %z"
 
 
@@ -58,7 +58,7 @@ def atom_identifier(filename: str, explicit: str | None = None) -> str:
     if explicit:
         return explicit.strip().strip('\"\'')
     name = Path(filename).name
-    canonical = re.match(r"(?:[0-9]+-)?(CA-[CAPRMEDIO]-[0-9]+)(?:-|\.|@|$)", name)
+    canonical = re.match(r"(?:[0-9]+-)?(CA-[ACDEIMOPR]-[0-9]+)(?:-|\.|@|$)", name)
     if canonical:
         return canonical.group(1)
     # Unmigrated legacy identities remain opaque; never allocate or renumber here.

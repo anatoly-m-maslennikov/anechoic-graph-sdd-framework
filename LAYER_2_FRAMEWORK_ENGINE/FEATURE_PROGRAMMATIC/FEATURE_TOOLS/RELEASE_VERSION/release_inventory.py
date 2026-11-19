@@ -14,7 +14,7 @@ from pathlib import Path
 
 _EPHEMERAL_DIRECTORIES = frozenset(
     {
-        ".caprmedio_tmp",
+        ".anechoic_tmp",
         "__pycache__",
         ".pytest_cache",
         ".mypy_cache",

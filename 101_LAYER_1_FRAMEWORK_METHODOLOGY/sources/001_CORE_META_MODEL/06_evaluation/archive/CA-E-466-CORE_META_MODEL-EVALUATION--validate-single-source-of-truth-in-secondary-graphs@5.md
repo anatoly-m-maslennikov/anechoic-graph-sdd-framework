@@ -1,6 +1,6 @@
 ---
 subjects:
-  governs: "CAPRMEDIO Graph"
+  governs: "ANECHOIC Graph"
   depends_on:
     - "Single Source of Truth"
     - "Projection"
@@ -17,7 +17,7 @@ relations:
     - CA-R-1470
     - CA-R-1471
     - CA-R-1437
-    - CAPRMEDIO-META-REQU-657
+    - ANECHOIC-META-REQU-657
 atom_id: "CA-E-466"
 content_role: "Evaluation"
 current_scope_unit: "CORE_META_MODEL"

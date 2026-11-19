@@ -1,6 +1,6 @@
 ---
 subjects:
-  governs: "CAPRMEDIO/Framework Engine Runtime Carrier Root"
+  governs: "ANECHOIC/Framework Engine Runtime Carrier Root"
   depends_on: []
 version: 13
 updated_at: "2026-10-04 22:10:46 +0000"
@@ -20,11 +20,11 @@ Place Framework Engine Runtime Carriers
 
 ## Scope
 
-Framework Engine executable installation and mutable execution-state Carriers in a CAPRMEDIO Project.
+Framework Engine executable installation and mutable execution-state Carriers in a ANECHOIC Project.
 
 ## Claim
 
-the CAPRMEDIO Project **must** place its selected running Framework Engine releases, stable launchers, Tools, Apps, Skills, sessions, service state, **and** resumable execution state under `.caprmedio_runtime/`. runtime technical **and** business Journal Carriers use their explicitly configured governed sinks **and** are **not** required **to** use this Directory Carrier.
+the ANECHOIC Project **must** place its selected running Framework Engine releases, stable launchers, Tools, Apps, Skills, sessions, service state, **and** resumable execution state under `.anechoic_runtime/`. runtime technical **and** business Journal Carriers use their explicitly configured governed sinks **and** are **not** required **to** use this Directory Carrier.
 
 ## Details
 

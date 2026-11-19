@@ -1,0 +1,54 @@
+---
+atom_id: CA-P-1698
+ref_id: CA-P-1698
+container:
+  atom: CA-P-1691
+role: Plan
+form: Plan
+label: Task
+topics:
+  main_subject: Subject/Graph Node/Engineering/Image
+  dependencies:
+  - Subject/Graph Node/Engineering/Continuant/Tool
+  - Subject/Graph Node/Engineering/Image
+  - Subject/Graph Node/Engineering/Occurrent/Runtime
+  - Subject/Graph Node/Engineering/Evaluation
+tier: 3
+relations:
+  is_decomposition_of:
+  - CA-P-1691
+  blocks:
+  - CA-P-1693
+  - CA-P-1697
+status: Done
+version: 8
+updated_at: 2026-10-25 17:32:27 +0400
+carrier_destination:
+  file:
+    name: 3-CA-P-1698-TASK--reopen-image-artifacts-after-promotion.md
+    path: .anechoic_anechoic/03_plan/done/15-CA-P-1117-EPIC--harvest-and-implement-session-derived-operations/10-CA-P-1620-TASK--deliver-release-version-workflow/3-CA-P-1623-TASK--implement-release-version-from-reviewed-rmed/5-CA-P-1643-TASK--integrate-release-actions-and-admission/9-CA-P-1691-TASK--implement-bound-release-image-phases/done
+work_sequence_number: 3
+current_scope_unit: anechoic
+author: Anatoly Maslennikov
+assignee: AI Agent
+autonomous_confidence_threshold: 90
+---
+# Summary
+
+Reopen image artifacts after promotion
+
+## Objective
+
+Within <=10 minutes, expose the selector-independent retained image-artifact verifier needed after promotion.
+
+## Details
+
+Own only release_image.py and its focused tests. Factor exact receipt/context/command/output/immutable-ID/canary proof below the pre-promotion current-N gate. Initial image admission still requires current N and the full suite; post-promotion consumers independently prove current N+1 and call the artifact verifier without replaying old-N selection. Reject test-double, changed or mismatched evidence; no caller post_promoted flag or image/promotion verifier cycle. No actual Docker effect, source/Plan/Git changes or C449 workaround. Coordinate P1693's concrete reader call; preserve all other changes.
+
+## Definition of Done
+
+Focused pre/post-selector, tamper and test-double refusal cases pass with exact hashes, without weakening initial image admission.
+
+### Current completed result
+
+release_image.py `c437eef1a88ef1f3c9ab2ae930d59feacd5ee68622482aff7d753a9d5919327e`; tests `238c74e7fa178da2696b949478b4e8f264e3868b8589b8edd126ff201bd9b303`. Twenty-five focused cases passed in the designated development worker, including pre/post-selection reads and tampered, rehashed, forged and test-double refusals. The retained-artifact reader does not read the current selector or invoke Docker; initial admission still requires current N and the bound full suite. All image command output was mocked. P1693 must independently validate current candidate/source/package/selection/Skill/intent before consuming this reader. No actual image or Release execution is proven.

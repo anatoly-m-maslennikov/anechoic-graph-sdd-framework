@@ -12,7 +12,7 @@ subjects:
   - Journal
   - Projection
   - CFEL > Relation
-  - CAPRMEDIO_MODEL <+ Projection
+  - ANECHOIC_MODEL <+ Projection
 version: 23
 tier: 3
 role: Requirement
@@ -27,7 +27,7 @@ context:
     - Journal
     - Projection
     - CFEL > Relation
-    - CAPRMEDIO_MODEL <+ Projection
+    - ANECHOIC_MODEL <+ Projection
 ---
 ## Summary
 

@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Format
+  main_subject: ANECHOIC_MODEL <+ Format
 tier: 1
 status: active
 version: 8
@@ -14,7 +14,7 @@ updated_at: '2026-11-13T22:57:39.635646+00:00'
 carrier_destination:
   file:
     name: CA-R-2248-CORE_META_MODEL-ENTITY_DEFINITION--define-value-format.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 ---
@@ -43,7 +43,7 @@ and prose conditions determine admissibility.
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_entity
+from anechoic.formal_claims import declare_entity
 
 class ValueFormat:
     pass

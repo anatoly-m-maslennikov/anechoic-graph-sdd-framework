@@ -6,7 +6,7 @@ version: 19
 updated_at: "2026-09-11 23:47:49 +0400"
 relations:
   child_of:
-    - CAPRMEDIO-META-REQU-084--relational-artifacts-declare-endpoints
+    - ANECHOIC-META-REQU-084--relational-artifacts-declare-endpoints
     - "CA-R-1767"
 atom_id: "CA-R-1675"
 content_role: "Requirement"

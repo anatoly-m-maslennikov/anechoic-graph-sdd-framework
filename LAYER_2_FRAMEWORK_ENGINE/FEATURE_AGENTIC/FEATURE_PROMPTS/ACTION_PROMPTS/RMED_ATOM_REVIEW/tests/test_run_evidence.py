@@ -24,17 +24,17 @@ def checked(source, criteria):
 
 class RunEvidenceTests(unittest.TestCase):
     def setUp(self):
-        temporary_root = HERE.parents[4] / '.caprmedio_tmp/tests/workflow-evidence'
+        temporary_root = HERE.parents[4] / '.anechoic_tmp/tests/workflow-evidence'
         temporary_root.mkdir(parents=True, exist_ok=True)
         self.tmp = tempfile.TemporaryDirectory(dir=temporary_root, ignore_cleanup_errors=True)
         self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name)
         (self.root / '.git').mkdir()
-        control = self.root / '.caprmedio_caprmedio'
+        control = self.root / '.anechoic_anechoic'
         control.mkdir()
-        (control / 'caprmedio_project_settings.toml').write_text(
-            '[paths]\ncontrol_root=".caprmedio_caprmedio"\n'
-            'journal_root=".caprmedio_caprmedio/_journal"\n')
+        (control / 'anechoic_project_settings.toml').write_text(
+            '[paths]\ncontrol_root=".anechoic_anechoic"\n'
+            'journal_root=".anechoic_anechoic/_journal"\n')
         (self.root / 'atom.md').write_text('mock atom')
         (self.root / 'rules.md').write_text('mock rules')
         self.store = RunEvidence(self.root)

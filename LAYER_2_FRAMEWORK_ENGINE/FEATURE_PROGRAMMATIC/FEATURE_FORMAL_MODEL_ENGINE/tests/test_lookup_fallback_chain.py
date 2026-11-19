@@ -12,7 +12,7 @@ from contract_graph import _clause
 PLAN='Atom/(.Header.Context.Role:=Plan)'
 PROP=PLAN+'.Header.Context.Plan.AI Agent Confidence Threshold'
 PROJECT='Project.Settings.AI Agent Confidence Threshold'
-CLAIM=f'''from caprmedio.formal_claims import Cardinality, declare_entity
+CLAIM=f'''from anechoic.formal_claims import Cardinality, declare_entity
 declare_entity(entity_name="AI Agent Confidence Threshold", relation_name="IS_PROPERTY_OF",
  base_path="{PLAN}.Header.Context.Plan", value_format=int,
  value_cardinality=Cardinality(minimum=0, maximum=1), minimum_value=0, maximum_value=100,

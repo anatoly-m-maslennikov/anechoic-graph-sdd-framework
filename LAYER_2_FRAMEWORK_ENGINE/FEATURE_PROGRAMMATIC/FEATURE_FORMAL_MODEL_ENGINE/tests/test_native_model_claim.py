@@ -12,7 +12,7 @@ from native_model_claim import NativeModelClaimError, parse_native_model_claim, 
 
 class NativeModelClaimTests(unittest.TestCase):
     def test_unknown_declaration_and_constraint_keys_fail_closed(self):
-        prefix = "from caprmedio.formal_claims import declare_entity, declare_relation\n"
+        prefix = "from anechoic.formal_claims import declare_entity, declare_relation\n"
         cases = (
             "declare_entity(entity_name='A', value_cardinailty=1)",
             "declare_relation(relation_name='R', source_endpoint={'level': 'instances'}, "
@@ -25,10 +25,10 @@ class NativeModelClaimTests(unittest.TestCase):
                 parse_native_model_claim(prefix + case)
 
     def test_typed_instance_is_static_and_requires_trusted_symbols(self):
-        prefix = ('from caprmedio.formal_claims import declare_entity\n'
-                  'from caprmedio.model import ScopeUnit\n')
+        prefix = ('from anechoic.formal_claims import declare_entity\n'
+                  'from anechoic.model import ScopeUnit\n')
         call = ('declare_entity(entity_name="ENGINE", instance=ScopeUnit('
-                'id="CA-SU-14", name="ENGINE", ordered=False, container="caprmedio"))')
+                'id="CA-SU-14", name="ENGINE", ordered=False, container="anechoic"))')
         result = parse_native_model_claim(prefix + call)
         self.assertEqual("ScopeUnit", result["arguments"]["instance"]["type"])
         self.assertEqual("CA-SU-14", result["arguments"]["instance"]["fields"]["id"])
@@ -42,27 +42,27 @@ class NativeModelClaimTests(unittest.TestCase):
             with self.subTest(item=item), self.assertRaises(NativeModelClaimError):
                 parse_native_model_claim(prefix + item)
         with self.assertRaises(NativeModelClaimError):
-            parse_native_model_claim('from caprmedio.formal_claims import declare_entity\n' + call)
+            parse_native_model_claim('from anechoic.formal_claims import declare_entity\n' + call)
 
     def test_aspect_instance_requires_full_matching_structure_address(self):
-        prefix = ('from caprmedio.formal_claims import declare_entity\n'
-                  'from caprmedio.model import Aspect\n')
-        address = 'PROJECT STRUCTURE//CAPRMEDIO <+ Aspects <+ Engineering <+ Schema'
+        prefix = ('from anechoic.formal_claims import declare_entity\n'
+                  'from anechoic.model import Aspect\n')
+        address = 'PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Engineering <+ Schema'
         call = f'declare_entity(entity_name="Schema", instance=Aspect(address={address!r}))'
         result = parse_native_model_claim(prefix + call)
         self.assertEqual({"type": "Aspect", "fields": {"address": address}},
                          result["arguments"]["instance"])
         self.assertEqual(address, validate_aspect_instance(result["arguments"]))
-        spaced = call.replace(address, 'PROJECT STRUCTURE // CAPRMEDIO  <+  Aspects <+ Engineering <+ Schema')
+        spaced = call.replace(address, 'PROJECT STRUCTURE // ANECHOIC  <+  Aspects <+ Engineering <+ Schema')
         self.assertEqual(address, validate_aspect_instance(parse_native_model_claim(prefix + spaced)["arguments"]))
         invalid = (
             call.replace('entity_name="Schema"', 'entity_name="Other"'),
             call.replace(address, 'Engineering <+ Schema'),
-            call.replace(address, 'CAPRMEDIO_MODEL <+ Aspects <+ Schema'),
-            call.replace(address, 'CAPRMEDIO_STRUCTURE <+ Aspects <+ Schema'),
+            call.replace(address, 'ANECHOIC_MODEL <+ Aspects <+ Schema'),
+            call.replace(address, 'ANECHOIC_STRUCTURE <+ Aspects <+ Schema'),
             call.replace('entity_name="Schema",', 'entity_name="Schema", value_cardinality=1,'),
-            call.replace(address, 'PROJECT STRUCTURE//CAPRMEDIO <+ Engineering <+ Schema'),
-            call.replace(address, 'PROJECT STRUCTURE//CAPRMEDIO <+ Aspects <+ Schema/X'),
+            call.replace(address, 'PROJECT STRUCTURE//ANECHOIC <+ Engineering <+ Schema'),
+            call.replace(address, 'PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Schema/X'),
             call.replace('Aspect(address=', 'Aspect(name="Schema", address='),
             call.replace('address=', 'address=read(').replace('))', ')))'),
         )
@@ -70,11 +70,11 @@ class NativeModelClaimTests(unittest.TestCase):
             with self.subTest(item=item), self.assertRaises(NativeModelClaimError):
                 parse_native_model_claim(prefix + item)
         with self.assertRaises(NativeModelClaimError):
-            parse_native_model_claim('from caprmedio.formal_claims import declare_entity\n' + call)
+            parse_native_model_claim('from anechoic.formal_claims import declare_entity\n' + call)
 
     def test_project_manifest_parameters_are_literal_mapping_only(self):
-        imports = ('from caprmedio.formal_claims import declare_entity\n'
-                   'from caprmedio.model import ProjectManifest, Project\n')
+        imports = ('from anechoic.formal_claims import declare_entity\n'
+                   'from anechoic.model import ProjectManifest, Project\n')
         claim = ('declare_entity(entity_name="Project Manifest", instance=ProjectManifest('
                  'name="Anechoic", prefix="AN", parameters={"options": {"verbose": False}}))')
         parsed = parse_native_model_claim(imports + claim)
@@ -87,8 +87,8 @@ class NativeModelClaimTests(unittest.TestCase):
                 parse_native_model_claim(imports + invalid)
 
     def test_project_manifest_lens_whitelist_accepts_literal_lists(self):
-        imports = ('from caprmedio.formal_claims import declare_entity\n'
-                   'from caprmedio.model import ProjectManifest, Project\n')
+        imports = ('from anechoic.formal_claims import declare_entity\n'
+                   'from anechoic.model import ProjectManifest, Project\n')
         claim = ('declare_entity(entity_name="Project Manifest", instance=ProjectManifest('
                  'name="Anechoic", prefix="AN", lens_whitelist={value}))')
         for value in (None, [], ["SPEC", "DES"]):
@@ -104,8 +104,8 @@ class NativeModelClaimTests(unittest.TestCase):
 
     def test_named_instance_check_is_preserved_without_execution(self):
         claim = '''
-from caprmedio.formal_claims import declare_entity
-from caprmedio.model import ScopeUnit
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ScopeUnit
 
 def check_scope_unit(unit: ScopeUnit) -> bool:
     raise RuntimeError("must not run while reading")
@@ -118,11 +118,11 @@ declare_entity(entity_name="Scope Unit", instance_check=check_scope_unit)
         self.assertEqual((check["name"], check["parameter"], check["parameter_type"]),
                          ("check_scope_unit", "unit", "ScopeUnit"))
         self.assertIn('raise RuntimeError("must not run while reading")', check["source"])
-        self.assertNotIn("caprmedio.model", sys.modules)
+        self.assertNotIn("anechoic.model", sys.modules)
 
     def test_invalid_instance_checks_are_rejected(self):
-        prefix = ("from caprmedio.formal_claims import declare_entity\n"
-                  "from caprmedio.model import ScopeUnit\n")
+        prefix = ("from anechoic.formal_claims import declare_entity\n"
+                  "from anechoic.model import ScopeUnit\n")
         cases = (
             'def check(unit: ScopeUnit) -> bool:\n    return True\n'
             'declare_entity(entity_name="Scope Unit", instance_check="check")',
@@ -146,8 +146,8 @@ declare_entity(entity_name="Scope Unit", instance_check=check_scope_unit)
     def test_nested_cardinality_and_dataclass_fields_are_preserved(self):
         claim = '''
 from dataclasses import dataclass, field
-from caprmedio.formal_claims import Cardinality, declare_entity
-from caprmedio.model import Atom
+from anechoic.formal_claims import Cardinality, declare_entity
+from anechoic.model import Atom
 
 @dataclass(kw_only=True)
 class Method(Atom):
@@ -173,7 +173,7 @@ declare_entity(
     def test_root_class_and_nested_dataclass_records(self):
         claim = '''
 from dataclasses import dataclass
-from caprmedio.formal_claims import declare_entity
+from anechoic.formal_claims import declare_entity
 
 @dataclass(kw_only=True)
 class AtomHeader:
@@ -192,7 +192,7 @@ declare_entity(entity_class=Atom, entity_name="Atom")
 
     def test_relation_endpoint_flags_and_model_scopes(self):
         claim = '''
-from caprmedio.formal_claims import declare_relation
+from anechoic.formal_claims import declare_relation
 
 declare_relation(
     relation_name="CARRIES",
@@ -209,17 +209,17 @@ declare_relation(
 
     def test_invalid_and_executable_forms_are_rejected(self):
         claims = (
-            'from caprmedio.formal_claims import declare_entity\n'
+            'from anechoic.formal_claims import declare_entity\n'
             'declare_entity(entity_name="Name", base_path=__import__("os").getcwd())',
-            'from caprmedio.formal_claims import declare_entity\n'
+            'from anechoic.formal_claims import declare_entity\n'
             'declare_entity(entity_name="A")\nopen("/tmp/pwned", "w")',
-            'from caprmedio.formal_claims import declare_entity\n'
+            'from anechoic.formal_claims import declare_entity\n'
             'if True:\n    declare_entity(entity_name="A")',
-            'from caprmedio.formal_claims import declare_entity\n'
+            'from anechoic.formal_claims import declare_entity\n'
             'declare_entity(entity_name="A")\ndeclare_entity(entity_name="B")',
-            'from caprmedio.formal_claims import Cardinality, declare_entity\n'
+            'from anechoic.formal_claims import Cardinality, declare_entity\n'
             'declare_entity(entity_name="A", value_cardinality=Cardinality(minimum=2, maximum=1))',
-            'from caprmedio.formal_claims import declare_entity\n'
+            'from anechoic.formal_claims import declare_entity\n'
             'class Bad(object):\n    x = open("/tmp/pwned", "w")\n'
             'declare_entity(entity_name="Bad", entity_class=Bad)',
         )
@@ -229,17 +229,17 @@ declare_relation(
                     parse_native_model_claim(claim)
 
     def test_unknown_names_and_duplicate_keyword_fail_with_line(self):
-        source = ('from caprmedio.formal_claims import declare_entity\n'
+        source = ('from anechoic.formal_claims import declare_entity\n'
                   'declare_entity(entity_name="Name", value_format=Missing)\n')
         with self.assertRaisesRegex(NativeModelClaimError, "line 2.*unbound symbol: Missing"):
             parse_native_model_claim(source)
-        source = ('from caprmedio.formal_claims import declare_entity\n'
+        source = ('from anechoic.formal_claims import declare_entity\n'
                   'declare_entity(entity_name="Name", entity_name="Name")\n')
         with self.assertRaisesRegex(NativeModelClaimError, "duplicate argument"):
             parse_native_model_claim(source)
 
     def test_invalid_cardinality_and_property_bearer_are_rejected(self):
-        prefix = 'from caprmedio.formal_claims import declare_entity\n'
+        prefix = 'from anechoic.formal_claims import declare_entity\n'
         invalid = (
             'declare_entity(entity_name="Name", relation_name="IS_PROPERTY_OF")',
             'declare_entity(entity_name="Name", relation_name="IS_PROPERTY_OF", base_path=" ")',
@@ -256,7 +256,7 @@ declare_relation(
                 parse_native_model_claim(prefix + claim)
 
     def test_invalid_relation_endpoints_are_rejected(self):
-        prefix = 'from caprmedio.formal_claims import declare_relation\n'
+        prefix = 'from anechoic.formal_claims import declare_relation\n'
         valid = '{"level": "instances"}'
         invalid = (
             'None',
@@ -277,7 +277,7 @@ declare_relation(
                     parse_native_model_claim(prefix + claim)
 
     def test_relation_endpoint_levels_default_independently(self):
-        prefix = 'from caprmedio.formal_claims import declare_relation\n'
+        prefix = 'from anechoic.formal_claims import declare_relation\n'
         claim = ("declare_relation(relation_name='R', source_endpoint={'entity_paths': ('Node',)}, "
                  "target_endpoint={'level': 'instances'})")
         args = parse_native_model_claim(prefix + claim)["arguments"]

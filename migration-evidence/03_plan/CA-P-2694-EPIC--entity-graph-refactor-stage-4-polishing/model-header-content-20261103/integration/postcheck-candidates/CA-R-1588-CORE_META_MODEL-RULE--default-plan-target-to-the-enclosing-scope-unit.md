@@ -1,11 +1,11 @@
 ---
 subjects:
-  active: 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan).Header.Subjects.Active'
+  active: 'ANECHOIC_MODEL <+ Atom/(.Header.Role := Plan).Header.Subjects.Active'
   passive:
-  - CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan)
-  - CAPRMEDIO_MODEL <+ Atom.Header.Subjects.Active
-  - CAPRMEDIO_MODEL <+ Scope Unit
-  - 'CAPRMEDIO_MODEL <+ Atom/(.Header.Role := Plan).Header.Label'
+  - ANECHOIC_MODEL <+ Atom/(.Header.Role := Plan)
+  - ANECHOIC_MODEL <+ Atom.Header.Subjects.Active
+  - ANECHOIC_MODEL <+ Scope Unit
+  - 'ANECHOIC_MODEL <+ Atom/(.Header.Role := Plan).Header.Label'
 version: 26
 updated_at: 2026-11-02 00:18:22 +0400
 relations: {}

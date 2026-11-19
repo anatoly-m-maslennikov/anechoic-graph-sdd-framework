@@ -48,8 +48,8 @@ def _native_row(source, identifier="CA-R-1"):
 
 class CompilerClaimTests(unittest.TestCase):
     def test_explicit_atom_dependencies_consumer_keeps_callback_metadata(self):
-        claim = """from caprmedio.formal_claims import Cardinality, declare_entity
-from caprmedio.model import Atom
+        claim = """from anechoic.formal_claims import Cardinality, declare_entity
+from anechoic.model import Atom
 
 def dependencies_are_distinct(atom: Atom) -> bool:
     return len(atom.dependencies) == len(set(atom.dependencies))
@@ -74,9 +74,9 @@ declare_entity(entity_name="Dependencies", relation_name="IS_PROPERTY_OF",
             compile_atom_dependencies_claim_with_check(claim.replace("dependencies_are_distinct", "other_check"))
 
     def test_aspect_instance_compiles_exact_structure_facts(self):
-        address = "PROJECT STRUCTURE//CAPRMEDIO <+ Aspects <+ Engineering <+ Query Processing"
-        claim = ("from caprmedio.formal_claims import declare_entity\n"
-                 "from caprmedio.model import Aspect\n"
+        address = "PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Engineering <+ Query Processing"
+        claim = ("from anechoic.formal_claims import declare_entity\n"
+                 "from anechoic.model import Aspect\n"
                  f"declare_entity(entity_name='Query Processing', instance=Aspect(address={address!r}))\n")
         self.assertEqual((address, f"({address}) ((INSTANCE_OF)) Aspect"), _compile(claim))
         from lint_python_model_claim import lint_python_model_claim
@@ -85,14 +85,14 @@ declare_entity(entity_name="Dependencies", relation_name="IS_PROPERTY_OF",
         self.assertTrue(lint_python_model_claim(invalid_claim, declared_addresses=["Aspect"], relation_names=[], python_class_bindings={"Aspect": ["Aspect"]}))
         from copy import deepcopy
         parsed = parse_native_model_claim(claim)
-        for invalid in ("Atom <+ Aspects <+ Query Processing", "PROJECT STRUCTURE//CAPRMEDIO <+ Aspects <+ Other"):
+        for invalid in ("Atom <+ Aspects <+ Query Processing", "PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Other"):
             modified = deepcopy(parsed)
             modified["arguments"]["instance"]["fields"]["address"] = invalid
             with self.assertRaisesRegex(ValueError, "invalid Aspect instance address"):
                 compiler_model_statements(modified)
 
     def test_allowed_classification_values_are_not_fixed_classifications(self):
-        claim = """from caprmedio.formal_claims import declare_entity
+        claim = """from anechoic.formal_claims import declare_entity
 declare_entity(entity_name="Node", allowed_classification_values={"Container": ("yes", "no")})
 """
         self.assertEqual(("Node >| Container: yes", "Node >| Container: no"), _compile(claim))
@@ -105,7 +105,7 @@ declare_entity(entity_name="Node", allowed_classification_values={"Container": (
     def test_same_bearer_fallback_requires_a_declared_property(self):
         from lint_python_model_claim import lint_python_model_claim
 
-        claim = """from caprmedio.formal_claims import declare_entity
+        claim = """from anechoic.formal_claims import declare_entity
 declare_entity(entity_name="Label", relation_name="IS_PROPERTY_OF",
     base_path="Atom.Header.Context", value_format=str, fallback_property_name="Form")
 """
@@ -118,7 +118,7 @@ declare_entity(entity_name="Label", relation_name="IS_PROPERTY_OF",
         self.assertIn("unknown declared fallback Property: Atom.Header.Context.Form", diagnostics[0])
 
     def test_base_status_claim_preserves_values_and_order_numbers(self):
-        claim = """from caprmedio.formal_claims import declare_entity
+        claim = """from anechoic.formal_claims import declare_entity
 declare_entity(entity_name="Status", relation_name="IS_PROPERTY_OF", base_path="Atom.Header.State",
                property_occurrence_cardinality=1, value_format=str, value_cardinality=1,
                dependent_property_cardinality=0, allowed_values=("Draft", "Active", "Archived"),
@@ -137,8 +137,8 @@ declare_entity(entity_name="Status", relation_name="IS_PROPERTY_OF", base_path="
             _compile(claim.replace('"Archived": 99', '"Archived": 0'))
 
     def test_projection_form_preserves_admitted_value_and_selector(self):
-        claim = """from caprmedio.formal_claims import declare_entity
-from caprmedio.model import Projection
+        claim = """from anechoic.formal_claims import declare_entity
+from anechoic.model import Projection
 
 class Map(Projection):
     pass
@@ -152,7 +152,7 @@ declare_entity(entity_class=Map, entity_name="Map", qualification_property_path=
     def test_property_bearer_uses_a_qualified_model_path(self):
         def compile_property(base):
             return _compile(
-                "from caprmedio.formal_claims import declare_entity\n"
+                "from anechoic.formal_claims import declare_entity\n"
                 f"declare_entity(entity_name='Mermaid Scheme', relation_name='IS_PROPERTY_OF', base_path={base!r})"
             )
 
@@ -165,8 +165,8 @@ declare_entity(entity_class=Map, entity_name="Map", qualification_property_path=
 
     def test_content_property_contributes_same_roles_and_cardinalities(self):
         native = '''
-from caprmedio.formal_claims import Cardinality, declare_entity
-from caprmedio.model import Requirement, Method, Evaluation, Delivery
+from anechoic.formal_claims import Cardinality, declare_entity
+from anechoic.model import Requirement, Method, Evaluation, Delivery
 declare_entity(entity_name="Semantics", relation_name="IS_PROPERTY_OF", base_path="Atom.Content",
     value_cardinality=Cardinality(minimum=0, maximum=1), dependent_property_cardinality=0,
     applies_to_entity_classes=(Requirement, Method, Evaluation, Delivery))
@@ -183,8 +183,8 @@ declare_entity(entity_name="Semantics", relation_name="IS_PROPERTY_OF", base_pat
 
     def test_recursive_content_and_role_scoped_ordering(self):
         native = '''
-from caprmedio.formal_claims import Cardinality, declare_entity
-from caprmedio.model import Requirement, Method, Evaluation, Delivery
+from anechoic.formal_claims import Cardinality, declare_entity
+from anechoic.model import Requirement, Method, Evaluation, Delivery
 declare_entity(entity_name="Content", relation_name="IS_PROPERTY_OF", base_path="Atom",
     property_occurrence_cardinality=1, value_cardinality=0,
     dependent_property_cardinality=Cardinality(minimum=0, maximum=None), dependent_property_name_format=str,
@@ -225,8 +225,8 @@ declare_entity(entity_name="Content", relation_name="IS_PROPERTY_OF", base_path=
 
     def test_nested_content_property_preserves_role_selection(self):
         native = """
-from caprmedio.formal_claims import Cardinality, declare_entity
-from caprmedio.model import Requirement, Method, Evaluation, Delivery
+from anechoic.formal_claims import Cardinality, declare_entity
+from anechoic.model import Requirement, Method, Evaluation, Delivery
 
 declare_entity(
     entity_name="Prose Claim",
@@ -248,7 +248,7 @@ declare_entity(
 
     def test_nested_header_constraints_and_wildcard_formats(self):
         native = '''
-from caprmedio.formal_claims import declare_entity
+from anechoic.formal_claims import declare_entity
 declare_entity(entity_name="File", relation_name="IS_PROPERTY_OF", base_path="Atom.Header.Destination",
     property_occurrence_cardinality=1, value_cardinality=0, dependent_property_cardinality=2,
     allowed_dependent_property_names=("Name", "Path"), dependent_property_value_format=str)
@@ -264,7 +264,7 @@ declare_entity(entity_name="File", relation_name="IS_PROPERTY_OF", base_path="At
 
     def test_header_relations_child_value_cardinality(self):
         native = '''
-from caprmedio.formal_claims import Cardinality, declare_entity
+from anechoic.formal_claims import Cardinality, declare_entity
 declare_entity(entity_name="Relations", relation_name="IS_PROPERTY_OF", base_path="Atom.Header",
     property_occurrence_cardinality=Cardinality(minimum=0, maximum=1), value_cardinality=0,
     dependent_property_cardinality=Cardinality(minimum=1, maximum=None),
@@ -300,8 +300,8 @@ declare_entity(entity_name="Relations", relation_name="IS_PROPERTY_OF", base_pat
 
     def test_nested_header_property_preserves_single_role(self):
         native = """
-from caprmedio.formal_claims import Cardinality, declare_entity
-from caprmedio.model import Plan
+from anechoic.formal_claims import Cardinality, declare_entity
+from anechoic.model import Plan
 
 declare_entity(
     entity_name="Plan",
@@ -328,8 +328,8 @@ declare_entity(
 
     def test_role_status_values_inherit_property_shape(self):
         native = """
-from caprmedio.formal_claims import declare_entity
-from caprmedio.model import Concern
+from anechoic.formal_claims import declare_entity
+from anechoic.model import Concern
 
 declare_entity(
     entity_name="Status",
@@ -351,16 +351,16 @@ declare_entity(
 
     def test_role_order_and_form_are_qualified_by_role(self):
         role = '''
-from caprmedio.formal_claims import declare_entity
-from caprmedio.model import Atom
+from anechoic.formal_claims import declare_entity
+from anechoic.model import Atom
 class Method(Atom):
     pass
 declare_entity(entity_class=Method, entity_name="Method", qualification_property_path="Atom.Header.Context.Role",
     classifications={"Role Order Number": 5})
 '''
         form = '''
-from caprmedio.formal_claims import declare_entity
-from caprmedio.model import Method
+from anechoic.formal_claims import declare_entity
+from anechoic.model import Method
 class Decision(Method):
     pass
 declare_entity(entity_class=Decision, entity_name="Decision", qualification_property_path="Atom.Header.Context.Form")
@@ -377,7 +377,7 @@ declare_entity(entity_class=Decision, entity_name="Decision", qualification_prop
 
     def test_relation_registry_keeps_instance_reverse_views(self):
         native = '''
-from caprmedio.formal_claims import declare_relation
+from anechoic.formal_claims import declare_relation
 declare_relation(relation_name="IS_PROPERTY_OF", inverse_alias="HAS_PROPERTY",
     source_endpoint={"level": "model_entities_or_instances"},
     target_endpoint={"level": "model_entities_or_instances"})
@@ -391,7 +391,7 @@ declare_relation(relation_name="IS_PROPERTY_OF", inverse_alias="HAS_PROPERTY",
         for relation, inverse in (("CARRIES", "IS_CARRIED_BY"), ("IS_PROPERTY_OF", "HAS_PROPERTY")):
             with self.subTest(relation=relation):
                 source = (
-                    "from caprmedio.formal_claims import declare_relation\n"
+                    "from anechoic.formal_claims import declare_relation\n"
                     f"declare_relation(relation_name='{relation}', inverse_alias='{inverse}', "
                     "source_endpoint={'level': 'instances'}, "
                     "target_endpoint={'level': 'model_entities_or_instances'})"
@@ -407,7 +407,7 @@ declare_relation(relation_name="IS_PROPERTY_OF", inverse_alias="HAS_PROPERTY",
 
     def test_model_only_inverse_remains_an_alias(self):
         native = '''
-from caprmedio.formal_claims import declare_relation
+from anechoic.formal_claims import declare_relation
 declare_relation(relation_name="IS_ORDERED_RIGHT_AFTER", inverse_alias="IS_ORDERED_RIGHT_BEFORE",
     source_endpoint={"level": "model_entities"},
     target_endpoint={"level": "model_entities"})
@@ -418,7 +418,7 @@ declare_relation(relation_name="IS_ORDERED_RIGHT_AFTER", inverse_alias="IS_ORDER
         self.assertEqual((), result.inverses)
 
     def test_instance_sibling_order_keeps_reverse_alias(self):
-        source = """from caprmedio.formal_claims import declare_relation
+        source = """from anechoic.formal_claims import declare_relation
 declare_relation(relation_name="IS_ORDERED_RIGHT_AFTER", inverse_alias="IS_ORDERED_RIGHT_BEFORE",
     source_endpoint={"level": "instances"}, target_endpoint={"level": "instances"},
     same_immediate_bearer=True)
@@ -434,7 +434,7 @@ declare_relation(relation_name="IS_ORDERED_RIGHT_AFTER", inverse_alias="IS_ORDER
         self.assertEqual(result, direct)
 
     def test_same_level_property_bearing_keeps_instance_inverse(self):
-        source = """from caprmedio.formal_claims import declare_relation
+        source = """from anechoic.formal_claims import declare_relation
 declare_relation(relation_name="IS_PROPERTY_OF", inverse_alias="HAS_PROPERTY",
     endpoint_pairs=(
         {"source_endpoint": {"level": "model_entities"}, "target_endpoint": {"level": "model_entities"}},
@@ -453,7 +453,7 @@ declare_relation(relation_name="IS_PROPERTY_OF", inverse_alias="HAS_PROPERTY",
 
     def test_unsafe_or_unsupported_compiler_values_fail(self):
         native = '''
-from caprmedio.formal_claims import declare_entity
+from anechoic.formal_claims import declare_entity
 declare_entity(entity_name="Name", relation_name="IS_PROPERTY_OF", base_path="Atom.Header;Other")
 '''
         with self.assertRaisesRegex(ValueError, "unsupported compiler name"):
@@ -461,8 +461,8 @@ declare_entity(entity_name="Name", relation_name="IS_PROPERTY_OF", base_path="At
 
     def test_instance_check_cannot_be_silently_dropped(self):
         native = '''
-from caprmedio.formal_claims import declare_entity
-from caprmedio.model import Atom
+from anechoic.formal_claims import declare_entity
+from anechoic.model import Atom
 
 def is_valid_atom(atom: Atom) -> bool:
     return atom.version > 0
@@ -481,8 +481,8 @@ declare_entity(entity_name="Atom", instance_check=is_valid_atom)
             compile_content_schema([row])
 
     def test_scope_level_schema_compiles_without_calling_its_check(self):
-        claim = '''from caprmedio.formal_claims import declare_entity
-from caprmedio.model import ScopeUnit
+        claim = '''from anechoic.formal_claims import declare_entity
+from anechoic.model import ScopeUnit
 
 def check_structural_level(unit: ScopeUnit) -> bool:
     return unit.structural_level == 0

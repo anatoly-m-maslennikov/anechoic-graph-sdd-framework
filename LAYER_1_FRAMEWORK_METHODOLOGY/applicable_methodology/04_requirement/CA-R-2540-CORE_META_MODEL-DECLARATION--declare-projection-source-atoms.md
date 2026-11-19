@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Declaration
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Projection.Source.Atoms
+  main_subject: ANECHOIC_MODEL <+ Projection.Source.Atoms
 tier: 3
 status: active
 version: 3
@@ -14,11 +14,11 @@ updated_at: '2026-11-12T17:23:54+00:00'
 carrier_destination:
   file:
     name: CA-R-2540-CORE_META_MODEL-DECLARATION--declare-projection-source-atoms.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2540-CORE_META_MODEL-DECLARATION--declare-projection-source-atoms.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2540-CORE_META_MODEL-DECLARATION--declare-projection-source-atoms.md
   source_atom_id: CA-R-2540
   source_atom_revision: 3
   source_sha256: d0314d5ee9cee05df57a8799f2e05e9cd50b09d5456ef2032be5cadcca67a71b
@@ -39,7 +39,7 @@ Each value is an Atom ID with an explicit Version.
 
 ```python
 # model
-from caprmedio.formal_claims import Cardinality, declare_entity
+from anechoic.formal_claims import Cardinality, declare_entity
 
 declare_entity(
     entity_name='Atoms',

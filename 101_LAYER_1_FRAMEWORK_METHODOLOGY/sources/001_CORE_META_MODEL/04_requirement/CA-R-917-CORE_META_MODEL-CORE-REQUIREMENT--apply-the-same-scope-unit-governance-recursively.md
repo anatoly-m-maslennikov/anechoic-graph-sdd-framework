@@ -1,6 +1,6 @@
 ---
 subjects:
-  governs: "CAPRMEDIO Metamodel/Fractality"
+  governs: "ANECHOIC Metamodel/Fractality"
   depends_on:
     - "Scope Unit"
 version: 17
@@ -22,10 +22,10 @@ Apply the same Scope Unit governance recursively
 
 ## Scope
 
-Structural levels of the CAPRMEDIO Metamodel.
+Structural levels of the ANECHOIC Metamodel.
 
 ## Claim
 
-the CAPRMEDIO Metamodel **must** be fractal by applying the same Scope Unit governance pattern recursively at **every** Structural level.
+the ANECHOIC Metamodel **must** be fractal by applying the same Scope Unit governance pattern recursively at **every** Structural level.
 
 ## Details

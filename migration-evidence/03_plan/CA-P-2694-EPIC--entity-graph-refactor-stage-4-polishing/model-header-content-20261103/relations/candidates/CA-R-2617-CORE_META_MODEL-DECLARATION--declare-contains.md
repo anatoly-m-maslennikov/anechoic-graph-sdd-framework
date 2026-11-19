@@ -8,7 +8,7 @@ updated_at: 2026-11-02 08:06:47 +0400
 current_scope_unit: CORE_META_MODEL
 tier: 3
 subjects:
-  active: CAPRMEDIO_MODEL <+ CFEL <+ Relation//CONTAINS
+  active: ANECHOIC_MODEL <+ CFEL <+ Relation//CONTAINS
 relations: {}
 ---
 ## Summary

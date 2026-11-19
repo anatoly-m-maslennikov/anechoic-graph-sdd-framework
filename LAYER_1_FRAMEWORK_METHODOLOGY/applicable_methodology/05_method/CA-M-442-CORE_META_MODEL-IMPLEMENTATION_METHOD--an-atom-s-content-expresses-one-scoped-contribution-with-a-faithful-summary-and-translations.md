@@ -6,11 +6,11 @@ container:
 role: Method
 form: Implementation Method
 topics:
-  main_subject: CAPRMEDIO_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring
+  main_subject: ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom.Content
-  - CAPRMEDIO_MODEL <+ Atom.Content.Summary
-  - CAPRMEDIO_MODEL <+ Atom.Content.Details
+  - ANECHOIC_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ Atom.Content.Summary
+  - ANECHOIC_MODEL <+ Atom.Content.Details
 tier: 3
 status: active
 version: 7
@@ -18,11 +18,11 @@ updated_at: '2026-11-13T18:42:52.296633+00:00'
 carrier_destination:
   file:
     name: CA-M-442-CORE_META_MODEL-IMPLEMENTATION_METHOD--an-atom-s-content-expresses-one-scoped-contribution-with-a-faithful-summary-and-translations.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-442-CORE_META_MODEL-IMPLEMENTATION_METHOD--an-atom-s-content-expresses-one-scoped-contribution-with-a-faithful-summary-and-translations.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-442-CORE_META_MODEL-IMPLEMENTATION_METHOD--an-atom-s-content-expresses-one-scoped-contribution-with-a-faithful-summary-and-translations.md
   source_atom_id: CA-M-442
   source_atom_revision: 7
   source_sha256: 6910fabef06aec1ed489e799b257581897cc9dafc419128243bdff2f708f9350

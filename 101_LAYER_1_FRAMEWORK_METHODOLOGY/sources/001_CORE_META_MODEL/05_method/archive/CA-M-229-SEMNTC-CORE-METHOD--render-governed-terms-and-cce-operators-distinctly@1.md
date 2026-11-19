@@ -15,4 +15,4 @@ relations: {}
 ---
 # Render Governed Terms and CCE Operators Distinctly
 
-to render CAPRMEDIO content, start every Governed Term and Subject Expression segment with a capital letter and render every registered CCE Operator in lowercase bold text, including at the start of a sentence.
+to render ANECHOIC content, start every Governed Term and Subject Expression segment with a capital letter and render every registered CCE Operator in lowercase bold text, including at the start of a sentence.

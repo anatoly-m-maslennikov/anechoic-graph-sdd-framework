@@ -18,7 +18,7 @@ from ATOM_LIFECYCLE import effects, source, state_actions  # noqa: E402
 
 class PublicationTest(unittest.TestCase):
     def test_watcher_cannot_observe_staged_hard_link(self):
-        base = ROOT / '.caprmedio_tmp' / 'effect-publication-test'
+        base = ROOT / '.anechoic_tmp' / 'effect-publication-test'
         base.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=base) as directory:
             path = Path(directory) / 'CA-R-1-TEST.md'
@@ -54,7 +54,7 @@ class PublicationTest(unittest.TestCase):
             self.assertEqual({('watcher', 1), ('notification', 1)}, set(observed))
 
     def test_watcher_sees_only_final_state_of_paired_move(self):
-        base = ROOT / '.caprmedio_tmp' / 'effect-publication-test'
+        base = ROOT / '.anechoic_tmp' / 'effect-publication-test'
         base.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=base) as directory:
             old = Path(directory) / 'CA-R-1-OLD.md'
@@ -89,7 +89,7 @@ class PublicationTest(unittest.TestCase):
             self.assertEqual([(False, True)], observed)
 
     def test_failed_publication_reports_effects(self):
-        base = ROOT / '.caprmedio_tmp' / 'effect-publication-test'
+        base = ROOT / '.anechoic_tmp' / 'effect-publication-test'
         base.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=base) as directory:
             old = Path(directory) / 'CA-R-1-OLD.md'

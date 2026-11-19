@@ -38,7 +38,7 @@
     const projectRoot = parameters.get('project_root');
     const explicitWorkspaceId = parameters.get('workspace');
     const embedded = parameters.get('embedded') === '1';
-    const standaloneSessionKey = `caprmedio.workbench.${projectRoot || urlProject}.standalone-session`;
+    const standaloneSessionKey = `anechoic.workbench.${projectRoot || urlProject}.standalone-session`;
     const persistedStandaloneId = browserStorage(() => localStorage.getItem(standaloneSessionKey));
     const standaloneBinding = !explicitWorkspaceId || explicitWorkspaceId === persistedStandaloneId;
     const workspaceId = (() => {

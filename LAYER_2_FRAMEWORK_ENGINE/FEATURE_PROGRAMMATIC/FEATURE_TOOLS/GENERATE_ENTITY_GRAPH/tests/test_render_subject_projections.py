@@ -35,13 +35,13 @@ class RenderSubjectProjectionsTests(unittest.TestCase):
             root = Path(temporary).resolve()
             sources = root / "sources"
             sources.mkdir()
-            write_atom(sources, 9001, "CAPRMEDIO <+ MODEL <+ Node", "Node declaration.",
-                       dependencies=["CAPRMEDIO <+ MODEL <+ Missing", "CAPRMEDIO <+ STRUCTURE <+ Project"])
-            write_atom(sources, 9002, "CAPRMEDIO <+ MODEL <+ Node/Child", "Child declaration.")
-            write_atom(sources, 9003, "CAPRMEDIO <+ MODEL <+ Node.Name", "```CFEL\nNode.Name: [string]{:1};\n```")
+            write_atom(sources, 9001, "ANECHOIC <+ MODEL <+ Node", "Node declaration.",
+                       dependencies=["ANECHOIC <+ MODEL <+ Missing", "ANECHOIC <+ STRUCTURE <+ Project"])
+            write_atom(sources, 9002, "ANECHOIC <+ MODEL <+ Node/Child", "Child declaration.")
+            write_atom(sources, 9003, "ANECHOIC <+ MODEL <+ Node.Name", "```CFEL\nNode.Name: [string]{:1};\n```")
             drafts = sources / "draft"
             drafts.mkdir()
-            write_atom(drafts, 9004, "CAPRMEDIO <+ MODEL <+ Hidden", "Excluded.")
+            write_atom(drafts, 9004, "ANECHOIC <+ MODEL <+ Hidden", "Excluded.")
             before = {path: path.read_bytes() for path in root.rglob("*") if path.is_file()}
             self.assertEqual(3, len(read_current_carriers(sources, root)))
             expected = {
@@ -70,7 +70,7 @@ class RenderSubjectProjectionsTests(unittest.TestCase):
             with contextlib.redirect_stderr(io.StringIO()) as stderr:
                 self.assertEqual(1, renderer.main(["..", "--repository", str(project), "--view", "primary-tree"]))
             self.assertIn("inside the selected repository", stderr.getvalue())
-            projection = project / ".caprmedio_caprmedio/_projection"
+            projection = project / ".anechoic_anechoic/_projection"
             projection.mkdir(parents=True)
             safe = projection / "view.md"
             self.assertEqual(safe, output_path(safe, project))

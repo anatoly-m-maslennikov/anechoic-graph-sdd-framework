@@ -17,4 +17,4 @@ relations:
 ---
 # Admit only necessary Metamodel constructs
 
-THE CAPRMEDIO Metamodel MUST admit a durable construct only when the existing Metamodel cannot preserve the required operational distinction.
+THE ANECHOIC Metamodel MUST admit a durable construct only when the existing Metamodel cannot preserve the required operational distinction.

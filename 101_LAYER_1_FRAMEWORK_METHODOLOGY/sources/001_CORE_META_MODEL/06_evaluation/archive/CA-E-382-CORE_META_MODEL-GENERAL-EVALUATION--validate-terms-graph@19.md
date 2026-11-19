@@ -7,7 +7,7 @@ subjects:
     - "NARROWER_THAN"
     - "Relation"
     - "Relation Kind"
-    - "CAPRMEDIO Graph"
+    - "ANECHOIC Graph"
     - "Governed Term"
     - "Definition Atom"
     - "Atom/Claim"

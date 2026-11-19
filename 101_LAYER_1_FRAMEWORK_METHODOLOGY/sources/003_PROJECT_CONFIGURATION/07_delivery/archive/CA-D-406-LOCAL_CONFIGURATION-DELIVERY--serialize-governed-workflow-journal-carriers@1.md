@@ -18,4 +18,4 @@ relations: {}
 ---
 # Serialize Governed Workflow Journal Carriers
 
-**every** governed CAPRMEDIO workflow **or** local project-control Journal Carrier whose append-only NDJSON representation is **not** already governed by CA-D-328 **or** CA-D-339 **must** use append-only NDJSON **in** its applicable registered authoritative place. the CAPRMEDIO Project Work Journal follows CA-D-328; the Implementation Journal follows CA-D-339.
+**every** governed ANECHOIC workflow **or** local project-control Journal Carrier whose append-only NDJSON representation is **not** already governed by CA-D-328 **or** CA-D-339 **must** use append-only NDJSON **in** its applicable registered authoritative place. the ANECHOIC Project Work Journal follows CA-D-328; the Implementation Journal follows CA-D-339.

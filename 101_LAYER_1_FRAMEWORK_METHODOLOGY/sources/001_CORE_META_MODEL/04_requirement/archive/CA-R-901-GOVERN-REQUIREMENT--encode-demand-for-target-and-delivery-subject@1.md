@@ -6,7 +6,7 @@ updated_at: 2026-08-22 05:30:00
 relations:
   child_of:
     - CA-R-900
-    - CAPRMEDIO-GOV-REQU-731--place-immutable-atom-id-before-mutable-scope-path
+    - ANECHOIC-GOV-REQU-731--place-immutable-atom-id-before-mutable-scope-path
     - CA-R-859
   replacement_of:
     - CA-R-883

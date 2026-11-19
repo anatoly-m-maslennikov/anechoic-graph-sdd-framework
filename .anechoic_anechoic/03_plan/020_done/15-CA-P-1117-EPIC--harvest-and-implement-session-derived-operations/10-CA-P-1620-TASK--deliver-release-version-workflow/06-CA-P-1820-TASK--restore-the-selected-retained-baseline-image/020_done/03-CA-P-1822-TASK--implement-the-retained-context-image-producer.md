@@ -1,0 +1,57 @@
+---
+atom_id: CA-P-1822
+ref_id: CA-P-1822
+container:
+  atom: CA-P-1820
+role: Plan
+form: Plan
+label: Task
+topics:
+  main_subject: Subject/Graph Node/Engineering/Image
+  dependencies:
+  - Subject/Graph Node/Engineering/Action
+  - Subject/Graph Node/Engineering/Continuant/Tool
+  - Subject/Graph Node/Engineering/Framework Package
+  - Subject/Graph Node/Engineering/Image
+  - Subject/Graph Node/Domain/Continuant/History/Journal
+  - 'Subject/Graph Node/Domain/Continuant/Actor/Type: Operator'
+tier: 3
+relations:
+  is_decomposition_of:
+  - CA-P-1820
+  blocks:
+  - CA-P-1826
+status: Done
+version: 8
+updated_at: 2026-10-25 17:32:27 +0400
+carrier_destination:
+  file:
+    name: 3-CA-P-1822-TASK--implement-the-retained-context-image-producer.md
+    path: .anechoic_anechoic/03_plan/done/15-CA-P-1117-EPIC--harvest-and-implement-session-derived-operations/10-CA-P-1620-TASK--deliver-release-version-workflow/6-CA-P-1820-TASK--restore-the-selected-retained-baseline-image/done
+work_sequence_number: 3
+current_scope_unit: anechoic
+author: Anatoly Maslennikov
+assignee: AI Agent
+autonomous_confidence_threshold: 90
+---
+# Summary
+
+Implement the retained-context image producer
+
+## Objective
+
+Implement the producer that copies only authenticated persistent retained context and captures actual build, immutable-ID inspect and fixed canary evidence. Reuse existing bootstrap proof shapes and preserve old proof for exact same-ID results.
+
+## Details
+
+The Operator explicitly approved rebuilding the missing selected image from verified retained N and registering its verified image digest. Preserve N's package, Version, public ca Skill, original proof and historical Journal. N21 remains unknown and is not replayed. No release gate is waived. Root owns Git, source admission and serialized runtime effects; independent workers own their assigned source scopes.
+
+Work estimate: <=15 minutes; add a necessary remainder before expanding beyond this bound. Source RMED is reviewed before implementation. Test-first acceptance uses honest local doubles separately from actual Docker proof.
+
+## Definition of Done
+
+Accepted producer tests prove filtered byte/mode currentness, truthful outcomes and canonical proof handling for both ID branches; no live-source input, fake digest or historical-proof overwrite is introduced.
+
+## Result
+
+Independent review accepted the producer after adding immutable-original-proof and mid-build drift assertions. Eight retained producer tests and thirteen unchanged bootstrap tests pass. Neither test run is actual Docker restoration proof.

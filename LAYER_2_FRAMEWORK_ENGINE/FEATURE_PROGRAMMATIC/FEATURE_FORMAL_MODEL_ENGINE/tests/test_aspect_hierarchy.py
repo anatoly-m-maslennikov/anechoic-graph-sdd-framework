@@ -11,9 +11,9 @@ from FEATURE_FORMAL_MODEL_ENGINE.compiler_claim import compiler_model_statements
 
 class AspectHierarchyTests(unittest.TestCase):
     def test_independent_collections_and_malformed_inputs(self):
-        a = 'PROJECT STRUCTURE//CAPRMEDIO <+ Aspects <+ Engineering'
-        b = 'PROJECT STRUCTURE//CAPRMEDIO <+ Aspects <+ Product'
-        claim = ('from caprmedio.formal_claims import declare_entity\n'
+        a = 'PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Engineering'
+        b = 'PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Product'
+        claim = ('from anechoic.formal_claims import declare_entity\n'
                  f'declare_entity(entity_name="Project Structure", structure_paths=({a!r},), aspect_memberships=({b!r},))')
         parsed = parse_native_model_claim(claim)
         self.assertEqual((a, f'({b}) ((INSTANCE_OF)) Aspect'), compiler_model_statements(parsed))

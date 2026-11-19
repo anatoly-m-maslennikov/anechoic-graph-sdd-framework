@@ -15,4 +15,4 @@ relations: {}
 ---
 # Define General Term
 
-a General Term **means** a Term whose ordinary English meaning is sufficient without one CAPRMEDIO Definition Atom.
+a General Term **means** a Term whose ordinary English meaning is sufficient without one ANECHOIC Definition Atom.

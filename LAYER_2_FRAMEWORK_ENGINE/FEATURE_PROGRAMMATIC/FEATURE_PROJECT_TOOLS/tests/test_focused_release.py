@@ -25,7 +25,7 @@ PASSING = (
 
 class FocusedReleaseTests(unittest.TestCase):
     def setUp(self) -> None:
-        parent = TOOLS.parent / ".caprmedio_tmp/tests/focused-release"
+        parent = TOOLS.parent / ".anechoic_tmp/tests/focused-release"
         parent.mkdir(parents=True, exist_ok=True)
         directory = tempfile.TemporaryDirectory(dir=parent)
         self.addCleanup(directory.cleanup)

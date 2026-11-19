@@ -6,9 +6,9 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Term
+  main_subject: ANECHOIC_MODEL <+ Term
   dependencies:
-  - CAPRMEDIO_MODEL <+ Term//Property
+  - ANECHOIC_MODEL <+ Term//Property
 tier: 2
 status: Active
 version: 28
@@ -16,11 +16,11 @@ updated_at: 2026-11-02 08:06:47 +0400
 carrier_destination:
   file:
     name: CA-R-1346-CORE_META_MODEL-RULE--permit-reused-terms-in-qualified-value-domains.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1346-CORE_META_MODEL-RULE--permit-reused-terms-in-qualified-value-domains.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1346-CORE_META_MODEL-RULE--permit-reused-terms-in-qualified-value-domains.md
   source_atom_id: CA-R-1346
   source_atom_revision: 28
   source_sha256: 3197f8da753d265ab4ea46297868da91bd9c3e4d9df66fc4890ce19ca6d05e33

@@ -1,9 +1,9 @@
 ---
 subjects:
-  governs: "CAPRMEDIO Routing Tree"
+  governs: "ANECHOIC Routing Tree"
   depends_on:
-    - "CAPRMEDIO Main Skill"
-    - "CAPRMEDIO Direct Route Skill"
+    - "ANECHOIC Main Skill"
+    - "ANECHOIC Direct Route Skill"
     - "Project Configuration"
 version: 17
 updated_at: "2026-09-30 13:09:08 +0000"
@@ -25,6 +25,6 @@ skill route resolution.
 
 ## Claim
 
-skill routes **must** resolve by explicit precedence: project-local CAPRMEDIO routes override framework routes, which override provider-global routes.
+skill routes **must** resolve by explicit precedence: project-local ANECHOIC routes override framework routes, which override provider-global routes.
 
 ## Details

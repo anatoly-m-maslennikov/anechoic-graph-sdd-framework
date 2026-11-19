@@ -6,9 +6,9 @@ container:
 role: Concern
 form: Question
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Relation//IS_PROPERTY_OF
+  main_subject: ANECHOIC_MODEL <+ Relation//IS_PROPERTY_OF
   dependencies:
-  - CAPRMEDIO_MODEL <+ Relation//HAS_PROPERTY
+  - ANECHOIC_MODEL <+ Relation//HAS_PROPERTY
 tier: 3
 status: Active
 version: 1
@@ -16,7 +16,7 @@ updated_at: 2026-11-02 08:06:47 +0400
 carrier_destination:
   file:
     name: CA-C-623-CORE_META_MODEL-QUESTION--should-a-future-model-support-non-property-bearer-dependence.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/01_concern
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/01_concern
 current_scope_unit: CORE_META_MODEL
 priority: medium
 ---

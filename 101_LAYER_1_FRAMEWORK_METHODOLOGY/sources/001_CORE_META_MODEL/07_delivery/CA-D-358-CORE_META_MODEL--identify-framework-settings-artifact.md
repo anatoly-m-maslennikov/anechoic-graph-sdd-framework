@@ -27,6 +27,6 @@ the Identifier of the authoritative Framework Instance Settings Artifact.
 
 ## Claim
 
-the Identifier of the authoritative Framework Instance Settings Artifact **must** be `caprmedio_framework_settings`.
+the Identifier of the authoritative Framework Instance Settings Artifact **must** be `anechoic_framework_settings`.
 
 ## Details

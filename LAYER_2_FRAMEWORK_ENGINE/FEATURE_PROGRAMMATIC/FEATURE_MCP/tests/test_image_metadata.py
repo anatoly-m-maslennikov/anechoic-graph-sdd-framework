@@ -32,7 +32,7 @@ import runtime  # noqa: E402
 
 IMAGE, OTHER_IMAGE = "sha256:" + "a" * 64, "sha256:" + "b" * 64
 VERSION, CREATED = "0.4.4.9", "2026-10-21T14:15:16.987654321Z"
-EXPECTED_TAG = "caprmedio-runtime:0.4.4.9-20261021T141516Z-aaaaaaaaaaaa"
+EXPECTED_TAG = "anechoic-runtime:0.4.4.9-20261021T141516Z-aaaaaaaaaaaa"
 
 
 class DockerProbe:
@@ -91,12 +91,12 @@ class DockerProbe:
 
 class ImageMetadataTests(unittest.TestCase):
     def setUp(self) -> None:
-        parent = APP.parents[2] / ".caprmedio_tmp/CA-P-2791/CA-P-2818/image-metadata"
+        parent = APP.parents[2] / ".anechoic_tmp/CA-P-2791/CA-P-2818/image-metadata"
         parent.mkdir(parents=True, exist_ok=True)
         self.temporary = tempfile.TemporaryDirectory(dir=parent)
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
-        self.project_temp = self.root / ".caprmedio_tmp"
+        self.project_temp = self.root / ".anechoic_tmp"
         self.project_temp.mkdir()
         self.scratch = Path(tempfile.mkdtemp(dir=self.project_temp))
         compiler = patch.object(runtime_images, "_compile_relation_registry", return_value=b'{"schema_version":1}\n')

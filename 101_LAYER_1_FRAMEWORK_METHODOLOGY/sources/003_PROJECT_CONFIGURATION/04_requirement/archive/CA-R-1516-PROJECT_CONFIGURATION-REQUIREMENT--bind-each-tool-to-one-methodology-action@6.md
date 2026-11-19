@@ -28,11 +28,11 @@ Bind each Tool to one methodology Action
 
 ## Scope
 
-Tools in the caprmedio Project.
+Tools in the anechoic Project.
 
 ## Claim
 
-**in** the caprmedio Project, **every** Tool **must** implement **`=1`** Action defined by an existing applicable methodology O Atom.
+**in** the anechoic Project, **every** Tool **must** implement **`=1`** Action defined by an existing applicable methodology O Atom.
 
 ## Details
 

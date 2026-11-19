@@ -402,14 +402,14 @@ class LifecycleProviderTests(unittest.IsolatedAsyncioTestCase):
 
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp).resolve()
-            control = root / '.caprmedio_test'
+            control = root / '.anechoic_test'
             control.mkdir()
-            (control / 'caprmedio_project_settings.toml').write_text(
+            (control / 'anechoic_project_settings.toml').write_text(
                 '[project]\nname="TEST"\n[artifacts.identity]\nproject_prefix="CA"\n'
-                '[paths]\ncontrol_root=".caprmedio_test"\n')
+                '[paths]\ncontrol_root=".anechoic_test"\n')
             write_scope_unit_declarations(root, control_root=control)
             selection = resolve_project(root)
-            host = Path('/unmounted/caprmedio-test')
+            host = Path('/unmounted/anechoic-test')
             host_id = hashlib.sha256(f'{host}\0{selection.control_relative.as_posix()}'.encode()).hexdigest()
             transported = rebind_selection(selection, host_id, host_root=host)
             refreshed = refresh_real(transported)
@@ -450,7 +450,7 @@ class LifecycleProviderTests(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(1, len(list(renamed['NEWER']['authority_path'].rglob('*draft*.md'))))
 
                 # Project settings remain bound to the original Project.
-                with (control / 'caprmedio_project_settings.toml').open('a') as settings:
+                with (control / 'anechoic_project_settings.toml').open('a') as settings:
                     settings.write('\n[changed]\nvalue=true\n')
                 result = await self.invoke(self.a, self.name, {'newAtom': new_atom})
                 self.assertEqual('failed', result['status'])
@@ -499,11 +499,11 @@ class LifecycleProviderTests(unittest.IsolatedAsyncioTestCase):
         for initial, correction, field in cases:
             with self.subTest(initial=initial, correction=correction), tempfile.TemporaryDirectory() as tmp:
                 root = Path(tmp).resolve()
-                control = root / '.caprmedio_test'
+                control = root / '.anechoic_test'
                 control.mkdir()
-                (control / 'caprmedio_project_settings.toml').write_text(
+                (control / 'anechoic_project_settings.toml').write_text(
                     '[project]\nname="TEST"\n[artifacts.identity]\nproject_prefix="CA"\n'
-                    '[paths]\ncontrol_root=".caprmedio_test"\n')
+                    '[paths]\ncontrol_root=".anechoic_test"\n')
                 write_scope_unit_declarations(root, control_root=control, rows=[])
                 source = control / '04_requirement/CA-R-1-DECLARATION--example.md'
                 source.parent.mkdir()

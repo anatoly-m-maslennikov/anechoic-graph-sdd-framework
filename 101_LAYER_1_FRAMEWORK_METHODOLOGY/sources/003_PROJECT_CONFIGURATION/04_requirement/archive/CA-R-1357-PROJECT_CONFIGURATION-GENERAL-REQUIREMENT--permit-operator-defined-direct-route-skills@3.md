@@ -5,11 +5,11 @@ cce_form: permission
 subjects:
   governs:
     occurrent:
-      - CAPRMEDIO Direct Route Skill Addition
+      - ANECHOIC Direct Route Skill Addition
   depends_on:
     continuant:
       - Operator
-      - CAPRMEDIO Direct Route Skill
+      - ANECHOIC Direct Route Skill
 version: 3
 updated_at: "2026-09-11 23:47:49 +0400"
 llm_session_ids:
@@ -18,4 +18,4 @@ relations: {}
 ---
 # Permit Operator-Defined Direct Route Skills
 
-the Operator **may** add a CAPRMEDIO Direct Route Skill.
+the Operator **may** add a ANECHOIC Direct Route Skill.

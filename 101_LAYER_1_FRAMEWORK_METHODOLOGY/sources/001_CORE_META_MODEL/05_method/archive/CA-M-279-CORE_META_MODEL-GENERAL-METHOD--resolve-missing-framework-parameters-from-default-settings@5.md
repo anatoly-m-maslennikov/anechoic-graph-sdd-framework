@@ -12,7 +12,7 @@ relations:
   relates_to:
     - "CA-R-1402"
     - "CA-R-1441"
-    - "CAPRMEDIO-META-REQU-675"
+    - "ANECHOIC-META-REQU-675"
     - "CA-D-407"
     - "CA-D-408"
 ---

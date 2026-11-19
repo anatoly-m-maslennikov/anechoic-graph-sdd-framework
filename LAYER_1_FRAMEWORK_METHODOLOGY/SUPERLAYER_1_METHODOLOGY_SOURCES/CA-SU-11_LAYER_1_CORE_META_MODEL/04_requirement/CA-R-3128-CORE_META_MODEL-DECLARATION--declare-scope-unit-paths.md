@@ -9,7 +9,7 @@ context:
     scope_unit: CA-SU-11
   tier: 3
   topics:
-    main_subject: CAPRMEDIO_MODEL <+ Scope Unit.Paths
+    main_subject: ANECHOIC_MODEL <+ Scope Unit.Paths
 state:
   version: 1
   status: active
@@ -17,7 +17,7 @@ state:
 destination:
   file:
     name: CA-R-3128-CORE_META_MODEL-DECLARATION--declare-scope-unit-paths.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 ---
 ## Summary
 
@@ -32,7 +32,7 @@ Paths groups the Scope Unit’s two physical folder paths. Each path is relative
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_entity
+from anechoic.formal_claims import declare_entity
 
 declare_entity(
     entity_name="Paths",

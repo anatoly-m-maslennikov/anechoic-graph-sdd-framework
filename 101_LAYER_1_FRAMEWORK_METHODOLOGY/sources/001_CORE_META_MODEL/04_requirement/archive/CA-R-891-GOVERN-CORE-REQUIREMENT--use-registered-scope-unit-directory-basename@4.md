@@ -12,4 +12,4 @@ relations:
 ---
 # Encode structural markers only in authority directory names
 
-EVERY Scope Unit authority directory under `.caprmedio/` MUST encode its applicable Bootstrap Seed marker, derived Unit Kind Name, Local Order, and Unit Name according to its registered structure.
+EVERY Scope Unit authority directory under `.anechoic/` MUST encode its applicable Bootstrap Seed marker, derived Unit Kind Name, Local Order, and Unit Name according to its registered structure.

@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Node >| Container
+  main_subject: ANECHOIC_MODEL <+ Node >| Container
 tier: 3
 status: active
 version: 4
@@ -14,11 +14,11 @@ updated_at: '2026-11-14T07:32:15.679073+00:00'
 carrier_destination:
   file:
     name: CA-R-2484-CORE_META_MODEL-RULE--classify-permission-to-have-parts-as-container.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2484-CORE_META_MODEL-RULE--classify-permission-to-have-parts-as-container.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-2484-CORE_META_MODEL-RULE--classify-permission-to-have-parts-as-container.md
   source_atom_id: CA-R-2484
   source_atom_revision: 4
   source_sha256: 62ef7ec978a8fe27062c4de48c2138826471ca340745d87d4f5c6eb1dc31c7ac
@@ -43,7 +43,7 @@ Use `Node// >| Container = yes` when selecting eligible whole instances. Contain
 ### Formal Claim
 
 ```python
-from caprmedio.formal_claims import declare_entity
+from anechoic.formal_claims import declare_entity
 
 declare_entity(
     entity_name="Node",

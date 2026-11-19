@@ -5,7 +5,7 @@ subjects:
     - "Artifact/Revision"
 version: 3
 updated_at: "2026-09-17 04:06:18 +0000"
-relations: {"child_of":["CAPRMEDIO-META-REQU-657"]}
+relations: {"child_of":["ANECHOIC-META-REQU-657"]}
 atom_id: "CA-R-1493"
 content_role: "Requirement"
 current_scope_unit: "CORE_META_MODEL"

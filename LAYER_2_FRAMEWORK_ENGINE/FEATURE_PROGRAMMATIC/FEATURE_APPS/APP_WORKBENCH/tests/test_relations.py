@@ -27,7 +27,7 @@ def relation_declaration(ref, name, binding=""):
     body = f'## Claim\n\n### Formal Claim\n\n```python\nsubject_path(address="Relation//{name}")\n{binding}\n```\n'
     row = atom(ref, form="Declaration", body=body)
     row["header_json"]["subjects"] = {
-        "active": "CAPRMEDIO_MODEL <+ CFEL <+ Relation//" + name,
+        "active": "ANECHOIC_MODEL <+ CFEL <+ Relation//" + name,
     }
     return row
 

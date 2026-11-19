@@ -313,7 +313,7 @@ def _rule_groups(identity: str, rules: list[Record], ancestors: Mapping[str, lis
 
 
 def _namespace_contexts(carriers: list[Record]) -> list[Record]:
-    """Keep one explicit CAPRMEDIO root context per namespace branch."""
+    """Keep one explicit ANECHOIC root context per namespace branch."""
 
     candidates: dict[str, list[tuple[int, Record]]] = defaultdict(list)
     for carrier in carriers:
@@ -335,7 +335,7 @@ def _namespace_contexts(carriers: list[Record]) -> list[Record]:
                 except notation.SubjectNotationError:
                     continue
                 if (isinstance(expression, notation.Path) and isinstance(expression.head, notation.Name)
-                        and expression.head.value in {"CAPRMEDIO_MODEL", "CAPRMEDIO_STRUCTURE"}
+                        and expression.head.value in {"ANECHOIC_MODEL", "ANECHOIC_STRUCTURE"}
                         and not expression.steps):
                     candidates[expression.head.value].append((0 if role == "governs" else 1, dict(source)))
                     continue
@@ -343,13 +343,13 @@ def _namespace_contexts(carriers: list[Record]) -> list[Record]:
                 if local is None or not isinstance(expression, notation.RelationChain):
                     continue
                 first = expression.endpoints[0]
-                if isinstance(first.head, notation.Name) and first.head.value in {"CAPRMEDIO_MODEL", "CAPRMEDIO_STRUCTURE"}:
+                if isinstance(first.head, notation.Name) and first.head.value in {"ANECHOIC_MODEL", "ANECHOIC_STRUCTURE"}:
                     candidates[first.head.value].append((2, dict(source)))
                     continue
                 namespace = expression.endpoints[1]
                 if not isinstance(namespace.head, notation.Name):
                     continue
-                root = f"CAPRMEDIO <+ {namespace.head.value}"
+                root = f"ANECHOIC <+ {namespace.head.value}"
                 direct = len(expression.endpoints) == 2
                 priority = 0 if direct and role == "governs" else 1 if direct else 2
                 candidates[root].append((priority, dict(source)))

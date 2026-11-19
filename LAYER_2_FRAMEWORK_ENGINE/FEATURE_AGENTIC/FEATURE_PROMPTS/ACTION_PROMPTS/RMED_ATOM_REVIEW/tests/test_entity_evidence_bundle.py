@@ -60,7 +60,7 @@ class EntityEvidenceBundleTests(unittest.TestCase):
             _validate_resolved_mention(item, {'REGISTER@1': raw}, {'REGISTER@1': prop})
 
     def test_cce_identity_accepts_active_method_authority_without_r_definition(self):
-        quote = 'To write a Claim in CAPRMEDIO Controlled English (CCE), use its identified language version.'
+        quote = 'To write a Claim in ANECHOIC Controlled English (CCE), use its identified language version.'
         raw = authority('CCE', quote).replace(
             'subjects:\n', 'status: Active\ncontent_role: Method\ntype: Method\nsubjects:\n', 1)
         item = mention('CCE', [{'authority': 'MOCK-M-001@1', 'excerpt': quote}])
@@ -68,7 +68,7 @@ class EntityEvidenceBundleTests(unittest.TestCase):
         _validate_resolved_mention(item, {'MOCK-M-001@1': raw}, {'MOCK-M-001@1': 'CCE'})
 
     def test_cce_method_still_needs_its_exact_governing_target(self):
-        quote = 'To write a Claim in CAPRMEDIO Controlled English (CCE), use its identified language version.'
+        quote = 'To write a Claim in ANECHOIC Controlled English (CCE), use its identified language version.'
         raw = authority('language', quote).replace(
             'subjects:\n', 'status: Active\ncontent_role: Method\nsubjects:\n', 1)
         item = mention('CCE', [{'authority': 'MOCK-M-001@1', 'excerpt': quote}])

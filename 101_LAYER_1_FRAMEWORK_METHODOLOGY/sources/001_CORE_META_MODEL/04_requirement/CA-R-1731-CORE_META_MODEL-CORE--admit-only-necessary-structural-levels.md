@@ -9,7 +9,7 @@ updated_at: "2026-10-03 02:39:08 +0400"
 relations:
   child_of:
     - CA-M-005-PRINCIPLE-METHOD--add-complexity-only-when-necessary
-    - CAPRMEDIO-REQU-031-CORE-REQUIREMENT--model-project-structure-as-numbered-levels
+    - ANECHOIC-REQU-031-CORE-REQUIREMENT--model-project-structure-as-numbered-levels
 atom_id: "CA-R-1731"
 content_role: "Requirement"
 current_scope_unit: "CORE_META_MODEL"

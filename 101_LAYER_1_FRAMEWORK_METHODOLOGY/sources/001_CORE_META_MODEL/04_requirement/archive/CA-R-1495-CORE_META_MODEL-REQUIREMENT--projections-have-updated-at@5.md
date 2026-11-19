@@ -7,8 +7,8 @@ version: 5
 updated_at: "2026-09-17 04:13:30 +0000"
 relations:
   child_of:
-    - CAPRMEDIO-META-REQU-125-CORE_META_MODEL-CORE-REQUIREMENT--classify-artifacts-through-the-extensible-type-registry
-    - CAPRMEDIO-META-REQU-128--separate-artifact-carrier-and-revision
+    - ANECHOIC-META-REQU-125-CORE_META_MODEL-CORE-REQUIREMENT--classify-artifacts-through-the-extensible-type-registry
+    - ANECHOIC-META-REQU-128--separate-artifact-carrier-and-revision
 atom_id: "CA-R-1495"
 content_role: "Requirement"
 current_scope_unit: "CORE_META_MODEL"

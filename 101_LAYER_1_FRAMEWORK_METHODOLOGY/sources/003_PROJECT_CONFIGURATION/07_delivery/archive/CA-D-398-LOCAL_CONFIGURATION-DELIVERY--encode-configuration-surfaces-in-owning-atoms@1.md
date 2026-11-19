@@ -17,7 +17,7 @@ updated_at: "2026-09-10 21:11:42 +0400"
 relations:
   child_of:
     - "CA-R-1054"
-    - "CAPRMEDIO-META-REQU-675"
+    - "ANECHOIC-META-REQU-675"
 ---
 # Encode configuration surfaces in owning Atoms
 

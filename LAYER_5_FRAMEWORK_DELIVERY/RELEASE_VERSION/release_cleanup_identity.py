@@ -13,8 +13,8 @@ from pydantic import BaseModel, ConfigDict
 Runner = Callable[[tuple[str, ...], Path], subprocess.CompletedProcess[str]]
 IMAGE = re.compile(r"sha256:[0-9a-f]{64}")
 IDENTIFIER = re.compile(r"[0-9a-f]{64}")
-FINGERPRINT = "org.caprmedio.runtime.fingerprint"
-SCHEMA = "org.caprmedio.runtime.schema"
+FINGERPRINT = "org.anechoic.runtime.fingerprint"
+SCHEMA = "org.anechoic.runtime.schema"
 
 
 @dataclass
@@ -28,9 +28,9 @@ class Cleanup:
 
 def owner_labels(root: Path, project_id: str, control: str) -> dict[str, str]:
     return {
-        "org.caprmedio.project": project_id,
-        "org.caprmedio.control_root": control,
-        "org.caprmedio.host_project_root": str(root),
+        "org.anechoic.project": project_id,
+        "org.anechoic.control_root": control,
+        "org.anechoic.host_project_root": str(root),
     }
 
 

@@ -22,6 +22,6 @@ Development Backlog reconciliation **after** the Release Record is accepted.
 
 ## Claim
 
-CAPRMEDIO **must** regenerate the Projection for Development Backlog reconciliation.
+ANECHOIC **must** regenerate the Projection for Development Backlog reconciliation.
 
 ## Details

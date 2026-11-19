@@ -6,12 +6,12 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Atom.Header.State.Status
+  main_subject: ANECHOIC_MODEL <+ Atom.Header.State.Status
   dependencies:
-  - CAPRMEDIO_MODEL <+ Atom.Content
-  - CAPRMEDIO_MODEL <+ Package/Project Package
-  - CAPRMEDIO_MODEL <+ Projection
-  - CAPRMEDIO_MODEL <+ Entity/Object/Continuant/Selection
+  - ANECHOIC_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ Package/Project Package
+  - ANECHOIC_MODEL <+ Projection
+  - ANECHOIC_MODEL <+ Entity/Object/Continuant/Selection
 tier: 3
 status: Active
 version: 26
@@ -19,11 +19,11 @@ updated_at: 2026-11-10 14:38:45 +0400
 carrier_destination:
   file:
     name: CA-R-1610-CORE_META_MODEL-RULE--keep-reverse-engineered-rmed-provisional.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1610-CORE_META_MODEL-RULE--keep-reverse-engineered-rmed-provisional.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/CA-R-1610-CORE_META_MODEL-RULE--keep-reverse-engineered-rmed-provisional.md
   source_atom_id: CA-R-1610
   source_atom_revision: 26
   source_sha256: c02b449f12e0a16dea874f55230e63e1e2ac823c3589ac2a6806767edb191d49

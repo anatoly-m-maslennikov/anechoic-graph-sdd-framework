@@ -16,7 +16,7 @@ updated_at: "2026-09-10 22:35:50 +0400"
 relations:
   relates_to:
     - CA-D-308
-    - CAPRMEDIO-META-REQU-158
+    - ANECHOIC-META-REQU-158
 ---
 # Serialize the shared Project Journal
 

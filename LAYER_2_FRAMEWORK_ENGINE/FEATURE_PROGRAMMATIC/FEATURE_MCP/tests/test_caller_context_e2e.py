@@ -66,7 +66,7 @@ class CallerContextE2ETests(unittest.IsolatedAsyncioTestCase):
 
     def _event(self, root, session, native_session="native-session"):
         return {
-            "tool_name": "mcp__caprmedio__echo",
+            "tool_name": "mcp__anechoic__echo",
             "session_id": session,
             "cwd": str(root),
             "tool_input": {"session_id": native_session},

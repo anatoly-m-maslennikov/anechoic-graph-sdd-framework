@@ -6,12 +6,12 @@ container:
 role: Evaluation
 form: Eval Policy
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Project.Settings
+  main_subject: ANECHOIC_MODEL <+ Project.Settings
   dependencies:
-  - CAPRMEDIO_MODEL <+ Project.Settings.Name
-  - CAPRMEDIO_MODEL <+ Project.Settings.Prefix
-  - CAPRMEDIO_MODEL <+ Project.Settings
-  - CAPRMEDIO_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Project.Settings.Name
+  - ANECHOIC_MODEL <+ Project.Settings.Prefix
+  - ANECHOIC_MODEL <+ Project.Settings
+  - ANECHOIC_MODEL <+ Scope Unit
 tier: 8
 relations:
   evaluation_for:
@@ -32,11 +32,11 @@ updated_at: 2026-11-04 09:30:21 +0400
 carrier_destination:
   file:
     name: CA-E-459-CORE_META_MODEL-EVAL_POLICY--validate-authoritative-project-settings-artifact.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-459-CORE_META_MODEL-POLICY--validate-authoritative-project-settings-artifact.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-459-CORE_META_MODEL-POLICY--validate-authoritative-project-settings-artifact.md
   source_atom_id: CA-E-459
   source_atom_revision: 40
   source_sha256: 5fda34d469efa6218302cc7f8116dc561671e15f0bbb63abeb8bffc4e24047d7
@@ -81,4 +81,4 @@ The replacement Prefix Decision is Current `CA-D-658@2`: [Serialize Project Pref
 
 ### Current source pin
 
-Proposed N+1 successor of `.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-459-CORE_META_MODEL-POLICY--validate-authoritative-project-settings-artifact.md`, CA-E-459@36, SHA-256 `0a24497bc8492d7b155f4067ee75c77389decdcbf4cfb13e66eb68acef4de631`. Current bytes remain unchanged; this Draft performs no promotion, evaluation execution, or Journal change.
+Proposed N+1 successor of `.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-459-CORE_META_MODEL-POLICY--validate-authoritative-project-settings-artifact.md`, CA-E-459@36, SHA-256 `0a24497bc8492d7b155f4067ee75c77389decdcbf4cfb13e66eb68acef4de631`. Current bytes remain unchanged; this Draft performs no promotion, evaluation execution, or Journal change.

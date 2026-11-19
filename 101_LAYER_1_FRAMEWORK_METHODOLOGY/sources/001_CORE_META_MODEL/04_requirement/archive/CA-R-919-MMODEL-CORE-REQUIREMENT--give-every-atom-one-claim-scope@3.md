@@ -12,7 +12,7 @@ version: 3
 updated_at: 2026-08-23 15:00:38
 relations:
   replacement_of:
-    - CAPRMEDIO-META-REQU-136
+    - ANECHOIC-META-REQU-136
   child_of:
     - CA-R-918
 ---

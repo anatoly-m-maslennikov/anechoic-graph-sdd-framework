@@ -6,7 +6,7 @@ container:
 role: Requirement
 form: Rule
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Project
+  main_subject: ANECHOIC_MODEL <+ Project
 tier: 3
 relations:
   child_of:
@@ -19,7 +19,7 @@ updated_at: 2026-11-02 19:44:26 +0400
 carrier_destination:
   file:
     name: CA-R-1680-PROJECT_CONFIGURATION-RULE--requirement-bound-recursive-self-hosting.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/04_requirement
 current_scope_unit: PROJECT_CONFIGURATION
 claim_target_scope_unit: PROJECT_CONFIGURATION
 ---
@@ -32,10 +32,10 @@ Requirement — Bound recursive self-hosting
 ### Prose Claim
 
 
-CAPRMEDIO's own repository.
+ANECHOIC's own repository.
 
 
-CAPRMEDIO applies the same structural constitution **and** governance semantics **to** its own repository while keeping native reusable framework source, project authority, **and** non-authoritative convenience locators under distinct owners.
+ANECHOIC applies the same structural constitution **and** governance semantics **to** its own repository while keeping native reusable framework source, project authority, **and** non-authoritative convenience locators under distinct owners.
 
 ## Details
 

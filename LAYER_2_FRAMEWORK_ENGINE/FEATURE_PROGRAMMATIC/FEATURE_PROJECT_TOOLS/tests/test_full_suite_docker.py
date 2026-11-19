@@ -21,7 +21,7 @@ IMAGE = "sha256:" + "a" * 64
 
 class FullSuiteDockerTests(unittest.TestCase):
     def setUp(self):
-        parent = Path(__file__).resolve().parents[4] / ".caprmedio_tmp/tests/full-suite-docker"
+        parent = Path(__file__).resolve().parents[4] / ".anechoic_tmp/tests/full-suite-docker"
         parent.mkdir(parents=True, exist_ok=True)
         directory = tempfile.TemporaryDirectory(dir=parent)
         self.addCleanup(directory.cleanup)
@@ -50,11 +50,11 @@ class FullSuiteDockerTests(unittest.TestCase):
             manager._build.side_effect = build
             with docker.current_code_test_image(self.root) as environment:
                 self.assertIn(f"Test image FINISH: {IMAGE}", self.output.getvalue())
-                self.assertEqual(IMAGE, environment["CAPRMEDIO_FIRST_CUT_HTTP_IMAGE"])
-                self.assertEqual(IMAGE, environment["CAPRMEDIO_DOCKER_QUERY_IMAGE"])
-                scratch = Path(environment["CAPRMEDIO_FIRST_CUT_HTTP_SCRATCH"])
+                self.assertEqual(IMAGE, environment["ANECHOIC_FIRST_CUT_HTTP_IMAGE"])
+                self.assertEqual(IMAGE, environment["ANECHOIC_DOCKER_QUERY_IMAGE"])
+                scratch = Path(environment["ANECHOIC_FIRST_CUT_HTTP_SCRATCH"])
                 self.assertEqual(str(scratch), environment["TMPDIR"])
-                self.assertTrue(scratch.is_relative_to(self.root / ".caprmedio_tmp"))
+                self.assertTrue(scratch.is_relative_to(self.root / ".anechoic_tmp"))
                 self.assertTrue(scratch.is_dir())
             manager._build.assert_called_once_with(manager.identity.return_value, use_packaged_assets=False)
             manager.resolve.assert_not_called()
@@ -132,13 +132,13 @@ class FullSuiteDockerTests(unittest.TestCase):
     def test_full_suite_uses_image_environment_without_retired_launcher_gate(self):
         module = self.root / docker.APP / "tests/test_docker_e2e.py"
         lifecycle = MagicMock()
-        lifecycle.__enter__.return_value = {"CAPRMEDIO_FIRST_CUT_HTTP_IMAGE": IMAGE}
+        lifecycle.__enter__.return_value = {"ANECHOIC_FIRST_CUT_HTTP_IMAGE": IMAGE}
         with (
             patch.dict(
                 full.os.environ,
                 {
-                    "CAPRMEDIO_RELEASE_E2E_CONTEXT": "old-sealed-context.json",
-                    "CAPRMEDIO_CANDIDATE_IMAGE_DIGEST": "sha256:" + "b" * 64,
+                    "ANECHOIC_RELEASE_E2E_CONTEXT": "old-sealed-context.json",
+                    "ANECHOIC_CANDIDATE_IMAGE_DIGEST": "sha256:" + "b" * 64,
                 },
             ),
             patch.object(full, "discover_test_modules", return_value=[module]),
@@ -149,10 +149,10 @@ class FullSuiteDockerTests(unittest.TestCase):
         ):
             self.assertEqual(0, full.run_full_suite(self.root, image_mode="existing"))
             build.assert_called_once_with(self.root, use_packaged_assets=True)
-            self.assertEqual(IMAGE, run.call_args.args[2]["CAPRMEDIO_FIRST_CUT_HTTP_IMAGE"])
+            self.assertEqual(IMAGE, run.call_args.args[2]["ANECHOIC_FIRST_CUT_HTTP_IMAGE"])
             environment = run.call_args.args[2]
-            self.assertNotIn("CAPRMEDIO_RELEASE_E2E_CONTEXT", environment)
-            self.assertNotIn("CAPRMEDIO_CANDIDATE_IMAGE_DIGEST", environment)
+            self.assertNotIn("ANECHOIC_RELEASE_E2E_CONTEXT", environment)
+            self.assertNotIn("ANECHOIC_CANDIDATE_IMAGE_DIGEST", environment)
             lifecycle.__exit__.assert_called_once()
 
     def test_missing_required_build_environment_fails_without_running_tests(self):

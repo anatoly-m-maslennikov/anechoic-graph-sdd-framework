@@ -1,8 +1,8 @@
 ---
 subjects:
-  active: CAPRMEDIO_MODEL <+ CFEL <+ Relation//structural_parent
+  active: ANECHOIC_MODEL <+ CFEL <+ Relation//structural_parent
   passive:
-  - CAPRMEDIO_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Scope Unit
 version: 36
 updated_at: 2026-11-02 19:44:26 +0400
 relations: {}

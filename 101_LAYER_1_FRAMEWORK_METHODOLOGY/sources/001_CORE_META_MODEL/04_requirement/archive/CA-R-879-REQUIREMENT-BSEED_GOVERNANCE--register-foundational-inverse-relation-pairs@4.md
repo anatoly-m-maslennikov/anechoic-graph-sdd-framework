@@ -6,7 +6,7 @@ version: 4
 updated_at: 2026-08-23 01:44:00
 relations:
   child_of:
-    - CAPRMEDIO-GOV-REQU-345--represent-accepted-meaning-faithfully
+    - ANECHOIC-GOV-REQU-345--represent-accepted-meaning-faithfully
 ---
 # Register foundational inverse relation pairs
 

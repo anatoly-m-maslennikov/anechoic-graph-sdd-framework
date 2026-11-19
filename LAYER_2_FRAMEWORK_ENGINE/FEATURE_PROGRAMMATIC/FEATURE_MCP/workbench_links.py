@@ -46,7 +46,7 @@ def _saved_page(request: Any, selection: Any) -> str | None:
     if base_url is not None:
         return f"{str(base_url).rstrip('/')}{WORKBENCH_PATH}/{quote(project_name(selection), safe='')}"
     try:
-        path = Path(selection.root) / ".caprmedio_runtime" / "caprmedio_runtime_settings.toml"
+        path = Path(selection.root) / ".anechoic_runtime" / "anechoic_runtime_settings.toml"
         document = read_settings_carrier(path)
         page = document.get("workbench", {}).get("public_url")
         if not isinstance(page, str) or not page or any(c.isspace() or ord(c) < 32 for c in page):

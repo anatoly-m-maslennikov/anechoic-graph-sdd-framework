@@ -6,9 +6,9 @@ container:
 role: Delivery
 form: Decision
 topics:
-  main_subject: CAPRMEDIO_MODEL <+ Relation
+  main_subject: ANECHOIC_MODEL <+ Relation
   dependencies:
-  - CAPRMEDIO_MODEL <+ Relation
+  - ANECHOIC_MODEL <+ Relation
 tier: 3
 status: Active
 version: 30
@@ -16,11 +16,11 @@ updated_at: 2026-11-02 08:06:47 +0400
 carrier_destination:
   file:
     name: CA-D-268-CORE_META_MODEL-DECISION--serialize-authored-direct-relations-on-their-owning-atoms.md
-    path: .caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery
 current_scope_unit: CORE_META_MODEL
 claim_target_scope_unit: CORE_META_MODEL
 projection:
-  source_carrier_path: ../../../.caprmedio_caprmedio/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-268-CORE_META_MODEL-DECISION--serialize-authored-direct-relations-on-their-owning-atoms.md
+  source_carrier_path: ../../../.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/CA-D-268-CORE_META_MODEL-DECISION--serialize-authored-direct-relations-on-their-owning-atoms.md
   source_atom_id: CA-D-268
   source_atom_revision: 30
   source_sha256: 8e9d228b4bc5dbbb0fe55c035850d02d5f758391cd2958b6134f227493f32e18

@@ -44,8 +44,8 @@ class SourceDiscoveryTests(unittest.TestCase):
         ]
         generated = [
             self.source("_projection/copy.md", "CA-R-784"),
-            self.source("000_CAPRMEDIO_framework/SUPERLAYER_1_METHODOLOGY_SOURCES/copy.md", "CA-R-787"),
-            self.source("000_CAPRMEDIO_framework/applicable_methodology/copy.md", "CA-R-788"),
+            self.source("000_ANECHOIC_framework/SUPERLAYER_1_METHODOLOGY_SOURCES/copy.md", "CA-R-787"),
+            self.source("000_ANECHOIC_framework/applicable_methodology/copy.md", "CA-R-788"),
         ]
         outside = self.root / "CA-R-786-outside.md"
         outside.write_bytes(current.read_bytes().replace(b"CA-R-780", b"CA-R-786"))
@@ -63,7 +63,7 @@ class SourceDiscoveryTests(unittest.TestCase):
     def test_generated_copies_stay_excluded_during_incremental_changes(self):
         source = self.source("loose/current.md", "CA-R-789")
         self.fixture._capture()
-        for directory in ("000_CAPRMEDIO_framework", "_projection"):
+        for directory in ("000_ANECHOIC_framework", "_projection"):
             copy = self.control / directory / "nested" / source.name
             copy.parent.mkdir(parents=True, exist_ok=True)
             copy.write_bytes(source.read_bytes())
@@ -226,7 +226,7 @@ relation(source="Relation//INVERSE", name="HAS_INVERSE", target="Relation//DIREC
         self.assertEqual({"CA-R-796", "CA-R-797"}, {item["atom_id"] for item in registry["sources"]})
 
     def test_installed_model_feeds_asset_compilers_but_not_public_capture(self):
-        installed = "000_CAPRMEDIO_framework/SUPERLAYER_1_METHODOLOGY_SOURCES/04_requirement"
+        installed = "000_ANECHOIC_framework/SUPERLAYER_1_METHODOLOGY_SOURCES/04_requirement"
         declaration = self.source(f"{installed}/content.md", "CA-R-795", body="""## Claim
 
 ### Formal Claim

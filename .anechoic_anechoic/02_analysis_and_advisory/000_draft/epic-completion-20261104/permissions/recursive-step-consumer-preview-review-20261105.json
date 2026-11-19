@@ -1,0 +1,72 @@
+{
+  "verdict": "THREE_BOUNDED_PREVIEWS_PASS_TWO_HELD",
+  "manifest_sha256": "bc416ee7bdc390439b4edb021dc8eff93752158b70b1a6ead77fb557737e9e09",
+  "rows": [
+    {
+      "id": "CA-M-232",
+      "source_path": ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-232-CORE_META_MODEL--derive-atom-subjects-graph-from-current-atom-subjects.md",
+      "source_sha256": "9f84da9fa587c9d41b91fbc4754afa3b470a3e8eb398bd0207399a34ad1f90af",
+      "source_pin_matches": true,
+      "preview_path": ".anechoic_anechoic/02_analysis/draft/epic-completion-20261104/coverage/recursive-steps-20261105/consumers/CA-M-232.preview.md",
+      "preview_sha256": "717d5e882f2ff392270310c528b7dd4d84e873daf09fcf825b0312e74feb4479",
+      "preview_pin_matches": true,
+      "summary_and_metadata": "unchanged from Current",
+      "readiness": "HOLD",
+      "finding": "Recursive Workflow-or-Step containment corrected; legacy active Subject Graph target remains unresolved and is not mapped to Node."
+    },
+    {
+      "id": "CA-M-305",
+      "source_path": ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-305-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-workflow-schemes-using-step-references.md",
+      "source_sha256": "ae15e8389fa1417f1d5b820e14558c0adaf9409a4333ddff6d21801745c1a4f3",
+      "source_pin_matches": true,
+      "preview_path": ".anechoic_anechoic/02_analysis/draft/epic-completion-20261104/coverage/recursive-steps-20261105/consumers/CA-M-305.preview.md",
+      "preview_sha256": "09e3a2372713f0efeae9a9d4a55feeebfed877e6b34a06851d2f6fa5ef2813e6",
+      "preview_pin_matches": true,
+      "summary_and_metadata": "unchanged from Current",
+      "readiness": "PASS_BOUNDED_PREVIEW",
+      "finding": "Leaf Action or Workflow and all three allowed parameter sources and contract references preserved; passive targets reconciled to declared kinds."
+    },
+    {
+      "id": "CA-M-444",
+      "source_path": ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/CA-M-444-CORE_META_MODEL-IMPLEMENTATION_METHOD--atom-claims-expose-their-meaning-conditions-and-consequences-clearly.md",
+      "source_sha256": "d3794f3b0f902703605cbe8a309e48dea4c688b8ab727de9868af19fa2b4018f",
+      "source_pin_matches": true,
+      "preview_path": ".anechoic_anechoic/02_analysis/draft/epic-completion-20261104/coverage/recursive-steps-20261105/consumers/CA-M-444.preview.md",
+      "preview_sha256": "c614576c78f761dd574fe06c5287ff3ee7222550b6436f7717bb1706d4683bac",
+      "preview_pin_matches": true,
+      "summary_and_metadata": "unchanged from Current",
+      "readiness": "PASS_BOUNDED_PREVIEW",
+      "finding": "Recursive Step language and count notation updated; passive targets use declared Workflow, Step and Action kinds."
+    },
+    {
+      "id": "CA-E-383",
+      "source_path": ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-383-CORE_META_MODEL-EVAL_POLICY--reject-invalid-subject-expressions.md",
+      "source_sha256": "8503b8391a73bfae63174a5c414f5be4b1d23fac8403951be0cbb4272817c78c",
+      "source_pin_matches": true,
+      "preview_path": ".anechoic_anechoic/02_analysis/draft/epic-completion-20261104/coverage/recursive-steps-20261105/consumers/CA-E-383.preview.md",
+      "preview_sha256": "520146d2ebbab8541c13b40b0013ef8e4255ce4a8ca55aba7e2ff445176c398d",
+      "preview_pin_matches": true,
+      "summary_and_metadata": "unchanged from Current",
+      "readiness": "HOLD",
+      "finding": "Recursive and notation wording corrected, including FOR EACH universal quantification; active Entity-root target remains unresolved and is not mapped to Node."
+    },
+    {
+      "id": "CA-E-669",
+      "source_path": ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/CA-E-669-CORE_META_MODEL-EVAL_POLICY--check-node-declaration-migration-readiness.md",
+      "source_sha256": "55c62fe55716d1332afc79ae69fb9749d1bea43027de4bcca0d439c990afeeef",
+      "source_pin_matches": true,
+      "preview_path": ".anechoic_anechoic/02_analysis/draft/epic-completion-20261104/coverage/recursive-steps-20261105/consumers/CA-E-669.preview.md",
+      "preview_sha256": "caa8b5351214e0ac967243ca1f6a79d4fa073b1c2a34dcbd35b1fa418ebdb737",
+      "preview_pin_matches": true,
+      "summary_and_metadata": "unchanged from Current",
+      "readiness": "PASS_BOUNDED_PREVIEW",
+      "finding": "Property instantiation prohibition removed while narrowing and other constraints preserved; ::, =, == and := distinctions corrected. Draft creation may normalize # Summary to ## Summary only, preserving exact Summary text Check Node Declaration migration readiness and ID."
+    }
+  ],
+  "boundaries": [
+    "Three pass as bounded source previews only; coordinated recursive Step contract and notation adoption remain dependencies.",
+    "M232 and E383 remain held for their active Subject targets.",
+    "D467/E500 physical layout and cycle policy remain held; no actual Workflow instances are changed.",
+    "No Current, native Draft, code, tests, Git, Workbench or Workflow source edited in this review."
+  ]
+}

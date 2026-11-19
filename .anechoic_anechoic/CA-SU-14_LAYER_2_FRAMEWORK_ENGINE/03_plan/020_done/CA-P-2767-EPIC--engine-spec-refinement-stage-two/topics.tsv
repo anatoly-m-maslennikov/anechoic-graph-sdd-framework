@@ -1,0 +1,324 @@
+Atom ID	old topic	new topic	status
+CA-D-005	Subject/ANECHOIC/Graph/Node/Aspect/UX/Discovery and Navigation	Subject/ANECHOIC/Graph/Node/Aspect/UX/Discovery and Navigation	Held: prior 78-RMEDO Content deferral
+CA-D-250	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Delivery	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Delivery	Held: prior 78-RMEDO Content deferral
+CA-D-437	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Storage/Directory Layout	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Storage/Directory Layout	Held: prior 78-RMEDO Content deferral
+CA-D-486	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Storage/Directory Layout	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Storage/Directory Layout	Applied
+CA-D-489	Subject/ANECHOIC/Graph/Node/Project Model/Scope Unit	Subject/ANECHOIC/Graph/Node/Project Model/Scope Unit	Held: prior 78-RMEDO Content deferral
+CA-D-490	Subject/ANECHOIC/Graph/Node/Project Model/Scope Unit	Subject/ANECHOIC/Graph/Node/Project Model/Scope Unit	Applied
+CA-D-509	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Prompt Authoring	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Prompt Authoring	Applied
+CA-D-510	Subject/ANECHOIC/Graph/Node/Aspect/Documentation/Traceability	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Traceability	Applied
+CA-D-511	Subject/ANECHOIC/Graph/Node/Aspect/Documentation/Traceability	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Traceability	Applied
+CA-D-521	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Applied
+CA-D-522	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Applied
+CA-D-523	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Applied
+CA-D-524	Subject/ANECHOIC/Graph/Node/Project Model/Execution/Workflow Run.Coverage	Subject/ANECHOIC/Graph/Node/Project Model/Execution/Workflow Run.Coverage	Applied
+CA-D-525	Subject/ANECHOIC/Carrier	Subject/ANECHOIC/Carrier	Applied
+CA-D-526	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Applied
+CA-D-544	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Prompt Authoring	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Prompt Authoring	Applied
+CA-D-545	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Prompt Authoring	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Prompt Authoring	Applied
+CA-D-546	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Test Design	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Test Design	Applied
+CA-D-547	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Applied
+CA-D-548	Subject/ANECHOIC/Graph/Node/Aspect/UX/Entry	Subject/ANECHOIC/Graph/Node/Aspect/UX/Entry	Applied
+CA-D-576	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Output Publication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Output Publication	Held: Its governing M339/R1882 targets have no Current resolution; do not invent replacement authority.
+CA-D-577	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Data Validation	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Data Validation	Held: Release-specific placement needs a Project Configuration handoff; do not break ancestry or silently withdraw retained RMED.
+CA-D-578	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Applied
+CA-D-583	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Applied
+CA-D-589	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Applied
+CA-D-590	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Applied
+CA-D-592	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Storage	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Storage	Applied
+CA-D-593	Subject/ANECHOIC/Graph/Node/Project Model/Project	Subject/ANECHOIC/Graph/Node/Project Model/Project	Applied
+CA-D-594	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Delivery	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Delivery	Applied
+CA-D-595	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Applied
+CA-D-638	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Delivery/Reproducibility	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Delivery/Reproducibility	Applied
+CA-D-639	Subject/ANECHOIC/Graph/Node/Aspect/UX/Result and Status Presentation	Subject/ANECHOIC/Graph/Node/Aspect/UX/Result and Status Presentation	Applied
+CA-D-640	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Applied
+CA-D-672	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Schema	Applied
+CA-D-673	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Architecture <+ Communication <+ Interface Contracts	Applied
+CA-D-674	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Delivery <+ Packaging	Applied
+CA-D-675	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Storage <+ Temporary State	Applied
+CA-D-676	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Execution Control	Applied
+CA-D-677	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Execution Control	Applied
+CA-D-678	Subject/ANECHOIC/Graph/Node/Aspect/UX/Discovery and Navigation	Subject/ANECHOIC/Graph/Node/Aspect/UX/Discovery and Navigation	Applied
+CA-D-679	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Indexing	Applied
+CA-D-681	ANECHOIC_MODEL <+ Workspace	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Architecture <+ Communication <+ Interface Contracts	Applied
+CA-D-695	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Observability <+ Logging	Applied
+CA-D-696	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ State Synchronization	Applied
+CA-D-697	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Query Processing	Applied
+CA-D-698	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Observability <+ Logging	Applied
+CA-D-703	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Performance <+ Measurement and Profiling	Applied
+CA-D-704	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Applied
+CA-D-705	ANECHOIC_MODEL <+ CFEL <+ Relation	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Schema	Applied
+CA-E-067	Subject/ANECHOIC/Graph/Node/Aspect/UX/Discovery and Navigation	Subject/ANECHOIC/Graph/Node/Aspect/UX/Discovery and Navigation	Applied
+CA-E-253	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring/Python Code	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring/Python Code	Held: prior 78-RMEDO Content deferral
+CA-E-254	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring/Python Code	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring/Python Code	Held: prior 78-RMEDO Content deferral
+CA-E-255	Subject/ANECHOIC/Graph/Node/Project Model/Implementation	Subject/ANECHOIC/Graph/Node/Project Model/Implementation	Held: prior 78-RMEDO Content deferral
+CA-E-256	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring	Held: prior 78-RMEDO Content deferral
+CA-E-257	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Held: prior 78-RMEDO Content deferral
+CA-E-258	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Held: prior 78-RMEDO Content deferral
+CA-E-259	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Held: prior 78-RMEDO Content deferral
+CA-E-260	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Held: prior 78-RMEDO Content deferral
+CA-E-261	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Held: prior 78-RMEDO Content deferral
+CA-E-262	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Held: prior 78-RMEDO Content deferral
+CA-E-263	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Held: prior 78-RMEDO Content deferral
+CA-E-264	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Held: prior 78-RMEDO Content deferral
+CA-E-265	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Held: prior 78-RMEDO Content deferral
+CA-E-266	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Static Analysis/Python Code	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Static Analysis/Python Code	Held: prior 78-RMEDO Content deferral
+CA-E-267	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Held: prior 78-RMEDO Content deferral
+CA-E-268	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Held: prior 78-RMEDO Content deferral
+CA-E-269	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Held: prior 78-RMEDO Content deferral
+CA-E-270	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Static Analysis	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Static Analysis	Held: prior 78-RMEDO Content deferral
+CA-E-271	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Held: prior 78-RMEDO Content deferral
+CA-E-272	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Held: prior 78-RMEDO Content deferral
+CA-E-273	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Applied
+CA-E-274	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Source Selection	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Source Selection	Replaced by CA-E-810
+CA-E-275	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Applied
+CA-E-276	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Replaced by CA-E-811
+CA-E-277	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Output Publication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Output Publication	Applied
+CA-E-278	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Data Validation	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Data Validation	Replaced by CA-E-812
+CA-E-279	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Applied
+CA-E-280	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Applied
+CA-E-281	Subject/ANECHOIC/Graph/Node/Aspect/UX/Entry	Subject/ANECHOIC/Graph/Node/Aspect/UX/Entry	Applied
+CA-E-282	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Output Publication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Output Publication	Applied
+CA-E-283	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Source Selection	Replaced by CA-E-813
+CA-E-284	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Replaced by CA-E-398
+CA-E-285	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Applied
+CA-E-286	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Applied
+CA-E-287	Subject/ANECHOIC/Graph/Node/Aspect/UX/Result and Status Presentation	Subject/ANECHOIC/Graph/Node/Aspect/UX/Result and Status Presentation	Applied
+CA-E-309	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Held: prior 78-RMEDO Content deferral
+CA-E-310	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Held: prior 78-RMEDO Content deferral
+CA-E-311	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Held: prior 78-RMEDO Content deferral
+CA-E-314	Subject/ANECHOIC/Graph/Node/Project Model/Scope Unit	Subject/ANECHOIC/Graph/Node/Project Model/Scope Unit	Held: prior 78-RMEDO Content deferral
+CA-E-349	Subject/ANECHOIC/Graph/Node/Aspect/UX/Interaction/Accessibility	Subject/ANECHOIC/Graph/Node/Aspect/UX/Interaction/Accessibility	Held: prior 78-RMEDO Content deferral
+CA-E-350	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Held: prior 78-RMEDO Content deferral
+CA-E-351	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Output Publication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Output Publication	Held: prior 78-RMEDO Content deferral
+CA-E-352	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Recovery	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Recovery	Held: prior 78-RMEDO Content deferral
+CA-E-356	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring	Held: prior 78-RMEDO Content deferral
+CA-E-357	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Component Structure	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Component Structure	Held: prior 78-RMEDO Content deferral
+CA-E-358	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Component Structure	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Component Structure	Held: prior 78-RMEDO Content deferral
+CA-E-359	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring	Held: prior 78-RMEDO Content deferral
+CA-E-360	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Held: prior 78-RMEDO Content deferral
+CA-E-361	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Held: prior 78-RMEDO Content deferral
+CA-E-362	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Held: prior 78-RMEDO Content deferral
+CA-E-363	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Static Analysis/Python Code	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Static Analysis/Python Code	Held: prior 78-RMEDO Content deferral
+CA-E-364	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Static Analysis/Python Code	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Static Analysis/Python Code	Held: prior 78-RMEDO Content deferral
+CA-E-365	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Static Analysis	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Static Analysis	Held: prior 78-RMEDO Content deferral
+CA-E-366	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Held: prior 78-RMEDO Content deferral
+CA-E-367	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring	Held: prior 78-RMEDO Content deferral
+CA-E-368	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Static Analysis/Python Code	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Static Analysis/Python Code	Held: prior 78-RMEDO Content deferral
+CA-E-369	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Held: prior 78-RMEDO Content deferral
+CA-E-370	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Held: prior 78-RMEDO Content deferral
+CA-E-371	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Held: prior 78-RMEDO Content deferral
+CA-E-372	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Held: prior 78-RMEDO Content deferral
+CA-E-373	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Held: prior 78-RMEDO Content deferral
+CA-E-374	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Held: prior 78-RMEDO Content deferral
+CA-E-375	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Held: prior 78-RMEDO Content deferral
+CA-E-376	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring/Python Code	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring/Python Code	Held: prior 78-RMEDO Content deferral
+CA-E-377	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring/Python Code	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring/Python Code	Held: prior 78-RMEDO Content deferral
+CA-E-378	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Held: prior 78-RMEDO Content deferral
+CA-E-385	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Static Analysis	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Static Analysis	Held: prior 78-RMEDO Content deferral
+CA-E-388	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Held: prior 78-RMEDO Content deferral
+CA-E-389	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Test Design	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Test Design	Applied
+CA-E-390	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Test Data/Golden Corpora	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Test Data/Golden Corpora	Held: prior 78-RMEDO Content deferral
+CA-E-391	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Held: prior 78-RMEDO Content deferral
+CA-E-392	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Held: prior 78-RMEDO Content deferral
+CA-E-393	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Held: prior 78-RMEDO Content deferral
+CA-E-394	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Data Validation	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Data Validation	Held: prior 78-RMEDO Content deferral
+CA-E-395	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Held: prior 78-RMEDO Content deferral
+CA-E-396	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Coverage	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Coverage	Held: prior 78-RMEDO Content deferral
+CA-E-397	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Held: prior 78-RMEDO Content deferral
+CA-E-398	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Applied
+CA-E-399	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Effect Authorization	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Effect Authorization	Applied
+CA-E-408	Subject/ANECHOIC/Graph/Node/Project Model/Scope Unit	Subject/ANECHOIC/Graph/Node/Project Model/Scope Unit	Held: prior 78-RMEDO Content deferral
+CA-E-451	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring/Python Code	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring/Python Code	Held: prior 78-RMEDO Content deferral
+CA-E-452	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring/Python Code	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring/Python Code	Held: prior 78-RMEDO Content deferral
+CA-E-453	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Static Analysis	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Static Analysis	Held: prior 78-RMEDO Content deferral
+CA-E-454	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Component Structure	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Component Structure	Held: prior 78-RMEDO Content deferral
+CA-E-455	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Static Analysis	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Static Analysis	Held: prior 78-RMEDO Content deferral
+CA-E-467	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Storage/Directory Layout	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Storage/Directory Layout	Held: prior 78-RMEDO Content deferral
+CA-E-492	Subject/ANECHOIC/Graph/Node/Project Model/Execution/Workflow Run	Subject/ANECHOIC/Graph/Node/Project Model/Execution/Workflow Run	Applied
+CA-E-493	Subject/ANECHOIC/Graph/Node/Project Model/Execution/Workflow Run	Subject/ANECHOIC/Graph/Node/Project Model/Execution/Workflow Run	Applied
+CA-E-524	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Coverage	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Coverage	Applied
+CA-E-531	Subject/ANECHOIC/Graph/Node/Project Model/Execution/Workflow Run	Subject/ANECHOIC/Graph/Node/Project Model/Execution/Workflow Run	Applied
+CA-E-532	Subject/ANECHOIC/Graph/Node/Project Model/Execution/Workflow Run	Subject/ANECHOIC/Graph/Node/Project Model/Execution/Workflow Run	Applied
+CA-E-533	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Applied
+CA-E-534	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Applied
+CA-E-535	Subject/ANECHOIC/Graph/Node/Project Model/Execution/Workflow Run.Coverage	Subject/ANECHOIC/Graph/Node/Project Model/Execution/Workflow Run.Coverage	Applied
+CA-E-536	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing/Canary Testing	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing/Canary Testing	Applied
+CA-E-537	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Applied
+CA-E-538	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Applied
+CA-E-539	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Static Analysis/Python Code	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Static Analysis/Python Code	Applied
+CA-E-540	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Static Analysis	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Static Analysis	Applied
+CA-E-563	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Test Data/Golden Corpora	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Test Data/Golden Corpora	Applied
+CA-E-564	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Prompt Authoring	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Prompt Authoring	Applied
+CA-E-565	Subject/ANECHOIC/Graph/Node/Project Model/Execution/Step Run.Agentic Step Execution Context	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Applied
+CA-E-566	Subject/ANECHOIC/Graph/Node/Project Model/Execution/Workflow Run.Retry and Repair Results	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Failure Handling	Applied
+CA-E-567	Subject/ANECHOIC/Graph/Node/Aspect/UX/Discovery and Navigation	Subject/ANECHOIC/Graph/Node/Aspect/UX/Discovery and Navigation	Applied
+CA-E-568	Subject/ANECHOIC/Graph/Node/Aspect/UX/Result and Status Presentation	Subject/ANECHOIC/Graph/Node/Aspect/UX/Result and Status Presentation	Applied
+CA-E-582	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Output Publication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Output Publication	Held: Its governing M339/R1882 targets have no Current resolution.
+CA-E-583	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Applied
+CA-E-584	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Applied
+CA-E-585	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Applied
+CA-E-590	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Applied
+CA-E-594	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Applied
+CA-E-595	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Applied
+CA-E-598	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Storage	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Storage	Applied
+CA-E-599	Subject/ANECHOIC/Graph/Node/Project Model/Project	Subject/ANECHOIC/Graph/Node/Project Model/Project	Applied
+CA-E-600	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Applied
+CA-E-601	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Applied
+CA-E-637	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Test Design	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Test Design	Applied
+CA-E-638	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing/Canary Testing	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing/Canary Testing	Replaced by CA-E-536
+CA-E-639	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Delivery/Change Readiness	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Delivery/Change Readiness	Applied
+CA-E-640	Subject/ANECHOIC/Graph/Node/Aspect/UX/Result and Status Presentation	Subject/ANECHOIC/Graph/Node/Aspect/UX/Result and Status Presentation	Applied
+CA-E-641	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Dynamic Testing	Applied
+CA-E-642	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Coverage	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Coverage	Applied
+CA-E-643	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Resource Limits	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Resource Limits	Applied
+CA-E-644	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Component Structure	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Component Structure	Applied
+CA-E-645	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Outcome Reporting	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Outcome Reporting	Applied
+CA-E-646	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring	Applied
+CA-E-647	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Failure Handling	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Failure Handling	Applied
+CA-E-648	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Component Structure	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Component Structure	Applied
+CA-E-649	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Effect Authorization	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Effect Authorization	Applied
+CA-E-650	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication/Interface Contracts	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication/Interface Contracts	Applied
+CA-E-651	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Effect Authorization	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Effect Authorization	Applied
+CA-E-653	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Traceability	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Traceability	Applied
+CA-E-673	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Architecture <+ Communication <+ Interface Contracts	Applied
+CA-E-674	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Query Processing	Applied
+CA-E-675	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Source Retrieval	Applied
+CA-E-676	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Query Processing	Applied
+CA-E-677	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Indexing	Applied
+CA-E-679	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Execution Control	Applied
+CA-E-680	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Execution Control	Applied
+CA-E-681	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Indexing	Applied
+CA-E-683	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Architecture <+ Communication <+ Interface Contracts	Applied
+CA-E-684	ANECHOIC_MODEL <+ Workspace	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Architecture <+ Communication <+ Interface Contracts	Applied
+CA-E-750	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Source Retrieval	Applied
+CA-E-751	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Storage <+ Temporary State	Applied
+CA-E-752	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Execution Control <+ Failure Handling	Applied
+CA-E-753	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Architecture <+ Communication <+ Interface Contracts	Applied
+CA-E-780	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Observability <+ Logging	Applied
+CA-E-781	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ State Synchronization	Applied
+CA-E-782	ANECHOIC_MODEL <+ Projection	ANECHOIC_MODEL <+ Projection	Applied
+CA-E-783	ANECHOIC_MODEL <+ Projection	ANECHOIC_MODEL <+ Projection	Applied
+CA-E-784	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Query Processing	Applied
+CA-E-785	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Storage <+ Temporary State	Applied
+CA-E-786	ANECHOIC_MODEL <+ Projection	ANECHOIC_MODEL <+ Projection	Applied
+CA-E-787	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Observability <+ Logging	Applied
+CA-E-788	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Storage <+ Temporary State	Applied
+CA-E-794	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Indexing	Applied
+CA-E-795	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Performance <+ Measurement and Profiling	Applied
+CA-E-796	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Applied
+CA-E-797	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Code Hot Reload	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Code Hot Reload	Applied
+CA-E-798	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Applied
+CA-E-799	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Performance <+ Measurement and Profiling	Applied
+CA-E-800	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Performance <+ Measurement and Profiling	Applied
+CA-E-803	ANECHOIC_MODEL <+ CFEL <+ Relation	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Schema	Applied
+CA-E-804	ANECHOIC_MODEL <+ CFEL <+ Relation	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Schema	Applied
+CA-M-153	Subject/ANECHOIC/Graph/Node/Aspect/UX/Discovery and Navigation	Subject/ANECHOIC/Graph/Node/Aspect/UX/Discovery and Navigation	Applied
+CA-M-167	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Applied
+CA-M-168	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Source Selection	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Source Selection	Replaced by CA-M-510
+CA-M-169	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Applied
+CA-M-170	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Replaced by CA-M-511
+CA-M-171	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Output Publication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Output Publication	Applied
+CA-M-172	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Data Validation	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Data Validation	Applied
+CA-M-173	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Applied
+CA-M-174	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Applied
+CA-M-175	Subject/ANECHOIC/Graph/Node/Aspect/UX/Entry	Subject/ANECHOIC/Graph/Node/Aspect/UX/Entry	Applied
+CA-M-176	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Output Publication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Output Publication	Applied
+CA-M-177	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Source Selection	Replaced by CA-M-512
+CA-M-178	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Applied
+CA-M-179	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Applied
+CA-M-180	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Effect Authorization	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Effect Authorization	Applied
+CA-M-181	Subject/ANECHOIC/Graph/Node/Aspect/UX/Result and Status Presentation	Subject/ANECHOIC/Graph/Node/Aspect/UX/Result and Status Presentation	Applied
+CA-M-191	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Effect Authorization	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Traceability/Provenance	Applied
+CA-M-193	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Applied
+CA-M-196	Subject/ANECHOIC/Graph/Node/Project Model/Scope Unit	Subject/ANECHOIC/Graph/Node/Project Model/Scope Unit	Held: prior 78-RMEDO Content deferral
+CA-M-222	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Held: prior 78-RMEDO Content deferral
+CA-M-242	Subject/ANECHOIC/Graph/Node/Project Model/Scope Unit	Subject/ANECHOIC/Graph/Node/Project Model/Scope Unit	Held: prior 78-RMEDO Content deferral
+CA-M-284	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Configuration	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Configuration	Applied
+CA-M-302	Subject/ANECHOIC/Graph/Node/Project Model/Execution/Workflow Run	Subject/ANECHOIC/Graph/Node/Project Model/Execution/Workflow Run	Applied
+CA-M-317	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Prompt Authoring	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Prompt Authoring	Applied
+CA-M-320	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Applied
+CA-M-321	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Applied
+CA-M-322	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Applied
+CA-M-323	Subject/ANECHOIC/Graph/Node/Project Model/Execution/Workflow Run.Coverage	Subject/ANECHOIC/Graph/Node/Project Model/Execution/Workflow Run.Coverage	Applied
+CA-M-324	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Applied
+CA-M-325	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Applied
+CA-M-326	Subject/anechoic/Workflow//Implementation Workflow.Step Prompt Construction	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Prompt Authoring	Applied
+CA-M-327	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Test Design	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Test Design	Held: generic implementation methodology needs a Core/PROGRAMMATIC ownership decision; handoff prepared
+CA-M-328	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Held: generic implementation methodology needs a Core/PROGRAMMATIC ownership decision; handoff prepared
+CA-M-329	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Output Publication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Output Publication	Applied
+CA-M-340	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Applied
+CA-M-341	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Applied
+CA-M-347	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Applied
+CA-M-350	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Output Publication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Output Publication	Applied
+CA-M-351	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Applied
+CA-M-352	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Applied
+CA-M-354	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Storage	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Storage	Applied
+CA-M-355	Subject/ANECHOIC/Graph/Node/Project Model/Project	Subject/ANECHOIC/Graph/Node/Project Model/Project	Applied
+CA-M-356	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Applied
+CA-M-357	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Applied
+CA-M-395	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Delivery/Change Readiness	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Delivery/Change Readiness	Applied
+CA-M-396	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Failure Handling	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Failure Handling	Applied
+CA-M-397	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Failure Handling	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Failure Handling	Applied
+CA-M-398	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Outcome Reporting	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Outcome Reporting	Applied
+CA-M-399	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Traceability/Provenance	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Traceability/Provenance	Applied
+CA-M-400	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Failure Handling	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Failure Handling	Applied
+CA-M-401	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Applied
+CA-M-402	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring	Applied
+CA-M-403	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Component Structure	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Component Structure	Applied
+CA-M-404	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Effect Authorization	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Effect Authorization	Applied
+CA-M-405	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Outcome Reporting	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Outcome Reporting	Applied
+CA-M-406	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring/Python Code	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring/Python Code	Applied
+CA-M-407	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring	Applied
+CA-M-408	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Component Structure	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Component Structure	Applied
+CA-M-409	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Applied
+CA-M-410	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Resource Limits	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Resource Limits	Applied
+CA-M-411	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Component Structure	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Component Structure	Applied
+CA-M-412	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Configuration	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Configuration	Applied
+CA-M-413	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication/Interface Contracts	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication/Interface Contracts	Applied
+CA-M-414	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Observability/Logging	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Observability/Logging	Applied
+CA-M-415	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring/Python Code	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring/Python Code	Applied
+CA-M-416	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Performance/Measurement and Profiling	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Performance/Measurement and Profiling	Applied
+CA-M-417	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Configuration	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Configuration	Held: Duplicate absorption is prepared but depends on held E454 consumer review.
+CA-M-418	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication/Interface Contracts	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication/Interface Contracts	Applied
+CA-M-419	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring/Python Code	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring/Python Code	Applied
+CA-M-420	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Static Analysis	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Static Analysis	Applied
+CA-M-421	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring	Applied
+CA-M-422	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Storage/Temporary State	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Storage/Temporary State	Applied
+CA-M-423	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring/Python Code	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring/Python Code	Applied
+CA-M-424	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Test Design	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Test Design	Applied
+CA-M-425	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Applied
+CA-M-426	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Component Structure	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Component Structure	Held: Duplicate absorption is prepared but held E260/E261/E360/E361/E366 consumers cannot yet be reviewed.
+CA-M-427	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Static Analysis	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Static Analysis	Applied
+CA-M-428	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Static Analysis	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Quality/Verification/Static Analysis	Applied
+CA-M-429	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring/Python Code	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring/Python Code	Applied
+CA-M-430	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Data Validation	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Data Handling/Data Validation	Applied
+CA-M-431	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Authoring/Code Authoring	Applied
+CA-M-432	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Component Structure	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Component Structure	Applied
+CA-M-462	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Query Processing	Applied
+CA-M-463	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Storage <+ Temporary State	Applied
+CA-M-464	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Source Retrieval	Applied
+CA-M-465	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Indexing	Applied
+CA-M-466	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Architecture <+ Component Structure	Applied
+CA-M-467	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Code Authoring	Applied
+CA-M-468	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Query Authoring <+ SQL	Applied
+CA-M-469	PROJECT_STRUCTURE <+ Aspect//Visual Design	PROJECT_STRUCTURE <+ Aspect//Visual Design	Applied
+CA-M-470	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Storage	Applied
+CA-M-471	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Architecture <+ Communication <+ Interface Contracts	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Architecture <+ Communication <+ Interface Contracts	Applied
+CA-M-472	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Verification <+ Test Design	Applied
+CA-M-473	Subject/ANECHOIC/Graph/Node/Aspect/UX/Discovery and Navigation	Subject/ANECHOIC/Graph/Node/Aspect/UX/Discovery and Navigation	Applied
+CA-M-474	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Indexing	Applied
+CA-M-476	ANECHOIC_MODEL <+ Workspace	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Architecture <+ Communication <+ Interface Contracts	Applied
+CA-M-490	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Observability <+ Logging	Applied
+CA-M-491	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ State Synchronization	Applied
+CA-M-492	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Architecture <+ Component Structure	Applied
+CA-M-493	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Query Processing	Applied
+CA-M-500	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Schema	Applied
+CA-M-501	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Query Authoring <+ SQL	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Query Authoring <+ SQL	Applied
+CA-M-502	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Observability <+ Logging	Applied
+CA-M-503	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Performance <+ Measurement and Profiling	Applied
+CA-M-504	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control	Applied
+CA-M-505	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Code Hot Reload	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Operation/Execution Control/Code Hot Reload	Applied
+CA-M-506	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication	Applied
+CA-M-508	ANECHOIC_MODEL <+ Projection	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Performance <+ Measurement and Profiling	Applied
+CA-M-509	ANECHOIC_MODEL <+ CFEL <+ Relation	ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Schema	Applied

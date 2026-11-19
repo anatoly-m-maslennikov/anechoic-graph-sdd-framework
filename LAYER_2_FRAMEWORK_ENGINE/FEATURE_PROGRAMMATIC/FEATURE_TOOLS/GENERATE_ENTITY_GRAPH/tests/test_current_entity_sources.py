@@ -15,7 +15,7 @@ from current_entity_sources import build_current_graph, read_current_carriers, r
 from current_subject_graph import compose_current_graph  # noqa: E402
 from VALIDATE_ATOMS.validate_atoms_workers.parsing import CarrierError  # noqa: E402
 
-TEST_TEMP_ROOT = Path.cwd() / ".caprmedio_tmp/tests/test_current_entity_sources"
+TEST_TEMP_ROOT = Path.cwd() / ".anechoic_tmp/tests/test_current_entity_sources"
 
 
 class CurrentEntitySourcesTests(unittest.TestCase):
@@ -188,7 +188,7 @@ class CurrentEntitySourcesTests(unittest.TestCase):
 
     def test_live_edit_added_and_deleted_sources_are_reflected_without_snapshot(self):
         first = self.write("CA-R-9001", "Before", version=2)
-        stale = self.repository / ".caprmedio_caprmedio/_projection/graph.json"
+        stale = self.repository / ".anechoic_anechoic/_projection/graph.json"
         stale.parent.mkdir(parents=True)
         stale.write_text("invalid stale snapshot", encoding="utf-8")
         self.assertEqual({"Before"}, {row["identity"] for row in self.build()[0]["nodes"]})

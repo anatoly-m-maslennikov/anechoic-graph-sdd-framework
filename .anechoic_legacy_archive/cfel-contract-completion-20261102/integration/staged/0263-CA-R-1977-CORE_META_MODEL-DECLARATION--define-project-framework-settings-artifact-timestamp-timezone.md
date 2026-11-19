@@ -33,4 +33,4 @@ Project.Settings.Artifact Timestamp Timezone.*[]{:0}
 
 ## Details
 
-Evidence: CA-D-390 supplies the timezone interpretation and its concrete encoding. Candidate #6 keeps Settings attached to Project and keeps concrete CAPRMEDIO mechanisms in Project Configuration. This definition adds no format, allowed value or default; those remain separate Delivery rules.
+Evidence: CA-D-390 supplies the timezone interpretation and its concrete encoding. Candidate #6 keeps Settings attached to Project and keeps concrete ANECHOIC mechanisms in Project Configuration. This definition adds no format, allowed value or default; those remain separate Delivery rules.

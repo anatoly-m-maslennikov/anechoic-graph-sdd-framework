@@ -102,7 +102,7 @@ def run_local_release(
     product_identity: dict[str, tuple[str, int]] = {}
     candidate_image: str | None = None
     candidate_fingerprint: str | None = None
-    runtime = _target(root, Path(".caprmedio_runtime/simple_local_release/package"), label="simple-runtime")
+    runtime = _target(root, Path(".anechoic_runtime/simple_local_release/package"), label="simple-runtime")
     if product == installed:
         raise LocalReleaseError("local-release-target-invalid")
 
@@ -191,7 +191,7 @@ def run_local_release(
                 if image_mode == "existing":
                     argv += ("--image-mode", "existing")
                 if default_runner:
-                    temporary = _target(root, Path(".caprmedio_tmp/simple_local_release"), label="test-log")
+                    temporary = _target(root, Path(".anechoic_tmp/simple_local_release"), label="test-log")
                     temporary.mkdir(parents=True, exist_ok=True)
                     with tempfile.NamedTemporaryFile(
                         mode="w+b", prefix=f"{run_id}-tests-", suffix=".log", dir=temporary, delete=False,
@@ -231,7 +231,7 @@ def run_local_release(
             elif phase == "build package":
                 failed_step = "build_package"
                 from project_runtime import owned_temporary_root, repository_root
-                temporary = _target(root, Path(".caprmedio_tmp/simple_local_release"), label="temporary-package")
+                temporary = _target(root, Path(".anechoic_tmp/simple_local_release"), label="temporary-package")
                 if repository_root(root) != root:
                     raise LocalReleaseError("local-release-temporary-project-mismatch")
                 owned_temporary_root(root, "simple_local_release")
@@ -285,7 +285,7 @@ def run_local_release(
                 _deploy_bootstrap(root, runtime)
             else:
                 failed_step = "start_mcp"
-                bootstrap = root / ".caprmedio_runtime/start_mcp.py"
+                bootstrap = root / ".anechoic_runtime/start_mcp.py"
                 if not bootstrap.is_file() or bootstrap.is_symlink():
                     raise LocalReleaseError("local-release-bootstrap-unavailable")
                 cleanup = cleanup_stopped_containers(
@@ -297,7 +297,7 @@ def run_local_release(
                 if prior_project is not None:
                     try:
                         result = runner((
-                            "docker", "ps", "--all", "--filter", f"label=org.caprmedio.project={prior_project}",
+                            "docker", "ps", "--all", "--filter", f"label=org.anechoic.project={prior_project}",
                             "--format", "{{.ID}}",
                         ), root)
                     except OSError:
@@ -327,10 +327,10 @@ def run_local_release(
                             if (
                                 getattr(inspected, "returncode", 1) == 0
                                 and isinstance(labels, dict)
-                                and labels.get("org.caprmedio.project") == prior_project
-                                and labels.get("org.caprmedio.service") == "mcp-http"
-                                and labels.get("org.caprmedio.control_root") == ".caprmedio_caprmedio"
-                                and labels.get("org.caprmedio.host_project_root") == str(root)
+                                and labels.get("org.anechoic.project") == prior_project
+                                and labels.get("org.anechoic.service") == "mcp-http"
+                                and labels.get("org.anechoic.control_root") == ".anechoic_anechoic"
+                                and labels.get("org.anechoic.host_project_root") == str(root)
                                 and isinstance(row.get("State"), dict)
                                 and isinstance(row["State"].get("Running"), bool)
                             ):
@@ -388,7 +388,7 @@ def run_local_release(
                 cleanup_pending |= cleanup.pending
                 cleanup_note = "\n".join([cleanup_note, *cleanup.notes])
                 receipt = _project_path(
-                    root, Path(".caprmedio_runtime/simple_local_release/reports") / f"{run_id}.md",
+                    root, Path(".anechoic_runtime/simple_local_release/reports") / f"{run_id}.md",
                     label="simple-receipt",
                 )
                 receipt.parent.mkdir(parents=True, exist_ok=True)
@@ -409,7 +409,7 @@ def run_local_release(
                 receipt_path = receipt.relative_to(root).as_posix()
     except (Exception, KeyboardInterrupt) as error:
         staging_note = _cleanup_staging(root, staging)
-        relative = Path(".caprmedio_runtime/simple_local_release/reports") / f"{run_id}.md"
+        relative = Path(".anechoic_runtime/simple_local_release/reports") / f"{run_id}.md"
         report_path: str | None = None
         try:
             report = _project_path(root, relative, label="simple-report")

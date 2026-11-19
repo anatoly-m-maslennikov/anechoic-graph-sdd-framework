@@ -14,6 +14,6 @@ relations: {"relates_to":["CA-O-062"]}
 ---
 # Place Project Scope Unit Graph Projection
 
-**if** the caprmedio Project's versionless Project Scope Unit Graph Projection is retained as historical migration evidence, **then** it **must** retain its legacy Carrier location at `.caprmedio_caprmedio/project_scope_unit_graph.projection.toml`.
+**if** the anechoic Project's versionless Project Scope Unit Graph Projection is retained as historical migration evidence, **then** it **must** retain its legacy Carrier location at `.anechoic_anechoic/project_scope_unit_graph.projection.toml`.
 
 this placement does **not** require generation, refresh, **or** consumer dependence. retirement **after** validated direct-consumer cutover follows CA-O-062.

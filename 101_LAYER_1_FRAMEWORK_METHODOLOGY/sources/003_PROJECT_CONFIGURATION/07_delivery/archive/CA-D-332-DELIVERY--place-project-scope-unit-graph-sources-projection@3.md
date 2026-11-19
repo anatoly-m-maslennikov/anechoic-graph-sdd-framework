@@ -13,4 +13,4 @@ relations: {}
 ---
 # Place Project Scope Unit Graph Sources Projection
 
-**if** retained retains its legacy Carrier location historical migration evidence, the caprmedio Project's versionless Project Scope Unit Graph Sources Projection as `.caprmedio_caprmedio/project_scope_unit_graph_sources.projection.toml`; this location does **not** require generation, refresh, **or** consumer dependence. **after** validated direct-consumer cutover, the obsolete structural Projection **must** be retired with its recorded migration disposition.
+**if** retained retains its legacy Carrier location historical migration evidence, the anechoic Project's versionless Project Scope Unit Graph Sources Projection as `.anechoic_anechoic/project_scope_unit_graph_sources.projection.toml`; this location does **not** require generation, refresh, **or** consumer dependence. **after** validated direct-consumer cutover, the obsolete structural Projection **must** be retired with its recorded migration disposition.

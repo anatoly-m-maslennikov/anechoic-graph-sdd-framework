@@ -12,7 +12,7 @@ from FEATURE_FORMAL_MODEL_ENGINE.native_model_lint import lint_native_model_clai
 from lint_python_model_claim import lint_python_model_claim
 from cfel_claim_constraints import _native_constraints
 
-CLAIM = '''from caprmedio.formal_claims import declare_entity
+CLAIM = '''from anechoic.formal_claims import declare_entity
 declare_entity(entity_name="ID", relation_name="IS_PROPERTY_OF", base_path="Projection",
     property_occurrence_cardinality=1, value_format=str, value_cardinality=1,
     dependent_property_cardinality=0,

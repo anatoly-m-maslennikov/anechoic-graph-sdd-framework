@@ -31,11 +31,11 @@ Keep canonical Actions and Workflows in methodology
 
 ## Scope
 
-the canonical O definitions of Actions and Workflows used by TOOLS in the caprmedio Project.
+the canonical O definitions of Actions and Workflows used by TOOLS in the anechoic Project.
 
 ## Claim
 
-**in** the caprmedio Project, the canonical O definitions of Actions **and** Workflows used by TOOLS **must** belong **to** methodology source Scope Units.
+**in** the anechoic Project, the canonical O definitions of Actions **and** Workflows used by TOOLS **must** belong **to** methodology source Scope Units.
 
 ## Details
 
