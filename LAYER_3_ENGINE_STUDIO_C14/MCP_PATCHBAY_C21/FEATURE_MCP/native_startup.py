@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 import re
 
-from native_project_selection import resolve_native_project
+from native_project_selection import manifest_paths, resolve_native_project
 from project_selection import (
     SETTINGS_FILENAME, ProjectSelectionError, _control_candidates, _control_relative,
     _project_root, _read_toml, resolve_project,
@@ -22,12 +22,7 @@ _RESERVED = {".anechoic_new", ".anechoic_legacy", ".anechoic_legacy_archive",
 
 
 def _has_manifest(reader: ReadContext, control: Path) -> bool:
-    for path in reader.inventory(control):
-        relative = path.relative_to(control)
-        if (relative.parts[0] in {"_PMETA", "__TKT"}
-                or {"draft", "archived"}.intersection(relative.parts[:-1])
-                or re.match(r"[A-Z]+-S-", path.name) is None or path.suffix != ".md"):
-            continue
+    for path in manifest_paths(reader, control):
         carrier = parse_carrier(reader.read(path), path)
         context = carrier.metadata.get("context")
         if (isinstance(context, dict) and context.get("template") == "project_manifest"):

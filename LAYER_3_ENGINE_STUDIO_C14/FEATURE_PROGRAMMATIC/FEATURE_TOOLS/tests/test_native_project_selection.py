@@ -46,7 +46,7 @@ class NativeProjectSelectionTests(unittest.TestCase):
         self.native = self.root / ".anechoic_anechoic"
         self.native.mkdir()
 
-    def carrier(self, relative="AN-S-001-PROJECT_MANIFEST--declare-anechoic.md", *, atom_id="AN-S-001",
+    def carrier(self, relative="SPEC/AN-S-001-PROJECT_MANIFEST--declare-anechoic.md", *, atom_id="AN-S-001",
                 name="Anechoic", prefix="AN", status="active", tier=-1, component="C0", lens_whitelist=None,
                 parameters=None):
         path = self.native / relative
@@ -77,7 +77,7 @@ class NativeProjectSelectionTests(unittest.TestCase):
         )
         write_scope_unit_declarations(self.root, control_root=legacy)
         active = self.carrier()
-        for area in ("_PMETA", "__TKT", "draft", "archived"):
+        for area in ("_PMETA", "__TKT", "draft", "archived", "archive", "SPEC/subsection"):
             self.carrier(f"{area}/{active.name}")
         native = self.select()
         self.assertEqual(("Anechoic", "AN", self.native), (native.project_name, native.project_prefix, native.control_root))
@@ -93,7 +93,7 @@ class NativeProjectSelectionTests(unittest.TestCase):
         with self.assertRaisesRegex(ProjectSelectionError, "Expected one Active"):
             self.select()
         self.carrier()
-        self.carrier("AN-S-002-PROJECT_MANIFEST--declare-anechoic.md", atom_id="AN-S-002")
+        self.carrier("SPEC/AN-S-002-PROJECT_MANIFEST--declare-anechoic.md", atom_id="AN-S-002")
         with self.assertRaisesRegex(ProjectSelectionError, "Expected one Active"):
             self.select()
 

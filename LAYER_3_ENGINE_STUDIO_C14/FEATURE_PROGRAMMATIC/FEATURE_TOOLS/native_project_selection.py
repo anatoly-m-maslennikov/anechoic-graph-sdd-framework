@@ -62,14 +62,16 @@ def rebind_native_selection(selection: NativeProjectSelection, instance_id: str,
     return replace(selection, instance_id=instance_id, host_root=host)
 
 
+def manifest_paths(reader: ReadContext, control: Path):
+    spec = control / "SPEC"
+    for path in reader.inventory(spec):
+        if (path.parent == spec and path.suffix == ".md"
+                and re.match(r"[A-Z]+-S-", path.name)):
+            yield path
+
+
 def _manifest_carriers(reader: ReadContext, control: Path):
-    for path in reader.inventory(control):
-        relative = path.relative_to(control)
-        if (relative.parts[0] in {"_PMETA", "__TKT"}
-                or {"draft", "archived"}.intersection(relative.parts[:-1])
-                or re.match(r"[A-Z]+-S-", path.name) is None
-                or path.suffix != ".md"):
-            continue
+    for path in manifest_paths(reader, control):
         carrier = parse_carrier(reader.read(path), path)
         context = carrier.metadata.get("context")
         state = carrier.metadata.get("state")

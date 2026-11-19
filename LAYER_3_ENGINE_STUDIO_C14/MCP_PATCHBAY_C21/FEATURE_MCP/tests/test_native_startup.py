@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import yaml
 
@@ -95,6 +96,18 @@ class RuntimeSelectionTests(unittest.TestCase):
         for control in (native.name, None):
             with self.subTest(control=control), self.assertRaises(ProjectSelectionError):
                 self.select(control)
+
+    def test_refuses_manifest_added_during_legacy_selection(self):
+        control = self.legacy()
+
+        def resolve_then_add(*args, **kwargs):
+            selection = resolve_project(*args, **kwargs)
+            self.manifest(control)
+            return selection
+
+        with patch("native_startup.resolve_project", side_effect=resolve_then_add):
+            with self.assertRaisesRegex(ProjectSelectionError, "changed during selection"):
+                self.select(control.name)
 
     def test_both_formats_in_one_root_are_ambiguous(self):
         control = self.legacy()
