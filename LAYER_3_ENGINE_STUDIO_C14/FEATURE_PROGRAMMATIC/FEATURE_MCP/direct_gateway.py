@@ -26,10 +26,9 @@ from health_observations import HealthObservations  # noqa: E402
 from operation_error_boundary import (  # noqa: E402
     FailureRecord, operation_error_boundary,
 )
-from project_selection import (  # noqa: E402
-    ProjectSelection, bind_selection, resolve_project, rebind_selection,
-)
+from project_selection import ProjectSelection, bind_selection, rebind_selection  # noqa: E402
 from project_tool_blacklist import project_tool_blacklist  # noqa: E402
+from project_settings_schema import mcp_tool_blacklist  # noqa: E402
 from project_tool_context import native_arguments  # noqa: E402
 from runtime_failure_diagnostics import report_failure  # noqa: E402
 from runtime_request_context import bind_request_context  # noqa: E402
@@ -39,17 +38,23 @@ from tool_registry_runtime import (  # noqa: E402
     ToolRegistryStaleError,
     load_active_registry,
 )
-from workbench_tools import WorkbenchTools, mcp_app_probe  # noqa: E402
+from workbench_tools import INTERFACE_TOOLS, LOAD, SAVED_LIST, SAVE_VIEW, WorkbenchTools, mcp_app_probe  # noqa: E402
 
 if TYPE_CHECKING:
     from native_query import NativeQueryOwner
 
 
 def startup_selection(root, control_root=None, instance_id=None, host_root=None):
-    selection = resolve_project(root, control_root)
+    from native_project_selection import NativeProjectSelection, rebind_native_selection
+    from native_startup import select_runtime_project
+
+    selection = select_runtime_project(root, control_root)
     if host_root is not None and instance_id is None:
         raise ValueError("Host Project binding requires an explicit instance identity")
-    return rebind_selection(selection, instance_id, host_root=host_root) if instance_id is not None else selection
+    if instance_id is None:
+        return selection
+    rebind = rebind_native_selection if isinstance(selection, NativeProjectSelection) else rebind_selection
+    return rebind(selection, instance_id, host_root=host_root)
 
 
 def result(value, error=False):
@@ -89,7 +94,8 @@ class DirectGateway:
         if self.ready:
             return
         with self._bind_legacy_selection():
-            project_blacklist = project_tool_blacklist(self.root) if self._native_query is None else frozenset()
+            project_blacklist = (project_tool_blacklist(self.root) if self._native_query is None
+                                 else mcp_tool_blacklist(self.selection.parameters))
         try:
             self.registry = load_active_registry(Path(__file__).parent, self.root, self)
         except ToolRegistryRuntimeError as error:
@@ -102,12 +108,13 @@ class DirectGateway:
         self.tool_blacklist = self.registry.global_blacklist | project_blacklist
         try:
             if self._native_query is not None:
-                from native_query import QUERY_TOOLS, query_tool
+                from native_query import QUERY_TOOLS
 
                 self._native_query.start()
-                self.tool_blacklist |= frozenset(self.registry.routes) - QUERY_TOOLS
+                supported = QUERY_TOOLS | frozenset((*INTERFACE_TOOLS, SAVE_VIEW, LOAD, SAVED_LIST))
+                self.tool_blacklist |= frozenset(self.registry.routes) - supported
                 self.tools = tuple(
-                    query_tool(tool) for tool in self.registry.tools if tool.name not in self.tool_blacklist
+                    tool for tool in self.registry.tools if tool.name not in self.tool_blacklist
                 )
             else:
                 self.tools = tuple(tool for tool in self.registry.tools if tool.name not in self.tool_blacklist)

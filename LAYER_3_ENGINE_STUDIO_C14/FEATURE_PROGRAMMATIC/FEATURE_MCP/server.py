@@ -18,17 +18,22 @@ if TYPE_CHECKING:
 
 def _serve_stdio(args, *, native_inputs: NativeQueryInputs | None = None):
     if native_inputs is not None:
-        from native_project_selection import resolve_native_project
-        from native_query import NativeQueryOwner
+        from native_query import create_native_gateway
 
-        selection = resolve_native_project(args.project_root, args.control_root,
-                                           validate_manifest=native_inputs.validate_manifest)
-        owner = NativeQueryOwner(selection, native_inputs)
-        asyncio.run(DirectGateway(selection.root, native_query=owner).serve())
+        asyncio.run(create_native_gateway(args.project_root, args.control_root, native_inputs).serve())
         return
     selection = startup_selection(args.project_root, args.control_root, args.instance_id, args.host_project_root)
-    with bind_selection(selection):
-        asyncio.run(DirectGateway(args.project_root, selection=selection).serve())
+    from native_project_selection import NativeProjectSelection
+
+    if isinstance(selection, NativeProjectSelection):
+        from native_query import NativeQueryOwner
+        from native_startup import load_native_inputs
+
+        owner = NativeQueryOwner(selection, load_native_inputs(selection))
+        asyncio.run(DirectGateway(selection.root, native_query=owner).serve())
+    else:
+        with bind_selection(selection):
+            asyncio.run(DirectGateway(args.project_root, selection=selection).serve())
 
 
 def main(argv=None, *, native_inputs: NativeQueryInputs | None = None):
@@ -40,10 +45,10 @@ def main(argv=None, *, native_inputs: NativeQueryInputs | None = None):
     parser.add_argument('--transport', choices=('stdio', 'streamable-http'), default='stdio')
     args = parser.parse_args(argv)
     if native_inputs is not None and (
-        args.transport != 'stdio' or not args.control_root
+        not args.control_root
         or args.instance_id is not None or args.host_project_root is not None
     ):
-        parser.error('Native selection requires stdio and --control-root and derives its own instance identity')
+        parser.error('Native selection requires --control-root and derives its own instance identity')
     if args.transport == 'stdio':
         return run_process(
             lambda: _serve_stdio(args, native_inputs=native_inputs), operation='mcp.stdio_startup',
@@ -57,6 +62,8 @@ def main(argv=None, *, native_inputs: NativeQueryInputs | None = None):
                             ('--host-project-root', args.host_project_root)):
             if value is not None:
                 http_argv += [flag, value]
+        if native_inputs is not None:
+            return serve_http(http_argv, native_inputs=native_inputs)
         return serve_http(http_argv)
 
 

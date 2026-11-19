@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import os
 from pathlib import Path
 import re
 import sys
@@ -19,7 +20,8 @@ TOOLS = Path(__file__).resolve().parents[3] / "FEATURE_TOOLS"
 if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
-from work_journal import append_sealed_events, configured_journal_root  # noqa: E402
+from work_journal import append_sealed_events, configured_journal_root, validated_journal_root  # noqa: E402
+from VALIDATE_ATOMS.validate_atoms_workers.read_io import open_regular  # noqa: E402
 
 
 _LEGACY_ID = re.compile(r"^(?P<kind>[qw])_(?P<token>[0-9a-f]{32})$")
@@ -30,8 +32,9 @@ _JOURNAL_AUTHOR = "workbench-saved-items"
 class SavedQueryStore:
     """Own saved items under one Project's Journal and legacy runtime files."""
 
-    def __init__(self, root: Path) -> None:
+    def __init__(self, root: Path, *, journal_root: str | None = None) -> None:
         self._root = Path(root)
+        self._journal_root = journal_root
         self._legacy_directory = self._root / ".anechoic_runtime" / "workbench" / "saved_queries"
 
     @staticmethod
@@ -104,6 +107,7 @@ class SavedQueryStore:
                 author=_JOURNAL_AUTHOR,
                 local_date=saved_at[:10],
                 timezone="UTC",
+                journal_root=self._journal_root,
             )
         except Exception as error:
             raise ValueError(f"saved query failed: {error}") from error
@@ -127,7 +131,8 @@ class SavedQueryStore:
         return values[0]
 
     def _journal_paths(self) -> list[Path]:
-        directory = self._root / configured_journal_root(self._root)
+        directory = self._root / (configured_journal_root(self._root) if self._journal_root is None
+                                  else validated_journal_root(self._root, self._journal_root))
         if not directory.is_dir():
             return []
         return sorted(directory.glob(f"{_JOURNAL_AUTHOR}-*-part-*.ndjson"))
@@ -160,7 +165,11 @@ class SavedQueryStore:
         items: list[dict[str, Any]] = []
         for path in self._journal_paths():
             try:
-                lines = path.read_text(encoding="utf-8").splitlines()
+                if self._journal_root is None:
+                    lines = path.read_text(encoding="utf-8").splitlines()
+                else:
+                    with os.fdopen(open_regular(path.absolute()), "r", encoding="utf-8") as stream:
+                        lines = stream.read().splitlines()
             except (OSError, UnicodeError) as error:
                 print(f"saved query skipped: {path}: {error}", file=sys.stderr)
                 continue
@@ -187,6 +196,8 @@ class SavedQueryStore:
     def load(self, reference: object) -> dict[str, Any]:
         saved_query_id = self._reference(reference)
         if _LEGACY_ID.fullmatch(saved_query_id):
+            if self._journal_root is not None:
+                raise ValueError("saved query is unavailable")
             return self._legacy_read(saved_query_id)
         for record in self._journal_items():
             if record["saved_query_id"] == saved_query_id:
@@ -213,7 +224,7 @@ class SavedQueryStore:
     def list(self, limit: object = 20) -> dict[str, list[dict[str, Any]]]:
         if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= 1000:
             raise ValueError("limit must be an integer from 1 to 1000")
-        items = self._journal_items() + self._legacy_items()
+        items = self._journal_items() + (self._legacy_items() if self._journal_root is None else [])
         items.sort(key=lambda item: item["saved_at"], reverse=True)
         return {"items": [
             {

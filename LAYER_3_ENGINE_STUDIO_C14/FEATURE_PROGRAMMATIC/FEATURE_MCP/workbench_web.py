@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Awaitable, Callable, Iterator, Mapping
+from collections.abc import Awaitable, Callable, Iterator
 from pathlib import Path
 import sys
 from typing import Any
@@ -32,7 +32,7 @@ from operation_error_boundary import ExplicitBlockingRuntimeFailure
 from project_tool_context import native_arguments
 from runtime_failure_diagnostics import report_failure
 from shared_gateway import SharedGatewayRefusal
-from workbench_links import public_saved, public_workspace, validate_reference
+from workbench_links import project_name as selection_project_name, public_saved, public_workspace, validate_reference
 from workbench_tools import (
     ARCHIVE_LOAD, CHECK, INTERFACE_TOOLS, LOAD, PAGE, RUN, SAVED_LIST, SAVE_VIEW, SCHEMA, SYNC_STATUS,
     WORKSPACE_GET, WORKSPACE_OPEN,
@@ -64,7 +64,7 @@ async def _arguments(request: Request, shared: bool) -> dict[str, Any]:
 
 def _error(gateway: Any, request: Request, selection: Any, arguments: dict[str, Any], error: Exception) -> JSONResponse:
     failure, secondary = report_failure(
-        getattr(gateway, "root", None), error,
+        getattr(gateway, "_diagnostic_root", getattr(gateway, "root", None)), error,
         component="MCP_HTTP", operation="workbench",
     )
     payload = {"error": failure.message}
@@ -78,9 +78,10 @@ def _json_stream(value: dict[str, Any]) -> Iterator[str]:
 
 
 def _project_name_matches(selection: Any, project_name: str) -> bool:
-    settings = getattr(selection, "settings", None)
-    project = settings.get("project") if isinstance(settings, Mapping) else None
-    return isinstance(project, Mapping) and project.get("name") == project_name
+    try:
+        return selection_project_name(selection) == project_name
+    except ValueError:
+        return False
 
 
 def _unknown_project() -> JSONResponse:
@@ -95,7 +96,8 @@ def _selection(gateway: Any, request: Request, shared: bool) -> Any:
 
 async def _execute(gateway: Any, name: str, arguments: dict[str, Any], shared: bool) -> dict[str, Any]:
     if not shared:
-        if name in (*INTERFACE_TOOLS, SAVE_VIEW, SYNC_STATUS, ARCHIVE_LOAD) and name in getattr(gateway, "tool_blacklist", frozenset()):
+        if (getattr(gateway, "_native_query", None) is not None
+                or name in (*INTERFACE_TOOLS, SAVE_VIEW, SYNC_STATUS, ARCHIVE_LOAD)) and name in getattr(gateway, "tool_blacklist", frozenset()):
             raise ExplicitBlockingRuntimeFailure("query_error", "Unknown Tool")
         result: dict[str, Any] = await gateway.workbench.call(
             name, {key: value for key, value in arguments.items() if key != "project_root"}
@@ -135,6 +137,8 @@ def routes(gateway: Any, *, shared: bool = False) -> list[BaseRoute]:  # noqa: C
         project_name = request.path_params["project_name"]
         try:
             selection = _selection(gateway, request, shared)
+            if not shared and getattr(gateway, "_native_query", None) is not None and "project_root" in request.query_params:
+                native_arguments({"project_root": request.query_params["project_root"]}, selection, gateway.root)
         except (TypeError, ValueError) as error:
             return JSONResponse({"error": str(error)}, status_code=400)
         if not _project_name_matches(selection, project_name):
@@ -154,7 +158,7 @@ def routes(gateway: Any, *, shared: bool = False) -> list[BaseRoute]:  # noqa: C
                 selection = gateway._selection(arguments["project_root"]) if shared else getattr(gateway, "selection", None)
                 if not _project_name_matches(selection, request.path_params["project_name"]):
                     return _unknown_project()
-                if name in {SYNC_STATUS, ARCHIVE_LOAD} and not shared:
+                if not shared and (name in {SYNC_STATUS, ARCHIVE_LOAD} or getattr(gateway, "_native_query", None) is not None):
                     try:
                         arguments = native_arguments(arguments, selection, gateway.root)
                     except ValueError as error:

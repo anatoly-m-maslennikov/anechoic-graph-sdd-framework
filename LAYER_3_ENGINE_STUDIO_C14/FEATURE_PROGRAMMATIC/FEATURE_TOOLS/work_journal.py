@@ -179,8 +179,19 @@ def configured_journal_root(root: Path, *, control_root: str | Path | None = Non
         raise RuntimeError("paths.journal_root must be a safe repository-relative path")
     if path != canonical:
         raise RuntimeError("paths.journal_root must be exactly paths.control_root/_journal")
-    _assert_project_relative_path(root, canonical, "paths.journal_root")
-    return canonical
+    return validated_journal_root(root, canonical.as_posix())
+
+
+def validated_journal_root(root: Path, value: object) -> Path:
+    """Validate an explicitly selected Project-relative Journal location."""
+    if not isinstance(value, str) or not value:
+        raise RuntimeError("paths.journal_root must be a non-empty string")
+    path = Path(value)
+    if (path.is_absolute() or not path.parts or ".." in path.parts or value != path.as_posix()
+            or protected(path)):
+        raise RuntimeError("paths.journal_root must be a safe repository-relative path")
+    _assert_project_relative_path(root, path, "paths.journal_root")
+    return path
 
 
 def event_record(
@@ -259,9 +270,10 @@ def _open_part(directory: Path, author: str, local_date: str) -> tuple[Path, byt
 
 
 def _append_event(root: Path, event: Any, author: str, local_date: str,
-                  *, control_root: str | Path | None = None) -> dict[str, Any]:
+                  *, control_root: str | Path | None = None, journal_root: str | None = None) -> dict[str, Any]:
     # shortcut: concurrent appends may exceed 1000 rows; serialize only if a strict limit is required.
-    directory = root / configured_journal_root(root, control_root=control_root)
+    directory = root / (configured_journal_root(root, control_root=control_root) if journal_root is None
+                        else validated_journal_root(root, journal_root))
     path, _, count = _open_part(directory, author, local_date)
     path.parent.mkdir(parents=True, exist_ok=True)
     parent = open_regular(path.parent.absolute(), directory=True)
@@ -292,6 +304,7 @@ def append_sealed_events(
     timezone: object,
     append_context: Mapping[str, Any] | None = None,
     control_root: str | Path | None = None,
+    journal_root: str | None = None,
 ) -> list[dict[str, Any]]:
     """Append caller-supplied rows in order, including repeated rows.
 
@@ -301,7 +314,8 @@ def append_sealed_events(
     receipts: list[dict[str, Any]] = []
     for index, event in enumerate(events):
         try:
-            receipts.append(_append_event(root, event, str(author), str(local_date), control_root=control_root))
+            receipts.append(_append_event(root, event, str(author), str(local_date), control_root=control_root,
+                                          journal_root=journal_root))
         except FutureCancelledError:
             raise
         except Exception as error:

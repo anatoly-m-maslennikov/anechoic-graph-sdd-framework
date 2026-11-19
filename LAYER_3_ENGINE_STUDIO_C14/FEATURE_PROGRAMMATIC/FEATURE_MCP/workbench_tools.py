@@ -166,6 +166,8 @@ class WorkbenchTools:
         self._lifecycle_lock = threading.RLock()
 
     def _owner(self) -> WorkbenchService:
+        if self._query_owner is not None:
+            raise ValueError("Operation is unavailable for a native Project")
         if self._service is None:
             from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service import WorkbenchService
             self._service = WorkbenchService(self.root)
@@ -205,6 +207,8 @@ class WorkbenchTools:
             return mcp_app_probe.call(name)
         if name == SYNC_STATUS:
             self._empty(arguments)
+            if self._query_owner is not None:
+                raise ValueError("Operation is unavailable for a native Project")
             owner = self._service
             status = {"syncing": False, "last_synced_at": None, "loaded_archive_scopes": [],
                       "audits_pending": False, "last_audit_ms": None, "audit_error": None}
@@ -218,7 +222,7 @@ class WorkbenchTools:
                 scopes = self._archive_scopes(arguments)
                 return self._owner().load_archives(scopes)
             if name in INTERFACE_TOOLS:
-                return self._owner().interface_call(name, arguments)
+                return self._query().interface_call(name, arguments)
             if name == RUN:
                 sql, page_size, cursor, save, preview, query_name, delivery, result_format = self._run(arguments)
                 return self._query().run(
@@ -240,14 +244,14 @@ class WorkbenchTools:
                 return self._query().schema()
             if name == SAVE_VIEW:
                 if isinstance(arguments, dict) and {"workspace_id", "view_id"} <= set(arguments):
-                    return self._owner().interface_call(name, arguments)
+                    return self._query().interface_call(name, arguments)
                 sql, _ = self._sql(arguments, {"sql", "name"})
-                return self._owner().save_view(sql, name=self._name(arguments))
+                return self._query().save_view(sql, name=self._name(arguments))
             if name == LOAD:
                 reference, _ = self._sql(arguments, {"reference"}, key="reference")
-                return self._owner().load(reference)
+                return self._query().load(reference)
             if name == SAVED_LIST:
-                return self._owner().saved_list(limit=self._limit(arguments))
+                return self._query().saved_list(limit=self._limit(arguments))
             if name == RESTART:
                 self._empty(arguments)
                 if self._service is not None:

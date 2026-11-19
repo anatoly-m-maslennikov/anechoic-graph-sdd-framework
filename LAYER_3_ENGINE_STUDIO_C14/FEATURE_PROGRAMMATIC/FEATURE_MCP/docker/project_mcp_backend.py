@@ -18,7 +18,7 @@ from typing import Any, Mapping
 from urllib.parse import urlsplit
 
 from mcp_paths import MCP_PATH
-from runtime_images import ImageManager
+from runtime_images import ImageError, ImageManager
 
 
 _DIRECTORY = Path(__file__).resolve().parent
@@ -110,11 +110,55 @@ class ProjectMcpBackend:
         self.build_if_missing = build_if_missing
         self.build_timeout = build_timeout
 
-    def resolve_image(self, source_root, explicit_id, *, project_root):
+    @staticmethod
+    def _native_package(source_root, project_root, control_root=None):
+        # The launcher has already admitted the Project; reselect to bind image mode.
+        if not Path(project_root).is_dir():
+            return None
+        import sys
+        mcp = Path(__file__).resolve().parents[1]
+        for path in (mcp.parent, mcp, mcp.parent / "FEATURE_TOOLS"):
+            if str(path) not in sys.path:
+                sys.path.insert(0, str(path))
+        from native_project_selection import NativeProjectSelection
+        from native_startup import select_runtime_project
+        from start_mcp import _installed_source_root
+        try:
+            selection = select_runtime_project(project_root, control_root)
+            if not isinstance(selection, NativeProjectSelection):
+                return None
+            if Path(source_root) != _installed_source_root(selection.root):
+                raise ValueError("native Project requires its installed runtime package")
+            return selection
+        except Exception as error:
+            raise ImageError("IMAGE_INPUT_UNAVAILABLE") from error
+
+    def _check_native_selection(self, selection):
+        native = getattr(self, "_native_selection", None)
+        if native is not None and (selection != native or
+                self._native_package(self._native_source, native.root, native.control_relative) != native):
+            raise BackendError("IMAGE_INPUT_UNAVAILABLE")
+
+    def resolve_image(self, source_root, explicit_id, *, project_root, selection=None):
         self._image_evidence = None
+        if selection is None:
+            self._native_selection = self._native_package(source_root, project_root)
+        else:
+            from native_project_selection import NativeProjectSelection
+            from project_selection import ProjectSelection
+            if isinstance(selection, NativeProjectSelection):
+                self._native_selection = self._native_package(source_root, project_root, selection.control_relative)
+                if self._native_selection != selection:
+                    raise ImageError("IMAGE_INPUT_UNAVAILABLE")
+            elif isinstance(selection, ProjectSelection) and selection.root == Path(project_root):
+                self._native_selection = None
+            else:
+                raise ImageError("IMAGE_INPUT_UNAVAILABLE")
+        self._native_source = source_root
         manager = ImageManager(source_root, timeout=self.build_timeout, project_root=project_root)
-        image_id = manager.resolve(explicit_id=explicit_id, build_if_missing=self.build_if_missing)
-        packaged = not self.build_if_missing
+        options = {"use_packaged_assets": True} if self._native_selection is not None else {}
+        image_id = manager.resolve(explicit_id=explicit_id, build_if_missing=self.build_if_missing, **options)
+        packaged = self._native_selection is not None or not self.build_if_missing
         identity = manager.identity(use_packaged_assets=packaged)
         manager._inspect(image_id, identity)
         manager._current(identity, use_packaged_assets=packaged)
@@ -214,6 +258,7 @@ class ProjectMcpBackend:
 
     def inspect(self, selection, *, timeout: float = 30.0):
         """Read the selected Project's Docker namespace within one deadline."""
+        self._check_native_selection(selection)
         if (isinstance(timeout, bool) or not isinstance(timeout, (int, float))
                 or not 0 < timeout <= 30.0):
             raise BackendError("DOCKER_PUBLICATION_FAILED")
@@ -304,6 +349,7 @@ class ProjectMcpBackend:
 
     def start(self, selection, image_id, fingerprint, timeout, port):
         """Start development mode from its checked-in Compose carrier."""
+        self._check_native_selection(selection)
         try:
             manager, identity, resolved_id, packaged = self._image_evidence
         except (AttributeError, TypeError):

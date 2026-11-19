@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from copy import deepcopy
+from dataclasses import dataclass, field, replace
+import os
 from pathlib import Path
 import re
 from typing import Protocol
@@ -12,7 +14,7 @@ from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_cl
 from FEATURE_FORMAL_MODEL_ENGINE.scope_callback_asset import formal_claim
 from project_selection import ProjectSelectionError, _instance_id, _project_root
 from VALIDATE_ATOMS.validate_atoms_workers.parsing import ParsedCarrier, parse_carrier
-from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext
+from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext, protected
 from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
 
 
@@ -32,6 +34,32 @@ class NativeProjectSelection:
     manifest_path: Path
     manifest_ref: str
     manifest_sha256: str
+    parameters: dict[str, object] = field(default_factory=dict)
+    host_root: Path | None = None
+
+    @property
+    def compose_project(self) -> str:
+        return "anechoic-mcp-" + self.instance_id[:24]
+
+
+def rebind_native_selection(selection: NativeProjectSelection, instance_id: str, *,
+                            host_root: str | Path | None = None) -> NativeProjectSelection:
+    """Retain the admitted host identity after container path translation."""
+    if not isinstance(selection, NativeProjectSelection) or not isinstance(instance_id, str) or not re.fullmatch(r"[0-9a-f]{64}", instance_id):
+        raise ProjectSelectionError("Transported Project identity is invalid")
+    host = selection.host_root if instance_id == selection.instance_id else None
+    if host_root is not None:
+        try:
+            host = Path(host_root)
+        except (TypeError, ValueError) as error:
+            raise ProjectSelectionError("Transported host root is invalid") from error
+        if (not host.is_absolute() or ".." in host.parts or str(host_root) != host.as_posix()
+                or host.as_posix().startswith("//") or protected(host)
+                or _instance_id(host, selection.control_relative) != instance_id):
+            raise ProjectSelectionError("Transported Project identity contradicts its host binding")
+        if os.path.lexists(host):
+            _project_root(host)
+    return replace(selection, instance_id=instance_id, host_root=host)
 
 
 def _manifest_carriers(reader: ReadContext, control: Path):
@@ -94,6 +122,9 @@ def resolve_native_project(
         path, carrier = selected
         fields, component_id = _manifest_inputs(path, carrier)
         manifest = validate_manifest(fields, component_id)
+        parameters = getattr(manifest, "parameters", fields.get("parameters", {}))
+        if not isinstance(parameters, dict):
+            raise ProjectSelectionError("Validated Project Manifest parameters must be a mapping")
         if relative.name != f".anechoic_{manifest.name.casefold()}":
             raise ProjectSelectionError("Project Manifest name contradicts the native control root")
         if not str(fields["atom_id"]).startswith(f"{manifest.prefix}-S-"):
@@ -102,7 +133,7 @@ def resolve_native_project(
             raise ProjectSelectionError("Project carriers changed during selection")
         return NativeProjectSelection(root, control, relative, _instance_id(root, relative),
                                       manifest.name, manifest.prefix, path, str(fields["ref_id"]),
-                                      reader.fingerprints[str(path)])
+                                      reader.fingerprints[str(path)], deepcopy(parameters))
     except ProjectSelectionError:
         raise
     except (OSError, RuntimeError, TypeError, ValueError) as error:

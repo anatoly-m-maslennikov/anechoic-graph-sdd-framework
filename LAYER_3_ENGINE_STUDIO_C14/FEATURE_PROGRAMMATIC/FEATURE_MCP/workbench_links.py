@@ -18,6 +18,7 @@ from urllib.parse import parse_qs, quote, urlencode, urlparse
 
 from http_paths import WORKBENCH_PATH
 from settings_carrier import read_settings_carrier
+from native_project_selection import NativeProjectSelection
 
 _LEGACY_SAVED_ID = re.compile(r"^[qw]_[0-9a-f]{32}$")
 
@@ -33,6 +34,8 @@ def _saved_id(value: str) -> bool:
 
 
 def project_name(selection: Any) -> str:
+    if isinstance(selection, NativeProjectSelection):
+        return selection.project_name
     settings = getattr(selection, "settings", None)
     project = settings.get("project") if isinstance(settings, Mapping) else None
     name = project.get("name") if isinstance(project, Mapping) else None

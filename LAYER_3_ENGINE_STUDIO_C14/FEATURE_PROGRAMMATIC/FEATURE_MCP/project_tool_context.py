@@ -8,12 +8,10 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
+from native_project_selection import NativeProjectSelection
 from project_selection import ProjectSelection
-
-if TYPE_CHECKING:
-    from native_project_selection import NativeProjectSelection
 
 
 def native_arguments(
@@ -32,7 +30,7 @@ def native_arguments(
     if not path.is_absolute() or ".." in path.parts or path.as_posix() != value:
         raise ValueError("project_root must be a canonical bound Project root")
     allowed = {str(root if selection is None else selection.root)}
-    if isinstance(selection, ProjectSelection) and selection.host_root is not None:
+    if isinstance(selection, (ProjectSelection, NativeProjectSelection)) and selection.host_root is not None:
         allowed.add(str(selection.host_root))
     if value not in allowed:
         raise ValueError("project_root does not match the bound Project")

@@ -70,7 +70,8 @@ class LoopbackGuard:
         await self.app(scope, receive, send)
 
     def _warning(self, code, operation):
-        root = getattr(getattr(self, 'gateway', None), 'root', None)
+        gateway = getattr(self, 'gateway', None)
+        root = getattr(gateway, '_diagnostic_root', getattr(gateway, 'root', None))
         report_failure(
             root, FailureRecord('WARNING', code, 'request refused'),
             component='MCP_HTTP', operation=operation,
@@ -118,7 +119,7 @@ def _gateway_ready(gateway):
     return gateway.ready
 
 
-async def health(request, gateway, restart_action=None, reread_action=None):
+async def health(request, gateway, restart_action=None, reread_action=None, *, allow_html=True):
     ready = _gateway_ready(gateway)
     status_code = 200 if ready else 503
     health_warning = None
@@ -131,11 +132,11 @@ async def health(request, gateway, restart_action=None, reread_action=None):
             raise
         except Exception as error:
             report_failure(
-                getattr(gateway, 'root', None), error, component='MCP_HTTP',
+                getattr(gateway, '_diagnostic_root', getattr(gateway, 'root', None)), error, component='MCP_HTTP',
                 operation='health_observations',
             )
             health_warning = 'health observations unavailable'
-    if restart_action is None and not _accepts_html(request.headers.get("accept")):
+    if restart_action is None and (not allow_html or not _accepts_html(request.headers.get("accept"))):
         payload = {"ready": ready}
         if health_warning is not None:
             payload['health_warning'] = health_warning
@@ -153,11 +154,28 @@ async def health(request, gateway, restart_action=None, reread_action=None):
     return HTMLResponse(page, status_code=status_code, headers=headers)
 
 
-def create_app(root, *, selection=None):
-    gateway = DirectGateway(root, selection=selection)
+def create_app(root, *, selection=None, native_inputs=None, control_root=None):
+    from native_project_selection import NativeProjectSelection
+
+    native_project = isinstance(selection, NativeProjectSelection)
+    if native_inputs is not None:
+        if selection is not None or not control_root:
+            raise ValueError("Native selection requires a control root and no legacy selection")
+        from native_query import create_native_gateway
+
+        gateway = create_native_gateway(root, control_root, native_inputs)
+    elif native_project:
+        from native_query import NativeQueryOwner
+        from native_startup import load_native_inputs
+
+        gateway = DirectGateway(root, native_query=NativeQueryOwner(selection, load_native_inputs(selection)))
+    else:
+        gateway = DirectGateway(root, selection=selection)
     server = gateway.build_server()
+    legacy = native_inputs is None and not native_project
+
     async def readiness(request):
-        return await health(request, gateway)
+        return await health(request, gateway, allow_html=legacy)
 
     async def restart(request):
         return await health(
@@ -171,17 +189,20 @@ def create_app(root, *, selection=None):
             reread_action=await reread_workbench(request, gateway, shared=False),
         )
 
+    routes = [Route(HEALTH_PATH, readiness)]
+    if legacy:
+        routes.extend([
+            Route(f"{HEALTH_PATH}/workbench-restart", restart, methods=["POST"]),
+            Route(f"{HEALTH_PATH}/workbench-reread", reread, methods=["POST"]),
+        ])
+    if legacy or native_project:
+        routes.extend(workbench_routes(gateway))
     app = server.streamable_http_app(
         streamable_http_path=PATH,
         transport_security=SECURITY,
         max_request_body_size=MAX_REQUEST_BODY_SIZE,
         host="127.0.0.1",
-        custom_starlette_routes=[
-            Route(HEALTH_PATH, readiness),
-            Route(f"{HEALTH_PATH}/workbench-restart", restart, methods=["POST"]),
-            Route(f"{HEALTH_PATH}/workbench-reread", reread, methods=["POST"]),
-            *workbench_routes(gateway),
-        ],
+        custom_starlette_routes=routes,
     )
     inner_lifespan = app.router.lifespan_context
 
@@ -195,24 +216,28 @@ def create_app(root, *, selection=None):
                 await gateway.close()
 
     app.router.lifespan_context = lifespan
-    guarded = LoopbackGuard(app, selection)
+    guarded = LoopbackGuard(app, selection if legacy else None)
     guarded.gateway = gateway
     guarded.starlette_app = app
     return guarded
 
 
-def _serve(args):
+def _serve(args, *, native_inputs=None):
     if args.host != "0.0.0.0" or args.port != PORT:
         raise ValueError("HTTP MCP requires the container bind 0.0.0.0:8092")
     import uvicorn
-    selection = startup_selection(args.project_root, args.control_root, args.instance_id, args.host_project_root)
+    if native_inputs is not None:
+        app = create_app(args.project_root, native_inputs=native_inputs, control_root=args.control_root)
+    else:
+        selection = startup_selection(args.project_root, args.control_root, args.instance_id, args.host_project_root)
+        app = create_app(args.project_root, selection=selection)
     uvicorn.run(
-        create_app(args.project_root, selection=selection),
+        app,
         host=args.host, port=args.port, log_level="warning",
     )
 
 
-def main(argv=None):
+def main(argv=None, *, native_inputs=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project-root", required=True, type=Path)
     parser.add_argument("--control-root")
@@ -221,8 +246,12 @@ def main(argv=None):
     parser.add_argument("--host", default="0.0.0.0")
     parser.add_argument("--port", default=PORT, type=int)
     args = parser.parse_args(argv)
+    if native_inputs is not None and (
+        not args.control_root or args.instance_id is not None or args.host_project_root is not None
+    ):
+        parser.error("Native selection requires --control-root and derives its own instance identity")
     return run_process(
-        lambda: _serve(args), operation='mcp.http_startup', root=args.project_root,
+        lambda: _serve(args, native_inputs=native_inputs), operation='mcp.http_startup', root=args.project_root,
     )
 
 

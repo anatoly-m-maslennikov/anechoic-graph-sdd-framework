@@ -1,0 +1,38 @@
+[
+  {
+    "subject": "MODEL//ANECHOIC <+ Node//Artifact//Atom//Spec Atom//Manifest",
+    "claim": "from caprmedio.formal_claims import declare_entity\nfrom caprmedio.model import SpecAtom\nfrom typing import ClassVar\nfrom dataclasses import field\n\nclass Manifest(SpecAtom):\n    control_flow: ClassVar[str] = \"Declarative\"\n    lens_whitelist: list[str] | None = field(default=None, kw_only=True)\n\ndeclare_entity(\n    entity_name=\"Manifest\",\n    entity_class=Manifest,\n)\n"
+  },
+  {
+    "subject": "MODEL//ANECHOIC <+ Node//Artifact//Atom//Spec Atom//Manifest//Project Manifest",
+    "claim": "from caprmedio.formal_claims import declare_entity\nfrom caprmedio.model import Manifest\nfrom dataclasses import field\n\nclass ProjectManifest(Manifest):\n    tier: int = field(metadata={\"allowed_values\": (-1,)})\n    name: str\n    prefix: str\n    parameters: dict[str, object] = field(default_factory=dict)\n\ndef check_project_manifest(manifest: ProjectManifest) -> bool:\n    return bool(manifest.name.strip() and manifest.prefix.strip() and len(manifest.parameters) + 2 + (manifest.lens_whitelist is not None) <= 20)\n\ndeclare_entity(\n    entity_name=\"Project Manifest\",\n    entity_class=ProjectManifest,\n    instance_relation_constraints={\n        \"CONTAINED_BY\": {\"target_entity_paths\": (\"Node//Artifact//Component//Project\",), \"targets_per_source\": 1},\n    },\n    instance_check=check_project_manifest,\n)\n"
+  },
+  {
+    "subject": "MODEL//ANECHOIC <+ Node//Artifact//Atom//Spec Atom//Manifest//Component Manifest",
+    "claim": "from caprmedio.formal_claims import declare_entity\nfrom caprmedio.model import Manifest\nfrom dataclasses import field\n\nclass ComponentManifest(Manifest):\n    tier: int = field(metadata={\"allowed_values\": (0,)})\n    component_id: str\n    name: str\n    layer: int | None = None\n\ndef check_component_manifest(manifest: ComponentManifest) -> bool:\n    return bool(manifest.component_id.strip() and manifest.name.strip())\n\ndeclare_entity(\n    entity_name=\"Component Manifest\",\n    entity_class=ComponentManifest,\n    instance_relation_constraints={\n        \"CONTAINED_BY\": {\"target_entity_paths\": (\"Node//Artifact//Component\",), \"targets_per_source\": 1},\n    },\n    instance_check=check_component_manifest,\n)\n"
+  },
+  {
+    "subject": "MODEL//ANECHOIC <+ Node//Artifact//Atom//Spec Atom//Purpose",
+    "claim": "from caprmedio.formal_claims import declare_entity\nfrom caprmedio.model import SpecAtom\n\nclass Purpose(SpecAtom):\n    purpose: str\n\ndef check_purpose(purpose: Purpose) -> bool:\n    return bool(purpose.purpose.strip())\n\ndeclare_entity(\n    entity_name=\"Purpose\",\n    entity_class=Purpose,\n    instance_check=check_purpose,\n)\n"
+  },
+  {
+    "subject": "MODEL//ANECHOIC <+ Node//Artifact//Atom//Spec Atom//Purpose//Project Goal",
+    "claim": "from caprmedio.formal_claims import declare_entity\nfrom caprmedio.model import Purpose\nfrom dataclasses import field\n\nclass ProjectGoal(Purpose):\n    tier: int = field(metadata={\"allowed_values\": (-1,)})\n\ndeclare_entity(\n    entity_name=\"Project Goal\",\n    entity_class=ProjectGoal,\n    instance_relation_constraints={\n        \"CONTAINED_BY\": {\"target_entity_paths\": (\"Node//Artifact//Component//Project\",), \"targets_per_source\": 1},\n    },\n)\n"
+  },
+  {
+    "subject": "MODEL//ANECHOIC <+ Node//Artifact//Atom//Spec Atom//Purpose//Component Purpose",
+    "claim": "from caprmedio.formal_claims import declare_entity\nfrom caprmedio.model import Purpose\nfrom dataclasses import field\n\nclass ComponentPurpose(Purpose):\n    tier: int = field(metadata={\"allowed_values\": (0,)})\n    component_id: str\n\ndef check_component_purpose(purpose: ComponentPurpose) -> bool:\n    return bool(purpose.component_id.strip())\n\ndeclare_entity(\n    entity_name=\"Component Purpose\",\n    entity_class=ComponentPurpose,\n    instance_relation_constraints={\n        \"CONTAINED_BY\": {\"target_entity_paths\": (\"Node//Artifact//Component\",), \"targets_per_source\": 1},\n    },\n    instance_check=check_component_purpose,\n)\n"
+  },
+  {
+    "subject": "MODEL//ANECHOIC <+ Node//Artifact//Atom//Spec Atom//Contract",
+    "claim": "from caprmedio.formal_claims import declare_entity\nfrom caprmedio.model import SpecAtom\n\nclass Contract(SpecAtom):\n    guarantee: str\n    tier: int | None = None\n\ndef check_contract(contract: Contract) -> bool:\n    return bool(contract.guarantee.strip())\n\ndeclare_entity(\n    entity_name=\"Contract\",\n    entity_class=Contract,\n    instance_relation_constraints={\n        \"CONTAINED_BY\": {\"target_entity_paths\": (\"Node//Artifact//Component\",), \"targets_per_source\": 1},\n    },\n    instance_check=check_contract,\n)\n"
+  },
+  {
+    "subject": "MODEL//ANECHOIC <+ Node//Artifact//Atom//Spec Atom//Contract//Component Contract",
+    "claim": "from caprmedio.formal_claims import declare_entity\nfrom caprmedio.model import Contract\nfrom dataclasses import field\n\nclass ComponentContract(Contract):\n    tier: int = field(metadata={\"allowed_values\": (1,)})\n\ndeclare_entity(\n    entity_name=\"Component Contract\",\n    entity_class=ComponentContract,\n)\n"
+  },
+  {
+    "subject": "MODEL//ANECHOIC <+ Node//Artifact//Atom//Spec Atom//Package Spec",
+    "claim": "from caprmedio.formal_claims import declare_entity\nfrom caprmedio.model import SpecAtom\n\nclass PackageSpec(SpecAtom):\n    package_id: str\n    purpose: str\n    contract: str\n    tier: int | None = None\n\ndef check_package_spec(spec: PackageSpec) -> bool:\n    return bool(spec.package_id.strip() and spec.package_id != spec.atom_id\n                and spec.purpose.strip() and spec.contract.strip())\n\ndeclare_entity(\n    entity_name=\"Package Spec\",\n    entity_class=PackageSpec,\n    instance_relation_constraints={\n        \"CONTAINED_BY\": {\"target_entity_paths\": (\"Node//Artifact//Component\",), \"targets_per_source\": 1},\n    },\n    instance_check=check_package_spec,\n)\n"
+  }
+]

@@ -12,11 +12,14 @@ import sys
 import time
 from typing import Any, Iterator, Mapping
 
-_TOOLS = Path(__file__).resolve().parents[2] / "FEATURE_TOOLS"
-if str(_TOOLS) not in sys.path:
-    sys.path.insert(0, str(_TOOLS))
+_PROGRAMMATIC = Path(__file__).resolve().parents[2]
+for _path in (_PROGRAMMATIC, _PROGRAMMATIC / "FEATURE_MCP", _PROGRAMMATIC / "FEATURE_TOOLS"):
+    if str(_path) not in sys.path:
+        sys.path.insert(0, str(_path))
 
-from project_selection import ProjectSelectionError, resolve_project
+from native_project_selection import NativeProjectSelection
+from native_startup import select_runtime_project as resolve_project
+from project_selection import ProjectSelectionError
 
 from mcp_paths import MCP_PATH  # noqa: E402
 from runtime_images import ImageError
@@ -193,7 +196,8 @@ def _requested_port(value: object) -> int | None:
 
 def _configured_port(selection: object, requested_port: int | None) -> int:
     """Read the sole Project-owned HTTP port and check an optional assertion."""
-    settings = getattr(selection, "settings", None)
+    settings = (selection.parameters if isinstance(selection, NativeProjectSelection)
+                else getattr(selection, "settings", None))
     project_mcp = settings.get("project_mcp") if isinstance(settings, Mapping) else None
     port = project_mcp.get("http_port") if isinstance(project_mcp, Mapping) else None
     if type(port) is not int or not 1 <= port <= 65535:
@@ -402,9 +406,12 @@ class Launcher:
         return ProjectMcpBackend(build_if_missing=build_if_missing, build_timeout=build_timeout)
 
     @staticmethod
-    def _image(backend, source_root, image, project_root):
+    def _image(backend, source_root, image, selection):
+        from project_mcp_backend import ProjectMcpBackend
+
+        options = {"selection": selection} if isinstance(backend, ProjectMcpBackend) else {}
         try:
-            image_id, fingerprint = backend.resolve_image(source_root, image, project_root=project_root)
+            image_id, fingerprint = backend.resolve_image(source_root, image, project_root=selection.root, **options)
         except ImageError as error:
             raise LaunchError(getattr(error, "code", "IMAGE_REFUSED")) from None
         except LaunchError:
@@ -518,8 +525,6 @@ class Launcher:
             selection = resolve_project(project_root, control_root)
         except Exception:
             return self._failure("PROJECT_SELECTION_REFUSED")
-        except ProjectSelectionError:
-            return self._failure("PROJECT_SELECTION_REFUSED")
         try:
             startup_timeout = _positive_timeout(timeout, ceiling=_DEFAULT_STARTUP_TIMEOUT,
                                                 default=_DEFAULT_STARTUP_TIMEOUT)
@@ -527,6 +532,20 @@ class Launcher:
                                                       default=_DEFAULT_BUILD_TIMEOUT)
             if type(build_if_missing) is not bool:
                 raise LaunchError("IMAGE_REFUSED")
+            if isinstance(selection, NativeProjectSelection):
+                runtime = selection.parameters.get("runtime", {})
+                mcp_options = runtime.get("project_mcp", {}) if isinstance(runtime, Mapping) else None
+                if not isinstance(mcp_options, Mapping) or type(mcp_options.get("build_if_missing", True)) is not bool:
+                    raise LaunchError("PROJECT_SELECTION_REFUSED")
+                startup_timeout = min(startup_timeout, _positive_timeout(
+                    mcp_options.get("startup_timeout_seconds", _DEFAULT_STARTUP_TIMEOUT),
+                    ceiling=_DEFAULT_STARTUP_TIMEOUT, default=_DEFAULT_STARTUP_TIMEOUT,
+                ))
+                bounded_build_timeout = min(bounded_build_timeout, _positive_timeout(
+                    mcp_options.get("build_timeout_seconds", _DEFAULT_BUILD_TIMEOUT),
+                    ceiling=_DEFAULT_BUILD_TIMEOUT, default=_DEFAULT_BUILD_TIMEOUT,
+                ))
+                build_if_missing = build_if_missing and mcp_options.get("build_if_missing", True)
             configured_port = _configured_port(selection, requested_port)
             if source_root is None:
                 return self._failure("IMAGE_INPUT_UNAVAILABLE", selection)
@@ -535,7 +554,7 @@ class Launcher:
                                     build_timeout=bounded_build_timeout)
             with _project_lock(selection, startup_timeout):
                 try:
-                    image_id, fingerprint = self._image(backend, source, image, selection.root)
+                    image_id, fingerprint = self._image(backend, source, image, selection)
                 except LaunchError as error:
                     result = self._failure(error.code, selection)
                     _record_safe_metadata(selection, result)
