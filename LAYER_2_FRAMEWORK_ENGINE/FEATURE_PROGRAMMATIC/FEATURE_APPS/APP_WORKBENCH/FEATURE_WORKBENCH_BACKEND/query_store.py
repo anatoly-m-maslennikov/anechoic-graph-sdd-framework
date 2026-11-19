@@ -238,11 +238,31 @@ class QueryStore:
                     return row[0]
             return None
 
-    def lifecycle_latest_version(self, atom_id: str, *, eligible=None) -> int | None:
+    def _create_atom_version_max(self) -> None:
+        if not self._connection.execute("SELECT count(*) FROM information_schema.tables "
+                                        "WHERE table_schema = 'main' AND table_name = 'archive_version_max'").fetchone()[0]:
+            return
+        source = revision_query(self._connection, stable_only=False)
+        self._connection.execute(
+            f"CREATE OR REPLACE VIEW main.atom_version_max AS WITH revisions AS ({source}) "
+            "SELECT atom_id, arg_max(version, (length(version), version)) AS max_version FROM ("
+            "SELECT atom_id, cast(version AS VARCHAR) AS version FROM revisions "
+            "JOIN main.atoms USING (reference, relative_path, filename) "
+            "WHERE status_group = 'Current' AND version > 0 "
+            f"{self._native_atom_clause()} "
+            "UNION ALL SELECT atom_id, max_version FROM main.archive_version_max"
+            ") GROUP BY atom_id"
+        )
+
+    def lifecycle_latest_draft_version(self, atom_id: str, *, eligible=None) -> int | None:
         with self._lock:
             source = revision_query(self._connection, stable_only=False)
             rows = self._connection.execute(
-                f"SELECT version, relative_path, filename FROM ({source}) WHERE atom_id = ? AND version IS NOT NULL", [atom_id],
+                f"SELECT revisions.version, revisions.relative_path, revisions.filename FROM ({source}) revisions "
+                "JOIN main.atoms USING (reference, relative_path, filename) "
+                "WHERE revisions.atom_id = ? AND revisions.version > 0 "
+                "AND status_group IN ('Current', 'Backlog', 'Draft') "
+                f"{self._native_atom_clause()}", [atom_id],
             ).fetchall()
             return max((version for version, directory, filename in rows
                         if eligible is None or eligible(directory, filename)), default=None)
@@ -318,6 +338,7 @@ class QueryStore:
                 self._header_schema = header_schema
                 self._content_schema = content_schema
                 self._schema_changed = False
+                self._create_atom_version_max()
                 header_schema.write(schema_asset_path(self._database_path))
                 content_schema.write(content_schema_asset_path(self._database_path))
                 self._projection = snapshot(

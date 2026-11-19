@@ -14,8 +14,8 @@ context:
     priority: Medium
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-19T02:34:31.238468+00:00'
+  version: 2
+  updated_at: '2026-11-19T14:46:07.639355+00:00'
 destination:
   file:
     name: CA-C-753-QUESTION--preserve-legacy-ticket-templates-during-mechanical-migration.md
@@ -37,7 +37,8 @@ Conflicts, eight Implementation Discrepancies, one Opportunity, and
 five archived records whose filenames say Problem but have no
 authored Form. The shared rehearsal holds all 50 by original path.
 
-Proposed disposition: preserve the five authored template meanings in
-their approved TASKS or ISSUES branch. Use Problem for the five
-filename-only carrier revisions only if their original filename is
-sufficient evidence. Keep their body bytes and revision history.
+Operator approval, 2026-11-19. Migrate the 17 Current Plans and
+two Backlog Objectives as Tasks. Migrate the two Current resolved
+Conflicts as Problems. Preserve the status, Markdown body, and
+revision of each source. Unresolved Archived cases stay deferred
+in the legacy tree.

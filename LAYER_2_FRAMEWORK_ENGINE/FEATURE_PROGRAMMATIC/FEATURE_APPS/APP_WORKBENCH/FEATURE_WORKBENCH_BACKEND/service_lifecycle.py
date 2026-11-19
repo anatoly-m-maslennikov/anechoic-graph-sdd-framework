@@ -220,13 +220,16 @@ class ServiceLifecycle:
         self._check_lifecycle_project(selection)
         self._flush_lifecycle_changes()
         assert self._store is not None
+        with self._refresh_lock, self._store._lock:
+            row = self._store._connection.execute(
+                "SELECT max_version FROM main.atom_version_max WHERE atom_id = ?", [atom_id],
+            ).fetchone()
+        return int(row[0]) if row is not None else None
+
+    def lifecycle_latest_draft_version(self, selection, atom_id: str) -> int | None:
+        self._check_lifecycle_project(selection)
+        self._flush_lifecycle_changes()
+        assert self._store is not None
         with self._refresh_lock:
-            self._archive_layout()
-            unloaded, unknown = self._reader._catalog.unloaded_version_max(
-                atom_id, self._reader._source_paths, self._archive_roots,
-            )
-            if unknown:
-                raise ArchiveNotLoadedError(f"Load the Archive Scope Unit and Role for {atom_id} before allocating its next Version.")
-            latest = self._store.lifecycle_latest_version(atom_id, eligible=self._lifecycle_eligible_parts)
-            return max(latest or 0, unloaded or 0) or None
+            return self._store.lifecycle_latest_draft_version(atom_id, eligible=self._lifecycle_eligible_parts)
 

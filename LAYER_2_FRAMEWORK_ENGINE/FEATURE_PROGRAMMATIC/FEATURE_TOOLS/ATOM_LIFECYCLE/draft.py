@@ -17,7 +17,6 @@ from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
 from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier
 
 from ATOM_LIFECYCLE import common
-from ATOM_LIFECYCLE.atom_population import validate_candidate_population
 from ATOM_LIFECYCLE.carrier import effective_header, logical_view, render_carrier
 from ATOM_LIFECYCLE.placement import derive_destination, resolve_container
 from ATOM_LIFECYCLE.source import ArchiveNotLoadedError, SourceSelectionError, _candidate_paths, query_reader, select_source
@@ -136,18 +135,19 @@ def _source(selection, selector, *, field='sourceCurrent'):
 
 
 def _next_version(selection, pin):
-    """Avoid reusing a known Current, Draft or Archived revision number."""
+    """Avoid reusing a known Current or Draft revision number."""
     indexed = query_reader()
     if indexed is not None:
-        latest = indexed.lifecycle_latest_version(selection, pin.atom_id)
+        latest = indexed.lifecycle_latest_draft_version(selection, pin.atom_id)
         return max(pin.version, latest or 0) + 1
     reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
     paths = _candidate_paths(reader, selection, pin.atom_id)
-    marker = re.compile(r'(?:^|-)'+re.escape(pin.atom_id)+r'@([1-9][0-9]*)')
-    suffix = re.compile(r'@([1-9][0-9]*)\.md$')
+    marker = re.compile(r'(?:^|-)'+re.escape(pin.atom_id)+r'@([1-9][0-9]*)-draft(?=-|\.)')
     versions = [pin.version]
     for path in paths:
-        match = marker.search(path.name) or suffix.search(path.name)
+        if 'archived' in (part.casefold() for part in path.relative_to(selection.root).parts[:-1]):
+            continue
+        match = marker.search(path.name)
         if match:
             versions.append(int(match.group(1)))
     if pin.status.casefold() in {'archived', 'draft'}:
@@ -226,8 +226,6 @@ def prepare_draft(selection, model, params, *, source_pin=None):  # noqa: C901
                          body=body if not pin or {'summary', 'body'} & values.keys() else None)
     common.validate_candidate(selection, model, raw, destination,
                               require_main_subject=pin is None or 'topics' in values)
-    validate_candidate_population(selection, model, atom_id=atom_id, version=version, status='Draft',
-                                  summary=summary)
     return {'pin': pin, 'selector': {'ref_id': pin.ref_id, 'version': pin.version} if pin else None, 'destination': destination,
             'raw': raw, 'atom_id': atom_id, 'version': version, 'warnings': warnings}
 

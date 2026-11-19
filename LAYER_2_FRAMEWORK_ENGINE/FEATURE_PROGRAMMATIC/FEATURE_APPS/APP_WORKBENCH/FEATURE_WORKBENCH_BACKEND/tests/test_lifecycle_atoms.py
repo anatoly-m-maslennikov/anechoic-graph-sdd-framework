@@ -9,7 +9,8 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests"))
 import test_incremental_indexing
 from smalltest_support import source_path, write_atom
-from ATOM_LIFECYCLE.source import ArchiveNotLoadedError
+from ATOM_LIFECYCLE.publish import _next_published_version
+from ATOM_LIFECYCLE.source import ArchiveNotLoadedError, bind_query_reader
 
 
 class LifecycleAtomsTests(test_incremental_indexing.IncrementalIndexingTests):
@@ -195,7 +196,7 @@ class LifecycleAtomsTests(test_incremental_indexing.IncrementalIndexingTests):
         ))
         write_atom(archived, "CA-R-101", status="Active", version=9)
         self.service.lifecycle_changed(archived, archived)
-        self.assertEqual(9, self.service.lifecycle_latest_version(selection, "CA-R-101"))
+        self.assertIsNone(self.service.lifecycle_latest_version(selection, "CA-R-101"))
 
     def test_archives_duplicates_and_immediate_changes_without_rescan(self):
         current = source_path(self.declarations, "ENGINE", "04_requirement", "CA-R-101.md").resolve()
@@ -262,7 +263,7 @@ class LifecycleAtomsTests(test_incremental_indexing.IncrementalIndexingTests):
         ))
         self.assertEqual([], self.service.sync_status()["loaded_archive_scopes"])
 
-    def test_archive_allocation_tables_follow_membership_and_watcher_changes(self):
+    def test_archive_allocation_tables_follow_watcher_changes(self):
         current = source_path(self.declarations, "ENGINE", "04_requirement", "CA-R-501.md").resolve()
         old = current.parent / "archive" / "CA-R-501@4-old.md"
         legacy = current.parent / "archive" / "CA-R-501-legacy.md"
@@ -275,19 +276,19 @@ class LifecycleAtomsTests(test_incremental_indexing.IncrementalIndexingTests):
         def query(sql):
             with self.service._store._lock:
                 return self.service._store._connection.execute(sql).fetchall()
-        self.assertIn(("CA-R-501", "4", True), query("SELECT * FROM main.archive_version_max"))
+        self.assertIn(("CA-R-501", "4"), query("SELECT * FROM main.archive_version_max"))
         result = self.store.run("SELECT atom_id, max_version FROM archive_version_max WHERE atom_id = 'CA-R-501'")
         self.assertEqual([["CA-R-501", "4"]], result["rows"])
-        self.assertNotIn("CA-R-900", {row[0] for row in query("SELECT * FROM main.archive_version_max")})
+        self.assertIn(("CA-R-900", "7"), query("SELECT * FROM main.atom_version_max"))
         self.assertEqual("900", query("SELECT max_id_number FROM main.archive_role_max WHERE role_marker = 'R'")[0][0])
         selection = SimpleNamespace(root=self.root.resolve(), control_root=self.service._reader.control_root)
-        with self.assertRaises(ArchiveNotLoadedError):
-            self.service.lifecycle_latest_version(selection, "CA-R-501")
+        self.assertEqual(5, self.service.lifecycle_latest_version(selection, "CA-R-501"))
         moved = old.with_name("CA-R-501@6-moved.md")
         old.rename(moved)
         write_atom(moved, "CA-R-501", status="Archived", version=6)
         self.service._refresh([{"operation": "move", "old_path": old.relative_to(self.root.resolve()).as_posix(), "new_path": moved.relative_to(self.root.resolve()).as_posix()}])
-        self.assertIn(("CA-R-501", "6", True), query("SELECT * FROM main.archive_version_max"))
+        self.assertIn(("CA-R-501", "6"), query("SELECT * FROM main.archive_version_max"))
+        self.assertEqual(6, self.service.lifecycle_latest_version(selection, "CA-R-501"))
         legacy.unlink()
         self.service._refresh([{"operation": "remove", "old_path": legacy.relative_to(self.root.resolve()).as_posix(), "new_path": None}])
         self.assertEqual(6, self.service.lifecycle_latest_version(selection, "CA-R-501"))
@@ -296,7 +297,7 @@ class LifecycleAtomsTests(test_incremental_indexing.IncrementalIndexingTests):
         self.assertEqual("501", query("SELECT max_id_number FROM main.archive_role_max WHERE role_marker = 'R'")[0][0])
         current.unlink()
         self.service._refresh([{"operation": "remove", "old_path": current.relative_to(self.root.resolve()).as_posix(), "new_path": None}])
-        self.assertNotIn("CA-R-501", {row[0] for row in query("SELECT * FROM main.archive_version_max")})
+        self.assertIn(("CA-R-501", "6"), query("SELECT * FROM main.atom_version_max"))
         self.service._refresh()
         self.assertEqual("501", query("SELECT max_id_number FROM main.archive_role_max WHERE role_marker = 'R'")[0][0])
 
@@ -306,8 +307,8 @@ class LifecycleAtomsTests(test_incremental_indexing.IncrementalIndexingTests):
         write_atom(current, "CA-R-504", version=3)
         write_atom(archive, "CA-R-504", status="Archived", version=2)
         self.service._refresh()
-        result = self.store.run("SELECT max_version, has_unknown_version FROM archive_version_max WHERE atom_id = 'CA-R-504'")
-        self.assertEqual([[None, True]], result["rows"])
+        result = self.store.run("SELECT max_version FROM archive_version_max WHERE atom_id = 'CA-R-504'")
+        self.assertEqual([["2"]], result["rows"])
 
     def test_archive_summary_and_projection_publish_under_one_lock(self):
         current = source_path(self.declarations, "ENGINE", "04_requirement", "CA-R-503.md").resolve()
@@ -316,8 +317,8 @@ class LifecycleAtomsTests(test_incremental_indexing.IncrementalIndexingTests):
         write_atom(archived, "CA-R-503", status="Archived", version=2)
         entered, release, queried = threading.Event(), threading.Event(), threading.Event()
         original = self.service._reader._catalog.refresh_summaries
-        def pause_summary(ids):
-            original(ids)
+        def pause_summary():
+            original()
             entered.set()
             if not release.wait(5):
                 raise TimeoutError("publication test timed out")
@@ -338,19 +339,28 @@ class LifecycleAtomsTests(test_incremental_indexing.IncrementalIndexingTests):
             query.join(5)
             self.assertTrue(queried.is_set())
 
-    def test_loaded_archive_version_uses_body_instead_of_filename(self):
+    def test_version_max_uses_archive_filenames_and_excludes_drafts(self):
         current = source_path(self.declarations, "ENGINE", "04_requirement", "CA-R-502.md").resolve()
         archived = current.parent / "archive" / "CA-R-502@11-old.md"
-        legacy = current.parent / "archive" / "CA-R-502-legacy.md"
+        malformed = current.parent / "archive" / "CA-R-502@12-broken.md"
+        draft = current.parent / "000_draft" / "CA-R-502@20-draft.md"
         write_atom(current, "CA-R-502", version=5)
         write_atom(archived, "CA-R-502", status="Archived", version=3)
-        write_atom(legacy, "CA-R-502", status="Archived", version=4)
+        malformed.write_text("not an Atom", encoding="utf-8")
+        write_atom(draft, "CA-R-502", status="Draft", version=20)
         self.service._refresh()
         selection = SimpleNamespace(root=self.root.resolve(), control_root=self.service._reader.control_root)
-        with self.assertRaises(ArchiveNotLoadedError):
-            self.service.lifecycle_latest_version(selection, "CA-R-502")
+        self.assertEqual(12, self.service.lifecycle_latest_version(selection, "CA-R-502"))
+        self.assertEqual(20, self.service.lifecycle_latest_draft_version(selection, "CA-R-502"))
+        self.assertEqual([["12"]], self.store.run(
+            "SELECT max_version FROM atom_version_max WHERE atom_id = 'CA-R-502'"
+        )["rows"])
+        with bind_query_reader(self.service), patch.object(self.service, "lifecycle_read", side_effect=AssertionError("body read")):
+            self.assertEqual(13, _next_published_version(selection, "CA-R-502"))
+            self.assertEqual(1, _next_published_version(selection, "CA-R-999"))
         self.service.load_archives([{"scope_unit": "ENGINE", "role": "Requirement"}])
-        self.assertEqual(5, self.service.lifecycle_latest_version(selection, "CA-R-502"))
+        self.assertEqual(12, self.service.lifecycle_latest_version(selection, "CA-R-502"))
+        self.assertEqual(20, self.service.lifecycle_latest_draft_version(selection, "CA-R-502"))
 
     def test_relation_read_flushes_own_changes_as_one_batch(self):
         path = source_path(self.declarations, "ENGINE", "04_requirement", "CA-R-101.md").resolve()

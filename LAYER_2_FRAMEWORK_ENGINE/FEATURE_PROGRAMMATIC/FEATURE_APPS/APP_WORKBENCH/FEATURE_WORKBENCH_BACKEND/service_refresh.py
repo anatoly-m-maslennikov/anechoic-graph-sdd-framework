@@ -30,7 +30,7 @@ class ServiceRefresh:
                         self._audits = AuditWorker(self._store)
                     self._audits.invalidate()
                 with self._store._lock:
-                    self._reader._catalog.refresh_summaries({row["id"] for row in atoms if row.get("id") and row.get("status_group") in {"Current", "Draft"}})
+                    self._reader._catalog.refresh_summaries()
                     captured_at = time.monotonic()
                     capture_seconds = captured_at - started
                     full = changed = False

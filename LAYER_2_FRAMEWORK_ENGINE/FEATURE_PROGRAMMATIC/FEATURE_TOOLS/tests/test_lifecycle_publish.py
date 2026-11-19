@@ -57,6 +57,7 @@ def run_case(*, changed=False, fail_second=False, destination=ROOT / 'current.md
           patch.object(publish, 'resolve_replacement', side_effect=lambda selection, ref: targets[ref]),
           patch.object(publish, '_destination', return_value=destination),
           patch.object(publish, '_current_collision', return_value=False),
+          patch.object(publish, '_next_published_version', return_value=1) as next_version,
           patch.object(publish, 'validate_candidate'),
           patch.object(publish.source, 'select_source', side_effect=select),
           patch.object(publish.source, 'select_sources', side_effect=lambda selection, refs: {
@@ -65,6 +66,8 @@ def run_case(*, changed=False, fail_second=False, destination=ROOT / 'current.md
           patch.object(publish, 'write_destination', return_value=effects.Result(effects=[{'operation': 'create'}])) as write,
           patch.object(publish.effects, 'remove', return_value=effects.Result(effects=[{'operation': 'remove'}])) as remove):
         result = publish.promote_draft(selection, model, {'target': {'ref_id': draft.ref_id, 'version': 1}, 'targetStatus': 'Active'})
+        if next_version.called:
+            next_version.assert_called_once_with(selection, draft.atom_id, None)
     return result, archives, write.call_count, remove.call_count
 
 
@@ -127,6 +130,8 @@ def test_same_identity_promotion_requires_predecessor_summary_and_role():
 
             with (patch.object(publish, 'read_target', return_value=draft),
                   patch.object(publish, 'resolve_replacement', return_value=predecessor),
+                  patch.object(publish, '_current_collision', return_value=predecessor_status == 'Active'),
+                  patch.object(publish, '_next_published_version', return_value=2),
                   patch.object(publish, '_destination', return_value=ROOT / 'current.md'),
                   patch.object(publish, 'validate_candidate'),
                   patch.object(publish.source, 'select_source', side_effect=select),
@@ -138,7 +143,7 @@ def test_same_identity_promotion_requires_predecessor_summary_and_role():
                   patch.object(publish.effects, 'remove', return_value=effects.Result(effects=[{'operation': 'remove'}])) as remove):
                 result = publish.promote_draft(selection, model, {
                     'target': {'ref_id': draft.ref_id, 'version': 3}, 'targetStatus': 'Active'})
-            if change == 'unchanged':
+            if change == 'unchanged' or predecessor_status == 'Archived':
                 assert not result['errors'] and result['outcome'] == 'completed', result
                 assert (write.call_count, remove.call_count) == (1, 1)
                 assert archive.call_count == (predecessor_status == 'Active')
@@ -211,17 +216,27 @@ def test_composed_update_preserves_status_and_version():
         assert deferred['savedDraft']['version'] == 4, deferred
         deferred_path = root / deferred['savedDraft']['path']
         deferred_bytes = deferred_path.read_bytes()
-        next_outcome = publish.update_atom(selection, model, {'sourceCurrent': {'ref_id': 'CA-R-1', 'version': 3},
-                                                               'changes': {'body': body + '\nUpdated again.\n'}})
+        next_outcome = publish.update_atom(selection, model, {
+            'sourceCurrent': {'ref_id': 'CA-R-1', 'version': 3},
+            'changes': {'body': body + '\nUpdated again.\n'}})
+        assert not next_outcome['errors'], next_outcome
+        assert next_outcome['artifact']['version'] == 4
+        assert deferred_path.read_bytes() == deferred_bytes
+        history = control / '04_requirement/archived/CA-R-1@8-RULE--historical.md'
+        history.parent.mkdir(exist_ok=True)
+        history.write_text('malformed historical carrier')
+        next_outcome = publish.update_atom(selection, model, {'sourceCurrent': {'ref_id': 'CA-R-1', 'version': 4},
+                                                               'changes': {'body': body + '\nUpdated once more.\n'}})
         assert not next_outcome['errors'], next_outcome
         assert next_outcome['artifact']['status'] == 'Active'
-        assert next_outcome['artifact']['version'] == 5
+        assert next_outcome['artifact']['version'] == 9
+        assert history.read_text() == 'malformed historical carrier'
         stale = publish.promote_draft(selection, model, {
             'target': {'ref_id': deferred['savedDraft']['ref_id'], 'version': 4},
             'targetStatus': 'Active'})
         assert stale['outcome'] == 'needs_input' and not stale['effects'], stale
         assert deferred_path.read_bytes() == deferred_bytes
-        request = {'sourceCurrent': {'ref_id': 'CA-R-1', 'version': 5},
+        request = {'sourceCurrent': {'ref_id': 'CA-R-1', 'version': 9},
                    'changes': {'body': body + '\nPromotion failure.\n'}}
         uncertain = {'operation': 'write', 'target': 'example', 'state': 'unknown'}
         with patch.object(publish, '_promote_draft', return_value={
@@ -234,8 +249,8 @@ def test_composed_update_preserves_status_and_version():
         assert failed['effects'] and failed['effects'][-1] == uncertain
         assert failed['warnings'] == ['warning']
         assert 'pending_promotion' not in failed and 'requested_input' not in failed
-        assert list(control.rglob('CA-R-1@6-draft*.md'))
-        assert list(control.rglob('CA-R-1@5-*.md')) and not path.exists()
+        assert list(control.rglob('CA-R-1@10-draft*.md'))
+        assert list(control.rglob('CA-R-1@9-*.md')) and not path.exists()
 
 
 @with_fixture_placement
@@ -280,26 +295,38 @@ def test_noop_update_and_same_identity_promotion_preserve_current():
         assert not list(control.rglob('CA-R-1@*.md'))
         assert len(result['effects']) == 1 and result['effects'][0]['operation'] == 'remove'
 
+        history = control / '04_requirement/archived/CA-R-1@7-RULE--historical.md'
+        history.parent.mkdir(exist_ok=True)
+        history.write_text('malformed historical carrier')
+        created = draft.create_draft(selection, model, {'sourceCurrent': selector, 'changes': {}})
+        assert not created['errors'], created
+        result = publish.promote_draft(selection, model, {
+            'target': {'ref_id': created['savedDraft']['ref_id'],
+                       'version': created['savedDraft']['version']}, 'targetStatus': 'Active'})
+        assert result['outcome'] == 'completed', result
+        assert result['artifact']['version'] == 2 and path.read_bytes() == original
+
         # A changed requested Status is a promotion, not an unchanged Draft discard.
         created = draft.create_draft(selection, model, {'sourceCurrent': selector, 'changes': {}})
         assert not created['errors'], created
         result = publish.promote_draft(selection, model, {
             'target': {'ref_id': 'CA-R-1@3-draft', 'version': 3}, 'targetStatus': 'Resolved'})
         assert result['outcome'] == 'completed', result
-        assert result['artifact']['version'] == 3 and result['artifact']['status'] == 'Resolved'
+        assert result['artifact']['version'] == 8 and result['artifact']['status'] == 'Resolved'
+        assert history.read_text() == 'malformed historical carrier'
         assert list(control.rglob('CA-R-1@2-*.md'))
 
         # An explicit replacement remains actionable even when the body is unchanged.
         other = control / '04_requirement/CA-R-2-RULE--other.md'
         other.write_bytes(original.replace(b'CA-R-1', b'CA-R-2').replace(b'Example', b'Other'))
         created = draft.create_draft(selection, model, {
-            'sourceCurrent': {'ref_id': 'CA-R-1', 'version': 3},
+            'sourceCurrent': {'ref_id': 'CA-R-1', 'version': 8},
             'changes': {'relations': {'is_replacement_for': ['CA-R-2']}}})
         assert not created['errors'], created
         result = publish.promote_draft(selection, model, {
-            'target': {'ref_id': 'CA-R-1@4-draft', 'version': 4}, 'targetStatus': 'Resolved'})
+            'target': {'ref_id': 'CA-R-1@9-draft', 'version': 9}, 'targetStatus': 'Resolved'})
         assert result['outcome'] == 'completed', result
-        assert result['artifact']['version'] == 4
+        assert result['artifact']['version'] == 9
         assert not other.exists() and list(control.rglob('CA-R-2@2-*.md'))
 
 

@@ -22,11 +22,10 @@ class ArchiveNotLoadedTests(unittest.TestCase):
                 draft._source(object(), {'ref_id': 'CA-R-1', 'version': 1})
         self.assertEqual(2, select.call_count)
 
-    def test_version_allocation_propagates_unloaded_archive(self):
-        reader = SimpleNamespace(lifecycle_latest_version=Mock(side_effect=self.error))
+    def test_version_allocation_uses_current_and_draft_index(self):
+        reader = SimpleNamespace(lifecycle_latest_draft_version=Mock(return_value=3))
         with patch.object(draft, 'query_reader', return_value=reader):
-            with self.assertRaises(source.ArchiveNotLoadedError):
-                draft._next_version(object(), SimpleNamespace(atom_id='CA-R-1', version=1))
+            self.assertEqual(4, draft._next_version(object(), SimpleNamespace(atom_id='CA-R-1', version=1)))
 
     def test_replacement_propagates_unloaded_archive(self):
         selection = object.__new__(ProjectSelection)

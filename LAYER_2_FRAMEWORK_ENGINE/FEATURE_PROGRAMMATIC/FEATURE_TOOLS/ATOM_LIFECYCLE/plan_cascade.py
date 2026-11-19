@@ -75,17 +75,10 @@ def _retained_version(path, atom_id):
 
 def _select_pins(selection, parent_pin, model, paths, reader):
     pins = {parent_pin.atom_id: parent_pin}
-    retained = set()
     current = {}
     parent_role = logical_view(parent_pin.metadata, model).get('role')
     for path, atom_id in paths:
-        version = _retained_version(path, atom_id)
-        if version is not None:
-            ref = f'{atom_id}@{version}'
-            if (ref in retained or _read_candidate(
-                    reader, path, ref, atom_id, version, None, retained_history=True) is None):
-                _fail('Carrier tree contains duplicate or invalid retained history')
-            retained.add(ref)
+        if _retained_version(path, atom_id) is not None:
             continue
         if atom_id in current or atom_id == parent_pin.atom_id:
             _fail('Carrier tree contains duplicate or misplaced Current Atom Markdown')
@@ -97,9 +90,6 @@ def _select_pins(selection, parent_pin, model, paths, reader):
         if view.get('role') != parent_role:
             _fail('Carrier tree contains unsupported Atom Markdown')
         pins[atom_id] = pin
-    revisions = (ref.rsplit('@', 1) for ref in retained)
-    if any(atom_id in pins and int(version) >= pins[atom_id].version for atom_id, version in revisions):
-        _fail('Retained revision is not older than the Current Atom')
     if reader.currentness()['state'] != 'unchanged':
         _fail('Carrier tree changed during selection')
     return pins

@@ -78,14 +78,13 @@ class PlanCascadeTest(unittest.TestCase):
         with self.assertRaises(InputError):
             select_archive_cascade(self.selection, parent, self.model)
 
-    def test_operations_rejects_malformed_history_and_wrong_placement(self):
+    def test_operations_skips_history_and_rejects_wrong_current_placement(self):
         group, child, _ = self._contained('Operations', 'Workflow', 'Step')
         parent = select_source(self.selection, 'CA-O-20')
         history = group / 'CA-O-21@1-STEP--old.md'
         history.write_text('retained')
-        with self.assertRaises(InputError):
-            select_archive_cascade(self.selection, parent, self.model)
-        history.unlink()
+        pins = select_archive_cascade(self.selection, parent, self.model)
+        self.assertEqual([pin.atom_id for pin in pins], ['CA-O-21', 'CA-O-20'])
         child.write_text(child.read_text().replace('status: Active', 'status: Resolved'))
         with self.assertRaises(InputError):
             select_archive_cascade(self.selection, parent, self.model)

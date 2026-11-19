@@ -13,7 +13,6 @@ import re
 from pathlib import Path
 
 from ATOM_LIFECYCLE import effects, source
-from ATOM_LIFECYCLE.atom_population import validate_candidate_population
 from ATOM_LIFECYCLE.carrier import logical_view, render_carrier, same_authored_carrier
 from ATOM_LIFECYCLE.common import InputError, SourceChanged, read_target, result, saved, validate_candidate, write_destination
 from ATOM_LIFECYCLE.draft import _summary
@@ -84,33 +83,19 @@ def resolve_replacement(selection, atom_id):  # noqa: C901
                     raise InputError('relations.is_replacement_for', 'Indexed Current replacement is stale or invalid.') from exc
             return _indexed_archive(selection, identity, reader)
         candidates = source._candidate_paths(reader, selection, identity)
-        current = []
-        archived = []
-        for path in candidates:
-            match = re.match(r'(?:[1-9][0-9]*-)?' + re.escape(identity) + r'(?:@([1-9][0-9]*)(-draft)?)?(?=-|\.)', path.name)
-            if not match:
-                raise source.SourceSelectionError('Malformed replacement carrier identity')
-            version, is_draft = match.groups()
-            if not version:
-                suffix = re.search(r'@([1-9][0-9]*)\.md$', path.name)
-                version = suffix.group(1) if suffix else None
-            if is_draft:
-                continue
-            ref = f'{identity}@{version}' if version else identity
-            pin = source._read_candidate(reader, path, ref, identity, version, None,
-                                         retained_history=bool(version))
-            if pin is not None:
-                (archived if version else current).append(pin)
-        source._check_currentness(reader, selection, identity, candidates)
-        if len(current) > 1 or (not current and not archived):
-            raise source.SourceSelectionError('Replacement target is missing or ambiguous')
+        revisions = [(path, *source._carrier_revision(path, identity)) for path in candidates]
+        current = tuple(path for path, version, is_draft in revisions if version is None and not is_draft)
         if current:
-            return current[0]
-        latest = max(pin.version for pin in archived)
-        matches = [pin for pin in archived if pin.version == latest]
-        if len(matches) != 1:
-            raise source.SourceSelectionError('Archived replacement target is ambiguous')
-        return matches[0]
+            pin = source._unique_candidate(reader, current, identity, identity, None, None)
+        else:
+            latest = max((int(version) for _, version, is_draft in revisions if version and not is_draft), default=0)
+            if not latest:
+                raise source.SourceSelectionError('Replacement target is missing or ambiguous')
+            selected = tuple(path for path, version, is_draft in revisions if version == str(latest) and not is_draft)
+            pin = source._unique_candidate(reader, selected, f'{identity}@{latest}', identity, str(latest), None,
+                                           retained_history=True)
+        source._check_currentness(reader, selection, identity, candidates)
+        return pin
     except source.ArchiveNotLoadedError:
         raise
     except InputError:
@@ -146,14 +131,26 @@ def _relations(pin):
     return list(dict.fromkeys(value))
 
 
-def _destination(selection, pin, status, model):
+def _next_published_version(selection, atom_id, predecessor=None):
+    indexed = source.query_reader()
+    if indexed is not None:
+        latest = indexed.lifecycle_latest_version(selection, atom_id)
+    else:
+        reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
+        latest = max((int(version) for path in source._candidate_paths(reader, selection, atom_id)
+                      for version, draft in (source._carrier_revision(path, atom_id),)
+                      if version is not None and not draft), default=0)
+    return max(latest or 0, predecessor.version if predecessor is not None else 0) + 1
+
+
+def _destination(selection, pin, status, model, version):
     view = logical_view(pin.metadata, model)
     body = parse_carrier(pin.raw, pin.path).body
     match = re.search(r'(?im)^#{1,2}\s+Summary\s*\n+([^\n]+)', body)
     if not match:
         raise InputError('target', 'Draft Summary is missing.')
     scope, parent = resolve_container(selection, view, pin.atom_id, model=model)
-    return derive_destination(selection, atom_id=pin.atom_id, version=pin.version, status=status,
+    return derive_destination(selection, atom_id=pin.atom_id, version=version, status=status,
                               role=view.get('role'), form=view.get('form'), label=view.get('label'),
                               summary=match.group(1).strip(), scope_unit=scope, parent=parent, tier=view.get('tier'),
                               work_sequence=view.get('work_sequence_number'))
@@ -203,7 +200,7 @@ def _promotion_predecessor(selection, ref, staged):
 
 
 @trace('promotion.promote')
-def _promote_draft(selection, model, params, *, staged=None, expected_draft=None):  # noqa: C901
+def _promote_draft(selection, model, params, *, staged=None, expected_draft=None, expected_version=None):  # noqa: C901
     """Resolve all predecessor targets, archive them, then publish and remove Draft."""
     from ATOM_LIFECYCLE.state_actions import archive_atom
 
@@ -233,38 +230,39 @@ def _promote_draft(selection, model, params, *, staged=None, expected_draft=None
             raise InputError('target', 'Draft identity already has a Current Atom.')
         # A same-identity Draft supersedes its current preceding revision even
         # when no replacement relation is required for the ordinary update.
-        if pin.version > 1 and pin.atom_id not in pins:
+        if (pin.version > 1 and pin.atom_id not in pins
+                and ((staged is not None and pin.atom_id in staged) or _current_collision(selection, pin.atom_id))):
             pins[pin.atom_id] = _promotion_predecessor(selection, pin.atom_id, staged)
-        if pin.atom_id in pins and pins[pin.atom_id].version >= pin.version:
+        predecessor = pins.get(pin.atom_id)
+        if (predecessor is not None and predecessor.status.casefold() != 'archived'
+                and predecessor.version >= pin.version):
             raise InputError('target', 'Draft predecessor Version is stale.')
         if staged is not None:
             if set(pins) != set(staged) or any(not _same_pin(pins[ref], previous) for ref, previous in staged.items()):
                 raise SourceChanged('Replacement target changed after preparation.')
-        if pin.version > 1:
-            predecessor = pins[pin.atom_id]
+        if predecessor is not None:
             previous_view = logical_view(predecessor.metadata, model)
             draft_summary = _summary(parse_carrier(pin.raw, pin.path).body)
             previous_summary = _summary(parse_carrier(predecessor.raw, predecessor.path).body)
             if view.get('role') != previous_view.get('role') or draft_summary != previous_summary:
                 raise InputError('target', 'A changed Summary or Content Role requires a new Atom ID at Version 1.')
-        for predecessor in pins.values():
-            if predecessor.status.casefold() != 'archived':
-                _ensure_leaf(selection, model, predecessor, 'target')
-        selected = source.select_sources(selection, [predecessor.ref_id for predecessor in pins.values()])
-        for predecessor in pins.values():
-            current = selected[predecessor.ref_id]
-            if not _same_pin(current, predecessor):
+        for target in pins.values():
+            if target.status.casefold() != 'archived':
+                _ensure_leaf(selection, model, target, 'target')
+        selected = source.select_sources(selection, [target.ref_id for target in pins.values()])
+        for target in pins.values():
+            current = selected[target.ref_id]
+            if not _same_pin(current, target):
                 raise SourceChanged('Replacement target changed after resolution.')
-        destination = _destination(selection, pin, status, model)
-        raw = render_carrier(pin.raw, {'status': encode_status(status), 'ref_id': pin.atom_id,
+        version = _next_published_version(selection, pin.atom_id, predecessor)
+        if expected_version is not None and version != expected_version:
+            raise SourceChanged('Published Version changed after preparation.')
+        destination = _destination(selection, pin, status, model, version)
+        raw = render_carrier(pin.raw, {'status': encode_status(status), 'ref_id': pin.atom_id, 'version': version,
                                        'destination': {'file': {'name': destination.name,
                                            'path': destination.parent.relative_to(selection.root).as_posix()}}}, model=model)
         validate_candidate(selection, model, raw, destination)
-        validate_candidate_population(selection, model, atom_id=pin.atom_id, version=pin.version,
-                                      status=status, summary=_summary(parse_carrier(raw, destination).body),
-                                      replaced=(pin,))
         _check_destination(destination, pins.values(), 'target')
-        predecessor = pins.get(pin.atom_id) if pin.version > 1 else None
         if (predecessor is not None and predecessor.status.casefold() != 'archived'
                 and destination == predecessor.path
                 and all(item.atom_id == predecessor.atom_id or item.status.casefold() == 'archived'
@@ -307,7 +305,7 @@ def _promote_draft(selection, model, params, *, staged=None, expected_draft=None
         if errors:
             return result(effects=all_effects, errors=errors, warnings=warnings)
         return result(effects=all_effects, warnings=warnings,
-                      artifact=saved(selection, destination, pin.atom_id, pin.atom_id, pin.version, status))
+                      artifact=saved(selection, destination, pin.atom_id, pin.atom_id, version, status))
     except (InputError, ValueError, OSError, RuntimeError) as exc:
         if not all_effects and isinstance(exc, InputError):
             return result(outcome="needs_input", requested_input=exc.requested_input, warnings=warnings)
@@ -358,13 +356,12 @@ def update_atom(selection, model, params, *, pending_source=None):  # noqa: C901
         targets = {ref: resolve_replacement(selection, ref) for ref in _relations(proposed)}
         if proposed.version == 1 and _current_collision(selection, proposed.atom_id):
             raise InputError('sourceCurrent', 'Proposed identity already has a Current Atom.')
-        destination = _destination(selection, proposed, status, model)
-        candidate = render_carrier(proposed.raw, {'status': encode_status(status), 'ref_id': proposed.atom_id,
+        version = _next_published_version(selection, proposed.atom_id, old if proposed.atom_id == old.atom_id else None)
+        destination = _destination(selection, proposed, status, model, version)
+        candidate = render_carrier(proposed.raw, {'status': encode_status(status), 'ref_id': proposed.atom_id, 'version': version,
             'destination': {'file': {'name': destination.name,
                 'path': destination.parent.relative_to(selection.root).as_posix()}}}, model=model)
         validate_candidate(selection, model, candidate, destination)
-        validate_candidate_population(selection, model, atom_id=proposed.atom_id, version=proposed.version,
-                                      status=status, summary=_summary(parsed.body))
         for target in targets.values():
             if target.status.casefold() != 'archived':
                 _ensure_leaf(selection, model, target, 'relations')
@@ -426,7 +423,7 @@ def update_atom(selection, model, params, *, pending_source=None):  # noqa: C901
             raise SourceChanged('Draft changed after creation.')
         promoted = _promote_draft(selection, model, {'target': {'ref_id': draft['ref_id'],
                                       'version': draft['version']}, 'targetStatus': status}, staged=targets,
-                                  expected_draft=draft_pin)
+                                  expected_draft=draft_pin, expected_version=version)
         all_effects.extend(promoted['effects'])
         warnings.extend(promoted.get('warnings', []))
         if promoted['outcome'] == 'needs_input':

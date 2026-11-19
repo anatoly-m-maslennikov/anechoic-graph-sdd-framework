@@ -1,11 +1,4 @@
-"""Check a proposed Atom against its pinned revision population."""
-
-from pathlib import Path
-
-from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier
-from .common import InputError, atom_summary
-from .source import SourceSelectionError, select_all_revisions
-
+"""Compile legacy revision population declarations."""
 
 def compile_atom_population_model(rows):
     from FEATURE_FORMAL_MODEL_ENGINE.model_catalog import _native_block
@@ -35,39 +28,3 @@ def compile_atom_population_model(rows):
                               'status_groups': ('Current', 'Backlog', 'Archived')},)):
         raise ValueError('Atom population Declarations differ from the supported revision checks')
     return True
-
-
-def validate_atom_population(selection, *, atom_id, version, status, summary, replaced=(), preserve_summary=False):
-    """Return pinned peers after checking identity/version and published Summary.
-
-    The caller revalidates these pins before its effects and excludes only exact
-    pinned carriers that its operation replaces or removes.
-    """
-    if (not isinstance(atom_id, str) or type(version) is not int or version < 1
-            or not isinstance(status, str) or not status.strip()
-            or not isinstance(summary, str) or not summary.strip()):
-        raise ValueError('Invalid proposed Atom population values')
-    peers = select_all_revisions(selection, atom_id)
-    replaced = tuple(replaced)
-    if any(pin not in peers for pin in replaced):
-        raise SourceSelectionError('Replaced Atom revision changed during population selection')
-    published = status.casefold() != 'draft'
-    for peer in peers:
-        if peer in replaced:
-            continue
-        if peer.version == version:
-            raise InputError('version', 'Atom ID and Version already exist.')
-        if published and not preserve_summary and peer.status.casefold() != 'draft':
-            body = parse_carrier(peer.raw, Path(peer.path)).body
-            if atom_summary(body).group(1).strip() != summary.strip():
-                raise InputError('summary', 'Summary conflicts with another Current, Backlog or Archived revision.')
-    return peers
-
-
-def validate_candidate_population(selection, model, *, atom_id, version, status, summary, replaced=(),
-                                  preserve_summary=False):
-    if getattr(getattr(model, 'candidate_schema', None), 'atom_population_model', False):
-        peers = validate_atom_population(selection, atom_id=atom_id, version=version, status=status,
-                                         summary=summary, replaced=replaced, preserve_summary=preserve_summary)
-        if select_all_revisions(selection, atom_id) != peers:
-            raise SourceSelectionError('Atom revision population changed before publication')

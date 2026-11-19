@@ -122,15 +122,15 @@ class DraftTest(unittest.TestCase):
         self.assertIn('Historical claim.', (self.root / result['savedDraft']['path']).read_text())
         self.assertIn('Retain me.', self.source.read_text())
 
-    def test_historical_source_skips_existing_revision_numbers(self):
+    def test_historical_source_ignores_other_archived_revision_numbers(self):
         archived = self.source.parent / 'archived' / 'CA-R-1@1-DECLARATION--example.md'
         archived.parent.mkdir()
         archived.write_text(self.source.read_text().replace('ref_id: CA-R-1', 'ref_id: CA-R-1@1')
                             .replace('status: Active', 'status: Archived').replace('version: 2', 'version: 1'))
         other = archived.with_name('CA-R-1@8-DECLARATION--example.md')
-        other.write_text(archived.read_text().replace('CA-R-1@1', 'CA-R-1@8').replace('version: 1', 'version: 8'))
+        other.write_text('not a valid carrier')
         plan = draft.prepare_draft(self.selection, Model(), {'sourceCurrent': 'CA-R-1@1'})
-        self.assertEqual(plan['version'], 9)
+        self.assertEqual(plan['version'], 3)
 
     def test_base_id_and_version_copy_an_existing_draft(self):
         original = draft.create_draft(self.selection, Model(), {'sourceCurrent': 'CA-R-1'})['savedDraft']

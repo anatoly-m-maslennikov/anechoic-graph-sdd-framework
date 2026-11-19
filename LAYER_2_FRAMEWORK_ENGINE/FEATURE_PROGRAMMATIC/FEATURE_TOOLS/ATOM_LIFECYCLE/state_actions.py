@@ -12,13 +12,11 @@ from .timing import trace
 
 from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier
 from ATOM_LIFECYCLE import effects
-from ATOM_LIFECYCLE.atom_population import validate_candidate_population
 from ATOM_LIFECYCLE.carrier import logical_view, render_carrier
 from ATOM_LIFECYCLE.draft import _body, _clean, _summary
 from ATOM_LIFECYCLE.common import InputError, SourceChanged, logical_container, read_target, result, saved, validate_candidate, write_destination
 from ATOM_LIFECYCLE.placement import archived_owner, derive_destination, resolve_container
 from ATOM_LIFECYCLE.plan_cascade import has_shared_plan_children, select_archive_cascade
-from ATOM_LIFECYCLE.source import select_published_revisions
 from ATOM_LIFECYCLE.status_model import canonical_status, encode_status, StatusModelError
 
 
@@ -237,11 +235,8 @@ def direct_update(selection, model, params):
     body = _body(old_body, changes)
     summary = _summary(body)
     summary_changed = summary != _summary(old_body)
-    schema = getattr(model, 'candidate_schema', None)
-    if summary_changed and pin.status.casefold() != 'draft' and not getattr(schema, 'atom_population_model', False):
-        for revision in select_published_revisions(selection, pin.atom_id):
-            if revision.ref_id != pin.ref_id and _summary(parse_carrier(revision.raw, revision.path).body) != summary:
-                raise InputError('summary', 'Summary conflicts with another Current, Backlog or Archived revision.')
+    if summary_changed and pin.status.casefold() != 'draft':
+        raise InputError('summary', 'Changing a published Summary requires an Update with a new Atom ID.')
     fields = {key: value for key, value in changes.items() if key not in {'summary', 'body', 'scope_unit'}}
     if {'scope_unit', 'container'} & changes.keys():
         fields['container'] = logical_container(changes, old)
@@ -261,9 +256,6 @@ def direct_update(selection, model, params):
         path = _destination(selection, pin, new, body, pin.status, model, verify_source=False)
     raw = render_carrier(raw, {'destination': _destination_field(selection, path)}, model=model)
     validate_candidate(selection, model, raw, path, require_main_subject='topics' in changes)
-    validate_candidate_population(selection, model, atom_id=pin.atom_id, version=pin.version,
-                                  status=status, summary=summary, replaced=(pin,),
-                                  preserve_summary=not summary_changed)
     output = _publish(selection, pin, path, raw, status, pin.ref_id)
     output['warnings'].extend(warnings)
     return output

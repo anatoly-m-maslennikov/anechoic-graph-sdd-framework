@@ -190,10 +190,10 @@ class SourceReader:
             return
         role, digits = match.groups()
         identity = f"{self._identity_prefix}-{role}-{digits}"
-        marker = re.match(r"^(?:[1-9][0-9]*-)?" + re.escape(identity) + r"(?:@([1-9][0-9]*))?(?=[_.-]|$)", path.name)
-        suffix = re.search(r"@([1-9][0-9]*)\.md$", path.name)
-        version = (marker.group(1) if marker else None) or (suffix.group(1) if suffix else None)
-        self._catalog.remember(path, (identity, role, str(int(digits))), version, archived)
+        marker = re.match(r"^(?:[1-9][0-9]*-)?" + re.escape(identity) + r"(?:@([0-9]+))?(?=[_.-]|$)", path.name)
+        suffix = re.search(r"@([0-9]+)\.md$", path.name)
+        version = (marker.group(1) if marker else None) or (suffix.group(1) if suffix else "")
+        self._catalog.remember(path, (identity, role, str(int(digits))), version.lstrip("0") or None, archived)
 
     def _remember_filename(self, path: Path) -> None:
         if self._catalog:

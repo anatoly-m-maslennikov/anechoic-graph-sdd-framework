@@ -222,40 +222,6 @@ def _matches_revision(path: Path, atom_id: str, qualified: str | None, draft: st
     return _carrier_revision(path, atom_id) == (qualified, bool(draft))
 
 
-@trace('source.select_published_revisions')
-def select_published_revisions(selection: ProjectSelection, atom_id: str) -> tuple[SourcePin, ...]:
-    """Bind all Current, Backlog and Archived revisions of one Atom."""
-    reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
-    candidates = _candidate_paths(reader, selection, atom_id)
-    references = set()
-    for path in candidates:
-        version, draft = _carrier_revision(path, atom_id)
-        if not draft:
-            references.add(f"{atom_id}@{version}" if version else atom_id)
-    selected = tuple(select_sources(selection, sorted(references)).values())
-    _check_currentness(reader, selection, atom_id, candidates)
-    return selected
-
-
-@trace('source.select_all_revisions')
-def select_all_revisions(selection: ProjectSelection, atom_id: str) -> tuple[SourcePin, ...]:
-    """Bind every Current, Backlog, Draft and Archived revision of one Atom."""
-    identity, version, draft = _selector(selection, atom_id, None)
-    if version is not None or draft is not None:
-        raise SourceSelectionError("An unqualified Atom ID is required")
-    reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
-    candidates = _candidate_paths(reader, selection, identity)
-    references = set()
-    for path in candidates:
-        version, draft = _carrier_revision(path, identity)
-        references.add(f"{identity}@{version}{'-draft' if draft else ''}" if version else identity)
-    selected = tuple(select_sources(selection, sorted(references)).values())
-    if query_reader() is not None and _candidate_paths(reader, selection, identity) != candidates:
-        raise SourceSelectionError("Atom source candidates changed during selection")
-    _check_currentness(reader, selection, identity, candidates)
-    return selected
-
-
 def _read_candidate(reader: ReadContext, path: Path, ref_id: str,
                     atom_id: str, qualified: str | None, draft: str | None, *,
                     retained_history: bool = False) -> SourcePin | None:

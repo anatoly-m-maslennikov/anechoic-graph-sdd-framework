@@ -31,6 +31,7 @@ class StagedPromotionTests(unittest.TestCase):
                       patch.object(publish, 'read_target', return_value=draft),
                       patch.object(publish, 'resolve_replacement', side_effect=source.ArchiveNotLoadedError('older unloaded')) as wide,
                       patch.object(publish, '_current_collision', return_value=False),
+                      patch.object(publish, '_next_published_version', return_value=2 if same_id else 1),
                       patch.object(publish, '_destination', return_value=ROOT / 'current.md'),
                       patch.object(publish, 'validate_candidate'),
                       patch.object(publish.source, 'select_source', side_effect=lambda _s, ref, **kw: pins[ref]),

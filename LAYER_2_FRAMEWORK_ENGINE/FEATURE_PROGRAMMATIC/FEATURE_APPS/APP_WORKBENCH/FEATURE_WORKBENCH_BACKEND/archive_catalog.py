@@ -14,11 +14,10 @@ class ArchiveCatalog:
         self.root = root
         self.batch = None
         self.dirty = True
-        self.active_ids = None
         with lock:
             connection.execute("CREATE TEMP TABLE workbench_filename_catalog (path VARCHAR PRIMARY KEY, atom_id VARCHAR, role_marker VARCHAR, id_number VARCHAR, version VARCHAR, archived BOOLEAN)")
             connection.execute("DROP TABLE IF EXISTS main.archive_version_max")
-            connection.execute("CREATE TABLE main.archive_version_max (atom_id VARCHAR, max_version VARCHAR, has_unknown_version BOOLEAN)")
+            connection.execute("CREATE TABLE main.archive_version_max (atom_id VARCHAR, max_version VARCHAR)")
             connection.execute("DROP TABLE IF EXISTS main.archive_role_max")
             connection.execute("CREATE TABLE main.archive_role_max (role_marker VARCHAR, max_id_number VARCHAR)")
 
@@ -79,28 +78,16 @@ class ArchiveCatalog:
             ).fetchone()
         return int(row[0]) if row else 0
 
-    def unloaded_version_max(self, atom_id, source_paths, archive_roots):
-        candidates = self.paths(atom_id=atom_id, archived=True)
-        loaded = [path.relative_to(self.root).as_posix() for path in candidates & source_paths]
-        roots = [path.as_posix().rstrip("/") + "/" for path in archive_roots]
-        with self.lock:
-            version, unknown = self.connection.execute(
-                "SELECT arg_max(version, (length(version), version)), bool_or(version IS NULL) "
-                "FROM temp.main.workbench_filename_catalog WHERE archived AND atom_id = ? "
-                "AND path NOT IN (SELECT unnest(?::VARCHAR[])) "
-                "AND EXISTS (SELECT 1 FROM unnest(?::VARCHAR[]) roots(root) WHERE starts_with(path, root))",
-                [atom_id, loaded, roots],
-            ).fetchone()
-        return (int(version) if version is not None else None), bool(unknown)
-
-    def refresh_summaries(self, active_ids):
-        if not self.dirty and self.active_ids == active_ids:
+    def refresh_summaries(self):
+        if not self.dirty:
             return
         with self.lock:
             self.connection.execute('DELETE FROM main.archive_role_max')
             self.connection.execute("INSERT INTO main.archive_role_max SELECT role_marker, arg_max(id_number, (length(id_number), id_number)) FROM temp.main.workbench_filename_catalog WHERE archived GROUP BY role_marker")
             self.connection.execute('DELETE FROM main.archive_version_max')
-            if active_ids:
-                self.connection.execute("INSERT INTO main.archive_version_max SELECT atom_id, arg_max(version, (length(version), version)), bool_or(version IS NULL) FROM temp.main.workbench_filename_catalog WHERE archived AND atom_id IN (SELECT unnest(?::VARCHAR[])) GROUP BY atom_id", [list(active_ids)])
-            self.active_ids = set(active_ids)
+            self.connection.execute(
+                "INSERT INTO main.archive_version_max "
+                "SELECT atom_id, arg_max(version, (length(version), version)) "
+                "FROM temp.main.workbench_filename_catalog WHERE archived AND version IS NOT NULL GROUP BY atom_id"
+            )
             self.dirty = False

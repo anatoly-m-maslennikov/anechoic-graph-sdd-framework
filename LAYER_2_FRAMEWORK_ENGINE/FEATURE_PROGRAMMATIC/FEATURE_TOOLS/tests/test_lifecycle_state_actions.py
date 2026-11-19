@@ -77,15 +77,21 @@ class StateActionsTest(unittest.TestCase):
         old_path.rename(legacy)
         updated = state_actions.direct_update(self.selection, self.model, {'target': target, 'changes': {'body': '## Summary\n\nExample\n\n## Claim\n\nChanged\n'}})
         self.assertEqual(self.root / updated['artifact']['path'], legacy)
-        updated = state_actions.direct_update(self.selection, self.model, {'target': target, 'changes': {'summary': 'Revised example'}})
-        path = self.root / updated['artifact']['path']
-        self.assertEqual(path.name, 'CA-R-10@2-RULE--revised-example.md')
-        self.assertFalse(legacy.exists())
-        self.assertEqual(self.read(updated['artifact'])[0]['ref_id'], 'CA-R-10@2')
+        path = legacy
         moved = state_actions.direct_update(self.selection, self.model, {'target': target, 'changes': {'scope_unit': 'OTHER'}})
         other = next(row for row in self.selection.structure['scope_units'] if row['scope_unit_name'] == 'OTHER')
         self.assertEqual((self.root / moved['artifact']['path']).parent, self.root / other['authority_path'] / '04_requirement/archived')
         self.assertFalse(path.exists())
+
+    def test_direct_update_ignores_malformed_history(self):
+        previous = self.folder / 'archived/CA-R-10@1-RULE--example.md'
+        previous.parent.mkdir()
+        previous.write_text('not a valid carrier')
+        output = state_actions.direct_update(self.selection, self.model, {'target': self.target, 'changes': {
+            'body': '## Summary\n\nExample\n\n## Claim\n\nChanged\n',
+        }})
+        self.assertEqual(output['outcome'], 'completed')
+        self.assertEqual(previous.read_text(), 'not a valid carrier')
 
     def test_direct_update_cannot_diverge_published_summaries(self):
         previous = self.folder / 'archived/CA-R-10@1-RULE--example.md'
@@ -95,7 +101,7 @@ class StateActionsTest(unittest.TestCase):
         prior = {path: path.read_bytes() for path in (previous, self.path)}
         targets = (self.target, {'ref_id': 'CA-R-10@1', 'version': 1})
         for target in targets:
-            with self.subTest(target=target), self.assertRaisesRegex(InputError, 'Summary conflicts'):
+            with self.subTest(target=target), self.assertRaisesRegex(InputError, 'published Summary'):
                 state_actions.direct_update(self.selection, self.model, {'target': target, 'changes': {
                     'body': '## Summary\n\nDifferent\n\n## Claim\n\nChanged\n',
                 }})
@@ -108,20 +114,20 @@ class StateActionsTest(unittest.TestCase):
         self.assertEqual(archived['outcome'], 'completed')
         target = {'ref_id': 'CA-O-21@2', 'version': 2}
         output = state_actions.direct_update(self.selection, self.model,
-                                             {'target': target, 'changes': {'summary': 'Revised archived child'}})
+                                             {'target': target, 'changes': {'body': '## Summary\n\nChild\n\n## Claim\n\nChanged\n'}})
         path = self.root / output['artifact']['path']
-        self.assertEqual(path, group.parent / 'archived/CA-O-21@2-STEP--revised-archived-child.md')
+        self.assertEqual(path, group.parent / 'archived/CA-O-21@2-STEP--child.md')
         view, body = self.read(output['artifact'])
         self.assertEqual((view['ref_id'], view['version'], str(view['updated_at']), view['status']),
                          ('CA-O-21@2', 2, '2026-01-01', 'archived'))
         self.assertEqual(view['container'], {'atom': 'CA-O-20'})
-        self.assertIn('Original', body)
+        self.assertIn('Changed', body)
 
         unbound = path.parent.parent / path.name
         path.rename(unbound)
         with self.assertRaisesRegex(InputError, 'outside a shared Role archive'):
             state_actions.direct_update(self.selection, self.model,
-                                        {'target': target, 'changes': {'summary': 'Refuse wrong folder'}})
+                                        {'target': target, 'changes': {'body': '## Summary\n\nChild\n\n## Claim\n\nChanged again\n'}})
 
     def test_status_and_direct_update_preserve_unmodified_properties(self):
         with self.assertRaises(InputError):
@@ -173,7 +179,7 @@ class StateActionsTest(unittest.TestCase):
         group, child, target = self._contained('Operations', 'Workflow', 'Step')
         result = state_actions.change_status(self.selection, self.model, {'target': target, 'targetStatus': 'Resolved'})
         self.assertEqual(self.root / result['artifact']['path'], group / 'resolved' / child.name)
-        updated = state_actions.direct_update(self.selection, self.model, {'target': target, 'changes': {'summary': 'Revised child'}})
+        updated = state_actions.direct_update(self.selection, self.model, {'target': target, 'changes': {'body': '## Summary\n\nChild\n\n## Claim\n\nRevised child\n'}})
         self.assertEqual((self.root / updated['artifact']['path']).parent, group / 'resolved')
         self.assertIn('Revised child', self.read(updated['artifact'])[1])
 
@@ -227,6 +233,7 @@ class StateActionsTest(unittest.TestCase):
         group, child, _ = self._contained('Operations', 'Workflow', 'Step')
         history, _ = self._retained_child(group, child)
         history.write_bytes(history.read_bytes().replace(b'status: Archived', b'status: Draft'))
+        history.rename(history.with_name(history.name.replace('@1-', '@1-draft-', 1)))
         with self.assertRaises(InputError):
             select_archive_cascade(self.selection, select_source(self.selection, 'CA-O-20'), self.model)
 

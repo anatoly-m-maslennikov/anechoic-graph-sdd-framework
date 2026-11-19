@@ -147,11 +147,12 @@ class CandidateValidationTests(unittest.TestCase):
             draft = target.parent.parent / 'draft/CA-P-2@1-draft-WORK_REPORT--same-work.md'
             draft.parent.mkdir()
             draft.write_bytes(render_carrier(saved, {'status': 'draft', 'ref_id': 'CA-P-2@1-draft'}))
-            refused = execute(selection, model, 'atom_lifecycle_direct_update',
-                              params | {'changes': {'body': body + 'Rejected\n'}})
-            self.assertEqual(refused['outcome'], 'needs_input', refused)
-            self.assertIn('Atom ID and Version already exist', refused['requested_input']['version']['error'])
-            self.assertEqual(saved, path.read_bytes())
+            draft_bytes = draft.read_bytes()
+            updated = execute(selection, model, 'atom_lifecycle_direct_update',
+                              params | {'changes': {'body': body + 'Updated without checking Draft history\n'}})
+            self.assertEqual(updated['outcome'], 'completed', updated)
+            self.assertEqual(draft_bytes, draft.read_bytes())
+            self.assertIn(b'Updated without checking Draft history', path.read_bytes())
 
     def test_batch_stops_after_first_generated_model_failure(self):
         from contextlib import redirect_stderr
