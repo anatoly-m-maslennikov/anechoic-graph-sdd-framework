@@ -58,8 +58,9 @@ edits in parallel where the paths and files are separate.
   CA-A-1461. Place the four Components directly under Engine Studio.
   Reuse C21 for MCP Patchbay and C43 for IWE Console. Keep the current
   Workbench backend under C43. Assign new IDs to Kernel Mixer and Backend
-  Deck. The topology plan and candidate IDs are in
-  `.anechoic_tmp/ca-p-3073/component-topology-plan.json`.
+  Deck. Defer the lifecycle code moves. Later, move the run coordinator and
+  its synchronous write backend into Kernel Mixer. See the topology plan and
+  candidate IDs in `.anechoic_tmp/ca-p-3073/component-topology-plan.json`.
 - [ ] Verify the renamed paths, references, and existing build. Hand off the
   confirmed Component paths to CA-P-3075 for its Component boundary work.
   The mechanical path corrections for C14 and its 37 descendants are in
@@ -84,9 +85,9 @@ edits in parallel where the paths and files are separate.
   build with existing assets passed. Refreshing the assets resolved to the
   same immutable image. Both Docker Workbench MCP and HTTP tests passed.
   Build and test logs are under `.anechoic_tmp/ca-p-3073/`.
-- [ ] Move the code for Kernel Mixer, Backend Deck, IWE Console, and MCP
-  Patchbay to their agreed Component folders. Verify each move with its
-  current callers. The isolated C21/C43 rehearsal is commit `ce1030270d`.
+- [ ] Move the IWE Console and MCP Patchbay code into their Component
+  folders. Keep the Workbench backend with IWE Console. Verify each move
+  with its current callers. The isolated C21/C43 rehearsal is commit `ce1030270d`.
   Its image build and both Docker Workbench MCP and HTTP tests passed. The
   combined rehearsal with native runtime is `52465f61ba`. Its image built,
   and its normal Docker launcher passed native MCP alias and Workbench View
@@ -118,6 +119,11 @@ the pre-cutover Local Release.
 - [ ] Build the delivered native model and relation rules from the reviewed
   CA-P-3089 packet. Bind CA-P-3075's final legacy reference map. The isolated
   loader uses the rehearsal's `native-aliases.json` row format.
+- [ ] Review the 14 legacy relation types outside the CA-P-3089 packet.
+  Keep them out of Workbench and MCP until the native model review is
+  complete. Keep the CA-P-3075 migration evidence for each relation. The
+  candidate declarations and replay are in
+  `.anechoic_tmp/ca-p-3073/native-bridge-review/`.
 - [ ] Move all Project Settings into the Project Manifest. Preserve setting
   types and values in nested parameter groups. Keep the protected legacy
   Settings at their original path through the pre-cutover Local Release.
@@ -125,8 +131,14 @@ the pre-cutover Local Release.
   used the native name and prefix. See
   `.anechoic_tmp/ca-p-3073/project-settings-manifest-rehearsal.json`. Use the
   validated fields in `.anechoic_tmp/ca-p-3073/project-manifest-fields.json`
-  when rendering the staged native Project Manifest. The CA-P-3075 renderer
-  must accept those parameters in its approved Project Manifest inputs.
+  when rendering the staged native Project Manifest. The isolated CA-P-3075
+  renderer test produced 43 Manifests with rehearsal IDs. The reviewed native
+  model validated the Project Manifest, and all parameter values matched.
+  The `runtime` group carries the declared Workbench schema and retention
+  settings. The launcher uses its existing defaults for settings the
+  Project does not set.
+  See `.anechoic_tmp/ca-p-3073/settings-renderer-rehearsal/`. Apply the inputs
+  with the shared allocation when CA-P-3075 stages the native batch.
 - [x] Wire production MCP and Workbench entry points to the validated native
   Manifest. The normal launcher selects it after the directory rename.
   Preserve the legacy Local Release selection during coexistence. Commit
@@ -135,12 +147,19 @@ the pre-cutover Local Release.
   the final directory names. Use CA-P-3096 to verify the migrated records and
   reference lookups. The isolated launch returned `READY_STARTED`, resolved
   a legacy alias through MCP, and fetched a native record through a Workbench
-  View. The final migration data and relation bindings remain to verify.
+  View. With the 12 Manifest parameter groups, the browser displayed the
+  native result and identified the source index as a startup snapshot. The
+  isolated fixture used a separate MCP port. Commit `65897c1f7a` uses the
+  Manifest for native Workbench schema mode and saved links. Verify the
+  final migration data and relation bindings before closing this task.
 
 ### SPEC carrier directories
 
 - [ ] Identify the nested trial paths that belong to the SPEC cutover. Check
-  each planned path against CA-A-1462, “Component, Tier, and Lens”.
+  each planned path against CA-A-1462, “Component, Tier, and Lens”. The
+  CA-P-3075 dry render found 85 source paths under `scope-trial-100` and
+  no native destination with that directory name. Check the final staged
+  output before changing any carrier paths.
 - [ ] Fix the confirmed nested trial paths before applying the SPEC carrier
   directory rules in CA-A-1466.
 - [ ] Verify that Active SPEC carriers use enabled lens directories in the owning
