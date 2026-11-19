@@ -1,0 +1,182 @@
+---
+identity:
+  atom_id: CA-P-3073
+  ref_id: CA-P-3073
+context:
+  container:
+    scope_unit: CA-SU-00
+  role: plan
+  form: plan
+  label: Epic
+  topics:
+    main_subject: PROJECT STRUCTURE//ANECHOIC
+  tier: 3
+state:
+  status: active
+  version: 1
+  updated_at: '2026-11-17T17:30:46.834267+00:00'
+destination:
+  file:
+    name: CA-P-3073-EPIC--rename-the-project-and-framework-components-to-anechoic.md
+    path: .anechoic_anechoic/03_plan
+---
+## Summary
+
+Rename the project and framework components to Anechoic
+
+## Objective
+
+Rename the Components and move their code folders. Prepare the cutover,
+lens folders, and technical cleanup.
+
+## Work
+
+The repository rename is complete. Local release `0.4.4.47` verified the new name.
+
+CA-P-3075 owns carrier migration and legacy release proof. CA-P-3078 owns
+Methodology moves. CA-P-3076 owns Specification content cleanup.
+
+## Tasks
+
+Start the inventories and path checks in parallel.
+Agree on the shared names and paths with CA-P-3075 before migration. Assign one
+owner to any shared moves, configuration files, or path references. Make
+edits in parallel where the paths and files are separate.
+
+### Component rename and Engine Studio split
+
+- [x] Record C14’s descendant IDs, parents, and paths before any split.
+  The baseline records C14 and 37 descendants in
+  `.anechoic_tmp/ca-p-3073/c14-before-split.json`.
+- [x] Check the five direct Project children against CA-A-1461, “Framework
+  Components”, and the confirmed placements in CA-C-749.
+- [ ] Apply the confirmed layer order. Meta-ontology is Layer 1,
+  Meta-methodology is Layer 2, and Engine Studio is Layer 3.
+- [ ] Apply the Component names and placements. Move C14 as a unit and retain
+  its descendant IDs and parent links in the mechanical migration baseline.
+- [ ] After the C14 move and baseline check, apply the Engine Studio split in
+  CA-A-1461. Place the four Components directly under Engine Studio.
+  Reuse C21 for MCP Patchbay and C43 for IWE Console. Keep the current
+  Workbench backend under C43. Assign new IDs to Kernel Mixer and Backend
+  Deck. The topology plan and candidate IDs are in
+  `.anechoic_tmp/ca-p-3073/component-topology-plan.json`.
+- [ ] Verify the renamed paths, references, and existing build. Hand off the
+  confirmed Component paths to CA-P-3075 for its Component boundary work.
+  The mechanical path corrections for C14 and its 37 descendants are in
+  `.anechoic_tmp/ca-p-3073/component-path-handoff.json`. They preserve the
+  mechanical parent links and give both staging and final SPEC paths.
+
+### Engine Studio code folders
+
+- [x] Inventory tracked code and configuration that refers to
+  `LAYER_2_FRAMEWORK_ENGINE/`. Distinguish current callers and generated
+  inputs from historical record paths.
+- [x] Move the C14 code tree as a unit from `LAYER_2_FRAMEWORK_ENGINE/`
+  to `LAYER_3_ENGINE_STUDIO_C14/` in commit `3a63478fec`.
+- [x] Update active release, package, Docker, and launcher paths for the new
+  root.
+- [x] Update active imports, tests, tooling configuration, and documentation
+  for the new root. Refresh affected generated or path-pinned assets from
+  their sources. Package preparation passed with both existing and refreshed
+  assets. The generated assets matched the committed files.
+- [x] Check that the existing build works from the new root before the split.
+  The isolated checkout matched the tracked tree of `3a63478fec`. The Docker
+  build with existing assets passed. Refreshing the assets resolved to the
+  same immutable image. Both Docker Workbench MCP and HTTP tests passed.
+  Build and test logs are under `.anechoic_tmp/ca-p-3073/`.
+- [ ] Move the code for Kernel Mixer, Backend Deck, IWE Console, and MCP
+  Patchbay to their agreed Component folders. Verify each move with its
+  current callers. The isolated C21/C43 rehearsal is commit `ce1030270d`.
+  Its image build and both Docker Workbench MCP and HTTP tests passed. The
+  combined rehearsal with native runtime is `52465f61ba`. Its image built,
+  and its normal Docker launcher passed native MCP alias and Workbench View
+  checks. The replay patch against `189f757401` is
+  `.anechoic_tmp/ca-p-3073/component-split-after-native.patch`.
+
+### Project structure cutover
+
+Keep the live legacy tree at `.anechoic_anechoic/` throughout staging and
+the pre-cutover Local Release.
+
+- [x] Create `.anechoic_new/` for native staging.
+- [ ] Stage the verified native records in `.anechoic_new/` with CA-P-3075.
+- [ ] With both trees present, verify that legacy Local Release still selects
+  the protected inputs at their original paths and excludes the native
+  staging tree from its package. Compare selected paths and digests with
+  the protected baseline. The live selector check with the staging directory
+  present matched all 1,108 selected source paths and digests. An isolated
+  package check also excluded a native Manifest placed in the staging tree.
+- [ ] In an isolated checkout, rehearse the final names from CA-A-1461.
+  Verify that the selected Project root resolves native SPEC, PMETA, and TKT
+  and binds the native Project Manifest. Verify the native runtime entry
+  points before the live rename. CA-P-3073 owns production wiring and
+  CA-P-3096 verifies the migrated runtime. The production Docker launcher
+  passed with a final-named native fixture and retained legacy Settings.
+
+### Production native runtime
+
+- [ ] Build the delivered native model and relation rules from the reviewed
+  CA-P-3089 packet. Bind CA-P-3075's final legacy reference map. The isolated
+  loader uses the rehearsal's `native-aliases.json` row format.
+- [ ] Move all Project Settings into the Project Manifest. Preserve setting
+  types and values in nested parameter groups. Keep the protected legacy
+  Settings at their original path through the pre-cutover Local Release.
+  The isolated Manifest rehearsal preserved 12 typed parameter groups and
+  used the native name and prefix. See
+  `.anechoic_tmp/ca-p-3073/project-settings-manifest-rehearsal.json`. Use the
+  validated fields in `.anechoic_tmp/ca-p-3073/project-manifest-fields.json`
+  when rendering the staged native Project Manifest. The CA-P-3075 renderer
+  must accept those parameters in its approved Project Manifest inputs.
+- [x] Wire production MCP and Workbench entry points to the validated native
+  Manifest. The normal launcher selects it after the directory rename.
+  Preserve the legacy Local Release selection during coexistence. Commit
+  `189f757401` wires native queries, Workspaces, Views, and saved items.
+- [ ] Verify the production launch and query path in an isolated checkout with
+  the final directory names. Use CA-P-3096 to verify the migrated records and
+  reference lookups. The isolated launch returned `READY_STARTED`, resolved
+  a legacy alias through MCP, and fetched a native record through a Workbench
+  View. The final migration data and relation bindings remain to verify.
+
+### SPEC carrier directories
+
+- [ ] Identify the nested trial paths that belong to the SPEC cutover. Check
+  each planned path against CA-A-1462, “Component, Tier, and Lens”.
+- [ ] Fix the confirmed nested trial paths before applying the SPEC carrier
+  directory rules in CA-A-1466.
+- [ ] Verify that Active SPEC carriers use enabled lens directories in the owning
+  Component Spec Section and that Draft and Archived carriers use the section’s
+  `draft/` and `archived/` directories. Coordinate any carrier moves with
+  CA-P-3075 after the affected Component paths are set.
+
+### Technical cleanup
+
+- [ ] List obsolete technical files and directories, including those in former
+  Analysis folders.
+- [ ] Check references, Local Release inputs, and recovery dependencies for
+  each candidate.
+- [ ] After the affected moves and checks are complete, remove only verified
+  obsolete items. Keep protected legacy inputs while the build depends on them.
+  Commit `54043f9e4a` removed seven obsolete Playwright error reports and their
+  run index after the C14 code move. The retained copies match the last
+  tracked bytes in `.anechoic_tmp/ca-p-3073/retained-playwright-output/`.
+
+### Integrated verification and cutover
+
+Keep each Local Release run isolated. Use the integrated changes from the
+work groups above.
+
+- [ ] With the legacy tree at `.anechoic_anechoic/` and the native tree at
+  `.anechoic_new/`, run the full test gate and a clean Local Release in
+  `refresh` mode. CA-P-3095 owns the clean legacy rebuild proof.
+- [ ] Verify `existing` mode with the generated assets saved with the matching
+  checkout.
+- [ ] After the pre-cutover Local Release succeeds, rename the live legacy tree
+  from `.anechoic_anechoic/` to `.anechoic_legacy/`. Then rename
+  `.anechoic_new/` to `.anechoic_anechoic/`.
+- [ ] Verify discovery and reference lookup from the final native path.
+- [ ] Verify Workbench and MCP `query_run` against the resulting runtime.
+
+## References
+
+CA-A-1461, CA-A-1462, CA-A-1466, CA-C-749, CA-P-3075, CA-P-3076,
+CA-P-3078, and CA-P-3095.
