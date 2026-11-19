@@ -41,10 +41,8 @@ def _migration_rows(rows, migration_refs):
         if old_ref is None:
             continue
         key = old_ref, original_path
-        if (not re.fullmatch(r"[A-Z]+-[A-Z]-[0-9]+@[1-9][0-9]*(?:-draft)?", old_ref)
-                or key in seen
-                or old_ref.rsplit("@", 1)[1].removesuffix("-draft")
-                != target_ref.rsplit("@", 1)[1].removesuffix("-draft")):
+        # A reviewed migration can assign a new version to a path-bound revision.
+        if not re.fullmatch(r"[A-Z]+-[A-Z]-[0-9]+@[1-9][0-9]*(?:-draft)?", old_ref) or key in seen:
             raise ValueError("Invalid legacy migration reference")
         seen.add(key)
         legacy.append((old_ref, original_path, target_ref))

@@ -65,7 +65,22 @@ class NativeProjectionTests(NativeCaptureTests):
         )["rows"])
         with self.assertRaisesRegex(ValueError, "Invalid legacy migration reference"):
             project_native(store, capture,
-                           migration_refs=[("CA-O-188@3", "bad.md", "AN-T-09@2")], **bindings)
+                           migration_refs=[("CA-O-188@0", "bad.md", "AN-T-09@2")], **bindings)
+
+    def test_legacy_revision_alias_can_target_a_renumbered_version(self):
+        self.write("archived/AN-T-09@1--earlier.md", "AN-T-09", "archived", 1)
+        self.write("archived/AN-T-09@2--resolved.md", "AN-T-09", "archived", 2)
+        store = QueryStore(extension_directory=extension_directory(APP_ROOT.parents[1]))
+        self.addCleanup(store.close)
+        refs = [
+            ("CA-C-453@1", ".anechoic_legacy/archive/earlier.md", "AN-T-09@1"),
+            ("CA-C-453@1", ".anechoic_legacy/archive/resolved.md", "AN-T-09@2"),
+        ]
+        project_native(store, capture_native(self.selection), relation_types={"CONTAINED_BY", "CONTAINS"},
+                       inverses={"CONTAINED_BY": "CONTAINS"}, migration_refs=refs)
+        self.assertEqual([list(row) for row in refs], store.run(
+            "SELECT legacy_ref, original_path, exact_ref FROM native_legacy_references ORDER BY original_path"
+        )["rows"])
 
     def test_conflicting_migration_path_preserves_existing_projection(self):
         self.write("archived/AN-T-09@2--first.md", "AN-T-09", "archived", 2)
