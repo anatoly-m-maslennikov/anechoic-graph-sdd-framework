@@ -12,7 +12,7 @@ from unittest.mock import Mock, patch
 
 REPOSITORY = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPOSITORY))
-sys.path.insert(0, str(REPOSITORY / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS"))
+sys.path.insert(0, str(REPOSITORY / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS"))
 from LAYER_5_FRAMEWORK_DELIVERY import release_events  # noqa: E402
 import work_journal  # noqa: E402
 

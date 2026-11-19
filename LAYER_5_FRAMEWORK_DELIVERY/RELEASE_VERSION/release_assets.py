@@ -15,10 +15,10 @@ class LocalReleaseError(RuntimeError):
 
 
 _WORKBENCH_BACKEND = Path(
-    "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_APPS/APP_WORKBENCH/"
+    "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_APPS/APP_WORKBENCH/"
     "FEATURE_WORKBENCH_BACKEND"
 )
-_MCP = Path("LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_MCP")
+_MCP = Path("LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP")
 _ATOM_LIFECYCLE = _MCP.parent / "FEATURE_TOOLS/ATOM_LIFECYCLE"
 
 
@@ -105,4 +105,4 @@ def generate_scope_callback(package: Path, raw: bytes, *, selected_pin, release_
         return None
     from FEATURE_FORMAL_MODEL_ENGINE.scope_callback_asset import generated_assets, write_package
     generated = generated_assets(raw, pin=selected_pin, release_sources=release_sources)
-    return write_package(package / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_FORMAL_MODEL_ENGINE/assets", generated)
+    return write_package(package / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_FORMAL_MODEL_ENGINE/assets", generated)

@@ -78,7 +78,7 @@ def _test_materials(root: Path, command: Command, candidate: str) -> None:
             "--all-groups",
             "python",
             "-B",
-            str(Path(__file__).resolve().parents[2] / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/run_full_test_suite.py"),
+            str(Path(__file__).resolve().parents[2] / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/run_full_test_suite.py"),
             "--project-root",
             str(root),
         )

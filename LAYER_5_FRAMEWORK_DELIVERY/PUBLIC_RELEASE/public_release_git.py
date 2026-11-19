@@ -11,7 +11,7 @@ import subprocess
 import sys
 
 sys.path.insert(
-    0, str(Path(__file__).resolve().parents[2] / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS")
+    0, str(Path(__file__).resolve().parents[2] / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS")
 )
 from artifact_metadata import project_identity
 from public_release_materials import PublicReleaseError, repository_identity, validate_pr_url

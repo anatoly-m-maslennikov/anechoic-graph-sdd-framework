@@ -48,8 +48,8 @@ class ReleaseCliTests(unittest.TestCase):
     def test_local_dispatch_forwards_repeatable_focused_modules(self) -> None:
         result = {"outcome": "completed", "receipt_path": "receipt.json"}
         modules = (
-            "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/tests/test_first.py",
-            "LAYER_2_FRAMEWORK_ENGINE/component/tests/test_second.py",
+            "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/tests/test_first.py",
+            "LAYER_3_ENGINE_STUDIO_C14/component/tests/test_second.py",
         )
         with patch.object(release, "run_local_release", return_value=result) as run:
             self.assertEqual(

@@ -131,7 +131,7 @@ Workflows are defined in Operations →\
 the harness implements and runs them using Tools and Prompts/Skills.
 
 We cannot put everything into one prompt →\
-the built-in entry Skill, [ca](LAYER_2_FRAMEWORK_ENGINE/FEATURE_AGENTIC/FEATURE_SKILLS/ca/SKILL.md), connects agents to MCP →\
+the built-in entry Skill, [ca](LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ca/SKILL.md), connects agents to MCP →\
 Tools retrieve the needed context and assemble Prompts/Skills →\
 MCP delivers them and exposes Tool and Workflow execution.
 
@@ -315,12 +315,12 @@ The installed Project package is in `.anechoic_runtime/simple_local_release/pack
 Configuration and existing Project records remain outside the replacement
 boundary. Python runs through locked `uv` environments, not system libraries.
 
-Use the locked host commands in [Project release tools](LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/README.md),
+Use the locked host commands in [Project release tools](LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/README.md),
 with an Operator-selected run ID and a JSON content draft for Public release.
 They use the host's Git, GitHub and Docker tools independently of MCP. Legacy
 release MCP bindings are retired; the two host commands remain. Regular
 Project MCP runs in Docker on localhost without a password; the
-[launcher documentation](LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_MCP/docker/README.md)
+[launcher documentation](LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP/docker/README.md)
 describes Project selection and endpoint startup.
 
 Local numbering adds or increments the fourth component (`0.4.2.1` →

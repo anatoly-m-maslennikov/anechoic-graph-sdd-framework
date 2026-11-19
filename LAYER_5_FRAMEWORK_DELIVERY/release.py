@@ -17,8 +17,8 @@ from pydantic import BaseModel, ConfigDict
 sys.dont_write_bytecode = True
 REPOSITORY = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPOSITORY))
-sys.path.insert(0, str(REPOSITORY / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC"))
-sys.path.insert(0, str(REPOSITORY / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS"))
+sys.path.insert(0, str(REPOSITORY / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC"))
+sys.path.insert(0, str(REPOSITORY / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS"))
 
 from LAYER_5_FRAMEWORK_DELIVERY.PUBLIC_RELEASE.public_release import run_public_release  # noqa: E402
 from LAYER_5_FRAMEWORK_DELIVERY.PUBLIC_RELEASE.public_release_materials import validate_draft  # noqa: E402

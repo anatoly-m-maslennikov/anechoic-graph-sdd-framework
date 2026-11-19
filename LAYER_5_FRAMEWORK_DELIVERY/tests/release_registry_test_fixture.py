@@ -33,7 +33,7 @@ def write_tool_registry_generator(directory: Path) -> Path:
         "from pathlib import Path\n"
         "import sys\n"
         "root = Path(sys.argv[sys.argv.index('--package-root') + 1])\n"
-        "(root / 'LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_MCP/tool_registry.json').write_text("
+        "(root / 'LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP/tool_registry.json').write_text("
         "'{\"schema_version\":1,\"providers\":[]}\\n', encoding='utf-8')\n",
         encoding="utf-8",
     )

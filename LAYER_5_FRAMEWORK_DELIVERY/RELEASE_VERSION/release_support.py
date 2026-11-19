@@ -26,11 +26,11 @@ from typing import Any
 
 from carrier_aliases import carrier_read_view, carrier_status_folder
 from header_yaml import parse_header
-from LAYER_2_FRAMEWORK_ENGINE.FEATURE_PROGRAMMATIC.FEATURE_MCP.docker.image_relation_registry import (
+from LAYER_3_ENGINE_STUDIO_C14.FEATURE_PROGRAMMATIC.FEATURE_MCP.docker.image_relation_registry import (
     compile_lifecycle_assets, verify_status_workflow_asset,
 )
-from LAYER_2_FRAMEWORK_ENGINE.FEATURE_PROGRAMMATIC.FEATURE_MCP.docker.image_docker_client import MAX_OUTPUT
-from LAYER_2_FRAMEWORK_ENGINE.FEATURE_PROGRAMMATIC.FEATURE_MCP.docker.runtime_images import (
+from LAYER_3_ENGINE_STUDIO_C14.FEATURE_PROGRAMMATIC.FEATURE_MCP.docker.image_docker_client import MAX_OUTPUT
+from LAYER_3_ENGINE_STUDIO_C14.FEATURE_PROGRAMMATIC.FEATURE_MCP.docker.runtime_images import (
     _GENERATED_ASSETS, ready_predecessor,
 )
 from project_selection import active_selection
@@ -281,7 +281,7 @@ def _copy_tree(source: Path, destination: Path, *, preserve: frozenset[str]) -> 
 
 def _deploy_bootstrap(root: Path, package: Path) -> None:
     """Refresh only the copied package bootstrap; never execute it."""
-    source = package / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/project_mcp_bootstrap.py"
+    source = package / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/project_mcp_bootstrap.py"
     try:
         mode = source.lstat().st_mode
         if source.is_symlink() or not stat.S_ISREG(mode):
@@ -360,11 +360,11 @@ def _prepare_package(root: Path, product: Path, package: Path, *,
                      scope_callback_selection=None) -> dict[str, tuple[str, int]]:
     selection = active_selection(root)
     excluded = frozenset({selection.control_relative.name.casefold(), ".anechoic_runtime", ".anechoic_tmp", ".runtime", ".git", ".pytest_cache", "__pycache__", ".mypy_cache", ".ruff_cache", ".venv", ".vite", "node_modules"})
-    programmatic = root / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC"
+    programmatic = root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC"
     trees = (
         (root, Path(".")),
         (product / "SUPERLAYER_1_METHODOLOGY_SOURCES", Path("METHODOLOGY/sources")),
-        (root / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_AGENTIC/FEATURE_SKILLS/ca", Path("SKILLS/ca")),
+        (root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ca", Path("SKILLS/ca")),
     )
     sources: list[tuple[Path, Path]] = []
     inventories: list[tuple[Path, list[Path]]] = []
@@ -415,7 +415,7 @@ def _prepare_package(root: Path, product: Path, package: Path, *,
         for asset in (relation_registry, workbench_schema, *lifecycle_assets, tool_registry):
             expected[asset.relative_to(package).as_posix()] = _file_identity(asset)
     if scope_callback_selection is None:
-        selection_file = package / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_FORMAL_MODEL_ENGINE/scope_callback_selection.json"
+        selection_file = package / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_FORMAL_MODEL_ENGINE/scope_callback_selection.json"
         if selection_file.exists():
             selection = json.loads(selection_file.read_bytes())
             if set(selection) != {"version", "selected"} or selection["version"] != 1:
@@ -429,7 +429,7 @@ def _prepare_package(root: Path, product: Path, package: Path, *,
         source_path, pin, release_sources = scope_callback_selection
         source = _project_path(package, _relative(source_path, label="scope-callback-source"),
                                label="scope-callback-source", require_exists=True)
-        asset_dir = package / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_FORMAL_MODEL_ENGINE/assets"
+        asset_dir = package / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_FORMAL_MODEL_ENGINE/assets"
         if refresh_assets:
             for name in ("scope_level_check.py", "scope_level_check.bin", "scope_level_sources.json", "scope_level_metadata.json"):
                 relative = (asset_dir / name).relative_to(package).as_posix()
@@ -442,21 +442,21 @@ def _prepare_package(root: Path, product: Path, package: Path, *,
                                                   release_sources=release_sources)
         if generated_pin is None:
             raise LocalReleaseError("local-release-scope-callback-unavailable")
-        asset_dir = package / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_FORMAL_MODEL_ENGINE/assets"
+        asset_dir = package / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_FORMAL_MODEL_ENGINE/assets"
         for asset in _walk_regular_files(asset_dir):
             expected[asset.relative_to(package).as_posix()] = _file_identity(asset)
     for relative in (
         "pyproject.toml", "uv.lock", "version.toml",
         "SKILLS/ca/SKILL.md",
-        "LAYER_2_FRAMEWORK_ENGINE/FEATURE_AGENTIC/FEATURE_SKILLS/ca/SKILL.md",
-        "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/project_mcp_bootstrap.py",
-        "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_MCP/docker/start_mcp.py",
-        "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_MCP/docker/runtime.py",
-        "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_MCP/generate_tool_registry.py",
-        "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_MCP/tool_providers.json",
-        "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_APPS/APP_WORKBENCH/"
+        "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ca/SKILL.md",
+        "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/project_mcp_bootstrap.py",
+        "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP/docker/start_mcp.py",
+        "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP/docker/runtime.py",
+        "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP/generate_tool_registry.py",
+        "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP/tool_providers.json",
+        "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_APPS/APP_WORKBENCH/"
         "FEATURE_WORKBENCH_BACKEND/generate_relation_registry.py",
-        "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_APPS/APP_WORKBENCH/"
+        "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_APPS/APP_WORKBENCH/"
         "FEATURE_WORKBENCH_BACKEND/generate_workbench_schema.py",
         *_GENERATED_ASSETS,
     ):
@@ -480,7 +480,7 @@ def _cleanup_staging(root: Path, staging: Path | None) -> str:
 
 def _image_manager(source: Path, temporary: Path | None = None, *, project_root: Path,
                    build_provenance: dict[str, str] | None = None):
-    docker = Path(__file__).resolve().parents[2] / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_MCP/docker"
+    docker = Path(__file__).resolve().parents[2] / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP/docker"
     if str(docker) not in sys.path:
         sys.path.insert(0, str(docker))
     from runtime_images import ImageManager

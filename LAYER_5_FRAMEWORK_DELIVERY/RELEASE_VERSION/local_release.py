@@ -186,7 +186,7 @@ def run_local_release(
                 argv = (
                     "uv", "run", "--project", str(root), "--locked", "--no-sync", "--python", "3.14",
                     "--managed-python", "--no-env-file", "--all-groups", "python", "-B", "-u",
-                    str(Path(__file__).resolve().parents[2] / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/run_full_test_suite.py"), "--project-root", str(root),
+                    str(Path(__file__).resolve().parents[2] / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/run_full_test_suite.py"), "--project-root", str(root),
                 )
                 if image_mode == "existing":
                     argv += ("--image-mode", "existing")

@@ -19,7 +19,7 @@ from pathlib import Path
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "RELEASE_VERSION"))
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS"))
 import local_release  # noqa: E402
 from local_release import run_local_release, _launcher_image  # noqa: E402
 from project_selection import resolve_project  # noqa: E402
@@ -73,7 +73,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             destination.mkdir(parents=True)
             (destination / "old.txt").write_text("obsolete", encoding="utf-8")
             (destination / "config.toml").write_text("keep = true\n", encoding="utf-8")
-        skill = self.root / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_AGENTIC/FEATURE_SKILLS/ca"
+        skill = self.root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ca"
         skill.mkdir(parents=True)
         (skill / "SKILL.md").write_text("ca skill", encoding="utf-8")
         (skill / "references").mkdir()
@@ -81,11 +81,11 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         (self.root / "pyproject.toml").write_text("[project]\nname = 'fixture'\n", encoding="utf-8")
         (self.root / "uv.lock").write_text("version = 1\n", encoding="utf-8")
         (self.root / "version.toml").write_text('[framework]\nversion = "0.4.1"\n', encoding="utf-8")
-        tools = self.root / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS"
+        tools = self.root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS"
         tools.mkdir(parents=True)
         bootstrap_helper = (
             Path(__file__).resolve().parents[2]
-            / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/project_mcp_bootstrap.py"
+            / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/project_mcp_bootstrap.py"
         )
         (tools / "project_mcp_bootstrap.py").write_bytes(bootstrap_helper.read_bytes())
         (tools / "project_mcp_bootstrap.py").chmod(0o644)
@@ -102,11 +102,11 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         subject_builder = tools / "GENERATE_ENTITY_GRAPH/render_entity_tree.py"
         subject_builder.parent.mkdir()
         subject_builder.write_text("# retained subject builder\n", encoding="utf-8")
-        prompt = self.root / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_AGENTIC/FEATURE_PROMPTS/retired.py"
+        prompt = self.root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/retired.py"
         prompt.parent.mkdir(parents=True)
         prompt.write_text("# source-only prompt\n", encoding="utf-8")
         self.engine_bootstrap = (
-            self.root / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_MCP/"
+            self.root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP/"
             "docker/start_mcp.py"
         )
         self.engine_bootstrap.parent.mkdir(parents=True)
@@ -118,7 +118,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             '{"mcp_blacklist":[],"providers":[]}\n', encoding="utf-8")
         write_tool_registry_generator(mcp)
         workbench_backend = (
-            self.root / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_APPS/"
+            self.root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_APPS/"
             "APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND"
         )
         workbench_backend.mkdir(parents=True)
@@ -362,25 +362,25 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertEqual(0o755, stat.S_IMODE(bootstrap.stat().st_mode))
         for package in (self.runtime / "simple_local_release/package",):
             self.assertFalse((package / "METHODOLOGY/compiled").exists())
-            source_skill = self.root / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_AGENTIC/FEATURE_SKILLS/ca"
+            source_skill = self.root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ca"
             expected_skill = {p.relative_to(source_skill): p.read_bytes() for p in source_skill.rglob("*") if p.is_file()}
-            for relative in ("SKILLS/ca", "LAYER_2_FRAMEWORK_ENGINE/FEATURE_AGENTIC/FEATURE_SKILLS/ca"):
+            for relative in ("SKILLS/ca", "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ca"):
                 packaged_skill = package / relative
                 self.assertEqual(expected_skill, {p.relative_to(packaged_skill): p.read_bytes()
                                                   for p in packaged_skill.rglob("*") if p.is_file()})
             self.assertEqual("# release source\n", (package / "LAYER_5_FRAMEWORK_DELIVERY/PUBLIC_RELEASE/public_release.py").read_text())
             self.assertTrue((package / "LAYER_5_FRAMEWORK_DELIVERY/PUBLIC_RELEASE/tests/test_private.py").is_file())
-            self.assertTrue((package / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/"
+            self.assertTrue((package / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/"
                              "FEATURE_TOOLS/GENERATE_ENTITY_GRAPH/render_entity_tree.py").is_file())
-            self.assertTrue((package / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_APPS/"
+            self.assertTrue((package / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_APPS/"
                              "APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/generate_workbench_schema.py").is_file())
             self.assertEqual(
                 '{"schema_version":1,"providers":[]}\n',
-                (package / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_MCP/"
+                (package / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP/"
                  "tool_registry.json").read_text(encoding="utf-8"),
             )
-            self.assertTrue((package / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_AGENTIC/FEATURE_PROMPTS/retired.py").is_file())
-            packaged_tools = package / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS"
+            self.assertTrue((package / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/retired.py").is_file())
+            packaged_tools = package / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS"
             self.assertEqual(
                 '{"schema":1}\n', (packaged_tools / "ATOM_LIFECYCLE/status_model.json").read_text(encoding="utf-8")
             )
@@ -438,8 +438,8 @@ class SimpleLocalReleaseTests(unittest.TestCase):
 
     def test_focused_request_runs_and_reports_full_suite(self):
         modules = (
-            "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/tests/test_one.py",
-            "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/tests/test_two.py",
+            "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/tests/test_one.py",
+            "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/tests/test_two.py",
         )
         runner, calls = self._runner()
         result = run_local_release(
@@ -461,7 +461,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertIn("Selected test modules: all discovered modules", receipt)
 
     def test_focused_test_failure_blocks_downstream_release(self):
-        modules = ("LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/tests/test_failing.py",)
+        modules = ("LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/tests/test_failing.py",)
         base_runner, calls = self._runner()
 
         def failed_tests(argv, cwd):
@@ -553,7 +553,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertIn('version = "0.4.1.10"', (self.root / "version.toml").read_text())
 
     def test_workbench_node_dependencies_are_not_packaged(self):
-        frontend = self.root / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_APPS/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND"
+        frontend = self.root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_APPS/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND"
         dependencies = frontend / "node_modules/.bin"
         dependencies.mkdir(parents=True)
         (frontend / "package.json").write_text('{"name":"workbench"}')
@@ -571,7 +571,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             self.product / "SUPERLAYER_1_METHODOLOGY_SOURCES",
             self.product / "SUPERLAYER_1_METHODOLOGY_SOURCES" / self.source_units["CORE_META_MODEL"].name,
             self.installed / "obsolete",
-            self.runtime / "simple_local_release/package/LAYER_2_FRAMEWORK_ENGINE",
+            self.runtime / "simple_local_release/package/LAYER_3_ENGINE_STUDIO_C14",
         )
         for directory in retained:
             directory.mkdir(parents=True, exist_ok=True)
@@ -741,8 +741,8 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             return {path.relative_to(target).as_posix(): (path.read_bytes(), stat.S_IMODE(path.stat().st_mode))
                     for path in target.rglob("*") if path.is_file()}
         before = {target: inventory(target) for target in (self.installed, runtime_package, skill)}
-        for relative in ("uv.lock", "LAYER_2_FRAMEWORK_ENGINE/FEATURE_AGENTIC/FEATURE_SKILLS/ca/SKILL.md",
-                         "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_MCP/docker/runtime.py"):
+        for relative in ("uv.lock", "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ca/SKILL.md",
+                         "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MCP/docker/runtime.py"):
             with self.subTest(relative=relative):
                 missing = self.root / relative
                 payload = missing.read_bytes()
@@ -782,7 +782,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
 
     def test_shipped_workflow_without_source_proof_stops_at_package_build(self):
         lifecycle = self.root / (
-            "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_LIFECYCLE"
+            "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_LIFECYCLE"
         )
         asset = lifecycle / "assets/change_current_status.py"
         asset.parent.mkdir()
@@ -794,7 +794,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
 
     def test_unreadable_package_subtree_refuses_before_replacement(self):
-        blocked = self.root / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/blocked"
+        blocked = self.root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/blocked"
         blocked.mkdir()
         (blocked / "required.py").write_bytes(b"required payload")
         runtime_package = self.runtime / "simple_local_release/package"
