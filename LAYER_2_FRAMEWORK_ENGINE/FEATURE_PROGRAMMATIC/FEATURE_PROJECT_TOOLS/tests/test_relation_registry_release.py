@@ -39,8 +39,7 @@ class RelationRegistryReleaseTests(unittest.TestCase):
 
         fixture.image.resolve.side_effect = resolve
         runner, _calls = fixture._runner()
-        with fixture._compiler():
-            result = local_release.run_local_release(fixture.root, run_id="relation-registry-build", runner=runner)
+        result = local_release.run_local_release(fixture.root, run_id="relation-registry-build", runner=runner)
         self.assertEqual("completed", result["outcome"], result)
         self.assertEqual(1, len(observed))
         self.assertEqual('{"schema_version":1,"registered_names":[]}\n', (fixture.root / relative).read_text())
@@ -54,8 +53,7 @@ class RelationRegistryReleaseTests(unittest.TestCase):
         script.write_text("pass\n", encoding="utf-8")
         script.with_name("canonical_relation_registry.json").write_text("stale asset", encoding="utf-8")
         runner, calls = fixture._runner()
-        with fixture._compiler():
-            result = local_release.run_local_release(fixture.root, run_id="relation-registry-no-output", runner=runner)
+        result = local_release.run_local_release(fixture.root, run_id="relation-registry-no-output", runner=runner)
         self.assertEqual("failed", result["outcome"])
         self.assertEqual("build_package", result["failed_step"])
         self.assertEqual("stale asset", script.with_name("canonical_relation_registry.json").read_text())
@@ -70,8 +68,7 @@ class RelationRegistryReleaseTests(unittest.TestCase):
         )
         script.write_text("raise SystemExit(1)\n", encoding="utf-8")
         runner, calls = fixture._runner()
-        with fixture._compiler():
-            result = local_release.run_local_release(fixture.root, run_id="relation-registry-failure", runner=runner)
+        result = local_release.run_local_release(fixture.root, run_id="relation-registry-failure", runner=runner)
         self.assertEqual("failed", result["outcome"])
         self.assertEqual("build_package", result["failed_step"])
         fixture.image_factory.assert_not_called()
@@ -81,8 +78,7 @@ class RelationRegistryReleaseTests(unittest.TestCase):
         fixture = self.fixture
         (fixture.engine_bootstrap.parent.parent / "generate_tool_registry.py").unlink()
         runner, calls = fixture._runner()
-        with fixture._compiler():
-            result = local_release.run_local_release(fixture.root, run_id="tool-registry-missing", runner=runner)
+        result = local_release.run_local_release(fixture.root, run_id="tool-registry-missing", runner=runner)
         self.assertEqual(("failed", "build_package"), (result["outcome"], result["failed_step"]))
         fixture.image_factory.assert_not_called()
         self.assertFalse(any(fixture._is_mcp_bootstrap(argv) for argv in calls))
@@ -98,8 +94,7 @@ class RelationRegistryReleaseTests(unittest.TestCase):
             encoding="utf-8",
         )
         runner, calls = fixture._runner()
-        with fixture._compiler():
-            result = local_release.run_local_release(fixture.root, run_id="tool-registry-invalid", runner=runner)
+        result = local_release.run_local_release(fixture.root, run_id="tool-registry-invalid", runner=runner)
         self.assertEqual(("failed", "build_package"), (result["outcome"], result["failed_step"]))
         fixture.image_factory.assert_not_called()
         self.assertFalse(any(fixture._is_mcp_bootstrap(argv) for argv in calls))
@@ -128,7 +123,7 @@ class RelationRegistryReleaseTests(unittest.TestCase):
 
         fixture.image.resolve.side_effect = resolve
         runner, _calls = fixture._runner()
-        with fixture._compiler(), mock.patch.object(local_release, "_verify_package", side_effect=capture):
+        with mock.patch.object(local_release, "_verify_package", side_effect=capture):
             result = local_release.run_local_release(fixture.root, run_id="workbench-schema-build", runner=runner)
         self.assertEqual("completed", result["outcome"], result)
         self.assertEqual(['{"schema_version":1,"tables":[]}\n'], observed)
@@ -144,8 +139,7 @@ class RelationRegistryReleaseTests(unittest.TestCase):
         script.write_text("pass\n", encoding="utf-8")
         script.with_name("workbench_schema.json").write_text("stale asset", encoding="utf-8")
         runner, calls = fixture._runner()
-        with fixture._compiler():
-            result = local_release.run_local_release(fixture.root, run_id="workbench-schema-no-output", runner=runner)
+        result = local_release.run_local_release(fixture.root, run_id="workbench-schema-no-output", runner=runner)
         self.assertEqual(("failed", "build_package"), (result["outcome"], result["failed_step"]))
         fixture.image_factory.assert_not_called()
         self.assertFalse(any(fixture._is_mcp_bootstrap(argv) for argv in calls))
@@ -166,8 +160,7 @@ class RelationRegistryReleaseTests(unittest.TestCase):
             encoding="utf-8",
         )
         runner, calls = fixture._runner()
-        with fixture._compiler():
-            result = local_release.run_local_release(fixture.root, run_id="workbench-schema-symlink", runner=runner)
+        result = local_release.run_local_release(fixture.root, run_id="workbench-schema-symlink", runner=runner)
         self.assertEqual(("failed", "build_package"), (result["outcome"], result["failed_step"]))
         fixture.image_factory.assert_not_called()
         self.assertFalse(any(fixture._is_mcp_bootstrap(argv) for argv in calls))

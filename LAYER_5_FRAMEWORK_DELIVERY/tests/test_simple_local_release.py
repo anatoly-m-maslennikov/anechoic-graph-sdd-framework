@@ -333,7 +333,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         nested_install = self.root / "LAYER_5_FRAMEWORK_DELIVERY" / ".anechoic_install" / "ordinary.txt"
         nested_install.parent.mkdir()
         nested_install.write_text("ordinary package file\n", encoding="utf-8")
-        similar = self.root / ".anechoic_install_extra" / "ordinary.txt"
+        similar = self.root / ".anechoic-install-extra" / "ordinary.txt"
         similar.parent.mkdir()
         similar.write_text("ordinary package file\n", encoding="utf-8")
         self.assertEqual(selected_before, _release_sources(self.root))

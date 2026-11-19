@@ -240,7 +240,7 @@ class QueryStore:
 
     def _create_atom_version_max(self) -> None:
         if not self._connection.execute("SELECT count(*) FROM information_schema.tables "
-                                        "WHERE table_schema = 'main' AND table_name = 'archive_version_max'").fetchone()[0]:
+                                        "WHERE table_schema = 'main' AND table_name = 'archive_version_max'").fetchall()[0][0]:
             return
         source = revision_query(self._connection, stable_only=False)
         self._connection.execute(
