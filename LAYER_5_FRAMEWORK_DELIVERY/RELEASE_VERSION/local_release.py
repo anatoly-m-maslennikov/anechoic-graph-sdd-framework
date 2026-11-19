@@ -127,7 +127,7 @@ def run_local_release(
     selected_test_modules = None
     test_selection = "all discovered modules"
     phases = (
-        "validate inputs", "tests", "copy active sources", "compile product", "build package", "prepare candidate image",
+        "validate inputs", "tests", "copy active sources", "build package", "prepare candidate image",
         "copy product to installed framework", "install project runtime", "start mcp", "final",
     )
     try:
@@ -181,20 +181,6 @@ def run_local_release(
                     if target.exists():
                         _walk_regular_files(target)
                 _read_version(root)
-                tools_root = _project_path(
-                    root, Path("LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS"),
-                    label="compiler-path", require_exists=True,
-                )
-                if not tools_root.is_dir():
-                    raise LocalReleaseError("local-release-compiler-unavailable")
-                if str(tools_root) not in sys.path:
-                    sys.path.insert(0, str(tools_root))
-                try:
-                    from COMPILE_APPLICABLE_METHODOLOGY.compile_applicable_methodology import (
-                        CompileError, MethodologyPaths, compile_report, methodology_paths, replace_outputs_atomically, stage_outputs,
-                    )
-                except ImportError as error:
-                    raise LocalReleaseError("local-release-compiler-unavailable") from error
             elif phase == "tests":
                 failed_step = "tests"
                 argv = (
@@ -236,24 +222,6 @@ def run_local_release(
                         target = target_root / entry.relative_to(source)
                         target.parent.mkdir(parents=True, exist_ok=True)
                         shutil.copy2(entry, target)
-            elif phase == "compile product":
-                failed_step = "compile_product"
-                try:
-                    canonical = methodology_paths(root)
-                    places = MethodologyPaths(
-                        source=canonical.source,
-                        output=Path("LAYER_1_FRAMEWORK_METHODOLOGY/applicable_methodology"),
-                        declaration_digest=canonical.declaration_digest,
-                        control_root=canonical.control_root,
-                    )
-                    report, candidates, snapshot = compile_report(root, places)
-                    if report.get("can_apply") is not True:
-                        raise LocalReleaseError("local-release-product-compile-blocked")
-                    replace_outputs_atomically(root, stage_outputs(root, candidates, snapshot, places), places)
-                except ImportError as error:
-                    raise LocalReleaseError("local-release-compiler-unavailable") from error
-                except CompileError as error:
-                    raise LocalReleaseError("local-release-product-compile-blocked") from error
             elif phase == "copy product to installed framework":
                 failed_step = "copy_product_to_installed_framework"
                 _verify_package(package, package_identity)

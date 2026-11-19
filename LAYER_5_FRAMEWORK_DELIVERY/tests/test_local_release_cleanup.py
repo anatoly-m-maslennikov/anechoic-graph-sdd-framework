@@ -72,7 +72,6 @@ class LocalReleaseCleanupTests(unittest.TestCase):
             return self._successful_host_command(argv)
 
         with (
-            fixture._compiler(),
             patch("local_release._launcher_image", side_effect=self._launcher_image(fixture, None, fixture.image_id)),
         ):
             result = run_local_release(fixture.root, run_id="cleanup", runner=runner)
@@ -102,7 +101,6 @@ class LocalReleaseCleanupTests(unittest.TestCase):
             return self._successful_host_command(argv)
 
         with (
-            fixture._compiler(),
             patch("local_release._launcher_image", return_value=None),
         ):
             result = run_local_release(fixture.root, run_id="first-install", runner=runner)
@@ -125,7 +123,6 @@ class LocalReleaseCleanupTests(unittest.TestCase):
             return self._successful_host_command(argv)
 
         with (
-            fixture._compiler(),
             patch("local_release._launcher_image", return_value=fixture.image_id),
         ):
             result = run_local_release(fixture.root, run_id="reuse", runner=runner)
@@ -158,7 +155,6 @@ class LocalReleaseCleanupTests(unittest.TestCase):
             return self._successful_host_command(argv)
 
         with (
-            fixture._compiler(),
             patch(
                 "local_release._launcher_image",
                 side_effect=self._launcher_image(fixture, prior_image, fixture.image_id),
@@ -178,8 +174,7 @@ class LocalReleaseCleanupTests(unittest.TestCase):
                 return docker.run(argv, root)
             return subprocess.CompletedProcess(argv, int(fixture._is_mcp_bootstrap(argv)), "", "")
 
-        with fixture._compiler():
-            result = run_local_release(fixture.root, run_id="launch-failed", runner=runner)
+        result = run_local_release(fixture.root, run_id="launch-failed", runner=runner)
         self.assertEqual(result["outcome"], "failed")
         self.assertEqual(result["failed_step"], "start_mcp")
         self.assertFalse(any(argv[1:3] == ("image", "rm") for argv in docker.calls))
@@ -201,7 +196,6 @@ class LocalReleaseCleanupTests(unittest.TestCase):
             return self._successful_host_command(argv)
 
         with (
-            fixture._compiler(),
             patch("local_release._launcher_image", side_effect=self._launcher_image(fixture, image, fixture.image_id)),
         ):
             result = run_local_release(fixture.root, run_id="no-retry", runner=runner)
@@ -219,7 +213,7 @@ class LocalReleaseCleanupTests(unittest.TestCase):
                 return docker.run(argv, root)
             return subprocess.CompletedProcess(argv, int(fixture._is_mcp_bootstrap(argv)), "", "")
 
-        with fixture._compiler(), patch("local_release._launcher_image", return_value=image):
+        with patch("local_release._launcher_image", return_value=image):
             result = run_local_release(fixture.root, run_id="prior-failed", runner=runner)
         self.assertEqual(result["outcome"], "failed")
         report = (fixture.root / str(result["report_path"])).read_text()
@@ -242,7 +236,6 @@ class LocalReleaseCleanupTests(unittest.TestCase):
             return self._successful_host_command(argv)
 
         with (
-            fixture._compiler(),
             patch("local_release._launcher_image", side_effect=self._launcher_image(fixture, image, fixture.image_id)),
         ):
             result = run_local_release(fixture.root, run_id="prior-no-retry", runner=runner)

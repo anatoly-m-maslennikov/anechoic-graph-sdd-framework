@@ -62,8 +62,7 @@ class ReleaseImageProvenanceTests(unittest.TestCase):
                 return fixture._mcp_bootstrap_success(argv)
             return subprocess.CompletedProcess(argv, 0, "", "")
 
-        with fixture._compiler():
-            result = run_local_release(fixture.root, run_id="provenance", runner=runner)
+        result = run_local_release(fixture.root, run_id="provenance", runner=runner)
         self.assertEqual(result["outcome"], "completed")
         fixture.provenance.assert_called_once()
         self.assertEqual(fixture.provenance.call_args.args[0], fixture.root)
@@ -82,8 +81,7 @@ class ReleaseImageProvenanceTests(unittest.TestCase):
         def runner(argv: tuple[str, ...], root: Path) -> subprocess.CompletedProcess[str]:
             return subprocess.CompletedProcess(argv, 0, "", "")
 
-        with fixture._compiler():
-            result = run_local_release(fixture.root, run_id="no-head", runner=runner)
+        result = run_local_release(fixture.root, run_id="no-head", runner=runner)
         self.assertEqual(result["failed_step"], "prepare_candidate_image")
         fixture.image_factory.assert_not_called()
 
@@ -110,8 +108,7 @@ class ReleaseImageProvenanceTests(unittest.TestCase):
                 argv, 0, head if argv[:3] == ("git", "rev-parse", "--verify") else "", ""
             )
 
-        with fixture._compiler():
-            result = run_local_release(fixture.root, run_id="post-commit-head", runner=runner)
+        result = run_local_release(fixture.root, run_id="post-commit-head", runner=runner)
         self.assertEqual(result["outcome"], "completed")
         commit = next(index for index, argv in enumerate(calls) if argv[:2] == ("git", "commit"))
         observe = calls.index(("git", "rev-parse", "--verify", "HEAD"))

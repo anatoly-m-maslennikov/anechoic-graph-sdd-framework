@@ -41,8 +41,7 @@ class LocalReleaseGitPreflightTests(unittest.TestCase):
                 return fixture._mcp_bootstrap_success(argv)
             return subprocess.CompletedProcess(argv, 0, "", "")
 
-        with fixture._compiler():
-            result = run_local_release(fixture.root, run_id="first-commit", runner=runner)
+        result = run_local_release(fixture.root, run_id="first-commit", runner=runner)
         return result, calls, fixture
 
     def test_dirty_input_committed_before_tests_and_build_provenance(self) -> None:

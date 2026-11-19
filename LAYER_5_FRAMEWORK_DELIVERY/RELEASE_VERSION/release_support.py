@@ -131,7 +131,9 @@ def _read_structure(root: Path, config: Mapping[str, Any]) -> tuple[tuple[str, P
 
 
 def _walk_regular_files(root: Path, *, excluded_directories: frozenset[str] = frozenset(),
-                        exclude_history: bool = False) -> list[Path]:
+                        exclude_history: bool = False,
+                        excluded_root_prefix: str = "",
+                        excluded_root_directories: frozenset[str] = frozenset()) -> list[Path]:
     def fail(error: OSError) -> None:
         raise LocalReleaseError("local-release-source-read-failed") from error
 
@@ -140,6 +142,8 @@ def _walk_regular_files(root: Path, *, excluded_directories: frozenset[str] = fr
         base = Path(directory)
         directories[:] = [name for name in directories if not _ignored(name)
                           and name.casefold() not in excluded_directories
+                          and (base != root or name.casefold() not in excluded_root_directories)
+                          and (base != root or not excluded_root_prefix or not name.casefold().startswith(excluded_root_prefix))
                           and not (exclude_history and carrier_status_folder(name) in {"draft", "archived"})]
         for name in directories:
             child = base / name
@@ -360,7 +364,6 @@ def _prepare_package(root: Path, product: Path, package: Path, *,
     trees = (
         (root, Path(".")),
         (product / "SUPERLAYER_1_METHODOLOGY_SOURCES", Path("METHODOLOGY/sources")),
-        (product / "applicable_methodology", Path("METHODOLOGY/compiled")),
         (root / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_AGENTIC/FEATURE_SKILLS/ca", Path("SKILLS/ca")),
     )
     sources: list[tuple[Path, Path]] = []
@@ -368,7 +371,9 @@ def _prepare_package(root: Path, product: Path, package: Path, *,
     for source, destination in trees:
         if source.is_symlink() or not source.is_dir():
             raise LocalReleaseError("local-release-package-source-unavailable")
-        members = _walk_regular_files(source, excluded_directories=excluded)
+        members = _walk_regular_files(source, excluded_directories=excluded,
+                                      excluded_root_prefix=".anechoic_" if source == root else "",
+                                      excluded_root_directories=frozenset({".caprmedio_install"}) if source == root else frozenset())
         if not members:
             raise LocalReleaseError("local-release-package-source-unavailable")
         inventories.append((source, members))
@@ -381,7 +386,9 @@ def _prepare_package(root: Path, product: Path, package: Path, *,
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, destination)
     for source, members in inventories:
-        current = _walk_regular_files(source, excluded_directories=excluded)
+        current = _walk_regular_files(source, excluded_directories=excluded,
+                                      excluded_root_prefix=".anechoic_" if source == root else "",
+                                      excluded_root_directories=frozenset({".caprmedio_install"}) if source == root else frozenset())
         if current != members:
             raise LocalReleaseError("local-release-package-source-changed")
     for source, relative in sources:

@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 import subprocess
-from contextlib import AbstractContextManager
 import io
 import json
 import os
@@ -13,7 +12,7 @@ import shutil
 import stat
 import sys
 import tempfile
-from types import ModuleType, SimpleNamespace
+from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
 from pathlib import Path
@@ -196,47 +195,6 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         launcher_python.chmod(0o755)
         return subprocess.CompletedProcess(argv, 0, "http://localhost:12345/mcp\n", "")
 
-    def _compile(self, root):
-        self.assertEqual(self.root, root)
-        output = self.product / "applicable_methodology"
-        output.mkdir(parents=True)
-        (output / "compiled.md").write_text("compiled", encoding="utf-8")
-
-    def _compiler(self, *, fail: bool = False) -> AbstractContextManager[object]:
-        module = ModuleType("COMPILE_APPLICABLE_METHODOLOGY.compile_applicable_methodology")
-        module.CompileError = RuntimeError
-        module.MethodologyPaths = SimpleNamespace
-        self.canonical_methodology_paths = SimpleNamespace(
-            source=Path("relocated/methodology-sources"),
-            output=Path("declared/applicable-methodology"),
-            declaration_digest="canonical-declaration-digest",
-            control_root=Path(".caprmedio_caprmedio"),
-        )
-        module.methodology_paths = Mock(return_value=self.canonical_methodology_paths)
-        self.compile_report_paths = []
-
-        def compile_report(root, paths):
-            self.compile_report_paths.append(paths)
-            return {"can_apply": not fail}, (), {}
-
-        module.compile_report = compile_report
-        module.stage_outputs = lambda *args: None
-        module.replace_outputs_atomically = lambda root, staging, paths: self._compile(root)
-        return patch.dict(sys.modules, {module.__name__: module})
-
-    def test_compile_product_preserves_canonical_methodology_inputs(self):
-        runner, _ = self._runner()
-        with self._compiler():
-            result = run_local_release(self.root, run_id="canonical-methodology-inputs", runner=runner)
-
-        self.assertEqual("completed", result["outcome"])
-        self.assertEqual(1, len(self.compile_report_paths))
-        places = self.compile_report_paths[0]
-        self.assertEqual(self.canonical_methodology_paths.source, places.source)
-        self.assertEqual(self.canonical_methodology_paths.declaration_digest, places.declaration_digest)
-        self.assertEqual(self.canonical_methodology_paths.control_root, places.control_root)
-        self.assertEqual(Path("LAYER_1_FRAMEWORK_METHODOLOGY/applicable_methodology"), places.output)
-
     def test_previous_image_refreshes_checkout_assets_before_build(self):
         runner, _ = self._runner()
         previous = "sha256:" + "e" * 64
@@ -247,7 +205,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         (selection.launcher_state / "ready.json").write_text(json.dumps(receipt), encoding="utf-8")
         (selection.launcher_state / "last_launch.json").write_text(
             json.dumps(dict(receipt, image_id="sha256:" + "f" * 64, readiness=False)), encoding="utf-8")
-        with self._compiler(), patch("local_release._launcher_image", return_value=self.image_id):
+        with patch("local_release._launcher_image", return_value=self.image_id):
             result = run_local_release(self.root, run_id="predecessor-query", runner=runner)
 
         self.assertIn(result["outcome"], {"completed", "completed_with_cleanup_pending"}, result)
@@ -267,8 +225,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             (self.root / relative).write_bytes(payload)
 
         runner, calls = self._runner()
-        with self._compiler():
-            result = run_local_release(self.root, run_id="existing-assets", runner=runner, image_mode="existing")
+        result = run_local_release(self.root, run_id="existing-assets", runner=runner, image_mode="existing")
 
         self.assertEqual("completed", result["outcome"], result)
         self.assertEqual("existing", result["image_mode"])
@@ -363,14 +320,32 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         terminal.mkdir()
         (terminal / "active.md").write_bytes((core / "active.md").read_bytes())
         (terminal / "data.json").write_text("{}\n", encoding="utf-8")
+        selected_before = _release_sources(self.root)
+        records = self.root / ".anechoic_anechoic" / "_PMETA" / "record.md"
+        records.parent.mkdir(parents=True)
+        records.write_text("new raw record\n", encoding="utf-8")
+        nested = self.root / "LAYER_5_FRAMEWORK_DELIVERY" / ".anechoic_nested" / "ordinary.txt"
+        nested.parent.mkdir()
+        nested.write_text("ordinary package file\n", encoding="utf-8")
+        transient = self.root / ".caprmedio_install" / "workflow_orchestrator" / "runtime.txt"
+        transient.parent.mkdir(parents=True)
+        transient.write_text("runtime state\n", encoding="utf-8")
+        nested_install = self.root / "LAYER_5_FRAMEWORK_DELIVERY" / ".caprmedio_install" / "ordinary.txt"
+        nested_install.parent.mkdir()
+        nested_install.write_text("ordinary package file\n", encoding="utf-8")
+        similar = self.root / ".caprmedio_install_extra" / "ordinary.txt"
+        similar.parent.mkdir()
+        similar.write_text("ordinary package file\n", encoding="utf-8")
+        self.assertEqual(selected_before, _release_sources(self.root))
         runner, calls = self._runner()
-        with self._compiler():
-            result = run_local_release(self.root, run_id="happy", runner=runner)
+        result = run_local_release(self.root, run_id="happy", runner=runner)
         self.assertEqual("completed", result["outcome"])
+        self.assertEqual(selected_before, _release_sources(self.root))
+        self.assertEqual("new raw record\n", records.read_text(encoding="utf-8"))
         for target in (self.product, self.installed):
             self.assertFalse((target / "old.txt").exists())
             self.assertEqual("keep = true\n", (target / "config.toml").read_text())
-            self.assertTrue((target / "applicable_methodology/compiled.md").is_file())
+            self.assertFalse((target / "applicable_methodology").exists())
             for relative in protected:
                 self.assertEqual(f"preserve {relative}\n", (target / relative).read_text())
             self.assertEqual(0o640, stat.S_IMODE((target / "SUPERLAYER_1_METHODOLOGY_SOURCES" / core.name / "active.md").stat().st_mode))
@@ -386,6 +361,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertEqual(self.engine_bootstrap.read_bytes(), bootstrap.read_bytes())
         self.assertEqual(0o755, stat.S_IMODE(bootstrap.stat().st_mode))
         for package in (self.runtime / "simple_local_release/package",):
+            self.assertFalse((package / "METHODOLOGY/compiled").exists())
             source_skill = self.root / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_AGENTIC/FEATURE_SKILLS/ca"
             expected_skill = {p.relative_to(source_skill): p.read_bytes() for p in source_skill.rglob("*") if p.is_file()}
             for relative in ("SKILLS/ca", "LAYER_2_FRAMEWORK_ENGINE/FEATURE_AGENTIC/FEATURE_SKILLS/ca"):
@@ -412,14 +388,17 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             for relative in ("tests/test_retired.py", "fixtures/input.json", "README.md",
                              "scope_declaration_test_support.py", "scope_declaration_render.py"):
                 self.assertTrue((packaged_tools / relative).is_file())
-            for excluded in (".caprmedio_caprmedio", ".caprmedio_runtime", ".caprmedio_tmp"):
+            self.assertTrue((package / nested.relative_to(self.root)).is_file())
+            self.assertTrue((package / nested_install.relative_to(self.root)).is_file())
+            self.assertTrue((package / similar.relative_to(self.root)).is_file())
+            for excluded in (".caprmedio_caprmedio", ".caprmedio_runtime", ".caprmedio_tmp", ".anechoic_anechoic", ".caprmedio_install"):
                 self.assertFalse((package / excluded).exists())
             self.assertEqual("retained implementation skill\n", (packaged_tools / "retained/SKILL.md").read_text())
         self.assertEqual("ca skill", (self.root / ".agents/skills/ca/SKILL.md").read_text())
         self.assertIn('version = "0.4.1.1"', (self.root / "version.toml").read_text())
         self.assertIn('version = "0.4.1.1"', (self.runtime / "simple_local_release/package/version.toml").read_text())
         self.assertEqual(1, sum(self._is_mcp_bootstrap(argv) for argv in calls))
-        self.assertFalse((self.root / ".caprmedio_install").exists())
+        self.assertEqual("runtime state\n", transient.read_text(encoding="utf-8"))
         self.assertEqual([], list((self.root / ".caprmedio_tmp/simple_local_release").iterdir()))
 
     def test_release_sources_accept_nested_and_lowercase_active_status(self):
@@ -451,8 +430,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         source = self.source_units["CORE_META_MODEL"] / "active.md"
         source.write_text("---\natom_id: not-an-atom-id\nstatus: Active\n---\nNo Claim or relations.\n", encoding="utf-8")
         runner, calls = self._runner()
-        with self._compiler():
-            result = run_local_release(self.root, run_id="no-atom-gate", runner=runner)
+        result = run_local_release(self.root, run_id="no-atom-gate", runner=runner)
         self.assertEqual("completed", result["outcome"])
         self.assertEqual(1, sum(any(item.endswith("run_full_test_suite.py") for item in argv) for argv in calls))
         for target in (self.product, self.installed):
@@ -464,13 +442,12 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/tests/test_two.py",
         )
         runner, calls = self._runner()
-        with self._compiler():
-            result = run_local_release(
-                self.root,
-                run_id="focused-forwarding",
-                runner=runner,
-                test_modules=modules,
-            )
+        result = run_local_release(
+            self.root,
+            run_id="focused-forwarding",
+            runner=runner,
+            test_modules=modules,
+        )
 
         self.assertEqual("completed", result["outcome"])
         self.assertEqual("full", result["test_scope"])
@@ -549,25 +526,16 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self._assert_input_refused("invalid-version")
         self.assertIn('version = "invalid"', version.read_text())
 
-    def test_unsafe_compiler_path_refuses_before_tests_or_replacement(self):
-        tools = self.root / "LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS"
-        moved = tools.with_name("saved_tools")
-        tools.rename(moved)
-        tools.symlink_to(moved, target_is_directory=True)
-        self._assert_input_refused("unsafe-compiler")
-
     def test_installer_refreshes_bootstrap_without_touching_runtime_config_or_state(self):
         runner, calls = self._runner()
-        with self._compiler():
-            first = run_local_release(self.root, run_id="bootstrap-one", runner=runner)
+        first = run_local_release(self.root, run_id="bootstrap-one", runner=runner)
         self.assertEqual("completed", first["outcome"])
         state = self.runtime / "project_mcp_state.json"
         state.write_text("retain this runtime state\n", encoding="utf-8")
         self.engine_bootstrap.write_bytes(b"#!/usr/bin/env python3\n# refreshed package bootstrap\n")
         self.engine_bootstrap.chmod(0o755)
 
-        with self._compiler():
-            second = run_local_release(self.root, run_id="bootstrap-two", runner=runner)
+        second = run_local_release(self.root, run_id="bootstrap-two", runner=runner)
 
         self.assertEqual("completed", second["outcome"])
         bootstrap = self.runtime / "start_mcp.py"
@@ -580,8 +548,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
     def test_four_component_local_version_increments_without_rollover(self):
         (self.root / "version.toml").write_text('[framework]\nversion = "0.4.1.9"\n', encoding="utf-8")
         runner, _ = self._runner()
-        with self._compiler():
-            result = run_local_release(self.root, run_id="version", runner=runner)
+        result = run_local_release(self.root, run_id="version", runner=runner)
         self.assertEqual("completed", result["outcome"])
         self.assertIn('version = "0.4.1.10"', (self.root / "version.toml").read_text())
 
@@ -592,8 +559,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         (frontend / "package.json").write_text('{"name":"workbench"}')
         (dependencies / "vite").symlink_to("../vite/bin/vite.js")
         runner, _ = self._runner()
-        with self._compiler():
-            result = run_local_release(self.root, run_id="frontend-dependencies", runner=runner)
+        result = run_local_release(self.root, run_id="frontend-dependencies", runner=runner)
         self.assertEqual("completed", result["outcome"])
         packaged = self.runtime / "simple_local_release/package" / frontend.relative_to(self.root)
         self.assertTrue((packaged / "package.json").is_file())
@@ -612,8 +578,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             (directory / ".DS_Store").write_bytes(b"ignored")
             (directory / "obsolete.txt").write_text("old", encoding="utf-8")
         runner, _ = self._runner()
-        with self._compiler():
-            result = run_local_release(self.root, run_id="ds-store", runner=runner)
+        result = run_local_release(self.root, run_id="ds-store", runner=runner)
         self.assertEqual("completed", result["outcome"])
         for directory in retained:
             self.assertEqual(b"ignored", (directory / ".DS_Store").read_bytes())
@@ -621,18 +586,6 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertTrue((self.product / "SUPERLAYER_1_METHODOLOGY_SOURCES" / self.source_units["CORE_META_MODEL"].name / "active.md").is_file())
         for target in (self.product, self.installed):
             self.assertEqual([], list((target / "SUPERLAYER_1_METHODOLOGY_SOURCES" / self.source_units["INSTALLED_EXTENSIONS"].name).rglob("*.md")))
-
-    def test_compiler_failure_stops_before_install_or_docker_and_reports(self):
-        runner, calls = self._runner()
-        with self._compiler(fail=True):
-            result = run_local_release(self.root, run_id="compile-failed", runner=runner)
-        self.assertEqual("failed", result["outcome"])
-        self.assertIn("compile", result["failed_step"])
-        self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
-        self.assertFalse(any(argv[0] == "docker" for argv in calls))
-        report = self.root / result["report_path"]
-        self.assertTrue(report.is_file())
-        self.assertIn("compile_product", report.read_text())
 
     def test_test_failure_leaves_both_methodology_destinations_untouched(self):
         calls = []
@@ -715,10 +668,11 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             return subprocess.CompletedProcess(argv, 0, "bounded tail", "")
 
         with patch("local_release.subprocess.run", side_effect=lambda argv, **kwargs: runner(argv, kwargs["cwd"])), \
-                patch("local_release.run_logged_test_process", side_effect=passed), self._compiler(fail=True):
+                patch("local_release.run_logged_test_process", side_effect=passed), \
+                patch("local_release._prepare_package", side_effect=RuntimeError("package failed")):
             result = run_local_release(self.root, run_id="later-failed")
 
-        self.assertEqual(("failed", "compile_product"), (result["outcome"], result["failed_step"]))
+        self.assertEqual(("failed", "build_package"), (result["outcome"], result["failed_step"]))
         self.assertEqual("complete test evidence\n", (self.root / result["test_log_path"]).read_text())
         self.assertIn(result["test_log_path"], (self.root / result["report_path"]).read_text())
 
@@ -734,8 +688,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
 
     def test_git_stages_everything_and_commits_before_steps_and_at_end(self):
         runner, calls = self._runner()
-        with self._compiler():
-            result = run_local_release(self.root, run_id="git-order", runner=runner)
+        result = run_local_release(self.root, run_id="git-order", runner=runner)
         self.assertEqual("completed", result["outcome"])
         adds = [index for index, argv in enumerate(calls) if argv[:3] == ("git", "add", "-A")]
         commits = [index for index, argv in enumerate(calls) if argv[:2] == ("git", "commit")]
@@ -745,7 +698,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             self.assertEqual(add + 2, commit)
         self.assertEqual(len(calls) - 2, commits[-1])
         self.assertEqual([
-            "validate inputs", "tests", "copy active sources", "compile product", "build package", "prepare candidate image",
+            "validate inputs", "tests", "copy active sources", "build package", "prepare candidate image",
             "copy product to installed framework", "install project runtime", "start mcp", "final",
         ], [calls[index][-1].removeprefix("chore(release): simple local ") for index in commits])
 
@@ -767,14 +720,13 @@ class SimpleLocalReleaseTests(unittest.TestCase):
                 return subprocess.CompletedProcess(argv, 0, "", "")
             return subprocess.CompletedProcess(argv, 0, "http://localhost:12345/mcp", "")
 
-        with self._compiler():
-            result = run_local_release(self.root, run_id="real-git", runner=runner)
+        result = run_local_release(self.root, run_id="real-git", runner=runner)
         self.assertEqual("completed", result["outcome"])
         self.assertEqual("", git("status", "--porcelain").stdout)
         self.assertEqual("chore(release): simple local final", git("log", "-1", "--format=%s").stdout.strip())
         receipt = ".caprmedio_runtime/simple_local_release/reports/real-git.md"
         self.assertIn("http://localhost:12345/mcp", git("show", f"HEAD:{receipt}").stdout)
-        self.assertEqual(7, int(git("rev-list", "--count", "HEAD").stdout))
+        self.assertEqual(6, int(git("rev-list", "--count", "HEAD").stdout))
         for relative in _GENERATED_ASSETS:
             self.assertEqual((self.root / relative).read_text(), git("show", f"HEAD:{relative}").stdout)
 
@@ -797,8 +749,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
                 mode = stat.S_IMODE(missing.stat().st_mode)
                 missing.unlink()
                 runner, calls = self._runner()
-                with self._compiler():
-                    result = run_local_release(self.root, run_id="missing-input", runner=runner)
+                result = run_local_release(self.root, run_id="missing-input", runner=runner)
                 missing.write_bytes(payload)
                 missing.chmod(mode)
                 self.assertEqual("failed", result["outcome"])
@@ -822,7 +773,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
                         path.chmod(0o600 if stat.S_IMODE(path.stat().st_mode) != 0o600 else 0o644)
                     return expected
                 runner, _ = self._runner()
-                with self._compiler(), patch.object(local_release, "_prepare_package", tamper):
+                with patch.object(local_release, "_prepare_package", tamper):
                     result = run_local_release(self.root, run_id="tampered-package", runner=runner)
                 self.assertEqual("failed", result["outcome"])
                 self.assertEqual("prepare_candidate_image", result["failed_step"])
@@ -837,8 +788,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         asset.parent.mkdir()
         asset.write_text("# reviewed workflow\n", encoding="utf-8")
         runner, _ = self._runner()
-        with self._compiler():
-            result = run_local_release(self.root, run_id="unverified-workflow", runner=runner)
+        result = run_local_release(self.root, run_id="unverified-workflow", runner=runner)
         self.assertEqual(("failed", "build_package"), (result["outcome"], result["failed_step"]))
         self.image_factory.assert_not_called()
         self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
@@ -855,8 +805,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         runner, calls = self._runner()
         blocked.chmod(0)
         try:
-            with self._compiler():
-                result = run_local_release(self.root, run_id="unreadable-package", runner=runner)
+            result = run_local_release(self.root, run_id="unreadable-package", runner=runner)
         finally:
             blocked.chmod(0o700)
         self.assertEqual("failed", result["outcome"])
@@ -878,7 +827,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             stages.append(package)
             return prepare(root, product, package, **kwargs)
         runner, _ = self._runner()
-        with self._compiler(), patch.object(local_release, "_prepare_package", capture):
+        with patch.object(local_release, "_prepare_package", capture):
             result = run_local_release(self.root, run_id="private", runner=runner)
         self.assertEqual("completed", result["outcome"])
         self.assertEqual(1, len(stages))
@@ -911,8 +860,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
                 events.append("post-smoke-image-cleanup")
             return result
 
-        with self._compiler():
-            result = run_local_release(self.root, run_id="image-order", runner=record)
+        result = run_local_release(self.root, run_id="image-order", runner=record)
         self.assertEqual("completed", result["outcome"])
         self.assertEqual(2, self.image_factory.call_count)
         self.assertEqual([unittest.mock.call(use_packaged_assets=True)] * 3, self.image.identity.call_args_list)
@@ -939,7 +887,6 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.image.resolve.side_effect = RuntimeError("image unavailable")
         runner, calls = self._runner()
         with (
-            self._compiler(),
             patch("local_release.cleanup_stopped_containers") as stopped_cleanup,
             patch("local_release.cleanup_obsolete_images") as image_cleanup,
         ):
@@ -960,8 +907,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.image.identity.side_effect = [SimpleNamespace(fingerprint="b" * 64),
                                            SimpleNamespace(fingerprint="c" * 64)]
         runner, calls = self._runner()
-        with self._compiler():
-            result = run_local_release(self.root, run_id="package-mismatch", runner=runner)
+        result = run_local_release(self.root, run_id="package-mismatch", runner=runner)
         self.assertEqual("failed", result["outcome"])
         self.assertEqual("prepare_candidate_image", result["failed_step"])
         self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
