@@ -135,7 +135,7 @@ legacy_migration_roots = [".anechoic"]
 key = "anechoic"
 name = "anechoic"
 obsolete_names = ["DSET", "CARMAIO", "CARMADIO"]
-repository_slug = "anechoic-graph-driven-framework"
+repository_slug = "anechoic-graph-sdd-framework"
 
 [project_mcp]
 http_port = 56317

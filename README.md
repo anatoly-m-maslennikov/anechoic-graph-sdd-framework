@@ -1,4 +1,4 @@
-# Anechoic
+# Anechoic Iceberg on Rails
 
 **The Graph-Driven Development Framework**
 

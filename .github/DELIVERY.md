@@ -4,8 +4,8 @@ This operational document defines how the repository moves changes from `amm/dev
 
 ## Rules
 
-- [Development branch ruleset](https://github.com/anatoly-m-maslennikov/anechoic-graph-driven-framework/rules/18896762): only `anatoly-m-maslennikov` may create, update, or delete `dev` or `amm/dev`.
-- [`main` ruleset](https://github.com/anatoly-m-maslennikov/anechoic-graph-driven-framework/rules/18897046): `main` has no bypass actors; every update requires a pull request, `PR policy`, and the merge-commit method.
+- [Development branch ruleset](https://github.com/anatoly-m-maslennikov/anechoic-graph-sdd-framework/rules/18896762): only `anatoly-m-maslennikov` may create, update, or delete `dev` or `amm/dev`.
+- [`main` ruleset](https://github.com/anatoly-m-maslennikov/anechoic-graph-sdd-framework/rules/18897046): `main` has no bypass actors; every update requires a pull request, `PR policy`, and the merge-commit method.
 - [Policy workflow](workflows/dev-to-main-policy.yml): `PR policy` passes only for a same-repository `dev → main` or `amm/dev → main` pull request authored by the repository owner. A passing non-draft PR is merged automatically.
 - Repository tests and validators are temporarily disabled; no successful PR check currently represents test, evaluation, lint, type-check, cross-platform, or framework-validation evidence.
 - [WSL proof workflow](workflows/wsl-proof.yml): an explicit manual workflow targets a labeled self-hosted Windows/WSL runner. It is a proof hook, not evidence until a run on the tested commit succeeds.

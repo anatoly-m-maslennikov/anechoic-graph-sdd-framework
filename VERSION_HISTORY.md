@@ -12,7 +12,7 @@ Selected version milestones from committed declarations:
 
 ## Version 0.4
 
-Full description in pr: https://github.com/anatoly-m-maslennikov/anechoic-graph-driven-framework/pull/17
+Full description in pr: https://github.com/anatoly-m-maslennikov/anechoic-graph-sdd-framework/pull/17
 
 Summary:
 
@@ -20,11 +20,11 @@ Summary:
 - Define stable Atom identities, Entities, Subjects, typed relations, CCE, Scope Units, planning, and reusable Workflows.
 - Deliver the first local RMED Atoms Base Revise MCP: gather → check → fix, with structured results and Journal records.
 - Separate the ontology/base model from replaceable interfaces and Tools; graph services and orchestration remain under development.
-- Declare version 0.4 on 3 October 2026; the version declaration is recorded in https://github.com/anatoly-m-maslennikov/anechoic-graph-driven-framework/pull/18.
+- Declare version 0.4 on 3 October 2026; the version declaration is recorded in https://github.com/anatoly-m-maslennikov/anechoic-graph-sdd-framework/pull/18.
 
 ## Version 0.4.1
 
-Full description in pr: https://github.com/anatoly-m-maslennikov/anechoic-graph-driven-framework/pull/25
+Full description in pr: https://github.com/anatoly-m-maslennikov/anechoic-graph-sdd-framework/pull/25
 
 Summary:
 
@@ -37,7 +37,7 @@ Summary:
 <!-- public-release:epic1848-direct-public-20261012-001 -->
 ## Version 0.4.3
 
-Full description in pr: https://github.com/anatoly-m-maslennikov/anechoic-graph-driven-framework/pull/27
+Full description in pr: https://github.com/anatoly-m-maslennikov/anechoic-graph-sdd-framework/pull/27
 
 Summary:
 
@@ -46,7 +46,7 @@ Summary:
 - Improve Tool discovery, Subject validation/patching, graph projection foundations, and Methodology authority; retain non-authoritative research separately.
 
 <!-- public-release:public-20261015-green-suite-1 -->
-## 0.4.4 [PR](https://github.com/anatoly-m-maslennikov/anechoic-graph-driven-framework/pull/30)
+## 0.4.4 [PR](https://github.com/anatoly-m-maslennikov/anechoic-graph-sdd-framework/pull/30)
 - Add direct Subject lookup, bound preview/staging and exact-change Codex confirmation; Core Subject migration remains separate.
 - Replace retired sealed-release and installer paths with direct releases that test prepared materials before publication.
 - Simplify Journals to project-scoped append/read and distinguish logging failures from actual Action outcomes.
