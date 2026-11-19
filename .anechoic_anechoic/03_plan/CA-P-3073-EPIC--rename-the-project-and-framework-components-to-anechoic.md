@@ -54,6 +54,12 @@ edits in parallel where the paths and files are separate.
   Meta-methodology is Layer 2, and Engine Studio is Layer 3.
 - [ ] Apply the Component names and placements. Move C14 as a unit and retain
   its descendant IDs and parent links in the mechanical migration baseline.
+  The isolated replay verified the Project Manifest, 42 Component Manifests,
+  and their direct and inverse containment edges. It preserved all 37 C14
+  descendant IDs and mechanical parents. See
+  `.anechoic_tmp/ca-p-3073/c14-structural-replay/receipt.json`. All 76 legacy
+  structural source digests have Git and rename evidence in
+  `.anechoic_tmp/ca-p-3073/structural-source-provenance.json`.
 - [ ] After the C14 move and baseline check, apply the Engine Studio split in
   CA-A-1461. Place the four Components directly under Engine Studio.
   Reuse C21 for MCP Patchbay and C43 for IWE Console. Keep the current
@@ -155,13 +161,14 @@ the pre-cutover Local Release.
 
 ### SPEC carrier directories
 
-- [ ] Identify the nested trial paths that belong to the SPEC cutover. Check
-  each planned path against CA-A-1462, “Component, Tier, and Lens”. The
-  CA-P-3075 dry render found 85 source paths under `scope-trial-100` and
-  no native destination with that directory name. Check the final staged
-  output before changing any carrier paths.
+- [x] Identify the nested trial paths that belong to the SPEC cutover.
+  Git verifies the indexed source bytes for all 84 trial drafts found in the
+  legacy tree. The CA-P-3075 dry render has 85 nested sources, including a
+  separate supporting Definition, and no nested trial destination. See
+  `.anechoic_tmp/ca-p-3073/trial-cutover-audit.json`.
 - [ ] Fix the confirmed nested trial paths before applying the SPEC carrier
-  directory rules in CA-A-1466.
+  directory rules in CA-A-1466. Check the final staged output before
+  changing any carrier paths.
 - [ ] Verify that Active SPEC carriers use enabled lens directories in the owning
   Component Spec Section and that Draft and Archived carriers use the section’s
   `draft/` and `archived/` directories. Coordinate any carrier moves with
@@ -169,8 +176,11 @@ the pre-cutover Local Release.
 
 ### Technical cleanup
 
-- [ ] List obsolete technical files and directories, including those in former
-  Analysis folders.
+- [x] Inventory candidate technical files and directories for cleanup. The
+  old top-level code directory is absent. The retained local artifacts have
+  927 bytecode files with corresponding source in the moved code tree. Two
+  records in former Analysis folders are protected release inputs. See
+  `.anechoic_tmp/ca-p-3073/technical-cleanup-inventory.json`.
 - [ ] Check references, Local Release inputs, and recovery dependencies for
   each candidate.
 - [ ] After the affected moves and checks are complete, remove only verified
@@ -186,7 +196,9 @@ work groups above.
 
 - [ ] With the legacy tree at `.anechoic_anechoic/` and the native tree at
   `.anechoic_new/`, run the full test gate and a clean Local Release in
-  `refresh` mode. CA-P-3095 owns the clean legacy rebuild proof.
+  `refresh` mode. CA-P-3095 owns the clean legacy rebuild proof. CA-C-758
+  permits a free port for the isolated startup check after the rebuild and
+  protected input digests pass with the original Settings.
 - [ ] Verify `existing` mode with the generated assets saved with the matching
   checkout.
 - [ ] After the pre-cutover Local Release succeeds, rename the live legacy tree
@@ -198,4 +210,4 @@ work groups above.
 ## References
 
 CA-A-1461, CA-A-1462, CA-A-1466, CA-C-749, CA-P-3075, CA-P-3076,
-CA-P-3078, and CA-P-3095.
+CA-P-3078, CA-P-3095, and CA-C-758.

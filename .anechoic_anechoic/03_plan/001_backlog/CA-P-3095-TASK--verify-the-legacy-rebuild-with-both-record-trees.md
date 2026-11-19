@@ -31,6 +31,11 @@ Verify the legacy rebuild with both record trees
 
 Compare the protected inputs and run the clean Local Release rebuild on an isolated coexistence checkout.
 
+Verify the protected input paths and digests with the original Settings
+through the clean rebuild. For the final startup check, CA-C-758 permits
+one free port in the isolated copy. Record the port exception and verify the
+original Settings bytes after the check. Keep the live service running.
+
 ## References
 
-CA-P-3075.
+CA-P-3075, CA-C-758.

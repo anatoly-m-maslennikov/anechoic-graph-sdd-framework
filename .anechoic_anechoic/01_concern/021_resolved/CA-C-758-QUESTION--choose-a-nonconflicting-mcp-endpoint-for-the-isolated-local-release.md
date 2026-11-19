@@ -13,13 +13,13 @@ context:
   concern:
     priority: Medium
 state:
-  status: active
+  status: resolved
   version: 1
   updated_at: '2026-11-19T05:21:51.934877+00:00'
 destination:
   file:
     name: CA-C-758-QUESTION--choose-a-nonconflicting-mcp-endpoint-for-the-isolated-local-release.md
-    path: .anechoic_anechoic/01_concern
+    path: .anechoic_anechoic/01_concern/021_resolved
 ---
 ## Summary
 
@@ -44,6 +44,11 @@ Keep the source proof and clean rebuild on the original settings. For the
 startup rehearsal, record one isolated-only port change in the copied
 settings. An isolated Docker host can instead keep the exact settings.
 The live settings, running container, and retained images stay in place.
+
+The Operator approved a free port in the isolated checkout for the startup
+check. Verify the clean rebuild and compare the protected input digests
+with the original Settings before changing the copied port. Record the
+startup exception and verify the original bytes after the check.
 
 ## References
 
