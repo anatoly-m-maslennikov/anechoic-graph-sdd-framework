@@ -133,7 +133,10 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
         before = self._carrier_digests()
         async with (
             asyncio.timeout(25),
-            stdio_client(StdioServerParameters(command=sys.executable, args=self.args)) as streams,
+            stdio_client(StdioServerParameters(
+                command=sys.executable, args=self.args,
+                env={"ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY": str(extension_directory(MCP.parents[2]))},
+            )) as streams,
             ClientSession(*streams) as client,
         ):
             initialized = await client.initialize()

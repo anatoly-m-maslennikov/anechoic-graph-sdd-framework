@@ -22,7 +22,7 @@ PROGRAMMATIC = REPOSITORY / "LAYER_3_ENGINE_STUDIO_C14" / "FEATURE_PROGRAMMATIC"
 MCP = PROGRAMMATIC / "FEATURE_MCP"
 TOOLS = PROGRAMMATIC / "FEATURE_TOOLS"
 APP = PROGRAMMATIC / "FEATURE_APPS" / "APP_WORKBENCH"
-for location in (MCP, TOOLS, APP.parent, APP / "tests"):
+for location in (MCP, TOOLS, APP.parent, APP, APP / "tests"):
     if str(location) not in sys.path:
         sys.path.insert(0, str(location))
 
@@ -32,7 +32,7 @@ from http_server import create_app  # noqa: E402
 from direct_gateway import startup_selection  # noqa: E402
 from project_selection import resolve_project  # noqa: E402
 from scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
-from smalltest_support import built_assets, write_settings  # noqa: E402
+from smalltest_support import built_assets, extension_directory, write_settings  # noqa: E402
 from workbench_tools import WorkbenchTools  # noqa: E402
 
 
@@ -66,7 +66,7 @@ class SingleProjectRootContextTests(unittest.IsolatedAsyncioTestCase):
         self.app = create_app(
             self.container, selection=selection,
         )
-        extensions = REPOSITORY / ".anechoic_tmp" / "workbench" / "extensions"
+        extensions = extension_directory(REPOSITORY)
         self.app.gateway.workbench = _ConfiguredWorkbenchTools(self.container, extensions)
 
     @staticmethod

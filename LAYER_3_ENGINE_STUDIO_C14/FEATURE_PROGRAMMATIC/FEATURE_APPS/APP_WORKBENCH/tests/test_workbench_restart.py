@@ -36,7 +36,7 @@ from http_server import create_app  # noqa: E402
 from direct_gateway import startup_selection  # noqa: E402
 from scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
 from workbench_tools import WorkbenchTools  # noqa: E402
-from smalltest_support import built_assets, write_atom, write_settings  # noqa: E402
+from smalltest_support import built_assets, extension_directory, write_atom, write_settings  # noqa: E402
 
 
 class _ConfiguredWorkbenchTools(WorkbenchTools):
@@ -103,8 +103,7 @@ class WorkbenchRestartTests(unittest.IsolatedAsyncioTestCase):
         authority = Path(self.declarations["ENGINE"]["authority_path"])
         write_atom(authority / "04_requirement" / "CA-R-501-source.md", "CA-R-501")
         self.app = create_app(self.root, selection=startup_selection(self.root))
-        extension_directory = REPOSITORY / ".anechoic_tmp" / "workbench" / "extensions"
-        self.app.gateway.workbench = _ConfiguredWorkbenchTools(self.root, extension_directory)
+        self.app.gateway.workbench = _ConfiguredWorkbenchTools(self.root, extension_directory(REPOSITORY))
 
     @asynccontextmanager
     async def session(self):
