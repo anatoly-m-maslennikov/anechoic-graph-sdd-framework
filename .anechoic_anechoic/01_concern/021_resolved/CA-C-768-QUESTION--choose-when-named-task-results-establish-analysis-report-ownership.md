@@ -1,7 +1,7 @@
 ---
 identity:
   atom_id: CA-C-768
-  ref_id: CA-C-768@1-draft
+  ref_id: CA-C-768
 context:
   container:
     scope_unit: CA-SU-00
@@ -13,13 +13,13 @@ context:
   concern:
     priority: Medium
 state:
-  status: draft
+  status: resolved
   version: 1
   updated_at: '2026-11-19T13:35:37.103328+00:00'
 destination:
   file:
-    name: CA-C-768@1-draft-QUESTION--choose-when-named-task-results-establish-analysis-report-ownership.md
-    path: .anechoic_anechoic/01_concern/000_draft
+    name: CA-C-768-QUESTION--choose-when-named-task-results-establish-analysis-report-ownership.md
+    path: .anechoic_anechoic/01_concern/021_resolved
 ---
 ## Summary
 
@@ -37,9 +37,10 @@ Their earliest available revisions record the same results at the
 time of the work. The Task instructions require the result but do not
 specify an Analysis carrier.
 
-Proposed disposition. Treat the exact named result as ownership.
-Place the 19 report revisions beside their corresponding Tasks.
-Preserve original Markdown, status, and authored links.
+The Operator approved the exact named result as evidence of ownership
+for the six Current Analysis reports. Place those reports beside the Tasks
+listed below. Preserve original Markdown, status, and authored links.
+Keep Archived cases on hold for a separate decision.
 
 - CA-A-052 → CA-P-070
 - CA-A-054 → CA-P-080

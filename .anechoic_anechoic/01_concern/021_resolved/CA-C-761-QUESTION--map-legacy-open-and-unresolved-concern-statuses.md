@@ -13,13 +13,13 @@ context:
   concern:
     priority: Medium
 state:
-  status: active
+  status: resolved
   version: 1
   updated_at: '2026-11-19T08:43:41.381554+00:00'
 destination:
   file:
     name: CA-C-761-QUESTION--map-legacy-open-and-unresolved-concern-statuses.md
-    path: .anechoic_anechoic/01_concern
+    path: .anechoic_anechoic/01_concern/021_resolved
 ---
 ## Summary
 
@@ -31,7 +31,8 @@ Should the mechanical migration treat legacy `open` and `unresolved` Concerns as
 
 ## Details
 
-CA-C-376 is Open. CA-C-353, CA-C-380 and CA-C-391 are Unresolved. All four are Current Project Problems. The existing decision maps `queued` to `active`. Keep these four on hold until their statuses have an approved destination.
+CA-C-376 is Open. CA-C-353, CA-C-380 and CA-C-391 are Unresolved. All four are Current Project Problems. The existing decision maps `queued` to `active`. The Operator approved the mapping to Active for the four migrated copies.
+Keep the original Concern statuses in the migration evidence.
 
 ## References
 

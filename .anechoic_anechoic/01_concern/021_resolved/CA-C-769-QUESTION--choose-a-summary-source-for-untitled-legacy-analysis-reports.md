@@ -1,7 +1,7 @@
 ---
 identity:
   atom_id: CA-C-769
-  ref_id: CA-C-769@1-draft
+  ref_id: CA-C-769
 context:
   container:
     scope_unit: CA-SU-00
@@ -13,13 +13,13 @@ context:
   concern:
     priority: Medium
 state:
-  status: draft
+  status: resolved
   version: 1
   updated_at: '2026-11-19T14:00:38.187508+00:00'
 destination:
   file:
-    name: CA-C-769@1-draft-QUESTION--choose-a-summary-source-for-untitled-legacy-analysis-reports.md
-    path: .anechoic_anechoic/01_concern/000_draft
+    name: CA-C-769-QUESTION--choose-a-summary-source-for-untitled-legacy-analysis-reports.md
+    path: .anechoic_anechoic/01_concern/021_resolved
 ---
 ## Summary
 
@@ -36,10 +36,10 @@ CA-A-040 through CA-A-049 start with “Task, scope, and boundaries.”
 The original FPF reports are recoverable in Git and have the same
 first heading. Their filenames distinguish the reports.
 
-Proposed disposition. Use the words of the original report's filename
-after removing the timestamp and file extension. Insert a Summary
-section in the migrated copy and preserve the whole original body.
-Place the reports under TKT Assets.
+The Operator approved the original report's filename as the Summary
+source for these ten Current reports. Remove the timestamp and file
+extension from the filename words. Insert a Summary in the migrated copy,
+preserve the whole original body, and place the report under TKT Assets.
 
 ## References
 
