@@ -1,0 +1,46 @@
+---
+atom_id: CA-R-1470
+ref_id: CA-R-1470
+container:
+  scope_unit: CA-SU-11
+role: Requirement
+form: Rule
+topics:
+  main_subject: ANECHOIC_MODEL <+ Entity
+  dependencies:
+  - ANECHOIC_MODEL <+ Atom
+  - ANECHOIC_MODEL <+ Atom.Content
+  - ANECHOIC_MODEL <+ Scope Unit
+  - ANECHOIC_MODEL <+ Carrier
+  - ANECHOIC_MODEL <+ Journal
+  - ANECHOIC_MODEL <+ Projection
+tier: 1
+status: Active
+version: 27
+updated_at: 2026-11-02 19:44:26 +0400
+carrier_destination:
+  file:
+    name: CA-R-1470-CORE_META_MODEL-RULE--define-single-source-of-truth.md
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+current_scope_unit: CORE_META_MODEL
+claim_target_scope_unit: CORE_META_MODEL
+---
+## Summary
+
+Define Single Source of Truth
+
+## Claim
+
+### Prose Claim
+
+
+the authority of independently maintained facts.
+
+
+Single Source of Truth **means** **`=1`** canonical authoritative source for **every** independently maintained fact **in** the same applicable context. another representation of that fact references **or** derives from its source **without** becoming an independently maintained authority.
+
+source authority is assigned per fact under the governing model: Atoms carry governing Claims **and** their declared source Relations; Project Structure owns declared Scope Unit facts; Structural Entity Carriers supply materialization observations; Journals preserve recorded historical facts. native Implementation Carriers **may** be authoritative for their actual realized content, structure, dependencies, **and** behavior. other admitted sources retain their declared authority. this does **not** require **all** facts **to** reside **in** **`=1`** Atom, file, **or** Artifact. a derived result **may** use multiple authoritative input facts **without** creating another authoritative source for those input facts.
+
+## Details
+
+Implementation actual-state authority does not establish governing intent, acceptance, or compliance. RMED remains authority for the required result, method, evaluation, and delivery. A dependency graph or another view generated from native I remains a non-authoritative Projection of those actual-state sources.

@@ -1,0 +1,38 @@
+---
+atom_id: CA-M-264
+ref_id: CA-M-264
+container:
+  scope_unit: CA-SU-11
+role: Method
+form: Implementation Method
+topics:
+  main_subject: ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
+  dependencies:
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Evaluation)
+  - ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Method)
+  - ANECHOIC_MODEL <+ Atom.Content.Claim.Prose Claim
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Tier
+  - ANECHOIC_MODEL <+ Relation//evaluation_for
+tier: 3
+status: Active
+version: 29
+updated_at: 2026-11-03 20:00:05 +0400
+carrier_destination:
+  file:
+    name: CA-M-264-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-evaluations-with-reproducible-falsification.md
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method
+current_scope_unit: CORE_META_MODEL
+claim_target_scope_unit: CORE_META_MODEL
+---
+## Summary
+
+Write evaluations with reproducible falsification
+
+## Claim
+
+### Prose Claim
+
+Applicability: authoring or maintaining an Evaluation.
+
+**to** write **or** maintain an Evaluation, identify its checked authority **and** Scope, select a suitable test technique, specify recoverable inputs, procedure, **and** observable falsifying conditions, **and** preserve the distinction between foundational evaluation authority, independent shared evaluation criteria **where** they are independently governed, **and** concrete evaluation criteria; keep writing techniques, test frameworks, **and** authoring conventions **in** Method authority rather than treating them as test results.
+
