@@ -36,6 +36,7 @@ class NativeProjectSelection:
     manifest_sha256: str
     parameters: dict[str, object] = field(default_factory=dict)
     host_root: Path | None = None
+    structure_snapshot: Path | None = None
 
     @property
     def launcher_state(self) -> Path:

@@ -102,6 +102,26 @@ class NativeModelClaimTests(unittest.TestCase):
             parse_native_model_claim(imports + claim.replace('instance=ProjectManifest', 'instance=Project')
                                      .format(value='["SPEC"]'))
 
+    def test_component_manifest_is_literal_only(self):
+        imports = ('from anechoic.formal_claims import declare_entity\n'
+                   'from anechoic.model import ComponentManifest\n')
+        claim = ('declare_entity(entity_name="Component Manifest", instance=ComponentManifest('
+                 'tier=0, component_id="AN-C-14", name="Example", layer=3, lens_whitelist={value}))')
+        for value in (None, [], ["SPEC", "DES"]):
+            with self.subTest(value=value):
+                instance = parse_native_model_claim(imports + claim.format(value=repr(value)))["arguments"]["instance"]
+                self.assertEqual({"type": "ComponentManifest", "fields": {
+                    "tier": 0, "component_id": "AN-C-14", "name": "Example", "layer": 3,
+                    "lens_whitelist": value,
+                }}, instance)
+        for value in ('load_lenses()', '["SPEC", str]', '[""]', '[" SPEC"]', '[17]', '("SPEC",)'):
+            with self.subTest(value=value), self.assertRaises(NativeModelClaimError):
+                parse_native_model_claim(imports + claim.format(value=value))
+        with self.assertRaises(NativeModelClaimError):
+            parse_native_model_claim(imports + claim.format(value='None').replace('name="Example"', 'name=load_name()'))
+        with self.assertRaises(NativeModelClaimError):
+            parse_native_model_claim(imports.splitlines()[0] + '\n' + claim.format(value='None'))
+
     def test_named_instance_check_is_preserved_without_execution(self):
         claim = '''
 from anechoic.formal_claims import declare_entity
@@ -227,6 +247,17 @@ declare_relation(
             with self.subTest(claim=claim):
                 with self.assertRaises(NativeModelClaimError):
                     parse_native_model_claim(claim)
+
+    def test_class_cannot_replace_annotations_or_declare_type_parameters(self):
+        for declaration, message in (
+            ('class Item:\n    __annotations__: ClassVar[object] = {"payload": "int"}', "special attributes"),
+            ("class Item[int: str]:\n    payload: int", "type parameters"),
+        ):
+            claim = ('from anechoic.formal_claims import declare_entity\n'
+                     'from typing import ClassVar\n'
+                     + declaration + '\ndeclare_entity(entity_name="Item", entity_class=Item)')
+            with self.subTest(declaration=declaration), self.assertRaisesRegex(NativeModelClaimError, message):
+                parse_native_model_claim(claim)
 
     def test_unknown_names_and_duplicate_keyword_fail_with_line(self):
         source = ('from anechoic.formal_claims import declare_entity\n'

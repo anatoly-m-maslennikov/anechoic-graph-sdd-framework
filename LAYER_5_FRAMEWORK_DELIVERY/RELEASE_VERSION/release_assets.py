@@ -121,6 +121,7 @@ def verify_native_release_assets(package: Path, project_root: Path, control_rela
     verifier = '''
 import sys
 from pathlib import Path
+from tempfile import TemporaryDirectory
 package, root, control = map(Path, sys.argv[1:])
 for directory in ("FEATURE_PROGRAMMATIC", "FEATURE_PROGRAMMATIC/FEATURE_TOOLS",
                   "IWE_CONSOLE_C43", "MCP_PATCHBAY_C21/FEATURE_MCP"):
@@ -132,8 +133,17 @@ from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.relation_registry_asset import load
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workbench_schema_asset import load_image_schema
 from ATOM_LIFECYCLE.status_model import load_status_model
 from ATOM_LIFECYCLE.candidate_schema import load_candidate_schema
+from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.manifest_compiler_pkg1.compiler import load_generation_model, write_model
+from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.manifest_compiler_pkg1.structure_compile import compile_structure
+from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.model_host_pkg2.host import verify_model
 selection = select_runtime_project(root, control)
-inputs = load_native_inputs(selection)
+with TemporaryDirectory(prefix="anechoic-model-check-") as directory:
+    fingerprint = write_model(Path(directory), selection.control_root)
+    verify_model(Path(directory), fingerprint)
+    sys.path.insert(0, directory)
+    model = load_generation_model(Path(directory))
+    compile_structure(selection, model)
+    inputs = load_native_inputs(selection, model=model)
 capture = capture_native(selection)
 if capture.errors:
     raise ValueError("native Project capture is incomplete")

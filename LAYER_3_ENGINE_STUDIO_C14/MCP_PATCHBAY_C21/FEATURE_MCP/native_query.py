@@ -185,8 +185,15 @@ class NativeQueryOwner(ServiceInterface):
         with self._interface_lock, bind_native_runtime(self.selection):
             store = self._owner()
             assert self._capture is not None
-            rows = self._capture.atoms
             try:
+                from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.structure_host_pkg3.snapshot import read_structure
+
+                snapshot_path = getattr(self.selection, "structure_snapshot", None)
+                try:
+                    structure_snapshot = read_structure(snapshot_path) if snapshot_path is not None else None
+                except (OSError, RuntimeError, TypeError, ValueError) as error:
+                    raise SourceChanged("Structure snapshot is unavailable or invalid.") from error
+                rows = self._capture.atoms
                 if name in {"atom_lifecycle_create_draft", "atom_lifecycle_update", "atom_lifecycle_promote_draft"}:
                     field = "target" if name == "atom_lifecycle_promote_draft" else "sourceCurrent"
                     target = arguments.get(field)
@@ -199,12 +206,13 @@ class NativeQueryOwner(ServiceInterface):
                 if name == "atom_lifecycle_direct_update":
                     outcome = direct_update(self.selection, arguments, current_rows=rows)
                 elif name in {"atom_lifecycle_create_draft", "atom_lifecycle_update"}:
-                    outcome = create_draft(self.selection, arguments, current_rows=rows)
+                    outcome = create_draft(self.selection, arguments, current_rows=rows, structure_snapshot=structure_snapshot)
                 elif name == "atom_lifecycle_archive":
                     outcome = archive_ticket(self.selection, arguments, current_rows=rows)
                 elif name == "atom_lifecycle_promote_draft":
                     outcome = promote_draft(
                         self.selection, arguments, current_rows=rows, migration_refs=self._inputs.migration_refs,
+                        structure_snapshot=structure_snapshot,
                     )
                 else:
                     check_definition = bind_status_specifications(

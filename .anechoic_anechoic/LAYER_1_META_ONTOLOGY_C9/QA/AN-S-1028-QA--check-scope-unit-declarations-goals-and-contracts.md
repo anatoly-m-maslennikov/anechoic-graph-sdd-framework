@@ -7,9 +7,9 @@ context:
   tier: 3
   lens: QA
 state:
-  status: active
-  version: 4
-  updated_at: 2026-11-07 15:28:42 +0400
+  status: "active"
+  version: 6
+  updated_at: "2026-11-20T11:29:16.561900+00:00"
 ---
 
 ## Summary
@@ -18,24 +18,4 @@ Check Scope Unit Declarations, Goals and Contracts
 
 ## Claim
 
-### Prose Claim
-
-
-Identify the Project root structural Atom by Role Requirement and Form Scope Unit Declaration, and each non-Project Scope Unit’s structural Atom by Form Scope Delegation and its admitted RMEDO Role. The Main Subject names the specific Scope Unit. Count exactly one matching structural Atom for each Scope Unit within the Project; predefined `world` (`CA-SU--1`) has no Declaration or Delegation; do not count unrelated Atoms as structural declarations.
-
-Check the selected sources for one external structural Atom per Scope Unit within the Project, its stable ID, Name, ordered state, optional Label, conditional order.number and direct containment. Check that Project is unordered, has one stable Scope Unit ID and has no order.number. Check that its Declaration is outside Project and contained by predefined `world`.
-
-Check that folder names are derived by the shared naming Policy rather than copied into a Declaration. Ordered names include order.number; unordered names omit the order segment and separator.
-
-Reject the selected Declaration set when:
-
-- a Scope Unit ID or Name is duplicated or invalid;
-- a Project Scope Unit Declaration or Scope Delegation uses the ID `CA-SU--1` reserved for predefined `world`;
-- a non-Project Scope Unit other than predefined `world` has a missing direct parent, or a declared direct parent is unresolved, self-referential or in another Project;
-- parentage has a cycle;
-- a retained ancestry or path disagrees with the declared parent chain;
-- ordering fields or Labels are invalid, ordered siblings share a number, or an Unordered unit has a number;
-- derived paths collide, escape the Project boundary or leave lookup ambiguous;
-- unsupported fields or expressions are used as structural declarations.
-
-Label does not determine ordered state. Check a valid example and a falsifying example for each applicable condition.
+Evaluate the selected Project and Component Manifests against their applicable schemas and structural rules. Check stable identifiers, names, direct parentage, ordering and derived paths where those properties are declared and governed. Reject invalid or duplicate identifiers or names, unresolved or cyclic parentage, contradictory retained paths, invalid ordering, collisions, paths that escape the Project boundary, ambiguous lookup and unsupported structural declarations. Check a valid and a falsifying example for each applicable condition. Folder names are derived under the applicable naming Policy, not copied from observations as authority.

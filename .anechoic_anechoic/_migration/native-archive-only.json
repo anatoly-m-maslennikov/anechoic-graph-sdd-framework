@@ -1,0 +1,42 @@
+[
+  {
+    "exact_ref": "AN-S-2206@2",
+    "path": "LAYER_1_META_ONTOLOGY_C9/099_archived/AN-S-2206@2-DES--declare-scope-unit-declaration-form.md"
+  },
+  {
+    "exact_ref": "AN-S-1034@3",
+    "path": "LAYER_1_META_ONTOLOGY_C9/099_archived/AN-S-1034@3-DEVOPS--carry-scope-unit-declarations-as-governing-atoms.md"
+  },
+  {
+    "exact_ref": "AN-S-1033@3",
+    "path": "LAYER_1_META_ONTOLOGY_C9/099_archived/AN-S-1033@3-DEVOPS--bind-scope-unit-declarations-to-source-evidence.md"
+  },
+  {
+    "exact_ref": "AN-S-1027@29",
+    "path": "LAYER_1_META_ONTOLOGY_C9/099_archived/AN-S-1027@29-DEVOPS--encode-scope-unit-declaration-fields.md"
+  },
+  {
+    "exact_ref": "AN-S-2723@5",
+    "path": "LAYER_1_META_ONTOLOGY_C9/099_archived/AN-S-2723@5-DES--derive-scope-unit-ancestry-from-declarations.md"
+  },
+  {
+    "exact_ref": "AN-S-1690@3",
+    "path": "LAYER_1_META_ONTOLOGY_C9/099_archived/AN-S-1690@3-DES--derive-scope-unit-places-from-declarations.md"
+  },
+  {
+    "exact_ref": "AN-S-2240@36",
+    "path": "LAYER_1_META_ONTOLOGY_C9/099_archived/AN-S-2240@36-DES--validate-structural-coordinates-against-authority.md"
+  },
+  {
+    "exact_ref": "AN-S-462@30",
+    "path": "LAYER_1_META_ONTOLOGY_C9/099_archived/AN-S-462@30-DEVOPS--bind-project-settings-to-its-authoritative-toml-carrier.md"
+  },
+  {
+    "exact_ref": "AN-S-461@29",
+    "path": "LAYER_1_META_ONTOLOGY_C9/099_archived/AN-S-461@29-DEVOPS--serialize-project-settings-filename.md"
+  },
+  {
+    "exact_ref": "AN-S-2347@17",
+    "path": "LAYER_1_META_ONTOLOGY_C9/099_archived/AN-S-2347@17-DES--use-settings-locations-defined-by-the-core-meta-model.md"
+  }
+]

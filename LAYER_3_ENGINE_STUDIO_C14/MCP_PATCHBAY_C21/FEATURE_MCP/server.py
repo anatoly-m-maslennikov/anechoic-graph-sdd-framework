@@ -9,7 +9,7 @@ import asyncio
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from direct_gateway import DirectGateway, bind_selection, startup_selection
+from direct_gateway import DirectGateway, bind_selection, native_runtime_gateway, startup_selection
 from runtime_process_boundary import run_process
 
 if TYPE_CHECKING:
@@ -26,11 +26,8 @@ def _serve_stdio(args, *, native_inputs: NativeQueryInputs | None = None):
     from native_project_selection import NativeProjectSelection
 
     if isinstance(selection, NativeProjectSelection):
-        from native_query import NativeQueryOwner
-        from native_startup import load_native_inputs
-
-        owner = NativeQueryOwner(selection, load_native_inputs(selection))
-        asyncio.run(DirectGateway(selection.root, native_query=owner).serve())
+        with native_runtime_gateway(selection) as gateway:
+            asyncio.run(gateway.serve())
     else:
         with bind_selection(selection):
             asyncio.run(DirectGateway(args.project_root, selection=selection).serve())

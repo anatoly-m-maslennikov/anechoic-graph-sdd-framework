@@ -113,12 +113,13 @@ def select_runtime_project(project_root, control_root=None, *, validate_manifest
         raise ProjectSelectionError("Project discovery is unavailable, invalid, or unsafe") from error
 
 
-def load_native_inputs(selection):
+def load_native_inputs(selection, *, model=None):
     """Bind the reviewed Model and the migration's existing alias-map format."""
     from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.native_manifest_model import load_native_model
     from native_query import NativeQueryInputs
 
-    model = load_native_model()
+    if model is None:
+        model = load_native_model()
     alias_path = selection.control_root / "_migration" / "native-aliases.json"
     aliases = ()
     if os.path.lexists(alias_path):

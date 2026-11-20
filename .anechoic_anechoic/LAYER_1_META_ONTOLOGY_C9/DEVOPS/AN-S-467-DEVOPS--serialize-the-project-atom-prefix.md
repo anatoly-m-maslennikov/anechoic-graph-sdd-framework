@@ -7,24 +7,15 @@ context:
   tier: 7
   lens: DevOps
 state:
-  status: active
-  version: 28
-  updated_at: 2026-11-02 08:06:47 +0400
+  status: "active"
+  version: 29
+  updated_at: "2026-11-20T11:29:16.622913+00:00"
 ---
+
 ## Summary
 
 Serialize the Project Atom prefix
 
 ## Claim
 
-### Prose Claim
-
-
-the Operator-selected Atom prefix in the Project Settings TOML Carrier.
-
-
-the Project Settings TOML Carrier **must** encode the Operator-selected Atom prefix as its exact nonempty uppercase TOML string value under CA-D-378 **in** `artifacts.identity.project_prefix` **before** the first Project Atom is created.
-
-## Details
-
-validation **must** preserve the selected prefix exactly; it **must not** trim **or** automatically uppercase it. the complete supported field signature is governed by CA-D-366.
+The Project Manifest stores the exact Operator-selected `prefix` before the first native Atom is created. Validate the uppercase Prefix against the native Atom ID format. Reject an invalid value without trimming or changing its case.

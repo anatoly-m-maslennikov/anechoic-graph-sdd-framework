@@ -1,0 +1,33 @@
+---
+identity:
+  atom_id: AN-S-3103
+context:
+  container:
+    component: C9
+  lens: SPEC
+state:
+  status: active
+  version: 1
+  updated_at: '2026-11-20T11:17:59+00:00'
+---
+
+## Summary
+
+Declare Module
+
+## Claim scope
+
+MODEL//ANECHOIC <+ Package/Module
+
+## Claim
+
+### Formal Claim
+
+```python
+from anechoic.formal_claims import declare_entity
+
+class Module:
+    pass
+
+declare_entity(entity_name="Module", entity_class=Module)
+```

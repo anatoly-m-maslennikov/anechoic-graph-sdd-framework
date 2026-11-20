@@ -196,8 +196,10 @@ def _release_sources(root: Path) -> list[tuple[str, Path, list[Path]]]:
 
 
 def _native_release_sources(selection) -> dict[Path, Path]:
-    """Map migrated Active carriers to their historical delivery groups."""
+    """Deliver the Active native Methodology and its admitted Model declarations."""
     from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import _carrier_row
+    from VALIDATE_ATOMS.validate_atoms_workers.read_io import LimitReached, ReadContext
+    from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
 
     root, control = selection.root, selection.control_root
     alias_file = _project_path(root, control.relative_to(root) / "_migration/native-aliases.json",
@@ -232,6 +234,35 @@ def _native_release_sources(selection) -> dict[Path, Path]:
             old_paths.add(relative)
             bindings[match.group(1)] = Path(*parts[3:-1])
 
+        retirement_file = _project_path(root, control.relative_to(root) / "_migration/native-archive-only.json",
+                                        label="native-archive-only")
+        retirement_reader = ReadContext(roots=[str(control)], limits=dict(CEILINGS))
+        retirement_exists = retirement_file.exists()
+        retired: set[str] = set()
+        retirement_identities: dict[Path, tuple[str, int]] = {}
+        if retirement_exists:
+            retirement_identities[retirement_file] = _file_identity(retirement_file)
+            retirement_rows = json.loads(retirement_reader.read(retirement_file))
+            if not isinstance(retirement_rows, list):
+                raise ValueError("invalid archive-only list")
+            for item in retirement_rows:
+                if not isinstance(item, dict) or set(item) != {"exact_ref", "path"}:
+                    raise ValueError("invalid archive-only row")
+                ref = item["exact_ref"]
+                match = re.fullmatch(r"([A-Z]+-[STP]-[0-9]+)@([1-9][0-9]*)", ref) if isinstance(ref, str) else None
+                relative = _relative(item["path"], label="native-archive-path")
+                if (match is None or match[1] in retired or match[1] not in bindings or
+                        not any(carrier_status_folder(part) == "archived" for part in relative.parts[:-1])):
+                    raise ValueError("invalid archive-only identity or path")
+                path = _project_path(root, control.relative_to(root) / relative,
+                                     label="native-archive-path", require_exists=True)
+                retirement_identities[path] = _file_identity(path)
+                family = {"_PMETA": "P", "__TKT": "T"}.get(relative.parts[0], "S")
+                row, _ = _carrier_row(path, root, family, selection.project_prefix, retirement_reader.read(path))
+                if row["id"] != match[1] or row["status"] != "archived" or row["_exact_ref"] != ref:
+                    raise ValueError("archive-only carrier mismatch")
+                retired.add(match[1])
+
         excluded = _NON_SOURCE_DIRECTORIES | frozenset({"_migration", "000_anechoic_framework"})
         members = _walk_regular_files(control, excluded_directories=excluded, exclude_history=True)
         selected: dict[Path, Path] = {}
@@ -260,16 +291,34 @@ def _native_release_sources(selection) -> dict[Path, Path]:
             if destination in selected:
                 raise ValueError("duplicate release destination")
             selected[destination] = path
-        if found != bindings.keys():
-            raise ValueError("missing Current carrier")
+        if found & retired or found | retired != bindings.keys():
+            raise ValueError("missing or conflicting Current carrier")
+        ontology = control / "LAYER_1_META_ONTOLOGY_C9"
+        if ontology.exists() or ontology.is_symlink():
+            from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.native_manifest_model import admit_active_model_records
+            from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.manifest_compiler_pkg1.active_model_sources import read_active_model_sources
+
+            sources, _, _ = admit_active_model_records(read_active_model_sources(control, ontology))
+            delivered = set(selected.values())
+            for source, _, _ in sources:
+                path = control / source.rsplit("@", 1)[0]
+                if path not in delivered:
+                    destination = Path(units[0], "SPEC", path.name)
+                    if destination in selected:
+                        raise ValueError("duplicate Model delivery destination")
+                    selected[destination] = path
+                    identities[path] = _file_identity(path)
         if not any(path.parts[0] == units[0] and path.suffix == ".md" for path in selected):
             raise ValueError("empty core model")
-        if (alias_identity != _file_identity(alias_file) or
+        if (retirement_file.exists() != retirement_exists or
+                any(_file_identity(path) != identity for path, identity in retirement_identities.items()) or
+                alias_identity != _file_identity(alias_file) or
                 members != _walk_regular_files(control, excluded_directories=excluded, exclude_history=True) or
-                any(_file_identity(path) != identity for path, identity in identities.items())):
+                any(_file_identity(path) != identity for path, identity in identities.items()) or
+                retirement_reader.currentness()["state"] != "unchanged"):
             raise ValueError("release sources changed")
         return selected
-    except (OSError, UnicodeError, ValueError, TypeError) as error:
+    except (OSError, UnicodeError, ValueError, TypeError, LimitReached) as error:
         raise LocalReleaseError("local-release-native-sources-invalid") from error
 
 

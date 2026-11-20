@@ -142,6 +142,44 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
         path.write_text('---\n' + yaml.safe_dump(data) + '---\n' + body)
         return path
 
+    def test_lifecycle_pins_structure_before_selecting_rows(self):
+        from contextlib import nullcontext
+        from unittest.mock import Mock, patch
+        sys.path.insert(0, str(ENGINE / 'MCP_PATCHBAY_C21' / 'FEATURE_MCP'))
+        from native_query import NativeQueryInputs, NativeQueryOwner
+
+        self.spec('UNIT_C9/DES/AN-S-4-DES--example.md', 'AN-S-4')
+        rows = capture_native(self.selection).atoms
+        self.selection.structure_snapshot = self.root / 'structure.json'
+        self.selection.parameters = {}
+        self.selection.control_relative = self.control.relative_to(self.root)
+        first = Mock()
+        first.component.return_value.source_path = 'AN-S-7-SPEC-COMPONENT_MANIFEST--unit.md'
+        later = Mock()
+        later.component.return_value.source_path = 'OTHER_C8/AN-S-7-SPEC--unit.md'
+        published = [first]
+
+        class Capture:
+            @property
+            def atoms(self):
+                published[0] = later
+                return rows
+
+        owner = NativeQueryOwner(self.selection, NativeQueryInputs(lambda *args: None, frozenset(), {}, ()))
+        owner._store = object()
+        owner._capture = Capture()
+        snapshot_module = 'LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.structure_host_pkg3.snapshot'
+        with patch(snapshot_module + '.read_structure', side_effect=lambda path: published[0]) as read, \
+                patch('project_runtime.bind_native_runtime', return_value=nullcontext()), \
+                patch.object(owner, '_refresh_after_write'):
+            output = owner.lifecycle('atom_lifecycle_create_draft', {
+                'sourceCurrent': {'ref_id': 'AN-S-4', 'version': 1},
+            })
+        self.assertEqual('completed', output['outcome'], output)
+        read.assert_called_once_with(self.selection.structure_snapshot)
+        first.component.assert_called_once_with('C9')
+        later.component.assert_not_called()
+
     def test_revision_archives_existing_epic_spec_and_pmeta(self):
         cases = [
             ('__TKT/TASKS/AN-T-4-EPIC--example.md', 'AN-T-4', 'epic', '__TKT/TASKS'),

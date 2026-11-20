@@ -3,6 +3,7 @@
 from graphlib import CycleError
 from pathlib import Path
 import sys
+import importlib
 from tempfile import TemporaryDirectory
 import unittest
 from importlib.util import module_from_spec, spec_from_file_location
@@ -11,7 +12,7 @@ from unittest.mock import patch
 PROGRAMMATIC = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(PROGRAMMATIC))
 
-from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.model_class_assembly import assemble_model_classes, build_model_class_source
+from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.model_class_assembly import assemble_model_classes, assemble_model_modules, build_model_class_source
 from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.model_declaration_sources import select_model_declarations
 from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_declaration_bindings import bind_model_declarations
 from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_field_validation import validate_model_fields
@@ -75,6 +76,43 @@ class ModelClassAssemblyTests(unittest.TestCase):
         exec(compile(source, "model.py", "exec"), namespace)
         self.assertTrue(issubclass(namespace["Project"], namespace["ScopeUnit"]))
         self.assertNotIn("anechoic.model", source)
+
+    def test_modules_are_deterministic_and_importable_with_dependencies(self):
+        parent = declaration("ScopeUnit").replace("    pass", "    name: str")
+        child = "from typing import Literal\n" + declaration("Project", "ScopeUnit").replace(
+            "    pass", "    status: Literal['Ready'] = 'Ready'"
+        )
+        modules = assemble_model_modules([child, parent])
+        self.assertEqual(modules, assemble_model_modules([parent, child]))
+        self.assertEqual(list(modules), ["project.py", "scope_unit.py"])
+        with TemporaryDirectory() as folder:
+            package = Path(folder) / "model_fixture"
+            package.mkdir()
+            (package / "__init__.py").write_text("")
+            for filename, source in modules.items():
+                (package / filename).write_text(source)
+            with patch.object(sys, "path", [folder, *sys.path]):
+                try:
+                    project = importlib.import_module("model_fixture.project").Project
+                    scope_unit = importlib.import_module("model_fixture.scope_unit").ScopeUnit
+                    self.assertTrue(issubclass(project, scope_unit))
+                    self.assertEqual(project("test").status, "Ready")
+                    self.assertEqual(__import__("typing").get_type_hints(project)["status"],
+                                     __import__("typing").Literal["Ready"])
+                finally:
+                    for key in list(sys.modules):
+                        if key == "model_fixture" or key.startswith("model_fixture."):
+                            del sys.modules[key]
+
+    def test_module_annotation_dependencies_resolve(self):
+        item = ("from anechoic.model import Detail\n" +
+                declaration("Item").replace("    pass", "    detail: Detail"))
+        modules = assemble_model_modules([item, declaration("Detail")])
+        self.assertIn("from .detail import Detail", modules["item.py"])
+        cycle = ("from anechoic.model import Item\n" +
+                 declaration("Detail").replace("    pass", "    item: Item"))
+        with self.assertRaises(CycleError):
+            assemble_model_modules([item, cycle])
 
     def test_missing_parent_and_cycle_are_rejected(self):
         with self.assertRaisesRegex(ValueError, "Missing Model parent"):

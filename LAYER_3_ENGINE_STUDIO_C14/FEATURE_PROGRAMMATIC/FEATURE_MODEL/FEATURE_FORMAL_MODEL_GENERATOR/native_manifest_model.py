@@ -1,6 +1,7 @@
-"""Load the reviewed ANECHOIC Model used to validate a native Manifest."""
+"""Load the ANECHOIC Model and bind its reviewed executable checks."""
 
 from functools import lru_cache
+from importlib import import_module
 from hashlib import sha256
 import json
 from pathlib import Path
@@ -12,7 +13,7 @@ from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_cl
 from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_declaration_bindings import bind_model_declarations
 from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.reviewed_instance_check import bind_reviewed_instance_check
 from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.validate_model_instance import validate_model_instance
-from .model_class_assembly import assemble_model_classes
+from .model_class_assembly import assemble_model_classes, model_module_name
 from .model_declaration_sources import _check_relation_references, _relation_registry
 
 
@@ -32,43 +33,92 @@ _REVIEWED_CHECKS = {
 }
 
 
+def _native_imports(claim):
+    # The approved bytes predate the Engine package rename.
+    claim = claim.replace("from caprmedio.formal_claims import ", "from anechoic.formal_claims import ")
+    return claim.replace("from caprmedio.model import ", "from anechoic.model import ")
+
+
+def reviewed_model_records():
+    """Return normalized reviewed Claims, their originals, and a source fingerprint."""
+    records, originals = [], {}
+    digest = sha256()
+    for name, expected in _CLAIM_FILES.items():
+        data = (_ASSETS / name).read_bytes()
+        if sha256(data).hexdigest() != expected:
+            raise ValueError(f"{name}: reviewed Claim file differs")
+        digest.update(name.encode() + b"\0" + data)
+        for row in json.loads(data):
+            claim = row["claim"]
+            originals[row["subject"]] = claim
+            records.append((name, row["subject"], _native_imports(claim)))
+    _check_relation_references(records)
+    return records, originals, digest.hexdigest()
+
+
+def admit_active_model_records(records):
+    """Validate Active declarations and keep executable checks pinned."""
+    reviewed, originals, _ = reviewed_model_records()
+    checks = {}
+    for _, subject, claim in reviewed:
+        check = parse_native_model_claim(claim).get("instance_check")
+        if check:
+            checks[subject] = check["source"]
+    records = tuple(records)
+    subjects = set()
+    for source, subject, claim in records:
+        declaration = parse_native_model_claim(claim)
+        if declaration is None or subject in subjects:
+            raise ValueError(f"{source}: expected a unique Model Declaration")
+        subjects.add(subject)
+        check = declaration.get("instance_check", {}).get("source")
+        if check != checks.get(subject):
+            raise ValueError(f"{source}: executable Model instance check differs from the approved review")
+    if checks.keys() - subjects:
+        raise ValueError("Active Model is missing reviewed instance checks")
+    _check_relation_references(records)
+    fingerprint = sha256(json.dumps(sorted(records), ensure_ascii=False).encode()).hexdigest()
+    return records, originals, fingerprint
+
+
 class _NativeModel:
-    def __init__(self):
-        records, originals = [], {}
-        for name, expected in _CLAIM_FILES.items():
-            data = (_ASSETS / name).read_bytes()
-            if sha256(data).hexdigest() != expected:
-                raise ValueError(f"{name}: reviewed Claim file differs")
-            for row in json.loads(data):
-                claim = row["claim"]
-                originals[row["subject"]] = claim
-                # The approved bytes predate the Engine package rename.
-                claim = claim.replace("from caprmedio.formal_claims import ", "from anechoic.formal_claims import ")
-                claim = claim.replace("from caprmedio.model import ", "from anechoic.model import ")
-                records.append((name, row["subject"], claim))
-        _check_relation_references(records)
-        module = ModuleType(f"_reviewed_anechoic_native_model_{uuid4().hex}")
-        sys.modules[module.__name__] = module
+    def __init__(self, compiled=False, records=None):
+        records, originals, self.fingerprint = (
+            reviewed_model_records() if records is None else admit_active_model_records(records)
+        )
+        parsed = [(source, subject, parse_native_model_claim(claim)) for source, subject, claim in records]
+        module = None
+        if compiled:
+            model_types = {
+                name: getattr(import_module(f"anechoic_runtime_model.{model_module_name(name)}"), name)
+                for _, _, declaration in parsed
+                if (name := declaration["arguments"].get("entity_class"))
+            }
+        else:
+            module = ModuleType(f"_reviewed_anechoic_native_model_{uuid4().hex}")
+            sys.modules[module.__name__] = module
         try:
-            exec(assemble_model_classes(claim for _, _, claim in records), vars(module))
-            parsed = [(source, subject, parse_native_model_claim(claim)) for source, subject, claim in records]
+            if module is not None:
+                exec(assemble_model_classes(claim for _, _, claim in records), vars(module))
+                model_types = vars(module)
             self._bindings, self._types, self._population = bind_model_declarations(
-                [(subject, declaration) for _, subject, declaration in parsed], vars(module),
+                [(subject, declaration) for _, subject, declaration in parsed], model_types,
             )
             self._endpoints = _relation_registry(parsed)
             self._checks = {}
-            for (_, subject, claim), (_, _, declaration) in zip(records, parsed, strict=True):
+            for _, subject, declaration in parsed:
                 if check := declaration.get("instance_check"):
                     name = check["name"]
                     if sha256(originals[subject].encode()).hexdigest() != _REVIEWED_CHECKS[name]:
                         raise ValueError(f"{subject}: Claim differs from reviewed source")
-                    # Bind the renamed Claim only after the approved original is verified.
+                    claim = _native_imports(originals[subject])
                     self._checks[check["parameter_type"]] = (name, bind_reviewed_instance_check(
                         claim, reference=subject, reviewed_claim_sha256=sha256(claim.encode()).hexdigest(),
-                        model_types=vars(module),
+                        model_types=model_types,
                     ))
         except BaseException:
-            del sys.modules[module.__name__]
+            if module is not None:
+                del sys.modules[module.__name__]
             raise
         self.relation_types = frozenset(self._endpoints)
         self.inverses = {name: args["inverse_alias"] for name, (args, reverse) in self._endpoints.items()
@@ -90,6 +140,22 @@ class _NativeModel:
             raise ValueError("Project Manifest must be contained by Project C00")
         project = self._validate("Project", {}, {})
         return self._validate("Project Manifest", fields, {"CONTAINED_BY": [project]})
+
+    def validate_component_manifest(self, fields, parent_id):
+        project = self._validate("Project", {}, {})
+        parent = project if parent_id == "C00" else self._validate("Component", {}, {"CHILD_OF": [project]})
+        self._validate("Component", {}, {"CHILD_OF": [parent]})
+        return self._validate("Component Manifest", fields, {"CONTAINED_BY": [parent]})
+
+    def validate_package_spec(self, fields, owner_id):
+        project = self._validate("Project", {}, {})
+        owner = project if owner_id == "C00" else self._validate("Component", {}, {"CHILD_OF": [project]})
+        return self._validate("Package Spec", fields, {"CONTAINED_BY": [owner]})
+
+
+def load_compiled_model(records=None):
+    """Bind reviewed declarations to the compiler-generated runtime classes."""
+    return _NativeModel(compiled=True, records=records)
 
 
 @lru_cache(maxsize=1)

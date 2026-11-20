@@ -1,0 +1,22 @@
+---
+identity:
+  atom_id: AN-S-2582
+context:
+  container:
+    component: C9
+  tier: 1
+  lens: DES
+state:
+  status: archived
+  version: 37
+  updated_at: 2026-11-11 18:46:16 +0400
+---
+## Summary
+Keep selected settings in their authoritative Settings Artifact
+
+## Claim
+
+### Prose Claim
+
+
+the ANECHOIC Framework Instance serving anechoic **must** consume Project Settings according **to** Core Meta-Model authority under CA-R-2748, **without** redefining their purpose, locations, **or** selected values **in** Project Atoms.

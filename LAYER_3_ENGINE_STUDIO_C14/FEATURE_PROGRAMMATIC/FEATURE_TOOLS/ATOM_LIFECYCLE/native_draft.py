@@ -21,7 +21,7 @@ from .placement import _slug
 from .source import bind_query_reader
 
 
-def _revision_root(selection, row):
+def _revision_root(selection, row, structure_snapshot=None):
     """Validate a Current carrier and return its owning revision directory."""
     relative = row.get("source_path")
     if not isinstance(relative, str):
@@ -84,7 +84,17 @@ def _revision_root(selection, row):
         if any(part.startswith("_") or not re.search(r"_C[0-9]+$", part)
                for part in root.relative_to(selection.control_root).parts):
             raise ValueError("Nested carrier path")
-    except (OSError, RuntimeError, TypeError, ValueError, AttributeError) as error:
+        snapshot_path = getattr(selection, "structure_snapshot", None)
+        if (structure_snapshot is not None or snapshot_path is not None) and root != selection.control_root:
+            from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.structure_host_pkg3.snapshot import (
+                read_structure,
+            )
+
+            snapshot = structure_snapshot if structure_snapshot is not None else read_structure(snapshot_path)
+            declaration = selection.control_root / snapshot.component(component).source_path
+            if declaration.parent != root.parent:
+                raise ValueError("Component parent contradicts the current Structure")
+    except (OSError, RuntimeError, TypeError, ValueError, AttributeError, KeyError) as error:
         raise common.InputError("sourceCurrent", "SPEC carrier must be in its lens and component root.") from error
     return root
 
@@ -137,7 +147,7 @@ def _state_bytes(raw, bounds, path, version, body, status):
         raise common.InputError('sourceCurrent', 'Task needs valid scalar state fields.') from error
 
 
-def create_draft(selection, params, *, current_rows):
+def create_draft(selection, params, *, current_rows, structure_snapshot=None):
     if isinstance(params, dict) and 'newAtom' in params:
         if set(params) != {'newAtom'}:
             raise common.InputError('newAtom', 'Supply only new Task properties.')
@@ -162,7 +172,7 @@ def create_draft(selection, params, *, current_rows):
             or not isinstance(relative, str)):
         raise common.SourceChanged('Current carrier capture lacks a valid path or source digest.')
     path = selection.root / relative
-    root = _revision_root(selection, selected)
+    root = _revision_root(selection, selected, structure_snapshot)
     with _project_write_lock(selection.root):
         try:
             capture = capture_native(selection)
@@ -328,11 +338,11 @@ def _promote_new(selection, target, status, draft, current_rows):
         return common.result(effects=recorded, errors=removed.errors, **data)
 
 
-def _cleanup_published_draft(selection, target, status, draft, current):
+def _cleanup_published_draft(selection, target, status, draft, current, structure_snapshot):
     atom_id, version = target['ref_id'].split('@')[0], target['version']
     if current.get('status') != status:
         raise common.InputError('targetStatus', 'Published carrier Status differs from the requested Status.')
-    root = _revision_root(selection, current)
+    root = _revision_root(selection, current, structure_snapshot)
     paths = []
     for row, marker, directory in ((draft, target['ref_id'], root / '000_draft'),
                                    (current, atom_id, (selection.root / current['source_path']).parent)):
@@ -403,7 +413,7 @@ def _rollback_promotion(selection, previous_path, previous_digest, created, reco
     return common.result(effects=recorded, errors=errors)
 
 
-def promote_draft(selection, params, *, current_rows, migration_refs):
+def promote_draft(selection, params, *, current_rows, migration_refs, structure_snapshot=None):
     """Archive the pinned predecessor and publish one unpinned Draft revision."""
     if not isinstance(params, dict) or set(params) != {'target', 'targetStatus'}:
         raise common.InputError('target', 'Supply an exact Draft target and Current Status.')
@@ -440,10 +450,10 @@ def promote_draft(selection, params, *, current_rows, migration_refs):
     if previous['header_json']['context'].get('template') == 'epic' and status != previous['status']:
         raise common.InputError('targetStatus', 'Publish the Epic at its Current Status. Use Change Status for transitions.')
     if previous.get('version') == version:
-        return _cleanup_published_draft(selection, target, status, draft, previous)
+        return _cleanup_published_draft(selection, target, status, draft, previous, structure_snapshot)
     if type(previous.get('version')) is not int or previous['version'] >= version:
         raise common.InputError('target', 'Draft Version must be newer than its Current predecessor.')
-    root = _revision_root(selection, previous)
+    root = _revision_root(selection, previous, structure_snapshot)
     paths = []
     for row, marker, directory in ((draft, target['ref_id'], root / '000_draft'),
                                    (previous, atom_id, (selection.root / previous['source_path']).parent)):

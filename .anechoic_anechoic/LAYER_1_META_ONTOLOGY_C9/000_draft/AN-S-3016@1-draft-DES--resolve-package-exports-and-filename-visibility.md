@@ -19,10 +19,25 @@ Resolve package exports and filename visibility
 
 ### Prose Claim
 
-When SPEC declares a Package export list, cross-package callers use that list. An explicitly empty list closes cross-package access. A Contract with no export list, such as a latency guarantee, leaves filename-based visibility in effect. Without a SPEC export list, root modules can self-declare visibility as `<name>__<visibility>.<extension>`, with reserved values `internal` and `public`; only marked root modules are eligible for cross-package access in this case. Other Packages use the internal default when neither an export list nor filename marker is present. Use the normal Python module name including its suffix, such as `from billing import orders__public`.
+When SPEC declares a Package export list, cross-package callers use that list.
+An explicitly empty list closes cross-package access. A Contract with no export
+list, such as a latency guarantee, leaves filename-based visibility in effect.
+
+Without a SPEC export list, a Package uses the Internal default until it has a
+marked root Module. The filename has the form
+`<name>__<visibility>.<extension>`, with visibility `internal` or `public`.
+Once the Package has a marked root Module, only its marked root Modules are
+eligible for cross-package access. Use the normal Python module name including
+its suffix, such as `from billing import orders__public`.
 
 ## Details
 
-Acceptance: a nonempty SPEC list permits an otherwise authorized listed entry and excludes an unlisted entry; an empty list denies all cross-package access. A latency-only Contract does not close filename-based access: `orders__public.py` can be imported by its normal suffixed name, subject to caller rules. A root module without a marker is not eligible under the filename fallback.
+- A nonempty SPEC list permits an otherwise authorized listed entry and excludes
+  unlisted entries. An empty list denies all cross-package access.
+- A Package with neither a SPEC list nor a marked root Module uses Internal
+  access for its unmarked Modules.
+- Adding `orders__public.py` at the Package root makes it eligible by its
+  suffixed name and closes cross-package access to unmarked Modules.
+  Caller rules still apply.
 
 Sources: CA-A-1463@1-draft. Task: CA-P-3084.

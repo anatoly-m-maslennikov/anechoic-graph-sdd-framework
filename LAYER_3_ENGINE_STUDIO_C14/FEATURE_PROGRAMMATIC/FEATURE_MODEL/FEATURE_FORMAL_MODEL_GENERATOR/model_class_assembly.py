@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import builtins
+import re
 import sys
 from collections.abc import Iterable, Mapping
 from graphlib import TopologicalSorter
@@ -153,3 +154,40 @@ def build_model_class_source(carriers: Iterable[Mapping[str, object]]) -> str:
     from .model_declaration_sources import select_model_claims
 
     return assemble_model_classes(select_model_claims(carriers))
+
+
+def model_module_name(class_name: str) -> str:
+    return re.sub(r"(?<!^)(?=[A-Z])", "_", class_name).lower()
+
+
+def assemble_model_modules(claims: Iterable[str]) -> dict[str, str]:
+    """Return one importable package module per selected Model class."""
+    claims = tuple(claims)
+    assemble_model_classes(claims)  # Retain the aggregate generator's validation.
+    classes, imports = _classes(claims)
+    filenames = {name: model_module_name(name) + ".py" for name in classes}
+    if len(set(filenames.values())) != len(filenames):
+        raise ValueError("Model class module filenames collide")
+    modules = {}
+    dependencies = {}
+    for name, node in classes.items():
+        used = {item.id for item in ast.walk(node) if isinstance(item, ast.Name) and isinstance(item.ctx, ast.Load)}
+        dependencies[name] = sorted((used & classes.keys()) - {name})
+    # Imports must be acyclic for every module to be importable directly.
+    tuple(TopologicalSorter(dependencies).static_order())
+    for name in sorted(classes, key=filenames.get):
+        node = classes[name]
+        used = {item.id for item in ast.walk(node) if isinstance(item, ast.Name) and isinstance(item.ctx, ast.Load)}
+        if not node.decorator_list:
+            node.decorator_list.append(ast.Name(id="dataclass", ctx=ast.Load()))
+        standard = {symbol: module for symbol, module in imports[name].items()
+                    if symbol in used and module not in {"anechoic.model", "__future__"}}
+        standard["dataclass"] = "dataclasses"
+        statements = [ast.ImportFrom(module="__future__", names=[ast.alias(name="annotations")], level=0)]
+        statements.extend(ast.ImportFrom(module=module, names=[ast.alias(name=symbol)], level=0)
+                          for symbol, module in sorted(standard.items(), key=lambda item: (item[1], item[0])))
+        statements.extend(ast.ImportFrom(module=filenames[dependency][:-3], names=[ast.alias(name=dependency)], level=1)
+                          for dependency in dependencies[name])
+        statements.append(node)
+        modules[filenames[name]] = ast.unparse(ast.fix_missing_locations(ast.Module(body=statements, type_ignores=[]))) + "\n"
+    return modules

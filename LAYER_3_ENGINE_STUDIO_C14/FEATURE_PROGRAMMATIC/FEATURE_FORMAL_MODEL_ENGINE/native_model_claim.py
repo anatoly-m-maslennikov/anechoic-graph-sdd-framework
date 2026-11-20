@@ -189,6 +189,8 @@ def _annotation(node: ast.AST, names: set[str]) -> str:
 def _field(node: ast.AnnAssign, names: set[str]) -> dict[str, Any]:
     if not isinstance(node.target, ast.Name) or node.simple != 1:
         _fail(node, "field must be a simple annotated name")
+    if node.target.id.startswith("__") and node.target.id.endswith("__"):
+        _fail(node, "Model field names cannot be Python special attributes")
     result: dict[str, Any] = {"name": node.target.id, "annotation": _annotation(node.annotation, names)}
     if node.value is None:
         return result
@@ -213,6 +215,8 @@ def _field(node: ast.AnnAssign, names: set[str]) -> dict[str, Any]:
 def _class(node: ast.ClassDef, names: set[str]) -> dict[str, Any]:  # noqa: C901
     if node.keywords:
         _fail(node, "class keyword arguments are unsupported")
+    if node.type_params:
+        _fail(node, "class type parameters are unsupported")
     bases = []
     for base in node.bases:
         if not isinstance(base, ast.Name) or base.id not in names | _BUILTINS:
@@ -400,27 +404,32 @@ def parse_native_model_claim(text: str) -> dict[str, Any] | None:  # noqa: C901
             continue
         if (function != "declare_entity" or not isinstance(value, ast.Call)
                 or not isinstance(value.func, ast.Name)
-                or value.func.id not in {"ScopeUnit", "Project", "Aspect", "ProjectManifest"}
+                or value.func.id not in {"ScopeUnit", "Project", "Aspect", "ProjectManifest", "ComponentManifest", "PackageSpec"}
                 or imports.get(value.func.id) != "anechoic.model"):
-            _fail(value, "instance requires an imported ScopeUnit, Project, Aspect, or ProjectManifest")
+            _fail(value, "instance requires an imported Model class supported by the eDSL")
         fields = {}
         for field, field_value in _keywords(value).items():
-            if value.func.id == "ProjectManifest" and field == "parameters":
+            if ((value.func.id, field) in {
+                ("ProjectManifest", "parameters"), ("ComponentManifest", "boundaries"), ("PackageSpec", "boundaries"),
+            }):
+                if field == "boundaries" and isinstance(field_value, ast.Constant) and field_value.value is None:
+                    fields[field] = None
+                    continue
                 if not isinstance(field_value, ast.Dict) or any(
                     isinstance(node, (ast.Name, ast.Call)) for node in ast.walk(field_value)
                 ):
-                    _fail(field_value, "Project Manifest parameters must be a literal mapping")
+                    _fail(field_value, f"{field} must be a literal mapping")
                 fields[field] = _dictionary(field_value, set())
                 continue
             try:
                 literal = ast.literal_eval(field_value)
             except (ValueError, TypeError, SyntaxError, RecursionError):
                 _fail(field_value, "instance fields must be literals")
-            if value.func.id == "ProjectManifest" and field == "lens_whitelist":
+            if value.func.id in {"ProjectManifest", "ComponentManifest"} and field == "lens_whitelist":
                 if literal is not None and (not isinstance(literal, list) or any(
                     not isinstance(lens, str) or not lens or lens != lens.strip() for lens in literal
                 )):
-                    _fail(field_value, "Project Manifest lens_whitelist must be a list of lens names or None")
+                    _fail(field_value, "Manifest lens_whitelist must be a list of lens names or None")
             elif literal is not None and type(literal) not in {str, int, bool}:
                 _fail(field_value, "instance fields must be scalar literals")
             fields[field] = literal

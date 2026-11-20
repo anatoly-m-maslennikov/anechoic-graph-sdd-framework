@@ -9,7 +9,8 @@
 
 import asyncio
 from concurrent.futures import CancelledError as FutureCancelledError
-from contextlib import nullcontext, redirect_stdout
+from contextlib import contextmanager, nullcontext, redirect_stdout
+from dataclasses import replace
 import json
 from pathlib import Path
 import sys
@@ -19,6 +20,7 @@ from mcp import types
 from mcp.server.lowlevel import Server
 from mcp.server.stdio import stdio_server
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "FEATURE_PROGRAMMATIC"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"))
 from caller_context import CallerContextError, take_caller_context  # noqa: E402
@@ -55,6 +57,25 @@ def startup_selection(root, control_root=None, instance_id=None, host_root=None)
         return selection
     rebind = rebind_native_selection if isinstance(selection, NativeProjectSelection) else rebind_selection
     return rebind(selection, instance_id, host_root=host_root)
+
+
+@contextmanager
+def native_runtime_gateway(selection):
+    from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.manifest_compiler_pkg1.compiler import (
+        load_generation_model,
+    )
+    from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.runtime import run_manifest_runtime
+    from native_query import NativeQueryOwner
+    from native_startup import load_native_inputs
+
+    with run_manifest_runtime(selection) as (generation, snapshot):
+        sys.path.insert(0, str(generation))
+        try:
+            selected = replace(selection, structure_snapshot=snapshot)
+            inputs = load_native_inputs(selected, model=load_generation_model(generation))
+            yield DirectGateway(selected.root, native_query=NativeQueryOwner(selected, inputs))
+        finally:
+            sys.path.remove(str(generation))
 
 
 def result(value, error=False):

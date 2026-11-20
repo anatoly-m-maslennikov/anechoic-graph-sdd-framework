@@ -90,6 +90,73 @@ Current claim.
         with self.assertRaises(LocalReleaseError):
             _native_release_sources(self.selection)
 
+    def admit_retirement(self):
+        self.rows.append(['CA-R-2@1', f'{PREFIX}/{CORE}/04_requirement/CA-R-2-old.md', 'AN-S-2@1'])
+        self.write_aliases()
+        archive = self.control / 'LAYER_C9/DES/099_archived/AN-S-2@2-DES--archived.md'
+        self.carrier(archive, 2, status='archived')
+        archive.write_text(archive.read_text().replace('AN-S-1', 'AN-S-2'))
+        retirement = self.control / '_migration/native-archive-only.json'
+        retirement.write_text(json.dumps([{'exact_ref': 'AN-S-2@2',
+                                           'path': archive.relative_to(self.control).as_posix()}]))
+        return archive, retirement
+
+    def test_archive_only_identity_is_admitted(self):
+        self.admit_retirement()
+        self.assertEqual({Path(CORE) / '04_requirement' / self.source.name: self.source},
+                         _native_release_sources(self.selection))
+
+    def test_missing_or_unadmitted_archive_is_refused(self):
+        archive, retirement = self.admit_retirement()
+        retirement.unlink()
+        with self.assertRaises(LocalReleaseError):
+            _native_release_sources(self.selection)
+        self.admit_retirement()
+        archive.unlink()
+        with self.assertRaises(LocalReleaseError):
+            _native_release_sources(self.selection)
+
+    def test_current_and_retirement_conflict_is_refused(self):
+        self.admit_retirement()
+        current = self.control / 'LAYER_C9/DES/AN-S-2-DES--current.md'
+        self.carrier(current, 3)
+        current.write_text(current.read_text().replace('AN-S-1', 'AN-S-2'))
+        with self.assertRaises(LocalReleaseError):
+            _native_release_sources(self.selection)
+
+    def test_changed_retirement_inputs_are_refused(self):
+        import release_support
+        archive, retirement = self.admit_retirement()
+        original = release_support._file_identity
+        for target in (archive, retirement):
+            counts = {}
+            def changed(path):
+                counts[path] = counts.get(path, 0) + 1
+                identity = original(path)
+                return ('0' * 64, identity[1]) if path == target and counts[path] > 1 else identity
+            with self.subTest(target=target), patch.object(release_support, '_file_identity', side_effect=changed):
+                with self.assertRaises(LocalReleaseError):
+                    _native_release_sources(self.selection)
+
+    def test_archive_symlink_swap_with_same_bytes_is_refused(self):
+        import release_support
+        archive, _ = self.admit_retirement()
+        outside = self.root / 'outside.md'
+        outside.write_bytes(archive.read_bytes())
+        original = release_support._file_identity
+        count = 0
+        def swap(path):
+            nonlocal count
+            if path == archive:
+                count += 1
+                if count == 2:
+                    archive.unlink()
+                    archive.symlink_to(outside)
+            return original(path)
+        with patch.object(release_support, '_file_identity', side_effect=swap):
+            with self.assertRaises(LocalReleaseError):
+                _native_release_sources(self.selection)
+
     def test_changed_manifest_is_refused(self):
         self.selection.manifest_path.write_bytes(b'changed')
         with self.assertRaises(LocalReleaseError):

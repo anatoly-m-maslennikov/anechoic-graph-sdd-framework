@@ -1,0 +1,33 @@
+---
+identity:
+  atom_id: AN-S-2200
+context:
+  container:
+    component: C9
+  lens: SPEC
+state:
+  status: active
+  version: 6
+  updated_at: '2026-11-20T11:17:59+00:00'
+---
+
+## Summary
+
+Define View
+
+## Claim scope
+
+MODEL//ANECHOIC <+ View
+
+## Claim
+
+### Formal Claim
+
+```python
+from anechoic.formal_claims import declare_entity
+
+class View:
+    pass
+
+declare_entity(entity_name="View", entity_class=View)
+```

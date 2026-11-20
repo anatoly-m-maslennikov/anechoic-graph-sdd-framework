@@ -8,7 +8,7 @@
 """Loopback-only Streamable HTTP transport for the MCP gateway."""
 import argparse
 from concurrent.futures import CancelledError as FutureCancelledError
-from contextlib import asynccontextmanager
+from contextlib import ExitStack, asynccontextmanager
 from contextlib import nullcontext
 from pathlib import Path
 import re
@@ -19,7 +19,7 @@ from starlette.routing import Route
 
 from health_page import render_health_page
 from health_actions import restart_workbench, reread_workbench
-from direct_gateway import DirectGateway, bind_selection, startup_selection
+from direct_gateway import DirectGateway, bind_selection, native_runtime_gateway, startup_selection
 from http_paths import HEALTH_PATH, MCP_PATH
 from mcp.server.transport_security import TransportSecuritySettings
 from operation_error_boundary import FailureRecord
@@ -154,11 +154,13 @@ async def health(request, gateway, restart_action=None, reread_action=None, *, a
     return HTMLResponse(page, status_code=status_code, headers=headers)
 
 
-def create_app(root, *, selection=None, native_inputs=None, control_root=None):
+def create_app(root, *, selection=None, native_inputs=None, control_root=None, runtime_gateway=None):
     from native_project_selection import NativeProjectSelection
 
     native_project = isinstance(selection, NativeProjectSelection)
-    if native_inputs is not None:
+    if runtime_gateway is not None:
+        gateway = runtime_gateway
+    elif native_inputs is not None:
         if selection is not None or not control_root:
             raise ValueError("Native selection requires a control root and no legacy selection")
         from native_query import create_native_gateway
@@ -226,15 +228,17 @@ def _serve(args, *, native_inputs=None):
     if args.host != "0.0.0.0" or args.port != PORT:
         raise ValueError("HTTP MCP requires the container bind 0.0.0.0:8092")
     import uvicorn
-    if native_inputs is not None:
-        app = create_app(args.project_root, native_inputs=native_inputs, control_root=args.control_root)
-    else:
-        selection = startup_selection(args.project_root, args.control_root, args.instance_id, args.host_project_root)
-        app = create_app(args.project_root, selection=selection)
-    uvicorn.run(
-        app,
-        host=args.host, port=args.port, log_level="warning",
-    )
+    from native_project_selection import NativeProjectSelection
+
+    with ExitStack() as stack:
+        if native_inputs is not None:
+            app = create_app(args.project_root, native_inputs=native_inputs, control_root=args.control_root)
+        else:
+            selection = startup_selection(args.project_root, args.control_root, args.instance_id, args.host_project_root)
+            gateway = (stack.enter_context(native_runtime_gateway(selection))
+                       if isinstance(selection, NativeProjectSelection) else None)
+            app = create_app(args.project_root, selection=selection, runtime_gateway=gateway)
+        uvicorn.run(app, host=args.host, port=args.port, log_level="warning")
 
 
 def main(argv=None, *, native_inputs=None):

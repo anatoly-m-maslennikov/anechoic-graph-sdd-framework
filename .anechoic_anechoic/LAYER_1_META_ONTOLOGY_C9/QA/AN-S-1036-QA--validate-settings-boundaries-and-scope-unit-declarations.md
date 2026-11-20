@@ -7,9 +7,9 @@ context:
   tier: 6
   lens: QA
 state:
-  status: active
-  version: 3
-  updated_at: 2026-11-07 15:28:42 +0400
+  status: "active"
+  version: 4
+  updated_at: "2026-11-20T11:29:16.584115+00:00"
 ---
 
 ## Summary
@@ -18,12 +18,6 @@ Validate settings boundaries and Scope Unit Declarations
 
 ## Claim
 
-Settings resolve inside their own Project without cross-Project fallback. Project Settings remain authoritative initialization inputs and Framework Instance Settings remain authoritative instance choices. A declared Scope Unit remains visible when its Carrier or active Goal is missing. An undeclared folder remains an observation. The Project Scope Unit Declaration and non-Project Scope Delegations do not change Settings, and Settings do not replace those structural Atoms. No Projection edit changes Settings, Scope Unit structural Atoms, or source Atoms.
+Project settings resolve within their selected Project without cross-Project fallback. The Project Manifest owns Project settings and Component Manifests own Component structure; neither a Projection nor an observed folder replaces those authorities. A declared Component remains visible when its Carrier or active Goal is missing, and an undeclared folder remains an observation. Projection edits do not change Manifests or source Atoms.
 
-Every Framework Instance's Methodology Sources and Applicable Methodology output resolve beneath its own Project's `000_ANECHOIC_framework/` directory. Rebuilding one Project's Applicable Methodology does not read, replace, or modify another Project's sources, Settings, or compiled results. A missing selected Project instance is reported rather than resolved through another Project or the former repository-shared framework root. Nesting the framework directory does not change source Atom identity or make a Projection a second authoritative Atom.
-
-## Details
-
-### Test case
-
-Create two Projects in one repository, each with Project Settings and a `000_ANECHOIC_framework` directory. Resolve both Settings before creating Project Atoms or Implementation. Give the instances distinct Methodology Sources and Applicable Methodology results. Declare a Scope Unit with no active Goal and no directory; separately add an undeclared candidate directory. Include Draft and archived Goals as non-active evidence.
+Each Framework Instance resolves its Methodology Sources and Applicable Methodology beneath its own Project's `000_ANECHOIC_framework/` directory. Rebuilding one Project does not read, replace or modify another Project's sources, settings or compiled results. Report a missing selected instance rather than falling back to another Project or a former shared root. Nesting the framework directory does not change source Atom identity or make a Projection an authoritative Atom.
