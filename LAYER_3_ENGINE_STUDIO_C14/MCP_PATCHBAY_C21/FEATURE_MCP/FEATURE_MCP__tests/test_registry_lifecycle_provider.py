@@ -637,7 +637,8 @@ class LifecycleRegistryExposureTests(unittest.TestCase):
             root = Path(tmp)
             feature = root / FEATURE_RELATIVE
             feature.mkdir(parents=True)
-            for name in ('tool_providers.json', 'registry_lifecycle_provider.py', 'registry_workbench_provider.py'):
+            for name in ('tool_providers.json', 'registry_lifecycle_provider.py', 'registry_workbench_provider.py',
+                         'registry_release_command_provider.py'):
                 shutil.copy2(MCP / name, feature / name)
             env = dict(os.environ)
             env['PYTHONPATH'] = os.pathsep.join((str(MCP), str(MCP.parents[1] / 'FEATURE_PROGRAMMATIC' / 'FEATURE_TOOLS'),

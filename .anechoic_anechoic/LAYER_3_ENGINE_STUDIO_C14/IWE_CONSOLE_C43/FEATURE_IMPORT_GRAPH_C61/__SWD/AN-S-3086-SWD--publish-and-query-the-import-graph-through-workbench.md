@@ -14,8 +14,8 @@ relations:
   - AN-T-2928@1-draft
 state:
   status: "active"
-  version: 4
-  updated_at: "2026-11-20T22:00:03.982154+00:00"
+  version: 5
+  updated_at: "2026-11-20T22:44:56.273982+00:00"
 ---
 
 ## Summary
@@ -69,11 +69,11 @@ Publish and query the Import Graph through Workbench
 | `import_edges` | One row per occurrence and directed pair. |
 | `import_edges` | Source and target keys, occurrence key, and derived flag. |
 | `package_imports` | View grouping Package → Package edges and counting contributing occurrences. |
-| `test_edges` | Source Test Package key and target parent Package key for each direct test directory. |
+| `test_edges` | Source Test Package key and target parent Package key for each qualifying direct test directory. |
 | `tested_by_edges` | Source parent Package key and target Test Package key. |
 | `import_read_issues` | Project-relative file path and error message for each current failed source read. |
 
-- Derive `TESTS` from each direct `<full package folder name>__tests/` Package to its parent Package.
+- Derive `TESTS` from each qualifying direct `<full package folder name>__tests/` Package to its parent Package.
 - Include the Relation when the parent has no Spec or Spec Binding.
 - Publish both directions with the same Package keys as imports.
 - Register `test_edges` as `TESTS` and `tested_by_edges` as `IS_TESTED_BY` in the `anechoic` property graph.

@@ -13,8 +13,8 @@ relations:
   - AN-T-2928@1-draft
 state:
   status: "active"
-  version: 3
-  updated_at: "2026-11-20T22:00:03.983893+00:00"
+  version: 4
+  updated_at: "2026-11-20T22:44:56.273982+00:00"
 ---
 
 ## Summary
@@ -59,6 +59,8 @@ Verify the Import Graph through public Workbench queries
 - Query both `TESTS` and `IS_TESTED_BY` and check `package_type` is `Test Package`.
 - Check that imports and test Relations use the same Package keys.
 - Check that one folder with several source languages has one Package node.
+- Check that an executable in an unsupported language qualifies each ancestor. Skip dot, empty, and asset-only folders.
+- Add and remove the last executable in a subtree. Verify the Package and audit rows update.
 - Move the test directory beside the Package, restore it, and delete it.
 - Verify the test Relation follows the direct test directory.
 - Check a test file with zero imports.

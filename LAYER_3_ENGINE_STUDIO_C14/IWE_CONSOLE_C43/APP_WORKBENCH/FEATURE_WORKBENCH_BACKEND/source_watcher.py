@@ -84,8 +84,11 @@ class SourceWatcher:
         relative = Path(directory).relative_to(self._root)
         with os.scandir(directory) as entries:
             for entry in entries:
-                if exclude is None or not exclude((relative / entry.name).as_posix()):
-                    yield entry
+                if exclude is not None and entry.is_dir(follow_symlinks=False) and exclude(
+                    (relative / entry.name).as_posix()
+                ):
+                    continue
+                yield entry
 
     def changes(self, timeout: float) -> list[Change]:
         try:

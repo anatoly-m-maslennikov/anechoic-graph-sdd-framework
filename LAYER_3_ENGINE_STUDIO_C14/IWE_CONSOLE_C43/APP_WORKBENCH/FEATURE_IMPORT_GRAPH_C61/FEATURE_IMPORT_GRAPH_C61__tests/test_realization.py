@@ -96,6 +96,21 @@ class RealizationTests(unittest.TestCase):
         assert [node[0] for node in nodes if node[1] == "package" and node[3] == "pkg"] == ["package:local:pkg"]
         assert tests == [("package:local:pkg/pkg__tests", "package:local:pkg")]
 
+    def test_executables_define_packages_without_becoming_python_import_targets(self):
+        root = self._temporary_project()
+        (root / "main.py").write_text("import tool\n")
+        for name, body in (("tool/source.rs", "fn main() {}"), ("script/run", "#!/usr/bin/env lua\n"),
+                           ("binary/run", "\x00")):
+            path = root / name
+            path.parent.mkdir()
+            path.write_text(body)
+        (root / "binary/run").chmod(0o755)
+        sources = capture(root, None)
+        nodes, occurrences, edges, _ = resolve_realization(root, sources)
+        assert {node[3] for node in nodes if node[1] == "package"} == {"tool", "script", "binary"}
+        assert occurrences[0][6] == "unresolved"
+        assert not edges
+
     def test_read_error_is_retried_on_next_capture_without_stat_change(self):
         root = self._temporary_project()
         path = root / "a.py"

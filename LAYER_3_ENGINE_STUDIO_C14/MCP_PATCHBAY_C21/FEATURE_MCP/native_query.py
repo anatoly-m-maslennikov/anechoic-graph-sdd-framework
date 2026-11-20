@@ -276,7 +276,7 @@ class NativeQueryOwner(ServiceInterface):
                     self._root, self.selection.control_root, implementation_root=self._root,
                     exclude_directory=lambda path: (
                         not PurePosixPath(path).is_relative_to(self.selection.control_relative)
-                        and excluded_source_path(path)
+                        and excluded_source_path(path, directory=True)
                     ),
                     poll_bind_mount=poll_bind_mount,
                 )

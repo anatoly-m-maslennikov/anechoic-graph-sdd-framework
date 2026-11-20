@@ -12,9 +12,9 @@ relations:
   REFERENCES:
   - AN-S-3159@1
 state:
-  status: active
-  version: 2
-  updated_at: '2026-11-20T16:34:57.901983+00:00'
+  status: "active"
+  version: 3
+  updated_at: "2026-11-20T22:44:56.273982+00:00"
 ---
 
 ## Summary
@@ -26,13 +26,13 @@ Extend Workbench with the Import Graph
 ### Prose Claim
 
 Call the Workbench projection the Realization Graph. Reuse Module and Package
-node identities across import and test Relations. One local folder has one
-Package node across all languages. Record each static import with its source
+node identities across import and test Relations. Each local folder with an executable file in its subtree has one Package
+node across all languages. Skip dot folders. Record each static import with its source
 Module, written target, and file location. Resolve it without running source.
 Keep all four Module and Package import pairs and direct Package imports.
 
 Derive `TESTS` from a direct `<full package folder name>__tests/` subdirectory
-to its parent Package. Expose the inverse as `IS_TESTED_BY`. The directory
+to its parent Package. Expose the inverse as `IS_TESTED_BY`. A qualifying test folder
 uses a Package node of type Test Package. Derive these Relations for Packages
 in the selected source scope, including those without a Spec or Spec Binding.
 

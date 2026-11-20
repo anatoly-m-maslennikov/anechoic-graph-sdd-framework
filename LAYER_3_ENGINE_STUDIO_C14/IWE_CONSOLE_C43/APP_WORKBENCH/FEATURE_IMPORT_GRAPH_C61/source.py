@@ -39,6 +39,43 @@ _SUFFIX_LANGUAGES = {
     ".mjs": "javascript",
     ".ts": "typescript",
     ".svelte": "svelte",
+    ".bash": "script",
+    ".bat": "batch",
+    ".c": "c",
+    ".cc": "cpp",
+    ".cljs": "clojure",
+    ".clj": "clojure",
+    ".cpp": "cpp",
+    ".cs": "csharp",
+    ".cxx": "cpp",
+    ".dart": "dart",
+    ".el": "elisp",
+    ".ex": "elixir",
+    ".exs": "elixir",
+    ".fish": "script",
+    ".fs": "fsharp",
+    ".go": "go",
+    ".hs": "haskell",
+    ".java": "java",
+    ".jl": "julia",
+    ".jsx": "javascript",
+    ".kt": "kotlin",
+    ".kts": "kotlin",
+    ".lua": "lua",
+    ".m": "objective-c",
+    ".mm": "objective-cpp",
+    ".ml": "ocaml",
+    ".php": "php",
+    ".pl": "perl",
+    ".ps1": "powershell",
+    ".r": "r",
+    ".rb": "ruby",
+    ".rs": "rust",
+    ".scala": "scala",
+    ".swift": "swift",
+    ".tsx": "typescript",
+    ".zig": "zig",
+    ".zsh": "script",
 }
 _RESOLUTION_INPUTS = frozenset({".gitignore", "pyproject.toml", "package.json"})
 _EXCLUDED_PARTS = frozenset({
@@ -74,8 +111,12 @@ def _relative_path(root: Path, path: Path) -> str | None:
         return None
 
 
-def excluded_source_path(relative: str) -> bool:
-    return any(part.casefold() in _EXCLUDED_PARTS for part in PurePosixPath(relative).parts)
+def excluded_source_path(relative: str, *, directory: bool = False) -> bool:
+    parts = PurePosixPath(relative).parts
+    folder_parts = parts if directory else parts[:-1]
+    return any(part.startswith(".") for part in folder_parts) or any(
+        part.casefold() in _EXCLUDED_PARTS for part in parts
+    )
 
 
 def _has_symlink_ancestor(root: Path, path: Path) -> bool:
@@ -108,9 +149,10 @@ def _file_language(path: Path) -> str | None:
         return language
     try:
         with path.open("rb") as handle:
-            return _shebang_language(handle.readline(512))
+            language = _shebang_language(handle.readline(512))
     except OSError:
-        return None
+        language = None
+    return language or ("executable" if os.access(path, os.X_OK) else None)
 
 
 def _iter_files(root: Path, *, source_only: bool = True) -> Iterable[Path]:
@@ -125,9 +167,12 @@ def _iter_files(root: Path, *, source_only: bool = True) -> Iterable[Path]:
             if entry.is_symlink():
                 continue
             path = Path(entry.path)
-            if entry.name == ".git" or (source_only and excluded_source_path(path.relative_to(root).as_posix())):
+            is_directory = entry.is_dir(follow_symlinks=False)
+            if entry.name == ".git" or (source_only and excluded_source_path(
+                path.relative_to(root).as_posix(), directory=is_directory
+            )):
                 continue
-            if entry.is_dir(follow_symlinks=False):
+            if is_directory:
                 pending.append(path)
             elif entry.is_file(follow_symlinks=False):
                 yield path
@@ -178,7 +223,8 @@ def _input_files(root: Path, changed: set[str] | None) -> Iterable[Path]:
         if path is None:
             continue
         if path.is_dir():
-            yield from _iter_files(path)
+            if not excluded_source_path(relative, directory=True):
+                yield from _iter_files(path)
         elif path.is_file():
             yield path
 
@@ -250,7 +296,11 @@ def _scan(relative: str, path: Path, language: str, previous: Source | None) -> 
             and previous.language == language and previous.signature == signature):
         return previous
     try:
-        data = path.read_bytes()
+        if language == "python":
+            data = path.read_bytes()
+        else:
+            with path.open("rb") as handle:
+                data = handle.read(1)
     except OSError as error:
         print(f"import graph: {relative}: read error: {error}", file=sys.stderr)
         return Source(language, "read_error", signature, error_message=str(error))
@@ -308,12 +358,10 @@ def _path_relevant(root: Path, relative: str, previous: Mapping[str, Source]) ->
     path = _event_path(root, relative)
     if path is None:
         return False
-    if path.name == path.parent.name + "__tests":
-        return True
     if PurePosixPath(relative).name.casefold() in _RESOLUTION_INPUTS:
         return True
     if path.is_dir():
-        return _directory_has_source(path)
+        return not excluded_source_path(relative, directory=True) and _directory_has_source(path)
     return _suffix_language(path) is not None or _file_language(path) is not None
 
 

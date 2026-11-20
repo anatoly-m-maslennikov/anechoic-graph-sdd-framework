@@ -306,6 +306,49 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
         reopened = await self._gateway(structure_snapshot=structure)
         self.assertEqual(expected, await audit(owner=reopened))
 
+    async def test_recursive_packages_follow_unsupported_source_removal(self):
+        source = self._source("src/tree/nested/leaf/main.go", "package leaf\n")
+        self._source("src/tree/assets/image.txt", "asset\n")
+        self._source("src/tree/tree__tests/assets/input.txt", "asset\n")
+        self._source("src/tree/.hidden/hidden.go", "package hidden\n")
+        self._source("src/tree/generated/generated.go", "package generated\n")
+        self._source("src/tree/ignored/ignored.go", "package ignored\n")
+        self._source(".gitignore", "src/tree/ignored/\n")
+        (self.root / "src/tree/empty").mkdir()
+        gateway = await self._gateway()
+
+        async def rows(owner, sql):
+            response = await owner.call(None, types.CallToolRequestParams(name="query_run", arguments={
+                "sql": sql, "result_delivery": "inline",
+            }))
+            self.assertFalse(response.is_error, response.structured_content)
+            return response.structured_content["rows"]
+
+        packages = """
+            SELECT n.node_key, count(a.relative_path)
+            FROM import_nodes n LEFT JOIN package_audit a ON a.relative_path = n.relative_path
+            WHERE n.kind = 'package' AND n.relative_path LIKE 'src/tree%'
+            GROUP BY n.node_key ORDER BY n.node_key
+        """
+        expected = [[f"package:local:{path}", 1] for path in
+                    ("src/tree", "src/tree/nested", "src/tree/nested/leaf")]
+        self.assertEqual(expected, await rows(gateway, packages))
+        self.assertEqual([["src/tree/nested/leaf/main.go", "unsupported"]], await rows(gateway, """
+            SELECT relative_path, scan_status FROM import_nodes
+            WHERE kind = 'module' AND relative_path LIKE 'src/tree%' ORDER BY relative_path
+        """))
+        source.unlink()
+        async with asyncio.timeout(6):
+            while await rows(gateway, packages):
+                await asyncio.sleep(.03)
+        await gateway.close()
+        reopened = await self._gateway()
+        self.assertEqual([], await rows(reopened, packages))
+        source.write_text("package leaf\n", encoding="utf-8")
+        async with asyncio.timeout(6):
+            while await rows(reopened, packages) != expected:
+                await asyncio.sleep(.03)
+
     async def test_import_publication_failure_reports_stderr_once(self):
         self._source("src/from_source.py", "import to_source\n")
         self._source("src/to_source.py", "")
@@ -324,13 +367,12 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
         with store._lock:
             self.assertEqual(store._connection.execute(
                 "SELECT relative_path FROM import_nodes ORDER BY relative_path",
-            ).fetchall(), [("src/from_source.py",), ("src/to_source.py",)])
+            ).fetchall(), [("src",), ("src/from_source.py",), ("src/to_source.py",)])
 
     async def test_disk_reopen_rebuild_and_test_relations(self):
         self._source("src/app/main.py", "import dep.helper\n")
         self._source("src/dep/helper.py", "")
-        test_directory = self.root / "src/app/app__tests"
-        test_directory.mkdir()
+        test_directory = self._source("src/app/app__tests/test_app.py", "pass\n").parent
         gateway = await self._gateway()
         owner = gateway._native_query
         store = owner._owner()

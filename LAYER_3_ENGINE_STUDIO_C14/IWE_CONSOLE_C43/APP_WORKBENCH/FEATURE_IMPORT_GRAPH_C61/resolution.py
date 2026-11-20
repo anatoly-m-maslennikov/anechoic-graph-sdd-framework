@@ -9,7 +9,7 @@ import sys
 import tomllib
 from pathlib import Path, PurePosixPath
 
-from .source import Source, _event_path, _git_ignored
+from .source import Source
 
 
 def _roots(root: Path, python_roots: tuple[str, ...]) -> list[PurePosixPath]:
@@ -207,22 +207,17 @@ def resolve_realization(
     root = root.resolve()
     nodes, occurrences, edges = resolve(root, sources, python_roots)
     packages = {row[3]: row for row in nodes if row[1] == "package" and row[3]}
-    candidates = {}
-    for path, node in packages.items():
-        parent = PurePosixPath(path)
-        relative = (parent / ((parent.name or root.name) + "__tests")).as_posix()
-        directory = _event_path(root, relative)
-        if directory is not None and directory.is_dir():
-            candidates[relative] = node
-    ignored = _git_ignored(root, set(candidates) - packages.keys())
+    for path, source in sorted(sources.items()):
+        for parent in PurePosixPath(path).parents:
+            relative = parent.as_posix()
+            if relative != "." and relative not in packages:
+                node = (f"package:local:{relative}", "package", source.language, relative, None, None)
+                packages[relative] = node
+                nodes.append(node)
     test_edges = []
-    for path, parent in sorted(candidates.items()):
-        if path in ignored:
-            continue
-        node = packages.get(path)
-        if node is None:
-            key = parent[0].rsplit(":", 1)[0] + ":" + path
-            node = (key, "package", parent[2], path, None, parent[5] or parent[0])
-            nodes.append(node)
-        test_edges.append((node[0], parent[0]))
+    for path, parent in sorted(packages.items()):
+        directory = PurePosixPath(path)
+        test_path = directory / ((directory.name or root.name) + "__tests")
+        if test_package := packages.get(test_path.as_posix()):
+            test_edges.append((test_package[0], parent[0]))
     return nodes, occurrences, edges, test_edges

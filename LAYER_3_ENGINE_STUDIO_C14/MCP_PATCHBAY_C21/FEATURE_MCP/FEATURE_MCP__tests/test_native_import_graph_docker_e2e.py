@@ -43,6 +43,7 @@ class NativeImportGraphDockerE2E(unittest.TestCase):
         cls._write("dep/__init__.py", "")
         cls._write("dep/helper.py", "VALUE = 1\n")
         (cls.root / "app/app__tests").mkdir()
+        (cls.root / "app/app__tests/test_app.py").write_text("pass\n", encoding="utf-8")
         cls.container = subprocess.check_output([
             "docker", "run", "--detach", "--pull=never", "--init",
             "--name", f"anechoic-import-graph-canary-{uuid4().hex}",

@@ -9,8 +9,8 @@ context:
   template: epic
 state:
   status: "done"
-  version: 4
-  updated_at: "2026-11-20T22:07:40.461432+00:00"
+  version: 5
+  updated_at: "2026-11-20T22:44:56.273982+00:00"
 ---
 ## Summary
 
@@ -63,3 +63,9 @@ inputs, targeted rebuild, and database reopen.
 An isolated audit of the Project returned 75 local Package rows.
 Each of the three declared Package Contracts had its exact active
 Package Spec in `implements`.
+
+## Recursive Package discovery
+
+11. Update the Realization Graph Specs with language-independent Package discovery.
+12. Publish and audit one Package per non-dot folder with an executable in its subtree.
+13. Verify watcher updates, persisted startup, and existing import resolution.
