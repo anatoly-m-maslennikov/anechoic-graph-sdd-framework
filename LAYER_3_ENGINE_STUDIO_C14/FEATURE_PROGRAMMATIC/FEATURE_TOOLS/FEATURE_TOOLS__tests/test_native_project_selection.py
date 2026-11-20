@@ -89,6 +89,18 @@ class NativeProjectSelectionTests(unittest.TestCase):
         self.assertNotEqual(legacy_default.instance_id, native.instance_id)
         self.assertFalse((self.root / ".anechoic_runtime").exists())
 
+    def test_canonical_manifest_header(self):
+        path = self.carrier()
+        text = path.read_text()
+        _, header, body = text.split('---', 2)
+        metadata = yaml.safe_load(header)
+        metadata['atom_family'] = 'SPEC'
+        metadata['atom_id'] = metadata.pop('identity')['atom_id']
+        metadata['structure'] = {'container': metadata['context'].pop('container'),
+                                 'tier': metadata['context'].pop('tier')}
+        path.write_text(f"---\n{yaml.safe_dump(metadata)}---{body}")
+        self.assertEqual('AN-S-001@3', self.select().manifest_ref)
+
     def test_refuses_missing_and_ambiguous_active_manifest(self):
         self.carrier(status="draft")
         with self.assertRaisesRegex(ProjectSelectionError, "Expected one Active"):

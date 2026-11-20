@@ -9,6 +9,9 @@ import re
 
 import yaml
 
+from native_carrier_header import canonical_native_header, native_header_view
+from native_carrier_placement import native_carrier_path
+
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import capture_native
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_rows import frontmatter_bounds
 from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier
@@ -34,7 +37,7 @@ def _revision_root(selection, row, structure_snapshot=None):
             or path == selection.manifest_path):
         raise common.InputError("sourceCurrent", "Select an admitted Current carrier.")
     atom_id = row.get("id", "")
-    header = row.get("header_json")
+    header = native_header_view(row.get("header_json"))
     context = header.get("context") if isinstance(header, dict) else None
     if not isinstance(context, dict):
         raise common.InputError("sourceCurrent", "Current carrier context is invalid.")
@@ -147,6 +150,15 @@ def _state_bytes(raw, bounds, path, version, body, status):
         raise common.InputError('sourceCurrent', 'Task needs valid scalar state fields.') from error
 
 
+def _task_path(selection, header, body, status, version):
+    projected = {**header, 'state': {**header['state'], 'status': status, 'version': version}}
+    try:
+        return native_carrier_path(projected, _summary(body), project_root=selection.control_root,
+                                   owner_directory=None)
+    except ValueError as error:
+        raise common.InputError('summary', 'Task Header or Summary cannot be projected to a path.') from error
+
+
 def create_draft(selection, params, *, current_rows, structure_snapshot=None):
     if isinstance(params, dict) and 'newAtom' in params:
         if set(params) != {'newAtom'}:
@@ -196,7 +208,12 @@ def create_draft(selection, params, *, current_rows, structure_snapshot=None):
         if _summary(body) != _summary(old_body):
             raise common.InputError('summary', 'Changing a Summary is not supported.')
         version = max(row['version'] for row in capture.atoms if row.get('id') == target['ref_id']) + 1
-        destination = root / '000_draft' / path.name.replace(target['ref_id'] + '-', f"{target['ref_id']}@{version}-draft-", 1)
+        if '-T-' in target['ref_id'] and 'atom_family' in selected['header_json']:
+            if _task_path(selection, selected['header_json'], old_body, selected['status'], target['version']) != path:
+                raise common.InputError('sourceCurrent', 'Task path disagrees with its authored Header and Summary.')
+            destination = _task_path(selection, selected['header_json'], body, 'draft', version)
+        else:
+            destination = root / '000_draft' / path.name.replace(target['ref_id'] + '-', f"{target['ref_id']}@{version}-draft-", 1)
         candidate = _state_bytes(raw, bounds, path, version, body, 'draft')
         with bind_query_reader(None):
             outcome = common.write_destination(selection.root, destination, candidate)
@@ -219,7 +236,7 @@ def _check_owner(selection, container, rows, capture):
             'source_path', 'id', '_exact_ref', 'version', 'status', 'status_group', 'header_json', '_source_sha256')):
         raise common.SourceChanged('Containing Task or Epic is missing or changed.')
     row = fresh[0]
-    header = row.get('header_json')
+    header = native_header_view(row.get('header_json'))
     context = header.get('context') if isinstance(header, dict) else None
     template = context.get('template') if isinstance(context, dict) else None
     status = row.get('status')
@@ -234,8 +251,18 @@ def _check_owner(selection, container, rows, capture):
     directory = () if status == 'active' else (status,)
     if (relative.is_absolute() or '..' in relative.parts or not path.is_relative_to(root)
             or path.relative_to(root).parts[:-1] != directory
-            or not re.fullmatch(re.escape(owner_id) + '-' + template.upper() + r'--.+\.md', path.name)):
+            or not re.fullmatch(re.escape(owner_id) + (r'-.+\.md' if 'atom_family' in row['header_json']
+                                                          else '-' + template.upper() + r'--.+\.md'), path.name)):
         raise common.InputError('container', 'Containing Atom is outside its native Task branch.')
+    try:
+        reader = ReadContext(roots=[str(selection.control_root)], limits=dict(CEILINGS))
+        raw = reader.read(path)
+        if (sha256(raw).hexdigest() != row.get('_source_sha256')
+                or parse_carrier(raw, path).metadata != row.get('header_json')
+                or reader.currentness()['state'] != 'unchanged'):
+            raise ValueError('Owner changed')
+    except (OSError, RuntimeError, TypeError, ValueError) as error:
+        raise common.SourceChanged('Containing Task or Epic source changed.') from error
 
 
 def _create_task(selection, values, current_rows):
@@ -264,10 +291,11 @@ def _create_task(selection, values, current_rows):
                        if isinstance(row.get('id'), str) and (match := pattern.fullmatch(row['id']))]
             atom_id = f"{selection.project_prefix}-T-{max(numbers, default=0) + 1}"
             ref = f'{atom_id}@1-draft'
-            path = selection.control_root / '__TKT' / 'TASKS' / '000_draft' / f'{ref}-TASK--{slug}.md'
-            header = {'identity': {'atom_id': atom_id},
-                      'context': {'container': values['container'], 'template': 'task'},
-                      'state': {'status': 'draft', 'version': 1, 'updated_at': datetime.now(timezone.utc).isoformat()}}
+            header = canonical_native_header(
+                {'identity': {'atom_id': atom_id},
+                 'context': {'container': values['container'], 'priority': 2, 'template': 'task'},
+                 'state': {'status': 'draft', 'version': 1, 'updated_at': datetime.now(timezone.utc).isoformat()}})
+            path = _task_path(selection, header, body, 'draft', 1)
             raw = b'---\n' + yaml.safe_dump(header, sort_keys=False).encode() + b'---\n' + body_bytes
         except (common.InputError, common.SourceChanged):
             raise
@@ -303,7 +331,7 @@ def _promote_new(selection, target, status, draft, current_rows):
                     'header_json', '_content_bytes', '_source_sha256'))):
                 raise common.SourceChanged('Task Draft changed or its identity already has history.')
             header = draft.get('header_json')
-            context = header.get('context') if isinstance(header, dict) else None
+            context = native_header_view(header).get('context')
             if not isinstance(context, dict) or context.get('template') != 'task':
                 raise common.InputError('target', 'Select a native Task Draft.')
             _check_owner(selection, context.get('container'), current_rows, capture)
@@ -315,9 +343,11 @@ def _promote_new(selection, target, status, draft, current_rows):
                 raise common.SourceChanged('Task Draft source changed after selection.')
             body = raw[bounds[2]:].decode('utf-8')
             slug = _native_slug(body)
-            if path.name != f"{target['ref_id']}-TASK--{slug}.md":
+            if path != (_task_path(selection, header, body, 'draft', 1) if 'atom_family' in header
+                        else root / '000_draft' / f"{target['ref_id']}-TASK--{slug}.md"):
                 raise common.InputError('target', 'Task Draft filename disagrees with its Summary.')
-            destination = root / ('' if status == 'active' else status) / f'{atom_id}-TASK--{slug}.md'
+            destination = (_task_path(selection, header, body, status, 1) if 'atom_family' in header
+                           else root / ('' if status == 'active' else status) / f'{atom_id}-TASK--{slug}.md')
             if destination.exists() or destination.is_symlink():
                 raise common.InputError('target', 'The promotion destination already exists.')
             if destination.parent.is_symlink() or (destination.parent.exists() and not destination.parent.is_dir()):
@@ -357,7 +387,7 @@ def _publish_first_pinned_spec(selection, draft, structure_snapshot):
             if capture.errors or matching != [draft] or any(row['status_group'] != 'Draft' for row in history):
                 raise common.SourceChanged('Spec Draft changed or the identity has published revisions.')
             header = draft['header_json']
-            context = header['context']
+            context = native_header_view(header)['context']
             lens = context.get('lens')
             if (context.get('template') is not None or not isinstance(lens, str)
                     or not re.fullmatch(r'[A-Z][A-Z0-9_]*(/[A-Z][A-Z0-9_]*)*', lens.upper())):
@@ -431,6 +461,11 @@ def _cleanup_published_draft(selection, target, status, draft, current, structur
             if reader.currentness()['state'] != 'unchanged':
                 raise common.SourceChanged('Draft or published carrier changed after selection.')
             draft_header, current_header = draft['header_json'], current['header_json']
+            if '-T-' in atom_id and 'atom_family' in current_header:
+                body = draft['_content_bytes'].decode('utf-8')
+                if (paths[0] != _task_path(selection, draft_header, body, 'draft', version)
+                        or paths[1] != _task_path(selection, current_header, body, status, version)):
+                    raise common.InputError('target', 'Task paths disagree with their authored Headers and Summary.')
             if ({key: value for key, value in draft_header.items() if key != 'state'}
                     != {key: value for key, value in current_header.items() if key != 'state'}
                     or draft['_content_bytes'] != current['_content_bytes']):
@@ -500,7 +535,7 @@ def promote_draft(selection, params, *, current_rows, migration_refs, structure_
             raise common.SourceChanged('Current predecessor is missing.')
         return _promote_new(selection, target, status, chosen[0], current_rows)
     draft, previous = chosen[0], predecessors[0]
-    if previous['header_json']['context'].get('template') == 'epic' and status != previous['status']:
+    if native_header_view(previous['header_json'])['context'].get('template') == 'epic' and status != previous['status']:
         raise common.InputError('targetStatus', 'Publish the Epic at its Current Status. Use Change Status for transitions.')
     if previous.get('version') == version:
         return _cleanup_published_draft(selection, target, status, draft, previous, structure_snapshot)
@@ -553,6 +588,12 @@ def promote_draft(selection, params, *, current_rows, migration_refs, structure_
             draft_bounds, previous_bounds = frontmatter_bounds(raw_draft), frontmatter_bounds(raw_previous)
             draft_body, previous_body = raw_draft[draft_bounds[2]:].decode(), raw_previous[previous_bounds[2]:].decode()
             draft_header, previous_header = draft['header_json'], previous['header_json']
+            if '-T-' in atom_id and 'atom_family' in previous_header:
+                if (draft_path != _task_path(selection, draft_header, draft_body, 'draft', version)
+                        or previous_path != _task_path(selection, previous_header, previous_body, previous['status'], previous['version'])):
+                    raise common.InputError('target', 'Task paths disagree with their authored Headers and Summaries.')
+                archive_path = _task_path(selection, previous_header, previous_body, 'archived', previous['version'])
+                destination = _task_path(selection, draft_header, draft_body, status, version)
             if ({key: value for key, value in draft_header.items() if key != 'state'}
                     != {key: value for key, value in previous_header.items() if key != 'state'}
                     or _summary(draft_body) != _summary(previous_body)):

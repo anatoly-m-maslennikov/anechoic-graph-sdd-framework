@@ -9,6 +9,7 @@ from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.markdown_content import parse_conte
 from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.model_declaration_sources import (
     _check_relation_references, _native_claim,
 )
+from native_carrier_header import native_header_view
 from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier
 from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext
 from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
@@ -40,7 +41,7 @@ def read_active_model_sources(control_root: Path, component_root: Path) -> tuple
     records, identifiers, subjects = [], set(), set()
     for path in reader.inventory_shallow(component):
         carrier = parse_carrier(reader.read(path), path)
-        header = carrier.metadata
+        header = native_header_view(carrier.metadata)
         context, state = header.get('context'), header.get('state')
         if not isinstance(context, dict) or not isinstance(state, dict):
             continue
@@ -54,7 +55,7 @@ def read_active_model_sources(control_root: Path, component_root: Path) -> tuple
         identifier = identity.get('atom_id') if isinstance(identity, dict) else None
         version = state.get('version')
         if (not isinstance(identifier, str) or not re.fullmatch(r'[A-Z]+-S-[0-9]+', identifier)
-                or not re.fullmatch(re.escape(identifier) + r'-SPEC(?:-[A-Z_]+)?--.+\.md', path.name)
+                or ('atom_family' not in carrier.metadata and not re.fullmatch(re.escape(identifier) + r'-SPEC(?:-[A-Z_]+)?--.+\.md', path.name))
                 or type(version) is not int or version < 1):
             raise ValueError(f'{source}: invalid Model source identity, filename or version')
         if identifier in identifiers or subject in subjects:

@@ -7,8 +7,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-20T14:42:07.157939+00:00'
+  version: 2
+  updated_at: '2026-11-20T17:25:38.351511+00:00'
 ---
 
 ## Summary
@@ -17,7 +17,7 @@ Declare Tier
 
 ## Claim scope
 
-MODEL//ANECHOIC <+ Node//Artifact//Atom//Spec Atom//Manifest//Component Manifest.Tier
+MODEL//ANECHOIC <+ Node//Artifact//Atom//Spec Atom//Manifest//Component Manifest.Header.Structure.Tier
 
 ## Claim
 
@@ -30,7 +30,7 @@ declare_entity(
     entity_name='Tier',
     entity_kind='Property',
     relation_name='IS_PROPERTY_OF',
-    base_path='Node//Artifact//Atom//Spec Atom',
+    base_path='Node//Artifact//Atom//Spec Atom.Header.Structure',
     value_format=int,
     field_options={'kw_only': True},
     allowed_values=(0,),

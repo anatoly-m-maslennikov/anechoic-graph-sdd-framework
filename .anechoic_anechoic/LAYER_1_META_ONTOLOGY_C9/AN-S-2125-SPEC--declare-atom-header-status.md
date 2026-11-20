@@ -7,8 +7,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 5
-  updated_at: '2026-11-20T14:42:07.157939+00:00'
+  version: 6
+  updated_at: '2026-11-20T17:25:38.351511+00:00'
 ---
 ## Summary
 
@@ -16,7 +16,7 @@ Declare Atom.Status
 
 ## Claim scope
 
-MODEL//ANECHOIC <+ Node//Artifact//Atom.State.Status
+MODEL//ANECHOIC <+ Node//Artifact//Atom.Header.State.Status
 
 ## Claim
 
@@ -33,7 +33,7 @@ declare_entity(
     entity_name='Status',
     entity_kind='Property',
     relation_name='IS_PROPERTY_OF',
-    base_path='Node//Artifact//Atom.State',
+    base_path='Node//Artifact//Atom.Header.State',
     value_format=str,
     field_options={'kw_only': True},
     value_cardinality=1,

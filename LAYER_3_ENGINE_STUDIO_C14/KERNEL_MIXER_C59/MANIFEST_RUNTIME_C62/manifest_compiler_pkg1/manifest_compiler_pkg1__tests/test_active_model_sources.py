@@ -40,6 +40,14 @@ class ActiveModelSourcesTests(unittest.TestCase):
         (self.component / '000_draft' / 'bad.md').write_text('bad')
         self.assertEqual(self.read(), (('META_ONTOLOGY_C9/AN-S-1-SPEC--atom.md@2', 'MODEL//ANECHOIC <+ Atom', CLAIM),))
 
+    def test_canonical_header_classifies_model(self):
+        text = carrier().replace('identity:\n  atom_id: AN-S-1', 'atom_family: SPEC\natom_id: AN-S-1')
+        text = text.replace('context:\n  container:', 'structure:\n  tier: 1\n  container:')
+        text = text.replace('  lens: SPEC', 'context:\n  lens: SPEC')
+        text = text.replace('  version: 1', '  version: 1\n  updated_at: 2026-11-20T00:00:00Z')
+        self.put('AN-S-1-OTHER--atom.md', text)
+        self.assertEqual(1, len(self.read()))
+
     def test_duplicate_id_subject_and_invalid(self):
         self.put('AN-S-1-SPEC--atom.md', carrier())
         for name, text in [

@@ -51,6 +51,28 @@ class NativeCaptureTests(unittest.TestCase):
         self.assertEqual(("Atom", "AN-T-09"), (asset["target_kind"], asset["target_ref"]))
         self.assertIn(b"Example", rows["AN-T-10@1"]["_content_bytes"])
 
+    def test_canonical_header_controls_identity_and_preserves_authored_metadata(self):
+        path = self.control / "__TKT" / "arbitrary-name.md"
+        path.parent.mkdir(parents=True)
+        header = {"atom_family": "SPEC", "atom_id": "AN-S-20",
+                  "structure": {"container": {"component": "C0"}, "tier": 3},
+                  "context": {"lens": "example"},
+                  "state": {"status": "active", "version": 1,
+                            "updated_at": "2026-11-19T00:00:00Z"}}
+        path.write_text("---\n" + yaml.safe_dump(header) + "---\n\n## Summary\n\nExample\n")
+        result = capture_native(self.selection)
+        self.assertEqual({}, result.errors)
+        row = next(row for row in result.atoms if row["id"] == "AN-S-20")
+        self.assertEqual(header, row["header_json"])
+        self.assertEqual(3, row["tier"])
+        self.assertEqual("AN-S-20", row["ref"])
+        self.assertEqual("C0", next(edge for edge in result.containment
+                                     if edge["source_ref"] == "AN-S-20")["target_ref"])
+
+        duplicate = self.control / "elsewhere.md"
+        duplicate.write_bytes(path.read_bytes())
+        self.assertTrue(any("Duplicate" in error for error in capture_native(self.selection).errors.values()))
+
     def test_invalid_and_duplicate_carriers_are_reported(self):
         self.write("one/AN-S-1--one.md", "AN-S-1", "active", 1)
         self.write("two/AN-S-1--two.md", "AN-S-1", "active", 2)

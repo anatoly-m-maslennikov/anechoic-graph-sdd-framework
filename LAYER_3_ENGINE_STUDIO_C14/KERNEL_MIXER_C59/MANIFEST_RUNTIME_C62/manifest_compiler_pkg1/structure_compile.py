@@ -11,6 +11,7 @@ from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_cl
 from FEATURE_FORMAL_MODEL_ENGINE.scope_callback_asset import formal_claim
 from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.code_access import parse_code_access
 from native_atom_reference import derive_atom_ref
+from native_carrier_header import native_header_view
 from native_project_selection import _manifest_carriers, _manifest_inputs, manifest_state_fields
 from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier
 from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext, open_regular
@@ -68,7 +69,7 @@ def _fields(body):
 
 
 def _component_inputs(path, carrier, parent, prefix):
-    header = carrier.metadata
+    header = native_header_view(carrier.metadata)
     context, state, identity = (header.get(name) for name in ("context", "state", "identity"))
     if not all(isinstance(group, dict) for group in (context, state, identity)):
         raise ValueError(f"Invalid Component Manifest header: {path}")
@@ -79,7 +80,7 @@ def _component_inputs(path, carrier, parent, prefix):
             or type(context.get("tier")) is not int or context["tier"] != 0
             or context.get("container") != {"component": parent}
             or not isinstance(atom, str) or not re.fullmatch(rf"{re.escape(prefix)}-S-[0-9]+", atom)
-            or not path.name.startswith(atom + "-") or type(version) is not int or version < 1):
+            or ("atom_family" not in carrier.metadata and not path.name.startswith(atom + "-")) or type(version) is not int or version < 1):
         raise ValueError(f"Invalid Component Manifest identity or parent: {path}")
     fields = _fields(carrier.body)
     if fields.keys() - {"component_id", "name", "layer", "lens_whitelist", "boundaries"}:
@@ -89,7 +90,9 @@ def _component_inputs(path, carrier, parent, prefix):
 
 
 def _validation_fields(fields, carrier, model):
-    return fields | manifest_state_fields(carrier) if model.requires_atom_state else fields
+    if not model.requires_atom_state:
+        return fields
+    return fields | manifest_state_fields(carrier, include_header=model.requires_atom_header)
 
 
 def compile_structure(selection, model) -> dict:  # noqa: C901
@@ -127,8 +130,12 @@ def compile_structure(selection, model) -> dict:  # noqa: C901
             directory_ids.add(cid)
             child_dirs[cid] = root / name
         for path in reader.inventory_shallow(root):
-            if _PACKAGE_SPEC_FILE.fullmatch(path.name):
-                carrier = parse_carrier(reader.read(path), path)
+            if not re.match(r'[A-Z]+-S-', path.name):
+                continue
+            carrier = parse_carrier(reader.read(path), path)
+            canonical = 'atom_family' in carrier.metadata
+            context = native_header_view(carrier.metadata).get('context', {}) if canonical else {}
+            if (canonical and context.get('template') == 'PKG') or (not canonical and _PACKAGE_SPEC_FILE.fullmatch(path.name)):
                 fields = read_package_spec(path, carrier, parent, project_fields["prefix"])
                 if fields is not None:
                     atom, package_id = fields["atom_id"], fields["package_id"]
@@ -141,9 +148,9 @@ def compile_structure(selection, model) -> dict:  # noqa: C901
                         "sha256": reader.fingerprints[str(path)], "source_path": path.relative_to(control).as_posix(),
                     }
                 continue
-            if not _MANIFEST_FILE.fullmatch(path.name):
+            if not ((canonical and context.get('template') == 'component_manifest')
+                    or (not canonical and _MANIFEST_FILE.fullmatch(path.name))):
                 continue
-            carrier = parse_carrier(reader.read(path), path)
             fields = _component_inputs(path, carrier, parent, project_fields["prefix"])
             if fields is None:
                 continue

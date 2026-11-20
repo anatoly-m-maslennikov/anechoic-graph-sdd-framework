@@ -9,6 +9,7 @@ from typing import Any
 
 from .source_rows import atom, canonical_row, source_body
 from native_atom_reference import derive_atom_ref
+from native_carrier_header import native_header_view
 from VALIDATE_ATOMS.validate_atoms_workers.parsing import CarrierError, parse_carrier
 from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext
 from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
@@ -29,7 +30,9 @@ CURRENT_STATUSES = {
 def _carrier_row(path: Path, root: Path, family: str, prefix: str, raw: bytes) -> tuple[dict, dict]:
     carrier = parse_carrier(raw, path)
     header = carrier.metadata
-    identity, context, state = (header.get(key) for key in ("identity", "context", "state"))
+    canonical = "atom_family" in header
+    normalized = native_header_view(header)
+    identity, context, state = (normalized.get(key) for key in ("identity", "context", "state"))
     if not all(isinstance(group, dict) for group in (identity, context, state)):
         raise ValueError("Native identity, context and state must be mappings")
     atom_id = identity.get("atom_id")
@@ -38,7 +41,7 @@ def _carrier_row(path: Path, root: Path, family: str, prefix: str, raw: bytes) -
     version, status, container = state.get("version"), state.get("status"), context.get("container")
     if match is None or type(version) is not int or version < 1:
         raise ValueError("Invalid native Atom identity or version")
-    if match[1] != family:
+    if not canonical and match[1] != family:
         raise ValueError("Native Atom family disagrees with its logical tree")
     if status in CURRENT_STATUSES[match[1]]:
         group = "Current"
@@ -48,9 +51,9 @@ def _carrier_row(path: Path, root: Path, family: str, prefix: str, raw: bytes) -
         raise ValueError("Invalid native status for Atom family")
     exact = derive_atom_ref(atom_id, version, status)
     marker = atom_id if group == "Current" else exact
-    if not path.name.startswith(marker + "-") or (
+    if not canonical and (not path.name.startswith(marker + "-") or (
         group == "Archived" and path.name.startswith(exact + "-draft-")
-    ):
+    )):
         raise ValueError("Filename marker disagrees with native identity or status")
     kind, target = _container(container, atom_id, pattern)
     view = {"atom_id": atom_id, "version": version, "status": status,
@@ -94,7 +97,7 @@ def capture_native(selection: Any) -> NativeCapture:
             family = {"_PMETA": "P", "__TKT": "T"}.get(tree, "S")
             row, edge = _carrier_row(path, root, family, selection.project_prefix, reader.read(path))
             row["_source_sha256"] = reader.fingerprints[str(path)]
-            exact, group, atom_id = row["_exact_ref"], row["status_group"], row["header_json"]["identity"]["atom_id"]
+            exact, group, atom_id = row["_exact_ref"], row["status_group"], row["id"]
             if exact in exact_paths or (group == "Current" and atom_id in current_paths):
                 raise ValueError("Duplicate native revision or Current identity")
             rows.append(row)

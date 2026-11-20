@@ -7,8 +7,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 3
-  updated_at: '2026-11-20T14:42:07.157939+00:00'
+  version: 4
+  updated_at: '2026-11-20T17:25:38.351511+00:00'
 ---
 
 
@@ -18,7 +18,7 @@ Declare Atom.State
 
 ## Claim scope
 
-MODEL//ANECHOIC <+ Node//Artifact//Atom.State
+MODEL//ANECHOIC <+ Node//Artifact//Atom.Header.State
 
 ## Claim
 
@@ -31,10 +31,11 @@ declare_entity(
     entity_name='State',
     entity_kind='Property',
     relation_name='IS_PROPERTY_OF',
-    base_path='Node//Artifact//Atom',
+    base_path='Node//Artifact//Atom.Header',
     value_format=object,
     value_cardinality=0,
     property_occurrence_cardinality=1,
-    allowed_dependent_property_names=('Version', 'Status', 'Updated At'),
+    allowed_dependent_property_names=('Status', 'Version', 'Updated At'),
+    ordered_dependent_property_pairs=(('Status', 'Version'), ('Version', 'Updated At')),
 )
 ```

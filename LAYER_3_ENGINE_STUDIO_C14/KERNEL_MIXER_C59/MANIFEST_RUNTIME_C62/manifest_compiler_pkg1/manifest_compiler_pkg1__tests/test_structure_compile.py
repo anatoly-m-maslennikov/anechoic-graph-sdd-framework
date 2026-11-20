@@ -7,6 +7,8 @@ import tempfile
 from types import SimpleNamespace
 import unittest
 
+import yaml
+
 ROOT = Path(__file__).resolve().parents[5]
 sys.path[:0] = [str(ROOT / 'LAYER_3_ENGINE_STUDIO_C14' / 'FEATURE_PROGRAMMATIC'),
                 str(ROOT / 'LAYER_3_ENGINE_STUDIO_C14' / 'FEATURE_PROGRAMMATIC' / 'FEATURE_TOOLS')]
@@ -93,6 +95,22 @@ class StructureTests(unittest.TestCase):
                     child.write_text(child.read_text() + '\n')
             with self.assertRaisesRegex(ValueError, 'changed'):
                 compiler.compile_structure(selected, MutatingModel())
+
+    def test_canonical_component_classified_by_header(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            control = Path(tmp).resolve()
+            shutil.copyfile(PROJECT, control / PROJECT.name)
+            raw = COMPONENT.read_text()
+            _, frontmatter, body = raw.split('---', 2)
+            header = yaml.safe_load(frontmatter)
+            header['atom_family'] = 'SPEC'
+            header['atom_id'] = header.pop('identity')['atom_id']
+            header['structure'] = {'container': header['context'].pop('container'),
+                                   'tier': header['context'].pop('tier')}
+            path = control / 'AN-S-3039-SPEC-OTHER--engine.md'
+            path.write_text(f'---\n{yaml.safe_dump(header)}---{body}')
+            result = compiler.compile_structure(selection(control), Model())
+            self.assertEqual(path.name, result['components']['C14']['source_path'])
 
     def test_formal_fields(self):
         claim = '''## Claim\n\n### Formal Claim\n\n```python\nfrom anechoic.formal_claims import declare_entity\nfrom anechoic.model import ComponentManifest\ndeclare_entity(entity_name="Component Manifest", instance=ComponentManifest(component_id="C1", name="One", lens_whitelist=["SPEC"]))\n```\n'''

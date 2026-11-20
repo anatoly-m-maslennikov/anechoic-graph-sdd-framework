@@ -7,8 +7,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-20T17:01:14.806545+00:00'
+  version: 2
+  updated_at: '2026-11-20T17:20:01.455451+00:00'
 ---
 
 ## Summary
@@ -29,14 +29,23 @@ Atom's Properties. The Markdown Content follows the Header.
    path, and relation, in that order.
 4. `structure` contains the required Container, then Tier when a SPEC Atom
    declares it. A Container references one Component or Atom.
-5. `context` carries Template, then Lens. TKT and PMETA require Template.
-   SPEC can declare Template according to its Template rule. Lens belongs
-   to SPEC.
+5. `context` carries Template, then Lens. TKT and Current PMETA require
+   Template. A PMETA Draft can omit Template. SPEC can declare Template
+   according to its Template rule. Lens belongs to SPEC.
 6. `relations` is optional on Atom. Each entry follows the target reference
    form and endpoint rules of its declared Relation.
 7. `state` carries Status, Version, and Updated At, in that order.
 
-Priority is a TKT Property. Concern carries its subject, path, and relation.
+TKT stores integer Priority in Structure after Container. Set the Priority
+of every migrated Ticket to 2. Use 2 as the default for new Tickets.
+Preserve previous authored values in the migration evidence.
+
+### Ticket containment
+
+A Ticket can act as a Container. An Epic contains only Tasks. A Task can
+own subtasks and Assets such as Work Logs, Analysis Reports, and Spec
+Proposals. An Asset with a Task binding follows its owner in the TKT
+branch. TKT Assets holds only Assets without a Task binding.
 
 ### Content
 

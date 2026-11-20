@@ -1,24 +1,23 @@
 ---
 identity:
-  atom_id: AN-S-2177
+  atom_id: AN-S-3119
 context:
   container:
     component: C9
   lens: SPEC
 state:
-  status: active
-  version: 3
+  status: archived
+  version: 2
   updated_at: '2026-11-20T16:02:18.721582+00:00'
 ---
 
-
 ## Summary
 
-Declare Atom.Identity
+Declare Atom ID
 
 ## Claim scope
 
-MODEL//ANECHOIC <+ Node//Artifact//Atom.Identity
+MODEL//ANECHOIC <+ Node//Artifact//Atom.Identity.Atom ID
 
 ## Claim
 
@@ -28,13 +27,12 @@ MODEL//ANECHOIC <+ Node//Artifact//Atom.Identity
 from anechoic.formal_claims import declare_entity
 
 declare_entity(
-    entity_name='Identity',
+    entity_name='Atom ID',
     entity_kind='Property',
     relation_name='IS_PROPERTY_OF',
-    base_path='Node//Artifact//Atom',
-    value_format=object,
-    value_cardinality=0,
+    base_path='Node//Artifact//Atom.Identity',
+    value_format=str,
+    value_cardinality=1,
     property_occurrence_cardinality=1,
-    allowed_dependent_property_names=('Atom ID',),
 )
 ```

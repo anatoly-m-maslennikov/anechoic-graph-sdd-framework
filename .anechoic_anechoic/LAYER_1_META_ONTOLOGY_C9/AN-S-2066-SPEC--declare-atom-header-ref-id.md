@@ -7,8 +7,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 6
-  updated_at: '2026-11-20T16:02:18.721582+00:00'
+  version: 7
+  updated_at: '2026-11-20T17:25:38.351511+00:00'
 ---
 
 ## Summary
@@ -34,7 +34,7 @@ declare_entity(
     value_format=str,
     value_cardinality=1,
     property_occurrence_cardinality=1,
-    derived_from_properties=('Identity.Atom ID', 'State.Version', 'State.Status'),
+    derived_from_properties=('Header.Atom ID', 'Header.State.Version', 'Header.State.Status'),
 )
 ```
 

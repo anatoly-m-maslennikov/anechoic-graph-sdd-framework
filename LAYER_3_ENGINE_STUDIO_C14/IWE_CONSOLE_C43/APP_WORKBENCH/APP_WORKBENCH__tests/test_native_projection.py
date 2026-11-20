@@ -99,6 +99,26 @@ class NativeProjectionTests(NativeCaptureTests):
             "SELECT original_path, exact_ref FROM native_migration_paths"
         )["rows"])
 
+    def test_canonical_authored_relations_use_admitted_types(self):
+        source = self.control / "task.md"
+        header = {"atom_family": "TKT", "atom_id": "AN-T-09",
+                  "structure": {"container": {"component": "C0"}, "priority": 2},
+                  "context": {"template": "task"},
+                  "relations": {"REFERENCES": ["AN-S-001"]},
+                  "state": {"status": "active", "version": 1,
+                            "updated_at": "2026-11-19T00:00:00Z"}}
+        source.write_text("---\n" + yaml.safe_dump(header) + "---\n\n## Summary\n\nTask\n")
+        capture = capture_native(self.selection)
+        store = QueryStore(extension_directory=extension_directory(APP_ROOT.parents[1]))
+        self.addCleanup(store.close)
+        bindings = {"CONTAINED_BY": "CONTAINS"}
+        with self.assertRaisesRegex(ValueError, "Undeclared native relation: REFERENCES"):
+            project_native(store, capture, relation_types=set(bindings) | set(bindings.values()), inverses=bindings)
+        project_native(store, capture, relation_types=set(bindings) | set(bindings.values()) | {"REFERENCES"},
+                       inverses=bindings)
+        self.assertIn(["AN-T-09", "AN-S-001", "REFERENCES", False], store.run(
+            "SELECT source_ref, target_ref, relation_type, derived FROM relations")["rows"])
+
     def test_authored_cross_revision_relation_and_reprojection(self):
         source = self.write("AN-T-09--task.md", "AN-T-09", "active", 2)
         header = yaml.safe_load(source.read_text().split("---\n")[1])

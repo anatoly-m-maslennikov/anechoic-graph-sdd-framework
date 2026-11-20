@@ -14,6 +14,7 @@ sys.path[:0] = [str(TOOLS), str(ENGINE / 'IWE_CONSOLE_C43')]
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import capture_native
 from ATOM_LIFECYCLE.common import InputError, SourceChanged
 from ATOM_LIFECYCLE.native_draft import create_draft, promote_draft
+from native_carrier_header import canonical_native_header
 
 
 class NativeDraftTests(unittest.TestCase):
@@ -59,6 +60,23 @@ class NativeDraftTests(unittest.TestCase):
         self.assertEqual(source_header['context'], row['header_json']['context'])
         self.assertEqual(6, row['header_json']['state']['version'])
         self.assertEqual(self.params['changes']['body'].encode(), row['_content_bytes'])
+
+    def test_canonical_ticket_revision_preserves_archived_body(self):
+        _, header, body = self.path.read_text().split('---', 2)
+        canonical = canonical_native_header(yaml.safe_load(header))
+        self.path.write_text('---\n' + yaml.safe_dump(canonical, sort_keys=False) + '---' + body)
+        output = create_draft(self.selection, self.params, current_rows=capture_native(self.selection).atoms)
+        ref = output['savedDraft']['ref_id']
+        result = promote_draft(self.selection, {'target': {'ref_id': ref, 'version': 2}, 'targetStatus': 'active'},
+                               current_rows=capture_native(self.selection).atoms, migration_refs=[])
+        self.assertEqual('completed', result['outcome'])
+        archive = self.control / '__TKT/TASKS/099_archived/AN-T-1@1-TASK--example.md'
+        _, archived_header, archived_body = archive.read_text().split('---', 2)
+        archived = yaml.safe_load(archived_header)
+        self.assertEqual(body, archived_body)
+        self.assertEqual({**canonical, 'state': archived['state']}, archived)
+        self.assertEqual('archived', archived['state']['status'])
+        self.assertIn('New', self.path.read_text())
 
     def test_missing_changes_preserves_body(self):
         output = create_draft(self.selection, {'sourceCurrent': self.params['sourceCurrent']}, current_rows=self.rows)
@@ -332,6 +350,10 @@ class NewNativeTaskTests(unittest.TestCase):
         result = create_draft(self.selection, self.new, current_rows=self.rows)
         self.assertEqual('AN-T-9@1-draft', result['savedDraft']['ref_id'])
         draft = self.root / result['savedDraft']['path']
+        header = yaml.safe_load(draft.read_text().split('---', 2)[1])
+        self.assertEqual(('TKT', 'AN-T-9', 2),
+                         (header['atom_family'], header['atom_id'], header['structure']['priority']))
+        self.assertEqual({'template': 'task'}, header['context'])
         self.assertEqual('AN-T-9@1-draft-TASK--create-a-task.md', draft.name)
         rows = capture_native(self.selection).atoms
         result = promote_draft(self.selection, {'target': {'ref_id': 'AN-T-9@1-draft', 'version': 1}, 'targetStatus': 'active'},
@@ -359,6 +381,19 @@ class NewNativeTaskTests(unittest.TestCase):
         self.path.write_bytes(self.path.read_bytes().replace(b'Old', b'Altered'))
         with self.assertRaises(SourceChanged):
             create_draft(self.selection, self.new, current_rows=self.rows)
+
+    def test_canonical_owner_template_is_authored_not_filename(self):
+        _, header, body = self.path.read_text().split('---', 2)
+        metadata = yaml.safe_load(header)
+        metadata['context']['template'] = 'epic'
+        self.path.write_text('---\n' + yaml.safe_dump(canonical_native_header(metadata), sort_keys=False) + '---' + body)
+        self.new['newAtom']['container'] = {'atom': 'AN-T-1'}
+        output = create_draft(self.selection, self.new, current_rows=capture_native(self.selection).atoms)
+        self.assertEqual('completed', output['outcome'])
+        result = promote_draft(self.selection,
+            {'target': {'ref_id': output['savedDraft']['ref_id'], 'version': 1}, 'targetStatus': 'active'},
+            current_rows=capture_native(self.selection).atoms, migration_refs=[])
+        self.assertEqual('completed', result['outcome'])
 
     def test_epic_owner_is_checked_again_at_promotion(self):
         epic = self.write('__TKT/TASKS/AN-T-10-EPIC--parent.md', 'AN-T-10', template='epic')

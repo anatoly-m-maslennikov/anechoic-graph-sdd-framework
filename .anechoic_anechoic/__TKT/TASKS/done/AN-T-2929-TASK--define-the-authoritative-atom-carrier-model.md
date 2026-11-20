@@ -6,9 +6,9 @@ context:
     atom: AN-T-2923
   template: task
 state:
-  status: active
+  status: "done"
   version: 1
-  updated_at: '2026-11-20T16:57:42.524056+00:00'
+  updated_at: "2026-11-20T17:38:52.838328+00:00"
 ---
 ## Summary
 

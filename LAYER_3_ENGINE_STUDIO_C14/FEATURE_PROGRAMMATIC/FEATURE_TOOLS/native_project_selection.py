@@ -14,6 +14,7 @@ from typing import Protocol
 from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim
 from FEATURE_FORMAL_MODEL_ENGINE.scope_callback_asset import formal_claim
 from native_atom_reference import derive_atom_ref
+from native_carrier_header import native_header_model_fields, native_header_view
 from project_selection import ProjectSelectionError, _instance_id, _project_root
 from VALIDATE_ATOMS.validate_atoms_workers.parsing import ParsedCarrier, parse_carrier
 from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext, protected
@@ -71,14 +72,25 @@ def rebind_native_selection(selection: NativeProjectSelection, instance_id: str,
 
 def manifest_paths(reader: ReadContext, control: Path):
     for path in reader.inventory_shallow(control):
-        if re.match(r"[A-Z]+-S-", path.name):
+        if path.suffix == ".md":
             yield path
 
 
-def _manifest_carriers(reader: ReadContext, control: Path):
+def manifest_sources(reader: ReadContext, control: Path):
     for path in manifest_paths(reader, control):
-        carrier = parse_carrier(reader.read(path), path)
-        context = carrier.metadata.get("context")
+        try:
+            carrier = parse_carrier(reader.read(path), path)
+        except ValueError:
+            if re.match(r"[A-Z]+-S-", path.name):
+                raise
+            continue
+        if "atom_family" in carrier.metadata or re.match(r"[A-Z]+-S-", path.name):
+            yield path, carrier
+
+
+def _manifest_carriers(reader: ReadContext, control: Path):
+    for path, carrier in manifest_sources(reader, control):
+        context = native_header_view(carrier.metadata).get("context")
         state = carrier.metadata.get("state")
         if (isinstance(context, dict) and context.get("template") == "project_manifest"
                 and isinstance(state, dict) and state.get("status") == "active"):
@@ -86,7 +98,7 @@ def _manifest_carriers(reader: ReadContext, control: Path):
 
 
 def _manifest_inputs(path: Path, carrier: ParsedCarrier) -> tuple[dict[str, object], str]:
-    header = carrier.metadata
+    header = native_header_view(carrier.metadata)
     context, state = header["context"], header["state"]
     container, identity = context.get("container"), header.get("identity")
     atom_id = identity.get("atom_id") if isinstance(identity, dict) else None
@@ -95,7 +107,7 @@ def _manifest_inputs(path: Path, carrier: ParsedCarrier) -> tuple[dict[str, obje
             or not isinstance(container, dict) or set(container) != {"component"}
             or not isinstance(container["component"], str) or not container["component"].strip()
             or not isinstance(atom_id, str) or re.fullmatch(r"[A-Z]+-S-[0-9]+", atom_id) is None
-            or not path.name.startswith(f"{atom_id}-")):
+            or ("atom_family" not in carrier.metadata and not path.name.startswith(f"{atom_id}-"))):
         raise ProjectSelectionError("Invalid Active Project Manifest header or filename")
     claim = parse_native_model_claim(formal_claim(carrier.body))
     arguments = claim["arguments"] if claim is not None and claim["kind"] == "entity" else {}
@@ -109,20 +121,22 @@ def _manifest_inputs(path: Path, carrier: ParsedCarrier) -> tuple[dict[str, obje
             "tier": tier, **fields}, container["component"]
 
 
-def manifest_state_fields(carrier: ParsedCarrier) -> dict[str, object]:
+def manifest_state_fields(carrier: ParsedCarrier, *, include_header=False) -> dict[str, object]:
     state = carrier.metadata["state"]
     updated_at = state.get("updated_at")
     if isinstance(updated_at, str):
         updated_at = datetime.fromisoformat(updated_at)
     if not isinstance(updated_at, datetime):
         raise ValueError("Manifest State requires a datetime Updated At")
-    return {"status": state["status"], "updated_at": updated_at}
+    fields = {"status": state["status"], "updated_at": updated_at}
+    return fields | native_header_model_fields(carrier.metadata) if include_header else fields
 
 
 def resolve_native_project(
     project_root: str | Path, control_root: str | Path, *,
     validate_manifest: Callable[[dict[str, object], str], ManifestIdentity],
     require_atom_state: bool = False,
+    require_atom_header: bool = False,
 ) -> NativeProjectSelection:
     """Validate the Manifest with the caller's compiled model and Project container."""
     root = _project_root(project_root)
@@ -139,8 +153,8 @@ def resolve_native_project(
             raise ProjectSelectionError("Expected one Active Tier -1 Project Manifest at Project root")
         path, carrier = selected
         fields, component_id = _manifest_inputs(path, carrier)
-        if require_atom_state:
-            fields.update(manifest_state_fields(carrier))
+        if require_atom_state or require_atom_header:
+            fields.update(manifest_state_fields(carrier, include_header=require_atom_header))
         manifest = validate_manifest(fields, component_id)
         parameters = getattr(manifest, "parameters", fields.get("parameters", {}))
         if not isinstance(parameters, dict):

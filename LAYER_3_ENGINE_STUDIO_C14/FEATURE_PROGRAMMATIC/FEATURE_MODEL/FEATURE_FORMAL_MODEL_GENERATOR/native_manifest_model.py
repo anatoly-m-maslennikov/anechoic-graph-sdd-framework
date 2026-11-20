@@ -137,6 +137,7 @@ class _NativeModel:
                 del sys.modules[module.__name__]
             raise
         self.relation_types = frozenset(self._endpoints)
+        self.requires_atom_header = "atom_family" in self._types["Atom"].__dataclass_fields__
         self.inverses = {name: args["inverse_alias"] for name, (args, reverse) in self._endpoints.items()
                          if not reverse and "inverse_alias" in args}
 

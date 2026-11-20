@@ -8,9 +8,10 @@ from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_cl
 from FEATURE_FORMAL_MODEL_ENGINE.scope_callback_asset import formal_claim
 from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.code_access import parse_code_access
 from native_atom_reference import derive_atom_ref
+from native_carrier_header import native_header_view
 
 
-def _fields(body):
+def _fields(body, canonical=False):
     tokens = MarkdownIt('commonmark').parse(body)
     lines = body.splitlines()
     sections = {}
@@ -39,9 +40,15 @@ def _fields(body):
         fields = instance['fields']
         if 'package_id' not in fields:
             raise ValueError('Missing formal Package Spec ID')
-        if any(fields.get(key) != value for key, value in sections.items()):
+        if canonical:
+            if fields.keys() & {'purpose', 'contract'}:
+                raise ValueError('Package Spec prose fields must occur only in sections')
+            fields = fields | sections
+        elif any(fields.get(key) != value for key, value in sections.items()):
             raise ValueError('Package Spec prose and formal fields differ')
     else:
+        if canonical:
+            raise ValueError('Missing formal Package Spec ID')
         fields = sections
     if (fields.keys() - {'package_id', 'purpose', 'contract', 'tier', 'boundaries'}
             or any(not isinstance(fields.get(key), str) or not fields[key].strip()
@@ -53,21 +60,23 @@ def _fields(body):
 
 def read_package_spec(path, carrier, parent, prefix):
     """Return validated source fields, or None for an inactive source."""
-    context, state, identity = (carrier.metadata.get(name) for name in ('context', 'state', 'identity'))
+    canonical = 'atom_family' in carrier.metadata
+    header = native_header_view(carrier.metadata)
+    context, state, identity = (header.get(name) for name in ('context', 'state', 'identity'))
     if not all(isinstance(group, dict) for group in (context, state, identity)):
         raise ValueError(f'Invalid Package Spec header: {path}')
     if state.get('status') != 'active':
         return None
     atom, version = identity.get('atom_id'), state.get('version')
-    package_id = context.get('package_id')
+    fields = _fields(carrier.body, canonical)
+    package_id = fields.get('package_id') if canonical else context.get('package_id')
     if (parent is None or context.get('template') != 'PKG' or context.get('lens') != 'SPEC'
             or context.get('container') != {'component': parent}
             or not isinstance(package_id, str) or not package_id.strip() or package_id == atom
             or not isinstance(atom, str) or not re.fullmatch(rf'{re.escape(prefix)}-S-[0-9]+', atom)
-            or not re.fullmatch(rf'{re.escape(atom)}-SPEC-PKG--.+\.md', path.name)
+            or (not canonical and not re.fullmatch(rf'{re.escape(atom)}-SPEC-PKG--.+\.md', path.name))
             or type(version) is not int or version < 1):
         raise ValueError(f'Invalid Package Spec identity or parent: {path}')
-    fields = _fields(carrier.body)
     if 'package_id' in fields and fields['package_id'] != package_id:
         raise ValueError(f'Package Spec ID differs from header: {path}')
     return {'atom_id': atom, 'ref_id': derive_atom_ref(atom, version, state['status']), 'version': version,

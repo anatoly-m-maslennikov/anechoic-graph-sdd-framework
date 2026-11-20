@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 import re
 
+from native_carrier_header import native_header_view
 from native_project_selection import NativeProjectSelection
 from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier
 from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext
@@ -50,7 +51,7 @@ def _pinned_bytes(reader: ReadContext, path: Path, ref_id: str, digest: str) -> 
 
 def _check_header(path: Path, raw: bytes, kind: str, ref_id: str) -> None:
     try:
-        header = parse_carrier(raw, path).metadata
+        header = native_header_view(parse_carrier(raw, path).metadata)
     except ValueError as error:
         raise NativeWorkflowDefinitionError(f"Unreadable native {kind} definition {ref_id}") from error
     identity, context, state = (header.get(key) for key in ("identity", "context", "state"))

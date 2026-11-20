@@ -7,12 +7,12 @@ import os
 from pathlib import Path
 import re
 
-from native_project_selection import manifest_paths, resolve_native_project
+from native_carrier_header import native_header_view
+from native_project_selection import manifest_sources, resolve_native_project
 from project_selection import (
     SETTINGS_FILENAME, ProjectSelectionError, _control_candidates, _control_relative,
     _project_root, _read_toml, resolve_project,
 )
-from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier
 from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext, open_regular
 from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
 
@@ -22,12 +22,11 @@ _RESERVED = {".anechoic_new", ".anechoic_legacy", ".anechoic_legacy_archive",
 
 
 def _has_manifest(reader: ReadContext, control: Path) -> bool:
-    for path in manifest_paths(reader, control):
-        carrier = parse_carrier(reader.read(path), path)
-        context = carrier.metadata.get("context")
+    for path, carrier in manifest_sources(reader, control):
+        context = native_header_view(carrier.metadata).get("context")
         if (isinstance(context, dict) and context.get("template") == "project_manifest"):
             return True
-        if "PROJECT_MANIFEST" in path.name:
+        if "atom_family" not in carrier.metadata and "PROJECT_MANIFEST" in path.name:
             return True
     return False
 
@@ -141,4 +140,5 @@ def load_native_inputs(selection, *, model=None):
     elif os.path.lexists(selection.root / ".anechoic_legacy"):
         raise ProjectSelectionError("The migrated Project requires its verified native alias map")
     return NativeQueryInputs(model.validate_manifest, model.relation_types, model.inverses, aliases,
-                             require_atom_state=model.requires_atom_state)
+                             require_atom_state=model.requires_atom_state,
+                             require_atom_header=model.requires_atom_header)

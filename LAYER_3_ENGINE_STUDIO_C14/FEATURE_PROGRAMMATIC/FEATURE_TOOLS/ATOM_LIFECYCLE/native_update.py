@@ -10,6 +10,8 @@ import re
 
 import yaml
 
+from native_carrier_header import native_header_view
+
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import CURRENT_STATUSES, capture_native
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_rows import frontmatter_bounds
 from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier
@@ -67,7 +69,7 @@ def _read_ticket(selection, target, selected, digest, path, *, close_epic=False)
         children = defaultdict(list)
         for row in capture.atoms:
             if row['status_group'] == 'Current':
-                owner = row['header_json']['context']['container'].get('atom')
+                owner = native_header_view(row['header_json']).get('context', {}).get('container', {}).get('atom')
                 if owner is not None:
                     children[owner].append(row)
         pending = list(children.get(selected['id'], ()))
@@ -108,7 +110,7 @@ def direct_update(selection, params, *, current_rows):
         raise InputError('changes', 'Supply only a Markdown body change.')
     selected, digest, path = _select_ticket(selection, target, current_rows, allow_draft=True)
     branch = path.relative_to(selection.control_root / '__TKT').parts[0]
-    template = selected['header_json']['context'].get('template')
+    template = native_header_view(selected['header_json']).get('context', {}).get('template')
     linked_asset = (branch in {'TASKS', 'ISSUES'} and isinstance(template, str)
                     and template.casefold().replace(' ', '_') in {'analysis_report', 'work_log'})
     if branch != 'ASSETS' and not linked_asset:
@@ -236,7 +238,7 @@ def change_ticket_status(selection, params, *, current_rows, check_definition):
     selected, digest, path = _select_ticket(selection, target, current_rows)
     branch = _branch(selection, path, selected['status'])
     destination = branch / ('' if status == 'active' else status) / path.name
-    close_epic = status == 'done' and selected['header_json']['context'].get('template') == 'epic'
+    close_epic = status == 'done' and native_header_view(selected['header_json']).get('context', {}).get('template') == 'epic'
     if destination == path:
         with _project_write_lock(selection.root):
             _read_ticket(selection, target, selected, digest, path, close_epic=close_epic)

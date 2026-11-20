@@ -7,8 +7,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 2
-  updated_at: '2026-11-20T16:02:18.721582+00:00'
+  version: 3
+  updated_at: '2026-11-20T17:30:26.925863+00:00'
 ---
 
 ## Summary
@@ -33,13 +33,10 @@ A subtype inherits each applicable Property. It can tighten or loosen the
 original Property by declaring a constraint scoped to the subtype. Model
 constraints name their owning Entity in a separate declaration.
 
-Atom owns the Identity and State groups. Identity owns Atom ID. State owns
-Version, Status, and Updated At. Identity stays in the Atom Header, including
-its `identity.atom_id` field. Atom ID identifies the Atom across revisions.
-Ref ID is a separate derived Property. Model objects compute it on read
-from Atom ID and State.Version. It adds `-draft` if State.Status is Draft.
-An Active revision keeps its exact Ref ID when it is Archived. Atom
-Carriers store only the input Properties.
+Atom ID belongs directly to the YAML Header. The Model path is
+`Header.Atom ID`. State owns Status, Version, and Updated At. See
+AN-S-3160 for the native Header order. Ref ID is computed from
+Atom ID, Version, and Status. It adds `-draft` for a Draft.
 
 ## References
 

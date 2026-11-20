@@ -14,6 +14,8 @@ PATH = Path('AN-S-123-SPEC-PKG--test.md')
 HEADER = {'identity': {'atom_id': 'AN-S-123'},
           'context': {'container': {'component': 'C62'}, 'lens': 'SPEC', 'template': 'PKG', 'package_id': 'pkg1'},
           'state': {'status': 'active', 'version': 1}}
+CANONICAL = {'atom_family': 'SPEC', 'atom_id': 'AN-S-123', 'structure': {'container': {'component': 'C62'}, 'tier': 1},
+             'context': {'lens': 'SPEC', 'template': 'PKG'}, 'state': {'status': 'active', 'version': 1, 'updated_at': '2026-11-20T00:00:00Z'}}
 PROSE = '## Purpose\n\nTest purpose.\n\n## Contract\n\nTest contract.\n'
 FORMAL = '''## Claim
 
@@ -53,6 +55,16 @@ class PackageSpecTests(unittest.TestCase):
             self.read(FORMAL.replace('["pkg2"]', '["pkg2", "pkg2"]'))
         with self.assertRaisesRegex(ValueError, 'fields'):
             self.read('## Purpose\n\nOnly purpose.\n')
+
+    def test_canonical_id_and_single_prose_sources(self):
+        formal = FORMAL.replace(', purpose="Test purpose.", contract="Test contract."', '')
+        fields = self.read(PROSE + formal, copy.deepcopy(CANONICAL))
+        self.assertEqual(('pkg1', 'Test purpose.', 'Test contract.'),
+                         (fields['package_id'], fields['purpose'], fields['contract']))
+        with self.assertRaisesRegex(ValueError, 'only in sections'):
+            self.read(PROSE + FORMAL, copy.deepcopy(CANONICAL))
+        with self.assertRaisesRegex(ValueError, 'formal'):
+            self.read(PROSE, copy.deepcopy(CANONICAL))
 
     def test_header_and_inactive(self):
         header = copy.deepcopy(HEADER)

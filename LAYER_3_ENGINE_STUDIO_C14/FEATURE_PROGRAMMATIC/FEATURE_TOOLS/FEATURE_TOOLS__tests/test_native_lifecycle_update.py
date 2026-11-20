@@ -16,6 +16,7 @@ from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import capture_n
 from ATOM_LIFECYCLE.common import InputError, SourceChanged
 from ATOM_LIFECYCLE import effects
 from ATOM_LIFECYCLE.native_update import archive_ticket, change_ticket_status, direct_update
+from native_carrier_header import canonical_native_header
 
 
 class NativeDirectUpdateTests(unittest.TestCase):
@@ -50,6 +51,27 @@ class NativeDirectUpdateTests(unittest.TestCase):
         self.assertEqual(('AN-T-1', 1, 'active'), (output['artifact']['ref_id'], output['artifact']['version'], output['artifact']['status']))
         self.assertEqual(before.split(b'---\n', 2)[1], self.path.read_bytes().split(b'---\n', 2)[1])
         self.assertIn(b'New', self.path.read_bytes())
+
+    def test_canonical_ticket_body_and_status_updates_preserve_header(self):
+        raw = self.path.read_text()
+        _, header, body = raw.split('---', 2)
+        metadata = yaml.safe_load(header)
+        metadata['context']['template'] = 'asset'
+        canonical = canonical_native_header(metadata)
+        self.path.write_text('---\n' + yaml.safe_dump(canonical, sort_keys=False) + '---' + body)
+        rows = capture_native(self.selection).atoms
+        before = self.path.read_bytes().split(b'---\n', 2)[1]
+        self.assertEqual('completed', direct_update(self.selection, self.params, current_rows=rows)['outcome'])
+        self.assertEqual(before, self.path.read_bytes().split(b'---\n', 2)[1])
+        rows = capture_native(self.selection).atoms
+        output = change_ticket_status(self.selection,
+            {'target': self.params['target'], 'targetStatus': 'done'},
+            current_rows=rows, check_definition=lambda: None)
+        self.assertEqual('completed', output['outcome'])
+        moved = self.control / '__TKT/ASSETS/done' / self.path.name
+        after = yaml.safe_load(moved.read_text().split('---', 2)[1])
+        self.assertEqual({**canonical, 'state': after['state']}, after)
+        self.assertEqual('done', after['state']['status'])
 
     def test_stale_or_invalid_inputs_have_no_effect(self):
         for case in ('version', 'header', 'header_bytes', 'missing_digest', 'path', 'wrong_path', 'summary', 'extra', 'child', 'companion'):
