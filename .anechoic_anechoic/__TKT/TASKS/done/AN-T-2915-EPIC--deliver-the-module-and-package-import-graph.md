@@ -69,3 +69,6 @@ Package Spec in `implements`.
 11. Update the Realization Graph Specs with language-independent Package discovery.
 12. Publish and audit one Package per non-dot folder with an executable in its subtree.
 13. Verify watcher updates, persisted startup, and existing import resolution.
+
+The 26 focused tests and the separate polling-mode check passed.
+An isolated Project run found 78 local Packages across 709 executable files.
