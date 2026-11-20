@@ -146,8 +146,12 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
             schema = await client.call_tool("query_schema", {})
             self.assertFalse(schema.is_error, schema.structured_content)
             tables = schema.structured_content["tables"]
-            self.assertEqual({"atoms", "relations", "native_references", "native_legacy_references",
-                              "native_migration_paths"}, set(tables))
+            self.assertEqual({
+                "atoms", "relations", "native_references", "native_legacy_references", "native_migration_paths",
+                "change_log", "query_log", "live_runs", "runtime_diagnostics", "atom_parse_issues",
+                "atom_schema_issues", "atom_declared_carrier_issues", "atom_physical_carrier_issues",
+                "atom_duplicate_revision_issues",
+            }, set(tables))
             self.assertEqual(["original_path", "exact_ref"],
                              [column["name"] for column in tables["native_migration_paths"]])
 

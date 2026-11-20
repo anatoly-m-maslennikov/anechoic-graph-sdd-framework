@@ -118,6 +118,20 @@ class NativeWorkspaceTests(unittest.TestCase):
             "SELECT exact_ref FROM native_references WHERE stable_ref = 'AN-T-009'", result_delivery="inline",
         )["rows"])
 
+    def test_native_database_does_not_follow_a_symlink(self):
+        inputs = fixture._native_inputs()
+        selection = resolve_native_project(self.root, fixture.CONTROL, validate_manifest=inputs.validate_manifest)
+        owner = NativeQueryOwner(selection, inputs)
+        self.addCleanup(owner.close)
+        target = self.root / "other.duckdb"
+        target.write_bytes(b"keep this file")
+        database = self.root / ".anechoic_runtime/workbench/projection.duckdb"
+        database.parent.mkdir(parents=True)
+        database.symlink_to(target)
+        with self.assertRaisesRegex(ValueError, "Project runtime directory directly"):
+            owner.start()
+        self.assertEqual(b"keep this file", target.read_bytes())
+
 
 if __name__ == "__main__":
     unittest.main()

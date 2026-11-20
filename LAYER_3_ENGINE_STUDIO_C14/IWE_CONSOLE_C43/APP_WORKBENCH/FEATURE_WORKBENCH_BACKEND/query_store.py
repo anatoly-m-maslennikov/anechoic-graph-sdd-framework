@@ -702,15 +702,14 @@ class QueryStore:
     ) -> dict[str, tuple[str, _Result]]:
         """Stage replacement tables inside the caller's transaction and store lock."""
         selected = self.resolve_result_selector(query_id) if query_id is not None else None
-        affected_tables = {name.rsplit(".", 1)[-1] for name in tables or ()}
+        affected_tables = {name.rsplit(".", 1)[-1].lower() for name in tables or ()}
         staged = {}
         for old_id, old in self._results.items():
             if (selected is not None or tables is not None) and old_id != selected:
                 if not affected_tables:
                     continue
                 try:
-                    dependencies = self._connection.get_table_names(old.sql, qualified=True)
-                    dependencies = {name.rsplit(".", 1)[-1] for name in dependencies}
+                    dependencies = {name.lower() for name in self._connection.get_table_names(old.sql)}
                 except Exception:
                     # Unclassified reads can still depend on the selected table.
                     dependencies = affected_tables

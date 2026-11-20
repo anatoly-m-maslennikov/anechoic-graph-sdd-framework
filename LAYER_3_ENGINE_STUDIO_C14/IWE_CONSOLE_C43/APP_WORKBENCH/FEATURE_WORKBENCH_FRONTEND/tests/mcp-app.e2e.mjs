@@ -19,6 +19,7 @@ const interfaceOperations = new Set([
 ]);
 const routes = {
   query_run: 'run', query_check: 'check', query_page: 'page', query_schema: 'schema',
+  query_rebuild: 'rebuild',
   workbench_status: 'status', query_load: 'load', query_saved_list: 'saved-list', view_save: 'view-save',
 };
 
@@ -69,6 +70,11 @@ async function bridgePage({ input, initial, resultFirst = false, callTool }) {
     }
   });
   if (fixtureUrl) await page.goto(fixtureUrl);
+  else {
+    const origin = 'http://127.0.0.1:54338/';
+    await page.route(origin, (route) => route.fulfill({ contentType: 'text/html', body: '' }));
+    await page.goto(origin);
+  }
   await page.setContent('<iframe title="ANECHOIC Workbench"></iframe>');
   await page.evaluate(({ html: app, input: toolInput, initial: toolResult, resultFirst: resultBeforeInput }) => {
     const frame = document.querySelector('iframe');
@@ -99,22 +105,31 @@ test('native artifact inlines the shared UI assets', async () => {
 });
 
 test('rebuild command sends target and refreshes the workspace result', async () => {
-  const initial = { workspace_id: 'session', project_name: 'Project', active_view_id: 'v1', views: [
-    { id: 'v1', sql: 'select 1', cursor_position: 0, revision: 1, result: { query_id: 'q1', status: 'completed' } },
-  ] };
-  const host = await bridgePage({ input: { session_id: 'session', project_root: '/project' }, initial,
-    callTool: ({ name }) => ({ isError: false, structuredContent: name === 'workspace_get' ? initial
-      : name === 'view_fetch' ? { query_id: 'q1', columns: [], rows: [], offset: 0, page_size: 100, has_more: false }
-      : name === 'query_saved_list' || name === 'query_log_list' ? { items: [] } : {} }),
+  let queryId = 'q1';
+  const workspace = () => ({ workspace_id: 'session', project_name: 'Project', active_view_id: 'v1', views: [
+    { id: 'v1', sql: 'select 1', cursor_position: 0, revision: 1, result: { query_id: queryId, status: 'success' } },
+  ] });
+  const host = await bridgePage({ input: { session_id: 'session', project_root: '/project' }, initial: workspace(),
+    callTool: ({ name }) => {
+      if (name === 'query_rebuild') queryId = 'q2';
+      const result = { query_id: queryId, columns: [{ name: 'result', type: 'VARCHAR' }], rows: [[queryId]],
+        row_count: 1, source_row_count: 1, column_count: 1, offset: 0, page_size: 100, has_more: false };
+      return { isError: false, structuredContent: name === 'workspace_get' ? workspace()
+        : name === 'view_fetch' ? result
+        : name === 'query_saved_list' || name === 'query_log_list' ? { items: [] } : {} };
+    },
   });
   try {
-    await host.frame.getByRole('button', { name: /Commands/ }).click();
+    try { await host.frame.getByRole('button', { name: /Commands/ }).click({ timeout: 8000 }); }
+    catch (error) {
+      assert.fail(`${error.message}\nbody=${await host.frame.locator('body').innerText()}\nerrors=${JSON.stringify(host.pageErrors)}`);
+    }
     const palette = host.frame.getByRole('dialog', { name: 'Command palette' });
     await palette.getByRole('textbox').fill('Rebuild tables');
     host.page.once('dialog', (dialog) => dialog.accept('atoms'));
     await palette.getByRole('textbox').press('Enter');
     await host.frame.getByRole('dialog', { name: 'Command palette' }).waitFor({ state: 'hidden' });
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    await host.frame.getByText('q2', { exact: true }).waitFor({ timeout: 8000 });
     const rebuild = host.calls.find((call) => call.name === 'query_rebuild');
     assert.equal(rebuild?.arguments.target, 'atoms');
     const index = host.calls.indexOf(rebuild);

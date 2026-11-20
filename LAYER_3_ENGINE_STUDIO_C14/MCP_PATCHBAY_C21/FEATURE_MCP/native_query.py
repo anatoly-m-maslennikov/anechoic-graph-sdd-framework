@@ -166,8 +166,9 @@ class NativeQueryOwner(ServiceInterface):
         self._realization_options = self._import_options(workbench)
         options = {key: workbench[key] for key in ("result_ttl_seconds", "schema_mode") if key in workbench}
         path = self._root / ".anechoic_runtime" / "workbench" / "projection.duckdb"
-        if not path.resolve().is_relative_to(self._root) or not (path.parent / "duckdb-temp").resolve().is_relative_to(self._root):
-            raise ValueError("Workbench database and spill paths must stay inside the Project")
+        spill = path.parent / "duckdb-temp"
+        if path.resolve() != path or spill.resolve() != spill:
+            raise ValueError("Workbench database and spill paths must use the Project runtime directory directly")
         store = QueryStore(extension_directory=self._inputs.extension_directory,
                            database_path=path, native=True, **options)
         try:
