@@ -177,6 +177,30 @@ aggregate column counters rather than per-Atom contribution copies. A full
 rebuild derives public rows once for both SQL insertion and its retained snapshot.
 Public Content values, schemas and hashes remain unchanged.
 
+## Import Graph
+
+Set the native Project Manifest parameter `runtime.workbench.import_graph` to `{}` to enable the graph. Set `python_roots` in that mapping to the ordered Project-relative Python source roots when the launch profile uses more than the Project root. Use `include` to admit named authored files that Git ignore rules omit. The first delivery extracts Python imports and lists recognized frontend files as unsupported.
+
+Use this query in Workbench to inspect outgoing imports and their source lines. Filter `d.relative_path` for incoming imports. Filter node kind `package` and use its Package path for Package results.
+
+```sql
+SELECT s.kind, s.relative_path, d.kind, d.relative_path, i.line, i.written_specifier
+FROM import_edges e
+JOIN import_nodes s ON s.node_key = e.source_key
+JOIN import_nodes d ON d.node_key = e.target_key
+JOIN module_imports i USING (occurrence_key)
+WHERE s.relative_path = 'src/app.py'
+ORDER BY i.line
+```
+
+From a terminal, send the same SQL to Workbench's read-only endpoint. For example, the `package_imports` view counts occurrences per Package pair.
+
+```sh
+curl -sS -H 'Content-Type: application/json' \
+  --data '{"sql":"SELECT * FROM package_imports LIMIT 20","result_delivery":"inline"}' \
+  http://localhost:56317/anechoic/Anechoic/api/run
+```
+
 ## Rebuildable SQL schema assets
 
 Header and Content SQL names preserve dots between path levels and use

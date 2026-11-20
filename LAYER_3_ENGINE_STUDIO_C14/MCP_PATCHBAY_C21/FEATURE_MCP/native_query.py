@@ -4,18 +4,21 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
+import sys
 import threading
 from typing import Any
 
 from workbench_tools import CHECK, PAGE, RUN, SCHEMA
 
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_projection import project_native
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.import_tables import publish_imports
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import NativeCapture, capture_native
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.query_log import QueryLog
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.query_store import QueryStore
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.result_delivery import deliver, validate_delivery
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.saved_queries import SavedQueryStore
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service_interface import ServiceInterface
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_watcher import SourceWatcher
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.statements import select_statement
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workspace import WorkspaceStore
 from native_project_selection import ManifestIdentity, NativeProjectSelection
@@ -51,6 +54,7 @@ LIFECYCLE_TOOLS = frozenset({
 })
 QUERY_TABLES = frozenset({
     "atoms", "relations", "native_references", "native_legacy_references", "native_migration_paths",
+    "import_nodes", "module_imports", "import_edges", "package_imports",
 })
 
 
@@ -73,6 +77,53 @@ class NativeQueryOwner(ServiceInterface):
         self._workspaces = WorkspaceStore(self._root)
         self._query_log = QueryLog(self._root)
         self._interface_lock = threading.RLock()
+        self._watcher: SourceWatcher | None = None
+        self._import_thread: threading.Thread | None = None
+        self._import_stop = threading.Event()
+        self._import_sources = {}
+
+    def _import_options(self, workbench: dict) -> tuple[tuple[str, ...], tuple[str, ...]] | None:
+        if "import_graph" not in workbench:
+            return None
+        config = workbench["import_graph"]
+        if not isinstance(config, dict):
+            raise ValueError("runtime.workbench.import_graph must be a mapping")
+        result = []
+        for name, default in (("python_roots", ["."]), ("include", [])):
+            values = config.get(name, default)
+            if not isinstance(values, list) or any(not isinstance(value, str) or not value for value in values):
+                raise ValueError(f"import_graph.{name} must be a list of Project-relative paths")
+            for value in values:
+                path = Path(value)
+                if path.is_absolute() or ".." in path.parts or not (self._root / path).resolve().is_relative_to(self._root.resolve()):
+                    raise ValueError(f"import_graph.{name} paths must be inside the Project")
+                if name == "include" and (path == Path(".") or (self._root / path).is_dir()):
+                    raise ValueError("import_graph.include paths must name source files")
+            result.append(tuple(values))
+        return result[0], result[1]
+
+    def _refresh_imports(
+        self, store: QueryStore, roots: tuple[str, ...], include: tuple[str, ...],
+        *, changes: list[dict[str, str | None]] | None = None,
+    ) -> None:
+        from APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.source import capture
+        from APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.resolution import resolve
+        sources = capture(self._root, self._import_sources, include, changes=changes)
+        nodes, occurrences, edges = resolve(self._root, sources, roots)
+        publish_imports(store, nodes, occurrences, edges)
+        self._import_sources = sources
+
+    def _watch_imports(self, store: QueryStore, roots: tuple[str, ...], include: tuple[str, ...]) -> None:
+        from APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.source import relevant_change
+
+        assert self._watcher is not None
+        while not self._import_stop.is_set():
+            batch = self._watcher.changes(timeout=0.1)
+            try:
+                if batch and relevant_change(self._root, batch, self._import_sources):
+                    self._refresh_imports(store, roots, include, changes=batch)
+            except Exception as error:
+                print(f"Import graph refresh failed. Batch discarded. {error}", file=sys.stderr)
 
     def _project(self, store: QueryStore) -> NativeCapture:
         capture = capture_native(self.selection)
@@ -85,11 +136,24 @@ class NativeQueryOwner(ServiceInterface):
         workbench = runtime.get("workbench", {}) if isinstance(runtime, dict) else None
         if not isinstance(workbench, dict):
             raise ValueError("Project Manifest runtime.workbench must be a mapping")
+        import_options = self._import_options(workbench)
         options = {key: workbench[key] for key in ("result_ttl_seconds", "schema_mode") if key in workbench}
         store = QueryStore(extension_directory=self._inputs.extension_directory, **options)
         try:
+            if import_options is not None:
+                self._watcher = SourceWatcher(self._root, self._root / self.selection.control_relative,
+                                              implementation_root=self._root)
+                self._watcher.start()
             self._capture = self._project(store)
+            if import_options is not None:
+                self._refresh_imports(store, *import_options)
+                self._import_thread = threading.Thread(target=self._watch_imports, args=(store, *import_options),
+                                                       name="native-import-graph", daemon=True)
+                self._import_thread.start()
         except BaseException:
+            if self._watcher is not None:
+                self._watcher.close()
+                self._watcher = None
             store.close()
             raise
         self._store = store
@@ -207,6 +271,13 @@ class NativeQueryOwner(ServiceInterface):
         return {"tables": {name: columns for name, columns in tables.items() if name in QUERY_TABLES}}
 
     def close(self) -> None:
+        self._import_stop.set()
+        if self._import_thread is not None:
+            self._import_thread.join()
+            self._import_thread = None
+        if self._watcher is not None:
+            self._watcher.close()
+            self._watcher = None
         self._query_log.close()
         self._capture = None
         if self._store is not None:

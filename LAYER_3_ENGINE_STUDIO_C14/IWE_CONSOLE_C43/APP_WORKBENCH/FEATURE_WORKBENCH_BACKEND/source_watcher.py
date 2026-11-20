@@ -35,13 +35,14 @@ class SourceWatcher:
         self._root = Path(root).absolute()
         self._control_root = Path(control_root).absolute()
         roots = (self._control_root,) if implementation_root is None else (self._control_root, implementation_root)
-        self._roots = tuple(Path(path).absolute() for path in roots)
-        self._resolved_roots = tuple(path.resolve() for path in self._roots)
+        candidates = tuple(Path(path).absolute() for path in roots)
         self._resolved_root = self._root.resolve()
-        if any(not path.is_relative_to(self._root) for path in self._roots) or any(
-            not path.is_relative_to(self._resolved_root) for path in self._resolved_roots
-        ):
+        if any(not path.is_relative_to(self._root) or not path.resolve().is_relative_to(self._resolved_root)
+               for path in candidates):
             raise ValueError("Workbench sources must be inside the selected repository")
+        self._roots = tuple(path for path in dict.fromkeys(candidates)
+                            if not any(path != other and path.is_relative_to(other) for other in candidates))
+        self._resolved_roots = tuple(path.resolve() for path in self._roots)
         self._observer_factory = observer_factory
         self._observer: Any = None
         self._changes: Queue[Change] = Queue()
@@ -54,11 +55,18 @@ class SourceWatcher:
         if factory is None:
             raise RuntimeError("watchdog runtime is unavailable")
         observer = factory()
-        self._watched_directories = {
-            path: observer.schedule(_Handler(self), str(path), recursive=True)
-            for path in self._roots
-        }
-        observer.start()
+        try:
+            self._watched_directories = {
+                path: observer.schedule(_Handler(self), str(path), recursive=True)
+                for path in self._roots
+            }
+            observer.start()
+        except BaseException:
+            observer.stop()
+            if observer.is_alive():
+                observer.join()
+            self._watched_directories = {}
+            raise
         self._observer = observer
 
     def changes(self, timeout: float) -> list[Change]:

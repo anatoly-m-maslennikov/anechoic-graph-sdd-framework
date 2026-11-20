@@ -91,13 +91,12 @@ def graph_relations(connection: Any, *, has_edges: bool) -> dict[tuple[str, str]
     """Read outgoing facts from the native graph without exposing its tables."""
     if not has_edges:
         return {}
-    descriptions = connection.execute("SELECT * FROM describe_property_graph('anechoic')").fetchall()
-    relation_types = sorted(
-        row[2] for row in descriptions
-        if row[3] is False and isinstance(row[2], str)
-    )
+    descriptions = connection.execute(
+        "SELECT label FROM describe_property_graph('anechoic') "
+        "WHERE NOT is_vertex_table AND schema = 'internal' ORDER BY label"
+    ).fetchall()
     outgoing: dict[tuple[str, str], dict[str, list[dict[str, object]]]] = defaultdict(dict)
-    for relation_type in relation_types:
+    for (relation_type,) in descriptions:
         rows = connection.execute(
             "FROM GRAPH_TABLE (anechoic "
             f"MATCH (source:Reference)-[edge:{quote_identifier(relation_type)}]->(target:Reference) "
@@ -153,9 +152,7 @@ def build_graph(
             "INSERT INTO internal.reference VALUES (?, ?, ?)",
         [(kind, ref, _hash({"kind": kind, "ref": ref})) for kind, ref in sorted(state.references)],
         )
-    edge_definitions = []
     for relation_type, table in state.tables.items():
-        label = quote_identifier(relation_type)
         connection.execute(
             f"CREATE TABLE internal.{table}(source_kind VARCHAR, source_ref VARCHAR, "
             "target_kind VARCHAR, target_ref VARCHAR, relation_type VARCHAR NOT NULL, "
@@ -166,16 +163,7 @@ def build_graph(
                 f"INSERT INTO internal.{table} VALUES (?, ?, ?, ?, ?, ?, ?)",
                 [(*edge, _hash(dict(zip(_EDGE_KEYS, edge)))) for edge in state.edges[relation_type]],
             )
-        edge_definitions.append(
-            f"internal.{table} SOURCE KEY(source_kind, source_ref) "
-            "REFERENCES internal.reference(kind, ref) "
-            "DESTINATION KEY(target_kind, target_ref) REFERENCES internal.reference(kind, ref) "
-            f"LABEL {label}"
-        )
-    graph_sql = "CREATE PROPERTY GRAPH anechoic VERTEX TABLES (internal.reference LABEL Reference)"
-    if edge_definitions:
-        graph_sql += " EDGE TABLES (" + ", ".join(edge_definitions) + ")"
-    connection.execute(graph_sql)
+    register_graph(connection, state)
     columns = ", ".join(_EDGE_KEYS)
     sources = [f"SELECT {columns} FROM internal.{table}" for table in state.tables.values()]
     if not sources:
@@ -184,6 +172,31 @@ def build_graph(
                    "NULL::VARCHAR AS relation_type, NULL::BOOLEAN AS derived WHERE FALSE"]
     connection.execute("CREATE OR REPLACE VIEW main.relations AS " + " UNION ALL ".join(sources))
     return state
+
+
+def register_graph(connection: Any, state: GraphState) -> None:
+    """Register the current Atom graph and any published import projection."""
+    vertices = ["internal.reference LABEL Reference"]
+    edges = [
+        f"internal.{table} SOURCE KEY(source_kind, source_ref) "
+        "REFERENCES internal.reference(kind, ref) "
+        "DESTINATION KEY(target_kind, target_ref) REFERENCES internal.reference(kind, ref) "
+        f"LABEL {quote_identifier(relation_type)}"
+        for relation_type, table in state.tables.items()
+    ]
+    if connection.execute(
+        "SELECT count(*) FROM information_schema.tables "
+        "WHERE table_schema = 'main' AND table_name = 'import_nodes'"
+    ).fetchone()[0]:
+        vertices.append("main.import_nodes LABEL ImportNode")
+        edges.append(
+            "main.import_edges SOURCE KEY(source_key) REFERENCES main.import_nodes(node_key) "
+            "DESTINATION KEY(target_key) REFERENCES main.import_nodes(node_key) LABEL Imports"
+        )
+    sql = "CREATE PROPERTY GRAPH anechoic VERTEX TABLES (" + ", ".join(vertices) + ")"
+    if edges:
+        sql += " EDGE TABLES (" + ", ".join(edges) + ")"
+    connection.execute(sql)
 
 
 def update_graph(

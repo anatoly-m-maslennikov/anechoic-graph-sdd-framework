@@ -8,8 +8,8 @@ context:
   lens: QA
 state:
   status: active
-  version: 15
-  updated_at: 2026-11-10 20:47:54 +0400
+  version: 18
+  updated_at: '2026-11-20T10:44:30.157383+00:00'
 ---
 ## Summary
 
@@ -23,7 +23,7 @@ Native SQL and typed relation expansion over derived Projection rows.
 
 ### Prose Claim
 
-Native DuckDB and DuckPGQ SQL/PGQ return requested columns/types/counts and complete rows through stable bounded pages. Typed reachability follows materialized direct/declared-derived Relations once, terminates cycles, and neither infers prose links nor synthesizes a second inverse; graph source tables remain `atoms` and `scope_units`.
+Native DuckDB and DuckPGQ SQL/PGQ return requested columns/types/counts and complete rows through stable bounded pages. Typed reachability follows materialized direct/declared-derived Relations once, terminates cycles, and neither infers prose links nor synthesizes a second inverse; Atom and Scope Unit traversal uses its existing source tables. When the Import Graph is enabled, `import_nodes` and `import_edges` supply its vertices and edges in the same property graph.
 
 ## Details
 
