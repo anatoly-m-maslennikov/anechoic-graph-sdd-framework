@@ -43,11 +43,11 @@ class WorkbenchPerformanceDockerMixin:
     def test_workbench_performance_gates(self) -> None:  # noqa: C901
         with tempfile.TemporaryDirectory() as temporary:
             fixture = prepare_fixture(Path(temporary))
-            state = Path(temporary) / "workbench"
-            state.mkdir()
+            state = fixture.root / ".anechoic_runtime" / "workbench"
+            state.mkdir(parents=True)
             state.chmod(0o777)
             cold_started = time.monotonic()
-            handle = self._start_performance_container(fixture.root, state)
+            handle = self._start_performance_container(fixture.root)
             _process, name, url, stdout, stderr = handle
             workbench_path = f"{WORKBENCH_PATH}/{project_name(fixture.control)}"
             database = state / "projection.duckdb"
@@ -334,8 +334,7 @@ class WorkbenchPerformanceDockerMixin:
             finally:
                 self._stop_performance_container(handle)
 
-    def _start_performance_container(self, root: Path, state: Path):
-        (root / ".anechoic_runtime" / "workbench").mkdir(parents=True, exist_ok=True)
+    def _start_performance_container(self, root: Path):
         name = f"anechoic-workbench-performance-{uuid4().hex}"
         port = free_port()
         url = f"http://127.0.0.1:{port}"
@@ -359,7 +358,6 @@ class WorkbenchPerformanceDockerMixin:
                 "-v",
                 f"{root}:/project:rw",
                 "-v",
-                f"{state}:/project/.anechoic_runtime/workbench:rw",
                 self.image,
                 "mcp-http",
             ],
