@@ -7,7 +7,7 @@ context:
   tier: 3
   template: epic
 state:
-  status: "done"
+  status: "archived"
   version: 1
   updated_at: "2026-11-20T15:23:41.110589+00:00"
 ---
