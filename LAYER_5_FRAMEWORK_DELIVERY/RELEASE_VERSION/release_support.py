@@ -496,7 +496,7 @@ def _prepare_package(root: Path, product: Path, package: Path, *,
     trees = (
         (root, Path(".")),
         (product / "SUPERLAYER_1_METHODOLOGY_SOURCES", Path("METHODOLOGY/sources")),
-        (root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ca", Path("SKILLS/ca")),
+        (root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane", Path("SKILLS/ane")),
     )
     sources: list[tuple[Path, Path]] = []
     inventories: list[tuple[Path, list[Path]]] = []
@@ -584,8 +584,8 @@ def _prepare_package(root: Path, product: Path, package: Path, *,
             expected[asset.relative_to(package).as_posix()] = _file_identity(asset)
     for relative in (
         "pyproject.toml", "uv.lock", "version.toml",
-        "SKILLS/ca/SKILL.md",
-        "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ca/SKILL.md",
+        "SKILLS/ane/SKILL.md",
+        "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane/SKILL.md",
         "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/project_mcp_bootstrap.py",
         "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/start_mcp.py",
         "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/runtime.py",

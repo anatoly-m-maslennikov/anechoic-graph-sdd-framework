@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-1035
-context:
+atom_family: TKT
+atom_id: AN-T-1035
+structure:
   container:
     component: C21
-  tier: 4
+  priority: 2
+context:
   template: problem
 state:
   status: active

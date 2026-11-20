@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2804
-context:
+atom_family: SPEC
+atom_id: AN-S-2804
+structure:
   container:
     component: C9
   tier: 3
+context:
   lens: DES
 state:
   status: active

@@ -1,15 +1,16 @@
 ---
-identity:
-  atom_id: AN-S-3014
-context:
+atom_family: SPEC
+atom_id: AN-S-3014
+structure:
   container:
     component: C9
   tier: 3
+context:
   lens: DES
 state:
-  status: "draft"
+  status: draft
   version: 1
-  updated_at: "2026-11-20T14:45:28.417339+00:00"
+  updated_at: '2026-11-20T14:45:28.417339+00:00'
 ---
 ## Summary
 

@@ -1,15 +1,16 @@
 ---
-identity:
-  atom_id: AN-S-426
-context:
+atom_family: SPEC
+atom_id: AN-S-426
+structure:
   container:
     component: C9
   tier: 8
+context:
   lens: QA
 state:
-  status: "active"
+  status: active
   version: 41
-  updated_at: "2026-11-20T11:29:16.610639+00:00"
+  updated_at: '2026-11-20T11:29:16.610639+00:00'
 ---
 
 ## Summary

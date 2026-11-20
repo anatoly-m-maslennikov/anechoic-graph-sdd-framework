@@ -19,6 +19,7 @@ from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext
 from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
 
 from . import effects
+from .directory_effect import _read_tree, move_directory
 from .backend import _project_write_lock
 from .common import InputError, SourceChanged, _create_parents, atom_summary, result, saved
 from .source import bind_query_reader
@@ -55,8 +56,10 @@ def _select_ticket(selection, target, current_rows, *, allow_draft=False):
     return selected, digest, path
 
 
-def _read_ticket(selection, target, selected, digest, path, *, close_epic=False):
+def _read_ticket(selection, target, selected, digest, path, *, close_epic=False, placement=False):
     try:
+        companion = path.with_suffix('')
+        tree = _read_tree(selection.root, companion) if close_epic and companion.is_dir() else None
         capture = capture_native(selection)
         if capture.errors:
             raise SourceChanged('Native carrier capture is incomplete.')
@@ -66,6 +69,8 @@ def _read_ticket(selection, target, selected, digest, path, *, close_epic=False)
                 'source_path', 'id', 'ref', '_exact_ref', 'version', 'status', 'status_group',
                 'header_json', '_content_bytes')):
             raise SourceChanged('Current Ticket source changed after selection.')
+        if placement:
+            _branch(selection, path, selected['status'], selected, capture.atoms)
         children = defaultdict(list)
         for row in capture.atoms:
             if row['status_group'] == 'Current':
@@ -84,7 +89,19 @@ def _read_ticket(selection, target, selected, digest, path, *, close_epic=False)
             pending.extend(children.get(child['id'], ()))
         companion = path.with_suffix('')
         if companion.exists() or companion.is_symlink():
-            raise InputError('target', 'Direct updates of container Atoms are unsupported.')
+            if not close_epic or companion.is_symlink() or not companion.is_dir():
+                raise InputError('target', 'Direct updates of container Atoms are unsupported.')
+            for child in capture.atoms:
+                child_path = selection.root / child['source_path']
+                if child['id'] in visited - {selected['id']} and not child_path.is_relative_to(companion):
+                    raise InputError('target', 'Epic descendants disagree with the companion directory.')
+                if child_path.is_relative_to(companion):
+                    owner = native_header_view(child['header_json']).get('context', {}).get('container', {}).get('atom')
+                    if owner not in visited:
+                        raise InputError('target', 'Epic companion contains an unrelated Atom.')
+                    _branch(selection, child_path, child['status'], child, capture.atoms, allow_flat=False)
+            if _read_tree(selection.root, companion) != tree:
+                raise SourceChanged('Epic companion changed during validation.')
         reader = ReadContext(roots=[str(selection.control_root)], limits=dict(CEILINGS))
         raw = reader.read(path)
         bounds = frontmatter_bounds(raw)
@@ -99,7 +116,7 @@ def _read_ticket(selection, target, selected, digest, path, *, close_epic=False)
         raise
     except (OSError, RuntimeError, TypeError, ValueError) as error:
         raise SourceChanged('Native source is unavailable or changed.') from error
-    return raw, bounds
+    return raw, bounds, tree
 
 
 def direct_update(selection, params, *, current_rows):
@@ -116,7 +133,7 @@ def direct_update(selection, params, *, current_rows):
     if branch != 'ASSETS' and not linked_asset:
         raise InputError('target', 'Direct body updates are limited to Ticket Assets.')
     with _project_write_lock(selection.root):
-        raw, bounds = _read_ticket(selection, target, selected, digest, path)
+        raw, bounds, _ = _read_ticket(selection, target, selected, digest, path)
         old_body = raw[bounds[2]:].decode('utf-8')
         old_summary = atom_summary(re.sub(r'(?m)^#(?= Summary[ \t]*\r?$)', '##', old_body)).group(1)
         new_summary = atom_summary(re.sub(r'(?m)^#(?= Summary[ \t]*\r?$)', '##', changes['body'])).group(1)
@@ -155,21 +172,50 @@ def _status_bytes(raw, bounds, path, status):
         raise InputError('target', 'Ticket needs scalar state status and updated_at fields.') from error
 
 
-def _branch(selection, path, status):
+def _branch(selection, path, status, selected, rows, *, allow_flat=True, seen=None):
     root = selection.control_root / '__TKT'
     parts = path.relative_to(root).parts
-    old_folder = () if status == 'active' else (status,)
-    if (len(parts) != 2 + len(old_folder) or parts[0] not in {'TASKS', 'ISSUES', 'ASSETS'}
-            or parts[1:-1] != old_folder):
+    folder = {'draft': '000_draft', 'archived': '099_archived'}.get(status, status)
+    old_folder = () if status == 'active' else (folder,)
+    if parts[0] not in {'TASKS', 'ISSUES', 'ASSETS'}:
         raise InputError('target', 'Ticket path disagrees with its Current Status placement.')
-    return root / parts[0]
+    flat = root / parts[0]
+    if allow_flat and path.parent == flat.joinpath(*old_folder):
+        return flat
+    context = native_header_view(selected['header_json']).get('context', {})
+    owner_id = context.get('container', {}).get('atom')
+    seen = set() if seen is None else seen
+    if not owner_id or owner_id in seen:
+        raise InputError('target', 'Ticket path disagrees with its Current Status placement.')
+    seen.add(owner_id)
+    owners = [row for row in rows if row.get('id') == owner_id and row.get('status_group') == 'Current']
+    if len(owners) != 1:
+        raise SourceChanged('Containing Ticket is missing or ambiguous.')
+    owner = owners[0]
+    owner_path = selection.root / owner['source_path']
+    if not owner_path.is_relative_to(root) or '..' in owner_path.parts:
+        raise SourceChanged('Containing Ticket path is invalid.')
+    owner_template = native_header_view(owner['header_json']).get('context', {}).get('template')
+    template = context.get('template')
+    if owner_template not in {'task', 'epic'} or (owner_template == 'epic' and template not in {'task', 'epic', 'work_report'}):
+        raise InputError('target', 'Ticket container is invalid.')
+    _branch(selection, owner_path, owner['status'], owner, rows, seen=seen)
+    branch = owner_path.with_suffix('')
+    if owner_template == 'epic' and template == 'work_report':
+        branch /= 'ASSETS'
+    if path.parent != branch.joinpath(*old_folder):
+        raise InputError('target', 'Ticket path disagrees with its Current Status placement.')
+    return branch
 
 
 def _move_ticket(selection, target, selected, digest, path, destination, status, check_definition, *, close_epic=False):
     with _project_write_lock(selection.root):
-        if destination.exists() or destination.is_symlink():
+        companion = path.with_suffix('')
+        target_companion = destination.with_suffix('')
+        if (destination.exists() or destination.is_symlink() or
+                (close_epic and (target_companion.exists() or target_companion.is_symlink()))):
             return result(errors=[{'code': 'destination_exists', 'message': 'Ticket destination already exists.'}])
-        raw, bounds = _read_ticket(selection, target, selected, digest, path, close_epic=close_epic)
+        raw, bounds, tree = _read_ticket(selection, target, selected, digest, path, close_epic=close_epic, placement=True)
         candidate = _status_bytes(raw, bounds, path, status)
         recorded, recorded_errors = [], []
 
@@ -215,12 +261,44 @@ def _move_ticket(selection, target, selected, digest, path, destination, status,
             if not check():
                 rollback()
                 return result(effects=recorded, errors=recorded_errors)
+            if tree is not None:
+                try:
+                    if _read_tree(selection.root, companion) != tree:
+                        raise ValueError('Epic companion changed before publication.')
+                except (OSError, RuntimeError, ValueError):
+                    rollback()
+                    return result(effects=recorded, errors=[{'code': 'source_changed', 'message': 'Epic companion changed before publication.'}])
+                moved = move_directory(selection.root, companion, target_companion)
+                recorded.extend(moved.effects)
+                recorded_errors.extend(moved.errors)
+                if moved.errors:
+                    if not moved.effects and not any(error.get('code') == 'effect_uncertain' for error in moved.errors):
+                        try:
+                            if _read_tree(selection.root, companion) == tree:
+                                rollback()
+                        except (OSError, RuntimeError, ValueError):
+                            pass
+                    return result(effects=recorded, errors=recorded_errors)
+                if not check():
+                    restored = move_directory(selection.root, target_companion, companion)
+                    recorded.extend(restored.effects)
+                    recorded_errors.extend(restored.errors)
+                    if not restored.errors:
+                        rollback()
+                    return result(effects=recorded, errors=recorded_errors)
             removed = effects.remove(selection.root, path, digest)
             recorded.extend(removed.effects)
             recorded_errors.extend(removed.errors)
             if (removed.errors and not removed.effects
                     and not any(error.get('code') == 'effect_uncertain' for error in removed.errors)):
-                rollback()
+                if tree is not None and source_intact():
+                    restored = move_directory(selection.root, target_companion, companion)
+                    recorded.extend(restored.effects)
+                    recorded_errors.extend(restored.errors)
+                    if not restored.errors:
+                        rollback()
+                else:
+                    rollback()
         ref = f"{selected['id']}@{target['version']}" if status == 'archived' else selected['id']
         data = {} if recorded_errors else {'artifact': saved(selection, destination, selected['id'], ref,
                                                                target['version'], status)}
@@ -236,12 +314,12 @@ def change_ticket_status(selection, params, *, current_rows, check_definition):
     status = status.casefold()
     target = params['target']
     selected, digest, path = _select_ticket(selection, target, current_rows)
-    branch = _branch(selection, path, selected['status'])
+    branch = _branch(selection, path, selected['status'], selected, current_rows)
     destination = branch / ('' if status == 'active' else status) / path.name
     close_epic = status == 'done' and native_header_view(selected['header_json']).get('context', {}).get('template') == 'epic'
     if destination == path:
         with _project_write_lock(selection.root):
-            _read_ticket(selection, target, selected, digest, path, close_epic=close_epic)
+            _read_ticket(selection, target, selected, digest, path, close_epic=close_epic, placement=True)
         return result(artifact=saved(selection, path, selected['id'], selected['id'],
                                      target['version'], selected['status']))
     return _move_ticket(selection, target, selected, digest, path, destination, status, check_definition,
@@ -253,7 +331,7 @@ def archive_ticket(selection, params, *, current_rows):
         raise InputError('target', 'Supply one Current Ticket target.')
     target = params['target']
     selected, digest, path = _select_ticket(selection, target, current_rows)
-    branch = _branch(selection, path, selected['status'])
+    branch = _branch(selection, path, selected['status'], selected, current_rows)
     name = f"{selected['id']}@{target['version']}" + path.name[len(selected['id']):]
     return _move_ticket(selection, target, selected, digest, path, branch / '099_archived' / name,
                         'archived', lambda: None)

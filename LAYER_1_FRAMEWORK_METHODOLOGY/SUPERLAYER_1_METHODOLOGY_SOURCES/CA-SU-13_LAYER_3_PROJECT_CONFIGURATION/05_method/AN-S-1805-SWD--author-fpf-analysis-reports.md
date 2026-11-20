@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-1805
-context:
+atom_family: SPEC
+atom_id: AN-S-1805
+structure:
   container:
     component: C9
   tier: 3
+context:
   lens: SWD
 state:
   status: active

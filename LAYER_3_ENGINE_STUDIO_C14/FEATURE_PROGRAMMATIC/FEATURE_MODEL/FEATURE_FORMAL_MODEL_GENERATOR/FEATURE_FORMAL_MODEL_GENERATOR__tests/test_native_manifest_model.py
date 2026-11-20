@@ -29,6 +29,19 @@ class NativeManifestModelTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Project C00"):
             self.model.validate_manifest(fields, "C01")
 
+    def test_release_workflow_setting_is_an_optional_exact_boolean(self):
+        self.model.validate_manifest(self.fields | {"parameters": {"project_mcp": {}}}, "C00")
+        for enabled in (True, False):
+            with self.subTest(enabled=enabled):
+                parameters = {"project_mcp": {"release_workflows_enabled": enabled}}
+                manifest = self.model.validate_manifest(self.fields | {"parameters": parameters}, "C00")
+                self.assertIs(manifest.parameters["project_mcp"]["release_workflows_enabled"], enabled)
+        for invalid in (1, "true", None):
+            with self.subTest(invalid=invalid):
+                parameters = {"project_mcp": {"release_workflows_enabled": invalid}}
+                with self.assertRaisesRegex(ValueError, "check_project_manifest"):
+                    self.model.validate_manifest(self.fields | {"parameters": parameters}, "C00")
+
     def test_derived_ref_id_input_is_checked_and_not_passed_to_constructor(self):
         @dataclass
         class StrictAtom:

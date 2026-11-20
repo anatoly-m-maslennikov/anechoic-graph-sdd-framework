@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2976
-context:
+atom_family: SPEC
+atom_id: AN-S-2976
+structure:
   container:
     component: C45
   tier: 6
+context:
   lens: QA
 state:
   status: draft

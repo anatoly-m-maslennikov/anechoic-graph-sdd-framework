@@ -1,12 +1,13 @@
 ---
-identity:
-  atom_id: AN-S-1838
-context:
+atom_family: SPEC
+atom_id: AN-S-1838
+structure:
   container:
     component: C9
   tier: 3
-  lens: DES/DOM
+context:
   template: workflow
+  lens: DES/DOM
 state:
   status: active
   version: 2

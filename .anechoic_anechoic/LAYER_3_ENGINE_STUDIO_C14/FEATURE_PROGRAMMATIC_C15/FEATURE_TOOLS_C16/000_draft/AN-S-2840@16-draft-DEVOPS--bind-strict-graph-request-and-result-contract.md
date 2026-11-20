@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2840
-context:
+atom_family: SPEC
+atom_id: AN-S-2840
+structure:
   container:
     component: C16
   tier: 4
+context:
   lens: DevOps
 state:
   status: draft

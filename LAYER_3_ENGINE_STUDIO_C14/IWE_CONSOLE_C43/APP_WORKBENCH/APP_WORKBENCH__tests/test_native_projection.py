@@ -103,7 +103,7 @@ class NativeProjectionTests(NativeCaptureTests):
         source = self.control / "task.md"
         header = {"atom_family": "TKT", "atom_id": "AN-T-09",
                   "structure": {"container": {"component": "C0"}, "priority": 2},
-                  "context": {"template": "task"},
+                  "context": {"template": "task", "label": "Subtask"},
                   "relations": {"REFERENCES": ["AN-S-001"]},
                   "state": {"status": "active", "version": 1,
                             "updated_at": "2026-11-19T00:00:00Z"}}
@@ -118,6 +118,9 @@ class NativeProjectionTests(NativeCaptureTests):
                        inverses=bindings)
         self.assertIn(["AN-T-09", "AN-S-001", "REFERENCES", False], store.run(
             "SELECT source_ref, target_ref, relation_type, derived FROM relations")["rows"])
+        self.assertEqual([["task", "Subtask"]], store.run(
+            'SELECT "header.context.template", "header.context.label" FROM atoms WHERE reference = \'AN-T-09\''
+        )["rows"])
 
     def test_authored_cross_revision_relation_and_reprojection(self):
         source = self.write("AN-T-09--task.md", "AN-T-09", "active", 2)

@@ -1,9 +1,10 @@
 ---
-identity:
-  atom_id: AN-P-72
-context:
+atom_family: PMETA
+atom_id: AN-P-72
+structure:
   container:
     component: C9
+context: {}
 state:
   status: draft
   version: 4

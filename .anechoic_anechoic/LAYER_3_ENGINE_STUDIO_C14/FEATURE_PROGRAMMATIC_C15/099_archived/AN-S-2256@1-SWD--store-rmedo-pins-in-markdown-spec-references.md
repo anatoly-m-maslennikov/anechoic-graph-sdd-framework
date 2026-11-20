@@ -1,15 +1,16 @@
 ---
-identity:
-  atom_id: AN-S-2256
-context:
+atom_family: SPEC
+atom_id: AN-S-2256
+structure:
   container:
     component: C15
   tier: 2
+context:
   lens: SWD
 state:
-  status: "archived"
+  status: archived
   version: 1
-  updated_at: "2026-11-20T14:16:10.333895+00:00"
+  updated_at: '2026-11-20T14:16:10.333895+00:00'
 ---
 ## Summary
 

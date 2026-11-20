@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-2672
-context:
+atom_family: TKT
+atom_id: AN-T-2672
+structure:
   container:
     component: C15
-  tier: 3
+  priority: 2
+context:
   template: Spec Proposal
 state:
   status: done

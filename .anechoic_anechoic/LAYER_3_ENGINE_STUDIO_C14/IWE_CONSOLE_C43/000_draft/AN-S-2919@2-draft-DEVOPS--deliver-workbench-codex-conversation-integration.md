@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2919
-context:
+atom_family: SPEC
+atom_id: AN-S-2919
+structure:
   container:
     component: C43
   tier: 4
+context:
   lens: DevOps
 state:
   status: draft

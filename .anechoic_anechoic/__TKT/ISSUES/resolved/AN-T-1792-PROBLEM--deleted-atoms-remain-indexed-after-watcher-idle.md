@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-1792
-context:
+atom_family: TKT
+atom_id: AN-T-1792
+structure:
   container:
     component: C14
-  tier: 3
+  priority: 2
+context:
   template: problem
 state:
   status: resolved

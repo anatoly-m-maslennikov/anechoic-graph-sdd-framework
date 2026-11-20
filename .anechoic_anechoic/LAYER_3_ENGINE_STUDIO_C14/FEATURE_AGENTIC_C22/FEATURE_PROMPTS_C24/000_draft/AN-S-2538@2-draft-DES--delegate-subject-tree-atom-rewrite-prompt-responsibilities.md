@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2538
-context:
+atom_family: SPEC
+atom_id: AN-S-2538
+structure:
   container:
     component: C24
   tier: 3
+context:
   lens: DES
 state:
   status: draft

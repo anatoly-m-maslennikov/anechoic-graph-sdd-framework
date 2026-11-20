@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2637
-context:
+atom_family: SPEC
+atom_id: AN-S-2637
+structure:
   container:
     component: C9
   tier: 1
+context:
   lens: DES
 state:
   status: active

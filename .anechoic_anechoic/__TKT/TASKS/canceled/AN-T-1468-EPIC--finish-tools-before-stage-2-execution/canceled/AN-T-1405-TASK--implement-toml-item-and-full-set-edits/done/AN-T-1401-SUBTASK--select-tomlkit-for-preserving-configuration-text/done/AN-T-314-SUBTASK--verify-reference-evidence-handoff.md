@@ -1,0 +1,34 @@
+---
+atom_family: TKT
+atom_id: AN-T-314
+structure:
+  container:
+    atom: AN-T-1401
+  priority: 2
+context:
+  template: task
+  label: Subtask
+state:
+  status: done
+  version: 6
+  updated_at: 2026-10-25 17:32:27 +0400
+---
+# Summary
+
+Verify reference evidence handoff
+
+## Objective
+
+Independently reproduce and verify the post-inventory stale-reference defect through the real complete-carrier validator, plus added ambiguous frontier, unchanged success and retained source bounds. Assert refusal after a real mutation, without replacing inventory or graph checks with artificial verdicts. Also independently recheck current parent Plan admission at final pins.
+
+## Details
+
+Follow-up to independent connected review of P2346. Estimated own work: up to 15 minutes; split before exceeding it. Root owns Plans and Git. Coordinate the shared proposed_carrier module with nested placement work. Fix the shared evidence boundary rather than special-casing a test.
+
+### Definition of Done
+
+Exact final code/source/test evidence and independent verification establish this finite admission guarantee. Earlier fixture passes and real-Plan successes do not prove protection from later source changes. Runtime publication and whole-Project admission remain separate.
+
+### Accepted outcome — 2026-10-13
+
+The final connected implementation is independently accepted in contained-status-and-plan-admission-acceptance.md under the Stage-2 Tools-first derived receipts. Full validator: 433/433. Independent real publication/placement: 33/33. Reference lifetime/closure: 28/28, including actual post-lookup mutation and namespace refusals. Real P2264 v6, P2256 v6 and P2272 v7 passed finite PRMEDO admission with exact bytes unchanged. This Task's bounded implementation/check scope is complete; selected lifecycle rebinding, cascade execution, Draft identity, runtime activation and live migration remain separate.

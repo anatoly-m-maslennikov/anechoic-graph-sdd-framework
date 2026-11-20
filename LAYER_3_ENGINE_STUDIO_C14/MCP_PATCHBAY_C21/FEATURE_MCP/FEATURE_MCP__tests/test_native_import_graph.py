@@ -1,4 +1,4 @@
-"""Exercise the opted-in Import Graph through the native Workbench routes."""
+"""Exercise the Import Graph through the native Workbench routes."""
 
 import asyncio
 from contextlib import redirect_stderr
@@ -43,7 +43,7 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
 
         def validate(fields, component):
             manifest = inputs.validate_manifest(fields, component)
-            workbench = {"import_graph": {"python_roots": ["src"]}} if enabled else {}
+            workbench = {"import_graph": {"python_roots": ["src"]} if enabled else False}
             return SimpleNamespace(name=manifest.name, prefix=manifest.prefix,
                                    parameters={"runtime": {"workbench": workbench}})
 
@@ -147,6 +147,12 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
                 while not await rows("SELECT 1 FROM import_nodes WHERE relative_path = 'new_root/added.py'"):
                     await asyncio.sleep(.03)
 
+            self._write("__TKT/TASKS/AN-T-010-TASK--external.md", "AN-T-010", "active", 1)
+            async with asyncio.timeout(6):
+                while not await rows("SELECT 1 FROM atoms WHERE reference = 'AN-T-010'"):
+                    await asyncio.sleep(.03)
+            self.assertGreater((await rows(graph))[0][0], 0)
+
             owner._inputs = replace(owner._inputs, relation_types=owner._inputs.relation_types | {"TEST_LINK"})
             owner._refresh_after_write(owner._owner())
             self.assertGreater((await rows(graph))[0][0], 0)
@@ -219,6 +225,86 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
         async with asyncio.timeout(6):
             while (await ratios())[2] != ["test_assets", 0.0, 0, None, None, None]:
                 await asyncio.sleep(.03)
+
+    async def test_package_audit_tracks_exact_pins_and_contracts(self):
+        package = "src/UNIT_C1/service_pkg1"
+        self._source("src/UNIT_C1/__init__.py", "")
+        marker = self._source(f"{package}/main__public.py", "pass\n")
+        self._source(f"{package}/child/main__internal.py", "pass\n")
+        self._source(f"{package}/service_pkg1__tests/test_main.py", "pass\n")
+        control = f"{fixture.CONTROL}/UNIT_C1"
+        spec_source = (
+            "---\nidentity: {atom_id: AN-S-007}\n"
+            "context: {container: {component: C1}, lens: SPEC, template: PKG, package_id: pkg1}\n"
+            "state: {status: active, version: 2}\n---\n"
+            "## Summary\n\nDescribe the service.\n\n## Purpose\n\nProvide a service.\n\n"
+            "## Contract\n\nAccept a request.\n"
+        )
+        spec = self._source(f"{control}/AN-S-007-SPEC-PKG--service.md", spec_source)
+        self._source(f"{control}/099_archived/AN-S-007@1-SPEC-PKG--service.md",
+                     spec_source.replace("active, version: 2", "archived, version: 1"))
+        sidecar = self._source(
+            f"{package}/service_pkg1__spec_bind.yaml",
+            "implements: [AN-S-007@1, AN-S-999@1]\napplies: [AN-S-007@2]\n",
+        )
+        structure = self._source(".anechoic_tmp/structure.json", json.dumps({
+            "model_sha256": "fixture", "project": {"ref": "AN-S-001@1", "sha256": "fixture"},
+            "components": {"C1": {"parent": "C00", "ref": "AN-S-006@1", "sha256": "fixture",
+                                  "source_path": "AN-S-006-SPEC-COMPONENT_MANIFEST--unit.md",
+                                  "fields": {"name": "Unit"}}},
+        }))
+        gateway = await self._gateway(structure_snapshot=structure)
+
+        async def audit(owner=gateway, path=package):
+            response = await owner.call(None, types.CallToolRequestParams(name="query_run", arguments={
+                "sql": "SELECT has_internal, has_public, has_spec_bind, binding_status, "
+                       "all_pins_active, list_sort(json_extract_string(pin_issues, '$[*].reason')), "
+                       "contract_ref, contract_covered FROM package_audit "
+                       f"WHERE relative_path = '{path}'",
+                "result_delivery": "inline",
+            }))
+            self.assertFalse(response.is_error, response.structured_content)
+            return response.structured_content["rows"][0]
+
+        async def expect_audit(expected):
+            async with asyncio.timeout(6):
+                while await audit() != expected:
+                    await asyncio.sleep(.03)
+
+        schema = await gateway.call(None, types.CallToolRequestParams(name="query_schema", arguments={}))
+        self.assertIn("package_audit", schema.structured_content["tables"])
+        self.assertEqual([False, True, True, "valid", False, ["archived", "missing"], "AN-S-007@2", False],
+                         await audit())
+        self.assertEqual([False, False, False, "missing", None, [], None, None],
+                         await audit(path=f"{package}/service_pkg1__tests"))
+        sidecar.write_text("{}\n", encoding="utf-8")
+        await expect_audit([False, True, True, "empty", None, [], "AN-S-007@2", False])
+        sidecar.write_text("implements: not-a-list\n", encoding="utf-8")
+        await expect_audit([False, True, True, "invalid", None, [], "AN-S-007@2", False])
+        self._source(f"{package}/service_pkg1.p.spec_trace.md", "## Implements\n- AN-S-007@2\n")
+        sidecar.unlink()
+        await expect_audit([False, True, False, "missing", None, [], "AN-S-007@2", False])
+        sidecar.write_text("implements: [AN-S-007@2]\n", encoding="utf-8")
+        marker.rename(marker.with_name("main__internal.py"))
+        await expect_audit([True, False, True, "valid", True, [], "AN-S-007@2", True])
+        updated_spec = spec_source.replace("version: 2", "version: 3")
+        spec.write_text(updated_spec, encoding="utf-8")
+        expected = [True, False, True, "valid", False, ["missing"], "AN-S-007@3", False]
+        await expect_audit(expected)
+        stderr = StringIO()
+        with redirect_stderr(stderr):
+            spec.write_text(updated_spec.replace("Accept a request.", ""), encoding="utf-8")
+            await expect_audit(expected[:-2] + [None, None])
+        self.assertIn("Invalid Package Spec", stderr.getvalue())
+        spec.write_text(updated_spec, encoding="utf-8")
+        await expect_audit(expected)
+        rebuild = await gateway.call(None, types.CallToolRequestParams(
+            name="query_rebuild", arguments={"target": "package_audit"}))
+        self.assertFalse(rebuild.is_error, rebuild.structured_content)
+        self.assertEqual(expected, await audit())
+        await gateway.close()
+        reopened = await self._gateway(structure_snapshot=structure)
+        self.assertEqual(expected, await audit(owner=reopened))
 
     async def test_import_publication_failure_reports_stderr_once(self):
         self._source("src/from_source.py", "import to_source\n")

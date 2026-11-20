@@ -1,12 +1,13 @@
 ---
-identity:
-  atom_id: AN-S-3088
-context:
+atom_family: SPEC
+atom_id: AN-S-3088
+structure:
   container:
     component: C59
-  lens: SPEC
-  template: component_manifest
   tier: 0
+context:
+  template: component_manifest
+  lens: SPEC
 state:
   status: active
   version: 1

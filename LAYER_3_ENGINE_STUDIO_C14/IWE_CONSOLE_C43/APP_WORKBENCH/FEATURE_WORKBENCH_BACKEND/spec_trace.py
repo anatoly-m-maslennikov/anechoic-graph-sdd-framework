@@ -71,15 +71,15 @@ def _read_pins(root, path, sidecar, kind):
     except (OSError, UnicodeError, yaml.YAMLError, ValueError) as exc:
         print(f'Invalid spec trace {sidecar}{exc}' if str(exc).startswith(':')
               else f'Invalid spec trace {sidecar}: {exc}', file=sys.stderr)
-        return []
+        return None
 
 
 def is_trace_path(relative):
     return isinstance(relative, str) and (relative.endswith(PACKAGE_SUFFIX) or relative.endswith(SUFFIX))
 
 
-def native_trace_rows(root, nodes):
-    """Read bindings for the local owners already inventoried by the Realization Graph."""
+def native_trace_snapshot(root, nodes):
+    """Read trace rows and canonical Package binding states from one snapshot."""
     if __package__.startswith('APP_WORKBENCH.'):
         from ..FEATURE_IMPORT_GRAPH_C61.source import _event_path, _git_ignored, _relative, excluded_source_path
     else:
@@ -88,10 +88,11 @@ def native_trace_rows(root, nodes):
     root = Path(root).resolve()
     candidates = []
     for _, kind, _, relative, _, _ in nodes:
-        if (kind not in ('package', 'module') or not relative or _relative(relative) != relative
+        root_package = kind == 'package' and relative == '.'
+        if (kind not in ('package', 'module') or not relative or (not root_package and _relative(relative) != relative)
                 or excluded_source_path(relative)):
             continue
-        owner = _event_path(root, relative)
+        owner = root if root_package else _event_path(root, relative)
         if owner is None or (not owner.is_dir() if kind == 'package' else not owner.is_file()):
             continue
         canonical = owner / (owner.name + PACKAGE_SUFFIX) if kind == 'package' else owner.with_name(owner.name + SUFFIX)
@@ -100,8 +101,11 @@ def native_trace_rows(root, nodes):
     paths = {path.relative_to(root).as_posix() for _, _, canonical, fallback in candidates
              for path in (canonical, fallback) if path is not None}
     ignored = _git_ignored(root, paths)
-    rows = []
+    rows, states = [], {}
     for owner, kind, canonical, fallback in candidates:
+        owner_relative = owner.relative_to(root).as_posix()
+        if kind == 'package':
+            states[owner_relative] = 'missing'
         for sidecar in (canonical, fallback):
             if sidecar is None:
                 continue
@@ -109,10 +113,19 @@ def native_trace_rows(root, nodes):
             if relative in ignored:
                 continue
             if os.path.lexists(sidecar):
+                pins = None
                 if _event_path(root, relative) is not None and sidecar.is_file():
-                    rows.extend(_read_pins(root, owner, sidecar, kind))
+                    pins = _read_pins(root, owner, sidecar, kind)
+                    rows.extend(pins or [])
+                if kind == 'package' and sidecar == canonical:
+                    states[owner_relative] = 'invalid' if pins is None else ('valid' if pins else 'empty')
                 break
-    return rows
+    return rows, states
+
+
+def native_trace_rows(root, nodes):
+    """Read bindings for the local owners already inventoried by the Realization Graph."""
+    return native_trace_snapshot(root, nodes)[0]
 
 
 def replace_native_traces(connection, rows):
@@ -170,7 +183,7 @@ class SpecTraceStore:
             if os.path.lexists(sidecar):
                 print(f'Invalid spec trace {sidecar}: not an allowed regular file', file=sys.stderr)
             return []
-        return _read_pins(self.root, path, sidecar, kind)
+        return _read_pins(self.root, path, sidecar, kind) or []
 
     def _insert(self, path, kind):
         rel = self._rel(path)

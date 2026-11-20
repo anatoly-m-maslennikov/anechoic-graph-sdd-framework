@@ -422,10 +422,17 @@ def tool_descriptors():
                 'required': list(item_properties), 'additionalProperties': False}}
         return result
 
+    def description(name, fields):
+        if name == 'atom_lifecycle_create_draft':
+            return ("Create a Draft Atom. To create a new native Task, use newAtom.\n"
+                    "Supply the Task template, container, and Markdown body.\n"
+                    "Use returned field errors to correct the input.")
+        if 'targets' in fields:
+            return 'Execute a Project Atom Lifecycle operation. Single inputs can be corrected; batches stop on failure.'
+        return 'Execute a Project Atom Lifecycle operation. Missing or invalid fields are returned for correction.'
+
     return tuple(types.Tool(
-        name=name, description=('Execute a Project Atom Lifecycle operation. Single inputs can be corrected; batches stop on failure.'
-                                if 'targets' in fields else
-                                'Execute a Project Atom Lifecycle operation. Missing or invalid fields are returned for correction.'),
+        name=name, description=description(name, fields),
         input_schema={'type': 'object', 'properties': properties(name, fields),
                       'additionalProperties': True},
     ) for name, fields in _INPUTS.items()) + (

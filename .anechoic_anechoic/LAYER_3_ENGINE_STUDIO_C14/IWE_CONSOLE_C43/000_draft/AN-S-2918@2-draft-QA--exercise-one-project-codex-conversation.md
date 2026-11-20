@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2918
-context:
+atom_family: SPEC
+atom_id: AN-S-2918
+structure:
   container:
     component: C43
   tier: 5
+context:
   lens: QA
 state:
   status: draft

@@ -19,7 +19,7 @@ from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
 
 from .package_spec_sources import read_package_spec
 
-_COMPONENT_DIR = re.compile(r'.+_(C[0-9]+)$')
+_COMPONENT_DIR = re.compile(r'(?!__).+_(C[0-9]+)$')
 _MANIFEST_FILE = re.compile(r'[A-Z]+-S-[0-9]+-SPEC-COMPONENT_MANIFEST--.+\.md$')
 _PACKAGE_SPEC_FILE = re.compile(r'[A-Z]+-S-[0-9]+-SPEC-PKG--.+\.md$')
 

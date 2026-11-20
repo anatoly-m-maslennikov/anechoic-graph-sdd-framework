@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-1327
-context:
+atom_family: SPEC
+atom_id: AN-S-1327
+structure:
   container:
     component: C15
   tier: 4
+context:
   lens: QA
 state:
   status: draft

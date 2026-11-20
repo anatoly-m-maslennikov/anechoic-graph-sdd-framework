@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2733
-context:
+atom_family: SPEC
+atom_id: AN-S-2733
+structure:
   container:
     component: C9
   tier: 4
+context:
   lens: DES
 state:
   status: active

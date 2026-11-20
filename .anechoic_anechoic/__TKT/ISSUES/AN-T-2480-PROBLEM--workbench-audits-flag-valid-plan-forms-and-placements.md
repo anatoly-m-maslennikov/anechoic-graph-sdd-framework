@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-2480
-context:
+atom_family: TKT
+atom_id: AN-T-2480
+structure:
   container:
     component: C45
-  tier: 3
+  priority: 2
+context:
   template: problem
 state:
   status: active

@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2512
-context:
+atom_family: SPEC
+atom_id: AN-S-2512
+structure:
   container:
     component: C00
   tier: 5
+context:
   lens: QA
 state:
   status: draft

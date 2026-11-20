@@ -97,4 +97,4 @@ export type QueryLogItem = {
 };
 
 export type ArchiveScope = { scope_unit: string; role: string };
-export type SourceSyncStatus = { mode?: 'startup_snapshot' | 'unavailable'; syncing?: boolean; last_synced_at?: string | null; loaded_archive_scopes?: ArchiveScope[] };
+export type SourceSyncStatus = { mode?: 'startup_snapshot' | 'live_index' | 'unavailable'; syncing?: boolean; last_synced_at?: string | null; loaded_archive_scopes?: ArchiveScope[] };

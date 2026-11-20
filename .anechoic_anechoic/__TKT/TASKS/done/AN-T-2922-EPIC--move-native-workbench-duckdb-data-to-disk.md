@@ -1,15 +1,12 @@
 ---
-identity:
-  atom_id: AN-T-2922
-context:
+atom_family: TKT
+atom_id: AN-T-2922
+structure:
   container:
     component: C43
-  tier: 3
+  priority: 2
+context:
   template: epic
-state:
-  status: done
-  version: 1
-  updated_at: '2026-11-20T16:34:57.901983+00:00'
 relations:
   REFERENCES:
   - AN-T-2915
@@ -28,6 +25,10 @@ relations:
   - AN-S-3159@1
   - AN-S-3014@2
   - AN-T-2928@1-draft
+state:
+  status: done
+  version: 1
+  updated_at: '2026-11-20T16:34:57.901983+00:00'
 ---
 
 ## Summary

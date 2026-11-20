@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2335
-context:
+atom_family: SPEC
+atom_id: AN-S-2335
+structure:
   container:
     component: C9
   tier: 6
+context:
   lens: SWD
 state:
   status: active

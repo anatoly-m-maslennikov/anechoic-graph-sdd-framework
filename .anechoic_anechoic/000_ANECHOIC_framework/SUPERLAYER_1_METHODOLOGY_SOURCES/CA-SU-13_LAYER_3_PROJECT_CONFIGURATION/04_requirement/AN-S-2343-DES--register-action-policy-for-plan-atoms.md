@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2343
-context:
+atom_family: SPEC
+atom_id: AN-S-2343
+structure:
   container:
     component: C9
   tier: 2
+context:
   lens: DES
 state:
   status: active

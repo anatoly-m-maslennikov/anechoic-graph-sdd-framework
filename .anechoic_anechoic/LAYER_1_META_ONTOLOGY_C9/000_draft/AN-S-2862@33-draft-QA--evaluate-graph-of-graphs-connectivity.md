@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2862
-context:
+atom_family: SPEC
+atom_id: AN-S-2862
+structure:
   container:
     component: C9
   tier: 3
+context:
   lens: QA
 state:
   status: draft

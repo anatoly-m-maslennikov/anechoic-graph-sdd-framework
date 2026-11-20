@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-2829
-context:
+atom_family: TKT
+atom_id: AN-T-2829
+structure:
   container:
     component: C00
-  tier: 3
+  priority: 2
+context:
   template: Analysis Report
 state:
   status: draft

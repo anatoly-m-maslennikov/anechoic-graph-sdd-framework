@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-484
-context:
+atom_family: SPEC
+atom_id: AN-S-484
+structure:
   container:
     component: C9
   tier: 7
+context:
   lens: DevOps
 state:
   status: archived

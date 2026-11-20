@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-1508
-context:
+atom_family: SPEC
+atom_id: AN-S-1508
+structure:
   container:
     component: C14
   tier: 3
+context:
   lens: SWD
 state:
   status: draft

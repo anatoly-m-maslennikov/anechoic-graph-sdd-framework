@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2821
-context:
+atom_family: SPEC
+atom_id: AN-S-2821
+structure:
   container:
     component: C00
   tier: 0
+context:
   lens: DES
 state:
   status: draft

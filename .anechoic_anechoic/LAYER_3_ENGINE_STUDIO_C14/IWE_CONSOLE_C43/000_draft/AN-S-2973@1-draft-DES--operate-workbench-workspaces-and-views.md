@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2973
-context:
+atom_family: SPEC
+atom_id: AN-S-2973
+structure:
   container:
     component: C43
   tier: 3
+context:
   lens: DES
 state:
   status: draft

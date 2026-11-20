@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-1941
-context:
+atom_family: SPEC
+atom_id: AN-S-1941
+structure:
   container:
     component: C43
   tier: 5
+context:
   lens: QA
 state:
   status: draft

@@ -1,9 +1,10 @@
 ---
-identity:
-  atom_id: AN-S-2910
-context:
+atom_family: SPEC
+atom_id: AN-S-2910
+structure:
   container:
     component: C15
+context:
   lens: DES
 state:
   status: draft

@@ -59,6 +59,7 @@ class LocalReleaseCleanupTests(unittest.TestCase):
         fixture, docker = self.fixture()
         _, first_image = docker.add("1")
         _, second_image = docker.add("2")
+        _, third_image = docker.add("3")
         order: list[str] = []
 
         def runner(argv: tuple[str, ...], root: Path) -> subprocess.CompletedProcess[str]:
@@ -76,10 +77,10 @@ class LocalReleaseCleanupTests(unittest.TestCase):
         ):
             result = run_local_release(fixture.root, run_id="cleanup", runner=runner)
         self.assertEqual(result["outcome"], "completed", result)
-        self.assertEqual(order.count("container rm"), 2)
-        self.assertEqual(order.count("image rm"), 2)
+        self.assertEqual(order.count("container rm"), 3)
+        self.assertEqual(order.count("image rm"), 1)
         self.assertEqual(
-            {first_image, second_image},
+            {third_image},
             {argv[-1] for argv in docker.calls if argv[1:3] == ("image", "rm")},
         )
         self.assertFalse(

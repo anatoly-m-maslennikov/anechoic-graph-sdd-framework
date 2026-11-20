@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-1134
-context:
+atom_family: TKT
+atom_id: AN-T-1134
+structure:
   container:
     component: C00
-  tier: 3
+  priority: 2
+context:
   template: Spec Proposal
 state:
   status: active

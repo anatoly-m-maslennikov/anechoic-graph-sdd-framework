@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-275
-context:
+atom_family: TKT
+atom_id: AN-T-275
+structure:
   container:
     component: C00
-  tier: 3
+  priority: 2
+context:
   template: task
 state:
   status: done

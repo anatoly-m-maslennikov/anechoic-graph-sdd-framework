@@ -1,10 +1,10 @@
 ---
-identity:
-  atom_id: AN-P-48
-context:
+atom_family: PMETA
+atom_id: AN-P-48
+structure:
   container:
     component: C27
-  tier: 3
+context:
   template: action
 state:
   status: active

@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2915
-context:
+atom_family: SPEC
+atom_id: AN-S-2915
+structure:
   container:
     component: C45
   tier: 5
+context:
   lens: QA
 state:
   status: draft

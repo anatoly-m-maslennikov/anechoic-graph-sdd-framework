@@ -1,15 +1,16 @@
 ---
-identity:
-  atom_id: AN-T-2791
-context:
+atom_family: TKT
+atom_id: AN-T-2791
+structure:
   container:
     component: C00
-  tier: 3
+  priority: 2
+context:
   template: epic
 state:
-  status: "archived"
+  status: archived
   version: 5
-  updated_at: "2026-11-20T10:26:57.128307+00:00"
+  updated_at: '2026-11-20T10:26:57.128307+00:00'
 ---
 ## Summary
 

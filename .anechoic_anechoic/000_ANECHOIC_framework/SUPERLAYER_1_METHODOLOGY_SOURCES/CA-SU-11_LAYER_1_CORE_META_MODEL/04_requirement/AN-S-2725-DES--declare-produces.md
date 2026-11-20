@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2725
-context:
+atom_family: SPEC
+atom_id: AN-S-2725
+structure:
   container:
     component: C9
   tier: 1
+context:
   lens: DES
 state:
   status: active

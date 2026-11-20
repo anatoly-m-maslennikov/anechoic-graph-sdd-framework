@@ -1,9 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-2270
-context:
+atom_family: TKT
+atom_id: AN-T-2270
+structure:
   container:
     component: C00
+  priority: 2
+context:
   template: question
 state:
   status: resolved

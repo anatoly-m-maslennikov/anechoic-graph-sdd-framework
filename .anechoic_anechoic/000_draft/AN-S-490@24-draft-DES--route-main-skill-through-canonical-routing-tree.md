@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-490
-context:
+atom_family: SPEC
+atom_id: AN-S-490
+structure:
   container:
     component: C00
   tier: 2
+context:
   lens: DES
 state:
   status: draft

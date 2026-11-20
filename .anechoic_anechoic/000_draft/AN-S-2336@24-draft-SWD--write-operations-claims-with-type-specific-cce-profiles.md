@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2336
-context:
+atom_family: SPEC
+atom_id: AN-S-2336
+structure:
   container:
     component: C00
   tier: 6
+context:
   lens: SWD
 state:
   status: draft

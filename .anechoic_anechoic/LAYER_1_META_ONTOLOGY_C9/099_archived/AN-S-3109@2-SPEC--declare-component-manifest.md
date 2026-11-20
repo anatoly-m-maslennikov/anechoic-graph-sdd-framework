@@ -1,14 +1,15 @@
 ---
-identity:
-  atom_id: AN-S-3109
-context:
+atom_family: SPEC
+atom_id: AN-S-3109
+structure:
   container:
     component: C9
+context:
   lens: SPEC
 state:
   status: archived
   version: 2
-  updated_at: "2026-11-20T11:44:25.479932+00:00"
+  updated_at: '2026-11-20T11:44:25.479932+00:00'
 ---
 
 ## Summary

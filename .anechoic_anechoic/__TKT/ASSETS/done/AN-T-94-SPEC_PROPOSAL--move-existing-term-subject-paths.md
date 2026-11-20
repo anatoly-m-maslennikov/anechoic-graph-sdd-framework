@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-94
-context:
+atom_family: TKT
+atom_id: AN-T-94
+structure:
   container:
     component: C00
-  tier: 3
+  priority: 2
+context:
   template: Spec Proposal
 state:
   status: done

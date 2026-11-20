@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-1860
-context:
+atom_family: SPEC
+atom_id: AN-S-1860
+structure:
   container:
     component: C14
   tier: 5
+context:
   lens: DES
 state:
   status: draft

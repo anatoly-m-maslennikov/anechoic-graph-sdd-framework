@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2843
-context:
+atom_family: SPEC
+atom_id: AN-S-2843
+structure:
   container:
     component: C00
   tier: 5
+context:
   lens: SWD
 state:
   status: draft

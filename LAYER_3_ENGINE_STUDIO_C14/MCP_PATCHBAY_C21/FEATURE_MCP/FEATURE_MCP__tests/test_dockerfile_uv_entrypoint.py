@@ -42,7 +42,7 @@ class DockerfileUVEntrypointTests(unittest.TestCase):
         for component in ("MCP_PATCHBAY_C21", "IWE_CONSOLE_C43"):
             path = f"LAYER_3_ENGINE_STUDIO_C14/{component}"
             self.assertIn(f"COPY {path} ./{path}", dockerfile)
-        self.assertIn("FEATURE_AGENTIC/FEATURE_SKILLS/ca", dockerfile)
+        self.assertIn("FEATURE_AGENTIC/FEATURE_SKILLS/ane", dockerfile)
         self.assertNotIn("COPY LAYER_3_ENGINE_STUDIO_C14 ./LAYER_3_ENGINE_STUDIO_C14", dockerfile)
         self.assertNotIn("FEATURE_AGENTIC/FEATURE_PROMPTS", dockerfile)
 

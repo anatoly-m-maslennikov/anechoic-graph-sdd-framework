@@ -1,15 +1,16 @@
 ---
-identity:
-  atom_id: AN-S-2582
-context:
+atom_family: SPEC
+atom_id: AN-S-2582
+structure:
   container:
     component: C9
   tier: 1
+context:
   lens: DES
 state:
-  status: "active"
+  status: active
   version: 38
-  updated_at: "2026-11-20T11:23:31.881227+00:00"
+  updated_at: '2026-11-20T11:23:31.881227+00:00'
 ---
 
 ## Summary

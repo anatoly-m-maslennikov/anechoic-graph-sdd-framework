@@ -1,12 +1,13 @@
 ---
-identity:
-  atom_id: AN-S-1832
-context:
+atom_family: SPEC
+atom_id: AN-S-1832
+structure:
   container:
     atom: AN-S-1833
   tier: 3
-  lens: DES/DOM
+context:
   template: step
+  lens: DES/DOM
 state:
   status: active
   version: 1

@@ -3,8 +3,11 @@
 The native MCP frontier contains the 28 Workbench tools for SQL queries,
 Workspaces, Views, query history, the MCP App bridge, and Workbench service
 control. Subject and Topic projection builders remain local tools; they do not
-need MCP registration. Local and Public release remain host commands documented
-in [Project release tools](../FEATURE_PROJECT_TOOLS/README.md).
+need MCP registration. Local and Public release run through `uv` on the host.
+Set `project_mcp.release_workflows_enabled` to `True` in the native Project
+Manifest to expose `local_release_command` and `public_release_command`.
+The tools return shell commands for the selected Project. `False` or omission
+blocks discovery and calls. See [Project release tools](../../FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/README.md).
 
 Legacy Artifact search, specialized RMED revision, selected Workflow execution,
 orchestration, capability discovery, Atom mutation, Revert, and graph Workflow

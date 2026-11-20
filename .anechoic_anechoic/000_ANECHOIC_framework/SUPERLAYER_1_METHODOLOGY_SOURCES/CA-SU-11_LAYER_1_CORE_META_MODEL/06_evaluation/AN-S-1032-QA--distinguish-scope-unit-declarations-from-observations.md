@@ -1,15 +1,16 @@
 ---
-identity:
-  atom_id: AN-S-1032
-context:
+atom_family: SPEC
+atom_id: AN-S-1032
+structure:
   container:
     component: C9
   tier: 6
+context:
   lens: QA
 state:
-  status: "active"
+  status: active
   version: 5
-  updated_at: "2026-11-20T11:29:16.579692+00:00"
+  updated_at: '2026-11-20T11:29:16.579692+00:00'
 ---
 
 ## Summary

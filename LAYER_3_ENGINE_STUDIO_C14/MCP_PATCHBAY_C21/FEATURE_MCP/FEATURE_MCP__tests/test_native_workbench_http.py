@@ -1,6 +1,9 @@
 """The existing Workbench HTTP contract uses the native Project store."""
 
+import asyncio
 from dataclasses import replace
+from pathlib import Path
+import shlex
 import unittest
 from unittest.mock import patch
 
@@ -37,11 +40,12 @@ class NativeWorkbenchHttpTests(unittest.IsolatedAsyncioTestCase):
         gateway = create_native_gateway(self.root, fixture.CONTROL, fixture._native_inputs())
         await gateway.initialize()
         self.addAsyncCleanup(gateway.close)
+        self.assertIn('module_imports', gateway._native_query.schema()['tables'])
         self.assertTrue({'workspace_open', 'view_run', 'view_fetch'} <= {tool.name for tool in gateway.tools})
         self.assertIn('workbench_status', {tool.name for tool in gateway.tools})
         status = await gateway.call(None, types.CallToolRequestParams(name='workbench_status', arguments={}))
         self.assertFalse(status.is_error, status.structured_content)
-        self.assertEqual({'mode': 'startup_snapshot'}, status.structured_content)
+        self.assertEqual({'mode': 'live_index'}, status.structured_content)
         mcp_open = await gateway.call(None, types.CallToolRequestParams(
             name='workspace_open', arguments={'session_id': 'mcp-session'},
         ))
@@ -56,7 +60,7 @@ class NativeWorkbenchHttpTests(unittest.IsolatedAsyncioTestCase):
             path = '/anechoic/Anechoic/api'
             status = await client.post(f'{path}/status', json={})
             self.assertEqual(200, status.status_code, status.text)
-            self.assertEqual({'mode': 'startup_snapshot'}, status.json())
+            self.assertEqual({'mode': 'live_index'}, status.json())
             wrong_status_root = await client.post(f'{path}/status', json={'project_root': '/wrong/project'})
             self.assertEqual(400, wrong_status_root.status_code)
 
@@ -104,6 +108,54 @@ class NativeWorkbenchHttpTests(unittest.IsolatedAsyncioTestCase):
             self.assertIsNone(gateway.workbench._service)
         self.assertEqual(before, {path: (source / path).read_bytes() for path in before})
 
+    async def test_external_atom_changes_are_indexed_without_rebuild(self):
+        gateway = create_native_gateway(self.root, fixture.CONTROL, fixture._native_inputs())
+        gateway.selection = gateway._native_query.selection = replace(
+            gateway.selection, parameters={'runtime': {'workbench': {'import_graph': False}}},
+        )
+        with patch.dict('os.environ', {'ANECHOIC_RUNTIME_NAMESPACE': 'docker'}):
+            await gateway.initialize()
+        self.addAsyncCleanup(gateway.close)
+
+        async def wait_for(predicate):
+            async with asyncio.timeout(15):
+                while True:
+                    result = await gateway.call(None, types.CallToolRequestParams(
+                        name='query_run', arguments={
+                            'sql': "SELECT relative_path, filename, exact_ref FROM native_references "
+                                   "WHERE stable_ref = 'AN-T-010'",
+                            'result_delivery': 'inline',
+                        },
+                    ))
+                    self.assertFalse(result.is_error, result.structured_content)
+                    rows = result.structured_content['rows']
+                    if predicate(rows):
+                        return rows
+                    await asyncio.sleep(0.1)
+
+        original = '__TKT/TASKS/new/nested/AN-T-010-TASK--watch.md'
+        moved = '__TKT/TASKS/moved/AN-T-010-TASK--renamed.md'
+        self._write(original, 'AN-T-010', 'active', 1, body='## Summary\n\nFirst content.\n')
+        first = await wait_for(lambda rows: len(rows) == 1 and rows[0][2] == 'AN-T-010@1')
+        self.assertTrue(first[0][0].endswith('__TKT/TASKS/new/nested'))
+
+        self._write(original, 'AN-T-010', 'active', 1, body='## Summary\n\nChanged content.\n')
+        await wait_for(lambda _: any(
+            atom['id'] == 'AN-T-010' and b'Changed content.' in atom['_content_bytes']
+            for atom in gateway._native_query._capture.atoms
+        ))
+        self._write(original, 'AN-T-010', 'active', 2, body='## Summary\n\nChanged content.\n')
+        await wait_for(lambda rows: len(rows) == 1 and rows[0][2] == 'AN-T-010@2')
+
+        source = self.root / fixture.CONTROL / original
+        destination = self.root / fixture.CONTROL / moved
+        destination.parent.mkdir(parents=True)
+        source.rename(destination)
+        await wait_for(lambda rows: len(rows) == 1 and rows[0][0].endswith('__TKT/TASKS/moved')
+                       and rows[0][1] == destination.name and rows[0][2] == 'AN-T-010@2')
+        destination.unlink()
+        await wait_for(lambda rows: not rows)
+
     async def test_rebuild_contract_over_mcp_and_http(self):
         gateway = create_native_gateway(self.root, fixture.CONTROL, fixture._native_inputs())
         await gateway.initialize()
@@ -121,6 +173,37 @@ class NativeWorkbenchHttpTests(unittest.IsolatedAsyncioTestCase):
                 invalid = await client.post('/anechoic/Anechoic/api/rebuild', json={'target': ''})
                 self.assertEqual(400, invalid.status_code)
             self.assertEqual(2, rebuild.call_count)
+
+    async def test_manifest_gates_release_commands(self):
+        names = {'local_release_command', 'public_release_command'}
+        for flag in ({}, {'release_workflows_enabled': False}, {'release_workflows_enabled': True}):
+            with self.subTest(flag=flag):
+                gateway = create_native_gateway(self.root, fixture.CONTROL, fixture._native_inputs())
+                settings = {'project_mcp': flag}
+                host_root = Path('/host/Anechoic checkout')
+                gateway.selection = gateway._native_query.selection = replace(
+                    gateway.selection, host_root=host_root, parameters=settings,
+                )
+                with patch.dict('os.environ', {'ANECHOIC_RUNTIME_NAMESPACE': 'docker'}):
+                    await gateway.initialize()
+                try:
+                    enabled = flag.get('release_workflows_enabled') is True
+                    advertised = {tool.name for tool in gateway.tools}
+                    self.assertEqual(names if enabled else set(), advertised & names)
+                    for name, operation in (('local_release_command', 'local'),
+                                            ('public_release_command', 'public')):
+                        response = await gateway.call(None, types.CallToolRequestParams(
+                            name=name, arguments={'run_id': 'release-check-1'},
+                        ))
+                        self.assertEqual(not enabled, response.is_error, response.structured_content)
+                        if enabled:
+                            args = shlex.split(response.structured_content['command'])
+                            self.assertEqual(['uv', 'run'], args[1:3])
+                            self.assertEqual([operation, '--project-root', str(host_root), '--run-id',
+                                              'release-check-1'], args[-5:])
+                            self.assertEqual(str(host_root), response.structured_content['working_directory'])
+                finally:
+                    await gateway.close()
 
     async def test_manifest_blacklist_applies_to_mcp_and_http(self):
         gateway = create_native_gateway(self.root, fixture.CONTROL, fixture._native_inputs())

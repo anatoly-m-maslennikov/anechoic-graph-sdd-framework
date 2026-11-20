@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2312
-context:
+atom_family: SPEC
+atom_id: AN-S-2312
+structure:
   container:
     component: C9
   tier: 1
+context:
   lens: SWD
 state:
   status: active

@@ -1,4 +1,4 @@
-"""Exercise the existing MCP stdio entry point with a native startup snapshot."""
+"""Exercise the existing MCP stdio entry point with native Workbench."""
 
 import asyncio
 import hashlib
@@ -148,6 +148,8 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
             tables = schema.structured_content["tables"]
             self.assertEqual({
                 "atoms", "relations", "native_references", "native_legacy_references", "native_migration_paths",
+                "import_nodes", "module_imports", "import_edges", "package_imports", "test_edges",
+                "tested_by_edges", "import_read_issues", "implementation_rmedo", "component_metrics",
                 "change_log", "query_log", "live_runs", "runtime_diagnostics", "atom_parse_issues",
                 "atom_schema_issues", "atom_declared_carrier_issues", "atom_physical_carrier_issues",
                 "atom_duplicate_revision_issues",

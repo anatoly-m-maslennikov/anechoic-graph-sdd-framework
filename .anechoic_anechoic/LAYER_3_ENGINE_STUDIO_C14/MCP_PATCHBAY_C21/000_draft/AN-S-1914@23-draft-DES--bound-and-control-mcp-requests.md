@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-1914
-context:
+atom_family: SPEC
+atom_id: AN-S-1914
+structure:
   container:
     component: C21
   tier: 1
+context:
   lens: DES
 state:
   status: draft

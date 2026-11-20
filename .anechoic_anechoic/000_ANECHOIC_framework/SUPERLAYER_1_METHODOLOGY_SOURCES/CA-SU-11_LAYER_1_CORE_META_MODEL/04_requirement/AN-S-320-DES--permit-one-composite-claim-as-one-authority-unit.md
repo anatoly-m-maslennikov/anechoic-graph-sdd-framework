@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-320
-context:
+atom_family: SPEC
+atom_id: AN-S-320
+structure:
   container:
     component: C9
   tier: 1
+context:
   lens: DES
 state:
   status: active

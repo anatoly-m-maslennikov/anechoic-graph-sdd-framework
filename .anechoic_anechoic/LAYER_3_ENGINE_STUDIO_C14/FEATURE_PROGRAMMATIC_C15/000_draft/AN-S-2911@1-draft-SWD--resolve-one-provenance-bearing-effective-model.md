@@ -1,9 +1,10 @@
 ---
-identity:
-  atom_id: AN-S-2911
-context:
+atom_family: SPEC
+atom_id: AN-S-2911
+structure:
   container:
     component: C15
+context:
   lens: SWD
 state:
   status: draft

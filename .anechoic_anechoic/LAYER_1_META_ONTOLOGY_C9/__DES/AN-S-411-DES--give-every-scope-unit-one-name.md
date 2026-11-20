@@ -1,0 +1,27 @@
+---
+atom_family: SPEC
+atom_id: AN-S-411
+structure:
+  container:
+    component: C9
+  tier: 1
+context:
+  lens: DES
+state:
+  status: active
+  version: 29
+  updated_at: 2026-11-02 00:18:22 +0400
+---
+## Summary
+
+Give Every Scope Unit One Name
+
+## Claim
+
+### Prose Claim
+
+
+Scope Unit Names.
+
+
+**every** Scope Unit **must** have **`=1`** authoritative Name.

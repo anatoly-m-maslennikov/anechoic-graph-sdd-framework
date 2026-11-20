@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-2033
-context:
+atom_family: TKT
+atom_id: AN-T-2033
+structure:
   container:
     component: C14
-  tier: 3
+  priority: 2
+context:
   template: question
 state:
   status: resolved

@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2260
-context:
+atom_family: SPEC
+atom_id: AN-S-2260
+structure:
   container:
     component: C45
   tier: 4
+context:
   lens: SWD
 state:
   status: draft

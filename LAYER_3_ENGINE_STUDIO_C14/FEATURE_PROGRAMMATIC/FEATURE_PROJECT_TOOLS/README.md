@@ -10,12 +10,13 @@ package. Shared compiler, installer and test-gate helpers remain in the Engine.
   empty commit; a failed commit or remaining changes stop before tests, builds
   or Docker work. Validate inputs and run the complete suite before replacing
   delivered or installed files. Copy active Methodology sources, compile the
-  product, build the Engine/package and candidate image, install the Methodology
-  and Project runtime, then start and verify MCP. Preserve configuration and
+  product, and build the Engine package and candidate image. Test the candidate
+  against a disposable Project copy on a Docker-assigned loopback port. After
+  it passes, install the Methodology and Project runtime and verify MCP. Preserve configuration and
   remove eligible stopped obsolete Project-owned containers before MCP startup,
-  then repeat cleanup after successful exact-candidate smoke. Keep only this
-  release's exact current-Version candidate; remove other eligible images owned
-  by this Project, even same-fingerprint rebuilds. Preserve every container
+  then repeat cleanup after the new production image passes its smoke test. Keep
+  the current image and two previous Project images. Use verified release history
+  first and fill any remaining slots from the newest Project-owned images. Preserve every container
   reference, other Projects' images, other running containers and unproven
   targets; report unfinished cleanup. Never force removal or prune globally.
 - **Public release:** one prompt produces the full PR description and concise

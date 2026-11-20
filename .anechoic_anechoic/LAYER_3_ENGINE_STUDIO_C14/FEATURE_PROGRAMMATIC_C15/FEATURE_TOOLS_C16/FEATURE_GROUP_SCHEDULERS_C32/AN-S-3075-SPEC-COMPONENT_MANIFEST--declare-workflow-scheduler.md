@@ -1,12 +1,13 @@
 ---
-identity:
-  atom_id: AN-S-3075
-context:
+atom_family: SPEC
+atom_id: AN-S-3075
+structure:
   container:
     component: C32
   tier: 0
-  lens: SPEC
+context:
   template: component_manifest
+  lens: SPEC
 state:
   status: active
   version: 1

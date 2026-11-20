@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-2006
-context:
+atom_family: TKT
+atom_id: AN-T-2006
+structure:
   container:
     component: C43
-  tier: 3
+  priority: 2
+context:
   template: task
 state:
   status: done

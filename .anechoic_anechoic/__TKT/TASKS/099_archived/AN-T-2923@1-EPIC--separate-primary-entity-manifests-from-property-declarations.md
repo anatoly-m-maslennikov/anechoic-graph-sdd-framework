@@ -1,15 +1,16 @@
 ---
-identity:
-  atom_id: AN-T-2923
-context:
+atom_family: TKT
+atom_id: AN-T-2923
+structure:
   container:
     component: C00
-  tier: 3
+  priority: 2
+context:
   template: epic
 state:
-  status: "archived"
+  status: archived
   version: 1
-  updated_at: "2026-11-20T15:23:41.110589+00:00"
+  updated_at: '2026-11-20T15:23:41.110589+00:00'
 ---
 ## Summary
 

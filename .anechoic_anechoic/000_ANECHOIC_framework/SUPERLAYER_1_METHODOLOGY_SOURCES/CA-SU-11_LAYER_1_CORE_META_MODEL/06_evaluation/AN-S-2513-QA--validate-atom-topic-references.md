@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2513
-context:
+atom_family: SPEC
+atom_id: AN-S-2513
+structure:
   container:
     component: C9
   tier: 6
+context:
   lens: QA
 state:
   status: active

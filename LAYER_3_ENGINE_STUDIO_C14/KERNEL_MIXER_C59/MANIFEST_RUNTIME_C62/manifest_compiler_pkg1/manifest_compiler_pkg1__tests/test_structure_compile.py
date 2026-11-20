@@ -14,6 +14,7 @@ sys.path[:0] = [str(ROOT / 'LAYER_3_ENGINE_STUDIO_C14' / 'FEATURE_PROGRAMMATIC')
                 str(ROOT / 'LAYER_3_ENGINE_STUDIO_C14' / 'FEATURE_PROGRAMMATIC' / 'FEATURE_TOOLS')]
 from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.manifest_compiler_pkg1 import structure_compile as compiler  # noqa: E402
 from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.structure_host_pkg3.snapshot import parse_structure  # noqa: E402
+from native_carrier_header import canonical_native_header, native_header_view  # noqa: E402
 from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier  # noqa: E402
 
 CONTROL = ROOT / '.anechoic_anechoic'
@@ -26,7 +27,7 @@ COMPONENT = CONTROL / 'AN-S-3039-SPEC-COMPONENT_MANIFEST--declare-engine-studio.
 def selection(control):
     project = control / PROJECT.name
     raw = project.read_bytes()
-    meta = parse_carrier(raw, project).metadata
+    meta = native_header_view(parse_carrier(raw, project).metadata)
     ref = f"{meta['identity']['atom_id']}@{meta['state']['version']}"
     return SimpleNamespace(control_root=control, manifest_path=project, manifest_ref=ref,
                            manifest_sha256=hashlib.sha256(raw).hexdigest())
@@ -68,6 +69,7 @@ class StructureTests(unittest.TestCase):
             child = control / COMPONENT.name
             shutil.copyfile(PROJECT, project)
             shutil.copyfile(COMPONENT, child)
+            (control / '__EXAMPLE_C14').mkdir()
             selected = selection(control)
             result = compiler.compile_structure(selected, Model())
             self.assertEqual(result['project']['sha256'], selected.manifest_sha256)
@@ -102,11 +104,7 @@ class StructureTests(unittest.TestCase):
             shutil.copyfile(PROJECT, control / PROJECT.name)
             raw = COMPONENT.read_text()
             _, frontmatter, body = raw.split('---', 2)
-            header = yaml.safe_load(frontmatter)
-            header['atom_family'] = 'SPEC'
-            header['atom_id'] = header.pop('identity')['atom_id']
-            header['structure'] = {'container': header['context'].pop('container'),
-                                   'tier': header['context'].pop('tier')}
+            header = canonical_native_header(yaml.safe_load(frontmatter))
             path = control / 'AN-S-3039-SPEC-OTHER--engine.md'
             path.write_text(f'---\n{yaml.safe_dump(header)}---{body}')
             result = compiler.compile_structure(selection(control), Model())

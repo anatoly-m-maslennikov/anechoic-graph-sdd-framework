@@ -1,9 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-2001
-context:
+atom_family: TKT
+atom_id: AN-T-2001
+structure:
   container:
     component: C16
+  priority: 2
+context:
   template: problem
 state:
   status: resolved

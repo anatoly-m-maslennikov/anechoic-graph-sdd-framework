@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-2004
-context:
+atom_family: TKT
+atom_id: AN-T-2004
+structure:
   container:
     component: C20
-  tier: 4
+  priority: 2
+context:
   template: problem
 state:
   status: resolved

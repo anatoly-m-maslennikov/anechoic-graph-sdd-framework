@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-1965
-context:
+atom_family: SPEC
+atom_id: AN-S-1965
+structure:
   container:
     component: C43
   tier: 5
+context:
   lens: DevOps
 state:
   status: draft

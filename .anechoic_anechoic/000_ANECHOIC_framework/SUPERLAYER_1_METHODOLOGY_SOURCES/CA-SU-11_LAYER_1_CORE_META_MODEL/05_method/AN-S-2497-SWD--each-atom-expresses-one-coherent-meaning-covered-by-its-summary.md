@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2497
-context:
+atom_family: SPEC
+atom_id: AN-S-2497
+structure:
   container:
     component: C9
   tier: 3
+context:
   lens: SWD
 state:
   status: active

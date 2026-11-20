@@ -27,8 +27,10 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43"))
+from release_canary import verify_candidate_image  # noqa: E402
 from release_cleanup import cleanup_obsolete_images, cleanup_stopped_containers  # noqa: E402
 from release_cleanup_identity import image_labels  # noqa: E402
+from release_cleanup_images import record_ready_images  # noqa: E402
 from release_image_provenance import release_image_provenance  # noqa: E402
 from LAYER_5_FRAMEWORK_DELIVERY.local_release_test_process import run_logged_test_process  # noqa: E402
 from release_support import (  # noqa: E402
@@ -125,6 +127,7 @@ def run_local_release(
     failed_step = "validate_inputs"
     mcp: Any = None
     endpoint: str | None = None
+    canary_endpoint: str | None = None
     receipt_path: str | None = None
     test_log_path: str | None = None
     cleanup_note = "No proven superseded Project-owned image identity was available; none was removed."
@@ -191,8 +194,8 @@ def run_local_release(
                     _native_release_sources(selection)
                 else:
                     _release_sources(root)
-                ca = _target(root, Path(".agents/skills/ca"), label="project-ca")
-                for target in (product, installed, runtime, ca):
+                ane = _target(root, Path(".agents/skills/ane"), label="project-ane")
+                for target in (product, installed, runtime, ane):
                     if target.exists():
                         _walk_regular_files(target)
                 _read_version(root)
@@ -316,6 +319,8 @@ def run_local_release(
                 if manager.identity(use_packaged_assets=True).fingerprint != candidate_fingerprint:
                     raise LocalReleaseError("local-release-packaged-image-mismatch")
                 _verify_package(package, package_identity)
+                failed_step = "verify_candidate_image"
+                canary_endpoint = verify_candidate_image(root, selection, package, staging, candidate_image)
             elif phase == "install project runtime":
                 failed_step = "install_project_runtime"
                 _verify_package(package, package_identity)
@@ -326,9 +331,9 @@ def run_local_release(
                 if (manager.resolve(explicit_id=candidate_image, build_if_missing=False) != candidate_image
                         or manager.identity(use_packaged_assets=True).fingerprint != candidate_fingerprint):
                     raise LocalReleaseError("local-release-installed-image-mismatch")
-                ca = _target(root, Path(".agents/skills/ca"), label="project-ca")
-                _clear_target(ca, root=root, preserve=frozenset(), label="project-ca")
-                _copy_tree(runtime / "SKILLS/ca", ca, preserve=frozenset())
+                ane = _target(root, Path(".agents/skills/ane"), label="project-ane")
+                _clear_target(ane, root=root, preserve=frozenset(), label="project-ane")
+                _copy_tree(runtime / "SKILLS/ane", ane, preserve=frozenset())
                 _deploy_bootstrap(root, runtime)
             else:
                 failed_step = "start_mcp"
@@ -424,11 +429,21 @@ def run_local_release(
                     root, selection.instance_id, selection.control_relative.as_posix(),
                     candidate_image, candidate_fingerprint, cleanup_runner, cleanup=cleanup,
                 )
-                if prior_image == candidate_image:
-                    cleanup.notes.append("Image reused; existing rollback image retained.")
+                try:
+                    history = _project_path(
+                        root, Path(".anechoic_runtime/simple_local_release/ready-images.json"),
+                        label="simple-image-history",
+                    )
+                    previous_images = record_ready_images(history, selection.instance_id, candidate_image, prior_image)
+                except (OSError, ValueError, LocalReleaseError):
+                    cleanup.pending = True
+                    cleanup.notes.append("Image history unavailable. Retained existing images.")
                 else:
-                    cleanup_obsolete_images(root, candidate_image, candidate_fingerprint, cleanup, cleanup_runner,
-                                            previous_image=previous_image or prior_image)
+                    if prior_image == candidate_image:
+                        cleanup.notes.append("Image reused. Retained existing rollback images.")
+                    else:
+                        cleanup_obsolete_images(root, candidate_image, candidate_fingerprint, cleanup, cleanup_runner,
+                                                previous_images=previous_images)
                 if prior_image is not None and previous_image is None and prior_image != candidate_image:
                     cleanup.pending = True
                     cleanup.notes.append("Prior image retained: readiness evidence unavailable.")
@@ -447,6 +462,7 @@ def run_local_release(
                     f"Image mode: `{image_mode}`\n\n"
                     f"Test scope: `{test_scope}`\n\n"
                     f"Selected test modules: {test_selection}\n\n"
+                    f"Canary endpoint: `{canary_endpoint}`\n\n"
                     f"Endpoint: `{endpoint or 'not reported'}`\n\n"
                     + (f"Complete test output: `{test_log_path}`\n\n" if test_log_path is not None else "")
                     +
@@ -468,7 +484,7 @@ def run_local_release(
                 f"Test scope: `{test_scope}`\n\n"
                 f"Selected test modules: {test_selection}\n\n"
                 f"Error class: `{type(error).__name__}`\n\n"
-                + (f"{str(error)[:8500]}\n\n" if failed_step == "tests" else "")
+                + (f"{str(error)[:8500]}\n\n" if failed_step in {"tests", "verify_candidate_image"} else "")
                 + (f"Complete test output: `{test_log_path}`\n\n" if test_log_path is not None else "")
                 + (f"MCP started at: `{endpoint}`\n\n" if endpoint is not None else "")
                 + ("\n".join(getattr(error, "__notes__", ())) + "\n\n" if getattr(error, "__notes__", ()) else "")
@@ -489,6 +505,7 @@ def run_local_release(
             "error_type": type(error).__name__,
             "test_log_path": test_log_path,
             "endpoint": endpoint,
+            "canary_endpoint": canary_endpoint,
             "test_scope": test_scope,
             "test_modules": selected_test_modules,
             "image_mode": image_mode,
@@ -499,6 +516,7 @@ def run_local_release(
         "failed_step": None, "report_path": None, "receipt_path": receipt_path,
         "test_log_path": test_log_path,
         "endpoint": endpoint,
+        "canary_endpoint": canary_endpoint,
         "test_scope": test_scope,
         "test_modules": selected_test_modules,
         "image_mode": image_mode,

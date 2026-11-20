@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2968
-context:
+atom_family: SPEC
+atom_id: AN-S-2968
+structure:
   container:
     component: C9
   tier: 4
+context:
   lens: QA
 state:
   status: draft

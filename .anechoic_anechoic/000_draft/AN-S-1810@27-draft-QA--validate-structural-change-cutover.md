@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-1810
-context:
+atom_family: SPEC
+atom_id: AN-S-1810
+structure:
   container:
     component: C00
   tier: 4
+context:
   lens: QA
 state:
   status: draft

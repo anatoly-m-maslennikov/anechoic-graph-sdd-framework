@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-35
-context:
+atom_family: SPEC
+atom_id: AN-S-35
+structure:
   container:
     component: C16
   tier: 3
+context:
   lens: DES
 state:
   status: draft

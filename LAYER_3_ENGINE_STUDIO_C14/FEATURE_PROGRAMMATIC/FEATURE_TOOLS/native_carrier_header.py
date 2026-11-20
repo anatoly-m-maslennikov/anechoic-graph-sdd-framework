@@ -7,7 +7,9 @@ import re
 _FAMILIES = {"S": "SPEC", "T": "TKT", "P": "PMETA"}
 _HEADER = {"atom_family", "atom_id", "concern", "structure", "context", "relations", "state"}
 _STATE = ("status", "version", "updated_at")
-_CONCERN = ("subject", "path", "relation")
+_CONCERN_LOCATOR = ("subject", "path", "relation")
+_CONCERN = (*_CONCERN_LOCATOR, "components")
+_CONTEXT = ("template", "label", "lens")
 
 
 def _family(atom_id):
@@ -39,11 +41,12 @@ def _validate_header(metadata):
             or ("priority" in structure and type(structure["priority"]) is not int)):
         raise ValueError("Native Structure has an invalid Tier or Priority")
     incomplete_draft = family == "PMETA" and isinstance(state, dict) and state.get("status") == "draft"
-    if (not isinstance(context, dict) or set(context) - {"template", "lens"}
+    if (not isinstance(context, dict) or set(context) - set(_CONTEXT)
             or any(not _text(value) for value in context.values())
             or (family != "SPEC" and "lens" in context)
+            or (family != "TKT" and "label" in context)
             or (family != "SPEC" and "template" not in context and not incomplete_draft)):
-        raise ValueError("Native Context has an invalid Template or Lens")
+        raise ValueError("Native Context has an invalid Template, Label, or Lens")
     if (not isinstance(state, dict) or set(state) != set(_STATE) or not _text(state["status"])
             or type(state["version"]) is not int or state["version"] < 1):
         raise ValueError("Native State requires Status, Version, and Updated At")
@@ -54,8 +57,17 @@ def _validate_header(metadata):
         raise ValueError("Native State requires a datetime Updated At")
     if "concern" in metadata:
         concern = metadata["concern"]
-        if not isinstance(concern, dict) or set(concern) != set(_CONCERN) or any(not _text(v) for v in concern.values()):
-            raise ValueError("Native Concern requires Subject, Path, and Relation")
+        if not isinstance(concern, dict) or not concern or set(concern) - set(_CONCERN):
+            raise ValueError("Native Concern requires Components or a Subject, Path, and Relation")
+        if any(name in concern for name in _CONCERN_LOCATOR) and not all(
+                _text(concern.get(name)) for name in _CONCERN_LOCATOR):
+            raise ValueError("Native Concern requires Subject, Path, and Relation together")
+        if "components" in concern:
+            components = concern["components"]
+            if (not isinstance(components, list) or not components
+                    or any(not isinstance(value, str) or not re.fullmatch(r"C[0-9]+", value) for value in components)
+                    or len(components) != len(set(components))):
+                raise ValueError("Native Concern requires a nonempty list of distinct Component IDs")
     if "relations" in metadata:
         relations = metadata["relations"]
         if (not isinstance(relations, dict) or not relations
@@ -79,11 +91,13 @@ def native_header_model_fields(metadata):
     context = view["context"]
     family = _family(view["identity"]["atom_id"])
     fields = {"atom_family": family, "container": context["container"]}
-    fields.update({key: context[key] for key in ("template", "lens") if key in context})
+    fields.update({key: context[key] for key in _CONTEXT if key in context})
     if family == "TKT":
         fields["priority"] = context.get("priority", 2)
     concern = view.get("concern", {})
-    fields.update({name: concern.get(name) for name in _CONCERN})
+    fields.update({name: concern.get(name) for name in _CONCERN_LOCATOR})
+    if "components" in concern:
+        fields["components"] = concern["components"]
     if "relations" in view:
         fields["relations"] = view["relations"]
     return fields
@@ -95,7 +109,7 @@ def canonical_native_header(metadata):
     context = view.get("context", {})
     if "package_id" in context:
         raise ValueError("Move the Package ID to the Formal Claim before rewriting the Header")
-    if set(view) - _HEADER - {"identity"} or set(context) - {"container", "tier", "priority", "template", "lens"}:
+    if set(view) - _HEADER - {"identity"} or set(context) - {*_CONTEXT, "container", "tier", "priority"}:
         raise ValueError("Native Header conversion would discard unrecognized data")
     identity = view.get("identity", {})
     if set(identity) != {"atom_id"}:
@@ -104,14 +118,14 @@ def canonical_native_header(metadata):
     family = _family(atom_id)
     header = {"atom_family": family, "atom_id": atom_id}
     if "concern" in view:
-        header["concern"] = {name: view["concern"][name] for name in _CONCERN}
+        header["concern"] = {name: view["concern"][name] for name in _CONCERN if name in view["concern"]}
     structure = {"container": context.get("container")}
     if family == "TKT":
         structure["priority"] = context.get("priority", 2)
     elif family == "SPEC" and "tier" in context:
         structure["tier"] = context["tier"]
     header["structure"] = structure
-    header["context"] = {name: context[name] for name in ("template", "lens") if name in context}
+    header["context"] = {name: context[name] for name in _CONTEXT if name in context}
     if "relations" in view:
         header["relations"] = view["relations"]
     header["state"] = {name: view["state"][name] for name in _STATE}

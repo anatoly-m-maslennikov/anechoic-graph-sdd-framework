@@ -1,9 +1,10 @@
 ---
-identity:
-  atom_id: AN-S-2913
-context:
+atom_family: SPEC
+atom_id: AN-S-2913
+structure:
   container:
     component: C15
+context:
   lens: DevOps
 state:
   status: draft

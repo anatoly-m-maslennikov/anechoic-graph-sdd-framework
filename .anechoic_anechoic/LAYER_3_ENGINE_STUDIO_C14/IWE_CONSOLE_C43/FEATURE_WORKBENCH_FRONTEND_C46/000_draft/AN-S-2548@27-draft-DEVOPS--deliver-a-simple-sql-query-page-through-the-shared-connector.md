@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2548
-context:
+atom_family: SPEC
+atom_id: AN-S-2548
+structure:
   container:
     component: C46
   tier: 4
+context:
   lens: DevOps
 state:
   status: draft

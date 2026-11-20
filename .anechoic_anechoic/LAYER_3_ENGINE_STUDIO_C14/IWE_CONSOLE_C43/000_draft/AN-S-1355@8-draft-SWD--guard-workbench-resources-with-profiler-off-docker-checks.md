@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-1355
-context:
+atom_family: SPEC
+atom_id: AN-S-1355
+structure:
   container:
     component: C43
   tier: 5
+context:
   lens: SWD
 state:
   status: draft

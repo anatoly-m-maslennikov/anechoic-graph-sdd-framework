@@ -32,14 +32,30 @@ def _slug(summary):
     return slug
 
 
+def native_ticket_label(template, owner_template):
+    if template == owner_template == 'task':
+        return 'Subtask'
+    if template == owner_template == 'epic':
+        return 'Sub-epic'
+    return None
+
+
+def spec_lens_directories(lens):
+    if not isinstance(lens, str):
+        raise ValueError('Authored SPEC Lens is required')
+    parts = lens.split('/')
+    if any(not re.fullmatch(r'[A-Za-z][A-Za-z0-9_]*', part) for part in parts):
+        raise ValueError('Invalid SPEC Lens')
+    return () if lens.upper() == 'SPEC' else tuple(f'__{part.upper()}' for part in parts)
+
+
 def native_carrier_path(header, summary, *, project_root, owner_directory, owner_template=None):
     """Project a path from authored Header and Summary, without filesystem access.
 
     The caller resolves the authored container: owner_directory is the Component
-    directory for SPEC, or the owning Atom's current directory for a task-bound
-    asset. For that asset, owner_template must be the resolved Atom's
-    authored template. project_root is the resolved Project control directory.
-    For Atom-owned SPECs, resolve the Component through the authored owner.
+    directory for Component-owned SPEC, or the companion directory of an
+    owning Atom. For Atom-owned TKT, owner_template is the owner's authored
+    template. project_root is the resolved Project control directory.
     Unknown templates need further placement rules. The function does not validate paths or
     check collisions; those checks belong to the caller.
     """
@@ -56,53 +72,53 @@ def native_carrier_path(header, summary, *, project_root, owner_directory, owner
     marker = atom_id + (f'@{version}-draft' if status == 'draft' else f'@{version}' if status == 'archived' else '')
     root = Path(project_root)
     template = context.get('template')
+    atom_owned = 'atom' in context['container']
+    if atom_owned and owner_directory is None:
+        raise ValueError('Resolved Atom companion directory is required')
     if family == 'SPEC':
         if owner_directory is None:
             raise ValueError('Resolved Component directory is required')
         root = Path(owner_directory)
         lens = context.get('lens')
-        if not isinstance(lens, str):
-            raise ValueError('Authored SPEC Lens is required')
-        parts = lens.split('/')
-        if any(not re.fullmatch(r'[A-Za-z][A-Za-z0-9_]*', part) for part in parts):
-            raise ValueError('Invalid SPEC Lens')
-        parts = [part.upper() for part in parts]
-        stem = marker + '-' + parts[-1]
+        lens_directories = spec_lens_directories(lens)
+        stem = marker + '-' + lens.rsplit('/', 1)[-1].upper()
         if template:
             stem += '-' + _token(template)
         if revision:
             root /= revision
-        elif parts != ['SPEC']:
-            root = root.joinpath(*parts)
+        else:
+            root = root.joinpath(*lens_directories)
     else:
+        if family == 'PMETA' and atom_owned:
+            root = Path(owner_directory)
         if family == 'PMETA' and status == 'draft' and not template:
-            return root / '_PMETA' / '000_draft' / (marker + '--' + _slug(summary) + '.md')
+            return root / ('' if atom_owned else '_PMETA') / '000_draft' / (marker + '--' + _slug(summary) + '.md')
         if not template:
             raise ValueError('Authored Template is required')
         key = _token(template).lower()
-        stem = marker + '-' + _token(template)
+        label = context.get('label') if family == 'TKT' else None
+        stem = marker + '-' + _token(label or template)
         if family == 'PMETA':
-            root /= '_PMETA'
+            if not atom_owned:
+                root /= '_PMETA'
         else:
             branch = 'ASSETS' if key in _ASSETS else _TKT_BRANCH.get(key)
             if branch is None:
                 raise ValueError('Unsupported TKT Template')
-            if owner_template == 'epic' and key != 'task':
-                raise ValueError('An Epic can contain only Tasks')
-            if key in _ASSETS and 'atom' in context['container'] and owner_template is None:
-                raise ValueError('Resolve the authored Asset owner before deriving its path')
-            task_bound = key in _ASSETS and owner_template == 'task'
-            if task_bound:
-                if owner_directory is None:
-                    raise ValueError('Resolved Task or Epic directory is required')
-                branch = 'TASKS'
-                if not revision:
-                    root = Path(owner_directory)
-                else:
-                    root = root / '__TKT' / branch
+            if owner_template == 'epic' and key not in {'task', 'epic', 'work_report'}:
+                raise ValueError('An Epic can contain only Tasks, Epics and Work Reports')
+            if atom_owned and owner_template is None:
+                raise ValueError('Resolve the authored Atom owner before deriving its path')
+            if atom_owned and key in _ASSETS and not (owner_template == 'task' or
+                    (key == 'work_report' and owner_template == 'epic')):
+                raise ValueError('An Asset can only be bound to a Task, or a Work Report to an Epic')
+            if atom_owned:
+                root = Path(owner_directory)
+                if owner_template == 'epic' and key == 'work_report':
+                    root /= 'ASSETS'
             else:
                 root = root / '__TKT' / branch
-            if not revision and not task_bound and status != 'active':
+            if not revision and status != 'active':
                 root /= status
         if revision:
             root /= revision

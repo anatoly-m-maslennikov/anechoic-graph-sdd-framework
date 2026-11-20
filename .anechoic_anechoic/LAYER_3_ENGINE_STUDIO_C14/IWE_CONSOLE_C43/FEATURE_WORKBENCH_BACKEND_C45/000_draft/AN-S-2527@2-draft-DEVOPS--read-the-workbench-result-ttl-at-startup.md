@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2527
-context:
+atom_family: SPEC
+atom_id: AN-S-2527
+structure:
   container:
     component: C45
   tier: 5
+context:
   lens: DevOps
 state:
   status: draft

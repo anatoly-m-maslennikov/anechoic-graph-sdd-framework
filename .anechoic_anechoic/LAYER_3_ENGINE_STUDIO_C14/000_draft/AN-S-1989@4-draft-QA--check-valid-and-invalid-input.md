@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-1989
-context:
+atom_family: SPEC
+atom_id: AN-S-1989
+structure:
   container:
     component: C14
   tier: 3
+context:
   lens: QA
 state:
   status: draft

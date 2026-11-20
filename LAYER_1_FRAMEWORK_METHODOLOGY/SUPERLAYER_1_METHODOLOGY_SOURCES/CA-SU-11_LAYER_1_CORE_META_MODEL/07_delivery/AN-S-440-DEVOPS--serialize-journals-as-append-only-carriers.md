@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-440
-context:
+atom_family: SPEC
+atom_id: AN-S-440
+structure:
   container:
     component: C9
   tier: 1
+context:
   lens: DevOps
 state:
   status: active

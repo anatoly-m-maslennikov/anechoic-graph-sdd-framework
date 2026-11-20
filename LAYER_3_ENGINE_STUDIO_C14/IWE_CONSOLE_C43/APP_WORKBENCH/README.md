@@ -179,7 +179,7 @@ Public Content values, schemas and hashes remain unchanged.
 
 ## Realization Graph
 
-Set the native Project Manifest parameter `runtime.workbench.import_graph` to `{}` to enable the graph. Set `python_roots` in that mapping to the ordered Project-relative Python source roots when the launch profile uses more than the Project root. Use `include` to admit named authored files that Git ignore rules omit. The first delivery extracts Python imports and lists recognized frontend files as unsupported.
+Native Workbench enables the Import Graph by default. Set the Project Manifest parameter `runtime.workbench.import_graph` to `false` to turn it off. Set `python_roots` in that mapping to the ordered Project-relative Python source roots when the launch profile uses more than the Project root. Use `include` to admit named authored files that Git ignore rules omit. The first delivery extracts Python imports and lists recognized frontend files as unsupported.
 
 `test_edges` links each direct `<package folder name>__tests/` Test Package
 to its parent Package. `tested_by_edges` gives the inverse. Both use the same

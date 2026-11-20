@@ -15,7 +15,7 @@ from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_watcher import SourceWatcher
 from project_runtime import bind_native_runtime, owned_temporary_root
 
 _TIMEOUT = 15
-_COMPONENT_PATH = re.compile(r".+_C[0-9]+$")
+_COMPONENT_PATH = re.compile(r"(?!__).+_C[0-9]+$")
 _CODE_ROOT = Path(__file__).resolve().parents[3]
 _ENGINE = _CODE_ROOT / "LAYER_3_ENGINE_STUDIO_C14"
 _PROGRAMMATIC = _ENGINE / "FEATURE_PROGRAMMATIC"
@@ -117,7 +117,10 @@ def run_manifest_runtime(selection):
     with TemporaryDirectory(dir=parent, prefix="generation-") as directory:
         generation = Path(directory)
         active = generation / "structure.json"
-        watcher = SourceWatcher(selection.root, selection.control_root)
+        watcher = SourceWatcher(
+            selection.root, selection.control_root,
+            poll_bind_mount=os.environ.get("ANECHOIC_RUNTIME_NAMESPACE") == "docker",
+        )
         watcher.start()
         try:
             snapshot = _compile(selection, generation, "--build-model")

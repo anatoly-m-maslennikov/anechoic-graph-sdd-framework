@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2521
-context:
+atom_family: SPEC
+atom_id: AN-S-2521
+structure:
   container:
     component: C9
   tier: 4
+context:
   lens: QA
 state:
   status: active

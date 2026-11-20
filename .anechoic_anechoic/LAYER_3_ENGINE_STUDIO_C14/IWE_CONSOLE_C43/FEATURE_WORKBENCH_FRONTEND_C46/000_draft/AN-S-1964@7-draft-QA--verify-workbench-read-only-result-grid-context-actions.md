@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-1964
-context:
+atom_family: SPEC
+atom_id: AN-S-1964
+structure:
   container:
     component: C46
   tier: 5
+context:
   lens: QA
 state:
   status: draft

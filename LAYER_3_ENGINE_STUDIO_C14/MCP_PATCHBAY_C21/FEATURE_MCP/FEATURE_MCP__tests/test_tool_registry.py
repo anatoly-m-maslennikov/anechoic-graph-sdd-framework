@@ -42,7 +42,7 @@ class MovedRegistryStagingTests(unittest.TestCase):
 
         registry = json.loads(compile_tool_registry(MCP.parents[2], timeout=60, max_output=2_000_000))
         self.assertEqual({provider["provider_id"] for provider in registry["providers"]},
-                         {"workbench", "lifecycle"})
+                         {"workbench", "lifecycle", "release_commands"})
 
 
 def _provider_source() -> str:

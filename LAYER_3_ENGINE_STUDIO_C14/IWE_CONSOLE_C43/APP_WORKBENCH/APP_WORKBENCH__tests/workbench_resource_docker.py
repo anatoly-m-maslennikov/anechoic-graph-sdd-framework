@@ -17,9 +17,10 @@ ROOT = Path(__file__).resolve().parents[4]
 RUNNER = Path(__file__).with_name("workbench_soak_runner.py").relative_to(ROOT)
 TESTS = RUNNER.parent
 TOOLS = TESTS.parents[2] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
-SCOPE_FIXTURES = tuple(TOOLS / name for name in (
-    "scope_declaration_render.py", "scope_declaration_test_support.py",
-))
+SCOPE_FIXTURES = (
+    TOOLS / "scope_declaration_render.py",
+    TOOLS / "FEATURE_TOOLS__tests" / "scope_declaration_test_support.py",
+)
 
 
 def run_resource_case(case: unittest.TestCase, seconds: int) -> None:

@@ -1,12 +1,12 @@
 ---
-identity:
-  atom_id: AN-S-3091
-context:
+atom_family: SPEC
+atom_id: AN-S-3091
+structure:
   container:
     component: C62
-  lens: SPEC
+context:
   template: PKG
-  package_id: pkg3
+  lens: SPEC
 state:
   status: active
   version: 1
@@ -24,3 +24,13 @@ Provide the current validated Structure to consumers.
 ## Contract
 
 Run as a thin, long-lived process. Publish a read-only snapshot API. Each operation holds one snapshot. Atomically replace it on successful compilation and retain the last valid snapshot on failure.
+
+## Claim
+
+### Formal Claim
+
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import PackageSpec
+declare_entity(entity_name="Package Spec", instance=PackageSpec(package_id="pkg3"))
+```

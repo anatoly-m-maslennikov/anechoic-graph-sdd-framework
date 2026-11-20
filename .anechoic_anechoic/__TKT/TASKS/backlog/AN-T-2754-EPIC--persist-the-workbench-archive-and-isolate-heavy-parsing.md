@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-2754
-context:
+atom_family: TKT
+atom_id: AN-T-2754
+structure:
   container:
     component: C43
-  tier: 3
+  priority: 2
+context:
   template: epic
 state:
   status: backlog

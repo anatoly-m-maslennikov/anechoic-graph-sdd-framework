@@ -5,12 +5,13 @@ from datetime import datetime, timezone
 from hashlib import sha256
 import json
 from pathlib import Path
+from types import SimpleNamespace
 import re
 
 import yaml
 
 from native_carrier_header import canonical_native_header, native_header_view
-from native_carrier_placement import native_carrier_path
+from native_carrier_placement import native_carrier_path, native_ticket_label, spec_lens_directories
 
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import capture_native
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_rows import frontmatter_bounds
@@ -24,7 +25,7 @@ from .placement import _slug
 from .source import bind_query_reader
 
 
-def _revision_root(selection, row, structure_snapshot=None):
+def _revision_root(selection, row, structure_snapshot=None, current_rows=None):
     """Validate a Current carrier and return its owning revision directory."""
     relative = row.get("source_path")
     if not isinstance(relative, str):
@@ -43,13 +44,21 @@ def _revision_root(selection, row, structure_snapshot=None):
         raise common.InputError("sourceCurrent", "Current carrier context is invalid.")
     status = row.get("status")
     if "-T-" in atom_id:
-        root = selection.control_root / "__TKT" / "TASKS"
+        if current_rows is None:
+            raise common.SourceChanged('Current owner capture is unavailable.')
+        capture = SimpleNamespace(atoms=current_rows)
+        owner_directory, _ = _check_owner(selection, context.get("container"), current_rows, capture)
+        flat_root = selection.control_root / "__TKT" / "TASKS"
+        root = owner_directory or flat_root
+        if path.parent == flat_root / ("" if status == "active" else str(status)):
+            root = flat_root
         directory = () if status == "active" else (status,)
         template = context.get("template")
         if (not isinstance(status, str) or status not in {"active", "backlog", "done", "canceled", "resolved"}
                 or template not in {"task", "epic"} or not path.is_relative_to(root)
                 or path.relative_to(root).parts[:-1] != directory
-                or not re.fullmatch(re.escape(atom_id) + "-" + template.upper() + r"--.+\.md", path.name)):
+                or not re.fullmatch(re.escape(atom_id) + (r"-.+--.+\.md" if "atom_family" in row["header_json"]
+                                                         else "-" + template.upper() + r"--.+\.md"), path.name)):
             raise common.InputError("sourceCurrent", "Select a native Task or Epic in its Current directory.")
         return root
     if status != "active" or not re.fullmatch(re.escape(atom_id) + r"-.+\.md", path.name):
@@ -70,15 +79,11 @@ def _revision_root(selection, row, structure_snapshot=None):
         if sha256(raw).hexdigest() != selection.manifest_sha256:
             raise ValueError("Manifest changed")
         _, project_component = _manifest_inputs(selection.manifest_path, parse_carrier(raw, selection.manifest_path))
-        lens_parts = lens.upper().split("/")
-        if not all(re.fullmatch(r"[A-Z][A-Z0-9_]*", part) for part in lens_parts):
-            raise ValueError("Lens is invalid")
         root = path.parent
-        if lens_parts != ["SPEC"]:
-            for part in reversed(lens_parts):
-                if root.name.upper() != part:
-                    raise ValueError("Lens path disagrees")
-                root = root.parent
+        for directory in reversed(spec_lens_directories(lens)):
+            if root.name.upper() != directory:
+                raise ValueError("Lens path disagrees")
+            root = root.parent
         component = container["component"]
         if (not root.is_relative_to(selection.control_root) or
                 (root == selection.control_root and component != project_component) or
@@ -150,11 +155,17 @@ def _state_bytes(raw, bounds, path, version, body, status):
         raise common.InputError('sourceCurrent', 'Task needs valid scalar state fields.') from error
 
 
-def _task_path(selection, header, body, status, version):
+def _task_path(selection, header, body, status, version, owner, root=None):
     projected = {**header, 'state': {**header['state'], 'status': status, 'version': version}}
     try:
-        return native_carrier_path(projected, _summary(body), project_root=selection.control_root,
-                                   owner_directory=None)
+        owner_directory, owner_template = owner
+        path = native_carrier_path(projected, _summary(body), project_root=selection.control_root,
+                                   owner_directory=owner_directory, owner_template=owner_template)
+        flat_root = selection.control_root / '__TKT' / 'TASKS'
+        if root == flat_root and owner_directory is not None:
+            directory = '000_draft' if status == 'draft' else '099_archived' if status == 'archived' else '' if status == 'active' else status
+            return flat_root / directory / path.name
+        return path
     except ValueError as error:
         raise common.InputError('summary', 'Task Header or Summary cannot be projected to a path.') from error
 
@@ -184,7 +195,7 @@ def create_draft(selection, params, *, current_rows, structure_snapshot=None):
             or not isinstance(relative, str)):
         raise common.SourceChanged('Current carrier capture lacks a valid path or source digest.')
     path = selection.root / relative
-    root = _revision_root(selection, selected, structure_snapshot)
+    root = _revision_root(selection, selected, structure_snapshot, current_rows)
     with _project_write_lock(selection.root):
         try:
             capture = capture_native(selection)
@@ -200,6 +211,8 @@ def create_draft(selection, params, *, current_rows, structure_snapshot=None):
                     or parse_carrier(raw, path).metadata != selected.get('header_json')):
                 raise common.SourceChanged('Current carrier source changed after selection.')
             old_body = raw[bounds[2]:].decode('utf-8')
+            if '-T-' in target['ref_id']:
+                owner = _check_owner(selection, native_header_view(selected['header_json'])['context'].get('container'), current_rows, capture)
         except common.SourceChanged:
             raise
         except (OSError, RuntimeError, TypeError, ValueError) as error:
@@ -209,9 +222,9 @@ def create_draft(selection, params, *, current_rows, structure_snapshot=None):
             raise common.InputError('summary', 'Changing a Summary is not supported.')
         version = max(row['version'] for row in capture.atoms if row.get('id') == target['ref_id']) + 1
         if '-T-' in target['ref_id'] and 'atom_family' in selected['header_json']:
-            if _task_path(selection, selected['header_json'], old_body, selected['status'], target['version']) != path:
+            if _task_path(selection, selected['header_json'], old_body, selected['status'], target['version'], owner, root) != path:
                 raise common.InputError('sourceCurrent', 'Task path disagrees with its authored Header and Summary.')
-            destination = _task_path(selection, selected['header_json'], body, 'draft', version)
+            destination = _task_path(selection, selected['header_json'], body, 'draft', version, owner, root)
         else:
             destination = root / '000_draft' / path.name.replace(target['ref_id'] + '-', f"{target['ref_id']}@{version}-draft-", 1)
         candidate = _state_bytes(raw, bounds, path, version, body, 'draft')
@@ -222,14 +235,18 @@ def create_draft(selection, params, *, current_rows, structure_snapshot=None):
         return common.result(effects=outcome.effects, errors=outcome.errors, **data)
 
 
-def _check_owner(selection, container, rows, capture):
-    if container == {'component': 'C00'}:
-        return
+def _check_owner(selection, container, rows, capture, seen=None):
+    if isinstance(container, dict) and set(container) == {'component'}:
+        return None, None
     if (not isinstance(container, dict) or set(container) != {'atom'}
             or not isinstance(container['atom'], str)
             or not re.fullmatch(re.escape(selection.project_prefix) + r'-T-[0-9]+', container['atom'])):
         raise common.InputError('container', 'Supply C00 or a Current native Task or Epic in this Project.')
     owner_id = container['atom']
+    seen = set() if seen is None else seen
+    if owner_id in seen:
+        raise common.InputError('container', 'Containing Atom cycle is invalid.')
+    seen.add(owner_id)
     selected = [row for row in rows if row.get('id') == owner_id and row.get('status_group') == 'Current']
     fresh = [row for row in capture.atoms if row.get('id') == owner_id and row.get('status_group') == 'Current']
     if len(selected) != 1 or len(fresh) != 1 or any(selected[0].get(key) != fresh[0].get(key) for key in (
@@ -246,8 +263,12 @@ def _check_owner(selection, container, rows, capture):
     if not isinstance(relative, str):
         raise common.SourceChanged('Containing Atom path is invalid.')
     relative = Path(relative)
-    root = selection.control_root / '__TKT' / 'TASKS'
+    parent_directory, _ = _check_owner(selection, context.get('container'), rows, capture, seen)
+    root = parent_directory or selection.control_root / '__TKT' / 'TASKS'
     path = selection.root / relative
+    flat_root = selection.control_root / '__TKT' / 'TASKS'
+    if path.parent == flat_root / ('' if status == 'active' else status):
+        root = flat_root
     directory = () if status == 'active' else (status,)
     if (relative.is_absolute() or '..' in relative.parts or not path.is_relative_to(root)
             or path.relative_to(root).parts[:-1] != directory
@@ -263,6 +284,7 @@ def _check_owner(selection, container, rows, capture):
             raise ValueError('Owner changed')
     except (OSError, RuntimeError, TypeError, ValueError) as error:
         raise common.SourceChanged('Containing Task or Epic source changed.') from error
+    return path.with_suffix(''), template
 
 
 def _create_task(selection, values, current_rows):
@@ -285,17 +307,25 @@ def _create_task(selection, values, current_rows):
             capture = capture_native(selection)
             if capture.errors:
                 raise common.SourceChanged('Native carrier capture is incomplete.')
-            _check_owner(selection, values['container'], current_rows, capture)
+            if (not isinstance(values['container'], dict) or
+                    (values['container'] != {'component': 'C00'} and 'atom' not in values['container'])):
+                raise common.InputError('container', 'Supply C00 or a Current native Task or Epic in this Project.')
+            owner = _check_owner(selection, values['container'], current_rows, capture)
+            _, owner_template = owner
             pattern = re.compile(re.escape(selection.project_prefix) + r'-T-([0-9]+)')
             numbers = [int(match[1]) for row in capture.atoms
                        if isinstance(row.get('id'), str) and (match := pattern.fullmatch(row['id']))]
             atom_id = f"{selection.project_prefix}-T-{max(numbers, default=0) + 1}"
             ref = f'{atom_id}@1-draft'
+            context = {'container': values['container'], 'priority': 2, 'template': 'task'}
+            label = native_ticket_label('task', owner_template)
+            if label:
+                context['label'] = label
             header = canonical_native_header(
                 {'identity': {'atom_id': atom_id},
-                 'context': {'container': values['container'], 'priority': 2, 'template': 'task'},
+                 'context': context,
                  'state': {'status': 'draft', 'version': 1, 'updated_at': datetime.now(timezone.utc).isoformat()}})
-            path = _task_path(selection, header, body, 'draft', 1)
+            path = _task_path(selection, header, body, 'draft', 1, owner)
             raw = b'---\n' + yaml.safe_dump(header, sort_keys=False).encode() + b'---\n' + body_bytes
         except (common.InputError, common.SourceChanged):
             raise
@@ -319,9 +349,10 @@ def _promote_new(selection, target, status, draft, current_rows):
     if (not selection.root.is_absolute() or not selection.control_root.is_relative_to(selection.root)
             or not selection.manifest_path.is_relative_to(selection.control_root)
             or relative.is_absolute() or '..' in relative.parts or not path.is_relative_to(root)
-            or path.parent != root / '000_draft'
-            or not re.fullmatch(re.escape(target['ref_id']) + r'-TASK--.+\.md', path.name)):
+            or path.parent.name != '000_draft'
+            or not re.fullmatch(re.escape(target['ref_id']) + r'-.+--.+\.md', path.name)):
         raise common.SourceChanged('Task Draft path is invalid.')
+    root = root if path.parent == root / '000_draft' else None
     with _project_write_lock(selection.root):
         try:
             capture = capture_native(selection)
@@ -334,7 +365,7 @@ def _promote_new(selection, target, status, draft, current_rows):
             context = native_header_view(header).get('context')
             if not isinstance(context, dict) or context.get('template') != 'task':
                 raise common.InputError('target', 'Select a native Task Draft.')
-            _check_owner(selection, context.get('container'), current_rows, capture)
+            owner = _check_owner(selection, context.get('container'), current_rows, capture)
             reader = ReadContext(roots=[str(selection.control_root)], limits=dict(CEILINGS))
             raw = reader.read(path)
             bounds = frontmatter_bounds(raw)
@@ -343,10 +374,10 @@ def _promote_new(selection, target, status, draft, current_rows):
                 raise common.SourceChanged('Task Draft source changed after selection.')
             body = raw[bounds[2]:].decode('utf-8')
             slug = _native_slug(body)
-            if path != (_task_path(selection, header, body, 'draft', 1) if 'atom_family' in header
+            if path != (_task_path(selection, header, body, 'draft', 1, owner, root) if 'atom_family' in header
                         else root / '000_draft' / f"{target['ref_id']}-TASK--{slug}.md"):
                 raise common.InputError('target', 'Task Draft filename disagrees with its Summary.')
-            destination = (_task_path(selection, header, body, status, 1) if 'atom_family' in header
+            destination = (_task_path(selection, header, body, status, 1, owner, root) if 'atom_family' in header
                            else root / ('' if status == 'active' else status) / f'{atom_id}-TASK--{slug}.md')
             if destination.exists() or destination.is_symlink():
                 raise common.InputError('target', 'The promotion destination already exists.')
@@ -389,11 +420,13 @@ def _publish_first_pinned_spec(selection, draft, structure_snapshot):
             header = draft['header_json']
             context = native_header_view(header)['context']
             lens = context.get('lens')
-            if (context.get('template') is not None or not isinstance(lens, str)
-                    or not re.fullmatch(r'[A-Z][A-Z0-9_]*(/[A-Z][A-Z0-9_]*)*', lens.upper())):
+            if context.get('template') is not None:
                 raise common.InputError('target', 'Select a Spec Draft with a lens and without a structural template.')
             owner = path.parent.parent
-            directory = owner if lens.upper() == 'SPEC' else owner.joinpath(*lens.upper().split('/'))
+            try:
+                directory = owner.joinpath(*spec_lens_directories(lens))
+            except ValueError as error:
+                raise common.InputError('target', 'Select a Spec Draft with a valid Lens.') from error
             destination = directory / (atom_id + path.name[len(ref_id):])
             proposed = {**draft, 'source_path': destination.relative_to(selection.root).as_posix(), 'status': 'active'}
             if _revision_root(selection, proposed, structure_snapshot) != owner:
@@ -420,11 +453,11 @@ def _publish_first_pinned_spec(selection, draft, structure_snapshot):
         return common.result(effects=written.effects, errors=written.errors, **data)
 
 
-def _cleanup_published_draft(selection, target, status, draft, current, structure_snapshot):
+def _cleanup_published_draft(selection, target, status, draft, current, structure_snapshot, current_rows):
     atom_id, version = target['ref_id'].split('@')[0], target['version']
     if current.get('status') != status:
         raise common.InputError('targetStatus', 'Published carrier Status differs from the requested Status.')
-    root = _revision_root(selection, current, structure_snapshot)
+    root = _revision_root(selection, current, structure_snapshot, current_rows)
     paths = []
     for row, marker, directory in ((draft, target['ref_id'], root / '000_draft'),
                                    (current, atom_id, (selection.root / current['source_path']).parent)):
@@ -461,10 +494,12 @@ def _cleanup_published_draft(selection, target, status, draft, current, structur
             if reader.currentness()['state'] != 'unchanged':
                 raise common.SourceChanged('Draft or published carrier changed after selection.')
             draft_header, current_header = draft['header_json'], current['header_json']
+            if '-T-' in atom_id:
+                owner = _check_owner(selection, native_header_view(current_header)['context'].get('container'), current_rows, capture)
             if '-T-' in atom_id and 'atom_family' in current_header:
                 body = draft['_content_bytes'].decode('utf-8')
-                if (paths[0] != _task_path(selection, draft_header, body, 'draft', version)
-                        or paths[1] != _task_path(selection, current_header, body, status, version)):
+                if (paths[0] != _task_path(selection, draft_header, body, 'draft', version, owner, root)
+                        or paths[1] != _task_path(selection, current_header, body, status, version, owner, root)):
                     raise common.InputError('target', 'Task paths disagree with their authored Headers and Summary.')
             if ({key: value for key, value in draft_header.items() if key != 'state'}
                     != {key: value for key, value in current_header.items() if key != 'state'}
@@ -538,10 +573,10 @@ def promote_draft(selection, params, *, current_rows, migration_refs, structure_
     if native_header_view(previous['header_json'])['context'].get('template') == 'epic' and status != previous['status']:
         raise common.InputError('targetStatus', 'Publish the Epic at its Current Status. Use Change Status for transitions.')
     if previous.get('version') == version:
-        return _cleanup_published_draft(selection, target, status, draft, previous, structure_snapshot)
+        return _cleanup_published_draft(selection, target, status, draft, previous, structure_snapshot, current_rows)
     if type(previous.get('version')) is not int or previous['version'] >= version:
         raise common.InputError('target', 'Draft Version must be newer than its Current predecessor.')
-    root = _revision_root(selection, previous, structure_snapshot)
+    root = _revision_root(selection, previous, structure_snapshot, current_rows)
     paths = []
     for row, marker, directory in ((draft, target['ref_id'], root / '000_draft'),
                                    (previous, atom_id, (selection.root / previous['source_path']).parent)):
@@ -588,12 +623,14 @@ def promote_draft(selection, params, *, current_rows, migration_refs, structure_
             draft_bounds, previous_bounds = frontmatter_bounds(raw_draft), frontmatter_bounds(raw_previous)
             draft_body, previous_body = raw_draft[draft_bounds[2]:].decode(), raw_previous[previous_bounds[2]:].decode()
             draft_header, previous_header = draft['header_json'], previous['header_json']
+            if '-T-' in atom_id:
+                owner = _check_owner(selection, native_header_view(previous_header)['context'].get('container'), current_rows, capture)
             if '-T-' in atom_id and 'atom_family' in previous_header:
-                if (draft_path != _task_path(selection, draft_header, draft_body, 'draft', version)
-                        or previous_path != _task_path(selection, previous_header, previous_body, previous['status'], previous['version'])):
+                if (draft_path != _task_path(selection, draft_header, draft_body, 'draft', version, owner, root)
+                        or previous_path != _task_path(selection, previous_header, previous_body, previous['status'], previous['version'], owner, root)):
                     raise common.InputError('target', 'Task paths disagree with their authored Headers and Summaries.')
-                archive_path = _task_path(selection, previous_header, previous_body, 'archived', previous['version'])
-                destination = _task_path(selection, draft_header, draft_body, status, version)
+                archive_path = _task_path(selection, previous_header, previous_body, 'archived', previous['version'], owner, root)
+                destination = _task_path(selection, draft_header, draft_body, status, version, owner, root)
             if ({key: value for key, value in draft_header.items() if key != 'state'}
                     != {key: value for key, value in previous_header.items() if key != 'state'}
                     or _summary(draft_body) != _summary(previous_body)):

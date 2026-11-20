@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-3086
-context:
+atom_family: SPEC
+atom_id: AN-S-3086
+structure:
   container:
     component: C61
   tier: 2
+context:
   lens: SWD
 state:
   status: archived

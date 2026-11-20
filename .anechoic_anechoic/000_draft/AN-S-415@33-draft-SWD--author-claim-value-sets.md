@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-415
-context:
+atom_family: SPEC
+atom_id: AN-S-415
+structure:
   container:
     component: C00
   tier: 4
+context:
   lens: SWD
 state:
   status: draft

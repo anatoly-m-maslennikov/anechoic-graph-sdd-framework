@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2019
-context:
+atom_family: SPEC
+atom_id: AN-S-2019
+structure:
   container:
     component: C9
   tier: 3
+context:
   lens: DES
 state:
   status: active

@@ -5,7 +5,7 @@ import sys
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from native_carrier_header import canonical_native_header, native_header_view
+from native_carrier_header import canonical_native_header, native_header_model_fields, native_header_view
 
 
 class NativeCarrierHeaderTests(unittest.TestCase):
@@ -50,6 +50,28 @@ class NativeCarrierHeaderTests(unittest.TestCase):
         del package["context"]["package_id"]
         package["context"]["tier"] = 0
         self.assertEqual(canonical_native_header(package)["structure"], {"container": {"component": "C9"}, "tier": 0})
+
+    def test_issue_concern_round_trips_affected_components(self):
+        issue = self.old | {"context": self.old["context"] | {"template": "problem"}}
+        for locator in ({}, {"subject": "Atom", "path": "Model", "relation": "about"}):
+            concern = locator | {"components": ["C21", "C45"]}
+            header = canonical_native_header(issue | {"concern": concern})
+            self.assertEqual(native_header_view(header)["concern"], concern)
+            self.assertEqual(canonical_native_header(header), header)
+            self.assertEqual(native_header_model_fields(header)["components"], ["C21", "C45"])
+        for invalid in ([], "C21", ["C21", "C21"], ["MCP"], [21]):
+            with self.subTest(components=invalid), self.assertRaisesRegex(ValueError, "Component IDs"):
+                canonical_native_header(issue | {"concern": {"components": invalid}})
+
+    def test_optional_ticket_label_is_separate_from_template(self):
+        header = canonical_native_header(self.old | {"context": self.old["context"] | {"label": "Subtask"}})
+        self.assertEqual(tuple(header["context"]), ("template", "label"))
+        self.assertEqual(native_header_model_fields(header)["label"], "Subtask")
+        self.assertEqual(native_header_model_fields(header)["template"], "task")
+        with self.assertRaisesRegex(ValueError, "Label"):
+            canonical_native_header(self.old | {
+                "identity": {"atom_id": "AN-P-1"}, "context": header["context"] | {"container": {"component": "C00"}},
+            })
 
 
 if __name__ == "__main__":

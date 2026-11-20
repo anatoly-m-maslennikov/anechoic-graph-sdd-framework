@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-1713
-context:
+atom_family: SPEC
+atom_id: AN-S-1713
+structure:
   container:
     component: C00
   tier: 6
+context:
   lens: SWD
 state:
   status: draft

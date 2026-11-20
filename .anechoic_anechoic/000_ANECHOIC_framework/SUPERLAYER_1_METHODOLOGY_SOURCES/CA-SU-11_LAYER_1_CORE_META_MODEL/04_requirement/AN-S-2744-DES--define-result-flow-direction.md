@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2744
-context:
+atom_family: SPEC
+atom_id: AN-S-2744
+structure:
   container:
     component: C9
   tier: 6
+context:
   lens: DES
 state:
   status: active

@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2180
-context:
+atom_family: SPEC
+atom_id: AN-S-2180
+structure:
   container:
     component: C00
   tier: 3
+context:
   lens: DES
 state:
   status: draft

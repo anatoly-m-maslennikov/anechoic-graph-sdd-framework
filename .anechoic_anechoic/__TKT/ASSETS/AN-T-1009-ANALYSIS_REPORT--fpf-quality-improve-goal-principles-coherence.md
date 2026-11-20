@@ -1,9 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-1009
-context:
+atom_family: TKT
+atom_id: AN-T-1009
+structure:
   container:
     component: C00
+  priority: 2
+context:
   template: ANALYSIS_REPORT
 state:
   status: active

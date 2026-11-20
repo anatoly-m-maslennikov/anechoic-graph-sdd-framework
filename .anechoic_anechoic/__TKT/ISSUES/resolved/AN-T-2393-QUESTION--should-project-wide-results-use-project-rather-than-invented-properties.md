@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-2393
-context:
+atom_family: TKT
+atom_id: AN-T-2393
+structure:
   container:
     component: C00
-  tier: 3
+  priority: 2
+context:
   template: question
 state:
   status: resolved

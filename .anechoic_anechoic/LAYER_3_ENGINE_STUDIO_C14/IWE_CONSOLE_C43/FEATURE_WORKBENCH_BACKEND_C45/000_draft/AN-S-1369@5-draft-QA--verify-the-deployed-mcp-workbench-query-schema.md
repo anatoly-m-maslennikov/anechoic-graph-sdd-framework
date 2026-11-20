@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-1369
-context:
+atom_family: SPEC
+atom_id: AN-S-1369
+structure:
   container:
     component: C45
   tier: 6
+context:
   lens: QA
 state:
   status: draft

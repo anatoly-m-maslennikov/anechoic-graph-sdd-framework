@@ -1,12 +1,13 @@
 ---
-identity:
-  atom_id: AN-S-3037
-context:
+atom_family: SPEC
+atom_id: AN-S-3037
+structure:
   container:
     component: C00
   tier: -1
-  lens: SPEC
+context:
   template: project_manifest
+  lens: SPEC
 state:
   status: archived
   version: 1

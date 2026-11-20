@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-123
-context:
+atom_family: SPEC
+atom_id: AN-S-123
+structure:
   container:
     component: C16
   tier: 6
+context:
   lens: DevOps
 state:
   status: draft

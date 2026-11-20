@@ -37,7 +37,7 @@ class NativeReleaseSourcesTests(unittest.TestCase):
         self.aliases.parent.mkdir()
         self.rows = [['CA-R-1@1', f'{PREFIX}/{CORE}/04_requirement/CA-R-1-old.md', 'AN-S-1@1']]
         self.write_aliases()
-        self.source = self.control / 'LAYER_C9/DES/AN-S-1-DES--current.md'
+        self.source = self.control / 'LAYER_C9/__DES/AN-S-1-DES--current.md'
         self.carrier(self.source, 2)
 
     def write_aliases(self):

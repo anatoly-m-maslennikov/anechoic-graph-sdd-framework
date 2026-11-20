@@ -1,0 +1,11 @@
+interface:
+  display_name: "ANECHOIC"
+  short_description: "Thin shared-host ANECHOIC MCP client"
+  default_prompt: "Use $ane through the shared ANECHOIC MCP for the explicitly trusted Project."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "anechoic"
+      description: "Shared HTTP ANECHOIC discovery, context and execution"
+      transport: "streamable_http"

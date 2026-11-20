@@ -1,4 +1,4 @@
-"""Serve an explicitly selected native Project's startup snapshot through Workbench."""
+"""Serve an explicitly selected native Project through Workbench."""
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -21,6 +21,7 @@ from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.import_cache import (
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.import_tables import remove_imports, replace_imports
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_projection import project_native, replace_component_metrics
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import NativeCapture, capture_native
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.package_audit import replace_package_audit
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.query_admission import is_duckdb_internal
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.query_log import QueryLog
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.query_store import QueryStore
@@ -29,7 +30,7 @@ from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.saved_queries import SavedQueryStor
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service_interface import ServiceInterface
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_watcher import SourceWatcher
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.spec_trace import (
-    is_trace_path, native_trace_rows, remove_native_traces, replace_native_traces,
+    is_trace_path, native_trace_snapshot, remove_native_traces, replace_native_traces,
 )
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.statements import select_statement
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workspace import WorkspaceStore
@@ -74,7 +75,7 @@ ATOM_TABLES = frozenset({
 })
 REALIZATION_TABLES = frozenset({
     "import_nodes", "module_imports", "import_edges", "package_imports", "test_edges", "tested_by_edges",
-    "import_read_issues", "implementation_rmedo", "component_metrics",
+    "import_read_issues", "implementation_rmedo", "component_metrics", "package_audit",
 })
 IMPORT_CACHE_TABLES = frozenset(f"_anechoic_import_cache.{name}" for name in ("sources", "sites", "version"))
 OBSERVATION_TABLES = frozenset({"change_log", "query_log", "live_runs", "runtime_diagnostics"})
@@ -108,16 +109,16 @@ class NativeQueryOwner(ServiceInterface):
         self._change_log = WatcherChangeLog(self._root)
         self._interface_lock = threading.RLock()
         self._watcher: SourceWatcher | None = None
-        self._import_thread: threading.Thread | None = None
-        self._import_stop = threading.Event()
+        self._watch_thread: threading.Thread | None = None
+        self._watch_stop = threading.Event()
         self._realization_options: tuple[tuple[str, ...], tuple[str, ...]] | None = None
 
     def _import_options(self, workbench: dict) -> tuple[tuple[str, ...], tuple[str, ...]] | None:
-        if "import_graph" not in workbench:
+        config = workbench.get("import_graph", {})
+        if config is False:
             return None
-        config = workbench["import_graph"]
         if not isinstance(config, dict):
-            raise ValueError("runtime.workbench.import_graph must be a mapping")
+            raise ValueError("runtime.workbench.import_graph must be a mapping or false")
         result = []
         for name, default in (("python_roots", ["."]), ("include", [])):
             values = config.get(name, default)
@@ -149,27 +150,31 @@ class NativeQueryOwner(ServiceInterface):
                 return None
         sources = capture(self._root, None if force_parse else previous, include, changes=changes)
         facts = resolve_realization(self._root, sources, roots)
-        return previous, sources, facts, native_trace_rows(self._root, facts[0])
+        return previous, sources, facts, native_trace_snapshot(self._root, facts[0])
 
     @staticmethod
-    def _publish_realization(store, graph, prepared) -> None:
+    def _publish_realization(store, graph, prepared) -> dict[str, str]:
         connection = store._connection
-        previous, sources, facts, traces = prepared
+        previous, sources, facts, (traces, binding_states) = prepared
         replace_import_sources(connection, sources, previous)
         replace_imports(connection, graph, *facts, sources=sources,
                         mark_graph_changed=store.mark_graph_registration_changed)
         replace_native_traces(connection, traces)
+        return binding_states
 
-    def _publish_component_metrics(self, store: QueryStore, capture: NativeCapture) -> None:
+    def _publish_realization_metadata(self, store: QueryStore, capture: NativeCapture,
+                                      binding_states: dict[str, str] | None = None) -> None:
         from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.component_metrics import measure_components
 
         connection = store._connection
         if self._realization_options is None:
             connection.execute("DROP TABLE IF EXISTS main.component_metrics")
+            connection.execute("DROP TABLE IF EXISTS main.package_audit")
             return
         nodes = connection.execute(
             "SELECT node_key, kind, language, relative_path, scan_status, package_key FROM main.import_nodes"
         ).fetchall()
+        replace_package_audit(connection, self.selection, capture, nodes, self._inputs.migration_refs, binding_states)
         tests = connection.execute("SELECT source_key, target_key FROM main.test_edges").fetchall()
         sources = read_import_sources(connection)
         try:
@@ -179,28 +184,54 @@ class NativeQueryOwner(ServiceInterface):
             measurements = []
         replace_component_metrics(connection, measurements)
 
-    def _watch_imports(self, store: QueryStore) -> None:
-
+    def _watch_sources(self, store: QueryStore) -> None:
         assert self._watcher is not None
-        while not self._import_stop.is_set() and store._available:
+        while not self._watch_stop.is_set() and store._available:
             batch = self._watcher.changes(timeout=0.1)
-            try:
-                if batch:
-                    with self._interface_lock:
+            if not batch:
+                continue
+            with self._interface_lock:
+                if self._watch_stop.is_set() or not store._available:
+                    break
+                if self._atom_sources_changed(batch):
+                    try:
+                        self._capture = self._project(store, skip_unchanged=True)
+                    except Exception as error:
+                        print(f"Native Atom refresh failed: {error}", file=sys.stderr)
+                if self._realization_options is not None and store._available:
+                    try:
                         prepared = self._prepare_realization(store, changes=batch)
                         if prepared is not None:
                             with store._lock, self._transaction(store):
-                                self._publish_realization(store, store._projection.graph, prepared)
-                                self._publish_component_metrics(store, self._capture)
-            except Exception as error:
-                print(f"Realization Graph refresh failed. Batch discarded. {error}", file=sys.stderr)
+                                bindings = self._publish_realization(store, store._projection.graph, prepared)
+                                self._publish_realization_metadata(store, self._capture, bindings)
+                    except Exception as error:
+                        print(f"Realization Graph refresh failed. Batch discarded. {error}", file=sys.stderr)
 
-    def _project(self, store: QueryStore, *, use_retained=False, before_commit=None) -> NativeCapture:
+    def _atom_sources_changed(self, batch) -> bool:
+        control = self.selection.control_relative
+        generated = control / "000_ANECHOIC_framework"
+        paths = {PurePosixPath(path) for change in batch for key in ("old_path", "new_path")
+                 if (path := change.get(key)) is not None}
+        for path in paths:
+            if not path.is_relative_to(control) or path.is_relative_to(generated):
+                continue
+            if path.suffix == ".md" or (self._root / path).is_dir():
+                return True
+            # A removed or renamed directory may have arrived without child events.
+            if any(PurePosixPath(row["source_path"]).is_relative_to(path) for row in self._capture.atoms):
+                return True
+        return False
+
+    def _project(self, store: QueryStore, *, use_retained=False, before_commit=None,
+                 skip_unchanged=False) -> NativeCapture:
         capture = capture_native(self.selection)
+        if skip_unchanged and capture == self._capture:
+            return capture
 
         def finish(graph) -> None:
             if before_commit is None:
-                self._publish_component_metrics(store, capture)
+                self._publish_realization_metadata(store, capture)
             else:
                 before_commit(graph, capture)
 
@@ -236,26 +267,34 @@ class NativeQueryOwner(ServiceInterface):
                 raise ValueError("Project Manifest runtime.workbench must be a mapping")
             self._realization_options = self._import_options(workbench)
             store = self._open_store(workbench)
+            poll_bind_mount = os.environ.get("ANECHOIC_RUNTIME_NAMESPACE") == "docker"
             prepared = None
             if self._realization_options is not None:
                 from APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.source import excluded_source_path
 
                 self._watcher = SourceWatcher(
-                    self._root, self._root / self.selection.control_relative,
-                    implementation_root=self._root, exclude_directory=excluded_source_path,
-                    poll_bind_mount=os.environ.get("ANECHOIC_RUNTIME_NAMESPACE") == "docker",
+                    self._root, self.selection.control_root, implementation_root=self._root,
+                    exclude_directory=lambda path: (
+                        not PurePosixPath(path).is_relative_to(self.selection.control_relative)
+                        and excluded_source_path(path)
+                    ),
+                    poll_bind_mount=poll_bind_mount,
                 )
-                self._watcher.start()
+            else:
+                self._watcher = SourceWatcher(self._root, self.selection.control_root, poll_bind_mount=poll_bind_mount)
+            self._watcher.start()
+            if self._realization_options is not None:
                 prepared = self._prepare_realization(store)
 
             def finish(graph, capture) -> None:
+                bindings = None
                 if prepared is None:
                     remove_imports(store._connection, graph, mark_graph_changed=store.mark_graph_registration_changed)
                     clear_import_sources(store._connection)
                     remove_native_traces(store._connection)
                 else:
-                    self._publish_realization(store, graph, prepared)
-                self._publish_component_metrics(store, capture)
+                    bindings = self._publish_realization(store, graph, prepared)
+                self._publish_realization_metadata(store, capture, bindings)
 
             self._capture = self._project(store, use_retained=True, before_commit=finish)
             store.sync_change_log(self._change_log, initialize=True)
@@ -263,10 +302,9 @@ class NativeQueryOwner(ServiceInterface):
                 lambda record: store.record_query_attempts([record])
             ))
             self._workspaces.clear_transient_results()
-            if self._watcher is not None:
-                self._import_thread = threading.Thread(target=self._watch_imports, args=(store,),
-                                                       name="native-realization-graph", daemon=True)
-                self._import_thread.start()
+            self._watch_thread = threading.Thread(target=self._watch_sources, args=(store,),
+                                                  name="native-source-watcher", daemon=True)
+            self._watch_thread.start()
         except BaseException as error:
             print(f"Native Workbench startup failed: {error}", file=sys.stderr)
             if self._watcher is not None:
@@ -344,7 +382,7 @@ class NativeQueryOwner(ServiceInterface):
                                      "internal.native_frontier"}
         atom_tables |= {f"internal.{name[1:-1]}" for name in store._projection.graph.tables.values()}
         if table in atom_tables:
-            return table, "atoms", atom_tables | set(AUDIT_TABLES) | {"anechoic", "component_metrics"}
+            return table, "atoms", atom_tables | set(AUDIT_TABLES) | {"anechoic", "component_metrics", "package_audit"}
         if table in REALIZATION_TABLES or table in IMPORT_CACHE_TABLES:
             if self._realization_options is None:
                 raise ValueError("Realization Graph is disabled")
@@ -369,8 +407,9 @@ class NativeQueryOwner(ServiceInterface):
                 with observations as query_attempts, store._lock:
                     def rebuild_dependents(graph, capture) -> None:
                         nonlocal staged
+                        bindings = None
                         if prepared is not None:
-                            self._publish_realization(store, graph, prepared)
+                            bindings = self._publish_realization(store, graph, prepared)
                         elif scope == "all":
                             remove_imports(store._connection, graph,
                                            mark_graph_changed=store.mark_graph_registration_changed)
@@ -380,7 +419,7 @@ class NativeQueryOwner(ServiceInterface):
                         if scope == "atoms":
                             create_tables(store._connection)
                         if scope in ("all", "atoms", "realization"):
-                            self._publish_component_metrics(store, capture)
+                            self._publish_realization_metadata(store, capture, bindings)
                         staged = store.prepare_result_rebuild(table if scope == "result" else None,
                                                               tables=dependent_inputs)
 
@@ -489,7 +528,7 @@ class NativeQueryOwner(ServiceInterface):
 
     def status(self) -> dict[str, str]:
         self._owner()
-        return {"mode": "startup_snapshot"}
+        return {"mode": "live_index"}
 
     def page(self, query_id: str, offset: int, page_size: int = 100, *, grid: object = None,
              preview: int | None = None, result_delivery: str = "file",
@@ -510,10 +549,10 @@ class NativeQueryOwner(ServiceInterface):
         return {"tables": {name: columns for name, columns in tables.items() if name in QUERY_TABLES}}
 
     def close(self) -> None:
-        self._import_stop.set()
-        if self._import_thread is not None:
-            self._import_thread.join()
-            self._import_thread = None
+        self._watch_stop.set()
+        if self._watch_thread is not None:
+            self._watch_thread.join()
+            self._watch_thread = None
         if self._watcher is not None:
             self._watcher.close()
             self._watcher = None

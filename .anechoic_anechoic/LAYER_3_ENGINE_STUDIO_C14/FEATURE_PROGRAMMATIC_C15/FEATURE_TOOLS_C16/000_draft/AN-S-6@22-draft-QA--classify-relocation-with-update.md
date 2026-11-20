@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-6
-context:
+atom_family: SPEC
+atom_id: AN-S-6
+structure:
   container:
     component: C16
   tier: 3
+context:
   lens: QA
 state:
   status: draft

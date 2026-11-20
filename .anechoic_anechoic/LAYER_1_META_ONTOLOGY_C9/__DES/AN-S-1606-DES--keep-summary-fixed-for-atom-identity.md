@@ -1,0 +1,27 @@
+---
+atom_family: SPEC
+atom_id: AN-S-1606
+structure:
+  container:
+    component: C9
+  tier: 3
+context:
+  lens: DES
+state:
+  status: active
+  version: 22
+  updated_at: 2026-11-02 00:18:22 +0400
+---
+## Summary
+
+Keep Summary fixed for Atom identity
+
+## Claim
+
+### Prose Claim
+
+
+the Summary of an Atom across its Revisions.
+
+
+an Atom **must** keep the Summary created with it across **all** of its Revisions. **if** its Summary needs a change, **then** it **must** be replaced by a new Atom with a new Atom ID, even **if** its Claim is unchanged.

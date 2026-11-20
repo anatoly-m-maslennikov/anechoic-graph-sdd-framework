@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2954
-context:
+atom_family: SPEC
+atom_id: AN-S-2954
+structure:
   container:
     component: C9
   tier: 5
+context:
   lens: SWD
 state:
   status: draft

@@ -299,6 +299,181 @@ class NativeDirectUpdateTests(unittest.TestCase):
         self.assertEqual('completed', outcome['outcome'])
         self.assertEqual(before, (child.read_bytes(), grandchild.read_bytes()))
 
+    def test_nested_leaf_status_and_archive_use_local_slots(self):
+        epic = self.write('__TKT/TASKS/AN-T-2-EPIC--owner.md', 'AN-T-2')
+        epic.write_bytes(epic.read_bytes().replace(b'context:\n', b'context:\n  template: epic\n'))
+        task = self.write('__TKT/TASKS/AN-T-2-EPIC--owner/AN-T-3-TASK--child.md', 'AN-T-3', {'atom': 'AN-T-2'})
+        task.write_bytes(task.read_bytes().replace(b'context:\n', b'context:\n  template: task\n'))
+        report = self.write('__TKT/TASKS/AN-T-2-EPIC--owner/ASSETS/AN-T-4-WORK_REPORT--report.md',
+                            'AN-T-4', {'atom': 'AN-T-2'})
+        report.write_bytes(report.read_bytes().replace(b'context:\n', b'context:\n  template: work_report\n'))
+        for path, identity in ((task, 'AN-T-3'), (report, 'AN-T-4')):
+            params = {'target': {'ref_id': identity, 'version': 1}, 'targetStatus': 'done'}
+            result = change_ticket_status(self.selection, params, current_rows=capture_native(self.selection).atoms,
+                                          check_definition=lambda: None)
+            self.assertEqual('completed', result['outcome'])
+            moved = path.parent / 'done' / path.name
+            self.assertTrue(moved.is_file())
+            result = archive_ticket(self.selection, {'target': params['target']},
+                                    current_rows=capture_native(self.selection).atoms)
+            self.assertEqual('completed', result['outcome'])
+            self.assertTrue((path.parent / '099_archived' / path.name.replace(identity, identity + '@1')).is_file())
+            self.assertFalse(moved.exists())
+
+    def test_epic_close_moves_valid_companion_and_preserves_descendants(self):
+        epic = self.write('__TKT/TASKS/AN-T-2-EPIC--owner.md', 'AN-T-2')
+        epic.write_bytes(epic.read_bytes().replace(b'context:\n', b'context:\n  template: epic\n'))
+        child = self.write('__TKT/TASKS/AN-T-2-EPIC--owner/done/AN-T-3-TASK--child.md', 'AN-T-3', {'atom': 'AN-T-2'})
+        child.write_bytes(child.read_bytes().replace(b'context:\n', b'context:\n  template: task\n').replace(b'status: active', b'status: done'))
+        nested = self.write('__TKT/TASKS/AN-T-2-EPIC--owner/done/AN-T-3-TASK--child/canceled/AN-T-4-TASK--nested.md',
+                            'AN-T-4', {'atom': 'AN-T-3'})
+        nested.write_bytes(nested.read_bytes().replace(b'context:\n', b'context:\n  template: task\n').replace(b'status: active', b'status: canceled'))
+        draft = self.write('__TKT/TASKS/AN-T-2-EPIC--owner/000_draft/AN-T-3@2-draft-TASK--child.md',
+                           'AN-T-3', {'atom': 'AN-T-2'})
+        draft.write_bytes(draft.read_bytes().replace(b'context:\n', b'context:\n  template: task\n').replace(
+            b'status: active', b'status: draft').replace(b'version: 1', b'version: 2'))
+        before = child.read_bytes(), nested.read_bytes(), draft.read_bytes()
+        params = {'target': {'ref_id': 'AN-T-2', 'version': 1}, 'targetStatus': 'done'}
+        result = change_ticket_status(self.selection, params, current_rows=capture_native(self.selection).atoms,
+                                      check_definition=lambda: None)
+        self.assertEqual('completed', result['outcome'])
+        destination = epic.parent / 'done' / epic.name
+        self.assertTrue(destination.is_file())
+        self.assertFalse(epic.exists())
+        for path, raw in zip((child, nested, draft), before):
+            self.assertEqual(raw, (destination.with_suffix('') / path.relative_to(epic.with_suffix(''))).read_bytes())
+        self.assertFalse(epic.with_suffix('').exists())
+
+    def test_epic_close_collision_and_failed_remove_keep_tree(self):
+        epic = self.write('__TKT/TASKS/AN-T-2-EPIC--owner.md', 'AN-T-2')
+        epic.write_bytes(epic.read_bytes().replace(b'context:\n', b'context:\n  template: epic\n'))
+        child = self.write('__TKT/TASKS/AN-T-2-EPIC--owner/done/AN-T-3-TASK--child.md', 'AN-T-3', {'atom': 'AN-T-2'})
+        child.write_bytes(child.read_bytes().replace(b'context:\n', b'context:\n  template: task\n').replace(b'status: active', b'status: done'))
+        params = {'target': {'ref_id': 'AN-T-2', 'version': 1}, 'targetStatus': 'done'}
+        destination = epic.parent / 'done' / epic.name
+        destination.with_suffix('').mkdir(parents=True)
+        before = epic.read_bytes(), child.read_bytes()
+        result = change_ticket_status(self.selection, params, current_rows=capture_native(self.selection).atoms,
+                                      check_definition=lambda: None)
+        self.assertEqual('destination_exists', result['errors'][0]['code'])
+        self.assertEqual(before, (epic.read_bytes(), child.read_bytes()))
+        destination.with_suffix('').rmdir()
+        remove = effects.remove
+        def fail_epic(root, path, digest):
+            if path == epic:
+                return effects.Result(errors=[{'code': 'backend_failure', 'message': 'failure'}])
+            return remove(root, path, digest)
+        with patch.object(effects, 'remove', side_effect=fail_epic):
+            result = change_ticket_status(self.selection, params, current_rows=capture_native(self.selection).atoms,
+                                          check_definition=lambda: None)
+        self.assertEqual('failed', result['outcome'])
+        self.assertEqual(before, (epic.read_bytes(), child.read_bytes()))
+        self.assertFalse(destination.exists())
+        self.assertFalse(destination.with_suffix('').exists())
+
+    def test_epic_close_no_effect_tree_failure_rolls_back_parent(self):
+        epic = self.write('__TKT/TASKS/AN-T-2-EPIC--owner.md', 'AN-T-2')
+        epic.write_bytes(epic.read_bytes().replace(b'context:\n', b'context:\n  template: epic\n'))
+        child = self.write('__TKT/TASKS/AN-T-2-EPIC--owner/done/AN-T-3-TASK--child.md', 'AN-T-3', {'atom': 'AN-T-2'})
+        child.write_bytes(child.read_bytes().replace(b'context:\n', b'context:\n  template: task\n').replace(b'status: active', b'status: done'))
+        before = epic.read_bytes(), child.read_bytes()
+        destination = epic.parent / 'done' / epic.name
+        with patch('ATOM_LIFECYCLE.native_update.move_directory', return_value=effects.Result(
+                errors=[{'code': 'backend_failure', 'message': 'failure'}])):
+            result = change_ticket_status(self.selection,
+                {'target': {'ref_id': 'AN-T-2', 'version': 1}, 'targetStatus': 'done'},
+                current_rows=capture_native(self.selection).atoms, check_definition=lambda: None)
+        self.assertEqual('failed', result['outcome'])
+        self.assertEqual(before, (epic.read_bytes(), child.read_bytes()))
+        self.assertFalse(destination.exists())
+        self.assertFalse(destination.with_suffix('').exists())
+
+    def test_epic_close_keeps_destination_when_source_changed_on_remove(self):
+        epic = self.write('__TKT/TASKS/AN-T-2-EPIC--owner.md', 'AN-T-2')
+        epic.write_bytes(epic.read_bytes().replace(b'context:\n', b'context:\n  template: epic\n'))
+        child = self.write('__TKT/TASKS/AN-T-2-EPIC--owner/done/AN-T-3-TASK--child.md', 'AN-T-3', {'atom': 'AN-T-2'})
+        child.write_bytes(child.read_bytes().replace(b'context:\n', b'context:\n  template: task\n').replace(b'status: active', b'status: done'))
+        before = child.read_bytes()
+        destination = epic.parent / 'done' / epic.name
+        remove = effects.remove
+        def change_source(root, path, digest):
+            if path == epic:
+                epic.write_bytes(epic.read_bytes() + b'concurrent change')
+                return effects.Result(errors=[{'code': 'stale_state', 'message': 'failure'}])
+            return remove(root, path, digest)
+        with patch.object(effects, 'remove', side_effect=change_source):
+            result = change_ticket_status(self.selection,
+                {'target': {'ref_id': 'AN-T-2', 'version': 1}, 'targetStatus': 'done'},
+                current_rows=capture_native(self.selection).atoms, check_definition=lambda: None)
+        self.assertEqual('failed', result['outcome'])
+        self.assertIn(b'concurrent change', epic.read_bytes())
+        self.assertTrue(destination.is_file())
+        self.assertEqual(before, (destination.with_suffix('') / child.relative_to(epic.with_suffix(''))).read_bytes())
+
+    def test_epic_close_rejects_nonterminal_and_unrelated_tree(self):
+        epic = self.write('__TKT/TASKS/AN-T-2-EPIC--owner.md', 'AN-T-2')
+        epic.write_bytes(epic.read_bytes().replace(b'context:\n', b'context:\n  template: epic\n'))
+        child = self.write('__TKT/TASKS/AN-T-2-EPIC--owner/AN-T-3-TASK--child.md', 'AN-T-3', {'atom': 'AN-T-2'})
+        child.write_bytes(child.read_bytes().replace(b'context:\n', b'context:\n  template: task\n'))
+        params = {'target': {'ref_id': 'AN-T-2', 'version': 1}, 'targetStatus': 'done'}
+        with self.assertRaises(InputError):
+            change_ticket_status(self.selection, params, current_rows=capture_native(self.selection).atoms,
+                                 check_definition=lambda: None)
+        child.write_bytes(child.read_bytes().replace(b'status: active', b'status: done'))
+        done = child.parent / 'done' / child.name
+        done.parent.mkdir()
+        child.rename(done)
+        unrelated = self.write('__TKT/TASKS/AN-T-2-EPIC--owner/AN-T-4-TASK--unrelated.md',
+                               'AN-T-4', {'component': 'C0'})
+        with self.assertRaises(InputError):
+            change_ticket_status(self.selection, params, current_rows=capture_native(self.selection).atoms,
+                                 check_definition=lambda: None)
+        with self.assertRaises(InputError):
+            archive_ticket(self.selection, {'target': params['target']}, current_rows=capture_native(self.selection).atoms)
+        self.assertTrue(epic.exists())
+        self.assertTrue(done.exists())
+        self.assertTrue(unrelated.exists())
+
+    def test_epic_close_rejects_companion_change_during_validation(self):
+        epic = self.write('__TKT/TASKS/AN-T-2-EPIC--owner.md', 'AN-T-2')
+        epic.write_bytes(epic.read_bytes().replace(b'context:\n', b'context:\n  template: epic\n'))
+        child = self.write('__TKT/TASKS/AN-T-2-EPIC--owner/done/AN-T-3-TASK--child.md', 'AN-T-3', {'atom': 'AN-T-2'})
+        child.write_bytes(child.read_bytes().replace(b'context:\n', b'context:\n  template: task\n').replace(b'status: active', b'status: done'))
+        rows = capture_native(self.selection).atoms
+        def capture_then_change(selection):
+            captured = capture_native(selection)
+            child.write_bytes(child.read_bytes() + b'concurrent change')
+            return captured
+        with patch('ATOM_LIFECYCLE.native_update.capture_native', side_effect=capture_then_change):
+            with self.assertRaises(SourceChanged):
+                change_ticket_status(self.selection,
+                    {'target': {'ref_id': 'AN-T-2', 'version': 1}, 'targetStatus': 'done'},
+                    current_rows=rows, check_definition=lambda: None)
+        self.assertTrue(epic.exists())
+        self.assertIn(b'concurrent change', child.read_bytes())
+        self.assertFalse((epic.parent / 'done' / epic.name).exists())
+
+    def test_epic_close_restores_tree_when_definition_changes_after_move(self):
+        epic = self.write('__TKT/TASKS/AN-T-2-EPIC--owner.md', 'AN-T-2')
+        epic.write_bytes(epic.read_bytes().replace(b'context:\n', b'context:\n  template: epic\n'))
+        child = self.write('__TKT/TASKS/AN-T-2-EPIC--owner/done/AN-T-3-TASK--child.md', 'AN-T-3', {'atom': 'AN-T-2'})
+        child.write_bytes(child.read_bytes().replace(b'context:\n', b'context:\n  template: task\n').replace(b'status: active', b'status: done'))
+        destination = epic.parent / 'done' / epic.name
+        destination.parent.mkdir()
+        before = epic.read_bytes(), child.read_bytes()
+        calls = []
+        def check():
+            calls.append(True)
+            if len(calls) == 3:
+                raise ValueError('definition changed')
+        result = change_ticket_status(self.selection,
+            {'target': {'ref_id': 'AN-T-2', 'version': 1}, 'targetStatus': 'done'},
+            current_rows=capture_native(self.selection).atoms, check_definition=check)
+        self.assertEqual('definition_revalidation_required', result['errors'][0]['code'])
+        self.assertEqual(before, (epic.read_bytes(), child.read_bytes()))
+        self.assertFalse(destination.exists())
+        self.assertFalse(destination.with_suffix('').exists())
+
     def test_status_rejects_stale_and_container(self):
         params = {'target': self.params['target'], 'targetStatus': 'done'}
         original = self.path.read_bytes()

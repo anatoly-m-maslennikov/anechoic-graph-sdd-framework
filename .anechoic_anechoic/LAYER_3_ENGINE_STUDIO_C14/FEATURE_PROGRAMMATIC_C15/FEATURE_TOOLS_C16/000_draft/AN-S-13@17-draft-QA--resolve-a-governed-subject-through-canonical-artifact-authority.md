@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-13
-context:
+atom_family: SPEC
+atom_id: AN-S-13
+structure:
   container:
     component: C16
   tier: 2
+context:
   lens: QA
 state:
   status: draft

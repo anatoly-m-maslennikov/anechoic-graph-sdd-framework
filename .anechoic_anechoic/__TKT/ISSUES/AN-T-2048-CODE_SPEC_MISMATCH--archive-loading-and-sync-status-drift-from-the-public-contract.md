@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-2048
-context:
+atom_family: TKT
+atom_id: AN-T-2048
+structure:
   container:
     component: C14
-  tier: 4
+  priority: 2
+context:
   template: Code-Spec Mismatch
 state:
   status: active

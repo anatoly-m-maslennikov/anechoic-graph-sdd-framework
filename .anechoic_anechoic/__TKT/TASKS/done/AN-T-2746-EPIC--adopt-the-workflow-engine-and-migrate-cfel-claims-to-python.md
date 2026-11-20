@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-2746
-context:
+atom_family: TKT
+atom_id: AN-T-2746
+structure:
   container:
     component: C14
-  tier: 3
+  priority: 2
+context:
   template: epic
 state:
   status: done

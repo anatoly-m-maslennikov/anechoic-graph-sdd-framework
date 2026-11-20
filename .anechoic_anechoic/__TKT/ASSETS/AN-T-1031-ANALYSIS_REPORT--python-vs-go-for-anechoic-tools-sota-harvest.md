@@ -1,9 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-1031
-context:
+atom_family: TKT
+atom_id: AN-T-1031
+structure:
   container:
     component: C16
+  priority: 2
+context:
   template: Analysis Report
 state:
   status: active

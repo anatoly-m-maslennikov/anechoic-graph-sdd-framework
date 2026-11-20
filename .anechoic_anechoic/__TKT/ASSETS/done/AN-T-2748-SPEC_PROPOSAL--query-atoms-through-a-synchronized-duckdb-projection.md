@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-2748
-context:
+atom_family: TKT
+atom_id: AN-T-2748
+structure:
   container:
     component: C14
-  tier: 3
+  priority: 2
+context:
   template: Spec Proposal
 state:
   status: done

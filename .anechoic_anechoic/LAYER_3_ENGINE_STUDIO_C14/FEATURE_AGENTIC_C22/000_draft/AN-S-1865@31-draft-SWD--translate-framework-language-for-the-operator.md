@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-1865
-context:
+atom_family: SPEC
+atom_id: AN-S-1865
+structure:
   container:
     component: C22
   tier: 3
+context:
   lens: SWD
 state:
   status: draft

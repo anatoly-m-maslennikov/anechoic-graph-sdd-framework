@@ -38,5 +38,9 @@
   {
     "exact_ref": "AN-S-2347@17",
     "path": "LAYER_1_META_ONTOLOGY_C9/099_archived/AN-S-2347@17-DES--use-settings-locations-defined-by-the-core-meta-model.md"
+  },
+  {
+    "exact_ref": "AN-S-2177@3",
+    "path": "LAYER_1_META_ONTOLOGY_C9/099_archived/AN-S-2177@3-SPEC--declare-atom-identity.md"
   }
 ]

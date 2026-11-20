@@ -1,9 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-2445
-context:
+atom_family: TKT
+atom_id: AN-T-2445
+structure:
   container:
     component: C16
+  priority: 2
+context:
   template: problem
 state:
   status: resolved

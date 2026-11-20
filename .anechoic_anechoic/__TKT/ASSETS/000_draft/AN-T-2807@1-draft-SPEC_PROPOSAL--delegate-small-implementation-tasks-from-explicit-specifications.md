@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-2807
-context:
+atom_family: TKT
+atom_id: AN-T-2807
+structure:
   container:
     component: C14
-  tier: 3
+  priority: 2
+context:
   template: Spec Proposal
 state:
   status: draft

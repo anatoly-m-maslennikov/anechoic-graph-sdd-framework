@@ -9,6 +9,7 @@ test('source index status distinguishes native, unavailable, and legacy states',
     const { render } = await server.ssrLoadModule('svelte/server');
     for (const [status, text] of [
       [{ mode: 'startup_snapshot' }, 'Startup snapshot'],
+      [{ mode: 'live_index' }, 'Watching files'],
       [{ mode: 'unavailable', syncing: false }, 'Unavailable'],
       [{ syncing: true, last_synced_at: null }, 'Syncing'],
       [{ syncing: false, last_synced_at: null }, 'Not synced yet'],

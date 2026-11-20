@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-517
-context:
+atom_family: SPEC
+atom_id: AN-S-517
+structure:
   container:
     component: C9
   tier: 3
+context:
   lens: DevOps
 state:
   status: active

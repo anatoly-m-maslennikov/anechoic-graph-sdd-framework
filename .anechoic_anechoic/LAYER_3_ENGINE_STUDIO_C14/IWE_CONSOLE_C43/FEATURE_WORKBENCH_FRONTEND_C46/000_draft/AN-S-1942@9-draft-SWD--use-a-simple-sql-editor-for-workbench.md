@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-1942
-context:
+atom_family: SPEC
+atom_id: AN-S-1942
+structure:
   container:
     component: C46
   tier: 4
+context:
   lens: SWD
 state:
   status: draft

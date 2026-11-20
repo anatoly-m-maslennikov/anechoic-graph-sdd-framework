@@ -1,10 +1,10 @@
 ---
-identity:
-  atom_id: AN-P-54
-context:
+atom_family: PMETA
+atom_id: AN-P-54
+structure:
   container:
     component: C21
-  tier: 1
+context:
   template: action
 state:
   status: active

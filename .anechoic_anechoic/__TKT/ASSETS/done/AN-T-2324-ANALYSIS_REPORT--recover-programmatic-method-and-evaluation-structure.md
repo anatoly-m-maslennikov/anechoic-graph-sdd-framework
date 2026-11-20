@@ -1,9 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-2324
-context:
+atom_family: TKT
+atom_id: AN-T-2324
+structure:
   container:
     component: C00
+  priority: 2
+context:
   template: Analysis Report
 state:
   status: done

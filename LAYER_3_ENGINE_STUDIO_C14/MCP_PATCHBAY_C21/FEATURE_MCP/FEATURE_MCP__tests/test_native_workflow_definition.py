@@ -78,7 +78,7 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
         for index, (kind, atom_id, version, original) in enumerate(installed.SOURCES, 10):
             legacy = f"{atom_id}@{version}"
             native = f"AN-S-{index}@{version}"
-            relative = f"{self.control}/LAYER_1_META_ONTOLOGY_C9/DES/DOM/AN-S-{index}-DOM-{kind.upper()}--fixture.md"
+            relative = f"{self.control}/LAYER_1_META_ONTOLOGY_C9/__DES/__DOM/AN-S-{index}-DOM-{kind.upper()}--fixture.md"
             body = base64.b64decode(snapshot[legacy]).partition(b"\n---\n")[2].decode()
             path = self._write(relative, {
                 "identity": {"atom_id": f"AN-S-{index}"},

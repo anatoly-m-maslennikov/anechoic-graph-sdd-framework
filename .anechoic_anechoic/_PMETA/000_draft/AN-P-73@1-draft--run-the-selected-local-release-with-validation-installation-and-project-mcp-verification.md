@@ -1,10 +1,10 @@
 ---
-identity:
-  atom_id: AN-P-73
-context:
+atom_family: PMETA
+atom_id: AN-P-73
+structure:
   container:
     component: C00
-  tier: 3
+context: {}
 state:
   status: draft
   version: 1

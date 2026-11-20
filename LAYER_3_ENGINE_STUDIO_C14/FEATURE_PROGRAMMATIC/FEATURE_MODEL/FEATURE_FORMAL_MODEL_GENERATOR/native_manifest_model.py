@@ -21,11 +21,11 @@ from .model_declaration_sources import _check_relation_references, _merge_constr
 _ASSETS = Path(__file__).resolve().parent.parent / "FEATURE_GENERATED_MODEL"
 _CLAIM_FILES = {
     "native-graph-claims.json": "777f959c571424e73503cde96c78065d9da3cb1b04eb312cb8976f4b8faf60eb",
-    "native-spec-template-claims.json": "a5d5591aba56a21c73931d2eea54f9d17ed86c3e8c878c6b71c31394f1158f69",
+    "native-spec-template-claims.json": "1d847774691f91b37db6445ce892810d8fe47e86f9d87b960d951dc2a3da437a",
 }
 _REVIEWED_CHECKS = {
     "check_atom_identity": "1756b0e117c6b68ae719f52cb805a69d2a2d198feb9a2996b94869698e13cd09",
-    "check_project_manifest": "b68c693a62ef4e85fa2183582ffbc9b27d7e5391e7ca5c604e7be3a8d14d5c78",
+    "check_project_manifest": "771c1c72eeae6ea67e1658e647fc3062dc07f725506372ff284d181b3cfe9b39",
     "check_component_manifest": "47532369ca1bc4cbd73611f09a27b6142aafb453e1eb156b10198bc4d98dc978",
     "check_purpose": "a080c8a08f9b2f066992045de8183f532eb0aa6fb1dc566e746bc3bed2701a3b",
     "check_component_purpose": "0e2405b84739f53ad22f70f2db415ab7576996b295592d2c63863abaab7a0e13",

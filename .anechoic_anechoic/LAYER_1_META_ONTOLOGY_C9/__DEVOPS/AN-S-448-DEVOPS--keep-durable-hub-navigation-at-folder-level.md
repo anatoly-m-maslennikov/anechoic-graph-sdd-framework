@@ -1,0 +1,27 @@
+---
+atom_family: SPEC
+atom_id: AN-S-448
+structure:
+  container:
+    component: C9
+  tier: 3
+context:
+  lens: DevOps
+state:
+  status: active
+  version: 24
+  updated_at: 2026-11-02 19:44:26 +0400
+---
+## Summary
+
+Keep Durable Hub Navigation at Folder Level
+
+## Claim
+
+### Prose Claim
+
+
+durable Hub Carrier navigation.
+
+
+a durable Hub Carrier **may** list stable child folders **and** their Hubs but **must not** enumerate individual Atom Carriers **or** Runtime State descendants.

@@ -73,9 +73,9 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             destination.mkdir(parents=True)
             (destination / "old.txt").write_text("obsolete", encoding="utf-8")
             (destination / "config.toml").write_text("keep = true\n", encoding="utf-8")
-        skill = self.root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ca"
+        skill = self.root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane"
         skill.mkdir(parents=True)
-        (skill / "SKILL.md").write_text("ca skill", encoding="utf-8")
+        (skill / "SKILL.md").write_text("ane skill", encoding="utf-8")
         (skill / "references").mkdir()
         (skill / "references/details.md").write_text("skill reference", encoding="utf-8")
         (self.root / "pyproject.toml").write_text("[project]\nname = 'fixture'\n", encoding="utf-8")
@@ -155,6 +155,9 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         image_factory = patch("local_release._image_manager", return_value=self.image)
         self.image_factory = image_factory.start()
         self.addCleanup(image_factory.stop)
+        canary = patch("local_release.verify_candidate_image", return_value="http://127.0.0.1:49152/anechoic/mcp")
+        self.canary = canary.start()
+        self.addCleanup(canary.stop)
         lifecycle_assets = patch("release_support.compile_lifecycle_assets",
                                  return_value=(b'{"schema":1}\n', b'{"schema":1}\n'))
         self.lifecycle_assets = lifecycle_assets.start()
@@ -390,6 +393,9 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertEqual(retained, legacy.read_bytes())
 
     def test_active_sources_replace_product_and_installed_copy_preserves_config(self):
+        legacy = self.root / ".agents/skills/ca/SKILL.md"
+        legacy.parent.mkdir(parents=True)
+        legacy.write_text("custom legacy skill", encoding="utf-8")
         protected = ("settings.toml", "project_settings.toml", "anechoic_framework_settings.toml",
                      "operators_registry.toml", "operator_registry/entry.txt")
         for target in (self.product, self.installed):
@@ -453,9 +459,9 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertEqual(0o755, stat.S_IMODE(bootstrap.stat().st_mode))
         for package in (self.runtime / "simple_local_release/package",):
             self.assertFalse((package / "METHODOLOGY/compiled").exists())
-            source_skill = self.root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ca"
+            source_skill = self.root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane"
             expected_skill = {p.relative_to(source_skill): p.read_bytes() for p in source_skill.rglob("*") if p.is_file()}
-            for relative in ("SKILLS/ca", "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ca"):
+            for relative in ("SKILLS/ane", "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane"):
                 packaged_skill = package / relative
                 self.assertEqual(expected_skill, {p.relative_to(packaged_skill): p.read_bytes()
                                                   for p in packaged_skill.rglob("*") if p.is_file()})
@@ -485,7 +491,8 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             for excluded in (".anechoic_anechoic", ".anechoic_runtime", ".anechoic_tmp", ".anechoic_anechoic", ".anechoic_install"):
                 self.assertFalse((package / excluded).exists())
             self.assertEqual("retained implementation skill\n", (packaged_tools / "retained/SKILL.md").read_text())
-        self.assertEqual("ca skill", (self.root / ".agents/skills/ca/SKILL.md").read_text())
+        self.assertEqual("ane skill", (self.root / ".agents/skills/ane/SKILL.md").read_text())
+        self.assertEqual("custom legacy skill", legacy.read_text(encoding="utf-8"))
         self.assertIn('version = "0.4.1.1"', (self.root / "version.toml").read_text())
         self.assertIn('version = "0.4.1.1"', (self.runtime / "simple_local_release/package/version.toml").read_text())
         self.assertEqual(1, sum(self._is_mcp_bootstrap(argv) for argv in calls))
@@ -823,7 +830,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
 
     def test_package_inputs_fail_before_any_installed_replacement(self):
         runtime_package = self.runtime / "simple_local_release/package"
-        skill = self.root / ".agents/skills/ca"
+        skill = self.root / ".agents/skills/ane"
         for target in (runtime_package, skill):
             target.mkdir(parents=True)
             (target / "old.txt").write_text("prior payload", encoding="utf-8")
@@ -832,7 +839,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             return {path.relative_to(target).as_posix(): (path.read_bytes(), stat.S_IMODE(path.stat().st_mode))
                     for path in target.rglob("*") if path.is_file()}
         before = {target: inventory(target) for target in (self.installed, runtime_package, skill)}
-        for relative in ("uv.lock", "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ca/SKILL.md",
+        for relative in ("uv.lock", "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane/SKILL.md",
                          "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/runtime.py"):
             with self.subTest(relative=relative):
                 missing = self.root / relative
@@ -889,7 +896,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         blocked.mkdir()
         (blocked / "required.py").write_bytes(b"required payload")
         runtime_package = self.runtime / "simple_local_release/package"
-        skill = self.root / ".agents/skills/ca"
+        skill = self.root / ".agents/skills/ane"
         for target in (runtime_package, skill):
             target.mkdir(parents=True)
             (target / "old.txt").write_bytes(b"previous payload")
@@ -933,13 +940,23 @@ class SimpleLocalReleaseTests(unittest.TestCase):
                 events.append("candidate-resolve")
                 self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
                 self.assertFalse((self.runtime / "simple_local_release/package").exists())
-                self.assertFalse((self.root / ".agents/skills/ca").exists())
+                self.assertFalse((self.root / ".agents/skills/ane").exists())
             else:
                 events.append("installed-resolve")
                 self.assertEqual({"explicit_id": self.image_id, "build_if_missing": False}, kwargs)
             return self.image_id
         self.image.resolve.side_effect = resolve
         runner, calls = self._runner()
+
+        def verify_canary(root, selection, package, staging, image):
+            events.append("candidate-canary")
+            self.assertEqual(self.root, root)
+            self.assertEqual(self.image_id, image)
+            self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
+            self.assertEqual(staging, package.parent)
+            return "http://127.0.0.1:49152/anechoic/mcp"
+
+        self.canary.side_effect = verify_canary
 
         def record(argv, cwd):
             result = runner(argv, cwd)
@@ -965,13 +982,24 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertNotIn("--image", launch)
         self.assertIn("--no-build", launch)
         self.assertLess(events.index("full-suite-green"), events.index("candidate-resolve"))
-        self.assertLess(events.index("candidate-resolve"), events.index("installed-resolve"))
+        self.assertLess(events.index("candidate-resolve"), events.index("candidate-canary"))
+        self.assertLess(events.index("candidate-canary"), events.index("installed-resolve"))
         self.assertLess(events.index("installed-resolve"), events.index("launch"))
         self.assertLess(events.index("launch"), events.index("post-smoke-image-cleanup"))
+        self.assertEqual("http://127.0.0.1:49152/anechoic/mcp", result["canary_endpoint"])
+
+    def test_failed_candidate_canary_preserves_the_installed_release(self):
+        self.canary.side_effect = local_release.LocalReleaseError("local-release-canary-probe-failed")
+        runner, calls = self._runner()
+        result = run_local_release(self.root, run_id="canary-failed", runner=runner)
+        self.assertEqual("verify_candidate_image", result["failed_step"])
+        self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
+        self.assertFalse(any(self._is_mcp_bootstrap(argv) for argv in calls))
+        self.assertFalse(any(argv[:3] == ("docker", "image", "rm") for argv in calls))
 
     def test_image_preparation_failure_preserves_previous_installation(self):
         runtime_package = self.runtime / "simple_local_release/package"
-        skill = self.root / ".agents/skills/ca"
+        skill = self.root / ".agents/skills/ane"
         for target in (runtime_package, skill):
             target.mkdir(parents=True)
             (target / "old.txt").write_bytes(b"previous payload")

@@ -1,14 +1,15 @@
 ---
-identity:
-  atom_id: AN-S-3119
-context:
+atom_family: SPEC
+atom_id: AN-S-3119
+structure:
   container:
     component: C9
+context:
   lens: SPEC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-20T14:42:07.157939+00:00'
+  version: 3
+  updated_at: '2026-11-20T17:25:38.351511+00:00'
 ---
 
 ## Summary
@@ -17,7 +18,7 @@ Declare Atom ID
 
 ## Claim scope
 
-MODEL//ANECHOIC <+ Node//Artifact//Atom.Atom ID
+MODEL//ANECHOIC <+ Node//Artifact//Atom.Header.Atom ID
 
 ## Claim
 
@@ -30,7 +31,7 @@ declare_entity(
     entity_name='Atom ID',
     entity_kind='Property',
     relation_name='IS_PROPERTY_OF',
-    base_path='Node//Artifact//Atom',
+    base_path='Node//Artifact//Atom.Header',
     value_format=str,
     value_cardinality=1,
     property_occurrence_cardinality=1,

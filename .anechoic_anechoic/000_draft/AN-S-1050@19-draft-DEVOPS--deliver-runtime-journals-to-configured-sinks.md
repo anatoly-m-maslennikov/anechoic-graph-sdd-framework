@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-1050
-context:
+atom_family: SPEC
+atom_id: AN-S-1050
+structure:
   container:
     component: C00
   tier: 3
+context:
   lens: DevOps
 state:
   status: draft

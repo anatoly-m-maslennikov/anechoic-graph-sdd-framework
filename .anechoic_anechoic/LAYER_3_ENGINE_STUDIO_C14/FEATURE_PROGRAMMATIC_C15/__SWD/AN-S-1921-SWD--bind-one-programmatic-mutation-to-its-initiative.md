@@ -1,0 +1,52 @@
+---
+atom_family: SPEC
+atom_id: AN-S-1921
+structure:
+  container:
+    component: C15
+  tier: 4
+context:
+  lens: SWD
+state:
+  status: active
+  version: 27
+  updated_at: '2026-11-12T01:59:14.433341+00:00'
+---
+
+## Summary
+
+Bind one programmatic mutation to its Initiative
+
+## Claim
+
+
+
+### Prose Claim
+##### Applicable when
+
+Apply before accepting or dispatching a programmatic mutation governed by Initiative binding. The six direct Project Atom Lifecycle Tools follow CA-R-1105.
+
+##### Procedure
+
+1. resolve **or** create **=1** sealed Initiative from the accepted human
+   instruction. it **may** bind **to** a persisted Plan **or** Task **or** remain an ephemeral
+   session task.
+2. assign one stable action identity **and** preserve a short instruction-derived
+   summary plus enough structured context **to** identify the instruction.
+3. attach the Initiative **and** action identities **before** **any** Hook, queue, worker,
+   retry, Git, Journal, **or** reconciliation handoff.
+4. propagate both identities unchanged through **every** handoff. a process,
+   thread, adapter, queue, **or** worker identity **may** be linked as execution
+   context but **must not** replace them.
+5. return an explicit blocked outcome **before** mutation **when** either identity is
+   missing, ambiguous, changed, **or** bound **to** more than one Initiative.
+
+##### Failure or stop
+
+stop **before** mutation **when** the Initiative is unsealed, the action identity is
+absent **or** reused for another Initiative, **or** a handoff cannot preserve both
+identities.
+
+##### Sources
+
+- [CA-A-058 — Validate PROGRAMMATIC Method and Evaluation closure](../02_analysis_and_advisory/CA-A-058-PROGRAMMATIC-ANALYSIS_RPRT--validate-programmatic-method-and-evaluation-closure.md)

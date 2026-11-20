@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2756
-context:
+atom_family: SPEC
+atom_id: AN-S-2756
+structure:
   container:
     component: C9
   tier: 3
+context:
   lens: QA
 state:
   status: active

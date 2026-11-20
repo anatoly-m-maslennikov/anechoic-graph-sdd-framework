@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2302
-context:
+atom_family: SPEC
+atom_id: AN-S-2302
+structure:
   container:
     component: C00
   tier: 4
+context:
   lens: QA
 state:
   status: draft

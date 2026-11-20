@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-2900
-context:
+atom_family: TKT
+atom_id: AN-T-2900
+structure:
   container:
     component: C45
-  tier: 4
+  priority: 2
+context:
   template: Spec Proposal
 state:
   status: draft

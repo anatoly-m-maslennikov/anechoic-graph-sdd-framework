@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2479
-context:
+atom_family: SPEC
+atom_id: AN-S-2479
+structure:
   container:
     component: C17
   tier: 3
+context:
   lens: DevOps
 state:
   status: archived

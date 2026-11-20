@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-428
-context:
+atom_family: SPEC
+atom_id: AN-S-428
+structure:
   container:
     component: C9
   tier: 3
+context:
   lens: QA
 state:
   status: active

@@ -1,0 +1,45 @@
+---
+atom_family: TKT
+atom_id: AN-T-1504
+structure:
+  container:
+    atom: AN-T-1578
+  priority: 2
+context:
+  template: task
+state:
+  status: "canceled"
+  version: 12
+  updated_at: "2026-11-20T20:21:05.037085+00:00"
+---
+# Summary
+
+Deliver Release Version Workflow
+
+## Objective
+
+Deliver the Operator-requested Release Version capability, reusing the existing compiler, installer, shared executor and Docker infrastructure. This is a composite; its bounded children author and review source, implement, then verify the actual release path.
+
+## Details
+
+The Operator selected full Methodology source delivery to root 101_LAYER_1_FRAMEWORK_METHODOLOGY/sources, then Applicable Methodology compilation and delivery for runtime use under .anechoic_anechoic/000_ANECHOIC_framework. Install the full declared Framework package into .anechoic_runtime, including its Methodology, not only Engine binaries. Install the project-local ca Skill without hooks. Run the full declared test suite, rebuild the Docker image, verify the installed package and actual new image, then remove only the exact retired image when unused. Authoritative sources remain the single source of truth; release/runtime copies are derived deliveries, not competing authoring sources.
+
+Bind selected Version/source revision, release notes, package manifest/digests, source and compilation destinations, project-local Skill target, tests, rollback/currentness gates, image/container references and canonical Run Journal/report destinations. Preserve Project settings, framework-instance settings, authoring sources, Journals, unrelated project Skills and rollback state during installation. Keep secrets outside packages/images. Explicit Operator invocation authorizes only the selected release boundary; no autonomous release or force-prune.
+
+Current project_structure.toml still delivers FRAMEWORK_METHODOLOGY to 101_FRAMEWORK_METHODOLOGY. Source authoring must reconcile that binding with the newly selected 101_LAYER_1_FRAMEWORK_METHODOLOGY/sources delivery before implementation; file presence is not authority. Exact compiler output layout is bound by reviewed D before effects, not silently inferred from this Plan.
+
+The existing fifteen-route manifest remains the accepted closed fifteen-route contract until the reviewed additive Release Version source and route admission permit its extension. Do not rewrite historical fifteen-route evidence as proof for this sixteenth capability. C447/C449 remain their existing denied-relocation and host-test-environment blockers; this addition grants no bypass.
+
+The first working vertical cut freezes Version N as the executing Framework/Methodology. That N builds and tests candidate N+1 using separately pinned candidate sources. Installation promotes N+1 only after its required gates pass; N remains the working runtime and rollback point until then. The running release graph and inputs do not silently switch to candidate definitions mid-Run. First-cut release verification must not recursively invoke another release to prove itself.
+
+## Definition of Done
+
+All four required children and their bounded remainders are Done; independently accepted source/RMED and functional current-release evidence cover delivery, compilation, full-suite gates, complete runtime installation, project Skill installation without hooks, actual new image and safe exact old-image retirement. Rollback and failure cases preserve actual effects and truthful shared Run records.
+
+## Planning review
+
+/root/review_combined_query_tools independently ACCEPTED the P1620–P1624 planning packet after the premature global-review assertion was corrected. This is Plan-only progression: no release source, Tool, installation, current image or retirement is accepted by that verdict. The source-authoring stage is decomposed into bounded O, RMED and existing-interface binding children; all three gate the complete-packet source review P1622. The executing N remains frozen while candidate N+1 is built and tested separately.
+
+## Approved first-cut disposition
+
+Automated Release execution, promotion and exact old-image retirement are deferred to a later milestone. This Plan remains Active; its formal RMED release gates, installed N baseline, interrupted-Run evidence, source/currentness and safety checks, and truthful Journal requirements remain in force and are neither waived nor relabeled complete. Existing lifecycle/runtime current-source binding maintenance may support the retained first cut, but it does not authorize an automated Release, a new image claim, promotion or retirement.

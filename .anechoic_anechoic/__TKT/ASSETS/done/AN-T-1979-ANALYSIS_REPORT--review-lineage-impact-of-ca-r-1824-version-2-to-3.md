@@ -1,9 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-1979
-context:
+atom_family: TKT
+atom_id: AN-T-1979
+structure:
   container:
     component: C15
+  priority: 2
+context:
   template: Analysis Report
 state:
   status: done

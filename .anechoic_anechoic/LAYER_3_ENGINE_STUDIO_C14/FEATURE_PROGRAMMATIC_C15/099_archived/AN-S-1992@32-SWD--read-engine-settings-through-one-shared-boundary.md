@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-1992
-context:
+atom_family: SPEC
+atom_id: AN-S-1992
+structure:
   container:
     component: C15
   tier: 4
+context:
   lens: SWD
 state:
   status: archived

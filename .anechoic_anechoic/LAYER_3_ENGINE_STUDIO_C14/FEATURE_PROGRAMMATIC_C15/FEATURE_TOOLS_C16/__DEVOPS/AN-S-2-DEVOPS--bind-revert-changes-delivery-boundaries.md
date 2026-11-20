@@ -1,0 +1,31 @@
+---
+atom_family: SPEC
+atom_id: AN-S-2
+structure:
+  container:
+    component: C16
+  tier: 5
+context:
+  lens: DevOps
+state:
+  status: active
+  version: 13
+  updated_at: 2026-10-27 19:59:27 +0400
+---
+# Summary
+
+Bind REVERT_CHANGES delivery boundaries
+
+## Scope
+
+The delivery boundary between REVERT_CHANGES, governed reversal capabilities, and shared Run/Journal support.
+
+## Claim
+
+REVERT_CHANGES **must** deliver manifest validation, currentness guards, ordered effect orchestration, and truthful result assembly, while delegated governed effects and shared Journal serialization retain their existing authority.
+
+## Details
+
+Implementation belongs at the CA-D-536 entrypoint with functional mocks under the same Tool package. It calls supported governed effect capabilities only after admission/currentness checks; it never replaces CA-O-131's semantics, deletes history, performs a Git reset, or implements an internal failure rollback. It passes exact Run/Step/Action identity and evidence references to existing shared Run support and retains actual Run observations and logging diagnostics. Plain Journal append/read is independent observation, not a permission or source-effect completion gate; no durable/pending receipt, logging retry or recovery channel is required or exposed. Actual Run-start failure blocks before effects, and actual Run-terminal failure preserves observed effects and reports its error without claiming terminal persistence. Logging failure does not downgrade an independently completed reversal or authorize effect replay.
+
+Delivery is incomplete until CA-E-553 and CA-E-636 run through the real MCP boundary in the required Docker image. This RMED carrier authorizes no code before independent RMED review and no runtime-success claim.

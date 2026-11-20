@@ -1,9 +1,10 @@
 ---
-identity:
-  atom_id: AN-S-3103
-context:
+atom_family: SPEC
+atom_id: AN-S-3103
+structure:
   container:
     component: C9
+context:
   lens: SPEC
 state:
   status: archived

@@ -8,6 +8,7 @@ const projectName = new URL(url).pathname.split('/').filter(Boolean).at(-1)!;
 async function replaceSql(page: Page, sql: string) {
   const input = editor(page);
   await expect(input).toBeEditable();
+  await expect(input).toHaveAttribute('contenteditable', 'true');
   await input.click();
   await input.press('Meta+A');
   await input.pressSequentially(sql);

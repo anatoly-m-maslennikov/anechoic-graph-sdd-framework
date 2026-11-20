@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-1501
-context:
+atom_family: SPEC
+atom_id: AN-S-1501
+structure:
   container:
     component: C00
   tier: 0
+context:
   lens: QA
 state:
   status: draft

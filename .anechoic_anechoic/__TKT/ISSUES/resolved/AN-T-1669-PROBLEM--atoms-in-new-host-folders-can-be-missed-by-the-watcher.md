@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-1669
-context:
+atom_family: TKT
+atom_id: AN-T-1669
+structure:
   container:
     component: C45
-  tier: 5
+  priority: 2
+context:
   template: problem
 state:
   status: resolved

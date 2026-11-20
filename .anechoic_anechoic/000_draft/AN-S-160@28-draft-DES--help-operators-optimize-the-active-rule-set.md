@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-160
-context:
+atom_family: SPEC
+atom_id: AN-S-160
+structure:
   container:
     component: C00
   tier: 5
+context:
   lens: DES
 state:
   status: draft

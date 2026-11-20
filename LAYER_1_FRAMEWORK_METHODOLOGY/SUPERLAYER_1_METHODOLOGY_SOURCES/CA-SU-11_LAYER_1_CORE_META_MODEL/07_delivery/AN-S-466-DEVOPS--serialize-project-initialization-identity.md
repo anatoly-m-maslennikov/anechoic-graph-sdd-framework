@@ -1,15 +1,16 @@
 ---
-identity:
-  atom_id: AN-S-466
-context:
+atom_family: SPEC
+atom_id: AN-S-466
+structure:
   container:
     component: C9
   tier: 7
+context:
   lens: DevOps
 state:
-  status: "active"
+  status: active
   version: 31
-  updated_at: "2026-11-20T11:29:16.618830+00:00"
+  updated_at: '2026-11-20T11:29:16.618830+00:00'
 ---
 
 ## Summary

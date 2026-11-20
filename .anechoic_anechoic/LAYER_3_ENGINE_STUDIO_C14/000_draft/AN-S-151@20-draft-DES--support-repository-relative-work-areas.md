@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-151
-context:
+atom_family: SPEC
+atom_id: AN-S-151
+structure:
   container:
     component: C14
   tier: 2
+context:
   lens: DES
 state:
   status: draft

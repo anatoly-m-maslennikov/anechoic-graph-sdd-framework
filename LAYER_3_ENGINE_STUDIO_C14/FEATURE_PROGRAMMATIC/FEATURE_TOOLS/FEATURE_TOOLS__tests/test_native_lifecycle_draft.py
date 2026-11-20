@@ -166,7 +166,7 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
         sys.path.insert(0, str(ENGINE / 'MCP_PATCHBAY_C21' / 'FEATURE_MCP'))
         from native_query import NativeQueryInputs, NativeQueryOwner
 
-        self.spec('UNIT_C9/DES/AN-S-4-DES--example.md', 'AN-S-4')
+        self.spec('UNIT_C9/__DES/AN-S-4-DES--example.md', 'AN-S-4')
         rows = capture_native(self.selection).atoms
         self.selection.structure_snapshot = self.root / 'structure.json'
         self.selection.parameters = {}
@@ -201,7 +201,7 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
     def test_revision_archives_existing_epic_spec_and_pmeta(self):
         cases = [
             ('__TKT/TASKS/AN-T-4-EPIC--example.md', 'AN-T-4', 'epic', '__TKT/TASKS'),
-            ('UNIT_C9/DES/DOM/AN-S-4-DOM--example.md', 'AN-S-4', 'spec', 'UNIT_C9'),
+            ('UNIT_C9/__DES/__DOM/AN-S-4-DOM--example.md', 'AN-S-4', 'spec', 'UNIT_C9'),
             ('_PMETA/AN-P-4-ACTION--example.md', 'AN-P-4', 'action', '_PMETA'),
             ('UNIT_C9/AN-S-5-SPEC--example.md', 'AN-S-5', 'root_spec', 'UNIT_C9'),
         ]
@@ -243,7 +243,7 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
         component_header['context']['template'] = 'component_manifest'
         component.write_text('---\n' + yaml.safe_dump(component_header) + '---\n' + body
                              + '\n### Component ID\n\nC9\n\n### Lens Whitelist\n\n["DevOps/RunTime"]\n')
-        path = self.spec('UNIT_C9/DEVOPS/RUNTIME/AN-S-6-RUNTIME--example.md', 'AN-S-6', 'DevOps/RunTime')
+        path = self.spec('UNIT_C9/__DEVOPS/__RUNTIME/AN-S-6-RUNTIME--example.md', 'AN-S-6', 'DevOps/RunTime')
         previous_header = next(row for row in capture_native(self.selection).atoms if row['id'] == 'AN-S-6')['header_json']
         output = create_draft(self.selection, {'sourceCurrent': {'ref_id': 'AN-S-6', 'version': 1},
             'changes': {'body': path.read_text().split('---\n', 2)[2].replace('Old', 'New')}},
@@ -259,7 +259,8 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
     def test_rejects_manifest_and_nested_paths(self):
         cases = [
             (self.selection.manifest_path, 'AN-S-1'),
-            (self.spec('UNIT_C9/DES/nested/AN-S-9-DES--example.md', 'AN-S-9'), 'AN-S-9'),
+            (self.spec('UNIT_C9/__DES/nested/AN-S-9-DES--example.md', 'AN-S-9'), 'AN-S-9'),
+            (self.spec('UNIT_C9/DES/AN-S-10-DES--example.md', 'AN-S-10'), 'AN-S-10'),
             (self.write('_PMETA/nested/AN-P-9-ACTION--example.md', 'AN-P-9'), 'AN-P-9'),
         ]
         for path, atom_id in cases:
@@ -269,7 +270,7 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
                                  current_rows=capture_native(self.selection).atoms)
 
     def test_spec_draft_migration_pin_is_refused(self):
-        self.spec('UNIT_C9/DES/AN-S-4-DES--example.md', 'AN-S-4')
+        self.spec('UNIT_C9/__DES/AN-S-4-DES--example.md', 'AN-S-4')
         result = create_draft(self.selection, {'sourceCurrent': {'ref_id': 'AN-S-4', 'version': 1}},
                               current_rows=capture_native(self.selection).atoms)
         ref = result['savedDraft']['ref_id']
@@ -299,7 +300,7 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
         result = promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms,
                                migration_refs=refs)
         self.assertEqual('completed', result['outcome'], result)
-        current = self.control / 'UNIT_C9/DES/AN-S-8-DES--example.md'
+        current = self.control / 'UNIT_C9/__DES/AN-S-8-DES--example.md'
         self.assertEqual(current, self.root / result['artifact']['path'])
         self.assertEqual(('AN-S-8', 2, 'active'), (result['artifact']['ref_id'],
                          result['artifact']['version'], result['artifact']['status']))
@@ -323,7 +324,7 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
     def test_spec_retry_after_cleanup_failure(self):
         from unittest.mock import patch
         from ATOM_LIFECYCLE import effects
-        self.spec('UNIT_C9/DES/AN-S-4-DES--example.md', 'AN-S-4')
+        self.spec('UNIT_C9/__DES/AN-S-4-DES--example.md', 'AN-S-4')
         output = create_draft(self.selection, {'sourceCurrent': {'ref_id': 'AN-S-4', 'version': 1}},
                               current_rows=capture_native(self.selection).atoms)
         ref = output['savedDraft']['ref_id']
@@ -365,6 +366,46 @@ class NewNativeTaskTests(unittest.TestCase):
         self.assertIn('AN-T-9@1', [row['_exact_ref'] for row in capture.atoms])
         self.assertEqual(before, (self.path.read_bytes(), self.selection.manifest_path.read_bytes()))
 
+    def test_canonical_flat_owned_task_keeps_validated_flat_revision_paths(self):
+        flat = self.write('__TKT/TASKS/AN-T-2-SUBTASK--example.md', 'AN-T-2')
+        _, header, body = flat.read_text().split('---', 2)
+        metadata = yaml.safe_load(header)
+        metadata['context']['container'] = {'atom': 'AN-T-1'}
+        metadata['context']['label'] = 'Subtask'
+        flat.write_text('---\n' + yaml.safe_dump(canonical_native_header(metadata), sort_keys=False) + '---' + body)
+        result = create_draft(self.selection, {'sourceCurrent': {'ref_id': 'AN-T-2', 'version': 1}},
+                              current_rows=capture_native(self.selection).atoms)
+        draft = self.root / result['savedDraft']['path']
+        self.assertEqual(flat.parent / '000_draft', draft.parent)
+        result = promote_draft(self.selection, {'target': {'ref_id': result['savedDraft']['ref_id'], 'version': 2},
+                                                'targetStatus': 'done'},
+                               current_rows=capture_native(self.selection).atoms, migration_refs=[])
+        self.assertEqual(flat.parent / 'done' / flat.name, self.root / result['artifact']['path'])
+        self.assertTrue((flat.parent / '099_archived' / flat.name.replace('AN-T-2-', 'AN-T-2@1-')).exists())
+
+    def test_nested_tasks_create_and_promote_revisions(self):
+        owner = self.path
+        for depth in range(2):
+            self.new['newAtom']['container'] = {'atom': f'AN-T-{depth + 1}'}
+            self.new['newAtom']['body'] = f'\n## Summary\n\nChild {depth}\n'
+            result = create_draft(self.selection, self.new, current_rows=capture_native(self.selection).atoms)
+            draft = self.root / result['savedDraft']['path']
+            self.assertEqual(owner.with_suffix('') / '000_draft', draft.parent)
+            ref = result['savedDraft']['ref_id']
+            result = promote_draft(self.selection, {'target': {'ref_id': ref, 'version': 1}, 'targetStatus': 'active'},
+                                   current_rows=capture_native(self.selection).atoms, migration_refs=[])
+            owner = self.root / result['artifact']['path']
+            self.assertEqual(draft.parent.parent, owner.parent)
+        result = create_draft(self.selection, {'sourceCurrent': {'ref_id': 'AN-T-3', 'version': 1}},
+                              current_rows=capture_native(self.selection).atoms)
+        draft = self.root / result['savedDraft']['path']
+        self.assertEqual(owner.parent / '000_draft', draft.parent)
+        result = promote_draft(self.selection, {'target': {'ref_id': result['savedDraft']['ref_id'], 'version': 2},
+                                                'targetStatus': 'active'},
+                               current_rows=capture_native(self.selection).atoms, migration_refs=[])
+        self.assertEqual('completed', result['outcome'])
+        self.assertTrue((owner.parent / '099_archived' / owner.name.replace('AN-T-3-', 'AN-T-3@1-')).exists())
+
     def test_unicode_punctuation_uses_reviewed_slug(self):
         self.new['newAtom']['body'] = self.new['newAtom']['body'].replace('Create a Task!', 'Create — a Task!')
         output = create_draft(self.selection, self.new, current_rows=self.rows)
@@ -374,6 +415,13 @@ class NewNativeTaskTests(unittest.TestCase):
         self.new['newAtom']['container'] = {'atom': 'AN-T-1'}
         output = create_draft(self.selection, self.new, current_rows=self.rows)
         self.assertEqual('completed', output['outcome'])
+        self.assertTrue(output['savedDraft']['path'].endswith('-SUBTASK--create-a-task.md'))
+        metadata = yaml.safe_load((self.root / output['savedDraft']['path']).read_text().split('---', 2)[1])
+        self.assertEqual({'template': 'task', 'label': 'Subtask'}, metadata['context'])
+        ref = output['savedDraft']['ref_id']
+        promoted = promote_draft(self.selection, {'target': {'ref_id': ref, 'version': 1}, 'targetStatus': 'active'},
+                                 current_rows=capture_native(self.selection).atoms, migration_refs=[])
+        self.assertTrue(promoted['artifact']['path'].endswith('-SUBTASK--create-a-task.md'))
         self.new['newAtom']['container'] = {'atom': 'XX-T-1'}
         with self.assertRaises(InputError):
             create_draft(self.selection, self.new, current_rows=self.rows)

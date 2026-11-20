@@ -1,14 +1,15 @@
 ---
-identity:
-  atom_id: AN-S-3117
-context:
+atom_family: SPEC
+atom_id: AN-S-3117
+structure:
   container:
     component: C9
+context:
   lens: SPEC
 state:
-  status: "active"
+  status: active
   version: 1
-  updated_at: "2026-11-20T16:37:26.178362+00:00"
+  updated_at: '2026-11-20T16:37:26.178362+00:00'
 ---
 
 ## Summary

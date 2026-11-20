@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2764
-context:
+atom_family: SPEC
+atom_id: AN-S-2764
+structure:
   container:
     component: C9
   tier: 2
+context:
   lens: QA
 state:
   status: active

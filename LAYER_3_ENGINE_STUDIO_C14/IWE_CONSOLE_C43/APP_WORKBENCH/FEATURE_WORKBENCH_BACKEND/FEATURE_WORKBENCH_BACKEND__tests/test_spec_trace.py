@@ -25,12 +25,16 @@ class SpecTraceTests(unittest.TestCase):
         yaml_path.write_text('implements: [AN-S-3014@3]\napplies: [CA-M-9@2]\n')
         (package / 'package.p.spec_trace.md').write_text('## Applies\n- CA-M-9@1\n')
         (package / 'unit.py.spec_trace.md').write_text('## Implements\n- CA-R-123@4\n')
-        nodes = [('package:local:package', 'package', 'python', 'package', None, None),
+        root_sidecar = root / (root.name + '__spec_bind.yaml')
+        root_sidecar.write_text('implements: [AN-S-1@1]\n')
+        nodes = [('package:local:.', 'package', 'typescript', '.', None, None),
+                 ('package:local:package', 'package', 'python', 'package', None, None),
                  ('module:package/unit.py', 'module', 'python', 'package/unit.py', 'parsed', None),
                  ('external', 'package', 'python', None, None, None),
                  ('outside', 'package', 'python', '../outside', None, None)]
         rows = native_trace_rows(root, nodes)
         self.assertEqual(set(rows), {
+            ('.', root_sidecar.name, 'implements', 'AN-S-1', 1),
             ('package', 'package/package__spec_bind.yaml', 'implements', 'AN-S-3014', 3),
             ('package', 'package/package__spec_bind.yaml', 'applies', 'CA-M-9', 2),
             ('package/unit.py', 'package/unit.py.spec_trace.md', 'implements', 'CA-R-123', 4),

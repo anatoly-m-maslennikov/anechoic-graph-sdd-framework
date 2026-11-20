@@ -1,12 +1,13 @@
 ---
-identity:
-  atom_id: AN-S-3083
-context:
+atom_family: SPEC
+atom_id: AN-S-3083
+structure:
   container:
     component: C61
   tier: 1
-  lens: DES
+context:
   template: DECISION
+  lens: DES
 state:
   status: archived
   version: 1

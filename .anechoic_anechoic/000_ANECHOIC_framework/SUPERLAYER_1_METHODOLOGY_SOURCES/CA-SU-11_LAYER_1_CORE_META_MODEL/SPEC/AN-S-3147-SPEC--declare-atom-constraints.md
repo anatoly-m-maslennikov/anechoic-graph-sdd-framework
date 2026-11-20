@@ -1,9 +1,10 @@
 ---
-identity:
-  atom_id: AN-S-3147
-context:
+atom_family: SPEC
+atom_id: AN-S-3147
+structure:
   container:
     component: C9
+context:
   lens: SPEC
 state:
   status: active

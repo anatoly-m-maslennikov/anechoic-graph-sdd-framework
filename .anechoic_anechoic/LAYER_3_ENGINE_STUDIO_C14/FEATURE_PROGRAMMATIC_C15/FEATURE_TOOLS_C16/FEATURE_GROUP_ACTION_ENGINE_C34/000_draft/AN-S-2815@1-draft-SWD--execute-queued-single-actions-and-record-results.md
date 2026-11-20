@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2815
-context:
+atom_family: SPEC
+atom_id: AN-S-2815
+structure:
   container:
     component: C34
   tier: 3
+context:
   lens: SWD
 state:
   status: draft

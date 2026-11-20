@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2768
-context:
+atom_family: SPEC
+atom_id: AN-S-2768
+structure:
   container:
     component: C00
   tier: 1
+context:
   lens: DevOps
 state:
   status: draft

@@ -1,9 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-2466
-context:
+atom_family: TKT
+atom_id: AN-T-2466
+structure:
   container:
     component: C9
+  priority: 2
+context:
   template: question
 state:
   status: resolved

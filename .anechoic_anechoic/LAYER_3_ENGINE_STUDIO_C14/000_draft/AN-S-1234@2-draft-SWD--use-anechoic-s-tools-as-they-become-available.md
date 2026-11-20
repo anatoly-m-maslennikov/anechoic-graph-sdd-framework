@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-1234
-context:
+atom_family: SPEC
+atom_id: AN-S-1234
+structure:
   container:
     component: C14
   tier: 2
+context:
   lens: SWD
 state:
   status: draft

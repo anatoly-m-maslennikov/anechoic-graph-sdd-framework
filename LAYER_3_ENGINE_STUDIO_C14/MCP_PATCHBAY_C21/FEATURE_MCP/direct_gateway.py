@@ -32,6 +32,7 @@ from project_selection import ProjectSelection, bind_selection, rebind_selection
 from project_tool_blacklist import project_tool_blacklist  # noqa: E402
 from project_settings_schema import mcp_tool_blacklist  # noqa: E402
 from project_tool_context import native_arguments  # noqa: E402
+from registry_release_command_provider import RELEASE_COMMAND_TOOLS  # noqa: E402
 from runtime_failure_diagnostics import report_failure  # noqa: E402
 from runtime_request_context import bind_request_context  # noqa: E402
 from shared_tool_contract import public_tool  # noqa: E402
@@ -135,12 +136,15 @@ class DirectGateway:
                 supported = QUERY_TOOLS | LIFECYCLE_TOOLS | frozenset((
                     *INTERFACE_TOOLS, SAVE_VIEW, LOAD, SAVED_LIST, SYNC_STATUS, REBUILD,
                 ))
+                if self.selection.parameters.get("project_mcp", {}).get("release_workflows_enabled") is True:
+                    supported |= RELEASE_COMMAND_TOOLS
                 self.tool_blacklist |= frozenset(self.registry.routes) - supported
                 self.tools = tuple(
                     tool for tool in self.registry.tools if tool.name not in self.tool_blacklist
                 )
             else:
                 self.tool_blacklist |= frozenset((REBUILD,))
+                self.tool_blacklist |= RELEASE_COMMAND_TOOLS & frozenset(self.registry.routes)
                 self.tools = tuple(tool for tool in self.registry.tools if tool.name not in self.tool_blacklist)
                 if isinstance(self.selection, ProjectSelection):
                     with self._bind_legacy_selection():

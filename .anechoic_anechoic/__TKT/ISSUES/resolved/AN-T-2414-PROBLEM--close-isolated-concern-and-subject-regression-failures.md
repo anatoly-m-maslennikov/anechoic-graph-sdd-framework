@@ -1,9 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-2414
-context:
+atom_family: TKT
+atom_id: AN-T-2414
+structure:
   container:
     component: C15
+  priority: 2
+context:
   template: problem
 state:
   status: resolved

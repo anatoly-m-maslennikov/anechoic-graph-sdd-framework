@@ -1,9 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-1952
-context:
+atom_family: TKT
+atom_id: AN-T-1952
+structure:
   container:
     component: C15
+  priority: 2
+context:
   template: problem
 state:
   status: resolved

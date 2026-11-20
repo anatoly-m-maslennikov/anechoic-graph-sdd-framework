@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2602
-context:
+atom_family: SPEC
+atom_id: AN-S-2602
+structure:
   container:
     component: C9
   tier: 3
+context:
   lens: DES
 state:
   status: active

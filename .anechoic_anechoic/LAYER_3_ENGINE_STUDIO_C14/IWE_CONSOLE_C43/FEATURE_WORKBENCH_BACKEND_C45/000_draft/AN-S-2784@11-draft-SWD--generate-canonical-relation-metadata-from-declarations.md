@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2784
-context:
+atom_family: SPEC
+atom_id: AN-S-2784
+structure:
   container:
     component: C45
   tier: 3
+context:
   lens: SWD
 state:
   status: draft

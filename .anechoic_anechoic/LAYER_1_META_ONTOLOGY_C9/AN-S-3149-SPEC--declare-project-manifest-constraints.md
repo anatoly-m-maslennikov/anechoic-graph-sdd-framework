@@ -1,14 +1,15 @@
 ---
-identity:
-  atom_id: AN-S-3149
-context:
+atom_family: SPEC
+atom_id: AN-S-3149
+structure:
   container:
     component: C9
+context:
   lens: SPEC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-20T14:42:07.157939+00:00'
+  version: 2
+  updated_at: '2026-11-20T20:37:23.155399+00:00'
 ---
 
 ## Summary
@@ -28,7 +29,14 @@ from anechoic.formal_claims import declare_entity
 from anechoic.model import ProjectManifest
 
 def check_project_manifest(manifest: ProjectManifest) -> bool:
-    return bool(manifest.name.strip() and manifest.prefix.strip() and len(manifest.parameters) + 2 + (manifest.lens_whitelist is not None) <= 20)
+    mcp = manifest.parameters.get("project_mcp", {})
+    return bool(
+        manifest.name.strip()
+        and manifest.prefix.strip()
+        and len(manifest.parameters) + 2 + (manifest.lens_whitelist is not None) <= 20
+        and type(mcp) is dict
+        and type(mcp.get("release_workflows_enabled", False)) is bool
+    )
 
 declare_entity(
     entity_name='Project Manifest Constraints',

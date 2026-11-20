@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-2484
-context:
+atom_family: TKT
+atom_id: AN-T-2484
+structure:
   container:
     component: C46
-  tier: 3
+  priority: 2
+context:
   template: Code-Spec Mismatch
 state:
   status: draft

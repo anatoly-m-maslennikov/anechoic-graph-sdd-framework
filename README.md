@@ -131,7 +131,7 @@ Workflows are defined in Operations →\
 the harness implements and runs them using Tools and Prompts/Skills.
 
 We cannot put everything into one prompt →\
-the built-in entry Skill, [ca](LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ca/SKILL.md), connects agents to MCP →\
+the built-in entry Skill, [ane](LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane/SKILL.md), connects agents to MCP →\
 Tools retrieve the needed context and assemble Prompts/Skills →\
 MCP delivers them and exposes Tool and Workflow execution.
 
@@ -294,11 +294,11 @@ Two Project-owned release commands run directly from the repository on the host:
 - **Local release (`LAYER_5_FRAMEWORK_DELIVERY/release.py local`):** first commit all tracked
   and untracked nonignored changes and verify a clean worktree; run the complete suite; copy active
   Methodology Sources into `LAYER_1_FRAMEWORK_METHODOLOGY`; compile Applicable
-  Methodology; replace the installed Methodology; build and install the Engine
-  package and project-local `ca`; remove eligible stopped obsolete Project-owned
-  containers before Docker MCP startup; after successful smoke, repeat cleanup
-  and remove unused obsolete images, preserving
-  verified current-code resources and unrelated or unproven targets.
+  Methodology; build the Engine package and test its immutable image on a
+  Docker-assigned loopback port; install the tested package and project-local
+  `ane`; start and verify production MCP. After verification, keep the current
+  image and two previous Project images. Remove older eligible unused images
+  and preserve unrelated or unproven targets.
 - **Public release (`LAYER_5_FRAMEWORK_DELIVERY/release.py public`):** run the complete suite; use one content
   prompt for the full PR description and its concise Version History bullets;
   update the version and README; push `amm/dev`; create or update the PR to

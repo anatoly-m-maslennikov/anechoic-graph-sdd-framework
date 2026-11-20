@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-1662
-context:
+atom_family: TKT
+atom_id: AN-T-1662
+structure:
   container:
     component: C15
-  tier: 4
+  priority: 2
+context:
   template: question
 state:
   status: resolved

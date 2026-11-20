@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-2451
-context:
+atom_family: SPEC
+atom_id: AN-S-2451
+structure:
   container:
     component: C00
   tier: 1
+context:
   lens: SWD
 state:
   status: draft

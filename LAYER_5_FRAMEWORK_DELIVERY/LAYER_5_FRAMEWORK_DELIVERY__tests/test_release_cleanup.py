@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -18,10 +19,26 @@ from release_cleanup import (  # noqa: E402
     cleanup_stopped_containers,
 )
 from release_cleanup_identity import FINGERPRINT, SCHEMA  # noqa: E402
+from release_cleanup_images import record_ready_images  # noqa: E402
 
 ROOT = Path("/project")
 CURRENT = "sha256:" + "a" * 64
 FINGER = "b" * 64
+
+
+class ReadyImageHistoryTests(unittest.TestCase):
+    def test_keeps_two_previous_deployments_and_ignores_reuse(self):
+        images = tuple("sha256:" + digit * 64 for digit in "1234")
+        with tempfile.TemporaryDirectory() as directory:
+            history = Path(directory) / "ready-images.json"
+            previous = None
+            for index, current in enumerate(images):
+                expected = tuple(reversed(images[:index]))[:2]
+                self.assertEqual(expected, record_ready_images(history, "project", current, previous))
+                previous = current
+            self.assertEqual((images[2], images[1]), record_ready_images(history, "project", images[3], images[3]))
+            with self.assertRaisesRegex(ValueError, "history is invalid"):
+                record_ready_images(history, "other", images[3], images[2])
 
 
 class DockerFixture:
@@ -113,7 +130,7 @@ class ReleaseCleanupTests(unittest.TestCase):
         self.assertEqual(docker.containers, {})
         cleanup_obsolete_images(ROOT, CURRENT, FINGER, cleanup, docker.run)
         removed = {argv[-1] for argv in docker.calls if argv[1:3] == ("image", "rm")}
-        self.assertEqual(removed, {first, second})
+        self.assertEqual(removed, set())
         self.assertTrue(cleanup.pending)
         self.assertTrue(any("without Project ownership" in note for note in cleanup.notes))
 

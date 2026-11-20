@@ -1,9 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-2283
-context:
+atom_family: TKT
+atom_id: AN-T-2283
+structure:
   container:
     component: C21
+  priority: 2
+context:
   template: question
 state:
   status: resolved

@@ -13,8 +13,6 @@ import time
 import unittest
 from unittest.mock import patch
 
-from watchdog.observers.polling import PollingObserver
-
 ROOT = Path(__file__).resolve().parents[4]
 NATIVE_CONTROL = ROOT.parent / "native-control"
 if not NATIVE_CONTROL.is_dir():
@@ -26,7 +24,6 @@ sys.path[:0] = [str(ROOT), str(PROGRAMMATIC), str(PROGRAMMATIC / "FEATURE_TOOLS"
 
 from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.native_manifest_model import load_native_model  # noqa: E402
 from native_project_selection import resolve_native_project  # noqa: E402
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_watcher import SourceWatcher  # noqa: E402
 from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62 import runtime  # noqa: E402
 from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.structure_host_pkg3.snapshot import read_structure  # noqa: E402
 
@@ -88,8 +85,7 @@ class ManifestRuntimeTests(unittest.TestCase):
                     time.sleep(0.05)
                 self.fail("Timed out waiting for a Structure update")
 
-            with (patch.object(runtime, "SourceWatcher", side_effect=lambda *args: SourceWatcher(
-                    *args, observer_factory=lambda: PollingObserver(timeout=0.05))),
+            with (patch.dict("os.environ", {"ANECHOIC_RUNTIME_NAMESPACE": "docker"}),
                   patch.object(runtime, "_compile", side_effect=compile_checked),
                   patch.object(runtime.subprocess, "Popen", side_effect=record_process)):
                 with runtime.run_manifest_runtime(selection) as (generation, active):

@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-1704
-context:
+atom_family: SPEC
+atom_id: AN-S-1704
+structure:
   container:
     component: C9
   tier: 4
+context:
   lens: SWD
 state:
   status: active

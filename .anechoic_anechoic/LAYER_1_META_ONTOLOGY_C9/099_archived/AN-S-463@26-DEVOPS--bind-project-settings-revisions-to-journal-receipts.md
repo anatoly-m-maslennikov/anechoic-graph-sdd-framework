@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-463
-context:
+atom_family: SPEC
+atom_id: AN-S-463
+structure:
   container:
     component: C9
   tier: 6
+context:
   lens: DevOps
 state:
   status: archived

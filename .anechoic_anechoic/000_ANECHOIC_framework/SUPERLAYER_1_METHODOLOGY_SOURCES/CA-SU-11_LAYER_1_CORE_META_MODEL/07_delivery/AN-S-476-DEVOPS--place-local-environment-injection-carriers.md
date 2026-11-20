@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-476
-context:
+atom_family: SPEC
+atom_id: AN-S-476
+structure:
   container:
     component: C9
   tier: 3
+context:
   lens: DevOps
 state:
   status: active

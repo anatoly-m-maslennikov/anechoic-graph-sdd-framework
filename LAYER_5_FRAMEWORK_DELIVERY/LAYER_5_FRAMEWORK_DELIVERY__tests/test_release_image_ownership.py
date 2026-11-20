@@ -40,7 +40,7 @@ class ReleaseImageOwnershipTests(unittest.TestCase):
         cleanup_obsolete_images(fixtures.ROOT, fixtures.CURRENT, fixtures.FINGER, cleanup,
                                 docker.run, previous_image=prior)
         self.assertNotIn(("docker", "image", "rm", prior), docker.calls)
-        self.assertIn(("docker", "image", "rm", older), docker.calls)
+        self.assertNotIn(("docker", "image", "rm", older), docker.calls)
         self.assertFalse(cleanup.pending)
 
     def test_owned_orphan_removed_without_container_link_or_commit_gate(self) -> None:
@@ -53,7 +53,7 @@ class ReleaseImageOwnershipTests(unittest.TestCase):
         cleanup_obsolete_images(
             fixtures.ROOT, fixtures.CURRENT, fixtures.FINGER, cleanup, docker.run
         )
-        self.assertIn(("docker", "image", "rm", image), docker.calls)
+        self.assertNotIn(("docker", "image", "rm", image), docker.calls)
         self.assertFalse(cleanup.pending)
 
     def test_unlabelled_partial_or_conflicting_owner_is_retained_pending(self) -> None:
@@ -101,7 +101,7 @@ class ReleaseImageOwnershipTests(unittest.TestCase):
         cleanup_obsolete_images(
             fixtures.ROOT, fixtures.CURRENT, fixtures.FINGER, cleanup, docker.run
         )
-        self.assertIn(("docker", "image", "rm", image), docker.calls)
+        self.assertNotIn(("docker", "image", "rm", image), docker.calls)
         self.assertFalse(cleanup.pending)
 
     def test_exact_candidate_is_protected_but_same_fingerprint_rebuild_is_not(self) -> None:
@@ -115,7 +115,7 @@ class ReleaseImageOwnershipTests(unittest.TestCase):
             fixtures.ROOT, fixtures.CURRENT, fixtures.FINGER, cleanup, docker.run
         )
         self.assertNotIn(("docker", "image", "rm", fixtures.CURRENT), docker.calls)
-        self.assertIn(("docker", "image", "rm", image), docker.calls)
+        self.assertNotIn(("docker", "image", "rm", image), docker.calls)
 
     def test_unowned_orphan_and_linked_image_are_retained_pending(self) -> None:
         for linked in (False, True):
@@ -143,8 +143,33 @@ class ReleaseImageOwnershipTests(unittest.TestCase):
         cleanup_obsolete_images(
             fixtures.ROOT, fixtures.CURRENT, fixtures.FINGER, cleanup, docker.run
         )
-        self.assertTrue(cleanup.pending)
+        self.assertFalse(cleanup.pending)
         self.assertNotIn(("docker", "image", "rm", image), docker.calls)
+
+    def test_verified_predecessors_take_priority_over_discovery_order(self) -> None:
+        docker = OwnedDocker()
+        images = ["sha256:" + char * 64 for char in "1234"]
+        owner = owner_labels(fixtures.ROOT, "c" * 64, ".anechoic_anechoic")
+        for image in images:
+            docker.images[image] = fixtures.FINGER
+            docker.metadata_overrides[image] = owner
+        cleanup = Cleanup(owner=owner)
+        cleanup_obsolete_images(fixtures.ROOT, fixtures.CURRENT, fixtures.FINGER, cleanup,
+                                docker.run, previous_images=(images[2], images[3]))
+        removed = {call[-1] for call in docker.calls if call[1:3] == ("image", "rm")}
+        self.assertEqual(removed, set(images[:2]))
+
+    def test_fallback_retains_first_two_owned_images_in_docker_order(self) -> None:
+        docker = OwnedDocker()
+        images = ["sha256:" + char * 64 for char in "321"]
+        owner = owner_labels(fixtures.ROOT, "c" * 64, ".anechoic_anechoic")
+        for image in images:
+            docker.images[image] = fixtures.FINGER
+            docker.metadata_overrides[image] = owner
+        cleanup = Cleanup(owner=owner)
+        cleanup_obsolete_images(fixtures.ROOT, fixtures.CURRENT, fixtures.FINGER, cleanup, docker.run)
+        removed = {call[-1] for call in docker.calls if call[1:3] == ("image", "rm")}
+        self.assertEqual(removed, {images[2]})
 
 
 if __name__ == "__main__":

@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-S-1581
-context:
+atom_family: SPEC
+atom_id: AN-S-1581
+structure:
   container:
     component: C24
   tier: 3
+context:
   lens: DevOps
 state:
   status: draft

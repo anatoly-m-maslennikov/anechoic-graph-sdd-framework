@@ -1,10 +1,10 @@
 ---
-identity:
-  atom_id: AN-P-6
-context:
+atom_family: PMETA
+atom_id: AN-P-6
+structure:
   container:
     component: C16
-  tier: 3
+context:
   template: action
 state:
   status: active

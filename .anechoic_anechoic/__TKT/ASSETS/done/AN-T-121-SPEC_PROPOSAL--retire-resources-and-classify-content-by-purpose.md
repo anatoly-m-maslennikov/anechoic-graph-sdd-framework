@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-121
-context:
+atom_family: TKT
+atom_id: AN-T-121
+structure:
   container:
     component: C00
-  tier: 3
+  priority: 2
+context:
   template: Spec Proposal
 state:
   status: done

@@ -1,10 +1,11 @@
 ---
-identity:
-  atom_id: AN-T-2905
-context:
+atom_family: TKT
+atom_id: AN-T-2905
+structure:
   container:
     component: C9
-  tier: 3
+  priority: 2
+context:
   template: epic
 state:
   status: draft

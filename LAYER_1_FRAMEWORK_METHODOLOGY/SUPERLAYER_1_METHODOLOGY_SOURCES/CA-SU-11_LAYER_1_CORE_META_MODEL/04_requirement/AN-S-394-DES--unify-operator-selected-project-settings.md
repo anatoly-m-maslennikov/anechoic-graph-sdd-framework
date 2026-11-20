@@ -1,15 +1,16 @@
 ---
-identity:
-  atom_id: AN-S-394
-context:
+atom_family: SPEC
+atom_id: AN-S-394
+structure:
   container:
     component: C9
   tier: 1
+context:
   lens: DES
 state:
-  status: "active"
+  status: active
   version: 2
-  updated_at: "2026-11-20T11:23:31.897533+00:00"
+  updated_at: '2026-11-20T11:23:31.897533+00:00'
 ---
 
 ## Summary

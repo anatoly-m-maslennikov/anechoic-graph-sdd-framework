@@ -1,10 +1,10 @@
 ---
-identity:
-  atom_id: AN-P-18
-context:
+atom_family: PMETA
+atom_id: AN-P-18
+structure:
   container:
     component: C16
-  tier: 1
+context: {}
 state:
   status: draft
   version: 11
