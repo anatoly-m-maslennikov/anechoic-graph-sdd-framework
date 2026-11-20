@@ -18,7 +18,9 @@ import uuid
 class WorkspaceStore:
     """Own one Project's small Workspace documents, never query-result rows."""
 
-    def __init__(self, root: Path) -> None:
+    def __init__(self, root: Path, *, transient_results: bool = False) -> None:
+        self._transient_results = transient_results
+        self._results: dict[tuple[str, str], dict[str, Any]] = {}
         self._root = Path(root)
         self._directory = self._root / ".anechoic_runtime" / "workbench" / "workspaces"
 
@@ -50,6 +52,15 @@ class WorkspaceStore:
         return self._directory / f"{hashlib.sha256(workspace_id.encode()).hexdigest()}.json"
 
     def _write(self, document: dict[str, Any]) -> None:
+        if self._transient_results:
+            document = dict(document, views=[dict(view) for view in document["views"]])
+            for view in document["views"]:
+                key = (document["workspace_id"], view["id"])
+                result = view.pop("result", None)
+                if result is None:
+                    self._results.pop(key, None)
+                else:
+                    self._results[key] = result
         self._directory.mkdir(parents=True, exist_ok=True)
         path = self._path(document["workspace_id"])
         temporary = path.with_suffix(".tmp")
@@ -67,6 +78,12 @@ class WorkspaceStore:
             raise ValueError("workspace is unavailable") from error
         if not isinstance(document, dict) or document.get("workspace_id") != value or not isinstance(document.get("views"), list) or not document["views"]:
             raise ValueError("workspace is unavailable")
+        if self._transient_results:
+            for view in document["views"]:
+                view.pop("result", None)
+                result = self._results.get((value, view.get("id")))
+                if result is not None:
+                    view["result"] = dict(result)
         return document
 
     @staticmethod
@@ -211,6 +228,26 @@ class WorkspaceStore:
         self._write(document)
         return self.get_view(workspace_id, view_id)
 
+    def replace_result_ids(self, replacements: dict[str, dict[str, Any]]) -> None:
+        """Publish replacements for each Workspace in one document write."""
+        if self._transient_results:
+            for result in self._results.values():
+                if result.get("query_id") in replacements:
+                    result.update(replacements[result["query_id"]])
+            return
+        if not self._directory.is_dir() or not replacements:
+            return
+        for path in self._directory.glob("*.json"):
+            document = json.loads(path.read_text(encoding="utf-8"))
+            changed = False
+            for view in document["views"]:
+                result = view.get("result") if isinstance(view, dict) else None
+                if isinstance(result, dict) and result.get("query_id") in replacements:
+                    result.update(replacements[result["query_id"]])
+                    changed = True
+            if changed:
+                self._write(document)
+
     def focus(self, workspace_id: object, view_id: object) -> dict[str, str]:
         document = self._read(workspace_id)
         document["active_view_id"] = self._view(document, view_id)["id"]
@@ -243,6 +280,9 @@ class WorkspaceStore:
         return self.list_views(workspace_id), prior
 
     def clear_transient_results(self) -> None:
+        if self._transient_results:
+            self._results.clear()
+            return
         if not self._directory.is_dir():
             return
         for path in self._directory.glob("*.json"):

@@ -11,11 +11,14 @@ from unittest.mock import patch
 
 import duckdb
 import httpx2
+from mcp import types
 from starlette.applications import Starlette
 from watchdog.observers.polling import PollingObserver
 
 import test_native_query_stdio as fixture
-from native_query import create_native_gateway, publish_imports
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.import_cache import read_import_sources
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.import_tables import publish_imports
+from native_query import create_native_gateway
 from workbench_web import routes
 
 
@@ -33,14 +36,14 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
         path.write_text(text, encoding="utf-8")
         return path
 
-    async def _gateway(self):
+    async def _gateway(self, *, enabled=True):
         inputs = fixture._native_inputs()
 
         def validate(fields, component):
             manifest = inputs.validate_manifest(fields, component)
-            return SimpleNamespace(name=manifest.name, prefix=manifest.prefix, parameters={
-                "runtime": {"workbench": {"import_graph": {"python_roots": ["src"]}}},
-            })
+            workbench = {"import_graph": {"python_roots": ["src"]}} if enabled else {}
+            return SimpleNamespace(name=manifest.name, prefix=manifest.prefix,
+                                   parameters={"runtime": {"workbench": workbench}})
 
         gateway = create_native_gateway(self.root, fixture.CONTROL, replace(inputs, validate_manifest=validate))
         with patch("APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_watcher.NativeObserver",
@@ -120,7 +123,8 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(result["rows"], await rows(counts))
 
             owner = gateway._native_query
-            importer = owner._import_sources["src/app/main.py"]
+            with owner._owner()._lock:
+                importer = read_import_sources(owner._owner()._connection)["src/app/main.py"]
             target = self._source("src/missing.py", "")
             sql = "SELECT resolution_status FROM module_imports WHERE written_specifier = 'missing'"
             async with asyncio.timeout(6):
@@ -130,7 +134,8 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
             async with asyncio.timeout(6):
                 while await rows(sql) != [["unresolved"]]:
                     await asyncio.sleep(.03)
-            self.assertIs(importer, owner._import_sources["src/app/main.py"])
+            with owner._owner()._lock:
+                self.assertEqual(importer, read_import_sources(owner._owner()._connection)["src/app/main.py"])
 
             self._source("new_root/added.py", "import os\n")
             async with asyncio.timeout(6):
@@ -146,7 +151,7 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
         self._source("src/to_source.py", "")
         gateway = await self._gateway()
         stderr = StringIO()
-        with redirect_stderr(stderr), patch("native_query.publish_imports", side_effect=ValueError("fixture write")) as write:
+        with redirect_stderr(stderr), patch("native_query.replace_imports", side_effect=ValueError("fixture write")) as write:
             self._source("src/new_source.py", "")
             async with asyncio.timeout(6):
                 while "fixture write" not in stderr.getvalue():
@@ -160,3 +165,82 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(store._connection.execute(
                 "SELECT relative_path FROM import_nodes ORDER BY relative_path",
             ).fetchall(), [("src/from_source.py",), ("src/to_source.py",)])
+
+    async def test_disk_reopen_rebuild_and_test_relations(self):
+        self._source("src/app/main.py", "import dep.helper\n")
+        self._source("src/dep/helper.py", "")
+        test_directory = self.root / "src/app/app__tests"
+        test_directory.mkdir()
+        gateway = await self._gateway()
+        owner = gateway._native_query
+        store = owner._owner()
+        database = self.root / ".anechoic_runtime/workbench/projection.duckdb"
+        self.assertTrue(database.is_file())
+        sql = """
+            SELECT parent.relative_path, test.relative_path, test.package_type
+            FROM tested_by_edges e JOIN import_nodes parent ON parent.node_key = e.source_key
+            JOIN import_nodes test ON test.node_key = e.target_key
+        """
+        app = Starlette(routes=routes(gateway))
+        async with httpx2.AsyncClient(transport=httpx2.ASGITransport(app=app),
+                                     base_url="http://127.0.0.1:18093") as client:
+            base = "/anechoic/Anechoic/api"
+
+            async def post(operation, arguments, status=200):
+                response = await client.post(f"{base}/{operation}", json=arguments)
+                self.assertEqual(status, response.status_code, response.text)
+                return response.json()
+
+            async def view_call(operation, arguments):
+                return await post("interface", {"operation": operation, "arguments": arguments})
+
+            workspace = await view_call("workspace_open", {"session_id": "realization"})
+            view = {"workspace_id": workspace["workspace_id"], "view_id": workspace["active_view_id"]}
+            await view_call("view_update", view | {"sql": sql, "expected_revision": 0})
+            first = (await view_call("view_run", view))["query_id"]
+            expected = [["src/app", "src/app/app__tests", "Test Package"]]
+            self.assertEqual(expected, (await view_call("view_fetch", view | {"result_delivery": "inline"}))["rows"])
+            with store._lock:
+                database_file = store._connection.execute(
+                    "SELECT path FROM duckdb_databases() WHERE NOT internal"
+                ).fetchone()[0]
+                self.assertEqual(database.resolve().as_posix(), database_file)
+            await post("rebuild", {"target": "unknown"}, 400)
+            moved = test_directory.parent.parent / test_directory.name
+            test_directory.rename(moved)
+            rebuilt = await post("rebuild", {"target": "test_edges"})
+            second = rebuilt["result_ids"][first]
+            self.assertNotEqual(first, second)
+            fetched = await view_call("view_fetch", view | {"result_delivery": "inline"})
+            self.assertEqual((second, []), (fetched["query_id"], fetched["rows"]))
+            self.assertTrue(store._results[second].pinned)
+            moved.rename(test_directory)
+            mcp = await gateway.call(None, types.CallToolRequestParams(
+                name="query_rebuild", arguments={"target": "all"},
+            ))
+            self.assertFalse(mcp.is_error, mcp.structured_content)
+            third = mcp.structured_content["result_ids"][second]
+            fetched = await view_call("view_fetch", view | {"result_delivery": "inline"})
+            self.assertEqual((third, expected), (fetched["query_id"], fetched["rows"]))
+            single = await post("rebuild", {"target": f"workbench_results.query_{third}"})
+            self.assertIn(third, single["result_ids"])
+
+        await gateway.close()
+        self._source("src/dep/helper.py", "import app.main\n")
+        from APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61 import source
+        with patch.object(source, "_parse", wraps=source._parse) as parse:
+            reopened = await self._gateway()
+            self.assertEqual(["src/dep/helper.py"], [call.args[0] for call in parse.call_args_list])
+        reopened_store = reopened._native_query._owner()
+        self.assertFalse(reopened_store._results)
+        with reopened_store._lock:
+            self.assertEqual([(2,)], reopened_store._connection.execute("SELECT count(*) FROM module_imports").fetchall())
+            self.assertEqual([], reopened_store._connection.execute(
+                "SELECT table_name FROM information_schema.tables WHERE table_schema = 'workbench_results'"
+            ).fetchall())
+        await reopened.close()
+        disabled = await self._gateway(enabled=False)
+        self.assertNotIn("test_edges", disabled._native_query.schema()["tables"])
+        disabled_store = disabled._native_query._owner()
+        with disabled_store._lock:
+            self.assertFalse(read_import_sources(disabled_store._connection))

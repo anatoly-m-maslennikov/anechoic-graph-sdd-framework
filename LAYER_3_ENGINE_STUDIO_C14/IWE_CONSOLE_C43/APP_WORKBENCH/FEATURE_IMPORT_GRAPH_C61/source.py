@@ -304,6 +304,8 @@ def _path_relevant(root: Path, relative: str, previous: Mapping[str, Source]) ->
     path = _event_path(root, relative)
     if path is None:
         return False
+    if path.name == path.parent.name + "__tests":
+        return True
     if PurePosixPath(relative).name.casefold() in _RESOLUTION_INPUTS:
         return True
     if path.is_dir():

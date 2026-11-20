@@ -1,4 +1,4 @@
-"""Source-backed Import Graph primitives."""
+"""Source-backed Realization Graph primitives."""
 
 from .source import ImportSite, Source, capture, relevant_change
 

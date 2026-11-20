@@ -34,7 +34,7 @@ from runtime_failure_diagnostics import report_failure
 from shared_gateway import SharedGatewayRefusal
 from workbench_links import project_name as selection_project_name, public_saved, public_workspace, validate_reference
 from workbench_tools import (
-    ARCHIVE_LOAD, CHECK, INTERFACE_TOOLS, LOAD, PAGE, RUN, SAVED_LIST, SAVE_VIEW, SCHEMA, SYNC_STATUS,
+    ARCHIVE_LOAD, CHECK, INTERFACE_TOOLS, LOAD, PAGE, REBUILD, RUN, SAVED_LIST, SAVE_VIEW, SCHEMA, SYNC_STATUS,
     WORKSPACE_GET, WORKSPACE_OPEN,
 )
 
@@ -202,7 +202,7 @@ def routes(gateway: Any, *, shared: bool = False) -> list[BaseRoute]:  # noqa: C
 
     operations = [(path, operation(name)) for path, name in (
         ("run", RUN), ("page", PAGE), ("check", CHECK), ("schema", SCHEMA), ("status", SYNC_STATUS),
-        ("archive-load", ARCHIVE_LOAD), ("view-save", SAVE_VIEW), ("load", LOAD), ("saved-list", SAVED_LIST),
+        ("rebuild", REBUILD), ("archive-load", ARCHIVE_LOAD), ("view-save", SAVE_VIEW), ("load", LOAD), ("saved-list", SAVED_LIST),
     )]
     return [
         Route(f"{WORKBENCH_PATH}/{{project_name}}", page),

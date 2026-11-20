@@ -26,7 +26,7 @@ The Project-local DuckDB runtime files, bundled dependencies and container deliv
 
 Deliver the rebuildable DuckDB database at `.anechoic_runtime/workbench/projection.duckdb` in the selected repository. Keep all native Workbench tables in that database, including temporary result and runtime observation tables. Keep spill data in the same runtime directory. Validate and reconcile retained native projections at normal startup before serving queries. Clear prior result tables and IDs at startup. Do not store source-byte copies, intermediate schema files or a second source of truth.
 
-Expose `main.atoms` and `main.scope_units` as public source tables and `main.change_log` as the technical watcher log. Internal graph mappings and generated result tables are disposable implementation state. Source files remain authoritative and unchanged by queries.
+Expose `main.atoms` as a public source table and `main.change_log` as the technical watcher log. Legacy Workbench also exposes `main.scope_units`; native Workbench uses its native inventory. Internal graph mappings and generated result tables are disposable implementation state. Source files remain authoritative and unchanged by queries.
 
 Transient result tables remain disposable state; the shared backend owner controls their retention and release.
 

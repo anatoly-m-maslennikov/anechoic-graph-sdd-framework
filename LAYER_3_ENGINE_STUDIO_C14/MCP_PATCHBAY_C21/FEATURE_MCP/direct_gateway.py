@@ -40,7 +40,7 @@ from tool_registry_runtime import (  # noqa: E402
     ToolRegistryStaleError,
     load_active_registry,
 )
-from workbench_tools import INTERFACE_TOOLS, LOAD, SAVED_LIST, SAVE_VIEW, SYNC_STATUS, WorkbenchTools, mcp_app_probe  # noqa: E402
+from workbench_tools import INTERFACE_TOOLS, LOAD, REBUILD, SAVED_LIST, SAVE_VIEW, SYNC_STATUS, WorkbenchTools, mcp_app_probe  # noqa: E402
 
 if TYPE_CHECKING:
     from native_query import NativeQueryOwner
@@ -133,13 +133,14 @@ class DirectGateway:
 
                 self._native_query.start()
                 supported = QUERY_TOOLS | LIFECYCLE_TOOLS | frozenset((
-                    *INTERFACE_TOOLS, SAVE_VIEW, LOAD, SAVED_LIST, SYNC_STATUS,
+                    *INTERFACE_TOOLS, SAVE_VIEW, LOAD, SAVED_LIST, SYNC_STATUS, REBUILD,
                 ))
                 self.tool_blacklist |= frozenset(self.registry.routes) - supported
                 self.tools = tuple(
                     tool for tool in self.registry.tools if tool.name not in self.tool_blacklist
                 )
             else:
+                self.tool_blacklist |= frozenset((REBUILD,))
                 self.tools = tuple(tool for tool in self.registry.tools if tool.name not in self.tool_blacklist)
                 if isinstance(self.selection, ProjectSelection):
                     with self._bind_legacy_selection():

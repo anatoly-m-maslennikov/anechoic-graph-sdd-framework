@@ -2,16 +2,22 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
+import re
 import sys
 import threading
 from typing import Any
 
 from workbench_tools import CHECK, PAGE, RUN, SCHEMA
 
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.audit_tables import TABLES as AUDIT_TABLES, create_tables
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.import_cache import (
+    clear_import_sources, read_import_sources, replace_import_sources,
+)
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.import_tables import remove_imports, replace_imports
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_projection import project_native
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.import_tables import publish_imports
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import NativeCapture, capture_native
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.query_log import QueryLog
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.query_store import QueryStore
@@ -21,6 +27,7 @@ from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service_interface import ServiceInt
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_watcher import SourceWatcher
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.statements import select_statement
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workspace import WorkspaceStore
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.watcher_change_log import WatcherChangeLog, mirror_change_log
 from native_project_selection import ManifestIdentity, NativeProjectSelection
 from work_journal import validated_journal_root
 
@@ -54,10 +61,15 @@ LIFECYCLE_TOOLS = frozenset({
     "atom_lifecycle_direct_update", "atom_lifecycle_create_draft", "atom_lifecycle_change_status",
     "atom_lifecycle_archive", "atom_lifecycle_promote_draft", "atom_lifecycle_update",
 })
-QUERY_TABLES = frozenset({
+ATOM_TABLES = frozenset({
     "atoms", "relations", "native_references", "native_legacy_references", "native_migration_paths",
-    "import_nodes", "module_imports", "import_edges", "package_imports",
 })
+REALIZATION_TABLES = frozenset({
+    "import_nodes", "module_imports", "import_edges", "package_imports", "test_edges", "tested_by_edges",
+})
+IMPORT_CACHE_TABLES = frozenset(f"_anechoic_import_cache.{name}" for name in ("sources", "sites", "version"))
+OBSERVATION_TABLES = frozenset({"change_log", "query_log", "live_runs", "runtime_diagnostics"})
+QUERY_TABLES = ATOM_TABLES | REALIZATION_TABLES | OBSERVATION_TABLES | frozenset(AUDIT_TABLES)
 
 
 class NativeQueryOwner(ServiceInterface):
@@ -76,13 +88,14 @@ class NativeQueryOwner(ServiceInterface):
                 and journal_path.parts[0] != selection.control_relative.name):
             raise ValueError("Native Journal cannot use another records tree")
         self._saved_queries = SavedQueryStore(self._root, journal_root=journal_path.as_posix())
-        self._workspaces = WorkspaceStore(self._root)
+        self._workspaces = WorkspaceStore(self._root, transient_results=True)
         self._query_log = QueryLog(self._root)
+        self._change_log = WatcherChangeLog(self._root)
         self._interface_lock = threading.RLock()
         self._watcher: SourceWatcher | None = None
         self._import_thread: threading.Thread | None = None
         self._import_stop = threading.Event()
-        self._import_sources = {}
+        self._realization_options: tuple[tuple[str, ...], tuple[str, ...]] | None = None
 
     def _import_options(self, workbench: dict) -> tuple[tuple[str, ...], tuple[str, ...]] | None:
         if "import_graph" not in workbench:
@@ -104,33 +117,45 @@ class NativeQueryOwner(ServiceInterface):
             result.append(tuple(values))
         return result[0], result[1]
 
-    def _refresh_imports(
-        self, store: QueryStore, roots: tuple[str, ...], include: tuple[str, ...],
-        *, changes: list[dict[str, str | None]] | None = None,
-    ) -> None:
-        from APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.source import capture
-        from APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.resolution import resolve
-        sources = capture(self._root, self._import_sources, include, changes=changes)
-        nodes, occurrences, edges = resolve(self._root, sources, roots)
-        publish_imports(store, nodes, occurrences, edges)
-        self._import_sources = sources
+    def _prepare_realization(self, store, *, changes=None, force_parse=False):
+        from APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.source import capture, relevant_change
+        from APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.resolution import resolve_realization
 
-    def _watch_imports(self, store: QueryStore, roots: tuple[str, ...], include: tuple[str, ...]) -> None:
-        from APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.source import relevant_change
+        assert self._realization_options is not None
+        roots, include = self._realization_options
+        with store._lock:
+            previous = read_import_sources(store._connection)
+        if changes is not None and not relevant_change(self._root, changes, previous):
+            return None
+        sources = capture(self._root, None if force_parse else previous, include, changes=changes)
+        return previous, sources, resolve_realization(self._root, sources, roots)
+
+    @staticmethod
+    def _publish_realization(connection, graph, prepared) -> None:
+        previous, sources, facts = prepared
+        replace_import_sources(connection, sources, previous)
+        replace_imports(connection, graph, *facts)
+
+    def _watch_imports(self, store: QueryStore) -> None:
 
         assert self._watcher is not None
         while not self._import_stop.is_set():
             batch = self._watcher.changes(timeout=0.1)
             try:
-                if batch and relevant_change(self._root, batch, self._import_sources):
-                    self._refresh_imports(store, roots, include, changes=batch)
+                if batch:
+                    with self._interface_lock:
+                        prepared = self._prepare_realization(store, changes=batch)
+                        if prepared is not None:
+                            with store._lock, self._transaction(store):
+                                self._publish_realization(store._connection, store._projection.graph, prepared)
             except Exception as error:
-                print(f"Import graph refresh failed. Batch discarded. {error}", file=sys.stderr)
+                print(f"Realization Graph refresh failed. Batch discarded. {error}", file=sys.stderr)
 
-    def _project(self, store: QueryStore) -> NativeCapture:
+    def _project(self, store: QueryStore, *, use_retained=False, before_commit=None) -> NativeCapture:
         capture = capture_native(self.selection)
         project_native(store, capture, relation_types=self._inputs.relation_types,
-                       inverses=self._inputs.inverses, migration_refs=self._inputs.migration_refs)
+                       inverses=self._inputs.inverses, migration_refs=self._inputs.migration_refs,
+                       use_retained=use_retained, before_commit=before_commit)
         return capture
 
     def start(self) -> None:
@@ -138,11 +163,16 @@ class NativeQueryOwner(ServiceInterface):
         workbench = runtime.get("workbench", {}) if isinstance(runtime, dict) else None
         if not isinstance(workbench, dict):
             raise ValueError("Project Manifest runtime.workbench must be a mapping")
-        import_options = self._import_options(workbench)
+        self._realization_options = self._import_options(workbench)
         options = {key: workbench[key] for key in ("result_ttl_seconds", "schema_mode") if key in workbench}
-        store = QueryStore(extension_directory=self._inputs.extension_directory, **options)
+        path = self._root / ".anechoic_runtime" / "workbench" / "projection.duckdb"
+        if not path.resolve().is_relative_to(self._root) or not (path.parent / "duckdb-temp").resolve().is_relative_to(self._root):
+            raise ValueError("Workbench database and spill paths must stay inside the Project")
+        store = QueryStore(extension_directory=self._inputs.extension_directory,
+                           database_path=path, native=True, **options)
         try:
-            if import_options is not None:
+            prepared = None
+            if self._realization_options is not None:
                 from APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.source import excluded_source_path
 
                 self._watcher = SourceWatcher(
@@ -150,20 +180,33 @@ class NativeQueryOwner(ServiceInterface):
                     implementation_root=self._root, exclude_directory=excluded_source_path,
                 )
                 self._watcher.start()
-            self._capture = self._project(store)
-            if import_options is not None:
-                self._refresh_imports(store, *import_options)
-                self._import_thread = threading.Thread(target=self._watch_imports, args=(store, *import_options),
-                                                       name="native-import-graph", daemon=True)
+                prepared = self._prepare_realization(store)
+
+            def finish(graph) -> None:
+                if prepared is None:
+                    remove_imports(store._connection, graph)
+                    clear_import_sources(store._connection)
+                else:
+                    self._publish_realization(store._connection, graph, prepared)
+
+            self._capture = self._project(store, use_retained=True, before_commit=finish)
+            store.sync_change_log(self._change_log, initialize=True)
+            store.record_query_attempts(self._query_log.bind(
+                lambda record: store.record_query_attempts([record])
+            ))
+            self._workspaces.clear_transient_results()
+            if self._watcher is not None:
+                self._import_thread = threading.Thread(target=self._watch_imports, args=(store,),
+                                                       name="native-realization-graph", daemon=True)
                 self._import_thread.start()
-        except BaseException:
+        except BaseException as error:
+            print(f"Native Workbench startup failed: {error}", file=sys.stderr)
             if self._watcher is not None:
                 self._watcher.close()
                 self._watcher = None
             store.close()
             raise
         self._store = store
-        self._workspaces.clear_transient_results()
 
     def _refresh_after_write(self, store: QueryStore) -> None:
         try:
@@ -173,6 +216,86 @@ class NativeQueryOwner(ServiceInterface):
             with store._lock:
                 store._available = False
             raise
+
+    @staticmethod
+    @contextmanager
+    def _transaction(store: QueryStore):
+        connection = store._connection
+        connection.execute("BEGIN TRANSACTION")
+        try:
+            yield
+            connection.execute("COMMIT")
+        except BaseException:
+            connection.execute("ROLLBACK")
+            raise
+
+    def _rebuild_observations(self, store: QueryStore, target: str) -> None:
+        connection = store._connection
+        if target in ("all", "change_log"):
+            mirror_change_log(connection, self._change_log, initialize=True, in_transaction=True)
+        if target in ("all", "query_log"):
+            connection.execute('DELETE FROM main.query_log_records WHERE "at" <= current_timestamp - INTERVAL 48 HOURS')
+        if target in ("all", "live_runs"):
+            connection.execute("DELETE FROM main.live_runs")
+            if store._live_runs:
+                connection.executemany("INSERT INTO main.live_runs VALUES (?, ?, ?, ?)", store._live_runs)
+        if target in ("all", "runtime_diagnostics"):
+            connection.execute("DELETE FROM main.runtime_diagnostics")
+            if store._diagnostic_rows:
+                connection.executemany(
+                    "INSERT INTO main.runtime_diagnostics VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    store._diagnostic_rows,
+                )
+        if target == "all" or target in AUDIT_TABLES:
+            create_tables(connection)
+
+    def rebuild(self, target: str) -> dict[str, Any]:
+        """Rebuild the selected projection and dependent tables on the existing connection."""
+        with self._interface_lock:
+            store = self._owner()
+            table = target.removeprefix("main.")
+            if table == "query_log_records":
+                table = "query_log"
+            all_tables = table == "all"
+            result_table = re.fullmatch(r"workbench_results\.query_([a-f0-9]{32})", table)
+            atom_tables = ATOM_TABLES | {"scope_units", "internal.reference", "internal.native_exact_refs",
+                                         "internal.native_frontier"}
+            atom_tables |= {f"internal.{name}" for name in store._projection.graph.tables.values()}
+            atom_rebuild = all_tables or table in atom_tables
+            realization_rebuild = all_tables or table in REALIZATION_TABLES or table in IMPORT_CACHE_TABLES
+            if realization_rebuild and not all_tables and self._realization_options is None:
+                raise ValueError("Realization Graph is disabled")
+            if not (atom_rebuild or realization_rebuild or result_table or table == "workbench_results"
+                    or table in OBSERVATION_TABLES or table in AUDIT_TABLES):
+                raise ValueError(f"Unknown Workbench rebuild target: {target}")
+
+            staged = {}
+            try:
+                prepared = (self._prepare_realization(store, force_parse=True)
+                            if realization_rebuild and self._realization_options is not None else None)
+
+                def rebuild_dependents(graph) -> None:
+                    nonlocal staged
+                    if prepared is not None:
+                        self._publish_realization(store._connection, graph, prepared)
+                    self._rebuild_observations(store, table)
+                    # An arbitrary read query can depend on a projection through a view or GRAPH_TABLE.
+                    staged = store.prepare_result_rebuild(result_table[1] if result_table else None)
+
+                with store._lock:
+                    store.prune_results()
+                    if atom_rebuild:
+                        self._capture = self._project(store, before_commit=rebuild_dependents)
+                    else:
+                        with self._transaction(store):
+                            rebuild_dependents(store._projection.graph)
+                    replaced = store.commit_result_rebuild(staged)
+                    self._workspaces.replace_result_ids(replaced)
+            except Exception as error:
+                print(f"Workbench rebuild failed for {target}: {error}", file=sys.stderr)
+                raise
+            return {"status": "ready", "target": target,
+                    "result_ids": {old: item["query_id"] for old, item in replaced.items()}}
 
     def lifecycle(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         from ATOM_LIFECYCLE.assets.change_current_status import WORKFLOW_BINDING

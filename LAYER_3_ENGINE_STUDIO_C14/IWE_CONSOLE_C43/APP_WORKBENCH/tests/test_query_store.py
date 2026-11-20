@@ -38,6 +38,24 @@ class QueryStoreTest(unittest.TestCase):
     def tearDown(self) -> None:
         self.store.close()
 
+    def test_rebuild_stages_until_commit_and_preserves_preview_and_pin(self) -> None:
+        old = self.store.run("SELECT * FROM range(5)", preview=2)["query_id"]
+        self.store.pin(old)
+        self.store._connection.execute("BEGIN")
+        staged = self.store.prepare_result_rebuild(old)
+        self.store._connection.execute("ROLLBACK")
+        self.assertEqual(2, self.store.page(old, 0)["row_count"])
+        self.store._connection.execute("BEGIN")
+        staged = self.store.prepare_result_rebuild(old)
+        self.store._connection.execute("COMMIT")
+        replacements = self.store.commit_result_rebuild(staged)
+        new = replacements[old]["query_id"]
+        self.assertNotEqual(old, new)
+        self.assertEqual(2, self.store.page(new, 0)["row_count"])
+        self.assertTrue(self.store._results[new].pinned)
+        with self.assertRaises(ValueError):
+            self.store.page(old, 0)
+
     def test_query_log_expiry_applies_to_backing_rows(self) -> None:
         self.store._connection.execute(
             "INSERT INTO query_log_records VALUES "

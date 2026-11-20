@@ -21,6 +21,7 @@ export class WorkbenchApi {
     return this.caller.call('query_page', { result_delivery: 'inline', query_id: queryId, offset, page_size: pageSize, ...(grid ? { grid } : {}) });
   }
 
+  rebuild(target: string): Promise<unknown> { return this.caller.call('query_rebuild', { target }); }
   schema(): Promise<Schema> { return this.caller.call('query_schema', {}); }
   status(): Promise<SourceSyncStatus> { return this.caller.call('workbench_status', {}); }
   loadArchives(scopes: ArchiveScope[]): Promise<{ loaded_archive_scopes: ArchiveScope[] }> {

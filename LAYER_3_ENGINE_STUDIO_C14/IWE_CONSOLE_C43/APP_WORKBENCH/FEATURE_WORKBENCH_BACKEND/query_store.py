@@ -91,6 +91,7 @@ class _Result:
     sql: str
     stored_columns: tuple[str, ...]
     created_at: float
+    preview: int | None = None
     pinned: bool = False
 
 
@@ -99,7 +100,7 @@ class QueryStore:
 
     def __init__(
         self, *, extension_directory: Path | None = None, database_path: Path | None = None,
-        result_ttl_seconds: int = 3600, schema_mode: int = 2,
+        result_ttl_seconds: int = 3600, schema_mode: int = 2, native: bool = False,
     ) -> None:
         if type(result_ttl_seconds) is not int or result_ttl_seconds <= 0:
             raise ValueError("result_ttl_seconds must be a positive integer")
@@ -107,6 +108,7 @@ class QueryStore:
             raise ValueError("workbench.schema_mode must be 1 or 2")
         self._extension_directory = extension_directory
         self._database_path = database_path
+        self._native = native
         self._result_ttl_seconds = result_ttl_seconds
         self._schema_mode = schema_mode
         self._lock = threading.RLock()
@@ -122,36 +124,47 @@ class QueryStore:
         self._content_schema = compile_content_schema([])
         self._schema_changed = False
         self._clear_startup_projection()
-        self.replace([], [])
+        if native:
+            self._initialized = bool(self._connection.execute(
+                "SELECT 1 FROM information_schema.tables "
+                "WHERE table_schema = 'main' AND table_name = 'atoms'"
+            ).fetchone())
+        else:
+            self.replace([], [])
 
     def _clear_startup_projection(self) -> None:
         """Discard the disposable projection and any prior process's query cache."""
         try:
-            self._connection.execute("DROP PROPERTY GRAPH IF EXISTS anechoic")
-            self._connection.execute("DROP SCHEMA IF EXISTS internal CASCADE")
+            if not self._native:
+                self._connection.execute("DROP PROPERTY GRAPH IF EXISTS anechoic")
+                self._connection.execute("DROP SCHEMA IF EXISTS internal CASCADE")
+                self._connection.execute("DROP TABLE IF EXISTS main.atoms")
+                self._connection.execute("DROP TABLE IF EXISTS main.scope_units")
             self._connection.execute("DROP SCHEMA IF EXISTS workbench_results CASCADE")
             self._connection.execute("DROP SCHEMA IF EXISTS lifecycle_private CASCADE")
-            self._connection.execute("DROP TABLE IF EXISTS main.atoms")
-            self._connection.execute("DROP TABLE IF EXISTS main.scope_units")
             self._connection.execute("DROP TABLE IF EXISTS main.change_log")
+            self._connection.execute("DROP VIEW IF EXISTS main.query_log")
+            for table in ("live_runs", "query_log_records", "runtime_diagnostics"):
+                self._connection.execute(f"DROP TABLE IF EXISTS main.{table}")
+            temporary = "" if self._database_path is not None else "TEMP "
             self._connection.execute("CREATE SCHEMA workbench_results")
             self._connection.execute(
                 "CREATE TABLE main.change_log (observed_at TIMESTAMPTZ NOT NULL, "
                 "operation VARCHAR NOT NULL, old_path VARCHAR, new_path VARCHAR)"
             )
             self._connection.execute(
-                "CREATE TEMP TABLE live_runs (run_id VARCHAR, session_id VARCHAR, tool VARCHAR, status VARCHAR)"
+                f"CREATE {temporary}TABLE live_runs (run_id VARCHAR, session_id VARCHAR, tool VARCHAR, status VARCHAR)"
             )
             self._connection.execute(
-                'CREATE TEMP TABLE query_log_records (log_id VARCHAR PRIMARY KEY, "at" TIMESTAMPTZ, sql VARCHAR, '
+                f'CREATE {temporary}TABLE query_log_records (log_id VARCHAR PRIMARY KEY, "at" TIMESTAMPTZ, sql VARCHAR, '
                 "outcome VARCHAR, error VARCHAR, row_count BIGINT, column_count BIGINT)"
             )
             self._connection.execute(
-                'CREATE TEMP VIEW query_log AS SELECT * FROM query_log_records '
+                f'CREATE {temporary}VIEW query_log AS SELECT * FROM query_log_records '
                 'WHERE "at" > current_timestamp - INTERVAL 48 HOURS'
             )
             self._connection.execute(
-                "CREATE TEMP TABLE runtime_diagnostics (observed_at TIMESTAMPTZ, name VARCHAR, outcome VARCHAR, "
+                f"CREATE {temporary}TABLE runtime_diagnostics (observed_at TIMESTAMPTZ, name VARCHAR, outcome VARCHAR, "
                 "returned_outcome VARCHAR, error_category VARCHAR, project_prefix VARCHAR, project_instance_id VARCHAR)"
             )
             create_audit_tables(self._connection)
@@ -306,11 +319,12 @@ class QueryStore:
     def replace(
         self, atom_rows: list[dict[str, Any]], scope_rows: list[dict[str, Any]],
         *, relation_types: set[str] | None = None, content_schema: ContentSchema | None = None,
-        header_schema: HeaderSchema | None = None,
+        header_schema: HeaderSchema | None = None, reuse: bool = False, before_commit=None,
     ) -> None:
         with self._lock:
             if not self._available:
                 raise WorkbenchUnavailableError("query store unavailable; Workbench restart required")
+            transaction = False
             try:
                 header_state = self._header_state
                 if header_schema is None:
@@ -322,35 +336,45 @@ class QueryStore:
                 if content_schema is None:
                     content_schema = compile_content_schema(atom_rows)
                 self._connection.execute("BEGIN TRANSACTION")
-                if self._initialized:
-                    self._connection.execute("DROP PROPERTY GRAPH anechoic")
+                transaction = True
+                if self._initialized and not reuse:
+                    self._connection.execute("DROP PROPERTY GRAPH IF EXISTS anechoic")
                     self._connection.execute("DROP SCHEMA internal CASCADE")
                     self._connection.execute("DROP TABLE main.atoms")
                     self._connection.execute("DROP TABLE main.scope_units")
                 started = time.monotonic()
-                public_rows = insert_rows(
+                public_rows = None if reuse else insert_rows(
                     self._connection, atom_rows, scope_rows, header_schema=header_schema,
                     content_schema=content_schema, relation_types=relation_types,
                 )
+                projection = snapshot(
+                    atom_rows, scope_rows, relation_types, header_schema, content_schema, public_rows=public_rows,
+                )
+                if before_commit is not None:
+                    before_commit(projection.graph)
                 self._connection.execute("COMMIT")
+                transaction = False
                 self._initialized = True
                 self._header_state = header_state
                 self._header_schema = header_schema
                 self._content_schema = content_schema
                 self._schema_changed = False
-                self._create_atom_version_max()
-                header_schema.write(schema_asset_path(self._database_path))
-                content_schema.write(content_schema_asset_path(self._database_path))
-                self._projection = snapshot(
-                    atom_rows, scope_rows, relation_types, header_schema, content_schema,
-                    public_rows=public_rows,
-                )
+                if not self._native:
+                    self._create_atom_version_max()
+                    header_schema.write(schema_asset_path(self._database_path))
+                    content_schema.write(content_schema_asset_path(self._database_path))
+                self._projection = projection
                 self._info_edit(
                     "replace", "projection", len(self._projection.atoms) + len(self._projection.scopes), started,
                 )
             except Exception as exc:
-                self._available = False
+                if transaction:
+                    self._connection.execute("ROLLBACK")
+                if not self._native or is_duckdb_internal(exc):
+                    self._available = False
                 print(f"query store refresh failed: {exc}", file=sys.stderr)
+                if self._native and self._available:
+                    raise
                 raise WorkbenchUnavailableError("query store unavailable; Workbench restart required") from exc
 
     def _info_edit(
@@ -543,15 +567,16 @@ class QueryStore:
             raise ValueError("preview must be a non-negative integer")
         return value
 
-    def _materialize(self, sql: str, preview: int | None = None) -> tuple[str, _Result]:
+    def _materialize(self, sql: str, preview: int | None = None, *, admitted: bool = False) -> tuple[str, _Result]:
         if not self._available:
             raise WorkbenchUnavailableError("query store unavailable; Workbench restart required")
         try:
-            self._admit(sql)
-            self._connection.execute(
-                'DELETE FROM query_log_records WHERE "at" <= current_timestamp - INTERVAL 48 HOURS'
-            )
-            self._verify_read_only(sql)
+            if not admitted:
+                self._admit(sql)
+                self._connection.execute(
+                    'DELETE FROM query_log_records WHERE "at" <= current_timestamp - INTERVAL 48 HOURS'
+                )
+                self._verify_read_only(sql)
         except ValueError as exc:
             print(f"query failed: {exc}", file=sys.stderr)
             raise
@@ -591,7 +616,7 @@ class QueryStore:
                 raise WorkbenchUnavailableError("query store unavailable; Workbench restart required") from exc
             print(_query_failure(exc), file=sys.stderr)
             raise QueryExecutionError(_query_failure(exc)) from exc
-        return query_id, _Result(columns, row_count, sql, stored_columns, time.monotonic())
+        return query_id, _Result(columns, row_count, sql, stored_columns, time.monotonic(), preview)
 
     def _read_page(
         self, query_id: str, result: _Result, offset: int, page_size: int, grid: Grid,
@@ -655,6 +680,30 @@ class QueryStore:
             except ValueError:
                 self.drop(query_id)
                 raise
+
+    def prepare_result_rebuild(self, query_id: str | None = None) -> dict[str, tuple[str, _Result]]:
+        """Stage replacement tables inside the caller's transaction and store lock."""
+        if query_id is not None and query_id not in self._results:
+            raise ValueError("unknown query_id")
+        selected = list(self._results) if query_id is None else [query_id]
+        staged = {}
+        for old_id in selected:
+            old = self._results[old_id]
+            new_id, result = self._materialize(old.sql, old.preview, admitted=True)
+            result.created_at, result.pinned = old.created_at, old.pinned
+            staged[old_id] = (new_id, result)
+        for old_id in selected:
+            self._connection.execute(f"DROP TABLE workbench_results.{quote_identifier(f'query_{old_id}')}")
+        return staged
+
+    def commit_result_rebuild(self, staged: dict[str, tuple[str, _Result]]) -> dict[str, dict[str, Any]]:
+        """Publish staged bookkeeping only after the caller commits SQL."""
+        for old_id, (new_id, result) in staged.items():
+            del self._results[old_id]
+            self._results[new_id] = result
+        return {old_id: {"query_id": new_id, "row_count": result.row_count,
+                         "column_count": len(result.columns)}
+                for old_id, (new_id, result) in staged.items()}
 
     def drop(self, query_id: str) -> None:
         """Release one process-local materialized result."""

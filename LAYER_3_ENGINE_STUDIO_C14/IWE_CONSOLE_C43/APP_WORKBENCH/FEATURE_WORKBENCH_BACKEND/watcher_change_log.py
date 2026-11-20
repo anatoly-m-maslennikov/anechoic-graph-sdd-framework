@@ -166,7 +166,7 @@ class WatcherChangeLog:
 
 def mirror_change_log(
     connection: Any, log: WatcherChangeLog, events: list[dict[str, str | None]] | None = None,
-    *, initialize: bool = False,
+    *, initialize: bool = False, in_transaction: bool = False,
 ) -> None:
     """Mirror the file owner's delta while the caller holds its database lock."""
     if events is not None:
@@ -182,7 +182,8 @@ def mirror_change_log(
     if not retained and not replace:
         return
     try:
-        connection.execute("BEGIN TRANSACTION")
+        if not in_transaction:
+            connection.execute("BEGIN TRANSACTION")
         if replace:
             connection.execute("DELETE FROM main.change_log")
         if retained:
@@ -194,7 +195,8 @@ def mirror_change_log(
                 "json_extract_string(value, '$.new_path') FROM json_each(?::JSON)",
                 [json.dumps(retained, separators=(",", ":"))],
             )
-        connection.execute("COMMIT")
+        if not in_transaction:
+            connection.execute("COMMIT")
     except Exception as error:
         print(f"query store change-log refresh failed: {error}", file=sys.stderr)
         raise WorkbenchUnavailableError("query store unavailable; Workbench restart required") from error

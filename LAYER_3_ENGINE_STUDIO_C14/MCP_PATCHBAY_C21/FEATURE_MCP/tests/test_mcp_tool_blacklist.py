@@ -70,7 +70,7 @@ class MCPToolBlacklistTests(unittest.IsolatedAsyncioTestCase):
                 async with ClientSession(*streams) as client:
                     await client.initialize()
                     names = {tool.name for tool in (await client.list_tools()).tools}
-                    self.assertEqual((set(NATIVE_TOOLS) | LIFECYCLE_NAMES) - {"workbench_ui_ping", "query_run"}, names)
+                    self.assertEqual((set(NATIVE_TOOLS) | LIFECYCLE_NAMES) - {"workbench_ui_ping", "query_run", "query_rebuild"}, names)
                     response = await client.call_tool("workbench_ui_ping", {})
                     self.assertTrue(response.is_error)
                     self.assertEqual(["Unknown Tool"], response.structured_content["diagnostics"])

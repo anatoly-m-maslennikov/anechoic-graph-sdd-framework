@@ -193,6 +193,15 @@ def register_graph(connection: Any, state: GraphState) -> None:
             "main.import_edges SOURCE KEY(source_key) REFERENCES main.import_nodes(node_key) "
             "DESTINATION KEY(target_key) REFERENCES main.import_nodes(node_key) LABEL Imports"
         )
+        for table, label in (("test_edges", "TESTS"), ("tested_by_edges", "IS_TESTED_BY")):
+            if connection.execute(
+                "SELECT count(*) FROM information_schema.tables "
+                "WHERE table_schema = 'main' AND table_name = ?", [table],
+            ).fetchone()[0]:
+                edges.append(
+                    f"main.{table} SOURCE KEY(source_key) REFERENCES main.import_nodes(node_key) "
+                    f"DESTINATION KEY(target_key) REFERENCES main.import_nodes(node_key) LABEL {label}"
+                )
     sql = "CREATE PROPERTY GRAPH anechoic VERTEX TABLES (" + ", ".join(vertices) + ")"
     if edges:
         sql += " EDGE TABLES (" + ", ".join(edges) + ")"

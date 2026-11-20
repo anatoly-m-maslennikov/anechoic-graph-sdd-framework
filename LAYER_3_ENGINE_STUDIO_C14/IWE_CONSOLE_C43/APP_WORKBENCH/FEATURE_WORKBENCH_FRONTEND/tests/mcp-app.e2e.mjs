@@ -98,6 +98,31 @@ test('native artifact inlines the shared UI assets', async () => {
   assert.ok(html.includes('tools/call'));
 });
 
+test('rebuild command sends target and refreshes the workspace result', async () => {
+  const initial = { workspace_id: 'session', project_name: 'Project', active_view_id: 'v1', views: [
+    { id: 'v1', sql: 'select 1', cursor_position: 0, revision: 1, result: { query_id: 'q1', status: 'completed' } },
+  ] };
+  const host = await bridgePage({ input: { session_id: 'session', project_root: '/project' }, initial,
+    callTool: ({ name }) => ({ isError: false, structuredContent: name === 'workspace_get' ? initial
+      : name === 'view_fetch' ? { query_id: 'q1', columns: [], rows: [], offset: 0, page_size: 100, has_more: false }
+      : name === 'query_saved_list' || name === 'query_log_list' ? { items: [] } : {} }),
+  });
+  try {
+    await host.frame.getByRole('button', { name: /Commands/ }).click();
+    const palette = host.frame.getByRole('dialog', { name: 'Command palette' });
+    await palette.getByRole('textbox').fill('Rebuild results');
+    host.page.once('dialog', (dialog) => dialog.accept('atoms'));
+    await palette.getByRole('textbox').press('Enter');
+    await host.frame.getByRole('dialog', { name: 'Command palette' }).waitFor({ state: 'hidden' });
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const rebuild = host.calls.find((call) => call.name === 'query_rebuild');
+    assert.equal(rebuild?.arguments.target, 'atoms');
+    const index = host.calls.indexOf(rebuild);
+    assert.ok(host.calls.slice(index + 1).some((call) => call.name === 'workspace_get'));
+    assert.ok(host.calls.slice(index + 1).some((call) => call.name === 'view_fetch'));
+  } finally { await host.browser.close(); }
+});
+
 test('native bridge binds reordered host context to the actual Workbench backend', { skip: !fixtureReady }, async () => {
   const sessionId = `native-bridge-${Date.now()}`;
   const initial = await openWorkspace(sessionId);

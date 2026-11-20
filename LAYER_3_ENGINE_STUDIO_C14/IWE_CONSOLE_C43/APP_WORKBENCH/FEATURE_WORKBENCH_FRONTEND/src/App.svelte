@@ -146,6 +146,19 @@
       if (target) updateTab(target, { sql: source.sql, cursor: source.cursor, dirty: source.dirty, savedSql: source.savedSql ?? source.sql, syncDirty: false });
     }
   }
+  async function rebuildResults() {
+    const target = window.prompt('Table selector or all', 'all');
+    if (target === null) return;
+    try {
+      storageError = '';
+      await api.rebuild(target.trim());
+      if (boundApi) {
+        const state = await boundApi.get();
+        tabs = tabs.map((tab) => ({ ...tab, result: undefined }));
+        applyBinding(state);
+      }
+    } catch (error) { storageError = message(error); }
+  }
   async function refreshStatus() { try { syncStatus = await api.status(); } catch { syncStatus = { ...syncStatus, mode: 'unavailable' }; } }
   async function loadArchives(scopes: ArchiveScope[]) {
     const coverage = await api.loadArchives(scopes);
@@ -326,6 +339,7 @@
     const busy = !workspaceReady || !active || active.busy || savedBusy; const result = active?.result;
     return [
       { id: 'settings', label: 'Settings', enabled: true, run: () => showUtility('settings') }, { id: 'saved', label: 'Bookmarks and saved Views', enabled: true, run: () => showUtility('saved') },
+      ...(native || syncStatus.mode === 'startup_snapshot' ? [{ id: 'rebuild-results', label: 'Rebuild results', enabled: workspaceReady, run: rebuildResults }] : []),
       { id: 'load-archives', label: 'Load Archives', enabled: workspaceReady, run: () => { archiveDialogOpen = true; void refreshStatus(); } },
       { id: 'open', label: 'Open Saved', enabled: !savedBusy, run: () => openSavedDialog = true }, { id: 'focus-sql', label: 'Focus Query editor', enabled: !!active, run: focusSql }, { id: 'focus-results', label: 'Focus Results', enabled: !!result, run: focusResults },
       ...tabs.map((tab) => ({ id: `view-${tab.id}`, label: `View: ${tabName(tab)}`, enabled: workspaceReady, run: () => showView(tab.id) })), { id: 'new-first', label: 'New View first', enabled: workspaceReady, run: () => addView('first') }, { id: 'new-last', label: 'New View last', enabled: workspaceReady, run: () => addView('last') },

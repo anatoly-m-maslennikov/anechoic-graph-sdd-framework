@@ -1,11 +1,13 @@
 """Publish a native capture through the existing Workbench DuckDB store."""
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping, Set
+from collections.abc import Callable, Iterable, Mapping, Set
+from hashlib import sha256
 from pathlib import PurePosixPath, PureWindowsPath
 import re
 from typing import Any
 
+from .graph_store import GraphState, register_graph
 from .native_source_rows import NativeCapture
 from .query_store import QueryStore
 
@@ -98,7 +100,9 @@ def _projected_rows(capture, relation_types, inverse):
 
 def project_native(store: QueryStore, capture: NativeCapture, *,
                    relation_types: Set[str], inverses: Mapping[str, str],
-                   migration_refs: Iterable[tuple[str | None, str, str]] = ()) -> None:
+                   migration_refs: Iterable[tuple[str | None, str, str]] = (),
+                   use_retained: bool = False,
+                   before_commit: Callable[[GraphState], None] | None = None) -> None:
     """Replace the disposable projection. Relation declarations must be caller-validated."""
     if capture.errors or not capture.atoms:
         raise ValueError("Cannot project a native capture with invalid carriers")
@@ -106,26 +110,49 @@ def project_native(store: QueryStore, capture: NativeCapture, *,
     rows = _projected_rows(capture, relation_types, inverse)
     legacy, paths = _migration_rows(rows, migration_refs)
     with store._lock:
-        store.replace(rows, [], relation_types=set(relation_types))
-        try:
-            store._connection.execute('''CREATE TABLE internal.native_exact_refs AS
+        connection = store._connection
+        # Invalidate retained rows when the projection layout or inputs change.
+        frontier = sha256(repr((
+            1, store._schema_mode, sorted(relation_types), sorted(inverses.items()),
+            sorted(legacy), sorted(paths),
+            sorted((row["source_path"], row["_source_sha256"]) for row in rows),
+        )).encode()).hexdigest()
+        retained = use_retained and connection.execute(
+            "SELECT 1 FROM information_schema.tables "
+            "WHERE table_schema = 'internal' AND table_name = 'native_frontier'"
+        ).fetchone() is not None and connection.execute(
+            "SELECT frontier FROM internal.native_frontier"
+        ).fetchall() == [(frontier,)]
+
+        def finish(graph: GraphState) -> None:
+            if retained:
+                connection.execute("DROP PROPERTY GRAPH IF EXISTS anechoic")
+                register_graph(connection, graph)
+            else:
+                _write_references(connection, rows, legacy, paths)
+                connection.execute("CREATE TABLE internal.native_frontier(frontier VARCHAR NOT NULL)")
+                connection.execute("INSERT INTO internal.native_frontier VALUES (?)", [frontier])
+            if before_commit is not None:
+                before_commit(graph)
+
+        store.replace(rows, [], relation_types=set(relation_types), reuse=retained, before_commit=finish)
+
+
+def _write_references(connection, rows, legacy, paths) -> None:
+    connection.execute('''CREATE TABLE internal.native_exact_refs AS
                 SELECT unnest(?::VARCHAR[]) AS reference, unnest(?::VARCHAR[]) AS exact_ref''',
-                [[row["ref"] for row in rows], [row["_exact_ref"] for row in rows]])
-            store._connection.execute('''CREATE OR REPLACE VIEW main.native_references AS
+                       [[row["ref"] for row in rows], [row["_exact_ref"] for row in rows]])
+    connection.execute('''CREATE OR REPLACE VIEW main.native_references AS
                 SELECT relative_path, filename, status_group, reference,
                        CASE WHEN status_group = 'Current' THEN reference END AS stable_ref,
                        exact_ref
                 FROM main.atoms JOIN internal.native_exact_refs USING (reference)''')
-            store._connection.execute('''CREATE OR REPLACE TABLE main.native_legacy_references (
+    connection.execute('''CREATE OR REPLACE TABLE main.native_legacy_references (
                 legacy_ref VARCHAR, original_path VARCHAR, exact_ref VARCHAR,
                 PRIMARY KEY (legacy_ref, original_path))''')
-            if legacy:
-                store._connection.executemany(
-                    "INSERT INTO main.native_legacy_references VALUES (?, ?, ?)", legacy)
-            store._connection.execute('''CREATE OR REPLACE TABLE main.native_migration_paths (
+    if legacy:
+        connection.executemany("INSERT INTO main.native_legacy_references VALUES (?, ?, ?)", legacy)
+    connection.execute('''CREATE OR REPLACE TABLE main.native_migration_paths (
                 original_path VARCHAR PRIMARY KEY, exact_ref VARCHAR NOT NULL)''')
-            if paths:
-                store._connection.executemany("INSERT INTO main.native_migration_paths VALUES (?, ?)", paths)
-        except Exception:
-            store._available = False
-            raise
+    if paths:
+        connection.executemany("INSERT INTO main.native_migration_paths VALUES (?, ?)", paths)

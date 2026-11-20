@@ -9,7 +9,7 @@ import sys
 import tomllib
 from pathlib import Path, PurePosixPath
 
-from .source import Source
+from .source import Source, _event_path, _git_ignored
 
 
 def _roots(root: Path, python_roots: tuple[str, ...]) -> list[PurePosixPath]:
@@ -198,3 +198,30 @@ def resolve(
             if target:
                 edges.extend(_edges(source_key, target, occurrence_key, nodes))
     return list(nodes.values()), occurrences, edges
+
+
+def resolve_realization(
+    root: Path, sources: dict[str, Source], python_roots: tuple[str, ...] = (".",)
+) -> tuple[list[tuple], list[tuple], list[tuple], list[tuple]]:
+    """Resolve imports and direct test-package relations from selected sources."""
+    nodes, occurrences, edges = resolve(root, sources, python_roots)
+    packages = {row[3]: row for row in nodes if row[1] == "package" and row[3]}
+    candidates = {}
+    for path, node in packages.items():
+        parent = PurePosixPath(path)
+        relative = (parent / (parent.name + "__tests")).as_posix()
+        directory = _event_path(root, relative)
+        if directory is not None and directory.is_dir():
+            candidates[relative] = node
+    ignored = _git_ignored(root, set(candidates) - packages.keys())
+    test_edges = []
+    for path, parent in sorted(candidates.items()):
+        if path in ignored:
+            continue
+        node = packages.get(path)
+        if node is None:
+            key = parent[0].rsplit(":", 1)[0] + ":" + path
+            node = (key, "package", parent[2], path, None, parent[5] or parent[0])
+            nodes.append(node)
+        test_edges.append((node[0], parent[0]))
+    return nodes, occurrences, edges, test_edges

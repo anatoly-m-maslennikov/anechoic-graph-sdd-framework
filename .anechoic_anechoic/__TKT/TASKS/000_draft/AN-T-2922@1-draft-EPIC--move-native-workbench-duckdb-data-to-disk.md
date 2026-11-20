@@ -9,7 +9,7 @@ context:
 state:
   status: "draft"
   version: 1
-  updated_at: "2026-11-20T14:14:26.497310+00:00"
+  updated_at: "2026-11-20T14:52:38.625695+00:00"
 ---
 ## Summary
 
@@ -18,6 +18,8 @@ Move native Workbench DuckDB data to disk
 ## Objective
 
 Store the native Workbench projection, parsed imports, and temporary query result tables in a Project-local DuckDB file. Let the Operator rebuild any table or all tables on demand.
+Extend the Import Graph into the Realization Graph. Reuse its Module and
+Package nodes for folder-derived test Relations.
 
 ## Work
 
@@ -32,13 +34,20 @@ Prerequisite. Admit the native `REFERENCES` Relation and its Header target forms
 5. Update [AN-S-1363](../../../LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/000_draft/AN-S-1363@12-draft-SWD--keep-duckdb-projection-ownership-in-the-existing-server.md) for disk-backed temporary results.
 6. Update [AN-S-1366](../../../LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/000_draft/AN-S-1366@19-draft-QA--query-native-sql-results-and-typed-relation-expansion.md) for acceptance.
 
+7. Create Tier 1 Policies for rebuilding dependent tables by default and
+   providing the same Operator controls in Workbench, Console, and MCP.
+8. Update the Realization Graph Decision and its acceptance Spec. Define
+   Test Package and the test Relations in the ontology Spec.
+
 ## Definition of Done
 
-The Solution Decision and supporting Spec Atoms cover the required behavior and agree with the existing Spec.
+The Spec covers both objectives. Verify disk-backed projections and results,
+a rebuild from each Operator surface, and folder-derived test Relations
+for Packages without a Spec Binding.
 
 ## Status
 
-The storage Drafts and the citation prerequisite Drafts are prepared.
+The storage, Realization Graph, and citation prerequisite Drafts are prepared.
 
 ## References
 

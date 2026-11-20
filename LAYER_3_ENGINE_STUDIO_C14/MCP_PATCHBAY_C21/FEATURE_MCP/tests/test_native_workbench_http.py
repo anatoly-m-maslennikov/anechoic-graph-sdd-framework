@@ -104,6 +104,24 @@ class NativeWorkbenchHttpTests(unittest.IsolatedAsyncioTestCase):
             self.assertIsNone(gateway.workbench._service)
         self.assertEqual(before, {path: (source / path).read_bytes() for path in before})
 
+    async def test_rebuild_contract_over_mcp_and_http(self):
+        gateway = create_native_gateway(self.root, fixture.CONTROL, fixture._native_inputs())
+        await gateway.initialize()
+        self.addAsyncCleanup(gateway.close)
+        response = {'status': 'ready', 'target': 'all', 'result_ids': {'old': 'new'}}
+        with patch.object(gateway._native_query, 'rebuild', return_value=response, create=True) as rebuild:
+            result = await gateway.call(None, types.CallToolRequestParams(name='query_rebuild', arguments={'target': 'all'}))
+            self.assertFalse(result.is_error, result.structured_content)
+            self.assertEqual(response, result.structured_content)
+            app = Starlette(routes=routes(gateway))
+            async with httpx2.AsyncClient(transport=httpx2.ASGITransport(app=app), base_url='http://127.0.0.1') as client:
+                http = await client.post('/anechoic/Anechoic/api/rebuild', json={'target': 'all'})
+                self.assertEqual(200, http.status_code, http.text)
+                self.assertEqual(response, http.json())
+                invalid = await client.post('/anechoic/Anechoic/api/rebuild', json={'target': ''})
+                self.assertEqual(400, invalid.status_code)
+            self.assertEqual(2, rebuild.call_count)
+
     async def test_manifest_blacklist_applies_to_mcp_and_http(self):
         gateway = create_native_gateway(self.root, fixture.CONTROL, fixture._native_inputs())
         selection = replace(gateway.selection, parameters={

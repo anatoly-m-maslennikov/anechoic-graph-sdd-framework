@@ -50,6 +50,7 @@ RUN, PAGE, CHECK, SCHEMA = "query_run", "query_page", "query_check", "query_sche
 SAVE_VIEW, LOAD, SAVED_LIST = "view_save", "query_load", "query_saved_list"
 RESTART = "workbench_restart"
 REREAD = "workbench_reread"
+REBUILD = "query_rebuild"
 SYNC_STATUS = "workbench_status"
 ARCHIVE_LOAD = "workbench_archive_load"
 WORKSPACE_OPEN, WORKSPACE_LIST, WORKSPACE_GET = "workspace_open", "workspace_list", "workspace_get"
@@ -64,7 +65,7 @@ INTERFACE_TOOLS = (
     VIEW_UPDATE, VIEW_RUN, VIEW_CHECK, VIEW_FETCH, VIEW_FOCUS, VIEW_RENAME, VIEW_REMOVE,
     QUERY_LOG_LIST, QUERY_LOG_GET,
 )
-NATIVE_TOOLS = (*mcp_app_probe.TOOL_NAMES, RUN, PAGE, CHECK, SCHEMA, SAVE_VIEW, LOAD, SAVED_LIST, *INTERFACE_TOOLS, RESTART, REREAD, SYNC_STATUS, ARCHIVE_LOAD)
+NATIVE_TOOLS = (*mcp_app_probe.TOOL_NAMES, RUN, PAGE, CHECK, SCHEMA, SAVE_VIEW, LOAD, SAVED_LIST, *INTERFACE_TOOLS, RESTART, REREAD, SYNC_STATUS, ARCHIVE_LOAD, REBUILD)
 
 _CURSOR = {"type": "integer", "minimum": 0}
 _SQL = {"type": "string"}
@@ -117,10 +118,12 @@ def native_tools() -> tuple[types.Tool, ...]:
                VIEW_FOCUS: _VIEW_GET_SCHEMA, VIEW_RENAME: _VIEW_RENAME_SCHEMA,
                VIEW_REMOVE: _VIEW_GET_SCHEMA, QUERY_LOG_LIST: _LIST_SCHEMA,
                QUERY_LOG_GET: _QUERY_LOG_GET_SCHEMA, RESTART: _EMPTY_SCHEMA, REREAD: _EMPTY_SCHEMA,
-               SYNC_STATUS: _EMPTY_SCHEMA, ARCHIVE_LOAD: _ARCHIVE_LOAD_SCHEMA}
+               SYNC_STATUS: _EMPTY_SCHEMA, ARCHIVE_LOAD: _ARCHIVE_LOAD_SCHEMA,
+               REBUILD: {"type": "object", "properties": {"target": {"type": "string", "minLength": 1}}, "required": ["target"], "additionalProperties": False}}
     writes = {RUN, SAVE_VIEW, WORKSPACE_OPEN, VIEW_CREATE, VIEW_DUPLICATE, VIEW_UPDATE, VIEW_RUN, VIEW_FOCUS,
-              VIEW_RENAME, VIEW_REMOVE, RESTART, REREAD, ARCHIVE_LOAD}
+              VIEW_RENAME, VIEW_REMOVE, RESTART, REREAD, ARCHIVE_LOAD, REBUILD}
     descriptions = {
+        REBUILD: "Rebuild one query table or all query tables; return replacement result IDs.",
         LOAD: "Load an explicitly requested Bookmark or saved View.",
         SAVED_LIST: "List recent Bookmark and saved View metadata.",
         SYNC_STATUS: "Read source-indexing status without starting or restarting Workbench.",
@@ -218,6 +221,17 @@ class WorkbenchTools:
                 self._owner().set_live_runs(live_runs)
             if diagnostics is not None:
                 self._owner().set_runtime_diagnostics(diagnostics)
+            if name == REBUILD:
+                if not isinstance(arguments, dict) or set(arguments) != {"target"} or not isinstance(arguments["target"], str) or not arguments["target"].strip():
+                    raise ValueError("Expected a non-empty target table selector or all")
+                if self._query_owner is None:
+                    raise ValueError("Query rebuild requires the native Project query backend")
+                try:
+                    return self._query_owner.rebuild(arguments["target"])
+                except ValueError:
+                    raise
+                except Exception as error:
+                    raise ExplicitBlockingRuntimeFailure("query_error", f"Query rebuild failed: {error}") from error
             if name == ARCHIVE_LOAD:
                 scopes = self._archive_scopes(arguments)
                 return self._owner().load_archives(scopes)
@@ -389,4 +403,4 @@ class WorkbenchTools:
                 self._service = None
 
 
-__all__ = ["CHECK", "INTERFACE_TOOLS", "LOAD", "NATIVE_TOOLS", "PAGE", "QUERY_LOG_GET", "QUERY_LOG_LIST", "REREAD", "RESTART", "RUN", "SAVED_LIST", "SAVE_VIEW", "SCHEMA", "SYNC_STATUS", "VIEW_CHECK", "VIEW_CREATE", "VIEW_DUPLICATE", "VIEW_FETCH", "VIEW_FOCUS", "VIEW_GET", "VIEW_LIST", "VIEW_REMOVE", "VIEW_RENAME", "VIEW_RUN", "VIEW_UPDATE", "WORKSPACE_GET", "WORKSPACE_LIST", "WORKSPACE_OPEN", "WorkbenchTools", "native_tools"]
+__all__ = ["CHECK", "INTERFACE_TOOLS", "LOAD", "NATIVE_TOOLS", "PAGE", "QUERY_LOG_GET", "QUERY_LOG_LIST", "REBUILD", "REREAD", "RESTART", "RUN", "SAVED_LIST", "SAVE_VIEW", "SCHEMA", "SYNC_STATUS", "VIEW_CHECK", "VIEW_CREATE", "VIEW_DUPLICATE", "VIEW_FETCH", "VIEW_FOCUS", "VIEW_GET", "VIEW_LIST", "VIEW_REMOVE", "VIEW_RENAME", "VIEW_RUN", "VIEW_UPDATE", "WORKSPACE_GET", "WORKSPACE_LIST", "WORKSPACE_OPEN", "WorkbenchTools", "native_tools"]

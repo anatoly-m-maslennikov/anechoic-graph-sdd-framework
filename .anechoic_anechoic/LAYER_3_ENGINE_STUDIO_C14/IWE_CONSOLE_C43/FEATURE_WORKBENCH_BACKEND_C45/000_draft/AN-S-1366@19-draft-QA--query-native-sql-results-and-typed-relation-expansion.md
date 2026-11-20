@@ -35,7 +35,7 @@ Verify Run/Check/Page and MCP/web parity: Check has metadata/errors only; Page r
 
 Use a disposable Project with a real DuckDB file. Verify startup reuse for unchanged sources and parsed imports. Add, edit, move, and delete files while Workbench is stopped. Compare the SQL tables and DuckPGQ edges after reopening. Disable the Import Graph and verify the retained import tables and graph labels are unavailable.
 
-Rebuild one table, then all tables, through the owner operation. Check the dependent views and graph in each case. After a single source-table rebuild, page an existing result. Verify disk-backed result rows, stable pages, expiry, startup cleanup, and replacement IDs for live results rebuilt from their retained Run inputs. Force a rebuild failure and verify stderr and no partial publication.
+Rebuild one table, then all tables, through Workbench, Console and MCP. Check dependent tables, views and graph in each case. Reject an invalid target before writing. After a single source-table rebuild, page an existing result. Verify disk-backed result rows, stable pages, expiry, startup cleanup, replacement IDs and old-to-new mappings for live results rebuilt from retained read-only SQL and effective execution inputs. Verify open Views and pins transfer, and save and export do not repeat. Force a rebuild failure and verify stderr and no partial publication.
 
 ## References
 
