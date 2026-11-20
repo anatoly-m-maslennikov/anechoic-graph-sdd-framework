@@ -4,6 +4,7 @@ import asyncio
 from contextlib import redirect_stderr
 from dataclasses import replace
 from io import StringIO
+import subprocess
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
@@ -19,8 +20,12 @@ from workbench_web import routes
 
 
 class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
-    setUp = fixture.NativeQueryStdioTests.setUp
     _write = fixture.NativeQueryStdioTests._write
+
+    def setUp(self):
+        fixture.NativeQueryStdioTests.setUp(self)
+        # The full suite places temporary Projects inside its ignored Git scratch tree.
+        subprocess.run(["git", "init", "--quiet", str(self.root)], check=True)
 
     def _source(self, name, text):
         path = self.root / name
