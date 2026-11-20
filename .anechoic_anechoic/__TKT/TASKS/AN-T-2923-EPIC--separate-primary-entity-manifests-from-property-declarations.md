@@ -7,9 +7,9 @@ context:
   tier: 3
   template: epic
 state:
-  status: backlog
+  status: "active"
   version: 1
-  updated_at: '2026-11-20T13:10:12.656325+00:00'
+  updated_at: "2026-11-20T14:13:15.026053+00:00"
 ---
 ## Summary
 
