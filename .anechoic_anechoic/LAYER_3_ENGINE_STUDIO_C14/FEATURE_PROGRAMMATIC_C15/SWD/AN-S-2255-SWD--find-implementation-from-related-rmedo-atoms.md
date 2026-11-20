@@ -7,9 +7,9 @@ context:
   tier: 2
   lens: SWD
 state:
-  status: active
-  version: 1
-  updated_at: '2026-11-13T12:16:36.432687+00:00'
+  status: "active"
+  version: 2
+  updated_at: "2026-11-20T14:14:56.321567+00:00"
 ---
 ## Summary
 
@@ -23,7 +23,7 @@ Finding code to inspect before implementing a new or changed RMEDO Atom. The pil
 
 ### Prose Claim
 
-Index Package `<folder name>.p.spec_trace.md` and Module `<full module filename with extension>.spec_trace.md` files under the Project’s Implementation root. Resolve each spec reference by its owner kind and path so a same-named Package and Module remain distinct. For the pilot, discover Python, Svelte, TypeScript and JavaScript source and test files as Modules and their containing directories as Packages. Skip generated files and directories. Exclude Assets and individual golden corpus files from the implementation trace inventory. Index a corpus-level Evaluation pin from its owning Package’s spec trace. Expose the Implementation structure and its RMEDO pins through `query_schema` and read-only `query_run`:
+Index Package `<folder name>__spec_bind.yaml` and Module `<full module filename with extension>.spec_trace.md` files under the Project’s Implementation root. Resolve each spec reference by its owner kind and path so a same-named Package and Module remain distinct. For the pilot, discover Python, Svelte, TypeScript and JavaScript source and test files as Modules and their containing directories as Packages. For a Package, read the legacy `<folder name>.p.spec_trace.md` only when its Spec Binding file is absent. Skip generated files and directories. Exclude Assets and individual golden corpus files from the implementation trace inventory. Index a corpus-level Evaluation pin from its owning Package’s spec trace. Expose the Implementation structure and its RMEDO pins through `query_schema` and read-only `query_run`:
 
 - `implementation_objects` lists every Package and Module by Project-relative path and kind, including those with no sidecar or pins. Every Module and every Package below the Project Package has exactly one immediate container, which is a Package. The Project Package is the Implementation root and has no container.
 - `implementation_rmedo` lists each sidecar entry by owner path, Project-relative sidecar path, entry kind, Atom ID, and exact Version. The owner path refers to an object in `implementation_objects`. Index every pin in a valid sidecar, including pins to non-Current versions. Pins remain queryable when the referenced Archive bodies are unloaded.

@@ -58,6 +58,41 @@ class SpecTraceTests(unittest.TestCase):
         self.assertIn(f'{package_trace}:3:', stderr.getvalue())
         self.assertEqual(connection.execute(pins).fetchall(), [('CA-R-123', 1)])
 
+    def test_package_yaml_precedence_validation_and_refresh(self):
+        root = Path(self.enterContext(TemporaryDirectory()))
+        package = root / PILOT / 'full_package_C43'
+        package.mkdir(parents=True)
+        canonical = package / 'full_package_C43__spec_bind.yaml'
+        legacy = package / 'full_package_C43.p.spec_trace.md'
+        legacy.write_text('## Applies\n- CA-M-9@1\n')
+        connection = self.enterContext(duckdb.connect(':memory:'))
+        store = SpecTraceStore(connection, root)
+        store.initialize()
+        store.refresh()
+        query = 'SELECT entry_kind, atom_id, version FROM implementation_rmedo ORDER BY entry_kind'
+        self.assertEqual(connection.execute(query).fetchall(), [('applies', 'CA-M-9', 1)])
+
+        canonical.write_text('implements:\n  - CA-R-123@5\napplies:\n  - AN-S-9@2\n')
+        store.refresh([canonical])
+        self.assertEqual(connection.execute(query).fetchall(),
+                         [('applies', 'AN-S-9', 2), ('implements', 'CA-R-123', 5)])
+        for invalid in ('implements: [CA-R-123@0]', 'implements: [CA-R-123@2147483648]',
+                        'implements: [CA-R-123@1, invalid]', 'implements: CA-R-123@1',
+                        'implements: []\nimplements: []', 'unknown: []', '[]',
+                        'implements: &pins [CA-R-123@1]\napplies: *pins'):
+            canonical.write_text(invalid)
+            stderr = StringIO()
+            with redirect_stderr(stderr):
+                store.refresh([canonical])
+            self.assertIn('Invalid spec trace', stderr.getvalue())
+            self.assertEqual(connection.execute(query).fetchall(), [])
+        canonical.unlink()
+        store.refresh([canonical])
+        self.assertEqual(connection.execute(query).fetchall(), [('applies', 'CA-M-9', 1)])
+        legacy.unlink()
+        store.refresh([legacy])
+        self.assertEqual(connection.execute(query).fetchall(), [])
+
     def test_incremental_trace_and_directory_changes(self):
         tmp_path = Path(self.enterContext(TemporaryDirectory()))
         pilot = tmp_path / PILOT

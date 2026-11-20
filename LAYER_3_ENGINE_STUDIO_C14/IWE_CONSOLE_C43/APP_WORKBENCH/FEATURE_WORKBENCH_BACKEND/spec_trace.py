@@ -6,12 +6,59 @@ from pathlib import Path
 import re
 import sys
 
+import yaml
+
+TOOLS = Path(__file__).resolve().parents[3] / 'FEATURE_PROGRAMMATIC' / 'FEATURE_TOOLS'
+if str(TOOLS) not in sys.path:
+    sys.path.insert(0, str(TOOLS))
+from VALIDATE_ATOMS.validate_atoms_workers.parsing import UniqueSafeLoader, check_yaml_resources  # noqa: E402
+
 PILOT = Path('LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH')
 EXCLUDED = {'FEATURE_WORKBENCH_CODEX', 'FEATURE_CODEX_EXTENSION', 'node_modules',
             '__pycache__', 'dist', 'build', 'coverage', 'assets', 'generated', 'benchmark', 'benchmarks'}
 EXTENSIONS = {'.py', '.svelte', '.ts', '.js', '.mjs'}
-PIN = re.compile(r'- ((?:CA-[RMEDO]|AN-[SP])-[0-9]+)@([0-9]+)')
+PIN = re.compile(r'((?:CA-[RMEDO]|AN-[SP])-[0-9]+)@([0-9]+)')
 SUFFIX = '.spec_trace.md'
+PACKAGE_SUFFIX = '__spec_bind.yaml'
+
+
+def _yaml_entries(content):
+    check_yaml_resources(content)
+    data = yaml.load(content, Loader=UniqueSafeLoader)
+    if not isinstance(data, dict) or set(data) - {'implements', 'applies'}:
+        raise ValueError('expected a mapping with implements and applies keys')
+    entries = []
+    for section, values in data.items():
+        if not isinstance(values, list):
+            raise ValueError(f'{section} must be a list of exact Atom version pins')
+        entries.extend((section, value, None) for value in values)
+    return entries
+
+
+def _markdown_entries(content, kind):
+    entries = []
+    section = None
+    for number, line in enumerate(content.splitlines(), 1):
+        line = line.strip()
+        if not line:
+            continue
+        if line == '## Implements' or (line == '## Applies' and kind == 'package'):
+            section = line.removeprefix('## ').lower()
+            continue
+        entries.append((section, line[2:] if line.startswith('- ') else None, number))
+    return entries
+
+
+def _validated_entries(entries):
+    pins = []
+    for section, value, number in entries:
+        match = PIN.fullmatch(value) if isinstance(value, str) else None
+        version = match.group(2).lstrip('0') if match else ''
+        if not section or not version or len(version) > 10 or int(version) > 2_147_483_647:
+            location = f':{number}' if number is not None else ''
+            raise ValueError(f'{location}: expected a heading or an exact Atom version pin')
+        pins.append((section, match.group(1), int(version)))
+    return pins
 
 
 class SpecTraceStore:
@@ -43,36 +90,27 @@ class SpecTraceStore:
         return path.relative_to(self.root).as_posix()
 
     def _sidecar(self, path, kind):
-        return path / (path.name + '.p' + SUFFIX) if kind == 'package' else path.with_name(path.name + SUFFIX)
+        return path / (path.name + PACKAGE_SUFFIX) if kind == 'package' else path.with_name(path.name + SUFFIX)
 
     def _pins(self, path, kind):
         if path != self.root / PILOT and self.root / PILOT not in path.parents:
             return []
         sidecar = self._sidecar(path, kind)
+        if kind == 'package' and not os.path.lexists(sidecar):
+            sidecar = path / (path.name + '.p' + SUFFIX)
         if not self._allowed(sidecar) or not sidecar.is_file():
+            if os.path.lexists(sidecar):
+                print(f'Invalid spec trace {sidecar}: not an allowed regular file', file=sys.stderr)
             return []
         try:
-            lines = sidecar.read_text(encoding='utf-8').splitlines()
-        except (OSError, UnicodeError) as exc:
-            print(f'Invalid spec trace {sidecar}: {exc}', file=sys.stderr)
+            content = sidecar.read_text(encoding='utf-8')
+            entries = (_yaml_entries(content) if sidecar.name.endswith(PACKAGE_SUFFIX)
+                       else _markdown_entries(content, kind))
+            return [(self._rel(path), self._rel(sidecar), *pin) for pin in _validated_entries(entries)]
+        except (OSError, UnicodeError, yaml.YAMLError, ValueError) as exc:
+            print(f'Invalid spec trace {sidecar}{exc}' if str(exc).startswith(':')
+                  else f'Invalid spec trace {sidecar}: {exc}', file=sys.stderr)
             return []
-        section = None
-        pins = []
-        for number, line in enumerate(lines, 1):
-            line = line.strip()
-            if not line:
-                continue
-            if line == '## Implements' or (line == '## Applies' and kind == 'package'):
-                section = line.removeprefix('## ').lower()
-                continue
-            match = PIN.fullmatch(line)
-            version = match.group(2).lstrip('0') if match else ''
-            if not section or not version or len(version) > 10 or int(version) > 2_147_483_647:
-                print(f'Invalid spec trace {sidecar}:{number}: expected a heading or an exact Atom version pin',
-                      file=sys.stderr)
-                return []
-            pins.append((self._rel(path), self._rel(sidecar), section, match.group(1), int(version)))
-        return pins
 
     def _insert(self, path, kind):
         rel = self._rel(path)
@@ -110,6 +148,24 @@ class SpecTraceStore:
                     if candidate.suffix in EXTENSIONS and self._allowed(candidate):
                         self._insert(candidate, 'module')
 
+    def _refresh_sidecar(self, path):
+        if path.name == path.parent.name + PACKAGE_SUFFIX:
+            owner = path.parent
+            expected_kind = 'package'
+        elif path.name.endswith(SUFFIX):
+            name = path.name[:-len(SUFFIX)]
+            if not name:
+                return True
+            owner = path.parent if name == path.parent.name + '.p' else path.with_name(name)
+            expected_kind = None
+        else:
+            return False
+        row = self.connection.execute('SELECT kind FROM implementation_objects WHERE path = ?',
+                                      [self._rel(owner)]).fetchone()
+        if row and (expected_kind is None or row[0] == expected_kind):
+            self._refresh_pins(owner, row[0])
+        return True
+
     def refresh(self, paths=None):
         """Refresh all pilot files initially, or affected paths and directory subtrees."""
         if paths is None:
@@ -121,15 +177,7 @@ class SpecTraceStore:
             path = Path(os.path.abspath(self.root / value))
             if not (path == self.root / PILOT or self.root / PILOT in path.parents):
                 continue
-            if path.name.endswith(SUFFIX):
-                name = path.name[:-len(SUFFIX)]
-                if not name:
-                    continue
-                owner = path.parent if name == path.parent.name + '.p' else path.with_name(name)
-                row = self.connection.execute('SELECT kind FROM implementation_objects WHERE path = ?',
-                                              [self._rel(owner)]).fetchone()
-                if row:
-                    self._refresh_pins(owner, row[0])
+            if self._refresh_sidecar(path):
                 continue
             if not self._allowed(path):
                 continue

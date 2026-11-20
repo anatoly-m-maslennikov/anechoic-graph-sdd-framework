@@ -76,7 +76,7 @@ class SpecTraceE2E(unittest.TestCase):
 
     def test_applies_pins_do_not_count_as_implementation(self):
         package = self.package.relative_to(self.root).as_posix()
-        (self.package / "example.p.spec_trace.md").write_text("## Applies\n\n- CA-M-501@1\n")
+        (self.package / "example__spec_bind.yaml").write_text("applies:\n  - CA-M-501@1\n")
         self.wait("SELECT owner_path, entry_kind FROM implementation_rmedo", [[package, "applies"]])
         self.assertEqual([[package, 0, 0]], self.sql(f"""
             SELECT o.path, count(r.atom_id) FILTER (WHERE r.owner_path = o.path), count(r.atom_id)
