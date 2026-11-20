@@ -1,0 +1,1 @@
+{"action_id":"manifest-runtime-live-local-release-20261120","event":"started","event_id":"58c84c47-be3e-482a-9f43-2e40f5ab4326","governed_subjects":[],"kind":"workflow","occurred_at":"2026-11-20 16:44:27 +0400","operation":"release_version","produced_outputs":[],"schema_version":1,"session_id":"manifest-runtime-live-local-release-20261120","structural_scope":"project"}
