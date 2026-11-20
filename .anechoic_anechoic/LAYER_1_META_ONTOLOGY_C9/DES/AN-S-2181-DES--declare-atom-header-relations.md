@@ -8,8 +8,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 6
-  updated_at: '2026-11-13T00:59:59.530485+00:00'
+  version: 7
+  updated_at: '2026-11-20T16:33:53.377856+00:00'
 ---
 ## Summary
 
@@ -19,7 +19,7 @@ Declare Atom.Header.Relations
 
 ### Prose Claim
 
-Each child name is the canonical name of a declared Relation, and each child has one or more base Atom ID values. A present Relations group has at least one child.
+Each child name is the canonical name of a declared Relation. Each child has one or more Atom references in the form that its Relation permits. Use base Atom IDs when the Relation specifies no other form. A present Relations group has at least one child.
 
 The replacement Atom stores IS_REPLACEMENT_FOR with its predecessor Atom IDs.
 

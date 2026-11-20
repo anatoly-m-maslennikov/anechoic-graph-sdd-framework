@@ -9,8 +9,11 @@ context:
   template: DECISION
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-20T10:44:30.157383+00:00'
+  version: 2
+  updated_at: '2026-11-20T16:34:57.901983+00:00'
+relations:
+  REFERENCES:
+  - AN-S-3159@1
 ---
 
 ## Summary
@@ -21,17 +24,19 @@ Extend Workbench with the Import Graph
 
 ### Prose Claim
 
-The Import Graph is a source-backed projection of the selected Project.
-It inventories executable source and extracts static imports without running that source.
-Record each import once with its source Module, written target, and file location.
-Resolve the target as a Module or Package when the available evidence supports it.
+Call the Workbench projection the Realization Graph. Reuse Module and Package
+node identities across import and test Relations. One local folder has one
+Package node across all languages. Record each static import with its source
+Module, written target, and file location. Resolve it without running source.
+Keep all four Module and Package import pairs and direct Package imports.
 
-Reuse the Workbench index for the initial scan and `SourceWatcher` for updates.
-Parse changed files and resolve affected imports again when targets change.
-Publish each update in one transaction in the Workbench DuckDB store.
-If an update fails, write an explicit error to stderr and make no partial publication.
+Derive `TESTS` from a direct `<full package folder name>__tests/` subdirectory
+to its parent Package. Expose the inverse as `IS_TESTED_BY`. The directory
+uses a Package node of type Test Package. Derive these Relations for Packages
+in the selected source scope, including those without a Spec or Spec Binding.
 
-Extend the existing `anechoic` property graph with the import relations.
-Expose Module → Module, Module → Package, Package → Module, and Package → Package.
-Use Module ownership to derive Package edges and preserve direct Package imports.
-Workbench and terminal SQL queries use the same graph and can trace each edge to its import.
+Reuse the Workbench index and `SourceWatcher`. Parse changed files and
+resolve affected imports again when targets change. Publish each update
+in one DuckDB transaction and write failures to stderr. Extend the existing
+`anechoic` property graph. Workbench and terminal SQL can trace each import
+to its file and line and each test Relation to its directory.

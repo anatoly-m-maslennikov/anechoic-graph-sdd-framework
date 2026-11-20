@@ -32063,5 +32063,10 @@
     "CA-C-453@3",
     ".anechoic_anechoic/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-16_FEATURE_TOOLS/WORKFLOW_OPERATIONS/ATOM_LIFECYCLE/01_concern/021_resolved/CA-C-453-ATOM_LIFECYCLE-PROBLEM--complete-model-admitted-nonactive-draft-status-effects.md",
     "AN-T-1@4"
+  ],
+  [
+    "CA-A-1467@1-draft",
+    ".anechoic_anechoic/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/02_analysis_and_advisory/000_draft/CA-A-1467@1-draft-FRAMEWORK_ENGINE-SPEC_PROPOSAL--derive-a-module-and-package-import-graph-from-project-source.md",
+    "AN-T-2928@1-draft"
   ]
 ]

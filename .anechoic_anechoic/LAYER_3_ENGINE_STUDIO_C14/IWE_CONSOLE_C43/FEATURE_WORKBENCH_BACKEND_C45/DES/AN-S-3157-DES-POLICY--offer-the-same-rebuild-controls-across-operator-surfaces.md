@@ -8,9 +8,9 @@ context:
   lens: DES
   template: POLICY
 state:
-  status: "draft"
+  status: active
   version: 1
-  updated_at: "2026-11-20T14:55:32.817323+00:00"
+  updated_at: '2026-11-20T16:34:57.901983+00:00'
 ---
 ## Summary
 
