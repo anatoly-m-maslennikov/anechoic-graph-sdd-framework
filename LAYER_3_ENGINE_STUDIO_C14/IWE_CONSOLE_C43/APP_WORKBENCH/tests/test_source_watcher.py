@@ -201,6 +201,39 @@ class SourceWatcherTests(unittest.TestCase):
         self.assertTrue(self.observer.stopped)
         self.assertTrue(self.observer.joined)
 
+    def test_filtered_root_schedules_and_registers_new_directories_before_events(self) -> None:
+        self.watcher.close()
+        excluded = self.root / "excluded"
+        excluded.mkdir()
+        (self.root / "linked").symlink_to(self.control, target_is_directory=True)
+        self.observer = _Observer()
+        self.watcher = SourceWatcher(
+            self.root, self.root, observer_factory=lambda: self.observer,
+            exclude_directory=lambda path: path == "excluded" or path.startswith("excluded/"),
+        )
+        self.observer.pending_changes = self.watcher.changes
+        self.watcher.start()
+        self.assertEqual({(str(self.root), False), (str(self.control), True)}, set(self.observer.schedules))
+
+        new = self.root / "new"
+        new.mkdir()
+        self.observer.handler.on_created(self.event(new, directory=True))
+        self.assertIn((str(new), True), self.observer.schedules)
+        self.assertEqual("new", self.watcher.changes(0)[0]["new_path"])
+        self.observer.handler.on_created(self.event(excluded, directory=True))
+        self.assertNotIn((str(excluded), True), self.observer.schedules)
+        self.watcher.changes(0)
+        moved = self.root / "moved"
+        new.rename(moved)
+        self.observer.handler.on_moved(self.event(new, destination=moved, directory=True))
+        self.assertIn((str(moved), True), self.observer.schedules)
+        self.assertEqual("rename", self.watcher.changes(0)[0]["operation"])
+        self.observer.handler.on_created(self.event(self.root / "linked", directory=True))
+        self.assertNotIn((str(self.root / "linked"), True), self.observer.schedules)
+        self.watcher.changes(0)
+        self.observer.handler.on_created(self.event(self.root / "file.py"))
+        self.assertEqual("file.py", self.watcher.changes(0)[0]["new_path"])
+
     def test_positive_timeout_collects_one_fixed_event_window(self) -> None:
         self.watcher._record("create", None, ".anechoic_example/first.md")
 

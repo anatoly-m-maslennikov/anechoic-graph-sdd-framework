@@ -141,8 +141,12 @@ class NativeQueryOwner(ServiceInterface):
         store = QueryStore(extension_directory=self._inputs.extension_directory, **options)
         try:
             if import_options is not None:
-                self._watcher = SourceWatcher(self._root, self._root / self.selection.control_relative,
-                                              implementation_root=self._root)
+                from APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.source import excluded_source_path
+
+                self._watcher = SourceWatcher(
+                    self._root, self._root / self.selection.control_relative,
+                    implementation_root=self._root, exclude_directory=excluded_source_path,
+                )
                 self._watcher.start()
             self._capture = self._project(store)
             if import_options is not None:

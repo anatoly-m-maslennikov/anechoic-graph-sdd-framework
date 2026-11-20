@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from queue import Empty, Queue
 from pathlib import Path
+import os
 import time
 from typing import Any, Callable
 
@@ -31,6 +32,7 @@ class SourceWatcher:
     def __init__(
         self, root: Path, control_root: Path,
         *, implementation_root: Path | None = None, observer_factory: Callable[[], Any] | None = None,
+        exclude_directory: Callable[[str], bool] | None = None,
     ) -> None:
         self._root = Path(root).absolute()
         self._control_root = Path(control_root).absolute()
@@ -44,6 +46,7 @@ class SourceWatcher:
                             if not any(path != other and path.is_relative_to(other) for other in candidates))
         self._resolved_roots = tuple(path.resolve() for path in self._roots)
         self._observer_factory = observer_factory
+        self._exclude_directory = exclude_directory if self._root in self._roots else None
         self._observer: Any = None
         self._changes: Queue[Change] = Queue()
         self._watched_directories: dict[Path, Any] = {}
@@ -56,10 +59,13 @@ class SourceWatcher:
             raise RuntimeError("watchdog runtime is unavailable")
         observer = factory()
         try:
-            self._watched_directories = {
-                path: observer.schedule(_Handler(self), str(path), recursive=True)
-                for path in self._roots
-            }
+            for path in self._roots:
+                filtered = self._exclude_directory is not None and path == self._root
+                self._watched_directories[path] = observer.schedule(_Handler(self), str(path), recursive=not filtered)
+                if filtered:
+                    for child in path.iterdir():
+                        if child.is_dir() and not child.is_symlink() and not self._exclude_directory(child.relative_to(self._root).as_posix()):
+                            self._watched_directories[child] = observer.schedule(_Handler(self), str(child), recursive=True)
             observer.start()
         except BaseException:
             observer.stop()
@@ -130,6 +136,24 @@ class SourceWatcher:
             self._watched_directories[directory] = watch
 
     def _watch_directory_tree(self, path: str) -> None:
+        if self._exclude_directory is not None:
+            candidate = Path(path)
+            if not candidate.is_absolute() or not candidate.is_relative_to(self._root) or ".." in candidate.parts:
+                return
+            parts = candidate.relative_to(self._root).parts
+            if any((self._root.joinpath(*parts[:index]).is_symlink()
+                    or self._exclude_directory(Path(*parts[:index]).as_posix()))
+                   for index in range(1, len(parts) + 1)):
+                return
+            if candidate.parent == self._root and candidate.is_dir():
+                if self._observer is not None and candidate not in self._watched_directories:
+                    self._watched_directories[candidate] = self._observer.schedule(_Handler(self), str(candidate), recursive=True)
+                return
+            for parent, children, _ in os.walk(candidate, followlinks=False):
+                children[:] = [child for child in children if not (Path(parent) / child).is_symlink()
+                               and not self._exclude_directory((Path(parent) / child).relative_to(self._root).as_posix())]
+                self._watch_directory(parent)
+            return
         directory = Path(path).resolve(strict=False)
         if not any(directory.is_relative_to(root) for root in self._resolved_roots):
             return

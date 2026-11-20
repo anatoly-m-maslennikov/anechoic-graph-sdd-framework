@@ -132,6 +132,11 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
                     await asyncio.sleep(.03)
             self.assertIs(importer, owner._import_sources["src/app/main.py"])
 
+            self._source("new_root/added.py", "import os\n")
+            async with asyncio.timeout(6):
+                while not await rows("SELECT 1 FROM import_nodes WHERE relative_path = 'new_root/added.py'"):
+                    await asyncio.sleep(.03)
+
             owner._inputs = replace(owner._inputs, relation_types=owner._inputs.relation_types | {"TEST_LINK"})
             owner._refresh_after_write(owner._owner())
             self.assertGreater((await rows(graph))[0][0], 0)

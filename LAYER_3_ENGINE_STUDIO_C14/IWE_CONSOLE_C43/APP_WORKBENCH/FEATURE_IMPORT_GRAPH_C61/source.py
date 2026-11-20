@@ -73,7 +73,7 @@ def _relative_path(root: Path, path: Path) -> str | None:
         return None
 
 
-def _excluded(relative: str) -> bool:
+def excluded_source_path(relative: str) -> bool:
     return any(part.casefold() in _EXCLUDED_PARTS for part in PurePosixPath(relative).parts)
 
 
@@ -124,7 +124,7 @@ def _iter_files(root: Path) -> Iterable[Path]:
             if entry.is_symlink():
                 continue
             path = Path(entry.path)
-            if _excluded(path.relative_to(root).as_posix()):
+            if excluded_source_path(path.relative_to(root).as_posix()):
                 continue
             if entry.is_dir(follow_symlinks=False):
                 pending.append(path)
@@ -171,7 +171,7 @@ def _input_files(root: Path, changed: set[str] | None) -> Iterable[Path]:
         yield from _iter_files(root)
         return
     for relative in changed:
-        if _excluded(relative):
+        if excluded_source_path(relative):
             continue
         path = _event_path(root, relative)
         if path is None:
@@ -297,7 +297,7 @@ def _event_path(root: Path, relative: str) -> Path | None:
 
 
 def _path_relevant(root: Path, relative: str, previous: Mapping[str, Source]) -> bool:
-    if _excluded(relative):
+    if excluded_source_path(relative):
         return False
     if _touches_previous(relative, previous):
         return True
@@ -320,4 +320,4 @@ def relevant_change(
     return any(_path_relevant(root, path, prior) for path in _changed_paths(changes))
 
 
-__all__ = ["ImportSite", "Source", "capture", "relevant_change"]
+__all__ = ["ImportSite", "Source", "capture", "excluded_source_path", "relevant_change"]
