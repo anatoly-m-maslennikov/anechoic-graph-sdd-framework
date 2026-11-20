@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.incremental_relations import materialize_delta  # noqa: E402
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.graph_store import graph_delta_state, graph_state  # noqa: E402
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.relation_registry import compile_registry  # noqa: E402
-from APP_WORKBENCH.tests.test_relations import atom, declarations  # noqa: E402
+from APP_WORKBENCH.APP_WORKBENCH__tests.test_relations import atom, declarations  # noqa: E402
 
 
 class IncrementalRelationTests(unittest.TestCase):
