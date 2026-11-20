@@ -7,8 +7,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-20T11:17:59+00:00'
+  version: 2
+  updated_at: '2026-11-20T14:42:07.157939+00:00'
 ---
 
 ## Summary
@@ -28,14 +28,11 @@ from anechoic.formal_claims import declare_entity
 from anechoic.model import SpecAtom
 
 class Purpose(SpecAtom):
-    purpose: str
-
-def check_purpose(purpose: Purpose) -> bool:
-    return bool(purpose.purpose.strip())
+    pass
 
 declare_entity(
-    entity_name="Purpose",
+    entity_name='Purpose',
     entity_class=Purpose,
-    instance_check=check_purpose,
+    entity_kind='Primary',
 )
 ```

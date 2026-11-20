@@ -7,8 +7,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-20T11:17:59+00:00'
+  version: 2
+  updated_at: '2026-11-20T14:42:07.157939+00:00'
 ---
 
 ## Summary
@@ -28,18 +28,11 @@ from anechoic.formal_claims import declare_entity
 from anechoic.model import SpecAtom
 
 class Contract(SpecAtom):
-    guarantee: str
-    tier: int | None = None
-
-def check_contract(contract: Contract) -> bool:
-    return bool(contract.guarantee.strip())
+    pass
 
 declare_entity(
-    entity_name="Contract",
+    entity_name='Contract',
     entity_class=Contract,
-    instance_relation_constraints={
-        "CONTAINED_BY": {"target_entity_paths": ("Node//Artifact//Component",), "targets_per_source": 1},
-    },
-    instance_check=check_contract,
+    entity_kind='Primary',
 )
 ```

@@ -7,8 +7,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-20T11:17:59+00:00'
+  version: 2
+  updated_at: '2026-11-20T14:42:07.157939+00:00'
 ---
 
 ## Summary
@@ -30,9 +30,9 @@ from anechoic.model import Artifact
 class Component(Artifact):
     pass
 
-declare_entity(entity_name="Component", entity_class=Component,
-    instance_relation_constraints={
-        "CHILD_OF": {"target_entity_paths": ("Node//Artifact//Component",), "targets_per_source": 1},
-    },
+declare_entity(
+    entity_name='Component',
+    entity_class=Component,
+    entity_kind='Primary',
 )
 ```

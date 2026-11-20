@@ -6,9 +6,9 @@ context:
     component: C9
   lens: SPEC
 state:
-  status: "active"
-  version: 2
-  updated_at: "2026-11-20T11:44:25.486252+00:00"
+  status: active
+  version: 3
+  updated_at: '2026-11-20T14:42:07.157939+00:00'
 ---
 
 ## Summary
@@ -28,22 +28,11 @@ from anechoic.formal_claims import declare_entity
 from anechoic.model import SpecAtom
 
 class PackageSpec(SpecAtom):
-    package_id: str
-    purpose: str
-    contract: str
-    tier: int | None = None
-    boundaries: dict[str, object] | None = None
-
-def check_package_spec(spec: PackageSpec) -> bool:
-    return bool(spec.package_id.strip() and spec.package_id != spec.atom_id
-                and spec.purpose.strip() and spec.contract.strip())
+    pass
 
 declare_entity(
-    entity_name="Package Spec",
+    entity_name='Package Spec',
     entity_class=PackageSpec,
-    instance_relation_constraints={
-        "CONTAINED_BY": {"target_entity_paths": ("Node//Artifact//Component",), "targets_per_source": 1},
-    },
-    instance_check=check_package_spec,
+    entity_kind='Primary',
 )
 ```

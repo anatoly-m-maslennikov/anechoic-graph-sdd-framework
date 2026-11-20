@@ -7,8 +7,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-20T11:17:59+00:00'
+  version: 2
+  updated_at: '2026-11-20T14:42:07.157939+00:00'
 ---
 
 ## Summary
@@ -26,10 +26,13 @@ MODEL//ANECHOIC <+ Node//Artifact//Atom//Ticket Atom
 ```python
 from anechoic.formal_claims import declare_entity
 from anechoic.model import Atom
-from typing import ClassVar
 
 class TicketAtom(Atom):
-    family_marker: ClassVar[str] = "T"
+    pass
 
-declare_entity(entity_name="Ticket Atom", entity_class=TicketAtom)
+declare_entity(
+    entity_name='Ticket Atom',
+    entity_class=TicketAtom,
+    entity_kind='Primary',
+)
 ```
