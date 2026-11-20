@@ -1,4 +1,4 @@
-"""Bind and run trusted Workflow definitions within one selected native Project."""
+"""Check workflow and status specification pins in the selected native Project."""
 from __future__ import annotations
 
 import base64
@@ -86,11 +86,11 @@ def bind_native_workflow(
     return check
 
 
-def bind_native_status_workflow(
+def bind_status_specifications(
     selection: NativeProjectSelection, *, migration_refs: Iterable[tuple[str | None, str, str]],
     current_rows: Iterable[Mapping[str, object]],
 ) -> tuple[Callable[[], None], dict[str, str]]:
-    """Bind the installed status Workflow to explicitly migrated Current native carriers."""
+    """Bind the installed status specification to its migrated Current SPEC carriers."""
     from ATOM_LIFECYCLE import status_workflow_definition as installed
     from ATOM_LIFECYCLE.assets.change_current_status import SOURCE_SHA256, WORKFLOW_BINDING
 
@@ -127,7 +127,7 @@ def bind_native_status_workflow(
         if len(matches) != 1 or matches[0][1] != original:
             raise NativeWorkflowDefinitionError(f"Missing or ambiguous migration for {legacy}")
         native = matches[0][2]
-        if not isinstance(native, str) or re.fullmatch(rf"{re.escape(selection.project_prefix)}-P-[0-9]+@[1-9][0-9]*", native) is None:
+        if not isinstance(native, str) or re.fullmatch(rf"{re.escape(selection.project_prefix)}-S-[0-9]+@[1-9][0-9]*", native) is None:
             raise NativeWorkflowDefinitionError(f"Invalid native migration target for {legacy}")
         selected = [row for row in rows if row.get('_exact_ref') == native and row.get('status_group') == 'Current']
         if len(selected) != 1:
@@ -136,7 +136,13 @@ def bind_native_status_workflow(
         relative, digest = row.get('source_path'), row.get('_source_sha256')
         if not isinstance(relative, str) or not isinstance(digest, str) or re.fullmatch(r'[0-9a-f]{64}', digest) is None:
             raise NativeWorkflowDefinitionError(f"Invalid native carrier for {legacy}")
-        full_path = _pin_path(selection, NativeDefinitionPin(native, relative, digest))
+        path = Path(relative)
+        if (path.is_absolute() or '..' in path.parts or path.as_posix() != relative
+                or not path.is_relative_to(selection.control_relative) or path.suffix != '.md'
+                or not path.name.startswith(native.partition('@')[0] + '-')
+                or path.relative_to(selection.control_relative).parts[0] in {'_PMETA', '__TKT'}):
+            raise NativeWorkflowDefinitionError(f"Invalid native SPEC path for {legacy}")
+        full_path = selection.root / path
         raw = _pinned_bytes(reader, full_path, native, digest)
         _check_header(full_path, raw, kind, native)
         old_body = sources[legacy].partition(b'\n---\n')
@@ -156,45 +162,4 @@ def bind_native_status_workflow(
         if current.currentness()["state"] != "unchanged":
             raise NativeWorkflowDefinitionError("Native status Workflow sources changed during verification")
 
-    return check, mapping
-
-
-def run_native_status_workflow(selection, params, *, migration_refs, current_rows):
-    from ATOM_LIFECYCLE.assets.change_current_status import WORKFLOW_BINDING, change_current_status
-    from ATOM_LIFECYCLE.common import InputError
-    from ATOM_LIFECYCLE.native_update import _select_ticket, change_ticket_status
-    from ATOM_LIFECYCLE.status_cascade import StatusAtom, StatusInvocation, StatusTree
-
-    if set(params) != {'target', 'targetStatus'} or not isinstance(params['targetStatus'], str):
-        raise InputError('targetStatus', 'Supply one Current Ticket and target Status.')
-    target = params['target']
-    selected, _, path = _select_ticket(selection, target, current_rows)
-    check, mapping = bind_native_status_workflow(
-        selection, migration_refs=migration_refs, current_rows=current_rows,
-    )
-    atom = StatusAtom(target['ref_id'], selected['status'])
-    invocation = StatusInvocation(atom.atom_id, target['version'], params['targetStatus'])
-
-    class LeafStatusRun:
-        outcome = None
-
-        def read_status_tree(self):
-            is_task = path.is_relative_to(selection.control_root / '__TKT' / 'TASKS')
-            return StatusTree(atom, (atom,), is_task, False)
-
-        def preflight(self, *, actions, parent_first, entering_backlog, reopening):
-            if actions != [(atom.atom_id, invocation.target_status)]:
-                raise ValueError('Native Status Workflow must select the pinned Ticket.')
-
-        def invoke(self, *, step, action, atom_id, target_status):
-            if (self.outcome is not None or (step, action) != (WORKFLOW_BINDING['step'], WORKFLOW_BINDING['action'])
-                    or (atom_id, target_status) != (atom.atom_id, invocation.target_status)):
-                raise ValueError('Native Status Workflow dispatch disagrees with its admitted binding.')
-            self.outcome = change_ticket_status(selection, params, current_rows=current_rows, check_definition=check)
-            return not self.outcome['errors']
-
-    run = LeafStatusRun()
-    change_current_status(invocation=invocation, engine=run)
-    if run.outcome is None:
-        raise ValueError('Native Status Workflow returned without dispatching its Action.')
-    return run.outcome | {'workflow_binding': {kind: mapping[ref] for kind, ref in WORKFLOW_BINDING.items()}}
+    return check

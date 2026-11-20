@@ -1,4 +1,4 @@
-"""Exercise native source pins and dispatch the installed status Workflow."""
+"""Exercise native Workflow pins and the SPEC contract for status changes."""
 
 import base64
 from dataclasses import replace
@@ -22,8 +22,7 @@ from native_workflow_definition import (  # noqa: E402
     NativeDefinitionPin,
     NativeWorkflowDefinitionError,
     bind_native_workflow,
-    bind_native_status_workflow,
-    run_native_status_workflow,
+    bind_status_specifications,
 )
 
 
@@ -78,11 +77,11 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
         refs, rows = [], []
         for index, (kind, atom_id, version, original) in enumerate(installed.SOURCES, 10):
             legacy = f"{atom_id}@{version}"
-            native = f"AN-P-{index}@{version}"
-            relative = f"{self.control}/_PMETA/AN-P-{index}-{kind.upper()}--fixture.md"
+            native = f"AN-S-{index}@{version}"
+            relative = f"{self.control}/LAYER_1_META_ONTOLOGY_C9/DES/DOM/AN-S-{index}-DOM-{kind.upper()}--fixture.md"
             body = base64.b64decode(snapshot[legacy]).partition(b"\n---\n")[2].decode()
             path = self._write(relative, {
-                "identity": {"atom_id": f"AN-P-{index}"},
+                "identity": {"atom_id": f"AN-S-{index}"},
                 "context": {"template": kind, "container": {"component": "C9"}},
                 "state": {"status": "active", "version": version},
             }, "")
@@ -94,8 +93,7 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
 
     def test_migrated_status_binding_checks_sources_and_manifest(self):
         refs, rows = self._status_binding()
-        check, mapping = bind_native_status_workflow(self.selection, migration_refs=refs, current_rows=rows)
-        self.assertEqual(mapping, {old: native for old, _, native in refs})
+        check = bind_status_specifications(self.selection, migration_refs=refs, current_rows=rows)
         check()
         for row in rows:
             path = self.root / row["source_path"]
@@ -105,7 +103,7 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
                 check()
             row["_source_sha256"] = sha256(path.read_bytes()).hexdigest()
             with self.assertRaisesRegex(NativeWorkflowDefinitionError, "body differs"):
-                bind_native_status_workflow(self.selection, migration_refs=refs, current_rows=rows)
+                bind_status_specifications(self.selection, migration_refs=refs, current_rows=rows)
             path.write_bytes(original)
             row["_source_sha256"] = sha256(original).hexdigest()
         self.manifest.write_bytes(self.manifest.read_bytes() + b"changed")
@@ -115,20 +113,21 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
     def test_migrated_status_binding_refuses_invalid_mapping_and_header(self):
         refs, rows = self._status_binding()
         with self.assertRaisesRegex(NativeWorkflowDefinitionError, "native migration target"):
-            spec = [*refs[1:], (refs[0][0], refs[0][1], refs[0][2].replace('-P-', '-S-'))]
-            bind_native_status_workflow(self.selection, migration_refs=spec, current_rows=rows)
+            pmeta = [*refs[1:], (refs[0][0], refs[0][1], refs[0][2].replace('-S-', '-P-'))]
+            bind_status_specifications(self.selection, migration_refs=pmeta, current_rows=rows)
         with self.assertRaisesRegex(NativeWorkflowDefinitionError, "migration"):
-            bind_native_status_workflow(self.selection, migration_refs=refs + refs[:1], current_rows=rows)
+            bind_status_specifications(self.selection, migration_refs=refs + refs[:1], current_rows=rows)
         with self.assertRaisesRegex(NativeWorkflowDefinitionError, "native carrier"):
-            bind_native_status_workflow(self.selection, migration_refs=refs, current_rows=rows[1:])
+            bind_status_specifications(self.selection, migration_refs=refs, current_rows=rows[1:])
         path = self.root / rows[0]["source_path"]
         path.write_bytes(path.read_bytes().replace(b"status: active", b"status: draft"))
         rows[0]["_source_sha256"] = sha256(path.read_bytes()).hexdigest()
         with self.assertRaisesRegex(NativeWorkflowDefinitionError, "Expected active native workflow"):
-            bind_native_status_workflow(self.selection, migration_refs=refs, current_rows=rows)
+            bind_status_specifications(self.selection, migration_refs=refs, current_rows=rows)
 
-    def test_installed_status_workflow_uses_migrated_pins(self):
+    def test_status_action_uses_migrated_specifications(self):
         from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import capture_native
+        from ATOM_LIFECYCLE.native_update import change_ticket_status
         from project_runtime import bind_native_runtime
 
         refs, _ = self._status_binding()
@@ -136,15 +135,15 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
             'identity': {'atom_id': 'AN-T-4'},
             'context': {'template': 'TASK', 'container': {'component': 'C0'}},
             'state': {'status': 'active', 'version': 3, 'updated_at': '2026-11-19T00:00:00Z'},
-        }, '## Summary\n\nVerify the Workflow.\n')
+        }, '## Summary\n\nVerify the status action.\n')
         before = capture_native(self.selection)
         self.assertEqual({}, before.errors)
+        check = bind_status_specifications(self.selection, migration_refs=refs, current_rows=before.atoms)
         with bind_native_runtime(self.selection):
-            outcome = run_native_status_workflow(self.selection, {
+            outcome = change_ticket_status(self.selection, {
                 'target': {'ref_id': 'AN-T-4', 'version': 3}, 'targetStatus': 'Backlog',
-            }, migration_refs=refs, current_rows=before.atoms)
+            }, current_rows=before.atoms, check_definition=check)
         self.assertEqual('completed', outcome['outcome'], outcome)
-        self.assertEqual(refs[0][2], outcome['workflow_binding']['workflow'])
         self.assertFalse(path.exists())
         after = capture_native(self.selection)
         self.assertEqual({}, after.errors)

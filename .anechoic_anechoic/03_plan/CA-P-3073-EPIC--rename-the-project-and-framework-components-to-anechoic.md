@@ -254,6 +254,11 @@ native MCP currently serves queries and Workbench from a startup snapshot.
 Keep the legacy MCP live until native Atom Lifecycle and Workflow commands
 pass verification in the isolated checkout.
 
+The Change Current Status definitions stay in SPEC. They bind the direct
+native status command. PMETA holds the Local Release and Public Release
+Workflows. Mechanical migration preserves each Draft and its `-draft`
+qualifier.
+
 The staged validation and map are in
 `.anechoic_tmp/ca-p-3073/combined-native-batches/candidate-002/`. The release
 and isolated cutover receipts are in

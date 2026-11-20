@@ -107,8 +107,8 @@ class NativeQueryOwner(ServiceInterface):
     def lifecycle(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         from ATOM_LIFECYCLE.common import InputError, SourceChanged, result
         from ATOM_LIFECYCLE.native_draft import create_draft, promote_draft
-        from ATOM_LIFECYCLE.native_update import archive_ticket, direct_update
-        from native_workflow_definition import NativeWorkflowDefinitionError, run_native_status_workflow
+        from ATOM_LIFECYCLE.native_update import archive_ticket, change_ticket_status, direct_update
+        from native_workflow_definition import NativeWorkflowDefinitionError, bind_status_specifications
         from project_runtime import bind_native_runtime
 
         if name not in LIFECYCLE_TOOLS:
@@ -129,8 +129,11 @@ class NativeQueryOwner(ServiceInterface):
                         self.selection, arguments, current_rows=rows, migration_refs=self._inputs.migration_refs,
                     )
                 else:
-                    outcome = run_native_status_workflow(
-                        self.selection, arguments, current_rows=rows, migration_refs=self._inputs.migration_refs,
+                    check_definition = bind_status_specifications(
+                        self.selection, current_rows=rows, migration_refs=self._inputs.migration_refs,
+                    )
+                    outcome = change_ticket_status(
+                        self.selection, arguments, current_rows=rows, check_definition=check_definition,
                     )
             except InputError as error:
                 return result(outcome="needs_input", requested_input=error.requested_input)
