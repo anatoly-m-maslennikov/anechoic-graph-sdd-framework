@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass
 from pathlib import Path
 import re
@@ -229,12 +229,13 @@ class NativeQueryOwner(ServiceInterface):
             connection.execute("ROLLBACK")
             raise
 
-    def _rebuild_observations(self, store: QueryStore, target: str) -> None:
+    def _rebuild_observations(self, store: QueryStore, target: str, query_attempts) -> None:
         connection = store._connection
         if target in ("all", "change_log"):
             mirror_change_log(connection, self._change_log, initialize=True, in_transaction=True)
         if target in ("all", "query_log"):
-            connection.execute('DELETE FROM main.query_log_records WHERE "at" <= current_timestamp - INTERVAL 48 HOURS')
+            connection.execute("DELETE FROM main.query_log_records")
+            store.record_query_attempts(query_attempts)
         if target in ("all", "live_runs"):
             connection.execute("DELETE FROM main.live_runs")
             if store._live_runs:
@@ -251,6 +252,8 @@ class NativeQueryOwner(ServiceInterface):
 
     def rebuild(self, target: str) -> dict[str, Any]:
         """Rebuild the selected projection and dependent tables on the existing connection."""
+        if not isinstance(target, str):
+            raise ValueError("Workbench rebuild target must be a table name or all")
         with self._interface_lock:
             store = self._owner()
             table = target.removeprefix("main.")
@@ -260,7 +263,7 @@ class NativeQueryOwner(ServiceInterface):
             result_table = re.fullmatch(r"workbench_results\.query_([a-f0-9]{32})", table)
             atom_tables = ATOM_TABLES | {"scope_units", "internal.reference", "internal.native_exact_refs",
                                          "internal.native_frontier"}
-            atom_tables |= {f"internal.{name}" for name in store._projection.graph.tables.values()}
+            atom_tables |= {f'internal.{name.strip(chr(34))}' for name in store._projection.graph.tables.values()}
             atom_rebuild = all_tables or table in atom_tables
             realization_rebuild = all_tables or table in REALIZATION_TABLES or table in IMPORT_CACHE_TABLES
             if realization_rebuild and not all_tables and self._realization_options is None:
@@ -274,15 +277,16 @@ class NativeQueryOwner(ServiceInterface):
                 prepared = (self._prepare_realization(store, force_parse=True)
                             if realization_rebuild and self._realization_options is not None else None)
 
-                def rebuild_dependents(graph) -> None:
-                    nonlocal staged
-                    if prepared is not None:
-                        self._publish_realization(store._connection, graph, prepared)
-                    self._rebuild_observations(store, table)
-                    # An arbitrary read query can depend on a projection through a view or GRAPH_TABLE.
-                    staged = store.prepare_result_rebuild(result_table[1] if result_table else None)
+                observations = self._query_log.snapshot() if table in ("all", "query_log") else nullcontext([])
+                with observations as query_attempts, store._lock:
+                    def rebuild_dependents(graph) -> None:
+                        nonlocal staged
+                        if prepared is not None:
+                            self._publish_realization(store._connection, graph, prepared)
+                        self._rebuild_observations(store, table, query_attempts)
+                        # A read query can depend on projection tables through views or GRAPH_TABLE.
+                        staged = store.prepare_result_rebuild(result_table[1] if result_table else None)
 
-                with store._lock:
                     store.prune_results()
                     if atom_rebuild:
                         self._capture = self._project(store, before_commit=rebuild_dependents)

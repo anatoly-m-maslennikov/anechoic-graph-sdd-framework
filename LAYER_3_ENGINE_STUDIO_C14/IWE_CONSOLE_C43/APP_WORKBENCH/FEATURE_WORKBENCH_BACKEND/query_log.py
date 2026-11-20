@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import datetime as dt
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 import json
 from pathlib import Path
 import sys
@@ -133,15 +134,20 @@ class QueryLog:
 
     def bind(self, on_record: Callable[[dict[str, Any]], None]) -> list[dict[str, Any]]:
         """Bind a consumer and read existing records without rewriting the log."""
+        with self.snapshot() as records:
+            self._on_record = on_record
+            return records
+
+    @contextmanager
+    def snapshot(self):
+        """Hold the log steady while a consumer replaces its mirror."""
         with self._lock:
             records = []
             if self._directory.is_dir():
                 for path in sorted(self._directory.glob("query-log-*.ndjson")):
                     records.extend(self._read_hour(path))
             records.extend(self._read_legacy())
-            records = self._retain(records, self._now())
-            self._on_record = on_record
-            return records
+            yield self._retain(records, self._now())
 
     def append(self, sql: str, result: dict[str, Any]) -> dict[str, Any]:
         now = self._now()

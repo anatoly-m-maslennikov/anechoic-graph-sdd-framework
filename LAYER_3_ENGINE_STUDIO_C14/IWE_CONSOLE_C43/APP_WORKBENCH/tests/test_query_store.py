@@ -56,6 +56,44 @@ class QueryStoreTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.store.page(old, 0)
 
+    def test_rebuild_updates_dependent_results_and_keeps_physical_name(self) -> None:
+        self.store._connection.execute("CREATE TABLE source_values (value INTEGER)")
+        self.store._connection.execute("INSERT INTO source_values VALUES (1)")
+        first = self.store.run("SELECT value FROM source_values")["query_id"]
+        second = self.store.run(f"SELECT value FROM workbench_results.query_{first}")["query_id"]
+        self.store._connection.execute("UPDATE source_values SET value = 2")
+        self.store._connection.execute("BEGIN")
+        staged = self.store.prepare_result_rebuild(first)
+        self.store._connection.execute("COMMIT")
+        replacements = self.store.commit_result_rebuild(staged)
+        new_first = replacements[first]["query_id"]
+        new_second = replacements[second]["query_id"]
+        self.assertEqual([[2]], self.store.page(new_second, 0)["rows"])
+        self.assertEqual(new_first, self.store.resolve_result_selector(f"workbench_results.query_{first}"))
+        self.store._connection.execute("UPDATE source_values SET value = 3")
+        self.store._connection.execute("BEGIN")
+        staged = self.store.prepare_result_rebuild()
+        self.store._connection.execute("ROLLBACK")
+        self.assertEqual([[2]], self.store.page(new_second, 0)["rows"])
+        self.store._connection.execute("BEGIN")
+        staged = self.store.prepare_result_rebuild()
+        self.store._connection.execute("COMMIT")
+        replacements = self.store.commit_result_rebuild(staged)
+        self.assertEqual([[3]], self.store.page(replacements[new_second]["query_id"], 0)["rows"])
+
+    def test_rebuild_dependency_failure_can_roll_back(self) -> None:
+        self.store._connection.execute("CREATE TABLE source_fail (value INTEGER)")
+        self.store._connection.execute("INSERT INTO source_fail VALUES (1)")
+        first = self.store.run("SELECT * FROM source_fail")["query_id"]
+        second = self.store.run(f"SELECT value FROM workbench_results.query_{first}")["query_id"]
+        self.store._connection.execute("ALTER TABLE source_fail RENAME value TO changed")
+        self.store._connection.execute("BEGIN")
+        with self.assertRaises(QueryExecutionError):
+            self.store.prepare_result_rebuild(first)
+        self.store._connection.execute("ROLLBACK")
+        self.assertEqual([[1]], self.store.page(first, 0)["rows"])
+        self.assertEqual([[1]], self.store.page(second, 0)["rows"])
+
     def test_query_log_expiry_applies_to_backing_rows(self) -> None:
         self.store._connection.execute(
             "INSERT INTO query_log_records VALUES "

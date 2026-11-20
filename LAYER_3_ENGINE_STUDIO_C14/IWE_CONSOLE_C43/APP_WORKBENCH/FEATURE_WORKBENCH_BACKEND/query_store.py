@@ -91,6 +91,7 @@ class _Result:
     sql: str
     stored_columns: tuple[str, ...]
     created_at: float
+    table_name: str
     preview: int | None = None
     pinned: bool = False
 
@@ -616,14 +617,14 @@ class QueryStore:
                 raise WorkbenchUnavailableError("query store unavailable; Workbench restart required") from exc
             print(_query_failure(exc), file=sys.stderr)
             raise QueryExecutionError(_query_failure(exc)) from exc
-        return query_id, _Result(columns, row_count, sql, stored_columns, time.monotonic(), preview)
+        return query_id, _Result(columns, row_count, sql, stored_columns, time.monotonic(), table_name, preview)
 
     def _read_page(
         self, query_id: str, result: _Result, offset: int, page_size: int, grid: Grid,
     ) -> dict[str, Any]:
         try:
             query = build_page_query(
-                f"query_{query_id}", result.stored_columns, grid, page_size=page_size, offset=offset,
+                result.table_name, result.stored_columns, grid, page_size=page_size, offset=offset,
             )
             row_count = self._connection.execute(query.count_sql, query.count_parameters).fetchone()[0]
             rows = self._connection.execute(query.page_sql, query.page_parameters).fetchall()
@@ -681,26 +682,49 @@ class QueryStore:
                 self.drop(query_id)
                 raise
 
+    def resolve_result_selector(self, selector: str) -> str:
+        """Resolve a current result ID or its stable physical table ID."""
+        if selector in self._results:
+            return selector
+        table_name = selector.removeprefix("workbench_results.")
+        if not table_name.startswith("query_"):
+            table_name = f"query_{table_name}"
+        for query_id, result in self._results.items():
+            if result.table_name == table_name:
+                return query_id
+        raise ValueError("unknown query_id")
+
     def prepare_result_rebuild(self, query_id: str | None = None) -> dict[str, tuple[str, _Result]]:
         """Stage replacement tables inside the caller's transaction and store lock."""
-        if query_id is not None and query_id not in self._results:
-            raise ValueError("unknown query_id")
-        selected = list(self._results) if query_id is None else [query_id]
+        selected = None if query_id is None else {self.resolve_result_selector(query_id)}
+        affected_tables: set[str] = set()
         staged = {}
-        for old_id in selected:
-            old = self._results[old_id]
+        for old_id, old in self._results.items():
+            if selected is not None and old_id not in selected:
+                try:
+                    dependencies = self._connection.get_table_names(old.sql, qualified=True)
+                except Exception as error:
+                    raise ValueError("cannot determine result dependencies") from error
+                if not affected_tables.intersection(dependencies):
+                    continue
             new_id, result = self._materialize(old.sql, old.preview, admitted=True)
             result.created_at, result.pinned = old.created_at, old.pinned
+            self._connection.execute(f"DROP TABLE workbench_results.{quote_identifier(old.table_name)}")
+            self._connection.execute(
+                f"ALTER TABLE workbench_results.{quote_identifier(result.table_name)} "
+                f"RENAME TO {quote_identifier(old.table_name)}"
+            )
+            result.table_name = old.table_name
             staged[old_id] = (new_id, result)
-        for old_id in selected:
-            self._connection.execute(f"DROP TABLE workbench_results.{quote_identifier(f'query_{old_id}')}")
+            affected_tables.add(f"workbench_results.{old.table_name}")
         return staged
 
     def commit_result_rebuild(self, staged: dict[str, tuple[str, _Result]]) -> dict[str, dict[str, Any]]:
         """Publish staged bookkeeping only after the caller commits SQL."""
-        for old_id, (new_id, result) in staged.items():
-            del self._results[old_id]
-            self._results[new_id] = result
+        self._results = {
+            (staged[key][0] if key in staged else key): (staged[key][1] if key in staged else value)
+            for key, value in self._results.items()
+        }
         return {old_id: {"query_id": new_id, "row_count": result.row_count,
                          "column_count": len(result.columns)}
                 for old_id, (new_id, result) in staged.items()}
@@ -711,7 +735,7 @@ class QueryStore:
             if not isinstance(query_id, str) or query_id not in self._results:
                 raise ValueError("unknown query_id")
             try:
-                table = quote_identifier(f"query_{query_id}")
+                table = quote_identifier(self._results[query_id].table_name)
                 self._connection.execute(f"DROP TABLE workbench_results.{table}")
                 del self._results[query_id]
             except Exception as exc:
