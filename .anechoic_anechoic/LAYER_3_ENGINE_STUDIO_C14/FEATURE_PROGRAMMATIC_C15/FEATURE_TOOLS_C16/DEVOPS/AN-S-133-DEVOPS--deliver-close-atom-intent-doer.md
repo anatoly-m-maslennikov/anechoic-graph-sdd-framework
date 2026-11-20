@@ -1,0 +1,20 @@
+---
+identity:
+  atom_id: AN-S-133
+context:
+  container:
+    component: C16
+  tier: 2
+  lens: DevOps
+state:
+  status: active
+  version: 25
+  updated_at: 2026-11-02 19:46:47 +0400
+---
+## Summary
+
+Deliver CLOSE_ATOM intent Doer
+
+# Deliver CLOSE_ATOM intent Doer
+
+the canonical source carrier for `CLOSE_ATOM` is `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/CLOSE_ATOM/close_atom.py`. It is installed **only** **in** the selected framework Tool release, delegates lifecycle effects **to** the canonical Atom lifecycle operation, **and** exposes mutation **only** through authorized project-local MCP delegation with a sealed Initiative action. Direct execution remains dry-run **only**.

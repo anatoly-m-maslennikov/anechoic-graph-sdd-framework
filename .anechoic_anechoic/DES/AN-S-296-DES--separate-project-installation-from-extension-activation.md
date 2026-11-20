@@ -1,0 +1,20 @@
+---
+identity:
+  atom_id: AN-S-296
+context:
+  container:
+    component: C00
+  tier: 1
+  lens: DES
+state:
+  status: active
+  version: 16
+  updated_at: 2026-10-27 19:59:56 +0400
+---
+## Summary
+
+Separate Project installation from Extension activation
+
+# Separate Project installation from Extension activation
+
+Installing an immutable FPF Extension Candidate **must** register its exact provenance **and** make its project-local `fpf` Skill available **without** activating its methodology authority; activation **must** require a separate current Project Configuration selection, **must not** mutate upstream **or** user-global FPF sources, **and** **must not** be claimed **until** a fresh Codex session resolves the selected project-local package **and** invokes it directly as `$fpf` **without** a `ca` wrapper.

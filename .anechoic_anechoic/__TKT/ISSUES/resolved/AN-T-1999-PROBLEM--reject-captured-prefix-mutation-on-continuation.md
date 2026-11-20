@@ -1,0 +1,21 @@
+---
+identity:
+  atom_id: AN-T-1999
+context:
+  container:
+    component: C16
+  template: problem
+state:
+  status: resolved
+  version: 2
+  updated_at: 2026-10-23 03:14:50 +0400
+---
+# Summary
+
+Reject captured-prefix mutation on continuation
+
+## Disposition
+
+Resolved in the Journal source contract: continuation revalidates source and
+captured-member hashes, rejects changed/deleted/unreadable/truncated captured
+data, and permits bytes appended after the sealed prefix.

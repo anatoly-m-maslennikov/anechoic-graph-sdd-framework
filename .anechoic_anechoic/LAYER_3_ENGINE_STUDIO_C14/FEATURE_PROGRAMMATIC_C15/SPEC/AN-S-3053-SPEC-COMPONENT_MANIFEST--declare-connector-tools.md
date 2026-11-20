@@ -1,0 +1,32 @@
+---
+identity:
+  atom_id: AN-S-3053
+context:
+  container:
+    component: C15
+  tier: 0
+  lens: SPEC
+  template: component_manifest
+state:
+  status: active
+  version: 1
+  updated_at: '2026-11-19T00:00:00Z'
+---
+
+## Summary
+
+Declare CONNECTOR_TOOLS
+
+## Claim
+
+### Component ID
+
+C17
+
+### Name
+
+CONNECTOR_TOOLS
+
+### Lens Whitelist
+
+["DES", "DevOps", "QA", "SWD"]

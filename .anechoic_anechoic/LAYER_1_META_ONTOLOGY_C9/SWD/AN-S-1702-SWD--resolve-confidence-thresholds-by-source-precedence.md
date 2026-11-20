@@ -1,0 +1,37 @@
+---
+identity:
+  atom_id: AN-S-1702
+context:
+  container:
+    component: C9
+  tier: 3
+  lens: SWD
+state:
+  status: active
+  version: 29
+  updated_at: 2026-11-02 18:35:20 +0400
+---
+## Summary
+Resolve confidence thresholds by source precedence
+
+## Claim
+
+### Prose Claim
+
+resolution of a Confidence Threshold.
+
+**to** resolve an effective Confidence Threshold, select the first applicable explicit source **in** this precedence:
+
+1. direct Operator input for the current decision context.
+2. an explicit value on the current Plan.
+3. the nearest Hub with an explicit value, walking `IS_CONTAINED_BY` from nearest **to** farthest; read its own current Plan File Carrier under `CA-D-472-CORE_META_MODEL-DELIVERY--serialize-explicit-plan-confidence-overrides`, **not** a separate Objective targeting a folder.
+4. the Framework Instance Settings default.
+
+### resolution constraints
+
+- an omitted optional override preserves inheritance; another explicit field does **not** stop lookup for the omitted field. a missing mandatory Plan file is invalid, **not** an inherited-setting selection.
+- use current Plan Revisions, **not** historical Carrier copies **or** unrelated nearby files; a Label is **not** an override source.
+- **if** a reached source is invalid **or** ambiguous, **or** no source supplies a value, request Operator disposition **before** the affected autonomous action; do **not** invent a value **or** silently fall through past invalid authority.
+- direct Operator input applies **only** within its stated context.
+- do **not** copy inherited values into Plan overrides. preserve an explicit selection even **when** it **`=`** the inherited value; a later upstream change **must not** overwrite it.
+- this resolution **must not** create another Atom, settings file, **or** execution permission.

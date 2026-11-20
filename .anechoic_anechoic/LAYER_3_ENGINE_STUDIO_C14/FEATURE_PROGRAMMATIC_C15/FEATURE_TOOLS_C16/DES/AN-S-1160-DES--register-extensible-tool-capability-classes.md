@@ -1,0 +1,22 @@
+---
+identity:
+  atom_id: AN-S-1160
+context:
+  container:
+    component: C16
+  tier: 1
+  lens: DES
+state:
+  status: active
+  version: 28
+  updated_at: 2026-11-02 19:44:26 +0400
+---
+## Summary
+
+Register extensible Tool capability classes
+
+# Register extensible Tool capability classes
+
+**every** Tool **must** register **=1** primary Tool kind: `finder` for strictly read-only retrieval **or** evaluation, **or** `doer` for governed mutation **or** materialization. `checker` is a registered Finder specialization that applies explicit Evaluation criteria **and** returns issues, evidence, **or** a verdict; additional specializations **may** extend a primary kind **only** through explicit registration of their semantics **and** interface obligations.
+
+capability class is **not** an operation-semantics owner. the registered canonical Tool owns the behavior of its public operation; generic Artifact Tools own **only** form-agnostic mechanics, while ANECHOIC Markdown Atom Tools own Atom-specific identity, admission, lifecycle, **and** mutation behavior. a Doer **must** default **to** dry run **and** require explicit `--apply`; a Finder **must** never mutate.

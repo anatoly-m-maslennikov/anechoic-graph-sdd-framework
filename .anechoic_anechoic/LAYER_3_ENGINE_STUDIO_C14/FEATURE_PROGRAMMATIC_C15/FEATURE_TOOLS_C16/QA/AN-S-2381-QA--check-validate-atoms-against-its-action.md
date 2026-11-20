@@ -1,0 +1,43 @@
+---
+identity:
+  atom_id: AN-S-2381
+context:
+  container:
+    component: C16
+  tier: 6
+  lens: QA
+state:
+  status: active
+  version: 16
+  updated_at: 2026-10-27 19:59:36 +0400
+---
+## Summary
+
+Check VALIDATE_ATOMS against its Action
+
+## Scope
+
+the `VALIDATE_ATOMS` implementation against its bound Check Atoms Action.
+
+## Claim
+
+### Prose Claim
+
+the `VALIDATE_ATOMS` implementation check **must** reject divergence from its bound CA-O-087-CORE_META_MODEL-ACTION--check-atoms.
+
+- exercise **every** declared result, including empty selection, unresolved selection, partial assessment, complete assessment with failures, changed inputs, **and** execution failure; compare the output with the exact Action Revision, **not** a second operational definition.
+- verify Scope Unit-**only** selection **and** selection with descendants; declared parentage, **not** physical folder nesting, determines descendants. Atom ownership comes from carried Properties.
+- verify Global Tier filters, Local Tier filters, their intersection, **and** explicit Atom lists, including exact Revisions, unassigned Drafts, missing entries, **and** ambiguous identities. listed values are alternatives; supplied criteria intersect.
+- remove required selector Properties **or** change declared parentage while keeping paths unchanged: require explicit unresolved membership **or** the newly correct set, never path-derived values. request an out-of-bound Atom: require a safe unresolved result, **not** a read outside the boundary.
+- changing an Action **or** rule definition **must** trigger compatibility validation **or** an unsupported-definition result, **not** silent old behavior.
+- require equivalent direct Action results **and** results returned through the Workflow's invocation Step. no Workflow engine, repair branch, **or** retry policy **may** be required inside the Tool.
+- definition validation remains **in** methodology; this Evaluation checks the Tool realization.
+
+- place an Atom declaring owner `UNIT_A` under `UNIT_B` while retaining both declared Scope Units. selection for `UNIT_A` includes it **and** reports the placement mismatch; selection for `UNIT_B` excludes it. moving the Carrier **must not** silently change its declared owner.
+- remove **or** corrupt that carried owner: require unresolved membership **without** filling it from either directory. repeat with a Plan grouping folder; grouping **must not** create a Scope Unit **or** override ownership.
+
+- omit the Status selector for Scope Unit/tier queries: require Active-**only** selection. test `all` with historical Revisions **and** an explicit list containing newly admitted Statuses. explicit Atom/Revision lists remain exact **unless** a Status filter is supplied.
+- select an ID with two surviving authoritative Revisions: require ambiguity rather than newest-Version selection. distinguish multiple Revisions, duplicate source Carriers of the same Revision, **and** a faithful projected representation. validate every selected Carrier separately.
+- include an ordinary Markdown artifact with admitted non-Atom classification, an explicitly excluded directory, **and** an unclassified malformed candidate; require distinct exclusion/unresolved outcomes **without** silent skipping.
+
+## Details

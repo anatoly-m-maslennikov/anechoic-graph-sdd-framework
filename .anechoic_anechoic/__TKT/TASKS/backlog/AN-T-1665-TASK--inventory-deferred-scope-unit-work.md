@@ -1,0 +1,28 @@
+---
+identity:
+  atom_id: AN-T-1665
+context:
+  container:
+    atom: AN-T-2215
+  tier: 3
+  template: task
+state:
+  status: backlog
+  version: 6
+  updated_at: 2026-10-25 17:32:27 +0400
+---
+# Summary
+
+Inventory deferred Scope Unit work
+
+## Objective
+
+Inventory existing Scope Unit contracts, audits, Project Structure, governing/delivery bindings and callers; propose bounded Stage 2 implementation Tasks without executing operations.
+
+## Details
+
+At most 15 minutes own work; split before extending. Deferred Backlog work only. Reuse historical evidence without pretending it is current acceptance. No scope mutation, migration, production test traffic or deployment.
+
+### Definition of Done
+
+Focused synthetic-project checks and independent review verify the stated behavior without live MCP tests, deployment, migration, or held-batch replay. Review dependent next Task before acceptance execution.

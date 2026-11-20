@@ -1,0 +1,24 @@
+---
+identity:
+  atom_id: AN-S-230
+context:
+  container:
+    component: C16
+  tier: 2
+  lens: QA
+state:
+  status: active
+  version: 20
+  updated_at: 2026-11-02 19:44:26 +0400
+---
+## Summary
+
+Reject settings source address
+
+# Reject settings source address
+
+## Test case
+
+**Fixture:** change one Project Settings source address so it no longer resolves **to** the recorded source revision.
+
+**Expected result:** fail with the stable settings-source-address diagnostic **and** a non-zero exit.

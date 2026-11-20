@@ -1,0 +1,32 @@
+---
+identity:
+  atom_id: AN-S-2548
+context:
+  container:
+    component: C46
+  tier: 4
+  lens: DevOps
+state:
+  status: active
+  version: 28
+  updated_at: '2026-11-12T16:59:31.357841+00:00'
+---
+## Summary
+
+Deliver a simple SQL query page through the shared connector
+
+## Claim scope
+
+The Workbench frontend and its same-listener HTTP delivery.
+
+## Claim
+
+### Prose Claim
+
+Deliver built Svelte/TypeScript/Vite static artifact through existing Python application at `/anechoic/workbench/<project_name>`; Node is build-only. Missing build returns explicit HTTP 503 without building assets/starting server, while API/MCP remain available. Current Project uses `/anechoic/workbench/anechoic` and shared assets path; mismatched declared Project name is 404. Browser operations use `/anechoic/{project}/api/{operation}` and preserve Project binding, Workspace bindings and IDs. Store the standalone Workspace ID locally when browser storage is available. Remove a legacy workspace parameter only when it matches the browser’s standalone Workspace, preserving other URL parts. The `embedded=1` marker selects a density default only.
+
+Bind all controls to existing Workspace/View/MCP contracts for Run/Page/Check/View-save/Load/Saved List/Schema, with active View context, one View-one-query and whole-query semantics. Do not use unbound browser `query_run` or add save/worksheet routes, evaluator, service or capability. Frontend owns presentation/pages/UI state; database owns SQL operations. Run/Check/page/error save nothing. Post-result save failure keeps rows/query ID/prior saved identity/dirty state, shows partial/save_error and does not retry/rollback; successful Run & Save exposes ID/URL/kind/name only on success. Result lifetime is backend-owned; no sharing/auth/dedup/retry/repair/rollback/deletion workflow.
+
+Render existing read-only sync status as Syncing, Not synced yet, local-time last successful sync, or existing failure through polling only; it is neither query/autosave status nor new service/stream/queue/scheduler. Mount canonical tabs/editor/library/results/palette/settings/status with loading/error/accessibility, bounded scrolling, visible headers, separately scrollable long values, positional/duplicate columns and exact counts. Do not add second grid/DOC/TREE/frontend replacement. Detail belongs to editor/visual/result/grid/rename/duplicate receivers.
+
+Use the shared Project API for Run/Page/Check/view-save/load/saved-list/schema; `POST /schema` accepts `{}` with shared metadata. No preview control is required. Browser interactive grid requests `result_delivery: inline`; generic MCP `query_run` remains for MCP callers. Label permanent saved queries Bookmarks distinct from Views; ordinary responses need not echo SQL but explicit Load/View-query reads do.

@@ -1,0 +1,38 @@
+---
+identity:
+  atom_id: AN-S-2096
+context:
+  container:
+    component: C32
+  tier: 3
+  lens: DES
+state:
+  status: active
+  version: 2
+  updated_at: '2026-11-12T18:37:20.805017+00:00'
+---
+## Summary
+
+Declare WORKFLOW_SCHEDULER
+
+## Claim
+
+### Formal Claim
+
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ScopeUnit
+
+declare_entity(
+    entity_name='WORKFLOW_SCHEDULER',
+    instance=ScopeUnit(
+        structural_level=5,
+        id='CA-SU-42',
+        name='WORKFLOW_SCHEDULER',
+        label='FEATURE_GROUP',
+        ordered=False,
+        container='SCHEDULERS',
+    ),
+)
+```
+

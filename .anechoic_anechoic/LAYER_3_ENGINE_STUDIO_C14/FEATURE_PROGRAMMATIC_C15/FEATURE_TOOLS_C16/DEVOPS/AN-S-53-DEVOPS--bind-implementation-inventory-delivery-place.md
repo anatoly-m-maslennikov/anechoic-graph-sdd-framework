@@ -1,0 +1,20 @@
+---
+identity:
+  atom_id: AN-S-53
+context:
+  container:
+    component: C16
+  tier: 1
+  lens: DevOps
+state:
+  status: active
+  version: 22
+  updated_at: 2026-11-02 19:44:26 +0400
+---
+## Summary
+
+Bind IMPLEMENTATION_INVENTORY Delivery place
+
+# Bind IMPLEMENTATION_INVENTORY Delivery place
+
+Relative **to** parent Scope Unit `TOOLS`, `IMPLEMENTATION_INVENTORY` uses authority-relative path `IMPLEMENTATION_INVENTORY` **and** Delivery-relative path `IMPLEMENTATION_INVENTORY`.

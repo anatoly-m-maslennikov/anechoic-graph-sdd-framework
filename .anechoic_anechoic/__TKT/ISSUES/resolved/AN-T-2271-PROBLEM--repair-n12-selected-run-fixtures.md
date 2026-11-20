@@ -1,0 +1,35 @@
+---
+identity:
+  atom_id: AN-T-2271
+context:
+  container:
+    component: C15
+  template: problem
+state:
+  status: resolved
+  version: 2
+  updated_at: 2026-10-23 03:14:50 +0400
+---
+# Summary
+
+Repair N12 selected Run fixtures
+
+## Concern
+
+four selected execution and MCP test cases fail in the sealed Unit context.
+
+## Evidences
+
+the retained actual N12 JUnit report contains 4 failing cases in this lane. N12's later source-currentness refusal does not invalidate those frozen test observations or establish their cause.
+
+## Blast radius
+
+the declared Unit modules and their shared source-complete fixture or implementation. no actual E2E, image or release acceptance is inferred from mock results.
+
+## Decision
+
+repair confirmed selected-run/MCP fixture or code mismatches while preserving existing authority, source freshness and recording contracts.
+
+## Result
+
+the selected-execution suite passes 20 tests and the isolated MCP suite passes 4 tests. the fixtures copy exact bound sources into disposable Projects, allow bounded gateway cold start and correctly stop before a next Step while terminal recording is pending. independent review accepts the changes; actual all-route release proof remains separate. retain the frozen N12 report and historical Events.
