@@ -89,17 +89,44 @@ the Project files outside the records directory. SPEC covers the records
 directory outside the reserved `_PMETA/` and `__TKT/` subdirectories.
 In a monorepo, resolve these paths from each selected Project root.
 
+At cutover, move the legacy tree to `.anechoic_legacy/`. Use
+`.anechoic_anechoic/` for the native records and SPEC lens folders. Select the
+legacy tree explicitly for the legacy Local Release while both trees are in
+use. CA-P-3075 verifies the release bindings and preserves the migration
+inventory.
+
 `docs/` describes the product as built. The **Project Goal** is the root
 Component’s **Purpose** and guides the Project. The **Project Manifest**
 declares the Project, including its name, ID prefix, and other Project
 configuration. The native tree uses that Manifest as its sole Project
 configuration source. Both are Tier −1 and live in SPEC.
 
-**Axioms** are truths the Project accepts as premises. They are Tier 1 general
-`SPEC`. **Applicable Principles** guide Project choices and are Tier 2 general
-`SPEC`. They stand on their own without requiring Contracts. Tiers are local
-to each Component. Product Definition remains optional when business intent
-needs its own section.
+### What SPEC and REAL own
+
+SPEC is the source of truth for what the Operator intends. It records the
+decisions that matter to the Project. REAL is the source of truth for what the
+Project has built. Let the Realization supply implementation details that the
+Operator leaves open.
+
+A Package can have one Spec Atom when its boundary matters. The Operator can
+make it a Component later. Size and complexity can suggest that change. A
+small Package can need a Spec when it is critical to the Project.
+
+### Project Contracts and tiers
+
+Propose Tier 0 Contracts for what the Project provides. These include
+Meta-ontology, Meta-methodology, and Engine Studio's Console and MCP surfaces.
+The Console provides direct access to the Specification and its graphs.
+
+Project Applicable Principles belong at Tier 1 under the Contracts. Docker is
+a current Engine Studio realization choice. Project Axioms are accepted truths.
+Their placement is open. The Operator considered Tier −1 for wider Axioms and
+Tier 0 for Axioms specific to the Project.
+
+A single general SPEC Solution can cover a Component across architecture,
+QA, and other viewpoints. Choose a narrower lens when it helps. CA-A-1462
+describes lens placement and CA-A-1463 describes the Component boundaries.
+Product Definition remains optional when business intent needs its own section.
 
 ### Source notes
 
@@ -109,3 +136,4 @@ Second brainstorm, lines 595, 645, 949, and 1073. The maintainer CLI choice
 follows the later direct discussion.
 Third brainstorm, lines 2–144, 672, 2015, and 2251–2445.
 Fourth brainstorm, lines 802–848.
+Fifth brainstorm, user prompts at lines 1257, 1295, 1331, 1397, and 1477.

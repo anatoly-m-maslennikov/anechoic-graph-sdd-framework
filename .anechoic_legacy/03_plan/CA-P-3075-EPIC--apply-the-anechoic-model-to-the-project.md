@@ -13,8 +13,8 @@ context:
   tier: 3
 state:
   status: active
-  version: 4
-  updated_at: '2026-11-19T01:02:59.187664+00:00'
+  version: 5
+  updated_at: '2026-11-19T17:28:19.342900+00:00'
 destination:
   file:
     name: CA-P-3075-EPIC--apply-the-anechoic-model-to-the-project.md
@@ -105,8 +105,15 @@ continues to build from the protected legacy inputs.
    trees, exact legacy and new revision lookup, cross-batch relations,
    regenerated Views, and the migrated index through MCP. Run lifecycle
    and admitted Workflow checks against an isolated copy of the real
-   migrated Project. Finish the Epic after 6 and 7 pass and every held
-   record has an approved destination or disposition.
+   migrated Project. The mechanical migration is complete after 6 and 7
+   pass and every held record has an approved destination or disposition.
+
+### Component boundaries
+
+Start after the Component rename in CA-P-3073.
+
+- Update the Model per CA-A-1463, “Boundary Allowlists”.
+- Then implement and verify the same section in the Engine.
 
 ## Boundaries
 

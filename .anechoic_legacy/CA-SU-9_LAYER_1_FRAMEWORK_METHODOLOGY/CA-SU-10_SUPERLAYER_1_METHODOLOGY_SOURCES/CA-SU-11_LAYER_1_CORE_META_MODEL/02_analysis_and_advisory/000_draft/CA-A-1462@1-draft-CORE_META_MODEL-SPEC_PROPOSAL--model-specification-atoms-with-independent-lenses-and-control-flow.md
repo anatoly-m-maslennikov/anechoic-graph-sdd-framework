@@ -36,9 +36,12 @@ addressable, versioned contribution. Its Concern identifies what it addresses.
 - **Container** locates an Atom in a Component or another Atom. The
   `contained_by` relation points from the Atom to its `container`.
   For example, a Task is `contained_by` its Epic.
-- **Tier** locates the Atom within its containing Component’s hierarchy.
-  The Project Manifest and Project Goal are Tier −1. Tier 1 Axioms state
-  accepted truths. Tier 2 Applicable Principles guide choices.
+- **Tier** locates the Atom within its containing Component's hierarchy.
+  The Project Manifest and Project Goal are Tier −1. Tier 0 Contracts state
+  what the Project or child Component provides. Tier 1 holds the main
+  Policies, Standards, and Solutions for how a Component meets its Contracts.
+  Place Project Applicable Principles at Tier 1 under the Project Contracts.
+  The Project Axiom tier remains open. CA-A-1461 records the options.
 - **Lens** is a named, optional grouping of viewpoints. The Operator chooses
   its name, composition, and granularity.
 
@@ -57,6 +60,10 @@ For the mechanical migration, write `lens_whitelist` explicitly on each
 migrated Component Manifest from the lenses used by its mapped Atoms.
 Enable `SPEC` explicitly at the Project root for the Project Manifest and
 Goal. Keep the approved temporary Meta-ontology admissions for its first pass.
+
+An author can use one general `SPEC` Solution for a coherent Component design
+that spans several viewpoints. For example, one Solution can cover architecture
+and QA. Choose a narrower enabled lens when it helps the reader.
 
 Lenses use the `narrower_than` relation. A Component can enable a broader
 lens together with any selection of its narrower lenses. A narrower lens is
@@ -428,8 +435,8 @@ and the full descendant tree. Its `affects` filter can use any criteria,
 including Lens, Tier, Template, a Concern Path subtree, and the logical
 Component name. `component.name` refers to the Component containing the Atom.
 For a child’s Purpose and Manifest, that is the parent Component’s name.
-A parent can use a Spec Policy to constrain `io_allowance` in the child
-Component Manifests it contains.
+A parent can use a Spec Policy to constrain `boundaries.runtime_io` in its
+child Component Manifests.
 SPEC covers the result and its Realization. PMETA covers the local meta-model
 and internal Project Workflows. Only PMETA Workflows can govern Ticket Atoms.
 
@@ -452,3 +459,4 @@ The strict meaning of viewpoint follows [ISO/IEC/IEEE 42010:2022](https://www.is
 and [The Open Group’s ArchiMate guidance](https://archimate-community.pages.opengroup.org/workgroups/archimate-101/).
 Third brainstorm, lines 2015, 2357, 2569–2970, 3112, and 3211.
 Fourth brainstorm, lines 223, 294, 507, 557, 610–614, 668, and 723.
+Fifth brainstorm, user prompts at lines 1331, 1397, and 1477.

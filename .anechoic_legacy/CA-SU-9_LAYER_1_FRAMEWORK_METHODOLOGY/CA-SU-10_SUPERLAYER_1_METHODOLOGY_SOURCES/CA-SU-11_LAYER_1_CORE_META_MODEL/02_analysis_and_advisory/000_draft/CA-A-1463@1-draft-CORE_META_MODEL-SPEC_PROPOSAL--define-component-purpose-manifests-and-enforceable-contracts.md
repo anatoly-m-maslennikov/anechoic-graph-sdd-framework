@@ -42,13 +42,15 @@ function, class, or method.
   with `context.template: project_manifest`. Its formal Python Claim
   declares `name` and `prefix` plus any other Project configuration.
   Keep at most 20 parameters in total.
-- **Contract** states a concrete guarantee. When a child Component has a
-  Purpose, its Contracts collectively meet it. Tier 1 is the working placement
-  for child Component Contracts. An optional **Demand** records a consumer’s
-  need from a producer. A producer Contract can fulfill the Demand.
+- **Contract** states a concrete guarantee. The Project and each child
+  Component use Tier 0 Contracts to state what they provide. When a child
+  Component has a Purpose, its Contracts collectively meet it. An optional
+  **Demand** records a consumer's need from a producer. A producer Contract can
+  fulfill the Demand.
 
-At the Project root, Applicable Principles guide decisions independently of
-Contracts. Use a Contract when the Project exposes a concrete guarantee.
+Tier 1 holds a Component's main Policies, Standards, and Solutions for how it
+provides its Contracts. Project Applicable Principles belong at Tier 1 under
+the Project Contracts. See CA-A-1461 for the proposed Project Contracts.
 
 The parent Component contains the child’s Purpose and Manifest in its own
 Component Spec Section. Both Atoms identify the child they describe.
@@ -82,18 +84,56 @@ The Layer prefix is optional.
 Give an ordinary Package one `PKG` Spec Atom when it needs a specified
 boundary. Include its stable package ID, a short Purpose, and its Contract.
 Keep that Atom in the owning Component’s Spec Section. The Package can
-later become a full Component.
+later become a full Component by Operator decision. Size and complexity can
+suggest that change. A small Package can need a Spec when it is critical.
 
 Place a specified Package immediately under its Component Package. Include
 its ID in its Realization directory name, for example `create_order_pkg3344`.
 The ID and the descriptive name are separate.
 
-### Visibility and dependencies
+### Manifest Runtime
 
-Component Packages and ordinary Packages can declare boundaries. Visibility
-governs access from other packages. Resolve `parent` and `siblings` in the
-package tree. An explicit allowlist can name stable Package or Component IDs.
-A Component ID selects its Component Package.
+Manifest Runtime (C62) is a child of Kernel Mixer (C59). It contains three
+ordinary Packages, each with its own `PKG` Spec Atom. Run the Hosts as
+separate, long-lived processes. Each Host imports only what it needs to
+load and serve its output.
+
+- **Manifest Compiler** compiles Active SPEC Anechoic Python eDSL into small
+  Model modules and a Structure snapshot validated against that Model. Reuse
+  the source watcher to trigger compilation in a short-lived process.
+- **Model Host** provides the Model types and rules that implementation
+  and validators import. Activate a new Model by restarting the Model Host
+  and consumers that imported the previous Model.
+- **Structure Host** publishes the current validated Structure through a
+  read-only snapshot API. It swaps in a valid snapshot without a restart and
+  keeps the last valid one on failure. Each operation reads one snapshot at
+  its start and uses it until completion.
+
+The Compiler writes complete local artifacts before either Host publishes
+them. A Structure snapshot records its source revisions and Model fingerprint.
+Structure reload leaves the consumers and database running. Startup settings
+such as the MCP port still take effect at runtime restart.
+
+Before the first release, reconcile Active Model declarations with Component
+and Manifest rules. Use those Active declarations as the Compiler inputs.
+Preserve superseded Scope Unit and Project Settings declarations in history.
+
+### Boundary Allowlists
+
+Use `boundaries` for the three allowlists of a Component or Package.
+CA-P-3075 specifies and delivers Code Access. AN-T-2921 owns the State and
+runtime I/O designs and their enforcement.
+
+- `code_access` governs code imports and exports.
+- `shared_state` governs access to shared state.
+- `runtime_io` governs read and write operations for Server and Client.
+
+#### Code Access
+
+`imports` lists what code a Package may import. `exports` lists the Modules
+and Units it makes available and the callers that may import them. Resolve
+`parent` and `siblings` in the package tree. An allowlist can name stable
+Package or Component IDs. A Component ID selects its Component Package.
 
 | Visibility | Access from other packages |
 |---|---|
@@ -109,7 +149,7 @@ Package, including Component Packages, Packages with a Spec, and ordinary
 Packages. This also applies to explicit SPEC exports. Use `public` to grant
 Public access.
 
-A caller can restrict its dependencies with import allowlists or denylists.
+An import allowlist limits the dependencies of the caller.
 A Component’s caller-side rules apply to its own modules and ordinary
 Packages at every depth. Child Components inherit these rules throughout
 the Component tree. An import must pass the provider’s visibility rule and
@@ -122,8 +162,8 @@ Contract exports only `billing.api.run`, allow
 `from billing.api import run`. Importing `billing.api` as a Module requires
 a Module-level export. Check each named import against its own export.
 
-Visibility and protocol are independent. Import is the default protocol. Other
-protocols can include HTTP REST, CLI, MCP, and TUI. Deployment controls network reach.
+Runtime protocols such as HTTP REST and MCP belong to `runtime_io`.
+Deployment controls network reach.
 
 `child_of` links a Component to its `parent` Component. The inverse gives
 the parent's `children`. `contained_by` links an Atom to its `container`,
@@ -134,37 +174,30 @@ imports still require provider visibility and caller permission. Unordered
 siblings have no layer restriction. Each Atom’s tier is local to its
 containing Component.
 
-### I/O allowances
+#### State
 
-A Component Manifest has one `io_allowance`. It applies to the Component’s
-own modules and ordinary Packages. A child Component inherits its parent’s
-allowance by default and can declare a different allowance in its Manifest.
-An ordinary Package can further narrow the allowance it inherits.
+`shared_state` allows read and write access to shared state, such as
+global variables, singletons, and ambient channels. Use `pure` to allow no
+shared state. Check access statically where possible, even without an import
+edge. Other State values and the exact checks remain open.
 
-```yaml
-io_allowance:
-  input: [db, api]
-  output: [db]
-```
+#### I/O
 
-An allowlist such as `io_allowance: [db, api]` applies to both directions.
-`input` covers reads and receives. `output` covers writes and sends.
-Use `[]` or `false` to deny all direct I/O. An omitted direction inherits
-that direction from the parent. The default without an ancestor is `all`.
+Use `server` and `client` under `runtime_io`. Server provides operations.
+Client requests operations or accesses resources, such as files. Each role
+can allow read, write, or both. A Component can use separate read and write
+servers. A read-only request remains read-only when the server sends a response.
 
-For REST calls, use `api` input for `GET`, `HEAD`, and `OPTIONS`.
-Use `api` output for `POST`, `PUT`, `PATCH`, and `DELETE`.
-A read-only fetch is input. Classify the operation once, regardless of
-which way its request and response travel.
+The allowance applies to the Component's modules and ordinary Packages.
+Child Components inherit it by default. A child Component can declare its
+own allowance. An ordinary Package can narrow its inherited allowance.
+An omitted role inherits the corresponding role. The default without an
+ancestor is `all`. Use an empty allowance to deny direct I/O.
 
-To limit child Components, write a Spec Policy that selects their
-Component Manifests in the parent’s Spec Section. Validate each selected
-Manifest’s effective allowance against that Policy. Report a violation
-with the direction, channel, and Policy. Keep the authored allowance intact.
-
-Block imports of I/O libraries for channels forbidden in both directions.
-Use permitted adapters for I/O outside the direct allowance. Exact channel
-definitions and enforcement remain open.
+A parent can use a Spec Policy to limit the allowances in its child
+Component Manifests. If an effective allowance violates the Policy, report
+the role, channel, capability, and Policy. Preserve the authored value.
+The exact channel notation and enforcement remain open.
 
 ### Contracts and trace sidecars
 
@@ -178,12 +211,11 @@ list. An explicitly empty list closes access from other Packages. Contracts
 that omit the export list, such as a latency guarantee, leave filename-based
 visibility in effect.
 
-Without a SPEC export list, root modules can self-declare visibility using
-`<name>__<visibility>.<extension>`. The reserved visibility values are
-`internal` and `public`. The extension is the module’s normal file extension.
-In this case, only marked root modules are eligible for cross-package access.
-Other Packages use the Internal default when neither an export list nor a
-filename marker is present.
+Without a SPEC export list, a Package uses the Internal default until it
+adds a marked root module. A marker has the form
+`<name>__<visibility>.<extension>`, with visibility `internal` or `public`
+and the module's normal extension. Once a Package has a marked root module,
+only its marked root modules are eligible for cross-package access.
 
 Use the normal Python module name including the suffix, such as
 `from billing import orders__public` for `billing/orders__public.py`.
@@ -195,3 +227,5 @@ Second brainstorm, lines 533, 949, and 1073, for Manifest size and local tiers.
 Third brainstorm, lines 719–1119, 1379, 1500, 1603, 1742, and 1894, for access and sidecars.
 Fourth brainstorm, lines 155–223, 294, 363, 507, 557, 610–614, 668, 723,
 850, 930, 997, 1081, 1203, 1301, 1372, and 1492.
+Fifth brainstorm, user prompts at lines 2, 111, 178, 594, 831, 968, 1105, 1174,
+1295, 1397, and 1477.
