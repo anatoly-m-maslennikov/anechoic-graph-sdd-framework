@@ -368,9 +368,26 @@ class LifecycleProvider:
         return None
 
 
+class NativeLifecycleProvider:
+    def __init__(self, owner):
+        self.owner = owner
+
+    async def call(self, name, arguments):
+        with anyio.CancelScope(shield=True):
+            value = await anyio.to_thread.run_sync(self.owner.lifecycle, name, arguments)
+        if name == 'atom_lifecycle_update' and value.get('outcome') == 'completed' and 'savedDraft' in value:
+            return {'status': 'draft_created', 'savedDraft': value['savedDraft']}
+        return _result(value)
+
+    async def close(self):
+        pass
+
+
 def create_provider(_root, gateway):
     from ATOM_LIFECYCLE.candidate_schema import load_candidate_schema
 
+    if (native := getattr(gateway, '_native_query', None)) is not None:
+        return NativeLifecycleProvider(native)
     if getattr(gateway, 'workbench', None) is None:
         raise ValueError('Lifecycle requires the Project Workbench query backend')
     model = status_model.load_status_model(Path(status_model.__file__).with_suffix('.json'))

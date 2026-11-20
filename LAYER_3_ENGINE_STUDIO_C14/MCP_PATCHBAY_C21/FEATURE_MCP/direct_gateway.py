@@ -108,10 +108,12 @@ class DirectGateway:
         self.tool_blacklist = self.registry.global_blacklist | project_blacklist
         try:
             if self._native_query is not None:
-                from native_query import QUERY_TOOLS
+                from native_query import LIFECYCLE_TOOLS, QUERY_TOOLS
 
                 self._native_query.start()
-                supported = QUERY_TOOLS | frozenset((*INTERFACE_TOOLS, SAVE_VIEW, LOAD, SAVED_LIST, SYNC_STATUS))
+                supported = QUERY_TOOLS | LIFECYCLE_TOOLS | frozenset((
+                    *INTERFACE_TOOLS, SAVE_VIEW, LOAD, SAVED_LIST, SYNC_STATUS,
+                ))
                 self.tool_blacklist |= frozenset(self.registry.routes) - supported
                 self.tools = tuple(
                     tool for tool in self.registry.tools if tool.name not in self.tool_blacklist

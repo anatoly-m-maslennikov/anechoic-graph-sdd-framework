@@ -89,6 +89,7 @@ def capture_native(selection: Any) -> NativeCapture:
             tree = path.relative_to(control).parts[0]
             family = {"_PMETA": "P", "__TKT": "T"}.get(tree, "S")
             row, edge = _carrier_row(path, root, family, selection.project_prefix, reader.read(path))
+            row["_source_sha256"] = reader.fingerprints[str(path)]
             exact, group, atom_id = row["_exact_ref"], row["status_group"], row["header_json"]["identity"]["atom_id"]
             if exact in exact_paths or (group == "Current" and atom_id in current_paths):
                 raise ValueError("Duplicate native revision or Current identity")

@@ -4,6 +4,8 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
+from contextvars import ContextVar
 import os
 import re
 import tempfile
@@ -13,10 +15,25 @@ from pathlib import Path
 RUNTIME_DIRECTORY = Path(".anechoic_runtime")
 TEMPORARY_DIRECTORY = Path(".anechoic_tmp")
 OWNER = re.compile(r"[a-z0-9][a-z0-9_-]{0,63}\Z")
+_NATIVE_ROOT = ContextVar("native_temporary_project_root", default=None)
 
 
 class TemporaryBoundaryError(RuntimeError):
     """A disposable Carrier cannot be placed in the required Project Temporary State."""
+
+
+@contextmanager
+def bind_native_runtime(selection):
+    """Use an explicitly selected native Project for shared filesystem effects."""
+    from native_project_selection import NativeProjectSelection
+
+    if not isinstance(selection, NativeProjectSelection):
+        raise TemporaryBoundaryError("A validated native Project selection is required")
+    token = _NATIVE_ROOT.set(selection.root)
+    try:
+        yield
+    finally:
+        _NATIVE_ROOT.reset(token)
 
 
 def _validate_directory_components(root: Path, directory: Path) -> None:
@@ -67,7 +84,7 @@ def repository_root(reference: Path | str) -> Path:
     from project_selection import bound_selection
 
     selection = bound_selection()
-    if selection is not None and candidate == selection.root:
+    if candidate == _NATIVE_ROOT.get() or (selection is not None and candidate == selection.root):
         return candidate
     for root in (candidate, *candidate.parents):
         if (root / ".git").exists():

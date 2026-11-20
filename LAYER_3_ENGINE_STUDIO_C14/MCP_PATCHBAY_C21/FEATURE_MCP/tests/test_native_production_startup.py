@@ -33,13 +33,13 @@ class NativeProductionStartupTests(unittest.IsolatedAsyncioTestCase):
         self.root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
         legacy = fixture.RuntimeSelectionTests.legacy(self, '.anechoic_legacy', declared='.anechoic_anechoic')
         fixture.RuntimeSelectionTests.manifest(self, self.root / '.anechoic_anechoic', component='C00')
-        task = self.root / '.anechoic_anechoic/__TKT/TASKS/AN-T-009-TASK--verify.md'
-        task.parent.mkdir(parents=True)
+        asset = self.root / '.anechoic_anechoic/__TKT/ASSETS/AN-T-009-ANALYSIS_REPORT--verify.md'
+        asset.parent.mkdir(parents=True)
         header = {'identity': {'atom_id': 'AN-T-009'},
-                  'context': {'container': {'component': 'C00'}, 'template': 'task', 'tier': 0},
+                  'context': {'container': {'component': 'C00'}, 'template': 'ANALYSIS_REPORT', 'tier': 0},
                   'state': {'version': 2, 'status': 'active', 'updated_at': '2026-11-19T00:00:00Z'}}
-        task.write_text(f'---\n{yaml.safe_dump(header)}---\n\n## Summary\n\nFixture.\n', encoding='utf-8')
-        self.old_path = '.anechoic_legacy/03_plan/CA-P-9--old-task.md'
+        asset.write_text(f'---\n{yaml.safe_dump(header)}---\n\n## Summary\n\nFixture.\n', encoding='utf-8')
+        self.old_path = '.anechoic_legacy/02_analysis_and_advisory/CA-P-9--old-asset.md'
         old = self.root / self.old_path
         old.parent.mkdir(parents=True)
         old.write_text('Retained legacy source.\n', encoding='utf-8')
@@ -80,6 +80,21 @@ class NativeProductionStartupTests(unittest.IsolatedAsyncioTestCase):
                         self.assertFalse(result.is_error, result.structured_content)
                         self.assertEqual([['CA-P-9@2', self.old_path, 'AN-T-009@2']],
                                          result.structured_content['rows'])
+                        updated = await client.call_tool('atom_lifecycle_direct_update', {
+                            'target': {'ref_id': 'AN-T-009', 'version': 2},
+                            'changes': {'body': '## Summary\n\nFixture.\n\n## Work\n\nUpdated through MCP.\n'},
+                        })
+                        self.assertFalse(updated.is_error, updated.structured_content)
+                        self.assertEqual({'status': 'completed'}, updated.structured_content)
+                        visible = await client.call_tool('query_run', {
+                            'sql': "SELECT exact_ref FROM native_references WHERE stable_ref = 'AN-T-009'",
+                            'result_delivery': 'inline',
+                        })
+                        self.assertFalse(visible.is_error, visible.structured_content)
+                        self.assertEqual([['AN-T-009@2']], visible.structured_content['rows'])
+                        capture = app.gateway._native_query._capture
+                        ticket, = [row for row in capture.atoms if row['id'] == 'AN-T-009']
+                        self.assertIn(b'Updated through MCP.', ticket['_content_bytes'])
         self.assertEqual(before, self.legacy_digests())
 
     def test_missing_or_malformed_alias_map_refuses_startup(self):
