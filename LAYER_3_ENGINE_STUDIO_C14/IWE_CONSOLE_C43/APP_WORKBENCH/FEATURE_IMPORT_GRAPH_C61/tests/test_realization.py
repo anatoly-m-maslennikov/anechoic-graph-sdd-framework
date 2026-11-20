@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import subprocess
 import sys
 from tempfile import TemporaryDirectory
 import unittest
@@ -12,6 +13,7 @@ from APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.source import capture, relevant_chan
 class RealizationTests(unittest.TestCase):
     def test_direct_test_packages_follow_source_inventory(self):
         tmp_path = Path(self.enterContext(TemporaryDirectory())).resolve()
+        subprocess.run(["git", "init", "--quiet", str(tmp_path)], check=True)
         for name in ("pkg/pkg__tests/test_one.py", "pkg/other__tests/test_two.py",
                      "other/pkg__tests/test_three.py", "pkg/pkg__tests/nested/test_four.py"):
             path = tmp_path / name
