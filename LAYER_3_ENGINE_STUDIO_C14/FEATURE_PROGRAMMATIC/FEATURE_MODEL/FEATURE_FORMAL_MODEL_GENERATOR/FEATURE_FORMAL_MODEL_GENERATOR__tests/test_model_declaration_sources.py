@@ -259,6 +259,10 @@ class ModelDeclarationSourceTests(unittest.TestCase):
         rel = model("Relation//IS_PROPERTY_OF", "CA-R-45", "from anechoic.formal_claims import declare_relation\n"
                     "declare_relation(relation_name='IS_PROPERTY_OF', source_endpoint={}, target_endpoint={})")
         self.assertEqual(len(select_model_claims([atom, ops, flow, prop, child, rel])), 6)
+        full = model("Workflow.Content.Claim", "CA-R-44", "from anechoic.formal_claims import declare_entity\n"
+                     "declare_entity(entity_name='Claim', relation_name='IS_PROPERTY_OF', "
+                     "base_path='Atom/(.Header.Context.Role:=Operations)/Workflow.Content')")
+        self.assertEqual(len(select_model_claims([atom, ops, flow, prop, full, rel])), 6)
         with self.assertRaisesRegex(ValueError, "unknown Model address: Workflow.Content"):
             select_model_claims([atom, ops, flow, child, rel])
         def row(subject, name=None, bases=()):

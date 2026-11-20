@@ -50,7 +50,5 @@ def class_property_aliases(parsed):
                     inherited.setdefault(suffix, set()).add(address)
         for suffix in direct.keys() | inherited.keys():
             if suffix in direct or len(inherited[suffix]) == 1:
-                alias = name + suffix
-                if alias not in canonical:
-                    aliases.add(alias)
+                aliases.update({name + suffix, roots[name] + suffix} - canonical)
     return aliases

@@ -127,6 +127,40 @@ class ManifestPropertyFieldsTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Unresolved Property group bearer"):
             assemble_model_classes([nested[0], nested[1], nested[3]])
 
+    def test_header_paths_and_inherited_group(self):
+        atom = "Node//Artifact//Atom"
+        spec = atom + "//SpecAtom"
+        claims = [primary("Node"), primary("Artifact", "Node"),
+                  primary("Atom", "Artifact", extra=", identity_properties=('Header.Atom ID',)"),
+                  primary("SpecAtom", "Atom"),
+                  prop("Header", atom, ", value_cardinality=0, "
+                       "allowed_dependent_property_names=('Atom Family', 'Atom ID', 'State', 'Structure')"),
+                  prop("Atom Family", atom + ".Header", ", value_format=str, allowed_values=('SPEC', 'TKT', 'PMETA')"),
+                  prop("Atom ID", atom + ".Header", ", value_format=str"),
+                  prop("State", atom + ".Header", ", value_cardinality=0, allowed_dependent_property_names=('Version', 'Status', 'Updated At')"),
+                  prop("Version", atom + ".Header.State", ", value_format=int"),
+                  prop("Status", atom + ".Header.State", ", value_format=str"),
+                  prop("Updated At", atom + ".Header.State", ", value_format=datetime"),
+                  prop("Structure", atom + ".Header", ", value_cardinality=0, allowed_dependent_property_names=('Tier',)"),
+                  prop("Tier", spec + ".Header.Structure", ", value_format=int"),
+                  prop("Ref ID", atom, ", value_format=str, derived_from_properties=('Header.Atom ID', 'Header.State.Version', 'Header.State.Status')")]
+        namespace = {}
+        exec(assemble_model_classes(claims), namespace)
+        from datetime import datetime
+        values = dict(atom_id="AN-S-1", version=2, status="draft", updated_at=datetime.now(), tier=3)
+        instance = namespace["SpecAtom"](atom_family="SPEC", **values)
+        self.assertEqual(instance.ref_id, "AN-S-1@2-draft")
+        self.assertNotIn("ref_id", asdict(instance))
+        with self.assertRaisesRegex(ValueError, "Atom Family disagrees"):
+            namespace["SpecAtom"](atom_family="TKT", **values)
+        with self.assertRaisesRegex(ValueError, "Unresolved Property group bearer"):
+            assemble_model_classes([claim.replace(spec + ".Header.Structure", spec + ".Header.Missing") for claim in claims])
+        with self.assertRaisesRegex(ValueError, "Duplicate inherited Property field"):
+            assemble_model_classes(claims + [prop("Version", spec + ".Header.Structure", ", value_format=int")])
+        with self.assertRaisesRegex(ValueError, "Unresolved Property group bearer"):
+            assemble_model_classes([claim.replace(atom + ".Header.State", atom + ".State")
+                                    if "entity_name='Version'" in claim else claim for claim in claims])
+
     def test_override_replaces_default_options(self):
         claims = [primary("Base"), primary("Child", "Base"),
                   prop("Name", "Base", ", value_format=str, field_options={'default': 'x', 'kw_only': True}"),

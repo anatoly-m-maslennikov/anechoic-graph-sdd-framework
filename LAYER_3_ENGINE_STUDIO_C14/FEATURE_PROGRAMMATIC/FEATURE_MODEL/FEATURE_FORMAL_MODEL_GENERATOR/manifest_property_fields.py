@@ -16,6 +16,14 @@ _PATH = re.compile(r"[A-Za-z_][A-Za-z_0-9 -]*(?://[A-Za-z_][A-Za-z_0-9 -]*)*")
 _REF_INPUTS = ("Identity.Atom ID", "State.Version", "State.Status")
 _ATOM_PATHS = {"atom_id": _REF_INPUTS[0], "version": _REF_INPUTS[1], "status": _REF_INPUTS[2],
                "updated_at": "State.Updated At", "ref_id": "Ref ID"}
+_HEADER_ATOM_PATHS = {
+    "atom_family": "Header.Atom Family",
+    "atom_id": "Header.Atom ID",
+    "version": "Header.State.Version",
+    "status": "Header.State.Status",
+    "updated_at": "Header.State.Updated At",
+    "ref_id": "Ref ID",
+}
 
 
 def _field_name(name):
@@ -134,7 +142,7 @@ def _override_target(scopes, name, owner, names, classes):
     return target
 
 
-def _property_fields(properties, names, classes):
+def _property_fields(properties, names, classes, atom_paths):
     groups = _property_groups(properties)
     children = {path: set() for path in groups}
     fields, overrides = {}, []
@@ -145,13 +153,22 @@ def _property_fields(properties, names, classes):
         owner = _owner(primary, names)
         scopes = args.get("applies_to_entity_classes")
         if separator:
-            if base not in groups:
-                raise ValueError(f"Unresolved Property group bearer: {base}")
+            group = base
+            if group not in groups:
+                suffix = base.partition(".")[2]
+                matches = [path for path in groups
+                           if path.partition(".")[2] == suffix
+                           and _subclass(owner, _owner(path.partition(".")[0], names), classes)]
+                if not matches:
+                    raise ValueError(f"Unresolved Property group bearer: {base}")
+                if len(matches) != 1:
+                    raise ValueError(f"Ambiguous Property group bearer: {base}")
+                group = matches[0]
             if scopes is None:
-                children[base].add(args["entity_name"])
+                children[group].add(args["entity_name"])
         name = _field_name(args["entity_name"])
-        if owner == atom and name in _ATOM_PATHS and _relative_property_path(args) != _ATOM_PATHS[name]:
-            raise ValueError(f"Atom Property must be declared at {_ATOM_PATHS[name]}")
+        if owner == atom and name in atom_paths and _relative_property_path(args) != atom_paths[name]:
+            raise ValueError(f"Atom Property must be declared at {atom_paths[name]}")
         if atom and name == "ref_id" and _subclass(owner, atom, classes):
             raise ValueError("Atom Ref ID cannot be redeclared on a subtype")
         if "derived_from_properties" in args and (owner != atom or name != "ref_id" or scopes is not None):
@@ -166,6 +183,10 @@ def _property_fields(properties, names, classes):
         if key in fields:
             raise ValueError(f"Duplicate Property field: {owner}.{name}")
         fields[key] = (args, property_imports)
+    for (owner, name) in fields:
+        if any(name == other_name and _subclass(owner, other_owner, classes)
+               for other_owner, other_name in fields):
+            raise ValueError(f"Duplicate inherited Property field: {owner}.{name}")
     for path, expected in groups.items():
         if children[path] != expected:
             raise ValueError(f"{path}: expected declared children {sorted(expected)}")
@@ -181,17 +202,17 @@ def _validate_identities(identities, fields, classes):
                 raise ValueError(f"{owner}: identity Property does not exist: {path}")
 
 
-def _prepare_derived(atom, fields):
+def _prepare_derived(atom, fields, atom_paths, ref_inputs):
     if not atom:
         return False
     ref = fields.pop((atom, "ref_id"), None)
     if not ref or "derived_from_properties" not in ref[0]:
         raise ValueError("Atom Ref ID requires its derived Property declaration")
-    if ref[0]["derived_from_properties"] != _REF_INPUTS:
-        raise ValueError("Ref ID requires Identity.Atom ID, State.Version and State.Status")
+    if ref[0]["derived_from_properties"] != ref_inputs:
+        raise ValueError(f"Ref ID requires {ref_inputs}")
     if "field_options" in ref[0] or ref[0].get("value_format") != "str":
         raise ValueError("Derived Ref ID requires a string format and has no field options")
-    if any((atom, name) not in fields for name in _ATOM_PATHS if name != "ref_id"):
+    if any((atom, name) not in fields for name in atom_paths if name != "ref_id"):
         raise ValueError("Ref ID requires declared Atom identity and State Properties")
     return True
 
@@ -244,13 +265,30 @@ def ref_id(self) -> str:
 ''').body[0])
 
 
+def _emit_family_check(atom, classes):
+    classes[atom].body.append(ast.parse('''\
+def __post_init__(self):
+    parts = self.atom_id.split("-") if isinstance(self.atom_id, str) else ()
+    if len(parts) != 3 or (parts[1], self.atom_family) not in (
+            ("S", "SPEC"), ("T", "TKT"), ("P", "PMETA")):
+        raise ValueError("Atom Family disagrees with the Atom ID")
+''').body[0])
+
+
 def assemble_manifest_fields(claims, declarations):
     classes, imports, names, properties, identities = _index_classes(claims, declarations)
-    fields, overrides = _property_fields(properties, names, classes)
+    header = any(args.get("entity_name") == "Header"
+                 and args.get("base_path", "").rsplit("//", 1)[-1] == "Atom"
+                 and args.get("value_cardinality") == 0 for args, _ in properties)
+    atom_paths = _HEADER_ATOM_PATHS if header else _ATOM_PATHS
+    ref_inputs = tuple(atom_paths[name] for name in ("atom_id", "version", "status"))
+    fields, overrides = _property_fields(properties, names, classes, atom_paths)
     _validate_identities(identities, fields, classes)
     atom = names.get("Atom", [None])[0]
-    derived = _prepare_derived(atom, fields)
+    derived = _prepare_derived(atom, fields, atom_paths, ref_inputs)
     _emit_fields(classes, imports, _merge_overrides(fields, overrides))
     if derived:
         _emit_derived(atom, classes)
+        if header:
+            _emit_family_check(atom, classes)
     return classes, imports
