@@ -357,7 +357,6 @@ class WorkbenchPerformanceDockerMixin:
                 f"127.0.0.1:{port}:8092",
                 "-v",
                 f"{root}:/project:rw",
-                "-v",
                 self.image,
                 "mcp-http",
             ],
