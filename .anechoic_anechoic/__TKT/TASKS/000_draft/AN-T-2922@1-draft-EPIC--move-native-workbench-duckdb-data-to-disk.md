@@ -9,7 +9,7 @@ context:
 state:
   status: "draft"
   version: 1
-  updated_at: "2026-11-20T13:05:31.242267+00:00"
+  updated_at: "2026-11-20T14:14:26.497310+00:00"
 ---
 ## Summary
 
@@ -22,6 +22,8 @@ Store the native Workbench projection, parsed imports, and temporary query resul
 ## Work
 
 ### Stage 1. Prepare the Spec
+
+Prerequisite. Admit the native `REFERENCES` Relation and its Header target forms before moving Stage 1 citations into Atom Relations.
 
 1. Create the [Tier 1 Solution Decision AN-S-3116](../../../LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/000_draft/AN-S-3116@1-draft-DES-DECISION--store-native-workbench-duckdb-data-on-disk.md).
 2. Update [AN-S-1362](../../../LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/000_draft/AN-S-1362@19-draft-DEVOPS--place-the-duckdb-projection-in-rebuildable-runtime-state.md) for runtime storage and startup.
@@ -36,7 +38,7 @@ The Solution Decision and supporting Spec Atoms cover the required behavior and 
 
 ## Status
 
-The Stage 1 Drafts are ready for review and promotion.
+The storage Drafts and the citation prerequisite Drafts are prepared.
 
 ## References
 
