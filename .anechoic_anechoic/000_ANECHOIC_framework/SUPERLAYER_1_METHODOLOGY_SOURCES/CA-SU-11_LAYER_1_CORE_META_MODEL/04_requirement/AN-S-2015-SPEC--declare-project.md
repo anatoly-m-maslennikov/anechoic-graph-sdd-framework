@@ -7,8 +7,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 8
-  updated_at: '2026-11-20T11:17:59+00:00'
+  version: 9
+  updated_at: '2026-11-20T14:42:07.157939+00:00'
 ---
 
 ## Summary
@@ -30,7 +30,9 @@ from anechoic.model import Component
 class Project(Component):
     pass
 
-declare_entity(entity_name="Project", entity_class=Project,
-    instance_relation_constraints={"CHILD_OF": {"targets_per_source": 0}},
+declare_entity(
+    entity_name='Project',
+    entity_class=Project,
+    entity_kind='Primary',
 )
 ```

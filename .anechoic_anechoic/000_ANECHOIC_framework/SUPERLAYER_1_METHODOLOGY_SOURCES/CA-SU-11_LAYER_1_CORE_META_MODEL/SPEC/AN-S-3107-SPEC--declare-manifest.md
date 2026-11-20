@@ -7,8 +7,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-20T11:17:59+00:00'
+  version: 2
+  updated_at: '2026-11-20T14:42:07.157939+00:00'
 ---
 
 ## Summary
@@ -26,15 +26,13 @@ MODEL//ANECHOIC <+ Node//Artifact//Atom//Spec Atom//Manifest
 ```python
 from anechoic.formal_claims import declare_entity
 from anechoic.model import SpecAtom
-from typing import ClassVar
-from dataclasses import field
 
 class Manifest(SpecAtom):
-    control_flow: ClassVar[str] = "Declarative"
-    lens_whitelist: list[str] | None = field(default=None, kw_only=True)
+    pass
 
 declare_entity(
-    entity_name="Manifest",
+    entity_name='Manifest',
     entity_class=Manifest,
+    entity_kind='Primary',
 )
 ```

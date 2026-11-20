@@ -7,8 +7,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 9
-  updated_at: '2026-11-20T11:17:59+00:00'
+  version: 10
+  updated_at: '2026-11-20T14:42:07.157939+00:00'
 ---
 
 ## Summary
@@ -29,5 +29,9 @@ from anechoic.formal_claims import declare_entity
 class Format:
     pass
 
-declare_entity(entity_name="Format", entity_class=Format)
+declare_entity(
+    entity_name='Format',
+    entity_class=Format,
+    entity_kind='Primary',
+)
 ```

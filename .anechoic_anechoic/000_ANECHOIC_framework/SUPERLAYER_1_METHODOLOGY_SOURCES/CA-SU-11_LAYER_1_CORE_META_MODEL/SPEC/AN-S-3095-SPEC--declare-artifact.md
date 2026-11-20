@@ -7,8 +7,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-20T11:17:59+00:00'
+  version: 2
+  updated_at: '2026-11-20T14:42:07.157939+00:00'
 ---
 
 ## Summary
@@ -30,5 +30,9 @@ from anechoic.model import Node
 class Artifact(Node):
     pass
 
-declare_entity(entity_name="Artifact", entity_class=Artifact)
+declare_entity(
+    entity_name='Artifact',
+    entity_class=Artifact,
+    entity_kind='Primary',
+)
 ```
