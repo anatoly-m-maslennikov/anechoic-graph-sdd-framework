@@ -166,7 +166,7 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
                 return rows
 
         owner = NativeQueryOwner(self.selection, NativeQueryInputs(lambda *args: None, frozenset(), {}, ()))
-        owner._store = object()
+        owner._store = SimpleNamespace(_available=True)
         owner._capture = Capture()
         snapshot_module = 'LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.structure_host_pkg3.snapshot'
         with patch(snapshot_module + '.read_structure', side_effect=lambda path: published[0]) as read, \

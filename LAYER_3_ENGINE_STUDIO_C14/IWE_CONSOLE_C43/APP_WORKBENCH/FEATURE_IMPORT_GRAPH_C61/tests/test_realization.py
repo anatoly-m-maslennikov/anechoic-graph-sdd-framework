@@ -12,9 +12,13 @@ from APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.source import Source, capture, relev
 
 
 class RealizationTests(unittest.TestCase):
-    def test_direct_test_packages_follow_source_inventory(self):
+    def _temporary_project(self):
         tmp_path = Path(self.enterContext(TemporaryDirectory())).resolve()
         subprocess.run(["git", "init", "--quiet", str(tmp_path)], check=True)
+        return tmp_path
+
+    def test_direct_test_packages_follow_source_inventory(self):
+        tmp_path = self._temporary_project()
         for name in ("pkg/pkg__tests/test_one.py", "pkg/other__tests/test_two.py",
                      "other/pkg__tests/test_three.py", "pkg/pkg__tests/nested/test_four.py"):
             path = tmp_path / name
@@ -67,7 +71,7 @@ class RealizationTests(unittest.TestCase):
         connection.close()
 
     def test_mixed_package_and_import_pairs(self):
-        root = Path(self.enterContext(TemporaryDirectory())).resolve()
+        root = self._temporary_project()
         for name, content in {"pkg/package.json": '{"name":"pkg"}',
                               "pkg/a.py": "import other.b\n", "pkg/app.js": "",
                               "pkg/pkg__tests/test.py": "", "pkg/pkg__tests/test.js": "",
@@ -93,7 +97,7 @@ class RealizationTests(unittest.TestCase):
         assert tests == [("package:local:pkg/pkg__tests", "package:local:pkg")]
 
     def test_read_error_is_retried_on_next_capture_without_stat_change(self):
-        root = Path(self.enterContext(TemporaryDirectory())).resolve()
+        root = self._temporary_project()
         path = root / "a.py"
         path.write_text("import os\n")
         with patch.object(Path, "read_bytes", side_effect=PermissionError("denied")) as read:

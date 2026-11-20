@@ -1,6 +1,7 @@
 from pathlib import Path
 from contextlib import redirect_stderr
 from io import StringIO
+import subprocess
 from tempfile import TemporaryDirectory
 import unittest
 
@@ -14,7 +15,8 @@ from FEATURE_WORKBENCH_BACKEND.spec_trace import (
 
 class SpecTraceTests(unittest.TestCase):
     def test_native_rows_use_inventoried_owners_and_publish(self):
-        root = Path(self.enterContext(TemporaryDirectory()))
+        root = Path(self.enterContext(TemporaryDirectory())).resolve()
+        subprocess.run(['git', 'init', '--quiet', str(root)], check=True)
         package = root / 'package'
         package.mkdir()
         module = package / 'unit.py'
@@ -48,7 +50,8 @@ class SpecTraceTests(unittest.TestCase):
                       native_trace_rows(root, nodes))
 
     def test_native_rejects_invalid_and_symlinked_bindings(self):
-        root = Path(self.enterContext(TemporaryDirectory()))
+        root = Path(self.enterContext(TemporaryDirectory())).resolve()
+        subprocess.run(['git', 'init', '--quiet', str(root)], check=True)
         package = root / 'package'
         package.mkdir()
         sidecar = package / 'package__spec_bind.yaml'
