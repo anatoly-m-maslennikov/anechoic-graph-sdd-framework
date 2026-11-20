@@ -7,9 +7,9 @@ context:
   tier: 3
   template: epic
 state:
-  status: draft
+  status: done
   version: 1
-  updated_at: '2026-11-20T09:00:02.739Z'
+  updated_at: '2026-11-20T11:57:01.927Z'
 ---
 ## Summary
 
@@ -36,6 +36,8 @@ The Component Manifest, Tier 1 Decision, and supporting Spec Atoms cover the rev
 ## Status
 
 The Spec has been reviewed against the existing Spec and code. The native implementation passed focused checks for all four relations, Workbench and terminal queries, watcher updates, and failed publication.
+
+The seven Spec Atoms are Current. Workbench `0.4.4.54` passed the full release gate. Live SQL and DuckPGQ queries returned all four Module and Package relation types.
 
 ## References
 
