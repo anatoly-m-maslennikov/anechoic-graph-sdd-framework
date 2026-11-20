@@ -7,16 +7,17 @@ context:
   tier: 1
   lens: DES
 state:
-  status: active
-  version: 37
-  updated_at: 2026-11-11 18:46:16 +0400
+  status: "active"
+  version: 38
+  updated_at: "2026-11-20T11:23:31.881227+00:00"
 ---
+
 ## Summary
+
 Keep selected settings in their authoritative Settings Artifact
 
 ## Claim
 
 ### Prose Claim
 
-
-the ANECHOIC Framework Instance serving anechoic **must** consume Project Settings according **to** Core Meta-Model authority under CA-R-2748, **without** redefining their purpose, locations, **or** selected values **in** Project Atoms.
+The Framework Instance serving Anechoic reads all Project settings from the Project Manifest. Other Atoms define constraints on those settings. The selected values and their authority stay in the Project Manifest.

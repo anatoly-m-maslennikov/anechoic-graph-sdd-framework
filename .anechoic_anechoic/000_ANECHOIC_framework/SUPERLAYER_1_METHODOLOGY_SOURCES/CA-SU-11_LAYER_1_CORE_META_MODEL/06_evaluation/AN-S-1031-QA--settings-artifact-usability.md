@@ -7,29 +7,15 @@ context:
   tier: 3
   lens: QA
 state:
-  status: active
-  version: 39
-  updated_at: 2026-11-07 15:28:42 +0400
+  status: "active"
+  version: 40
+  updated_at: "2026-11-20T11:29:16.575491+00:00"
 ---
 
 ## Summary
 
 Settings Artifact Usability
 
-## Claim scope
-
-The Operator has no undocumented Framework knowledge and must not edit the Framework Catalog.
-
 ## Claim
 
-An Operator unfamiliar with the repository can configure Framework behavior, including default and Project Authority Modes, through Framework Instance Settings and Project initialization inputs through Project Settings using the owning Settings Artifacts and their in-file documentation. The Project Scope Unit Declaration and non-Project Scope Delegations separately own their respective Scope Unit structure. No structural Projection is required to make these choices.
-
-## Details
-
-### Acceptance criteria
-
-Every intended change is made through its owning Settings Artifact or applicable Scope Unit structural Atom, and at least 90% of classifications distinguish Project choices from methodology definitions.
-
-### Failure disposition
-
-Record a Concern for every misleading or missing Settings instruction and stop settings-usability readiness until it is corrected.
+An Operator without undocumented Framework knowledge or Catalog edits can configure Project initialization and applicable Framework behavior through the Project Manifest and its documentation. Component Manifests separately own Component structure; a structural Projection is not required. At least 90% of classifications distinguish Project choices from methodology definitions. Record a Concern for each misleading or missing instruction and stop settings-usability readiness until corrected.

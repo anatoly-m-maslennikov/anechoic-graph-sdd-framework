@@ -7,10 +7,11 @@ context:
   tier: 1
   lens: DES
 state:
-  status: active
-  version: 1
-  updated_at: 2026-11-04 09:30:21 +0400
+  status: "active"
+  version: 2
+  updated_at: "2026-11-20T11:23:31.897533+00:00"
 ---
+
 ## Summary
 
 Unify Operator-selected Project Settings
@@ -19,4 +20,6 @@ Unify Operator-selected Project Settings
 
 ### Prose Claim
 
-Project.Settings owns the Operator-selected Project initialization inputs and applicable ANECHOIC behavior and configuration choices. Each selected setting has one authoritative owner in its Project. Atoms define permitted parameters, constraints, and applicability without duplicating selected values or defaults.
+The Project Manifest owns all Operator-selected Project settings and configuration choices.
+
+Other Atoms define permitted parameters, constraints, and applicability. Component Manifests declare Component structure.
