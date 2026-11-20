@@ -48,7 +48,7 @@ def code_access_occurrences(
             kind, _, key = target.partition(":") if target else (None, None, None)
             target_path = None
             if status == "internal":
-                target_path = key.removeprefix("python:") if kind == "package" else key
+                target_path = key.removeprefix("local:") if kind == "package" else key
             facts.append(CodeAccessOccurrence(
                 path, target_path, kind,
                 unit, written, site.line, site.column, status,
