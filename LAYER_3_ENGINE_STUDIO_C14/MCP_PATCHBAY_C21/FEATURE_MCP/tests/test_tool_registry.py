@@ -521,7 +521,7 @@ class ToolRegistryTests(unittest.IsolatedAsyncioTestCase):
             await gateway.initialize()
             try:
                 self.assertEqual(set(), {tool.name for tool in gateway.tools})
-                self.assertEqual(frozenset({"blocked", "demo"}), gateway.tool_blacklist)
+                self.assertEqual(frozenset({"blocked", "demo", "query_rebuild"}), gateway.tool_blacklist)
             finally:
                 await gateway.close()
 
