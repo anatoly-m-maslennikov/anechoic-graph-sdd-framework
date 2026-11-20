@@ -684,9 +684,10 @@ class QueryStore:
 
     def resolve_result_selector(self, selector: str) -> str:
         """Resolve a current result ID or its stable physical table ID."""
-        if selector in self._results:
-            return selector
         table_name = selector.removeprefix("workbench_results.")
+        result_id = table_name.removeprefix("query_")
+        if result_id in self._results:
+            return result_id
         if not table_name.startswith("query_"):
             table_name = f"query_{table_name}"
         for query_id, result in self._results.items():
@@ -701,11 +702,15 @@ class QueryStore:
         staged = {}
         for old_id, old in self._results.items():
             if selected is not None and old_id not in selected:
+                if not affected_tables:
+                    continue
                 try:
                     dependencies = self._connection.get_table_names(old.sql, qualified=True)
-                except Exception as error:
-                    raise ValueError("cannot determine result dependencies") from error
-                if not affected_tables.intersection(dependencies):
+                except Exception:
+                    # Unclassified reads can still depend on the selected table.
+                    dependencies = affected_tables
+                if not affected_tables.intersection(name.rsplit(".", 2)[-2] + "." + name.rsplit(".", 2)[-1]
+                                                    for name in dependencies if "." in name):
                     continue
             new_id, result = self._materialize(old.sql, old.preview, admitted=True)
             result.created_at, result.pinned = old.created_at, old.pinned

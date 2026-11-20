@@ -260,10 +260,10 @@ class NativeQueryOwner(ServiceInterface):
             if table == "query_log_records":
                 table = "query_log"
             all_tables = table == "all"
-            result_table = re.fullmatch(r"workbench_results\.query_([a-f0-9]{32})", table)
+            result_table = re.fullmatch(r"(?:workbench_results\.)?(?:query_)?[a-f0-9]{32}", table)
             atom_tables = ATOM_TABLES | {"scope_units", "internal.reference", "internal.native_exact_refs",
                                          "internal.native_frontier"}
-            atom_tables |= {f'internal.{name.strip(chr(34))}' for name in store._projection.graph.tables.values()}
+            atom_tables |= {f"internal.{name[1:-1]}" for name in store._projection.graph.tables.values()}
             atom_rebuild = all_tables or table in atom_tables
             realization_rebuild = all_tables or table in REALIZATION_TABLES or table in IMPORT_CACHE_TABLES
             if realization_rebuild and not all_tables and self._realization_options is None:
@@ -285,7 +285,7 @@ class NativeQueryOwner(ServiceInterface):
                             self._publish_realization(store._connection, graph, prepared)
                         self._rebuild_observations(store, table, query_attempts)
                         # A read query can depend on projection tables through views or GRAPH_TABLE.
-                        staged = store.prepare_result_rebuild(result_table[1] if result_table else None)
+                        staged = store.prepare_result_rebuild(table if result_table else None)
 
                     store.prune_results()
                     if atom_rebuild:
