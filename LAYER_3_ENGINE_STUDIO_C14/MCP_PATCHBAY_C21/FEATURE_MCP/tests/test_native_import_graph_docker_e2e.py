@@ -38,6 +38,8 @@ class NativeImportGraphDockerE2E(unittest.TestCase):
         })
         cls._write("app/__init__.py", "")
         cls._write("app/main.py", "import dep.helper\nimport dep.helper\n")
+        cls._write("app/package.json", '{"name": "app"}\n')
+        cls._write("app/frontend.js", "")
         cls._write("dep/__init__.py", "")
         cls._write("dep/helper.py", "VALUE = 1\n")
         (cls.root / "app/app__tests").mkdir()
@@ -109,7 +111,7 @@ class NativeImportGraphDockerE2E(unittest.TestCase):
         """))
         graph = GRAPH_COUNTS + " JOIN module_imports i USING (occurrence_key) WHERE i.source_key = 'module:app/main.py'"
         self.assertEqual([[8]], self._rows(graph))
-        query = "SELECT occurrence_count FROM package_imports WHERE source_key = 'package:python:app'"
+        query = "SELECT occurrence_count FROM package_imports WHERE source_key = 'package:local:app'"
         workspace = self._post("/interface", {"operation": "workspace_open", "arguments": {"session_id": "imports"}})
         view = {"workspace_id": workspace["workspace_id"], "view_id": workspace["active_view_id"]}
         for operation, args in (("view_update", {"sql": query, "expected_revision": 0}), ("view_run", {})):
@@ -125,9 +127,13 @@ class NativeImportGraphDockerE2E(unittest.TestCase):
             JOIN import_nodes test ON test.node_key = e.target_key
             WHERE parent.relative_path = 'app'
         """
-        expected = [["package:python:app", "package", "package:python:app/app__tests",
+        expected = [["package:local:app", "package", "package:local:app/app__tests",
                      "package", "Test Package"]]
         self.assertEqual(expected, self._rows(query))
+        self.assertEqual([["package:local:app"], ["package:local:app"]], self._rows("""
+            SELECT package_key FROM import_nodes
+            WHERE relative_path IN ('app/main.py', 'app/frontend.js') ORDER BY relative_path
+        """))
         for label, source, target in (("TESTS", expected[0][2], expected[0][0]),
                                       ("IS_TESTED_BY", expected[0][0], expected[0][2])):
             self.assertEqual([[source, target]], self._rows(f"""

@@ -29,6 +29,7 @@ class Source:
     status: str
     signature: str
     imports: tuple[ImportSite, ...] = ()
+    error_message: str | None = None
 
 
 _SUFFIX_LANGUAGES = {
@@ -245,13 +246,14 @@ def _parse(relative: str, language: str, data: bytes, signature: str) -> Source:
 
 def _scan(relative: str, path: Path, language: str, previous: Source | None) -> Source:
     signature = _stat_signature(path)
-    if previous is not None and previous.language == language and previous.signature == signature:
+    if (previous is not None and previous.status != "read_error"
+            and previous.language == language and previous.signature == signature):
         return previous
     try:
         data = path.read_bytes()
     except OSError as error:
         print(f"import graph: {relative}: read error: {error}", file=sys.stderr)
-        return Source(language, "read_error", signature)
+        return Source(language, "read_error", signature, error_message=str(error))
     return _parse(relative, language, data, signature)
 
 
@@ -265,6 +267,8 @@ def capture(
     changed = _changed_paths(changes) if changes is not None else None
     if changed and any(PurePosixPath(path).name == ".gitignore" for path in changed):
         changed = None
+    if changed is not None:
+        changed.update(path for path, source in prior.items() if source.status == "read_error")
     retained = {} if changed is None else {
         path: source for path, source in prior.items()
         if not any(path == item or path.startswith(item + "/") for item in changed)

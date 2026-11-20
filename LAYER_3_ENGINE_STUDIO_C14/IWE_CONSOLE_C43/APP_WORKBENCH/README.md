@@ -184,6 +184,9 @@ Set the native Project Manifest parameter `runtime.workbench.import_graph` to `{
 `test_edges` links each direct `<package folder name>__tests/` Test Package
 to its parent Package. `tested_by_edges` gives the inverse. Both use the same
 Package nodes as import queries and work without a Spec Binding.
+Each local Package key is `package:local:<Project-relative folder>`.
+`import_read_issues` shows the path and message for currently failed source
+reads. The next scan clears an issue when it reads the file successfully.
 
 Use this query in Workbench to inspect outgoing imports and their source lines. Filter `d.relative_path` for incoming imports. Filter node kind `package` and use its Package path for Package results.
 
@@ -207,6 +210,8 @@ curl -sS -H 'Content-Type: application/json' \
 
 Native Workbench stores its projection, parsed imports, and live result tables
 in `.anechoic_runtime/workbench/projection.duckdb`. Restart clears live results.
+One process owns the Project database. Workbench, Console, and MCP can share
+that process over HTTP. A second writer exits with an explicit error.
 Use **Rebuild tables** in Workbench, call MCP `query_rebuild`, or send
 `{"target":"all"}` to `POST /anechoic/<project>/api/rebuild`. You can also pass
 a table name, or `workbench_results.query_<result ID>` for one result.

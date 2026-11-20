@@ -126,6 +126,7 @@ def project_native(store: QueryStore, capture: NativeCapture, *,
 
         def finish(graph: GraphState) -> None:
             if retained:
+                store.mark_graph_registration_changed()
                 connection.execute("DROP PROPERTY GRAPH IF EXISTS anechoic")
                 register_graph(connection, graph)
             else:

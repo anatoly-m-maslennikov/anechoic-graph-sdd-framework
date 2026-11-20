@@ -4,6 +4,7 @@ import asyncio
 from contextlib import redirect_stderr
 from dataclasses import replace
 from io import StringIO
+from pathlib import Path
 import subprocess
 from types import SimpleNamespace
 import unittest
@@ -206,7 +207,18 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
                     "SELECT path FROM duckdb_databases() WHERE NOT internal"
                 ).fetchone()[0]
                 self.assertEqual(database.resolve().as_posix(), database_file)
-            await post("rebuild", {"target": "unknown"}, 400)
+            stderr = StringIO()
+            with redirect_stderr(stderr):
+                rejected = await post("rebuild", {"target": "unknown"}, 400)
+            self.assertIn("Unknown Workbench rebuild target", rejected["error"])
+            self.assertIn("Unknown Workbench rebuild target", stderr.getvalue())
+            with redirect_stderr(StringIO()) as errors:
+                response = await gateway.call(None, types.CallToolRequestParams(
+                    name="query_rebuild", arguments={"target": "missing"},
+                ))
+            self.assertTrue(response.is_error)
+            self.assertIn("Unknown Workbench rebuild target", str(response.structured_content))
+            self.assertIn("Unknown Workbench rebuild target", errors.getvalue())
             moved = test_directory.parent.parent / test_directory.name
             test_directory.rename(moved)
             rebuilt = await post("rebuild", {"target": "test_edges"})
@@ -216,14 +228,14 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
             fetched = await view_call("view_fetch", view | {"result_delivery": "inline"})
             self.assertEqual((second, []), (fetched["query_id"], fetched["rows"]))
             self.assertTrue(store._results[second].pinned)
-            moved.rename(test_directory)
             stderr = StringIO()
             with redirect_stderr(stderr), patch.object(store, "prepare_result_rebuild",
                                                        side_effect=ValueError("fixture rebuild failure")):
-                await post("rebuild", {"target": "all"}, 400)
-            self.assertIn("Workbench rebuild failed for all: fixture rebuild failure", stderr.getvalue())
+                await post("rebuild", {"target": "test_edges"}, 400)
+            self.assertIn("fixture rebuild failure", stderr.getvalue())
             fetched = await view_call("view_fetch", view | {"result_delivery": "inline"})
             self.assertEqual((second, []), (fetched["query_id"], fetched["rows"]))
+            moved.rename(test_directory)
             mcp = await gateway.call(None, types.CallToolRequestParams(
                 name="query_rebuild", arguments={"target": "all"},
             ))
@@ -253,3 +265,47 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
         disabled_store = disabled._native_query._owner()
         with disabled_store._lock:
             self.assertFalse(read_import_sources(disabled_store._connection))
+
+    async def test_read_issue_is_queryable_and_clears_on_the_next_scan(self):
+        source = self._source("src/app/main.py", "import os\n")
+        read_bytes = Path.read_bytes
+
+        def read(path):
+            if path == source:
+                raise PermissionError("fixture read denied")
+            return read_bytes(path)
+
+        with patch.object(Path, "read_bytes", read), redirect_stderr(StringIO()) as errors:
+            gateway = await self._gateway()
+        self.assertIn("fixture read denied", errors.getvalue())
+        sql = "SELECT relative_path, error_message FROM import_read_issues"
+        owner = gateway._native_query
+        self.assertIn("import_read_issues", owner.schema()["tables"])
+        self.assertEqual([["src/app/main.py", "fixture read denied"]],
+                         owner.run(sql, result_delivery="inline")["rows"])
+        owner.rebuild("import_read_issues")
+        self.assertEqual([], owner.run(sql, result_delivery="inline")["rows"])
+
+    async def test_graph_rebuild_failure_disables_queries_at_the_public_boundary(self):
+        self._source("src/main.py", "")
+        gateway = await self._gateway()
+        owner = gateway._native_query
+        store = owner._owner()
+        async with httpx2.AsyncClient(transport=httpx2.ASGITransport(app=Starlette(routes=routes(gateway))),
+                                     base_url="http://127.0.0.1:18093") as client:
+            stderr = StringIO()
+            with redirect_stderr(stderr), patch(
+                "APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.query_store.insert_rows",
+                side_effect=OSError("fixture atom insert blocked"),
+            ):
+                failure = await client.post("/anechoic/Anechoic/api/rebuild", json={"target": "atoms"})
+            self.assertEqual(400, failure.status_code)
+            self.assertIn("restart required", failure.json()["error"])
+            self.assertIn("fixture atom insert blocked", stderr.getvalue())
+            response = await gateway.call(None, types.CallToolRequestParams(
+                name="query_run", arguments={"sql": "SELECT count(*) FROM atoms"},
+            ))
+            self.assertTrue(response.is_error)
+            self.assertIn("restart required", str(response.structured_content))
+        with store._lock:
+            self.assertGreater(store._connection.execute("SELECT count(*) FROM atoms").fetchone()[0], 0)

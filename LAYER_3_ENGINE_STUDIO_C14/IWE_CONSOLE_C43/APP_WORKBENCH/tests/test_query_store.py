@@ -94,6 +94,96 @@ class QueryStoreTest(unittest.TestCase):
         self.assertEqual([[1]], self.store.page(first, 0)["rows"])
         self.assertEqual([[1]], self.store.page(second, 0)["rows"])
 
+    def test_expiry_retains_transitive_sources_until_last_dependent_expires(self) -> None:
+        first = self.store.run("SELECT 1 AS value")["query_id"]
+        second = self.store.run(f"SELECT value FROM workbench_results.query_{first}")["query_id"]
+        third = self.store.run(f"SELECT value FROM workbench_results.query_{second}")["query_id"]
+        self.store._results[first].created_at -= 4000
+        self.store._results[second].created_at -= 4000
+        self.store.prune_results()
+        self.assertEqual([[1]], self.store.page(third, 0)["rows"])
+        self.store._connection.execute("BEGIN")
+        staged = self.store.prepare_result_rebuild(first)
+        self.store._connection.execute("COMMIT")
+        replaced = self.store.commit_result_rebuild(staged)
+        third = replaced[third]["query_id"]
+        self.assertEqual([[1]], self.store.page(third, 0)["rows"])
+        self.store._results[third].created_at -= 4000
+        self.store.prune_results()
+        self.assertFalse(self.store._results)
+
+    def test_rebuild_skips_expired_unrelated_result_without_cleanup(self) -> None:
+        self.store._connection.execute("CREATE TABLE expired_source (value INTEGER)")
+        expired = self.store.run("SELECT value FROM expired_source")["query_id"]
+        current = self.store.run("SELECT 42 AS value")["query_id"]
+        self.store._results[expired].created_at -= 4000
+        self.store._connection.execute("DROP TABLE expired_source")
+        self.store._connection.execute("BEGIN")
+        with self.assertRaises(ValueError):
+            self.store.prepare_result_rebuild(expired)
+        staged = self.store.prepare_result_rebuild()
+        self.store._connection.execute("COMMIT")
+        replacements = self.store.commit_result_rebuild(staged)
+        self.assertNotIn(expired, replacements)
+        self.assertIn(expired, self.store._results)
+        self.assertEqual([[42]], self.store.page(replacements[current]["query_id"], 0)["rows"])
+        self.store.prune_results()
+        self.assertNotIn(expired, self.store._results)
+
+    def test_unclassified_dependencies_only_retain_named_snapshots(self) -> None:
+        first = self.store.run("SELECT 1 AS value")["query_id"]
+        unrelated = self.store.run("SELECT 2 AS value")["query_id"]
+        connection = self.store._connection
+        class UnclassifiedConnection:
+            def __getattr__(self, name):
+                if name == "get_table_names":
+                    raise RuntimeError("cannot classify")
+                return getattr(connection, name)
+        self.store._connection = UnclassifiedConnection()
+        try:
+            dependent = self.store.run(f"SELECT value FROM workbench_results.query_{first}")["query_id"]
+        finally:
+            self.store._connection = connection
+        self.store._results[first].created_at -= 4000
+        self.store._results[unrelated].created_at -= 4000
+        self.store.prune_results()
+        self.assertIn(first, self.store._results)
+        self.assertNotIn(unrelated, self.store._results)
+        self.assertEqual([[1]], self.store.page(dependent, 0)["rows"])
+
+    def test_drop_retains_source_for_dependent_rebuild(self) -> None:
+        first = self.store.run("SELECT 1 AS value")["query_id"]
+        second = self.store.run(f"SELECT value FROM workbench_results.query_{first}")["query_id"]
+        self.store.drop(first)
+        with self.assertRaises(ValueError):
+            self.store.page(first, 0)
+        self.store._connection.execute("BEGIN")
+        staged = self.store.prepare_result_rebuild()
+        self.store._connection.execute("COMMIT")
+        replacements = self.store.commit_result_rebuild(staged)
+        self.assertNotIn(first, replacements)
+        second = replacements[second]["query_id"]
+        self.assertEqual([[1]], self.store.page(second, 0)["rows"])
+        self.store.drop(second)
+        self.assertFalse(self.store._results)
+
+    def test_native_rebuild_failure_after_graph_drop_fails_closed(self) -> None:
+        self.store._native = True
+        self.store._connection.execute("CREATE TABLE rollback_evidence (value INTEGER)")
+        self.store._connection.execute("INSERT INTO rollback_evidence VALUES (1)")
+        def fail_after_drop(_graph):
+            self.store.mark_graph_registration_changed()
+            self.store._connection.execute("DROP PROPERTY GRAPH IF EXISTS anechoic")
+            self.store._connection.execute("DELETE FROM rollback_evidence")
+            raise RuntimeError("rebuild failed")
+        stderr = StringIO()
+        with redirect_stderr(stderr), self.assertRaises(WorkbenchUnavailableError):
+            self.store.replace([], [], reuse=True, before_commit=fail_after_drop)
+        self.assertIn("rebuild failed", stderr.getvalue())
+        self.assertEqual([(1,)], self.store._connection.execute("SELECT * FROM rollback_evidence").fetchall())
+        with self.assertRaises(WorkbenchUnavailableError):
+            self.store.run("SELECT 1")
+
     def test_query_log_expiry_applies_to_backing_rows(self) -> None:
         self.store._connection.execute(
             "INSERT INTO query_log_records VALUES "

@@ -49,6 +49,22 @@ test('polling leaves an unsynced draft on its original revision', () => {
   assert.equal(tabs[0].serverRevision, 3);
 });
 
+test('polling a rebuilt View keeps its unsynced draft and follows the new result', () => {
+  const result = { query_id: 'new', status: 'success' };
+  const state = { active_view_id: 'a', views: [{ id: 'a', sql: 'SELECT remote', cursor_position: 0, revision: 3, result }] };
+  const local = { id: 'a', sql: 'SELECT local', cursor: 7, savedSql: 'SELECT old', dirty: true, syncDirty: true, revision: 2, conflict: true, run: { query_id: 'old' }, result: { query_id: 'old', rows: [[1]] } };
+  const tab = workspaceTabs(state, [local]).tabs[0];
+  assert.equal(tab.sql, local.sql);
+  assert.equal(tab.cursor, local.cursor);
+  assert.equal(tab.revision, local.revision);
+  assert.equal(tab.conflict, true);
+  assert.equal(tab.serverRevision, 3);
+  assert.equal(tab.run, result);
+  assert.equal(tab.result, undefined);
+  const fetched = { query_id: 'new', rows: [[2]] };
+  assert.equal(workspaceTabs(state, [{ ...tab, result: fetched }]).tabs[0].result, fetched);
+});
+
 test('an acknowledged draft remains permanently unsaved after workspace polling', () => {
   const state = { active_view_id: 'a', views: [{ id: 'a', sql: 'SELECT draft', revision: 3 }] };
   const { tabs } = workspaceTabs(state, [{ id: 'a', title: 'View 1', sql: 'SELECT draft', savedSql: 'SELECT saved', dirty: true, syncDirty: false, revision: 3 }]);

@@ -228,10 +228,10 @@ class WorkbenchTools:
                     raise ValueError("Query rebuild requires the native Project query backend")
                 try:
                     return self._query_owner.rebuild(arguments["target"])
-                except ValueError:
+                except (ValueError, QueryExecutionError, WorkbenchUnavailableError):
                     raise
                 except Exception as error:
-                    raise ExplicitBlockingRuntimeFailure("query_error", f"Query rebuild failed: {error}") from error
+                    raise ExplicitBlockingRuntimeFailure("query_error", "Query rebuild failed. See process diagnostics.") from error
             if name == ARCHIVE_LOAD:
                 scopes = self._archive_scopes(arguments)
                 return self._owner().load_archives(scopes)

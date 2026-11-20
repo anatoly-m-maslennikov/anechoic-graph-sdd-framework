@@ -61,7 +61,7 @@ export function workspaceTabs(state, previous = []) {
       ...(local?.result && local.result.query_id === view.result?.query_id ? { result: local.result } : {}),
     };
     // Keep a draft on the old revision so the next update reports, rather than hides, a conflict.
-    return { ...remote, ...local, serverSql: view.sql, serverRevision: view.revision };
+    return { ...remote, ...local, run: view.result, result: local.result?.query_id === view.result?.query_id ? local.result : undefined, serverSql: view.sql, serverRevision: view.revision };
   });
   return { tabs, activeId: state.active_view_id && tabs.some((tab) => tab.id === state.active_view_id) ? state.active_view_id : tabs[0]?.id };
 }

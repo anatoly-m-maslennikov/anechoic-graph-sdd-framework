@@ -21,6 +21,7 @@ class ImportCacheTests(unittest.TestCase):
                 )),
                 "a.js": Source("javascript", "unsupported", "stat:two"),
                 "bad.py": Source("python", "parse_error", "stat:bad"),
+                "denied.py": Source("python", "read_error", "stat:denied", error_message="denied"),
             }
             connection = duckdb.connect(path)
             self.assertEqual({}, read_import_sources(connection))

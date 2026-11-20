@@ -47,7 +47,7 @@ def _owner_for(path: PurePosixPath, roots: list[PurePosixPath], packages: set[st
             if len(parts) > 1:
                 package = base.joinpath(parts[0]).as_posix()
                 if package in packages:
-                    return f"package:python:{package}"
+                    return f"package:local:{package}"
             break
     return None
 
@@ -65,8 +65,8 @@ def _frontend_owner(root: Path, path: str, source: Source, manifests: dict, node
         if manifests[manifest] is not None:
             if manifests[manifest]:
                 relative = parent.relative_to(root).as_posix()
-                owner = f"package:frontend:{relative}"
-                nodes[owner] = (owner, "package", source.language, relative, None, None)
+                owner = f"package:local:{relative}"
+                nodes.setdefault(owner, (owner, "package", source.language, relative, None, None))
                 return owner
             break
         parent = parent.parent
@@ -76,7 +76,7 @@ def _frontend_owner(root: Path, path: str, source: Source, manifests: dict, node
 def _nodes(root: Path, sources: dict[str, Source], roots: list[PurePosixPath], packages: set[str]) -> dict[str, tuple]:
     nodes: dict[str, tuple] = {}
     for package in sorted(packages):
-        key = f"package:python:{package}"
+        key = f"package:local:{package}"
         owner = _owner_for(PurePosixPath(package) / "__init__.py", roots, packages)
         if owner == key:
             owner = None
@@ -120,7 +120,7 @@ def _candidates(name: str, bases: list[PurePosixPath], sources: dict[str, Source
         if module in sources and sources[module].language == "python":
             matches.append(f"module:{module}")
         if path.as_posix() in packages:
-            matches.append(f"package:python:{path.as_posix()}")
+            matches.append(f"package:local:{path.as_posix()}")
         if matches:
             return matches
     return []
@@ -204,12 +204,13 @@ def resolve_realization(
     root: Path, sources: dict[str, Source], python_roots: tuple[str, ...] = (".",)
 ) -> tuple[list[tuple], list[tuple], list[tuple], list[tuple]]:
     """Resolve imports and direct test-package relations from selected sources."""
+    root = root.resolve()
     nodes, occurrences, edges = resolve(root, sources, python_roots)
     packages = {row[3]: row for row in nodes if row[1] == "package" and row[3]}
     candidates = {}
     for path, node in packages.items():
         parent = PurePosixPath(path)
-        relative = (parent / (parent.name + "__tests")).as_posix()
+        relative = (parent / ((parent.name or root.name) + "__tests")).as_posix()
         directory = _event_path(root, relative)
         if directory is not None and directory.is_dir():
             candidates[relative] = node

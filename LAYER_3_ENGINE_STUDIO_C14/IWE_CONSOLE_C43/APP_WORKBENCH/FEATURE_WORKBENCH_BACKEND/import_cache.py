@@ -6,7 +6,7 @@ from ..FEATURE_IMPORT_GRAPH_C61.source import ImportSite, Source
 
 
 # Increment when the stored schema or parser semantics change.
-_CACHE_VERSION = 1
+_CACHE_VERSION = 2
 _SCHEMA = "_anechoic_import_cache"
 
 
@@ -30,9 +30,9 @@ def read_import_sources(connection) -> dict[str, Source]:
     ).fetchall():
         sites.setdefault(path, []).append(ImportSite(module, name, level, line, column))
     return {
-        path: Source(language, status, signature, tuple(sites.get(path, ())))
-        for path, language, status, signature in connection.execute(
-            f"SELECT path, language, status, signature FROM {_SCHEMA}.sources"
+        path: Source(language, status, signature, tuple(sites.get(path, ())), error_message)
+        for path, language, status, signature, error_message in connection.execute(
+            f"SELECT path, language, status, signature, error_message FROM {_SCHEMA}.sources"
         ).fetchall()
     }
 
@@ -55,7 +55,7 @@ def replace_import_sources(connection, sources: dict[str, Source],
         connection.execute(f"INSERT INTO {_SCHEMA}.version VALUES (?)", [_CACHE_VERSION])
         connection.execute(
             f"CREATE TABLE {_SCHEMA}.sources (path VARCHAR PRIMARY KEY, language VARCHAR NOT NULL, "
-            "status VARCHAR NOT NULL, signature VARCHAR NOT NULL)"
+            "status VARCHAR NOT NULL, signature VARCHAR NOT NULL, error_message VARCHAR)"
         )
         connection.execute(
             f'CREATE TABLE {_SCHEMA}.sites (path VARCHAR NOT NULL, ordinal INTEGER NOT NULL, '
@@ -70,10 +70,10 @@ def replace_import_sources(connection, sources: dict[str, Source],
         return
     for table in ("sites", "sources"):
         connection.execute(f"DELETE FROM {_SCHEMA}.{table} WHERE path IN (SELECT unnest(?))", [list(changed)])
-    rows = [(path, source.language, source.status, source.signature)
+    rows = [(path, source.language, source.status, source.signature, source.error_message)
             for path, source in sources.items() if path in changed]
     if rows:
-        connection.execute(f"INSERT INTO {_SCHEMA}.sources SELECT unnest(?), unnest(?), unnest(?), unnest(?)",
+        connection.execute(f"INSERT INTO {_SCHEMA}.sources SELECT unnest(?), unnest(?), unnest(?), unnest(?), unnest(?)",
                            [list(column) for column in zip(*rows, strict=True)])
     rows = [(path, ordinal, site.module, site.name, site.level, site.line, site.column)
             for path, source in sources.items() if path in changed

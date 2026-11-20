@@ -154,7 +154,6 @@
       await api.rebuild(target.trim());
       if (boundApi) {
         const state = await boundApi.get();
-        tabs = tabs.map((tab) => ({ ...tab, result: undefined }));
         applyBinding(state);
       }
     } catch (error) { storageError = message(error); }

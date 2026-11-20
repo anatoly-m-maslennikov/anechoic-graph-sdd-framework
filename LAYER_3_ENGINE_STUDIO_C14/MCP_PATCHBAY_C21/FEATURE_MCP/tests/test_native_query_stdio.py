@@ -258,6 +258,18 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
             with self.subTest(main=main), self.assertRaises(SystemExit):
                 main(args + extra + ["--instance-id", "legacy"], native_inputs=inputs)
 
+    def test_second_native_process_reports_project_lock_to_stderr(self):
+        from native_query import create_native_gateway
+
+        owner = create_native_gateway(self.root, CONTROL, _native_inputs())._native_query
+        self.addCleanup(owner.close)
+        owner.start()
+        completed = subprocess.run([sys.executable, *self.args], input="", text=True,
+                                   capture_output=True, timeout=15, check=False)
+        self.assertEqual(2, completed.returncode, completed.stderr)
+        self.assertEqual("", completed.stdout)
+        self.assertIn("This Project is already open", completed.stderr)
+
     def test_startup_refuses_an_unapproved_manifest_owner(self):
         manifest_path = self.root / CONTROL / MANIFEST
         source = manifest_path.read_text(encoding="utf-8")

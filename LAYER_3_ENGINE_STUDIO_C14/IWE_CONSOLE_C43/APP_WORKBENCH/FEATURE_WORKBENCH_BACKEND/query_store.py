@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
 import sys
 import threading
 import time
@@ -94,6 +95,8 @@ class _Result:
     table_name: str
     preview: int | None = None
     pinned: bool = False
+    dependencies: frozenset[str] = frozenset()
+    released: bool = False
 
 
 class QueryStore:
@@ -326,6 +329,7 @@ class QueryStore:
             if not self._available:
                 raise WorkbenchUnavailableError("query store unavailable; Workbench restart required")
             transaction = False
+            self._graph_registration_changed = False
             try:
                 header_state, header_schema = self._replacement_header(atom_rows, header_schema)
                 if content_schema is None:
@@ -333,6 +337,7 @@ class QueryStore:
                 self._connection.execute("BEGIN TRANSACTION")
                 transaction = True
                 if self._initialized and not reuse:
+                    self.mark_graph_registration_changed()
                     self._connection.execute("DROP PROPERTY GRAPH IF EXISTS anechoic")
                     self._connection.execute("DROP SCHEMA internal CASCADE")
                     self._connection.execute("DROP TABLE main.atoms")
@@ -363,14 +368,18 @@ class QueryStore:
                     "replace", "projection", len(self._projection.atoms) + len(self._projection.scopes), started,
                 )
             except Exception as exc:
+                if not self._native or self._graph_registration_changed or is_duckdb_internal(exc):
+                    self._available = False
                 if transaction:
                     self._connection.execute("ROLLBACK")
-                if not self._native or is_duckdb_internal(exc):
-                    self._available = False
                 print(f"query store refresh failed: {exc}", file=sys.stderr)
                 if self._native and self._available:
                     raise
                 raise WorkbenchUnavailableError("query store unavailable; Workbench restart required") from exc
+
+    def mark_graph_registration_changed(self) -> None:
+        """Mark non-transactional DuckPGQ registration as potentially changed."""
+        self._graph_registration_changed = True
 
     def _replacement_header(self, atom_rows, header_schema):
         if header_schema is not None:
@@ -619,7 +628,13 @@ class QueryStore:
                 raise WorkbenchUnavailableError("query store unavailable; Workbench restart required") from exc
             print(_query_failure(exc), file=sys.stderr)
             raise QueryExecutionError(_query_failure(exc)) from exc
-        return query_id, _Result(columns, row_count, sql, stored_columns, time.monotonic(), table_name, preview)
+        try:
+            dependencies = frozenset(name.lower() for name in self._connection.get_table_names(sql))
+        except Exception:
+            dependencies = frozenset(re.findall(r"(?i)\bquery_[0-9a-f]{32}\b", sql))
+            dependencies = frozenset(name.lower() for name in dependencies)
+        return query_id, _Result(columns, row_count, sql, stored_columns, time.monotonic(), table_name,
+                                 preview, dependencies=dependencies)
 
     def _read_page(
         self, query_id: str, result: _Result, offset: int, page_size: int, grid: Grid,
@@ -688,12 +703,12 @@ class QueryStore:
         """Resolve a current result ID or its stable physical table ID."""
         table_name = selector.removeprefix("workbench_results.")
         result_id = table_name.removeprefix("query_")
-        if result_id in self._results:
+        if result_id in self._results and not self._results[result_id].released:
             return result_id
         if not table_name.startswith("query_"):
             table_name = f"query_{table_name}"
         for query_id, result in self._results.items():
-            if result.table_name == table_name:
+            if result.table_name == table_name and not result.released:
                 return query_id
         raise ValueError("unknown query_id")
 
@@ -702,9 +717,14 @@ class QueryStore:
     ) -> dict[str, tuple[str, _Result]]:
         """Stage replacement tables inside the caller's transaction and store lock."""
         selected = self.resolve_result_selector(query_id) if query_id is not None else None
+        retained = self._retained_result_tables(expire=True)
+        if selected is not None and self._results[selected].table_name.lower() not in retained:
+            raise ValueError("unknown query_id")
         affected_tables = {name.rsplit(".", 1)[-1].lower() for name in tables or ()}
         staged = {}
         for old_id, old in self._results.items():
+            if old.table_name.lower() not in retained:
+                continue
             if (selected is not None or tables is not None) and old_id != selected:
                 if not affected_tables:
                     continue
@@ -716,7 +736,7 @@ class QueryStore:
                 if not affected_tables.intersection(dependencies):
                     continue
             new_id, result = self._materialize(old.sql, old.preview, admitted=True)
-            result.created_at, result.pinned = old.created_at, old.pinned
+            result.created_at, result.pinned, result.released = old.created_at, old.pinned, old.released
             self._connection.execute(f"DROP TABLE workbench_results.{quote_identifier(old.table_name)}")
             self._connection.execute(
                 f"ALTER TABLE workbench_results.{quote_identifier(result.table_name)} "
@@ -735,17 +755,37 @@ class QueryStore:
         }
         return {old_id: {"query_id": new_id, "row_count": result.row_count,
                          "column_count": len(result.columns)}
-                for old_id, (new_id, result) in staged.items()}
+                for old_id, (new_id, result) in staged.items() if not result.released}
+
+    def _retained_result_tables(self, *, expire: bool) -> set[str]:
+        now = time.monotonic()
+        retained = {result.table_name.lower() for result in self._results.values()
+                    if not result.released and (not expire or result.pinned
+                                                or now - result.created_at < self._result_ttl_seconds)}
+        by_table = {result.table_name.lower(): result for result in self._results.values()}
+        pending = list(retained)
+        while pending:
+            result = by_table[pending.pop()]
+            for dependency in result.dependencies & by_table.keys() - retained:
+                retained.add(dependency)
+                pending.append(dependency)
+        return retained
+
+    def _prune_results(self, *, expire: bool) -> None:
+        retained = self._retained_result_tables(expire=expire)
+        for query_id, result in list(self._results.items()):
+            if result.table_name.lower() not in retained:
+                self._connection.execute(f"DROP TABLE workbench_results.{quote_identifier(result.table_name)}")
+                del self._results[query_id]
 
     def drop(self, query_id: str) -> None:
         """Release one process-local materialized result."""
         with self._lock:
-            if not isinstance(query_id, str) or query_id not in self._results:
+            if not isinstance(query_id, str) or query_id not in self._results or self._results[query_id].released:
                 raise ValueError("unknown query_id")
             try:
-                table = quote_identifier(self._results[query_id].table_name)
-                self._connection.execute(f"DROP TABLE workbench_results.{table}")
-                del self._results[query_id]
+                self._results[query_id].released = True
+                self._prune_results(expire=False)
             except Exception as exc:
                 self._available = False
                 print(f"query store unavailable: {exc}", file=sys.stderr)
@@ -768,13 +808,12 @@ class QueryStore:
     def prune_results(self) -> None:
         """Drop expired unpinned results when the existing owner performs cleanup."""
         with self._lock:
-            now = time.monotonic()
-            expired = [
-                query_id for query_id, result in self._results.items()
-                if not result.pinned and now - result.created_at >= self._result_ttl_seconds
-            ]
-            for query_id in expired:
-                self.drop(query_id)
+            try:
+                self._prune_results(expire=True)
+            except Exception as exc:
+                self._available = False
+                print(f"query store unavailable: {exc}", file=sys.stderr)
+                raise WorkbenchUnavailableError("query store unavailable; Workbench restart required") from exc
 
     def page(
         self, query_id: str, offset: int, page_size: int = 100, *, preview: int | None = None,
@@ -789,7 +828,7 @@ class QueryStore:
         with self._lock:
             if not self._available:
                 raise WorkbenchUnavailableError("query store unavailable; Workbench restart required")
-            if query_id not in self._results:
+            if query_id not in self._results or self._results[query_id].released:
                 raise ValueError("unknown query_id")
             result = self._results[query_id]
             validate_columns(parsed_grid, len(result.columns))

@@ -13,12 +13,14 @@ from typing import Any
 from workbench_tools import CHECK, PAGE, RUN, SCHEMA
 
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.audit_tables import TABLES as AUDIT_TABLES, create_tables
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.errors import WorkbenchUnavailableError
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.import_cache import (
     clear_import_sources, read_import_sources, replace_import_sources,
 )
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.import_tables import remove_imports, replace_imports
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_projection import project_native
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import NativeCapture, capture_native
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.query_admission import is_duckdb_internal
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.query_log import QueryLog
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.query_store import QueryStore
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.result_delivery import deliver, validate_delivery
@@ -66,6 +68,7 @@ ATOM_TABLES = frozenset({
 })
 REALIZATION_TABLES = frozenset({
     "import_nodes", "module_imports", "import_edges", "package_imports", "test_edges", "tested_by_edges",
+    "import_read_issues",
 })
 IMPORT_CACHE_TABLES = frozenset(f"_anechoic_import_cache.{name}" for name in ("sources", "sites", "version"))
 OBSERVATION_TABLES = frozenset({"change_log", "query_log", "live_runs", "runtime_diagnostics"})
@@ -131,15 +134,17 @@ class NativeQueryOwner(ServiceInterface):
         return previous, sources, resolve_realization(self._root, sources, roots)
 
     @staticmethod
-    def _publish_realization(connection, graph, prepared) -> None:
+    def _publish_realization(store, graph, prepared) -> None:
+        connection = store._connection
         previous, sources, facts = prepared
         replace_import_sources(connection, sources, previous)
-        replace_imports(connection, graph, *facts)
+        replace_imports(connection, graph, *facts, sources=sources,
+                        mark_graph_changed=store.mark_graph_registration_changed)
 
     def _watch_imports(self, store: QueryStore) -> None:
 
         assert self._watcher is not None
-        while not self._import_stop.is_set():
+        while not self._import_stop.is_set() and store._available:
             batch = self._watcher.changes(timeout=0.1)
             try:
                 if batch:
@@ -147,7 +152,7 @@ class NativeQueryOwner(ServiceInterface):
                         prepared = self._prepare_realization(store, changes=batch)
                         if prepared is not None:
                             with store._lock, self._transaction(store):
-                                self._publish_realization(store._connection, store._projection.graph, prepared)
+                                self._publish_realization(store, store._projection.graph, prepared)
             except Exception as error:
                 print(f"Realization Graph refresh failed. Batch discarded. {error}", file=sys.stderr)
 
@@ -158,20 +163,33 @@ class NativeQueryOwner(ServiceInterface):
                        use_retained=use_retained, before_commit=before_commit)
         return capture
 
-    def start(self) -> None:
-        runtime = self.selection.parameters.get("runtime", {})
-        workbench = runtime.get("workbench", {}) if isinstance(runtime, dict) else None
-        if not isinstance(workbench, dict):
-            raise ValueError("Project Manifest runtime.workbench must be a mapping")
-        self._realization_options = self._import_options(workbench)
+    def _open_store(self, workbench: dict) -> QueryStore:
+        from duckdb import IOException
+
         options = {key: workbench[key] for key in ("result_ttl_seconds", "schema_mode") if key in workbench}
         path = self._root / ".anechoic_runtime" / "workbench" / "projection.duckdb"
         spill = path.parent / "duckdb-temp"
         if path.resolve() != path or spill.resolve() != spill:
             raise ValueError("Workbench database and spill paths must use the Project runtime directory directly")
-        store = QueryStore(extension_directory=self._inputs.extension_directory,
-                           database_path=path, native=True, **options)
         try:
+            return QueryStore(extension_directory=self._inputs.extension_directory,
+                              database_path=path, native=True, **options)
+        except IOException as error:
+            if "Could not set lock on file" in str(error):
+                raise WorkbenchUnavailableError(
+                    "This Project is already open. Connect to its HTTP server if available."
+                ) from error
+            raise
+
+    def start(self) -> None:
+        store = None
+        try:
+            runtime = self.selection.parameters.get("runtime", {})
+            workbench = runtime.get("workbench", {}) if isinstance(runtime, dict) else None
+            if not isinstance(workbench, dict):
+                raise ValueError("Project Manifest runtime.workbench must be a mapping")
+            self._realization_options = self._import_options(workbench)
+            store = self._open_store(workbench)
             prepared = None
             if self._realization_options is not None:
                 from APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.source import excluded_source_path
@@ -185,10 +203,10 @@ class NativeQueryOwner(ServiceInterface):
 
             def finish(graph) -> None:
                 if prepared is None:
-                    remove_imports(store._connection, graph)
+                    remove_imports(store._connection, graph, mark_graph_changed=store.mark_graph_registration_changed)
                     clear_import_sources(store._connection)
                 else:
-                    self._publish_realization(store._connection, graph, prepared)
+                    self._publish_realization(store, graph, prepared)
 
             self._capture = self._project(store, use_retained=True, before_commit=finish)
             store.sync_change_log(self._change_log, initialize=True)
@@ -205,7 +223,8 @@ class NativeQueryOwner(ServiceInterface):
             if self._watcher is not None:
                 self._watcher.close()
                 self._watcher = None
-            store.close()
+            if store is not None:
+                store.close()
             raise
         self._store = store
 
@@ -222,12 +241,23 @@ class NativeQueryOwner(ServiceInterface):
     @contextmanager
     def _transaction(store: QueryStore):
         connection = store._connection
+        if not store._available:
+            raise WorkbenchUnavailableError("Workbench unavailable; restart required")
+        store._graph_registration_changed = False
         connection.execute("BEGIN TRANSACTION")
         try:
             yield
             connection.execute("COMMIT")
-        except BaseException:
-            connection.execute("ROLLBACK")
+        except BaseException as error:
+            if store._graph_registration_changed or is_duckdb_internal(error):
+                store._available = False
+            try:
+                connection.execute("ROLLBACK")
+            except Exception:
+                store._available = False
+                raise
+            if not store._available:
+                raise WorkbenchUnavailableError("Workbench unavailable; restart required") from error
             raise
 
     def _rebuild_observations(self, store: QueryStore, target: str, query_attempts) -> None:
@@ -274,15 +304,15 @@ class NativeQueryOwner(ServiceInterface):
             return "query_log", "observation", {"query_log", "query_log_records"}
         if table in OBSERVATION_TABLES or table in AUDIT_TABLES:
             return table, "observation", {table}
-        raise ValueError(f"Unknown Workbench rebuild target: {target}")
+        raise ValueError(f"Unknown Workbench rebuild target: {target!r}")
 
     def rebuild(self, target: str) -> dict[str, Any]:
         """Rebuild the selected projection and dependent tables on the existing connection."""
         with self._interface_lock:
-            store = self._owner()
-            table, scope, dependent_inputs = self._rebuild_scope(store, target)
             staged = {}
             try:
+                store = self._owner()
+                table, scope, dependent_inputs = self._rebuild_scope(store, target)
                 prepared = (self._prepare_realization(store, force_parse=scope == "all" or table in IMPORT_CACHE_TABLES)
                             if scope in ("all", "realization") and self._realization_options is not None else None)
 
@@ -291,9 +321,10 @@ class NativeQueryOwner(ServiceInterface):
                     def rebuild_dependents(graph) -> None:
                         nonlocal staged
                         if prepared is not None:
-                            self._publish_realization(store._connection, graph, prepared)
+                            self._publish_realization(store, graph, prepared)
                         elif scope == "all":
-                            remove_imports(store._connection, graph)
+                            remove_imports(store._connection, graph,
+                                           mark_graph_changed=store.mark_graph_registration_changed)
                             clear_import_sources(store._connection)
                         self._rebuild_observations(store, table, query_attempts)
                         if scope == "atoms":
@@ -301,7 +332,6 @@ class NativeQueryOwner(ServiceInterface):
                         staged = store.prepare_result_rebuild(table if scope == "result" else None,
                                                               tables=dependent_inputs)
 
-                    store.prune_results()
                     if scope in ("all", "atoms"):
                         self._capture = self._project(store, before_commit=rebuild_dependents)
                     else:
@@ -310,7 +340,7 @@ class NativeQueryOwner(ServiceInterface):
                     replaced = store.commit_result_rebuild(staged)
                     self._workspaces.replace_result_ids(replaced)
             except Exception as error:
-                print(f"Workbench rebuild failed for {target}: {error}", file=sys.stderr)
+                print(f"Workbench rebuild failed for {target!r}: {error}", file=sys.stderr)
                 raise
             return {"status": "ready", "target": target,
                     "result_ids": {old: item["query_id"] for old, item in replaced.items()}}
@@ -401,6 +431,8 @@ class NativeQueryOwner(ServiceInterface):
     def _owner(self) -> QueryStore:
         if self._store is None or self._capture is None:
             raise RuntimeError("Native query projection is unavailable")
+        if not self._store._available:
+            raise WorkbenchUnavailableError("Workbench unavailable; restart required")
         return self._store
 
     def status(self) -> dict[str, str]:

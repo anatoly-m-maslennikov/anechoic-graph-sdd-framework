@@ -17,7 +17,7 @@ def _exists(connection, name):
     ).fetchone()[0])
 
 
-def replace_imports(connection, graph, nodes, occurrences, edges, test_edges) -> None:
+def replace_imports(connection, graph, nodes, occurrences, edges, test_edges, sources=None, *, mark_graph_changed=None) -> None:
     """Replace a realization snapshot within the caller's transaction."""
     needs_registration = not _exists(connection, "test_edges")
     if not _exists(connection, "import_nodes"):
@@ -49,6 +49,9 @@ def replace_imports(connection, graph, nodes, occurrences, edges, test_edges) ->
                 f"CREATE TABLE main.{table} (source_key VARCHAR NOT NULL, target_key VARCHAR NOT NULL, "
                 "PRIMARY KEY (source_key, target_key))"
             )
+    if not _exists(connection, "import_read_issues"):
+        connection.execute("CREATE TABLE main.import_read_issues "
+                           "(relative_path VARCHAR PRIMARY KEY, error_message VARCHAR NOT NULL)")
     if not connection.execute(
         "SELECT 1 FROM information_schema.columns WHERE table_schema = 'main' "
         "AND table_name = 'import_nodes' AND column_name = 'package_type'"
@@ -60,6 +63,8 @@ def replace_imports(connection, graph, nodes, occurrences, edges, test_edges) ->
     for table, rows in (
         ("import_edges", edges), ("module_imports", occurrences), ("test_edges", test_edges),
         ("tested_by_edges", [(target, source) for source, target in test_edges]), ("import_nodes", typed_nodes),
+        ("import_read_issues", [(path, source.error_message) for path, source in (sources or {}).items()
+                                if source.status == "read_error" and source.error_message is not None]),
     ):
         connection.execute(f"DELETE FROM main.{table}")
         if rows:
@@ -67,17 +72,21 @@ def replace_imports(connection, graph, nodes, occurrences, edges, test_edges) ->
             operands = ", ".join("unnest(?)" for _ in columns)
             connection.execute(f"INSERT INTO main.{table} SELECT {operands}", columns)
     if needs_registration:
+        if mark_graph_changed is not None:
+            mark_graph_changed()
         connection.execute("DROP PROPERTY GRAPH anechoic")
         register_graph(connection, graph)
 
 
-def remove_imports(connection, graph) -> None:
+def remove_imports(connection, graph, *, mark_graph_changed=None) -> None:
     """Remove the realization snapshot within the caller's transaction."""
     if not _exists(connection, "import_nodes"):
         return
+    if mark_graph_changed is not None:
+        mark_graph_changed()
     connection.execute("DROP PROPERTY GRAPH anechoic")
     connection.execute("DROP VIEW IF EXISTS main.package_imports")
-    for table in ("test_edges", "tested_by_edges", "import_edges", "module_imports", "import_nodes"):
+    for table in ("test_edges", "tested_by_edges", "import_edges", "module_imports", "import_nodes", "import_read_issues"):
         connection.execute(f"DROP TABLE IF EXISTS main.{table}")
     register_graph(connection, graph)
 
