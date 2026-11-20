@@ -9,7 +9,7 @@ context:
 state:
   status: "draft"
   version: 19
-  updated_at: "2026-11-20T13:05:31.238025+00:00"
+  updated_at: "2026-11-20T15:54:00.952258+00:00"
 ---
 ## Summary
 
@@ -35,7 +35,7 @@ Verify Run/Check/Page and MCP/web parity: Check has metadata/errors only; Page r
 
 Use a disposable Project with a real DuckDB file. Verify startup reuse for unchanged sources and parsed imports. Add, edit, move, and delete files while Workbench is stopped. Compare the SQL tables and DuckPGQ edges after reopening. Disable the Import Graph and verify the retained import tables and graph labels are unavailable.
 
-Rebuild one table, then all tables, through Workbench, Console and MCP. Check dependent tables, views and graph in each case. Reject an invalid target before writing. After a single source-table rebuild, page an existing result. Verify disk-backed result rows, stable pages, expiry, startup cleanup, replacement IDs and old-to-new mappings for live results rebuilt from retained read-only SQL and effective execution inputs. Verify open Views and pins transfer, and save and export do not repeat. Force a rebuild failure and verify stderr and no partial publication.
+Rebuild one table, then all tables, through Workbench, Console and MCP. Check dependent tables, views and graph in each case. Reject an invalid target before writing. After a single source-table rebuild, page an existing result. Verify disk-backed result rows, stable pages, expiry, startup cleanup, replacement IDs and old-to-new mappings for live results rebuilt from retained read-only SQL and effective execution inputs. Verify open Views and pins transfer, unsynced View SQL remains intact, dependent source snapshots remain available while results are live, and save and export do not repeat. Force a rebuild failure after DuckPGQ registration may have been lost. Verify stderr, the HTTP or MCP error response, no partial publication, and owner unavailability until explicit restart. Start a second writer process and verify that it exits with an explicit lock error.
 
 ## References
 

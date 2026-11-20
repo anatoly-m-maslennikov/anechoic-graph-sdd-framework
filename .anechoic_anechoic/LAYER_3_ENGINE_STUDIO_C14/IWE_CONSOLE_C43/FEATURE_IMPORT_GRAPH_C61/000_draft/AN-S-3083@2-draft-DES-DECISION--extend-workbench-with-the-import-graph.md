@@ -10,7 +10,7 @@ context:
 state:
   status: "draft"
   version: 2
-  updated_at: "2026-11-20T14:50:57.651086+00:00"
+  updated_at: "2026-11-20T15:54:00.855257+00:00"
 ---
 
 ## Summary
@@ -22,10 +22,10 @@ Extend Workbench with the Import Graph
 ### Prose Claim
 
 Call the Workbench projection the Realization Graph. Reuse Module and Package
-node identities across import and test Relations. Record each static import
-with its source Module, written target, and file location. Resolve from
-available evidence without running Project source. Keep all four Module and
-Package import pairs, including derived Package edges and direct Package imports.
+node identities across import and test Relations. One local folder has one
+Package node across all languages. Record each static import with its source
+Module, written target, and file location. Resolve it without running source.
+Keep all four Module and Package import pairs and direct Package imports.
 
 Derive `TESTS` from a direct `<full package folder name>__tests/` subdirectory
 to its parent Package. Expose the inverse as `IS_TESTED_BY`. The directory

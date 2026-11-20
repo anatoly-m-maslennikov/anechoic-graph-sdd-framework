@@ -9,7 +9,7 @@ context:
 state:
   status: "draft"
   version: 2
-  updated_at: "2026-11-20T14:50:57.653505+00:00"
+  updated_at: "2026-11-20T15:54:00.903232+00:00"
 ---
 
 ## Summary
@@ -22,7 +22,7 @@ Verify the Import Graph through public Workbench queries
 
 Verify that the selected Project's static import facts remain correct from source selection through publication and query.
 
-1. Scan an authored Module without the executable bit, a file with zero imports, an unsupported script, an unreadable file, an invalid file, and a generated copy tracked by Git. Check inventory, exclusions, and distinct scan outcomes. Verify that unreadable and invalid files produce explicit path-specific errors on stderr and publish no import facts for the affected file. Keep unsupported scripts as ordinary inventory statuses.
+1. Scan an authored Module without the executable bit, a file with zero imports, an unsupported script, an unreadable file, an invalid file, and a generated copy tracked by Git. Check inventory, exclusions, and distinct scan outcomes. Verify that unreadable and invalid files produce explicit path-specific errors on stderr and publish no import facts for the affected file. Keep unsupported scripts as ordinary inventory statuses. Verify that a current read issue retains its path and message until a successful read or removal. Run the next ordinary scan with an unchanged fingerprint and verify a new read. Verify no automatic retry or recovery.
 2. Check absolute, relative, conditional, external, ambiguous, and unresolved imports. Check repeated imports on different lines and absence of edges for comments, exports, and dynamic loads. When frontend parsers are delivered, also check type-only, mixed, and side-effect declarations.
 3. Resolve `operation_error_boundary` from the MCP entry point with the Project-relative `FEATURE_TOOLS` source root in the configuration. When frontend parsers are available, verify `App.svelte` resolves local `.svelte` and extensionless imports and distinguishes type-only from mixed declarations.
 4. Use a Module in one Package that imports a Module in a second Package. Trace all four directed pairs to the same occurrence. Check a direct Package import, unknown Package ownership, intra-Package edges, and cycles. Compare incoming and outgoing results in Workbench and through its terminal SQL endpoint.
@@ -31,8 +31,9 @@ Verify that the selected Project's static import facts remain correct from sourc
 
 7. Use a Package with no Spec or Spec Binding and a direct
    `<full package folder name>__tests/` subdirectory. Query `TESTS` and
-   `IS_TESTED_BY` in the Realization Graph. Check the Test Package type and
-   the same Package node keys in import and test queries. Move the test
+   `IS_TESTED_BY` in the Realization Graph. Check `package_type` is `Test Package` and
+   the same Package node keys in import and test queries. Use source files in
+   different languages in one folder and verify one Package node. Move the test
    directory beside the Package, then restore and delete it. Verify that
    the test Relation follows the direct directory. Check a test file
    with zero imports.

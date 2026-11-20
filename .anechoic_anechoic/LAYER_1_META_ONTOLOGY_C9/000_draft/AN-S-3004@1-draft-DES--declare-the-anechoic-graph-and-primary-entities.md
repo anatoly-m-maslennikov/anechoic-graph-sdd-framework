@@ -7,9 +7,9 @@ context:
   tier: 3
   lens: DES
 state:
-  status: draft
+  status: "draft"
   version: 1
-  updated_at: '2026-11-18T22:04:29.828572+00:00'
+  updated_at: "2026-11-20T15:54:00.831681+00:00"
 ---
 ## Summary
 
@@ -21,8 +21,9 @@ Declare the Anechoic graph and primary entities
 
 A Model has a Graph, an eDSL, and Carriers. A Graph consists of Nodes and Relations. Artifact and Ephemeral narrow Node. Atom, Event Record, Component, and Package narrow Artifact. Spec Atom, Ticket Atom, and PMETA Atom narrow Atom. Project narrows Component; Component Package narrows Package. A Component has a Component Spec Section and a Component Package. A Package may contain Packages and Modules; a Module may contain Units. The eDSL is Python for writing Manifests; Format and Cardinality belong to the eDSL.
 
-A Test Package is a Package for test implementation. It uses the common Package
-structure and the Package node kind.
+One local folder has one Package node across all languages. A Test Package is
+a Package for test implementation. It uses the common Package structure and
+the Package node kind.
 
 A View presents information derived from source Atoms and Relations. A View is the new name for the Current Projection; Workspace and its editable SQL View belong to the Workbench model.
 

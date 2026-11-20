@@ -10,30 +10,24 @@ context:
 state:
   status: "draft"
   version: 1
-  updated_at: "2026-11-20T13:05:31.234323+00:00"
+  updated_at: "2026-11-20T15:54:00.998793+00:00"
 ---
 ## Summary
 
-Store native Workbench DuckDB data on disk
+Store native Workbench tables in one Project-local DuckDB file. Use the
+existing serialized connection and keep the database and spill files in
+the Workbench runtime directory. Project sources and the Journal remain
+authoritative for their facts.
 
-## Claim
+Validate retained data before serving queries. Reuse valid parsed imports
+and reconcile changes made while Workbench was stopped. Store live results
+in the same file and apply the existing expiry, pinning, and startup rules.
 
-### Prose Claim
-
-Store native Workbench DuckDB tables in one Project-local file.
-Use the existing Workbench owner and its serialized connection.
-Place the working database and spill files in the Workbench runtime directory.
-Project sources and the Journal remain authoritative for their facts.
-
-Validate retained data against current sources and configuration before serving queries.
-Reuse valid parsed imports and reconcile source changes made while Workbench was stopped.
-Use the same file for materialized query results during their temporary lifetime.
-Apply the existing paging, pinning, expiry, and restart rules.
-
-Provide an explicit Workbench operation to rebuild one table or all tables.
-Rebuild dependent tables by default. Publish affected views and DuckPGQ registration in the same rebuild.
-Rerun retained live results when the rebuild includes their tables. Publish a new result ID for each replacement, transfer any open View and its pin, and return old-to-new IDs to standalone callers.
-Report failures to stderr and publish no partial rebuild.
+Rebuild one table or all tables on demand, including dependent tables.
+Replace affected snapshots and keep their Views and pins attached. Return
+the replacement IDs. Report failures to stderr and the requesting client.
+Roll back failed SQL writes. Require an explicit restart if failure may
+have lost graph registration. A second writer exits with a lock error.
 
 ## References
 

@@ -9,7 +9,7 @@ context:
 state:
   status: "draft"
   version: 32
-  updated_at: "2026-11-20T13:05:31.239668+00:00"
+  updated_at: "2026-11-20T15:54:00.976078+00:00"
 ---
 ## Summary
 
@@ -43,7 +43,7 @@ Read YAML and actual Markdown headings directly, using generated declaration ass
 
 Open the Project's Workbench runtime database. Before serving queries, validate the native projection against the loaded schema, selected configuration, and current source inventory. Reuse valid data. Reconcile additions, edits, moves, deletions, and exclusions. Build from current inputs when no compatible snapshot exists.
 
-Provide an explicit owner operation to rebuild one named table or all tables. Validate the target before writing. Build the selected tables and dependent tables by default from the same input state. Rebuild affected views and graph registration from that state. Apply the result lifecycle to explicit result-table and all-table rebuilds. Publish rows, views, and any affected DuckPGQ registration together under the owner lock. Apply the existing failure boundary and report the failing target to stderr.
+Provide an explicit owner operation to rebuild one named table or all tables. Validate the target before writing. Build the selected tables and dependent tables by default from the same input state. Rebuild affected views and graph registration from that state. Apply the result lifecycle to explicit result-table and all-table rebuilds. Publish rows, views, and any affected DuckPGQ registration together under the owner lock. Apply the existing failure boundary and report the failing target to stderr and the requesting HTTP or MCP client. Roll back failed SQL writes. If failure may have lost DuckPGQ registration, leave the owner unavailable until explicit restart.
 
 ## References
 

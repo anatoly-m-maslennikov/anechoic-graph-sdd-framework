@@ -9,7 +9,7 @@ context:
 state:
   status: "draft"
   version: 1
-  updated_at: "2026-11-20T15:14:17.493311+00:00"
+  updated_at: "2026-11-20T15:54:00.809800+00:00"
 ---
 ## Summary
 
@@ -33,10 +33,11 @@ Prerequisite. Admit the native `REFERENCES` Relation and its Header target forms
 4. Update [AN-S-3086](../../../LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_IMPORT_GRAPH_C61/000_draft/AN-S-3086@2-draft-SWD--publish-and-query-the-import-graph-through-workbench.md) for persisted parsed imports.
 5. Update [AN-S-1363](../../../LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/000_draft/AN-S-1363@12-draft-SWD--keep-duckdb-projection-ownership-in-the-existing-server.md) for disk-backed temporary results.
 6. Update [AN-S-1366](../../../LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/000_draft/AN-S-1366@19-draft-QA--query-native-sql-results-and-typed-relation-expansion.md) for acceptance.
-7. Create Tier 1 Policies for rebuilding dependent tables by default and
-   providing the same Operator controls in Workbench, Console, and MCP.
-8. Update the Realization Graph Decision and its acceptance Spec. Define
-   Test Package and the test Relations in the ontology Spec.
+7. Update Policy Drafts AN-S-3156@1 and AN-S-3157@1 for dependent
+   rebuilds and the same Operator controls in Workbench, Console, and MCP.
+8. Update Realization Graph Drafts AN-S-3083@2, AN-S-3086@2, and
+   AN-S-3087@2. Define Package identity and Test Package in AN-S-3004@1.
+   Apply the test Relation rule from Current AN-S-3014@2.
 
 ## Definition of Done
 
@@ -46,8 +47,8 @@ for Packages without a Spec Binding.
 
 ## Status
 
-Disk-backed storage, table rebuilds, and the Realization Graph passed
-verification in a disposable Workbench image. The Spec remains in Draft.
+The rebuild and Realization Graph review fixes passed verification in a
+disposable Workbench image. The Spec remains in Draft.
 Citation migration requires the native `REFERENCES` Relation and a native
 binding for the legacy proposal.
 
