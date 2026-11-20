@@ -11,7 +11,7 @@ from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_cl
 from FEATURE_FORMAL_MODEL_ENGINE.scope_callback_asset import formal_claim
 from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.code_access import parse_code_access
 from native_atom_reference import derive_atom_ref
-from native_project_selection import _manifest_carriers, _manifest_inputs
+from native_project_selection import _manifest_carriers, _manifest_inputs, manifest_state_fields
 from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier
 from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext, open_regular
 from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
@@ -88,6 +88,10 @@ def _component_inputs(path, carrier, parent, prefix):
     return {"atom_id": atom, "ref_id": derive_atom_ref(atom, version, state["status"]), "version": version, "tier": 0, **fields}
 
 
+def _validation_fields(fields, carrier, model):
+    return fields | manifest_state_fields(carrier) if model.requires_atom_state else fields
+
+
 def compile_structure(selection, model) -> dict:  # noqa: C901
     """Compile the selected Project and its active Component Manifests."""
     control = Path(os.path.abspath(selection.control_root))
@@ -124,12 +128,13 @@ def compile_structure(selection, model) -> dict:  # noqa: C901
             child_dirs[cid] = root / name
         for path in reader.inventory_shallow(root):
             if _PACKAGE_SPEC_FILE.fullmatch(path.name):
-                fields = read_package_spec(path, parse_carrier(reader.read(path), path), parent, project_fields["prefix"])
+                carrier = parse_carrier(reader.read(path), path)
+                fields = read_package_spec(path, carrier, parent, project_fields["prefix"])
                 if fields is not None:
                     atom, package_id = fields["atom_id"], fields["package_id"]
                     if atom in atoms or package_id in packages:
                         raise ValueError(f"Duplicate Package or Atom ID: {path}")
-                    model.validate_package_spec(fields, parent)
+                    model.validate_package_spec(_validation_fields(fields, carrier, model), parent)
                     atoms.add(atom)
                     packages[package_id] = {
                         "component": parent, "ref": fields["ref_id"], "fields": fields,
@@ -138,13 +143,14 @@ def compile_structure(selection, model) -> dict:  # noqa: C901
                 continue
             if not _MANIFEST_FILE.fullmatch(path.name):
                 continue
-            fields = _component_inputs(path, parse_carrier(reader.read(path), path), parent, project_fields["prefix"])
+            carrier = parse_carrier(reader.read(path), path)
+            fields = _component_inputs(path, carrier, parent, project_fields["prefix"])
             if fields is None:
                 continue
             atom, cid = fields["atom_id"], fields.get("component_id")
             if not isinstance(cid, str) or not re.fullmatch(r'C[0-9]+', cid) or cid == 'C00' or cid in components or atom in atoms:
                 raise ValueError(f'Duplicate or invalid Component or Atom ID: {path}')
-            model.validate_component_manifest(fields, parent)
+            model.validate_component_manifest(_validation_fields(fields, carrier, model), parent)
             components[cid] = {'parent': parent, 'ref': fields['ref_id'], 'sha256': reader.fingerprints[str(path)], 'fields': fields, 'source_path': path.relative_to(control).as_posix()}
             atoms.add(atom)
             if cid in child_dirs:

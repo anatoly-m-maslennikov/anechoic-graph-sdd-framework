@@ -1,7 +1,7 @@
 """Explicit native binding uses the authored Manifest and preserves legacy discovery."""
 
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, datetime
 from hashlib import sha256
 from pathlib import Path
 from types import SimpleNamespace
@@ -97,6 +97,27 @@ class NativeProjectSelectionTests(unittest.TestCase):
         self.carrier("AN-S-002-PROJECT_MANIFEST--declare-anechoic.md", atom_id="AN-S-002")
         with self.assertRaisesRegex(ProjectSelectionError, "Expected one Active"):
             self.select()
+
+    def test_passes_authored_state_to_strict_model(self):
+        path = self.carrier()
+        header = path.read_text()
+
+        def check(fields, component_id):
+            fields = dict(fields)
+            self.assertEqual("active", fields.pop("status"))
+            self.assertEqual(datetime.fromisoformat("2026-11-19T00:00:00Z"), fields.pop("updated_at"))
+            return validate_manifest(fields, component_id)
+
+        def select():
+            return resolve_native_project(self.root, self.native.name, validate_manifest=check,
+                                          require_atom_state=True)
+
+        select()
+        timestamp_line = next(line for line in header.splitlines(keepends=True) if line.startswith("  updated_at:"))
+        for bad in ("", "  updated_at: invalid\n"):
+            path.write_text(header.replace(timestamp_line, bad))
+            with self.assertRaises(ProjectSelectionError):
+                select()
 
     def test_old_spec_directory_is_ignored_and_never_walked(self):
         self.carrier("SPEC/AN-S-001-PROJECT_MANIFEST--declare-anechoic.md")

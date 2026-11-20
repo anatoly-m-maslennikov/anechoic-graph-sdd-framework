@@ -7,8 +7,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 3
-  updated_at: '2026-11-20T14:42:07.157939+00:00'
+  version: 4
+  updated_at: '2026-11-20T14:52:48.784566+00:00'
 ---
 ## Summary
 
@@ -35,8 +35,10 @@ declare_entity(
     entity_kind='Property',
     relation_name='IS_PROPERTY_OF',
     base_path='Node//Artifact//Atom.State',
-    value_format=datetime | None,
-    field_options={'default': None, 'kw_only': True},
+    property_occurrence_cardinality=1,
+    value_format=datetime,
+    value_cardinality=1,
+    field_options={'kw_only': True},
 )
 ```
 

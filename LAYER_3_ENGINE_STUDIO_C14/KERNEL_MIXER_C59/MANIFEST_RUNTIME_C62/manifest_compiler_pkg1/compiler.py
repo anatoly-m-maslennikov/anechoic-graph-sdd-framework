@@ -64,7 +64,8 @@ def main() -> None:
         write_model(args.generation, bootstrap.control_root)
     sys.path.insert(0, str(args.generation))
     model = load_generation_model(args.generation)
-    selection = resolve_native_project(args.project_root, args.control_root, validate_manifest=model.validate_manifest)
+    selection = resolve_native_project(args.project_root, args.control_root, validate_manifest=model.validate_manifest,
+                                       require_atom_state=model.requires_atom_state)
     if selection.manifest_sha256 != args.project_manifest_sha256:
         raise ValueError("Project Manifest changed. Restart to apply its settings.")
     snapshot = compile_structure(selection, model)

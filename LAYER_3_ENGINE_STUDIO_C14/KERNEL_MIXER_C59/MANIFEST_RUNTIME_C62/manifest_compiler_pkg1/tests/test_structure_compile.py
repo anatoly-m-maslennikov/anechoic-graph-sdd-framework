@@ -32,6 +32,7 @@ def selection(control):
 
 class Model:
     fingerprint = 'model-fingerprint'
+    requires_atom_state = False
 
     def validate_component_manifest(self, fields, parent_id):
         assert fields['component_id'] and parent_id

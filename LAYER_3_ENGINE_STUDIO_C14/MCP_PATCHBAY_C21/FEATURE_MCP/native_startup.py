@@ -140,4 +140,5 @@ def load_native_inputs(selection, *, model=None):
         aliases = tuple(map(tuple, rows))
     elif os.path.lexists(selection.root / ".anechoic_legacy"):
         raise ProjectSelectionError("The migrated Project requires its verified native alias map")
-    return NativeQueryInputs(model.validate_manifest, model.relation_types, model.inverses, aliases)
+    return NativeQueryInputs(model.validate_manifest, model.relation_types, model.inverses, aliases,
+                             require_atom_state=model.requires_atom_state)

@@ -37,13 +37,15 @@ class NativeQueryInputs:
     inverses: Mapping[str, str]
     migration_refs: tuple[tuple[str | None, str, str], ...] = ()
     extension_directory: Path | None = None
+    require_atom_state: bool = False
 
 
 def create_native_gateway(root: Path, control_root: str, inputs: NativeQueryInputs):
     from direct_gateway import DirectGateway
     from native_project_selection import resolve_native_project
 
-    selection = resolve_native_project(root, control_root, validate_manifest=inputs.validate_manifest)
+    selection = resolve_native_project(root, control_root, validate_manifest=inputs.validate_manifest,
+                                       require_atom_state=inputs.require_atom_state)
     return DirectGateway(selection.root, native_query=NativeQueryOwner(selection, inputs))
 
 

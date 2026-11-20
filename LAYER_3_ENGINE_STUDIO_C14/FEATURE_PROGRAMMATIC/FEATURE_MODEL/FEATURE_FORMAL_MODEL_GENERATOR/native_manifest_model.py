@@ -99,8 +99,8 @@ class _NativeModel:
         parsed = _merge_constraint_claims(
             [(source, subject, parse_native_model_claim(claim)) for source, subject, claim in records]
         )
-        self._derived_refs = any(declaration["arguments"].get("derived_from_properties")
-                                 for _, _, declaration in parsed)
+        self.requires_atom_state = any(declaration["arguments"].get("derived_from_properties")
+                                       for _, _, declaration in parsed)
         module = None
         if compiled:
             model_types = {
@@ -140,10 +140,8 @@ class _NativeModel:
         self.inverses = {name: args["inverse_alias"] for name, (args, reverse) in self._endpoints.items()
                          if not reverse and "inverse_alias" in args}
 
-    def _validate(self, name, properties, relations, *, active_carrier=False):
+    def _validate(self, name, properties, relations):
         model_class = self._types[name]
-        if active_carrier and self._derived_refs:
-            properties = {**properties, "status": "active"}
         return validate_model_instance(
             model_class, properties=properties, outgoing_relations=relations,
             relation_declarations=self._bindings, model_types=self._types,
@@ -157,18 +155,18 @@ class _NativeModel:
         if component_id != "C00":
             raise ValueError("Project Manifest must be contained by Project C00")
         project = self._validate("Project", {}, {})
-        return self._validate("Project Manifest", fields, {"CONTAINED_BY": [project]}, active_carrier=True)
+        return self._validate("Project Manifest", fields, {"CONTAINED_BY": [project]})
 
     def validate_component_manifest(self, fields, parent_id):
         project = self._validate("Project", {}, {})
         parent = project if parent_id == "C00" else self._validate("Component", {}, {"CHILD_OF": [project]})
         self._validate("Component", {}, {"CHILD_OF": [parent]})
-        return self._validate("Component Manifest", fields, {"CONTAINED_BY": [parent]}, active_carrier=True)
+        return self._validate("Component Manifest", fields, {"CONTAINED_BY": [parent]})
 
     def validate_package_spec(self, fields, owner_id):
         project = self._validate("Project", {}, {})
         owner = project if owner_id == "C00" else self._validate("Component", {}, {"CHILD_OF": [project]})
-        return self._validate("Package Spec", fields, {"CONTAINED_BY": [owner]}, active_carrier=True)
+        return self._validate("Package Spec", fields, {"CONTAINED_BY": [owner]})
 
 
 def load_compiled_model(records=None):

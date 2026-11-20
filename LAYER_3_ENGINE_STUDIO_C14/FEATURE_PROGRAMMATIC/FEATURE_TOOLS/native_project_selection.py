@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import dataclass, field, replace
+from datetime import datetime
 import os
 from pathlib import Path
 import re
@@ -108,9 +109,20 @@ def _manifest_inputs(path: Path, carrier: ParsedCarrier) -> tuple[dict[str, obje
             "tier": tier, **fields}, container["component"]
 
 
+def manifest_state_fields(carrier: ParsedCarrier) -> dict[str, object]:
+    state = carrier.metadata["state"]
+    updated_at = state.get("updated_at")
+    if isinstance(updated_at, str):
+        updated_at = datetime.fromisoformat(updated_at)
+    if not isinstance(updated_at, datetime):
+        raise ValueError("Manifest State requires a datetime Updated At")
+    return {"status": state["status"], "updated_at": updated_at}
+
+
 def resolve_native_project(
     project_root: str | Path, control_root: str | Path, *,
     validate_manifest: Callable[[dict[str, object], str], ManifestIdentity],
+    require_atom_state: bool = False,
 ) -> NativeProjectSelection:
     """Validate the Manifest with the caller's compiled model and Project container."""
     root = _project_root(project_root)
@@ -127,6 +139,8 @@ def resolve_native_project(
             raise ProjectSelectionError("Expected one Active Tier -1 Project Manifest at Project root")
         path, carrier = selected
         fields, component_id = _manifest_inputs(path, carrier)
+        if require_atom_state:
+            fields.update(manifest_state_fields(carrier))
         manifest = validate_manifest(fields, component_id)
         parameters = getattr(manifest, "parameters", fields.get("parameters", {}))
         if not isinstance(parameters, dict):
