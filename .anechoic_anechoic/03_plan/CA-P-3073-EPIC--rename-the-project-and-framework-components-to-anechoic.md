@@ -251,8 +251,9 @@ Both Local Release modes passed all 312 test modules and matched all 1,108
 protected inputs. The isolated launcher selected the native Manifest at
 the final path. MCP queries and Workbench verified the staged data. The
 native MCP currently serves queries and Workbench from a startup snapshot.
-Keep the legacy MCP live until native Atom Lifecycle and Workflow commands
-pass verification in the isolated checkout.
+Keep the legacy MCP live until the installed native package passes the
+Ticket lifecycle checks in the isolated checkout. The Operator approved
+cutover on that basis. SPEC and PMETA authoring remains deferred.
 
 The Change Current Status definitions stay in SPEC. They bind the direct
 native status command. PMETA holds the Local Release and Public Release
