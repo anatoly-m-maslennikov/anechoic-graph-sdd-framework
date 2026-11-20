@@ -6,9 +6,9 @@ context:
     atom: AN-T-2791
   template: task
 state:
-  status: "active"
+  status: "done"
   version: 1
-  updated_at: "2026-11-20T08:27:45.401864+00:00"
+  updated_at: "2026-11-20T09:13:23.358225+00:00"
 ---
 ## Summary
 
