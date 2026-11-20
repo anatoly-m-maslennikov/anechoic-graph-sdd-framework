@@ -7,9 +7,9 @@ context:
   tier: 3
   template: task
 state:
-  status: "active"
+  status: "archived"
   version: 1
-  updated_at: "2026-11-20T03:20:05.385449+00:00"
+  updated_at: "2026-11-20T12:31:56.105254+00:00"
 ---
 ## Summary
 

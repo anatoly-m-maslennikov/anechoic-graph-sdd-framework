@@ -7,9 +7,9 @@ context:
   tier: 3
   template: work_report
 state:
-  status: active
+  status: "done"
   version: 1
-  updated_at: '2026-11-18T23:39:08.437801+00:00'
+  updated_at: "2026-11-20T12:19:31.293568+00:00"
 ---
 ## Summary
 
