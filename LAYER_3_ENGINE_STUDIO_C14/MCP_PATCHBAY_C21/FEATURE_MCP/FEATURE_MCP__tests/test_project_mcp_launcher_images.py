@@ -148,6 +148,17 @@ class ImageGoldenTests(unittest.TestCase):
         after = self.manager(source, no_docker).identity()
         self.assertNotEqual(before.fingerprint, after.fingerprint)
 
+    def test_test_package_stays_outside_image_identity(self) -> None:
+        source = self.source_fixture()
+        manager = self.manager(source, lambda *_a, **_k: self.fail("Docker is not needed"))
+        before = manager.identity(use_packaged_assets=True)
+        suite = source / APP.relative_to(APP.parents[2]) / "FEATURE_MCP__tests"
+        assets = suite / "assets"
+        assets.mkdir(parents=True)
+        (suite / "test_server.py").write_text("pass\n", encoding="utf-8")
+        (assets / "input.json").write_text("{}", encoding="utf-8")
+        self.assertEqual(before, manager.identity(use_packaged_assets=True))
+
     def test_backend_refuses_checkout_changed_after_image_resolution(self) -> None:
         source = self.source_fixture()
         identity = self.manager(source, lambda *_a, **_k: None).identity(use_packaged_assets=True)
