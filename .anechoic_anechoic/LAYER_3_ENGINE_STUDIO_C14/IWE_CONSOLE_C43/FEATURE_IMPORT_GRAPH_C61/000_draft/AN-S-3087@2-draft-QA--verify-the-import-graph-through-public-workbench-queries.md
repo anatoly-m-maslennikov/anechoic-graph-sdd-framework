@@ -9,7 +9,7 @@ context:
 state:
   status: "draft"
   version: 2
-  updated_at: "2026-11-20T15:54:00.903232+00:00"
+  updated_at: "2026-11-20T16:02:36.502843+00:00"
 ---
 
 ## Summary
@@ -20,23 +20,43 @@ Verify the Import Graph through public Workbench queries
 
 ### Prose Claim
 
-Verify that the selected Project's static import facts remain correct from source selection through publication and query.
+- Verify selected Project imports from source selection through SQL publication.
+- Scan an authored Module without the executable bit and a file with zero imports.
+- Include an unsupported script, unreadable source, invalid source, and generated Git copy.
+- Verify the inventory, exclusions, and distinct scan statuses.
+- Keep unsupported scripts as ordinary inventory statuses.
+- Verify stderr reports unreadable or invalid files with their paths.
+- Verify unreadable and invalid files supply no import facts.
+- Query `import_read_issues` for the current path and error message.
+- Verify the next ordinary scan reads a failed file with an unchanged fingerprint.
+- Verify that a successful read or file removal clears its issue.
+- Verify the scan does not retry or recover within the same attempt.
 
-1. Scan an authored Module without the executable bit, a file with zero imports, an unsupported script, an unreadable file, an invalid file, and a generated copy tracked by Git. Check inventory, exclusions, and distinct scan outcomes. Verify that unreadable and invalid files produce explicit path-specific errors on stderr and publish no import facts for the affected file. Keep unsupported scripts as ordinary inventory statuses. Verify that a current read issue retains its path and message until a successful read or removal. Run the next ordinary scan with an unchanged fingerprint and verify a new read. Verify no automatic retry or recovery.
-2. Check absolute, relative, conditional, external, ambiguous, and unresolved imports. Check repeated imports on different lines and absence of edges for comments, exports, and dynamic loads. When frontend parsers are delivered, also check type-only, mixed, and side-effect declarations.
-3. Resolve `operation_error_boundary` from the MCP entry point with the Project-relative `FEATURE_TOOLS` source root in the configuration. When frontend parsers are available, verify `App.svelte` resolves local `.svelte` and extensionless imports and distinguishes type-only from mixed declarations.
-4. Use a Module in one Package that imports a Module in a second Package. Trace all four directed pairs to the same occurrence. Check a direct Package import, unknown Package ownership, intra-Package edges, and cycles. Compare incoming and outgoing results in Workbench and through its terminal SQL endpoint.
-5. Edit, add, move, and delete source outside the Workbench pilot. Verify updates through the existing watcher queue. Add and remove a previously missing target and verify that resolution changes without reparsing the importing file. Verify Atom and generated-file changes cause no import parsing.
-6. Query Atom and import edges using `GRAPH_TABLE` before and after an Atom relation-layout change. Force an import publication failure. Verify that it writes an explicit error to stderr and makes no partial publication.
+- Check absolute, relative, conditional, external, ambiguous, and unresolved imports.
+- Keep repeated imports on different lines.
+- Verify comments, exports, and dynamic loads supply no import edges.
+- When frontend parsers exist, check type-only, mixed, and side-effect imports.
+- Resolve `operation_error_boundary` from MCP with `FEATURE_TOOLS` as a source root.
+- With frontend parsing, test `App.svelte` imports of local `.svelte` and extensionless paths.
+- Check all four directed Module and Package pairs against one import occurrence.
+- Check direct Package imports, unknown ownership, intra-Package edges, and cycles.
+- Compare incoming and outgoing results in Workbench and through its terminal endpoint.
 
-7. Use a Package with no Spec or Spec Binding and a direct
-   `<full package folder name>__tests/` subdirectory. Query `TESTS` and
-   `IS_TESTED_BY` in the Realization Graph. Check `package_type` is `Test Package` and
-   the same Package node keys in import and test queries. Use source files in
-   different languages in one folder and verify one Package node. Move the test
-   directory beside the Package, then restore and delete it. Verify that
-   the test Relation follows the direct directory. Check a test file
-   with zero imports.
+- Add, edit, move, and delete source outside the Workbench pilot.
+- Verify updates use the existing watcher queue.
+- Add and remove an import target. Verify it resolves again without reparsing its importer.
+- Verify changes to Atoms and generated files cause no import parsing.
+- Query Atom and import edges with `GRAPH_TABLE` before and after a graph layout change.
+- Force an import publication failure. Verify stderr and no partial publication.
+
+- Use a direct `<full package folder name>__tests/` folder.
+- Verify its Relations when the parent has no Spec or Spec Binding.
+- Query both `TESTS` and `IS_TESTED_BY` and check `package_type` is `Test Package`.
+- Check that imports and test Relations use the same Package keys.
+- Check that one folder with several source languages has one Package node.
+- Move the test directory beside the Package, restore it, and delete it.
+- Verify the test Relation follows the direct test directory.
+- Check a test file with zero imports.
 
 ## References
 

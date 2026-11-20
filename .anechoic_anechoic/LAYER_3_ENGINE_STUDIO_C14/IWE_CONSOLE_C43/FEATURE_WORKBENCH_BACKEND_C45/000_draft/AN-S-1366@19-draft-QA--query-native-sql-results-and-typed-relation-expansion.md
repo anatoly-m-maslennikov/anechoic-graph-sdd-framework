@@ -9,7 +9,7 @@ context:
 state:
   status: "draft"
   version: 19
-  updated_at: "2026-11-20T15:54:00.952258+00:00"
+  updated_at: "2026-11-20T16:01:36.075384+00:00"
 ---
 ## Summary
 
@@ -33,9 +33,25 @@ Verify Run/Check/Page and MCP/web parity: Check has metadata/errors only; Page r
 
 ### Disk-backed Workbench and explicit rebuilds
 
-Use a disposable Project with a real DuckDB file. Verify startup reuse for unchanged sources and parsed imports. Add, edit, move, and delete files while Workbench is stopped. Compare the SQL tables and DuckPGQ edges after reopening. Disable the Import Graph and verify the retained import tables and graph labels are unavailable.
-
-Rebuild one table, then all tables, through Workbench, Console and MCP. Check dependent tables, views and graph in each case. Reject an invalid target before writing. After a single source-table rebuild, page an existing result. Verify disk-backed result rows, stable pages, expiry, startup cleanup, replacement IDs and old-to-new mappings for live results rebuilt from retained read-only SQL and effective execution inputs. Verify open Views and pins transfer, unsynced View SQL remains intact, dependent source snapshots remain available while results are live, and save and export do not repeat. Force a rebuild failure after DuckPGQ registration may have been lost. Verify stderr, the HTTP or MCP error response, no partial publication, and owner unavailability until explicit restart. Start a second writer process and verify that it exits with an explicit lock error.
+- Use a disposable Project with a real DuckDB file.
+- Verify that startup reuses unchanged source data and parsed imports.
+- Add, edit, move, and delete sources while Workbench is stopped.
+- Compare SQL tables and DuckPGQ edges after reopening.
+- Disable the Realization Graph. Verify that its tables and labels are unavailable.
+- Rebuild one table and all tables through Workbench, Console, and MCP.
+- Check dependent tables, views, and graph registration for each rebuild.
+- Verify that invalid targets fail before writes and produce stderr and a response.
+- Verify disk-backed rows, stable pages, expiry, and startup cleanup.
+- Verify that live results keep the source snapshots they need.
+- Verify that rebuild uses the last executed SQL and effective options.
+- Page the replacement result with its new ID after an affected source table rebuilds.
+- Check the returned ID map and transfer of View bindings and pins.
+- Check that unsynced View SQL stays intact.
+- Verify that rebuild repeats neither save nor export.
+- Force a failure after graph registration may have changed.
+- Verify stderr, the HTTP or MCP error response, and SQL rollback.
+- Verify that query serving requires an explicit restart after that failure.
+- Start a second writer and verify that it exits with an explicit lock error.
 
 ## References
 

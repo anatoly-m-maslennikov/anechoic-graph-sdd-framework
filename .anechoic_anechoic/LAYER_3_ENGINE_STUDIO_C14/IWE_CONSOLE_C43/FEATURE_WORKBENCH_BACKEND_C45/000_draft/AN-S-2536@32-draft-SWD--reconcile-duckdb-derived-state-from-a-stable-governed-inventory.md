@@ -9,7 +9,7 @@ context:
 state:
   status: "draft"
   version: 32
-  updated_at: "2026-11-20T15:54:00.976078+00:00"
+  updated_at: "2026-11-20T16:01:36.073285+00:00"
 ---
 ## Summary
 
@@ -41,9 +41,18 @@ Read YAML and actual Markdown headings directly, using generated declaration ass
 
 ### Native startup and on-demand rebuild
 
-Open the Project's Workbench runtime database. Before serving queries, validate the native projection against the loaded schema, selected configuration, and current source inventory. Reuse valid data. Reconcile additions, edits, moves, deletions, and exclusions. Build from current inputs when no compatible snapshot exists.
-
-Provide an explicit owner operation to rebuild one named table or all tables. Validate the target before writing. Build the selected tables and dependent tables by default from the same input state. Rebuild affected views and graph registration from that state. Apply the result lifecycle to explicit result-table and all-table rebuilds. Publish rows, views, and any affected DuckPGQ registration together under the owner lock. Apply the existing failure boundary and report the failing target to stderr and the requesting HTTP or MCP client. Roll back failed SQL writes. If failure may have lost DuckPGQ registration, leave the owner unavailable until explicit restart.
+- Open the Project-local Workbench database.
+- Validate retained data against the loaded schema, settings, and sources.
+- Reuse valid data. Rebuild from current inputs when retained data is incompatible.
+- Reconcile added, edited, moved, deleted, and excluded inputs before serving queries.
+- Let the Operator rebuild one named table or all tables.
+- Validate the target before writing.
+- Build selected and dependent tables from the same input state.
+- Publish rows, views, and graph registration under the owner lock.
+- Apply the result lifecycle when a rebuild affects result tables.
+- Report the failing target to stderr and in the HTTP or MCP error response.
+- Roll back failed SQL writes.
+- Require an explicit restart if a failed rebuild may have invalidated the graph.
 
 ## References
 

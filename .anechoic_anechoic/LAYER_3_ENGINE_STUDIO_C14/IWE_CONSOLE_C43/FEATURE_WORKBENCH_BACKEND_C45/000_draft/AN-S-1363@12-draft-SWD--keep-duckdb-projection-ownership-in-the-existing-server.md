@@ -9,7 +9,7 @@ context:
 state:
   status: "draft"
   version: 12
-  updated_at: "2026-11-20T15:54:00.926389+00:00"
+  updated_at: "2026-11-20T16:02:36.442879+00:00"
 ---
 ## Summary
 
@@ -23,15 +23,36 @@ The derived DuckDB Projection and query results for one Project.
 
 ### Prose Claim
 
-Keep one serialized DuckDB owner in the existing application. Use the delivered database and spill locations. Store materialized result rows in disk-backed tables in the same Project database. The result lifecycle determines when the owner removes those tables. Each live result retains the source snapshots it depends on until the result is released.
+- Use one serialized Workbench owner and the delivered database and spill paths.
+- A second writer process exits with an explicit lock error.
+- Serialize refresh, Run, Page, and Check in the existing owner.
+- Add no database server, queue, planner, scheduler, or worker.
+- Keep parsed-source rows and signatures for incremental refresh.
+- Remove cached parse data for deleted, excluded, or invalid sources.
+- Treat later source changes as new input.
+- Add no configuration staging, second cache, or discarded-state restoration.
 
-Materialize each Run once. Page reads use that materialized result, including after source refresh; execution and delivery retain their separate failure boundaries.
+- Materialize each Run once in a disk-backed result table.
+- Page reads the snapshot, including after an ordinary source refresh.
+- Keep execution and delivery failures separate.
+- Measure the startup TTL with a monotonic clock.
+- Keep a result while it is young, pinned by its View, or needed by a live result.
+- Keep source snapshots through every level of a live result's dependencies.
+- Closing a View unpins its snapshot. The normal retention rules still apply.
+- Add no heartbeat, cross-process lease, or crash recovery.
+- Keep the snapshot when the Operator edits View SQL.
+- Release the prior result ID when a valid rerun starts, even if execution fails.
+- Clear result tables, IDs, and View bindings at startup.
+- Remove an unrevealed result if first-page conversion fails.
+- Report later conversion or export errors. Keep the known result ID.
 
-Use the delivered startup TTL to keep a result while it is young or pinned by its open owner View. Measure age with a monotonic clock. Add no heartbeat, cross-process lease or crash recovery. Closing unpins but does not evict a young result. Editing View SQL preserves its last result until valid rerun starts; then release it before native execution, even if SQL fails. Startup clears old results; IDs do not survive restart. First-page conversion failure removes an unrevealed result; later conversion/export failure preserves the known ID and reports the delivery error.
-
-Keep each live result's read-only SQL and effective execution inputs for an explicit rebuild. Do not repeat save or export. Rebuild one selected result or every live result in an all-table rebuild after its inputs are current. Publish a new ID for each replacement, transfer its open owner View and pin, preserve unsynced View SQL, and return old-to-new IDs to standalone callers together with the publication.
-
-A second writer process exits with an explicit lock error. Serialize refresh, Run, Page and Check through this owner synchronously. Do not add a database server, queue, planner, scheduler or worker. Retain parsed-source rows/signatures for incremental refresh; remove cache for deleted, excluded or invalid sources and treat a later actual change as new input. No configuration staging, second cache or discarded-state restoration is added.
+- Rebuild affected live snapshots from the last executed SQL and effective options.
+- Use current inputs when rebuilding one result table or all tables.
+- Rebuild source snapshots before their dependents.
+- Publish replacement IDs, View bindings, and pins together.
+- Preserve unsynced View SQL when its snapshot changes.
+- Return the old-to-new ID map to the caller.
+- Repeat neither save nor export during a rebuild.
 
 ## References
 
