@@ -19,7 +19,11 @@ Define an ordinary Package Spec
 
 ### Prose Claim
 
-An ordinary Package needs one PKG Spec Atom when its boundary is specified. The Atom records its stable package ID, a short Purpose, and a Contract, and belongs in the owning Component’s Spec Section. Use a lens allowed by that Component’s effective whitelist. The Spec Atom retains its own stable Atom ID when its lens or name changes; the package ID is separate from its descriptive name. Place the specified Package immediately under its Component Package in Realization and include the package ID in the directory name, for example `create_order_pkg3344`. An ordinary Package may later become a Component.
+A **Specified Package**, also called a **Specified PKG**, is an ordinary Package in Realization whose boundary is defined by exactly one Package Spec (PKG Spec Atom).
+
+The Package Spec records the Package’s stable ID, a short Purpose, and a Contract. It belongs in the owning Component’s Spec Section. Use a lens allowed by that Component’s effective whitelist. The Spec Atom retains its own stable Atom ID when its lens or name changes. The package ID is separate from its descriptive name.
+
+Place the Specified Package immediately under its Component Package in Realization and include the package ID in the directory name, for example `create_order_pkg3344`. An ordinary Package may later become a Component.
 
 ## Details
 
