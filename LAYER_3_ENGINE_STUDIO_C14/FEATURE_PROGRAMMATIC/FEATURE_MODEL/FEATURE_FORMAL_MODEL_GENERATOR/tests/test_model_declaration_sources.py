@@ -326,9 +326,37 @@ class ConstraintClaimMergeTests(unittest.TestCase):
                 "applies_to_entity_classes": ("Node//Child",)}
         records.append(("property", "MODEL//ANECHOIC <+ Node//Child.Flag", {"arguments": prop}))
         _check_manifest_property_bearers(records)
+        records[-1] = ("property", "MODEL//ANECHOIC <+ Node.Flag", {"arguments": prop})
+        with self.assertRaisesRegex(ValueError, r"expected .*Node//Child.Flag.*actual Node.Flag"):
+            _check_manifest_property_bearers(records)
+        prop.update(entity_name="Version", base_path="Node.State")
+        records[-1] = ("property", "MODEL//ANECHOIC <+ Node//Child.State.Version", {"arguments": prop})
+        _check_manifest_property_bearers(records)
+        records[-1] = ("property", "MODEL//ANECHOIC <+ Node//Child.Version", {"arguments": prop})
+        with self.assertRaisesRegex(ValueError, r"expected .*Node//Child.State.Version.*actual Node//Child.Version"):
+            _check_manifest_property_bearers(records)
         prop["applies_to_entity_classes"] = ("Unknown//Child",)
         with self.assertRaisesRegex(ValueError, "unresolved Property refinement owner"):
             _check_manifest_property_bearers(records)
+
+    def test_property_scope_matches_bearer_name_and_refinement(self):
+        from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.model_declaration_sources import (
+            _check_manifest_property_bearers,
+        )
+
+        owner = ("owner", "MODEL//ANECHOIC <+ Node//Atom",
+                 {"arguments": {"entity_kind": "Primary", "entity_name": "Atom"}})
+        prop = {"entity_kind": "Property", "entity_name": "Version", "base_path": "Node//Atom.State"}
+        def check(subject):
+            _check_manifest_property_bearers([owner, ("property", "MODEL//ANECHOIC <+ " + subject,
+                                                       {"arguments": prop})])
+        check("Node//Atom.State.Version")
+        with self.assertRaisesRegex(ValueError, r"expected .*Node//Atom.State.Version.*actual Node//Atom.State.Other"):
+            check("Node//Atom.State.Other")
+        with self.assertRaisesRegex(ValueError, r"expected .*Node//Atom.State.Version.*actual Node//Atom.Version"):
+            check("Node//Atom.Version")
+        prop.update(entity_name="Atom ID", base_path="Node//Atom.Identity")
+        check("Node//Atom.Identity.Atom ID")
 
     def test_constraints_are_merged_without_mutating_primary(self):
         from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.model_declaration_sources import _merge_constraint_claims

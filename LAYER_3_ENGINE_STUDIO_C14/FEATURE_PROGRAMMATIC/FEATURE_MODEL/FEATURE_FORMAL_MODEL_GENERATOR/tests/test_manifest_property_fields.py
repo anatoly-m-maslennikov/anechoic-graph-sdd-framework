@@ -1,6 +1,7 @@
 """Separate Primary and Property declarations compile into public classes."""
 
 import importlib
+from dataclasses import asdict
 from pathlib import Path
 import sys
 from tempfile import TemporaryDirectory
@@ -28,21 +29,23 @@ def prop(name, base, extra=""):
 class ManifestPropertyFieldsTests(unittest.TestCase):
     def claims(self):
         atom = "Node//Artifact//Atom"
-        return [primary("Node"), primary("Artifact", "Node"), primary("Atom", "Artifact"),
-                primary("Plan", "Atom"),
-                prop("Atom ID", atom, ", value_format=str"),
+        return [primary("Node"), primary("Artifact", "Node"),
+                primary("Atom", "Artifact", extra=", identity_properties=('Identity.Atom ID',)"),
+                primary("Plan", "Atom", extra=", identity_properties=('State.Version',)"),
+                prop("Identity", atom, ", value_cardinality=0, allowed_dependent_property_names=('Atom ID',)"),
+                prop("Atom ID", atom + ".Identity", ", value_format=str"),
                 prop("State", atom, ", value_cardinality=0, "
                      "allowed_dependent_property_names=('Version', 'Status', 'Updated At')"),
                 prop("Version", atom + ".State", ", value_format=int, minimum_value=1"),
-                prop("Status", atom + ".State", ", value_format=str | None, "
-                     "field_options={'default': None, 'kw_only': True}, allowed_values=('Draft', 'Active')"),
+                prop("Status", atom + ".State", ", value_format=str, "
+                     "field_options={'kw_only': True}, allowed_values=('draft', 'active')"),
                 prop("Updated At", atom + ".State", ", value_format=datetime"),
                 prop("Tags", atom, ", value_format=list[str] | None, field_options={'default': None, 'kw_only': True}"),
                 prop("Attributes", atom, ", value_format=dict[str, str], field_options={'default_factory': dict, 'kw_only': True}"),
-                prop("Ref ID", atom, ", value_format=str, field_options={'default': '', 'kw_only': True}, "
-                     "derived_from_properties=('Atom ID', 'State.Version', 'State.Status')"),
+                prop("Ref ID", atom, ", value_format=str, "
+                     "derived_from_properties=('Identity.Atom ID', 'State.Version', 'State.Status')"),
                 prop("Status", atom + ".State", ", applies_to_entity_classes=('Node//Artifact//Atom//Plan',), "
-                     "allowed_values=('Active',)")]
+                     "allowed_values=('draft', 'active', 'done')")]
 
     def test_aggregate_and_modules_emit_fields_on_correct_classes(self):
         claims = self.claims()
@@ -62,22 +65,26 @@ class ManifestPropertyFieldsTests(unittest.TestCase):
                     plan = importlib.import_module("model_fixture.plan").Plan
                     self.assertTrue(issubclass(plan, atom))
                     self.assertEqual(set(atom.__dataclass_fields__),
-                                     {"atom_id", "version", "status", "updated_at", "tags", "attributes", "ref_id"})
+                                     {"atom_id", "version", "status", "updated_at", "tags", "attributes"})
                     self.assertEqual(atom.__dataclass_fields__["version"].metadata["minimum_value"], 1)
-                    self.assertEqual(plan.__dataclass_fields__["status"].metadata["allowed_values"], ("Active",))
+                    self.assertEqual(plan.__dataclass_fields__["status"].metadata["allowed_values"], ("draft", "active", "done"))
                     self.assertIs(atom.__dataclass_fields__["attributes"].default_factory, dict)
                     self.assertTrue(atom.__dataclass_fields__["tags"].kw_only)
                     from datetime import datetime
                     values = {"atom_id": "AN-S-1", "version": 2, "updated_at": datetime.now()}
-                    self.assertEqual(atom(**values, status="draft").ref_id, "AN-S-1@2-draft")
-                    self.assertEqual(plan(**values, status="active").ref_id, "AN-S-1@2")
-                    self.assertEqual(atom(**values, status="active", ref_id="AN-S-1@2").ref_id, "AN-S-1@2")
-                    with self.assertRaisesRegex(ValueError, "disagrees"):
+                    instance = plan(**values, status="draft")
+                    self.assertEqual(instance.ref_id, "AN-S-1@2-draft")
+                    instance.status = "active"
+                    self.assertEqual(instance.ref_id, "AN-S-1@2")
+                    instance.version = 3
+                    instance.status = "archived"
+                    self.assertEqual(instance.ref_id, "AN-S-1@3")
+                    self.assertNotIn("ref_id", asdict(instance))
+                    self.assertNotIn("ref_id", vars(instance))
+                    with self.assertRaises(AttributeError):
+                        instance.ref_id = "incorrect"
+                    with self.assertRaisesRegex(TypeError, "ref_id"):
                         atom(**values, status="active", ref_id="incorrect")
-                    with self.assertRaisesRegex(ValueError, "requires status"):
-                        atom(**values)
-                    with self.assertRaisesRegex(ValueError, "requires status"):
-                        atom(**values, ref_id="AN-S-1@2")
                 finally:
                     for name in list(sys.modules):
                         if name == "model_fixture" or name.startswith("model_fixture."):
@@ -88,21 +95,37 @@ class ManifestPropertyFieldsTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "whitelisted"):
             assemble_model_classes(claims + [primary("Bad", extra=", instance_population_cardinality=1")])
         with self.assertRaisesRegex(ValueError, "subclass"):
-            assemble_model_classes(claims + [prop("Atom ID", "Node//Artifact//Atom", ", applies_to_entity_classes=('Node',)")])
+            assemble_model_classes(claims + [prop("Atom ID", "Node//Artifact//Atom.Identity", ", applies_to_entity_classes=('Node',)")])
         with self.assertRaisesRegex(ValueError, "ambiguous"):
             assemble_model_classes(claims + [primary("Other", entity_name="Atom")])
-        with self.assertRaisesRegex(ValueError, "State requires"):
+        with self.assertRaisesRegex(ValueError, "State: expected declared children"):
             assemble_model_classes([claim for claim in claims if "entity_name='Updated At'" not in claim])
-        with self.assertRaisesRegex(ValueError, "State requires declared"):
+        with self.assertRaisesRegex(ValueError, "State: expected declared children"):
             assemble_model_classes([claim.replace("('Version', 'Status', 'Updated At')", "('Version', 'Status')")
                                     for claim in claims])
-        with self.assertRaisesRegex(ValueError, "declared under State"):
+        with self.assertRaisesRegex(ValueError, "must be declared at State"):
             assemble_model_classes(claims + [prop("UpdatedAt", "Node//Artifact//Atom", ", value_format=datetime")])
         with self.assertRaisesRegex(ValueError, "identity Property does not exist"):
             assemble_model_classes([primary("Base", extra=", identity_properties=('Missing',)")])
         with self.assertRaisesRegex(ValueError, "requires its derived"):
-            assemble_model_classes([claim.replace(", derived_from_properties=('Atom ID', 'State.Version', 'State.Status')", "")
+            assemble_model_classes([claim.replace(", derived_from_properties=('Identity.Atom ID', 'State.Version', 'State.Status')", "")
                                     for claim in claims])
+        with self.assertRaisesRegex(ValueError, "cannot be redeclared"):
+            assemble_model_classes(claims + [prop("Ref ID", "Node//Artifact//Atom//Plan", ", value_format=str")])
+
+    def test_identity_resolves_every_segment_from_the_primary_entity(self):
+        claims = self.claims()
+        for path in ("Atom ID", "Imaginary.Atom ID", "State.Atom ID", "Atom.Identity.Atom ID"):
+            with self.subTest(path=path), self.assertRaisesRegex(ValueError, "identity Property does not exist"):
+                assemble_model_classes([claim.replace("identity_properties=('Identity.Atom ID',)",
+                                                     f"identity_properties=({path!r},)") for claim in claims])
+        nested = [primary("Entity", extra=", identity_properties=('Identity.Revision.Version',)"),
+                  prop("Identity", "Entity", ", value_cardinality=0, allowed_dependent_property_names=('Revision',)"),
+                  prop("Revision", "Entity.Identity", ", value_cardinality=0, allowed_dependent_property_names=('Version',)"),
+                  prop("Version", "Entity.Identity.Revision", ", value_format=int")]
+        self.assertIn("version: int", assemble_model_classes(nested))
+        with self.assertRaisesRegex(ValueError, "Unresolved Property group bearer"):
+            assemble_model_classes([nested[0], nested[1], nested[3]])
 
     def test_override_replaces_default_options(self):
         claims = [primary("Base"), primary("Child", "Base"),

@@ -7,8 +7,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-20T14:19:22.784671+00:00'
+  version: 2
+  updated_at: '2026-11-20T16:02:18.721582+00:00'
 ---
 
 ## Summary
@@ -25,15 +25,21 @@ The identity rule names the Properties that identify an instance. The class
 body has no fields. The class bases declare inheritance.
 
 Declare each Property in its own Manifest. A Property uses `IS_PROPERTY_OF`
-to name its bearer and declares its value type and cardinality. A subtype
-inherits each applicable Property. It can narrow the original Property by
-declaring a constraint scoped to the subtype. Model constraints name their
-owning Entity in a separate declaration.
+to name its explicit bearer and declares its value type and cardinality.
+The Claim scope matches the Property name and its bearer or subtype target.
+Property paths in identity and derivation rules are relative to the nearest
+Primary Entity. Nested Properties resolve through their declared bearers.
+A subtype inherits each applicable Property. It can tighten or loosen the
+original Property by declaring a constraint scoped to the subtype. Model
+constraints name their owning Entity in a separate declaration.
 
-Atom owns the State group. State owns Version, Status, and Updated At.
-Atom ID identifies the Atom across revisions. Ref ID is a derived Property
-that combines Atom ID and State.Version. It adds `-draft` if State.Status is
-Draft. An Active revision keeps its exact Ref ID when it is Archived.
+Atom owns the Identity and State groups. Identity owns Atom ID. State owns
+Version, Status, and Updated At. Identity stays in the Atom Header, including
+its `identity.atom_id` field. Atom ID identifies the Atom across revisions.
+Ref ID is a separate derived Property. Model objects compute it on read
+from Atom ID and State.Version. It adds `-draft` if State.Status is Draft.
+An Active revision keeps its exact Ref ID when it is Archived. Atom
+Carriers store only the input Properties.
 
 ## References
 

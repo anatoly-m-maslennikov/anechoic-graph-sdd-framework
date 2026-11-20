@@ -7,8 +7,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 17
-  updated_at: '2026-11-20T14:42:07.157939+00:00'
+  version: 18
+  updated_at: '2026-11-20T16:02:18.721582+00:00'
 ---
 
 ## Summary
@@ -34,6 +34,6 @@ declare_entity(
     entity_name='Atom',
     entity_class=Atom,
     entity_kind='Primary',
-    identity_properties=('Atom ID', 'Ref ID'),
+    identity_properties=('Identity.Atom ID',),
 )
 ```

@@ -4,6 +4,7 @@ import sys
 import tempfile
 from pathlib import Path
 import unittest
+from dataclasses import dataclass
 from unittest.mock import patch
 
 from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR import native_manifest_model
@@ -27,6 +28,28 @@ class NativeManifestModelTests(unittest.TestCase):
             self.model.validate_manifest(fields | {"ref_id": "AN-S-123@2"}, "C00")
         with self.assertRaisesRegex(ValueError, "Project C00"):
             self.model.validate_manifest(fields, "C01")
+
+    def test_derived_ref_id_input_is_checked_and_not_passed_to_constructor(self):
+        @dataclass
+        class StrictAtom:
+            atom_id: str
+            version: int
+
+            @property
+            def ref_id(self):
+                return f"{self.atom_id}@{self.version}"
+
+        def validate(cls, *, properties, **kwargs):
+            return cls(**properties)
+
+        with patch.dict(self.model._types, {"Strict": StrictAtom}), patch.object(
+            native_manifest_model, "validate_model_instance", side_effect=validate
+        ):
+            fields = {"atom_id": "AN-S-123", "version": 1, "ref_id": "AN-S-123@1"}
+            self.assertEqual(self.model._validate("Strict", fields, {}).ref_id, fields["ref_id"])
+            self.assertIn("ref_id", fields)
+            with self.assertRaisesRegex(ValueError, "differs from derived"):
+                self.model._validate("Strict", fields | {"ref_id": "AN-S-123@2"}, {})
 
     def test_containment_is_checked_by_the_reviewed_model(self):
         project = self.model._validate("Project", {}, {})

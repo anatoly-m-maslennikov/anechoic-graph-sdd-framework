@@ -261,16 +261,22 @@ def _check_manifest_property_bearers(parsed):
     owners = {model_class_target(subject, args["entity_name"])
               for _, subject, declaration in parsed
               if (args := declaration["arguments"]).get("entity_kind") == "Primary"}
-    for source, _, declaration in parsed:
+    for source, subject, declaration in parsed:
         args = declaration["arguments"]
         if args.get("entity_kind") != "Property":
             continue
         bearer = args.get("base_path")
-        if not isinstance(bearer, str) or bearer.removesuffix(".State") not in owners:
+        if not isinstance(bearer, str) or bearer.split(".", 1)[0] not in owners:
             raise ValueError(f"{source}: unresolved Property bearer: {bearer}")
         scoped = args.get("applies_to_entity_classes", ())
         if not isinstance(scoped, tuple) or any(not isinstance(path, str) or path not in owners for path in scoped):
             raise ValueError(f"{source}: unresolved Property refinement owner: {scoped}")
+        suffix = bearer[len(bearer.split(".", 1)[0]):]
+        expected = tuple(f"{owner}{suffix if scoped else ''}.{args['entity_name']}"
+                         for owner in (scoped or (bearer,)))
+        actual = _canonical_address(subject)
+        if actual not in expected:
+            raise ValueError(f"{source}: Property scope mismatch: expected {expected}, actual {actual}")
 
 
 def _check_relation_references(records: list[tuple[str, str, str]]) -> None:

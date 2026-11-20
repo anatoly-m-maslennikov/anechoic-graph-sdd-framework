@@ -7,8 +7,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 5
-  updated_at: '2026-11-20T14:42:07.157939+00:00'
+  version: 6
+  updated_at: '2026-11-20T16:02:18.721582+00:00'
 ---
 
 ## Summary
@@ -34,6 +34,10 @@ declare_entity(
     value_format=str,
     value_cardinality=1,
     property_occurrence_cardinality=1,
-    derived_from_properties=('Atom ID', 'State.Version', 'State.Status'),
+    derived_from_properties=('Identity.Atom ID', 'State.Version', 'State.Status'),
 )
 ```
+
+### Prose Claim
+
+Ref ID is computed on read and is not persisted.

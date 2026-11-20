@@ -7,8 +7,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-20T14:42:07.157939+00:00'
+  version: 2
+  updated_at: '2026-11-20T16:02:18.721582+00:00'
 ---
 
 ## Summary
@@ -17,7 +17,7 @@ Declare Atom ID
 
 ## Claim scope
 
-MODEL//ANECHOIC <+ Node//Artifact//Atom.Atom ID
+MODEL//ANECHOIC <+ Node//Artifact//Atom.Identity.Atom ID
 
 ## Claim
 
@@ -30,7 +30,7 @@ declare_entity(
     entity_name='Atom ID',
     entity_kind='Property',
     relation_name='IS_PROPERTY_OF',
-    base_path='Node//Artifact//Atom',
+    base_path='Node//Artifact//Atom.Identity',
     value_format=str,
     value_cardinality=1,
     property_occurrence_cardinality=1,

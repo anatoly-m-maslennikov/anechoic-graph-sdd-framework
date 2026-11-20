@@ -142,7 +142,11 @@ class _NativeModel:
 
     def _validate(self, name, properties, relations):
         model_class = self._types[name]
-        return validate_model_instance(
+        has_supplied_ref = "ref_id" in properties and isinstance(getattr(model_class, "ref_id", None), property)
+        if has_supplied_ref:
+            supplied_ref = properties["ref_id"]
+            properties = {key: value for key, value in properties.items() if key != "ref_id"}
+        instance = validate_model_instance(
             model_class, properties=properties, outgoing_relations=relations,
             relation_declarations=self._bindings, model_types=self._types,
             checks=dict(self._checks[base.__name__] for base in model_class.__mro__
@@ -150,6 +154,9 @@ class _NativeModel:
             population_declarations=self._population, population_peers={self._types["Atom"]: ()},
             endpoint_registry=self._endpoints,
         )
+        if has_supplied_ref and supplied_ref != instance.ref_id:
+            raise ValueError("ref_id: supplied value differs from derived Ref ID")
+        return instance
 
     def validate_manifest(self, fields, component_id):
         if component_id != "C00":

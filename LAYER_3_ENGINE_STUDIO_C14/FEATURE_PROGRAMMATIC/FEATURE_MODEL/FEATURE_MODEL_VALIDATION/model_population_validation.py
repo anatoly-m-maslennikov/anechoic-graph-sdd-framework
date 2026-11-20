@@ -10,7 +10,9 @@ def _property_value(instance, path, *, optional=False):
     value = instance
     for segment in path.split("."):
         name = re.sub(r"[ -]+", "_", segment).lower()
-        if isinstance(value, type) or not is_dataclass(value) or name not in {field.name for field in fields(value)}:
+        if (isinstance(value, type) or not is_dataclass(value)
+                or (name not in {field.name for field in fields(value)}
+                    and not (name == "ref_id" and isinstance(getattr(type(value), name, None), property)))):
             raise ValueError(f"{path}: declared Property is unavailable")
         value = getattr(value, name, None)
         if value is None and optional:

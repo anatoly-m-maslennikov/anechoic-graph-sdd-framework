@@ -68,6 +68,22 @@ class ModelPopulationValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "uniqueness violated"):
             validate_population_uniqueness(Atom, proposed, [atom("CA-R-1", 2, "Active")], rules)
 
+    def test_derived_ref_id_is_unique_across_peers(self):
+        @dataclass
+        class StrictAtom:
+            atom_id: str
+            version: int
+
+            @property
+            def ref_id(self):
+                return f"{self.atom_id}@{self.version}"
+
+        rules = ({"keys": ("Ref ID",)},)
+        proposed = StrictAtom("AN-S-1", 1)
+        validate_population_uniqueness(StrictAtom, proposed, [StrictAtom("AN-S-1", 2)], rules)
+        with self.assertRaisesRegex(ValueError, "uniqueness violated"):
+            validate_population_uniqueness(StrictAtom, proposed, [StrictAtom("AN-S-1", 1)], rules)
+
 
 if __name__ == "__main__":
     unittest.main()
