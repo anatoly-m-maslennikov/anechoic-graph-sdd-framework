@@ -8,8 +8,12 @@ context:
   lens: DevOps
 state:
   status: active
-  version: 17
-  updated_at: 2026-11-10 20:47:54 +0400
+  version: 18
+  updated_at: '2026-11-20T16:34:57.901983+00:00'
+relations:
+  REFERENCES:
+  - AN-S-3116@1
+  - AN-S-1351
 ---
 
 ## Summary
@@ -24,13 +28,13 @@ The Project-local DuckDB runtime files, bundled dependencies and container deliv
 
 ### Prose Claim
 
-Deliver the rebuildable DuckDB database at `.anechoic_runtime/workbench/projection.duckdb` in the selected repository. Keep internal materialized query results and owned spill data in that runtime directory. Rebuild source tables and clear old results at startup. Do not store source-byte copies, intermediate schema files or a second source of truth.
+Deliver the rebuildable DuckDB database at `.anechoic_runtime/workbench/projection.duckdb` in the selected repository. Keep all native Workbench tables in that database, including temporary result and runtime observation tables. Keep spill data in the same runtime directory. Validate and reconcile retained native projections at normal startup before serving queries. Clear prior result tables and IDs at startup. Do not store source-byte copies, intermediate schema files or a second source of truth.
 
-Expose `main.atoms` and `main.scope_units` as public source tables and `main.change_log` as the technical watcher log. Internal graph mappings and generated result tables are disposable implementation state. Source files remain authoritative and unchanged by queries.
+Expose `main.atoms` as a public source table and `main.change_log` as the technical watcher log. Legacy Workbench also exposes `main.scope_units`; native Workbench uses its native inventory. Internal graph mappings and generated result tables are disposable implementation state. Source files remain authoritative and unchanged by queries.
 
 Transient result tables remain disposable state; the shared backend owner controls their retention and release.
 
-Read the editable `.anechoic_runtime/anechoic_runtime_settings.toml` at Workbench start. For example:
+Read native Workbench settings from the selected Project Manifest at startup. Legacy Workbench reads the editable `.anechoic_runtime/anechoic_runtime_settings.toml` at startup. For example:
 
 ```toml
 [workbench]
@@ -39,7 +43,7 @@ result_ttl_seconds = 3600
 
 `result_ttl_seconds` must be a positive integer; a missing file uses the 3,600-second default for this delivery, while an existing invalid file is a startup configuration failure reported on stderr rather than silently defaulted. An explicit `workbench_restart`/reread is required to apply an edited file; no hot reload is required. The runtime settings file is outside the watcher `control_root` and does not create a `change_log` event. MCP setting editing and new configuration Tools are deferred.
 
-Bundle DuckDB `2.0.0` and its compatible DuckPGQ extension in the existing application image. Load the extension and grammar at trusted startup without downloading it at runtime. Disable external access and lock public configuration after startup. Admit native read queries only; trusted internal source refresh and result materialization use native write transactions with COMMIT. Do not add application retries, rollback or automatic recovery.
+Bundle DuckDB `2.0.0` and its compatible DuckPGQ extension in the existing application image. Load the extension and grammar at trusted startup without downloading it at runtime. Disable external access and lock public configuration after startup. Admit native read queries only; trusted internal source refresh and result materialization use native write transactions with COMMIT. Roll back failed SQL writes. Add no application retry or automatic recovery.
 
 Build Svelte + TypeScript + Vite assets during image construction and serve the static output through Python. No Node server is needed at runtime. Deliver `/anechoic/workbench/<project_name>`, `/anechoic/mcp` and `/anechoic/health` on the configured listener.
 

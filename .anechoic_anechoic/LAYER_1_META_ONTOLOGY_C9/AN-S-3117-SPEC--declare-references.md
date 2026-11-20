@@ -6,9 +6,9 @@ context:
     component: C9
   lens: SPEC
 state:
-  status: draft
+  status: "active"
   version: 1
-  updated_at: '2026-11-20T14:13:02.133321+00:00'
+  updated_at: "2026-11-20T16:37:26.178362+00:00"
 ---
 
 ## Summary
@@ -39,4 +39,7 @@ declare_relation(
 
 ## Details
 
-Admit the Relation to the native Model before authoring citations that use it. Verify that Workbench publishes direct edges to a base Atom ID and an exact Draft reference. Resolve legacy citations through an admitted native migration binding.
+- Admit the Relation before authoring citations.
+- Verify direct Workbench edges to a base Atom ID and an exact Draft reference.
+- Quote the label as `"REFERENCES"` in `GRAPH_TABLE` patterns.
+- Resolve legacy citations through an admitted native migration binding.

@@ -8,9 +8,13 @@ context:
   lens: DES
   template: DECISION
 state:
-  status: "draft"
+  status: active
   version: 1
-  updated_at: "2026-11-20T16:01:36.068880+00:00"
+  updated_at: '2026-11-20T16:34:57.901983+00:00'
+relations:
+  REFERENCES:
+  - AN-S-2565
+  - AN-S-348
 ---
 ## Summary
 
@@ -32,7 +36,3 @@ Store native Workbench DuckDB data on disk
 - Roll back failed SQL writes.
 - Require an explicit restart if a failure may have invalidated graph registration.
 - Make a second writer exit with an explicit lock error.
-
-## References
-
-[DuckDB runtime storage AN-S-2565](../DEVOPS/AN-S-2565-DEVOPS--deliver-duckdb-atom-content-property-and-relation-records.md), [Single Source of Truth AN-S-348](../../../../LAYER_1_META_ONTOLOGY_C9/DES/AN-S-348-DES--define-single-source-of-truth.md)

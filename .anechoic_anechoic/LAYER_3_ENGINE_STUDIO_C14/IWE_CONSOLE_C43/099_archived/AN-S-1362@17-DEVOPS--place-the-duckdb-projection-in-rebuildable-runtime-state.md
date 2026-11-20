@@ -7,9 +7,9 @@ context:
   tier: 4
   lens: DevOps
 state:
-  status: "draft"
-  version: 19
-  updated_at: "2026-11-20T13:04:25.526422+00:00"
+  status: archived
+  version: 17
+  updated_at: 2026-11-10 20:47:54 +0400
 ---
 
 ## Summary
@@ -24,13 +24,13 @@ The Project-local DuckDB runtime files, bundled dependencies and container deliv
 
 ### Prose Claim
 
-Deliver the rebuildable DuckDB database at `.anechoic_runtime/workbench/projection.duckdb` in the selected repository. Keep all native Workbench tables in that database, including temporary result and runtime observation tables. Keep spill data in the same runtime directory. Validate and reconcile retained native projections at normal startup before serving queries. Clear prior result tables and IDs at startup. Do not store source-byte copies, intermediate schema files or a second source of truth.
+Deliver the rebuildable DuckDB database at `.anechoic_runtime/workbench/projection.duckdb` in the selected repository. Keep internal materialized query results and owned spill data in that runtime directory. Rebuild source tables and clear old results at startup. Do not store source-byte copies, intermediate schema files or a second source of truth.
 
-Expose `main.atoms` as a public source table and `main.change_log` as the technical watcher log. Legacy Workbench also exposes `main.scope_units`; native Workbench uses its native inventory. Internal graph mappings and generated result tables are disposable implementation state. Source files remain authoritative and unchanged by queries.
+Expose `main.atoms` and `main.scope_units` as public source tables and `main.change_log` as the technical watcher log. Internal graph mappings and generated result tables are disposable implementation state. Source files remain authoritative and unchanged by queries.
 
 Transient result tables remain disposable state; the shared backend owner controls their retention and release.
 
-Read native Workbench settings from the selected Project Manifest at startup. Legacy Workbench reads the editable `.anechoic_runtime/anechoic_runtime_settings.toml` at startup. For example:
+Read the editable `.anechoic_runtime/anechoic_runtime_settings.toml` at Workbench start. For example:
 
 ```toml
 [workbench]
@@ -50,7 +50,3 @@ Include the locked `pytz` dependency in the Workbench runtime group so native Du
 Exclude the frontend’s local `node_modules` dependency cache from release packages. Deliver its package manifest, lockfile and source, and build production assets in the image. Dependency-cache symlinks are not authored package input.
 
 Keep delivered service implementation, retained rebuildable database/index state and disposable indexing/build scratch separate from governed sources. Retained derived state remains non-authoritative and records its source-frontier references. Apply the existing Project Temporary State boundary to disposable scratch and build intermediates; keep the database, internal results and owned spill data at their declared Workbench runtime location. These storage choices grant no source-mutation capability.
-
-## References
-
-[Disk storage Decision AN-S-3116](../FEATURE_WORKBENCH_BACKEND_C45/000_draft/AN-S-3116@1-draft-DES-DECISION--store-native-workbench-duckdb-data-on-disk.md), [Explicit Workbench restart AN-S-1351](../DES/AN-S-1351-DES--workbench-can-restart-without-restarting-mcp.md)
