@@ -377,11 +377,12 @@ class NativeLifecycleProvider:
             value = await anyio.to_thread.run_sync(self.owner.lifecycle, name, arguments)
         response = _result(value)
         if response['status'] == 'completed':
-            for field in ('savedDraft', 'artifact'):
-                if field in value:
-                    response[field] = value[field]
-            if name == 'atom_lifecycle_update' and 'savedDraft' in response:
-                response['status'] = 'draft_created'
+            if 'savedDraft' in value:
+                response['savedDraft'] = value['savedDraft']
+                if name == 'atom_lifecycle_update':
+                    response['status'] = 'draft_created'
+            if name == 'atom_lifecycle_promote_draft' and 'artifact' in value:
+                response['artifact'] = value['artifact']
         return response
 
     async def close(self):
