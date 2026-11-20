@@ -7,9 +7,9 @@ context:
   tier: 3
   lens: DES
 state:
-  status: draft
+  status: "draft"
   version: 1
-  updated_at: '2026-11-18T22:05:10.875678+00:00'
+  updated_at: "2026-11-20T14:45:28.417339+00:00"
 ---
 ## Summary
 
@@ -26,8 +26,20 @@ The Package sidecar is the Spec Binding file. Store it at the Package root as
 YAML keys `implements` and `applies` for the two binding types. Each key has a
 list of exact Atom version pins. Omit a key when its list has no entries.
 
+Each `implements` entry records `IMPLEMENTS` from the Realization Package
+to the pinned Spec Atom. Read the inverse as `IS_IMPLEMENTED_BY`.
+
+For a Component Package or Specified Package, recognize its direct
+`<full package folder name>__tests/` subdirectory as its Test Package.
+Derive `TESTS` from the Test Package to its parent Realization Package.
+Read the inverse as `IS_TESTED_BY`.
+
 ## Details
 
 Acceptance: a sidecar associates an existing module under the selected Project root with the exact revision of a Spec Atom; a path that does not resolve to existing Realization fails the binding check. A mapped passing test supports only the behavior it exercises.
+
+A direct `create_order_pkg3344__tests/` directory supplies one `TESTS`
+edge to `create_order_pkg3344`. A similarly named sibling or deeper
+directory supplies no such edge.
 
 Sources: CA-A-1463@1-draft, CA-A-1465@1-draft. Task: CA-P-3083.
