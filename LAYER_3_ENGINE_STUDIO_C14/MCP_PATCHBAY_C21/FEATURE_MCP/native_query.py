@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass
+import os
 from pathlib import Path, PurePosixPath
 import re
 import sys
@@ -240,6 +241,7 @@ class NativeQueryOwner(ServiceInterface):
                 self._watcher = SourceWatcher(
                     self._root, self._root / self.selection.control_relative,
                     implementation_root=self._root, exclude_directory=excluded_source_path,
+                    poll_bind_mount=os.environ.get("ANECHOIC_RUNTIME_NAMESPACE") == "docker",
                 )
                 self._watcher.start()
                 prepared = self._prepare_realization(store)

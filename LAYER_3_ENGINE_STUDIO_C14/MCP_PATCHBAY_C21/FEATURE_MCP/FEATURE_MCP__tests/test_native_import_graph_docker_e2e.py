@@ -48,6 +48,7 @@ class NativeImportGraphDockerE2E(unittest.TestCase):
             "--name", f"anechoic-import-graph-canary-{uuid4().hex}",
             "--label", "anechoic.test=import-graph-canary",
             "--read-only", "--tmpfs", "/tmp:rw,nosuid,nodev,size=256m",
+            "--pids-limit", "128", "--cpus", "1",
             "--publish", "127.0.0.1::8092", "--volume", f"{cls.root}:/project:rw",
             "--env", "ANECHOIC_RUNTIME_NAMESPACE=docker", "--env", f"ANECHOIC_CONTROL_ROOT={control}",
             image, "mcp-http",
@@ -182,6 +183,17 @@ class NativeImportGraphDockerE2E(unittest.TestCase):
         self._wait_rows(sql, [["external"]])
         manifest.unlink()
         self._wait_rows(sql, [["unresolved"]])
+
+    def test_watcher_stays_live_when_many_host_directories_appear(self):
+        for index in range(80):
+            (self.root / f"app/churn/branch_{index}").mkdir(parents=True)
+        relative = "app/churn/branch_79/main.py"
+        target = self._write(relative, "import dep.helper\n")
+        sql = f"SELECT resolution_status FROM module_imports WHERE source_key = 'module:{relative}'"
+        self._wait_rows(sql, [["internal"]])
+        target.write_text("import missing_canary_resource\n", encoding="utf-8")
+        self._wait_rows(sql, [["unresolved"]])
+        self.assertEqual((200, {"ready": True}), request(self.url + HEALTH_PATH))
 
     def test_ignored_files_and_parse_errors_appear_as_expected(self):
         self._write("generated/ignored.py", "import dep\n")

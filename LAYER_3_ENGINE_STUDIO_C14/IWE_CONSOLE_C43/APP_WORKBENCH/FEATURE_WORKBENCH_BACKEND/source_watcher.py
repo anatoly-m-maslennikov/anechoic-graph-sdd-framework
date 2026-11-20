@@ -17,6 +17,7 @@ NativeObserver: Callable[[], Any] | None
 try:
     from watchdog.events import FileSystemEventHandler
     from watchdog.observers import Observer
+    from watchdog.observers.polling import PollingObserverVFS
     NativeObserver = Observer
 except ImportError:  # Tests can inject an Observer without an installed runtime dependency.
     FileSystemEventHandler = object  # type: ignore[assignment,misc]
@@ -33,6 +34,7 @@ class SourceWatcher:
         self, root: Path, control_root: Path,
         *, implementation_root: Path | None = None, observer_factory: Callable[[], Any] | None = None,
         exclude_directory: Callable[[str], bool] | None = None,
+        poll_bind_mount: bool = False,
     ) -> None:
         self._root = Path(root).absolute()
         self._control_root = Path(control_root).absolute()
@@ -47,6 +49,7 @@ class SourceWatcher:
         self._resolved_roots = tuple(path.resolve() for path in self._roots)
         self._observer_factory = observer_factory
         self._exclude_directory = exclude_directory if self._root in self._roots else None
+        self._poll_bind_mount = poll_bind_mount
         self._observer: Any = None
         self._changes: Queue[Change] = Queue()
         self._watched_directories: dict[Path, Any] = {}
@@ -57,10 +60,11 @@ class SourceWatcher:
         factory = self._observer_factory or NativeObserver
         if factory is None:
             raise RuntimeError("watchdog runtime is unavailable")
-        observer = factory()
+        # Docker bind mounts can misclassify directories and exhaust watcher threads.
+        observer = PollingObserverVFS(os.lstat, self._source_entries) if self._poll_bind_mount else factory()
         try:
             for path in self._roots:
-                filtered = self._exclude_directory is not None and path == self._root
+                filtered = not self._poll_bind_mount and self._exclude_directory is not None and path == self._root
                 self._watched_directories[path] = observer.schedule(_Handler(self), str(path), recursive=not filtered)
                 if filtered:
                     for child in path.iterdir():
@@ -74,6 +78,14 @@ class SourceWatcher:
             self._watched_directories = {}
             raise
         self._observer = observer
+
+    def _source_entries(self, directory: str):
+        exclude = self._exclude_directory
+        relative = Path(directory).relative_to(self._root)
+        with os.scandir(directory) as entries:
+            for entry in entries:
+                if exclude is None or not exclude((relative / entry.name).as_posix()):
+                    yield entry
 
     def changes(self, timeout: float) -> list[Change]:
         try:
@@ -136,6 +148,8 @@ class SourceWatcher:
             self._watched_directories[directory] = watch
 
     def _watch_directory_tree(self, path: str) -> None:
+        if self._poll_bind_mount:
+            return
         if self._exclude_directory is not None:
             candidate = Path(path)
             if not candidate.is_absolute() or not candidate.is_relative_to(self._root) or ".." in candidate.parts:
