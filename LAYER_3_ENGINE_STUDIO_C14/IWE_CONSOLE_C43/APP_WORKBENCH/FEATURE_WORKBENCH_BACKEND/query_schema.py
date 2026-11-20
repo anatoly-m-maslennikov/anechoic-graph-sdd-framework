@@ -16,7 +16,8 @@ def public_schema(connection: Any, header_schema: HeaderSchema) -> dict[str, dic
     tables: dict[str, list[dict[str, Any]]] = {}
     for name in ("atoms", "scope_units", "relations", "change_log", "query_log", "live_runs", "runtime_diagnostics",
                  "implementation_objects", "implementation_rmedo", "import_nodes", "module_imports", "import_edges", "package_imports", "test_edges", "tested_by_edges", "import_read_issues", ARCHIVE_VERSION_MAX, ARCHIVE_ROLE_MAX, "atom_version_max",
-                 *AUDIT_TABLES, "native_references", "native_legacy_references", "native_migration_paths"):
+                 *AUDIT_TABLES, "native_references", "native_legacy_references", "native_migration_paths",
+                 "component_metrics"):
         rows = connection.execute(
             "SELECT column_name, data_type FROM information_schema.columns "
             "WHERE table_schema = 'main' AND table_name = ? ORDER BY ordinal_position", [name],

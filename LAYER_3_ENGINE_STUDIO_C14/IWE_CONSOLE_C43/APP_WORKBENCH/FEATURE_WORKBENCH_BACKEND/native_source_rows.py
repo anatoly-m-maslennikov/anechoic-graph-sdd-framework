@@ -56,6 +56,7 @@ def _carrier_row(path: Path, root: Path, family: str, prefix: str, raw: bytes) -
     view = {"atom_id": atom_id, "version": version, "status": status,
             "tier": context.get("tier"), "updated_at": state.get("updated_at")}
     row = atom(path, root, header, view, source_body(raw, path), group)
+    row["_source_bytes"] = len(raw)
     row["_exact_ref"] = exact
     canonical_row(row)
     edge = {"source_kind": "Atom", "source_ref": row["ref"], "relation_type": "CONTAINED_BY",

@@ -4,6 +4,7 @@ import asyncio
 from contextlib import redirect_stderr
 from dataclasses import replace
 from io import StringIO
+import json
 from pathlib import Path
 import subprocess
 from types import SimpleNamespace
@@ -37,7 +38,7 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
         path.write_text(text, encoding="utf-8")
         return path
 
-    async def _gateway(self, *, enabled=True):
+    async def _gateway(self, *, enabled=True, structure_snapshot=None):
         inputs = fixture._native_inputs()
 
         def validate(fields, component):
@@ -47,6 +48,9 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
                                    parameters={"runtime": {"workbench": workbench}})
 
         gateway = create_native_gateway(self.root, fixture.CONTROL, replace(inputs, validate_manifest=validate))
+        if structure_snapshot is not None:
+            selected = replace(gateway.selection, structure_snapshot=structure_snapshot)
+            gateway.selection = gateway._native_query.selection = selected
         with patch("APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_watcher.NativeObserver",
                    lambda: PollingObserver(timeout=.05)):
             await gateway.initialize()
@@ -178,6 +182,43 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
             async with asyncio.timeout(6):
                 while await pins() != [module]:
                     await asyncio.sleep(.03)
+
+    async def test_component_ratios_follow_formal_test_assets(self):
+        self._source("src/UNIT_C1/main.py", "pass\npass\n")
+        self._source("src/UNIT_C1/tests/test_legacy.py", "pass\n")
+        self._source("src/UNIT_C1/UNIT_C1__tests/test_main.py", "pass\n")
+        asset = self._source("src/UNIT_C1/UNIT_C1__tests/assets/input.txt", "x\n")
+        body = "## Summary\n\nDescribe C1.\n"
+        spec = self._source(f"{fixture.CONTROL}/UNIT_C1/AN-S-007-SPEC--description.md", (
+            "---\nidentity: {atom_id: AN-S-007}\ncontext: {container: {component: C1}, lens: SPEC}\n"
+            "state: {status: active, version: 1}\n---\n" + body
+        ))
+        structure = self._source(".anechoic_tmp/structure.json", json.dumps({
+            "model_sha256": "fixture", "project": {"ref": "AN-S-001@1", "sha256": "fixture"},
+            "components": {"C1": {"parent": "C00", "ref": "AN-S-006@1", "sha256": "fixture",
+                                  "source_path": "AN-S-006-SPEC-COMPONENT_MANIFEST--unit.md",
+                                  "fields": {"name": "Unit"}}},
+        }))
+        gateway = await self._gateway(structure_snapshot=structure)
+
+        async def ratios():
+            response = await gateway.call(None, types.CallToolRequestParams(name="query_run", arguments={
+                "sql": "SELECT denominator, realization_kb, realization_lines, spec_full_kb_ratio, "
+                       "spec_body_kb_ratio, spec_body_lines_ratio FROM component_metrics "
+                       "WHERE component_id = 'C1' ORDER BY denominator", "result_delivery": "inline",
+            }))
+            self.assertFalse(response.is_error, response.structured_content)
+            return response.structured_content["rows"]
+
+        populations = {"implementation": (10, 2), "implementation_and_tests": (17, 4),
+                       "test_assets": (2, 1), "test_code": (5, 1), "tests": (7, 2)}
+        expected = [[kind, size / 1000, lines, spec.stat().st_size / size, len(body) / size, 3 / lines]
+                    for kind, (size, lines) in sorted(populations.items())]
+        self.assertEqual(expected, await ratios())
+        asset.unlink()
+        async with asyncio.timeout(6):
+            while (await ratios())[2] != ["test_assets", 0.0, 0, None, None, None]:
+                await asyncio.sleep(.03)
 
     async def test_import_publication_failure_reports_stderr_once(self):
         self._source("src/from_source.py", "import to_source\n")

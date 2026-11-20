@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import re
 import sys
 import threading
@@ -18,7 +18,7 @@ from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.import_cache import (
     clear_import_sources, read_import_sources, replace_import_sources,
 )
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.import_tables import remove_imports, replace_imports
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_projection import project_native
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_projection import project_native, replace_component_metrics
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import NativeCapture, capture_native
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.query_admission import is_duckdb_internal
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.query_log import QueryLog
@@ -71,11 +71,17 @@ ATOM_TABLES = frozenset({
 })
 REALIZATION_TABLES = frozenset({
     "import_nodes", "module_imports", "import_edges", "package_imports", "test_edges", "tested_by_edges",
-    "import_read_issues", "implementation_rmedo",
+    "import_read_issues", "implementation_rmedo", "component_metrics",
 })
 IMPORT_CACHE_TABLES = frozenset(f"_anechoic_import_cache.{name}" for name in ("sources", "sites", "version"))
 OBSERVATION_TABLES = frozenset({"change_log", "query_log", "live_runs", "runtime_diagnostics"})
 QUERY_TABLES = ATOM_TABLES | REALIZATION_TABLES | OBSERVATION_TABLES | frozenset(AUDIT_TABLES)
+
+
+def _test_asset_change(root: Path, relative: str) -> bool:
+    parts = (root.name, *PurePosixPath(relative).parts)
+    return any(test == parent + "__tests" and child == "assets"
+               for parent, test, child in zip(parts, parts[1:], parts[2:]))
 
 
 class NativeQueryOwner(ServiceInterface):
@@ -132,9 +138,11 @@ class NativeQueryOwner(ServiceInterface):
         with store._lock:
             previous = read_import_sources(store._connection)
         if changes is not None:
-            traces_changed = any(is_trace_path(path) for change in changes for key in ("old_path", "new_path")
-                                 if (path := change.get(key)) is not None)
-            if not traces_changed and not relevant_change(self._root, changes, previous):
+            measurements_changed = any(
+                is_trace_path(path) or _test_asset_change(self._root, path)
+                for change in changes for key in ("old_path", "new_path") if (path := change.get(key)) is not None
+            )
+            if not measurements_changed and not relevant_change(self._root, changes, previous):
                 return None
         sources = capture(self._root, None if force_parse else previous, include, changes=changes)
         facts = resolve_realization(self._root, sources, roots)
@@ -149,6 +157,25 @@ class NativeQueryOwner(ServiceInterface):
                         mark_graph_changed=store.mark_graph_registration_changed)
         replace_native_traces(connection, traces)
 
+    def _publish_component_metrics(self, store: QueryStore, capture: NativeCapture) -> None:
+        from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.component_metrics import measure_components
+
+        connection = store._connection
+        if self._realization_options is None:
+            connection.execute("DROP TABLE IF EXISTS main.component_metrics")
+            return
+        nodes = connection.execute(
+            "SELECT node_key, kind, language, relative_path, scan_status, package_key FROM main.import_nodes"
+        ).fetchall()
+        tests = connection.execute("SELECT source_key, target_key FROM main.test_edges").fetchall()
+        sources = read_import_sources(connection)
+        try:
+            measurements = measure_components(self.selection, capture, sources, nodes, tests)
+        except (OSError, RuntimeError, ValueError) as error:
+            print(f"Component metrics unavailable: {error}", file=sys.stderr)
+            measurements = []
+        replace_component_metrics(connection, measurements)
+
     def _watch_imports(self, store: QueryStore) -> None:
 
         assert self._watcher is not None
@@ -161,14 +188,22 @@ class NativeQueryOwner(ServiceInterface):
                         if prepared is not None:
                             with store._lock, self._transaction(store):
                                 self._publish_realization(store, store._projection.graph, prepared)
+                                self._publish_component_metrics(store, self._capture)
             except Exception as error:
                 print(f"Realization Graph refresh failed. Batch discarded. {error}", file=sys.stderr)
 
     def _project(self, store: QueryStore, *, use_retained=False, before_commit=None) -> NativeCapture:
         capture = capture_native(self.selection)
+
+        def finish(graph) -> None:
+            if before_commit is None:
+                self._publish_component_metrics(store, capture)
+            else:
+                before_commit(graph, capture)
+
         project_native(store, capture, relation_types=self._inputs.relation_types,
                        inverses=self._inputs.inverses, migration_refs=self._inputs.migration_refs,
-                       use_retained=use_retained, before_commit=before_commit)
+                       use_retained=use_retained, before_commit=finish)
         return capture
 
     def _open_store(self, workbench: dict) -> QueryStore:
@@ -209,13 +244,14 @@ class NativeQueryOwner(ServiceInterface):
                 self._watcher.start()
                 prepared = self._prepare_realization(store)
 
-            def finish(graph) -> None:
+            def finish(graph, capture) -> None:
                 if prepared is None:
                     remove_imports(store._connection, graph, mark_graph_changed=store.mark_graph_registration_changed)
                     clear_import_sources(store._connection)
                     remove_native_traces(store._connection)
                 else:
                     self._publish_realization(store, graph, prepared)
+                self._publish_component_metrics(store, capture)
 
             self._capture = self._project(store, use_retained=True, before_commit=finish)
             store.sync_change_log(self._change_log, initialize=True)
@@ -304,7 +340,7 @@ class NativeQueryOwner(ServiceInterface):
                                      "internal.native_frontier"}
         atom_tables |= {f"internal.{name[1:-1]}" for name in store._projection.graph.tables.values()}
         if table in atom_tables:
-            return table, "atoms", atom_tables | set(AUDIT_TABLES) | {"anechoic"}
+            return table, "atoms", atom_tables | set(AUDIT_TABLES) | {"anechoic", "component_metrics"}
         if table in REALIZATION_TABLES or table in IMPORT_CACHE_TABLES:
             if self._realization_options is None:
                 raise ValueError("Realization Graph is disabled")
@@ -327,7 +363,7 @@ class NativeQueryOwner(ServiceInterface):
 
                 observations = self._query_log.snapshot() if table in ("all", "query_log") else nullcontext([])
                 with observations as query_attempts, store._lock:
-                    def rebuild_dependents(graph) -> None:
+                    def rebuild_dependents(graph, capture) -> None:
                         nonlocal staged
                         if prepared is not None:
                             self._publish_realization(store, graph, prepared)
@@ -339,6 +375,8 @@ class NativeQueryOwner(ServiceInterface):
                         self._rebuild_observations(store, table, query_attempts)
                         if scope == "atoms":
                             create_tables(store._connection)
+                        if scope in ("all", "atoms", "realization"):
+                            self._publish_component_metrics(store, capture)
                         staged = store.prepare_result_rebuild(table if scope == "result" else None,
                                                               tables=dependent_inputs)
 
@@ -346,7 +384,7 @@ class NativeQueryOwner(ServiceInterface):
                         self._capture = self._project(store, before_commit=rebuild_dependents)
                     else:
                         with self._transaction(store):
-                            rebuild_dependents(store._projection.graph)
+                            rebuild_dependents(store._projection.graph, self._capture)
                     replaced = store.commit_result_rebuild(staged)
                     self._workspaces.replace_result_ids(replaced)
             except Exception as error:
