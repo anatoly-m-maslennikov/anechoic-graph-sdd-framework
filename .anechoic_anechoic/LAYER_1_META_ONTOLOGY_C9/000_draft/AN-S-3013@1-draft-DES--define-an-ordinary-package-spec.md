@@ -25,8 +25,22 @@ The Package Spec records the Package’s stable ID, a short Purpose, and a Contr
 
 Place the Specified Package immediately under its Component Package in Realization and include the package ID in the directory name, for example `create_order_pkg3344`. An ordinary Package may later become a Component.
 
+If a Specified Package has tests, put them in a sibling directory under the same
+Component Package. To get the test directory name, append `__tests` to the
+complete Specified Package directory name, including its package ID.
+
+Put test assets, including fixtures and corpora, in the `assets/` subtree of the
+test directory. Classify all files in that subtree as test assets, including
+source files used as test inputs. Put test source files outside `assets/` within
+the test directory and classify them as test code. Test total is the sum of test
+code and test assets.
+
 ## Details
 
 Acceptance: a PKG Spec in an owning Component’s Spec Section records package ID `pkg3344`, a short Purpose, and a Contract under an enabled lens; `create_order_pkg3344` is directly under the Component Package. Moving it beneath another ordinary Package fails the stated placement.
+
+The test directory for `create_order_pkg3344` is its sibling
+`create_order_pkg3344__tests`. Classify `test_create_order.py` in that directory
+as test code and `assets/input.py` as a test asset.
 
 Sources: CA-A-1462@1-draft, CA-A-1463@1-draft. Task: CA-P-3083.
