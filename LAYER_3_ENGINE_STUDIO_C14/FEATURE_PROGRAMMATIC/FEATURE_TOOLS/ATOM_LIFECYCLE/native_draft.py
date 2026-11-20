@@ -338,6 +338,58 @@ def _promote_new(selection, target, status, draft, current_rows):
         return common.result(effects=recorded, errors=removed.errors, **data)
 
 
+def _publish_first_pinned_spec(selection, draft, structure_snapshot):
+    atom_id, ref_id = draft['id'], draft['_exact_ref']
+    relative, digest = draft.get('source_path'), draft.get('_source_sha256')
+    if (not isinstance(relative, str) or not isinstance(digest, str)
+            or not re.fullmatch(r'[0-9a-f]{64}', digest)):
+        raise common.SourceChanged('Draft capture lacks a valid path or digest.')
+    relative = Path(relative)
+    path = selection.root / relative
+    if (relative.is_absolute() or '..' in relative.parts or not path.is_relative_to(selection.control_root)
+            or path.parent.name != '000_draft' or not re.fullmatch(re.escape(ref_id) + r'-.+\.md', path.name)):
+        raise common.InputError('target', 'Select a Spec in its native Draft directory.')
+    with _project_write_lock(selection.root):
+        try:
+            capture = capture_native(selection)
+            history = [row for row in capture.atoms if row['id'] == atom_id]
+            matching = [row for row in history if row['_exact_ref'] == ref_id]
+            if capture.errors or matching != [draft] or any(row['status_group'] != 'Draft' for row in history):
+                raise common.SourceChanged('Spec Draft changed or the identity has published revisions.')
+            header = draft['header_json']
+            context = header['context']
+            lens = context.get('lens')
+            if (context.get('template') is not None or not isinstance(lens, str)
+                    or not re.fullmatch(r'[A-Z][A-Z0-9_]*(/[A-Z][A-Z0-9_]*)*', lens.upper())):
+                raise common.InputError('target', 'Select a Spec Draft with a lens and without a structural template.')
+            owner = path.parent.parent
+            directory = owner if lens.upper() == 'SPEC' else owner.joinpath(*lens.upper().split('/'))
+            destination = directory / (atom_id + path.name[len(ref_id):])
+            proposed = {**draft, 'source_path': destination.relative_to(selection.root).as_posix(), 'status': 'active'}
+            if _revision_root(selection, proposed, structure_snapshot) != owner:
+                raise common.InputError('target', 'Spec Draft and Current carrier must belong to the same Component.')
+            if destination.exists() or destination.is_symlink():
+                raise common.InputError('target', 'The promotion destination already exists.')
+            reader = ReadContext(roots=[str(selection.control_root)], limits=dict(CEILINGS))
+            raw = reader.read(path)
+            bounds = frontmatter_bounds(raw)
+            if (bounds is None or sha256(raw).hexdigest() != digest or raw[bounds[2]:] != draft['_content_bytes']
+                    or parse_carrier(raw, path).metadata != header or reader.currentness()['state'] != 'unchanged'):
+                raise common.SourceChanged('Spec Draft source changed after selection.')
+            body = raw[bounds[2]:].decode('utf-8')
+            _summary(body)
+            version = max(row['version'] for row in history) + 1
+            promoted = _state_bytes(raw, bounds, path, version, body, 'active')
+        except (common.InputError, common.SourceChanged):
+            raise
+        except (OSError, RuntimeError, TypeError, ValueError) as error:
+            raise common.SourceChanged('Native Spec source is unavailable or changed.') from error
+        with bind_query_reader(None):
+            written = common.write_destination(selection.root, destination, promoted)
+        data = {} if written.errors else {'artifact': common.saved(selection, destination, atom_id, atom_id, version, 'active')}
+        return common.result(effects=written.effects, errors=written.errors, **data)
+
+
 def _cleanup_published_draft(selection, target, status, draft, current, structure_snapshot):
     atom_id, version = target['ref_id'].split('@')[0], target['version']
     if current.get('status') != status:
@@ -414,7 +466,7 @@ def _rollback_promotion(selection, previous_path, previous_digest, created, reco
 
 
 def promote_draft(selection, params, *, current_rows, migration_refs, structure_snapshot=None):
-    """Archive the pinned predecessor and publish one unpinned Draft revision."""
+    """Publish a native Draft and keep any exact reference required by migration."""
     if not isinstance(params, dict) or set(params) != {'target', 'targetStatus'}:
         raise common.InputError('target', 'Supply an exact Draft target and Current Status.')
     target, status = params['target'], params['targetStatus']
@@ -434,12 +486,13 @@ def promote_draft(selection, params, *, current_rows, migration_refs, structure_
             raise ValueError('Invalid migration references')
     except (TypeError, ValueError) as error:
         raise common.SourceChanged('Migration references are unavailable or invalid.') from error
-    if any(item[2] == target['ref_id'] for item in refs):
-        raise common.InputError('target', 'A migration-pinned Draft cannot be promoted.')
-
     atom_id, version = match[1], target['version']
     chosen = [row for row in current_rows if row.get('_exact_ref') == target['ref_id'] and row.get('status_group') == 'Draft']
     predecessors = [row for row in current_rows if row.get('id') == atom_id and row.get('status_group') == 'Current']
+    if any(item[2] == target['ref_id'] for item in refs):
+        if '-S-' in atom_id and len(chosen) == 1 and not predecessors:
+            return _publish_first_pinned_spec(selection, chosen[0], structure_snapshot)
+        raise common.InputError('target', 'A migration-pinned Draft cannot be promoted.')
     if len(chosen) != 1 or len(predecessors) > 1:
         raise common.SourceChanged('Draft or Current predecessor is missing or ambiguous.')
     if not predecessors:

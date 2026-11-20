@@ -259,6 +259,49 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
             promote_draft(self.selection, {'target': {'ref_id': ref, 'version': 2}, 'targetStatus': 'active'},
                           current_rows=capture_native(self.selection).atoms, migration_refs=[('old', 'old.md', ref)])
 
+    def test_first_migration_pinned_spec_publishes_and_preserves_draft(self):
+        draft = self.spec('UNIT_C9/000_draft/AN-S-8@1-draft-DES--example.md', 'AN-S-8')
+        header, body = draft.read_text().split('---\n', 2)[1:]
+        data = yaml.safe_load(header)
+        data['state']['status'] = 'draft'
+        draft.write_text('---\n' + yaml.safe_dump(data) + '---\n' + body)
+        original = draft.read_bytes()
+        ref = 'AN-S-8@1-draft'
+        params = {'target': {'ref_id': ref, 'version': 1}, 'targetStatus': 'active'}
+        refs = [('old', 'old.md', ref)]
+        rows = capture_native(self.selection).atoms
+
+        draft.write_bytes(original + b'changed')
+        before = {p.relative_to(self.control): p.read_bytes() for p in self.control.rglob('*.md')}
+        with self.assertRaises(SourceChanged):
+            promote_draft(self.selection, params, current_rows=rows, migration_refs=refs)
+        self.assertEqual(before, {p.relative_to(self.control): p.read_bytes() for p in self.control.rglob('*.md')})
+        draft.write_bytes(original)
+
+        result = promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms,
+                               migration_refs=refs)
+        self.assertEqual('completed', result['outcome'], result)
+        current = self.control / 'UNIT_C9/DES/AN-S-8-DES--example.md'
+        self.assertEqual(current, self.root / result['artifact']['path'])
+        self.assertEqual(('AN-S-8', 2, 'active'), (result['artifact']['ref_id'],
+                         result['artifact']['version'], result['artifact']['status']))
+        self.assertEqual(original, draft.read_bytes())
+        capture = capture_native(self.selection)
+        self.assertFalse(capture.errors)
+        self.assertEqual({'AN-S-8@1-draft', 'AN-S-8@2'},
+                         {row['_exact_ref'] for row in capture.atoms if row['id'] == 'AN-S-8'})
+        self.assertEqual([current], [self.root / row['source_path'] for row in capture.atoms
+                                    if row['id'] == 'AN-S-8' and row['status_group'] == 'Current'])
+
+        before = {p.relative_to(self.control): p.read_bytes() for p in self.control.rglob('*.md')}
+        try:
+            retry = promote_draft(self.selection, params, current_rows=capture.atoms, migration_refs=refs)
+        except (InputError, SourceChanged):
+            pass
+        else:
+            self.assertFalse(retry.get('effects'), retry)
+        self.assertEqual(before, {p.relative_to(self.control): p.read_bytes() for p in self.control.rglob('*.md')})
+
     def test_spec_retry_after_cleanup_failure(self):
         from unittest.mock import patch
         from ATOM_LIFECYCLE import effects
