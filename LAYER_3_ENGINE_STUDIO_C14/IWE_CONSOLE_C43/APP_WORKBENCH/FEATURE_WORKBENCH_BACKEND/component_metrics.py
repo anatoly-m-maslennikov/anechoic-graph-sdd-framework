@@ -45,11 +45,12 @@ def _test_sizes(root, reader, sources, tests, totals):
             continue
         for path in _iter_files(directory):
             relative = path.relative_to(root).as_posix()
-            asset = path.is_relative_to(directory / 'assets')
-            if relative in test_files and test_files[relative][1]:
-                continue
-            if asset or relative in sources:
-                test_files[relative] = owner, asset
+            if relative in sources and not (relative in test_files and test_files[relative][1]):
+                test_files[relative] = owner, False
+        assets = directory / 'assets'
+        if not assets.is_symlink():
+            for path in _iter_files(assets, source_only=False):
+                test_files[path.relative_to(root).as_posix()] = owner, True
     ignored = _git_ignored(root, test_files)
     for relative, (owner, asset) in test_files.items():
         if relative in ignored:

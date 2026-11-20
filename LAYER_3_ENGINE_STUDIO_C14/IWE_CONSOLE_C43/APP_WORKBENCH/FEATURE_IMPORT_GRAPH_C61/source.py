@@ -113,7 +113,7 @@ def _file_language(path: Path) -> str | None:
         return None
 
 
-def _iter_files(root: Path) -> Iterable[Path]:
+def _iter_files(root: Path, *, source_only: bool = True) -> Iterable[Path]:
     pending = [root]
     while pending:
         directory = pending.pop()
@@ -125,7 +125,7 @@ def _iter_files(root: Path) -> Iterable[Path]:
             if entry.is_symlink():
                 continue
             path = Path(entry.path)
-            if excluded_source_path(path.relative_to(root).as_posix()):
+            if entry.name == ".git" or (source_only and excluded_source_path(path.relative_to(root).as_posix())):
                 continue
             if entry.is_dir(follow_symlinks=False):
                 pending.append(path)

@@ -43,7 +43,7 @@ Automatic Agent dispatch is retired. These prompts and their source bindings rem
 ## Checks
 
 ```sh
-python3 -m unittest discover -s LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/IMPLEMENTATION_WORKFLOW/tests -v
+python3 -m unittest discover -s LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/IMPLEMENTATION_WORKFLOW/IMPLEMENTATION_WORKFLOW__tests -v
 ```
 
 These checks cover the retained prompt text, context and result-label contracts. They do not prove runtime execution.

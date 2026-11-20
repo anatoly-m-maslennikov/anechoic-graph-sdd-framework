@@ -6,8 +6,8 @@
     "build": "vite build && node scripts/build-mcp-app.mjs",
     "build:standalone": "vite build",
     "build:mcp-app": "node scripts/build-mcp-app.mjs",
-    "test:workspace": "node --test src/lib/*.test.mjs tests/hot-reload.test.mjs tests/sync-status.test.mjs",
-    "test:mcp-app": "npm run build:mcp-app && node --test tests/mcp-app.e2e.mjs",
+    "test:workspace": "node --test FEATURE_WORKBENCH_FRONTEND__tests/*.test.mjs",
+    "test:mcp-app": "npm run build:mcp-app && node --test FEATURE_WORKBENCH_FRONTEND__tests/mcp-app.e2e.mjs",
     "test:e2e": "playwright test"
   },
   "devDependencies": {

@@ -76,8 +76,8 @@ discovered module paths:
 UV_PROJECT_ENVIRONMENT="$PWD/.anechoic_runtime/launcher-venv" \
 uv run --project "$PWD" --locked --no-sync --python 3.14 --managed-python --no-env-file \
   --all-groups python -B LAYER_5_FRAMEWORK_DELIVERY/release.py local --run-id local-focused \
-  --test-module LAYER_5_FRAMEWORK_DELIVERY/tests/test_release_cli.py \
-  --test-module LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/tests/test_focused_release.py
+  --test-module LAYER_5_FRAMEWORK_DELIVERY/LAYER_5_FRAMEWORK_DELIVERY__tests/test_release_cli.py \
+  --test-module LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_focused_release.py
 ```
 
 Focused selection rejects empty, duplicate, malformed, foreign, and symlink
@@ -146,7 +146,7 @@ Failures stop and report the actual failed step for manual handling.
 ## Focused tests
 
 ```sh
-UV_PROJECT_ENVIRONMENT=.anechoic_runtime/launcher-venv uv run --locked --no-sync --no-env-file --group rmed-workflow-mcp python -B -m unittest discover -s LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/tests
+UV_PROJECT_ENVIRONMENT=.anechoic_runtime/launcher-venv uv run --locked --no-sync --no-env-file --group rmed-workflow-mcp python -B -m unittest discover -s LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests
 ```
 
 These tests use temporary fixtures, real scoped Git checkpoints and mocked

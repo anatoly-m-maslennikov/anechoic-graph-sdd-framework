@@ -34,11 +34,15 @@ Compute each Spec measure against five Realization totals of the same unit:
 - Test code plus test assets.
 - Implementation code plus test code and test assets.
 
-Count test code and assets from Test Packages recognized by the Realization
-Graph. Use the `assets/` classification in AN-S-3013. Exclude files in legacy
-`tests/` trees and legacy Python test modules selected by the test discovery
-rule from implementation totals. Include those tests after they use the
-declared layout.
+Put Component-wide tests in the direct `<full Component Package folder name>__tests/`
+subdirectory of the Component Package. Use the same layout for tests of an
+ordinary Package in the Component. Count tests from both locations for the
+owning Component. The Realization Graph identifies the Test Packages according
+to AN-S-3014. Classify assets separately from test code as specified in AN-S-3013.
+
+Exclude legacy `tests/` trees and legacy Python test modules selected by the
+test discovery rule from the implementation totals. Include those tests in the
+test totals when they use the declared layout.
 
 Use 1,000 bytes per KB. Count physical lines in UTF-8 text. Binary assets
 contribute bytes only. Return a null ratio when the denominator is zero.

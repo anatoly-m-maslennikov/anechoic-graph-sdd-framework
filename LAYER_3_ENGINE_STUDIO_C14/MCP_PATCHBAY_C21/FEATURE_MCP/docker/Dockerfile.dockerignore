@@ -37,6 +37,7 @@
 **/.testcache
 **/node_modules
 **/tests
+**/*__tests
 **/fixtures
 **/*.md
 !**/SKILL.md

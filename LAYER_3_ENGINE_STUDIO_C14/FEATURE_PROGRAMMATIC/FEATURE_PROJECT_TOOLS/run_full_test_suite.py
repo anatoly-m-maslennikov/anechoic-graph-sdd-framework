@@ -21,6 +21,8 @@ from full_suite_docker import APP, current_code_test_image
 
 PROGRAMMATIC = Path("LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC")
 WORKBENCH = Path("LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH")
+WORKBENCH_TESTS = WORKBENCH / (WORKBENCH.name + "__tests")
+MCP_TESTS = APP / (APP.name + "__tests")
 CODE_ROOTS = ("LAYER_3_ENGINE_STUDIO_C14", "LAYER_5_FRAMEWORK_DELIVERY")
 MODULE_TIMEOUT_SECONDS = 3600
 RESULT_MARKER = "ANECHOIC_TEST_COUNTS "
@@ -92,12 +94,15 @@ def discover_test_modules(root: Path) -> list[Path]:
         if source.is_symlink() or not source.is_dir():
             raise OSError(f"source test root is unavailable: {source}")
         for folder, directories, filenames in os.walk(source, followlinks=False, onerror=failed):
-            parts = Path(folder).relative_to(source).parts
+            directory = Path(folder)
+            parts = directory.relative_to(source).parts
+            test_package = directory.name == directory.parent.name + "__tests"
             directories[:] = [
                 entry
                 for entry in directories
                 if not entry.startswith(".")
                 and entry != "__pycache__"
+                and not (test_package and entry == "assets")
                 and not (entry == "tests" and "tests" in parts)
             ]
             for entry in directories:
@@ -186,8 +191,7 @@ def run_module(
 
 
 def _docker_module(root: Path, module: Path) -> bool:
-    app_tests = root / WORKBENCH / "tests"
-    return module.parent in (root / APP / "tests", app_tests) and (
+    return module.parent in (root / MCP_TESTS, root / WORKBENCH_TESTS) and (
         module.stem.endswith("_docker_e2e") or module.stem == "test_selected_query_mcp_e2e"
     )
 
@@ -256,7 +260,7 @@ def _record_modules(root: Path, pending: dict) -> tuple[list[str], int, int]:
 def _run_modules(root: Path, modules: list[Path], environment: dict, integration: bool) -> int:
     failed = []
     tests = skipped = 0
-    workbench_tests = root / WORKBENCH / "tests"
+    workbench_tests = root / WORKBENCH_TESTS
     isolated = [module for module in modules if module.parent == workbench_tests and module.stem in {
         "test_workbench_docker_e2e", "test_workbench_resource_docker_e2e",
     }]
