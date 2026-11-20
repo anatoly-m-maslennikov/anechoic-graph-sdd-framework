@@ -7,9 +7,9 @@ context:
   tier: 3
   template: task
 state:
-  status: backlog
+  status: "active"
   version: 1
-  updated_at: '2026-11-18T23:19:57.985461+00:00'
+  updated_at: "2026-11-20T03:20:05.385449+00:00"
 ---
 ## Summary
 
