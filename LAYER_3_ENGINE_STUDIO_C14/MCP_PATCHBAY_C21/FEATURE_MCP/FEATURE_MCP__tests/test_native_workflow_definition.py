@@ -158,7 +158,7 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
         owner = NativeQueryOwner(self.selection, NativeQueryInputs(
             lambda *args: None, frozenset(), {}, tuple(refs),
         ))
-        owner._store = object()
+        owner._store = SimpleNamespace(_available=True)
         owner._capture = SimpleNamespace(atoms=rows)
         atom_id, _, version = rows[0]['_exact_ref'].partition('@')
         for name, field, target in (
