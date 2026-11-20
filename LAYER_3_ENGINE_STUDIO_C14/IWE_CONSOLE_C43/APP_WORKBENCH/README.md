@@ -177,9 +177,13 @@ aggregate column counters rather than per-Atom contribution copies. A full
 rebuild derives public rows once for both SQL insertion and its retained snapshot.
 Public Content values, schemas and hashes remain unchanged.
 
-## Import Graph
+## Realization Graph
 
 Set the native Project Manifest parameter `runtime.workbench.import_graph` to `{}` to enable the graph. Set `python_roots` in that mapping to the ordered Project-relative Python source roots when the launch profile uses more than the Project root. Use `include` to admit named authored files that Git ignore rules omit. The first delivery extracts Python imports and lists recognized frontend files as unsupported.
+
+`test_edges` links each direct `<package folder name>__tests/` Test Package
+to its parent Package. `tested_by_edges` gives the inverse. Both use the same
+Package nodes as import queries and work without a Spec Binding.
 
 Use this query in Workbench to inspect outgoing imports and their source lines. Filter `d.relative_path` for incoming imports. Filter node kind `package` and use its Package path for Package results.
 
@@ -200,6 +204,13 @@ curl -sS -H 'Content-Type: application/json' \
   --data '{"sql":"SELECT * FROM package_imports LIMIT 20","result_delivery":"inline"}' \
   http://localhost:56317/anechoic/Anechoic/api/run
 ```
+
+Native Workbench stores its projection, parsed imports, and live result tables
+in `.anechoic_runtime/workbench/projection.duckdb`. Restart clears live results.
+Use **Rebuild tables** in Workbench, call MCP `query_rebuild`, or send
+`{"target":"all"}` to `POST /anechoic/<project>/api/rebuild`. You can also pass
+a table name, or `workbench_results.query_<result ID>` for one result.
+The response maps replaced result IDs to their new IDs. Open Views use the replacements.
 
 ## Rebuildable SQL schema assets
 

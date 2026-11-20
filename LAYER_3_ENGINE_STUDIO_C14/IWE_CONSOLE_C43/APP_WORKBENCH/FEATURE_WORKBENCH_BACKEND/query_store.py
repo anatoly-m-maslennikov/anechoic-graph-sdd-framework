@@ -327,13 +327,7 @@ class QueryStore:
                 raise WorkbenchUnavailableError("query store unavailable; Workbench restart required")
             transaction = False
             try:
-                header_state = self._header_state
-                if header_schema is None:
-                    if self._schema_mode == 2:
-                        header_state = HeaderSchemaState.from_atoms(atom_rows)
-                        header_schema = header_state.schema
-                    else:
-                        header_schema = header_schema_for_mode(self._schema_mode, atom_rows)
+                header_state, header_schema = self._replacement_header(atom_rows, header_schema)
                 if content_schema is None:
                     content_schema = compile_content_schema(atom_rows)
                 self._connection.execute("BEGIN TRANSACTION")
@@ -377,6 +371,14 @@ class QueryStore:
                 if self._native and self._available:
                     raise
                 raise WorkbenchUnavailableError("query store unavailable; Workbench restart required") from exc
+
+    def _replacement_header(self, atom_rows, header_schema):
+        if header_schema is not None:
+            return self._header_state, header_schema
+        if self._schema_mode == 2:
+            header_state = HeaderSchemaState.from_atoms(atom_rows)
+            return header_state, header_state.schema
+        return self._header_state, header_schema_for_mode(self._schema_mode, atom_rows)
 
     def _info_edit(
         self, operation: str, table: str, row_count: int, started: float, reference: str | None = None,
@@ -695,22 +697,24 @@ class QueryStore:
                 return query_id
         raise ValueError("unknown query_id")
 
-    def prepare_result_rebuild(self, query_id: str | None = None) -> dict[str, tuple[str, _Result]]:
+    def prepare_result_rebuild(
+        self, query_id: str | None = None, *, tables: set[str] | None = None,
+    ) -> dict[str, tuple[str, _Result]]:
         """Stage replacement tables inside the caller's transaction and store lock."""
-        selected = None if query_id is None else {self.resolve_result_selector(query_id)}
-        affected_tables: set[str] = set()
+        selected = self.resolve_result_selector(query_id) if query_id is not None else None
+        affected_tables = {name.rsplit(".", 1)[-1] for name in tables or ()}
         staged = {}
         for old_id, old in self._results.items():
-            if selected is not None and old_id not in selected:
+            if (selected is not None or tables is not None) and old_id != selected:
                 if not affected_tables:
                     continue
                 try:
                     dependencies = self._connection.get_table_names(old.sql, qualified=True)
+                    dependencies = {name.rsplit(".", 1)[-1] for name in dependencies}
                 except Exception:
                     # Unclassified reads can still depend on the selected table.
                     dependencies = affected_tables
-                if not affected_tables.intersection(name.rsplit(".", 2)[-2] + "." + name.rsplit(".", 2)[-1]
-                                                    for name in dependencies if "." in name):
+                if not affected_tables.intersection(dependencies):
                     continue
             new_id, result = self._materialize(old.sql, old.preview, admitted=True)
             result.created_at, result.pinned = old.created_at, old.pinned
@@ -721,7 +725,7 @@ class QueryStore:
             )
             result.table_name = old.table_name
             staged[old_id] = (new_id, result)
-            affected_tables.add(f"workbench_results.{old.table_name}")
+            affected_tables.add(old.table_name)
         return staged
 
     def commit_result_rebuild(self, staged: dict[str, tuple[str, _Result]]) -> dict[str, dict[str, Any]]:

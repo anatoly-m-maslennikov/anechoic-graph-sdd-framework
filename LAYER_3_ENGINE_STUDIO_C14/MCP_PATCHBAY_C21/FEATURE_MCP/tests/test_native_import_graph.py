@@ -198,6 +198,7 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
             view = {"workspace_id": workspace["workspace_id"], "view_id": workspace["active_view_id"]}
             await view_call("view_update", view | {"sql": sql, "expected_revision": 0})
             first = (await view_call("view_run", view))["query_id"]
+            independent = (await post("run", {"sql": "SELECT 7", "result_delivery": "inline"}))["query_id"]
             expected = [["src/app", "src/app/app__tests", "Test Package"]]
             self.assertEqual(expected, (await view_call("view_fetch", view | {"result_delivery": "inline"}))["rows"])
             with store._lock:
@@ -211,10 +212,18 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
             rebuilt = await post("rebuild", {"target": "test_edges"})
             second = rebuilt["result_ids"][first]
             self.assertNotEqual(first, second)
+            self.assertNotIn(independent, rebuilt["result_ids"])
             fetched = await view_call("view_fetch", view | {"result_delivery": "inline"})
             self.assertEqual((second, []), (fetched["query_id"], fetched["rows"]))
             self.assertTrue(store._results[second].pinned)
             moved.rename(test_directory)
+            stderr = StringIO()
+            with redirect_stderr(stderr), patch.object(store, "prepare_result_rebuild",
+                                                       side_effect=ValueError("fixture rebuild failure")):
+                await post("rebuild", {"target": "all"}, 400)
+            self.assertIn("Workbench rebuild failed for all: fixture rebuild failure", stderr.getvalue())
+            fetched = await view_call("view_fetch", view | {"result_delivery": "inline"})
+            self.assertEqual((second, []), (fetched["query_id"], fetched["rows"]))
             mcp = await gateway.call(None, types.CallToolRequestParams(
                 name="query_rebuild", arguments={"target": "all"},
             ))

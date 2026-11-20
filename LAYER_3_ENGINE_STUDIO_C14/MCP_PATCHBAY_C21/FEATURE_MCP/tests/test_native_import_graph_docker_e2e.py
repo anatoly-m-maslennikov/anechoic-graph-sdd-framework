@@ -40,6 +40,7 @@ class NativeImportGraphDockerE2E(unittest.TestCase):
         cls._write("app/main.py", "import dep.helper\nimport dep.helper\n")
         cls._write("dep/__init__.py", "")
         cls._write("dep/helper.py", "VALUE = 1\n")
+        (cls.root / "app/app__tests").mkdir()
         cls.container = subprocess.check_output([
             "docker", "run", "--detach", "--pull=never", "--init",
             "--name", f"anechoic-import-graph-canary-{uuid4().hex}",
@@ -115,6 +116,38 @@ class NativeImportGraphDockerE2E(unittest.TestCase):
             self._post("/interface", {"operation": operation, "arguments": view | args})
         result = self._post("/interface", {"operation": "view_fetch", "arguments": view | {"result_delivery": "inline"}})
         self.assertEqual([[2]], result["rows"])
+
+    def test_realization_test_package_and_rebuild_follows_open_view(self):
+        query = """
+            SELECT parent.node_key, parent.kind, test.node_key, test.kind, test.package_type
+            FROM tested_by_edges e
+            JOIN import_nodes parent ON parent.node_key = e.source_key
+            JOIN import_nodes test ON test.node_key = e.target_key
+            WHERE parent.relative_path = 'app'
+        """
+        expected = [["package:python:app", "package", "package:python:app/app__tests",
+                     "package", "Test Package"]]
+        self.assertEqual(expected, self._rows(query))
+        for label, source, target in (("TESTS", expected[0][2], expected[0][0]),
+                                      ("IS_TESTED_BY", expected[0][0], expected[0][2])):
+            self.assertEqual([[source, target]], self._rows(f"""
+                FROM GRAPH_TABLE (anechoic
+                MATCH (s:ImportNode)-[e:{label}]->(t:ImportNode)
+                COLUMNS (s.node_key AS source_key, t.node_key AS target_key))
+                WHERE source_key = '{source}' AND target_key = '{target}'
+            """))
+        workspace = self._post("/interface", {"operation": "workspace_open",
+                                               "arguments": {"session_id": "realization-canary"}})
+        view = {"workspace_id": workspace["workspace_id"], "view_id": workspace["active_view_id"]}
+        self._post("/interface", {"operation": "view_update",
+                                  "arguments": view | {"sql": query, "expected_revision": 0}})
+        first = self._post("/interface", {"operation": "view_run", "arguments": view})["query_id"]
+        rebuilt = self._post("/rebuild", {"target": "all"})
+        second = rebuilt["result_ids"][first]
+        self.assertNotEqual(first, second)
+        fetched = self._post("/interface", {"operation": "view_fetch",
+                                           "arguments": view | {"result_delivery": "inline"}})
+        self.assertEqual((second, expected), (fetched["query_id"], fetched["rows"]))
 
     def test_watcher_adds_renames_and_removes_targets(self):
         self._write("consumer.py", "import moving.target\n")

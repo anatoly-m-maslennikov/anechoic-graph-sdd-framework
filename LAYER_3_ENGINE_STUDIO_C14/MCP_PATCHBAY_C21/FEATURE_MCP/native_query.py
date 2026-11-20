@@ -250,32 +250,40 @@ class NativeQueryOwner(ServiceInterface):
         if target == "all" or target in AUDIT_TABLES:
             create_tables(connection)
 
-    def rebuild(self, target: str) -> dict[str, Any]:
-        """Rebuild the selected projection and dependent tables on the existing connection."""
+    def _rebuild_scope(self, store: QueryStore, target: str) -> tuple[str, str, set[str] | None]:
         if not isinstance(target, str):
             raise ValueError("Workbench rebuild target must be a table name or all")
+        table = target.removeprefix("main.")
+        if table == "all":
+            return table, "all", None
+        if table == "workbench_results":
+            return table, "results", None
+        if re.fullmatch(r"(?:workbench_results\.)?(?:query_)?[a-f0-9]{32}", table):
+            return table, "result", None
+        atom_tables = ATOM_TABLES | {"scope_units", "internal.reference", "internal.native_exact_refs",
+                                     "internal.native_frontier"}
+        atom_tables |= {f"internal.{name[1:-1]}" for name in store._projection.graph.tables.values()}
+        if table in atom_tables:
+            return table, "atoms", atom_tables | set(AUDIT_TABLES) | {"anechoic"}
+        if table in REALIZATION_TABLES or table in IMPORT_CACHE_TABLES:
+            if self._realization_options is None:
+                raise ValueError("Realization Graph is disabled")
+            return table, "realization", set(REALIZATION_TABLES | IMPORT_CACHE_TABLES | {"anechoic"})
+        if table in ("query_log_records", "query_log"):
+            return "query_log", "observation", {"query_log", "query_log_records"}
+        if table in OBSERVATION_TABLES or table in AUDIT_TABLES:
+            return table, "observation", {table}
+        raise ValueError(f"Unknown Workbench rebuild target: {target}")
+
+    def rebuild(self, target: str) -> dict[str, Any]:
+        """Rebuild the selected projection and dependent tables on the existing connection."""
         with self._interface_lock:
             store = self._owner()
-            table = target.removeprefix("main.")
-            if table == "query_log_records":
-                table = "query_log"
-            all_tables = table == "all"
-            result_table = re.fullmatch(r"(?:workbench_results\.)?(?:query_)?[a-f0-9]{32}", table)
-            atom_tables = ATOM_TABLES | {"scope_units", "internal.reference", "internal.native_exact_refs",
-                                         "internal.native_frontier"}
-            atom_tables |= {f"internal.{name[1:-1]}" for name in store._projection.graph.tables.values()}
-            atom_rebuild = all_tables or table in atom_tables
-            realization_rebuild = all_tables or table in REALIZATION_TABLES or table in IMPORT_CACHE_TABLES
-            if realization_rebuild and not all_tables and self._realization_options is None:
-                raise ValueError("Realization Graph is disabled")
-            if not (atom_rebuild or realization_rebuild or result_table or table == "workbench_results"
-                    or table in OBSERVATION_TABLES or table in AUDIT_TABLES):
-                raise ValueError(f"Unknown Workbench rebuild target: {target}")
-
+            table, scope, dependent_inputs = self._rebuild_scope(store, target)
             staged = {}
             try:
-                prepared = (self._prepare_realization(store, force_parse=True)
-                            if realization_rebuild and self._realization_options is not None else None)
+                prepared = (self._prepare_realization(store, force_parse=scope == "all" or table in IMPORT_CACHE_TABLES)
+                            if scope in ("all", "realization") and self._realization_options is not None else None)
 
                 observations = self._query_log.snapshot() if table in ("all", "query_log") else nullcontext([])
                 with observations as query_attempts, store._lock:
@@ -283,12 +291,17 @@ class NativeQueryOwner(ServiceInterface):
                         nonlocal staged
                         if prepared is not None:
                             self._publish_realization(store._connection, graph, prepared)
+                        elif scope == "all":
+                            remove_imports(store._connection, graph)
+                            clear_import_sources(store._connection)
                         self._rebuild_observations(store, table, query_attempts)
-                        # A read query can depend on projection tables through views or GRAPH_TABLE.
-                        staged = store.prepare_result_rebuild(table if result_table else None)
+                        if scope == "atoms":
+                            create_tables(store._connection)
+                        staged = store.prepare_result_rebuild(table if scope == "result" else None,
+                                                              tables=dependent_inputs)
 
                     store.prune_results()
-                    if atom_rebuild:
+                    if scope in ("all", "atoms"):
                         self._capture = self._project(store, before_commit=rebuild_dependents)
                     else:
                         with self._transaction(store):

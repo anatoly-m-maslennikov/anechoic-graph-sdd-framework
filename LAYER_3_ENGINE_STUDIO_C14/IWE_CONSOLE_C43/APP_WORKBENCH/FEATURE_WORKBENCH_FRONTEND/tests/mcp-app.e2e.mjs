@@ -110,7 +110,7 @@ test('rebuild command sends target and refreshes the workspace result', async ()
   try {
     await host.frame.getByRole('button', { name: /Commands/ }).click();
     const palette = host.frame.getByRole('dialog', { name: 'Command palette' });
-    await palette.getByRole('textbox').fill('Rebuild results');
+    await palette.getByRole('textbox').fill('Rebuild tables');
     host.page.once('dialog', (dialog) => dialog.accept('atoms'));
     await palette.getByRole('textbox').press('Enter');
     await host.frame.getByRole('dialog', { name: 'Command palette' }).waitFor({ state: 'hidden' });
