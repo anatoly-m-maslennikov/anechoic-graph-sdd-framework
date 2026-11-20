@@ -8,6 +8,7 @@ from types import SimpleNamespace
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import yaml
 
@@ -46,7 +47,7 @@ class NativeProjectSelectionTests(unittest.TestCase):
         self.native = self.root / ".anechoic_anechoic"
         self.native.mkdir()
 
-    def carrier(self, relative="SPEC/AN-S-001-PROJECT_MANIFEST--declare-anechoic.md", *, atom_id="AN-S-001",
+    def carrier(self, relative="AN-S-001-PROJECT_MANIFEST--declare-anechoic.md", *, atom_id="AN-S-001",
                 name="Anechoic", prefix="AN", status="active", tier=-1, component="C0", lens_whitelist=None,
                 parameters=None):
         path = self.native / relative
@@ -93,8 +94,34 @@ class NativeProjectSelectionTests(unittest.TestCase):
         with self.assertRaisesRegex(ProjectSelectionError, "Expected one Active"):
             self.select()
         self.carrier()
-        self.carrier("SPEC/AN-S-002-PROJECT_MANIFEST--declare-anechoic.md", atom_id="AN-S-002")
+        self.carrier("AN-S-002-PROJECT_MANIFEST--declare-anechoic.md", atom_id="AN-S-002")
         with self.assertRaisesRegex(ProjectSelectionError, "Expected one Active"):
+            self.select()
+
+    def test_old_spec_directory_is_ignored_and_never_walked(self):
+        self.carrier("SPEC/AN-S-001-PROJECT_MANIFEST--declare-anechoic.md")
+        with self.assertRaisesRegex(ProjectSelectionError, "Expected one Active"):
+            self.select()
+        self.carrier()
+        (self.native / "SPEC" / "unreadable-link").symlink_to(self.root / "missing")
+        self.assertEqual(self.native / "AN-S-001-PROJECT_MANIFEST--declare-anechoic.md", self.select().manifest_path)
+
+    def test_refuses_manifest_added_during_native_validation(self):
+        self.carrier()
+
+        def add_manifest(fields, component):
+            self.carrier("AN-S-002-PROJECT_MANIFEST--declare-anechoic.md", atom_id="AN-S-002")
+            return validate_manifest(fields, component)
+
+        with self.assertRaisesRegex(ProjectSelectionError, "changed during selection"):
+            resolve_native_project(self.root, self.native.name, validate_manifest=add_manifest)
+
+    def test_direct_root_inventory_is_bounded(self):
+        self.carrier()
+        (self.native / "one").touch()
+        (self.native / "two").touch()
+        from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
+        with patch.dict(CEILINGS, {"max_candidates": 2}), self.assertRaises(ProjectSelectionError):
             self.select()
 
     def test_passes_the_authored_lens_whitelist_to_typed_validation(self):

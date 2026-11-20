@@ -42,6 +42,7 @@ from release_assets import (
     generate_tool_registry,
     generate_workbench_schema,
     generate_scope_callback,
+    verify_native_release_assets,
 )
 
 
@@ -192,6 +193,84 @@ def _release_sources(root: Path) -> list[tuple[str, Path, list[Path]]]:
             raise LocalReleaseError("local-release-source-empty:CORE_META_MODEL")
         selected.append((name, source, files))
     return selected
+
+
+def _native_release_sources(selection) -> dict[Path, Path]:
+    """Map migrated Active carriers to their historical delivery groups."""
+    from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import _carrier_row
+
+    root, control = selection.root, selection.control_root
+    alias_file = _project_path(root, control.relative_to(root) / "_migration/native-aliases.json",
+                               label="native-aliases", require_exists=True)
+    try:
+        alias_identity = _file_identity(alias_file)
+        rows = json.loads(alias_file.read_bytes())
+        if not isinstance(rows, list):
+            raise ValueError("invalid aliases")
+        prefix = (".anechoic_anechoic", "CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY",
+                  "CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES")
+        units = ("CA-SU-11_LAYER_1_CORE_META_MODEL", "CA-SU-12_LAYER_2_INSTALLED_EXTENSIONS",
+                 "CA-SU-13_LAYER_3_PROJECT_CONFIGURATION")
+        bindings: dict[str, Path] = {}
+        old_paths: set[Path] = set()
+        for row in rows:
+            if (not isinstance(row, list) or len(row) != 3 or
+                    (row[0] is not None and not isinstance(row[0], str)) or
+                    not isinstance(row[1], str) or not isinstance(row[2], str)):
+                raise ValueError("invalid alias row")
+            old_ref, old_path, native_ref = row
+            relative = _relative(old_path, label="native-alias-path")
+            parts = relative.parts
+            if (len(parts) < 5 or parts[:3] != prefix or parts[3] not in units or not old_ref
+                    or any(part.casefold() in _NON_SOURCE_DIRECTORIES or
+                           carrier_status_folder(part) in {"draft", "archived"} for part in parts[4:-1])
+                    or old_ref.endswith(("-draft", "-archived"))):
+                continue
+            match = re.fullmatch(r"([A-Z]+-[A-Z]+-[0-9]+)@[0-9]+", native_ref)
+            if match is None or relative in old_paths or match.group(1) in bindings:
+                raise ValueError("duplicate or invalid release alias")
+            old_paths.add(relative)
+            bindings[match.group(1)] = Path(*parts[3:-1])
+
+        excluded = _NON_SOURCE_DIRECTORIES | frozenset({"_migration", "000_anechoic_framework"})
+        members = _walk_regular_files(control, excluded_directories=excluded, exclude_history=True)
+        selected: dict[Path, Path] = {}
+        found: set[str] = set()
+        identities: dict[Path, tuple[str, int]] = {}
+        manifest = _project_path(root, selection.manifest_path.relative_to(root),
+                                 label="native-manifest", require_exists=True)
+        identities[manifest] = _file_identity(manifest)
+        if identities[manifest][0] != selection.manifest_sha256:
+            raise ValueError("native manifest changed")
+        for path in members:
+            match = re.match(r"^([A-Z]+-[STP]-[0-9]+)-", path.name)
+            atom_id = match.group(1) if match else None
+            if atom_id not in bindings:
+                continue
+            identities[path] = _file_identity(path)
+            tree = path.relative_to(control).parts[0]
+            family = {"_PMETA": "P", "__TKT": "T"}.get(tree, "S")
+            row, _ = _carrier_row(path, root, family, selection.project_prefix, path.read_bytes())
+            if row["id"] != atom_id or atom_id in found:
+                raise ValueError("invalid or duplicate Current carrier")
+            found.add(atom_id)
+            if row["status"] != "active":
+                continue
+            destination = bindings[atom_id] / path.name
+            if destination in selected:
+                raise ValueError("duplicate release destination")
+            selected[destination] = path
+        if found != bindings.keys():
+            raise ValueError("missing Current carrier")
+        if not any(path.parts[0] == units[0] and path.suffix == ".md" for path in selected):
+            raise ValueError("empty core model")
+        if (alias_identity != _file_identity(alias_file) or
+                members != _walk_regular_files(control, excluded_directories=excluded, exclude_history=True) or
+                any(_file_identity(path) != identity for path, identity in identities.items())):
+            raise ValueError("release sources changed")
+        return selected
+    except (OSError, UnicodeError, ValueError, TypeError) as error:
+        raise LocalReleaseError("local-release-native-sources-invalid") from error
 
 
 def _clear_target(target: Path, *, root: Path, preserve: frozenset[str], label: str) -> None:
@@ -357,8 +436,12 @@ def _publish_image_assets(root: Path, package: Path, previous: Mapping[str, tupl
 
 def _prepare_package(root: Path, product: Path, package: Path, *,
                      refresh_assets: bool = True, previous_image: str | None = None,
-                     scope_callback_selection=None) -> dict[str, tuple[str, int]]:
-    selection = active_selection(root)
+                     scope_callback_selection=None, project_selection=None) -> dict[str, tuple[str, int]]:
+    selection = project_selection if project_selection is not None else active_selection(root)
+    if selection.root != root:
+        raise LocalReleaseError("local-release-project-selection-invalid")
+    from native_project_selection import NativeProjectSelection
+    native = isinstance(selection, NativeProjectSelection)
     excluded = frozenset({selection.control_relative.name.casefold(), ".anechoic_runtime", ".anechoic_tmp", ".runtime", ".git", ".pytest_cache", "__pycache__", ".mypy_cache", ".ruff_cache", ".venv", ".vite", "node_modules"})
     programmatic = root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC"
     trees = (
@@ -394,27 +477,32 @@ def _prepare_package(root: Path, product: Path, package: Path, *,
     for source, relative in sources:
         if _file_identity(source) != expected[relative.as_posix()]:
             raise LocalReleaseError("local-release-package-source-changed")
-    _verify_packaged_workflow(package)
+    if native:
+        verify_native_release_assets(package, root, selection.control_relative)
+    else:
+        _verify_packaged_workflow(package)
     if refresh_assets:
         previous_assets = {relative: expected.get(relative) for relative in sorted(_GENERATED_ASSETS)}
-        relation_registry = generate_relation_registry(package, root)
-        workbench_schema = generate_workbench_schema(package, root)
-        if previous_image is None:
-            lifecycle_assets = (generate_lifecycle_status_model(package), generate_lifecycle_candidate_schema(package))
-        else:
-            try:
-                assets = compile_lifecycle_assets(package, root, timeout=60, max_output=MAX_OUTPUT,
-                                                  previous_image=previous_image)
-            except (OSError, RuntimeError, subprocess.SubprocessError, ValueError) as error:
-                raise LocalReleaseError("local-release-lifecycle-predecessor-query-failed") from error
-            lifecycle = package / programmatic.relative_to(root) / "FEATURE_TOOLS/ATOM_LIFECYCLE"
-            lifecycle_assets = (lifecycle / "status_model.json", lifecycle / "candidate_schema.json")
-            for output, data in zip(lifecycle_assets, assets, strict=True):
-                output.write_bytes(data)
+        if not native:
+            relation_registry = generate_relation_registry(package, root)
+            workbench_schema = generate_workbench_schema(package, root)
+            if previous_image is None:
+                lifecycle_assets = (generate_lifecycle_status_model(package), generate_lifecycle_candidate_schema(package))
+            else:
+                try:
+                    assets = compile_lifecycle_assets(package, root, timeout=60, max_output=MAX_OUTPUT,
+                                                      previous_image=previous_image)
+                except (OSError, RuntimeError, subprocess.SubprocessError, ValueError) as error:
+                    raise LocalReleaseError("local-release-lifecycle-predecessor-query-failed") from error
+                lifecycle = package / programmatic.relative_to(root) / "FEATURE_TOOLS/ATOM_LIFECYCLE"
+                lifecycle_assets = (lifecycle / "status_model.json", lifecycle / "candidate_schema.json")
+                for output, data in zip(lifecycle_assets, assets, strict=True):
+                    output.write_bytes(data)
         tool_registry = generate_tool_registry(package)
-        for asset in (relation_registry, workbench_schema, *lifecycle_assets, tool_registry):
+        assets = (tool_registry,) if native else (relation_registry, workbench_schema, *lifecycle_assets, tool_registry)
+        for asset in assets:
             expected[asset.relative_to(package).as_posix()] = _file_identity(asset)
-    if scope_callback_selection is None:
+    if not native and scope_callback_selection is None:
         selection_file = package / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_FORMAL_MODEL_ENGINE/scope_callback_selection.json"
         if selection_file.exists():
             selection = json.loads(selection_file.read_bytes())
@@ -425,7 +513,7 @@ def _prepare_package(root: Path, product: Path, package: Path, *,
                 if not isinstance(selected, dict) or set(selected) != {"source_path", "pin"}:
                     raise LocalReleaseError("local-release-scope-callback-selection-invalid")
                 scope_callback_selection = (selected["source_path"], selected["pin"], (selected["pin"],))
-    if scope_callback_selection is not None:
+    if not native and scope_callback_selection is not None:
         source_path, pin, release_sources = scope_callback_selection
         source = _project_path(package, _relative(source_path, label="scope-callback-source"),
                                label="scope-callback-source", require_exists=True)

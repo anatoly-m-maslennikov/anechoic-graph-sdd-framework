@@ -1,0 +1,30 @@
+---
+identity:
+  atom_id: AN-S-438
+context:
+  container:
+    component: C9
+  tier: 3
+  lens: DevOps
+state:
+  status: active
+  version: 30
+  updated_at: 2026-11-03 23:25:51 +0400
+---
+## Summary
+
+Require Portable-Safe Carrier Addresses
+
+## Claim
+
+### Prose Claim
+
+
+Project-owned Carrier address segments.
+
+
+**every** Project-owned Carrier address segment
+
+- **must** use **only** portable automation-safe ASCII letters, digits, underscores, hyphens, **and** dots, with `@` admitted **only** **in** the `@<version>` Archive suffix immediately **before** the file extension, as specified by CA-D-289,
+- **must not** contain whitespace, control characters, path separators, shell metacharacters, empty **or** reserved segments, **or** unsafe leading **or** trailing characters,
+- **and** **must** remain sibling-unique under ASCII case folding.

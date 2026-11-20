@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from pathlib import Path
+import shutil
 import sys
 import tempfile
 import unittest
@@ -48,7 +49,7 @@ class RuntimeSelectionTests(unittest.TestCase):
         return control
 
     def manifest(self, control, *, name="Anechoic", prefix="AN", component="C0"):
-        path = control / "SPEC" / f"{prefix}-S-001-PROJECT_MANIFEST--declare.md"
+        path = control / f"{prefix}-S-001-PROJECT_MANIFEST--declare.md"
         path.parent.mkdir(parents=True, exist_ok=True)
         header = {"identity": {"atom_id": f"{prefix}-S-001"},
                   "context": {"container": {"component": component}, "tier": -1,
@@ -109,6 +110,32 @@ class RuntimeSelectionTests(unittest.TestCase):
             with self.assertRaisesRegex(ProjectSelectionError, "changed during selection"):
                 self.select(control.name)
 
+    def test_legacy_selection_ignores_a_manifest_in_the_old_spec_directory(self):
+        control = self.legacy()
+        path = self.manifest(control)
+        (control / "SPEC").mkdir()
+        path.rename(control / "SPEC" / path.name)
+        self.assertIsInstance(self.select(), ProjectSelection)
+
+    def test_refuses_control_root_removed_during_legacy_selection(self):
+        control = self.legacy()
+
+        def resolve_then_remove(*args, **kwargs):
+            selection = resolve_project(*args, **kwargs)
+            shutil.rmtree(control)
+            return selection
+
+        with patch("native_startup.resolve_project", side_effect=resolve_then_remove):
+            with self.assertRaisesRegex(ProjectSelectionError, "changed during selection"):
+                self.select(control.name)
+
+    def test_missing_and_symlink_control_roots_are_refused(self):
+        with self.assertRaises(ProjectSelectionError):
+            self.select(".anechoic_anechoic")
+        (self.root / ".anechoic_anechoic").symlink_to(self.root)
+        with self.assertRaises(ProjectSelectionError):
+            self.select(".anechoic_anechoic")
+
     def test_both_formats_in_one_root_are_ambiguous(self):
         control = self.legacy()
         self.manifest(control)
@@ -144,7 +171,7 @@ class RuntimeSelectionTests(unittest.TestCase):
         self.manifest(self.root / ".anechoic_other", name="Other", prefix="OT")
         with self.assertRaisesRegex(ProjectSelectionError, "ambiguous"):
             self.select()
-        (self.root / ".anechoic_other" / "SPEC" / "OT-S-001-PROJECT_MANIFEST--declare.md").unlink()
+        (self.root / ".anechoic_other" / "OT-S-001-PROJECT_MANIFEST--declare.md").unlink()
         self.legacy(".anechoic_legacy", declared=".anechoic_unknown")
         with self.assertRaises(ProjectSelectionError):
             self.select()

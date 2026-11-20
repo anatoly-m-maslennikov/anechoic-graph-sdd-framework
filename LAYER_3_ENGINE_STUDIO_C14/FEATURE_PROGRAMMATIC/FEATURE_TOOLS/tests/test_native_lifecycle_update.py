@@ -89,7 +89,7 @@ class NativeDirectUpdateTests(unittest.TestCase):
                     extra_path.rmdir() if extra_path.is_dir() else extra_path.unlink()
 
     def test_draft_asset_update_uses_exact_reference(self):
-        path = self.write('__TKT/ASSETS/draft/AN-T-1@2-draft-ASSET--draft.md', 'AN-T-1')
+        path = self.write('__TKT/ASSETS/000_draft/AN-T-1@2-draft-ASSET--draft.md', 'AN-T-1')
         path.write_bytes(path.read_bytes().replace(b'status: active', b'status: draft').replace(b'version: 1', b'version: 2'))
         rows = capture_native(self.selection).atoms
         before = path.read_bytes()
@@ -106,14 +106,14 @@ class NativeDirectUpdateTests(unittest.TestCase):
             direct_update(self.selection, params, current_rows=rows)
 
     def test_archive_preserves_draft_and_version(self):
-        draft = self.write('__TKT/ASSETS/draft/AN-T-1@2-draft-ASSET--draft.md', 'AN-T-1')
+        draft = self.write('__TKT/ASSETS/000_draft/AN-T-1@2-draft-ASSET--draft.md', 'AN-T-1')
         draft.write_bytes(draft.read_bytes().replace(b'status: active', b'status: draft').replace(b'version: 1', b'version: 2'))
         rows = capture_native(self.selection).atoms
         body = self.path.read_bytes().split(b'---\n', 2)[2]
         original_draft = draft.read_bytes()
         outcome = archive_ticket(self.selection, {'target': self.params['target']}, current_rows=rows)
         self.assertEqual('completed', outcome['outcome'])
-        destination = self.path.parent / 'archived' / 'AN-T-1@1-ASSET--example.md'
+        destination = self.path.parent / '099_archived' / 'AN-T-1@1-ASSET--example.md'
         self.assertFalse(self.path.exists())
         self.assertEqual(body, destination.read_bytes().split(b'---\n', 2)[2])
         self.assertEqual(original_draft, draft.read_bytes())

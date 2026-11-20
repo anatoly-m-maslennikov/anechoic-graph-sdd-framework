@@ -133,7 +133,7 @@ def create_draft(selection, params, *, current_rows):
         if _summary(body) != _summary(old_body):
             raise common.InputError('summary', 'Changing a Task Summary is not supported.')
         version = max(row['version'] for row in capture.atoms if row.get('id') == target['ref_id']) + 1
-        destination = root / 'draft' / path.name.replace(target['ref_id'] + '-', f"{target['ref_id']}@{version}-draft-", 1)
+        destination = root / '000_draft' / path.name.replace(target['ref_id'] + '-', f"{target['ref_id']}@{version}-draft-", 1)
         candidate = _state_bytes(raw, bounds, path, version, body, 'draft')
         with bind_query_reader(None):
             outcome = common.write_destination(selection.root, destination, candidate)
@@ -201,7 +201,7 @@ def _create_task(selection, values, current_rows):
                        if isinstance(row.get('id'), str) and (match := pattern.fullmatch(row['id']))]
             atom_id = f"{selection.project_prefix}-T-{max(numbers, default=0) + 1}"
             ref = f'{atom_id}@1-draft'
-            path = selection.control_root / '__TKT' / 'TASKS' / 'draft' / f'{ref}-TASK--{slug}.md'
+            path = selection.control_root / '__TKT' / 'TASKS' / '000_draft' / f'{ref}-TASK--{slug}.md'
             header = {'identity': {'atom_id': atom_id},
                       'context': {'container': values['container'], 'template': 'task'},
                       'state': {'status': 'draft', 'version': 1, 'updated_at': datetime.now(timezone.utc).isoformat()}}
@@ -228,7 +228,7 @@ def _promote_new(selection, target, status, draft, current_rows):
     if (not selection.root.is_absolute() or not selection.control_root.is_relative_to(selection.root)
             or not selection.manifest_path.is_relative_to(selection.control_root)
             or relative.is_absolute() or '..' in relative.parts or not path.is_relative_to(root)
-            or path.parent != root / 'draft'
+            or path.parent != root / '000_draft'
             or not re.fullmatch(re.escape(target['ref_id']) + r'-TASK--.+\.md', path.name)):
         raise common.SourceChanged('Task Draft path is invalid.')
     with _project_write_lock(selection.root):
@@ -281,7 +281,7 @@ def _cleanup_published_draft(selection, target, status, draft, current):
         raise common.InputError('targetStatus', 'Published Task Status differs from the requested Status.')
     root = selection.control_root / '__TKT' / 'TASKS'
     paths = []
-    for row, marker, directory in ((draft, target['ref_id'], ('draft',)),
+    for row, marker, directory in ((draft, target['ref_id'], ('000_draft',)),
                                    (current, atom_id, () if status == 'active' else (status,))):
         relative, digest = row.get('source_path'), row.get('_source_sha256')
         if not isinstance(relative, str) or not isinstance(digest, str) or not re.fullmatch(r'[0-9a-f]{64}', digest):
@@ -404,7 +404,7 @@ def promote_draft(selection, params, *, current_rows, migration_refs):
                 or not selection.manifest_path.is_relative_to(selection.control_root)
                 or relative.is_absolute() or '..' in relative.parts or not path.is_relative_to(root)):
             raise common.SourceChanged('Task path is invalid.')
-        directory = () if group == 'active' else (group,)
+        directory = ('000_draft',) if group == 'draft' else (() if group == 'active' else (group,))
         header = row.get('header_json')
         context = header.get('context') if isinstance(header, dict) else None
         if (not isinstance(group, str) or group not in {'draft', 'active', 'backlog', 'done', 'canceled', 'resolved'}
@@ -417,7 +417,7 @@ def promote_draft(selection, params, *, current_rows, migration_refs):
     suffix = draft_path.name[len(target['ref_id']):]
     if previous_path.name != atom_id + suffix:
         raise common.InputError('target', 'Task Draft and Current filename must agree.')
-    archive_path = root / 'archived' / f"{atom_id}@{previous['version']}{suffix}"
+    archive_path = root / '099_archived' / f"{atom_id}@{previous['version']}{suffix}"
     destination = root / ('' if status == 'active' else status) / (atom_id + suffix)
 
     with _project_write_lock(selection.root):

@@ -5,8 +5,10 @@
 from __future__ import annotations
 
 from pathlib import Path
+import json
 import sys
-from types import ModuleType
+import tempfile
+from types import ModuleType, SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
 
@@ -18,6 +20,26 @@ import work_journal  # noqa: E402
 
 
 class ReleaseEventsTests(unittest.TestCase):
+    def test_native_selection_records_linked_events_in_selected_journal(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            control = Path('.anechoic_test')
+            (root / control).mkdir()
+            selection = SimpleNamespace(root=root, control_relative=control, parameters={
+                'artifact_timestamps': {'timezone': 'UTC'},
+                'paths': {'journal_root': '.anechoic_test/_journal'},
+            })
+            result = release_events.run_recorded_release(
+                root, 'release_version', 'run', lambda: {'outcome': 'completed'}, selection=selection
+            )
+            self.assertNotIn('recording_error', result)
+            files = list((root / control / '_journal').glob('src-work-journal-*.ndjson'))
+            self.assertEqual(len(files), 1)
+            started, completed = [json.loads(line) for line in files[0].read_text().splitlines()]
+            self.assertEqual((started['event'], completed['event']), ('started', 'completed'))
+            self.assertEqual(completed['preceding_event'], started['event_id'])
+            self.assertTrue(started['occurred_at'].endswith(' +0000'))
+
     def test_started_and_terminal_linkage(self) -> None:
         for outcome in ("completed", "failed"):
             with self.subTest(outcome=outcome):

@@ -12,6 +12,18 @@ from release_image_provenance import release_image_provenance
 
 
 class ReleaseImageProvenanceTests(unittest.TestCase):
+    def test_native_provenance_uses_validated_manifest_name(self) -> None:
+        fixture = fixtures.SimpleLocalReleaseTests("runTest")
+        fixture.setUp()
+        self.addCleanup(fixture.doCleanups)
+        fixture._native_project()
+        from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import select_runtime_project
+        selection = select_runtime_project(fixture.root)
+        runner = Mock(return_value=subprocess.CompletedProcess([], 0, "d" * 40, ""))
+        metadata = release_image_provenance(fixture.root, selection, runner)
+        self.assertEqual("Anechoic", metadata["project_name"])
+        self.assertEqual(selection.instance_id, metadata["project_id"])
+
     def test_owner_name_and_full_head_are_observed_from_owning_root(self) -> None:
         root = Path("/owning-repository")
         selection = SimpleNamespace(

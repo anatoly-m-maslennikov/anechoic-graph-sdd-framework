@@ -60,6 +60,15 @@ class NativeCaptureTests(unittest.TestCase):
         self.assertTrue(any("Duplicate" in error for error in result.errors.values()))
         self.assertTrue(any("status" in error for error in result.errors.values()))
 
+    def test_installed_methodology_copies_are_excluded(self):
+        active = self.write("AN-S-2--definition.md", "AN-S-2", "active", 1)
+        copy = self.control / "000_ANECHOIC_framework/sources" / active.name
+        copy.parent.mkdir(parents=True)
+        copy.write_bytes(active.read_bytes())
+        result = capture_native(self.selection)
+        self.assertEqual({}, result.errors)
+        self.assertEqual({"AN-S-001@1", "AN-S-2@1"}, {row["_exact_ref"] for row in result.atoms})
+
     def test_manifest_drift_refuses_capture(self):
         self.manifest.write_text("changed", encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "Manifest changed"):

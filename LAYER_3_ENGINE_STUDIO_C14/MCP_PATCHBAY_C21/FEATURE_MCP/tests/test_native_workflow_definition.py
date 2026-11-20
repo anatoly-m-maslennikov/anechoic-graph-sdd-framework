@@ -30,7 +30,7 @@ class NativeWorkflowDefinitionTests(unittest.TestCase):
     def setUp(self):
         self.root = Path(self.enterContext(TemporaryDirectory())).resolve()
         self.control = ".anechoic_anechoic"
-        self.manifest = self._write(f"{self.control}/SPEC/AN-S-1-PROJECT_MANIFEST--declare.md", {
+        self.manifest = self._write(f"{self.control}/AN-S-1-PROJECT_MANIFEST--declare.md", {
             "identity": {"atom_id": "AN-S-1"},
             "context": {"container": {"component": "C0"}, "tier": -1, "template": "project_manifest"},
             "state": {"status": "active", "version": 1},

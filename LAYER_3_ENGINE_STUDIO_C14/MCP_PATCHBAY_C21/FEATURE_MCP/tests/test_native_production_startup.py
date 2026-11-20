@@ -43,8 +43,10 @@ class NativeProductionStartupTests(unittest.IsolatedAsyncioTestCase):
         old = self.root / self.old_path
         old.parent.mkdir(parents=True)
         old.write_text('Retained legacy source.\n', encoding='utf-8')
-        self.alias_path = self.root / 'native-aliases.json'
+        self.alias_path = self.root / '.anechoic_anechoic/_migration/native-aliases.json'
+        self.alias_path.parent.mkdir(parents=True)
         self.alias_path.write_text(json.dumps([['CA-P-9@2', self.old_path, 'AN-T-009@2']]), encoding='utf-8')
+        (self.root / 'native-aliases.json').write_text(self.alias_path.read_text(encoding='utf-8'), encoding='utf-8')
         self.legacy = legacy
 
     def legacy_digests(self):

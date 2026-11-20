@@ -53,6 +53,7 @@ class ReadContext:
     fingerprints: dict[str, str] = field(default_factory=dict)
     sizes: dict[str, int] = field(default_factory=dict)
     inventories: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    shallow_inventories: dict[str, tuple[str, ...]] = field(default_factory=dict)
     candidates: set[str] = field(default_factory=set)
 
     def checkpoint(self) -> None:
@@ -146,6 +147,25 @@ class ReadContext:
                 raise LimitReached("max_candidates")
         return sorted(found)
 
+    def inventory_shallow(self, root: Path, *, remember: bool = True) -> list[Path]:
+        root = self.allowed(root)
+        descriptor = open_regular(root, directory=True)
+        try:
+            names = []
+            with os.scandir(descriptor) as entries:
+                for count, entry in enumerate(entries, 1):
+                    self.checkpoint()
+                    if count > self.limits["max_candidates"]:
+                        raise LimitReached("max_candidates")
+                    if entry.name.endswith(".md"):
+                        names.append(str(root / entry.name))
+        finally:
+            os.close(descriptor)
+        members = tuple(sorted(names))
+        if remember:
+            self.shallow_inventories[str(root)] = members
+        return [Path(name) for name in members]
+
     def currentness(self) -> dict[str, Any]:
         affected: list[dict[str, str]] = []
         for name, digest in sorted(self.fingerprints.items()):
@@ -160,6 +180,13 @@ class ReadContext:
                 names = tuple(str(path) for path in self.inventory(Path(root), remember=False))
             except OSError:
                 names = ()
+            if names != members:
+                affected.append({"path": root})
+        for root, members in sorted(self.shallow_inventories.items()):
+            try:
+                names = tuple(str(path) for path in self.inventory_shallow(Path(root), remember=False))
+            except OSError:
+                names = None
             if names != members:
                 affected.append({"path": root})
         return {"state": "changed" if affected else "unchanged", "affected_inputs": affected}

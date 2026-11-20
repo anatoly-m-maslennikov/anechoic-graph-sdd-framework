@@ -6,13 +6,15 @@ from __future__ import annotations
 
 import argparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from contextlib import nullcontext
+from contextlib import contextmanager, nullcontext
 import json
 from itertools import chain
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
+import tempfile
 import time
 
 from full_suite_docker import APP, current_code_test_image
@@ -37,6 +39,45 @@ if not count:
     print("No test cases loaded", file=sys.stderr)
 sys.exit(0 if count and result.wasSuccessful() and not required_skips else 1)
 """
+
+
+@contextmanager
+def legacy_test_fixture(root: Path):
+    """Run legacy data assumptions in an owned clone of the current source."""
+    with tempfile.TemporaryDirectory(prefix="anechoic-legacy-tests-") as temporary:
+        temporary_root = Path(temporary).resolve(strict=True)
+        fixture = temporary_root / "project"
+        status = subprocess.run(("git", "status", "--porcelain", "--untracked-files=no"),
+                                cwd=root, capture_output=True, check=True, timeout=300).stdout
+        if status:
+            raise OSError("legacy fixture requires clean tracked source")
+        head = subprocess.run(("git", "rev-parse", "HEAD"), cwd=root,
+                              capture_output=True, check=True, timeout=300).stdout
+        subprocess.run(("git", "clone", "--quiet", "--shared", "--no-hardlinks", "--no-tags",
+                        str(root), str(fixture)),
+                       check=True, timeout=300)
+        cloned_head = subprocess.run(("git", "rev-parse", "HEAD"), cwd=fixture,
+                                     capture_output=True, check=True, timeout=300).stdout
+        if head != cloned_head:
+            raise OSError("source HEAD changed while creating legacy fixture")
+        native, legacy = fixture / ".anechoic_anechoic", fixture / ".anechoic_legacy"
+        if any(path.is_symlink() or not path.is_dir() for path in (native, legacy)):
+            raise OSError("native control or retained legacy fixture is missing")
+        native.rename(temporary_root / "native-control")
+        legacy.rename(native)
+        for relative in (
+            Path(".anechoic_tmp/workbench/extensions"),
+            Path(".anechoic_tmp/workbench/playwright-browsers"),
+            WORKBENCH / "FEATURE_WORKBENCH_FRONTEND/node_modules",
+        ):
+            source, destination = root / relative, fixture / relative
+            if source.is_symlink():
+                raise OSError(f"test cache is a symbolic link: {source}")
+            if source.is_dir():
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copytree(source, destination, symlinks=True)
+        print(f"Legacy test fixture: {fixture} (source HEAD {head.decode().strip()})", flush=True)
+        yield fixture
 
 
 def discover_test_modules(root: Path) -> list[Path]:
@@ -252,12 +293,18 @@ def main() -> int:
     parser.add_argument("--project-root", type=Path, default=Path.cwd())
     parser.add_argument("--test-module", action="append", dest="test_modules", metavar="PATH")
     parser.add_argument("--image-mode", choices=("refresh", "existing"), default="refresh")
+    parser.add_argument("--legacy-fixture", action="store_true", help=argparse.SUPPRESS)
     arguments = parser.parse_args()
     root = arguments.project_root.resolve(strict=True)
-    return run_full_suite(
-        root, test_modules=tuple(arguments.test_modules) if arguments.test_modules is not None else None,
-        image_mode=arguments.image_mode,
-    )
+    try:
+        with legacy_test_fixture(root) if arguments.legacy_fixture else nullcontext(root) as test_root:
+            return run_full_suite(
+                test_root, test_modules=tuple(arguments.test_modules) if arguments.test_modules is not None else None,
+                image_mode=arguments.image_mode,
+            )
+    except (OSError, subprocess.SubprocessError) as error:
+        print(f"Required legacy test fixture failed: {error}", file=sys.stderr)
+        return 1
 
 
 if __name__ == "__main__":

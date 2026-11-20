@@ -26,7 +26,7 @@ class NativeHostLauncherTests(unittest.TestCase):
     def setUp(self):
         self.root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
         self.control = self.root / '.anechoic_anechoic'
-        path = self.control / 'SPEC' / 'AN-S-001-PROJECT_MANIFEST--declare.md'
+        path = self.control / 'AN-S-001-PROJECT_MANIFEST--declare.md'
         path.parent.mkdir(parents=True)
         header = {'identity': {'atom_id': 'AN-S-001'},
                   'context': {'container': {'component': 'C00'}, 'tier': -1,

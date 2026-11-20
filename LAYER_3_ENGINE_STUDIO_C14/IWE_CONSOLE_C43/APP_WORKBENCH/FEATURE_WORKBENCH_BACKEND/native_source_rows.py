@@ -84,9 +84,11 @@ def capture_native(selection: Any) -> NativeCapture:
     exact_paths: dict[str, str] = {}
     current_paths: dict[str, str] = {}
     for path in paths:
+        tree = path.relative_to(control).parts[0]
+        if tree == "000_ANECHOIC_framework":
+            continue
         relative = path.relative_to(root).as_posix()
         try:
-            tree = path.relative_to(control).parts[0]
             family = {"_PMETA": "P", "__TKT": "T"}.get(tree, "S")
             row, edge = _carrier_row(path, root, family, selection.project_prefix, reader.read(path))
             row["_source_sha256"] = reader.fingerprints[str(path)]

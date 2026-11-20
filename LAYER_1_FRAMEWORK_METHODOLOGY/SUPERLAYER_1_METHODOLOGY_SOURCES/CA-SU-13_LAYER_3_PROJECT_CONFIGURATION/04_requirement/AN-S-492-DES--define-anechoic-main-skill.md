@@ -1,0 +1,26 @@
+---
+identity:
+  atom_id: AN-S-492
+context:
+  container:
+    component: C9
+  tier: 3
+  lens: DES
+state:
+  status: active
+  version: 33
+  updated_at: 2026-11-02 19:44:26 +0400
+---
+## Summary
+
+Define ANECHOIC Main Skill
+
+## Claim
+
+### Prose Claim
+
+
+the ANECHOIC Main Skill.
+
+
+The ANECHOIC Main Skill **must** be the canonical Skill with identity `ca`.

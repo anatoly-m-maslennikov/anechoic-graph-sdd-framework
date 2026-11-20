@@ -238,5 +238,5 @@ def archive_ticket(selection, params, *, current_rows):
     selected, digest, path = _select_ticket(selection, target, current_rows)
     branch = _branch(selection, path, selected['status'])
     name = f"{selected['id']}@{target['version']}" + path.name[len(selected['id']):]
-    return _move_ticket(selection, target, selected, digest, path, branch / 'archived' / name,
+    return _move_ticket(selection, target, selected, digest, path, branch / '099_archived' / name,
                         'archived', lambda: None)

@@ -25,8 +25,12 @@ def release_image_provenance(
     selection: SelectedProject,
     runner: Runner | None = None,
 ) -> dict[str, str]:
-    project = selection.settings.get("project")
-    name = project.get("name") if isinstance(project, Mapping) else None
+    from native_project_selection import NativeProjectSelection
+    if isinstance(selection, NativeProjectSelection):
+        name = selection.project_name
+    else:
+        project = selection.settings.get("project")
+        name = project.get("name") if isinstance(project, Mapping) else None
     if not isinstance(name, str) or not name.strip():
         raise ValueError("local-release-project-name-invalid")
     argv = ("git", "rev-parse", "--verify", "HEAD")

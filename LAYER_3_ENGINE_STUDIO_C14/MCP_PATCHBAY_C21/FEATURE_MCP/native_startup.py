@@ -119,7 +119,7 @@ def load_native_inputs(selection):
     from native_query import NativeQueryInputs
 
     model = load_native_model()
-    alias_path = selection.root / "native-aliases.json"
+    alias_path = selection.control_root / "_migration" / "native-aliases.json"
     aliases = ()
     if os.path.lexists(alias_path):
         reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))

@@ -106,3 +106,53 @@ def generate_scope_callback(package: Path, raw: bytes, *, selected_pin, release_
     from FEATURE_FORMAL_MODEL_ENGINE.scope_callback_asset import generated_assets, write_package
     generated = generated_assets(raw, pin=selected_pin, release_sources=release_sources)
     return write_package(package / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_FORMAL_MODEL_ENGINE/assets", generated)
+
+
+def verify_native_release_assets(package: Path, project_root: Path, control_relative: Path) -> tuple[Path, ...]:
+    """Verify native runtime bindings and the retained legacy compatibility assets."""
+    assets = (
+        package / _WORKBENCH_BACKEND / "canonical_relation_registry.json",
+        package / _WORKBENCH_BACKEND / "workbench_schema.json",
+        package / _ATOM_LIFECYCLE / "status_model.json",
+        package / _ATOM_LIFECYCLE / "candidate_schema.json",
+    )
+    if any(path.is_symlink() or not path.is_file() for path in assets):
+        raise LocalReleaseError("local-release-native-assets-unavailable")
+    verifier = '''
+import sys
+from pathlib import Path
+package, root, control = map(Path, sys.argv[1:])
+for directory in ("FEATURE_PROGRAMMATIC", "FEATURE_PROGRAMMATIC/FEATURE_TOOLS",
+                  "IWE_CONSOLE_C43", "MCP_PATCHBAY_C21/FEATURE_MCP"):
+    sys.path.insert(0, str(package / "LAYER_3_ENGINE_STUDIO_C14" / directory))
+from native_startup import select_runtime_project, load_native_inputs
+from native_workflow_definition import bind_status_specifications
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import capture_native
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.relation_registry_asset import load_registry_asset
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workbench_schema_asset import load_image_schema
+from ATOM_LIFECYCLE.status_model import load_status_model
+from ATOM_LIFECYCLE.candidate_schema import load_candidate_schema
+selection = select_runtime_project(root, control)
+inputs = load_native_inputs(selection)
+capture = capture_native(selection)
+if capture.errors:
+    raise ValueError("native Project capture is incomplete")
+bind_status_specifications(selection, migration_refs=inputs.migration_refs, current_rows=capture.atoms)()
+workbench = package / "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND"
+lifecycle = package / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_LIFECYCLE"
+load_registry_asset(workbench / "canonical_relation_registry.json")
+load_image_schema(workbench / "workbench_schema.json")
+load_status_model(lifecycle / "status_model.json")
+load_candidate_schema(lifecycle / "candidate_schema.json")
+'''
+    try:
+        result = subprocess.run(
+            (sys.executable, "-B", "-c", verifier, str(package), str(project_root), str(control_relative)),
+            cwd=package, env={}, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+            timeout=60, check=False,
+        )
+    except (OSError, subprocess.SubprocessError) as error:
+        raise LocalReleaseError("local-release-native-assets-verification-failed") from error
+    if result.returncode != 0:
+        raise LocalReleaseError("local-release-native-assets-verification-failed")
+    return assets

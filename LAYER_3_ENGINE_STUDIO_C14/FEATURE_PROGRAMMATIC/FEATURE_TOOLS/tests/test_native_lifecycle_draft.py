@@ -39,14 +39,14 @@ class NativeDraftTests(unittest.TestCase):
         return path
 
     def test_creates_next_version_without_changing_current_or_manifest(self):
-        self.write('__TKT/TASKS/archived/AN-T-1@4-TASK--example.md', 'AN-T-1', version=4, status='archived')
-        self.write('__TKT/TASKS/draft/AN-T-1@5-draft-TASK--example.md', 'AN-T-1', version=5, status='draft')
+        self.write('__TKT/TASKS/099_archived/AN-T-1@4-TASK--example.md', 'AN-T-1', version=4, status='archived')
+        self.write('__TKT/TASKS/000_draft/AN-T-1@5-draft-TASK--example.md', 'AN-T-1', version=5, status='draft')
         current, manifest = self.path.read_bytes(), self.selection.manifest_path.read_bytes()
         output = create_draft(self.selection, self.params, current_rows=self.rows)
         self.assertEqual('completed', output['outcome'])
         self.assertEqual('AN-T-1@6-draft', output['savedDraft']['ref_id'])
         target = self.root / output['savedDraft']['path']
-        self.assertEqual(self.control / '__TKT/TASKS/draft/AN-T-1@6-draft-TASK--example.md', target)
+        self.assertEqual(self.control / '__TKT/TASKS/000_draft/AN-T-1@6-draft-TASK--example.md', target)
         self.assertEqual('create', output['effects'][-1]['operation'])
         self.assertEqual(current, self.path.read_bytes())
         self.assertEqual(manifest, self.selection.manifest_path.read_bytes())
@@ -84,14 +84,14 @@ class NativeDraftTests(unittest.TestCase):
                 if case == 'manifest': self.selection.manifest_path.write_bytes(manifest + b'changed')
                 with self.assertRaises((InputError, SourceChanged)):
                     create_draft(self.selection, params, current_rows=rows)
-                self.assertFalse((self.control / '__TKT/TASKS/draft').exists())
+                self.assertFalse((self.control / '__TKT/TASKS/000_draft').exists())
                 self.path.write_bytes(original)
                 self.selection.manifest_path.write_bytes(manifest)
 
     def test_symlink_draft_directory_cannot_escape(self):
         outside = self.root / 'outside'
         outside.mkdir()
-        (self.control / '__TKT/TASKS/draft').symlink_to(outside, target_is_directory=True)
+        (self.control / '__TKT/TASKS/000_draft').symlink_to(outside, target_is_directory=True)
         output = create_draft(self.selection, self.params, current_rows=self.rows)
         self.assertEqual('failed', output['outcome'])
         self.assertTrue(output['errors'])
@@ -116,7 +116,7 @@ class NewNativeTaskTests(unittest.TestCase):
                                 'body': '\n## Summary\n\nCreate a Task!\n\n## Work\n\nDo it.\n'}}
 
     def test_new_task_allocates_across_history_and_promotes_version_one(self):
-        self.write('__TKT/ISSUES/archived/AN-T-8@2-QUESTION--old.md', 'AN-T-8', version=2, status='archived', template='question')
+        self.write('__TKT/ISSUES/099_archived/AN-T-8@2-QUESTION--old.md', 'AN-T-8', version=2, status='archived', template='question')
         before = self.path.read_bytes(), self.selection.manifest_path.read_bytes()
         result = create_draft(self.selection, self.new, current_rows=self.rows)
         self.assertEqual('AN-T-9@1-draft', result['savedDraft']['ref_id'])
@@ -275,7 +275,7 @@ class NativePromotionTests(unittest.TestCase):
             promote_draft(self.selection, self.promotion, current_rows=self.rows,
                           migration_refs=[('CA-P-1@2-draft', 'old.md', 'AN-T-1@2-draft')])
         self.assertEqual(before, (self.path.read_bytes(), self.draft.read_bytes()))
-        self.assertFalse((self.control / '__TKT/TASKS/archived').exists())
+        self.assertFalse((self.control / '__TKT/TASKS/099_archived').exists())
 
     def test_conflict_and_stale_sources_have_no_effects(self):
         for case in ('collision', 'draft', 'current', 'manifest', 'selector', 'invalid_refs'):
@@ -285,7 +285,7 @@ class NativePromotionTests(unittest.TestCase):
                 conflict = None
                 refs = []
                 if case == 'collision':
-                    conflict = self.write('__TKT/TASKS/archived/AN-T-1@2-TASK--example.md', 'AN-T-1', version=2, status='archived')
+                    conflict = self.write('__TKT/TASKS/099_archived/AN-T-1@2-TASK--example.md', 'AN-T-1', version=2, status='archived')
                 if case == 'draft': self.draft.write_bytes(draft.replace(b'New', b'Changed'))
                 if case == 'current': self.path.write_bytes(old.replace(b'Old', b'Changed'))
                 if case == 'manifest': self.selection.manifest_path.write_bytes(manifest + b'changed')
@@ -307,7 +307,7 @@ class NativePromotionTests(unittest.TestCase):
         self.promotion['targetStatus'] = 'done'
         with self.assertRaises(InputError):
             promote_draft(self.selection, self.promotion, current_rows=self.rows, migration_refs=[])
-        self.assertFalse((self.control / '__TKT/TASKS/archived').exists())
+        self.assertFalse((self.control / '__TKT/TASKS/099_archived').exists())
         self.assertEqual([], list(outside.iterdir()))
 
     def test_failed_replacement_rolls_back_archive(self):
@@ -320,7 +320,7 @@ class NativePromotionTests(unittest.TestCase):
         self.assertTrue(output['effects'])
         self.assertTrue(self.draft.exists())
         self.assertTrue(self.path.exists())
-        self.assertFalse((self.control / '__TKT/TASKS/archived/AN-T-1@1-TASK--example.md').exists())
+        self.assertFalse((self.control / '__TKT/TASKS/099_archived/AN-T-1@1-TASK--example.md').exists())
         self.assertFalse(capture_native(self.selection).errors)
 
 
@@ -339,7 +339,7 @@ class NativePromotionTests(unittest.TestCase):
         self.assertTrue(self.path.exists())
         self.assertTrue(self.draft.exists())
         self.assertFalse((self.control / '__TKT/TASKS/done/AN-T-1-TASK--example.md').exists())
-        self.assertFalse((self.control / '__TKT/TASKS/archived/AN-T-1@1-TASK--example.md').exists())
+        self.assertFalse((self.control / '__TKT/TASKS/099_archived/AN-T-1@1-TASK--example.md').exists())
         self.assertFalse(capture_native(self.selection).errors)
 
     def test_changed_current_retains_generated_carriers_and_reports_uncertainty(self):
@@ -359,12 +359,12 @@ class NativePromotionTests(unittest.TestCase):
         self.assertTrue(self.path.read_bytes().endswith(b'external'))
         self.assertTrue(self.draft.exists())
         self.assertTrue((self.control / '__TKT/TASKS/done/AN-T-1-TASK--example.md').exists())
-        self.assertTrue((self.control / '__TKT/TASKS/archived/AN-T-1@1-TASK--example.md').exists())
+        self.assertTrue((self.control / '__TKT/TASKS/099_archived/AN-T-1@1-TASK--example.md').exists())
 
     def test_changed_archive_is_retained_and_reported(self):
         from unittest.mock import patch
         from ATOM_LIFECYCLE.effects import Result
-        archive = self.control / '__TKT/TASKS/archived/AN-T-1@1-TASK--example.md'
+        archive = self.control / '__TKT/TASKS/099_archived/AN-T-1@1-TASK--example.md'
         def replace(*args):
             archive.write_bytes(archive.read_bytes() + b'external')
             return Result(errors=[{'code': 'stale_state', 'message': 'injected failure'}])
@@ -388,7 +388,7 @@ class NativePromotionTests(unittest.TestCase):
             output = promote_draft(self.selection, self.promotion, current_rows=self.rows, migration_refs=[])
         self.assertEqual('failed', output['outcome'])
         self.assertEqual('source_changed', output['errors'][0]['code'])
-        self.assertFalse((self.control / '__TKT/TASKS/archived/AN-T-1@1-TASK--example.md').exists())
+        self.assertFalse((self.control / '__TKT/TASKS/099_archived/AN-T-1@1-TASK--example.md').exists())
         self.assertTrue(self.path.exists())
         self.assertTrue(self.draft.read_bytes().endswith(b'external'))
 

@@ -38,6 +38,10 @@ class NativeProjectSelection:
     host_root: Path | None = None
 
     @property
+    def launcher_state(self) -> Path:
+        return self.root / ".anechoic_runtime/runtime/project_mcp" / self.instance_id
+
+    @property
     def compose_project(self) -> str:
         return "anechoic-mcp-" + self.instance_id[:24]
 
@@ -63,10 +67,8 @@ def rebind_native_selection(selection: NativeProjectSelection, instance_id: str,
 
 
 def manifest_paths(reader: ReadContext, control: Path):
-    spec = control / "SPEC"
-    for path in reader.inventory(spec):
-        if (path.parent == spec and path.suffix == ".md"
-                and re.match(r"[A-Z]+-S-", path.name)):
+    for path in reader.inventory_shallow(control):
+        if re.match(r"[A-Z]+-S-", path.name):
             yield path
 
 
@@ -120,7 +122,7 @@ def resolve_native_project(
         sources = _manifest_carriers(reader, control)
         selected = next(sources, None)
         if selected is None or next(sources, None) is not None:
-            raise ProjectSelectionError("Expected one Active Tier -1 Project Manifest in SPEC")
+            raise ProjectSelectionError("Expected one Active Tier -1 Project Manifest at Project root")
         path, carrier = selected
         fields, component_id = _manifest_inputs(path, carrier)
         manifest = validate_manifest(fields, component_id)

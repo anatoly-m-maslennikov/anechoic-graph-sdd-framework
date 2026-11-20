@@ -27,7 +27,7 @@ from smalltest_support import extension_directory  # noqa: E402
 
 
 CONTROL = ".anechoic_anechoic"
-MANIFEST = "SPEC/AN-S-001-PROJECT_MANIFEST--declare-anechoic.md"
+MANIFEST = "AN-S-001-PROJECT_MANIFEST--declare-anechoic.md"
 OLD_PATH = ".anechoic_legacy/03_plan/CA-P-9--old-task.md"
 UNNUMBERED_PATH = ".anechoic_legacy/03_plan/archive/old-task.md"
 STAGING_COPY_PATH = "migration-evidence/03_plan/old-task-copy.md"

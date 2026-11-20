@@ -195,6 +195,97 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         launcher_python.chmod(0o755)
         return subprocess.CompletedProcess(argv, 0, "http://localhost:12345/mcp\n", "")
 
+    def _native_project(self):
+        (self.control / "anechoic_project_settings.toml").unlink()
+        manifest = self.control / "AN-S-001-PROJECT_MANIFEST--declare.md"
+        manifest.parent.mkdir(exist_ok=True)
+        manifest.write_text(
+            "---\nidentity:\n  atom_id: AN-S-001\ncontext:\n  container:\n    component: C00\n"
+            "  tier: -1\n  template: project_manifest\nstate:\n  status: active\n  version: 1\n---\n"
+            "## Claim\n\n### Formal Claim\n\n```python\n"
+            "from anechoic.formal_claims import declare_entity\n"
+            "from anechoic.model import ProjectManifest\n"
+            "declare_entity(entity_name='Project Manifest', "
+            "instance=ProjectManifest(name='Anechoic', prefix='AN'))\n```\n", encoding="utf-8",
+        )
+
+        for relative in _GENERATED_ASSETS:
+            (self.root / relative).write_text('{"sealed": true}\n', encoding="utf-8")
+        self.native_assets = self.enterContext(patch("release_support.verify_native_release_assets"))
+
+    def _native_sources(self):
+        return {Path(source.name) / "active.md": source / "active.md" for source in self.source_units.values()}
+
+    def test_native_release_runs_full_gates_and_copies_selected_sources(self):
+        self._native_project()
+        runner, calls = self._runner()
+        with patch("release_support._native_release_sources", return_value=self._native_sources(), create=True) as select, \
+             patch("local_release._build_predecessor", return_value=None), \
+             patch("local_release._launcher_image", side_effect=[None, self.image_id]):
+            result = run_local_release(self.root, run_id="native-release", runner=runner)
+        self.native_assets.assert_called_once()
+        self.assertEqual("completed", result["outcome"], result)
+        self.assertTrue(all(call.args[0].manifest_ref == "AN-S-001@1" for call in select.call_args_list))
+        test_argv = next(call for call in calls if any(arg.endswith("run_full_test_suite.py") for arg in call))
+        self.assertIn("--legacy-fixture", test_argv)
+        self.assertEqual(("--image-mode", "existing"), test_argv[-2:])
+        self.assertEqual("refresh", result["image_mode"])
+        self.assertTrue(any(self._is_mcp_bootstrap(call) for call in calls))
+        product_sources = self.product / "SUPERLAYER_1_METHODOLOGY_SOURCES"
+        for relative, source in self._native_sources().items():
+            self.assertEqual(source.read_bytes(), (product_sources / relative).read_bytes())
+
+    def test_native_manifest_change_stops_before_product_replacement(self):
+        self._native_project()
+        runner, _ = self._runner()
+
+        def change_manifest(argv, cwd):
+            if argv[0] == "uv":
+                path = self.control / "AN-S-001-PROJECT_MANIFEST--declare.md"
+                path.write_text(path.read_text() + "\nchanged\n", encoding="utf-8")
+            return runner(argv, cwd)
+
+        with patch("release_support._native_release_sources", return_value=self._native_sources(), create=True), \
+             patch("local_release._build_predecessor", return_value=None), \
+             patch("local_release._launcher_image", return_value=None):
+            result = run_local_release(self.root, run_id="native-changed", runner=change_manifest)
+        self.assertEqual(("failed", "validate_project_selection"), (result["outcome"], result["failed_step"]))
+        self.assertEqual("obsolete", (self.product / "old.txt").read_text())
+
+    def test_native_existing_mode_keeps_the_full_test_gate(self):
+        self._native_project()
+        runner, calls = self._runner()
+        with patch("release_support._native_release_sources", return_value=self._native_sources(), create=True), \
+             patch("local_release._build_predecessor", return_value=None), \
+             patch("local_release._launcher_image", side_effect=[None, self.image_id]):
+            result = run_local_release(self.root, run_id="native-existing", runner=runner, image_mode="existing")
+        self.native_assets.assert_called_once()
+        self.assertEqual("completed", result["outcome"], result)
+        test_argv = next(call for call in calls if any(arg.endswith("run_full_test_suite.py") for arg in call))
+        self.assertIn("--legacy-fixture", test_argv)
+        self.assertEqual(("--image-mode", "existing"), test_argv[-2:])
+
+    def test_native_source_change_stops_before_product_replacement(self):
+        self._native_project()
+        runner, _ = self._runner()
+        original_copy = shutil.copy2
+        changed = next(iter(self._native_sources().values()))
+
+        def mutate_after_copy(source, destination, *args, **kwargs):
+            result = original_copy(source, destination, *args, **kwargs)
+            if source == changed:
+                changed.write_text("changed", encoding="utf-8")
+            return result
+
+        with patch("release_support._native_release_sources", return_value=self._native_sources(), create=True), \
+             patch("local_release._build_predecessor", return_value=None), \
+             patch("local_release._launcher_image", return_value=None), \
+             patch("local_release.shutil.copy2", side_effect=mutate_after_copy):
+            result = run_local_release(self.root, run_id="native-source-change", runner=runner)
+        self.assertEqual(("failed", "copy_active_sources"), (result["outcome"], result["failed_step"]))
+        self.assertEqual("obsolete", (self.product / "old.txt").read_text())
+        self.assertIn('version = "0.4.1"', (self.root / "version.toml").read_text())
+
     def test_previous_image_refreshes_checkout_assets_before_build(self):
         runner, _ = self._runner()
         previous = "sha256:" + "e" * 64
