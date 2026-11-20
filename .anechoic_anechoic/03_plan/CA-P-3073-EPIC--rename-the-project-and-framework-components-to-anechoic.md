@@ -106,9 +106,9 @@ edits in parallel where the paths and files are separate.
 - [x] Prepare a compact old-ID and new-ID file for the isolated Active
   preview. The provisional map is
   `.anechoic_tmp/ca-p-3073/current-family-rebind/active-preview-id-map.tsv`.
-- [ ] Freeze the compact ID map for the verified migration set. Keep the
+- [x] Freeze the compact ID map for the verified migration set. Keep the
   original path for ambiguous legacy exact references.
-- [ ] Apply the same map to Atom IDs and references in native YAML,
+- [x] Apply the same map to Atom IDs and references in native YAML,
   filenames, and relations admitted by CA-P-3089. Keep unresolved
   relation occurrences in the migration receipt.
 - [x] Verify the Active preview against the production native runtime.
@@ -129,14 +129,14 @@ references. The archive may remain partial.
   excludes the archive and still selects the same 1,108 source files.
 
 - [x] Create `.anechoic_new/` for native staging.
-- [ ] Stage the verified native records in `.anechoic_new/` with CA-P-3075.
-- [ ] With both trees present, verify that legacy Local Release still selects
+- [x] Stage the verified native records in `.anechoic_new/` with CA-P-3075.
+- [x] With both trees present, verify that legacy Local Release still selects
   the protected inputs at their original paths and excludes the native
   staging tree from its package. Compare selected paths and digests with
   the protected baseline. The live selector check with the staging directory
   present matched all 1,108 selected source paths and digests. An isolated
   package check also excluded a native Manifest placed in the staging tree.
-- [ ] In an isolated checkout, rehearse the final names from CA-A-1461.
+- [x] In an isolated checkout, rehearse the final names from CA-A-1461.
   Verify that the selected Project root resolves native SPEC, PMETA, and TKT
   and binds the native Project Manifest. Verify the native runtime entry
   points before the live rename. CA-P-3073 owns production wiring and
@@ -145,7 +145,7 @@ references. The archive may remain partial.
 
 ### Production native runtime
 
-- [ ] Build the delivered native model and relation rules from the reviewed
+- [x] Build the delivered native model and relation rules from the reviewed
   CA-P-3089 packet. Bind CA-P-3075's final legacy reference map. The isolated
   loader uses the rehearsal's `native-aliases.json` row format.
 - [ ] Review the 14 legacy relation types outside the CA-P-3089 packet.
@@ -153,7 +153,7 @@ references. The archive may remain partial.
   complete. Keep the CA-P-3075 migration evidence for each relation. The
   candidate declarations and replay are in
   `.anechoic_tmp/ca-p-3073/native-bridge-review/`.
-- [ ] Move all Project Settings into the Project Manifest. Preserve setting
+- [x] Move all Project Settings into the Project Manifest. Preserve setting
   types and values in nested parameter groups. Keep the protected legacy
   Settings at their original path through the pre-cutover Local Release.
   The isolated Manifest rehearsal preserved 12 typed parameter groups and
@@ -174,7 +174,7 @@ references. The archive may remain partial.
   `189f757401` wires native queries, Workspaces, Views, and saved items.
   Commit `4dba891959` selects the Active Project Manifest from the
   Project’s `SPEC/` directory.
-- [ ] Verify the production launch and query path in an isolated checkout with
+- [x] Verify the production launch and query path in an isolated checkout with
   the final directory names. Use CA-P-3096 to verify the migrated records and
   reference lookups. The isolated launch returned `READY_STARTED`, resolved
   a legacy alias through MCP, and fetched a native record through a Workbench
@@ -219,12 +219,12 @@ references. The archive may remain partial.
 Keep each Local Release run isolated. Use the integrated changes from the
 work groups above.
 
-- [ ] With the legacy tree at `.anechoic_anechoic/` and the native tree at
+- [x] With the legacy tree at `.anechoic_anechoic/` and the native tree at
   `.anechoic_new/`, run the full test gate and a clean Local Release in
   `refresh` mode. CA-P-3095 owns the clean legacy rebuild proof. CA-C-758
   permits a free port for the isolated startup check after the rebuild and
   protected input digests pass with the original Settings.
-- [ ] Verify `existing` mode with the generated assets saved with the matching
+- [x] Verify `existing` mode with the generated assets saved with the matching
   checkout.
 - [ ] After the pre-cutover Local Release succeeds, rename the live legacy tree
   from `.anechoic_anechoic/` to `.anechoic_legacy/` as one complete tree,
@@ -232,6 +232,32 @@ work groups above.
   `.anechoic_anechoic/`.
 - [ ] Verify discovery and reference lookup from the final native path.
 - [ ] Verify Workbench and MCP `query_run` against the resulting runtime.
+
+### Staged records and release checks
+
+The staged native tree contains 5,683 Current Atoms, including all 3,544
+Active Atoms, 727 Drafts, 3 archived CA-C-453 revisions, and 45 Manifests.
+The Project Manifest carries 12 typed Settings groups.
+
+The shared ID map has 5,999 old and new ID pairs. The native index resolves
+6,413 original paths, including the two legacy CA-C-453 Version 1 paths
+that map to different native Versions. The migration updates native YAML
+identities, filenames, and 1,667 Atom container references. The native
+index derives the matching CONTAINS relations. Legacy relation types
+outside CA-P-3089 remain excluded until model review.
+
+Anatoly approved retaining 169 unresolved Drafts in `.anechoic_legacy/`.
+Both Local Release modes passed all 312 test modules and matched all 1,108
+protected inputs. The isolated launcher selected the native Manifest at
+the final path. MCP queries and Workbench verified the staged data. The
+native MCP currently serves queries and Workbench from a startup snapshot.
+Keep the legacy MCP live until native Atom Lifecycle and Workflow commands
+pass verification in the isolated checkout.
+
+The staged validation and map are in
+`.anechoic_tmp/ca-p-3073/combined-native-batches/candidate-002/`. The release
+and isolated cutover receipts are in
+`.anechoic_tmp/ca-p-3073/isolated-release-port/`.
 
 ## References
 
