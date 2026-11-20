@@ -29,10 +29,11 @@ list of exact Atom version pins. Omit a key when its list has no entries.
 Each `implements` entry records `IMPLEMENTS` from the Realization Package
 to the pinned Spec Atom. Read the inverse as `IS_IMPLEMENTED_BY`.
 
-For a Component Package or Specified Package, recognize its direct
+For a Realization Package, recognize its direct
 `<full package folder name>__tests/` subdirectory as its Test Package.
 Derive `TESTS` from the Test Package to its parent Realization Package.
-Read the inverse as `IS_TESTED_BY`.
+Read the inverse as `IS_TESTED_BY`. This derivation does not require a Spec
+or a Spec Binding for the parent Package.
 
 ## Details
 
