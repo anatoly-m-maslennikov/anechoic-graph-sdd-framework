@@ -27,6 +27,9 @@ from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.result_delivery import deliver, val
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.saved_queries import SavedQueryStore
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service_interface import ServiceInterface
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_watcher import SourceWatcher
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.spec_trace import (
+    is_trace_path, native_trace_rows, remove_native_traces, replace_native_traces,
+)
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.statements import select_statement
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workspace import WorkspaceStore
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.watcher_change_log import WatcherChangeLog, mirror_change_log
@@ -68,7 +71,7 @@ ATOM_TABLES = frozenset({
 })
 REALIZATION_TABLES = frozenset({
     "import_nodes", "module_imports", "import_edges", "package_imports", "test_edges", "tested_by_edges",
-    "import_read_issues",
+    "import_read_issues", "implementation_rmedo",
 })
 IMPORT_CACHE_TABLES = frozenset(f"_anechoic_import_cache.{name}" for name in ("sources", "sites", "version"))
 OBSERVATION_TABLES = frozenset({"change_log", "query_log", "live_runs", "runtime_diagnostics"})
@@ -128,18 +131,23 @@ class NativeQueryOwner(ServiceInterface):
         roots, include = self._realization_options
         with store._lock:
             previous = read_import_sources(store._connection)
-        if changes is not None and not relevant_change(self._root, changes, previous):
-            return None
+        if changes is not None:
+            traces_changed = any(is_trace_path(path) for change in changes for key in ("old_path", "new_path")
+                                 if (path := change.get(key)) is not None)
+            if not traces_changed and not relevant_change(self._root, changes, previous):
+                return None
         sources = capture(self._root, None if force_parse else previous, include, changes=changes)
-        return previous, sources, resolve_realization(self._root, sources, roots)
+        facts = resolve_realization(self._root, sources, roots)
+        return previous, sources, facts, native_trace_rows(self._root, facts[0])
 
     @staticmethod
     def _publish_realization(store, graph, prepared) -> None:
         connection = store._connection
-        previous, sources, facts = prepared
+        previous, sources, facts, traces = prepared
         replace_import_sources(connection, sources, previous)
         replace_imports(connection, graph, *facts, sources=sources,
                         mark_graph_changed=store.mark_graph_registration_changed)
+        replace_native_traces(connection, traces)
 
     def _watch_imports(self, store: QueryStore) -> None:
 
@@ -205,6 +213,7 @@ class NativeQueryOwner(ServiceInterface):
                 if prepared is None:
                     remove_imports(store._connection, graph, mark_graph_changed=store.mark_graph_registration_changed)
                     clear_import_sources(store._connection)
+                    remove_native_traces(store._connection)
                 else:
                     self._publish_realization(store, graph, prepared)
 
@@ -326,6 +335,7 @@ class NativeQueryOwner(ServiceInterface):
                             remove_imports(store._connection, graph,
                                            mark_graph_changed=store.mark_graph_registration_changed)
                             clear_import_sources(store._connection)
+                            remove_native_traces(store._connection)
                         self._rebuild_observations(store, table, query_attempts)
                         if scope == "atoms":
                             create_tables(store._connection)

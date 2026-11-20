@@ -61,6 +61,74 @@ def _validated_entries(entries):
     return pins
 
 
+def _read_pins(root, path, sidecar, kind):
+    try:
+        content = sidecar.read_text(encoding='utf-8')
+        entries = (_yaml_entries(content) if sidecar.name.endswith(PACKAGE_SUFFIX)
+                   else _markdown_entries(content, kind))
+        return [(path.relative_to(root).as_posix(), sidecar.relative_to(root).as_posix(), *pin)
+                for pin in _validated_entries(entries)]
+    except (OSError, UnicodeError, yaml.YAMLError, ValueError) as exc:
+        print(f'Invalid spec trace {sidecar}{exc}' if str(exc).startswith(':')
+              else f'Invalid spec trace {sidecar}: {exc}', file=sys.stderr)
+        return []
+
+
+def is_trace_path(relative):
+    return isinstance(relative, str) and (relative.endswith(PACKAGE_SUFFIX) or relative.endswith(SUFFIX))
+
+
+def native_trace_rows(root, nodes):
+    """Read bindings for the local owners already inventoried by the Realization Graph."""
+    if __package__.startswith('APP_WORKBENCH.'):
+        from ..FEATURE_IMPORT_GRAPH_C61.source import _event_path, _git_ignored, _relative, excluded_source_path
+    else:
+        from FEATURE_IMPORT_GRAPH_C61.source import _event_path, _git_ignored, _relative, excluded_source_path
+
+    root = Path(root).resolve()
+    candidates = []
+    for _, kind, _, relative, _, _ in nodes:
+        if (kind not in ('package', 'module') or not relative or _relative(relative) != relative
+                or excluded_source_path(relative)):
+            continue
+        owner = _event_path(root, relative)
+        if owner is None or (not owner.is_dir() if kind == 'package' else not owner.is_file()):
+            continue
+        canonical = owner / (owner.name + PACKAGE_SUFFIX) if kind == 'package' else owner.with_name(owner.name + SUFFIX)
+        fallback = owner / (owner.name + '.p' + SUFFIX) if kind == 'package' else None
+        candidates.append((owner, kind, canonical, fallback))
+    paths = {path.relative_to(root).as_posix() for _, _, canonical, fallback in candidates
+             for path in (canonical, fallback) if path is not None}
+    ignored = _git_ignored(root, paths)
+    rows = []
+    for owner, kind, canonical, fallback in candidates:
+        for sidecar in (canonical, fallback):
+            if sidecar is None:
+                continue
+            relative = sidecar.relative_to(root).as_posix()
+            if relative in ignored:
+                continue
+            if os.path.lexists(sidecar):
+                if _event_path(root, relative) is not None and sidecar.is_file():
+                    rows.extend(_read_pins(root, owner, sidecar, kind))
+                break
+    return rows
+
+
+def replace_native_traces(connection, rows):
+    """Replace the native binding snapshot within the caller's transaction."""
+    connection.execute('CREATE TABLE IF NOT EXISTS main.implementation_rmedo '
+                       '(owner_path VARCHAR, sidecar_path VARCHAR, entry_kind VARCHAR, '
+                       'atom_id VARCHAR, version INTEGER)')
+    connection.execute('DELETE FROM main.implementation_rmedo')
+    if rows:
+        connection.executemany('INSERT INTO main.implementation_rmedo VALUES (?, ?, ?, ?, ?)', rows)
+
+
+def remove_native_traces(connection):
+    connection.execute('DROP TABLE IF EXISTS main.implementation_rmedo')
+
+
 class SpecTraceStore:
     """Publish source facts to a caller-owned DuckDB connection."""
 
@@ -102,15 +170,7 @@ class SpecTraceStore:
             if os.path.lexists(sidecar):
                 print(f'Invalid spec trace {sidecar}: not an allowed regular file', file=sys.stderr)
             return []
-        try:
-            content = sidecar.read_text(encoding='utf-8')
-            entries = (_yaml_entries(content) if sidecar.name.endswith(PACKAGE_SUFFIX)
-                       else _markdown_entries(content, kind))
-            return [(self._rel(path), self._rel(sidecar), *pin) for pin in _validated_entries(entries)]
-        except (OSError, UnicodeError, yaml.YAMLError, ValueError) as exc:
-            print(f'Invalid spec trace {sidecar}{exc}' if str(exc).startswith(':')
-                  else f'Invalid spec trace {sidecar}: {exc}', file=sys.stderr)
-            return []
+        return _read_pins(self.root, path, sidecar, kind)
 
     def _insert(self, path, kind):
         rel = self._rel(path)

@@ -6,10 +6,62 @@ import unittest
 
 import duckdb
 
-from FEATURE_WORKBENCH_BACKEND.spec_trace import PILOT, SpecTraceStore
+from FEATURE_WORKBENCH_BACKEND.spec_trace import (
+    PILOT, SpecTraceStore, is_trace_path, native_trace_rows, remove_native_traces,
+    replace_native_traces,
+)
 
 
 class SpecTraceTests(unittest.TestCase):
+    def test_native_rows_use_inventoried_owners_and_publish(self):
+        root = Path(self.enterContext(TemporaryDirectory()))
+        package = root / 'package'
+        package.mkdir()
+        module = package / 'unit.py'
+        module.write_text('pass')
+        yaml_path = package / 'package__spec_bind.yaml'
+        yaml_path.write_text('implements: [AN-S-3014@3]\napplies: [CA-M-9@2]\n')
+        (package / 'package.p.spec_trace.md').write_text('## Applies\n- CA-M-9@1\n')
+        (package / 'unit.py.spec_trace.md').write_text('## Implements\n- CA-R-123@4\n')
+        nodes = [('package:local:package', 'package', 'python', 'package', None, None),
+                 ('module:package/unit.py', 'module', 'python', 'package/unit.py', 'parsed', None),
+                 ('external', 'package', 'python', None, None, None),
+                 ('outside', 'package', 'python', '../outside', None, None)]
+        rows = native_trace_rows(root, nodes)
+        self.assertEqual(set(rows), {
+            ('package', 'package/package__spec_bind.yaml', 'implements', 'AN-S-3014', 3),
+            ('package', 'package/package__spec_bind.yaml', 'applies', 'CA-M-9', 2),
+            ('package/unit.py', 'package/unit.py.spec_trace.md', 'implements', 'CA-R-123', 4),
+        })
+        connection = self.enterContext(duckdb.connect(':memory:'))
+        replace_native_traces(connection, rows)
+        self.assertEqual(set(connection.execute('SELECT * FROM implementation_rmedo').fetchall()), set(rows))
+        replace_native_traces(connection, [])
+        self.assertEqual(connection.execute('SELECT * FROM implementation_rmedo').fetchall(), [])
+        remove_native_traces(connection)
+        remove_native_traces(connection)
+        self.assertTrue(is_trace_path('package/package__spec_bind.yaml'))
+        self.assertTrue(is_trace_path('package/unit.py.spec_trace.md'))
+        self.assertFalse(is_trace_path('package/unit.py'))
+        yaml_path.unlink()
+        self.assertIn(('package', 'package/package.p.spec_trace.md', 'applies', 'CA-M-9', 1),
+                      native_trace_rows(root, nodes))
+
+    def test_native_rejects_invalid_and_symlinked_bindings(self):
+        root = Path(self.enterContext(TemporaryDirectory()))
+        package = root / 'package'
+        package.mkdir()
+        sidecar = package / 'package__spec_bind.yaml'
+        sidecar.write_text('implements: [AN-S-1@1, invalid]')
+        nodes = [('package:local:package', 'package', 'python', 'package', None, None)]
+        with redirect_stderr(StringIO()):
+            self.assertEqual(native_trace_rows(root, nodes), [])
+        sidecar.unlink()
+        outside = root / 'outside.yaml'
+        outside.write_text('implements: [AN-S-1@1]')
+        sidecar.symlink_to(outside)
+        self.assertEqual(native_trace_rows(root, nodes), [])
+
     def test_mixed_legacy_and_native_pins_preserve_exact_versions(self):
         root = Path(self.enterContext(TemporaryDirectory()))
         package = root / PILOT / 'example'

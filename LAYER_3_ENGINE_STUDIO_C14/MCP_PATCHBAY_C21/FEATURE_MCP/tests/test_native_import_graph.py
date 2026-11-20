@@ -147,6 +147,38 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
             owner._refresh_after_write(owner._owner())
             self.assertGreater((await rows(graph))[0][0], 0)
 
+    async def test_spec_bindings_are_indexed_and_follow_sidecar_changes(self):
+        self._source("src/app/main.py", "pass\n")
+        sidecar = self._source("src/app/app__spec_bind.yaml", "implements:\n  - AN-S-001@1\n")
+        self._source("src/app/main.py.spec_trace.md", "## Implements\n- CA-R-10@2\n")
+        gateway = await self._gateway()
+        app = Starlette(routes=routes(gateway))
+        async with httpx2.AsyncClient(transport=httpx2.ASGITransport(app=app),
+                                     base_url="http://127.0.0.1:18093") as client:
+            base = "/anechoic/Anechoic/api"
+            schema = await client.post(f"{base}/schema", json={})
+            self.assertEqual(schema.status_code, 200, schema.text)
+            self.assertIn("implementation_rmedo", schema.json()["tables"])
+
+            async def pins():
+                result = await client.post(f"{base}/run", json={
+                    "sql": "SELECT owner_path, entry_kind, atom_id, version FROM implementation_rmedo ORDER BY 1",
+                    "result_delivery": "inline",
+                })
+                self.assertEqual(result.status_code, 200, result.text)
+                return result.json()["rows"]
+
+            module = ["src/app/main.py", "implements", "CA-R-10", 2]
+            self.assertEqual(await pins(), [["src/app", "implements", "AN-S-001", 1], module])
+            sidecar.write_text("applies:\n  - AN-S-007@3\n", encoding="utf-8")
+            async with asyncio.timeout(6):
+                while await pins() != [["src/app", "applies", "AN-S-007", 3], module]:
+                    await asyncio.sleep(.03)
+            sidecar.unlink()
+            async with asyncio.timeout(6):
+                while await pins() != [module]:
+                    await asyncio.sleep(.03)
+
     async def test_import_publication_failure_reports_stderr_once(self):
         self._source("src/from_source.py", "import to_source\n")
         self._source("src/to_source.py", "")
