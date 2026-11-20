@@ -12,7 +12,7 @@ sys.path.insert(0, str(TOOLS))
 import ATOM_LIFECYCLE.source as source_module  # noqa: E402
 from ATOM_LIFECYCLE.source import select_source, SourceSelectionError  # noqa: E402
 from project_selection import resolve_project  # noqa: E402
-from scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
+from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
 from lifecycle_placement_test_support import bind_placement, fixture_rules  # noqa: E402
 from ATOM_LIFECYCLE.common import allocate_id  # noqa: E402
 from ATOM_LIFECYCLE.placement import _predecessor_status, _role_root  # noqa: E402

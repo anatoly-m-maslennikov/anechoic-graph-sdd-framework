@@ -9,7 +9,7 @@ from pathlib import Path
 import random
 
 from scope_declaration_render import render_scope_declaration
-from scope_declaration_test_support import write_scope_unit_declarations
+from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations
 from smalltest_support import source_path, write_settings
 
 

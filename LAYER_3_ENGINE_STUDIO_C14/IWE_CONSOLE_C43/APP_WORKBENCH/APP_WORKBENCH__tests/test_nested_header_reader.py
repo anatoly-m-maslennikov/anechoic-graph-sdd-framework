@@ -15,7 +15,7 @@ APP_ROOT = Path(__file__).resolve().parents[2]
 TOOLS_ROOT = APP_ROOT.parent / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 sys.path[:0] = [str(APP_ROOT), str(TOOLS_ROOT), str(TOOLS_ROOT / "VALIDATE_ATOMS")]
 
-from scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
+from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
 from smalltest_support import write_settings  # noqa: E402
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.relations import materialize  # noqa: E402
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND import content_schema as content_schema_module  # noqa: E402

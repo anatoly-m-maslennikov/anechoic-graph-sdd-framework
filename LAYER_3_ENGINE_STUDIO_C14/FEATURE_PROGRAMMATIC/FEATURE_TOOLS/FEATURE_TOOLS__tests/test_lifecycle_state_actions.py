@@ -14,7 +14,7 @@ from ATOM_LIFECYCLE.common import InputError  # noqa: E402
 from ATOM_LIFECYCLE.status_model import StatusModel  # noqa: E402
 from carrier_aliases import carrier_read_view  # noqa: E402
 from project_selection import resolve_project  # noqa: E402
-from scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
+from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
 from lifecycle_placement_test_support import bind_placement, fixture_rules  # noqa: E402
 from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier  # noqa: E402
 

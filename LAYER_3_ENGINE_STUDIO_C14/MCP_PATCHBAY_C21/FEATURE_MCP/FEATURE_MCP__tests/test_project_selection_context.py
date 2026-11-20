@@ -15,7 +15,7 @@ sys.path[:0] = [str(MCP), str(TOOLS)]
 from project_selection import bind_selection, resolve_project
 from artifact_metadata import configured_timezone, project_identity
 from project_settings_values import control_root
-from scope_declaration_test_support import write_scope_unit_declarations
+from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations
 
 
 class ProjectContextTests(unittest.IsolatedAsyncioTestCase):

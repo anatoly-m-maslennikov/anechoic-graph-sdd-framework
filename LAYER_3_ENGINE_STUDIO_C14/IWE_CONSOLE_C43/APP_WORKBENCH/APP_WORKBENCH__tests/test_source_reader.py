@@ -17,7 +17,7 @@ APP_ROOT = Path(__file__).resolve().parents[2]
 TOOLS_ROOT = APP_ROOT.parent / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 sys.path[:0] = [str(APP_ROOT), str(TOOLS_ROOT), str(TOOLS_ROOT / "VALIDATE_ATOMS")]
 
-from scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
+from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
 from scope_unit_declarations import ScopeDeclarationError  # noqa: E402
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND import source_reader as source_reader_module  # noqa: E402
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.public_rows import projected_rows  # noqa: E402

@@ -32,7 +32,7 @@ from generate_tool_registry import _provider_payload  # noqa: E402
 from http_paths import HEALTH_PATH, MCP_PATH, WORKBENCH_PATH  # noqa: E402
 from http_server import create_app  # noqa: E402
 from lifecycle_placement_test_support import fixture_rules  # noqa: E402
-from scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
+from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
 from smalltest_support import built_assets, extension_directory, source_path, write_atom, write_settings  # noqa: E402
 from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext  # noqa: E402
 from ATOM_LIFECYCLE.source import ArchiveNotLoadedError  # noqa: E402

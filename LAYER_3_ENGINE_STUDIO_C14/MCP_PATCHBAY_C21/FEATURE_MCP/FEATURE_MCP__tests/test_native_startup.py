@@ -18,7 +18,7 @@ sys.path[:0] = [str(MCP), str(PROGRAMMATIC), str(TOOLS), str(MCP.parents[1] / "I
 from native_project_selection import NativeProjectSelection
 from native_startup import select_runtime_project
 from project_selection import ProjectSelection, ProjectSelectionError, resolve_project
-from scope_declaration_test_support import write_scope_unit_declarations
+from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations
 
 
 @dataclass

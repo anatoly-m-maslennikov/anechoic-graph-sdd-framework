@@ -18,7 +18,7 @@ TOOLS = MCP.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 sys.path[:0] = [str(MCP), str(TOOLS), str(TOOLS / "VALIDATE_ATOMS")]
 
 from host_runtime_config import load_host_runtime_config  # noqa: E402
-from scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
+from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
 import shared_project_catalog as catalog  # noqa: E402
 from shared_project_catalog import (  # noqa: E402
     SharedToolFrontier,

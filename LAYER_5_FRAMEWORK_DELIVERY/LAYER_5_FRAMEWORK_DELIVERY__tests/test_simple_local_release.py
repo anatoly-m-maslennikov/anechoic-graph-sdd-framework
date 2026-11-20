@@ -24,7 +24,7 @@ import local_release  # noqa: E402
 from local_release import run_local_release, _launcher_image  # noqa: E402
 from project_selection import resolve_project  # noqa: E402
 from release_support import _GENERATED_ASSETS, _file_identity, _publish_image_assets, _release_sources  # noqa: E402
-from scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
+from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
 from release_registry_test_fixture import (  # noqa: E402
     write_relation_registry_generator,
     write_tool_registry_generator,

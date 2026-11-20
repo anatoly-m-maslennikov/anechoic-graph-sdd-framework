@@ -20,7 +20,7 @@ class CandidateValidationTests(unittest.TestCase):
         from ATOM_LIFECYCLE.candidate_schema import compile_candidate_schema, load_candidate_schema
         from lifecycle_placement_test_support import fixture_rules
         from project_selection import resolve_project
-        from scope_declaration_test_support import write_scope_unit_declarations
+        from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations
         from test_lifecycle_candidate_schema import CORE
 
         with tempfile.TemporaryDirectory() as directory:
@@ -163,7 +163,7 @@ class CandidateValidationTests(unittest.TestCase):
         from ATOM_LIFECYCLE.candidate_schema import compile_candidate_schema, load_candidate_schema
         from lifecycle_placement_test_support import fixture_rules
         from project_selection import resolve_project
-        from scope_declaration_test_support import write_scope_unit_declarations
+        from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations
         from test_lifecycle_candidate_schema import CORE
 
         with TemporaryDirectory() as directory:

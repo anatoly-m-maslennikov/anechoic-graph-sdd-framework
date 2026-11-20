@@ -13,7 +13,7 @@ import tempfile
 import time
 from uuid import uuid4
 
-from scope_declaration_test_support import write_scope_unit_declarations
+from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations
 from smalltest_support import source_path, write_atom, write_settings
 from workbench_performance_metrics import LATENCY_BUDGET_SECONDS, record_performance
 from workbench_docker_support import free_port, project_name as read_project_name, request

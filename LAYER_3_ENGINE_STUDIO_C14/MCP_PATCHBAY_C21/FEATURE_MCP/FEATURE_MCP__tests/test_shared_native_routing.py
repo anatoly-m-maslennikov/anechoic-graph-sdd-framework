@@ -26,7 +26,7 @@ from project_selection import ProjectSelectionError, bind_selection, bound_selec
 from test_workspace_end_to_end import _ConfiguredWorkbenchTools  # noqa: E402
 from smalltest_support import extension_directory  # noqa: E402
 from http_paths import MCP_PATH  # noqa: E402
-from scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
+from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
 from shared_gateway import SharedGateway  # noqa: E402
 from shared_http_server import create_app  # noqa: E402
 

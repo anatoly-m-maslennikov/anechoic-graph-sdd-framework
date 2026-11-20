@@ -10,7 +10,7 @@ import yaml
 APP = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(APP.parents[1] / 'FEATURE_PROGRAMMATIC' / 'FEATURE_TOOLS'))
 from project_selection import resolve_project
-from scope_declaration_test_support import write_scope_unit_declarations
+from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations
 
 
 class ProjectStateTests(unittest.TestCase):

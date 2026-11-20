@@ -4,7 +4,7 @@ class TypedReferenceIntegration(unittest.TestCase):
     def test_real_source_reader_and_standalone_workbench(self):
         from pathlib import Path
         from tempfile import TemporaryDirectory
-        from scope_declaration_test_support import write_scope_unit_declarations
+        from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations
         from FEATURE_WORKBENCH_BACKEND.source_reader import SourceReader
         from FEATURE_WORKBENCH_BACKEND.generate_workbench_schema import compile_project_schema
         from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier

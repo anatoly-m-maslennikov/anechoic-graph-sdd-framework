@@ -34,7 +34,7 @@ from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service import WorkbenchService  # 
 from http_paths import HEALTH_PATH, MCP_PATH, WORKBENCH_PATH  # noqa: E402
 from http_server import create_app  # noqa: E402
 from direct_gateway import startup_selection  # noqa: E402
-from scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
+from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
 from workbench_tools import WorkbenchTools  # noqa: E402
 from smalltest_support import built_assets, extension_directory, write_atom, write_settings  # noqa: E402
 

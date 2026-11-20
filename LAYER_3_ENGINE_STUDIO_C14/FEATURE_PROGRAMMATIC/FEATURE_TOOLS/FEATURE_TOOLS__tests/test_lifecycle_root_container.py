@@ -20,7 +20,7 @@ from FEATURE_WORKBENCH_BACKEND.workbench_schema_asset import SchemaCompilation  
 from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier  # noqa: E402
 from header_groups import header_value  # noqa: E402
 from project_selection import resolve_project  # noqa: E402
-from scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
+from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
 
 
 class LifecycleRootContainerTests(unittest.TestCase):

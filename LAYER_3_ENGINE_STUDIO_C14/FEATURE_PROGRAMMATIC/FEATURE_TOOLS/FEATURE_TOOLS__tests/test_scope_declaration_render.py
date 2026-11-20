@@ -10,7 +10,7 @@ if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
 from scope_declaration_render import render_scope_declaration
-from scope_declaration_test_support import write_scope_unit_declarations
+from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations
 from scope_unit_declarations import read_scope_unit_declarations
 
 

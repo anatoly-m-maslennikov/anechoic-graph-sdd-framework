@@ -157,7 +157,7 @@ def test_composed_update_preserves_status_and_version():
     import tempfile
     from ATOM_LIFECYCLE import draft
     from project_selection import resolve_project
-    from scope_declaration_test_support import write_scope_unit_declarations
+    from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations
 
     scratch = Path(__file__).resolve().parents[4] / '.anechoic_tmp/CA-P-2791/CA-P-2934/publish'
     scratch.mkdir(parents=True, exist_ok=True)
@@ -257,7 +257,7 @@ def test_composed_update_preserves_status_and_version():
 def test_noop_update_and_same_identity_promotion_preserve_current():
     import tempfile
     from project_selection import resolve_project
-    from scope_declaration_test_support import write_scope_unit_declarations
+    from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations
     from ATOM_LIFECYCLE import draft
 
     scratch = Path(__file__).resolve().parents[4] / '.anechoic_tmp/CA-P-2791/CA-P-2934/publish'
@@ -337,7 +337,7 @@ def test_independent_copy_promotion_applies_inherited_replacement():
     from ATOM_LIFECYCLE.carrier import render_carrier
     from lifecycle_placement_test_support import fixture_rules
     from project_selection import resolve_project
-    from scope_declaration_test_support import write_scope_unit_declarations
+    from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations
     from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier
 
     schema_path = Path(candidate_schema.__file__).with_name('candidate_schema.json')

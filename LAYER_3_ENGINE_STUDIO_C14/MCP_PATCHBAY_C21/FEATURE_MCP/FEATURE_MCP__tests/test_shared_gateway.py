@@ -20,7 +20,7 @@ from host_runtime_config import HostRuntimeConfigError, OutsideProjectRootError,
 from mcp import types  # noqa: E402
 from mcp.client._memory import InMemoryTransport  # noqa: E402
 from mcp.client.session import ClientSession  # noqa: E402
-from scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
+from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
 from shared_gateway import SharedGateway  # noqa: E402
 from tool_registry_runtime import ToolRegistryStaleError  # noqa: E402
 

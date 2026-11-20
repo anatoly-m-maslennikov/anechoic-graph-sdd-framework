@@ -11,7 +11,7 @@ TOOLS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS))
 from ATOM_LIFECYCLE import common, draft  # noqa: E402
 from project_selection import resolve_project  # noqa: E402
-from scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
+from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
 from lifecycle_placement_test_support import bind_placement, fixture_rules  # noqa: E402
 
 

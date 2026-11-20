@@ -129,7 +129,7 @@ class CompilerTest(unittest.TestCase):
         )
 
     def setUp(self) -> None:
-        from scope_declaration_test_support import write_scope_unit_declarations
+        from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations
 
         temporary = Path.cwd() / ".anechoic_tmp/compiler-tests"
         temporary.mkdir(parents=True, exist_ok=True)

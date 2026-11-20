@@ -75,7 +75,7 @@ class ContainerRelationTests(unittest.TestCase):
         from ATOM_LIFECYCLE.placement_model import bind_placement
         from lifecycle_placement_test_support import fixture_rules
         from project_selection import resolve_project
-        from scope_declaration_test_support import write_scope_unit_declarations
+        from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations
 
         with TemporaryDirectory() as directory, bind_placement(fixture_rules()):
             root = Path(directory).resolve()

@@ -19,7 +19,7 @@ from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_field_validation import valida
 from legacy_settings_to_manifest import legacy_settings_to_manifest  # noqa: E402
 from native_project_selection import resolve_native_project  # noqa: E402
 from project_selection import ProjectSelectionError, resolve_project  # noqa: E402
-from scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
+from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
 
 
 @dataclass

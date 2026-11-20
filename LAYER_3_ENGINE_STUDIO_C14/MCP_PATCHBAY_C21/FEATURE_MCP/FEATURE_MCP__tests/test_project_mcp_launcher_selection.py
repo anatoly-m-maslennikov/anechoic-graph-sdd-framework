@@ -15,7 +15,7 @@ TOOLS = APP.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 sys.path.insert(0, str(TOOLS))
 
 from project_selection import active_selection, bind_selection, resolve_project  # noqa: E402
-from scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
+from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
 
 
 GOLDENS = Path(__file__).parent / "assets" / "launcher_golden" / "selection_cases.json"

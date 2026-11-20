@@ -13,7 +13,7 @@ for location in (PROGRAMMATIC.parent / "MCP_PATCHBAY_C21" / "FEATURE_MCP", APP_R
     sys.path.insert(0, str(location))
 
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service import WorkbenchService  # noqa: E402
-from scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
+from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
 from smalltest_support import built_assets, extension_directory, write_atom, write_settings  # noqa: E402
 from workbench_tools import WorkbenchTools  # noqa: E402
 

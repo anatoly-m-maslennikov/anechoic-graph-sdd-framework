@@ -18,7 +18,7 @@ from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service import WorkbenchService
 from FEATURE_FORMAL_MODEL_ENGINE.project_claim_lint import _relation_declaration_context, lint_project_claim
 from lifecycle_placement_test_support import fixture_rules
 from project_selection import resolve_project
-from scope_declaration_test_support import write_scope_unit_declarations
+from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations
 from smalltest_support import built_assets, extension_directory, write_settings
 
 

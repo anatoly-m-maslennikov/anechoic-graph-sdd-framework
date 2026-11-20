@@ -22,7 +22,7 @@ from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_reader import SourceReader
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_content_schema import SourceContentSchema
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service import WorkbenchService
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workbench_schema_asset import compile_schema
-from scope_declaration_test_support import write_scope_unit_declarations
+from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations
 from smalltest_support import extension_directory, source_path, write_atom, write_settings
 
 

@@ -19,7 +19,7 @@ from health_observations import MAX_OBSERVATIONS  # noqa: E402
 from host_runtime_config import load_host_runtime_config  # noqa: E402
 from mcp import types  # noqa: E402
 from operation_error_boundary import FailureRecord  # noqa: E402
-from scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
+from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
 from shared_gateway import SharedGateway  # noqa: E402
 from shared_gateway_support import refusal  # noqa: E402
 

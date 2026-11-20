@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "FEATURE_PROGRAMMAT
 
 from profile_workbench import output_directory, profile
 from smalltest_support import extension_directory, write_atom
-from scope_declaration_test_support import write_scope_unit_declarations
+from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations
 
 
 REPOSITORY = Path(__file__).resolve().parents[4]

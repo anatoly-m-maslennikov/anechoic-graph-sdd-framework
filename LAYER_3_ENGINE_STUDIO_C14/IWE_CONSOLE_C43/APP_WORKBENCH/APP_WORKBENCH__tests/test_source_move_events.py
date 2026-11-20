@@ -9,7 +9,7 @@ import unittest
 APP_ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(APP_ROOT.parent), str(APP_ROOT.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS")]
 
-from scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
+from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
 from smalltest_support import source_path, write_atom, write_settings  # noqa: E402
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_reader import SourceReader  # noqa: E402
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.relations import materialize  # noqa: E402

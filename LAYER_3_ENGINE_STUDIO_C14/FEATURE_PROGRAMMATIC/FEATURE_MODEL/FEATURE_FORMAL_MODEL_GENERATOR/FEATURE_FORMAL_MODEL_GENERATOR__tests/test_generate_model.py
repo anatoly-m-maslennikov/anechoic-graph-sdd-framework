@@ -12,7 +12,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR import generate_model
-from scope_declaration_test_support import write_scope_unit_declarations
+from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations
 
 
 def model_carrier(identifier, subject, claim):

@@ -12,7 +12,7 @@ import unittest
 APP = Path(__file__).resolve().parents[1]
 TOOLS = APP.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 sys.path.insert(0, str(TOOLS))
-from scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
+from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
 from project_selection import ProjectSelectionError, rebind_selection, resolve_project  # noqa: E402
 
 

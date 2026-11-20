@@ -406,7 +406,7 @@ class LifecycleProviderTests(unittest.IsolatedAsyncioTestCase):
         from ATOM_LIFECYCLE import common
         from project_selection import ProjectSelection, rebind_selection, resolve_project
         from scope_unit_declarations import read_scope_unit_declarations
-        from scope_declaration_test_support import write_scope_unit_declarations
+        from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations
         sys.path.insert(0, str(MCP.parents[1] / 'FEATURE_PROGRAMMATIC' / 'FEATURE_TOOLS' / 'FEATURE_TOOLS__tests'))
         from lifecycle_placement_test_support import fixture_rules
 
@@ -493,7 +493,7 @@ class LifecycleProviderTests(unittest.IsolatedAsyncioTestCase):
         from ATOM_LIFECYCLE import common
         from project_selection import resolve_project
         sys.path.insert(0, str(MCP.parents[1] / 'FEATURE_PROGRAMMATIC' / 'FEATURE_TOOLS' / 'FEATURE_TOOLS__tests'))
-        from scope_declaration_test_support import write_scope_unit_declarations
+        from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations
         from lifecycle_placement_test_support import fixture_rules
 
         class Model:
