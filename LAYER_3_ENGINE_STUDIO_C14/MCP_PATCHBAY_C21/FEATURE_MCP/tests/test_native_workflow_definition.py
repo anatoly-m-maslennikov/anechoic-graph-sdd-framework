@@ -151,6 +151,25 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
         self.assertEqual(('backlog', 'AN-T-4@3'), (ticket['status'], ticket['_exact_ref']))
         self.assertIn('/TASKS/backlog/', ticket['source_path'])
 
+    def test_lifecycle_cannot_revise_or_promote_installed_status_pin(self):
+        from native_query import NativeQueryInputs, NativeQueryOwner
+
+        refs, rows = self._status_binding()
+        owner = NativeQueryOwner(self.selection, NativeQueryInputs(
+            lambda *args: None, frozenset(), {}, tuple(refs),
+        ))
+        owner._store = object()
+        owner._capture = SimpleNamespace(atoms=rows)
+        atom_id, _, version = rows[0]['_exact_ref'].partition('@')
+        for name, field, target in (
+            ('atom_lifecycle_update', 'sourceCurrent', {'ref_id': atom_id, 'version': int(version)}),
+            ('atom_lifecycle_promote_draft', 'target', {'ref_id': f'{atom_id}@2-draft', 'version': 2}),
+        ):
+            with self.subTest(name=name):
+                result = owner.lifecycle(name, {field: target})
+                self.assertEqual('needs_input', result['outcome'])
+                self.assertIn('runtime binding', result['requested_input'][field]['error'])
+
     def test_exact_active_native_binding_can_be_rechecked(self):
         check = self._bind()
         check()

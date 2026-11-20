@@ -105,6 +105,7 @@ class NativeQueryOwner(ServiceInterface):
             raise
 
     def lifecycle(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
+        from ATOM_LIFECYCLE.assets.change_current_status import WORKFLOW_BINDING
         from ATOM_LIFECYCLE.common import InputError, SourceChanged, result
         from ATOM_LIFECYCLE.native_draft import create_draft, promote_draft
         from ATOM_LIFECYCLE.native_update import archive_ticket, change_ticket_status, direct_update
@@ -118,6 +119,15 @@ class NativeQueryOwner(ServiceInterface):
             assert self._capture is not None
             rows = self._capture.atoms
             try:
+                if name in {"atom_lifecycle_create_draft", "atom_lifecycle_update", "atom_lifecycle_promote_draft"}:
+                    field = "target" if name == "atom_lifecycle_promote_draft" else "sourceCurrent"
+                    target = arguments.get(field)
+                    ref = target.get("ref_id") if isinstance(target, dict) else None
+                    if isinstance(ref, str) and any(
+                        old in WORKFLOW_BINDING.values() and native.partition("@")[0] == ref.partition("@")[0]
+                        for old, _, native in self._inputs.migration_refs
+                    ):
+                        raise InputError(field, "Installed status definitions can change only with their runtime binding.")
                 if name == "atom_lifecycle_direct_update":
                     outcome = direct_update(self.selection, arguments, current_rows=rows)
                 elif name in {"atom_lifecycle_create_draft", "atom_lifecycle_update"}:

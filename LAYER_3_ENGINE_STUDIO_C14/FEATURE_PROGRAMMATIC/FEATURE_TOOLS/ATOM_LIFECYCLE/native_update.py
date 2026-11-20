@@ -1,6 +1,7 @@
 """Bounded updates for a selected Current native Ticket."""
 from __future__ import annotations
 
+from collections import defaultdict
 from datetime import datetime, timezone
 from hashlib import sha256
 import json
@@ -52,7 +53,7 @@ def _select_ticket(selection, target, current_rows, *, allow_draft=False):
     return selected, digest, path
 
 
-def _read_ticket(selection, target, selected, digest, path):
+def _read_ticket(selection, target, selected, digest, path, *, close_epic=False):
     try:
         capture = capture_native(selection)
         if capture.errors:
@@ -63,10 +64,22 @@ def _read_ticket(selection, target, selected, digest, path):
                 'source_path', 'id', 'ref', '_exact_ref', 'version', 'status', 'status_group',
                 'header_json', '_content_bytes')):
             raise SourceChanged('Current Ticket source changed after selection.')
-        if any(row.get('status_group') == 'Current' and row.get('id') != selected['id']
-               and row.get('header_json', {}).get('context', {}).get('container') == {'atom': selected['id']}
-               for row in capture.atoms):
+        children = defaultdict(list)
+        for row in capture.atoms:
+            if row['status_group'] == 'Current':
+                owner = row['header_json']['context']['container'].get('atom')
+                if owner is not None:
+                    children[owner].append(row)
+        pending = list(children.get(selected['id'], ()))
+        if pending and not close_epic:
             raise InputError('target', 'Direct updates of container Atoms are unsupported.')
+        visited = {selected['id']}
+        while pending:
+            child = pending.pop()
+            if child['id'] in visited or child['status'] not in {'done', 'canceled', 'resolved'}:
+                raise InputError('target', 'An Epic needs terminal Current descendants before it can be Done.')
+            visited.add(child['id'])
+            pending.extend(children.get(child['id'], ()))
         companion = path.with_suffix('')
         if companion.exists() or companion.is_symlink():
             raise InputError('target', 'Direct updates of container Atoms are unsupported.')
@@ -150,11 +163,11 @@ def _branch(selection, path, status):
     return root / parts[0]
 
 
-def _move_ticket(selection, target, selected, digest, path, destination, status, check_definition):
+def _move_ticket(selection, target, selected, digest, path, destination, status, check_definition, *, close_epic=False):
     with _project_write_lock(selection.root):
         if destination.exists() or destination.is_symlink():
             return result(errors=[{'code': 'destination_exists', 'message': 'Ticket destination already exists.'}])
-        raw, bounds = _read_ticket(selection, target, selected, digest, path)
+        raw, bounds = _read_ticket(selection, target, selected, digest, path, close_epic=close_epic)
         candidate = _status_bytes(raw, bounds, path, status)
         recorded, recorded_errors = [], []
 
@@ -223,12 +236,14 @@ def change_ticket_status(selection, params, *, current_rows, check_definition):
     selected, digest, path = _select_ticket(selection, target, current_rows)
     branch = _branch(selection, path, selected['status'])
     destination = branch / ('' if status == 'active' else status) / path.name
+    close_epic = status == 'done' and selected['header_json']['context'].get('template') == 'epic'
     if destination == path:
         with _project_write_lock(selection.root):
-            _read_ticket(selection, target, selected, digest, path)
+            _read_ticket(selection, target, selected, digest, path, close_epic=close_epic)
         return result(artifact=saved(selection, path, selected['id'], selected['id'],
                                      target['version'], selected['status']))
-    return _move_ticket(selection, target, selected, digest, path, destination, status, check_definition)
+    return _move_ticket(selection, target, selected, digest, path, destination, status, check_definition,
+                        close_epic=close_epic)
 
 
 def archive_ticket(selection, params, *, current_rows):

@@ -375,9 +375,14 @@ class NativeLifecycleProvider:
     async def call(self, name, arguments):
         with anyio.CancelScope(shield=True):
             value = await anyio.to_thread.run_sync(self.owner.lifecycle, name, arguments)
-        if name == 'atom_lifecycle_update' and value.get('outcome') == 'completed' and 'savedDraft' in value:
-            return {'status': 'draft_created', 'savedDraft': value['savedDraft']}
-        return _result(value)
+        response = _result(value)
+        if response['status'] == 'completed':
+            for field in ('savedDraft', 'artifact'):
+                if field in value:
+                    response[field] = value[field]
+            if name == 'atom_lifecycle_update' and 'savedDraft' in response:
+                response['status'] = 'draft_created'
+        return response
 
     async def close(self):
         pass

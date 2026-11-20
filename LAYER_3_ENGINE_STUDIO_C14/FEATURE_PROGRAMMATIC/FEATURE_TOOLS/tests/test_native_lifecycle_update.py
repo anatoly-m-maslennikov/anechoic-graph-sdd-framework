@@ -260,6 +260,23 @@ class NativeDirectUpdateTests(unittest.TestCase):
         self.assertTrue(destination.exists())
         self.assertIn(b'Changed concurrently', self.path.read_bytes())
 
+    def test_epic_done_requires_terminal_descendants_and_preserves_them(self):
+        self.path.write_bytes(self.path.read_bytes().replace(b'context:\n', b'context:\n  template: epic\n'))
+        child = self.write('__TKT/TASKS/done/AN-T-2-TASK--child.md', 'AN-T-2', {'atom': 'AN-T-1'})
+        child.write_bytes(child.read_bytes().replace(b'status: active', b'status: done'))
+        grandchild = self.write('__TKT/TASKS/AN-T-3-TASK--child.md', 'AN-T-3', {'atom': 'AN-T-2'})
+        params = {'target': self.params['target'], 'targetStatus': 'done'}
+        rows = capture_native(self.selection).atoms
+        original = self.path.read_bytes()
+        with self.assertRaises(InputError):
+            change_ticket_status(self.selection, params, current_rows=rows, check_definition=lambda: None)
+        self.assertEqual(original, self.path.read_bytes())
+        grandchild.write_bytes(grandchild.read_bytes().replace(b'status: active', b'status: canceled'))
+        before = (child.read_bytes(), grandchild.read_bytes())
+        outcome = change_ticket_status(self.selection, params, current_rows=rows, check_definition=lambda: None)
+        self.assertEqual('completed', outcome['outcome'])
+        self.assertEqual(before, (child.read_bytes(), grandchild.read_bytes()))
+
     def test_status_rejects_stale_and_container(self):
         params = {'target': self.params['target'], 'targetStatus': 'done'}
         original = self.path.read_bytes()

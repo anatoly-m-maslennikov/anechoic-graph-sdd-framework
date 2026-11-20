@@ -18,7 +18,24 @@ MCP = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(MCP), str(MCP.parents[1] / 'FEATURE_PROGRAMMATIC' / 'FEATURE_TOOLS')]
 from mcp.server.session import ServerSession  # noqa: E402
 from mcp.server.connection import Connection  # noqa: E402
+from registry_lifecycle_provider import NativeLifecycleProvider  # noqa: E402
 from registry_lifecycle_provider import LifecycleProvider, _PROJECT_RUNS, _refresh_selection as refresh_real, tool_descriptors  # noqa: E402
+
+
+class NativeLifecycleProviderTests(unittest.IsolatedAsyncioTestCase):
+    async def test_success_returns_exact_saved_reference(self):
+        draft = {'ref_id': 'AN-T-1@1-draft'}
+        artifact = {'ref_id': 'AN-T-1'}
+        cases = (
+            ('atom_lifecycle_create_draft', 'savedDraft', draft, 'completed'),
+            ('atom_lifecycle_update', 'savedDraft', draft, 'draft_created'),
+            ('atom_lifecycle_promote_draft', 'artifact', artifact, 'completed'),
+        )
+        for name, field, saved, status in cases:
+            with self.subTest(name=name):
+                outcome = {'outcome': 'completed', field: saved}
+                provider = NativeLifecycleProvider(SimpleNamespace(lifecycle=lambda *_: outcome))
+                self.assertEqual(await provider.call(name, {}), {'status': status, field: saved})
 
 
 class LifecycleProviderTests(unittest.IsolatedAsyncioTestCase):
