@@ -10,6 +10,7 @@ from markdown_it import MarkdownIt
 from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim
 from FEATURE_FORMAL_MODEL_ENGINE.scope_callback_asset import formal_claim
 from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.code_access import parse_code_access
+from native_atom_reference import derive_atom_ref
 from native_project_selection import _manifest_carriers, _manifest_inputs
 from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier
 from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext, open_regular
@@ -84,7 +85,7 @@ def _component_inputs(path, carrier, parent, prefix):
     if fields.keys() - {"component_id", "name", "layer", "lens_whitelist", "boundaries"}:
         raise ValueError(f"Invalid Component Manifest fields: {path}")
     parse_code_access(fields.get("boundaries"))
-    return {"atom_id": atom, "ref_id": f"{atom}@{version}", "version": version, "tier": 0, **fields}
+    return {"atom_id": atom, "ref_id": derive_atom_ref(atom, version, state["status"]), "version": version, "tier": 0, **fields}
 
 
 def compile_structure(selection, model) -> dict:  # noqa: C901

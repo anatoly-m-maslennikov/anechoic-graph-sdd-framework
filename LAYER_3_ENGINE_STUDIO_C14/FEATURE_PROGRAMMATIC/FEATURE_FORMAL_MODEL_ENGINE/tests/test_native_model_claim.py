@@ -259,6 +259,22 @@ declare_relation(
             with self.subTest(declaration=declaration), self.assertRaisesRegex(NativeModelClaimError, message):
                 parse_native_model_claim(claim)
 
+    def test_property_manifest_formats_and_options_are_static(self):
+        claim = (
+            'from anechoic.formal_claims import declare_entity\n'
+            'declare_entity(entity_name="Boundaries", entity_kind="Property", '
+            'relation_name="IS_PROPERTY_OF", base_path="Component Manifest", '
+            'value_format=dict[str, object] | None, field_options={"default": None})'
+        )
+        arguments = parse_native_model_claim(claim)["arguments"]
+        self.assertEqual(arguments["value_format"], "dict[str, object] | None")
+        self.assertEqual(arguments["field_options"], {"default": None})
+        for expression in ('"dict[str, object]"', 'object.attribute', 'str()'):
+            with self.subTest(expression=expression), self.assertRaises(NativeModelClaimError):
+                parse_native_model_claim(claim.replace("dict[str, object] | None", expression))
+        with self.assertRaisesRegex(NativeModelClaimError, "unsupported Property field options"):
+            parse_native_model_claim(claim.replace('{"default": None}', '{"default_factory": "unknown"}'))
+
     def test_unknown_names_and_duplicate_keyword_fail_with_line(self):
         source = ('from anechoic.formal_claims import declare_entity\n'
                   'declare_entity(entity_name="Name", value_format=Missing)\n')

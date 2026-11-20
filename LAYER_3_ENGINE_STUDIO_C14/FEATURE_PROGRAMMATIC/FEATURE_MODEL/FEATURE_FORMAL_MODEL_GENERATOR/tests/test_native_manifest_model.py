@@ -1,3 +1,4 @@
+import ast
 import importlib
 import sys
 import tempfile
@@ -6,7 +7,7 @@ import unittest
 from unittest.mock import patch
 
 from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR import native_manifest_model
-from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.model_class_assembly import assemble_model_modules
+from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.model_class_assembly import assemble_model_classes, assemble_model_modules
 from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.native_manifest_model import load_native_model
 
 
@@ -67,6 +68,39 @@ class NativeManifestModelTests(unittest.TestCase):
         changed = changed.replace("instance_check=check_project_manifest", "instance_check=changed_check", 1)
         with self.assertRaisesRegex(ValueError, "instance check differs"):
             admit((*active[:index], (path, subject, changed), *active[index + 1:]))
+
+    def test_separate_reviewed_check_and_constraints_follow_their_owner(self):
+        records, _, _ = native_manifest_model.reviewed_model_records()
+        index = next(i for i, (_, _, claim) in enumerate(records) if "def check_project_manifest(" in claim)
+        path, subject, claim = records[index]
+        tree = ast.parse(claim)
+        function = next(node for node in tree.body if isinstance(node, ast.FunctionDef))
+        call = tree.body[-1].value
+        lines = claim.splitlines(keepends=True)
+        check_source = "".join(lines[function.lineno - 1:function.end_lineno])
+        cls = next(node for node in tree.body if isinstance(node, ast.ClassDef))
+        start = min([cls.lineno, *(item.lineno for item in cls.decorator_list)])
+        class_source = "".join(lines[:start - 1]) + f"class {cls.name}({ast.unparse(cls.bases[0])}):\n    pass\n\n"
+        kept = [ast.unparse(keyword) for keyword in call.keywords if keyword.arg in {"entity_name", "entity_class"}]
+        primary = class_source + "declare_entity(" + ", ".join(kept) + ", entity_kind='Primary')\n"
+        moved = [ast.unparse(keyword) for keyword in call.keywords if keyword.arg not in {"entity_name", "entity_class"}]
+        target = "Node//Artifact//Atom//Spec Atom//Manifest//Project Manifest"
+        constraint = ("from anechoic.formal_claims import declare_entity\n"
+                      "from anechoic.model import ProjectManifest\n" + check_source + "\n"
+                      "declare_entity(entity_name='Project Manifest Constraints', constraints_for=" + repr(target)
+                      + ", " + ", ".join(moved) + ")\n")
+        active = [*records[:index], (path, subject, primary), *records[index + 1:],
+                  ("constraint", "ANECHOIC_MODEL <+ Project Manifest Constraints", constraint)]
+        reviewed_classes = assemble_model_classes(claim for _, _, claim in records)
+        with patch.object(native_manifest_model, "assemble_model_classes", return_value=reviewed_classes):
+            model = native_manifest_model._NativeModel(records=active)
+        self.assertEqual(model.validate_manifest(self.fields, "C00").name, "Anechoic")
+        with self.assertRaisesRegex(ValueError, "instance check differs"):
+            native_manifest_model.admit_active_model_records(
+                [*active[:-1], ("constraint", active[-1][1], constraint.replace("manifest.name.strip()", "True"))])
+        with self.assertRaisesRegex(ValueError, "unknown constraint owner"):
+            native_manifest_model.admit_active_model_records(
+                [*active[:-1], ("constraint", active[-1][1], constraint.replace(target, "Unknown"))])
 
     def test_compiled_model_uses_generated_class_objects(self):
         records, _, fingerprint = native_manifest_model.reviewed_model_records()

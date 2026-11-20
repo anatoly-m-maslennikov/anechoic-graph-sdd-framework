@@ -35,6 +35,7 @@ _ENDPOINT_LEVELS = {"model_entities", "instances", "model_entities_or_instances"
 _DECLARATION_KEYS = {
     "declare_entity": {
         "entity_name", "entity_class", "instance", "instance_check", "qualification_property_path", "incoming_model_relations", "structure_paths", "aspect_memberships",
+        "entity_kind", "identity_properties", "field_options", "derived_from_properties", "constraints_for",
         "relation_name", "base_path", "value_format", "value_cardinality", "property_occurrence_cardinality",
         "dependent_property_cardinality", "dependent_property_name_format", "dependent_property_value_format",
         "dependent_property_value_cardinality",
@@ -184,6 +185,50 @@ def _annotation(node: ast.AST, names: set[str]) -> str:
     else:
         _fail(node, "unsupported annotation")
     return ast.unparse(node)
+
+
+def _manifest_property_annotation(node, imports):
+    if any(isinstance(part, ast.Constant) and part.value is not None for part in ast.walk(node)):
+        _fail(node, "Property value formats must use types directly")
+    names = {"datetime"} if imports.get("datetime") == "datetime" else set()
+    return _annotation(node, names)
+
+
+def _manifest_field_options(node):
+    if not isinstance(node, ast.Dict):
+        _fail(node, "field_options must be a literal mapping")
+    options = _dictionary(node, set())
+    if (options.keys() - {"default", "default_factory", "kw_only", "class_var"}
+            or any(type(options[key]) is not bool for key in ("kw_only", "class_var") if key in options)
+            or ("default_factory" in options and (
+                options["default_factory"] not in ("dict", "list", "set", "tuple") or "default" in options))
+            or (options.get("class_var") and (options.keys() - {"class_var", "default"} or "default" not in options))):
+        _fail(node, "unsupported Property field options")
+    return options
+
+
+def _validate_manifest_arguments(arguments, node):
+    kind = arguments.get("entity_kind")
+    if "entity_kind" in arguments and kind not in ("Primary", "Property"):
+        _fail(node, "entity_kind must be Primary or Property")
+    if kind == "Property" and arguments.get("relation_name") != "IS_PROPERTY_OF":
+        _fail(node, "Property must declare its bearer through IS_PROPERTY_OF")
+    for key, required_kind in (("identity_properties", "Primary"), ("derived_from_properties", "Property")):
+        if key not in arguments:
+            continue
+        items = arguments[key]
+        if (kind != required_kind or not isinstance(items, tuple) or not items
+                or any(not isinstance(item, str) or not item.strip() for item in items)
+                or len(set(items)) != len(items)):
+            _fail(node, f"{key} requires distinct Property paths on a {required_kind} declaration")
+    if "field_options" in arguments and kind != "Property":
+        _fail(node, "Only a Property can declare field_options")
+    if "constraints_for" in arguments:
+        owner = arguments["constraints_for"]
+        if (not isinstance(owner, str) or not owner.strip() or kind is not None
+                or set(arguments) - {"entity_name", "constraints_for", "instance_check",
+                                     "instance_relation_constraints", "population_unique_constraints"}):
+            _fail(node, "constraints_for requires a separate class constraint declaration")
 
 
 def _field(node: ast.AnnAssign, names: set[str]) -> dict[str, Any]:
@@ -398,7 +443,15 @@ def parse_native_model_claim(text: str) -> dict[str, Any] | None:  # noqa: C901
     if unknown := keywords.keys() - _DECLARATION_KEYS[function]:
         _fail(declaration, f"unsupported {function} arguments: {', '.join(sorted(unknown))}")
     arguments = {}
+    property_manifest = (isinstance(keywords.get("entity_kind"), ast.Constant)
+                         and keywords["entity_kind"].value == "Property")
     for key, value in keywords.items():
+        if key == "value_format" and property_manifest:
+            arguments[key] = _manifest_property_annotation(value, imports)
+            continue
+        if key == "field_options":
+            arguments[key] = _manifest_field_options(value)
+            continue
         if key != "instance":
             arguments[key] = _value(value, names)
             continue
@@ -434,6 +487,7 @@ def parse_native_model_claim(text: str) -> dict[str, Any] | None:  # noqa: C901
                 _fail(field_value, "instance fields must be scalar literals")
             fields[field] = literal
         arguments[key] = {"type": value.func.id, "fields": fields}
+    _validate_manifest_arguments(arguments, declaration)
     if "allowed_classification_values" in arguments:
         values = arguments["allowed_classification_values"]
         if (set(arguments) != {"entity_name", "allowed_classification_values"}
@@ -548,10 +602,14 @@ def parse_native_model_claim(text: str) -> dict[str, Any] | None:  # noqa: C901
         if not isinstance(base, str) or not base.strip() or base != base.strip():
             _fail(declaration, "IS_PROPERTY_OF requires a nonempty base_path")
         allowed = arguments.get("allowed_values", ())
-        if (not isinstance(allowed, (list, tuple)) or any(not isinstance(value, str) or not value.strip()
-                                                          for value in allowed)
+        if property_manifest and arguments.get("value_format") == "int":
+            valid_values = isinstance(allowed, (list, tuple)) and all(type(value) is int for value in allowed)
+        else:
+            valid_values = isinstance(allowed, (list, tuple)) and all(
+                isinstance(value, str) and value.strip() for value in allowed)
+        if (not valid_values
                 or len(allowed) != len(set(allowed))):
-            _fail(declaration, "allowed_values requires distinct nonempty names")
+            _fail(declaration, "allowed_values requires distinct values of the Property's type")
         forms = arguments.get("applies_to_forms")
         role = arguments.get("applies_to_role")
         groups = arguments.get("status_groups")
@@ -584,13 +642,16 @@ def parse_native_model_claim(text: str) -> dict[str, Any] | None:  # noqa: C901
         _fail(declaration, "population_entity_path requires a population constraint")
     if "population_unique_constraints" in arguments:
         class_declaration = function == "declare_entity" and "entity_class" in arguments
-        population = arguments.get("population_entity_path", arguments.get("base_path", arguments.get("entity_name")))
+        constraint_owner = arguments.get("constraints_for")
+        population = (constraint_owner
+                      or arguments.get("population_entity_path", arguments.get("base_path", arguments.get("entity_name"))))
         base = arguments.get("base_path")
         rules = arguments["population_unique_constraints"]
         property_declaration = (function == "declare_entity" and arguments.get("relation_name") == "IS_PROPERTY_OF"
                                 and isinstance(base, str) and isinstance(population, str)
                                 and (base == population or base.startswith(population + ".")))
-        if (not (property_declaration or (class_declaration and population == arguments.get("entity_name")))
+        if (not (constraint_owner or property_declaration
+                 or (class_declaration and population == arguments.get("entity_name")))
                 or not isinstance(population, str) or not population.strip() or population != population.strip()
                 or not isinstance(rules, (tuple, list)) or not rules):
             _fail(declaration, "population uniqueness requires a declared class or a Property and its population")

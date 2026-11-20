@@ -7,6 +7,7 @@ from markdown_it import MarkdownIt
 from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim
 from FEATURE_FORMAL_MODEL_ENGINE.scope_callback_asset import formal_claim
 from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.code_access import parse_code_access
+from native_atom_reference import derive_atom_ref
 
 
 def _fields(body):
@@ -69,5 +70,5 @@ def read_package_spec(path, carrier, parent, prefix):
     fields = _fields(carrier.body)
     if 'package_id' in fields and fields['package_id'] != package_id:
         raise ValueError(f'Package Spec ID differs from header: {path}')
-    return {'atom_id': atom, 'ref_id': f'{atom}@{version}', 'version': version,
+    return {'atom_id': atom, 'ref_id': derive_atom_ref(atom, version, state['status']), 'version': version,
             **fields, 'package_id': package_id}

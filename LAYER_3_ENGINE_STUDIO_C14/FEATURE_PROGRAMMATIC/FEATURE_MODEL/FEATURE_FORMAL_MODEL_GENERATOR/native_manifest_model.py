@@ -14,7 +14,8 @@ from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_declaration_bindings import bi
 from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.reviewed_instance_check import bind_reviewed_instance_check
 from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.validate_model_instance import validate_model_instance
 from .model_class_assembly import assemble_model_classes, model_module_name
-from .model_declaration_sources import _check_relation_references, _relation_registry
+from model_class_subject import model_class_target
+from .model_declaration_sources import _check_relation_references, _merge_constraint_claims, _relation_registry
 
 
 _ASSETS = Path(__file__).resolve().parent.parent / "FEATURE_GENERATED_MODEL"
@@ -61,20 +62,29 @@ def admit_active_model_records(records):
     reviewed, originals, _ = reviewed_model_records()
     checks = {}
     for _, subject, claim in reviewed:
-        check = parse_native_model_claim(claim).get("instance_check")
-        if check:
-            checks[subject] = check["source"]
+        declaration = parse_native_model_claim(claim)
+        if check := declaration.get("instance_check"):
+            target = model_class_target(subject, declaration["arguments"]["entity_name"])
+            checks[target] = check["source"]
     records = tuple(records)
     subjects = set()
+    parsed = []
     for source, subject, claim in records:
         declaration = parse_native_model_claim(claim)
         if declaration is None or subject in subjects:
             raise ValueError(f"{source}: expected a unique Model Declaration")
         subjects.add(subject)
+        parsed.append((source, subject, declaration))
+    seen = set()
+    for source, subject, declaration in _merge_constraint_claims(parsed):
         check = declaration.get("instance_check", {}).get("source")
-        if check != checks.get(subject):
+        args = declaration["arguments"]
+        target = model_class_target(subject, args.get("entity_name")) if "entity_class" in args else None
+        if check != checks.get(target):
             raise ValueError(f"{source}: executable Model instance check differs from the approved review")
-    if checks.keys() - subjects:
+        if check:
+            seen.add(target)
+    if checks.keys() - seen:
         raise ValueError("Active Model is missing reviewed instance checks")
     _check_relation_references(records)
     fingerprint = sha256(json.dumps(sorted(records), ensure_ascii=False).encode()).hexdigest()
@@ -86,7 +96,11 @@ class _NativeModel:
         records, originals, self.fingerprint = (
             reviewed_model_records() if records is None else admit_active_model_records(records)
         )
-        parsed = [(source, subject, parse_native_model_claim(claim)) for source, subject, claim in records]
+        parsed = _merge_constraint_claims(
+            [(source, subject, parse_native_model_claim(claim)) for source, subject, claim in records]
+        )
+        self._derived_refs = any(declaration["arguments"].get("derived_from_properties")
+                                 for _, _, declaration in parsed)
         module = None
         if compiled:
             model_types = {
@@ -109,9 +123,11 @@ class _NativeModel:
             for _, subject, declaration in parsed:
                 if check := declaration.get("instance_check"):
                     name = check["name"]
-                    if sha256(originals[subject].encode()).hexdigest() != _REVIEWED_CHECKS[name]:
+                    original_subject = next(key for key, value in originals.items()
+                                            if sha256(value.encode()).hexdigest() == _REVIEWED_CHECKS[name])
+                    if sha256(originals[original_subject].encode()).hexdigest() != _REVIEWED_CHECKS[name]:
                         raise ValueError(f"{subject}: Claim differs from reviewed source")
-                    claim = _native_imports(originals[subject])
+                    claim = _native_imports(originals[original_subject])
                     self._checks[check["parameter_type"]] = (name, bind_reviewed_instance_check(
                         claim, reference=subject, reviewed_claim_sha256=sha256(claim.encode()).hexdigest(),
                         model_types=model_types,
@@ -124,8 +140,10 @@ class _NativeModel:
         self.inverses = {name: args["inverse_alias"] for name, (args, reverse) in self._endpoints.items()
                          if not reverse and "inverse_alias" in args}
 
-    def _validate(self, name, properties, relations):
+    def _validate(self, name, properties, relations, *, active_carrier=False):
         model_class = self._types[name]
+        if active_carrier and self._derived_refs:
+            properties = {**properties, "status": "active"}
         return validate_model_instance(
             model_class, properties=properties, outgoing_relations=relations,
             relation_declarations=self._bindings, model_types=self._types,
@@ -139,18 +157,18 @@ class _NativeModel:
         if component_id != "C00":
             raise ValueError("Project Manifest must be contained by Project C00")
         project = self._validate("Project", {}, {})
-        return self._validate("Project Manifest", fields, {"CONTAINED_BY": [project]})
+        return self._validate("Project Manifest", fields, {"CONTAINED_BY": [project]}, active_carrier=True)
 
     def validate_component_manifest(self, fields, parent_id):
         project = self._validate("Project", {}, {})
         parent = project if parent_id == "C00" else self._validate("Component", {}, {"CHILD_OF": [project]})
         self._validate("Component", {}, {"CHILD_OF": [parent]})
-        return self._validate("Component Manifest", fields, {"CONTAINED_BY": [parent]})
+        return self._validate("Component Manifest", fields, {"CONTAINED_BY": [parent]}, active_carrier=True)
 
     def validate_package_spec(self, fields, owner_id):
         project = self._validate("Project", {}, {})
         owner = project if owner_id == "C00" else self._validate("Component", {}, {"CHILD_OF": [project]})
-        return self._validate("Package Spec", fields, {"CONTAINED_BY": [owner]})
+        return self._validate("Package Spec", fields, {"CONTAINED_BY": [owner]}, active_carrier=True)
 
 
 def load_compiled_model(records=None):

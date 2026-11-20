@@ -3,6 +3,7 @@
 import hashlib
 import json
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -97,7 +98,9 @@ class ManifestRuntimeTests(unittest.TestCase):
                     self.assertTrue(all(process.poll() is None for process in processes))
                     descriptor = json.loads((generation / "model.json").read_text())
                     self.assertNotEqual(model.fingerprint, descriptor["model_sha256"])
-                    self.assertEqual(40, len(descriptor["declarations"]))
+                    declared = {subject for _, subject, _ in descriptor["declarations"]}
+                    self.assertIn("MODEL//ANECHOIC <+ Node//Artifact//Atom", declared)
+                    self.assertEqual(len(declared), len(descriptor["declarations"]))
                     module = generation / "anechoic_runtime_model" / "component_manifest.py"
                     self.assertEqual(descriptor["modules"][module.name], hashlib.sha256(module.read_bytes()).hexdigest())
                     subprocess.run([sys.executable, "-c", "from anechoic_runtime_model.component_manifest import ComponentManifest; assert ComponentManifest.__name__ == 'ComponentManifest'"],
@@ -124,8 +127,10 @@ class ManifestRuntimeTests(unittest.TestCase):
                     self.assertEqual("Updated Studio", valid.component("C14").name)
                     claim = control / ontology / "AN-S-3109-SPEC--declare-component-manifest.md"
                     revision = claim.read_text(encoding="utf-8")
-                    self.assertIn("version: 2", revision)
-                    claim.write_text(revision.replace("version: 2", "version: 3", 1), encoding="utf-8")
+                    revised, count = re.subn(r"(?m)^  version: (\d+)$",
+                                             lambda match: f"  version: {int(match[1]) + 1}", revision)
+                    self.assertEqual(count, 1)
+                    claim.write_text(revised, encoding="utf-8")
                     component.write_text(changed.replace("version: 2", "version: 4"), encoding="utf-8")
                     wait_for(lambda: read_structure(active).component("C14").ref == "AN-S-3039@4")
                     self.assertEqual(descriptor["model_sha256"], read_structure(active).model_sha256)

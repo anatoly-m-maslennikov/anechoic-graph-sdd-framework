@@ -7,8 +7,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-20T11:17:59+00:00'
+  version: 2
+  updated_at: '2026-11-20T14:42:07.157939+00:00'
 ---
 
 ## Summary
@@ -26,13 +26,13 @@ MODEL//ANECHOIC <+ Node//Artifact//Atom//Spec Atom//Contract//Component Contract
 ```python
 from anechoic.formal_claims import declare_entity
 from anechoic.model import Contract
-from dataclasses import field
 
 class ComponentContract(Contract):
-    tier: int = field(metadata={"allowed_values": (1,)})
+    pass
 
 declare_entity(
-    entity_name="Component Contract",
+    entity_name='Component Contract',
     entity_class=ComponentContract,
+    entity_kind='Primary',
 )
 ```

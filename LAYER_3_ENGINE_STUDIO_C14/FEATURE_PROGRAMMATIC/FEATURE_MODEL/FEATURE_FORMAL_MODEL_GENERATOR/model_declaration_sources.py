@@ -203,9 +203,82 @@ def _relation_registry(records: list) -> dict:
     return relations
 
 
+def _merge_constraint_claims(parsed: list) -> list:
+    """Attach separate constraint declarations to their canonical class owner."""
+    owners = {}
+    for source, subject, declaration in parsed:
+        args = declaration["arguments"]
+        if declaration["kind"] != "entity" or "entity_class" not in args:
+            continue
+        target = model_class_target(subject, args["entity_name"])
+        if target in owners:
+            raise ValueError(f"{source}: duplicate Model class target: {target}")
+        owners[target] = (source, declaration)
+        if args.get("entity_kind") == "Primary":
+            allowed = {"entity_name", "entity_class", "entity_kind", "identity_properties"}
+            if args.keys() - allowed or declaration.get("instance_check"):
+                raise ValueError(f"{source}: Primary class Declaration contains constraints")
+    merged, seen = [], set()
+    for source, subject, declaration in parsed:
+        args = declaration["arguments"]
+        if "constraints_for" not in args:
+            merged.append((source, subject, {**declaration, "arguments": dict(args)}))
+            continue
+        target = args["constraints_for"]
+        if target not in owners:
+            raise ValueError(f"{source}: unknown constraint owner: {target}")
+        if target in seen:
+            raise ValueError(f"{source}: duplicate constraint owner: {target}")
+        seen.add(target)
+        owner = owners[target][1]
+        allowed = {"entity_name", "constraints_for", "instance_relation_constraints",
+                   "population_unique_constraints", "instance_check"}
+        if (declaration["kind"] != "entity" or args.keys() - allowed
+                or args.get("entity_name") != owner["arguments"]["entity_name"] + " Constraints"):
+            raise ValueError(f"{source}: invalid constraint Declaration")
+    for source, subject, declaration in merged:
+        args = declaration["arguments"]
+        if "entity_class" not in args:
+            continue
+        target = model_class_target(subject, args["entity_name"])
+        if target not in seen:
+            continue
+        constraint = next(item for _, _, item in parsed
+                          if item["arguments"].get("constraints_for") == target)
+        for key in ("instance_relation_constraints", "population_unique_constraints"):
+            if key in constraint["arguments"]:
+                if key in args:
+                    raise ValueError(f"{source}: duplicate {key} for {target}")
+                args[key] = constraint["arguments"][key]
+        if constraint.get("instance_check"):
+            if declaration.get("instance_check"):
+                raise ValueError(f"{source}: duplicate instance check for {target}")
+            declaration["instance_check"] = constraint["instance_check"]
+    return merged
+
+
+def _check_manifest_property_bearers(parsed):
+    owners = {model_class_target(subject, args["entity_name"])
+              for _, subject, declaration in parsed
+              if (args := declaration["arguments"]).get("entity_kind") == "Primary"}
+    for source, _, declaration in parsed:
+        args = declaration["arguments"]
+        if args.get("entity_kind") != "Property":
+            continue
+        bearer = args.get("base_path")
+        if not isinstance(bearer, str) or bearer.removesuffix(".State") not in owners:
+            raise ValueError(f"{source}: unresolved Property bearer: {bearer}")
+        scoped = args.get("applies_to_entity_classes", ())
+        if not isinstance(scoped, tuple) or any(not isinstance(path, str) or path not in owners for path in scoped):
+            raise ValueError(f"{source}: unresolved Property refinement owner: {scoped}")
+
+
 def _check_relation_references(records: list[tuple[str, str, str]]) -> None:
     """Build the Relation registry, then check Entity and Relation references."""
-    parsed = [(source, subject, parse_native_model_claim(claim)) for source, subject, claim in records]
+    parsed = _merge_constraint_claims(
+        [(source, subject, parse_native_model_claim(claim)) for source, subject, claim in records]
+    )
+    _check_manifest_property_bearers(parsed)
     relations = _relation_registry(parsed)
     addresses = {subject for _, subject, _ in records}
     addresses.update(_class_property_aliases(parsed))

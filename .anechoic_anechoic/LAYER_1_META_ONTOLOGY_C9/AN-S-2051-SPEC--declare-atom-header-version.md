@@ -4,16 +4,19 @@ identity:
 context:
   container:
     component: C9
-  tier: 3
-  lens: DES
+  lens: SPEC
 state:
   status: active
-  version: 2
-  updated_at: '2026-11-12T12:33:04.158402+00:00'
+  version: 3
+  updated_at: '2026-11-20T14:42:07.157939+00:00'
 ---
 ## Summary
 
-Declare Atom.Header.Version
+Declare Atom.Version
+
+## Claim scope
+
+MODEL//ANECHOIC <+ Node//Artifact//Atom.State.Version
 
 ## Claim
 
@@ -24,12 +27,12 @@ from anechoic.formal_claims import declare_entity
 
 declare_entity(
     entity_name='Version',
+    entity_kind='Property',
     relation_name='IS_PROPERTY_OF',
-    base_path='Atom.Header.State',
+    base_path='Node//Artifact//Atom.State',
     value_format=int,
-    property_occurrence_cardinality=1,
-    value_cardinality=1,
-    dependent_property_cardinality=0,
     minimum_value=1,
+    value_cardinality=1,
+    property_occurrence_cardinality=1,
 )
 ```

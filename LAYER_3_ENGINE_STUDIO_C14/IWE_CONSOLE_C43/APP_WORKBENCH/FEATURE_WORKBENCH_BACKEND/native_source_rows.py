@@ -8,6 +8,7 @@ import re
 from typing import Any
 
 from .source_rows import atom, canonical_row, source_body
+from native_atom_reference import derive_atom_ref
 from VALIDATE_ATOMS.validate_atoms_workers.parsing import CarrierError, parse_carrier
 from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext
 from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
@@ -45,7 +46,7 @@ def _carrier_row(path: Path, root: Path, family: str, prefix: str, raw: bytes) -
         group = status.title()
     else:
         raise ValueError("Invalid native status for Atom family")
-    exact = f"{atom_id}@{version}" + ("-draft" if group == "Draft" else "")
+    exact = derive_atom_ref(atom_id, version, status)
     marker = atom_id if group == "Current" else exact
     if not path.name.startswith(marker + "-") or (
         group == "Archived" and path.name.startswith(exact + "-draft-")

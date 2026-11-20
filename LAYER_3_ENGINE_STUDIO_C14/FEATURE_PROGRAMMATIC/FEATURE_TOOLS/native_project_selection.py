@@ -12,6 +12,7 @@ from typing import Protocol
 
 from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim
 from FEATURE_FORMAL_MODEL_ENGINE.scope_callback_asset import formal_claim
+from native_atom_reference import derive_atom_ref
 from project_selection import ProjectSelectionError, _instance_id, _project_root
 from VALIDATE_ATOMS.validate_atoms_workers.parsing import ParsedCarrier, parse_carrier
 from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext, protected
@@ -103,7 +104,7 @@ def _manifest_inputs(path: Path, carrier: ParsedCarrier) -> tuple[dict[str, obje
             or instance.get("type") != "ProjectManifest" or not {"name", "prefix"} <= fields.keys()
             or fields.keys() - {"name", "prefix", "parameters", "lens_whitelist"}):
         raise ProjectSelectionError("Expected one formal ProjectManifest instance")
-    return {"atom_id": atom_id, "ref_id": f"{atom_id}@{version}", "version": version,
+    return {"atom_id": atom_id, "ref_id": derive_atom_ref(atom_id, version, state["status"]), "version": version,
             "tier": tier, **fields}, container["component"]
 
 

@@ -13,14 +13,18 @@ from uuid import uuid4
 
 from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim
 from .atom_header_groups import atom_header_group_sources
+from .manifest_property_fields import assemble_manifest_fields
 
 
 def _classes(claims: Iterable[str]):
+    claims = tuple(claims)
+    declarations = [parse_native_model_claim(claim) for claim in claims]
+    if any(item is not None and "entity_kind" in item["arguments"] for item in declarations):
+        return assemble_manifest_fields(claims, declarations)
     classes = {}
     imports = {}
     properties = []
-    for claim in claims:
-        declaration = parse_native_model_claim(claim)
+    for claim, declaration in zip(claims, declarations, strict=True):
         if declaration is None:
             raise ValueError("Model Claim must be a native Python declaration")
         if declaration["kind"] == "entity" and declaration["arguments"].get("relation_name") == "IS_PROPERTY_OF":
