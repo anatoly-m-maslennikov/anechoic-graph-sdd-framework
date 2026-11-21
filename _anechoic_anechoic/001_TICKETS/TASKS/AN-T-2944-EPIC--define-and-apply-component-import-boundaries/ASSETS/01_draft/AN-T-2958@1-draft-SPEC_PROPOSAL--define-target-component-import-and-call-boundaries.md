@@ -110,10 +110,23 @@ and applies the production tag to that same image ID. It retains the
 verified previous image when available. Failures report observed effects
 without automatic replay.
 
-Public Release owns both changelog outputs. It prepares the detailed
-changelog for a Local Release and derives the short Version History
-entry from that changelog. The released version and change evidence
-are inputs. This is the complete scope of Public Release.
+Public Release prepares the detailed PR description for a selected
+Local Release and derives a brief Version History entry from it. The
+entry summarizes the main user-facing changes. These are the two
+outputs of Public Release.
+
+Pin the PR base (`main`) and head (`amm/dev`) commits for both evidence
+sources:
+
+1. Read completed Task and Epic files from the Git repository. Use
+   records that describe changes included in the selected release as
+   the primary evidence.
+2. Have Luna review the Git diff for the same PR comparison. Add
+   relevant changes that the completed Tasks and Epics do not cover.
+   Combine overlapping evidence in one PR entry.
+
+Read the Task and Epic files and the diff directly with Git. This work
+requires no ANECHOIC runtime, MCP, or Workbench.
 
 ### Import policy and acceptance
 
@@ -136,8 +149,10 @@ are inputs. This is the complete scope of Public Release.
 - Verify zero code imports from Components outside the Release subtree.
   Verify that the approved Test Suite entry is the only external
   Component interface called by Local Release.
-- Verify that Public Release produces both changelog outputs for the
-  same Local Release and derives the short entry from the detailed one.
+- Verify that Public Release reads completed Tasks and Epics directly
+  from Git and uses Luna to find omissions in the same PR diff.
+- Verify that the detailed PR description and brief Version History
+  entry describe the same Local Release.
 - Verify that the two Release Components allow Public Release to use
   declared Local Release interfaces. Reject Local Release imports and
   calls into Public Release.
