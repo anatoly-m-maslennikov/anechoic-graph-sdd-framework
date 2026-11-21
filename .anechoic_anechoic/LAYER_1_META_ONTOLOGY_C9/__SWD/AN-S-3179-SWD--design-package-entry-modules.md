@@ -8,9 +8,9 @@ structure:
 context:
   lens: SWD
 state:
-  status: draft
+  status: "active"
   version: 1
-  updated_at: '2026-11-21T11:58:00.402013+00:00'
+  updated_at: "2026-11-21T12:43:52.360824+00:00"
 ---
 
 ## Summary
