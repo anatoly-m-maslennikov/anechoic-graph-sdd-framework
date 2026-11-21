@@ -316,12 +316,14 @@ def _publish_image_assets(root: Path, package: Path, previous: Mapping[str, tupl
 
 
 def _prepare_package(root: Path, product: Path, package: Path, *,
-                     project_selection, refresh_assets: bool = True) -> dict[str, tuple[str, int]]:
-    selection = project_selection
-    from native_project_selection import NativeProjectSelection
-    if not isinstance(selection, NativeProjectSelection) or selection.root != root:
+                     control_relative: Path, refresh_assets: bool = True) -> dict[str, tuple[str, int]]:
+    if (len(control_relative.parts) != 1
+            or not control_relative.name.startswith((".anechoic_", "_anechoic_"))):
         raise LocalReleaseError("local-release-project-selection-invalid")
-    excluded = frozenset({selection.control_relative.name.casefold(), ".anechoic_runtime", ".anechoic_tmp", ".runtime", ".git", ".pytest_cache", "__pycache__", ".mypy_cache", ".ruff_cache", ".venv", ".vite", "node_modules"})
+    control_root = _project_path(root, control_relative, label="control-root", require_exists=True)
+    if not control_root.is_dir():
+        raise LocalReleaseError("local-release-project-selection-invalid")
+    excluded = frozenset({control_relative.name.casefold(), ".anechoic_runtime", ".anechoic_tmp", ".runtime", ".git", ".pytest_cache", "__pycache__", ".mypy_cache", ".ruff_cache", ".venv", ".vite", "node_modules"})
     programmatic = root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC"
     trees = (
         (root, Path(".")),
@@ -357,7 +359,7 @@ def _prepare_package(root: Path, product: Path, package: Path, *,
     for source, relative in sources:
         if _file_identity(source) != expected[relative.as_posix()]:
             raise LocalReleaseError("local-release-package-source-changed")
-    verify_native_release_assets(package, root, selection.control_relative)
+    verify_native_release_assets(package, root, control_relative)
     if refresh_assets:
         tool_registry = generate_tool_registry(package)
         relative = tool_registry.relative_to(package).as_posix()

@@ -24,10 +24,9 @@ def release_image_provenance(
     selection: SelectedProject,
     runner: Runner | None = None,
 ) -> dict[str, str]:
-    from native_project_selection import NativeProjectSelection
-    if isinstance(selection, NativeProjectSelection):
-        name = selection.project_name
-    else:
+    missing = object()
+    name = getattr(selection, "project_name", missing)
+    if name is missing:
         project = selection.settings.get("project")
         name = project.get("name") if isinstance(project, Mapping) else None
     if not isinstance(name, str) or not name.strip():

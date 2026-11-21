@@ -292,7 +292,7 @@ def run_local_release(
                 package.mkdir()
                 package_identity = _prepare_package(
                     root, prepared_product, package, refresh_assets=image_mode == "refresh",
-                    project_selection=selection,
+                    control_relative=selection.control_relative,
                 )
             elif phase == "prepare candidate image":
                 failed_step = "prepare_candidate_image"
