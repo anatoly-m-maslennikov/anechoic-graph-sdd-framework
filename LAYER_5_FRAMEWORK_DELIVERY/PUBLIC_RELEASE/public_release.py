@@ -19,7 +19,9 @@ from public_release_materials import (
     validate_draft,
 )
 
-from public_release_git import Command, Runner, _checkpoint, _command, _repository, _create_pr, _verify_pr
+from public_release_git import (
+    Command, Runner, _check_staged_environment, _checkpoint, _command, _repository, _create_pr, _verify_pr,
+)
 
 
 def _prepare_materials(root: Path, run_id: str, summary: list[str], pr_url: str) -> str:
@@ -83,13 +85,21 @@ def _test_materials(root: Path, command: Command, candidate: str) -> None:
 
 
 def _release(
-    root: Path, run_id: str, draft: Mapping[str, object], command: Command
+    root: Path, run_id: str, draft: Mapping[str, object], command: Command, repository_slug: str | None
 ) -> dict[str, object]:
     step = "content_draft"
     effects: list[str] = []
     try:
         description, summary = validate_draft(draft)
-        repository = _repository(root, command)
+        if (
+            not isinstance(repository_slug, str)
+            or re.fullmatch(r"[A-Za-z0-9_.-]+", repository_slug) is None
+            or repository_slug in (".", "..")
+        ):
+            raise PublicReleaseError("public-release-repository-slug-invalid")
+        repository = _repository(command, repository_slug)
+        step = "git_preflight"
+        _check_staged_environment(command)
         step = "discover_pr"
         discovered = command(
             (
@@ -198,6 +208,7 @@ def run_public_release(
     run_id: str,
     content_draft: Mapping[str, object] | None = None,
     runner: Runner | None = None,
+    repository_slug: str | None = None,
 ) -> dict[str, object]:
     """Discover the selected PR, prepare and test materials, then publish Draft."""
     if content_draft is None:
@@ -219,4 +230,4 @@ def run_public_release(
         raise PublicReleaseError("public-release-project-root-invalid") from error
     if not root.is_dir() or root == Path(root.anchor):
         raise PublicReleaseError("public-release-project-root-invalid")
-    return _release(root, run_id, content_draft, partial(_command, root, runner))
+    return _release(root, run_id, content_draft, partial(_command, root, runner), repository_slug)

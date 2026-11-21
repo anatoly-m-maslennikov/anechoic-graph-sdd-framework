@@ -97,6 +97,19 @@ class ReleaseCliTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir=temporary) as directory:
             draft = Path(directory) / "draft.json"
             draft.write_text(json.dumps(DRAFT), encoding="utf-8")
+            control = Path(directory) / "_anechoic_fixture"
+            control.mkdir()
+            (control / "FX-S-1-SPEC-PROJECT_MANIFEST--declare-fixture.md").write_text(
+                "---\natom_family: SPEC\natom_id: FX-S-1\ncontainer:\n  component: C00\n"
+                "tier: -1\ncontext:\n  template: project_manifest\n  lens: SPEC\n"
+                "state:\n  status: active\n  version: 1\n  updated_at: '2026-11-21T00:00:00Z'\n---\n"
+                "## Summary\n\nDeclare Fixture\n\n## Claim\n\n### Formal Claim\n\n```python\n"
+                "from anechoic.formal_claims import declare_entity\n"
+                "from anechoic.model import ProjectManifest\n"
+                "declare_entity(entity_name='Project Manifest', instance=ProjectManifest("
+                "name='Fixture', prefix='FX', parameters={'project': {'repository_slug': 'fixture-repo'}}))\n```\n",
+                encoding="utf-8",
+            )
             result = {"outcome": "failed", "failed_step": "tests", "report_path": "issue.md"}
             with patch(PUBLIC_ENTRY, return_value=result) as run:
                 status, actual = self.invoke(
@@ -111,7 +124,30 @@ class ReleaseCliTests(unittest.TestCase):
                     ]
                 )
             self.assertEqual((status, actual), (1, result))
-            run.assert_called_once_with(Path(directory), run_id="public-1", content_draft=DRAFT)
+            run.assert_called_once_with(
+                Path(directory), run_id="public-1", content_draft=DRAFT, repository_slug="fixture-repo",
+            )
+
+    def test_public_release_refuses_a_checkout_with_only_legacy_settings(self) -> None:
+        temporary = REPOSITORY / ".anechoic_tmp/verification/release-cli"
+        temporary.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=temporary) as directory, patch(PUBLIC_ENTRY) as run:
+            root = Path(directory)
+            draft = root / "draft.json"
+            draft.write_text(json.dumps(DRAFT), encoding="utf-8")
+            control = root / ".anechoic_anechoic"
+            control.mkdir()
+            (control / "anechoic_project_settings.toml").write_text(
+                '[project]\nname = "fixture"\nkey = "fixture"\nrepository_slug = "fixture-repo"\n'
+                '[artifacts.identity]\nproject_prefix = "FX"\n', encoding="utf-8",
+            )
+            status, actual = self.invoke([
+                "public", "--run-id", "legacy-only", "--project-root", directory, "--content-draft", str(draft),
+            ])
+        self.assertEqual(1, status)
+        self.assertEqual("invocation", actual["failed_step"])
+        run.assert_not_called()
+        self.record.assert_not_called()
 
     def test_missing_draft_uses_native_input_required_without_effects(self) -> None:
         with patch("subprocess.run", side_effect=AssertionError("release effect")):

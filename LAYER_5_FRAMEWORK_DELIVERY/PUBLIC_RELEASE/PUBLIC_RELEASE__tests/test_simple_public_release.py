@@ -23,7 +23,7 @@ class SimplePublicReleaseTests(PublicReleaseFixture):
     def test_failed_test_retains_prepared_materials_and_writes_issue(self) -> None:
         runner, calls = self._runner(fail_tests=True)
         result = run_public_release(
-            self.root, run_id="public-3", content_draft=self.draft, runner=runner
+            self.root, run_id="public-3", content_draft=self.draft, runner=runner, repository_slug="project"
         )
 
         self.assertEqual("failed", result["outcome"])
@@ -38,12 +38,46 @@ class SimplePublicReleaseTests(PublicReleaseFixture):
     def test_refuses_a_branch_other_than_amm_dev_before_staging(self) -> None:
         runner, calls = self._runner(branch="main")
         result = run_public_release(
-            self.root, run_id="public-4", content_draft=self.draft, runner=runner
+            self.root, run_id="public-4", content_draft=self.draft, runner=runner, repository_slug="project"
         )
 
         self.assertEqual("failed", result["outcome"])
         self.assertEqual("content_draft", result["failed_step"])
         self.assertFalse(any(argv[:2] == ("git", "add") for argv in calls))
+
+    def test_staged_environment_files_stop_before_commit_or_push(self) -> None:
+        for phase in ("git_preflight", "candidate_commit"):
+            with self.subTest(phase=phase):
+                runner, calls = self._runner(staged_environment_at=phase)
+                result = run_public_release(
+                    self.root, run_id="staged-environment", content_draft=self.draft,
+                    runner=runner, repository_slug="project",
+                )
+                self.assertEqual("failed", result["outcome"])
+                self.assertEqual(phase, result["failed_step"])
+                self.assertEqual("public-release-staged-environment-file", result["error"])
+                self.assertFalse(any(argv[:2] in (("git", "commit"), ("git", "push")) for argv in calls))
+                if phase == "git_preflight":
+                    self.assertFalse(any(argv[0] == "gh" for argv in calls))
+
+    def test_missing_or_malformed_slug_refuses_even_with_legacy_settings(self) -> None:
+        settings = self.root / ".anechoic_anechoic/anechoic_project_settings.toml"
+        settings.parent.mkdir()
+        settings.write_text(
+            '[project]\nkey="fixture"\nname="fixture"\nrepository_slug="project"\n'
+            '[artifacts.identity]\nproject_prefix="FX"\n', encoding="utf-8",
+        )
+        for slug in (None, "", " ", "acme/project", ".", "..", "bad\nslug"):
+            with self.subTest(slug=slug):
+                runner, calls = self._runner()
+                result = run_public_release(
+                    self.root, run_id="invalid-slug", content_draft=self.draft,
+                    runner=runner, repository_slug=slug,
+                )
+                self.assertEqual("failed", result["outcome"])
+                self.assertEqual("public-release-repository-slug-invalid", result["error"])
+                self.assertEqual([], calls)
+                self.assertIn('version = "0.4.2.1"', (self.root / "version.toml").read_text())
 
     def test_remote_identity_is_bound_before_staging(self) -> None:
         for options in (
@@ -54,7 +88,7 @@ class SimplePublicReleaseTests(PublicReleaseFixture):
             with self.subTest(options=options):
                 runner, calls = self._runner(**options)
                 result = run_public_release(
-                    self.root, run_id="public-remote", content_draft=self.draft, runner=runner
+                    self.root, run_id="public-remote", content_draft=self.draft, runner=runner, repository_slug="project"
                 )
                 self.assertEqual("failed", result["outcome"])
                 self.assertFalse(any(argv[:2] == ("git", "add") for argv in calls))
@@ -78,7 +112,7 @@ class SimplePublicReleaseTests(PublicReleaseFixture):
             with self.subTest(output=output):
                 runner, calls = self._runner(discovery=output)
                 result = run_public_release(
-                    self.root, run_id="public-discovery", content_draft=self.draft, runner=runner
+                    self.root, run_id="public-discovery", content_draft=self.draft, runner=runner, repository_slug="project"
                 )
                 self.assertEqual("failed", result["outcome"])
                 self.assertEqual("discover_pr", result["failed_step"])
@@ -90,7 +124,7 @@ class SimplePublicReleaseTests(PublicReleaseFixture):
     def test_created_pr_url_must_match_the_bound_repository(self) -> None:
         runner, calls = self._runner(created_url="https://github.com/other/project/pull/42")
         result = run_public_release(
-            self.root, run_id="public-created", content_draft=self.draft, runner=runner
+            self.root, run_id="public-created", content_draft=self.draft, runner=runner, repository_slug="project"
         )
         self.assertEqual("failed", result["outcome"])
         self.assertEqual("create_pr", result["failed_step"])
@@ -106,6 +140,7 @@ class SimplePublicReleaseTests(PublicReleaseFixture):
                     run_id="public-drift-" + change,
                     content_draft=self.draft,
                     runner=runner,
+                    repository_slug="project",
                 )
                 self.assertEqual("failed", result["outcome"])
                 self.assertEqual("tests", result["failed_step"])

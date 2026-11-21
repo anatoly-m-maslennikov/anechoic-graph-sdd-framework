@@ -7,12 +7,6 @@ from collections.abc import Callable
 import json
 from pathlib import Path
 import subprocess
-import sys
-
-sys.path.insert(
-    0, str(Path(__file__).resolve().parents[2] / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS")
-)
-from artifact_metadata import project_identity
 from public_release_materials import PublicReleaseError, repository_identity, validate_pr_url
 
 Runner = Callable[[tuple[str, ...], Path], subprocess.CompletedProcess[str]]
@@ -46,6 +40,14 @@ def _command(
     return result
 
 
+def _check_staged_environment(command: Command) -> None:
+    staged = command((
+        "git", "diff", "--cached", "--name-only", "--", ":(glob)**/.env*", ":(glob)**/*.env",
+    ))
+    if not isinstance(staged.stdout, str) or staged.stdout.strip():
+        raise PublicReleaseError("public-release-staged-environment-file")
+
+
 def _checkpoint(command: Command, before: str) -> None:
     command(
         (
@@ -59,6 +61,7 @@ def _checkpoint(command: Command, before: str) -> None:
             ":(exclude,glob)**/*.env",
         )
     )
+    _check_staged_environment(command)
     staged = command(("git", "diff", "--cached", "--quiet"), allow_dirty_status=True)
     if staged.returncode == 1:
         command(("git", "commit", "-m", f"chore(release): checkpoint before public {before}"))
@@ -66,10 +69,9 @@ def _checkpoint(command: Command, before: str) -> None:
         raise PublicReleaseError("public-release-git-status-failed")
 
 
-def _repository(root: Path, command: Command) -> str:
+def _repository(command: Command, slug: str) -> str:
     if command(("git", "branch", "--show-current")).stdout.strip() != "amm/dev":
         raise PublicReleaseError("public-release-requires-amm-dev")
-    slug = project_identity(root)["project"]["repository_slug"]
     repository = repository_identity(
         command(("git", "remote", "get-url", "--all", "origin")).stdout, slug
     )

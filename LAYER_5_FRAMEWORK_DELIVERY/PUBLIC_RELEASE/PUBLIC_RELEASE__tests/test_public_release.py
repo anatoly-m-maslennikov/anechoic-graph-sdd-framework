@@ -25,11 +25,6 @@ class PublicReleaseFixture(unittest.TestCase):
         (self.root / "version.toml").write_text('[framework]\nversion = "0.4.2.1"\n')
         (self.root / "README.md").write_text("# Project\n")
         (self.root / "VERSION_HISTORY.md").write_text("# Version History\n")
-        settings = self.root / ".anechoic_anechoic/anechoic_project_settings.toml"
-        settings.parent.mkdir()
-        settings.write_text(
-            '[project]\nkey="fixture"\nname="fixture"\nrepository_slug="project"\n[artifacts.identity]\nproject_prefix="FX"\n'
-        )
         self.draft = {
             "description": "## New\n- Direct public release.\n\n## Fixed\n- Removed selector dependency.\n",
             "summary": ["Direct public release with one supplied PR description."],
@@ -55,6 +50,7 @@ class PublicReleaseFixture(unittest.TestCase):
         change_after_tests=None,
         wrong_head=False,
         fail_push=False,
+        staged_environment_at=None,
     ):
         calls: list[tuple[str, ...]] = []
         tracked = staged = self._materials()
@@ -65,6 +61,10 @@ class PublicReleaseFixture(unittest.TestCase):
             self.assertEqual(self.root, cwd)
             calls.append(argv)
             self.snapshots.append((argv, self._materials()))
+            if argv[:4] == ("git", "diff", "--cached", "--name-only"):
+                checkpoint = any(call[:2] == ("git", "add") for call in calls)
+                phase = "candidate_commit" if checkpoint else "git_preflight"
+                return subprocess.CompletedProcess(argv, 0, "private.env\n" if staged_environment_at == phase else "", "")
             if argv[:2] == ("git", "show"):
                 return subprocess.CompletedProcess(argv, 0, tracked[argv[2].split(":", 1)[1]], "")
             if argv[:2] == ("git", "add"):
@@ -123,7 +123,7 @@ class PublicReleaseTests(PublicReleaseFixture):
         newer = "## Version 0.4.1\n\nNewer details.\n\n"
         history.write_text("# Version History\n\nIntroduction.\n\n" + older + newer)
         runner, _ = self._runner(existing_pr=True)
-        result = run_public_release(self.root, run_id="legacy", content_draft=self.draft, runner=runner)
+        result = run_public_release(self.root, run_id="legacy", content_draft=self.draft, runner=runner, repository_slug="project")
         self.assertEqual("completed", result["outcome"], result)
         text = history.read_text()
         self.assertLess(text.index("## 0.4.3"), text.index(newer))
@@ -134,7 +134,7 @@ class PublicReleaseTests(PublicReleaseFixture):
         for existing in (False, True):
             with self.subTest(existing=existing):
                 runner, calls = self._runner(existing_pr=existing)
-                result = run_public_release(self.root, run_id="public-" + str(existing), content_draft=self.draft, runner=runner)
+                result = run_public_release(self.root, run_id="public-" + str(existing), content_draft=self.draft, runner=runner, repository_slug="project")
                 self.assertEqual("completed", result["outcome"], result)
                 push = next(x for x in calls if x[:2] == ("git", "push"))
                 self.assertEqual(1, sum(x[:2] == ("git", "push") for x in calls))
@@ -154,7 +154,7 @@ class PublicReleaseTests(PublicReleaseFixture):
         for options in ({"fail_tests": True}, {"change_after_tests": "head"}, {"change_after_tests": "tracked"}, {"created_url": "https://github.com/other/project/pull/42"}, {"fail_push": True}, {"wrong_head": True}):
             with self.subTest(options=options):
                 runner, calls = self._runner(**options)
-                result = run_public_release(self.root, run_id="failure", content_draft=self.draft, runner=runner)
+                result = run_public_release(self.root, run_id="failure", content_draft=self.draft, runner=runner, repository_slug="project")
                 self.assertEqual("failed", result["outcome"], result)
                 pushes = sum(x[:2] == ("git", "push") for x in calls)
                 self.assertEqual(int(bool(options.get("fail_push") or options.get("wrong_head"))), pushes)

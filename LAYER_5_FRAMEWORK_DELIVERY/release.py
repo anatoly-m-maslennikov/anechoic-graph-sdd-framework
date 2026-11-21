@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+from collections.abc import Mapping
 from contextlib import redirect_stdout
 from functools import partial
 import json
@@ -103,11 +104,13 @@ def _invoke(arguments: argparse.Namespace) -> dict[str, object]:
     draft = _read_draft(arguments.content_draft)
     if draft is None:
         return run_public_release(root, run_id=arguments.run_id)
-    try:
-        selected = select_runtime_project(root)
-    except ValueError:
-        selected = None
-    invoke = partial(run_public_release, root, run_id=arguments.run_id, content_draft=draft)
+    selected = select_runtime_project(root)
+    project = selected.parameters.get("project")
+    repository_slug = project.get("repository_slug") if isinstance(project, Mapping) else None
+    invoke = partial(
+        run_public_release, root, run_id=arguments.run_id, content_draft=draft,
+        repository_slug=repository_slug,
+    )
     return run_recorded_release(
         root, "public.release", arguments.run_id, invoke,
         selection=selected,
