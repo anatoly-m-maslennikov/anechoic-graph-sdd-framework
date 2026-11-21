@@ -27,9 +27,9 @@ Analyze realized state with Autoform
 
 ### Prose Claim
 
-Extend the Realization Graph with a State Analyzer. Send its selected Modules
-through Autoform to obtain source-backed state observations. Reuse the graph's
-Module, Package, and Component identities and the existing source watcher.
+Extend the Realization Graph with a State Analyzer. Use Autoform to translate
+selected Modules into a shared Lean model. Reuse graph identities and the
+existing source watcher. Keep source locations on observations.
 
 Evaluate reads and writes against the authored state boundary. Store findings
 with their source locations in the existing DuckDB projection. Workbench,
@@ -37,4 +37,4 @@ Console, MCP, and lint use the same findings.
 
 Pilot Python and JavaScript. Compare each language's observed post-state with
 its runtime before using its findings to block lint. Report incomplete
-analysis as unresolved. Keep PastaLean algorithm checks in the next stage.
+analysis as unresolved.
