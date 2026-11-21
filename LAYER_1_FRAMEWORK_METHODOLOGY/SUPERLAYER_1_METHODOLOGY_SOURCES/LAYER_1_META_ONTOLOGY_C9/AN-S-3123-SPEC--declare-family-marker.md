@@ -33,7 +33,7 @@ declare_entity(
     relation_name='IS_PROPERTY_OF',
     base_path='Node//Artifact//Atom',
     value_format=str,
-    field_options={'class_var': True, 'default': 'P'},
+    field_options={'class_var': True, 'default': 'C'},
     applies_to_entity_classes=('Node//Artifact//Atom//Project Config Atom',),
 )
 ```
