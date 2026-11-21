@@ -55,6 +55,29 @@ The Kernel imports zero code from the API Backend, Tools, or entry
 points. The Backend accesses Kernel services through the public Kernel
 API.
 
+### Manifest Runtime
+
+Kernel+ owns the Manifest Builder, Model Host, and Structure Host.
+The watcher triggers the Manifest Builder. Each build runs in a
+short-lived separate worker process. The builder compiles the admitted
+Model and validates the Structure against it.
+
+The builder produces versioned Model and Structure artifacts on disk.
+Each Structure snapshot records its Model fingerprint. Kernel+ publishes
+the accepted pair atomically. Each operation holds one generation. A
+failed build leaves the last accepted generation available.
+
+The hosts expose accepted artifacts through read-only interfaces and
+import zero builder code. The Model Host exposes generated modules or
+a schema, and consumers load any required Python types locally. Keep
+the reader outside the builder Package.
+
+Start with a disk-backed JSON snapshot for Structure. Use an indexed
+snapshot with record-level access if measurements show that whole-file
+parsing uses too much memory. Start with thin reader entry points. Use
+a long-lived host process when it needs to serve requests or manage a
+shared cache.
+
 ### Workers
 
 Put Tool execution workers in the API Backend by default. Put source
@@ -87,6 +110,10 @@ installation and startup when mapping release responsibilities.
   Project Components.
 - Verify that Kernel Core alone accesses the DB, Kernel+ uses Core for
   state writes, and the Kernel imports zero Backend, Tool, or UI code.
+- Verify that builds run in their own worker process and that both
+  hosts read the accepted generation without importing builder code.
+  Reject a mismatched Model and Structure pair. Verify that a failed
+  build leaves the last accepted pair readable.
 - Verify that C27 imports and calls only the approved Test Suite entry
   point across Component code boundaries.
 - Map the target roles to current Component IDs and bind exact Contract
@@ -96,3 +123,5 @@ installation and startup when mapping release responsibilities.
 ## References
 
 AN-T-2944 and AN-S-3179@1.
+
+Manifest Runtime Contracts AN-S-3089@1, AN-S-3090@1, AN-S-3091@1, and AN-S-3186@1.
