@@ -34,7 +34,8 @@ def check_atom_identity(atom: Atom) -> bool:
         return False
     prefix, family, number = parts
     if not (prefix.isascii() and prefix.isalpha() and prefix.isupper()
-            and family == atom.family_marker and number.isascii() and number.isdecimal()):
+            and (family == atom.family_marker or (atom.family_marker == 'C' and family == 'P'))
+            and number.isascii() and number.isdecimal()):
         return False
     revision = f"{atom.atom_id}@{atom.version}"
     return atom.ref_id in (revision, f"{revision}-draft")
