@@ -71,7 +71,7 @@ class NativeLifecycleProvider:
                 response['savedDraft'] = value['savedDraft']
                 if name == 'atom_lifecycle_update':
                     response['status'] = 'draft_created'
-            if 'artifact' in value:
+            if 'artifact' in value and name != 'atom_lifecycle_direct_update':
                 response['artifact'] = value['artifact']
             if 'sourceRef' in value:
                 response['sourceRef'] = value['sourceRef']

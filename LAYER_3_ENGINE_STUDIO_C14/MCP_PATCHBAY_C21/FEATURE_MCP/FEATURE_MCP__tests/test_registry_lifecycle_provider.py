@@ -20,6 +20,7 @@ class NativeLifecycleProviderTests(unittest.IsolatedAsyncioTestCase):
         draft = {'ref_id': 'AN-T-1@1-draft'}
         artifact = {'ref_id': 'AN-T-1'}
         cases = (
+            ('atom_lifecycle_create_asset', 'artifact', artifact, 'completed'),
             ('atom_lifecycle_create_draft', 'savedDraft', draft, 'completed'),
             ('atom_lifecycle_update', 'savedDraft', draft, 'draft_created'),
             ('atom_lifecycle_promote_draft', 'artifact', artifact, 'completed'),
@@ -40,7 +41,8 @@ class LifecycleRegistryExposureTests(unittest.TestCase):
         entry = next(item for item in inventory.providers if item.provider_id == 'lifecycle')
         self.assertEqual('tool_descriptors', entry.descriptor_factory)
         all_names = {tool.name for tool in tool_descriptors()}
-        admitted = {'atom_lifecycle_archive', 'atom_lifecycle_change_status', 'atom_lifecycle_create_draft',
+        admitted = {'atom_lifecycle_archive', 'atom_lifecycle_change_status', 'atom_lifecycle_create_asset',
+                    'atom_lifecycle_create_draft',
                     'atom_lifecycle_direct_update', 'atom_lifecycle_promote_draft', 'atom_lifecycle_update'}
         self.assertEqual(admitted, all_names)
         self.assertFalse(all_names & set(inventory.blacklist))
