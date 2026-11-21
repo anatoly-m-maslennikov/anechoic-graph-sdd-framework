@@ -63,11 +63,11 @@ class CallerContextE2ETests(unittest.IsolatedAsyncioTestCase):
             load_host_runtime_config(self.config_path), gateway_factory=_ContextGateway
         )
 
-    def _event(self, root, session, native_session="native-session"):
+    def _event(self, cwd, session, native_session="native-session"):
         return {
             "tool_name": "mcp__anechoic__echo",
             "session_id": session,
-            "cwd": str(root),
+            "cwd": str(cwd),
             "tool_input": {"session_id": native_session},
         }
 
@@ -106,12 +106,13 @@ class CallerContextE2ETests(unittest.IsolatedAsyncioTestCase):
                 await client.initialize()
                 listed = (await client.list_tools()).tools[0]
                 self.assertIn("caller_context", listed.input_schema["properties"])
-                inputs = [
-                    self._run_hook(self._event(root, f"codex-{index}"))["hookSpecificOutput"][
-                        "updatedInput"
-                    ]
-                    for index, root in enumerate(self.roots)
-                ]
+                inputs = []
+                for index, root in enumerate(self.roots):
+                    (root / ".git").mkdir()
+                    cwd = root / "nested"
+                    cwd.mkdir()
+                    hook = self._run_hook(self._event(cwd, f"codex-{index}"))
+                    inputs.append(hook["hookSpecificOutput"]["updatedInput"])
                 _ContextGateway.barrier = asyncio.Barrier(2)
                 first, second = await asyncio.wait_for(
                     asyncio.gather(*(client.call_tool("echo", arguments) for arguments in inputs)),
