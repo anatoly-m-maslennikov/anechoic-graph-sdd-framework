@@ -72,7 +72,7 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
 
     def _status_binding(self):
         ontology = Path(self.control) / "LAYER_1_META_ONTOLOGY_C9"
-        source = STUDIO.parent / ontology
+        source = STUDIO.parent / "_anechoic_anechoic" / ontology.name
         rows = []
         for (native, _) in STATUS_SPECIFICATIONS.values():
             atom_id = native.partition("@")[0]
