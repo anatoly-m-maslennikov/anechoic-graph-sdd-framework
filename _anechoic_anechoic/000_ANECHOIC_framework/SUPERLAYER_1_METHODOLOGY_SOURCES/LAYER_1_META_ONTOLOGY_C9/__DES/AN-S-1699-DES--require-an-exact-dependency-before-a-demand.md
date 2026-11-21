@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1699
-structure:
-  container:
-    component: C9
-  tier: 6
+container:
+  component: C9
+tier: 6
 context:
   lens: DES
 state:

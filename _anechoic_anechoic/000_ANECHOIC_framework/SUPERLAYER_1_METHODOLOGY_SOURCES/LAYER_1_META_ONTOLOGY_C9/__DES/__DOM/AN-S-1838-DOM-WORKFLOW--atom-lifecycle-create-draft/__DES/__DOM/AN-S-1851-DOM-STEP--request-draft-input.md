@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1851
-structure:
-  container:
-    atom: AN-S-1838
-  tier: 3
+container:
+  atom: AN-S-1838
+tier: 3
 context:
   template: step
   lens: DES/DOM

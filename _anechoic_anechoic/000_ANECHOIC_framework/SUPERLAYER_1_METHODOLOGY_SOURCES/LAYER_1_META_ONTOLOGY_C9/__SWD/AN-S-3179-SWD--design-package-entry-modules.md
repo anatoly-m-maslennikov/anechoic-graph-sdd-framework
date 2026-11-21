@@ -1,16 +1,15 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-3179
-structure:
-  container:
-    component: C9
-  tier: 3
+container:
+  component: C9
+tier: 3
 context:
   lens: SWD
 state:
-  status: "active"
+  status: active
   version: 1
-  updated_at: "2026-11-21T12:43:52.360824+00:00"
+  updated_at: '2026-11-21T12:43:52.360824+00:00'
 ---
 
 ## Summary

@@ -1,20 +1,19 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-3159
-structure:
-  container:
-    component: C9
-  tier: 3
+container:
+  component: C9
+tier: 3
 context:
   lens: DES
 relations:
-  REFERENCES:
+  IS_REFERENCE:
   - AN-S-2596
   - AN-S-3014@2
 state:
-  status: "active"
+  status: active
   version: 2
-  updated_at: "2026-11-20T23:12:09.705525+00:00"
+  updated_at: '2026-11-20T23:12:09.705525+00:00'
 ---
 
 ## Summary
