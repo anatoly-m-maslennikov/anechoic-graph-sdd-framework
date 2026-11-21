@@ -23,6 +23,19 @@ class FullTestSuiteParallelTests(unittest.TestCase):
         self.case.setUp()
         self.addCleanup(self.case.doCleanups)
 
+    def test_browser_suite_finishes_before_other_workers_start(self):
+        browser = self.case.file(str(full.MCP_TESTS / "test_native_import_graph_docker_e2e.py"))
+        ordinary = self.case.file("LAYER_3_ENGINE_STUDIO_C14/test_example.py")
+        observed = []
+
+        def execute(root, module, environment):
+            observed.append(module)
+            return True, 1, 0, "", "", 0.01, None
+
+        with patch.object(full, "run_module", side_effect=execute):
+            self.assertEqual(0, full._run_modules(self.case.root, [ordinary, browser], {}))
+        self.assertEqual([browser, ordinary], observed)
+
     def test_parallel_worker_bounds_keep_one_image(self) -> None:
         modules = [
             self.case.file(f"LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_unit_{number}.py") for number in range(5)

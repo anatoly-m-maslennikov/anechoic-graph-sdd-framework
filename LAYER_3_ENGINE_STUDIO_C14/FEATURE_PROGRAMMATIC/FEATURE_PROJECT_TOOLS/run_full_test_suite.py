@@ -215,15 +215,22 @@ def _record_modules(root: Path, pending: dict) -> tuple[list[str], int, int]:
 
 
 def _run_modules(root: Path, modules: list[Path], environment: dict) -> int:
+    browser = root / MCP_TESTS / "test_native_import_graph_docker_e2e.py"
+    failed, tests, skipped = [], 0, 0
     with ThreadPoolExecutor(max_workers=2) as ordinary, ThreadPoolExecutor(max_workers=2) as docker:
         try:
+            if browser in modules:
+                failed, tests, skipped = _record_modules(root, {docker.submit(run_module, root, browser, environment): browser})
             pending = {
                 (docker if _docker_module(root, module) else ordinary).submit(
                     run_module, root, module, environment
                 ): module
-                for module in modules
+                for module in modules if module != browser
             }
-            failed, tests, skipped = _record_modules(root, pending)
+            other_failed, other_tests, other_skipped = _record_modules(root, pending)
+            failed.extend(other_failed)
+            tests += other_tests
+            skipped += other_skipped
         except KeyboardInterrupt:
             for executor in (ordinary, docker):
                 executor.shutdown(wait=False, cancel_futures=True)
