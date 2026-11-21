@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 2
-  updated_at: '2026-11-21T21:49:45.763566+00:00'
+  version: 3
+  updated_at: '2026-11-21T22:24:03.911363+00:00'
 ---
 
 ## Summary
@@ -35,6 +35,7 @@ declare_entity(
                 'imports': [],
                 'exports': {
                     'RELEASE_VERSION__family_pub.run_local_release': {'family_pub': ['parent']},
+                    'RELEASE_VERSION__family_pub.build_image': {'family_pub': ['parent']},
                 },
             },
             'runtime_io': {

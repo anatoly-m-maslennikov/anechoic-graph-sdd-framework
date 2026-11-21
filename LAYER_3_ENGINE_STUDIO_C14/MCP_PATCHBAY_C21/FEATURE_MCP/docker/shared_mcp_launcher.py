@@ -5,9 +5,12 @@ import argparse
 import json
 from pathlib import Path
 import subprocess
+import sys
 import time
 from typing import Any, Callable
 from urllib.request import urlopen
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "FEATURE_PROGRAMMATIC/FEATURE_TOOLS"))
 
 from shared_mcp_launch_support import (  # noqa: E402
     SharedLaunchError,
@@ -33,7 +36,7 @@ class SharedMcpLauncher:
         self.sleeper = sleeper
         self.clock = clock
 
-    def prepare(self, settings_path=None, image=None, *, compose_file=None, timeout=120):
+    def prepare(self, settings_path=None, image=None, *, compose_file=None, timeout=420):
         return prepare_config(settings_path, image, compose_file=compose_file, timeout=timeout)
 
     def _docker(self, command, environment, timeout):
@@ -55,12 +58,12 @@ class SharedMcpLauncher:
         image=None,
         *,
         compose_file=None,
-        timeout=120,
-        readiness_timeout=30,
+        timeout=420,
+        readiness_timeout=420,
     ):
         prepared = self.prepare(settings_path, image, compose_file=compose_file, timeout=timeout)
-        readiness_budget = bounded(readiness_timeout, "readiness_timeout", 30)
-        started = self._docker(prepared["command"], prepared["environment"], timeout)
+        readiness_budget = bounded(readiness_timeout, "readiness_timeout", 420)
+        started = self._docker(prepared["command"], prepared["environment"], bounded(timeout, "startup_timeout", 420) + 10)
         if started is None or getattr(started, "returncode", 1) != 0:
             return {
                 key: prepared[key]
@@ -134,8 +137,8 @@ def main(argv=None):
     parser.add_argument("--host-settings", "--settings", dest="settings_path")
     parser.add_argument("--image", required=True)
     parser.add_argument("--compose-file", type=Path)
-    parser.add_argument("--startup-timeout", type=int, default=120)
-    parser.add_argument("--readiness-timeout", type=int, default=30)
+    parser.add_argument("--startup-timeout", type=int, default=420)
+    parser.add_argument("--readiness-timeout", type=int, default=420)
     parser.add_argument("--apply", action="store_true")
     args = parser.parse_args(argv)
     try:

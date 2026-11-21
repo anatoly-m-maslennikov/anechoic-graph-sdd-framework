@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 3
-  updated_at: '2026-11-21T21:49:45.763566+00:00'
+  version: 4
+  updated_at: '2026-11-21T22:24:03.911363+00:00'
 ---
 
 ## Summary
@@ -38,7 +38,7 @@ declare_entity(
                         'transport': 'cli',
                         'runner': 'uv',
                         'path': 'LAYER_5_FRAMEWORK_DELIVERY/release.py',
-                        'subcommands': {'local': 'C63', 'public': 'C64'},
+                        'subcommands': {'local': 'C63', 'public': 'C64', 'build-image': 'C63'},
                     },
                 },
             },

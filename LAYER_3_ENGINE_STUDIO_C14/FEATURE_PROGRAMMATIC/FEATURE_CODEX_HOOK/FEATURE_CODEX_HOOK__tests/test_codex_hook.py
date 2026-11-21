@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 import unittest
 
 HOOK = Path(__file__).resolve().parents[1] / "codex_hook.py"
@@ -19,7 +20,11 @@ def invoke(event):
 
 class CodexHookTests(unittest.TestCase):
     def setUp(self):
-        self.project = Path(HOOK.anchor) / "projects" / "example"
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.project = Path(self.temp.name).resolve() / "example"
+        self.project.mkdir()
+        (self.project / ".git").mkdir()
         self.event = {
             "hook_event_name": "PreToolUse",
             "tool_name": "mcp__anechoic__query_run",
@@ -48,21 +53,37 @@ class CodexHookTests(unittest.TestCase):
         result = self.decision(self.event)
         self.assertEqual(self.event["tool_input"], result["updatedInput"])
 
-    def test_injects_exact_session_folder_when_project_root_is_omitted(self):
+    def test_resolves_nearest_git_root(self):
         del self.event["tool_input"]["project_root"]
-        for project in (self.project, self.project.with_name("another"), self.project / "nested"):
-            folder = str(project)
+        subdir = self.project / "subdir"
+        subdir.mkdir()
+        nested = subdir / "nested"
+        nested.mkdir()
+        (nested / ".git").write_text("gitdir: /worktree/gitdir\n")
+        for folder, root in ((self.project, self.project), (subdir, self.project), (nested, nested)):
             with self.subTest(folder=folder):
-                result = self.decision({**self.event, "cwd": folder})
+                result = self.decision({**self.event, "cwd": str(folder)})
                 self.assertEqual("allow", result["permissionDecision"])
-                self.assertEqual(
-                    {
-                        **self.event["tool_input"],
-                        "project_root": folder,
-                        "caller_context": {"session_id": "codex-session-123"},
-                    },
-                    result["updatedInput"],
-                )
+                self.assertEqual(str(root), result["updatedInput"]["project_root"])
+
+    def test_subdirectory_accepts_only_canonical_explicit_root(self):
+        child = self.project / "child"
+        child.mkdir()
+        self.event["cwd"] = str(child)
+        self.assertEqual("allow", self.decision(self.event)["permissionDecision"])
+        self.event["tool_input"]["project_root"] = str(child)
+        self.assertEqual("deny", self.decision(self.event)["permissionDecision"])
+
+    def test_rejects_missing_root_and_unsafe_marker(self):
+        del self.event["tool_input"]["project_root"]
+        outside = Path(self.temp.name).resolve() / "outside"
+        outside.mkdir()
+        self.assertEqual("deny", self.decision({**self.event, "cwd": str(outside)})["permissionDecision"])
+        child = self.project / "child"
+        child.mkdir()
+        (child / ".git").symlink_to(self.project / ".git")
+        self.assertEqual("deny", self.decision({**self.event, "cwd": str(child)})["permissionDecision"])
+        self.assertEqual("deny", self.decision({**self.event, "cwd": str(child / "missing")})["permissionDecision"])
 
     def test_conflicting_project_root_is_denied(self):
         self.event["tool_input"]["project_root"] = str(self.project.with_name("another"))
@@ -91,7 +112,7 @@ class CodexHookTests(unittest.TestCase):
                 self.assertEqual("deny", self.decision(changed)["permissionDecision"])
 
     def test_other_servers_are_untouched(self):
-        result = invoke(json.dumps({**self.event, "tool_name": "mcp__other__query_run"}))
+        result = invoke(json.dumps({**self.event, "cwd": None, "tool_name": "mcp__other__query_run"}))
         self.assertEqual({}, result)
 
     def test_invalid_json_is_denied(self):

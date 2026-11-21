@@ -97,6 +97,26 @@ class SharedGatewayTests(unittest.IsolatedAsyncioTestCase):
     def _gateway(self):
         return SharedGateway(load_host_runtime_config(self.config_path), gateway_factory=_Gateway)
 
+    async def test_single_project_catalog_and_routing_include_lifecycle(self):
+        root = self.roots[0]
+        self.config_path.write_text(
+            f'schema_version=1\n[shared_mcp]\nproject_root="{root}"\nhttp_port=8092\n'
+        )
+        name = "atom_lifecycle_archive"
+        _Gateway.tools_by_root[str(root)] = [_tool(), _tool(name)]
+        gateway = self._gateway()
+        await gateway.initialize()
+        self.addAsyncCleanup(gateway.close)
+        self.assertEqual({"echo", name}, {tool.name for tool in gateway.tools})
+        for tool in ("echo", name):
+            for selected, expected_error in ((root, False), (self.roots[1], True)):
+                result = await gateway.call(None, types.CallToolRequestParams(
+                    name=tool, arguments={"project_root": str(selected), "request": "x"}
+                ))
+                self.assertEqual(expected_error, bool(result.is_error))
+                if expected_error:
+                    self.assertEqual(["outside_project_root"], result.structured_content["diagnostics"])
+
     async def test_project_error_codes_do_not_depend_on_message_wording(self):
         from shared_gateway import SharedGatewayRefusal
 

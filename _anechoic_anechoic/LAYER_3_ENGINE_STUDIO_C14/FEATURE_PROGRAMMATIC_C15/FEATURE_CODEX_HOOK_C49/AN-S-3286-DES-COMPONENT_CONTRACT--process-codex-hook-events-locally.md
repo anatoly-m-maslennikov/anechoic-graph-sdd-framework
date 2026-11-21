@@ -9,8 +9,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-21T18:44:22.234679+00:00'
+  version: 2
+  updated_at: '2026-11-21T22:31:53.200903+00:00'
 ---
 
 ## Summary
@@ -19,14 +19,13 @@ Process Codex Hook events locally
 
 ## Guarantee
 
-Given a Codex `PreToolUse` event on standard input, return one JSON
-response on standard output. For an ANECHOIC MCP request, bind the
-supplied absolute session folder and session ID to the request. Deny
-malformed or conflicting input. Return an empty response for other
-Tools.
+The Hook is installed in user-global Codex configuration and matches ANECHOIC MCP requests only. Given a Codex `PreToolUse` event on standard input, it returns one JSON response on standard output. It returns an empty response for other Tools.
 
-The Hook uses host input and output only. It imports zero other
-Project Components and makes zero outbound calls.
+For an ANECHOIC MCP request, resolve the event's absolute `cwd` through the local filesystem. Find the nearest canonical Git worktree root by walking upward to a `.git` directory or file marker. Bind that root and the event's session ID to the request.
+
+Deny malformed or conflicting input, a missing worktree root, or an explicit Project root that does not match the resolved root. Deny a caller session ID that conflicts with the event's session ID.
+
+The Hook makes no subprocess or other Component calls. It uses local filesystem access and host input and output.
 
 ## References
 

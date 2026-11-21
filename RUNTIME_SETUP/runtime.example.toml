@@ -1,0 +1,10 @@
+schema_version = 1
+
+[shared_mcp]
+projects_root = "/absolute/path/to/repositories"
+http_port = 8092
+max_loaded_projects = 2
+
+[project_defaults]
+workbench_storage = "disk"
+journal_storage = "files"

@@ -20,7 +20,7 @@ sys.path.insert(0, str(REPOSITORY))
 def _arguments(argv: list[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="operation", required=True)
-    for operation in ("local", "public"):
+    for operation in ("local", "public", "build-image"):
         command = commands.add_parser(operation)
         command.add_argument("--project-root", type=Path, default=REPOSITORY)
         command.add_argument("--run-id", required=True)
@@ -30,7 +30,7 @@ def _arguments(argv: list[str] | None) -> argparse.Namespace:
             command.add_argument(
                 "--content-draft", type=Path, help="UTF-8 JSON with the reviewed change entries"
             )
-        else:
+        elif operation == "local":
             command.add_argument(
                 "--image-mode",
                 choices=("refresh", "existing"),
@@ -74,6 +74,10 @@ def _invoke(arguments: argparse.Namespace) -> dict[str, object]:
     )
     if re.fullmatch(pattern, arguments.run_id) is None:
         raise ValueError("release-run-id-invalid")
+    if arguments.operation == "build-image":
+        from LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.RELEASE_VERSION__family_pub import build_image
+
+        return build_image(root, run_id=arguments.run_id)
     if arguments.operation == "local":
         from LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.RELEASE_VERSION__family_pub import run_local_release
 

@@ -74,6 +74,8 @@ def _has_marker(root: Path, frontier: SharedToolFrontier) -> bool:
 
 
 def _candidate_paths(config: HostRuntimeConfig, frontier: SharedToolFrontier) -> list[Path]:
+    if getattr(config, "single_project", False):
+        return [config.projects_root]
     entries: list[Path] = []
     try:
         with os.scandir(config.projects_root) as children:
@@ -133,7 +135,7 @@ async def _discover_project(
     selection = None
     try:
         selection = resolve_host_project(config, root)
-        if selection.root.parent != config.projects_root:
+        if not getattr(config, "single_project", False) and selection.root.parent != config.projects_root:
             raise ValueError("Project root is not a direct host child")
         gateway = gateway_factory(selection.root, selection=selection)
         await gateway.initialize()

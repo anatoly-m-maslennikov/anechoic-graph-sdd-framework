@@ -131,6 +131,40 @@ class HostRuntimeConfigTests(unittest.TestCase):
             with self.subTest(candidate=candidate), self.assertRaises(ValueError):
                 resolve_host_project(config, candidate)
 
+    def test_single_project_and_defaults_are_applied_without_overriding_manifest(self):
+        root = self.projects / "alpha"
+        path = self._write_config(
+            f'schema_version = 1\n[shared_mcp]\nproject_root = "{root}"\nhttp_port = 1\n'
+            '[project_defaults]\nworkbench_storage = "memory"\njournal_storage = "duckdb"\n'
+        )
+        config = load_host_runtime_config(path)
+        self.assertTrue(config.single_project)
+        selection = resolve_host_project(config, root)
+        self.assertEqual("memory", selection.parameters["runtime"]["workbench"]["storage"])
+        self.assertEqual("duckdb", selection.parameters["runtime"]["journal"]["storage"])
+        with self.assertRaises(ValueError):
+            resolve_host_project(config, self.projects / "beta")
+        with self.assertRaises(ValueError):
+            resolve_host_project(config, root / ".anechoic_alpha")
+        from dataclasses import replace
+        with patch("native_startup.select_runtime_project", return_value=replace(
+            selection, parameters={"runtime": {"workbench": {"storage": "disk"}}}
+        )):
+            resolved = resolve_host_project(config, root)
+        self.assertEqual("disk", resolved.parameters["runtime"]["workbench"]["storage"])
+        self.assertEqual("duckdb", resolved.parameters["runtime"]["journal"]["storage"])
+
+    def test_rejects_ambiguous_roots_and_invalid_defaults(self):
+        prefix = f'schema_version = 1\n[shared_mcp]\nproject_root = "{self.projects}"\nhttp_port = 1\n'
+        for suffix in (
+            f'projects_root = "{self.projects}"\n',
+            '[project_defaults]\nworkbench_storage = "other"\n',
+            '[project_defaults]\njournal_storage = "other"\n',
+            '[project_defaults]\nunknown = "disk"\n',
+        ):
+            with self.subTest(suffix=suffix), self.assertRaises(HostRuntimeConfigError):
+                load_host_runtime_config(self._write_config(prefix + suffix))
+
     def test_resolve_requires_the_declared_prefix(self):
         config = load_host_runtime_config(self._write_config())
         root = self._make_project("missing-prefix", prefix="")

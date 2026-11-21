@@ -9,8 +9,8 @@ context:
   lens: DES
 state:
   status: "active"
-  version: 2
-  updated_at: '2026-11-21T21:49:45.763566+00:00'
+  version: 3
+  updated_at: '2026-11-21T22:24:03.911363+00:00'
 ---
 
 ## Summary
@@ -20,6 +20,8 @@ Run Local Release from the command line
 ## Guarantee
 
 From the Framework checkout, append `local --run-id <id>` to the host `uv` command in AN-S-3288. The command accepts `--project-root <path>` and `--image-mode refresh|existing`.
+
+The `build-image --project-root <path> --run-id <id>` subcommand uses the same image builder and returns its immutable image ID. It does not deploy the image or change a Version.
 
 It defaults to the Framework checkout and refresh mode. The compatibility option `--test-module` does not narrow the Local Release gate.
 
@@ -37,4 +39,4 @@ The command writes one JSON result to stdout and sends progress to stderr. Exit 
 
 ## References
 
-AN-S-3290@2, AN-S-1976, and AN-S-1994.
+AN-S-3290@3, AN-S-1976, and AN-S-1994.

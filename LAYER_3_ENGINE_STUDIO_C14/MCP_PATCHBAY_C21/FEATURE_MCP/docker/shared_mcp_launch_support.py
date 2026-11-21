@@ -78,7 +78,7 @@ def _prefix(compose, project):
     ]
 
 
-def prepare_config(settings_path=None, image=None, *, compose_file=None, timeout=120):
+def prepare_config(settings_path=None, image=None, *, compose_file=None, timeout=420):
     config = _config(settings_path)
     image = _image(image)
     compose = _path(compose_file or COMPOSE)

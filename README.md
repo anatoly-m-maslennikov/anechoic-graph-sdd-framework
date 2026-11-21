@@ -4,6 +4,7 @@
 
 ## Contents
 
+- [Install](#install)
 - [The Goal](#the-goal)
 - [What Anechoic is](#what-anechoic-is)
 - [Why Anechoic works this way (chains-of-thoughts)](#why-anechoic-works-this-way-chains-of-thoughts)
@@ -13,6 +14,10 @@
 - [Status](#status)
 - [Version History](#version-history)
 - [Thanks](#thanks)
+
+## Install
+
+See [INSTALL.md](INSTALL.md) for local setup, including instructions for an AI agent.
 
 ## The Goal
 

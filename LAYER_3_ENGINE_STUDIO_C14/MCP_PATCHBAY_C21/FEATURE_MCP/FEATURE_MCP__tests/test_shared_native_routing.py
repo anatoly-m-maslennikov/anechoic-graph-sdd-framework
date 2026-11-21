@@ -78,6 +78,7 @@ class SharedNativeRoutingTests(unittest.IsolatedAsyncioTestCase):
                 transport=httpx2.ASGITransport(app=app),
                 base_url="http://127.0.0.1:18092",
             ) as client:
+                self.client = client
                 transport = streamable_http_client(
                     "http://127.0.0.1:18092" + MCP_PATH,
                     http_client=client,
@@ -125,6 +126,33 @@ class SharedNativeRoutingTests(unittest.IsolatedAsyncioTestCase):
                 }) for name in ("alpha", "beta")
             ))
             self.assertEqual([2, 1], [len(r.structured_content["views"]) for r in states])
+
+    async def test_single_project_mcp_and_workbench_schema(self):
+        root = self.projects_by_name["alpha"]
+        self.config_path.write_text(
+            f'schema_version=1\n[shared_mcp]\nproject_root={str(root)!r}\nhttp_port=18092\n'
+            '[project_defaults]\nworkbench_storage="memory"\njournal_storage="files"\n'
+        )
+        self.config = load_host_runtime_config(self.config_path)
+        async with self._session() as session:
+            tools = {tool.name for tool in (await session.list_tools()).tools}
+            self.assertIn("query_schema", tools)
+            response = await session.call_tool("query_schema", {"project_root": str(root)})
+            self.assertFalse(response.is_error, response.structured_content)
+            self.assertFalse((root / ".anechoic_runtime/workbench/projection.duckdb").exists())
+            web = await self.client.post(
+                "/anechoic/alpha/api/schema", json={"project_root": str(root)}
+            )
+            self.assertEqual(200, web.status_code, web.text)
+            wrong = await self.client.post(
+                "/anechoic/beta/api/schema", json={"project_root": str(root)}
+            )
+            self.assertEqual(404, wrong.status_code)
+            outside = await session.call_tool(
+                "query_schema", {"project_root": str(self.projects_by_name["beta"])}
+            )
+            self.assertTrue(outside.is_error)
+            self.assertEqual(["outside_project_root"], outside.structured_content["diagnostics"])
 
     async def test_frontdoor_refuses_missing_and_outside_project_root(self):
         async with self._session() as session:

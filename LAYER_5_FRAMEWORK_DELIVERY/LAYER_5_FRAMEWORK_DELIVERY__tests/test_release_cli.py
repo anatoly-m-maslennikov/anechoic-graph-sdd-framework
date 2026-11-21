@@ -39,6 +39,13 @@ class ReleaseCliTests(unittest.TestCase):
             status = release.main(arguments)
         return status, json.loads(output.getvalue())
 
+    def test_build_image_dispatch(self) -> None:
+        result = {"outcome": "completed", "image_id": "sha256:" + "a" * 64}
+        entry = "LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.RELEASE_VERSION__family_pub.build_image"
+        with patch(entry, return_value=result) as build:
+            self.assertEqual(self.invoke(["build-image", "--run-id", "build-1"]), (0, result))
+        build.assert_called_once_with(REPOSITORY, run_id="build-1")
+
     def test_local_dispatch_preserves_result_and_defaults(self) -> None:
         result = {"outcome": "completed", "receipt_path": "receipt.json"}
         with patch(LOCAL_ENTRY, return_value=result) as run:

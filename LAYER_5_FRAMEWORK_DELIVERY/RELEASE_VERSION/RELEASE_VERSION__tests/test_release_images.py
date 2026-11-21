@@ -9,6 +9,7 @@ import sys
 import tempfile
 from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import release_images as images
@@ -61,6 +62,37 @@ class ReleaseImagesTests(unittest.TestCase):
                                            build_temp_root=self.build, executor=self.docker,
                                            build_provenance=self.provenance if provenance else None)
         return self.manager
+
+    def test_build_only_uses_checkout_and_cleans_staging(self):
+        import local_release
+
+        provenance = {**self.provenance, "project_root": str(self.package)}
+        def manager(source, temporary, *, project_root, build_provenance):
+            self.manager = images.ImageManager(source, project_root=project_root, build_temp_root=temporary,
+                                               build_provenance=build_provenance, executor=self.docker)
+            return self.manager
+
+        with (patch.object(local_release, "read_release_selection", return_value=object()),
+              patch.object(local_release, "release_image_provenance", return_value=provenance),
+              patch.object(local_release, "_image_manager", side_effect=manager)):
+            result = local_release.build_image(self.package, run_id="build-1")
+        self.assertEqual(result["outcome"], "completed")
+        self.assertEqual(result["image_id"], self.image)
+        self.assertEqual(result["fingerprint"], self.labels["org.anechoic.runtime.fingerprint"])
+        self.assertEqual(result["version"], "1.2.3")
+        self.assertEqual(list((self.package / ".anechoic_tmp/simple_local_release").iterdir()), [])
+        self.assertEqual(self.tags, {"anechoic-runtime:test-" + self.image[7:]})
+
+    def test_build_only_cleans_staging_after_failure(self):
+        import local_release
+
+        provenance = {**self.provenance, "project_root": str(self.package)}
+        with (patch.object(local_release, "read_release_selection", return_value=object()),
+              patch.object(local_release, "release_image_provenance", return_value=provenance),
+              patch.object(local_release, "_image_manager", side_effect=RuntimeError("failed"))):
+            with self.assertRaises(RuntimeError):
+                local_release.build_image(self.package, run_id="build-1")
+        self.assertEqual(list((self.package / ".anechoic_tmp/simple_local_release").iterdir()), [])
 
     def test_build_and_installed_admission_bind_exact_package_and_labels(self):
         manager = self.make_manager()

@@ -52,6 +52,15 @@ class SharedHostLauncherTests(unittest.TestCase):
         self.assertNotIn("ANECHOIC_PROJECT_ROOT", result["environment"])
         self.assertEqual([], runner.call_args_list)
 
+    def test_single_project_mount_and_cold_start_budget(self):
+        root = self.projects / "alpha"
+        self.settings.write_text(
+            f'schema_version=1\n[shared_mcp]\nproject_root="{root}"\nhttp_port=54321\n'
+        )
+        result = SharedMcpLauncher().prepare(self.settings, IMAGE)
+        self.assertEqual(str(root), result["environment"]["ANECHOIC_PROJECTS_ROOT"])
+        self.assertEqual("420", result["command"][-2])
+
     def test_cli_dry_run_exits_success_without_docker(self):
         output = io.StringIO()
         with patch("shared_mcp_launcher.subprocess.run") as runner, redirect_stdout(output):
@@ -107,6 +116,21 @@ class SharedHostLauncherTests(unittest.TestCase):
         result = SharedMcpLauncher(runner=runner).apply(self.settings, IMAGE)
         self.assertEqual("docker_start_failed", result["condition"])
         self.assertFalse(result["ready"])
+
+    def test_retry_after_start_failure_uses_same_compose_project(self):
+        from host_runtime_config import load_host_runtime_config
+
+        runner = FakeRunner(load_host_runtime_config(self.settings), failure=True)
+        launcher = SharedMcpLauncher(
+            runner=runner, opener=lambda *_args, **_kwargs: FakeResponse(b'{"ready": true}')
+        )
+        first = launcher.apply(self.settings, IMAGE)
+        runner.failure = False
+        second = launcher.apply(self.settings, IMAGE)
+        self.assertFalse(first["ready"])
+        self.assertTrue(second["ready"])
+        starts = [command for command, _kwargs in runner.commands if "up" in command]
+        self.assertEqual(starts[0], starts[1])
 
     def test_apply_requires_readback_and_health_before_ready(self):
         from host_runtime_config import load_host_runtime_config

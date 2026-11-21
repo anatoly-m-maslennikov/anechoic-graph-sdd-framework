@@ -18,7 +18,10 @@ http_port = 8092
 max_loaded_projects = 2
 ```
 
-`projects_root` is the host root containing the configured Projects. The
+`projects_root` is the host root containing the configured Projects. Use
+`project_root` in its place to mount and serve one repository. See the
+[Runtime Setup example](../../../../RUNTIME_SETUP/runtime.example.toml) and
+[install guide](../../../../INSTALL.md) for Project creation defaults. The
 `max_loaded_projects` value bounds warm in-memory contexts; it does not limit
 which Projects under the configured root may be addressed.
 

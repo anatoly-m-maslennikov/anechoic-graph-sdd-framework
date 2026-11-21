@@ -9,8 +9,8 @@ context:
   lens: DES
 state:
   status: "active"
-  version: 4
-  updated_at: '2026-11-21T21:49:45.763566+00:00'
+  version: 5
+  updated_at: '2026-11-21T22:24:03.911363+00:00'
 ---
 
 ## Summary
@@ -28,7 +28,7 @@ UV_PROJECT_ENVIRONMENT="$PWD/.anechoic_runtime/launcher-venv" \
     python -B "$PWD/LAYER_5_FRAMEWORK_DELIVERY/release.py" --help
 ```
 
-Replace `--help` with `local --project-root <root> --run-id <id>` for Local Release or `public --project-root <root> --run-id <id>` for Public Release.
+Replace `--help` with `local --project-root <root> --run-id <id>` for Local Release or `public --project-root <root> --run-id <id>` for Public Release. Use `build-image --project-root <root> --run-id <id>` to build only the image.
 
 The child CLI Contracts define the additional arguments and result guarantees.
 
@@ -38,4 +38,4 @@ The command writes one JSON result to stdout and sends progress to stderr. Exit 
 
 ## References
 
-AN-S-3292, AN-S-3293, AN-S-1976, and AN-S-1994.
+AN-S-3292@3, AN-S-3293, AN-S-1976, and AN-S-1994.

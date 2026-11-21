@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import json
 from os.path import isabs
+from pathlib import Path
+import stat
 import sys
 from typing import Any
 
@@ -19,6 +21,24 @@ def deny(reason: str) -> dict[str, Any]:
             "permissionDecisionReason": reason,
         }
     }
+
+
+def project_root(cwd: str) -> str | None:
+    try:
+        folder = Path(cwd).resolve(strict=True)
+        if not folder.is_dir():
+            return None
+        for candidate in (folder, *folder.parents):
+            try:
+                mode = (candidate / ".git").lstat().st_mode
+            except FileNotFoundError:
+                continue
+            if stat.S_ISDIR(mode) or stat.S_ISREG(mode):
+                return str(candidate)
+            return None
+    except (OSError, RuntimeError, ValueError):
+        return None
+    return None
 
 
 def pre_tool_use(event: object) -> dict[str, Any]:
@@ -36,8 +56,11 @@ def pre_tool_use(event: object) -> dict[str, Any]:
     cwd = event.get("cwd")
     if not isinstance(cwd, str) or not isabs(cwd) or "\x00" in cwd:
         return deny("ANECHOIC hook event requires an absolute Codex session folder")
-    if arguments.get("project_root", cwd) != cwd:
-        return deny("ANECHOIC Project root differs from the Codex session folder")
+    root = project_root(cwd)
+    if root is None:
+        return deny("ANECHOIC hook event requires a safe Git worktree root")
+    if arguments.get("project_root", root) != root:
+        return deny("ANECHOIC Project root differs from the Git worktree root")
     if not isinstance(session_id, str) or not session_id.strip():
         return deny("ANECHOIC hook event requires a session ID")
     context = arguments.get("caller_context", {})
@@ -46,7 +69,7 @@ def pre_tool_use(event: object) -> dict[str, Any]:
     if "session_id" in context and context["session_id"] != session_id:
         return deny("ANECHOIC caller session differs from the Codex session")
     updated = dict(arguments)
-    updated["project_root"] = cwd
+    updated["project_root"] = root
     updated["caller_context"] = {**context, "session_id": session_id}
     return {
         "hookSpecificOutput": {

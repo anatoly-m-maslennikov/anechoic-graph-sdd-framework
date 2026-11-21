@@ -147,7 +147,8 @@ class SharedGateway:
             root = _canonical_directory(value)
         except HostRuntimeConfigError as caught:
             raise SharedGatewayRefusal("invalid_project_root") from caught
-        if root == self.config.projects_root or not root.is_relative_to(self.config.projects_root):
+        if (root != self.config.projects_root if self.config.single_project else
+                root == self.config.projects_root or not root.is_relative_to(self.config.projects_root)):
             raise SharedGatewayRefusal("outside_project_root")
         self._current_config()
         entry = await self.pool.acquire_cached(root)
