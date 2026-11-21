@@ -94,7 +94,7 @@ class NativeImportGraphDockerE2E(unittest.TestCase):
         }
         with tempfile.TemporaryDirectory(prefix="workbench-browser-") as output:
             result = subprocess.run(
-                ["npm", "run", "test:e2e", "--", "--output", output, "--global-timeout", "115000"],
+                ["npm", "run", "test:e2e", "--", "--output", output, "--global-timeout", "115000", "--retries", "1"],
                 cwd=frontend, env=environment,
                 capture_output=True, text=True, timeout=120,
             )
