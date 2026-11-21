@@ -268,7 +268,11 @@ for example: one prompt for how to write code, built from all M Atoms that apply
 
 **Different views, one source.** Rebuild Projections from their sources.
 
-Each Project has a `.anechoic_<project_name>/` folder. Store persistent Journals in `_journal/` and general Projections in `_projection/`. Project-declared Methodology source remains authoritative. In this Project, `LAYER_1_FRAMEWORK_METHODOLOGY/` is the delivered product and `.anechoic_anechoic/000_ANECHOIC_framework/` is the installed copy. Both are derived deliveries that preserve provenance. Neither they, graph views, nor derived Journal views replace source or grant Action authority.
+The Project Manifest derives the Atom tree from the Project name and `project.root.prefix`. Use `dot` for `.anechoic_<project_name>/` or `underscore` for `_anechoic_<project_name>/`. This Project uses `_anechoic_anechoic/`. Runtime and temporary data use `.anechoic_runtime/` and `.anechoic_tmp/`.
+
+The delivered product is `LAYER_1_FRAMEWORK_METHODOLOGY/`. The installed Framework is `_anechoic_anechoic/000_ANECHOIC_framework/`. Both preserve Methodology source provenance. Project-declared Methodology source remains authoritative.
+
+Store file-based Journals in `_journal/` and general Projections in `_projection/`.
 
 With an explicit Project root, Journal writes and queries use that Project's settings and Journal, not those of a parent or sibling Project. Ambiguous control folders and symlinked settings are rejected.
 
@@ -339,7 +343,7 @@ its research remain non-authoritative; full migration is not claimed complete.
 Keep `.anechoic_legacy/` and `.anechoic_legacy_archive/` in Git as read-only
 archives. They preserve the original records, including held Drafts and pinned
 revisions. The native alias map resolves old references to exact native
-revisions. See [native aliases](.anechoic_anechoic/_migration/native-aliases.json).
+revisions. See [native aliases](_anechoic_anechoic/_migration/native-aliases.json).
 
 Use native sources for runtime, QA, and Local Release. Store historical test
 inputs under `assets/` in their Test Packages. QA and Local Release must run in

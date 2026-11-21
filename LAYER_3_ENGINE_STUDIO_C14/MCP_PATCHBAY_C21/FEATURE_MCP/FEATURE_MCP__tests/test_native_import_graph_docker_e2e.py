@@ -37,8 +37,9 @@ class NativeImportGraphDockerE2E(unittest.TestCase):
             raise RuntimeError("ANECHOIC_IMAGE must be the immutable test image ID")
         cls.root = Path(cls.enterClassContext(tempfile.TemporaryDirectory())).resolve()
         subprocess.run(["git", "init", "--quiet", str(cls.root)], check=True)
-        control = ".anechoic_anechoic"
+        control = "_anechoic_anechoic"
         fixture.RuntimeSelectionTests.manifest(cls, cls.root / control, component="C00", parameters={
+            "project": {"root": {"prefix": "underscore"}},
             "runtime": {"journal": {"storage": "duckdb"}, "workbench": {"storage": "disk", "import_graph": {}}},
         })
         (cls.root / control / "__TKT/TASKS").mkdir(parents=True)
@@ -272,7 +273,7 @@ class NativeImportGraphDockerE2E(unittest.TestCase):
         self.assertIn("database_edit operation=reuse table=projection", logs.stdout + logs.stderr)
 
     def test_watcher_updates_native_atom_and_relations(self):
-        relative = ".anechoic_anechoic/__TKT/TASKS/AN-T-9901--watcher.md"
+        relative = "_anechoic_anechoic/__TKT/TASKS/AN-T-9901--watcher.md"
         graph = """
             FROM GRAPH_TABLE (anechoic
             MATCH (s:Reference)-[e:CONTAINED_BY]->(t:Reference)

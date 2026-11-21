@@ -79,7 +79,7 @@ class RuntimeTests(unittest.TestCase):
         ignored = (APP / "docker/Dockerfile.dockerignore").read_text()
         for value in (
             "**/.env", "**/.env.*", "**/*.env", "**/auth.json",
-            "**/.anechoic_tmp", "**/.anechoic_install",
+            "**/_anechoic_*", "**/.anechoic_tmp", "**/.anechoic_install",
             "**/.anechoic_runtime", "**/tmp", "**/tests", "**/*__tests", "**/fixtures",
             "**/*.md", "!**/SKILL.md",
         ):
@@ -95,6 +95,14 @@ class RuntimeTests(unittest.TestCase):
             with self.subTest(compose=compose_name, service=service):
                 config = yaml.safe_load((APP / "docker" / compose_name).read_text())
                 self.assertNotIn("ANECHOIC_HOT_RELOAD", config["services"][service]["environment"])
+
+    def test_prepare_accepts_visible_framework_control_root(self):
+        with tempfile.TemporaryDirectory(dir=self.temporary) as directory:
+            root = Path(directory)
+            (root / ".git").mkdir()
+            (root / "_anechoic_anechoic").mkdir()
+            Runtime(root).prepare()
+            self.assertTrue((root / ".anechoic_tmp").is_dir())
 
     def test_mount_symlinks_rejected_before_mcp_start(self):
         with tempfile.TemporaryDirectory(

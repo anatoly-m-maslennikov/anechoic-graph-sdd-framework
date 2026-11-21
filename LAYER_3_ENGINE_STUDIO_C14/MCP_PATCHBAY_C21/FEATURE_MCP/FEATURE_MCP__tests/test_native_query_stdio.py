@@ -7,7 +7,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
-from types import ModuleType
+from types import ModuleType, SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -76,6 +76,22 @@ def _launch_server():
     with polling_source_watcher():
         return main(sys.argv[1:], native_inputs=_native_inputs())
 
+
+class NativeJournalOwnershipTests(unittest.TestCase):
+    def test_rejects_journal_outside_selected_control(self):
+        from native_query import NativeQueryOwner
+
+        with tempfile.TemporaryDirectory() as root:
+            for journal in ("_anechoic_other/_journal", ".anechoic_other/_journal"):
+                selection = SimpleNamespace(root=Path(root).resolve(), control_relative=Path("_anechoic_anechoic"),
+                                            parameters={"paths": {"journal_root": journal}})
+                with self.subTest(journal=journal), self.assertRaisesRegex(ValueError, "another records tree"):
+                    NativeQueryOwner(selection, None)
+            selection.parameters["paths"]["journal_root"] = "elsewhere/journal"
+            with patch("native_query.SavedQueryStore") as saved, patch("native_query.WorkspaceStore"), \
+                    patch("native_query.QueryLog"):
+                NativeQueryOwner(selection, None)
+                self.assertEqual("elsewhere/journal", saved.call_args.kwargs["journal_root"])
 
 class NativeQueryStdioTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):

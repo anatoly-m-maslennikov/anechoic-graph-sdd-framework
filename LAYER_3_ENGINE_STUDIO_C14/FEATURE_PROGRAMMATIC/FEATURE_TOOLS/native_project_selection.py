@@ -21,6 +21,11 @@ from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext, protected
 from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
 
 
+def is_native_control_name(name: str) -> bool:
+    return any(name.startswith(prefix) and len(name) > len(prefix)
+               for prefix in (".anechoic_", "_anechoic_"))
+
+
 class ManifestIdentity(Protocol):
     name: str
     prefix: str
@@ -143,7 +148,7 @@ def resolve_native_project(
     try:
         relative = Path(control_root)
         if (len(relative.parts) != 1 or str(control_root) != relative.as_posix()
-                or not relative.name.startswith(".anechoic_") or relative.name == ".anechoic_"):
+                or not is_native_control_name(relative.name) or protected(relative)):
             raise ProjectSelectionError("Native control root must name one explicit direct Project child")
         control = root / relative
         reader = ReadContext(roots=[str(control)], limits=dict(CEILINGS))
@@ -159,8 +164,18 @@ def resolve_native_project(
         parameters = getattr(manifest, "parameters", fields.get("parameters", {}))
         if not isinstance(parameters, dict):
             raise ProjectSelectionError("Validated Project Manifest parameters must be a mapping")
-        if relative.name != f".anechoic_{manifest.name.casefold()}":
+        if relative.name not in {f".anechoic_{manifest.name.casefold()}", f"_anechoic_{manifest.name.casefold()}"}:
             raise ProjectSelectionError("Project Manifest name contradicts the native control root")
+        for values in (fields.get("parameters", {}), parameters):
+            project = values.get("project") if isinstance(values, dict) else None
+            project_root = project.get("root") if isinstance(project, dict) else None
+            if isinstance(project_root, dict) and "prefix" in project_root:
+                marker = {"dot": ".", "underscore": "_"}.get(project_root["prefix"])
+                if marker is None or relative.name != f"{marker}anechoic_{manifest.name.casefold()}":
+                    raise ProjectSelectionError("Project Manifest root prefix contradicts the selection")
+            paths = values.get("paths") if isinstance(values, dict) else None
+            if isinstance(paths, dict) and "control_root" in paths and paths["control_root"] != relative.as_posix():
+                raise ProjectSelectionError("Project Manifest control_root contradicts the selection")
         if not str(fields["atom_id"]).startswith(f"{manifest.prefix}-S-"):
             raise ProjectSelectionError("Project Manifest prefix contradicts its Atom ID")
         if reader.currentness()["state"] != "unchanged":

@@ -6,14 +6,15 @@ import os
 from pathlib import Path
 
 from native_carrier_header import native_header_view
-from native_project_selection import manifest_sources, resolve_native_project
-from project_selection import ProjectSelectionError, _control_relative, _project_root
+from native_project_selection import is_native_control_name, manifest_sources, resolve_native_project
+from project_selection import ProjectSelectionError, _project_root
 from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext, open_regular
 from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
 
 
 _RESERVED = {".anechoic_new", ".anechoic_legacy", ".anechoic_legacy_archive",
              ".anechoic_runtime", ".anechoic_tmp"}
+_RESERVED |= {"_" + name[1:] for name in _RESERVED}
 
 
 def _has_manifest(reader: ReadContext, control: Path) -> bool:
@@ -45,7 +46,7 @@ def select_runtime_project(project_root, control_root=None, *, validate_manifest
 
     try:
         if control_root is not None:
-            return finish(native(_control_relative(control_root)))
+            return finish(native(control_root))
 
         def control_roots():
             descriptor = open_regular(root, directory=True)
@@ -54,11 +55,11 @@ def select_runtime_project(project_root, control_root=None, *, validate_manifest
                     controls = []
                     for entry in entries:
                         reader.checkpoint()
-                        if entry.name.startswith(".anechoic_") and entry.name not in _RESERVED:
+                        if is_native_control_name(entry.name) and entry.name not in _RESERVED:
                             if entry.is_symlink():
                                 raise ProjectSelectionError("Project control candidates must not be symlinks")
                             if entry.is_dir(follow_symlinks=False):
-                                controls.append(_control_relative(entry.name))
+                                controls.append(Path(entry.name))
                                 if len(controls) > 64:
                                     raise ProjectSelectionError("Project control candidates exceed the host ceiling")
                 return sorted(controls)

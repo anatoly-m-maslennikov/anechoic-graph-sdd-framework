@@ -14,7 +14,7 @@ from mcp import types
 
 from host_runtime_config import HostRuntimeConfig, resolve_host_project
 from operation_error_boundary import FailureRecord
-from native_project_selection import NativeProjectSelection
+from native_project_selection import NativeProjectSelection, is_native_control_name
 from runtime_failure_diagnostics import report_failure
 from shared_tool_contract import ToolContract, contract_digest, public_tool
 from tool_registry_runtime import ToolRegistryRuntimeError
@@ -66,7 +66,7 @@ def _has_marker(root: Path, frontier: SharedToolFrontier) -> bool:
                 if index >= MAX_PROJECT_CANDIDATES:
                     frontier.warning("PROJECT_MARKER_SCAN_BOUND_REACHED")
                     break
-                if entry.name.startswith(".anechoic_"):
+                if is_native_control_name(entry.name):
                     return True
     except OSError:
         frontier.warning("PROJECT_CANDIDATE_UNAVAILABLE")

@@ -44,8 +44,8 @@ AUTHOR_RE = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$")
 
 def _settings_control_relative(value: str | Path) -> Path:
     path = Path(value)
-    if (path.is_absolute() or len(path.parts) != 1 or path.name == ".anechoic_"
-            or not path.name.startswith(".anechoic_") or str(value) != path.as_posix()
+    if (path.is_absolute() or len(path.parts) != 1 or path.name in {".anechoic_", "_anechoic_"}
+            or not path.name.startswith((".anechoic_", "_anechoic_")) or str(value) != path.as_posix()
             or protected(path)):
         raise RuntimeError("paths.control_root must name one normalized direct Project child")
     return path
@@ -66,7 +66,7 @@ def _read_project_settings(root: Path, control_root: str | Path | None = None) -
                 candidates = []
                 with os.scandir(descriptor) as entries:
                     for entry in entries:
-                        if not entry.name.startswith(".anechoic_"):
+                        if not entry.name.startswith((".anechoic_", "_anechoic_")):
                             continue
                         if entry.is_symlink():
                             raise RuntimeError("Project control candidates must not be symlinks")

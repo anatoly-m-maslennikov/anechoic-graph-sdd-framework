@@ -36,7 +36,7 @@ class PackageSpecTests(unittest.TestCase):
     def test_live_prose_sources(self):
         control = ROOT.parent / 'native-control'
         if not control.is_dir():
-            control = ROOT / '.anechoic_anechoic'
+            control = ROOT / '_anechoic_anechoic'
         root = control / 'LAYER_3_ENGINE_STUDIO_C14' / 'KERNEL_MIXER_C59' / 'MANIFEST_RUNTIME_C62'
         files = sorted(root.glob('*-SPEC-PKG--*.md'))
         self.assertTrue(files)

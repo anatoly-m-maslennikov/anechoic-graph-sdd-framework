@@ -8,8 +8,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 3
-  updated_at: '2026-11-21T09:54:37.122704+00:00'
+  version: 4
+  updated_at: '2026-11-21T17:08:38.459263+00:00'
 ---
 
 ## Summary
@@ -47,7 +47,8 @@ Paths below are relative to `ProjectManifest.parameters`. A group holds the sett
 | `project.key` | Stable key used to identify the Project in configuration. |
 | `project.obsolete_names` | Former Project names retained for legacy lookup. |
 | `project.repository_slug` | Repository identifier associated with the Project. |
-| `paths.control_root` | Project-relative directory for the native control tree. The selected Manifest must belong to that tree. |
+| `project.root.prefix` | `dot` selects `.anechoic_<project_name>`. `underscore` selects `_anechoic_<project_name>`. Both forms use the case-folded Manifest name. |
+| `paths.control_root` | Locator retained for existing Project Manifests. When present, it must match the selected tree. |
 | `paths.framework_root` | Project-relative directory for the installed Framework. |
 | `paths.journal_root` | Project-relative directory for the Project Journal. |
 | `paths.legacy_migration_roots` | Project-relative legacy roots retained for migration. |

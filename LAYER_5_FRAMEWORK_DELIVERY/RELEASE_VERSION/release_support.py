@@ -84,7 +84,7 @@ def _ignored(name: str) -> bool:
 
 
 def _walk_regular_files(root: Path, *, excluded_directories: frozenset[str] = frozenset(),
-                        excluded_root_prefix: str = "",
+                        excluded_root_prefix: tuple[str, ...] = (),
                         excluded_root_directories: frozenset[str] = frozenset(),
                         excluded_root_files: frozenset[str] = frozenset()) -> list[Path]:
     def fail(error: OSError) -> None:
@@ -199,7 +199,7 @@ def _clear_owned(path: Path, *, label: str) -> None:
 
 def _target(root: Path, relative: Path, *, label: str) -> Path:
     target = _project_path(root, relative, label=label)
-    if target == root or target.parent == target or target == root / ".anechoic_anechoic":
+    if target == root or target.parent == target or (target.parent == root and target.name.startswith((".anechoic_", "_anechoic_"))):
         raise LocalReleaseError("local-release-target-invalid")
     if target.exists() and (target.is_symlink() or not target.is_dir()):
         raise LocalReleaseError(f"local-release-{label}-unsafe")
@@ -334,7 +334,7 @@ def _prepare_package(root: Path, product: Path, package: Path, *,
         if source.is_symlink() or not source.is_dir():
             raise LocalReleaseError("local-release-package-source-unavailable")
         members = _walk_regular_files(source, excluded_directories=excluded,
-                                      excluded_root_prefix=".anechoic_" if source == root else "",
+                                      excluded_root_prefix=(".anechoic_", "_anechoic_") if source == root else (),
                                       excluded_root_directories=frozenset({".anechoic_install"}) if source == root else frozenset())
         if not members:
             raise LocalReleaseError("local-release-package-source-unavailable")
@@ -350,7 +350,7 @@ def _prepare_package(root: Path, product: Path, package: Path, *,
         shutil.copy2(source, destination)
     for source, members in inventories:
         current = _walk_regular_files(source, excluded_directories=excluded,
-                                      excluded_root_prefix=".anechoic_" if source == root else "",
+                                      excluded_root_prefix=(".anechoic_", "_anechoic_") if source == root else (),
                                       excluded_root_directories=frozenset({".anechoic_install"}) if source == root else frozenset())
         if current != members:
             raise LocalReleaseError("local-release-package-source-changed")

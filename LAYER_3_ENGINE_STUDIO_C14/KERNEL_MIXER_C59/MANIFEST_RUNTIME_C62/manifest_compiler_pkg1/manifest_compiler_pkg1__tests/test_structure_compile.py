@@ -17,7 +17,7 @@ from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.structure_h
 from native_carrier_header import canonical_native_header, native_header_view  # noqa: E402
 from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier  # noqa: E402
 
-CONTROL = ROOT / '.anechoic_anechoic'
+CONTROL = ROOT / '_anechoic_anechoic'
 if (ROOT.parent / 'native-control').is_dir():
     CONTROL = ROOT.parent / 'native-control'
 PROJECT = CONTROL / 'AN-S-3037-SPEC-PROJECT_MANIFEST--declare-anechoic.md'

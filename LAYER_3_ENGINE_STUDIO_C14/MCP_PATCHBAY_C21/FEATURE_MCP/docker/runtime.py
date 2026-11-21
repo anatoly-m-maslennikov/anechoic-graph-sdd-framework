@@ -113,10 +113,10 @@ class Runtime:
         return self.image
 
     def prepare(self):
-        for relative in (".anechoic_anechoic", ".git"):
+        for relative in (".anechoic_anechoic", "_anechoic_anechoic", ".git"):
             if (self.root / relative).is_symlink():
                 raise ValueError("Runtime mounts must not be symlinks")
-        if not (self.root / ".anechoic_anechoic").is_dir() or not (self.root / ".git").is_dir():
+        if not any((self.root / name).is_dir() for name in (".anechoic_anechoic", "_anechoic_anechoic")) or not (self.root / ".git").is_dir():
             raise ValueError("Project authority and a directory Git repository are required")
         for relative in (".anechoic_install", ".anechoic_tmp", "tmp"):
             path = self.root / relative
@@ -204,7 +204,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project-root", type=Path, default=SOURCE_ROOT)
     parser.add_argument("--image", help=argparse.SUPPRESS)
-    parser.add_argument("--control-root", help="Direct .anechoic_<project> folder, when explicit selection is needed")
+    parser.add_argument("--control-root", help="Direct _anechoic_<project> or legacy .anechoic_<project> folder, when explicit selection is needed")
     parser.add_argument("--source-root", type=Path, help="Explicit Framework checkout with image build inputs; required for project-mcp")
     parser.add_argument("--startup-timeout", type=float, default=420, help="Bound startup/readiness seconds (maximum 420)")
     parser.add_argument("--build-timeout", type=float, default=600, help="Bound image build seconds (maximum 600)")

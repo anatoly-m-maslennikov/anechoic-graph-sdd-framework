@@ -189,6 +189,24 @@ class NativeProjectSelectionTests(unittest.TestCase):
             resolve_native_project(self.root, self.native.name,
                                    validate_manifest=lambda fields, component: SimpleNamespace(name="Anechoic", prefix="AN", parameters=None))
 
+    def test_root_prefix_and_legacy_control_root_bind_selection(self):
+        for spelling, prefix in ((".anechoic_anechoic", "dot"), ("_anechoic_anechoic", "underscore")):
+            with self.subTest(spelling=spelling):
+                target = self.root / spelling
+                if self.native != target:
+                    self.native.rename(target)
+                    self.native = target
+                for parameters in ({}, {"project": {"root": {"prefix": prefix}}},
+                                   {"paths": {"control_root": spelling}}):
+                    self.carrier(parameters=parameters)
+                    self.assertEqual(target, self.select().control_root)
+                for parameters in ({"project": {"root": {"prefix": "dot" if prefix == "underscore" else "underscore"}}},
+                                   {"project": {"root": {"prefix": "invalid"}}},
+                                   {"paths": {"control_root": "wrong"}}):
+                    self.carrier(parameters=parameters)
+                    with self.assertRaises(ProjectSelectionError):
+                        self.select()
+
     def test_settings_conversion_preserves_all_other_values_through_selection(self):
         settings = {"schema_version": "2.0", "projection": {"version": 2},
                     "artifact_timestamps": {"timezone": "local"},

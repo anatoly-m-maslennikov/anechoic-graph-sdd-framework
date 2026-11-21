@@ -129,6 +129,14 @@ class RealizationTests(unittest.TestCase):
         assert "carrier 2.md" not in sources
         assert sources["run"].language == "executable"
 
+    def test_visible_control_tree_is_excluded_from_realization(self):
+        root = self._temporary_project()
+        control = root / "_anechoic_example"
+        control.mkdir()
+        (control / "fixture.py").write_text("pass\n")
+        (root / "implementation.py").write_text("pass\n")
+        assert set(capture(root, None)) == {"implementation.py"}
+
     def test_read_error_is_retried_on_next_capture_without_stat_change(self):
         root = self._temporary_project()
         path = root / "a.py"

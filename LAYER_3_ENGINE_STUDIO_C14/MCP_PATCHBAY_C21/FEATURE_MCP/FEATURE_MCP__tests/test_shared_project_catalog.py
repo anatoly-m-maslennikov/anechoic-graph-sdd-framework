@@ -158,6 +158,11 @@ class SharedProjectCatalogTests(unittest.IsolatedAsyncioTestCase):
         frontier = await discover_frontier(self.config, _Gateway)
         self.assertIn("PROJECT_CANDIDATE_CLOSE_FAILED", [row["code"] for row in frontier.warnings])
 
+    def test_catalog_discovers_visible_control_root(self):
+        root = self.roots[0]
+        (root / ".anechoic_alpha").rename(root / "_anechoic_alpha")
+        self.assertIn(root, _candidate_paths(self.config, SharedToolFrontier()))
+
     def test_scan_bound_counts_direct_candidate_dirs_not_valid_projects(self):
         scan_root = self.base / "scan-root"
         scan_root.mkdir()

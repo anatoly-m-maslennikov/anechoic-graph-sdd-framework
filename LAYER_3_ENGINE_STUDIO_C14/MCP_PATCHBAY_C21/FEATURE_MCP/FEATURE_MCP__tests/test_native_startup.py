@@ -145,6 +145,20 @@ class RuntimeSelectionTests(unittest.TestCase):
         with self.assertRaisesRegex(ProjectSelectionError, "ceiling"):
             self.select()
 
+    def test_visible_control_is_discovered_and_ambiguous_with_hidden_control(self):
+        visible = self.root / "_anechoic_anechoic"
+        self.manifest(visible)
+        self.assertEqual(visible, self.select().control_root)
+        self.assertEqual(visible, self.select(visible.name).control_root)
+        self.manifest(self.root / ".anechoic_anechoic")
+        with self.assertRaisesRegex(ProjectSelectionError, "unique native Project Manifest"):
+            self.select()
+
+    def test_visible_symlink_candidate_is_refused(self):
+        (self.root / "_anechoic_anechoic").symlink_to(self.root)
+        with self.assertRaises(ProjectSelectionError):
+            self.select()
+
     def test_staging_is_never_discovered_implicitly(self):
         self.manifest(self.root / ".anechoic_new")
         with self.assertRaises(ProjectSelectionError):

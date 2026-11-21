@@ -82,7 +82,7 @@ class ReleaseImageOwnershipTests(unittest.TestCase):
         image = "sha256:" + "1" * 64
         docker.images[image] = "1" * 64
         owner = owner_labels(fixtures.ROOT, "c" * 64, ".anechoic_anechoic")
-        docker.metadata_overrides[image] = owner_labels(Path("/foreign"), "f" * 64, ".anechoic_foreign")
+        docker.metadata_overrides[image] = owner_labels(Path("/foreign"), "f" * 64, "_anechoic_foreign")
         cleanup = Cleanup(owner=owner, images={image})
         cleanup_obsolete_images(
             fixtures.ROOT, fixtures.CURRENT, fixtures.FINGER, cleanup, docker.run

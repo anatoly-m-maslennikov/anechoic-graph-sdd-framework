@@ -68,7 +68,7 @@ def _foreign_owner(labels: dict[str, str], owner: dict[str, str]) -> bool:
         and re.fullmatch(r"[0-9a-f]{64}", project_id) is not None
         and Path(root).is_absolute()
         and ".." not in Path(root).parts
-        and control.startswith(".anechoic_")
+        and control.startswith((".anechoic_", "_anechoic_")) and len(control) > len(".anechoic_")
         and len(Path(control).parts) == 1
     )
 

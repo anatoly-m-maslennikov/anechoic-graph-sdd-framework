@@ -61,6 +61,22 @@ class PlainJournalTests(unittest.TestCase):
         self.append(second)
         self.assertEqual(first + second, read_records(self.directory))
 
+    def test_visible_control_root_discovery_and_ambiguity(self) -> None:
+        visible = self.root / "_anechoic_anechoic"
+        (self.root / ".anechoic_anechoic").rename(visible)
+        settings = visible / "anechoic_project_settings.toml"
+        settings.write_text(settings.read_text().replace(".anechoic_anechoic", "_anechoic_anechoic"))
+        self.assertEqual(Path("_anechoic_anechoic/_journal"), journal.configured_journal_root(self.root))
+        self.append([{"visible": True}])
+        self.assertEqual([{"visible": True}], read_records(visible / "_journal"))
+        other = self.root / ".anechoic_other"
+        other.mkdir()
+        (other / "anechoic_project_settings.toml").write_text('[paths]\ncontrol_root = ".anechoic_other"\n')
+        with self.assertRaisesRegex(RuntimeError, "missing or ambiguous"):
+            journal.configured_journal_root(self.root)
+        self.assertEqual(Path("_anechoic_anechoic/_journal"),
+                         journal.configured_journal_root(self.root, control_root="_anechoic_anechoic"))
+
     def test_storage_setting_defaults_and_validation(self) -> None:
         self.assertEqual("files", journal.journal_storage({}))
         self.assertEqual("duckdb", journal.journal_storage({"runtime": {"journal": {"storage": "duckdb"}}}))

@@ -115,7 +115,7 @@ def _relative_path(root: Path, path: Path) -> str | None:
 def excluded_source_path(relative: str, *, directory: bool = False) -> bool:
     parts = PurePosixPath(relative).parts
     folder_parts = parts if directory else parts[:-1]
-    return any(part.startswith(".") for part in folder_parts) or any(
+    return any(part.startswith((".", "_anechoic_")) for part in folder_parts) or any(
         part.casefold() in _EXCLUDED_PARTS for part in parts
     )
 

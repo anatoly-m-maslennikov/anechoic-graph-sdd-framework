@@ -16,7 +16,7 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[4]
 NATIVE_CONTROL = ROOT.parent / "native-control"
 if not NATIVE_CONTROL.is_dir():
-    NATIVE_CONTROL = ROOT / ".anechoic_anechoic"
+    NATIVE_CONTROL = ROOT / "_anechoic_anechoic"
 ENGINE = ROOT / "LAYER_3_ENGINE_STUDIO_C14"
 PROGRAMMATIC = ENGINE / "FEATURE_PROGRAMMATIC"
 sys.path[:0] = [str(ROOT), str(PROGRAMMATIC), str(PROGRAMMATIC / "FEATURE_TOOLS"),
@@ -44,7 +44,7 @@ class ManifestRuntimeTests(unittest.TestCase):
     def test_real_hosts_reload_and_keep_last_valid_snapshot(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()
-            control = root / ".anechoic_anechoic"
+            control = root / "_anechoic_anechoic"
             control.mkdir()
             source = NATIVE_CONTROL
             for name in ("AN-S-3037-SPEC-PROJECT_MANIFEST--declare-anechoic.md",

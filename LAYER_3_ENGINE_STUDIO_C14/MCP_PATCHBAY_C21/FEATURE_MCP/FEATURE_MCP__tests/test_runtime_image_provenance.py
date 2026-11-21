@@ -67,6 +67,12 @@ class ImageProvenanceTests(unittest.TestCase):
             with self.subTest(changes=changes), self.assertRaises(ValueError):
                 replace(self.owner, **changes)
 
+    def test_visible_control_root_is_valid_provenance(self) -> None:
+        owner = replace(self.owner, control_root="_anechoic_project")
+        self.assertEqual(owner.labels()["org.anechoic.control_root"], "_anechoic_project")
+        with self.assertRaises(ValueError):
+            replace(self.owner, control_root="_anechoic_")
+
     def test_fresh_build_attaches_and_verifies_owner_name_and_head(self) -> None:
         labels: dict[str, str] = {}
         calls: list[list[str]] = []

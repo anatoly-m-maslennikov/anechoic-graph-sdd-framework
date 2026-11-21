@@ -64,7 +64,7 @@ def main(argv=None):
     parser.add_argument("--project-root", type=Path, default=default_root)
     parser.add_argument("--source-root", type=Path,
                         help="Framework source checkout (defaults to the selected installed package)")
-    parser.add_argument("--control-root", help="Optional direct .anechoic_<project> folder")
+    parser.add_argument("--control-root", help="Optional direct _anechoic_<project> or legacy .anechoic_<project> folder")
     parser.add_argument("--port", type=int, help="Assert the Project Settings localhost port")
     parser.add_argument("--no-build", action="store_true", help="Use a matching existing image only")
     args = parser.parse_args(argv)

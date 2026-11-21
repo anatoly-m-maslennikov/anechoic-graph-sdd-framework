@@ -32,7 +32,8 @@ class ImageBuildProvenance:
             or not PurePosixPath(self.project_root).is_absolute()
             or ".." in PurePosixPath(self.project_root).parts
             or len(PurePosixPath(self.control_root).parts) != 1
-            or not self.control_root.startswith(".anechoic_")
+            or not self.control_root.startswith((".anechoic_", "_anechoic_"))
+            or len(self.control_root) <= len(".anechoic_")
         ):
             raise ValueError("Image build provenance is invalid")
 

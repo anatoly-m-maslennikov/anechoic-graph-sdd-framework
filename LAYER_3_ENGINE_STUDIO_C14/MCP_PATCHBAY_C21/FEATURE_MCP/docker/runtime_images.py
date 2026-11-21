@@ -119,7 +119,7 @@ def _canonical(value: object) -> bytes:
 
 def _excluded_directory(name: str) -> bool:
     return (name in _TRANSIENT_DIRECTORIES or name in _CREDENTIAL_DIRECTORIES
-            or name.startswith(".anechoic_") or name.endswith("__tests"))
+            or name.startswith((".anechoic_", "_anechoic_")) or name.endswith("__tests"))
 
 
 def _excluded_file(name: str) -> bool:

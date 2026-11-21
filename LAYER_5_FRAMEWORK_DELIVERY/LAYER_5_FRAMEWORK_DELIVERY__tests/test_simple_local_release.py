@@ -742,12 +742,17 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         import local_release
         prepare = local_release._prepare_package
         stages = []
+        other_control = self.root / "_anechoic_other"
+        other_control.mkdir()
+        (other_control / "private.txt").write_text("private")
         def capture(root, product, package, **kwargs):
             self.assertTrue(package.is_relative_to(root / ".anechoic_tmp/simple_local_release"))
             self.assertTrue(package.parent.name.startswith("private-"))
             self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
             stages.append(package)
-            return prepare(root, product, package, **kwargs)
+            result = prepare(root, product, package, **kwargs)
+            self.assertFalse((package / "_anechoic_other").exists())
+            return result
         runner, _ = self._runner()
         with patch.object(local_release, "_prepare_package", capture):
             result = run_local_release(self.root, run_id="private", runner=runner)

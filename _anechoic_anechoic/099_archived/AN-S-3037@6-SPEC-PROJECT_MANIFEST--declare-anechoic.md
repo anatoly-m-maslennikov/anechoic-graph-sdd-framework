@@ -9,7 +9,7 @@ context:
   template: project_manifest
   lens: SPEC
 state:
-  status: active
+  status: archived
   version: 6
   updated_at: '2026-11-21T10:08:17.316550+00:00'
 ---

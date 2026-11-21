@@ -33,6 +33,7 @@ __pycache__/
 
 # Retain local release candidates and rollback sources outside version control.
 /.anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/_release_materialized/
+/_anechoic_anechoic/000_ANECHOIC_framework/00_APPLICABLE_METHODOLOGY/_release_materialized/
 /.anechoic_archive/101_LAYER_1_FRAMEWORK_METHODOLOGY/.release-sources-prior-*/
 /.anechoic_archive/101_LAYER_1_FRAMEWORK_METHODOLOGY/.release-sources-*/
 /LAYER_1_FRAMEWORK_METHODOLOGY/.release-sources-prior-*/

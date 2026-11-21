@@ -103,7 +103,7 @@ class NativeQueryOwner(ServiceInterface):
             raise ValueError("Project Manifest paths must be a mapping")
         journal_root = paths.get("journal_root", (selection.control_relative / "_journal").as_posix())
         journal_path = validated_journal_root(self._root, journal_root)
-        if (journal_path.parts[0].startswith(".anechoic_")
+        if (journal_path.parts[0].startswith((".anechoic_", "_anechoic_"))
                 and journal_path.parts[0] != selection.control_relative.name):
             raise ValueError("Native Journal cannot use another records tree")
         self._journal_mode = journal_storage(selection.parameters)

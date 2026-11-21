@@ -46,6 +46,7 @@ LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/scope_declaration_r
 **/*.pyc
 **/*.pyo
 **/.anechoic_*
+**/_anechoic_*
 **/.anechoic_tmp
 **/.anechoic_install
 **/.anechoic_runtime

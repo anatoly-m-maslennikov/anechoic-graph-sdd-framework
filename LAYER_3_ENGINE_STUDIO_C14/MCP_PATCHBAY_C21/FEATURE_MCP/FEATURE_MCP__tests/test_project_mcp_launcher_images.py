@@ -151,6 +151,16 @@ class ImageGoldenTests(unittest.TestCase):
         with self.assertRaises(ImageError):
             manager._verify_context(context, identity)
 
+    def test_visible_control_root_is_excluded_from_image_context(self) -> None:
+        source = self.source_fixture()
+        manager = self.manager(source, lambda *_a, **_k: self.fail("Docker is not needed"))
+        before = manager.identity()
+        control = source / "_anechoic_other"
+        control.mkdir()
+        (control / "private.py").write_text("secret")
+        self.assertEqual(before.fingerprint, manager.identity().fingerprint)
+        self.assertNotIn("_anechoic_other/private.py", [item.path for item in manager.identity().manifest])
+
     def test_admitted_source_change_changes_fingerprint(self) -> None:
         source = self.source_fixture()
         no_docker = lambda *_args, **_kwargs: self.fail("identity must not invoke Docker")
