@@ -8,15 +8,16 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import nullcontext
 import json
 import os
+import re
 from pathlib import Path
 import subprocess
 import sys
 import time
 
 if __package__:
-    from .full_suite_docker import APP, current_code_test_image
+    from .full_suite_docker import APP, candidate_test_image, current_code_test_image
 else:
-    from full_suite_docker import APP, current_code_test_image
+    from full_suite_docker import APP, candidate_test_image, current_code_test_image
 
 PROGRAMMATIC = Path("LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC")
 WORKBENCH = Path("LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH")
@@ -158,12 +159,22 @@ def _docker_module(root: Path, module: Path) -> bool:
 
 
 def run_full_suite(root: Path, test_modules: tuple[str, ...] | None = None, *,
-                   image_mode: str = "existing") -> int:
+                   image_mode: str = "existing", phase: str = "full",
+                   candidate_image: str | None = None) -> int:
     """Attempt the complete discovered suite and fail on test or import errors."""
+    if (phase not in ("full", "unit", "e2e") or
+            (phase == "e2e") != (candidate_image is not None) or
+            (candidate_image is not None and (not isinstance(candidate_image, str)
+             or not re.fullmatch(r"sha256:[0-9a-f]{64}", candidate_image))) or
+            (phase != "full" and test_modules is not None)):
+        print("Invalid test phase or candidate image selection", file=sys.stderr)
+        return 1
     modules = discover_test_modules(root)
-    scope = "full" if test_modules is None else "focused"
+    if phase != "full":
+        modules = [module for module in modules if _docker_module(root, module) == (phase == "e2e")]
+    scope = phase if test_modules is None else "focused"
     if test_modules is None:
-        selection = "all discovered modules"
+        selection = "all discovered modules" if phase == "full" else f"{phase} modules"
     else:
         try:
             modules = _select_test_modules(root, modules, test_modules)
@@ -176,7 +187,8 @@ def run_full_suite(root: Path, test_modules: tuple[str, ...] | None = None, *,
         print("No source test modules found", file=sys.stderr)
         return 1
     integration = any(_docker_module(root, module) for module in modules)
-    context = (current_code_test_image(root, use_packaged_assets=image_mode == "existing")
+    context = (candidate_test_image(root, candidate_image) if candidate_image is not None else
+               current_code_test_image(root, use_packaged_assets=image_mode == "existing")
                if integration else nullcontext({}))
     try:
         with context as additions:
@@ -252,11 +264,13 @@ def main() -> int:
     parser.add_argument("--project-root", type=Path, default=Path.cwd())
     parser.add_argument("--test-module", action="append", dest="test_modules", metavar="PATH")
     parser.add_argument("--image-mode", choices=("refresh", "existing"), default="existing")
+    parser.add_argument("--phase", choices=("full", "unit", "e2e"), default="full")
+    parser.add_argument("--candidate-image")
     arguments = parser.parse_args()
     root = arguments.project_root.resolve(strict=True)
     return run_full_suite(
         root, test_modules=tuple(arguments.test_modules) if arguments.test_modules is not None else None,
-        image_mode=arguments.image_mode,
+        image_mode=arguments.image_mode, phase=arguments.phase, candidate_image=arguments.candidate_image,
     )
 
 

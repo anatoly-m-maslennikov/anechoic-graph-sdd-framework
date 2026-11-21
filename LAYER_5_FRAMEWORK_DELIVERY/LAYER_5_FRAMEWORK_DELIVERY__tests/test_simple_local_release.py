@@ -41,7 +41,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         )
         for path in self.native_sources:
             path.write_text("## Claim\nNative source\n", encoding="utf-8")
-        (self.root / ".gitignore").write_text(".anechoic_tmp/\n", encoding="utf-8")
+        (self.root / ".gitignore").write_text(".anechoic_tmp/\n/.anechoic_runtime/\n", encoding="utf-8")
         self.product = self.root / "LAYER_1_FRAMEWORK_METHODOLOGY"
         self.installed = self.control / "000_ANECHOIC_framework"
         self.runtime = self.root / ".anechoic_runtime"
@@ -133,12 +133,20 @@ class SimpleLocalReleaseTests(unittest.TestCase):
 
     def _runner(self):
         calls = []
+        staged = False
 
         def run(argv, cwd):
+            nonlocal staged
             self.assertEqual(self.root, cwd)
             calls.append(argv)
+            if argv[:2] == ("git", "add"):
+                staged = True
+            elif argv[:2] == ("git", "commit"):
+                staged = False
+            if argv[:2] == ("git", "rev-parse"):
+                return subprocess.CompletedProcess(argv, 0, "d" * 40 + "\n", "")
             if argv == ("git", "diff", "--cached", "--quiet"):
-                return subprocess.CompletedProcess(argv, 1, "", "")
+                return subprocess.CompletedProcess(argv, int(staged), "", "")
             if self._is_mcp_bootstrap(argv):
                 return self._mcp_bootstrap_success(argv)
             return subprocess.CompletedProcess(argv, 0, "", "")
@@ -169,7 +177,8 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             "from anechoic.formal_claims import declare_entity\n"
             "from anechoic.model import ProjectManifest\n"
             "declare_entity(entity_name='Project Manifest', "
-            "instance=ProjectManifest(name='Anechoic', prefix='AN'))\n```\n", encoding="utf-8",
+            "instance=ProjectManifest(name='Anechoic', prefix='AN', "
+            "parameters={'project_mcp': {'http_port': 12345}}))\n```\n", encoding="utf-8",
         )
 
         for relative in _GENERATED_ASSETS:
@@ -189,8 +198,9 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertEqual("completed", result["outcome"], result)
         self.image.mark_production_image.assert_called_once_with(self.image_id)
         self.assertTrue(all(call.args[0].manifest_ref == "AN-S-001@1" for call in select.call_args_list))
-        test_argv = next(call for call in calls if any(arg.endswith("test_suite__pub.py") for arg in call))
-        self.assertEqual(("--image-mode", "existing"), test_argv[-2:])
+        gates = [call for call in calls if any(arg.endswith("test_suite__pub.py") for arg in call)]
+        self.assertEqual(["unit", "e2e"], [argv[argv.index("--phase") + 1] for argv in gates])
+        self.assertEqual(self.image_id, gates[1][gates[1].index("--candidate-image") + 1])
         self.assertEqual("refresh", result["image_mode"])
         self.assertTrue(any(self._is_mcp_bootstrap(call) for call in calls))
         product_sources = self.product / "SUPERLAYER_1_METHODOLOGY_SOURCES"
@@ -229,8 +239,9 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             result = run_local_release(self.root, run_id="native-existing", runner=runner, image_mode="existing")
         self.native_assets.assert_called_once()
         self.assertEqual("completed", result["outcome"], result)
-        test_argv = next(call for call in calls if any(arg.endswith("test_suite__pub.py") for arg in call))
-        self.assertEqual(("--image-mode", "existing"), test_argv[-2:])
+        gates = [call for call in calls if any(arg.endswith("test_suite__pub.py") for arg in call)]
+        self.assertEqual(["unit", "e2e"], [argv[argv.index("--phase") + 1] for argv in gates])
+        self.assertEqual(self.image_id, gates[1][gates[1].index("--candidate-image") + 1])
 
     def test_native_source_change_stops_before_product_replacement(self):
         runner, _ = self._runner()
@@ -250,7 +261,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             result = run_local_release(self.root, run_id="native-source-change", runner=runner)
         self.assertEqual(("failed", "copy_active_sources"), (result["outcome"], result["failed_step"]))
         self.assertEqual("obsolete", (self.product / "old.txt").read_text())
-        self.assertIn('version = "0.4.1"', (self.root / "version.toml").read_text())
+        self.assertIn('version = "0.4.1.1"', (self.root / "version.toml").read_text())
 
     def test_existing_image_mode_preserves_checkout_assets_without_a_predecessor(self):
         selection = select_runtime_project(self.root)
@@ -265,8 +276,9 @@ class SimpleLocalReleaseTests(unittest.TestCase):
 
         self.assertEqual("completed", result["outcome"], result)
         self.assertEqual("existing", result["image_mode"])
-        test_argv = next(argv for argv in calls if any(arg.endswith("test_suite__pub.py") for arg in argv))
-        self.assertEqual(("--image-mode", "existing"), test_argv[-2:])
+        gates = [argv for argv in calls if any(arg.endswith("test_suite__pub.py") for arg in argv)]
+        self.assertEqual(["unit", "e2e"], [argv[argv.index("--phase") + 1] for argv in gates])
+        self.assertEqual(self.image_id, gates[1][gates[1].index("--candidate-image") + 1])
         self.assertEqual({"use_packaged_assets": True}, self.image.resolve.call_args_list[0].kwargs)
         runtime_package = self.runtime / "simple_local_release/package"
         for relative, payload in payloads.items():
@@ -367,7 +379,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             test_modules=modules,
         )
 
-        self.assertEqual(("failed", "tests"), (result["outcome"], result["failed_step"]))
+        self.assertEqual(("failed", "unit_tests"), (result["outcome"], result["failed_step"]))
         self.assertEqual("full", result["test_scope"])
         self.assertIsNone(result["test_modules"])
         self.assertFalse(any(self._is_mcp_bootstrap(argv) for argv in calls))
@@ -376,11 +388,11 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertIn("Selected test modules: all discovered modules", report)
         self.assertIn("focused test failure", report)
 
-    def _assert_input_refused(self, run_id):
+    def _assert_input_refused(self, run_id, failed_step="validate_inputs"):
         runner, calls = self._runner()
         result = run_local_release(self.root, run_id=run_id, runner=runner)
         self.assertEqual("failed", result["outcome"])
-        self.assertEqual("validate_inputs", result["failed_step"])
+        self.assertEqual(failed_step, result["failed_step"])
         for target in (self.product, self.installed):
             self.assertEqual("obsolete", (target / "old.txt").read_text())
         self.assertFalse(any(any(item.endswith("test_suite__pub.py") for item in argv) for argv in calls))
@@ -394,7 +406,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
     def test_invalid_version_refuses_before_tests_or_replacement(self):
         version = self.root / "version.toml"
         version.write_text('[framework]\nversion = "invalid"\n')
-        self._assert_input_refused("invalid-version")
+        self._assert_input_refused("invalid-version", "bump_candidate_version")
         self.assertIn('version = "invalid"', version.read_text())
 
     def test_installer_refreshes_bootstrap_without_touching_runtime_config_or_state(self):
@@ -461,13 +473,21 @@ class SimpleLocalReleaseTests(unittest.TestCase):
 
     def test_test_failure_leaves_both_methodology_destinations_untouched(self):
         calls = []
+        staged = False
         stdout = "early stdout evidence\n" + "output tail\n" * 500
         stderr = "early failure traceback\n" + "error tail\n" * 500
 
         def runner(argv, cwd):
+            nonlocal staged
             calls.append(argv)
+            if argv[:2] == ("git", "add"):
+                staged = True
+            elif argv[:2] == ("git", "commit"):
+                staged = False
+            if argv[:2] == ("git", "rev-parse"):
+                return subprocess.CompletedProcess(argv, 0, "d" * 40 + "\n", "")
             if argv == ("git", "diff", "--cached", "--quiet"):
-                return subprocess.CompletedProcess(argv, 1, "", "")
+                return subprocess.CompletedProcess(argv, int(staged), "", "")
             if any(item.endswith("test_suite__pub.py") for item in argv):
                 self.assertIn("--all-groups", argv)
                 self.assertIn("--managed-python", argv)
@@ -483,8 +503,9 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             patch("local_release.cleanup_obsolete_images") as image_cleanup,
         ):
             result = run_local_release(self.root, run_id="tests-failed", runner=runner)
-        self.assertEqual("tests", result["failed_step"])
+        self.assertEqual("unit_tests", result["failed_step"])
         self.assertEqual("failed", result["outcome"])
+        self.image.mark_production_image.assert_not_called()
         stopped_cleanup.assert_not_called()
         image_cleanup.assert_not_called()
         for target in (self.product, self.installed):
@@ -499,7 +520,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertNotIn("early failure traceback", report)
         with patch("local_release.tempfile.NamedTemporaryFile", side_effect=OSError("unavailable")):
             unsaved = run_local_release(self.root, run_id="tests-log-unavailable", runner=runner)
-        self.assertEqual(("failed", "tests"), (unsaved["outcome"], unsaved["failed_step"]))
+        self.assertEqual(("failed", "unit_tests"), (unsaved["outcome"], unsaved["failed_step"]))
         self.assertIn("Complete test output could not be saved (OSError)",
                       (self.root / unsaved["report_path"]).read_text())
 
@@ -519,14 +540,14 @@ class SimpleLocalReleaseTests(unittest.TestCase):
                 patch("local_release.sys.stderr", output):
             result = run_local_release(self.root, run_id="interrupted")
 
-        self.assertEqual(("failed", "tests", "KeyboardInterrupt"),
+        self.assertEqual(("failed", "unit_tests", "KeyboardInterrupt"),
                          (result["outcome"], result["failed_step"], result["error_type"]))
         self.assertEqual("partial test evidence\n", (self.root / result["test_log_path"]).read_text())
         report = (self.root / result["report_path"]).read_text()
-        self.assertIn("Stopped at: `tests`", report)
+        self.assertIn("Stopped at: `unit_tests`", report)
         self.assertIn("Error class: `KeyboardInterrupt`", report)
         self.assertIn(result["test_log_path"], report)
-        self.assertIn("Local release phase START: tests", output.getvalue())
+        self.assertIn("Local release phase START: unit tests", output.getvalue())
         self.assertIn(result["test_log_path"], output.getvalue())
         for target in (self.product, self.installed):
             self.assertEqual("obsolete", (target / "old.txt").read_text())
@@ -548,6 +569,32 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertEqual("complete test evidence\n", (self.root / result["test_log_path"]).read_text())
         self.assertIn(result["test_log_path"], (self.root / result["report_path"]).read_text())
 
+    def test_default_runner_streams_one_log_for_each_gate(self):
+        runner, _ = self._runner()
+        phases = []
+
+        def passed(argv, cwd, log):
+            phase = argv[argv.index("--phase") + 1]
+            phases.append(phase)
+            log.write(f"{phase} evidence\n".encode())
+            return subprocess.CompletedProcess(argv, 0, "", "")
+
+        original_run = subprocess.run
+        def run(argv, **kwargs):
+            if argv[0] == "git" or self._is_mcp_bootstrap(argv):
+                return runner(argv, self.root)
+            return original_run(argv, **kwargs)
+
+        with patch("local_release.subprocess.run", side_effect=run), \
+                patch("local_release.run_logged_test_process", side_effect=passed):
+            result = run_local_release(self.root, run_id="two-logs")
+        self.assertEqual("completed", result["outcome"], result)
+        self.assertEqual(["unit", "e2e"], phases)
+        for phase in phases:
+            path = self.root / result["test_log_paths"][phase]
+            self.assertEqual(f"{phase} evidence\n", path.read_text())
+        self.assertEqual(result["test_log_paths"]["e2e"], result["test_log_path"])
+
     def test_interrupt_before_tests_reports_actual_git_step_without_claiming_log(self):
         def interrupted(argv, cwd):
             raise KeyboardInterrupt
@@ -558,23 +605,39 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertIsNone(result["test_log_path"])
         self.assertIn("git_before_validate_inputs", (self.root / result["report_path"]).read_text())
 
-    def test_git_stages_everything_and_commits_before_steps_and_at_end(self):
+    def test_git_stages_initial_changes_then_only_release_paths(self):
         runner, calls = self._runner()
         result = run_local_release(self.root, run_id="git-order", runner=runner)
         self.assertEqual("completed", result["outcome"])
-        adds = [index for index, argv in enumerate(calls) if argv[:3] == ("git", "add", "-A")]
-        commits = [index for index, argv in enumerate(calls) if argv[:2] == ("git", "commit")]
-        self.assertGreaterEqual(len(commits), 7)
-        self.assertEqual(len(adds), len(commits))
-        for add, commit in zip(adds, commits):
-            self.assertEqual(add + 2, commit)
-        self.assertEqual(len(calls) - 2, commits[-1])
-        self.assertEqual([
-            "validate inputs", "tests", "copy active sources", "build package", "prepare candidate image",
-            "copy product to installed framework", "install project runtime", "start mcp", "final",
-        ], [calls[index][-1].removeprefix("chore(release): simple local ") for index in commits])
+        adds = [argv for argv in calls if argv[:3] == ("git", "add", "-A")]
+        self.assertEqual(".", adds[0][4])
+        self.assertEqual("version.toml", adds[1][4])
+        self.assertEqual(6, len(adds))
+        self.assertTrue(all("." not in argv[4:-2] for argv in adds[1:]))
+        commits = [argv[-1] for argv in calls if argv[:2] == ("git", "commit")]
+        self.assertEqual(["validate inputs", "unit tests", "build package", "prepare candidate image",
+                          "install project runtime", "start mcp"],
+                         [message.removeprefix("chore(release): simple local ") for message in commits])
 
-    def test_checkpoints_commit_actual_temporary_git_changes_including_final(self):
+    def test_unit_gate_worktree_drift_is_refused_before_build(self):
+        runner, calls = self._runner()
+        drifted = False
+
+        def changed(argv, cwd):
+            nonlocal drifted
+            result = runner(argv, cwd)
+            if "--phase" in argv and "unit" in argv:
+                drifted = True
+            if drifted and argv[:2] == ("git", "status"):
+                return subprocess.CompletedProcess(argv, 0, "?? unrelated.txt\n", "")
+            return result
+
+        result = run_local_release(self.root, run_id="source-drift", runner=changed)
+        self.assertEqual(("failed", "git_before_copy_active_sources"), (result["outcome"], result["failed_step"]))
+        self.image_factory.assert_not_called()
+        self.assertEqual(2, sum(argv[:3] == ("git", "add", "-A") for argv in calls))
+
+    def test_checkpoints_commit_actual_temporary_git_changes(self):
         def git(*args):
             return subprocess.run(("git", *args), cwd=self.root, capture_output=True, text=True, check=True)
 
@@ -593,12 +656,10 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             return subprocess.CompletedProcess(argv, 0, "http://localhost:12345/mcp", "")
 
         result = run_local_release(self.root, run_id="real-git", runner=runner)
-        self.assertEqual("completed", result["outcome"])
+        self.assertEqual("completed", result["outcome"], (result, git("status", "--porcelain").stdout))
         self.assertEqual("", git("status", "--porcelain").stdout)
-        self.assertEqual("chore(release): simple local final", git("log", "-1", "--format=%s").stdout.strip())
-        receipt = ".anechoic_runtime/simple_local_release/reports/real-git.md"
-        self.assertIn("http://localhost:12345/mcp", git("show", f"HEAD:{receipt}").stdout)
-        self.assertEqual(6, int(git("rev-list", "--count", "HEAD").stdout))
+        self.assertEqual("chore(release): simple local start mcp", git("log", "-1", "--format=%s").stdout.strip())
+        self.assertIn('version = "0.4.1.1"', git("show", "HEAD:version.toml").stdout)
         for relative in _GENERATED_ASSETS:
             self.assertEqual((self.root / relative).read_text(), git("show", f"HEAD:{relative}").stdout)
 
@@ -791,7 +852,9 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         def record(argv, cwd):
             result = runner(argv, cwd)
             if any(item.endswith("test_suite__pub.py") for item in argv):
-                events.append("full-suite-green")
+                phase = argv[argv.index("--phase") + 1]
+                self.assertIn('version = "0.4.1.1"', (self.root / "version.toml").read_text())
+                events.append(f"{phase}-green")
             elif self._is_mcp_bootstrap(argv):
                 events.append("launch")
             elif argv[:3] == ("docker", "image", "ls"):
@@ -799,7 +862,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             return result
 
         result = run_local_release(self.root, run_id="image-order", runner=record)
-        self.assertEqual("completed", result["outcome"])
+        self.assertEqual("completed", result["outcome"], result)
         self.assertEqual(2, self.image_factory.call_count)
         self.assertEqual([unittest.mock.call(use_packaged_assets=True)] * 3, self.image.identity.call_args_list)
         source, temporary = self.image_factory.call_args_list[0].args
@@ -809,14 +872,33 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         launch = next(argv for argv in calls if self._is_mcp_bootstrap(argv))
         self.assertEqual((sys.executable, str(self.runtime / "start_mcp.py")), launch[:2])
         self.assertEqual(str(self.runtime / "simple_local_release/package"), launch[launch.index("--source-root") + 1])
-        self.assertNotIn("--image", launch)
+        self.assertEqual(self.image_id, launch[launch.index("--image") + 1])
+        self.assertEqual("12345", launch[launch.index("--port") + 1])
         self.assertIn("--no-build", launch)
-        self.assertLess(events.index("full-suite-green"), events.index("candidate-resolve"))
-        self.assertLess(events.index("candidate-resolve"), events.index("candidate-canary"))
+        self.assertLess(events.index("unit-green"), events.index("candidate-resolve"))
+        self.assertLess(events.index("candidate-resolve"), events.index("e2e-green"))
+        self.assertLess(events.index("e2e-green"), events.index("candidate-canary"))
         self.assertLess(events.index("candidate-canary"), events.index("installed-resolve"))
         self.assertLess(events.index("installed-resolve"), events.index("launch"))
         self.assertLess(events.index("launch"), events.index("post-smoke-image-cleanup"))
         self.assertEqual("http://127.0.0.1:49152/anechoic/mcp", result["canary_endpoint"])
+
+    def test_e2e_failure_stops_before_canary_install_and_production_tag(self):
+        runner, calls = self._runner()
+
+        def fail_e2e(argv, cwd):
+            result = runner(argv, cwd)
+            if "--phase" in argv and argv[argv.index("--phase") + 1] == "e2e":
+                self.assertEqual(self.image_id, argv[argv.index("--candidate-image") + 1])
+                return subprocess.CompletedProcess(argv, 1, "", "e2e failed")
+            return result
+
+        result = run_local_release(self.root, run_id="e2e-failed", runner=fail_e2e)
+        self.assertEqual(("failed", "e2e_tests"), (result["outcome"], result["failed_step"]))
+        self.canary.assert_not_called()
+        self.image.mark_production_image.assert_not_called()
+        self.assertFalse(any(self._is_mcp_bootstrap(argv) for argv in calls))
+        self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
 
     def test_failed_candidate_canary_preserves_the_installed_release(self):
         self.canary.side_effect = local_release.LocalReleaseError("local-release-canary-probe-failed")

@@ -179,6 +179,35 @@ class FullSuiteDockerTests(unittest.TestCase):
             self.assertNotIn("ANECHOIC_CANDIDATE_IMAGE_DIGEST", environment)
             lifecycle.__exit__.assert_called_once()
 
+    def test_release_phases_partition_discovery_and_preserve_candidate(self):
+        integration = self.root / docker.APP / "FEATURE_MCP__tests/test_docker_e2e.py"
+        ordinary = self.root / docker.APP / "FEATURE_MCP__tests/test_unit.py"
+        with (
+            patch.object(full, "discover_test_modules", return_value=[ordinary, integration]),
+            patch.object(full, "current_code_test_image") as build,
+            patch.object(full, "_run_modules", return_value=0) as run,
+            patch.dict(full.os.environ, {"ANECHOIC_RELEASE_E2E_CONTEXT": "stale"}),
+            redirect_stdout(self.output),
+        ):
+            self.assertEqual(0, full.run_full_suite(self.root, phase="unit"))
+            self.assertEqual([ordinary], run.call_args.args[1])
+            self.assertEqual(0, full.run_full_suite(self.root, phase="e2e", candidate_image=IMAGE))
+            self.assertEqual([integration], run.call_args.args[1])
+            environment = run.call_args.args[2]
+            for name in ("ANECHOIC_IMAGE", "ANECHOIC_FIRST_CUT_HTTP_IMAGE", "ANECHOIC_DOCKER_QUERY_IMAGE"):
+                self.assertEqual(IMAGE, environment[name])
+            self.assertNotIn("ANECHOIC_RELEASE_E2E_CONTEXT", environment)
+            self.assertFalse(Path(environment["TMPDIR"]).exists())
+            build.assert_not_called()
+
+    def test_release_phase_rejects_invalid_candidate_and_focused_selection(self):
+        with patch.object(full, "discover_test_modules") as discover, redirect_stderr(self.errors):
+            for options in ({"phase": "e2e"}, {"phase": "e2e", "candidate_image": "latest"},
+                            {"phase": "unit", "candidate_image": IMAGE},
+                            {"phase": "unit", "test_modules": ("test.py",)}):
+                self.assertEqual(1, full.run_full_suite(self.root, **options))
+            discover.assert_not_called()
+
     def test_missing_required_build_environment_fails_without_running_tests(self):
         module = self.root / docker.APP / "FEATURE_MCP__tests/test_docker_e2e.py"
         lifecycle = MagicMock()

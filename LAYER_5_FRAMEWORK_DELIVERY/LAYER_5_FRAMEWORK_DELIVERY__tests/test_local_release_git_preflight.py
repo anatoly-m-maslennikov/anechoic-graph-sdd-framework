@@ -21,6 +21,8 @@ class LocalReleaseGitPreflightTests(unittest.TestCase):
         def runner(argv: tuple[str, ...], root: Path) -> subprocess.CompletedProcess[str]:
             nonlocal staged
             calls.append(argv)
+            if argv[:2] == ("git", "rev-parse"):
+                return subprocess.CompletedProcess(argv, 0, "d" * 40 + "\n", "")
             if argv[:4] == ("git", "diff", "--cached", "--name-only"):
                 return subprocess.CompletedProcess(
                     argv, 0, ".env\n" if mode == "staged-env" else "", ""

@@ -33,11 +33,12 @@ class StartMcpScriptTests(unittest.TestCase):
     def test_main_uses_locked_uv_project_mcp_url_handoff_only(self) -> None:
         module = self._module(SCRIPT)
         root = APP.parents[2]
+        image = "sha256:" + "a" * 64
 
         with patch.object(module.subprocess, "run", return_value=SimpleNamespace(returncode=0)) as run:
             self.assertEqual(0, module.main([
                 "--project-root", str(root), "--source-root", str(root),
-                "--port", "56317", "--no-build",
+                "--port", "56317", "--image", image, "--no-build",
             ]))
 
         command = run.call_args.args[0]
@@ -47,6 +48,7 @@ class StartMcpScriptTests(unittest.TestCase):
         self.assertIn("project-mcp", command)
         self.assertEqual(["--output", "url"], command[command.index("--output"):command.index("--output") + 2])
         self.assertEqual(["--port", "56317"], command[command.index("--port"):command.index("--port") + 2])
+        self.assertEqual(image, command[command.index("--image") + 1])
         self.assertIn("--no-build", command)
         self.assertNotIn("docker", command)
         self.assertNotIn("worker", command)

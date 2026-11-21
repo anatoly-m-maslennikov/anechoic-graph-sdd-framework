@@ -66,10 +66,13 @@ def main(argv=None):
                         help="Framework source checkout (defaults to the selected installed package)")
     parser.add_argument("--control-root", help="Optional direct _anechoic_<project> or legacy .anechoic_<project> folder")
     parser.add_argument("--port", type=int, help="Assert the Project Settings localhost port")
+    parser.add_argument("--image", help="Start the specified immutable sha256 image ID")
     parser.add_argument("--no-build", action="store_true", help="Use a matching existing image only")
     args = parser.parse_args(argv)
     if args.port is not None and not 1 <= args.port <= 65535:
         parser.error("--port must be between 1 and 65535")
+    if args.image is not None and not re.fullmatch(r"sha256:[0-9a-f]{64}", args.image):
+        parser.error("--image must be an immutable sha256 image ID")
 
     project = args.project_root.resolve()
     try:
@@ -93,6 +96,8 @@ def main(argv=None):
         command.extend(["--control-root", args.control_root])
     if args.port is not None:
         command.extend(["--port", str(args.port)])
+    if args.image is not None:
+        command.extend(["--image", args.image])
     if args.no_build:
         command.append("--no-build")
     command.append("project-mcp")

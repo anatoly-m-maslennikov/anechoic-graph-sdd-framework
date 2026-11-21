@@ -76,7 +76,8 @@ class ReleaseImageProvenanceTests(unittest.TestCase):
         def runner(argv: tuple[str, ...], root: Path) -> subprocess.CompletedProcess[str]:
             if fixture._is_mcp_bootstrap(argv):
                 return fixture._mcp_bootstrap_success(argv)
-            return subprocess.CompletedProcess(argv, 0, "", "")
+            output = "d" * 40 if argv[:2] == ("git", "rev-parse") else ""
+            return subprocess.CompletedProcess(argv, 0, output, "")
 
         result = run_local_release(fixture.root, run_id="provenance", runner=runner)
         self.assertEqual(result["outcome"], "completed")
@@ -92,13 +93,15 @@ class ReleaseImageProvenanceTests(unittest.TestCase):
         fixture = fixtures.SimpleLocalReleaseTests("runTest")
         fixture.setUp()
         self.addCleanup(fixture.doCleanups)
-        fixture.provenance.side_effect = ValueError("HEAD unavailable")
+        version = (fixture.root / "version.toml").read_bytes()
 
         def runner(argv: tuple[str, ...], root: Path) -> subprocess.CompletedProcess[str]:
             return subprocess.CompletedProcess(argv, 0, "", "")
 
         result = run_local_release(fixture.root, run_id="no-head", runner=runner)
-        self.assertEqual(result["failed_step"], "prepare_candidate_image")
+        self.assertEqual(result["failed_step"], "git_before_validate_inputs")
+        self.assertEqual(version, (fixture.root / "version.toml").read_bytes())
+        fixture.provenance.assert_not_called()
         fixture.image_factory.assert_not_called()
 
     def test_build_head_observation_follows_initial_commit_in_owning_repository(self) -> None:

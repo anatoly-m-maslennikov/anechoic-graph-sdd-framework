@@ -59,6 +59,50 @@ def _failed_test_output(root: Path, run_id: str, result: Any, *, log_path: str |
     )
 
 
+def _git_head(root: Path, runner: Callable) -> str:
+    result = runner(("git", "rev-parse", "--verify", "HEAD"), root)
+    head = getattr(result, "stdout", "")
+    if (getattr(result, "returncode", 1) != 0 or not isinstance(head, str)
+            or re.fullmatch(r"(?:[0-9a-f]{40}|[0-9a-f]{64})", head.strip()) is None):
+        raise LocalReleaseError("local-release-head-commit-unavailable")
+    return head.strip()
+
+
+def _git_checkpoint(root: Path, runner: Callable, phase: str, paths: tuple[str, ...], head: str | None) -> str:
+    if head is not None and _git_head(root, runner) != head:
+        raise LocalReleaseError("local-release-head-commit-changed")
+    sensitive = runner((
+        "git", "diff", "--cached", "--name-only", "--", ":(glob)**/.env*", ":(glob)**/*.env",
+    ), root)
+    if (getattr(sensitive, "returncode", 1) != 0 or not isinstance(getattr(sensitive, "stdout", None), str)
+            or sensitive.stdout.strip()):
+        raise LocalReleaseError("local-release-staged-environment-file-or-check-unavailable")
+    if head is not None and runner(("git", "diff", "--cached", "--quiet"), root).returncode != 0:
+        raise LocalReleaseError("local-release-index-changed")
+    committed = False
+    if paths:
+        result = runner((
+            "git", "add", "-A", "--", *paths, ":(exclude,glob)**/.env*", ":(exclude,glob)**/*.env",
+        ), root)
+        if result.returncode != 0:
+            raise LocalReleaseError("local-release-git-failed")
+        staged = runner(("git", "diff", "--cached", "--quiet"), root)
+        if staged.returncode == 1:
+            result = runner(("git", "commit", "-m", f"chore(release): simple local {phase}"), root)
+            if result.returncode != 0:
+                raise LocalReleaseError("local-release-git-failed")
+            committed = True
+        elif staged.returncode != 0:
+            raise LocalReleaseError("local-release-git-failed")
+    result = runner(("git", "status", "--porcelain", "--untracked-files=all"), root)
+    if (result.returncode != 0 or not isinstance(getattr(result, "stdout", None), str) or result.stdout.strip()):
+        raise LocalReleaseError("local-release-worktree-not-clean")
+    current = _git_head(root, runner)
+    if head is not None and not committed and current != head:
+        raise LocalReleaseError("local-release-head-commit-changed")
+    return current
+
+
 @contextmanager
 def _installation_lock(root: Path, selection=None):
     from project_runtime import bind_native_runtime, owned_temporary_root
@@ -124,6 +168,7 @@ def run_local_release(
     product_identity: dict[str, tuple[str, int]] = {}
     candidate_image: str | None = None
     candidate_fingerprint: str | None = None
+    production_port: int | None = None
     runtime = _target(root, Path(".anechoic_runtime/simple_local_release/package"), label="simple-runtime")
     if product == installed:
         raise LocalReleaseError("local-release-target-invalid")
@@ -134,6 +179,7 @@ def run_local_release(
     canary_endpoint: str | None = None
     receipt_path: str | None = None
     test_log_path: str | None = None
+    test_log_paths: dict[str, str] = {}
     cleanup_note = "No proven superseded Project-owned image identity was available; none was removed."
     cleanup_pending = False
     cleanup = None
@@ -141,9 +187,18 @@ def run_local_release(
     selected_test_modules = None
     test_selection = "all discovered modules"
     phases = (
-        "validate inputs", "tests", "copy active sources", "build package", "prepare candidate image",
+        "validate inputs", "bump candidate version", "unit tests", "copy active sources", "build package",
+        "prepare candidate image", "e2e tests", "verify candidate image",
         "copy product to installed framework", "install project runtime", "start mcp", "final",
     )
+    checkpoint_paths = {
+        "validate inputs": (".",),
+        "unit tests": ("version.toml",),
+        "build package": (product.relative_to(root).as_posix(),),
+        "prepare candidate image": tuple(sorted(_GENERATED_ASSETS)) if image_mode == "refresh" else (),
+        "install project runtime": (installed.relative_to(root).as_posix(),),
+        "start mcp": (".agents/skills/ane",),
+    }
     try:
         failed_step = "installation_lock"
         installation_lock.enter_context(_installation_lock(root, selection))
@@ -156,48 +211,23 @@ def run_local_release(
             previous_image = None
         prior_image = previous_image or _launcher_image(selection)
         prior_project = selection.instance_id if prior_image is not None else None
+        head = None
         for phase in phases:
             print(f"Local release phase START: {phase}", file=sys.stderr, flush=True)
             failed_step = "validate_project_selection"
             if select_runtime_project(root) != selection:
                 raise LocalReleaseError("local-release-project-selection-changed")
             failed_step = f"git_before_{phase.replace(' ', '_')}"
-            sensitive = runner((
-                "git", "diff", "--cached", "--name-only", "--", ":(glob)**/.env*", ":(glob)**/*.env",
-            ), root)
-            if (getattr(sensitive, "returncode", 1) != 0 or not isinstance(getattr(sensitive, "stdout", None), str)
-                    or sensitive.stdout.strip()):
-                raise LocalReleaseError("local-release-staged-environment-file-or-check-unavailable")
-            try:
-                result = runner((
-                    "git", "add", "-A", "--", ".", ":(exclude,glob)**/.env*", ":(exclude,glob)**/*.env",
-                ), root)
-            except OSError as error:
-                raise LocalReleaseError("local-release-git-failed") from error
-            if getattr(result, "returncode", 0) != 0:
-                raise LocalReleaseError("local-release-git-failed")
-            try:
-                result = runner(("git", "diff", "--cached", "--quiet"), root)
-            except OSError as error:
-                raise LocalReleaseError("local-release-git-failed") from error
-            if getattr(result, "returncode", 0) == 1:
-                try:
-                    result = runner(("git", "commit", "-m", f"chore(release): simple local {phase}"), root)
-                except OSError as error:
-                    raise LocalReleaseError("local-release-git-failed") from error
-                if getattr(result, "returncode", 0) != 0:
-                    raise LocalReleaseError("local-release-git-failed")
-            elif getattr(result, "returncode", 0) != 0:
-                raise LocalReleaseError("local-release-git-failed")
-            result = runner(("git", "status", "--porcelain", "--untracked-files=all"), root)
-            if (getattr(result, "returncode", 1) != 0 or not isinstance(getattr(result, "stdout", None), str)
-                    or result.stdout.strip()):
-                raise LocalReleaseError("local-release-worktree-not-clean")
+            head = _git_checkpoint(root, runner, phase, checkpoint_paths.get(phase, ()), head)
 
             if phase == "final":
                 continue
             if phase == "validate inputs":
                 failed_step = "validate_inputs"
+                mcp_settings = selection.parameters.get("project_mcp")
+                production_port = mcp_settings.get("http_port") if isinstance(mcp_settings, dict) else None
+                if type(production_port) is not int or not 1 <= production_port <= 65535:
+                    raise LocalReleaseError("local-release-production-port-invalid")
                 if image_mode == "existing":
                     for relative in sorted(_GENERATED_ASSETS):
                         asset = _project_path(root, Path(relative), label="image-asset")
@@ -209,22 +239,32 @@ def run_local_release(
                 for target in (product, installed, runtime, ane):
                     if target.exists():
                         _walk_regular_files(target)
-                _read_version(root)
-            elif phase == "tests":
-                failed_step = "tests"
+            elif phase == "bump candidate version":
+                failed_step = "bump_candidate_version"
+                version_path, next_version_text = _read_version(root)
+                version_path.write_text(next_version_text, encoding="utf-8")
+            elif phase in {"unit tests", "e2e tests"}:
+                failed_step = phase.replace(" ", "_")
+                suite_phase = phase.split()[0]
+                test_log_path = None
                 argv = (
                     "uv", "run", "--project", str(root), "--locked", "--no-sync", "--python", "3.14",
                     "--managed-python", "--no-env-file", "--all-groups", "python", "-B", "-u",
                     str(Path(__file__).resolve().parents[2] / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/test_suite__pub.py"), "--project-root", str(root),
                 )
-                argv += ("--image-mode", "existing")
+                argv += ("--phase", suite_phase)
+                if suite_phase == "e2e":
+                    if candidate_image is None:
+                        raise LocalReleaseError("local-release-candidate-image-invalid")
+                    argv += ("--candidate-image", candidate_image)
                 if default_runner:
                     temporary = _target(root, Path(".anechoic_tmp/simple_local_release"), label="test-log")
                     temporary.mkdir(parents=True, exist_ok=True)
                     with tempfile.NamedTemporaryFile(
-                        mode="w+b", prefix=f"{run_id}-tests-", suffix=".log", dir=temporary, delete=False,
+                        mode="w+b", prefix=f"{run_id}-{suite_phase}-tests-", suffix=".log", dir=temporary, delete=False,
                     ) as log:
                         test_log_path = Path(log.name).relative_to(root).as_posix()
+                        test_log_paths[suite_phase] = test_log_path
                         print(f"Local release tests; output log: {test_log_path}", file=sys.stderr, flush=True)
                         result = run_logged_test_process(argv, root, log)
                 else:
@@ -232,7 +272,7 @@ def run_local_release(
                         result = runner(argv, root)
                     except OSError as error:
                         raise LocalReleaseError("local-release-command-unavailable") from error
-                if getattr(result, "returncode", 0) != 0:
+                if getattr(result, "returncode", 1) != 0:
                     detail = _failed_test_output(root, run_id, result, log_path=test_log_path)
                     raise LocalReleaseError(f"local-release-command-failed: {detail}")
             elif phase == "copy active sources":
@@ -256,8 +296,6 @@ def run_local_release(
                     _verify_package(staged, {
                         relative.as_posix(): identities[source] for relative, source in sources.items()
                     })
-                    version_path, next_version_text = _read_version(root)
-                    version_path.write_text(next_version_text, encoding="utf-8")
                     _clear_target(product, root=root, preserve=_PRESERVED_NAMES, label="product-root")
                     product_sources = product / "SUPERLAYER_1_METHODOLOGY_SOURCES"
                     product_sources.mkdir(parents=True, exist_ok=True)
@@ -312,7 +350,9 @@ def run_local_release(
                 if manager.identity(use_packaged_assets=True).fingerprint != candidate_fingerprint:
                     raise LocalReleaseError("local-release-packaged-image-mismatch")
                 _verify_package(package, package_identity)
+            elif phase == "verify candidate image":
                 failed_step = "verify_candidate_image"
+                _verify_package(package, package_identity)
                 canary_endpoint = verify_candidate_image(root, selection, package, staging, candidate_image, run_id=run_id)
             elif phase == "install project runtime":
                 failed_step = "install_project_runtime"
@@ -411,7 +451,8 @@ def run_local_release(
                 try:
                     mcp = runner((
                         sys.executable, str(bootstrap), "--project-root", str(root),
-                        "--source-root", str(runtime), "--no-build",
+                        "--source-root", str(runtime), "--control-root", selection.control_relative.as_posix(),
+                        "--image", candidate_image, "--port", str(production_port), "--no-build",
                     ), root)
                 except OSError as error:
                     raise LocalReleaseError("local-release-command-unavailable") from error
@@ -466,7 +507,7 @@ def run_local_release(
                     f"Selected test modules: {test_selection}\n\n"
                     f"Canary endpoint: `{canary_endpoint}`\n\n"
                     f"Endpoint: `{endpoint or 'not reported'}`\n\n"
-                    + (f"Complete test output: `{test_log_path}`\n\n" if test_log_path is not None else "")
+                    + "".join(f"Complete {phase} test output: `{path}`\n\n" for phase, path in test_log_paths.items())
                     +
                     f"Image cleanup: {cleanup_note}\n\n{staging_note}",
                     encoding="utf-8",
@@ -488,8 +529,8 @@ def run_local_release(
                 f"Test scope: `{test_scope}`\n\n"
                 f"Selected test modules: {test_selection}\n\n"
                 f"Error class: `{type(error).__name__}`\n\n"
-                + (f"{str(error)[:8500]}\n\n" if failed_step in {"tests", "verify_candidate_image"} else "")
-                + (f"Complete test output: `{test_log_path}`\n\n" if test_log_path is not None else "")
+                + (f"{str(error)[:8500]}\n\n" if failed_step in {"unit_tests", "e2e_tests", "verify_candidate_image"} else "")
+                + "".join(f"Complete {phase} test output: `{path}`\n\n" for phase, path in test_log_paths.items())
                 + (f"MCP started at: `{endpoint}`\n\n" if endpoint is not None else "")
                 + ("\n".join(getattr(error, "__notes__", ())) + "\n\n" if getattr(error, "__notes__", ()) else "")
                 +
@@ -508,6 +549,7 @@ def run_local_release(
             "report_path": report_path,
             "error_type": type(error).__name__,
             "test_log_path": test_log_path,
+            "test_log_paths": test_log_paths,
             "endpoint": endpoint,
             "canary_endpoint": canary_endpoint,
             "test_scope": test_scope,
@@ -521,6 +563,7 @@ def run_local_release(
         "outcome": "completed_with_cleanup_pending" if cleanup_pending else "completed",
         "failed_step": None, "report_path": None, "receipt_path": receipt_path,
         "test_log_path": test_log_path,
+        "test_log_paths": test_log_paths,
         "endpoint": endpoint,
         "canary_endpoint": canary_endpoint,
         "test_scope": test_scope,

@@ -65,8 +65,7 @@ def _remove_owned_image(root: Path, image: str, attempt: str) -> None:
 
 
 @contextmanager
-def current_code_test_image(root: Path, *, use_packaged_assets: bool = False):
-    print("Test image START: preparing current source", flush=True)
+def _test_scratch(root: Path):
     parent = root / ".anechoic_tmp/tests/full-suite-integration"
     for component in (root / ".anechoic_tmp", parent.parent, parent):
         if component.is_symlink():
@@ -75,20 +74,36 @@ def current_code_test_image(root: Path, *, use_packaged_assets: bool = False):
     if parent.resolve(strict=True) != parent or parent.is_symlink():
         raise OSError("test scratch must remain inside the selected Project")
     with tempfile.TemporaryDirectory(prefix="attempt-", dir=parent) as directory:
-        scratch = Path(directory)
+        yield Path(directory)
+
+
+def _image_environment(image: str, scratch: Path) -> dict[str, str]:
+    return {
+        "ANECHOIC_IMAGE": image,
+        "ANECHOIC_FIRST_CUT_HTTP_IMAGE": image,
+        "ANECHOIC_FIRST_CUT_HTTP_SCRATCH": str(scratch),
+        "ANECHOIC_DOCKER_QUERY_IMAGE": image,
+        "TMPDIR": str(scratch),
+        "ANECHOIC_PROJECT_LAUNCHER_DOCKER_E2E": "1",
+    }
+
+
+@contextmanager
+def candidate_test_image(root: Path, image: str):
+    with _test_scratch(root) as scratch:
+        yield _image_environment(image, scratch)
+
+
+@contextmanager
+def current_code_test_image(root: Path, *, use_packaged_assets: bool = False):
+    print("Test image START: preparing current source", flush=True)
+    with _test_scratch(root) as scratch:
         attempt = uuid.uuid4().hex
         manager = ImageManager(root, executor=_executor(attempt), build_temp_root=scratch, project_root=root)
         identity = manager.identity(use_packaged_assets=use_packaged_assets)
         image = manager._build(identity, use_packaged_assets=use_packaged_assets)
         print(f"Test image FINISH: {image}", flush=True)
         try:
-            yield {
-                "ANECHOIC_IMAGE": image,
-                "ANECHOIC_FIRST_CUT_HTTP_IMAGE": image,
-                "ANECHOIC_FIRST_CUT_HTTP_SCRATCH": str(scratch),
-                "ANECHOIC_DOCKER_QUERY_IMAGE": image,
-                "TMPDIR": str(scratch),
-                "ANECHOIC_PROJECT_LAUNCHER_DOCKER_E2E": "1",
-            }
+            yield _image_environment(image, scratch)
         finally:
             _remove_owned_image(root, image, attempt)
