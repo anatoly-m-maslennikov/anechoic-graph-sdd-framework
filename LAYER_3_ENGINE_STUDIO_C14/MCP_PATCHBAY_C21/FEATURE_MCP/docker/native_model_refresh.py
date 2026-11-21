@@ -33,7 +33,11 @@ def select_claims(component: Path) -> list[list[str]]:
     for path in sorted(component.glob("*.md")):
         raw = path.read_bytes()
         carrier = parse_carrier(raw, path)
-        header = native_header_view(carrier.metadata)
+        metadata = dict(carrier.metadata)
+        if "container" in metadata and "structure" not in metadata:
+            metadata["structure"] = {name: metadata.pop(name) for name in ("container", "tier", "priority")
+                                     if name in metadata}
+        header = native_header_view(metadata)
         context, state = header.get("context", {}), header.get("state", {})
         if context.get("container") != {"component": "C9"}:
             continue
