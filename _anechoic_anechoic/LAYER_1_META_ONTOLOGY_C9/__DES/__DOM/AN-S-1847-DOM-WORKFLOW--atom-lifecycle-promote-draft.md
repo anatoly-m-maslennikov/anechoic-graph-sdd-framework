@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1847
-structure:
-  container:
-    component: C9
-  tier: 3
+container:
+  component: C9
+tier: 3
 context:
   template: workflow
   lens: DES/DOM

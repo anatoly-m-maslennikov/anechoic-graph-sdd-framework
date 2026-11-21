@@ -1,9 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-3180
-structure:
-  container:
-    component: C9
+container:
+  component: C9
+tier: 2
 context:
   lens: SPEC
 state:

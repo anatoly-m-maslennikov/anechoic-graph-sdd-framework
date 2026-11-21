@@ -199,10 +199,10 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
             child = await create("Epic", {"atom": parent["atom_id"]}, "Child epic")
             promoted = await client.call_tool("atom_lifecycle_promote_draft", {
                 "target": {"ref_id": parent["ref_id"], "version": parent["version"]},
-                "targetStatus": "active",
+                "targetStatus": "backlog",
             })
             self.assertEqual("completed", promoted.structured_content["status"], promoted.structured_content)
-            children = (await query(parent=parent["atom_id"], statuses=["active"]))["rows"]
+            children = (await query(parent=parent["atom_id"], statuses=["backlog"]))["rows"]
             self.assertEqual([(child["atom_id"], "task", "Epic")],
                              [(row[0], row[2], row[5]) for row in children])
 
@@ -338,6 +338,36 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
                     self.assertTrue(refused.is_error)
             self.assertEqual(6, (await query("SELECT count(*) AS atoms FROM atoms"))["rows"][0][0])
         self.assertEqual(before, self._carrier_digests())
+
+    async def test_ticket_asset_and_spec_draft_archive_tools(self):
+        for number in (11, 12):
+            self._write(f"01_draft/AN-S-{number:03d}@1-draft-SPEC-COMPONENT_CONTRACT--fixture.md",
+                        f"AN-S-{number:03d}", "draft", 1, template="component_contract", lens="SPEC",
+                        container={"component": "C0"}, structure_tier=1)
+        async with (
+            asyncio.timeout(25),
+            stdio_client(StdioServerParameters(command=sys.executable, args=self.args)) as streams,
+            ClientSession(*streams) as client,
+        ):
+            await client.initialize()
+            asset = await client.call_tool("atom_lifecycle_create_asset", {"newAtom": {
+                "template": "spec_proposal", "body": "## Summary\n\nExample proposal\n",
+            }})
+            self.assertEqual("completed", asset.structured_content["status"], asset.structured_content)
+            saved = asset.structured_content["artifact"]
+            self.assertEqual("in_queue", saved["status"])
+            self.assertIn("/001_TICKETS/ASSETS/", saved["path"])
+            selection = await client.call_tool("query_run", {
+                "sql": 'SELECT reference, "header.state.version" FROM atoms '
+                       "WHERE reference IN ('AN-S-011@1-draft', 'AN-S-012@1-draft') ORDER BY 1",
+                "result_delivery": "inline",
+            })
+            targets = selection.structured_content["rows"]
+            self.assertEqual([["AN-S-011@1-draft", 1], ["AN-S-012@1-draft", 1]], targets)
+            archived = await client.call_tool("atom_lifecycle_archive", {"targets": targets})
+            self.assertEqual("completed", archived.structured_content["status"], archived.structured_content)
+            self.assertEqual(["AN-S-011@1", "AN-S-012@1"],
+                             [row["artifact"]["ref_id"] for row in archived.structured_content["results"]])
 
     async def test_component_queries_use_declared_id_and_owned_spec_tiers(self):
         self._write("AN-S-011-manifest.md", "AN-S-011", "active", 1, template="component_manifest", lens="SPEC",

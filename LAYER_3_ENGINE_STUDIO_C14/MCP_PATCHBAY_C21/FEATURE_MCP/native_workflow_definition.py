@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 
 from native_carrier_header import native_header_view
+from native_carrier_placement import PROJECT_CONFIG_DIRECTORY
 from native_project_selection import NativeProjectSelection
 from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier
 from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext
@@ -31,7 +32,8 @@ def _pin_path(selection: NativeProjectSelection, pin: NativeDefinitionPin) -> Pa
     exact = rf"{re.escape(selection.project_prefix)}-P-[0-9]+@[1-9][0-9]*"
     if (re.fullmatch(exact, pin.ref_id) is None
             or relative.as_posix() != pin.relative_path
-            or relative.parent != selection.control_relative / "_PMETA"
+            or relative.parent not in {selection.control_relative / PROJECT_CONFIG_DIRECTORY,
+                                       selection.control_relative / "_PMETA"}
             or relative.suffix != ".md" or not relative.name.startswith(f"{atom_id}-")):
         raise NativeWorkflowDefinitionError(f"Invalid native PMETA pin: {pin.ref_id}")
     return selection.root / relative

@@ -1,16 +1,15 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1994
-structure:
-  container:
-    component: C27
-  tier: 4
+container:
+  component: C27
+tier: 4
 context:
   lens: SWD
 state:
-  status: "active"
+  status: active
   version: 26
-  updated_at: "2026-11-21T19:44:44.942315+00:00"
+  updated_at: '2026-11-21T19:44:44.942315+00:00'
 ---
 
 ## Summary

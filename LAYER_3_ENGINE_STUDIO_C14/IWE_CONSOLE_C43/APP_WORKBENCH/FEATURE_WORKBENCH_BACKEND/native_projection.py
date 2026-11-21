@@ -72,18 +72,17 @@ def _projected_rows(capture, relation_types, inverse):
         add(dict(edge))
     for row in rows:
         relations = row["header_json"].get("relations", {})
-        if ("HAS_REFERENCE" in relation_types and isinstance(relations, dict)
-                and "IS_REFERENCE_FOR" in relations):
-            raise ValueError("Native relation IS_REFERENCE_FOR is derived")
+        direct, derived = ("IS_REFERENCE", "HAS_REFERENCE") if inverse.get("IS_REFERENCE") == "HAS_REFERENCE" else ("HAS_REFERENCE", "IS_REFERENCE_FOR")
+        if (direct in relation_types and isinstance(relations, dict) and derived in relations):
+            raise ValueError(f"Native relation {derived} is derived")
         citations = set()
         for edge in _authored_edges(row):
-            if "HAS_REFERENCE" in relation_types:
-                if edge["relation_type"] in {"REFERENCES", "HAS_REFERENCE"}:
-                    edge["relation_type"] = "HAS_REFERENCE"
-                    key = edge["target_kind"], edge["target_ref"]
-                    if key in citations:
-                        continue
-                    citations.add(key)
+            if direct in relation_types and edge["relation_type"] in {"REFERENCES", direct}:
+                edge["relation_type"] = direct
+                key = edge["target_kind"], edge["target_ref"]
+                if key in citations:
+                    continue
+                citations.add(key)
             add(edge)
     return rows
 
@@ -167,7 +166,7 @@ def project_native(store: QueryStore, capture: NativeCapture, *,
 
 def _native_frontier(store, rows, relation_types, inverses, component_refs):
     return sha256(repr((
-        5, store._schema_mode, sorted(relation_types), sorted(inverses.items()),
+        6, store._schema_mode, sorted(relation_types), sorted(inverses.items()),
         component_refs,
         sorted((row["source_path"], row["_source_sha256"]) for row in rows),
     )).encode()).hexdigest()

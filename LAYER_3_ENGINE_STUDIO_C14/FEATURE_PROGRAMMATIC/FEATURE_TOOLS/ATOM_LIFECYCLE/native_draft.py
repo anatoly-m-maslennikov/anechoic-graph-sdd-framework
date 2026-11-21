@@ -13,7 +13,8 @@ import yaml
 
 from native_carrier_header import canonical_native_header, native_header_view
 from native_component_contract import read_component_contract
-from native_carrier_placement import native_carrier_path, native_ticket_label, spec_lens_directories
+from native_carrier_placement import (native_carrier_path, native_ticket_label, spec_lens_directories,
+                                      DRAFT_DIRECTORY, ARCHIVE_DIRECTORY, READY_DIRECTORY, TICKET_DIRECTORY, PROJECT_CONFIG_DIRECTORY)
 
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import capture_native, revalidate_native
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_rows import frontmatter_bounds
@@ -23,6 +24,7 @@ from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
 
 from . import common, effects
 from .effects import _project_write_lock
+from .native_project_spec import PROJECT_SPEC_TIERS, create_project_spec, validate_project_spec
 from .placement import _slug
 from .source import bind_query_reader
 
@@ -60,23 +62,23 @@ def _revision_root(selection, row, structure_snapshot=None, current_rows=None):
             raise common.SourceChanged('Current owner capture is unavailable.')
         capture = SimpleNamespace(atoms=current_rows)
         owner_directory, _ = _check_owner(selection, context.get("container"), current_rows, capture)
-        flat_root = selection.control_root / "__TKT" / "TASKS"
+        flat_root = selection.control_root / ("__TKT" if "__TKT" in path.parts else TICKET_DIRECTORY) / "TASKS"
         root = owner_directory or flat_root
-        if path.parent == flat_root / ("" if status == "active" else str(status)):
+        if path.parent == flat_root / ("" if status in {"active", "in_queue"} else str(status)):
             root = flat_root
-        directory = () if status == "active" else (status,)
+        directory = () if status in {"active", "in_queue"} else (status,)
         template = context.get("template")
-        if (not isinstance(status, str) or status not in {"active", "backlog", "done", "canceled", "resolved"}
+        if (not isinstance(status, str) or status not in {"active", "in_queue", "backlog", "done", "canceled", "resolved"}
                 or template not in {"task", "epic"} or not path.is_relative_to(root)
                 or path.relative_to(root).parts[:-1] != directory
                 or not re.fullmatch(re.escape(atom_id) + (r"-.+--.+\.md" if "atom_family" in row["header_json"]
                                                          else "-" + template.upper() + r"--.+\.md"), path.name)):
             raise common.InputError("sourceCurrent", "Select a native Task or Epic in its Current directory.")
         return root
-    if status != "active" or not re.fullmatch(re.escape(atom_id) + r"-.+\.md", path.name):
+    if status not in {"active", "ready"} or not re.fullmatch(re.escape(atom_id) + r"-.+\.md", path.name):
         raise common.InputError("sourceCurrent", "Select an active native carrier.")
     if "-P-" in atom_id:
-        root = selection.control_root / "_PMETA"
+        root = selection.control_root / ('_PMETA' if '_PMETA' in path.parts else PROJECT_CONFIG_DIRECTORY)
         if path.parent != root:
             raise common.InputError("sourceCurrent", "Select a direct PMETA carrier.")
         return root
@@ -91,8 +93,8 @@ def _revision_root(selection, row, structure_snapshot=None, current_rows=None):
         if sha256(raw).hexdigest() != selection.manifest_sha256:
             raise ValueError("Manifest changed")
         _, project_component = _manifest_inputs(selection.manifest_path, parse_carrier(raw, selection.manifest_path))
-        root = path.parent
-        for directory in reversed(spec_lens_directories(lens)):
+        root = path.parent.parent if status == 'ready' and path.parent.name == READY_DIRECTORY else path.parent
+        for directory in reversed(() if status == 'ready' or (header.get('tier', context.get('tier')) in {-1, 0, 1, 2} and not path.parent.name.startswith('__')) else spec_lens_directories(lens)):
             if root.name.upper() != directory:
                 raise ValueError("Lens path disagrees")
             root = root.parent
@@ -173,20 +175,35 @@ def _task_path(selection, header, body, status, version, owner, root=None):
         owner_directory, owner_template = owner
         path = native_carrier_path(projected, _summary(body), project_root=selection.control_root,
                                    owner_directory=owner_directory, owner_template=owner_template)
-        flat_root = selection.control_root / '__TKT' / 'TASKS'
-        if root == flat_root and owner_directory is not None:
-            directory = '000_draft' if status == 'draft' else '099_archived' if status == 'archived' else '' if status == 'active' else status
+        flat_root = root if root in {selection.control_root / '__TKT' / 'TASKS', selection.control_root / TICKET_DIRECTORY / 'TASKS'} else selection.control_root / TICKET_DIRECTORY / 'TASKS'
+        if root == flat_root:
+            directory = DRAFT_DIRECTORY if status == 'draft' else ARCHIVE_DIRECTORY if status == 'archived' else '' if status in {'active', 'in_queue'} else status
             return flat_root / directory / path.name
         return path
     except ValueError as error:
         raise common.InputError('summary', 'Task Header or Summary cannot be projected to a path.') from error
 
 
-def create_draft(selection, params, *, current_rows, structure_snapshot=None, ticket_labels=()):
+def _validate_project_template(header, validate):
+    template = native_header_view(header)['context'].get('template')
+    if isinstance(template, str) and template in PROJECT_SPEC_TIERS:
+        if validate is None:
+            raise common.InputError('target', 'The compiled Model does not admit this Project SPEC Template.')
+        validate_project_spec(header, validate)
+
+
+def create_draft(selection, params, *, current_rows, structure_snapshot=None, ticket_labels=(),
+                 validate_project_spec_model=None):
     if isinstance(params, dict) and 'newAtom' in params:
         if set(params) != {'newAtom'}:
             raise common.InputError('newAtom', 'Supply only new Task or Epic properties.')
-        if isinstance(params['newAtom'], dict) and params['newAtom'].get('template') == 'component_contract':
+        values = params['newAtom']
+        template = values.get('template') if isinstance(values, dict) else None
+        if isinstance(template, str) and template in PROJECT_SPEC_TIERS:
+            if validate_project_spec_model is None:
+                raise common.InputError('newAtom', 'The compiled Model does not admit this Project SPEC Template.')
+            return create_project_spec(selection, values, validate_project_spec_model)
+        if template == 'component_contract':
             return _create_component_contract(selection, params['newAtom'], structure_snapshot)
         return _create_task(selection, params['newAtom'], current_rows, structure_snapshot, ticket_labels)
     if not isinstance(params, dict) or set(params) - {'sourceCurrent', 'changes'} or 'sourceCurrent' not in params:
@@ -240,7 +257,7 @@ def create_draft(selection, params, *, current_rows, structure_snapshot=None, ti
                 raise common.InputError('sourceCurrent', 'Task path disagrees with its authored Header and Summary.')
             destination = _task_path(selection, selected['header_json'], body, 'draft', version, owner, root)
         else:
-            destination = root / '000_draft' / path.name.replace(target['ref_id'] + '-', f"{target['ref_id']}@{version}-draft-", 1)
+            destination = root / DRAFT_DIRECTORY / path.name.replace(target['ref_id'] + '-', f"{target['ref_id']}@{version}-draft-", 1)
         candidate = _state_bytes(raw, bounds, path, version, body, 'draft')
         with bind_query_reader(None):
             outcome = common.write_destination(selection.root, destination, candidate)
@@ -274,7 +291,7 @@ def _check_owner(selection, container, rows, capture, seen=None, *, allow_draft=
     context = header.get('context') if isinstance(header, dict) else None
     template = context.get('template') if isinstance(context, dict) else None
     status = row.get('status')
-    if template not in {'task', 'epic'} or status not in {'active', 'backlog', 'done', 'canceled', 'resolved', 'draft'}:
+    if template not in {'task', 'epic'} or status not in {'active', 'in_queue', 'backlog', 'done', 'canceled', 'resolved', 'draft'}:
         raise common.InputError('container', 'Containing Atom must be a planning Ticket.')
     relative = row.get('source_path')
     if not isinstance(relative, str):
@@ -282,10 +299,10 @@ def _check_owner(selection, container, rows, capture, seen=None, *, allow_draft=
     relative = Path(relative)
     parent_directory, _ = _check_owner(selection, context.get('container'), rows, capture, seen,
                                        allow_draft=allow_draft)
-    root = parent_directory or selection.control_root / '__TKT' / 'TASKS'
     path = selection.root / relative
-    flat_root = selection.control_root / '__TKT' / 'TASKS'
-    directory = {'active': '', 'draft': '000_draft'}.get(status, status)
+    flat_root = selection.control_root / ('__TKT' if '__TKT' in path.parts else TICKET_DIRECTORY) / 'TASKS'
+    root = parent_directory or flat_root
+    directory = {'active': '', 'in_queue': '', 'draft': ('000_draft' if path.parent.name == '000_draft' else DRAFT_DIRECTORY)}.get(status, status)
     if path.parent == flat_root / directory:
         root = flat_root
     marker = f'{owner_id}@1-draft' if status == 'draft' else owner_id
@@ -503,15 +520,15 @@ def _promote_new(selection, target, status, draft, current_rows, previous_captur
             or not re.fullmatch(r'[0-9a-f]{64}', digest)):
         raise common.SourceChanged('Draft capture lacks a valid path or digest.')
     relative = Path(relative)
-    root = selection.control_root / '__TKT' / 'TASKS'
     path = selection.root / relative
+    root = selection.control_root / ('__TKT' if '__TKT' in path.parts else TICKET_DIRECTORY) / 'TASKS'
     if (not selection.root.is_absolute() or not selection.control_root.is_relative_to(selection.root)
             or not selection.manifest_path.is_relative_to(selection.control_root)
             or relative.is_absolute() or '..' in relative.parts or not path.is_relative_to(root)
-            or path.parent.name != '000_draft'
+            or path.parent.name not in {DRAFT_DIRECTORY, '000_draft'}
             or not re.fullmatch(re.escape(target['ref_id']) + r'-.+--.+\.md', path.name)):
         raise common.SourceChanged('Task Draft path is invalid.')
-    root = root if path.parent == root / '000_draft' else None
+    root = root if path.parent in {root / DRAFT_DIRECTORY, root / '000_draft'} else None
     with _project_write_lock(selection.root):
         try:
             capture = revalidate_native(selection, previous_capture)
@@ -534,10 +551,10 @@ def _promote_new(selection, target, status, draft, current_rows, previous_captur
             body = raw[bounds[2]:].decode('utf-8')
             slug = _native_slug(body)
             if path != (_task_path(selection, header, body, 'draft', 1, owner, root) if 'atom_family' in header
-                        else root / '000_draft' / f"{target['ref_id']}-TASK--{slug}.md"):
+                        else root / DRAFT_DIRECTORY / f"{target['ref_id']}-TASK--{slug}.md"):
                 raise common.InputError('target', 'Task Draft filename disagrees with its Summary.')
             destination = (_task_path(selection, header, body, status, 1, owner, root) if 'atom_family' in header
-                           else root / ('' if status == 'active' else status) / f'{atom_id}-TASK--{slug}.md')
+                           else root / ('' if status in {'active', 'in_queue'} else status) / f'{atom_id}-TASK--{slug}.md')
             if destination.exists() or destination.is_symlink():
                 raise common.InputError('target', 'The promotion destination already exists.')
             if destination.parent.is_symlink() or (destination.parent.exists() and not destination.parent.is_dir()):
@@ -547,11 +564,11 @@ def _promote_new(selection, target, status, draft, current_rows, previous_captur
             raise
         except (OSError, RuntimeError, TypeError, ValueError) as error:
             raise common.SourceChanged('Native source is unavailable or changed.') from error
-        if status in ('active', 'backlog'):
+        if status in ('active', 'in_queue', 'backlog'):
             from .native_update import promote_ticket_tree
             return promote_ticket_tree(selection, draft, destination, status, current_rows, capture.atoms, lambda: None)
         if path.with_suffix('').exists() or path.with_suffix('').is_symlink():
-            raise common.InputError('targetStatus', 'Draft trees can only be published to Active or Backlog.')
+            raise common.InputError('targetStatus', 'Draft trees can only be published to Backlog or In Queue.')
         with bind_query_reader(None):
             written = common.write_destination(selection.root, destination, promoted)
             recorded = list(written.effects)
@@ -563,7 +580,7 @@ def _promote_new(selection, target, status, draft, current_rows, previous_captur
         return common.result(effects=recorded, errors=removed.errors, **data)
 
 
-def _publish_first_spec(selection, draft, structure_snapshot, previous_capture):
+def _publish_first_spec(selection, draft, structure_snapshot, previous_capture, validate_project_spec_model):
     atom_id, ref_id = draft['id'], draft['_exact_ref']
     relative, digest = draft.get('source_path'), draft.get('_source_sha256')
     if (not isinstance(relative, str) or not isinstance(digest, str)
@@ -572,7 +589,7 @@ def _publish_first_spec(selection, draft, structure_snapshot, previous_capture):
     relative = Path(relative)
     path = selection.root / relative
     if (relative.is_absolute() or '..' in relative.parts or not path.is_relative_to(selection.control_root)
-            or path.parent.name != '000_draft' or not re.fullmatch(re.escape(ref_id) + r'-.+\.md', path.name)):
+            or path.parent.name not in {DRAFT_DIRECTORY, '000_draft'} or not re.fullmatch(re.escape(ref_id) + r'-.+\.md', path.name)):
         raise common.InputError('target', 'Select a Spec in its native Draft directory.')
     with _first_spec_write_lock(selection.root):
         try:
@@ -584,16 +601,17 @@ def _publish_first_spec(selection, draft, structure_snapshot, previous_capture):
             header = draft['header_json']
             context = native_header_view(header)['context']
             lens = context.get('lens')
-            if (context.get('template') not in (None, 'component_contract')
+            if (context.get('template') not in (None, 'component_contract', *PROJECT_SPEC_TIERS)
                     or re.search(r'-(?:PROJECT|COMPONENT)_MANIFEST(?:--|\.md$)', path.name, re.I)):
                 raise common.InputError('target', 'Select a Spec Draft with a lens and without a structural template.')
             owner = path.parent.parent
             try:
-                directory = owner.joinpath(*spec_lens_directories(lens))
+                spec_lens_directories(lens)
+                directory = owner / READY_DIRECTORY
             except ValueError as error:
                 raise common.InputError('target', 'Select a Spec Draft with a valid Lens.') from error
             destination = directory / (atom_id + path.name[len(ref_id):])
-            proposed = {**draft, 'source_path': destination.relative_to(selection.root).as_posix(), 'status': 'active'}
+            proposed = {**draft, 'source_path': destination.relative_to(selection.root).as_posix(), 'status': 'ready'}
             if _revision_root(selection, proposed, structure_snapshot) != owner:
                 raise common.InputError('target', 'Spec Draft and Current carrier must belong to the same Component.')
             if destination.exists() or destination.is_symlink():
@@ -606,6 +624,7 @@ def _publish_first_spec(selection, draft, structure_snapshot, previous_capture):
                 raise common.SourceChanged('Spec Draft source changed after selection.')
             body = raw[bounds[2]:].decode('utf-8')
             summary = _summary(body)
+            _validate_project_template(header, validate_project_spec_model)
             contract_owner = _validate_contract(selection, header, body, path, structure_snapshot, capture)
             if contract_owner is not None and contract_owner != owner:
                 raise common.InputError('container', 'Component Contract owner disagrees with its path.')
@@ -618,7 +637,7 @@ def _publish_first_spec(selection, draft, structure_snapshot, previous_capture):
                 if path != projected:
                     raise common.InputError('target', 'Spec Draft path disagrees with its Header and Summary.')
             version = draft['version']
-            promoted = _state_bytes(raw, bounds, path, version, body, 'active')
+            promoted = _state_bytes(raw, bounds, path, version, body, 'ready')
         except (common.InputError, common.SourceChanged):
             raise
         except (OSError, RuntimeError, TypeError, ValueError) as error:
@@ -631,7 +650,7 @@ def _publish_first_spec(selection, draft, structure_snapshot, previous_capture):
                 removed = effects.remove(selection.root, path, digest)
                 recorded.extend(removed.effects)
                 errors.extend(removed.errors)
-        data = {} if errors else {'artifact': common.saved(selection, destination, atom_id, atom_id, version, 'active')}
+        data = {} if errors else {'artifact': common.saved(selection, destination, atom_id, atom_id, version, 'ready')}
         return common.result(effects=recorded, errors=errors, **data)
 
 
@@ -642,7 +661,7 @@ def _cleanup_published_draft(selection, target, status, draft, current, structur
         raise common.InputError('targetStatus', 'Published carrier Status differs from the requested Status.')
     root = _revision_root(selection, current, structure_snapshot, current_rows)
     paths = []
-    for row, marker, directory in ((draft, target['ref_id'], root / '000_draft'),
+    for row, marker, directory in ((draft, target['ref_id'], (selection.root / draft['source_path']).parent),
                                    (current, atom_id, (selection.root / current['source_path']).parent)):
         relative, digest = row.get('source_path'), row.get('_source_sha256')
         if not isinstance(relative, str) or not isinstance(digest, str) or not re.fullmatch(r'[0-9a-f]{64}', digest):
@@ -650,6 +669,7 @@ def _cleanup_published_draft(selection, target, status, draft, current, structur
         relative = Path(relative)
         path = selection.root / relative
         if (relative.is_absolute() or '..' in relative.parts or path.parent != directory
+                or (row is draft and path.parent not in {root / DRAFT_DIRECTORY, root / '000_draft'})
                 or not re.fullmatch(re.escape(marker) + r'-.+\.md', path.name)):
             raise common.SourceChanged('Carrier path is invalid.')
         paths.append(path)
@@ -729,7 +749,8 @@ def _rollback_promotion(selection, previous_path, previous_digest, created, reco
     return common.result(effects=recorded, errors=errors)
 
 
-def promote_draft(selection, params, *, current_rows, structure_snapshot=None, previous_capture=None):
+def promote_draft(selection, params, *, current_rows, structure_snapshot=None, previous_capture=None,
+                  validate_project_spec_model=None):
     """Publish a native Draft."""
     if not isinstance(params, dict) or set(params) != {'target', 'targetStatus'}:
         raise common.InputError('target', 'Supply an exact Draft target and Current Status.')
@@ -741,17 +762,22 @@ def promote_draft(selection, params, *, current_rows, structure_snapshot=None, p
     match = re.fullmatch(rf'({re.escape(selection.project_prefix)}-[STP]-[0-9]+)@([1-9][0-9]*)-draft', target['ref_id'])
     if match is None or int(match[2]) != target['version']:
         raise common.InputError('target', 'Supply an exact Draft reference and matching Version.')
-    if (not isinstance(status, str) or status not in {'active', 'backlog', 'done', 'canceled', 'resolved'}
-            or ('-T-' not in match[1] and status != 'active')):
+    if (not isinstance(status, str) or status not in {'active', 'ready', 'in_queue', 'backlog', 'done', 'canceled', 'resolved'}
+            or ('-S-' in match[1] and status != 'ready')
+            or ('-P-' in match[1] and status != 'active')
+            or ('-T-' in match[1] and status in {'ready', 'in_queue'})):
         raise common.InputError('targetStatus', 'Supply an applicable Current Status.')
     atom_id, version = match[1], target['version']
     chosen = [row for row in current_rows if row.get('_exact_ref') == target['ref_id'] and row.get('status_group') == 'Draft']
     predecessors = [row for row in current_rows if row.get('id') == atom_id and row.get('status_group') == 'Current']
     if len(chosen) != 1 or len(predecessors) > 1:
         raise common.SourceChanged('Draft or Current predecessor is missing or ambiguous.')
+    if '-T-' in atom_id and status != 'backlog' and 'atom_family' in chosen[0]['header_json']:
+        raise common.InputError('targetStatus', 'A native Ticket Draft must be published to Backlog.')
     if not predecessors:
         if '-S-' in atom_id:
-            return _publish_first_spec(selection, chosen[0], structure_snapshot, previous_capture)
+            return _publish_first_spec(selection, chosen[0], structure_snapshot, previous_capture,
+                                       validate_project_spec_model)
         if version == 1 and '-T-' in atom_id:
             return _promote_new(selection, target, status, chosen[0], current_rows, previous_capture)
         raise common.SourceChanged('Current predecessor is missing.')
@@ -763,7 +789,7 @@ def promote_draft(selection, params, *, current_rows, structure_snapshot=None, p
         raise common.InputError('target', 'Draft Version must be newer than its Current predecessor.')
     root = _revision_root(selection, previous, structure_snapshot, current_rows)
     paths = []
-    for row, marker, directory in ((draft, target['ref_id'], root / '000_draft'),
+    for row, marker, directory in ((draft, target['ref_id'], (selection.root / draft['source_path']).parent),
                                    (previous, atom_id, (selection.root / previous['source_path']).parent)):
         relative, digest = row.get('source_path'), row.get('_source_sha256')
         if (not isinstance(relative, str) or not isinstance(digest, str)
@@ -772,6 +798,7 @@ def promote_draft(selection, params, *, current_rows, structure_snapshot=None, p
         relative = Path(relative)
         path = selection.root / relative
         if (relative.is_absolute() or '..' in relative.parts or path.parent != directory
+                or (row is draft and path.parent not in {root / DRAFT_DIRECTORY, root / '000_draft'})
                 or not re.fullmatch(re.escape(marker) + r'-.+\.md', path.name)):
             raise common.InputError('target', 'Select carriers in their native revision directories.')
         paths.append(path)
@@ -779,9 +806,9 @@ def promote_draft(selection, params, *, current_rows, structure_snapshot=None, p
     suffix = draft_path.name[len(target['ref_id']):]
     if previous_path.name != atom_id + suffix:
         raise common.InputError('target', 'Draft and Current filename must agree.')
-    archive_path = root / '099_archived' / f"{atom_id}@{previous['version']}{suffix}"
-    destination = (root / ('' if status == 'active' else status) / (atom_id + suffix)
-                   if '-T-' in atom_id else previous_path)
+    archive_path = root / ARCHIVE_DIRECTORY / f"{atom_id}@{previous['version']}{suffix}"
+    destination = (root / ('' if status in {'active', 'in_queue'} else status) / (atom_id + suffix)
+                   if '-T-' in atom_id else root / READY_DIRECTORY / (atom_id + suffix) if '-S-' in atom_id else previous_path)
 
     with _project_write_lock(selection.root):
         try:
@@ -808,6 +835,8 @@ def promote_draft(selection, params, *, current_rows, structure_snapshot=None, p
             draft_bounds, previous_bounds = frontmatter_bounds(raw_draft), frontmatter_bounds(raw_previous)
             draft_body, previous_body = raw_draft[draft_bounds[2]:].decode(), raw_previous[previous_bounds[2]:].decode()
             draft_header, previous_header = draft['header_json'], previous['header_json']
+            if '-S-' in atom_id:
+                _validate_project_template(draft_header, validate_project_spec_model)
             contract_owner = _validate_contract(selection, draft_header, draft_body, draft_path, structure_snapshot, capture)
             if contract_owner is not None:
                 if contract_owner != root:

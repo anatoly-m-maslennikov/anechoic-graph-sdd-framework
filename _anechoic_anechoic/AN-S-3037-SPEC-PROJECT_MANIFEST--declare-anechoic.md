@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-3037
-structure:
-  container:
-    component: C00
-  tier: -1
+container:
+  component: C00
+tier: -1
 context:
   template: project_manifest
   lens: SPEC

@@ -1,0 +1,24 @@
+---
+atom_family: SPEC
+atom_id: AN-S-2826
+container:
+  component: C00
+tier: 5
+context:
+  lens: DES
+state:
+  status: archived
+  version: 1
+  updated_at: 2026-10-29 20:32:25 +0400
+---
+## Summary
+
+Help the Operator maintain a necessary and sufficient active rule set
+
+## Claim scope
+
+The obligation described by the Claim.
+
+## Claim
+
+ANECHOIC **must** help the Operator keep the active rule set necessary **and** sufficient for the current scope, stage, **and** priorities.

@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1504
-structure:
-  container:
-    component: C00
-  tier: 5
+container:
+  component: C00
+tier: 5
 context:
   lens: QA
 state:

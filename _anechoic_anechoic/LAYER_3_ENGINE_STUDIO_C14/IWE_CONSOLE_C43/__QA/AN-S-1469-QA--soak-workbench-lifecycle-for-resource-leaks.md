@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1469
-structure:
-  container:
-    component: C43
-  tier: 6
+container:
+  component: C43
+tier: 6
 context:
   lens: QA
 state:

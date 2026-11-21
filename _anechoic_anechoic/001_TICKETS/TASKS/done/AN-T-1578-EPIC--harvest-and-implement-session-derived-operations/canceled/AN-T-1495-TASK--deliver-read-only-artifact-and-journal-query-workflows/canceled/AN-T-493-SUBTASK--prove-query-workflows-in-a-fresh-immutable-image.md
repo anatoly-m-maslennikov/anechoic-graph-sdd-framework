@@ -1,0 +1,31 @@
+---
+atom_family: TKT
+atom_id: AN-T-493
+container:
+  atom: AN-T-1495
+priority: 2
+context:
+  template: task
+  label: Subtask
+state:
+  status: canceled
+  version: 10
+  updated_at: '2026-11-20T20:03:59.980963+00:00'
+---
+# Summary
+
+prove query workflows in a fresh immutable image
+
+## Objective
+
+Within <=15 minutes, prove both query Workflows through the integrated existing MCP/orchestrator route in a freshly built immutable image. No host-mount substitution, source/RMED revision, or broad Docker inventory.
+
+### Exact inputs, output, ownership, and gate
+
+Inputs: accepted/passing P1527 integration and current Docker golden harness. Ownership: the query-specific fresh-image E2E fixture/test additions under the existing Docker harness and its exact evidence record. Output: image identity plus actual two-route E2E results, source snapshot and truthful Workflow/Action Journal evidence.
+
+P1527 is a true dispatch blocker. Verify default IDs, selected fetch, allowed filters/statuses/properties, pagination/coverage, all required diagnostics, no arbitrary evaluation or secret return, read-only/no-authority behavior, and no undeclared host code/dependencies. A failed/blocked image path remains unfinished with a typed Concern; P1123's wider image closure is separate.
+
+### Definition of Done
+
+Fresh-image proof covers both routes and required negative cases with retained results; an image build or host-only pass is insufficient.

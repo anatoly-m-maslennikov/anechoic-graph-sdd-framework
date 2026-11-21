@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1988
-structure:
-  container:
-    component: C14
-  tier: 5
+container:
+  component: C14
+tier: 5
 context:
   lens: QA
 state:

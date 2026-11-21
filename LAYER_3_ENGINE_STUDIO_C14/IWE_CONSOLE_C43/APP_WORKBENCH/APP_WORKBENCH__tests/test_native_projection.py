@@ -191,6 +191,39 @@ class NativeProjectionTests(NativeCaptureTests):
         with self.assertRaisesRegex(ValueError, "IS_REFERENCE_FOR is derived"):
             project_native(store, capture_native(self.selection), relation_types=types, inverses=bindings)
 
+    def test_new_reference_model_and_flat_header(self):
+        source = self.control / "001_TICKETS" / "TASKS" / "task.md"
+        source.parent.mkdir(parents=True)
+        header = {"atom_family": "TKT", "atom_id": "AN-T-09",
+                  "container": {"component": "C0"}, "priority": 2,
+                  "context": {"template": "task"},
+                  "relations": {"REFERENCES": ["AN-S-001"], "IS_REFERENCE": ["AN-S-001", "AN-S-001@1"]},
+                  "state": {"status": "active", "version": 1, "updated_at": "2026-11-19T00:00:00Z"}}
+        source.write_text("---\n" + yaml.safe_dump(header) + "---\n\n## Summary\n\nTask\n")
+        capture = capture_native(self.selection)
+        self.assertEqual({}, capture.errors)
+        self.assertEqual(header, next(row for row in capture.atoms if row["id"] == "AN-T-09")["header_json"])
+        store = QueryStore(extension_directory=extension_directory(APP_ROOT.parents[1]))
+        self.addCleanup(store.close)
+        inverse = {"CONTAINED_BY": "CONTAINS", "IS_REFERENCE": "HAS_REFERENCE"}
+        types = set(inverse) | set(inverse.values())
+        project_native(store, capture, relation_types=types, inverses=inverse)
+        facts = store.run("SELECT source_ref, target_ref, relation_type, derived FROM relations "
+                          "WHERE relation_type IN ('IS_REFERENCE', 'HAS_REFERENCE')")["rows"]
+        self.assertCountEqual(facts, [
+            ["AN-T-09", "AN-S-001", "IS_REFERENCE", False],
+            ["AN-S-001", "AN-T-09", "HAS_REFERENCE", True],
+            ["AN-T-09", "AN-S-001@1", "IS_REFERENCE", False],
+            ["AN-S-001@1", "AN-T-09", "HAS_REFERENCE", True],
+        ])
+        self.assertEqual([[2, 'C0']], store.run(
+            'SELECT "header.priority", "header.container.component" FROM atoms WHERE reference = \'AN-T-09\''
+        )["rows"])
+        header["relations"] = {"HAS_REFERENCE": ["AN-S-001"]}
+        source.write_text("---\n" + yaml.safe_dump(header) + "---\n\n## Summary\n\nTask\n")
+        with self.assertRaisesRegex(ValueError, "HAS_REFERENCE is derived"):
+            project_native(store, capture_native(self.selection), relation_types=types, inverses=inverse)
+
     def test_authored_cross_revision_relation_and_reprojection(self):
         source = self.write("AN-T-09--task.md", "AN-T-09", "active", 2)
         header = yaml.safe_load(source.read_text().split("---\n")[1])

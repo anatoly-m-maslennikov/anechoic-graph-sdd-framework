@@ -1,17 +1,16 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-3044
-structure:
-  container:
-    component: C14
-  tier: 0
+container:
+  component: C14
+tier: 0
 context:
   template: component_manifest
   lens: SPEC
 state:
-  status: "active"
+  status: active
   version: 2
-  updated_at: "2026-11-21T14:26:34.288257+00:00"
+  updated_at: '2026-11-21T14:26:34.288257+00:00'
 ---
 
 ## Summary

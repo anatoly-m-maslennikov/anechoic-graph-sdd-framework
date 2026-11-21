@@ -74,6 +74,57 @@ class NativeCaptureTests(unittest.TestCase):
         duplicate.write_bytes(path.read_bytes())
         self.assertTrue(any("Duplicate" in error for error in capture_native(self.selection).errors.values()))
 
+    def test_complete_ticket_asset_is_current(self):
+        path = self.control / "001_TICKETS/ASSETS/08_complete/AN-T-14--asset.md"
+        path.parent.mkdir(parents=True)
+        header = {"atom_family": "TKT", "atom_id": "AN-T-14", "container": {"component": "C0"},
+                  "priority": 2, "context": {"template": "analysis_report"},
+                  "state": {"status": "complete", "version": 2, "updated_at": "2026-11-19T00:00:00Z"}}
+        path.write_text("---\n" + yaml.safe_dump(header) + "---\n\n## Summary\n\nExample\n")
+        result = capture_native(self.selection)
+        self.assertEqual({}, result.errors)
+        row = next(row for row in result.atoms if row["id"] == "AN-T-14")
+        self.assertEqual(("Current", "AN-T-14", "AN-T-14@2"),
+                         (row["status_group"], row["ref"], row["_exact_ref"]))
+
+    def test_ticket_in_queue_is_current_and_in_progress_is_invalid(self):
+        self.write("AN-T-12--queued.md", "AN-T-12", "in_queue", 2)
+        self.write("AN-T-13--working.md", "AN-T-13", "in_progress", 1)
+        result = capture_native(self.selection)
+        row = next(row for row in result.atoms if row["id"] == "AN-T-12")
+        self.assertEqual(("Current", "AN-T-12", "AN-T-12@2"),
+                         (row["status_group"], row["ref"], row["_exact_ref"]))
+        self.assertEqual(1, len(result.errors))
+        self.assertIn("status", next(iter(result.errors.values())))
+
+    def test_ready_is_current_only_for_spec(self):
+        self.write("02_ready/AN-S-2--ready.md", "AN-S-2", "ready", 2)
+        self.write("AN-T-3--invalid.md", "AN-T-3", "ready", 1)
+        self.write("_PMETA/AN-P-4--invalid.md", "AN-P-4", "ready", 1)
+        result = capture_native(self.selection)
+        row = next(row for row in result.atoms if row["id"] == "AN-S-2")
+        self.assertEqual(("Current", "AN-S-2", "AN-S-2@2"),
+                         (row["status_group"], row["ref"], row["_exact_ref"]))
+        self.assertEqual(2, len(result.errors))
+        self.assertTrue(all("status" in error for error in result.errors.values()))
+        self.write("AN-S-2--active.md", "AN-S-2", "active", 3)
+        self.assertTrue(any("Duplicate" in error for error in capture_native(self.selection).errors.values()))
+
+    def test_new_folder_names_accept_legacy_headers(self):
+        for folder, atom_id in (("001_TICKETS/TASKS/01_draft", "AN-T-10"),
+                                ("002_PROJECT_CONFIG/09_archived", "AN-P-10")):
+            status = "draft" if "01_draft" in folder else "archived"
+            ref = f"{atom_id}@1" + ("-draft" if status == "draft" else "")
+            path = self.control / folder / f"{ref}--example.md"
+            path.parent.mkdir(parents=True)
+            header = {"identity": {"atom_id": atom_id}, "context": {"container": {"component": "C0"}},
+                      "state": {"status": status, "version": 1, "updated_at": "2026-11-19T00:00:00Z"}}
+            path.write_text("---\n" + yaml.safe_dump(header) + "---\n\n## Summary\n\nExample\n")
+        result = capture_native(self.selection)
+        self.assertEqual({}, result.errors)
+        self.assertEqual({"AN-T-10@1-draft", "AN-P-10@1"},
+                         {row["ref"] for row in result.atoms if row["id"] in {"AN-T-10", "AN-P-10"}})
+
     def test_invalid_and_duplicate_carriers_are_reported(self):
         self.write("one/AN-S-1--one.md", "AN-S-1", "active", 1)
         self.write("two/AN-S-1--two.md", "AN-S-1", "active", 2)

@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2299
-structure:
-  container:
-    component: C54
-  tier: 3
+container:
+  component: C54
+tier: 3
 context:
   lens: DES
 state:

@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1932
-structure:
-  container:
-    component: C45
-  tier: 5
+container:
+  component: C45
+tier: 5
 context:
   lens: QA
 state:

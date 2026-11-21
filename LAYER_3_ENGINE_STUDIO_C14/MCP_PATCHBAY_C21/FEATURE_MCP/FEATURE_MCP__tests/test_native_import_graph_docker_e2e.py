@@ -42,7 +42,7 @@ class NativeImportGraphDockerE2E(unittest.TestCase):
             "project": {"root": {"prefix": "underscore"}},
             "runtime": {"journal": {"storage": "duckdb"}, "workbench": {"storage": "disk", "import_graph": {}}},
         })
-        (cls.root / control / "__TKT/TASKS").mkdir(parents=True)
+        (cls.root / control / "001_TICKETS/TASKS").mkdir(parents=True)
         cls._write("app/__init__.py", "")
         cls._write("app/main.py", "import dep.helper\nimport dep.helper\n")
         cls._write("app/package.json", '{"name": "app"}\n')
@@ -201,7 +201,7 @@ class NativeImportGraphDockerE2E(unittest.TestCase):
                 draft = created["savedDraft"]
                 await call("atom_lifecycle_promote_draft", {
                     "target": {"ref_id": draft["ref_id"], "version": draft["version"]},
-                    "targetStatus": "active",
+                    "targetStatus": "backlog",
                 })
                 revised = await call("atom_lifecycle_update", {
                     "sourceCurrent": {"ref_id": draft["atom_id"], "version": 1},
@@ -210,10 +210,10 @@ class NativeImportGraphDockerE2E(unittest.TestCase):
                 revision = revised["savedDraft"]
                 await call("atom_lifecycle_promote_draft", {
                     "target": {"ref_id": revision["ref_id"], "version": revision["version"]},
-                    "targetStatus": "active",
+                    "targetStatus": "backlog",
                 })
                 atom = draft["atom_id"]
-                self.assertEqual([[atom + "@1", 1, "archived"], [atom, 2, "active"]], self._rows(
+                self.assertEqual([[atom + "@1", 1, "archived"], [atom, 2, "backlog"]], self._rows(
                     'SELECT reference, "header.state.version", "header.state.status" FROM atoms '
                     f"WHERE reference IN ('{atom}', '{atom}@1', '{revision['ref_id']}') "
                     'ORDER BY "header.state.version"'
@@ -273,7 +273,7 @@ class NativeImportGraphDockerE2E(unittest.TestCase):
         self.assertIn("database_edit operation=reuse table=projection", logs.stdout + logs.stderr)
 
     def test_watcher_updates_native_atom_and_relations(self):
-        relative = "_anechoic_anechoic/__TKT/TASKS/AN-T-9901--watcher.md"
+        relative = "_anechoic_anechoic/001_TICKETS/TASKS/AN-T-9901--watcher.md"
         graph = """
             FROM GRAPH_TABLE (anechoic
             MATCH (s:Reference)-[e:CONTAINED_BY]->(t:Reference)

@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2424
-structure:
-  container:
-    component: C18
-  tier: 3
+container:
+  component: C18
+tier: 3
 context:
   lens: SWD
 state:

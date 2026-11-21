@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1221
-structure:
-  container:
-    component: C48
-  tier: 6
+container:
+  component: C48
+tier: 6
 context:
   lens: QA
 state:

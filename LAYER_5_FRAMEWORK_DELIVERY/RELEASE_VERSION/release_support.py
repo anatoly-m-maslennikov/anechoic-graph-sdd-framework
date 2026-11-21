@@ -22,6 +22,7 @@ from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_provena
 from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images import (
     ImageManager, RETIRED_ASSETS, _GENERATED_ASSETS, ready_predecessor,
 )
+from native_carrier_placement import ARCHIVE_DIRECTORY, DRAFT_DIRECTORY, READY_DIRECTORY
 from release_assets import (
     LocalReleaseError,
     generate_tool_registry,
@@ -41,7 +42,7 @@ _PRESERVED_NAMES = frozenset(
     }
 )
 _RUN_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*\Z")
-_NON_SOURCE_DIRECTORIES = frozenset({"000_draft", "099_archived", "_journal", "_projection"})
+_NON_SOURCE_DIRECTORIES = frozenset({DRAFT_DIRECTORY, READY_DIRECTORY, ARCHIVE_DIRECTORY, "000_draft", "099_archived", "_journal", "_projection"})
 
 
 def _relative(value: object, *, label: str) -> Path:

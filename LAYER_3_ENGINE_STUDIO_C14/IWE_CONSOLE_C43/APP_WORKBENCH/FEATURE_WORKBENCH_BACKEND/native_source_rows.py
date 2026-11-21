@@ -10,6 +10,7 @@ from typing import Any
 from .source_rows import atom, canonical_row, source_body
 from native_atom_reference import derive_atom_ref
 from native_carrier_header import native_header_view
+from native_carrier_placement import PROJECT_CONFIG_DIRECTORY, TICKET_DIRECTORY
 from VALIDATE_ATOMS.validate_atoms_workers.parsing import CarrierError, parse_carrier
 from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext
 from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
@@ -28,7 +29,7 @@ class NativeManifestChanged(ValueError):
 
 
 CURRENT_STATUSES = {
-    "S": {"active"}, "T": {"active", "backlog", "done", "canceled", "resolved"}, "P": {"active"},
+    "S": {"active", "ready"}, "T": {"active", "in_queue", "backlog", "done", "canceled", "resolved", "complete"}, "P": {"active"},
 }
 
 
@@ -153,7 +154,7 @@ def capture_native(
                     missing.append(path)
                     versions.pop(str(path), None)
                     continue
-            family = {"_PMETA": "P", "__TKT": "T"}.get(tree, "S")
+            family = {"_PMETA": "P", "__TKT": "T", PROJECT_CONFIG_DIRECTORY: "P", TICKET_DIRECTORY: "T"}.get(tree, "S")
             raw = manifest if path == selection.manifest_path else reader.read(
                 path, metadata_guard=incremental, skip_version=versions.get(str(path)) if incremental else None,
             )

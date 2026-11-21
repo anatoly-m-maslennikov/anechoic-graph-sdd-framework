@@ -1,14 +1,13 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1363
-structure:
-  container:
-    component: C45
-  tier: 4
+container:
+  component: C45
+tier: 4
 context:
   lens: SWD
 relations:
-  REFERENCES:
+  IS_REFERENCE:
   - AN-S-3116@1
 state:
   status: active

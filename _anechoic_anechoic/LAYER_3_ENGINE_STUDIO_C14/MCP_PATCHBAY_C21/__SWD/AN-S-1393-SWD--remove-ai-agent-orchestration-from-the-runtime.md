@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1393
-structure:
-  container:
-    component: C21
-  tier: 4
+container:
+  component: C21
+tier: 4
 context:
   lens: SWD
 state:

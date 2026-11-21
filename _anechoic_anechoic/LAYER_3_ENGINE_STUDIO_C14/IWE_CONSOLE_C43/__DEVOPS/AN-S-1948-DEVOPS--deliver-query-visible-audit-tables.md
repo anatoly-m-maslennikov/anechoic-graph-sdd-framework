@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1948
-structure:
-  container:
-    component: C43
-  tier: 5
+container:
+  component: C43
+tier: 5
 context:
   lens: DevOps
 state:

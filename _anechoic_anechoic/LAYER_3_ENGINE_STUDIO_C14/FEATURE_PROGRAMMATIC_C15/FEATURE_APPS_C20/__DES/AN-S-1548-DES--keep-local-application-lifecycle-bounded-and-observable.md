@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1548
-structure:
-  container:
-    component: C20
-  tier: 3
+container:
+  component: C20
+tier: 3
 context:
   lens: DES
 state:

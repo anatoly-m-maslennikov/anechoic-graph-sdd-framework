@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1557
-structure:
-  container:
-    component: C23
-  tier: 4
+container:
+  component: C23
+tier: 4
 context:
   lens: QA
 state:

@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2388
-structure:
-  container:
-    component: C16
-  tier: 4
+container:
+  component: C16
+tier: 4
 context:
   lens: DevOps
 state:

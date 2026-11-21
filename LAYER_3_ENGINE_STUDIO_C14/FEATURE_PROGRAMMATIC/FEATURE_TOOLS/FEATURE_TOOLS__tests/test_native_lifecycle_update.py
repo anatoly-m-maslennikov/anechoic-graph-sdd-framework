@@ -26,7 +26,7 @@ class NativeDirectUpdateTests(unittest.TestCase):
         self.control = self.root / '.anechoic_test'
         self.control.mkdir()
         manifest = self.write('AN-S-1-PROJECT_MANIFEST--manifest.md', 'AN-S-1')
-        self.path = self.write('__TKT/ASSETS/AN-T-1-ASSET--example.md', 'AN-T-1')
+        self.path = self.write('001_TICKETS/ASSETS/AN-T-1-ASSET--example.md', 'AN-T-1')
         self.selection = SimpleNamespace(root=self.root, control_root=self.control, manifest_path=manifest,
                                          manifest_sha256=sha256(manifest.read_bytes()).hexdigest(), project_prefix='AN')
         self.rows = capture_native(self.selection).atoms
@@ -42,6 +42,81 @@ class NativeDirectUpdateTests(unittest.TestCase):
                   'state': {'status': 'active', 'version': 1, 'updated_at': '2026-11-19T00:00:00Z'}}
         path.write_text('---\n' + yaml.safe_dump(header) + '---\n\n## Summary\n\nExample\n\n## Details\n\nOld\n')
         return path
+
+    def test_queue_terminal_status_matches_template(self):
+        for atom_id, branch, template, allowed, rejected in (
+                ('AN-T-2', 'TASKS', 'task', 'done', 'resolved'),
+                ('AN-T-3', 'ISSUES', 'question', 'resolved', 'done')):
+            path = self.write(f'001_TICKETS/{branch}/{atom_id}-{template.upper()}--example.md', atom_id)
+            _, header, body = path.read_text().split('---', 2)
+            metadata = yaml.safe_load(header)
+            metadata['context']['template'] = template
+            metadata['state']['status'] = 'in_queue'
+            path.write_text('---\n' + yaml.safe_dump(canonical_native_header(metadata)) + '---' + body)
+            target = {'ref_id': atom_id, 'version': 1}
+            with self.assertRaises(InputError):
+                change_ticket_status(self.selection, {'target': target, 'targetStatus': rejected},
+                                     current_rows=capture_native(self.selection).atoms, check_definition=lambda: None)
+            outcome = change_ticket_status(self.selection, {'target': target, 'targetStatus': allowed},
+                                           current_rows=capture_native(self.selection).atoms, check_definition=lambda: None)
+            self.assertEqual(allowed, outcome['artifact']['status'])
+
+    def test_standalone_asset_completes_in_its_directory(self):
+        path = self.write('001_TICKETS/ASSETS/AN-T-2-WORK_LOG--example.md', 'AN-T-2')
+        _, header, body = path.read_text().split('---', 2)
+        metadata = yaml.safe_load(header)
+        metadata['context']['template'] = 'work_log'
+        metadata['state']['status'] = 'in_queue'
+        path.write_text('---\n' + yaml.safe_dump(canonical_native_header(metadata)) + '---' + body)
+        target = {'ref_id': 'AN-T-2', 'version': 1}
+        outcome = change_ticket_status(self.selection, {'target': target, 'targetStatus': 'complete'},
+                                       current_rows=capture_native(self.selection).atoms, check_definition=lambda: None)
+        self.assertEqual('complete', outcome['artifact']['status'])
+        self.assertEqual(self.control / '001_TICKETS/ASSETS/08_complete' / path.name,
+                         self.root / outcome['artifact']['path'])
+        self.assertFalse(path.exists())
+        self.assertEqual('complete', next(row for row in capture_native(self.selection).atoms
+                                          if row['id'] == 'AN-T-2')['status'])
+
+    def test_canonical_ticket_archive_requires_current_replacement(self):
+        target_path = self.write('001_TICKETS/TASKS/AN-T-2-TASK--example.md', 'AN-T-2')
+        _, header, body = target_path.read_text().split('---', 2)
+        metadata = yaml.safe_load(header)
+        metadata['context']['template'] = 'task'
+        target_path.write_text('---\n' + yaml.safe_dump(canonical_native_header(metadata)) + '---' + body)
+        target = {'ref_id': 'AN-T-2', 'version': 1}
+        with self.assertRaises(InputError):
+            archive_ticket(self.selection, {'target': target}, current_rows=capture_native(self.selection).atoms)
+        replacement = self.write('001_TICKETS/TASKS/AN-T-3-TASK--example.md', 'AN-T-3')
+        _, header, body = replacement.read_text().split('---', 2)
+        metadata = yaml.safe_load(header)
+        metadata['context']['template'] = 'task'
+        metadata['relations'] = {'IS_REPLACEMENT_FOR': ['AN-T-2']}
+        replacement.write_text('---\n' + yaml.safe_dump(canonical_native_header(metadata)) + '---' + body)
+        outcome = archive_ticket(self.selection, {'target': target}, current_rows=capture_native(self.selection).atoms)
+        self.assertEqual('completed', outcome['outcome'], outcome)
+        self.assertEqual('AN-T-2@1', outcome['artifact']['ref_id'])
+        self.assertEqual('09_archived', (self.root / outcome['artifact']['path']).parent.name)
+        self.assertFalse(target_path.exists())
+
+    def test_canonical_ticket_draft_archive_uses_base_replacement_reference(self):
+        path = self.write('001_TICKETS/TASKS/01_draft/AN-T-4@2-draft-TASK--example.md', 'AN-T-4')
+        _, header, body = path.read_text().split('---', 2)
+        metadata = yaml.safe_load(header)
+        metadata['context']['template'] = 'task'
+        metadata['state'].update(status='draft', version=2)
+        path.write_text('---\n' + yaml.safe_dump(canonical_native_header(metadata)) + '---' + body)
+        replacement = self.write('001_TICKETS/TASKS/AN-T-5-TASK--example.md', 'AN-T-5')
+        _, header, body = replacement.read_text().split('---', 2)
+        metadata = yaml.safe_load(header)
+        metadata['context']['template'] = 'task'
+        metadata['relations'] = {'IS_REPLACEMENT_FOR': ['AN-T-4']}
+        replacement.write_text('---\n' + yaml.safe_dump(canonical_native_header(metadata)) + '---' + body)
+        target = {'ref_id': 'AN-T-4@2-draft', 'version': 2}
+        outcome = archive_ticket(self.selection, {'target': target}, current_rows=capture_native(self.selection).atoms)
+        self.assertEqual('completed', outcome['outcome'], outcome)
+        self.assertEqual('AN-T-4@2', outcome['artifact']['ref_id'])
+        self.assertFalse(path.exists())
 
     def test_body_update_preserves_header_and_identity(self):
         before = self.path.read_bytes()
@@ -68,7 +143,7 @@ class NativeDirectUpdateTests(unittest.TestCase):
             {'target': self.params['target'], 'targetStatus': 'done'},
             current_rows=rows, check_definition=lambda: None)
         self.assertEqual('completed', output['outcome'])
-        moved = self.control / '__TKT/ASSETS/done' / self.path.name
+        moved = self.control / '001_TICKETS/ASSETS/done' / self.path.name
         after = yaml.safe_load(moved.read_text().split('---', 2)[1])
         self.assertEqual({**canonical, 'state': after['state']}, after)
         self.assertEqual('done', after['state']['status'])
@@ -98,7 +173,7 @@ class NativeDirectUpdateTests(unittest.TestCase):
                 elif case == 'extra':
                     params['changes']['status'] = 'done'
                 elif case == 'child':
-                    extra_path = self.write('__TKT/ASSETS/AN-T-2-ASSET--child.md', 'AN-T-2', {'atom': 'AN-T-1'})
+                    extra_path = self.write('001_TICKETS/ASSETS/AN-T-2-ASSET--child.md', 'AN-T-2', {'atom': 'AN-T-1'})
                 else:
                     extra_path = self.path.with_suffix('')
                     extra_path.mkdir()
@@ -111,7 +186,7 @@ class NativeDirectUpdateTests(unittest.TestCase):
                     extra_path.rmdir() if extra_path.is_dir() else extra_path.unlink()
 
     def test_draft_asset_update_uses_exact_reference(self):
-        path = self.write('__TKT/ASSETS/000_draft/AN-T-1@2-draft-ASSET--draft.md', 'AN-T-1')
+        path = self.write('001_TICKETS/ASSETS/01_draft/AN-T-1@2-draft-ASSET--draft.md', 'AN-T-1')
         path.write_bytes(path.read_bytes().replace(b'status: active', b'status: draft').replace(b'version: 1', b'version: 2'))
         rows = capture_native(self.selection).atoms
         before = path.read_bytes()
@@ -128,14 +203,14 @@ class NativeDirectUpdateTests(unittest.TestCase):
             direct_update(self.selection, params, current_rows=rows)
 
     def test_archive_preserves_draft_and_version(self):
-        draft = self.write('__TKT/ASSETS/000_draft/AN-T-1@2-draft-ASSET--draft.md', 'AN-T-1')
+        draft = self.write('001_TICKETS/ASSETS/01_draft/AN-T-1@2-draft-ASSET--draft.md', 'AN-T-1')
         draft.write_bytes(draft.read_bytes().replace(b'status: active', b'status: draft').replace(b'version: 1', b'version: 2'))
         rows = capture_native(self.selection).atoms
         body = self.path.read_bytes().split(b'---\n', 2)[2]
         original_draft = draft.read_bytes()
         outcome = archive_ticket(self.selection, {'target': self.params['target']}, current_rows=rows)
         self.assertEqual('completed', outcome['outcome'])
-        destination = self.path.parent / '099_archived' / 'AN-T-1@1-ASSET--example.md'
+        destination = self.path.parent / '09_archived' / 'AN-T-1@1-ASSET--example.md'
         self.assertFalse(self.path.exists())
         self.assertEqual(body, destination.read_bytes().split(b'---\n', 2)[2])
         self.assertEqual(original_draft, draft.read_bytes())
@@ -169,9 +244,9 @@ class NativeDirectUpdateTests(unittest.TestCase):
         self.assertEqual('unknown', outcome['effects'][1]['state'])
         self.assertTrue(destination.exists())
 
-    def test_archive_rejects_draft_and_stale_selection(self):
+    def test_archive_rejects_missing_draft_and_stale_selection(self):
         params = {'target': {'ref_id': 'AN-T-1@1-draft', 'version': 1}}
-        with self.assertRaises(InputError):
+        with self.assertRaises(SourceChanged):
             archive_ticket(self.selection, params, current_rows=self.rows)
         params['target'] = self.params['target']
         self.path.write_bytes(self.path.read_bytes() + b'stale')
@@ -180,7 +255,7 @@ class NativeDirectUpdateTests(unittest.TestCase):
         self.assertTrue(self.path.exists())
 
     def test_body_update_rejects_task(self):
-        path = self.write('__TKT/TASKS/AN-T-3-TASK--task.md', 'AN-T-3')
+        path = self.write('001_TICKETS/TASKS/AN-T-3-TASK--task.md', 'AN-T-3')
         rows = capture_native(self.selection).atoms
         for row in rows:
             row['_source_sha256'] = sha256((self.root / row['source_path']).read_bytes()).hexdigest()
@@ -191,7 +266,7 @@ class NativeDirectUpdateTests(unittest.TestCase):
         self.assertEqual(before, path.read_bytes())
 
     def test_body_update_accepts_linked_report_with_original_summary_heading(self):
-        path = self.write('__TKT/TASKS/done/AN-T-3-ANALYSIS_REPORT--report.md', 'AN-T-3')
+        path = self.write('001_TICKETS/TASKS/done/AN-T-3-ANALYSIS_REPORT--report.md', 'AN-T-3')
         path.write_bytes(path.read_bytes().replace(
             b'context:\n', b'context:\n  template: Analysis Report\n',
         ).replace(b'## Summary', b'# Summary'))
@@ -221,7 +296,7 @@ class NativeDirectUpdateTests(unittest.TestCase):
         rows = capture_native(self.selection).atoms
         for row in rows:
             row['_source_sha256'] = sha256((self.root / row['source_path']).read_bytes()).hexdigest()
-        reopened = change_ticket_status(self.selection, {'target': self.params['target'], 'targetStatus': 'active'},
+        reopened = change_ticket_status(self.selection, {'target': self.params['target'], 'targetStatus': 'in_queue'},
                                         current_rows=rows, check_definition=lambda: None)
         self.assertEqual('completed', reopened['outcome'])
         self.assertTrue(self.path.exists())
@@ -231,7 +306,7 @@ class NativeDirectUpdateTests(unittest.TestCase):
         for number, (branch, status) in enumerate((('TASKS', 'backlog'), ('ISSUES', 'resolved'),
                                                     ('ASSETS', 'canceled')), 2):
             identity = f'AN-T-{number}'
-            path = self.write(f'__TKT/{branch}/{identity}-TICKET--example.md', identity)
+            path = self.write(f'001_TICKETS/{branch}/{identity}-TICKET--example.md', identity)
             rows = capture_native(self.selection).atoms
             for row in rows:
                 row['_source_sha256'] = sha256((self.root / row['source_path']).read_bytes()).hexdigest()
@@ -284,7 +359,7 @@ class NativeDirectUpdateTests(unittest.TestCase):
 
     def test_flat_descendants_are_rejected_without_detachment(self):
         self.path.write_bytes(self.path.read_bytes().replace(b'context:\n', b'context:\n  template: epic\n'))
-        child = self.write('__TKT/TASKS/done/AN-T-2-TASK--child.md', 'AN-T-2', {'atom': 'AN-T-1'})
+        child = self.write('001_TICKETS/TASKS/done/AN-T-2-TASK--child.md', 'AN-T-2', {'atom': 'AN-T-1'})
         child.write_bytes(child.read_bytes().replace(b'status: active', b'status: done'))
         params = {'target': self.params['target'], 'targetStatus': 'done'}
         before = self.path.read_bytes(), child.read_bytes()
@@ -294,11 +369,11 @@ class NativeDirectUpdateTests(unittest.TestCase):
         self.assertEqual(before, (self.path.read_bytes(), child.read_bytes()))
 
     def test_nested_leaf_status_and_archive_use_local_slots(self):
-        epic = self.write('__TKT/TASKS/AN-T-2-EPIC--owner.md', 'AN-T-2')
+        epic = self.write('001_TICKETS/TASKS/AN-T-2-EPIC--owner.md', 'AN-T-2')
         epic.write_bytes(epic.read_bytes().replace(b'context:\n', b'context:\n  template: epic\n'))
-        task = self.write('__TKT/TASKS/AN-T-2-EPIC--owner/AN-T-3-TASK--child.md', 'AN-T-3', {'atom': 'AN-T-2'})
+        task = self.write('001_TICKETS/TASKS/AN-T-2-EPIC--owner/AN-T-3-TASK--child.md', 'AN-T-3', {'atom': 'AN-T-2'})
         task.write_bytes(task.read_bytes().replace(b'context:\n', b'context:\n  template: task\n'))
-        report = self.write('__TKT/TASKS/AN-T-2-EPIC--owner/ASSETS/AN-T-4-WORK_REPORT--report.md',
+        report = self.write('001_TICKETS/TASKS/AN-T-2-EPIC--owner/ASSETS/AN-T-4-WORK_REPORT--report.md',
                             'AN-T-4', {'atom': 'AN-T-2'})
         report.write_bytes(report.read_bytes().replace(b'context:\n', b'context:\n  template: work_report\n'))
         for path, identity in ((task, 'AN-T-3'), (report, 'AN-T-4')):
@@ -311,23 +386,23 @@ class NativeDirectUpdateTests(unittest.TestCase):
             result = archive_ticket(self.selection, {'target': params['target']},
                                     current_rows=capture_native(self.selection).atoms)
             self.assertEqual('completed', result['outcome'])
-            self.assertTrue((path.parent / '099_archived' / path.name.replace(identity, identity + '@1')).is_file())
+            self.assertTrue((path.parent / '09_archived' / path.name.replace(identity, identity + '@1')).is_file())
             self.assertFalse(moved.exists())
 
     def test_cancel_task_preserves_nested_terminal_descendants_and_history(self):
-        parent = self.write('__TKT/TASKS/AN-T-2-TASK--parent.md', 'AN-T-2')
+        parent = self.write('001_TICKETS/TASKS/AN-T-2-TASK--parent.md', 'AN-T-2')
         parent.write_bytes(parent.read_bytes().replace(b'context:\n', b'context:\n  template: task\n'))
         companion = parent.with_suffix('')
-        child = self.write('__TKT/TASKS/AN-T-2-TASK--parent/done/AN-T-3-SUBTASK--child.md',
+        child = self.write('001_TICKETS/TASKS/AN-T-2-TASK--parent/done/AN-T-3-SUBTASK--child.md',
                            'AN-T-3', {'atom': 'AN-T-2'})
         child.write_bytes(child.read_bytes().replace(b'context:\n', b'context:\n  template: task\n')
                           .replace(b'status: active', b'status: done').replace(b'version: 1', b'version: 2'))
-        nested = self.write('__TKT/TASKS/AN-T-2-TASK--parent/done/AN-T-3-SUBTASK--child/canceled/AN-T-4-SUBTASK--nested.md',
+        nested = self.write('001_TICKETS/TASKS/AN-T-2-TASK--parent/done/AN-T-3-SUBTASK--child/canceled/AN-T-4-SUBTASK--nested.md',
                             'AN-T-4', {'atom': 'AN-T-3'})
         nested.write_bytes(nested.read_bytes().replace(b'context:\n', b'context:\n  template: task\n')
                            .replace(b'status: active', b'status: canceled')
                            .replace(b'state:\n', b'relations:\n  REFERENCES:\n  - AN-T-2\nstate:\n'))
-        history = self.write('__TKT/TASKS/AN-T-2-TASK--parent/099_archived/AN-T-3@1-SUBTASK--child.md',
+        history = self.write('001_TICKETS/TASKS/AN-T-2-TASK--parent/09_archived/AN-T-3@1-SUBTASK--child.md',
                              'AN-T-3', {'atom': 'AN-T-2'})
         history.write_bytes(history.read_bytes().replace(b'context:\n', b'context:\n  template: task\n')
                             .replace(b'status: active', b'status: archived'))
@@ -344,9 +419,9 @@ class NativeDirectUpdateTests(unittest.TestCase):
             self.assertEqual(raw, (destination.with_suffix('') / relative).read_bytes())
 
     def test_cancel_task_cancels_unfinished_descendant(self):
-        parent = self.write('__TKT/TASKS/AN-T-2-TASK--parent.md', 'AN-T-2')
+        parent = self.write('001_TICKETS/TASKS/AN-T-2-TASK--parent.md', 'AN-T-2')
         parent.write_bytes(parent.read_bytes().replace(b'context:\n', b'context:\n  template: task\n'))
-        child = self.write('__TKT/TASKS/AN-T-2-TASK--parent/AN-T-3-SUBTASK--child.md',
+        child = self.write('001_TICKETS/TASKS/AN-T-2-TASK--parent/AN-T-3-SUBTASK--child.md',
                            'AN-T-3', {'atom': 'AN-T-2'})
         child.write_bytes(child.read_bytes().replace(b'context:\n', b'context:\n  template: task\n'))
         outcome = change_ticket_status(self.selection,
@@ -359,7 +434,7 @@ class NativeDirectUpdateTests(unittest.TestCase):
     def test_epic_terminal_status_cancels_mixed_nested_descendants(self):
         for number, status in ((10, 'done'), (20, 'canceled')):
             with self.subTest(status=status):
-                prefix = f'__TKT/TASKS/AN-T-{number}-EPIC--parent'
+                prefix = f'001_TICKETS/TASKS/AN-T-{number}-EPIC--parent'
                 parent = self.write(prefix + '.md', f'AN-T-{number}')
                 parent.write_bytes(parent.read_bytes().replace(b'context:\n', b'context:\n  template: epic\n'))
                 done = self.write(prefix + f'/done/AN-T-{number + 1}-TASK--done.md',
@@ -373,14 +448,14 @@ class NativeDirectUpdateTests(unittest.TestCase):
                 for path, initial in ((done, 'done'), (canceled, 'canceled'), (active, 'active'), (nested, 'backlog')):
                     path.write_bytes(path.read_bytes().replace(b'context:\n', b'context:\n  template: task\n')
                                      .replace(b'status: active', f'status: {initial}'.encode()))
-                resolved = self.write(prefix + f'/resolved/AN-T-{number + 6}-TASK--resolved.md',
+                resolved = self.write(prefix + f'/resolved/AN-T-{number + 6}-QUESTION--resolved.md',
                                       f'AN-T-{number + 6}', {'atom': f'AN-T-{number}'})
-                resolved.write_bytes(resolved.read_bytes().replace(b'context:\n', b'context:\n  template: task\n')
+                resolved.write_bytes(resolved.read_bytes().replace(b'context:\n', b'context:\n  template: question\n')
                                      .replace(b'status: active', b'status: resolved'))
                 report = self.write(prefix + f'/ASSETS/AN-T-{number + 5}-WORK_REPORT--report.md',
                                     f'AN-T-{number + 5}', {'atom': f'AN-T-{number}'})
                 report.write_bytes(report.read_bytes().replace(b'context:\n', b'context:\n  template: work_report\n'))
-                draft = self.write(prefix + f'/000_draft/AN-T-{number + 3}@2-draft-TASK--active.md',
+                draft = self.write(prefix + f'/01_draft/AN-T-{number + 3}@2-draft-TASK--active.md',
                                    f'AN-T-{number + 3}', {'atom': f'AN-T-{number}'})
                 draft.write_bytes(draft.read_bytes().replace(b'context:\n', b'context:\n  template: task\n')
                                   .replace(b'status: active', b'status: draft').replace(b'version: 1', b'version: 2'))
@@ -396,16 +471,16 @@ class NativeDirectUpdateTests(unittest.TestCase):
                     relative = path.relative_to(parent.with_suffix(''))
                     new_path = moved.with_suffix('') / relative.parent.parent / 'canceled' / relative.name if path == nested else moved.with_suffix('') / 'canceled' / relative.name
                     self.assertEqual('canceled', yaml.safe_load(new_path.read_text().split('---', 2)[1])['state']['status'])
-                resolved_path = moved.with_suffix('') / 'canceled' / resolved.name
-                self.assertEqual('canceled', yaml.safe_load(resolved_path.read_text().split('---', 2)[1])['state']['status'])
+                resolved_path = moved.with_suffix('') / 'resolved' / resolved.name
+                self.assertEqual('resolved', yaml.safe_load(resolved_path.read_text().split('---', 2)[1])['state']['status'])
                 report_path = moved.with_suffix('') / 'ASSETS' / 'canceled' / report.name
                 self.assertEqual('canceled', yaml.safe_load(report_path.read_text().split('---', 2)[1])['state']['status'])
                 self.assertFalse(parent.exists())
 
     def test_nonterminal_status_moves_companion_without_changing_children(self):
-        parent = self.write('__TKT/TASKS/AN-T-30-EPIC--parent.md', 'AN-T-30')
+        parent = self.write('001_TICKETS/TASKS/AN-T-30-EPIC--parent.md', 'AN-T-30')
         parent.write_bytes(parent.read_bytes().replace(b'context:\n', b'context:\n  template: epic\n'))
-        child = self.write('__TKT/TASKS/AN-T-30-EPIC--parent/AN-T-31-TASK--child.md',
+        child = self.write('001_TICKETS/TASKS/AN-T-30-EPIC--parent/AN-T-31-TASK--child.md',
                            'AN-T-31', {'atom': 'AN-T-30'})
         child.write_bytes(child.read_bytes().replace(b'context:\n', b'context:\n  template: task\n'))
         before = child.read_bytes()
@@ -413,12 +488,12 @@ class NativeDirectUpdateTests(unittest.TestCase):
             {'target': {'ref_id': 'AN-T-30', 'version': 1}, 'targetStatus': 'backlog'},
             current_rows=capture_native(self.selection).atoms, check_definition=lambda: None)
         self.assertEqual('completed', outcome['outcome'], outcome)
-        destination = self.control / '__TKT/TASKS/backlog/AN-T-30-EPIC--parent'
+        destination = self.control / '001_TICKETS/TASKS/backlog/AN-T-30-EPIC--parent'
         self.assertEqual(before, (destination / child.name).read_bytes())
         self.assertFalse(parent.exists())
 
     def test_task_reopening_preserves_descendant_status(self):
-        prefix = '__TKT/TASKS/done/AN-T-40-TASK--parent'
+        prefix = '001_TICKETS/TASKS/done/AN-T-40-TASK--parent'
         parent = self.write(prefix + '.md', 'AN-T-40')
         parent.write_bytes(parent.read_bytes().replace(b'context:\n', b'context:\n  template: task\n')
                            .replace(b'status: active', b'status: done'))
@@ -427,17 +502,17 @@ class NativeDirectUpdateTests(unittest.TestCase):
                           .replace(b'status: active', b'status: done'))
         before = child.read_bytes()
         reopened = change_ticket_status(self.selection,
-            {'target': {'ref_id': 'AN-T-40', 'version': 1}, 'targetStatus': 'active'},
+            {'target': {'ref_id': 'AN-T-40', 'version': 1}, 'targetStatus': 'in_queue'},
             current_rows=capture_native(self.selection).atoms, check_definition=lambda: None)
         self.assertEqual('completed', reopened['outcome'], reopened)
-        current = self.control / '__TKT/TASKS/AN-T-40-TASK--parent' / 'done' / child.name
+        current = self.control / '001_TICKETS/TASKS/AN-T-40-TASK--parent' / 'done' / child.name
         self.assertEqual(before, current.read_bytes())
 
     def test_backlog_activation_promotes_nested_tasks_and_preserves_assets(self):
-        parent = self.write('__TKT/TASKS/backlog/AN-T-30-EPIC--parent.md', 'AN-T-30')
+        parent = self.write('001_TICKETS/TASKS/backlog/AN-T-30-EPIC--parent.md', 'AN-T-30')
         parent.write_bytes(parent.read_bytes().replace(b'context:\n', b'context:\n  template: epic\n')
                            .replace(b'status: active', b'status: backlog'))
-        branch = '__TKT/TASKS/backlog/AN-T-30-EPIC--parent'
+        branch = '001_TICKETS/TASKS/backlog/AN-T-30-EPIC--parent'
         child = self.write(f'{branch}/backlog/AN-T-31-TASK--child.md', 'AN-T-31', {'atom': 'AN-T-30'})
         child.write_bytes(child.read_bytes().replace(b'context:\n', b'context:\n  template: task\n')
                           .replace(b'status: active', b'status: backlog'))
@@ -448,35 +523,35 @@ class NativeDirectUpdateTests(unittest.TestCase):
         asset = grand.parent.parent / 'notes.txt'
         asset.write_text('keep')
         outcome = change_ticket_status(self.selection,
-            {'target': {'ref_id': 'AN-T-30', 'version': 1}, 'targetStatus': 'active'},
+            {'target': {'ref_id': 'AN-T-30', 'version': 1}, 'targetStatus': 'in_queue'},
             current_rows=capture_native(self.selection).atoms, check_definition=lambda: None)
         self.assertEqual('completed', outcome['outcome'], outcome)
-        dest = self.control / '__TKT/TASKS/AN-T-30-EPIC--parent/AN-T-31-TASK--child'
-        self.assertEqual('active', yaml.safe_load((dest / grand.name).read_text().split('---', 2)[1])['state']['status'])
+        dest = self.control / '001_TICKETS/TASKS/AN-T-30-EPIC--parent/AN-T-31-TASK--child'
+        self.assertEqual('in_queue', yaml.safe_load((dest / grand.name).read_text().split('---', 2)[1])['state']['status'])
         self.assertEqual('keep', (dest / 'notes.txt').read_text())
-        self.assertEqual('active', yaml.safe_load(dest.with_suffix('.md').read_text().split('---', 2)[1])['state']['status'])
+        self.assertEqual('in_queue', yaml.safe_load(dest.with_suffix('.md').read_text().split('---', 2)[1])['state']['status'])
 
     def test_backlog_activation_publishes_first_draft_descendant(self):
-        parent = self.write('__TKT/TASKS/backlog/AN-T-30-EPIC--parent.md', 'AN-T-30')
+        parent = self.write('001_TICKETS/TASKS/backlog/AN-T-30-EPIC--parent.md', 'AN-T-30')
         parent.write_bytes(parent.read_bytes().replace(b'context:\n', b'context:\n  template: epic\n')
                            .replace(b'status: active', b'status: backlog'))
-        child = self.write('__TKT/TASKS/backlog/AN-T-30-EPIC--parent/000_draft/AN-T-31@1-draft-TASK--child.md',
+        child = self.write('001_TICKETS/TASKS/backlog/AN-T-30-EPIC--parent/01_draft/AN-T-31@1-draft-TASK--child.md',
                            'AN-T-31', {'atom': 'AN-T-30'})
         child.write_bytes(child.read_bytes().replace(b'context:\n', b'context:\n  template: task\n')
                           .replace(b'status: active', b'status: draft'))
         outcome = change_ticket_status(self.selection,
-            {'target': {'ref_id': 'AN-T-30', 'version': 1}, 'targetStatus': 'active'},
+            {'target': {'ref_id': 'AN-T-30', 'version': 1}, 'targetStatus': 'in_queue'},
             current_rows=capture_native(self.selection).atoms, check_definition=lambda: None)
         self.assertEqual('completed', outcome['outcome'], outcome)
-        destination = self.control / '__TKT/TASKS/AN-T-30-EPIC--parent/AN-T-31-TASK--child.md'
-        self.assertEqual('active', yaml.safe_load(destination.read_text().split('---', 2)[1])['state']['status'])
+        destination = self.control / '001_TICKETS/TASKS/AN-T-30-EPIC--parent/AN-T-31-TASK--child.md'
+        self.assertEqual('in_queue', yaml.safe_load(destination.read_text().split('---', 2)[1])['state']['status'])
         self.assertFalse(child.exists())
 
     def test_activation_preflights_all_child_destinations(self):
-        parent = self.write('__TKT/TASKS/backlog/AN-T-30-EPIC--parent.md', 'AN-T-30')
+        parent = self.write('001_TICKETS/TASKS/backlog/AN-T-30-EPIC--parent.md', 'AN-T-30')
         parent.write_bytes(parent.read_bytes().replace(b'context:\n', b'context:\n  template: epic\n')
                            .replace(b'status: active', b'status: backlog'))
-        branch = '__TKT/TASKS/backlog/AN-T-30-EPIC--parent'
+        branch = '001_TICKETS/TASKS/backlog/AN-T-30-EPIC--parent'
         children = []
         for number in (31, 32):
             child = self.write(f'{branch}/backlog/AN-T-{number}-TASK--child.md', f'AN-T-{number}', {'atom': 'AN-T-30'})
@@ -487,7 +562,7 @@ class NativeDirectUpdateTests(unittest.TestCase):
         collision.mkdir()
         before = [path.read_bytes() for path in [parent, *children]]
         outcome = change_ticket_status(self.selection,
-            {'target': {'ref_id': 'AN-T-30', 'version': 1}, 'targetStatus': 'active'},
+            {'target': {'ref_id': 'AN-T-30', 'version': 1}, 'targetStatus': 'in_queue'},
             current_rows=capture_native(self.selection).atoms, check_definition=lambda: None)
         self.assertEqual('failed', outcome['outcome'])
         self.assertEqual('destination_exists', outcome['errors'][0]['code'])
@@ -499,7 +574,7 @@ class NativeDirectUpdateTests(unittest.TestCase):
             with self.subTest(status=status):
                 epic_id = f'AN-T-{number}'
                 epic = f'{epic_id}-EPIC--parent'
-                prefix = f'__TKT/TASKS/{status}/{epic}'
+                prefix = f'001_TICKETS/TASKS/{status}/{epic}'
                 parent = self.write(prefix + '.md', epic_id)
                 parent.write_bytes(parent.read_bytes().replace(b'context:\n', b'context:\n  template: epic\n')
                                    .replace(b'status: active', f'status: {status}'.encode()))
@@ -515,20 +590,20 @@ class NativeDirectUpdateTests(unittest.TestCase):
                     before[relative] = raw.replace(b'status: active', f'status: {child_status}'.encode())
                     path.write_bytes(before[relative])
                 outcome = change_ticket_status(self.selection,
-                    {'target': {'ref_id': epic_id, 'version': 1}, 'targetStatus': 'active'},
+                    {'target': {'ref_id': epic_id, 'version': 1}, 'targetStatus': 'in_queue'},
                     current_rows=capture_native(self.selection).atoms, check_definition=lambda: None)
                 self.assertEqual('completed', outcome['outcome'], outcome)
-                self.assertEqual('active', outcome['artifact']['status'])
-                destination = self.control / '__TKT/TASKS' / epic
+                self.assertEqual('in_queue', outcome['artifact']['status'])
+                destination = self.control / '001_TICKETS/TASKS' / epic
                 for relative, raw in before.items():
                     self.assertEqual(raw, (destination / relative).read_bytes())
                 self.assertFalse(parent.exists())
                 self.assertFalse(parent.with_suffix('').exists())
 
     def test_archive_container_refuses_without_detachment(self):
-        parent = self.write('__TKT/TASKS/AN-T-30-EPIC--parent.md', 'AN-T-30')
+        parent = self.write('001_TICKETS/TASKS/AN-T-30-EPIC--parent.md', 'AN-T-30')
         parent.write_bytes(parent.read_bytes().replace(b'context:\n', b'context:\n  template: epic\n'))
-        child = self.write('__TKT/TASKS/AN-T-30-EPIC--parent/AN-T-31-TASK--child.md',
+        child = self.write('001_TICKETS/TASKS/AN-T-30-EPIC--parent/AN-T-31-TASK--child.md',
                            'AN-T-31', {'atom': 'AN-T-30'})
         child.write_bytes(child.read_bytes().replace(b'context:\n', b'context:\n  template: task\n'))
         before = parent.read_bytes(), child.read_bytes()
@@ -539,11 +614,11 @@ class NativeDirectUpdateTests(unittest.TestCase):
 
     def test_partial_cascade_reports_completed_actions_and_stops(self):
         from ATOM_LIFECYCLE import native_update
-        parent = self.write('__TKT/TASKS/AN-T-40-EPIC--parent.md', 'AN-T-40')
+        parent = self.write('001_TICKETS/TASKS/AN-T-40-EPIC--parent.md', 'AN-T-40')
         parent.write_bytes(parent.read_bytes().replace(b'context:\n', b'context:\n  template: epic\n'))
         children = []
         for identity in ('AN-T-41', 'AN-T-42'):
-            child = self.write(f'__TKT/TASKS/AN-T-40-EPIC--parent/{identity}-TASK--child.md',
+            child = self.write(f'001_TICKETS/TASKS/AN-T-40-EPIC--parent/{identity}-TASK--child.md',
                                identity, {'atom': 'AN-T-40'})
             child.write_bytes(child.read_bytes().replace(b'context:\n', b'context:\n  template: task\n'))
             children.append(child)
@@ -575,14 +650,14 @@ class NativeDirectUpdateTests(unittest.TestCase):
         self.assertEqual(1, capture.call_count)
 
     def test_epic_close_moves_valid_companion_and_preserves_descendants(self):
-        epic = self.write('__TKT/TASKS/AN-T-2-EPIC--owner.md', 'AN-T-2')
+        epic = self.write('001_TICKETS/TASKS/AN-T-2-EPIC--owner.md', 'AN-T-2')
         epic.write_bytes(epic.read_bytes().replace(b'context:\n', b'context:\n  template: epic\n'))
-        child = self.write('__TKT/TASKS/AN-T-2-EPIC--owner/done/AN-T-3-TASK--child.md', 'AN-T-3', {'atom': 'AN-T-2'})
+        child = self.write('001_TICKETS/TASKS/AN-T-2-EPIC--owner/done/AN-T-3-TASK--child.md', 'AN-T-3', {'atom': 'AN-T-2'})
         child.write_bytes(child.read_bytes().replace(b'context:\n', b'context:\n  template: task\n').replace(b'status: active', b'status: done'))
-        nested = self.write('__TKT/TASKS/AN-T-2-EPIC--owner/done/AN-T-3-TASK--child/canceled/AN-T-4-TASK--nested.md',
+        nested = self.write('001_TICKETS/TASKS/AN-T-2-EPIC--owner/done/AN-T-3-TASK--child/canceled/AN-T-4-TASK--nested.md',
                             'AN-T-4', {'atom': 'AN-T-3'})
         nested.write_bytes(nested.read_bytes().replace(b'context:\n', b'context:\n  template: task\n').replace(b'status: active', b'status: canceled'))
-        draft = self.write('__TKT/TASKS/AN-T-2-EPIC--owner/000_draft/AN-T-3@2-draft-TASK--child.md',
+        draft = self.write('001_TICKETS/TASKS/AN-T-2-EPIC--owner/01_draft/AN-T-3@2-draft-TASK--child.md',
                            'AN-T-3', {'atom': 'AN-T-2'})
         draft.write_bytes(draft.read_bytes().replace(b'context:\n', b'context:\n  template: task\n').replace(
             b'status: active', b'status: draft').replace(b'version: 1', b'version: 2'))
@@ -599,9 +674,9 @@ class NativeDirectUpdateTests(unittest.TestCase):
         self.assertFalse(epic.with_suffix('').exists())
 
     def test_epic_close_collision_and_failed_remove_keep_tree(self):
-        epic = self.write('__TKT/TASKS/AN-T-2-EPIC--owner.md', 'AN-T-2')
+        epic = self.write('001_TICKETS/TASKS/AN-T-2-EPIC--owner.md', 'AN-T-2')
         epic.write_bytes(epic.read_bytes().replace(b'context:\n', b'context:\n  template: epic\n'))
-        child = self.write('__TKT/TASKS/AN-T-2-EPIC--owner/done/AN-T-3-TASK--child.md', 'AN-T-3', {'atom': 'AN-T-2'})
+        child = self.write('001_TICKETS/TASKS/AN-T-2-EPIC--owner/done/AN-T-3-TASK--child.md', 'AN-T-3', {'atom': 'AN-T-2'})
         child.write_bytes(child.read_bytes().replace(b'context:\n', b'context:\n  template: task\n').replace(b'status: active', b'status: done'))
         params = {'target': {'ref_id': 'AN-T-2', 'version': 1}, 'targetStatus': 'done'}
         destination = epic.parent / 'done' / epic.name
@@ -626,9 +701,9 @@ class NativeDirectUpdateTests(unittest.TestCase):
         self.assertFalse(destination.with_suffix('').exists())
 
     def test_epic_close_no_effect_tree_failure_rolls_back_parent(self):
-        epic = self.write('__TKT/TASKS/AN-T-2-EPIC--owner.md', 'AN-T-2')
+        epic = self.write('001_TICKETS/TASKS/AN-T-2-EPIC--owner.md', 'AN-T-2')
         epic.write_bytes(epic.read_bytes().replace(b'context:\n', b'context:\n  template: epic\n'))
-        child = self.write('__TKT/TASKS/AN-T-2-EPIC--owner/done/AN-T-3-TASK--child.md', 'AN-T-3', {'atom': 'AN-T-2'})
+        child = self.write('001_TICKETS/TASKS/AN-T-2-EPIC--owner/done/AN-T-3-TASK--child.md', 'AN-T-3', {'atom': 'AN-T-2'})
         child.write_bytes(child.read_bytes().replace(b'context:\n', b'context:\n  template: task\n').replace(b'status: active', b'status: done'))
         before = epic.read_bytes(), child.read_bytes()
         destination = epic.parent / 'done' / epic.name
@@ -643,9 +718,9 @@ class NativeDirectUpdateTests(unittest.TestCase):
         self.assertFalse(destination.with_suffix('').exists())
 
     def test_epic_close_keeps_destination_when_source_changed_on_remove(self):
-        epic = self.write('__TKT/TASKS/AN-T-2-EPIC--owner.md', 'AN-T-2')
+        epic = self.write('001_TICKETS/TASKS/AN-T-2-EPIC--owner.md', 'AN-T-2')
         epic.write_bytes(epic.read_bytes().replace(b'context:\n', b'context:\n  template: epic\n'))
-        child = self.write('__TKT/TASKS/AN-T-2-EPIC--owner/done/AN-T-3-TASK--child.md', 'AN-T-3', {'atom': 'AN-T-2'})
+        child = self.write('001_TICKETS/TASKS/AN-T-2-EPIC--owner/done/AN-T-3-TASK--child.md', 'AN-T-3', {'atom': 'AN-T-2'})
         child.write_bytes(child.read_bytes().replace(b'context:\n', b'context:\n  template: task\n').replace(b'status: active', b'status: done'))
         before = child.read_bytes()
         destination = epic.parent / 'done' / epic.name
@@ -665,9 +740,9 @@ class NativeDirectUpdateTests(unittest.TestCase):
         self.assertEqual(before, (destination.with_suffix('') / child.relative_to(epic.with_suffix(''))).read_bytes())
 
     def test_epic_close_rejects_unrelated_tree(self):
-        epic = self.write('__TKT/TASKS/AN-T-2-EPIC--owner.md', 'AN-T-2')
+        epic = self.write('001_TICKETS/TASKS/AN-T-2-EPIC--owner.md', 'AN-T-2')
         epic.write_bytes(epic.read_bytes().replace(b'context:\n', b'context:\n  template: epic\n'))
-        unrelated = self.write('__TKT/TASKS/AN-T-2-EPIC--owner/AN-T-4-TASK--unrelated.md',
+        unrelated = self.write('001_TICKETS/TASKS/AN-T-2-EPIC--owner/AN-T-4-TASK--unrelated.md',
                                'AN-T-4', {'component': 'C0'})
         params = {'target': {'ref_id': 'AN-T-2', 'version': 1}, 'targetStatus': 'done'}
         with self.assertRaises(InputError):
@@ -679,9 +754,9 @@ class NativeDirectUpdateTests(unittest.TestCase):
         self.assertTrue(unrelated.exists())
 
     def test_epic_close_rejects_companion_change_during_validation(self):
-        epic = self.write('__TKT/TASKS/AN-T-2-EPIC--owner.md', 'AN-T-2')
+        epic = self.write('001_TICKETS/TASKS/AN-T-2-EPIC--owner.md', 'AN-T-2')
         epic.write_bytes(epic.read_bytes().replace(b'context:\n', b'context:\n  template: epic\n'))
-        child = self.write('__TKT/TASKS/AN-T-2-EPIC--owner/done/AN-T-3-TASK--child.md', 'AN-T-3', {'atom': 'AN-T-2'})
+        child = self.write('001_TICKETS/TASKS/AN-T-2-EPIC--owner/done/AN-T-3-TASK--child.md', 'AN-T-3', {'atom': 'AN-T-2'})
         child.write_bytes(child.read_bytes().replace(b'context:\n', b'context:\n  template: task\n').replace(b'status: active', b'status: done'))
         rows = capture_native(self.selection).atoms
         def capture_then_change(selection):
@@ -698,9 +773,9 @@ class NativeDirectUpdateTests(unittest.TestCase):
         self.assertFalse((epic.parent / 'done' / epic.name).exists())
 
     def test_epic_close_restores_tree_when_definition_changes_after_move(self):
-        epic = self.write('__TKT/TASKS/AN-T-2-EPIC--owner.md', 'AN-T-2')
+        epic = self.write('001_TICKETS/TASKS/AN-T-2-EPIC--owner.md', 'AN-T-2')
         epic.write_bytes(epic.read_bytes().replace(b'context:\n', b'context:\n  template: epic\n'))
-        child = self.write('__TKT/TASKS/AN-T-2-EPIC--owner/done/AN-T-3-TASK--child.md', 'AN-T-3', {'atom': 'AN-T-2'})
+        child = self.write('001_TICKETS/TASKS/AN-T-2-EPIC--owner/done/AN-T-3-TASK--child.md', 'AN-T-3', {'atom': 'AN-T-2'})
         child.write_bytes(child.read_bytes().replace(b'context:\n', b'context:\n  template: task\n').replace(b'status: active', b'status: done'))
         destination = epic.parent / 'done' / epic.name
         destination.parent.mkdir()
@@ -725,7 +800,7 @@ class NativeDirectUpdateTests(unittest.TestCase):
         with self.assertRaises(SourceChanged):
             change_ticket_status(self.selection, params, current_rows=self.rows, check_definition=lambda: None)
         self.path.write_bytes(original)
-        child = self.write('__TKT/ASSETS/AN-T-2-ASSET--child.md', 'AN-T-2', {'atom': 'AN-T-1'})
+        child = self.write('001_TICKETS/ASSETS/AN-T-2-ASSET--child.md', 'AN-T-2', {'atom': 'AN-T-1'})
         with self.assertRaises(InputError):
             change_ticket_status(self.selection, params, current_rows=self.rows, check_definition=lambda: None)
         self.assertTrue(child.exists())

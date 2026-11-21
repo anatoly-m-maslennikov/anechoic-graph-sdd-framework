@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1076
-structure:
-  container:
-    component: C37
-  tier: 3
+container:
+  component: C37
+tier: 3
 context:
   lens: QA
 state:

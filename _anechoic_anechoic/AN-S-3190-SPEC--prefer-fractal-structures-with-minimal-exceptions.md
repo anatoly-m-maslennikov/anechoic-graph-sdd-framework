@@ -1,19 +1,18 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-3190
-structure:
-  container:
-    component: C00
-  tier: 1
+container:
+  component: C00
+tier: 1
 context:
   lens: SPEC
 relations:
-  REFERENCES:
+  IS_REFERENCE:
   - AN-S-1432
 state:
-  status: "active"
+  status: active
   version: 1
-  updated_at: "2026-11-21T17:08:05.989101+00:00"
+  updated_at: '2026-11-21T17:08:05.989101+00:00'
 ---
 
 ## Summary

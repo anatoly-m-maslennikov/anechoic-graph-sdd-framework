@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1354
-structure:
-  container:
-    component: C43
-  tier: 4
+container:
+  component: C43
+tier: 4
 context:
   lens: SWD
 state:

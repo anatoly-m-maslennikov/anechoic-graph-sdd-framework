@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1371
-structure:
-  container:
-    component: C45
-  tier: 8
+container:
+  component: C45
+tier: 8
 context:
   lens: QA
 state:

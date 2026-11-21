@@ -25,7 +25,7 @@ TEMPLATES = {
 }
 _ATOM_ID = r"[A-Z]+-[STP]-[0-9]+"
 _VERSION = r"@[1-9][0-9]*(?:-draft)?"
-_STATUSES = ["active", "backlog", "draft", "done", "canceled", "resolved", "archived"]
+_STATUSES = ["active", "in_queue", "ready", "backlog", "draft", "done", "complete", "canceled", "resolved", "archived"]
 _FAMILIES = {"spec": "S", "tkt": "T", "pmeta": "P"}
 _INVENTORIES = {"list_atoms", "count_atoms", "list_tickets"}
 _COMPONENT_QUERIES = {"fetch_contracts", "fetch_solutions", "get_component_manifest", "get_component_purpose"}
@@ -186,7 +186,8 @@ def run_arguments(arguments: dict) -> dict:
         elif template == "get_component_purpose":
             where = f"r.exact_ref IN (SELECT unnest(purpose_refs) FROM components WHERE component_id = {cid})"
         else:
-            tier = "coalesce(json_extract_string(to_json(a), '$.\"header.structure.tier\"'), " \
+            tier = "coalesce(json_extract_string(to_json(a), '$.\"header.tier\"'), " \
+                   "json_extract_string(to_json(a), '$.\"header.structure.tier\"'), " \
                    "json_extract_string(to_json(a), '$.\"header.context.tier\"'))"
             contract = "coalesce(json_extract_string(to_json(a), '$.\"header.context.template\"'), '') = 'component_contract'"
             classification = (f"(({tier} = '0' AND NOT ({contract})) OR ({tier} = '1' AND {contract}))"

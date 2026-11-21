@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2089
-structure:
-  container:
-    component: C31
-  tier: 3
+container:
+  component: C31
+tier: 3
 context:
   lens: DES
 state:

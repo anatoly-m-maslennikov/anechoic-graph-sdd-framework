@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2786
-structure:
-  container:
-    component: C45
-  tier: 7
+container:
+  component: C45
+tier: 7
 context:
   lens: QA
 state:

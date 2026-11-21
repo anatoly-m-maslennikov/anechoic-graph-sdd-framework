@@ -66,6 +66,8 @@ Native Spec.
         self.carrier(self.ontology / "000_draft/AN-S-1@3-draft-DOM--current.md", status="draft", version=3)
         self.carrier(self.ontology / "099_archived/AN-S-2@1-DOM--retired.md",
                      atom_id="AN-S-2", status="archived", version=1)
+        for directory in ("01_draft", "02_ready", "09_archived"):
+            self.carrier(self.ontology / directory / "AN-S-1-DOM--excluded.md")
         self.assertEqual({p.relative_to(self.control): p for p in (self.source, new)},
                          _native_release_sources(self.selection))
         self.read_model.assert_called_once_with(self.control, self.ontology)

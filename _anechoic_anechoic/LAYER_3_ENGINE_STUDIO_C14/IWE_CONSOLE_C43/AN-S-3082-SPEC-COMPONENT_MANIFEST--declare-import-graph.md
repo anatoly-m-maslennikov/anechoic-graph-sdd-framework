@@ -1,17 +1,16 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-3082
-structure:
-  container:
-    component: C43
-  tier: 0
+container:
+  component: C43
+tier: 0
 context:
   template: component_manifest
   lens: SPEC
 state:
-  status: "active"
+  status: active
   version: 2
-  updated_at: "2026-11-21T12:14:05.597140+00:00"
+  updated_at: '2026-11-21T12:14:05.597140+00:00'
 ---
 
 ## Summary

@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1579
-structure:
-  container:
-    component: C24
-  tier: 4
+container:
+  component: C24
+tier: 4
 context:
   lens: DevOps
 state:

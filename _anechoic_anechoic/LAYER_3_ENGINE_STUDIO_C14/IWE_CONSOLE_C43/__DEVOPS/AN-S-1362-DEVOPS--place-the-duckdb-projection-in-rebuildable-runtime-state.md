@@ -1,14 +1,13 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1362
-structure:
-  container:
-    component: C43
-  tier: 4
+container:
+  component: C43
+tier: 4
 context:
   lens: DevOps
 relations:
-  REFERENCES:
+  IS_REFERENCE:
   - AN-S-3116@1
   - AN-S-1351
 state:

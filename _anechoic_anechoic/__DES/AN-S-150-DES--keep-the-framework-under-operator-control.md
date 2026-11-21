@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-150
-structure:
-  container:
-    component: C00
-  tier: 4
+container:
+  component: C00
+tier: 4
 context:
   lens: DES
 state:

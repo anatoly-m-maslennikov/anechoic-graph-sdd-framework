@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1320
-structure:
-  container:
-    component: C15
-  tier: 4
+container:
+  component: C15
+tier: 4
 context:
   lens: QA
 state:

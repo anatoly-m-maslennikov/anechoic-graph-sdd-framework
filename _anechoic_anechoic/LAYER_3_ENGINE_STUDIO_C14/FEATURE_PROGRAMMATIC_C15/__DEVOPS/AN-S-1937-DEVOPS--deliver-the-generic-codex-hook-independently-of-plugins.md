@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1937
-structure:
-  container:
-    component: C15
-  tier: 6
+container:
+  component: C15
+tier: 6
 context:
   lens: DevOps
 state:

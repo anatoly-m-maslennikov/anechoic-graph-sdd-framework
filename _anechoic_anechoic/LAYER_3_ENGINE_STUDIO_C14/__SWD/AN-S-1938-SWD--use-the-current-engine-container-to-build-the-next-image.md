@@ -1,16 +1,15 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1938
-structure:
-  container:
-    component: C14
-  tier: 3
+container:
+  component: C14
+tier: 3
 context:
   lens: SWD
 state:
-  status: "active"
+  status: active
   version: 4
-  updated_at: "2026-11-21T13:06:21.691029+00:00"
+  updated_at: '2026-11-21T13:06:21.691029+00:00'
 ---
 ## Summary
 

@@ -1,0 +1,3290 @@
+{
+  "archived_at": "2026-11-21T18:29:29.242124+00:00",
+  "records": [
+    {
+      "draft_ref": "AN-S-1042@32-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1042@32-draft-DEVOPS--serialize-framework-settings-content-in-toml.md",
+      "draft_sha256": "122a06758bfcb8c7ccac101853cab9dcc6e8c3e5e18625678baa379632b74a27",
+      "archive_ref": "AN-S-3200@32",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3200@32-DEVOPS--serialize-framework-settings-content-in-toml.md",
+      "archive_sha256": "120084932b088faaa64699f11155fb66671daa1f75213b36b070ea091f68a2af",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-D-361@32-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/169-CA-D-361-CORE_META_MODEL-ENG_DECISION--serialize-framework-settings-content-in-toml.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1043@29-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1043@29-draft-DEVOPS--serialize-the-necessary-information-confidence-default.md",
+      "draft_sha256": "62b36ed46a585a9f6e5dbf7ed3b5700ddcce7467efd5e1d1cd35a33e0916763e",
+      "archive_ref": "AN-S-1043@29",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1043@29-DEVOPS--serialize-the-necessary-information-confidence-default.md",
+      "archive_sha256": "7a2854bfcf1f65d6cbe5d04fdf9420fcf75a34b311aeee306d184d58297fd7f1",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-D-368@29-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/241-CA-D-368-CORE_META_MODEL-ENG_DECISION--serialize-the-necessary-information-confidence-default.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1044@28-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1044@28-draft-DEVOPS--serialize-the-semantic-resolution-confidence-default.md",
+      "draft_sha256": "833d34894d9fb44789f06d8d94811f36ea5016201b4c6119340a896394e5eb37",
+      "archive_ref": "AN-S-1044@28",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1044@28-DEVOPS--serialize-the-semantic-resolution-confidence-default.md",
+      "archive_sha256": "67c3799e1d3160894c2cde865045cffe630005adc4faf388b2760e342f244ba3",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-D-369@28-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/377-CA-D-369-CORE_META_MODEL-ENG_DECISION--serialize-the-semantic-resolution-confidence-default.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1045@23-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1045@23-draft-DEVOPS--serialize-generated-data-stage-prefixes-and-formats.md",
+      "draft_sha256": "e496bfe0cd102bfc705d21f709758105eaf814bbe83375dd80d6f2e9ebaba71b",
+      "archive_ref": "AN-S-1045@23",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1045@23-DEVOPS--serialize-generated-data-stage-prefixes-and-formats.md",
+      "archive_sha256": "83f49282c5bcef9374c6ac2fc590492d44d2796c7f811e0853cc117e2f564454",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-D-388@23-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/101-CA-D-388-PROJECT_CONFIGURATION-ENG_DECISION--serialize-generated-data-stage-prefixes-and-formats.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1046@23-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1046@23-draft-DEVOPS--serialize-structured-production-log-records.md",
+      "draft_sha256": "648d11947c779778f40ea86ec3620b08d8f994711fc34bc7ac2d4f73dc29b033",
+      "archive_ref": "AN-S-3201@23",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3201@23-DEVOPS--serialize-structured-production-log-records.md",
+      "archive_sha256": "9e4efa71963bf4094c4bba53fddd3812f26592e4ab6bf6f81ac392307dd37ba0",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-D-396@23-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/397-CA-D-396-PROJECT_CONFIGURATION-ENG_DECISION--serialize-structured-production-log-records.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1047@26-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1047@26-draft-DEVOPS--carry-defaulted-atom-values-without-copying-inherited-overrides.md",
+      "draft_sha256": "a4fcb314c4548c159be50e45c8e5cf049efea3edf9fb46501dffbc9d042dc290",
+      "archive_ref": "AN-S-1047@26",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1047@26-DEVOPS--carry-defaulted-atom-values-without-copying-inherited-overrides.md",
+      "archive_sha256": "a50c7db547ec1d55082c978b85dc19ef402d3a8161029f9a764ac8ec0d822d7a",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-D-485@26-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/407-CA-D-485-CORE_META_MODEL-ENG_DECISION--carry-defaulted-atom-values-without-copying-inherited-overrides.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1048@15-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1048@15-draft-DEVOPS--select-material-production-log-events.md",
+      "draft_sha256": "d0b10c274c75b8f87f24ae6f0a8de4b7b0042ed20a47d8405103a5dc0690be4c",
+      "archive_ref": "AN-S-3202@15",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3202@15-DEVOPS--select-material-production-log-events.md",
+      "archive_sha256": "b8a97e6b3ca68e253d2b99f1202035e2026742ec09ade0c7f0b2a696fc562808",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-D-500@15-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/185-CA-D-500-PROJECT_CONFIGURATION-ENG_DECISION--select-material-production-log-events.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1049@15-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1049@15-draft-DEVOPS--prevent-duplicate-production-exception-stack-traces.md",
+      "draft_sha256": "a410c130700c46ae0fa877b39bc8347c9af169c93c1b2b21efd5ab5a0354b76b",
+      "archive_ref": "AN-S-3203@15",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3203@15-DEVOPS--prevent-duplicate-production-exception-stack-traces.md",
+      "archive_sha256": "68ec63f7c9b10f778d455b39f9f1c63d22e2ca221fb73498fb417bab53d2582e",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-D-501@15-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/339-CA-D-501-PROJECT_CONFIGURATION-ENG_DECISION--prevent-duplicate-production-exception-stack-traces.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1050@19-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1050@19-draft-DEVOPS--deliver-runtime-journals-to-configured-sinks.md",
+      "draft_sha256": "3c20bd09de9c3560776f74d2f04250670f8bfa4bb4ddfa0ea13827d10d9a30ae",
+      "archive_ref": "AN-S-3204@19",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3204@19-DEVOPS--deliver-runtime-journals-to-configured-sinks.md",
+      "archive_sha256": "16ea0f7b7b66340dbafe52844ac6c6b0d1119a00331b2d08bbbae16372312263",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-D-559@19-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/401-CA-D-559-CORE_META_MODEL-ENG_DECISION--deliver-runtime-journals-to-configured-sinks.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1081@26-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1081@26-draft-QA--require-usable-inputs-for-reliance.md",
+      "draft_sha256": "d52f87b86c48c2ba25b1bdc0422cbfbf1ef1f891a1d2d055a5cf085abbb631d7",
+      "archive_ref": "AN-S-3205@26",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3205@26-QA--require-usable-inputs-for-reliance.md",
+      "archive_sha256": "920bad20e926a9321ca1bcae32a9d83c71559feb962631592e0a3a68a59ea23f",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-E-206@26-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/289-CA-E-206-POLICY--require-usable-inputs-for-reliance.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1082@36-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1082@36-draft-QA--evaluate-priority-governed-alternative-selection.md",
+      "draft_sha256": "688e0c0022a6601182735d94d704f5fc0906deb4824fc787da57abe939a51822",
+      "archive_ref": "AN-S-3206@36",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3206@36-QA--evaluate-priority-governed-alternative-selection.md",
+      "archive_sha256": "57d776e8795b7a1ca93b7c8956ad315d5ee6aa6165852964554217eea89ec36a",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-E-207@36-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/129-CA-E-207-PROJECT_CONFIGURATION-POLICY--evaluate-priority-governed-alternative-selection.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1085@27-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1085@27-draft-QA--evaluate-operator-control-of-ai-permissions.md",
+      "draft_sha256": "1e6182f00d2431a053e09d8d0834ee8afc1553db92addff6c1d21adc64ffe3d1",
+      "archive_ref": "AN-S-3207@27",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3207@27-QA--evaluate-operator-control-of-ai-permissions.md",
+      "archive_sha256": "0d63389f66aebba7c1544541b1c1eb2a8e2737ad805852cd6b30507910f35929",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-E-230@27-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/239-CA-E-230-EVAL_CASE--evaluate-operator-control-of-ai-permissions.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1126@20-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1126@20-draft-QA--validate-the-routing-tree.md",
+      "draft_sha256": "be0a4c0c25a8fb9b22f66543ce73f04bfa6bf7376c3cde7a39cec0293dae6fe1",
+      "archive_ref": "AN-S-1126@20",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1126@20-QA--validate-the-routing-tree.md",
+      "archive_sha256": "b25125c4fb32a0e6c1ea073832a686de8e4a421416b6db91844296dd0d645ab4",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-E-483@20-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/173-CA-E-483-PROJECT_CONFIGURATION-POLICY--validate-the-routing-tree.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1130@26-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1130@26-draft-SWD--optimize-correctness-at-its-declared-priority.md",
+      "draft_sha256": "af903e7657c9f028d1ee431e6cf3f8c95bb28f1b20014f4bc8e4405e0580560c",
+      "archive_ref": "AN-S-3208@26",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3208@26-SWD--optimize-correctness-at-its-declared-priority.md",
+      "archive_sha256": "36575ec76bdba280fc751f1a35b10ca1ec5ac7851dce6bc001a32346bb5b7d4e",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-095@26-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/245-CA-M-095-IMPLEMENTATION_METHOD--optimize-correctness-at-its-declared-priority.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1133@42-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1133@42-draft-SWD--write-claims-in-anechoic-controlled-english.md",
+      "draft_sha256": "c502be32bf72521bbd53879fd92231fe233667fa83f9f0d91a4a9e923c18de7d",
+      "archive_ref": "AN-S-3209@42",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3209@42-SWD--write-claims-in-anechoic-controlled-english.md",
+      "archive_sha256": "ba6c0195cd0d838bb62251fe44fbb2f76b7c89c40785902baad4ee84df8f0cb8",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-113@42-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/149-CA-M-113-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-claims-in-anechoic-controlled-english.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1134@31-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1134@31-draft-SWD--exclude-generated-only-implementation-edges.md",
+      "draft_sha256": "db28c2e0d22a2b2f72e9508768bb29b737421c8ee9bfbe9a5e089076751d6c53",
+      "archive_ref": "AN-S-1134@31",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1134@31-SWD--exclude-generated-only-implementation-edges.md",
+      "archive_sha256": "b5afc999655b2c748d435d764d44385b77c398e0f4b1327e7b9e5f286018305f",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-135@31-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/253-CA-M-135-CORE_META_MODEL-IMPLEMENTATION_METHOD--exclude-generated-only-implementation-edges.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1184@28-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1184@28-draft-DES--separate-extension-installation-from-activation.md",
+      "draft_sha256": "26af0e3430b223cac066f333a9e95a6453fea5e47032424110d730cdb7e3ee39",
+      "archive_ref": "AN-S-3210@28",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3210@28-DES--separate-extension-installation-from-activation.md",
+      "archive_sha256": "08a6b9fa763e972bd7799933d942ae37102ae84f3c00a8816fc39fe11672f730",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1206@28-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/345-CA-R-1206-CORE_META_MODEL-RULE--separate-extension-installation-from-activation.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1185@25-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1185@25-draft-DES--bind-each-project-customization-to-one-source-revision.md",
+      "draft_sha256": "f2873a522478bd4347a144d2f8aa8fdca9e766dc68387638a58dbc61d0dcbeba",
+      "archive_ref": "AN-S-3211@25",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3211@25-DES--bind-each-project-customization-to-one-source-revision.md",
+      "archive_sha256": "dc6887a549a3e4b0d30718e37e82b270487318a37ec9750ecf1282ee10273b41",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1226@25-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/211-CA-R-1226-PROJECT_CONFIGURATION-RULE--bind-each-project-customization-to-one-source-revision.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1186@24-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1186@24-draft-DES--restrict-general-system-prompt-loading-to-main-skill.md",
+      "draft_sha256": "2a686df7ec294b01cda626edd6de056c0fee5f5279ce89c6bb51dd19ced2e287",
+      "archive_ref": "AN-S-3212@24",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3212@24-DES--restrict-general-system-prompt-loading-to-main-skill.md",
+      "archive_sha256": "65fa51f102ba07bad8589e3b9414528c4b23bef3d9aab4e8bc81aa46cbaf51b6",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1354@24-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/337-CA-R-1354-PROJECT_CONFIGURATION--restrict-general-system-prompt-loading-to-main-skill.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1187@26-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1187@26-draft-DES--define-anechoic-direct-route-skill.md",
+      "draft_sha256": "adb664cd2e328601ccd16dc7a72d4e4d8712b15379fa6a2e2caa1db2aaf74939",
+      "archive_ref": "AN-S-3213@26",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3213@26-DES--define-anechoic-direct-route-skill.md",
+      "archive_sha256": "4fe395ad8560c945d2950b69805f00d5f00f9492e3f806732b9ec3977f55749a",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1356@26-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/159-CA-R-1356-PROJECT_CONFIGURATION--define-anechoic-direct-route-skill.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1189@23-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1189@23-draft-DES--keep-git-integration-in-an-extension.md",
+      "draft_sha256": "9ec5f7c12041271a7f959ca0464096b7647671783e19e6c2cae4ff5fd0c6d374",
+      "archive_ref": "AN-S-3214@23",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3214@23-DES--keep-git-integration-in-an-extension.md",
+      "archive_sha256": "e90ec3bb7963ae09bccb03364d7c2e96e7125082ab713c6bef1f42f4bd5df63c",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1466@23-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/411-CA-R-1466-CORE_META_MODEL--keep-git-integration-in-an-extension.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1191@23-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1191@23-draft-DES--govern-ca-execution-gates.md",
+      "draft_sha256": "d774affbd39bdde4edd9421edae941331177aae72c4b98ebd8db4779e90cee54",
+      "archive_ref": "AN-S-3215@23",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3215@23-DES--govern-ca-execution-gates.md",
+      "archive_sha256": "9529a233cfe13d0baad25907de5e5ef19652bbcb7601b8dddb277bd798fb6bc6",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1555@23-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/261-CA-R-1555-CORE_META_MODEL--govern-ca-execution-gates.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1192@19-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1192@19-draft-DES--permit-operator-defined-direct-route-skills.md",
+      "draft_sha256": "c949c2200ef08329fc08dcf1f1a019d04b3a33693340bb56b35be0edea82a1fc",
+      "archive_ref": "AN-S-3216@19",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3216@19-DES--permit-operator-defined-direct-route-skills.md",
+      "archive_sha256": "07ea3b1e65df6406fb4c3b3c56003ce9edfb6d3376c59c262a3e0168c99459ae",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1560@19-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/203-CA-R-1560-PROJECT_CONFIGURATION-RULE--permit-operator-defined-direct-route-skills.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1193@31-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1193@31-draft-DES--requirement-exclude-secrets-from-anechoic.md",
+      "draft_sha256": "8d5a0910fa969ce31277aa2bf499447d2ded2eba55dba990d76cf01c4a976b5c",
+      "archive_ref": "AN-S-3217@31",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3217@31-DES--requirement-exclude-secrets-from-anechoic.md",
+      "archive_sha256": "5f317e171aa78f07957f608823aa53aa92a276ae45c33082cfb75ea735e605d7",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1627@31-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/267-CA-R-1627-CORE_META_MODEL-RULE--requirement-exclude-secrets-from-anechoic.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1194@43-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1194@43-draft-DES--record-one-lineage-impact-analysis-per-changed-atom-revision.md",
+      "draft_sha256": "53a7ae6345d820b8fa7c397e2882dc102273720b2130122a4f4a36ad04e1c208",
+      "archive_ref": "AN-S-3218@43",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3218@43-DES--record-one-lineage-impact-analysis-per-changed-atom-revision.md",
+      "archive_sha256": "1d804af06e350a3a08c6574f0b78dbe5357cdf934f369e872fcc70c8c1d99956",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1633@43-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/357-CA-R-1633-CORE_META_MODEL-RULE--record-one-lineage-impact-analysis-per-changed-atom-revision.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1195@33-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1195@33-draft-DES--resolve-skill-routing-precedence.md",
+      "draft_sha256": "b472ffa18fa804d8a7087ac5b0a65647fbdaa981bdcbb0ceba619c5a7c1739c2",
+      "archive_ref": "AN-S-3219@33",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3219@33-DES--resolve-skill-routing-precedence.md",
+      "archive_sha256": "2dc179e103a82fe9488d5d31f5437f0bb727a42ce488b809b6a9509a13969972",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1641@33-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/179-CA-R-1641-PROJECT_CONFIGURATION-RULE--resolve-skill-routing-precedence.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1196@41-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1196@41-draft-DES--bind-proof-records-to-dependency-frontiers.md",
+      "draft_sha256": "c09371d2318dd93e260df0ff1a8d4c62f2c447735381bb0f34e229a43a952354",
+      "archive_ref": "AN-S-3220@41",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3220@41-DES--bind-proof-records-to-dependency-frontiers.md",
+      "archive_sha256": "d71c68dd3096e8fb9264b027ea17d73ee181584e8ff355af4bb6c5e113537d87",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1646@41-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/155-CA-R-1646-CORE_META_MODEL-RULE--bind-proof-records-to-dependency-frontiers.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1197@34-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1197@34-draft-DES--define-the-bounded-session-state-envelope.md",
+      "draft_sha256": "b8e87d521b890cf891b5cdea548c6a9db257937c388322af6594734ce446601f",
+      "archive_ref": "AN-S-3221@34",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3221@34-DES--define-the-bounded-session-state-envelope.md",
+      "archive_sha256": "75fc41bea4ca44ca0fec3cb6b2fc2a92e0c41f2aad34754ff33af68ee62a95b7",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1650@34-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/367-CA-R-1650-CORE_META_MODEL-RULE--define-the-bounded-session-state-envelope.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1198@41-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1198@41-draft-DES--configure-necessary-information-confidence-threshold.md",
+      "draft_sha256": "1aacfcbc7edea1a29a296b5f72e43f912d74d6d5fb9f7eea0786d6aad54c34df",
+      "archive_ref": "AN-S-3222@41",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3222@41-DES--configure-necessary-information-confidence-threshold.md",
+      "archive_sha256": "e373fbef7492b50f1f8b263d92ced926586fbf4b4bb4f2623190810ec71cc244",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1652@41-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/405-CA-R-1652-CORE_META_MODEL--configure-necessary-information-confidence-threshold.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1200@30-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1200@30-draft-DES--requirement-bound-effect-guarantees.md",
+      "draft_sha256": "5f83f103ab06bed9ef868c5154fabd0befeaf06d5a82bd5496b7bb068df2a133",
+      "archive_ref": "AN-S-1200@30",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1200@30-DES--requirement-bound-effect-guarantees.md",
+      "archive_sha256": "f5ead2f6da88bdde5f4d0caf1af67485f29b1706d0848125012813076f482413",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1679@30-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/115-CA-R-1679-CORE_META_MODEL--requirement-bound-effect-guarantees.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1201@33-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1201@33-draft-DES--requirement-keep-provenance-separate-from-evidence.md",
+      "draft_sha256": "de624f9b14ebc44afa5f62264e1e3b089e33c189d15b9d0d2437b50407ee14db",
+      "archive_ref": "AN-S-1201@33",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1201@33-DES--requirement-keep-provenance-separate-from-evidence.md",
+      "archive_sha256": "e71330f45bd75fa082d787a4b8d0758dc6566643b95e83213eb1fd34b222b6eb",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1687@33-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/163-CA-R-1687-CORE_META_MODEL-RULE--requirement-keep-provenance-separate-from-evidence.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1203@31-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1203@31-draft-DES--keep-data-stages-orthogonal-to-artifact-semantics.md",
+      "draft_sha256": "f2747dd3abbf89d328dc22758b50e35cf7d1f60b1d4da017657248e996f5b1ab",
+      "archive_ref": "AN-S-1203@31",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1203@31-DES--keep-data-stages-orthogonal-to-artifact-semantics.md",
+      "archive_sha256": "911e2c8508fe991aebb118c87ea276ab2a5c490a89a5e3524504d66ba17cc069",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1717@31-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/205-CA-R-1717-CORE_META_MODEL-RULE--keep-data-stages-orthogonal-to-artifact-semantics.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1204@29-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1204@29-draft-DES--realize-recurrence-evaluation-through-implementation.md",
+      "draft_sha256": "cbc42431d794fb0828a310999c08bbdddfd98a2fb6cc38a8c244095f8a90f14f",
+      "archive_ref": "AN-S-1204@29",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1204@29-DES--realize-recurrence-evaluation-through-implementation.md",
+      "archive_sha256": "cdaf509c7e00e3408c69997543d4871ed942ba23333d5d09553cec31f262e5e5",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1742@29-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/293-CA-R-1742-CORE_META_MODEL-RULE--realize-recurrence-evaluation-through-implementation.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1205@29-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1205@29-draft-DES--bound-extension-applicability.md",
+      "draft_sha256": "2663addd3a6525e1b2328fe822193102783a556d85ea0a1521f99f4030edb201",
+      "archive_ref": "AN-S-1205@29",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1205@29-DES--bound-extension-applicability.md",
+      "archive_sha256": "bb7905d2067cb9f9a9f14f7fb73ffb17ab85918edec8dce7bed952c3320884a9",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1755@29-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/167-CA-R-1755-CORE_META_MODEL--bound-extension-applicability.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1206@13-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1206@13-draft-DES--define-production-log-severity-meanings.md",
+      "draft_sha256": "aeb040d253533aaa51da793481330c465057536572a4e0adeb5f7204f9f53718",
+      "archive_ref": "AN-S-1206@13",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1206@13-DES--define-production-log-severity-meanings.md",
+      "archive_sha256": "f865b92cf7609eb235a12da97dbde6620e000f1e268b37103a382c97d31e2a8e",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1780@13-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/417-CA-R-1780-PROJECT_CONFIGURATION-RULE--define-production-log-severity-meanings.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1207@14-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1207@14-draft-DES--bound-high-frequency-info-logging.md",
+      "draft_sha256": "d5246b91ce7364dbc7f9f6d39bab46090f8b971ca2864076941000ce60be9731",
+      "archive_ref": "AN-S-3223@14",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3223@14-DES--bound-high-frequency-info-logging.md",
+      "archive_sha256": "85349d985d6f93b68553e081622a0e75e15c12f3432642d4bf6da6c9b65a7aad",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1781@14-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/113-CA-R-1781-PROJECT_CONFIGURATION-RULE--bound-high-frequency-info-logging.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1208@15-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1208@15-draft-DES--control-production-debug-enablement.md",
+      "draft_sha256": "246f68c71246f016e8b94a8d88124153312d314a8191e966fa30b184a50ab65e",
+      "archive_ref": "AN-S-3224@15",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3224@15-DES--control-production-debug-enablement.md",
+      "archive_sha256": "323c538d984489fbf6ac715cc06cb561604cbc6c4c9f1819ff0f4cb0c25cca71",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1782@15-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/145-CA-R-1782-PROJECT_CONFIGURATION-RULE--control-production-debug-enablement.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1209@13-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1209@13-draft-DES--require-production-logging-lifecycle-settings.md",
+      "draft_sha256": "31ba008b4a614a2582d2ab04ff3989f06b36685e66422485c3ce1533d383d0ab",
+      "archive_ref": "AN-S-1209@13",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1209@13-DES--require-production-logging-lifecycle-settings.md",
+      "archive_sha256": "70c073ea4147e5acff8cdcdfaaf0737b9b3ba2cf1688f1e8ba51dbbff97660e0",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1783@13-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/207-CA-R-1783-PROJECT_CONFIGURATION-RULE--require-production-logging-lifecycle-settings.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1210@13-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1210@13-draft-DES--protect-primary-operations-from-logging-failure.md",
+      "draft_sha256": "c3a85eaa32d3a9de0d1817017e6bc151fc3f1ee9d4a8678cb916c4bab5286f50",
+      "archive_ref": "AN-S-1210@13",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1210@13-DES--protect-primary-operations-from-logging-failure.md",
+      "archive_sha256": "5cb5b67a504f718752e081a5e2e2eb9682c932b3abe39d4f1be5d9d45032a41e",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1784@13-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/183-CA-R-1784-PROJECT_CONFIGURATION-RULE--protect-primary-operations-from-logging-failure.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1211@14-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1211@14-draft-DES--make-required-production-record-loss-observable.md",
+      "draft_sha256": "b3b70c2f0dc17db89a32bd9dbb3643013aa02100b7499f9fc71571709ae65d02",
+      "archive_ref": "AN-S-3225@14",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3225@14-DES--make-required-production-record-loss-observable.md",
+      "archive_sha256": "b62ef435a1c99329290d4438c971683e93a762245785e819dd1987cf927f7142",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1785@14-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/333-CA-R-1785-PROJECT_CONFIGURATION-RULE--make-required-production-record-loss-observable.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1212@13-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1212@13-draft-DES--require-monitors-for-important-production-health-signals.md",
+      "draft_sha256": "d901b27d3323692875336c32fa6d6717cb0ed54595ec3a53ff80259319281144",
+      "archive_ref": "AN-S-1212@13",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1212@13-DES--require-monitors-for-important-production-health-signals.md",
+      "archive_sha256": "8c0112726b28e69b2e4928d0fb17b291cdc251d09c4a7463f6bb5fdfc750ce13",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1786@13-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/299-CA-R-1786-PROJECT_CONFIGURATION-RULE--require-monitors-for-important-production-health-signals.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1216@4-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1216@4-draft-DES--reserve-project-wide-invariant-conflict-resolution-to-the-operator.md",
+      "draft_sha256": "07693a65874bff4c895a270815637f0d783d94a34cddc0f8f90c1bcff9574046",
+      "archive_ref": "AN-S-3226@4",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3226@4-DES--reserve-project-wide-invariant-conflict-resolution-to-the-operator.md",
+      "archive_sha256": "5b6b158cb5659f301645685bcaf7843148c0beb84d432cd1967ff38c55fa7068",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-2425@4-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/349-CA-R-2425-CORE_META_MODEL-RULE--reserve-project-wide-invariant-conflict-resolution-to-the-operator.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1219@31-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1219@31-draft-DES--let-the-operator-control-ai-permissions.md",
+      "draft_sha256": "d11f1b981778db95decd0b515975e13e9df83b42a904c1148cc4791c115be3bd",
+      "archive_ref": "AN-S-3227@31",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3227@31-DES--let-the-operator-control-ai-permissions.md",
+      "archive_sha256": "98fcb564948a92368803d618deb2c09db094ed8a39ad35afba8fedbd3fe1016e",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-846@31-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/125-CA-R-846-GOAL--let-the-operator-control-ai-permissions.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1233@4-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1233@4-draft-DES--create-and-evolve-a-working-anechoic-framework.md",
+      "draft_sha256": "4c7b5ecfc2dbac42eab447454d117a0659e27829cc6a7e1c8c2207283c84cdf8",
+      "archive_ref": "AN-S-1233@4",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1233@4-DES--create-and-evolve-a-working-anechoic-framework.md",
+      "archive_sha256": "9601c72cb73496857ebff05ad4a9fa63ff8bd17f76f2cc5026d0dc22ea9ddec4",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-2452@4-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/141-CA-R-2452-ANATOLY-MASLENNIKOV-DEFINES_GOAL_FOR-anechoic--create-and-evolve-a-working-anechoic-framework.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1464@15-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1464@15-draft-DES--establish-recurrence-protection.md",
+      "draft_sha256": "0720709312750f491f0894f2fb0083c678f2a5978f05eceabf09daf40e06c5e9",
+      "archive_ref": "AN-S-1464@15",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1464@15-DES--establish-recurrence-protection.md",
+      "archive_sha256": "1995b25b52e5c2b4fd8d5eb8a912be15ce25ae3519a1b7c2921cca7313086c24",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-637@15-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/353-CA-R-637-RULE--establish-recurrence-protection.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1476@34-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1476@34-draft-DES--expose-only-task-necessary-distinctions.md",
+      "draft_sha256": "4a76e84d9186e79c4f43e9a1614ddd954e593a3812df33f9fe9acb0d158225af",
+      "archive_ref": "AN-S-1476@34",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1476@34-DES--expose-only-task-necessary-distinctions.md",
+      "archive_sha256": "45f60ca1b78b86fc5201824a26d0d12026ffdc2bb201548bd97da6fcb3fce8b6",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1057@34-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/331-CA-R-1057-GOAL--expose-only-task-necessary-distinctions.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1478@5-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1478@5-draft-DES--preserve-valuable-information.md",
+      "draft_sha256": "451fd8b805c99c2b95ac0e79aca57714ef5a0332dd92fd622a1aae5ddd29fcd3",
+      "archive_ref": "AN-S-1478@5",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1478@5-DES--preserve-valuable-information.md",
+      "archive_sha256": "d6a191f9b9c8d934ec22230835403acf421c5c27bf6dc22bae280bb523b8bf57",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-2448@5-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/385-CA-R-2448-ANECHOIC-SCOPE_CONTRACT-GOAL--keep-valuable-project-information-recoverable.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1481@28-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1481@28-draft-DES--bound-improvement-claims-to-a-comparison-frame.md",
+      "draft_sha256": "bd253af7eac8088c2f2ef468e72afad4d788701826baa42be5b1cdc1468367ea",
+      "archive_ref": "AN-S-1481@28",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1481@28-DES--bound-improvement-claims-to-a-comparison-frame.md",
+      "archive_sha256": "80d8a72ee647d132099f293389f2b646f685f376159451c0c7bc7771a5f1bcdb",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-053@28-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/351-CA-R-053-RULE--bound-improvement-claims-to-a-comparison-frame.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1483@29-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1483@29-draft-DES--distinguish-framework-and-project-improvement-targets.md",
+      "draft_sha256": "e0fb5c0cc56cfd89e169debb97d98f9185a8a1d97288843bd2c03f7e5f931e8e",
+      "archive_ref": "AN-S-1483@29",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1483@29-DES--distinguish-framework-and-project-improvement-targets.md",
+      "archive_sha256": "233dcc7ec171b286ecea73eeb41a0883d976beddb7f4d8781b1c52e5b8858d07",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-632@29-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/135-CA-R-632-RULE--distinguish-framework-and-project-improvement-targets.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1494@29-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1494@29-draft-DES--govern-requirement-conflicts-by-tier.md",
+      "draft_sha256": "6ddbed65e8a6e92de03ec16e9b07a959aa6ec019c4758647bce3deb3c27c73fa",
+      "archive_ref": "AN-S-3228@29",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3228@29-DES--govern-requirement-conflicts-by-tier.md",
+      "archive_sha256": "afa5760b2a87435374d5dc6ef1f13922fd3b8f3d40d5ce71ee925a1d62ace103",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-024@29-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/365-CA-R-024-ANECHOIC-RULE--govern-requirement-conflicts-by-tier.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1496@20-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1496@20-draft-DES--provide-capabilities-without-forcing-their-execution.md",
+      "draft_sha256": "a0122bcde649e9772013b90288e8dfa9cc803dc30b1912844ab36caa26c4fd9d",
+      "archive_ref": "AN-S-3229@20",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3229@20-DES--provide-capabilities-without-forcing-their-execution.md",
+      "archive_sha256": "791d4d35356ba551b831f3eadffddedc9f112fcda6b27b00be78848bd270aeb1",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1799@20-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/343-CA-R-1799-RULE--provide-capabilities-without-forcing-their-execution.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1498@25-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1498@25-draft-SWD--preserve-sufficient-authority-for-reconstruction.md",
+      "draft_sha256": "80856186b0b14e6dc737e127fb162b252d47914a845e1a54df2dceba2320bc48",
+      "archive_ref": "AN-S-1498@25",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1498@25-SWD--preserve-sufficient-authority-for-reconstruction.md",
+      "archive_sha256": "385625b421a32a646899065918edfb47ef61df8b773f2da5ce62bce2308ccfc3",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-262@25-draft",
+          "path": ".anechoic_anechoic/05_method/000_draft/cfel-contract-completion-20261102/subject-migration/CA-M-262@25-draft-IMPLEMENTATION_METHOD--preserve-sufficient-authority-for-reconstruction.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1499@25-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1499@25-draft-SWD--follow-the-operator-selected-implementation-mode.md",
+      "draft_sha256": "379d9639fe1f7641524fa1cc2531e9c0170411e8b2dffe24424de3f8b7ad6837",
+      "archive_ref": "AN-S-1499@25",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1499@25-SWD--follow-the-operator-selected-implementation-mode.md",
+      "archive_sha256": "f42d4635342d29aee51e423683b7430119f4173ab6516019bc74dab6490d2bbf",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-266@25-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/269-CA-M-266-IMPLEMENTATION_METHOD--follow-the-operator-selected-implementation-mode.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1500@29-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1500@29-draft-SWD--prepare-verification-before-refactoring.md",
+      "draft_sha256": "7ded4ede3eab57128be81b1c60a1d1f1027558214adc817ff1ad53f7c20166a7",
+      "archive_ref": "AN-S-1500@29",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1500@29-SWD--prepare-verification-before-refactoring.md",
+      "archive_sha256": "0ba33eeda95f165cd3c98ba036654651f90e969e0d3d3a0ff140751265d9d5e3",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-270@29-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/303-CA-M-270-IMPLEMENTATION_METHOD--prepare-verification-before-refactoring.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1501@35-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1501@35-draft-QA--make-governed-commitments-and-results-checkable.md",
+      "draft_sha256": "273d9df40dbc64f0b74d7f9a4a6a67e9fce47735376bc264603930b7b7a862c5",
+      "archive_ref": "AN-S-1501@35",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1501@35-QA--make-governed-commitments-and-results-checkable.md",
+      "archive_sha256": "8bddac2fb5b43369794d5de234f5f68fb4e351127729c1c64d9cff9e3a4f0b13",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-E-001@35-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/329-CA-E-001-ANECHOIC-SCOPE_CONTRACT-EVAL-POLICY--make-governed-commitments-and-results-checkable.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1502@28-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1502@28-draft-QA--evaluate-operator-control-outside-the-framework-instance.md",
+      "draft_sha256": "f5702c291f62c3add7682c11e70d401a3a78b1830eb6967cb4a8632c54a609e7",
+      "archive_ref": "AN-S-3230@28",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3230@28-QA--evaluate-operator-control-outside-the-framework-instance.md",
+      "archive_sha256": "206fdc0ced73f7cc1522958b7cd326e62c38c0dc69d022459680357740f6134c",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-E-229@28-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/257-CA-E-229-POLICY--evaluate-operator-control-outside-the-framework-instance.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1503@26-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1503@26-draft-QA--evaluate-reconstruction-readiness.md",
+      "draft_sha256": "6efface4f0224f91f0191add960425c9c41604df75ed8c698b65ed12c706946a",
+      "archive_ref": "AN-S-1503@26",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1503@26-QA--evaluate-reconstruction-readiness.md",
+      "archive_sha256": "2ef7c7506b45f9ce1a97c32ab7176b5e39707247b4f60724d459ab9758e834f3",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-E-435@26-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/335-CA-E-435-POLICY--evaluate-reconstruction-readiness.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1504@27-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1504@27-draft-QA--evaluate-methodology-alignment-support.md",
+      "draft_sha256": "c24e2734ef8e0b857bc44963ab149aa82dc05cbd84d4ca4eca87b020cc98ef81",
+      "archive_ref": "AN-S-3231@27",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3231@27-QA--evaluate-methodology-alignment-support.md",
+      "archive_sha256": "a1612a44bbfca2419abbcfc4719423bc4dcb6a6e34d1f3798fa247faab38fdb2",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-E-437@27-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/311-CA-E-437-POLICY--evaluate-methodology-alignment-support.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1505@26-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1505@26-draft-QA--evaluate-implementation-mode-conformance.md",
+      "draft_sha256": "fb2955f4e1515b7b812bdbd2366f30e51daeb41dd9da8f4fc1baa863f9fd06dc",
+      "archive_ref": "AN-S-1505@26",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1505@26-QA--evaluate-implementation-mode-conformance.md",
+      "archive_sha256": "fd5008b0320e9e5eb7fae49bb0209a46b0527765dcf2e1d0a1f8fb16f0317cf8",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-E-438@26-draft",
+          "path": ".anechoic_anechoic/06_evaluation/000_draft/cfel-contract-completion-20261102/subject-migration/CA-E-438@26-draft-POLICY--evaluate-implementation-mode-conformance.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1506@26-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1506@26-draft-QA--evaluate-refactoring-verification-readiness.md",
+      "draft_sha256": "a5fe9c5ce465460a26d2f89a148a308dfe48d7795622132cb3a7b7631076405a",
+      "archive_ref": "AN-S-1506@26",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1506@26-QA--evaluate-refactoring-verification-readiness.md",
+      "archive_sha256": "c704ea1e9b244043e42795da2bb9b1b9af48cb473ee1c59627224647614e5116",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-E-442@26-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/103-CA-E-442-POLICY--evaluate-refactoring-verification-readiness.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-150@37-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-150@37-draft-DES--keep-the-framework-under-operator-control.md",
+      "draft_sha256": "dcc4d122259c50da917578344ba267e251b48cd41340b45b9e8a91f7159bf466",
+      "archive_ref": "AN-S-3232@37",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3232@37-DES--keep-the-framework-under-operator-control.md",
+      "archive_sha256": "ee13e0bcc45df005778ad1dc3a4a658885be078d32e50d7fcce31f2cb4b58270",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-004@37-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/215-CA-R-004-RULE--keep-the-framework-under-operator-control.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-157@39-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-157@39-draft-DES--require-operator-authority-for-governed-change.md",
+      "draft_sha256": "06459e142f8e846832a8e57343c2efeda7388a0d6842250868fdd7e6998b727a",
+      "archive_ref": "AN-S-3233@39",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3233@39-DES--require-operator-authority-for-governed-change.md",
+      "archive_sha256": "29021b86b5a88a18e7f0cb7229f3413225bf4e611a7dd97d71f47bc6a3ec8b16",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1058@39-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/221-CA-R-1058-RULE--require-operator-authority-for-governed-change.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1583@4-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1583@4-draft-SWD--model-concepts-use-their-readable-names-in-authored-methodology.md",
+      "draft_sha256": "a5f7880885c7cb3d6d4417048846d3db1f40bea7a598b768ccf3fbc226e0e83a",
+      "archive_ref": "AN-S-3234@4",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3234@4-SWD--model-concepts-use-their-readable-names-in-authored-methodology.md",
+      "archive_sha256": "621f367d740ae7922099e2baf58a6aa39b1c281bccb3a7801830d6bfccae5361",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-445@4-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/315-CA-M-445-METHODOLOGY_SOURCES-ENG_POLICY--model-concepts-use-their-readable-names-in-authored-methodology.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1585@33-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1585@33-draft-DES--define-autonomous-confidence-threshold.md",
+      "draft_sha256": "29c84576432b13b6c889032ef9891607fd7d7c988e5ad18838adba4777b56100",
+      "archive_ref": "AN-S-3235@33",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3235@33-DES--define-autonomous-confidence-threshold.md",
+      "archive_sha256": "57efc4227decc24ac329ee4fc5686b966d1f8566615287289f91185a8a69e7fb",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1044@33-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/223-CA-R-1044-CORE_META_MODEL-DEFINITION--define-autonomous-confidence-threshold.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-160@28-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-160@28-draft-DES--help-operators-optimize-the-active-rule-set.md",
+      "draft_sha256": "6d0debfe9a6227f25a5ae094d95e5cb89f40c81d68c655abe7592fe348f52530",
+      "archive_ref": "AN-S-3236@28",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3236@28-DES--help-operators-optimize-the-active-rule-set.md",
+      "archive_sha256": "168ed9124857d73205f9bb087a9e7da2f6945363ab86bbc1deb86ba9e25d85a0",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-818@28-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/165-CA-R-818-GOAL--help-operators-optimize-the-active-rule-set.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1611@25-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1611@25-draft-DES--keep-evaluation-implementation-coverage-explicit.md",
+      "draft_sha256": "4be8b16c4afe4e8627413adac819dcd66812f6eb4fa766f6c9502851cf598447",
+      "archive_ref": "AN-S-1611@25",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1611@25-DES--keep-evaluation-implementation-coverage-explicit.md",
+      "archive_sha256": "fa2a42e2bb184549c1638b81ba4d39c32659489579c630efe16629e98ba36995",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1504@25-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/247-CA-R-1504-CORE_META_MODEL-RULE--keep-evaluation-implementation-coverage-explicit.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1612@27-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1612@27-draft-DES--keep-evaluation-realization-chains-distinct.md",
+      "draft_sha256": "3e7f3e2c6c86a60fba5ca86e579ef390cfc13c3131026bba27cc2e1c0b989067",
+      "archive_ref": "AN-S-1612@27",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1612@27-DES--keep-evaluation-realization-chains-distinct.md",
+      "archive_sha256": "e80e0493a4c3a3f4053d8e4127df066230f5b67324ecaa69f08f1e215cb69665",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1505@27-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/235-CA-R-1505-CORE_META_MODEL-RULE--keep-evaluation-realization-chains-distinct.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1613@21-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1613@21-draft-DES--separate-check-mechanism-labels-from-evaluation-atom-types.md",
+      "draft_sha256": "8375b903a4cc6e014632675c456c4cf31ed397ffad8f333097bc67747e26acb4",
+      "archive_ref": "AN-S-3237@21",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3237@21-DES--separate-check-mechanism-labels-from-evaluation-atom-types.md",
+      "archive_sha256": "db0415097e66f642e093476de5810ef867cfb9d255e81a58e9d729ffa44e8155",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1506@21-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/219-CA-R-1506-CORE_META_MODEL-RULE--separate-check-mechanism-labels-from-evaluation-atom-types.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1626@26-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1626@26-draft-DES--gate-governing-atom-changes-during-implementation.md",
+      "draft_sha256": "0134af1753e526626e010e60cd2cc7c2b47a05fa7306bc7dee5ec398fb409ecd",
+      "archive_ref": "AN-S-1626@26",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1626@26-DES--gate-governing-atom-changes-during-implementation.md",
+      "archive_sha256": "4e7475ab83ea569834ea1fc52dc860f4ef0a132c68d7ab549492795315525ad7",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1559@26-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/381-CA-R-1559-CORE_META_MODEL-RULE--gate-governing-atom-changes-during-implementation.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-162@32-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-162@32-draft-DES--keep-the-project-under-operator-control.md",
+      "draft_sha256": "310bb0c962cdc42e4f3affb1b8dd2227dfb3e3b56e82fda791bb480f691c5eb0",
+      "archive_ref": "AN-S-3238@32",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3238@32-DES--keep-the-project-under-operator-control.md",
+      "archive_sha256": "80a2c312ca169321170f6bf2a428b73cf3cbc72ed273d1f2fb003851f6b245d1",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-827@32-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/355-CA-R-827-BOUNDARY--keep-the-project-under-operator-control.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1636@26-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1636@26-draft-DES--require-an-effective-confidence-threshold-for-plan-execution.md",
+      "draft_sha256": "5c2b58b61969ef2ac9c16e97f5541cff6a5895ac15126ec76d5db518dd87c273",
+      "archive_ref": "AN-S-3239@26",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3239@26-DES--require-an-effective-confidence-threshold-for-plan-execution.md",
+      "archive_sha256": "c9bb0a602e46e914189f8a97a669d543d07c3cf10ff1d8045a359f09fcb57d0a",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1587@26-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/193-CA-R-1587-CORE_META_MODEL-RULE--require-an-effective-confidence-threshold-for-plan-execution.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1640@28-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1640@28-draft-DES--apply-autonomous-confidence-thresholds-to-plan-execution.md",
+      "draft_sha256": "2d58e4f8e5b5deb9096bd5268beddb500daaee2e4b253cec43141e36d011dcd5",
+      "archive_ref": "AN-S-3240@28",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3240@28-DES--apply-autonomous-confidence-thresholds-to-plan-execution.md",
+      "archive_sha256": "7880d51365b4a1661838c1ec74ab9f319a997523a883809dcb344c194fd24ba7",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1591@28-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/285-CA-R-1591-CORE_META_MODEL-RULE--apply-autonomous-confidence-thresholds-to-plan-execution.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1653@38-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1653@38-draft-DES--preserve-implementation-traceability-in-the-shared-project-journal.md",
+      "draft_sha256": "c745d774b6076e3911afab658ae1930e283e389f282ea4e50b9baf3541edbdf4",
+      "archive_ref": "AN-S-3241@38",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3241@38-DES--preserve-implementation-traceability-in-the-shared-project-journal.md",
+      "archive_sha256": "1445f168053dc5ab254ba4402962ddf8caafda50fb845370084fb94e123940b8",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1695@38-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/137-CA-R-1695-CORE_META_MODEL-RULE--preserve-implementation-traceability-in-the-shared-project-journal.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1655@40-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1655@40-draft-DES--use-implementation-overview-as-a-projection.md",
+      "draft_sha256": "33e48055138533eca49653b7e895701f75fc5fe114c064ee219a258c668dae78",
+      "archive_ref": "AN-S-1655@40",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1655@40-DES--use-implementation-overview-as-a-projection.md",
+      "archive_sha256": "1a861dae0815e7e36cbc566d2a546185c9b2a5b513e975e36f7d4511ded55995",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1703@40-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/199-CA-R-1703-CORE_META_MODEL-RULE--use-implementation-overview-as-a-projection.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1709@22-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1709@22-draft-SWD--write-workflow-schemes-using-step-references.md",
+      "draft_sha256": "664a6ec9d32937086c9acb06691d51796b5c7d4d89080f02018943f3611ded10",
+      "archive_ref": "AN-S-3242@22",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3242@22-SWD--write-workflow-schemes-using-step-references.md",
+      "archive_sha256": "b5ef3ef8caf01a5ab5463455f54f7571ea6524443b0290a80c73ad2808be5970",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-305@22-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/recursive-steps-20261105/consumers/CA-M-305.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1710@29-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1710@29-draft-SWD--define-content-role-specific-cce-profiles.md",
+      "draft_sha256": "8868191100c49142c4fe9b71b1b1a66c0a24c7a4bc6f125db3a914ed1722c46b",
+      "archive_ref": "AN-S-1710@29",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1710@29-SWD--define-content-role-specific-cce-profiles.md",
+      "archive_sha256": "d9ba5c4dd9b22fb189bcc5669d83c9f586e56b5b4107a10313ff37c81932b41f",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-307@29-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/279-CA-M-307-CORE_META_MODEL-IMPLEMENTATION_METHOD--define-content-role-specific-cce-profiles.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1711@25-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1711@25-draft-SWD--resolve-the-effective-cce-role-profile.md",
+      "draft_sha256": "7eb148738eb2622409b62385c9feca570619dd2182a40f07d5107b9ca08a3f14",
+      "archive_ref": "AN-S-3243@25",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3243@25-SWD--resolve-the-effective-cce-role-profile.md",
+      "archive_sha256": "f049e493277530417071e1ebfad53c26616e637c090e9cd18d0c911d5fea0710",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-308@25-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/213-CA-M-308-CORE_META_MODEL--resolve-the-effective-cce-role-profile.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1713@25-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1713@25-draft-SWD--write-method-claims-with-the-method-cce-profile.md",
+      "draft_sha256": "d5965c9137525204760cb9bc8cc5e5804642fd4e2b9b8176eaa1e6401f9f673b",
+      "archive_ref": "AN-S-3244@25",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3244@25-SWD--write-method-claims-with-the-method-cce-profile.md",
+      "archive_sha256": "19cd8108a46fd2b5a800520401792f1a2996aabb4eda1b619f986e078a4830b6",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-311@25-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/313-CA-M-311-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-method-claims-with-the-method-cce-profile.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1718@49-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1718@49-draft-QA--validate-atom-scope-and-claim-scope.md",
+      "draft_sha256": "68127b2e5e3fda657b8a598da6b6bfa7edaeb34aed4b86776a5e4d3bcf5ecb9f",
+      "archive_ref": "AN-S-1718@49",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1718@49-QA--validate-atom-scope-and-claim-scope.md",
+      "archive_sha256": "26bb329f8e3c3d9cb20d5fa884acaab2285351e631e979b67c33ec849da33941",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-E-240@49-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/container-header-integration-20261105/CA-E-240.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1721@36-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1721@36-draft-QA--report-exact-claim-value-set-consolidation-candidates.md",
+      "draft_sha256": "9cf01f0d0ebaa85c982cf4511f686669180aeab9f6a0f80ef18e9121e20d683e",
+      "archive_ref": "AN-S-3245@36",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3245@36-QA--report-exact-claim-value-set-consolidation-candidates.md",
+      "archive_sha256": "7da3adb2d326d58d4212c61adb5cb6cb3450dbf9776dcc7eef84131b49fc4e8c",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-E-403@36-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/cfel-without-operator-entities-20261105/consumers/previews/CA-E-403-CORE_META_MODEL-EVAL_POLICY--report-exact-claim-value-set-consolidation-candidates.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1724@36-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1724@36-draft-QA--evaluate-governing-atom-change-approval.md",
+      "draft_sha256": "81bdf7e6057c0b4f027dabb56387e72a851cd615239282194e1abab4ca71718b",
+      "archive_ref": "AN-S-1724@36",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1724@36-QA--evaluate-governing-atom-change-approval.md",
+      "archive_sha256": "b9ef879ca26f6bce364871c162080535ae49935412e8572f03c39c22d1bbbf20",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-E-440@36-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/305-CA-E-440-CORE_META_MODEL-POLICY--evaluate-governing-atom-change-approval.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1725@34-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1725@34-draft-QA--validate-confidence-threshold-precedence-and-inheritance.md",
+      "draft_sha256": "49e7bb2391e13d308bb604b2c2220970ee8f103e9ad14da60b98c25f7120bbf7",
+      "archive_ref": "AN-S-3246@34",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3246@34-QA--validate-confidence-threshold-precedence-and-inheritance.md",
+      "archive_sha256": "b78309aab597206f1c0f562eaeec951d986e63caacd03847312e8df33b4bc3d5",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-E-443@34-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/273-CA-E-443-CORE_META_MODEL-EVAL_CASE--validate-confidence-threshold-precedence-and-inheritance.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1726@32-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1726@32-draft-QA--validate-accidental-atom-id-reuse-repair.md",
+      "draft_sha256": "1ce1131fd2712e3dc44783a1b16facf06530ad516c157de4331f07f8bf85fe2f",
+      "archive_ref": "AN-S-1726@32",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1726@32-QA--validate-accidental-atom-id-reuse-repair.md",
+      "archive_sha256": "3d7dc375f4d2f8f982747a1d98cb57c593a40f94d3c4f9c6a8bbff6c69add967",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-E-448@32-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/325-CA-E-448-CORE_META_MODEL-POLICY--validate-accidental-atom-id-reuse-repair.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1778@29-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1778@29-draft-DEVOPS--serialize-explicit-plan-confidence-overrides.md",
+      "draft_sha256": "71c425728f7fa759a0d6b303e0097c370bc36614f763c7a7813c7f311043c365",
+      "archive_ref": "AN-S-1778@29",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1778@29-DEVOPS--serialize-explicit-plan-confidence-overrides.md",
+      "archive_sha256": "b04e5df7f6e63d6d5e0112fb6ef1ad33f75a160ae5eef83de358082c14c5134d",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-D-472@29-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/383-CA-D-472-CORE_META_MODEL-DECISION--serialize-explicit-plan-confidence-overrides.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1794@26-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1794@26-draft-DES--allow-pre-runtime-pass-only-with-sufficient-evidence.md",
+      "draft_sha256": "6fdbd924c35afbe0dceb8e7e6bdf438f64d35ec5fc1e800026c4ca76f96dcf28",
+      "archive_ref": "AN-S-3247@26",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3247@26-DES--allow-pre-runtime-pass-only-with-sufficient-evidence.md",
+      "archive_sha256": "7b5462c5c529d4493d2ae6977d7d7ad8eacd8a66f95325309a9f1e76d7915663",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1612@26-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/341-CA-R-1612-PROJECT_CONFIGURATION-RULE--allow-pre-runtime-pass-only-with-sufficient-evidence.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1798@33-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1798@33-draft-DES--define-the-anechoic-expansion.md",
+      "draft_sha256": "11cb4c586bb2c3df720ba93ca18569704f3fe630300166154af883c5fa7d627a",
+      "archive_ref": "AN-S-3248@33",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3248@33-DES--define-the-anechoic-expansion.md",
+      "archive_sha256": "0b149fdc19aa32aa10a95b71d8e6ef7781d3068a1f1c1b479bcd3cd1c4f99e84",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1736@33-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/175-CA-R-1736-PROJECT_CONFIGURATION-RULE--define-the-anechoic-expansion.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1801@17-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1801@17-draft-DES--require-production-logging-policies.md",
+      "draft_sha256": "8efe1ae57fe044c6f07fe685d54722478da876b4d3074292635c0dfd1f8d93f9",
+      "archive_ref": "AN-S-3249@17",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3249@17-DES--require-production-logging-policies.md",
+      "archive_sha256": "4871778d37bb499b056c2a87d9de5b43a8c6da74863e67991a084fe6cdb62cc4",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1779@17-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/259-CA-R-1779-PROJECT_CONFIGURATION-RULE--require-production-logging-policies.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1805@18-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1805@18-draft-SWD--author-fpf-analysis-reports.md",
+      "draft_sha256": "360a64cfcf2f06ac81c4578956e4397ed92554dc28c18384687b4291410a6ac8",
+      "archive_ref": "AN-S-1805@18",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1805@18-SWD--author-fpf-analysis-reports.md",
+      "archive_sha256": "daf64765cf941e86820e018d1d661225d798572a4ceed50ffe056f412f411c81",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-345@18-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/281-CA-M-345-PROJECT_CONFIGURATION--author-fpf-analysis-reports.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1807@29-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1807@29-draft-QA--evaluate-the-evaluation-first-implementation-loop.md",
+      "draft_sha256": "7c81e2fdda18d12d5a7f664c6bb89516ccdf8bc5b32471140b6719ef1d90b30c",
+      "archive_ref": "AN-S-3250@29",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3250@29-QA--evaluate-the-evaluation-first-implementation-loop.md",
+      "archive_sha256": "f2b9237e76e5285b8b5dcd2dee69a1fb8c7b2c7578446f0e12310ccf1dda3c52",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-E-439@29-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/237-CA-E-439-PROJECT_CONFIGURATION-POLICY--evaluate-the-evaluation-first-implementation-loop.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1810@27-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1810@27-draft-QA--validate-structural-change-cutover.md",
+      "draft_sha256": "eca2730eef3501a77056bbc709ae9eee6737e5a1971181776b8fc84757ffdd1b",
+      "archive_ref": "AN-S-1810@27",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1810@27-QA--validate-structural-change-cutover.md",
+      "archive_sha256": "02e09bd9db796fc69ebc24fd190265ed0c2c4344577b01117e1ae816e12e3968",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-E-471@27-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/105-CA-E-471-PROJECT_CONFIGURATION-POLICY--validate-structural-change-cutover.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1813@28-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1813@28-draft-QA--validate-workflow-independent-implementation-specifications.md",
+      "draft_sha256": "5bf3f2f0a8bce5cfc7ab8bbe7dab5506f537564e9212a590dfcab7d05e72885b",
+      "archive_ref": "AN-S-3251@28",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3251@28-QA--validate-workflow-independent-implementation-specifications.md",
+      "archive_sha256": "10f984397212ff844547d0b3a6ddd2109233148d71672573d36a0469d22a0e85",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-E-487@28-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/395-CA-E-487-PROJECT_CONFIGURATION-EVAL_CASE--validate-workflow-independent-implementation-specifications.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1818@18-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1818@18-draft-QA--check-fpf-analysis-report-imports.md",
+      "draft_sha256": "9c831069c3697bb873ccf12fdefe91917a76332a1dd3120f30648c12e72286aa",
+      "archive_ref": "AN-S-1818@18",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1818@18-QA--check-fpf-analysis-report-imports.md",
+      "archive_sha256": "1074360b668987baffe877d2d8134f2120993f6ae7de6975ae09e4f7f383a48b",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-E-588@18-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/231-CA-E-588-PROJECT_CONFIGURATION-EVAL_CASE--check-fpf-analysis-report-imports.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1821@29-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1821@29-draft-DEVOPS--serialize-the-shared-project-journal.md",
+      "draft_sha256": "70169bcc76f2d76836196b5e72db83ede1e5fac760b4aae29d8bb6389a74d753",
+      "archive_ref": "AN-S-3252@29",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3252@29-DEVOPS--serialize-the-shared-project-journal.md",
+      "archive_sha256": "9b4a9a95748c32ad8749f9ffc119f1e4a52e0688542440a896948d3bf040590b",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-D-339@29-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/327-CA-D-339-PROJECT_CONFIGURATION-ENG_DECISION--serialize-the-shared-project-journal.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1865@28-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1865@28-draft-SWD--translate-framework-language-for-the-operator.md",
+      "draft_sha256": "46b7b63c994b9b830bf6197fa3d3c99c98e36d2de57d171ee25563fe9db43e9f",
+      "archive_ref": "AN-S-1865@28",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1865@28-SWD--translate-framework-language-for-the-operator.md",
+      "archive_sha256": "21a5efe8df32bf058b57f8d952caa2fd8ac0ba7ba03f23b29e9f7afeb58589dc",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-139@28-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/243-CA-M-139-IMPLEMENTATION_METHOD--translate-framework-language-for-the-operator.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1881@26-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1881@26-draft-SWD--describe-methodology-expansion-mappings.md",
+      "draft_sha256": "25b0f1dcfd38895ee40480a432dbfd9819cd660182b62a2b52dc500db5163e7e",
+      "archive_ref": "AN-S-1881@26",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1881@26-SWD--describe-methodology-expansion-mappings.md",
+      "archive_sha256": "ec0c0d868545375c319a9d42430ebadf3738c6e74e136c11188f68d42824ae62",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-298@26-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/363-CA-M-298-CORE_META_MODEL-IMPLEMENTATION_METHOD--describe-methodology-expansion-mappings.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1882@37-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1882@37-draft-DES--minimal-default-project-model.md",
+      "draft_sha256": "d6571dcd924849281acd0d4d10d61910bfd74c0ded4ea04f915665b5205c9ab9",
+      "archive_ref": "AN-S-1882@37",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1882@37-DES--minimal-default-project-model.md",
+      "archive_sha256": "69bdde4a95e73c6df19aecb5fe565ea5cc774b066d6497dae3a3ba17f32d45fc",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1772@37-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/409-CA-R-1772-CORE_META_MODEL-RULE--minimal-default-project-model.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-1884@40-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-1884@40-draft-DES--separate-graph-dimensions.md",
+      "draft_sha256": "a2dba44645f7673e1a35368db52da626fea0f805d047be88b4cefd3ba393a20d",
+      "archive_ref": "AN-S-1884@40",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-1884@40-DES--separate-graph-dimensions.md",
+      "archive_sha256": "6239e0ba566c9a3a4380c4caae76bb4ad315f32179de71d2a1722445ba5b7dab",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1776@40-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/297-CA-R-1776-CORE_META_MODEL-RULE--separate-graph-dimensions.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2076@2-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2076@2-draft-DES--declare-anechoic.md",
+      "draft_sha256": "1513a7964e0ea02fc574c73616b7c2796e75624c9ced9108d9ddf93f68c70e76",
+      "archive_ref": "AN-S-3253@2",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3253@2-DES--declare-anechoic.md",
+      "archive_sha256": "a661f3f9a7e92c142e319becaad4c919223dc00c531be515478a75f2816b5303",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-2640@2-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/project-root-id-20261105/root-declaration/CA-R-2640@2-root-id.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2151@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2151@1-draft-DES--declare-runtime.md",
+      "draft_sha256": "d83c5a8a613d531a6ccced0d4aa65c9c7f340d02414f5b7bfcfeaddb45b26ab2",
+      "archive_ref": "AN-S-3254@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3254@1-DES--declare-runtime.md",
+      "archive_sha256": "6d918ae58ace2ce89f22b6faf74143dc7b48de1b9ac3442c7f77bb522bbc7e38",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-2753@1-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/occurrent-declarations/kind-review-20261105/previews/CA-R-2753@1-preview-CORE_META_MODEL-DECLARATION--declare-runtime.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2152@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2152@1-draft-DES--declare-execution.md",
+      "draft_sha256": "a0e91aaadc7dc7ac3b0e6361ed8eaf781b60ffa24b535f99835075ce8be8122f",
+      "archive_ref": "AN-S-3255@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3255@1-DES--declare-execution.md",
+      "archive_sha256": "68fd4dd230bc2266d82d6cdc524ab7b6766f72bc41e3b9f71bb566322ac5c76e",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-2749@1-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/occurrent-declarations/kind-review-20261105/previews/CA-R-2749@1-preview-CORE_META_MODEL-DECLARATION--declare-execution.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2153@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2153@1-draft-DES--declare-event.md",
+      "draft_sha256": "0d0184f2497b89a0b209f6c7cf20c74e5b15e9ccda73cd370caef856092ccfeb",
+      "archive_ref": "AN-S-3256@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3256@1-DES--declare-event.md",
+      "archive_sha256": "7903f157f7244515644f890d6e44db79a0f8dca09f61388dc785b728634705fd",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-2755@1-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/occurrent-declarations/kind-review-20261105/previews/CA-R-2755@1-preview-CORE_META_MODEL-DECLARATION--declare-event.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2155@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2155@1-draft-DES--declare-internal-remote-runtime.md",
+      "draft_sha256": "ac1abcc8069a0e5b1449d44f1389dee87cca7ff994edc51026a219cc15aa64b1",
+      "archive_ref": "AN-S-3257@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3257@1-DES--declare-internal-remote-runtime.md",
+      "archive_sha256": "a829adeafa9be56768fca41d454220577aa0917980baf0d552e46b744b858887",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-2757@1-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/occurrent-declarations/kind-review-20261105/previews/CA-R-2757@1-preview-CORE_META_MODEL-DECLARATION--declare-internal-remote-runtime.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2157@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2157@1-draft-DES--declare-external-remote-runtime.md",
+      "draft_sha256": "5d3141b8b9eb3884bb2b92ef81184b9b23fd5d210004c6c19d60e30d9a9dffa2",
+      "archive_ref": "AN-S-3258@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3258@1-DES--declare-external-remote-runtime.md",
+      "archive_sha256": "6154a98313211ac96a35a89413d0a1b22db9205e89dcfb4a7ea0db472da1d4c4",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-2759@1-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/occurrent-declarations/kind-review-20261105/previews/CA-R-2759@1-preview-CORE_META_MODEL-DECLARATION--declare-external-remote-runtime.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2159@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2159@1-draft-DES--declare-workflow-run.md",
+      "draft_sha256": "9b617bbde644177048070400a3a8d04fc473253f1ed51bcf6ae1645f71bab634",
+      "archive_ref": "AN-S-3259@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3259@1-DES--declare-workflow-run.md",
+      "archive_sha256": "1d2648526f1d77c140ce4fec31975941de894f91d0052bb1dd4260646fba61ae",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-2750@1-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/occurrent-declarations/kind-review-20261105/previews/CA-R-2750@1-preview-CORE_META_MODEL-DECLARATION--declare-workflow-run.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2160@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2160@1-draft-DES--declare-step-run.md",
+      "draft_sha256": "3d34890c1019128a6a904859e4bf63dffcd2cca9edbf9d44b97622c9aee0d815",
+      "archive_ref": "AN-S-3260@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3260@1-DES--declare-step-run.md",
+      "archive_sha256": "0d3b19475b6850777583f9b7b668b53d88e3386d5c09a9231b072f1dc780626d",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-2751@1-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/occurrent-declarations/kind-review-20261105/previews/CA-R-2751@1-preview-CORE_META_MODEL-DECLARATION--declare-step-run.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2161@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2161@1-draft-DES--declare-action-run.md",
+      "draft_sha256": "e775a88d9c012ee954c85aa32050efbd442bfa9a5ea15decee5c171c6f88242f",
+      "archive_ref": "AN-S-3261@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3261@1-DES--declare-action-run.md",
+      "archive_sha256": "948644f5e121febd4719ae84ad475f9ca353a742f1d699cca09d4974e0d90ba1",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-2752@1-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/occurrent-declarations/kind-review-20261105/previews/CA-R-2752@1-preview-CORE_META_MODEL-DECLARATION--declare-action-run.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2180@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2180@1-draft-DES--declare-atom-header-container.md",
+      "draft_sha256": "f327839e463640c663e0a010cd2305e9243de6873dbe8cd191cc98cb274403a6",
+      "archive_ref": "AN-S-2180@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2180@1-DES--declare-atom-header-container.md",
+      "archive_sha256": "49d6a7a27ba8866c587181f2b424570df682bed850c365eef8955c74c99aeb81",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-2779@1-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/container-header-change/path-encoding-20261105/CA-R-2779@1.path-integrated.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2203@2-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2203@2-draft-DES--declare-atom-header-role-plan-header-work-sequence-number.md",
+      "draft_sha256": "08a1509405098cb006dd6b8d60f2814829c801f5ad0b74f450bf64afc95369aa",
+      "archive_ref": "AN-S-2203@2",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2203@2-DES--declare-atom-header-role-plan-header-work-sequence-number.md",
+      "archive_sha256": "cfb3106298b71f5576064a89b8c4844bf9ffb7443c468656c51941f8831b8be3",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-2712@2-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/container-header-integration-20261105/CA-R-2712.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2302@30-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2302@30-draft-QA--check-simple-wording-without-meaning-loss.md",
+      "draft_sha256": "6ea4e2b6de4d01464dc6ae1a49e3e4ce9eeaea2bfbe0f958aa1383a247de61f7",
+      "archive_ref": "AN-S-2302@30",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2302@30-QA--check-simple-wording-without-meaning-loss.md",
+      "archive_sha256": "1cecad623857b3fc6d8c1da9c4b26162813330ccd8d552943fc903417740f086",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-E-472@30-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/209-CA-E-472-CORE_META_MODEL-POLICY--check-simple-wording-without-meaning-loss.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2306@31-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2306@31-draft-SWD--write-definitions-of-done.md",
+      "draft_sha256": "7232d9f2fa6d5f1b1ae3d5ed41316a7629f306aeb901141d9912b63aa1b02c87",
+      "archive_ref": "AN-S-2306@31",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2306@31-SWD--write-definitions-of-done.md",
+      "archive_sha256": "4bcc93a5e97bdce9524ca05c2d8f5ce5c176ae8f07f74bd7db40ac75192d2e5a",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-123@31-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/415-CA-M-123-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-definitions-of-done.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2331@38-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2331@38-draft-DES--requirement-freeze-a-version-only-at-release.md",
+      "draft_sha256": "765fec3bd4975a3c3a38923b66a80cafc326c323eb881db56f958f4a140958f1",
+      "archive_ref": "AN-S-2331@38",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2331@38-DES--requirement-freeze-a-version-only-at-release.md",
+      "archive_sha256": "29abeec8661f7664519a288fd52b2938a5ae6d13f43bfc446da3e8c8e3c26a3a",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1692@38-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/271-CA-R-1692-PROJECT_CONFIGURATION-RULE--requirement-freeze-a-version-only-at-release.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2334@23-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2334@23-draft-SWD--write-plan-claims-with-the-plan-cce-profile.md",
+      "draft_sha256": "25fd595e8ed7b3246bb37140e1910afb40ba7908bb103422b6b05e8d2b6c94f7",
+      "archive_ref": "AN-S-2334@23",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2334@23-SWD--write-plan-claims-with-the-plan-cce-profile.md",
+      "archive_sha256": "01e5b7371ba66375896314bd9034dd3d806e6a734c1d6cbe63c6f44113b66f5b",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-309@23-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/151-CA-M-309-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-plan-claims-with-the-plan-cce-profile.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2335@24-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2335@24-draft-SWD--write-evaluation-claims-with-the-evaluation-cce-profile.md",
+      "draft_sha256": "f907d2e97a0969470caeeac1cdf2e321b9c8f81f0f42fa00b59d135bef6a7c9a",
+      "archive_ref": "AN-S-3262@24",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3262@24-SWD--write-evaluation-claims-with-the-evaluation-cce-profile.md",
+      "archive_sha256": "18afcccd07652cb6cbbc677e159a3966856dfa4f047ac63ce53b3c074907bc5a",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-312@24-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/263-CA-M-312-CORE_META_MODEL-ENG_DECISION--write-evaluation-claims-with-the-evaluation-cce-profile.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2336@24-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2336@24-draft-SWD--write-operations-claims-with-type-specific-cce-profiles.md",
+      "draft_sha256": "6a1d18e7238b20b3ad7307caa83e7488494d36f8d598de7f592367c9b6fb202c",
+      "archive_ref": "AN-S-2336@24",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2336@24-SWD--write-operations-claims-with-type-specific-cce-profiles.md",
+      "archive_sha256": "77d344b1a204dd94389aebaebbf811f62f4379897f77ac6db2f0dcb6737defa4",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-314@24-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/393-CA-M-314-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-operations-claims-with-type-specific-cce-profiles.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2345@35-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2345@35-draft-DES--select-methodology-source-revisions-explicitly.md",
+      "draft_sha256": "886659d1d59c6d7c737bfc21d959a76d46905107e5bd0c3f778de8a3d8d965ae",
+      "archive_ref": "AN-S-2345@35",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2345@35-DES--select-methodology-source-revisions-explicitly.md",
+      "archive_sha256": "fcb1c93b6644b6c4e752090ad45104279f254daca9b726f13cf88a433e1aef52",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1769@35-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/295-CA-R-1769-PROJECT_CONFIGURATION-RULE--select-methodology-source-revisions-explicitly.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2346@19-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2346@19-draft-DES--bind-every-tool-to-one-methodology-action.md",
+      "draft_sha256": "a00530c2984e77010be90c4fac999692ee778d640cbbad109d77b893556462ee",
+      "archive_ref": "AN-S-3263@19",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3263@19-DES--bind-every-tool-to-one-methodology-action.md",
+      "archive_sha256": "fd5e54c62aa5b0a520dd97402d1a0688143d1be3ac0a577a6d5a2b416406dd29",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1800@19-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/387-CA-R-1800-PROJECT_CONFIGURATION-RULE--bind-every-tool-to-one-methodology-action.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2448@26-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2448@26-draft-DES--provide-the-minimal-self-applicable-canonical-methodology-model.md",
+      "draft_sha256": "3b7784bded827e25f296fe0d5310161b2353309f2b1a244740e004f85675006f",
+      "archive_ref": "AN-S-2448@26",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2448@26-DES--provide-the-minimal-self-applicable-canonical-methodology-model.md",
+      "archive_sha256": "eff8c3df1f2974ed90ddfca3fdbeb70de96633709a9d1877fd8c2f4b81bc1cbf",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1174@26-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/229-CA-R-1174-METHODOLOGY_SOURCES-GOAL-CORE_META_MODEL--provide-the-minimal-self-applicable-canonical-methodology-model.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2451@16-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2451@16-draft-SWD--rebuild-implementation-from-its-governing-specification.md",
+      "draft_sha256": "6efd3304351175582c2ac63736b356254464d32a0c74e25226826ec2ab02b4a6",
+      "archive_ref": "AN-S-2451@16",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2451@16-SWD--rebuild-implementation-from-its-governing-specification.md",
+      "archive_sha256": "5774e1a2a586c6e8414b655cee8ee41a923209050bd936a9c531dfa2a488093c",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-261@16-draft",
+          "path": ".anechoic_anechoic/05_method/000_draft/cfel-contract-completion-20261102/subject-migration/CA-M-261@16-draft-PROJECT-IMPLEMENTATION_METHOD--rebuild-implementation-from-its-governing-specification.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2497@4-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2497@4-draft-SWD--each-atom-expresses-one-coherent-meaning-covered-by-its-summary.md",
+      "draft_sha256": "f6e6fcd583e708ed1d6b5a38699acea6df415485649148d9959b341987c15b85",
+      "archive_ref": "AN-S-2497@4",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2497@4-SWD--each-atom-expresses-one-coherent-meaning-covered-by-its-summary.md",
+      "archive_sha256": "8d6e00a29f35d7a8be363c187c82c8bdab12f9840dbcd7510b6550cd3f59ac24",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-443@4-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/157-CA-M-443-CORE_META_MODEL-IMPLEMENTATION_METHOD--each-atom-expresses-one-coherent-meaning-covered-by-its-summary.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2498@27-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2498@27-draft-SWD--use-simpler-words-without-losing-meaning.md",
+      "draft_sha256": "30f722aea31189140e8214aeb6052c751a803b78da9655183555296a0a5a153a",
+      "archive_ref": "AN-S-2498@27",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2498@27-SWD--use-simpler-words-without-losing-meaning.md",
+      "archive_sha256": "ebe5d801ed7f59f1f0d198eb5571275465b87bc811c978ee98c938156ae7ddc0",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-294@27-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/121-CA-M-294-CORE_META_MODEL-IMPLEMENTATION_METHOD--use-simpler-words-without-losing-meaning.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2500@29-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2500@29-draft-SWD--use-english-as-the-project-language.md",
+      "draft_sha256": "8b350716398151a959f18e26d47781075f82d0092e4aaa3f638b4d82ae08aa74",
+      "archive_ref": "AN-S-2500@29",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2500@29-SWD--use-english-as-the-project-language.md",
+      "archive_sha256": "78fe6cc31e916c55c9c4d0412122d8f50fe9549de7cd244a2d4aa025920e13e4",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-112@29-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/171-CA-M-112-CORE_META_MODEL-IMPLEMENTATION_METHOD--use-english-as-the-project-language.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2501@20-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2501@20-draft-SWD--distinguish-scope-unit-names-from-ordinary-english.md",
+      "draft_sha256": "5854c62aa9b8ff0f8551e73baaab5a938f044ded2818d8a0cef819763465b329",
+      "archive_ref": "AN-S-2501@20",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2501@20-SWD--distinguish-scope-unit-names-from-ordinary-english.md",
+      "archive_sha256": "4348b8d26898c6f1558f74313f455cc412c0690d721d44e24d8b212fe54816f5",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-299@20-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/359-CA-M-299-CORE_META_MODEL-IMPLEMENTATION_METHOD--distinguish-scope-unit-names-from-ordinary-english.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2505@32-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2505@32-draft-QA--check-rmed-atom-coherence.md",
+      "draft_sha256": "6bb62ece875210cebb8d406bbac58614e760dec38a1cb30acfe33f1aae35cea2",
+      "archive_ref": "AN-S-2505@32",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2505@32-QA--check-rmed-atom-coherence.md",
+      "archive_sha256": "e0285254319c5c60888b42a71ea8315fe6be213ad8c9ed90132fb49fb5cefce6",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-E-520@32-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/283-CA-E-520-CORE_META_MODEL-EVAL-POLICY--check-rmed-atom-coherence.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2506@30-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2506@30-draft-SWD--evaluate-condition-expressions.md",
+      "draft_sha256": "0ba6238be0afa68277c945d3680cf336e97bc1ed874591f0b899354f6ba80cee",
+      "archive_ref": "AN-S-2506@30",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2506@30-SWD--evaluate-condition-expressions.md",
+      "archive_sha256": "d568dd278828bfdcb9589c57b958466ba318dea6f55570ed82ba446bef75c67c",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-122@30-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/275-CA-M-122-CORE_META_MODEL-IMPLEMENTATION_METHOD--evaluate-condition-expressions.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2507@31-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2507@31-draft-SWD--evaluate-set-valued-property-membership.md",
+      "draft_sha256": "7422004c65a24ca5996076c17d634f04b168c00b9233680df5e191252f33e15d",
+      "archive_ref": "AN-S-2507@31",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2507@31-SWD--evaluate-set-valued-property-membership.md",
+      "archive_sha256": "c78aec273b3abae1c4654af917121a03ec10ca13a90b54b3df12d62a8d0ad827",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-127@31-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/181-CA-M-127-CORE_META_MODEL-IMPLEMENTATION_METHOD--evaluate-set-valued-property-membership.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2512@30-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2512@30-draft-QA--validate-canonical-scope-signature-boundary.md",
+      "draft_sha256": "506acb14ee14e3c4b91db710ce9554f4692d0eebcfcf4c419501f705e74a67eb",
+      "archive_ref": "AN-S-2512@30",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2512@30-QA--validate-canonical-scope-signature-boundary.md",
+      "archive_sha256": "e58daadf0d8da199f7dc5fc274b9974326e7435417533995c19f25c5baa0c236",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-E-407@30-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/301-CA-E-407-CORE_META_MODEL-POLICY--validate-canonical-scope-signature-boundary.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2522@27-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2522@27-draft-DEVOPS--serialize-cce-operators-in-bold.md",
+      "draft_sha256": "adacdf2d017f3e69a895aaa819d476659b9c25157571ed10e2b313ee97757506",
+      "archive_ref": "AN-S-2522@27",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2522@27-DEVOPS--serialize-cce-operators-in-bold.md",
+      "archive_sha256": "71c5a54eff0948ade2352a81c6b878aa5b70d29fa11efd7108e3f5f495594d46",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-D-280@27-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/287-CA-D-280-CORE_META_MODEL-ENG_DECISION--serialize-cce-operators-in-bold.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2523@28-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2523@28-draft-DES--prohibit-cce-operator-scope-unit-names.md",
+      "draft_sha256": "ab597718b3a5e571ebe6a8316d11a6163c6e3a39563c43e0c50713eaeeb88c02",
+      "archive_ref": "AN-S-2523@28",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2523@28-DES--prohibit-cce-operator-scope-unit-names.md",
+      "archive_sha256": "2b8ef14ad320a3a3e54559b8f58585915c558a7293b1cb34da3521c06bcebdb1",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1297@28-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/361-CA-R-1297-CORE_META_MODEL-RULE--prohibit-cce-operator-scope-unit-names.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2567@14-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2567@14-draft-DES--reconcile-development-backlog-candidates-after-release.md",
+      "draft_sha256": "ee53b3a4067a1daebb9321f5d8e331cfe2b45e8ad476219158f52eb9d373cce2",
+      "archive_ref": "AN-S-2567@14",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2567@14-DES--reconcile-development-backlog-candidates-after-release.md",
+      "archive_sha256": "03e1a49864695f74cefc43035761ef1d4d4f367f999412a04bc3eaabf8e31fed",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1795@14-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/373-CA-R-1795-PROJECT_CONFIGURATION-RULE--reconcile-development-backlog-candidates-after-release.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2568@14-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2568@14-draft-DES--record-development-backlog-reconciliation-in-journal-after-release-record-acceptance.md",
+      "draft_sha256": "078cb45ab3a76ce7264f63aa112a95f7d72eebdcc7ad1bcf500a6e4fda81f1ff",
+      "archive_ref": "AN-S-2568@14",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2568@14-DES--record-development-backlog-reconciliation-in-journal-after-release-record-acceptance.md",
+      "archive_sha256": "870dba10e89ac4bcfd7d3bdcfca36c24d28649fbaa9f6e45474894634617a1b4",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1796@14-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/251-CA-R-1796-PROJECT_CONFIGURATION-RULE--record-development-backlog-reconciliation-in-journal-after-release-record-acceptance.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2576@26-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2576@26-draft-SWD--write-self-contained-agentic-action-instructions.md",
+      "draft_sha256": "a6612ba55a6dd13ee46acf8c328d443a5239f652d61a8319d2862e25cb3f5722",
+      "archive_ref": "AN-S-2576@26",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2576@26-SWD--write-self-contained-agentic-action-instructions.md",
+      "archive_sha256": "2700b7135208bb338fa46e7f01659f6cb8d25d0ccab7b879919806aa31e48277",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-304@26-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/265-CA-M-304-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-self-contained-agentic-action-instructions.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2577@5-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2577@5-draft-SWD--an-atom-s-content-expresses-one-scoped-contribution-with-a-faithful-summary-and-translations.md",
+      "draft_sha256": "f73e0d19dc2d965e54787a8ab79a035809103bc31ff5442215c8fc9429ee8845",
+      "archive_ref": "AN-S-2577@5",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2577@5-SWD--an-atom-s-content-expresses-one-scoped-contribution-with-a-faithful-summary-and-translations.md",
+      "archive_sha256": "23a577b86392bd2003d14eb74e9cd97d426fbeb8c1b5fdd4264a089fc87a2a11",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-442@5-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/255-CA-M-442-CORE_META_MODEL-IMPLEMENTATION_METHOD--an-atom-s-content-expresses-one-scoped-contribution-with-a-faithful-summary-and-translations.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2607@6-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2607@6-draft-DES--declare-atom.md",
+      "draft_sha256": "1d083ea634ee4c424b18060483495f057d00bec80f763f1dc242a7c3635e2e5a",
+      "archive_ref": "AN-S-2607@6",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2607@6-DES--declare-atom.md",
+      "archive_sha256": "60c24a1d445b97bd913528a650056903b2ddf80fea9e9f4d5805a3e5e5f9d5c4",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-2508@6-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/container-header-integration-20261105/CA-R-2508.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2627@36-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2627@36-draft-DES--identify-necessary-information-by-confidence.md",
+      "draft_sha256": "5a13cba62e2d652ad59b9d034d955cd5aacbc9f9db9d9d38d3bded0f13b73938",
+      "archive_ref": "AN-S-3264@36",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3264@36-DES--identify-necessary-information-by-confidence.md",
+      "archive_sha256": "c92b2c9b61e9c71ab9b8e8a8178f3ea348603c38a536644a218e779ac6f6c9bd",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-035@36-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/107-CA-R-035-ANECHOIC-RULE--identify-necessary-information-by-confidence.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2668@32-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2668@32-draft-DES--keep-one-source-for-each-relation-fact.md",
+      "draft_sha256": "cfe95427624c54e9d52af047c0bdba7c4e256f0bc8a32f2aa74f2d2fe6b486fc",
+      "archive_ref": "AN-S-3265@32",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3265@32-DES--keep-one-source-for-each-relation-fact.md",
+      "archive_sha256": "f8dbba32fb1a78f72bc3b3ab74eedbdf3eb4a66f70956671922b0098066f8538",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1437@32-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/133-CA-R-1437-CORE_META_MODEL-RULE--keep-one-source-for-each-relation-fact.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2671@39-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2671@39-draft-DES--derive-entities-views-from-selected-authority.md",
+      "draft_sha256": "c7c893dad1edeb5514f91ea9b55a9ef89fcc2931b15654d294ff2943b74bec57",
+      "archive_ref": "AN-S-3266@39",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3266@39-DES--derive-entities-views-from-selected-authority.md",
+      "archive_sha256": "94612828161109b7c1664424bb864d2aa0ffa5ca460c33dee28d5892f6cbd796",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1456@39-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/cfel-without-operator-entities-20261105/consumers/previews/CA-R-1456-CORE_META_MODEL-RULE--derive-entities-views-from-selected-authority.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2719@3-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2719@3-draft-DES--declare-has-active-subject.md",
+      "draft_sha256": "7b080aa1a04169e2efd792514b67a4c88dbd487296c9393a837928cae922dfa8",
+      "archive_ref": "AN-S-2719@3",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2719@3-DES--declare-has-active-subject.md",
+      "archive_sha256": "a92ce100336b5044bd9868ad5221d0bb0ccb42c8389e539a2315c0ae6e794a6b",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-2618@3-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/cfel-without-operator-entities-20261105/consumers/previews/CA-R-2618-CORE_META_MODEL-DECLARATION--declare-has-active-subject.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2748@43-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2748@43-draft-SWD--compile-the-direct-relation-registry.md",
+      "draft_sha256": "269dabd75993c031ad89c2cd9d5016e1aeb55a2c08d9766b645c7125086331ae",
+      "archive_ref": "AN-S-3267@43",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3267@43-SWD--compile-the-direct-relation-registry.md",
+      "archive_sha256": "aa66cd53e12393ceb40fd231c52c02552d2181d969f1e959d30fa847d946f722",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-120@43-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/147-CA-M-120-CORE_META_MODEL-IMPLEMENTATION_METHOD--compile-the-direct-relation-registry.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2752@32-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2752@32-draft-SWD--author-plan-atoms.md",
+      "draft_sha256": "70e3039d97b19f536896cb5820da1ccde350accb3790a82161eddbe5608d9d4a",
+      "archive_ref": "AN-S-2752@32",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2752@32-SWD--author-plan-atoms.md",
+      "archive_sha256": "fc6b11e0076694fd0b277b3d897e3c694808f873f8aea15961cb63dd27dd5887",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-306@32-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/399-CA-M-306-CORE_META_MODEL--author-plan-atoms.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2765@53-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2765@53-draft-QA--canonical-relation-validity.md",
+      "draft_sha256": "3736d26411fb34d35aa41fb986e929371bb07a30208813c828ea9d19034cbd38",
+      "archive_ref": "AN-S-2765@53",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2765@53-QA--canonical-relation-validity.md",
+      "archive_sha256": "7a59434ce6cc10bab10cea3877d0ef9a7ef6f40ecdee5a9d32651e26a1175ebe",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-E-622@53-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/323-CA-E-622-CORE_META_MODEL-EVAL_CASE--canonical-relation-validity.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2766@38-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2766@38-draft-QA--validate-generated-only-provenance-boundary.md",
+      "draft_sha256": "98094c977bdaa87da738a24b620e5a5ff3a378cad1d9d3bb9abde92c122044fa",
+      "archive_ref": "AN-S-3268@38",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3268@38-QA--validate-generated-only-provenance-boundary.md",
+      "archive_sha256": "775027600199ec4af4ce4b8c74b7eb73665269f04db73286cb63a350e036b501",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-E-624@38-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/177-CA-E-624-CORE_META_MODEL-POLICY--validate-generated-only-provenance-boundary.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2768@29-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2768@29-draft-DEVOPS--prohibit-persisting-derived-containment.md",
+      "draft_sha256": "90171b42097ca3d5f8a742dfa5072d361c4a16d068c41a86ae578da2660faf9d",
+      "archive_ref": "AN-S-3269@29",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3269@29-DEVOPS--prohibit-persisting-derived-containment.md",
+      "archive_sha256": "7e0ed57bf76a6329f35ce5154db1d1320b56ffd5cc3ba2ffdfe22b073d351ad9",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-D-266@29-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/container-header-integration-20261105/CA-D-266.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2769@30-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2769@30-draft-DEVOPS--serialize-authored-direct-relations-on-their-owning-atoms.md",
+      "draft_sha256": "81c688ad3c4086ed7e9f5d9e8b75aadcb4e5d6edfb6a1d7772efd44f4b650d62",
+      "archive_ref": "AN-S-3270@30",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3270@30-DEVOPS--serialize-authored-direct-relations-on-their-owning-atoms.md",
+      "archive_sha256": "52ea6b0a5bd5f01d79778bfb668e260135da6a5f4a129f9468c596083a5fbe67",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-D-268@30-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/container-header-integration-20261105/CA-D-268.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2779@25-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2779@25-draft-DES--separate-methodology-and-tool-evaluation-responsibilities.md",
+      "draft_sha256": "f1d6aac7703f56be8e52208ca957e76b5900e41e5075432bdc0377a9068b300f",
+      "archive_ref": "AN-S-3271@25",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3271@25-DES--separate-methodology-and-tool-evaluation-responsibilities.md",
+      "archive_sha256": "f02ca31b8cc426dcc0072a98c2881af2ae08202db76ab10d77b8804a20ff93d8",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1518@25-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/225-CA-R-1518-PROJECT_CONFIGURATION-RULE--separate-methodology-and-tool-evaluation-responsibilities.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2780@25-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2780@25-draft-DES--define-realization-graph.md",
+      "draft_sha256": "6f81579e9f6422b87db5964c8a3eb786b03d5df529a230112e4bcdccd4ea4d04",
+      "archive_ref": "AN-S-3272@25",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3272@25-DES--define-realization-graph.md",
+      "archive_sha256": "05cbf8ba4058fc42af0f60a39af18d9c13bb5e202492402770e2736512a3c8bd",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1616@25-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/111-CA-R-1616-PROJECT_CONFIGURATION-RULE--define-realization-graph.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2782@4-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2782@4-draft-QA--check-gap-free-rmedo-conflict-resolution.md",
+      "draft_sha256": "ed4ae2e40376c6c9b32bed7fa848b254e31107cbaf25fcf966ca56b1fd299882",
+      "archive_ref": "AN-S-3273@4",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3273@4-QA--check-gap-free-rmedo-conflict-resolution.md",
+      "archive_sha256": "1810cfe5aec773fd8895363bac720682f2f62f109aac7bc5e4c96dd1b4cf4de4",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-E-666@4-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/195-CA-E-666-PROJECT_CONFIGURATION-EVAL_CASE--check-gap-free-rmedo-conflict-resolution.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2787@18-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2787@18-draft-DES--use-subject-path-separators-for-broader-to-narrower-and-bearer-to-dependent.md",
+      "draft_sha256": "17bdfa8f80760875f00ec6eecf20d33fed2a484364361cd3b7dc5cf09789a504",
+      "archive_ref": "AN-S-2787@18",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2787@18-DES--use-subject-path-separators-for-broader-to-narrower-and-bearer-to-dependent.md",
+      "archive_sha256": "e30c74caa4bac0fea4acc42b92ad54b7f330d66046aa1235e5c9e90ded1530cb",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1931@18-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/declarative-notation-review/allowed-value-consumers-20261105/previews/CA-R-1931-CORE_META_MODEL-RULE--use-subject-path-separators-for-broader-to-narrower-and-bearer-to-dependent.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2790@2-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2790@2-draft-DES--assign-a-default-when-an-object-property-is-absent.md",
+      "draft_sha256": "d3d60f21ed16cb66d48f2fefacfd58d3adcea667acf9b60e316cbe6b7ae4ff42",
+      "archive_ref": "AN-S-2790@2",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2790@2-DES--assign-a-default-when-an-object-property-is-absent.md",
+      "archive_sha256": "5478a6becd27b50668681cd92e7320b8f74d35d5843fbd04b7791347d828b1e2",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-2768@2-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/cfel-without-operator-entities-20261105/consumers/previews/CA-R-2768-CORE_META_MODEL-RULE--assign-a-default-when-an-object-property-is-absent.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2797@5-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2797@5-draft-DES--apply-default-relation-cardinalities.md",
+      "draft_sha256": "5f89339b8e746ba48c126f7bda2b8522884983d1e8eac9acb044f5aeba51a723",
+      "archive_ref": "AN-S-3274@5",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3274@5-DES--apply-default-relation-cardinalities.md",
+      "archive_sha256": "f4bdebda1b54ba5b509d968c064166b56a58367326900f79637afd74bd957ae4",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-2588@5-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/declarative-notation-review/allowed-value-consumers-20261105/previews/CA-R-2588-CORE_META_MODEL-CFEL--apply-default-relation-cardinalities.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2798@28-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2798@28-draft-DES--qualify-allowed-values-with-colon.md",
+      "draft_sha256": "774418f30dfaddff309aa1b030a51a870e58032dfee714312335988fad028275",
+      "archive_ref": "AN-S-2798@28",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2798@28-DES--qualify-allowed-values-with-colon.md",
+      "archive_sha256": "b6bb2195a9c6d41e255c9f36a322e923d33f81d0f07e3535e3ce0b16f5f16ef0",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1245@28-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/cfel-without-operator-entities-20261105/consumers/previews/CA-R-1245-CORE_META_MODEL-RULE--qualify-allowed-values-with-colon.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2798@29-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2798@29-draft-DES--qualify-allowed-values-with-colon.md",
+      "draft_sha256": "a6b7531f7b9410942b96673e5d30268888cc101286374674af36e533e6424e65",
+      "archive_ref": "AN-S-3275@29",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3275@29-DES--qualify-allowed-values-with-colon.md",
+      "archive_sha256": "50ef47f26ddf6245e576756550722b15bd7e6ce43d0b5c8daf2876753dbcbcca",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1245@29-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/application/value-relation-drafts-20261105/withdrawn/CA-R-1245@29-draft-CORE_META_MODEL-RULE--qualify-allowed-values-with-colon.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2809@35-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2809@35-draft-DES--define-subject-expression.md",
+      "draft_sha256": "2695873980a93f25e2f213eccbad6c095020528599599eb9ac00ac4132f08ad5",
+      "archive_ref": "AN-S-2809@35",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2809@35-DES--define-subject-expression.md",
+      "archive_sha256": "ae4da2194c7e63a5dae254404dbf49711aa0367d4854b344bd869ab7a7bf0039",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1321@35-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/declarative-notation-review/allowed-value-consumers-20261105/previews/CA-R-1321-CORE_META_MODEL-RULE--define-subject-expression.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2818@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2818@1-draft-DES--enable-operator-control-of-every-ai-agent-delegation-and-authorization-rule.md",
+      "draft_sha256": "7121d30276e572a154f8275961ace3eb1fe7fc5b65fae701bfe5f393a52655f8",
+      "archive_ref": "AN-S-2818@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2818@1-DES--enable-operator-control-of-every-ai-agent-delegation-and-authorization-rule.md",
+      "archive_sha256": "f32ac0dba2abefb42ce649482b2ae5b75e577c9379742f58cb423065e86c57c0",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": null,
+          "path": ".anechoic_anechoic/04_requirement/000_draft/scope-trial-100/CA-R-draft-ANECHOIC-RULE--enable-operator-control-of-every-ai-agent-delegation-and-authorization-rule.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2819@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2819@1-draft-DES--keep-operator-communication-necessary-and-sufficient-for-informed-decisions.md",
+      "draft_sha256": "785bbd56cd3459e501d08a4b2d532a1b66ce93e746bfe9acbcf8d3278989b2f4",
+      "archive_ref": "AN-S-2819@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2819@1-DES--keep-operator-communication-necessary-and-sufficient-for-informed-decisions.md",
+      "archive_sha256": "7934b25877c26a1c2951ed3af575fa8996a6c07fa8fcb1ebcf2da9307985740b",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": null,
+          "path": ".anechoic_anechoic/04_requirement/000_draft/scope-trial-100/CA-R-draft-ANECHOIC-RULE--keep-operator-communication-necessary-and-sufficient-for-informed-decisions.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2820@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2820@1-draft-DES--support-configuration-and-extension-of-framework-capabilities.md",
+      "draft_sha256": "54978a881af39d27d01b217e576a4a56406ad32c76e46a62961968beb309d230",
+      "archive_ref": "AN-S-2820@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2820@1-DES--support-configuration-and-extension-of-framework-capabilities.md",
+      "archive_sha256": "a490e6e19ef16bfa23ad474e06ccd84a69f8610804d78152ba0df46911c3e27b",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": null,
+          "path": ".anechoic_anechoic/04_requirement/000_draft/scope-trial-100/CA-R-draft-ANECHOIC-RULE--support-configuration-and-extension-of-framework-capabilities.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2821@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2821@1-draft-DES--support-authorized-narrowly-scoped-improvement-proposals-for-material-outcomes.md",
+      "draft_sha256": "79944175d84215b39a6f5f43aee127e98f8fecbc4470b9333b027baed41786a0",
+      "archive_ref": "AN-S-2821@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2821@1-DES--support-authorized-narrowly-scoped-improvement-proposals-for-material-outcomes.md",
+      "archive_sha256": "3070244485ddca3951c0e99422a3b5d07861516da71ed004a840cafaa65a095c",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": null,
+          "path": ".anechoic_anechoic/04_requirement/000_draft/scope-trial-100/CA-R-draft-ANECHOIC-RULE--support-authorized-narrowly-scoped-improvement-proposals-for-material-outcomes.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2822@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2822@1-draft-DES--supply-only-guidance-needed-to-meet-the-operator-defined-adequacy-threshold.md",
+      "draft_sha256": "48fe9d828a357b21278d452a34b50d4e144176e9264f60a256c67acf1436f0de",
+      "archive_ref": "AN-S-2822@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2822@1-DES--supply-only-guidance-needed-to-meet-the-operator-defined-adequacy-threshold.md",
+      "archive_sha256": "6e4a0c7098e85ef3e7064622c5ce57ba9743c38b84562dac2ec569433901b4e1",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": null,
+          "path": ".anechoic_anechoic/04_requirement/000_draft/scope-trial-100/CA-R-draft-ANECHOIC-RULE--supply-only-guidance-needed-to-meet-the-operator-defined-adequacy-threshold.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2823@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2823@1-draft-DES--minimize-methodology-application-waste-and-mistakes-while-preserving-project-outcomes.md",
+      "draft_sha256": "f758a75ced207b24a2f54f0438ceee15d53039b06c5acce555ce9535648a4e8f",
+      "archive_ref": "AN-S-2823@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2823@1-DES--minimize-methodology-application-waste-and-mistakes-while-preserving-project-outcomes.md",
+      "archive_sha256": "602964639e42175b83a0ec0825a568a552c5fa7242142739530aa17e486f3dbf",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": null,
+          "path": ".anechoic_anechoic/04_requirement/000_draft/scope-trial-100/CA-R-draft-ANECHOIC-RULE--minimize-methodology-application-waste-and-mistakes-while-preserving-project-outcomes.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2824@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2824@1-draft-DES--support-every-admissible-operator-priority-model-for-project-trade-offs.md",
+      "draft_sha256": "ac63fd840985ecac8930f90c62ddb75c3ee82fc17f4ef8abed90d72ac911bd4e",
+      "archive_ref": "AN-S-2824@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2824@1-DES--support-every-admissible-operator-priority-model-for-project-trade-offs.md",
+      "archive_sha256": "59caa99b531c1f0b6903ec5f3a2dccd4ef757ad8ccef96c5a2708d289ed830f2",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": null,
+          "path": ".anechoic_anechoic/04_requirement/000_draft/scope-trial-100/CA-R-draft-ANECHOIC-RULE--support-every-admissible-operator-priority-model-for-project-trade-offs.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2825@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2825@1-draft-DES--keep-valuable-project-information-recoverable-across-disruptions-and-changes.md",
+      "draft_sha256": "aa266162457700618e749aae8821fc1039c8d7b50119f0f9df8081ce5d1c3aee",
+      "archive_ref": "AN-S-2825@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2825@1-DES--keep-valuable-project-information-recoverable-across-disruptions-and-changes.md",
+      "archive_sha256": "bf105797061c4c40d89ada960debe89a747e613badfce7eecd184a82e4de8a2b",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": null,
+          "path": ".anechoic_anechoic/04_requirement/000_draft/scope-trial-100/CA-R-draft-ANECHOIC-RULE--keep-valuable-project-information-recoverable-across-disruptions-and-changes.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2826@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2826@1-draft-DES--help-the-operator-maintain-a-necessary-and-sufficient-active-rule-set.md",
+      "draft_sha256": "840e862b9c73f4b3940217aea494ea6de27780f904925c4d7f5dd91e3ad7ab91",
+      "archive_ref": "AN-S-2826@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2826@1-DES--help-the-operator-maintain-a-necessary-and-sufficient-active-rule-set.md",
+      "archive_sha256": "223eaf678db892460fc5d9278b9fb864c946f9dab58ab0a472ac8ceca345d962",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": null,
+          "path": ".anechoic_anechoic/04_requirement/000_draft/scope-trial-100/CA-R-draft-ANECHOIC-RULE--help-the-operator-maintain-a-necessary-and-sufficient-active-rule-set.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2827@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2827@1-draft-DES--provide-operator-controlled-tools-for-evaluating-and-maintaining-methodology-alignment.md",
+      "draft_sha256": "7e3dc20a43a981166575d2501b3f4f470b71e1d7e1ce5f9d3a1be54ff4e8bf2c",
+      "archive_ref": "AN-S-2827@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2827@1-DES--provide-operator-controlled-tools-for-evaluating-and-maintaining-methodology-alignment.md",
+      "archive_sha256": "94dbf29f076d808826de8c574b5d6c813bcd6555bd6c2bcd64bd3f888dc06921",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": null,
+          "path": ".anechoic_anechoic/04_requirement/000_draft/scope-trial-100/CA-R-draft-ANECHOIC-RULE--provide-operator-controlled-tools-for-evaluating-and-maintaining-methodology-alignment.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2828@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2828@1-draft-DES--configure-optional-capabilities-within-declared-boundaries-without-redefining-meaning.md",
+      "draft_sha256": "820d275cd62fbc2126f3150955700050b7e1221909d1e9937359e98688dadae9",
+      "archive_ref": "AN-S-2828@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2828@1-DES--configure-optional-capabilities-within-declared-boundaries-without-redefining-meaning.md",
+      "archive_sha256": "a8bbd373d7721354f958b86630778862a9a5403b8bf00e88b947baa54ebe84a5",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": null,
+          "path": ".anechoic_anechoic/04_requirement/000_draft/scope-trial-100/CA-R-draft-ANECHOIC-RULE--configure-optional-capabilities-within-declared-boundaries-without-redefining-meaning.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2829@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2829@1-draft-DES--expose-only-task-necessary-distinctions-for-operator-understanding-and-control.md",
+      "draft_sha256": "5031b98b97c3bbac412fa24d0da90a0aa6ccf42f99e8493162a841b9d7723629",
+      "archive_ref": "AN-S-2829@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2829@1-DES--expose-only-task-necessary-distinctions-for-operator-understanding-and-control.md",
+      "archive_sha256": "7fab7d3b0c5d6f1667f3cc8554d7920fd47eae7991dd860e426addca7034187c",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": null,
+          "path": ".anechoic_anechoic/04_requirement/000_draft/scope-trial-100/CA-R-draft-ANECHOIC-RULE--expose-only-task-necessary-distinctions-for-operator-understanding-and-control.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2830@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2830@1-draft-DES--make-engine-execution-observable-for-operator-understanding-and-decisions.md",
+      "draft_sha256": "b8447f210de5f6da3499f91c887a967837714aac730eec4b2d2707ec24cae84f",
+      "archive_ref": "AN-S-2830@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2830@1-DES--make-engine-execution-observable-for-operator-understanding-and-decisions.md",
+      "archive_sha256": "683f24253666809e2d30d0726d5dbeead6321edb37ea81fe0a69c890d1345ddb",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": null,
+          "path": ".anechoic_anechoic/04_requirement/000_draft/scope-trial-100/CA-R-draft-ANECHOIC-RULE--make-engine-execution-observable-for-operator-understanding-and-decisions.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2831@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2831@1-draft-DES--create-and-evolve-a-framework-for-operators-and-ai-agents-to-run-feasible-projects.md",
+      "draft_sha256": "fa21d88d72735e42dee604c6d28f06cd5f71a74dd535ea16e76507801f6a7818",
+      "archive_ref": "AN-S-2831@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2831@1-DES--create-and-evolve-a-framework-for-operators-and-ai-agents-to-run-feasible-projects.md",
+      "archive_sha256": "cfdd9759bad07738eb1fd408c5386c8efe69e6cb2bf22e4a8483555cb85c3671",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": null,
+          "path": ".anechoic_anechoic/draft/scope-trial-100/CA-R-draft-ANATOLY-MASLENNIKOV-DEFINES_SCOPE_FOR-ANECHOIC--create-and-evolve-a-framework-for-operators-and-ai-agents-to-run-feasible-projects.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2832@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2832@1-draft-DES--guide-operators-to-use-a-framework-instance-efficiently-to-achieve-project-goals.md",
+      "draft_sha256": "d158cf10338484ac12772d3debdcad4392474f6bbc6a650dcd4bfee309bda261",
+      "archive_ref": "AN-S-2832@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2832@1-DES--guide-operators-to-use-a-framework-instance-efficiently-to-achieve-project-goals.md",
+      "archive_sha256": "4f73a6d6f2e630d6c52b8d625781d8b163e8af793d5ea3f713ba7304cc32fa77",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": null,
+          "path": ".anechoic_anechoic/04_requirement/000_draft/scope-trial-100/CA-R-draft-ANECHOIC-DEFINES_SCOPE_FOR-OPERATOR_DOCUMENTATION--guide-operators-to-use-a-framework-instance-efficiently-to-achieve-project-goals.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2833@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2833@1-draft-DES--catalog-external-extensions-without-making-them-anechoic-owned.md",
+      "draft_sha256": "2a90487bca367c91a4dd1366877848c91344b622627845a9c0dd2bfd898a8149",
+      "archive_ref": "AN-S-2833@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2833@1-DES--catalog-external-extensions-without-making-them-anechoic-owned.md",
+      "archive_sha256": "7cd322ee464288a1814708ad3f7e8728c55e58a351ca16d3b5da4fca720e5d0e",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": null,
+          "path": ".anechoic_anechoic/04_requirement/000_draft/scope-trial-100/CA-R-draft-ANECHOIC-DEFINES_SCOPE_FOR-COMMUNITY_EXTENSIONS--catalog-external-extensions-without-making-them-anechoic-owned.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2834@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2834@1-draft-DES--provide-optional-maintained-extensions-without-modifying-core-authority.md",
+      "draft_sha256": "947a7c0da05cede1244209a6eb7447d31e9b177f9874414da63b7afe533df9a8",
+      "archive_ref": "AN-S-2834@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2834@1-DES--provide-optional-maintained-extensions-without-modifying-core-authority.md",
+      "archive_sha256": "55b82d4e148a59724c16800f3b96ba31dd10c54aec287e6764e16f1ca6263adc",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": null,
+          "path": ".anechoic_anechoic/04_requirement/000_draft/scope-trial-100/CA-R-draft-ANECHOIC-DEFINES_SCOPE_FOR-CORE_EXTENSIONS--provide-optional-maintained-extensions-without-modifying-core-authority.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2835@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2835@1-draft-DES--collect-feedback-questions-suggestions-and-reports-from-users.md",
+      "draft_sha256": "f0c599c050c9965a0616ba57e207eafe94307e2c82c837b1d37e7c4621608c0c",
+      "archive_ref": "AN-S-2835@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2835@1-DES--collect-feedback-questions-suggestions-and-reports-from-users.md",
+      "archive_sha256": "50db0ffb128c6d9f87733b9bb6b7c91ff4e7b153d6d3b854ae874130ee58ff0f",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": null,
+          "path": ".anechoic_anechoic/04_requirement/000_draft/scope-trial-100/CA-R-draft-ANECHOIC-DEFINES_SCOPE_FOR-FIELD--collect-feedback-questions-suggestions-and-reports-from-users.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2836@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2836@1-draft-DES--provide-evaluated-releases-and-notes-on-changes-compatibility-and-limits.md",
+      "draft_sha256": "f6910a4b6c6152576a0a7908649cab69ac204f4b18356c7d4bf3c9a611b8b59d",
+      "archive_ref": "AN-S-2836@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2836@1-DES--provide-evaluated-releases-and-notes-on-changes-compatibility-and-limits.md",
+      "archive_sha256": "6a6633dd38f43fb229f748ef6ee2d08ac61fe16cfc02b78cdfb3765b64b42437",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": null,
+          "path": ".anechoic_anechoic/04_requirement/000_draft/scope-trial-100/CA-R-draft-ANECHOIC-DEFINES_SCOPE_FOR-RELEASES--provide-evaluated-releases-and-notes-on-changes-compatibility-and-limits.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2837@17-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2837@17-draft-DES--define-how-projects-are-represented-and-operated.md",
+      "draft_sha256": "40f9ee5e1117ad70df93d8d4db8f8f50f4f8872735c7831205d203828fff99fb",
+      "archive_ref": "AN-S-2837@17",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2837@17-DES--define-how-projects-are-represented-and-operated.md",
+      "archive_sha256": "50a05c15151c03cd0f4a39ca87f53bc1250ed3ea800fd84a4f6d90e1195f23a0",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1486@17-draft",
+          "path": ".anechoic_anechoic/04_requirement/000_draft/scope-trial-100/CA-R-1486@17-draft-ANECHOIC-DEFINES_SCOPE_FOR-FRAMEWORK_METHODOLOGY--define-how-projects-are-represented-and-operated.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2838@28-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2838@28-draft-DES--full-minimal-traceability.md",
+      "draft_sha256": "6332e12ac5c18fcb36c4d094c718aaf0fea5d61f68a189be7f37f2685ef225fb",
+      "archive_ref": "AN-S-2838@28",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2838@28-DES--full-minimal-traceability.md",
+      "archive_sha256": "48371463d4a4f43da4fb445d4f7fe0b7ba9cc58e3e6035374e277c1ce13c529f",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-007@28-draft",
+          "path": ".anechoic_anechoic/04_requirement/000_draft/scope-contracts-p2701/CA-R-007@28-draft-ANECHOIC-SCOPE_CONTRACT-RULE--full-minimal-traceability.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2839@28-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2839@28-draft-DES--separate-core-extension-and-project-configuration-authority.md",
+      "draft_sha256": "3e88226dc292e26ef214831d822761e8e8bb0ccb61fdd68cf435695ba95b0a91",
+      "archive_ref": "AN-S-2839@28",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2839@28-DES--separate-core-extension-and-project-configuration-authority.md",
+      "archive_sha256": "d5ddd114e19d16de2f0470d367bcd54ba9e2797360913e17eac79709ee31d93a",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-686@28-draft",
+          "path": ".anechoic_anechoic/04_requirement/000_draft/scope-contracts-p2701/CA-R-686@28-draft-ANECHOIC-SCOPE_CONTRACT-RULE--separate-core-extension-and-project-configuration-authority.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2839@32-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2839@32-draft-DES--separate-core-extension-and-project-configuration-authority.md",
+      "draft_sha256": "4efc103bfe15e70b00143ace7b015daace700d6b925ac3c5a1aeb3c6a5c5d785",
+      "archive_ref": "AN-S-2839@32",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2839@32-DES--separate-core-extension-and-project-configuration-authority.md",
+      "archive_sha256": "08db151d554903f4970af53f618300cd382ff351a65d039f06775dc9d494ee04",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-686@32-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/161-CA-R-686-RULE--separate-core-extension-and-project-configuration-authority.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2843@27-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2843@27-draft-SWD--optimize-flexibility-at-its-declared-priority.md",
+      "draft_sha256": "4895c60c8edbbd9168db0f2a18ea84af2cf0edbe989ebb6b8b13710a9f405ce0",
+      "archive_ref": "AN-S-2843@27",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2843@27-SWD--optimize-flexibility-at-its-declared-priority.md",
+      "archive_sha256": "f3e06c00fb28daf35092ed05a7ad5ca7670fb01fdd25f9447e5039cfb83b40e3",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-100@27-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/109-CA-M-100-IMPLEMENTATION_METHOD--optimize-flexibility-at-its-declared-priority.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2844@6-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2844@6-draft-DES--require-one-to-one-canonical-entity-names-with-reusable-terms.md",
+      "draft_sha256": "be6d3be4d237dbabdac26e19695d63dab413df47c17430263b7fc026a1e7a439",
+      "archive_ref": "AN-S-2844@6",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2844@6-DES--require-one-to-one-canonical-entity-names-with-reusable-terms.md",
+      "archive_sha256": "6a6f01f0458b50a2dc72be05d5d5b983e57a366a7d9a5c78fd39693fe1fcc306",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-2276@6-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/117-CA-R-2276-CORE_META_MODEL-RULE--require-one-to-one-canonical-entity-names-with-reusable-terms.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2845@30-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2845@30-draft-DES--provide-usable-anechoic-versions-and-release-notes.md",
+      "draft_sha256": "4c2286a616e7458c7ad08b7a5df07e0319052adadd4c6613a6e01b9056747c3b",
+      "archive_ref": "AN-S-2845@30",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2845@30-DES--provide-usable-anechoic-versions-and-release-notes.md",
+      "archive_sha256": "0ad7254f732c5891bdf2b3c8a6dff70eb22d10c1396d2b9d09ca1dd5e93c7558",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1181@30-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/119-CA-R-1181-ANECHOIC-SCOPE_CONTRACT-GOAL--provide-usable-anechoic-versions-and-release-notes.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2846@21-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2846@21-draft-DES--target-framework-improvement-at-the-operating-framework.md",
+      "draft_sha256": "cf995269cb398d55066cf5aa118f1e4607535319ea6909813ba6d2dc64caa575",
+      "archive_ref": "AN-S-2846@21",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2846@21-DES--target-framework-improvement-at-the-operating-framework.md",
+      "archive_sha256": "d3df46bfbef7195d5d1f1e17f14c004439880b5814170cd4e225ed2398bf12d9",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-633@21-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/123-CA-R-633-RULE--target-framework-improvement-at-the-operating-framework.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2847@25-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2847@25-draft-DES--make-engine-execution-observable-and-transparent.md",
+      "draft_sha256": "4880f9316344b5466ec0f1fa377fe9387f5dfacf37de00651b77907c7aea668a",
+      "archive_ref": "AN-S-2847@25",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2847@25-DES--make-engine-execution-observable-and-transparent.md",
+      "archive_sha256": "e8727c7fcba4dc94361a3c80ab60db7a283047e7c139a15e59c66d282f3709c7",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1426@25-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/131-CA-R-1426-ANECHOIC-SCOPE_CONTRACT-GOAL--make-engine-execution-observable-and-transparent.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2848@24-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2848@24-draft-SWD--express-cardinality-with-comparison-operators-and-integer-literals.md",
+      "draft_sha256": "f52545706f3fc42e99cbd742b8a1e196b64f0648a9d0736eeb1fd2dc19cd5317",
+      "archive_ref": "AN-S-2848@24",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2848@24-SWD--express-cardinality-with-comparison-operators-and-integer-literals.md",
+      "archive_sha256": "75eadf794b311b3706e2a4173d2ecf55a0dcf2ab241dd534cbde01e3679acbcf",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-235@24-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/139-CA-M-235-CORE_META_MODEL-IMPLEMENTATION_METHOD--express-cardinality-with-comparison-operators-and-integer-literals.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2849@5-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2849@5-draft-DES--collect-inputs-from-other-anechoic-users.md",
+      "draft_sha256": "6d0f87b3d5196daa6a7b20f6cee7c9c2a3e1cd121e351805291a53d2181ba92e",
+      "archive_ref": "AN-S-2849@5",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2849@5-DES--collect-inputs-from-other-anechoic-users.md",
+      "archive_sha256": "11ecc69916e833e4acb99e13a3c99683bb8fe7761b0a7fe05726d747566eccc9",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-2444@5-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/143-CA-R-2444-ANECHOIC-SCOPE_CONTRACT-GOAL--collect-input-from-other-anechoic-users.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2850@28-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2850@28-draft-DES--define-restricted-cce-canonical-signature.md",
+      "draft_sha256": "bc1a5accaaa8eacd4d01da74049cbe3e8153e4f6129633c863be9011be5da277",
+      "archive_ref": "AN-S-2850@28",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2850@28-DES--define-restricted-cce-canonical-signature.md",
+      "archive_sha256": "ac56e33ff42cecf3ad9e8b2b051747f756b0e5fa1edace078e534820cbc54db5",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1360@28-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/153-CA-R-1360-CORE_META_MODEL-DEFINITION--define-restricted-cce-canonical-signature.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2851@30-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2851@30-draft-SWD--derive-restricted-cce-canonical-signatures-without-source-rewrite.md",
+      "draft_sha256": "ce8a3158776e7b3a3cb42b2a214f0c697787befd0b2674496ec0f7c1a0443433",
+      "archive_ref": "AN-S-2851@30",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2851@30-SWD--derive-restricted-cce-canonical-signatures-without-source-rewrite.md",
+      "archive_sha256": "c62c09396ae64c37a344d9ebd636979bd021447be23a346d7371bfe6ba1354b8",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-240@30-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/191-CA-M-240-CORE_META_MODEL-IMPLEMENTATION_METHOD--derive-restricted-cce-canonical-signatures-without-source-rewrite.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2852@30-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2852@30-draft-DES--help-operators-use-anechoic-to-achieve-project-goals.md",
+      "draft_sha256": "ab0f05925bed3347b3fdc006ad4b847dc0dd7244a3d2b02da1e9d0c14e22167d",
+      "archive_ref": "AN-S-2852@30",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2852@30-DES--help-operators-use-anechoic-to-achieve-project-goals.md",
+      "archive_sha256": "559a91fb579a441868d2f3ac7b66744358f8594a7559521c7339a7d8cd7e900d",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1179@30-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/197-CA-R-1179-ANECHOIC-SCOPE_CONTRACT-GOAL--help-operators-use-anechoic-to-achieve-project-goals.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2853@27-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2853@27-draft-QA--validate-cce-lexical-case.md",
+      "draft_sha256": "db5a717db28184befd7729f2ea0fc56a8390fcb3158666908a0b062a31a60344",
+      "archive_ref": "AN-S-2853@27",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2853@27-QA--validate-cce-lexical-case.md",
+      "archive_sha256": "964f0b99e1f860c5d68228f1a5e09c1035815e1875b45ce6b58959dcb60db816",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-E-512@27-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/201-CA-E-512-CORE_META_MODEL-EVAL_CASE--validate-cce-lexical-case.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2854@31-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2854@31-draft-QA--validate-restricted-cce-canonical-signature-boundary.md",
+      "draft_sha256": "2a9fbdd3c17d873e64564b929648e3b7b68ecb58b4917448004759d7509094e7",
+      "archive_ref": "AN-S-2854@31",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2854@31-QA--validate-restricted-cce-canonical-signature-boundary.md",
+      "archive_sha256": "5957c94b401426dac4d3cc2cfc6ada65824fc1a4495938bd4de2a07c72fe422d",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-E-405@31-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/227-CA-E-405-CORE_META_MODEL-POLICY--validate-restricted-cce-canonical-signature-boundary.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2855@38-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2855@38-draft-DES--do-not-require-human-participants-to-master-or-personally-perform-specialist-work.md",
+      "draft_sha256": "d8b6cb1662ea0ff7c77f60298c35498b9fab89bb7dc682d0476fab01e6db4bb7",
+      "archive_ref": "AN-S-2855@38",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2855@38-DES--do-not-require-human-participants-to-master-or-personally-perform-specialist-work.md",
+      "archive_sha256": "6146cab75aadaab07ac03feaab7c442c930fc7abe011b92714f8b2e05ecd4765",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-819@38-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/233-CA-R-819-ANECHOIC-SCOPE_CONTRACT-RULE--do-not-require-human-participants-to-master-or-personally-perform-specialist-work.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2856@28-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2856@28-draft-DES--add-reusable-capabilities-through-extensions.md",
+      "draft_sha256": "45b27006835b9a83b33f44e7efa5a2e2aa1435da2bb4c3e24021f7e93404d6b7",
+      "archive_ref": "AN-S-2856@28",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2856@28-DES--add-reusable-capabilities-through-extensions.md",
+      "archive_sha256": "a8328c46c3933d8f2e1b089d7eb643650c0096b95bda70bdc353a5622985ddb1",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-831@28-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/249-CA-R-831-RULE--add-reusable-capabilities-through-extensions.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2857@27-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2857@27-draft-DES--support-informed-operator-decisions.md",
+      "draft_sha256": "aea0d02469989996d8669800b15f675122b3f28dac8017cc68f71f73a627ca71",
+      "archive_ref": "AN-S-2857@27",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2857@27-DES--support-informed-operator-decisions.md",
+      "archive_sha256": "8c3f5535f9d2e96a6cd78acf31220c57af5ac62bb24558bff397c322ac7521ab",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1420@27-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/277-CA-R-1420-ANECHOIC-SCOPE_CONTRACT-GOAL--support-informed-operator-decisions.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2858@36-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2858@36-draft-DEVOPS--deliver-cce-canonical-signatures-as-external-report-projections.md",
+      "draft_sha256": "27cecd37eb090fdc7367a5c70c8851226c4f391bd79fdfa2523845aafde3a2a4",
+      "archive_ref": "AN-S-2858@36",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2858@36-DEVOPS--deliver-cce-canonical-signatures-as-external-report-projections.md",
+      "archive_sha256": "7012c5627205aa5162b04a7dc0409dfe1ce97f619823a2d394117f1187b7d08d",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-D-346@36-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/291-CA-D-346-CORE_META_MODEL-DECISION--deliver-cce-canonical-signatures-as-external-report-projections.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2859@26-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2859@26-draft-SWD--minimize-external-expense-at-its-declared-priority.md",
+      "draft_sha256": "59774c89730c907cfbf3ebf0837cf49073f8c4bd1bdb52be148c0f01a0fcb6e0",
+      "archive_ref": "AN-S-2859@26",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2859@26-SWD--minimize-external-expense-at-its-declared-priority.md",
+      "archive_sha256": "22c31e7c2dcd4d918e6528415c68645139f7713a87f5d4043877f6bc4510d230",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-099@26-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/307-CA-M-099-IMPLEMENTATION_METHOD--minimize-external-expense-at-its-declared-priority.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2860@22-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2860@22-draft-DES--target-project-improvement-at-the-system-being-developed.md",
+      "draft_sha256": "3eafabbf93646f9980399146ede16fcf90f4670ff44923a99c7dfa0749a17c98",
+      "archive_ref": "AN-S-2860@22",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2860@22-DES--target-project-improvement-at-the-system-being-developed.md",
+      "archive_sha256": "4102b042924f5c8aa1a35f2d06f207fc2826309d4248b756d46827e0b79c23a5",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-634@22-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/309-CA-R-634-RULE--target-project-improvement-at-the-system-being-developed.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2861@28-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2861@28-draft-DES--the-anechoic-instance-and-the-implementation-form-a-graph-of-graphs.md",
+      "draft_sha256": "e05fb13ebf2361557f98e89bb1354d92463be752af4405232605f3be7088d940",
+      "archive_ref": "AN-S-2861@28",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2861@28-DES--the-anechoic-instance-and-the-implementation-form-a-graph-of-graphs.md",
+      "archive_sha256": "ca02750a24e334adcf8ea1443b57be2b881eaee5cf71cb587ecda24ee352e2e3",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1407@28-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/317-CA-R-1407-ANECHOIC-SCOPE_CONTRACT-RULE--the-anechoic-instance-and-the-implementation-form-a-graph-of-graphs.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2862@30-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2862@30-draft-QA--evaluate-graph-of-graphs-connectivity.md",
+      "draft_sha256": "675de54bfc43e5827327a4b9f594910b6f3450dd0b0fcee4b3a480cd9f70dce4",
+      "archive_ref": "AN-S-2862@30",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2862@30-QA--evaluate-graph-of-graphs-connectivity.md",
+      "archive_sha256": "39049d97964d2d8f0f814bb7dda9b68479438a4e38570bc75b1aeb3a6e116750",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-E-436@30-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/319-CA-E-436-EVAL_POLICY--evaluate-graph-of-graphs-connectivity.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2863@27-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2863@27-draft-DES--support-improvement-from-observed-outcomes.md",
+      "draft_sha256": "7c594aa1ea74f8e465cb15aea3ef7f1d2208523121b132317399ee00ac7b8005",
+      "archive_ref": "AN-S-2863@27",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2863@27-DES--support-improvement-from-observed-outcomes.md",
+      "archive_sha256": "8fef7fab800dcf558004af1227beb124ddc4b5ca0b7b7531a1406ecd865db9bb",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1423@27-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/347-CA-R-1423-ANECHOIC-SCOPE_CONTRACT-GOAL--support-improvement-from-observed-outcomes.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2864@29-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2864@29-draft-SWD--author-in-canonical-framework-language.md",
+      "draft_sha256": "d5dcba101fcf01088efa259b3c1245ad89b533b8b43677f618f5a9f5ee3e76c9",
+      "archive_ref": "AN-S-2864@29",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2864@29-SWD--author-in-canonical-framework-language.md",
+      "archive_sha256": "6a7c0c779440839dda54c8e7fd6751734747cb0cf880f8683f36eda773afeb4f",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-138@29-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/371-CA-M-138-IMPLEMENTATION_METHOD--author-in-canonical-framework-language.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2865@27-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2865@27-draft-SWD--apply-declared-rule-conformance-to-the-active-rule-set.md",
+      "draft_sha256": "6d4544d040ea9c9f359828e7da6276178ded8c136eebd337f3f10de92a9b6df9",
+      "archive_ref": "AN-S-2865@27",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2865@27-SWD--apply-declared-rule-conformance-to-the-active-rule-set.md",
+      "archive_sha256": "0c6206298dc99170124486355e6510c278f511aa82419ccfcb08d7e07910e251",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-097@27-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/391-CA-M-097-IMPLEMENTATION_METHOD--apply-declared-rule-conformance-to-the-active-rule-set.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2866@23-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2866@23-draft-SWD--make-information-clear-to-the-operator.md",
+      "draft_sha256": "49a974105e0bcfd00569cc2c8a0eb00bd84cdf8e69e6fa2134fb51f05675f64e",
+      "archive_ref": "AN-S-2866@23",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2866@23-SWD--make-information-clear-to-the-operator.md",
+      "archive_sha256": "901eb32da9dcc17f98ff81f4d33fc0204ba171be07d0fd86fd173f42c3c2b648",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-263@23-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/403-CA-M-263-IMPLEMENTATION_METHOD--make-information-clear-to-the-operator.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2867@5-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2867@5-draft-DES--catalog-externally-maintained-extension-packages.md",
+      "draft_sha256": "7629c2f8a44c2d6b314ace64e503830ab254cfec2fbc64d81983f9f10e3f8f71",
+      "archive_ref": "AN-S-2867@5",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2867@5-DES--catalog-externally-maintained-extension-packages.md",
+      "archive_sha256": "ddb235cd27f4850c547eaf589e5e10d7daf362a775811c3432b909df8617b568",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-2445@5-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/413-CA-R-2445-ANECHOIC-SCOPE_CONTRACT-GOAL--catalog-externally-maintained-extension-packages.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2868@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2868@1-draft-DES--admit-an-allowed-value.md",
+      "draft_sha256": "7c93fe545c4dd2a079a2c21715d68eaa25b842e5b3c631bdd9de89c818f1d565",
+      "archive_ref": "AN-S-2868@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2868@1-DES--admit-an-allowed-value.md",
+      "archive_sha256": "b64da31f9c3c42555e64ba3c466063169c236ac0e0bdfa727a686bb03f06b0a0",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-2810@1-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/application/allowed-value-relation-correction-20261105/withdrawn/CA-R-2810@1-draft-CORE_META_MODEL-RULE--admit-an-allowed-value.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2869@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2869@1-draft-DES--declare-has-allowed-value.md",
+      "draft_sha256": "b7bc23553c84eb2d47db259ce0b3ebf503e154657911932742b9b51b98dddbfc",
+      "archive_ref": "AN-S-2869@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2869@1-DES--declare-has-allowed-value.md",
+      "archive_sha256": "dcb0f5372d0d551946bc04bbe4a182f267df8970fc8d75c8e3a6854f032d1218",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-2822@1-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/application/value-relation-identity-repair-20261105/preimages/CA-R-2822@1-draft-CORE_META_MODEL-DECLARATION--declare-has-allowed-value.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2870@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2870@1-draft-DES--declare-is-allowed-value-of.md",
+      "draft_sha256": "5ee7cf248a1ac831b9ebe87dbe204e538db96f0949478c83823bea122e8b56da",
+      "archive_ref": "AN-S-2870@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2870@1-DES--declare-is-allowed-value-of.md",
+      "archive_sha256": "9d5de7791385d2b5442a9dcb878694fe1cfe38d1200603c82f243521add84c4b",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-2823@1-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/application/value-relation-identity-repair-20261105/preimages/CA-R-2823@1-draft-CORE_META_MODEL-DECLARATION--declare-is-allowed-value-of.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2871@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2871@1-draft-DES--declare-has-value-constraint.md",
+      "draft_sha256": "2e1b177754e495bd7deaf8db201605bcd13040149d3800f2deef9db77c5e4a64",
+      "archive_ref": "AN-S-2871@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2871@1-DES--declare-has-value-constraint.md",
+      "archive_sha256": "eb0545860429c68d66b0ae20135858eaa54f4fffe1398d1a289d99a66fa59371",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-2824@1-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/application/value-relation-identity-repair-20261105/preimages/CA-R-2824@1-draft-CORE_META_MODEL-DECLARATION--declare-has-value-constraint.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2872@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2872@1-draft-DES--declare-is-value-constraint-of.md",
+      "draft_sha256": "bbf8a5356ff5667fed2d1af36805e6d037f49debfd13ab2c7912be64b41ca1ed",
+      "archive_ref": "AN-S-2872@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2872@1-DES--declare-is-value-constraint-of.md",
+      "archive_sha256": "3565337be8054a3de17330d860a89aa30b0cdfe7dec28710e5b3a31ec8aa2b09",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-2825@1-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/application/value-relation-identity-repair-20261105/preimages/CA-R-2825@1-draft-CORE_META_MODEL-DECLARATION--declare-is-value-constraint-of.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-293@17-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-293@17-draft-DES--derive-fpf-behavior-from-current-anechoic-authority.md",
+      "draft_sha256": "d195727b82a7e33deaed053fcd665238eb1f5411606249034d7bea8660129082",
+      "archive_ref": "AN-S-293@17",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-293@17-DES--derive-fpf-behavior-from-current-anechoic-authority.md",
+      "archive_sha256": "9915d36a6ac55a1a54904dbf67e3854a47e6b6f9fc69c24066d597636c35700d",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1476@17-draft",
+          "path": ".anechoic_anechoic/CA-SU-26_LAYER_4_CORE_EXTENSIONS/04_requirement/000_draft/scope-trial-100/CA-R-1476@17-draft-CORE_EXTENSIONS-RULE--derive-fpf-behavior-from-current-anechoic-authority.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2977@1-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2977@1-draft-DES--delegate-responsibility-to-core-extensions.md",
+      "draft_sha256": "bbb77267a1676e1f1c9d88828937708b88fde92a8a26c85dc5e16359c21c1683",
+      "archive_ref": "AN-S-2977@1",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2977@1-DES--delegate-responsibility-to-core-extensions.md",
+      "archive_sha256": "709650554291c45c121177c54db380c7ae82ad7a5a515810dccc1c489dfa3dd5",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-3076@1-draft",
+          "path": ".anechoic_anechoic/04_requirement/000_draft/CA-R-3076@1-draft-ANECHOIC-SCOPE_DELEGATION--delegate-responsibility-to-core-extensions.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-2983@33-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-2983@33-draft-DES--use-relation-specific-cross-unit-ownership.md",
+      "draft_sha256": "5651eafd257d304dcbc91bf379cbaa3138a5a0a3a656fb454b02831a09e508eb",
+      "archive_ref": "AN-S-2983@33",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-2983@33-DES--use-relation-specific-cross-unit-ownership.md",
+      "archive_sha256": "9dfb841678727f034bda962d9cb3e807fa479bbf4738a64d3d0c79ad2da5e05e",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-881@33-draft",
+          "path": ".anechoic_anechoic/04_requirement/000_draft/cfel-contract-completion-20261102/subject-migration/CA-R-881@33-draft-RULE--use-relation-specific-cross-unit-ownership.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-332@35-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-332@35-draft-DES--consolidate-single-value-claims-as-one-value-set-claim.md",
+      "draft_sha256": "3ee54f8fa04c274abc940e7f880249b8d9d075d2c744165d585c22bbffca3d9e",
+      "archive_ref": "AN-S-3276@35",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3276@35-DES--consolidate-single-value-claims-as-one-value-set-claim.md",
+      "archive_sha256": "087e8f20d1355e63de0854fcff23c86c58e0fe95c2c51dccb62b57b21944d056",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1358@35-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/cfel-without-operator-entities-20261105/consumers/previews/CA-R-1358-CORE_META_MODEL-RULE--consolidate-single-value-claims-as-one-value-set-claim.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-333@30-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-333@30-draft-DES--define-claim-value-set.md",
+      "draft_sha256": "f2cc2e46e530ad1fbdcdd16d37dff5b188f61e76093c5973bf4711ca83033c1d",
+      "archive_ref": "AN-S-3277@30",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3277@30-DES--define-claim-value-set.md",
+      "archive_sha256": "4e14a197378e067e1194f04f99cbd107dc13541eddce2f47230827eb51b46e4d",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1359@30-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/cfel-without-operator-entities-20261105/consumers/previews/CA-R-1359-CORE_META_MODEL-RULE--define-claim-value-set.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-338@29-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-338@29-draft-DES--register-core-artifact-type-values.md",
+      "draft_sha256": "7669b3af6887ecd6b942b304cb0bf431645734427c8d6252eab6fd497e7c0304",
+      "archive_ref": "AN-S-3278@29",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3278@29-DES--register-core-artifact-type-values.md",
+      "archive_sha256": "b0004b84fa4850a24fd8e981ef14d41df6a41f8c639d6761053292b8a75a6da8",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1405@29-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/cfel-without-operator-entities-20261105/consumers/previews/CA-R-1405-CORE_META_MODEL-RULE--register-core-artifact-type-values.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-415@33-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-415@33-draft-SWD--author-claim-value-sets.md",
+      "draft_sha256": "b48a3f39f2f9e4d9ae3a4e953b48ccf64e83c4c19506fb05f407a8352a7ce7f9",
+      "archive_ref": "AN-S-3279@33",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3279@33-SWD--author-claim-value-sets.md",
+      "archive_sha256": "220dec49edb3906bca83faa1afe86b8a1d08c41eba5802464b27988147c48d2c",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-M-237@33-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/cfel-without-operator-entities-20261105/consumers/previews/CA-M-237-CORE_META_MODEL-IMPLEMENTATION_METHOD--author-claim-value-sets.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-423@33-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-423@33-draft-QA--reject-invalid-claim-value-sets.md",
+      "draft_sha256": "0a931c33b97d14e14602975cbaefa0742dacac2cd6952d4b31c5f25c6286e9d1",
+      "archive_ref": "AN-S-3280@33",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3280@33-QA--reject-invalid-claim-value-sets.md",
+      "archive_sha256": "0b0e632092e0b3589a900fe40a563b693e15909893f9edddc063a41bfa8948d8",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-E-402@33-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/cfel-without-operator-entities-20261105/consumers/previews/CA-E-402-CORE_META_MODEL-EVAL_POLICY--reject-invalid-claim-value-sets.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-429@4-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-429@4-draft-QA--check-node-declaration-migration-readiness.md",
+      "draft_sha256": "a82e5fd19cab260e9724f3aad256abe7110f18527ffa759b0235f7dd3714f807",
+      "archive_ref": "AN-S-3281@4",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3281@4-QA--check-node-declaration-migration-readiness.md",
+      "archive_sha256": "6c2c4f9b7a8706fab2ae4714c5161791ca1700c891a3fd1600fbec2d555fc5ff",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-E-669@4-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/recursive-steps-20261105/consumers/CA-E-669.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-490@24-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-490@24-draft-DES--route-main-skill-through-canonical-routing-tree.md",
+      "draft_sha256": "938c9002da0dcbd95ef4c5af4593dcc68ec04a4e50489da4a6fd94c462a5cfb3",
+      "archive_ref": "AN-S-3282@24",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3282@24-DES--route-main-skill-through-canonical-routing-tree.md",
+      "archive_sha256": "a9e0baa00818f3c22f26b93008c2f5bef7a5dab6718de8a0746ab98ee2c7a72f",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1355@24-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/187-CA-R-1355-PROJECT_CONFIGURATION--route-main-skill-through-canonical-routing-tree.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-492@32-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-492@32-draft-DES--define-anechoic-main-skill.md",
+      "draft_sha256": "f723df87ff334bb3d5f2aa469bafd8c344692d1ea21c8e3e298a6c81383fd097",
+      "archive_ref": "AN-S-492@32",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-492@32-DES--define-anechoic-main-skill.md",
+      "archive_sha256": "f5031885285ab8252d6ad619c495d34df242e73c69846c31b41222e9f90493bd",
+      "revision_collision": false,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1637@32-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/217-CA-R-1637-PROJECT_CONFIGURATION-DEFINITION--define-anechoic-main-skill.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-494@39-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-494@39-draft-DES--define-self-hosted-governance-origins.md",
+      "draft_sha256": "c71f7ff624c0f2bc61b94ce5bb3c6d1f997d34b5693b864867e407a2364b7b0a",
+      "archive_ref": "AN-S-3283@39",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3283@39-DES--define-self-hosted-governance-origins.md",
+      "archive_sha256": "f32afe967e278aefba35c02653ed83bb56d2ff9b9e36faa5749ab3cdcc597f60",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-R-1645@39-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/389-CA-R-1645-PROJECT_CONFIGURATION-RULE--define-self-hosted-governance-origins.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-502@30-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-502@30-draft-DEVOPS--materialize-applicable-methodology-as-projected-atom-files.md",
+      "draft_sha256": "b5becf46c70e0209a68427441894ad03aac40ba995a102029e006e92600caca3",
+      "archive_ref": "AN-S-3284@30",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3284@30-DEVOPS--materialize-applicable-methodology-as-projected-atom-files.md",
+      "archive_sha256": "32eaaa7548842eb1bf93fcae431191f54b6a186d4b1ad66bac18f2bda55fe308",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-D-306@30-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/epic-completion-20261104/coverage/exact-authority-remaining-20261105/projection-term/CA-D-306.preview.md"
+        }
+      ]
+    },
+    {
+      "draft_ref": "AN-S-511@23-draft",
+      "draft_path": "_anechoic_anechoic/000_draft/AN-S-511@23-draft-DEVOPS--serialize-main-skill-invocation-per-host.md",
+      "draft_sha256": "bfd46215158cca8c56fd08f0136752762b97447eb66e1fd17e927c8131b0761f",
+      "archive_ref": "AN-S-3285@23",
+      "archive_path": "_anechoic_anechoic/099_archived/AN-S-3285@23-DEVOPS--serialize-main-skill-invocation-per-host.md",
+      "archive_sha256": "d58a8a2d43520ffa43a617bda4f711ba39cd2b51ea4e6d17bff3d520442cc135",
+      "revision_collision": true,
+      "legacy_aliases": [
+        {
+          "reference": "CA-D-344@23-draft",
+          "path": ".anechoic_anechoic/02_analysis_and_advisory/000_draft/question-resolutions-20261102/C620/containment-correction/staged/127-CA-D-344-PROJECT_CONFIGURATION-ENG_DECISION--serialize-main-skill-invocation-per-host.md"
+        }
+      ]
+    }
+  ]
+}

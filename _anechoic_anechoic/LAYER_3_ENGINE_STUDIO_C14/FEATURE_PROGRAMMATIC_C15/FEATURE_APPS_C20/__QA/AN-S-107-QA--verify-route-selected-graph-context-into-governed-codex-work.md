@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-107
-structure:
-  container:
-    component: C20
-  tier: 3
+container:
+  component: C20
+tier: 3
 context:
   lens: QA
 state:

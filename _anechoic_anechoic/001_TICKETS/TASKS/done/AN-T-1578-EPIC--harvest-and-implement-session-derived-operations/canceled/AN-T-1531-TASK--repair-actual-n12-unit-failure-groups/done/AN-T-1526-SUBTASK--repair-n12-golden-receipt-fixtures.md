@@ -1,0 +1,35 @@
+---
+atom_family: TKT
+atom_id: AN-T-1526
+container:
+  atom: AN-T-1531
+priority: 2
+context:
+  template: task
+  label: Subtask
+state:
+  status: done
+  version: 7
+  updated_at: 2026-10-25 17:32:27 +0400
+---
+# Summary
+
+Repair N12 golden receipt fixtures
+
+## Objective
+
+repair the source-complete golden fixture and affected tests without weakening actual receipt, currentness or Full Gate checks.
+
+## Details
+
+- this lane owns 17 failing cases from the frozen N12 Unit report, not a new scope expansion.
+- use disposable fixtures; preserve actual Run, runtime, Journal and source snapshot evidence.
+- coordinate shared production dependencies instead of overlapping another worker. root integrates accepted changes and current pins.
+
+## Definition of Done
+
+the observed failures are explained and fixed against current authority; focused regression suites pass and independent review accepts the bounded change. actual full Release acceptance remains with the parent Plan.
+
+## Result
+
+the fixture now writes the exact context-derived unit-deadline.json snapshot consumed by the real reader. independent review accepts the two-line fixture change. four focused tests have retained exit-0 terminal results: two retained-fixture cases, the E2E fixed-command/bound-receipt case and the Full Gate exact-partition/unchanged-bytes case. the long combined run has no retained aggregate verdict and is not claimed passing; the fresh complete Unit and later release gates remain with the parent Plan.

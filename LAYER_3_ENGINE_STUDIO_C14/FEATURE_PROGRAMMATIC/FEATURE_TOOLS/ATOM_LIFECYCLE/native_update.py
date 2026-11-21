@@ -12,7 +12,7 @@ import re
 import yaml
 
 from native_carrier_header import native_header_view
-from native_carrier_placement import native_ticket_asset
+from native_carrier_placement import native_ticket_asset, DRAFT_DIRECTORY, ARCHIVE_DIRECTORY, COMPLETE_DIRECTORY, TICKET_DIRECTORY
 
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import CURRENT_STATUSES, capture_native
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_rows import frontmatter_bounds
@@ -49,7 +49,7 @@ def _select_ticket(selection, target, current_rows, *, allow_draft=False):
     if not isinstance(relative, str):
         raise SourceChanged('Current Ticket path is invalid.')
     relative = Path(relative)
-    ticket_root = selection.control_root / '__TKT'
+    ticket_root = selection.control_root / ('__TKT' if '__TKT' in relative.parts else TICKET_DIRECTORY)
     path = selection.root / relative
     if (relative.is_absolute() or '..' in relative.parts or not path.is_relative_to(ticket_root)
             or path.suffix != '.md' or path == selection.manifest_path):
@@ -83,7 +83,7 @@ def _read_ticket(selection, target, selected, digest, path, *, close_tree=False,
         if pending and (not close_tree or not companion.is_dir()):
             raise InputError('target', 'Ticket descendants require their companion directory.')
         visited = {selected['id']}
-        terminal = {'done', 'canceled'}
+        terminal = {'done', 'canceled', 'resolved', 'complete'}
         while pending:
             child = pending.pop()
             if child['id'] in visited:
@@ -130,7 +130,7 @@ def direct_update(selection, params, *, current_rows):
     if not isinstance(changes, dict) or set(changes) != {'body'} or not isinstance(changes['body'], str):
         raise InputError('changes', 'Supply only a Markdown body change.')
     selected, digest, path = _select_ticket(selection, target, current_rows, allow_draft=True)
-    branch = path.relative_to(selection.control_root / '__TKT').parts[0]
+    branch = path.relative_to(selection.control_root / ('__TKT' if '__TKT' in path.parts else TICKET_DIRECTORY)).parts[0]
     template = native_header_view(selected['header_json']).get('context', {}).get('template')
     linked_asset = (branch in {'TASKS', 'ISSUES'} and isinstance(template, str)
                     and template.casefold().replace(' ', '_') in {'analysis_report', 'work_log'})
@@ -177,10 +177,10 @@ def _status_bytes(raw, bounds, path, status):
 
 
 def _branch(selection, path, status, selected, rows, *, allow_flat=True, seen=None):
-    root = selection.control_root / '__TKT'
+    root = selection.control_root / ('__TKT' if '__TKT' in path.parts else TICKET_DIRECTORY)
     parts = path.relative_to(root).parts
-    folder = {'draft': '000_draft', 'archived': '099_archived'}.get(status, status)
-    old_folder = () if status == 'active' else (folder,)
+    folder = {'draft': DRAFT_DIRECTORY, 'archived': ARCHIVE_DIRECTORY, 'complete': COMPLETE_DIRECTORY}.get(status, status)
+    old_folder = () if status in {'active', 'in_queue'} else (('000_draft' if status == 'draft' and path.parent.name == '000_draft' else folder),)
     if parts[0] not in {'TASKS', 'ISSUES', 'ASSETS'}:
         raise InputError('target', 'Ticket path disagrees with its Current Status placement.')
     flat = root / parts[0]
@@ -368,20 +368,24 @@ def promote_ticket_tree(selection, selected, destination, status, original_rows,
         owner = owners[context['container']['atom']]
         owner_context = native_header_view(owner['header_json']).get('context', {})
         branch = (selection.root / owner['source_path']).with_suffix('')
-        folder = {'draft': '000_draft', 'active': ''}.get(row['status'], row['status'])
+        folder = {'draft': DRAFT_DIRECTORY, 'active': '', 'in_queue': ''}.get(row['status'], row['status'])
         expected = {branch / folder}
+        if row['status'] == 'draft':
+            expected.add(branch / '000_draft')
         if native_ticket_asset(context.get('template')):
             expected.add(branch / 'ASSETS' / folder)
+            if row['status'] == 'draft':
+                expected.add(branch / 'ASSETS' / '000_draft')
         if owner_context.get('template') not in ('task', 'epic') or source.parent not in expected:
             raise InputError('target', 'Ticket descendant placement disagrees with its container.')
         if context.get('template') not in ('task', 'epic') or (
-                row['status'] != 'draft' and (row['status'] != 'backlog' or status != 'active')):
+                row['status'] != 'draft' and (row['status'] != 'backlog' or status not in {'active', 'in_queue'})):
             continue
         name = source.name
         prefix = row['_exact_ref'] if row['status'] == 'draft' else row['id']
         if not name.startswith(prefix + '-'):
             raise InputError('target', 'Ticket descendant filename is invalid.')
-        dest = branch / ('' if status == 'active' else status) / (row['id'] + name[len(prefix):])
+        dest = branch / ('' if status in {'active', 'in_queue'} else status) / (row['id'] + name[len(prefix):])
         actions.append((row, source, dest))
     actions.append((selected, root_path, destination))
     return _apply_promotions(selection, actions, status, check_definition)
@@ -427,22 +431,38 @@ def change_ticket_status(selection, params, *, current_rows, check_definition):
     if not isinstance(params, dict) or set(params) != {'target', 'targetStatus'}:
         raise InputError('target', 'Supply one target and target Status.')
     status = params['targetStatus']
-    if not isinstance(status, str) or status.casefold() not in CURRENT_STATUSES['T']:
-        raise InputError('targetStatus', 'Supply a Current Ticket Status.', allowed_values=CURRENT_STATUSES['T'])
+    if not isinstance(status, str) or status.casefold() not in CURRENT_STATUSES['T'] - {'active'}:
+        raise InputError('targetStatus', 'Supply a Current Ticket Status.', allowed_values=CURRENT_STATUSES['T'] - {'active'})
     status = status.casefold()
     target = params['target']
     selected, digest, path = _select_ticket(selection, target, current_rows)
     template = native_header_view(selected['header_json']).get('context', {}).get('template')
+    context = native_header_view(selected['header_json']).get('context', {})
+    detached_asset = native_ticket_asset(template) and 'component' in context.get('container', {})
+    if status == 'complete' and not detached_asset:
+        raise InputError('targetStatus', 'Only a standalone Ticket Asset can be completed.')
+    if detached_asset and status == 'complete' and selected['status'] != 'in_queue':
+        raise InputError('targetStatus', 'Only an In Queue Asset can be completed.')
+    if 'atom_family' in selected['header_json']:
+        issue = template in {'problem', 'question', 'code_spec_mismatch', 'opportunity'}
+        planning = template in {'task', 'epic'}
+        if issue or planning:
+            terminals = {'resolved', 'canceled'} if issue else {'done', 'canceled'}
+            permitted = ((selected['status'] == 'backlog' and status == 'in_queue')
+                         or (selected['status'] in {'in_queue', 'active'} and status in terminals)
+                         or (selected['status'] == 'active' and status == 'in_queue'))
+            if not permitted:
+                raise InputError('targetStatus', 'Ticket Status transition is not supported for its Template.')
     move_tree = template in ('task', 'epic')
     terminal = move_tree and status in ('done', 'canceled')
     recorded = []
     with _project_write_lock(selection.root):
         branch = _branch(selection, path, selected['status'], selected, current_rows)
-        destination = branch / ('' if status == 'active' else status) / path.name
+        destination = branch / ('' if status in {'active', 'in_queue'} else COMPLETE_DIRECTORY if status == 'complete' else status) / path.name
         if destination != path and (destination.exists() or destination.is_symlink() or
                 (move_tree and (destination.with_suffix('').exists() or destination.with_suffix('').is_symlink()))):
             return result(errors=[{'code': 'destination_exists', 'message': 'Ticket destination already exists.'}])
-        if move_tree and selected['status'] == 'backlog' and status == 'active':
+        if move_tree and selected['status'] == 'backlog' and status == 'in_queue':
             capture = capture_native(selection)
             if capture.errors:
                 raise SourceChanged('Native carrier capture is incomplete.')
@@ -457,10 +477,10 @@ def change_ticket_status(selection, params, *, current_rows, check_definition):
                 any(before.get(key) != after.get(key) for key in keys)
                 for before, after in zip(planned, fresh)):
             raise SourceChanged('Ticket descendants changed after selection.')
-        if (move_tree and selected['status'] in ('done', 'canceled') and not terminal and status != 'active'
+        if (move_tree and selected['status'] in ('done', 'canceled') and not terminal and status != 'in_queue'
                 and any(row['status'] != status for row in planned)):
             raise InputError('target', 'Reopening requires changing contained Ticket statuses; this operation is unsupported.')
-        actions = [row for row in planned if terminal and row['status'] not in ('done', 'canceled')]
+        actions = [row for row in planned if terminal and row['status'] not in ('done', 'canceled', 'resolved', 'complete')]
         actions.append(selected)
         for row in actions:
             is_parent = row['id'] == selected['id']
@@ -469,7 +489,7 @@ def change_ticket_status(selection, params, *, current_rows, check_definition):
             try:
                 current, action_digest, action_path = _select_ticket(selection, action_target, current_rows)
                 branch = _branch(selection, action_path, current['status'], current, current_rows)
-                destination = branch / ('' if action_status == 'active' else action_status) / action_path.name
+                destination = branch / ('' if action_status in {'active', 'in_queue'} else COMPLETE_DIRECTORY if action_status == 'complete' else action_status) / action_path.name
                 action_template = native_header_view(current['header_json']).get('context', {}).get('template')
                 action_tree = action_template in ('task', 'epic')
                 if destination == action_path:
@@ -497,10 +517,196 @@ def change_ticket_status(selection, params, *, current_rows, check_definition):
 
 def archive_ticket(selection, params, *, current_rows):
     if not isinstance(params, dict) or set(params) != {'target'}:
-        raise InputError('target', 'Supply one Current Ticket target.')
+        raise InputError('target', 'Supply one Ticket target.')
     target = params['target']
-    selected, digest, path = _select_ticket(selection, target, current_rows)
-    branch = _branch(selection, path, selected['status'], selected, current_rows)
-    name = f"{selected['id']}@{target['version']}" + path.name[len(selected['id']):]
-    return _move_ticket(selection, target, selected, digest, path, branch / '099_archived' / name,
-                        'archived', lambda: None)
+    selected, digest, path = _select_ticket(selection, target, current_rows, allow_draft=True)
+    if 'atom_family' not in selected['header_json']:
+        if selected['status_group'] != 'Current':
+            raise InputError('target', 'Legacy Ticket archive requires a Current carrier.')
+        branch = _branch(selection, path, selected['status'], selected, current_rows)
+        name = f"{selected['id']}@{target['version']}" + path.name[len(selected['id']):]
+        return _move_ticket(selection, target, selected, digest, path, branch / ARCHIVE_DIRECTORY / name,
+                            'archived', lambda: None)
+
+    replacements = []
+
+    def check_replacement():
+        if not replacements:
+            capture = capture_native(selection)
+            if capture.errors:
+                raise SourceChanged('Native carrier capture is incomplete.')
+            replacements.extend(row for row in capture.atoms if row.get('status_group') == 'Current'
+                        and row.get('id') != selected['id']
+                        and isinstance(row.get('header_json', {}).get('relations', {}).get('IS_REPLACEMENT_FOR'), list)
+                        and selected['id'] in row['header_json']['relations']['IS_REPLACEMENT_FOR'])
+        if not replacements:
+            raise InputError('target', 'A different Current Atom must declare IS_REPLACEMENT_FOR this Ticket.')
+        reader = ReadContext(roots=[str(selection.control_root)], limits=dict(CEILINGS))
+        for row in replacements:
+            raw = reader.read(selection.root / row['source_path'])
+            if (sha256(raw).hexdigest() != row.get('_source_sha256')
+                    or parse_carrier(raw, selection.root / row['source_path']).metadata != row['header_json']):
+                raise SourceChanged('Replacement source changed.')
+        if reader.currentness()['state'] != 'unchanged':
+            raise SourceChanged('Replacement source changed.')
+
+    with _project_write_lock(selection.root):
+        branch = _branch(selection, path, selected['status'], selected, current_rows)
+        ticket_root = selection.control_root / TICKET_DIRECTORY
+        if branch not in {ticket_root / name for name in ('TASKS', 'ISSUES', 'ASSETS')}:
+            raise InputError('target', 'Only flat native Tickets can be archived by this operation.')
+        if path.with_suffix('').exists() or path.with_suffix('').is_symlink():
+            raise InputError('target', 'Ticket containers cannot be archived by this operation.')
+        check_replacement()
+        raw, bounds, tree, _ = _read_ticket(selection, target, selected, digest, path, placement=True)
+        marker = target['ref_id'] if selected['status_group'] == 'Draft' else selected['id']
+        if not path.name.startswith(marker + '-'):
+            raise InputError('target', 'Ticket filename disagrees with its reference.')
+        name = f"{selected['id']}@{target['version']}" + path.name[len(marker):]
+        return _move_ticket(selection, target, selected, digest, path, branch / ARCHIVE_DIRECTORY / name,
+                            'archived', check_replacement, locked=True, preflight=(raw, bounds, tree))
+
+
+def change_spec_status(selection, params, *, current_rows, structure_snapshot=None, validate_project_spec_model=None):
+    """Start implementation of a Ready SPEC or retire an Active SPEC."""
+    from native_carrier_placement import native_carrier_path
+    from .native_draft import _revision_root, _summary, _validate_project_template
+
+    if not isinstance(params, dict) or set(params) != {'target', 'targetStatus'}:
+        raise InputError('target', 'Supply one Current SPEC target and Status.')
+    target, status = params['target'], params['targetStatus']
+    if (not isinstance(target, dict) or set(target) != {'ref_id', 'version'}
+            or not isinstance(target['ref_id'], str)
+            or not re.fullmatch(re.escape(selection.project_prefix) + r'-S-[0-9]+', target['ref_id'])
+            or type(target['version']) is not int or target['version'] < 1
+            or status not in {'active', 'archived'}):
+        raise InputError('target', 'Supply a SPEC reference, Version and applicable Status.')
+    matches = [row for row in current_rows if row.get('ref') == target['ref_id']
+               and row.get('status_group') == 'Current' and row.get('version') == target['version']]
+    if len(matches) != 1:
+        raise SourceChanged('Current SPEC selection is missing, ambiguous, or stale.')
+    selected = matches[0]
+    if (selected.get('status'), status) not in {('ready', 'active'), ('active', 'archived')}:
+        raise InputError('targetStatus', 'Only Ready to Active and Active to Archived are supported.')
+    root = _revision_root(selection, selected, structure_snapshot, current_rows)
+    path = selection.root / selected['source_path']
+    digest = selected.get('_source_sha256')
+    if not isinstance(digest, str) or not re.fullmatch(r'[0-9a-f]{64}', digest):
+        raise SourceChanged('Current SPEC capture lacks a source digest.')
+    with _project_write_lock(selection.root):
+        capture = capture_native(selection)
+        fresh = [row for row in capture.atoms if row.get('_exact_ref') == selected.get('_exact_ref')]
+        if capture.errors or len(fresh) != 1 or any(fresh[0].get(k) != selected.get(k) for k in (
+                'source_path', 'id', 'ref', '_exact_ref', 'version', 'status', 'status_group',
+                'header_json', '_content_bytes', '_source_sha256')):
+            raise SourceChanged('Current SPEC changed after selection.')
+        if path.with_suffix('').exists() or path.with_suffix('').is_symlink() or any(
+                native_header_view(row['header_json']).get('context', {}).get('container', {}).get('atom') == selected['id']
+                for row in capture.atoms):
+            raise InputError('target', 'SPEC containers cannot change Status.')
+        reader = ReadContext(roots=[str(selection.control_root)], limits=dict(CEILINGS))
+        try:
+            raw = reader.read(path)
+            bounds = frontmatter_bounds(raw)
+            if (bounds is None or sha256(raw).hexdigest() != digest or raw[bounds[2]:] != selected['_content_bytes']
+                    or parse_carrier(raw, path).metadata != selected['header_json']
+                    or sha256(reader.read(selection.manifest_path)).hexdigest() != selection.manifest_sha256
+                    or reader.currentness()['state'] != 'unchanged'):
+                raise SourceChanged('Current SPEC source changed after selection.')
+            header = selected['header_json']
+            if status == 'active':
+                _validate_project_template(header, validate_project_spec_model)
+            body = raw[bounds[2]:].decode('utf-8')
+            if path != native_carrier_path(header, _summary(body), project_root=selection.control_root, owner_directory=root):
+                raise InputError('target', 'SPEC path disagrees with its Header and Summary.')
+            projected = {**header, 'state': {**header['state'], 'status': status}}
+            destination = native_carrier_path(projected, _summary(body), project_root=selection.control_root, owner_directory=root)
+        except (OSError, RuntimeError, ValueError, KeyError, TypeError) as error:
+            raise SourceChanged('Current SPEC source is unavailable or changed.') from error
+        return _move_ticket(selection, target, selected, digest, path, destination, status, lambda: None,
+                            locked=True, preflight=(raw, bounds, None))
+
+
+def archive_spec_draft(selection, params, *, current_rows, structure_snapshot=None):
+    """Archive an exact SPEC Draft without replacing an existing revision."""
+    from native_carrier_placement import native_carrier_path, READY_DIRECTORY
+    from . import common
+    from .native_draft import _revision_root, _state_bytes, _summary
+
+    if not isinstance(params, dict) or set(params) != {'target'}:
+        raise InputError('target', 'Supply one exact SPEC Draft target.')
+    target = params['target']
+    if (not isinstance(target, dict) or set(target) != {'ref_id', 'version'}
+            or not isinstance(target['ref_id'], str) or type(target['version']) is not int
+            or target['version'] < 1):
+        raise InputError('target', 'Supply an exact SPEC Draft reference and Version.')
+    match = re.fullmatch(re.escape(selection.project_prefix) + r'-S-[0-9]+@([1-9][0-9]*)-draft', target['ref_id'])
+    if match is None or int(match[1]) != target['version']:
+        raise InputError('target', 'Supply an exact SPEC Draft reference and matching Version.')
+    rows = [row for row in current_rows if row.get('_exact_ref') == target['ref_id'] and row.get('status_group') == 'Draft']
+    if len(rows) != 1:
+        raise SourceChanged('SPEC Draft selection is missing or ambiguous.')
+    draft = rows[0]
+    relative, digest = draft.get('source_path'), draft.get('_source_sha256')
+    if not isinstance(relative, str) or not isinstance(digest, str) or not re.fullmatch(r'[0-9a-f]{64}', digest):
+        raise SourceChanged('SPEC Draft capture lacks a path or digest.')
+    relative = Path(relative)
+    path = selection.root / relative
+    if (relative.is_absolute() or '..' in relative.parts or not path.is_relative_to(selection.control_root)
+            or path.parent.name != DRAFT_DIRECTORY):
+        raise InputError('target', 'Select a SPEC in its native Draft directory.')
+    owner = path.parent.parent
+    proposed = {**draft, 'status': 'ready', 'source_path': (owner / READY_DIRECTORY / (draft['id'] + path.name[len(target['ref_id']):])).relative_to(selection.root).as_posix()}
+    if _revision_root(selection, proposed, structure_snapshot, current_rows) != owner:
+        raise InputError('target', 'SPEC Draft owner is invalid.')
+    with _project_write_lock(selection.root):
+        capture = capture_native(selection)
+        fresh = [row for row in capture.atoms if row.get('_exact_ref') == target['ref_id']]
+        if capture.errors or len(fresh) != 1 or any(fresh[0].get(k) != draft.get(k) for k in (
+                'source_path', 'id', 'ref', '_exact_ref', 'version', 'status', 'status_group',
+                'header_json', '_content_bytes', '_source_sha256')):
+            raise SourceChanged('SPEC Draft changed after selection.')
+        reader = ReadContext(roots=[str(selection.control_root)], limits=dict(CEILINGS))
+        try:
+            raw = reader.read(path)
+            bounds = frontmatter_bounds(raw)
+            if (bounds is None or sha256(raw).hexdigest() != digest or raw[bounds[2]:] != draft['_content_bytes']
+                    or parse_carrier(raw, path).metadata != draft['header_json']
+                    or sha256(reader.read(selection.manifest_path)).hexdigest() != selection.manifest_sha256
+                    or reader.currentness()['state'] != 'unchanged'):
+                raise SourceChanged('SPEC Draft changed after selection.')
+            body = raw[bounds[2]:].decode('utf-8')
+            header = draft['header_json']
+            if path != native_carrier_path(header, _summary(body), project_root=selection.control_root, owner_directory=owner):
+                raise InputError('target', 'SPEC Draft path disagrees with its Header and Summary.')
+            used = {row['version'] for row in capture.atoms if row['id'] == draft['id'] and row is not fresh[0]}
+            version = target['version']
+            while True:
+                projected = {**header, 'state': {**header['state'], 'status': 'archived', 'version': version}}
+                destination = native_carrier_path(projected, _summary(body), project_root=selection.control_root, owner_directory=owner)
+                if version not in used and not destination.exists() and not destination.is_symlink():
+                    break
+                version += 1
+            archived = _state_bytes(raw, bounds, path, version, body, 'archived')
+        except (OSError, RuntimeError, ValueError, KeyError, TypeError) as error:
+            raise SourceChanged('SPEC Draft source is unavailable or changed.') from error
+        with bind_query_reader(None):
+            written = common.write_destination(selection.root, destination, archived)
+            recorded = list(written.effects)
+            if written.errors:
+                return result(effects=recorded, errors=written.errors)
+            removed = effects.remove(selection.root, path, digest)
+            recorded.extend(removed.effects)
+            if removed.errors:
+                errors = list(removed.errors)
+                if not removed.effects and not any(error.get('code') == 'effect_uncertain' for error in errors):
+                    try:
+                        if sha256(ReadContext(roots=[str(selection.control_root)], limits=dict(CEILINGS)).read(path)).hexdigest() == digest:
+                            rollback = effects.remove(selection.root, destination, sha256(archived).hexdigest())
+                            recorded.extend(rollback.effects)
+                            errors.extend(rollback.errors)
+                    except (OSError, RuntimeError, ValueError):
+                        pass
+                return result(effects=recorded, errors=errors)
+        artifact = saved(selection, destination, draft['id'], f"{draft['id']}@{version}", version, 'archived')
+        return result(effects=recorded, artifact=artifact, sourceRef=target['ref_id'])

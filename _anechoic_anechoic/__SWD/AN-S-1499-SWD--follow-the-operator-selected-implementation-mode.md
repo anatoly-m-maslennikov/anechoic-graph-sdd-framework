@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1499
-structure:
-  container:
-    component: C00
-  tier: 3
+container:
+  component: C00
+tier: 3
 context:
   lens: SWD
 state:

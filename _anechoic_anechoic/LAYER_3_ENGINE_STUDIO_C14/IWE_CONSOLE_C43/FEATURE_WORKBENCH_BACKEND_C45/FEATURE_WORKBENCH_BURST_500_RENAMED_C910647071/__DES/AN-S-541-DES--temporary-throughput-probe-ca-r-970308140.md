@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-541
-structure:
-  container:
-    component: C910647071
-  tier: 3
+container:
+  component: C910647071
+tier: 3
 context:
   lens: DES
 state:

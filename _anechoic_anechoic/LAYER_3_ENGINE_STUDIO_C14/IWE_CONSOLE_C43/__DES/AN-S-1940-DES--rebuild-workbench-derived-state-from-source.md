@@ -1,16 +1,15 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1940
-structure:
-  container:
-    component: C43
-  tier: 4
+container:
+  component: C43
+tier: 4
 context:
   lens: DES
 state:
-  status: "active"
+  status: active
   version: 6
-  updated_at: "2026-11-21T10:54:29.563341+00:00"
+  updated_at: '2026-11-21T10:54:29.563341+00:00'
 ---
 ## Summary
 

@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2439
-structure:
-  container:
-    component: C27
-  tier: 3
+container:
+  component: C27
+tier: 3
 context:
   lens: DES
 state:

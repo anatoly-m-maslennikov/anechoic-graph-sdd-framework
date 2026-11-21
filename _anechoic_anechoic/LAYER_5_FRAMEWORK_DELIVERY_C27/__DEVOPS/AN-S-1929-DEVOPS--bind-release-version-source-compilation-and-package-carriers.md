@@ -1,16 +1,15 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1929
-structure:
-  container:
-    component: C27
-  tier: 5
+container:
+  component: C27
+tier: 5
 context:
   lens: DevOps
 state:
-  status: "active"
+  status: active
   version: 26
-  updated_at: "2026-11-21T14:24:52.329085+00:00"
+  updated_at: '2026-11-21T14:24:52.329085+00:00'
 ---
 
 ## Summary

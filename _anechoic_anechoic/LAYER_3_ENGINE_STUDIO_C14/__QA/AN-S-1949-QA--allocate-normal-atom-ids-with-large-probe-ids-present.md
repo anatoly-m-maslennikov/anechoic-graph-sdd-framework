@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1949
-structure:
-  container:
-    component: C14
-  tier: 3
+container:
+  component: C14
+tier: 3
 context:
   lens: QA
 state:

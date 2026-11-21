@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2300
-structure:
-  container:
-    component: C55
-  tier: 3
+container:
+  component: C55
+tier: 3
 context:
   lens: DES
 state:

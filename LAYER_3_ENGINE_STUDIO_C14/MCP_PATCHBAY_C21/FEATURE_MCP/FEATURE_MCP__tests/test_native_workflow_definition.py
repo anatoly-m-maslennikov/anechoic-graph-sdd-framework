@@ -66,6 +66,11 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
         }, "## Summary\n\nFixture.\n\n```python\nraise AssertionError('carrier code executed')\n```\n")
         return NativeDefinitionPin(f"{atom_id}@{version}", relative, sha256(path.read_bytes()).hexdigest())
 
+    def test_project_config_workflow_pin(self):
+        pin = self._pin("workflow", "AN-P-4", 1,
+                        relative=f"{self.control}/002_PROJECT_CONFIG/AN-P-4-WORKFLOW--fixture.md")
+        self._bind(workflow=pin)()
+
     def _bind(self, **changes):
         binding = {"workflow": self.workflow, "steps": (self.step,), "actions": (self.action,)}
         return bind_native_workflow(self.selection, **(binding | changes))

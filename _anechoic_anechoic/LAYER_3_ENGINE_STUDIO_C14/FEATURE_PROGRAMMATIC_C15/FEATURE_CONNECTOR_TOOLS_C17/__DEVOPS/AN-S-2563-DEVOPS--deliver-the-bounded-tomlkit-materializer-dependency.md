@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2563
-structure:
-  container:
-    component: C17
-  tier: 5
+container:
+  component: C17
+tier: 5
 context:
   lens: DevOps
 state:

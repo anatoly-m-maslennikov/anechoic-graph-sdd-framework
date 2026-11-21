@@ -59,18 +59,17 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
         return gateway
 
     async def test_lifecycle_writes_refresh_atoms_without_full_projection(self):
-        unrelated = self._source(f"{fixture.CONTROL}/__TKT/TASKS/AN-T-010-TASK--existing-task.md", """---
+        unrelated = self._source(f"{fixture.CONTROL}/001_TICKETS/TASKS/AN-T-010-TASK--existing-task.md", """---
 atom_family: TKT
 atom_id: AN-T-010
-structure:
-  container:
-    component: C00
-  priority: 2
+container:
+  component: C00
+priority: 2
 context:
   template: task
   label: Task
 state:
-  status: active
+  status: in_queue
   version: 1
   updated_at: '2026-11-19T00:00:00Z'
 ---
@@ -103,7 +102,7 @@ Existing task
             with patch.object(ReadContext, 'read', record_read):
                 promoted = owner.lifecycle('atom_lifecycle_promote_draft', {
                     'target': {'ref_id': draft['ref_id'], 'version': draft['version']},
-                    'targetStatus': 'active',
+                    'targetStatus': 'backlog',
                 })
             self.assertNotIn(unrelated, reads)
             self.assertFalse(promoted['errors'], promoted)
@@ -121,7 +120,7 @@ Existing task
             revision = revised['savedDraft']
             published = owner.lifecycle('atom_lifecycle_promote_draft', {
                 'target': {'ref_id': revision['ref_id'], 'version': revision['version']},
-                'targetStatus': 'active',
+                'targetStatus': 'backlog',
             })
             self.assertFalse(published['errors'], published)
             active, archived = draft['atom_id'], draft['atom_id'] + '@1'
@@ -130,7 +129,7 @@ Existing task
                     'SELECT reference, "header.state.version", "header.state.status" '
                     'FROM atoms WHERE reference IN (?, ?, ?) ORDER BY "header.state.version"',
                     [active, archived, revision['ref_id']],
-                ).fetchall(), [(archived, 1, 'archived'), (active, 2, 'active')])
+                ).fetchall(), [(archived, 1, 'archived'), (active, 2, 'backlog')])
 
     async def test_promotion_detects_unseen_duplicate_with_restored_mtime(self):
         carrier = """---
@@ -152,9 +151,9 @@ state:
 
 Existing task
 """
-        self._source(f"{fixture.CONTROL}/__TKT/TASKS/AN-T-010-TASK--existing-task.md", carrier)
+        self._source(f"{fixture.CONTROL}/001_TICKETS/TASKS/AN-T-010-TASK--existing-task.md", carrier)
         duplicate = self._source(
-            f"{fixture.CONTROL}/__TKT/TASKS/099_archived/unrelated.md",
+            f"{fixture.CONTROL}/001_TICKETS/TASKS/09_archived/unrelated.md",
             carrier.replace('AN-T-010', 'AN-T-999').replace('status: active', 'status: archived')
                    .replace('version: 1', 'version: 2'),
         )
@@ -175,7 +174,7 @@ Existing task
             self.assertEqual(duplicate.stat().st_mtime_ns, before.st_mtime_ns)
             promoted = owner.lifecycle('atom_lifecycle_promote_draft', {
                 'target': {'ref_id': draft['ref_id'], 'version': draft['version']},
-                'targetStatus': 'active',
+                'targetStatus': 'backlog',
             })
             self.assertEqual(promoted['outcome'], 'needs_input', promoted)
             self.assertIn('already has a non-Draft revision',

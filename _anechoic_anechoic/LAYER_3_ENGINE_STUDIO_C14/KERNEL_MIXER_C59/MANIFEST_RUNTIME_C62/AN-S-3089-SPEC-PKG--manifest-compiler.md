@@ -1,9 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-3089
-structure:
-  container:
-    component: C62
+container:
+  component: C62
+tier: 2
 context:
   template: PKG
   lens: SPEC

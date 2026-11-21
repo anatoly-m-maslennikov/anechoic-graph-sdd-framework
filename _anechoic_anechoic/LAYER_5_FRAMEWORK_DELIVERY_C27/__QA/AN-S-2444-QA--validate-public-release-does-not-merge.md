@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2444
-structure:
-  container:
-    component: C27
-  tier: 5
+container:
+  component: C27
+tier: 5
 context:
   lens: QA
 state:

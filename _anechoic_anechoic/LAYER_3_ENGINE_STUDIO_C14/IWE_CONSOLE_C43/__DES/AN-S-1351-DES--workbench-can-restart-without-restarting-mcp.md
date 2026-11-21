@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1351
-structure:
-  container:
-    component: C43
-  tier: 4
+container:
+  component: C43
+tier: 4
 context:
   lens: DES
 state:

@@ -1,16 +1,15 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1975
-structure:
-  container:
-    component: C27
-  tier: 5
+container:
+  component: C27
+tier: 5
 context:
   lens: QA
 state:
-  status: "active"
+  status: active
   version: 20
-  updated_at: "2026-11-21T19:42:22.854572+00:00"
+  updated_at: '2026-11-21T19:42:22.854572+00:00'
 ---
 
 ## Summary

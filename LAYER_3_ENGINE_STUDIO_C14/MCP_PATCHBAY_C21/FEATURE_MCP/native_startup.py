@@ -90,4 +90,5 @@ def load_native_inputs(selection, *, model=None):
     return NativeQueryInputs(model.validate_manifest, model.relation_types, model.inverses,
                              require_atom_state=model.requires_atom_state,
                              require_atom_header=model.requires_atom_header,
-                             ticket_labels=model.ticket_labels)
+                             ticket_labels=model.ticket_labels,
+                             validate_project_spec=model.validate_project_spec)

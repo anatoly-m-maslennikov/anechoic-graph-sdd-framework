@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2529
-structure:
-  container:
-    component: C45
-  tier: 5
+container:
+  component: C45
+tier: 5
 context:
   lens: SWD
 state:

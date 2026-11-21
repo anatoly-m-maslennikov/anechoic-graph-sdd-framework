@@ -6,6 +6,13 @@ import unicodedata
 from native_carrier_header import native_header_view
 
 
+DRAFT_DIRECTORY = '01_draft'
+ARCHIVE_DIRECTORY = '09_archived'
+READY_DIRECTORY = '02_ready'
+COMPLETE_DIRECTORY = '08_complete'
+TICKET_DIRECTORY = '001_TICKETS'
+PROJECT_CONFIG_DIRECTORY = '002_PROJECT_CONFIG'
+
 _ASSETS = {'analysis_report', 'work_report', 'work_log', 'spec_proposal'}
 _TKT_BRANCH = {
     'task': 'TASKS', 'epic': 'TASKS',
@@ -73,57 +80,77 @@ def native_carrier_path(header, summary, *, project_root, owner_directory, owner
     atom_id = view['identity']['atom_id']
     context, state = view['context'], view['state']
     status, version = state['status'].lower(), state['version']
-    if status not in {'active', 'backlog', 'done', 'canceled', 'resolved', 'draft', 'archived'}:
+    if (status not in {'active', 'in_queue', 'backlog', 'done', 'complete', 'canceled', 'resolved', 'draft', 'ready', 'archived'}
+            or (status == 'ready' and family != 'SPEC') or (status in {'in_queue', 'complete'} and family != 'TKT')):
         raise ValueError('Unsupported authored Status')
-    revision = '000_draft' if status == 'draft' else '099_archived' if status == 'archived' else None
+    revision = DRAFT_DIRECTORY if status == 'draft' else ARCHIVE_DIRECTORY if status == 'archived' else None
     marker = atom_id + (f'@{version}-draft' if status == 'draft' else f'@{version}' if status == 'archived' else '')
     root = Path(project_root)
-    template = context.get('template')
     atom_owned = 'atom' in context['container']
     if atom_owned and owner_directory is None:
         raise ValueError('Resolved Atom companion directory is required')
     if family == 'SPEC':
-        if owner_directory is None:
-            raise ValueError('Resolved Component directory is required')
-        root = Path(owner_directory)
-        lens = context.get('lens')
-        lens_directories = spec_lens_directories(lens)
-        stem = marker + '-' + lens.rsplit('/', 1)[-1].upper()
-        if template:
-            stem += '-' + _token(template)
-        if revision:
-            root /= revision
-        else:
-            root = root.joinpath(*lens_directories)
+        root, stem = _spec_placement(header, context, status, revision, marker, project_root, owner_directory, atom_owned)
     else:
-        if family == 'PMETA' and atom_owned:
-            root = Path(owner_directory)
-        if family == 'PMETA' and status == 'draft' and not template:
-            return root / ('' if atom_owned else '_PMETA') / '000_draft' / (marker + '--' + _slug(summary) + '.md')
-        if not template:
-            raise ValueError('Authored Template is required')
-        key = _token(template).lower()
-        label = context.get('label') if family == 'TKT' else None
-        stem = marker + '-' + _token(label or template)
-        if family == 'PMETA':
-            if not atom_owned:
-                root /= '_PMETA'
-        else:
-            branch = 'ASSETS' if key in _ASSETS else _TKT_BRANCH.get(key)
-            if branch is None:
-                raise ValueError('Unsupported TKT Template')
-            if atom_owned and owner_template is None:
-                raise ValueError('Resolve the authored Atom owner before deriving its path')
-            if atom_owned and key in _ASSETS and owner_template not in {'task', 'epic'}:
-                raise ValueError('An Asset can only be bound to a planning Ticket')
-            if atom_owned:
-                root = Path(owner_directory)
-                if key in _ASSETS:
-                    root /= 'ASSETS'
-            else:
-                root = root / '__TKT' / branch
-            if not revision and status != 'active':
-                root /= status
-        if revision:
-            root /= revision
+        root, stem = _other_placement(family, context, status, revision, marker, root, owner_directory, owner_template, atom_owned)
     return root / (stem + '--' + _slug(summary) + '.md')
+
+
+def _spec_placement(header, context, status, revision, marker, project_root, owner_directory, atom_owned):
+    if owner_directory is None:
+        raise ValueError('Resolved Component directory is required')
+    tier = header.get('tier', context.get('tier'))
+    root = Path(project_root if tier == -1 and not atom_owned else owner_directory)
+    lens = context.get('lens')
+    lens_directories = spec_lens_directories(lens)
+    stem = marker + '-' + lens.rsplit('/', 1)[-1].upper()
+    if context.get('template'):
+        stem += '-' + _token(context['template'])
+    if revision:
+        root /= revision
+    elif status == 'ready':
+        root /= READY_DIRECTORY
+    elif atom_owned or tier not in {-1, 0, 1, 2}:
+        root = root.joinpath(*lens_directories)
+    return root, stem
+
+
+def _ticket_root(root, key, status, revision, owner_directory, owner_template, atom_owned):
+    branch = 'ASSETS' if key in _ASSETS else _TKT_BRANCH.get(key)
+    if branch is None:
+        raise ValueError('Unsupported TKT Template')
+    if atom_owned and owner_template is None:
+        raise ValueError('Resolve the authored Atom owner before deriving its path')
+    if atom_owned and key in _ASSETS and owner_template not in {'task', 'epic'}:
+        raise ValueError('An Asset can only be bound to a planning Ticket')
+    if atom_owned:
+        root = Path(owner_directory)
+        if key in _ASSETS:
+            root /= 'ASSETS'
+    else:
+        root = root / TICKET_DIRECTORY / branch
+    if status == 'complete':
+        if branch != 'ASSETS' or atom_owned:
+            raise ValueError('Only detached Assets use Complete placement')
+        root /= COMPLETE_DIRECTORY
+    elif not revision and status not in {'active', 'in_queue'}:
+        root /= status
+    return root
+
+
+def _other_placement(family, context, status, revision, marker, root, owner_directory, owner_template, atom_owned):
+    template = context.get('template')
+    if family == 'PMETA':
+        root = Path(owner_directory) if atom_owned else root / PROJECT_CONFIG_DIRECTORY
+    if family == 'PMETA' and status == 'draft' and not template:
+        return root / DRAFT_DIRECTORY, marker
+    if not template:
+        raise ValueError('Authored Template is required')
+    key = _token(template).lower()
+    label = context.get('label') if family == 'TKT' else None
+    stem = marker + '-' + _token(label or template)
+    if family == 'TKT':
+        root = _ticket_root(root, key, status, revision, owner_directory, owner_template, atom_owned)
+    if revision:
+        root /= revision
+    return root, stem

@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2566
-structure:
-  container:
-    component: C45
-  tier: 6
+container:
+  component: C45
+tier: 6
 context:
   template: DECISION
   lens: DES/DOM

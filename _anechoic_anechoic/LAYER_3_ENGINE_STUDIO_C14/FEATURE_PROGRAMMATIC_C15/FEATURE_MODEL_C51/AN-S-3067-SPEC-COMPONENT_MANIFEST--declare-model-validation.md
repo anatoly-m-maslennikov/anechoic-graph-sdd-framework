@@ -1,17 +1,16 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-3067
-structure:
-  container:
-    component: C51
-  tier: 0
+container:
+  component: C51
+tier: 0
 context:
   template: component_manifest
   lens: SPEC
 state:
-  status: "active"
+  status: active
   version: 2
-  updated_at: "2026-11-21T13:12:31.355497+00:00"
+  updated_at: '2026-11-21T13:12:31.355497+00:00'
 ---
 
 ## Summary

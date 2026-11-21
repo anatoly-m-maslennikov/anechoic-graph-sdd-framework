@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-120
-structure:
-  container:
-    component: C16
-  tier: 3
+container:
+  component: C16
+tier: 3
 context:
   lens: DevOps
 state:

@@ -182,6 +182,31 @@ class _NativeModel:
         self._validate("Component", {}, {self._parent_relation: [parent]})
         return self._validate("Component Manifest", fields, {"CONTAINED_BY": [parent]})
 
+    def validate_project_spec(self, template, header, owner_id):
+        from native_atom_reference import derive_atom_ref
+        from native_carrier_header import native_header_view
+        from native_project_selection import manifest_state_fields
+
+        view = native_header_view(header)
+        state = view["state"]
+        atom_id = view["identity"]["atom_id"]
+        fields = {"atom_id": atom_id, "version": state["version"],
+                  "ref_id": derive_atom_ref(atom_id, state["version"], state["status"]),
+                  "tier": view["context"].get("tier")}
+        if self.requires_atom_state:
+            from types import SimpleNamespace
+            fields.update(manifest_state_fields(SimpleNamespace(metadata=header), include_header=self.requires_atom_header))
+        names = {"axiom": ("Axiom", -1), "applicable_principle": ("Applicable Principle", 1)}
+        if template not in names or names[template][0] not in self._types:
+            raise ValueError("Project SPEC template is not supported by the compiled Model")
+        name, tier = names[template]
+        if (owner_id != "C00" or view["context"].get("container") != {"component": "C00"}
+                or view["context"].get("template") != template
+                or type(fields.get("tier")) is not int or fields["tier"] != tier):
+            raise ValueError("Project SPEC requires Project C00 and its declared Tier")
+        project = self._validate("Project", {}, {})
+        return self._validate(name, fields, {"CONTAINED_BY": [project]})
+
     def validate_package_spec(self, fields, owner_id):
         project = self._validate("Project", {}, {})
         owner = project if owner_id == "C00" else self._validate("Component", {}, {self._parent_relation: [project]})

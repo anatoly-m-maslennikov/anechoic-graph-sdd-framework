@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2560
-structure:
-  container:
-    component: C17
-  tier: 4
+container:
+  component: C17
+tier: 4
 context:
   lens: SWD
 state:

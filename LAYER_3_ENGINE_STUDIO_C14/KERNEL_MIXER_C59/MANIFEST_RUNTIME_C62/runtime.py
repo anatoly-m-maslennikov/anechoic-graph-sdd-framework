@@ -12,6 +12,7 @@ from tempfile import TemporaryDirectory
 from threading import Event, Thread
 
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_watcher import SourceWatcher
+from native_carrier_placement import ARCHIVE_DIRECTORY, DRAFT_DIRECTORY, READY_DIRECTORY
 from project_runtime import bind_native_runtime, owned_temporary_root
 
 _TIMEOUT = 15
@@ -85,10 +86,10 @@ def _relevant(relative, control, manifest):
     path = Path(relative)
     return path.is_relative_to(control) and (
         path == manifest or (
-            not {"000_draft", "099_archived"}.intersection(path.parts)
-            and ("-SPEC-COMPONENT_MANIFEST--" in path.name
-                 or "-SPEC-PROJECT_MANIFEST--" in path.name
-                 or "-SPEC-PKG--" in path.name
+            not {DRAFT_DIRECTORY, READY_DIRECTORY, ARCHIVE_DIRECTORY, "000_draft", "099_archived"}.intersection(path.parts)
+            and ("-COMPONENT_MANIFEST--" in path.name
+                 or "-PROJECT_MANIFEST--" in path.name
+                 or "-PKG--" in path.name
                  or _COMPONENT_PATH.fullmatch(path.name))
         )
     )

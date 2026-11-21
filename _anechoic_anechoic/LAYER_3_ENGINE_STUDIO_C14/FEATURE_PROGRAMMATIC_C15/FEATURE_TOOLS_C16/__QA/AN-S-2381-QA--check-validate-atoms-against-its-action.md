@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2381
-structure:
-  container:
-    component: C16
-  tier: 6
+container:
+  component: C16
+tier: 6
 context:
   lens: QA
 state:

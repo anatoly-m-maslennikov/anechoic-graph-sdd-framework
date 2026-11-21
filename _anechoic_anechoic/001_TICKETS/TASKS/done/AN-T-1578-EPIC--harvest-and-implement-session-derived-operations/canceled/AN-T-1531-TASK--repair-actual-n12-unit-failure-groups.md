@@ -1,0 +1,32 @@
+---
+atom_family: TKT
+atom_id: AN-T-1531
+container:
+  atom: AN-T-1578
+priority: 2
+context:
+  template: task
+state:
+  status: canceled
+  version: 9
+  updated_at: '2026-11-20T20:21:05.048018+00:00'
+---
+# Summary
+
+Repair actual N12 Unit failure groups
+
+## Objective
+
+repair the five independently owned groups of actual N12 Unit failures before freezing another release candidate.
+
+## Details
+
+- N12 ran 1,987 cases in 2,909.715539457997 seconds: 26 failures, 23 errors, zero skipped. the sealed report and receipt remain at `.anechoic_runtime/release_suite/72616b32ea0d9349ee82c407e9600f9bf0726ef17b38db47edbed8bca2f1fdc4/attempt-enndonce/`.
+- five independent lanes own distinct files. resolve confirmed defects from their exact report and current authority; fixture failure is not permission to weaken production gates.
+- N12 ended with post-suite source-currentness stale and three durably recorded interruptions. retain its 22 actual Events and do not replay or rebind it.
+- root owns source pins, integration, actual publication, Git and a fresh N13. installed N remains the rollback runtime.
+
+## Definition of Done
+
+all five groups have confirmed root causes, bounded independently accepted repairs and passing focused tests; a fresh source-bound candidate passes the complete Unit and later mandatory release gates.
+

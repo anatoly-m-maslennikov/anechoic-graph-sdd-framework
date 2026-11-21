@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1109
-structure:
-  container:
-    component: C34
-  tier: 3
+container:
+  component: C34
+tier: 3
 context:
   lens: QA
 state:

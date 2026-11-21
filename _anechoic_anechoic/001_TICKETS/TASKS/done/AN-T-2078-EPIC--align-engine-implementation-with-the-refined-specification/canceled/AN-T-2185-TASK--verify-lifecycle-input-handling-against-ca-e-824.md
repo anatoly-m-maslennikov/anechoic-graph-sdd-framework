@@ -1,0 +1,27 @@
+---
+atom_family: TKT
+atom_id: AN-T-2185
+container:
+  atom: AN-T-2078
+priority: 2
+context:
+  template: task
+state:
+  status: canceled
+  version: 1
+  updated_at: '2026-11-11T22:18:41.347311+04:00'
+---
+
+## Summary
+
+Verify lifecycle input handling against CA-E-824
+
+## Objective
+
+Run the MCP input checks required by CA-E-824. Cover valid input, wrong values, missing required fields, and mixed cases. Verify correction-only follow-ups.
+
+Verify cancellation at each supported wait and verify that in-flight Actions finish safely.
+
+## Details
+
+The exact-image MCP test passed valid, wrong, missing, and mixed inputs. Correction-only calls retained valid fields. Cancellation passed for five correction forms, Archive session close, and live HTTP form and request cancellation. Controlled injections verified that Update retains earlier effects and that an in-flight Action finishes.

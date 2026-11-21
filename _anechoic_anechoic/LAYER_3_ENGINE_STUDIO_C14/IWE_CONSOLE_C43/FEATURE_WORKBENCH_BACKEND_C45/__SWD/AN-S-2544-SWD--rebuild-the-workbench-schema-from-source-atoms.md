@@ -1,16 +1,15 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2544
-structure:
-  container:
-    component: C45
-  tier: 4
+container:
+  component: C45
+tier: 4
 context:
   lens: SWD
 state:
-  status: "active"
+  status: active
   version: 17
-  updated_at: "2026-11-21T13:13:26.138497+00:00"
+  updated_at: '2026-11-21T13:13:26.138497+00:00'
 ---
 ## Summary
 

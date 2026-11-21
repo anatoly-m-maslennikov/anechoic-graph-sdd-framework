@@ -1,0 +1,28 @@
+---
+atom_family: TKT
+atom_id: AN-T-2413
+container:
+  component: C15
+priority: 2
+context:
+  template: question
+state:
+  status: resolved
+  version: 3
+  updated_at: 2026-10-23 03:06:32 +0400
+---
+# Summary
+
+Settle shared nested Plan archive hierarchy
+
+## Concern
+
+The Operator explicitly answered No—flatten archived Plans. This latest decision overrides D461v14/E502v12 clauses retaining the archived child-folder hierarchy. Current non-archived Plan hierarchy is unchanged; Archived Plan carriers use the owning Scope Unit shared archive area without retaining the Plan hierarchy.
+
+## Evidences
+
+Read-only intersecting contract review found nested local-folder consumers in proposed_references and lifecycle_intents differ from the new shared placement. P2444 fixes only explicit root path parsing. The Methodology owner was asked to align only the conflicting archive-placement source clauses through the canonical workflow. No physical Plan migration, incoming-link cleanup, Status removal or new cascade policy was performed.
+
+## Blast radius
+
+The policy question is resolved, not its implementation. Problem C539 separately tracks flat shared archival implementation and safe migration. Scope-root parser compatibility and the approved release do not claim nested flattening acceptance.

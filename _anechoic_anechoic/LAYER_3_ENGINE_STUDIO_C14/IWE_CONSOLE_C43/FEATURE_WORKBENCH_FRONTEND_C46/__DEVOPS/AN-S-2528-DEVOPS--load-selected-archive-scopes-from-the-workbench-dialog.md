@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2528
-structure:
-  container:
-    component: C46
-  tier: 6
+container:
+  component: C46
+tier: 6
 context:
   lens: DevOps
 state:

@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2095
-structure:
-  container:
-    component: C32
-  tier: 3
+container:
+  component: C32
+tier: 3
 context:
   lens: DES
 state:

@@ -1,16 +1,15 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1968
-structure:
-  container:
-    component: C21
-  tier: 5
+container:
+  component: C21
+tier: 5
 context:
   lens: QA
 state:
-  status: "active"
+  status: active
   version: 5
-  updated_at: "2026-11-21T10:23:29.783063+00:00"
+  updated_at: '2026-11-21T10:23:29.783063+00:00'
 ---
 ## Summary
 

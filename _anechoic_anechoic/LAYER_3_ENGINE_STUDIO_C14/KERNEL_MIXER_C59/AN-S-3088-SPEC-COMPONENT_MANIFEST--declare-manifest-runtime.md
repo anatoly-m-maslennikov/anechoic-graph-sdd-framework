@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-3088
-structure:
-  container:
-    component: C59
-  tier: 0
+container:
+  component: C59
+tier: 0
 context:
   template: component_manifest
   lens: SPEC

@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1536
-structure:
-  container:
-    component: C35
-  tier: 3
+container:
+  component: C35
+tier: 3
 context:
   lens: QA
 state:

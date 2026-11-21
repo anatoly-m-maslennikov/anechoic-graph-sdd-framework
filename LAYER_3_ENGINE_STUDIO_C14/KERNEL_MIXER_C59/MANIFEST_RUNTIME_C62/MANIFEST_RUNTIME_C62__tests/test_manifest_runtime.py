@@ -29,6 +29,13 @@ from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.structure_h
 
 
 class ManifestRuntimeTests(unittest.TestCase):
+    def test_relevant_named_lens_and_revision_directories(self):
+        control = Path(".anechoic_project")
+        manifest = control / "AN-S-1-SPEC-PROJECT_MANIFEST--project.md"
+        self.assertTrue(runtime._relevant(str(control / "AN-S-2-DOM-COMPONENT_MANIFEST--component.md"), control, manifest))
+        for directory in ("01_draft", "02_ready", "09_archived", "000_draft", "099_archived"):
+            self.assertFalse(runtime._relevant(str(control / directory / "AN-S-2-DOM-PKG--package.md"), control, manifest))
+
     def test_unresponsive_host_retains_published_snapshot(self):
         with (tempfile.TemporaryDirectory() as temporary,
               subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"],

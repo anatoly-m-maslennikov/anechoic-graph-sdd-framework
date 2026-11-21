@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1546
-structure:
-  container:
-    component: C16
-  tier: 4
+container:
+  component: C16
+tier: 4
 context:
   lens: QA
 state:

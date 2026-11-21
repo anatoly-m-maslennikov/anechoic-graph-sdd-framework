@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2327
-structure:
-  container:
-    component: C17
-  tier: 6
+container:
+  component: C17
+tier: 6
 context:
   lens: QA
 state:

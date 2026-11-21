@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2107
-structure:
-  container:
-    component: C15
-  tier: 3
+container:
+  component: C15
+tier: 3
 context:
   lens: DES
 state:
