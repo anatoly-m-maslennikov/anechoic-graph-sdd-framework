@@ -14,11 +14,11 @@ state:
 
 ## Summary
 
-Declare PMETA Atom
+Declare Project Config Atom
 
 ## Claim scope
 
-MODEL//ANECHOIC <+ Node//Artifact//Atom//PMETA Atom
+MODEL//ANECHOIC <+ Node//Artifact//Atom//Project Config Atom
 
 ## Claim
 
@@ -28,12 +28,12 @@ MODEL//ANECHOIC <+ Node//Artifact//Atom//PMETA Atom
 from anechoic.formal_claims import declare_entity
 from anechoic.model import Atom
 
-class PMETAAtom(Atom):
+class ProjectConfigAtom(Atom):
     pass
 
 declare_entity(
-    entity_name='PMETA Atom',
-    entity_class=PMETAAtom,
+    entity_name='Project Config Atom',
+    entity_class=ProjectConfigAtom,
     entity_kind='Primary',
 )
 ```

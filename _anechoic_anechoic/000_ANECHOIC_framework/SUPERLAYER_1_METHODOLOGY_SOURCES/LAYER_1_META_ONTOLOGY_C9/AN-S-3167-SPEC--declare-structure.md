@@ -19,5 +19,5 @@ Declare Structure
 ## Claim
 
 SPEC and TKT store Container and Tier or Priority at the top level of the
-Header. The Model declares these Properties directly under Header. PMETA
-retains its existing nested Structure in Carrier serialization.
+Header. The Model declares these Properties directly under Header.
+Project Config Atoms store their Container in the nested Structure.
