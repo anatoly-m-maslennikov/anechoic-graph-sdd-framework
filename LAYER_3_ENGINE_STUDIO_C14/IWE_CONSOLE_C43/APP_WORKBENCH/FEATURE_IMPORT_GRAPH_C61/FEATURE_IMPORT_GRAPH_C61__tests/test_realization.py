@@ -116,6 +116,19 @@ class RealizationTests(unittest.TestCase):
         assert [node[1] for node in nodes if node[3] == "namespace"] == ["namespace"]
         assert len(edges) == 1
 
+    def test_non_executable_carrier_is_excluded_when_access_reports_executable(self):
+        root = self._temporary_project()
+        carrier = root / "carrier 2.md"
+        carrier.write_text("# Generated carrier\n")
+        carrier.chmod(0o600)
+        executable = root / "run"
+        executable.write_text("binary content\n")
+        executable.chmod(0o755)
+        with patch("os.access", return_value=True):
+            sources = capture(root, None)
+        assert "carrier 2.md" not in sources
+        assert sources["run"].language == "executable"
+
     def test_read_error_is_retried_on_next_capture_without_stat_change(self):
         root = self._temporary_project()
         path = root / "a.py"

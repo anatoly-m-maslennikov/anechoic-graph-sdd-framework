@@ -8,6 +8,7 @@ from hashlib import sha256
 import io
 import os
 from pathlib import Path, PurePosixPath
+import stat
 import subprocess
 import sys
 import tokenize
@@ -152,7 +153,13 @@ def _file_language(path: Path) -> str | None:
             language = _shebang_language(handle.readline(512))
     except OSError:
         language = None
-    return language or ("executable" if os.access(path, os.X_OK) else None)
+    if language is not None:
+        return language
+    try:
+        executable = path.stat().st_mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+    except OSError:
+        return None
+    return "executable" if executable else None
 
 
 def _iter_files(root: Path, *, source_only: bool = True) -> Iterable[Path]:
