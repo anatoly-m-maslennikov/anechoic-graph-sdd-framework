@@ -8,10 +8,11 @@ structure:
 context:
   lens: DevOps
 state:
-  status: active
-  version: 20
-  updated_at: '2026-11-12T17:09:54.081558+00:00'
+  status: "active"
+  version: 21
+  updated_at: "2026-11-21T19:46:07.282771+00:00"
 ---
+
 ## Summary
 
 Carry project-owned Docker image cleanup
@@ -24,7 +25,7 @@ Direct Docker/MCP smoke for the installed project runtime and cleanup of superse
 
 ### Prose Claim
 
-After a green full suite and successful installed Docker/MCP smoke, delivery retains the exact admitted candidate of the current package Version and one known-good previous Project image, when available. It removes other eligible images only when they are positively identified as owned by the selected Project and unused by any container. It never prunes broadly, removes an unrelated image, or forces container deletion.
+After green unit and linter checks, exact-image end-to-end tests, a disposable canary and successful installed candidate readiness, delivery retains the exact admitted candidate of the current package Version and one known-good previous Project image, when available. It removes other eligible images only when they are positively identified as owned by the selected Project and unused by any container. It never prunes broadly, removes an unrelated image, or forces container deletion.
 
 ## Details
 
