@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 import unittest
 
 from test_public_release import PublicReleaseFixture, run_public_release
@@ -30,6 +31,8 @@ class SimplePublicReleaseTests(PublicReleaseFixture):
         self.assertTrue((self.root / result["report_path"]).is_file())
         self.assertIn("tests failed", (self.root / result["report_path"]).read_text())
         self.assertIn('version = "0.4.3"', (self.root / "version.toml").read_text())
+        test_command = next(argv for argv in calls if argv[:2] == ("uv", "run"))
+        self.assertEqual("test_suite__pub.py", Path(test_command[-3]).name)
         self.assertFalse(any(argv[:2] == ("git", "push") for argv in calls))
 
     def test_refuses_a_branch_other_than_amm_dev_before_staging(self) -> None:

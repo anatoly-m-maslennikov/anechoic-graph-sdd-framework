@@ -51,7 +51,7 @@ class LocalReleaseGitPreflightTests(unittest.TestCase):
         test = next(
             index
             for index, argv in enumerate(calls)
-            if any(value.endswith("run_full_test_suite.py") for value in argv)
+            if any(value.endswith("test_suite__pub.py") for value in argv)
         )
         self.assertLess(commit, test)
         self.assertEqual(

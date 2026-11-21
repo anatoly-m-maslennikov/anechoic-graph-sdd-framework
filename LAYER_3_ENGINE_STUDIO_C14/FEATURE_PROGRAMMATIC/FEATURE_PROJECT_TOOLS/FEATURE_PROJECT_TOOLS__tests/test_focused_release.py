@@ -5,6 +5,7 @@ from __future__ import annotations
 from contextlib import redirect_stderr, redirect_stdout
 import io
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -65,12 +66,29 @@ class FocusedReleaseTests(unittest.TestCase):
     def test_default_selection_remains_the_complete_discovered_suite(self) -> None:
         first = self.file("LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_first.py")
         second = self.file("LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_second.py")
+        for name in ("test_suite__pub.py", "test_suite__family_pub.py"):
+            self.file(f"LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/{name}", "")
         result = (True, 1, 0, "", "", 0.0, None)
         with patch.object(full, "run_module", return_value=result) as run:
             self.assertEqual(0, self.run_suite())
 
         self.assertEqual({first, second}, {call.args[1] for call in run.call_args_list})
         self.assertNotIn("focused", self.output.getvalue().lower())
+
+    def test_public_cli_preserves_selection_report_and_exit_status(self) -> None:
+        passing = self.file("LAYER_3_ENGINE_STUDIO_C14/test_passing.py")
+        failing = self.file("LAYER_3_ENGINE_STUDIO_C14/test_failing.py", PASSING.replace("True)", "False)"))
+        for selected, unselected, expected in ((passing, failing, 0), (failing, passing, 1)):
+            with self.subTest(selected=selected.name):
+                result = subprocess.run(
+                    (sys.executable, "-B", str(TOOLS / "test_suite__pub.py"),
+                     "--project-root", str(self.root), "--test-module", selected.relative_to(self.root).as_posix()),
+                    cwd=self.root, capture_output=True, text=True, check=False, timeout=30,
+                )
+                self.assertEqual(expected, result.returncode, result.stderr)
+                self.assertIn("Test scope: focused", result.stdout)
+                self.assertIn(selected.name, result.stdout)
+                self.assertNotIn(unselected.name, result.stdout)
 
     def assert_rejected(self, modules: tuple[str, ...]) -> None:
         with patch.object(full, "run_module") as run:

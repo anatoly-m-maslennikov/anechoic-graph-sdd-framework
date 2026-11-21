@@ -189,7 +189,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertEqual("completed", result["outcome"], result)
         self.image.mark_production_image.assert_called_once_with(self.image_id)
         self.assertTrue(all(call.args[0].manifest_ref == "AN-S-001@1" for call in select.call_args_list))
-        test_argv = next(call for call in calls if any(arg.endswith("run_full_test_suite.py") for arg in call))
+        test_argv = next(call for call in calls if any(arg.endswith("test_suite__pub.py") for arg in call))
         self.assertEqual(("--image-mode", "existing"), test_argv[-2:])
         self.assertEqual("refresh", result["image_mode"])
         self.assertTrue(any(self._is_mcp_bootstrap(call) for call in calls))
@@ -229,7 +229,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             result = run_local_release(self.root, run_id="native-existing", runner=runner, image_mode="existing")
         self.native_assets.assert_called_once()
         self.assertEqual("completed", result["outcome"], result)
-        test_argv = next(call for call in calls if any(arg.endswith("run_full_test_suite.py") for arg in call))
+        test_argv = next(call for call in calls if any(arg.endswith("test_suite__pub.py") for arg in call))
         self.assertEqual(("--image-mode", "existing"), test_argv[-2:])
 
     def test_native_source_change_stops_before_product_replacement(self):
@@ -265,7 +265,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
 
         self.assertEqual("completed", result["outcome"], result)
         self.assertEqual("existing", result["image_mode"])
-        test_argv = next(argv for argv in calls if any(arg.endswith("run_full_test_suite.py") for arg in argv))
+        test_argv = next(argv for argv in calls if any(arg.endswith("test_suite__pub.py") for arg in argv))
         self.assertEqual(("--image-mode", "existing"), test_argv[-2:])
         self.assertEqual({"use_packaged_assets": True}, self.image.resolve.call_args_list[0].kwargs)
         runtime_package = self.runtime / "simple_local_release/package"
@@ -296,7 +296,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         result = run_local_release(self.root, run_id="missing-assets", runner=runner, image_mode="existing")
         self.assertEqual(("failed", "validate_inputs"), (result["outcome"], result["failed_step"]))
         self.assertEqual(original_version, (self.root / "version.toml").read_bytes())
-        self.assertFalse(any(any(item.endswith("run_full_test_suite.py") for item in argv) for argv in calls))
+        self.assertFalse(any(any(item.endswith("test_suite__pub.py") for item in argv) for argv in calls))
         self.image_factory.assert_not_called()
 
     def test_launcher_image_reads_only_exact_selected_runtime_namespace(self):
@@ -341,7 +341,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertEqual("full", result["test_scope"])
         self.assertIsNone(result["test_modules"])
         test_command = next(argv for argv in calls if any(
-            item.endswith("run_full_test_suite.py") for item in argv
+            item.endswith("test_suite__pub.py") for item in argv
         ))
         self.assertNotIn("--test-module", test_command)
         receipt = (self.root / result["receipt_path"]).read_text(encoding="utf-8")
@@ -354,7 +354,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
 
         def failed_tests(argv, cwd):
             result = base_runner(argv, cwd)
-            if any(item.endswith("run_full_test_suite.py") for item in argv):
+            if any(item.endswith("test_suite__pub.py") for item in argv):
                 return subprocess.CompletedProcess(
                     argv, 1, "focused tests ran\n", "focused test failure\n"
                 )
@@ -383,7 +383,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertEqual("validate_inputs", result["failed_step"])
         for target in (self.product, self.installed):
             self.assertEqual("obsolete", (target / "old.txt").read_text())
-        self.assertFalse(any(any(item.endswith("run_full_test_suite.py") for item in argv) for argv in calls))
+        self.assertFalse(any(any(item.endswith("test_suite__pub.py") for item in argv) for argv in calls))
         self.assertFalse(any(self._is_mcp_bootstrap(argv) for argv in calls))
         self.image_factory.assert_not_called()
 
@@ -468,14 +468,14 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             calls.append(argv)
             if argv == ("git", "diff", "--cached", "--quiet"):
                 return subprocess.CompletedProcess(argv, 1, "", "")
-            if any(item.endswith("run_full_test_suite.py") for item in argv):
+            if any(item.endswith("test_suite__pub.py") for item in argv):
                 self.assertIn("--all-groups", argv)
                 self.assertIn("--managed-python", argv)
                 self.assertIn("3.14", argv)
                 self.assertEqual(str(self.root), argv[argv.index("--project-root") + 1])
                 for target in (self.product, self.installed):
                     self.assertEqual("obsolete", (target / "old.txt").read_text())
-            failed = any(item.endswith("run_full_test_suite.py") for item in argv)
+            failed = any(item.endswith("test_suite__pub.py") for item in argv)
             return subprocess.CompletedProcess(argv, 2 if failed else 0, stdout if failed else "", stderr if failed else "")
 
         with (
@@ -489,7 +489,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         image_cleanup.assert_not_called()
         for target in (self.product, self.installed):
             self.assertEqual("obsolete", (target / "old.txt").read_text())
-        self.assertEqual(1, sum(any(item.endswith("run_full_test_suite.py") for item in argv) for argv in calls))
+        self.assertEqual(1, sum(any(item.endswith("test_suite__pub.py") for item in argv) for argv in calls))
         self.assertEqual(2, sum(argv[:2] == ("git", "commit") for argv in calls))
         report = (self.root / result["report_path"]).read_text()
         logs = list((self.root / ".anechoic_tmp/simple_local_release").glob("tests-failed-tests-*.log"))
@@ -790,7 +790,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
 
         def record(argv, cwd):
             result = runner(argv, cwd)
-            if any(item.endswith("run_full_test_suite.py") for item in argv):
+            if any(item.endswith("test_suite__pub.py") for item in argv):
                 events.append("full-suite-green")
             elif self._is_mcp_bootstrap(argv):
                 events.append("launch")
