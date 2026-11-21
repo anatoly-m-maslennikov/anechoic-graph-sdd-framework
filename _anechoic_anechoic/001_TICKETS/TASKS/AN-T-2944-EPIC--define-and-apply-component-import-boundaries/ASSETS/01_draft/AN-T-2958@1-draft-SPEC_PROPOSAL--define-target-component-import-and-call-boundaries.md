@@ -86,27 +86,34 @@ Local Release exports and CLI interfaces. Local Release may neither
 import from nor call Public Release. Declare this direction in the child
 Component Manifests.
 
-Outside the Release subtree, the sole Component dependency is the
-single public Test Suite entry point. The Test Suite owns
+Release has zero code imports from Components outside its subtree.
+Local Release calls the single public Test Suite entry point as its
+sole external Component interface. The Test Suite owns
 discovery, fixtures, and execution of individual tests. It returns a
 pass/fail outcome and a report to C27.
 
-C27 owns release orchestration, installation, and startup. It uses the
+Local Release owns release orchestration, installation, and startup. It uses the
 standard library, Git, Docker, and artifact and build inputs as data.
 It commits pending nonignored changes under existing protections, then
 bumps and commits the candidate Version.
 
-C27 calls the Test Suite once for unit tests and linters. After that gate
-passes, C27 prepares the retained governed Framework, runtime, and Skill
+Local Release calls the Test Suite once for unit tests and linters. After
+that gate passes, it prepares the retained governed Framework, runtime, and Skill
 package and builds one immutable candidate image. It calls the same
 Test Suite entry in end-to-end mode on that exact image, then runs a
 disposable canary before production.
 
-After both pass, C27 installs the verified files, starts the exact image
+After both pass, Local Release installs the verified files and starts the
+exact image
 on the Project-owned Manifest `project_mcp.http_port`, checks readiness,
 and applies the production tag to that same image ID. It retains the
 verified previous image when available. Failures report observed effects
-without automatic replay. Public Release retains its full-suite behavior.
+without automatic replay.
+
+Public Release owns both changelog outputs. It prepares the detailed
+changelog for a Local Release and derives the short Version History
+entry from that changelog. The released version and change evidence
+are inputs. This is the complete scope of Public Release.
 
 ### Import policy and acceptance
 
@@ -126,8 +133,11 @@ without automatic replay. Public Release retains its full-suite behavior.
   runs in a separate worker and that the hosts import zero Builder code.
 - Reject a mismatched Model and Structure pair. Verify that a failed
   build leaves the last accepted pair readable.
-- Verify that the Release Components use only the approved Test Suite
-  entry point across Component boundaries outside the Release subtree.
+- Verify zero code imports from Components outside the Release subtree.
+  Verify that the approved Test Suite entry is the only external
+  Component interface called by Local Release.
+- Verify that Public Release produces both changelog outputs for the
+  same Local Release and derives the short entry from the detailed one.
 - Verify that the two Release Components allow Public Release to use
   declared Local Release interfaces. Reject Local Release imports and
   calls into Public Release.
