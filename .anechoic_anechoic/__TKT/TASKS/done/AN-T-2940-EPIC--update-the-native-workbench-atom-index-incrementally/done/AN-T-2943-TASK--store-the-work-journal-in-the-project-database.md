@@ -8,9 +8,9 @@ structure:
 context:
   template: task
 state:
-  status: active
+  status: "done"
   version: 1
-  updated_at: '2026-11-21T08:53:36Z'
+  updated_at: "2026-11-21T11:56:27.189323+00:00"
 ---
 ## Summary
 
