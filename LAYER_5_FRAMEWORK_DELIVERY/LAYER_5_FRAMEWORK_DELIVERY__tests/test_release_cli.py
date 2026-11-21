@@ -6,6 +6,7 @@ from __future__ import annotations
 from contextlib import redirect_stdout
 import io
 import json
+import runpy
 from pathlib import Path
 import subprocess
 import sys
@@ -17,6 +18,11 @@ REPOSITORY = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPOSITORY))
 from LAYER_5_FRAMEWORK_DELIVERY import release  # noqa: E402
 from LAYER_5_FRAMEWORK_DELIVERY import release_events  # noqa: E402
+
+LOCAL_ENTRY = "LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.RELEASE_VERSION__family_pub.run_local_release"
+PUBLIC_MODULE = "LAYER_5_FRAMEWORK_DELIVERY.PUBLIC_RELEASE.PUBLIC_RELEASE__family_pub"
+PUBLIC_ENTRY = PUBLIC_MODULE + ".run_public_release"
+
 
 DRAFT = {
     "description": "## New\n- Host command.\n\n## Fixed\n- Routing.\n",
@@ -40,9 +46,20 @@ class ReleaseCliTests(unittest.TestCase):
 
     def test_local_dispatch_preserves_result_and_defaults(self) -> None:
         result = {"outcome": "completed", "receipt_path": "receipt.json"}
-        with patch.object(release, "run_local_release", return_value=result) as run:
+        with patch(LOCAL_ENTRY, return_value=result) as run:
             self.assertEqual(self.invoke(["local", "--run-id", "local-1"]), (0, result))
         run.assert_called_once_with(REPOSITORY, run_id="local-1", image_mode="refresh")
+
+    def test_local_cli_can_run_without_public_component(self) -> None:
+        result = {"outcome": "completed"}
+        with (
+            patch(LOCAL_ENTRY, return_value=result),
+            patch.dict(sys.modules, {PUBLIC_MODULE: None}),
+            redirect_stdout(io.StringIO()) as output,
+        ):
+            command = runpy.run_path(str(REPOSITORY / "LAYER_5_FRAMEWORK_DELIVERY/release.py"))
+            self.assertEqual(0, command["main"](["local", "--run-id", "local-only"]))
+        self.assertEqual(result, json.loads(output.getvalue()))
 
     def test_local_dispatch_forwards_repeatable_focused_modules(self) -> None:
         result = {"outcome": "completed", "receipt_path": "receipt.json"}
@@ -50,7 +67,7 @@ class ReleaseCliTests(unittest.TestCase):
             "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_first.py",
             "LAYER_3_ENGINE_STUDIO_C14/component/tests/test_second.py",
         )
-        with patch.object(release, "run_local_release", return_value=result) as run:
+        with patch(LOCAL_ENTRY, return_value=result) as run:
             self.assertEqual(
                 self.invoke(
                     [
@@ -81,7 +98,7 @@ class ReleaseCliTests(unittest.TestCase):
             draft = Path(directory) / "draft.json"
             draft.write_text(json.dumps(DRAFT), encoding="utf-8")
             result = {"outcome": "failed", "failed_step": "tests", "report_path": "issue.md"}
-            with patch.object(release, "run_public_release", return_value=result) as run:
+            with patch(PUBLIC_ENTRY, return_value=result) as run:
                 status, actual = self.invoke(
                     [
                         "public",
@@ -120,7 +137,7 @@ class ReleaseCliTests(unittest.TestCase):
             ):
                 with self.subTest(payload=payload[:10]):
                     draft.write_bytes(payload)
-                    with patch.object(release, "run_public_release") as run:
+                    with patch(PUBLIC_ENTRY) as run:
                         status, result = self.invoke(
                             [
                                 "public",
@@ -136,8 +153,8 @@ class ReleaseCliTests(unittest.TestCase):
             self.record.assert_not_called()
 
     def test_native_exception_is_bounded_and_not_retried(self) -> None:
-        with patch.object(
-            release, "run_local_release", side_effect=ValueError("private payload")
+        with patch(
+            LOCAL_ENTRY, side_effect=ValueError("private payload")
         ) as run:
             status, result = self.invoke(["local", "--run-id", "bad"])
         self.assertEqual(status, 1)
@@ -152,9 +169,8 @@ class ReleaseCliTests(unittest.TestCase):
         ):
             with self.subTest(returned=type(returned).__name__):
                 side_effect = returned if isinstance(returned, BaseException) else None
-                with patch.object(
-                    release,
-                    "run_local_release",
+                with patch(
+                    LOCAL_ENTRY,
                     return_value=None if side_effect else returned,
                     side_effect=side_effect,
                 ) as run:
@@ -186,8 +202,8 @@ class ReleaseCliTests(unittest.TestCase):
 
     def test_terminal_record_interruption_preserves_completion_and_exits_130(self) -> None:
         self.record.side_effect = [("start", None), KeyboardInterrupt]
-        with patch.object(
-            release, "run_local_release", return_value={"outcome": "completed"}):
+        with patch(
+            LOCAL_ENTRY, return_value={"outcome": "completed"}):
             status, result = self.invoke(["local", "--run-id", "interrupted"])
         self.assertEqual(status, 130)
         self.assertEqual(result["outcome"], "completed")
@@ -195,7 +211,7 @@ class ReleaseCliTests(unittest.TestCase):
         self.assertIn("completed recording interrupted", str(result["recording_error"]))
 
     def test_invalid_file_path_does_not_dispatch(self) -> None:
-        with patch.object(release, "run_public_release") as run:
+        with patch(PUBLIC_ENTRY) as run:
             status, result = self.invoke(
                 ["public", "--run-id", "missing", "--content-draft", "\x00"]
             )
@@ -226,7 +242,7 @@ class ReleaseCliTests(unittest.TestCase):
             print("native progress")
             return {"outcome": "completed"}
 
-        with patch.object(release, "run_local_release", side_effect=noisy_release):
+        with patch(LOCAL_ENTRY, side_effect=noisy_release):
             status, result = self.invoke(["local", "--run-id", "stdout"])
         self.assertEqual(status, 0)
         self.assertEqual(result["outcome"], "completed")
@@ -238,7 +254,7 @@ class ReleaseCliTests(unittest.TestCase):
         ):
             with (
                 self.subTest(arguments=arguments),
-                patch.object(release, "run_local_release") as run,
+                patch(LOCAL_ENTRY) as run,
             ):
                 self.assertEqual(self.invoke(arguments)[0], 1)
                 run.assert_not_called()

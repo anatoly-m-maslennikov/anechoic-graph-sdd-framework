@@ -7,7 +7,7 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'RELEASE_VERSION'))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from release_assets import LocalReleaseError, verify_native_release_assets  # noqa: E402
 
 

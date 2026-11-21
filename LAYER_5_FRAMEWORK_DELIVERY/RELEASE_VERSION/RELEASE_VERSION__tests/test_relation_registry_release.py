@@ -1,11 +1,8 @@
 
 """Tool registry generation must succeed before building the release image."""
 
-from pathlib import Path
-import sys
 import unittest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "LAYER_5_FRAMEWORK_DELIVERY/LAYER_5_FRAMEWORK_DELIVERY__tests"))
 import test_simple_local_release as release_fixture
 import local_release
 

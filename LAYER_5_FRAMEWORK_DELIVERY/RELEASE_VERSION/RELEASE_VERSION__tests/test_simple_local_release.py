@@ -17,8 +17,8 @@ from unittest.mock import Mock, patch
 from pathlib import Path
 
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "RELEASE_VERSION"))
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS"))
 import local_release  # noqa: E402
 from local_release import run_local_release, _launcher_image  # noqa: E402
 from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import select_runtime_project  # noqa: E402
@@ -65,7 +65,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         tools = self.root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS"
         tools.mkdir(parents=True)
         bootstrap_helper = (
-            Path(__file__).resolve().parents[2]
+            Path(__file__).resolve().parents[3]
             / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/project_mcp_bootstrap.py"
         )
         (tools / "project_mcp_bootstrap.py").write_bytes(bootstrap_helper.read_bytes())

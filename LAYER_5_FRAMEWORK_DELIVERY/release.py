@@ -19,9 +19,6 @@ sys.path.insert(0, str(REPOSITORY))
 sys.path.insert(0, str(REPOSITORY / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC"))
 sys.path.insert(0, str(REPOSITORY / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS"))
 
-from LAYER_5_FRAMEWORK_DELIVERY.PUBLIC_RELEASE.public_release import run_public_release  # noqa: E402
-from LAYER_5_FRAMEWORK_DELIVERY.PUBLIC_RELEASE.public_release_materials import validate_draft  # noqa: E402
-from LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.local_release import run_local_release  # noqa: E402
 from LAYER_5_FRAMEWORK_DELIVERY.release_events import run_recorded_release  # noqa: E402
 
 
@@ -71,6 +68,8 @@ def _read_draft(path: Path | None) -> dict[str, object] | None:
     if len(payload) > 1_048_576:
         raise ValueError("content-draft-file-too-large")
     validated = ContentDraft.model_validate_json(payload.decode("utf-8")).model_dump()
+    from LAYER_5_FRAMEWORK_DELIVERY.PUBLIC_RELEASE.PUBLIC_RELEASE__family_pub import validate_draft
+
     validate_draft(validated)
     return validated
 
@@ -89,6 +88,8 @@ def _invoke(arguments: argparse.Namespace) -> dict[str, object]:
     from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import select_runtime_project
 
     if arguments.operation == "local":
+        from LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.RELEASE_VERSION__family_pub import run_local_release
+
         selected = select_runtime_project(root)
         invoke = partial(run_local_release, root, run_id=arguments.run_id, image_mode=arguments.image_mode)
         if arguments.test_modules is not None:
@@ -97,6 +98,8 @@ def _invoke(arguments: argparse.Namespace) -> dict[str, object]:
             root, "release_version", arguments.run_id, invoke,
             selection=selected,
         )
+    from LAYER_5_FRAMEWORK_DELIVERY.PUBLIC_RELEASE.PUBLIC_RELEASE__family_pub import run_public_release
+
     draft = _read_draft(arguments.content_draft)
     if draft is None:
         return run_public_release(root, run_id=arguments.run_id)

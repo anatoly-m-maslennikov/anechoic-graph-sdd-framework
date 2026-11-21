@@ -18,9 +18,9 @@ from unittest.mock import Mock, patch
 if os.name == "posix":
     import fcntl
 
-REPOSITORY = Path(__file__).resolve().parents[2]
+REPOSITORY = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPOSITORY))
-from LAYER_5_FRAMEWORK_DELIVERY.local_release_test_process import run_logged_test_process  # noqa: E402
+from LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.local_release_test_process import run_logged_test_process  # noqa: E402
 
 
 def _wait_for(path: Path, *, timeout: float = 10.0) -> None:
@@ -121,7 +121,7 @@ time.sleep(60)
 from pathlib import Path
 import sys
 sys.path.insert(0, sys.argv[1])
-from LAYER_5_FRAMEWORK_DELIVERY.local_release_test_process import run_logged_test_process
+from LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.local_release_test_process import run_logged_test_process
 root = Path(sys.argv[2])
 with (root / 'tests.log').open('w+b') as log:
     try:
@@ -190,9 +190,9 @@ time.sleep(60)
         log_path = self.root / "tests.log"
         with log_path.open("w+b") as log:
             log.write(b"partial evidence\n")
-            with patch("LAYER_5_FRAMEWORK_DELIVERY.local_release_test_process.subprocess.Popen", return_value=process), \
-                    patch("LAYER_5_FRAMEWORK_DELIVERY.local_release_test_process._signal_owned"), \
-                    patch("LAYER_5_FRAMEWORK_DELIVERY.local_release_test_process._owned_group_exists", return_value=False), \
+            with patch("LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.local_release_test_process.subprocess.Popen", return_value=process), \
+                    patch("LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.local_release_test_process._signal_owned"), \
+                    patch("LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.local_release_test_process._owned_group_exists", return_value=False), \
                     redirect_stderr(io.StringIO()):
                 with self.assertRaises(KeyboardInterrupt) as interrupted:
                     run_logged_test_process(("fixture",), self.root, log)

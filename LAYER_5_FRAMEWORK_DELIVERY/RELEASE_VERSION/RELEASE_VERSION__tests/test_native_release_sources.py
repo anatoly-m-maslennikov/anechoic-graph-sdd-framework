@@ -8,7 +8,7 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 sys.path[:0] = [str(ROOT / 'LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION'),
                str(ROOT / 'LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS'),
                str(ROOT / 'LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC'),

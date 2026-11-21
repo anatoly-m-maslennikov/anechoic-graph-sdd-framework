@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-19T00:00:00Z'
+  version: 2
+  updated_at: '2026-11-21T20:39:26.276803+00:00'
 ---
 
 ## Summary
@@ -30,6 +30,18 @@ declare_entity(
         name='Framework Delivery',
         layer=5,
         lens_whitelist=['DES', 'DevOps', 'QA', 'SWD'],
+        boundaries={
+            'runtime_io': {
+                'provides': {
+                    'release': {
+                        'transport': 'cli',
+                        'runner': 'uv',
+                        'path': 'LAYER_5_FRAMEWORK_DELIVERY/release.py',
+                        'subcommands': {'local': 'C63', 'public': 'C64'},
+                    },
+                },
+            },
+        },
     ),
 )
 ```
