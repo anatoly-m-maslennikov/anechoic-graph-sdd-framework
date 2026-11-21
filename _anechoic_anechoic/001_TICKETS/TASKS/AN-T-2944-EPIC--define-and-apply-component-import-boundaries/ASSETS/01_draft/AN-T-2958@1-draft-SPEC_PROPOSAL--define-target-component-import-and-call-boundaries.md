@@ -80,8 +80,14 @@ show that whole-file JSON parsing uses too much memory.
 
 ### Framework Delivery (C27)
 
-C27 has exactly one cross-Component code dependency. It imports and
-calls the single public Test Suite entry point. The Test Suite owns
+Split Release into two child Components within Layer 5. Local Release is
+the lower layer. Public Release is the upper layer and may use declared
+Local Release exports and CLI interfaces. Local Release may neither
+import from nor call Public Release. Declare this direction in the child
+Component Manifests.
+
+Outside the Release subtree, the sole Component dependency is the
+single public Test Suite entry point. The Test Suite owns
 discovery, fixtures, and execution of individual tests. It returns a
 pass/fail outcome and a report to C27.
 
@@ -120,8 +126,11 @@ without automatic replay. Public Release retains its full-suite behavior.
   runs in a separate worker and that the hosts import zero Builder code.
 - Reject a mismatched Model and Structure pair. Verify that a failed
   build leaves the last accepted pair readable.
-- Verify that C27 imports and calls only the approved Test Suite entry
-  point across Component code boundaries.
+- Verify that the Release Components use only the approved Test Suite
+  entry point across Component boundaries outside the Release subtree.
+- Verify that the two Release Components allow Public Release to use
+  declared Local Release interfaces. Reject Local Release imports and
+  calls into Public Release.
 - Map the target roles to current Component IDs and bind exact Contract
   revisions to their realization Packages. First resolve forbidden
   cross-Component imports from the highest Layer down. Begin the
