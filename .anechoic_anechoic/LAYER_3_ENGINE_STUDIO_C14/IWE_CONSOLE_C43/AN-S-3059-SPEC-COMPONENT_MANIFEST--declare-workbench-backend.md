@@ -9,9 +9,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: active
-  version: 1
-  updated_at: '2026-11-19T00:00:00Z'
+  status: "active"
+  version: 2
+  updated_at: "2026-11-21T13:07:38.642570+00:00"
 ---
 
 ## Summary
@@ -30,6 +30,16 @@ declare_entity(
         component_id='C45',
         name='WORKBENCH_BACKEND',
         lens_whitelist=['DES', 'DES/DOM', 'DevOps', 'QA', 'SPEC', 'SWD'],
+        boundaries={
+            'code_access': {
+                'exports': {
+                    'FEATURE_WORKBENCH_BACKEND__family_pub': None,
+                    'FEATURE_WORKBENCH_BACKEND__family_pub.SourceReader': None,
+                    'FEATURE_WORKBENCH_BACKEND__pub': 'public',
+                    'FEATURE_WORKBENCH_BACKEND__pub.ServiceInterface': 'public',
+                },
+            },
+        },
     ),
 )
 ```
