@@ -1,6 +1,7 @@
 """Select complete native Claims from an already-selected Declaration set."""
 
 from collections.abc import Iterable, Mapping
+from functools import cache
 from typing import Any
 
 from markdown_it import MarkdownIt
@@ -302,6 +303,8 @@ def _check_relation_references(records: list[tuple[str, str, str]]) -> None:
             elif all(step.operator == "/" and isinstance(step.operand, notation.Name) for step in local.steps):
                 short_names.setdefault(local.steps[-1].operand.value, set()).add(subject)
     addresses.update(name for name, subjects in short_names.items() if len(subjects) == 1)
+    simple_address = cache(_simple_address)
+    canonical_address = cache(_canonical_address)
     keys = {
         "source_endpoint", "target_endpoint", "endpoint_pairs", "relation_name",
         "incoming_model_relations", "model_relation_constraints", "instance_relation_constraints",
@@ -320,8 +323,8 @@ def _check_relation_references(records: list[tuple[str, str, str]]) -> None:
         check.pop("instance_check", None)
         errors = lint_native_model_claim(
             check, declared_addresses=addresses, relation_names=set(relations), path=source,
-            first_line=1, resolve_address=_resolve, simple_address=_simple_address,
-            canonical_address=_canonical_address,
+            first_line=1, resolve_address=_resolve, simple_address=simple_address,
+            canonical_address=canonical_address,
         )
         if errors:
             raise ValueError(errors[0])

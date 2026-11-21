@@ -6,6 +6,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.component_metrics import measure_components
+from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.structure_host_pkg3.snapshot import StructureSnapshot
 
 
 class ComponentMetricsTest(unittest.TestCase):
@@ -32,18 +33,21 @@ class ComponentMetricsTest(unittest.TestCase):
                 {'id': 'CA-S-1', 'ref': 'CA-S-1', 'status_group': 'Current', '_source_bytes': 20, '_content_bytes': 'é\r\nx'.encode()},
                 {'id': 'CA-S-2', 'ref': 'CA-S-2', 'status_group': 'Draft', '_source_bytes': 100, '_content_bytes': b'draft'},
             ], containment=[{'source_ref': 'CA-S-1', 'target_kind': 'Component', 'target_ref': 'C1'}])
-            entries = {'C00': {'id': 'C00', 'kind': 'component'}, 'C1': {'id': 'C1', 'kind': 'component'}, 'C2': {'id': 'C2', 'kind': 'component'}}
-            class Ownership:
-                def __init__(self): self.entries = entries
-                def owner(self, path):
-                    return entries['C2' if 'child' in str(path) else 'C1']
+            ownership = SimpleNamespace(entries={
+                'C00': {'id': 'C00', 'kind': 'component', 'path': '.'},
+                'C1': {'id': 'C1', 'kind': 'component', 'path': 'parent'},
+                'C2': {'id': 'C2', 'kind': 'component', 'path': 'parent/child'},
+            })
+            snapshot = StructureSnapshot('model', {}, {'C1': None, 'C2': None}, {})
             package_paths = {'p': 'parent', 't': 'parent/parent__tests',
                              'cp': 'parent/child', 'ct': 'parent/child/child__tests'}
             nodes = [(key, 'package', 'python', path, None, None) for key, path in package_paths.items()]
             source_names = ['parent/code.py', 'parent/child/code.py', 'parent/tests/old.py',
                             'parent/test_old.py', 'parent/parent__tests/test_a.py',
                             'parent/parent__tests/assets/fixture.py', 'parent/child/child__tests/test_child.py']
-            with patch('APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.component_metrics.read_structure', return_value=SimpleNamespace(components={'C1': None, 'C2': None})), patch('APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.component_metrics.build_code_access_ownership', return_value=Ownership()):
+            module = 'APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.component_metrics'
+            with (patch(f'{module}.read_structure', return_value=snapshot),
+                  patch(f'{module}.build_code_access_ownership', return_value=ownership)):
                 rows = {row[0]: row[1:] for row in measure_components(
                     selection, capture, dict.fromkeys(source_names), nodes, [('t', 'p'), ('ct', 'cp')])}
             self.assertEqual(rows['C1'], (20, 5, 2, 5, 2, 5, 1, 11, 3))

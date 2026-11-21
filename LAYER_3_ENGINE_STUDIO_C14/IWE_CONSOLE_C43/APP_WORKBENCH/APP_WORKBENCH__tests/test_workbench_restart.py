@@ -170,7 +170,7 @@ class WorkbenchRestartTests(unittest.IsolatedAsyncioTestCase):
             malformed = await session.call_tool("workbench_restart", {"unexpected": True})
             self.assertTrue(malformed.is_error)
 
-            ran = await session.call_tool("query_run", {"sql": "SELECT 41"})
+            ran = await session.call_tool("query_run", {"sql": "SELECT 41", "result_delivery": "file"})
             self.assertFalse(ran.is_error, ran.structured_content)
             self.assertIn("result_file", ran.structured_content)
             self.assertNotIn("rows", ran.structured_content)

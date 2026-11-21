@@ -170,9 +170,9 @@ class WorkbenchToolsTests(unittest.TestCase):
 
         asyncio.run(exercise())
         self.assertEqual(
-            [(RUN, "SELECT 1", 100, None, False, None, None, "file", "json_matrix"), (PAGE, "q-1", 0, 1, None, "file", "json_matrix"), (CHECK, "SELECT 1", None),
-             (RUN, "SELECT 2", 100, 2, True, None, "saved", "file", "json_matrix"), (SAVE_VIEW, "SELECT 3", "view"),
-             (RUN, "SELECT 4", 100, None, True, None, "   ", "file", "json_matrix"), (LOAD, "q_2"),
+            [(RUN, "SELECT 1", 1000, None, False, None, None, "auto", "json_matrix"), (PAGE, "q-1", 0, 1, None, "file", "json_matrix"), (CHECK, "SELECT 1", None),
+             (RUN, "SELECT 2", 1000, 2, True, None, "saved", "auto", "json_matrix"), (SAVE_VIEW, "SELECT 3", "view"),
+             (RUN, "SELECT 4", 1000, None, True, None, "   ", "auto", "json_matrix"), (LOAD, "q_2"),
              (SCHEMA,), (SAVED_LIST, 3), (WORKSPACE_OPEN, {"session_id": "session-1"}),
              (VIEW_CREATE, {"workspace_id": "session-1"}),
              (VIEW_DUPLICATE, {"workspace_id": "session-1", "view_id": "source-view"}),

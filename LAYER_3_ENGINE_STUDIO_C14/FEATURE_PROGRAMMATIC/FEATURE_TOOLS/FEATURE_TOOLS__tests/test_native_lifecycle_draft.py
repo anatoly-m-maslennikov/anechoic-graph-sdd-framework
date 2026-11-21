@@ -186,8 +186,7 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
         owner = NativeQueryOwner(self.selection, NativeQueryInputs(lambda *args: None, frozenset(), {}, ()))
         owner._store = SimpleNamespace(_available=True)
         owner._capture = Capture()
-        snapshot_module = 'LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.structure_host_pkg3.snapshot'
-        with patch(snapshot_module + '.read_structure', side_effect=lambda path: published[0]) as read, \
+        with patch('native_query.read_structure', side_effect=lambda path: published[0]) as read, \
                 patch('project_runtime.bind_native_runtime', return_value=nullcontext()), \
                 patch.object(owner, '_refresh_after_write'):
             output = owner.lifecycle('atom_lifecycle_create_draft', {
