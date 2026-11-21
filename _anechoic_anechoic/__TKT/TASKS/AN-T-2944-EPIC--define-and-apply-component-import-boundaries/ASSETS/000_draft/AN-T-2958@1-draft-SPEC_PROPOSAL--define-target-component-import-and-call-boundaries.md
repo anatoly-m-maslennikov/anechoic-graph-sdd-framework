@@ -110,8 +110,9 @@ installation and startup when mapping release responsibilities.
 - Verify that C27 imports and calls only the approved Test Suite entry
   point across Component code boundaries.
 - Map the target roles to current Component IDs and bind exact Contract
-  revisions to their realization Packages. Finish Tasks 1–4 in
-  AN-T-2944 before changing caller imports.
+  revisions to their realization Packages. First resolve forbidden
+  cross-Component imports from the highest Layer down. Begin the
+  target refactor after that pass.
 
 ## References
 

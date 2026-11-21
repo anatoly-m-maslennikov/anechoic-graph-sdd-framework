@@ -8,9 +8,9 @@ structure:
 context:
   template: task
 state:
-  status: "backlog"
+  status: "archived"
   version: 1
-  updated_at: "2026-11-21T12:19:35.913986+00:00"
+  updated_at: "2026-11-21T19:07:45.165186+00:00"
 ---
 
 ## Summary

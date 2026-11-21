@@ -10,8 +10,8 @@ context:
   label: Epic
 state:
   status: "active"
-  version: 4
-  updated_at: "2026-11-21T18:55:23.441511+00:00"
+  version: 5
+  updated_at: "2026-11-21T19:06:22.031079+00:00"
 ---
 
 ## Summary
@@ -100,14 +100,17 @@ flowchart LR
 ```
 
 Record exact providers and entry Modules in Component Manifests. Bind
-their Contracts to the owning Packages before changing caller imports.
+their Contracts to the owning Packages for the target architecture.
 See Spec Proposal `AN-T-2958@1-draft` for detailed rules and acceptance
 checks.
 
 ## Work
 
-1. Declare Code Access in Component Manifests.
-2. Give each code-bearing Package a `__family_pub` entry Module for its parent and siblings. Prefer one such entry Module and add an optional `__pub` entry Module. Keep implementation Modules unmarked and Package-local. Apply the rule separately to each Package.
-3. Write each Component Contract and implement its code interface.
-4. Bind exact Contract revisions to their Realization Packages.
-5. Resolve forbidden imports after Tasks 1–4 pass. Use Component Seed as the name for a Package with its own Spec that may later become a Component.
+1. Resolve forbidden cross-Component imports first. Start with the highest Layer and work down.
+   Verify each Component against declared ownership and Code Access.
+2. Declare Code Access in Component Manifests.
+3. Give each code-bearing Package a `__family_pub` entry Module for its parent and siblings. Prefer one such entry Module and add an optional `__pub` entry Module. Keep implementation Modules unmarked and Package-local. Apply the rule separately to each Package.
+4. Write each Component Contract and implement its code interface.
+5. Bind exact Contract revisions to their Realization Packages.
+6. Refactor to the target architecture after the forbidden cross-Component imports are resolved.
+   Use Component Seed as the name for a Package with its own Spec that may later become a Component.
