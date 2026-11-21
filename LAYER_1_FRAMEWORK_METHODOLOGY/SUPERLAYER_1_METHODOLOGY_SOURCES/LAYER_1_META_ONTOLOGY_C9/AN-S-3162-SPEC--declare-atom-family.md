@@ -27,5 +27,5 @@ MODEL//ANECHOIC <+ Node//Artifact//Atom.Header.Atom Family
 ```python
 from anechoic.formal_claims import Cardinality, declare_entity
 declare_entity(entity_name='Atom Family', entity_kind='Property', relation_name='IS_PROPERTY_OF',
-    base_path='Node//Artifact//Atom.Header', value_format=str, value_cardinality=1, property_occurrence_cardinality=1, allowed_values=('SPEC', 'TKT', 'PMETA'))
+    base_path='Node//Artifact//Atom.Header', value_format=str, value_cardinality=1, property_occurrence_cardinality=1, allowed_values=('SPEC', 'TKT', 'PROJECT_CONFIG'))
 ```

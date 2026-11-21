@@ -32,7 +32,7 @@ declare_relation(
     inverse_alias="CLASSIFIES",
     endpoint_pairs=(
         {
-            "source_endpoint": {"level": "model_entities", "entity_paths": ("Node//Artifact//Atom//Spec Atom", "Node//Artifact//Atom//PMETA Atom")},
+            "source_endpoint": {"level": "model_entities", "entity_paths": ("Node//Artifact//Atom//Spec Atom", "Node//Artifact//Atom//Project Config Atom")},
             "target_endpoint": {"level": "model_entities", "entity_paths": ("Continuant",)},
         },
         {
