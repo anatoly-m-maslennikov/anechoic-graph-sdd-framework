@@ -14,13 +14,16 @@
 from __future__ import annotations
 
 import json
+import fcntl
+import os
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
 from collections.abc import Callable
-from contextlib import nullcontext
+from contextlib import ExitStack, contextmanager, nullcontext
 from pathlib import Path
 from typing import Any
 
@@ -68,6 +71,30 @@ def _failed_test_output(root: Path, run_id: str, result: Any, *, log_path: str |
     )
 
 
+@contextmanager
+def _installation_lock(root: Path, selection=None):
+    from project_runtime import bind_native_runtime, owned_temporary_root
+    from VALIDATE_ATOMS.validate_atoms_workers.read_io import open_regular
+
+    with bind_native_runtime(selection) if selection is not None else nullcontext():
+        directory = open_regular(owned_temporary_root(root, "local_release_installation"), directory=True)
+    try:
+        descriptor = os.open("installation.lock", os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_NONBLOCK,
+                             mode=0o600, dir_fd=directory)
+        try:
+            if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+                raise LocalReleaseError("local-release-installation-lock-invalid")
+            try:
+                fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError as error:
+                raise LocalReleaseError("local-release-installation-lock-busy") from error
+            yield
+        finally:
+            os.close(descriptor)
+    finally:
+        os.close(directory)
+
+
 def run_local_release(
     project_root: Path | str,
     *,
@@ -92,6 +119,7 @@ def run_local_release(
     from project_selection import ProjectSelectionError
     from native_project_selection import NativeProjectSelection
     from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import select_runtime_project
+    installation_lock = ExitStack()
     try:
         selection = select_runtime_project(root)
     except ProjectSelectionError as error:
@@ -115,15 +143,6 @@ def run_local_release(
     if product == installed:
         raise LocalReleaseError("local-release-target-invalid")
 
-    try:
-        previous_image = _build_predecessor(selection)
-    except LocalReleaseError:
-        if image_mode != "existing":
-            raise
-        previous_image = None
-    prior_image = previous_image or _launcher_image(selection)
-    prior_project = selection.instance_id if prior_image is not None else None
-
     failed_step = "validate_inputs"
     mcp: Any = None
     endpoint: str | None = None
@@ -141,6 +160,17 @@ def run_local_release(
         "copy product to installed framework", "install project runtime", "start mcp", "final",
     )
     try:
+        failed_step = "installation_lock"
+        installation_lock.enter_context(_installation_lock(root, selection if native else None))
+        failed_step = "validate_inputs"
+        try:
+            previous_image = _build_predecessor(selection)
+        except LocalReleaseError:
+            if image_mode != "existing":
+                raise
+            previous_image = None
+        prior_image = previous_image or _launcher_image(selection)
+        prior_project = selection.instance_id if prior_image is not None else None
         for phase in phases:
             print(f"Local release phase START: {phase}", file=sys.stderr, flush=True)
             if native:
@@ -276,6 +306,7 @@ def run_local_release(
                 _verify_package(prepared_product, product_identity)
                 _clear_target(installed, root=root, preserve=_PRESERVED_NAMES, label="installed-root")
                 _copy_tree(prepared_product, installed, preserve=_PRESERVED_NAMES)
+                _verify_package(installed, product_identity, preserve=_PRESERVED_NAMES)
             elif phase == "build package":
                 failed_step = "build_package"
                 from project_runtime import bind_native_runtime, owned_temporary_root, repository_root
@@ -334,7 +365,11 @@ def run_local_release(
                 ane = _target(root, Path(".agents/skills/ane"), label="project-ane")
                 _clear_target(ane, root=root, preserve=frozenset(), label="project-ane")
                 _copy_tree(runtime / "SKILLS/ane", ane, preserve=frozenset())
-                _deploy_bootstrap(root, runtime)
+                _verify_package(ane, {path.removeprefix("SKILLS/ane/"): identity
+                                      for path, identity in package_identity.items()
+                                      if path.startswith("SKILLS/ane/")})
+                with bind_native_runtime(selection) if native else nullcontext():
+                    _deploy_bootstrap(root, runtime)
             else:
                 failed_step = "start_mcp"
                 bootstrap = root / ".anechoic_runtime/start_mcp.py"
@@ -471,6 +506,8 @@ def run_local_release(
                 )
                 receipt_path = receipt.relative_to(root).as_posix()
     except (Exception, KeyboardInterrupt) as error:
+        if failed_step == "installation_lock":
+            print(f"Local release installation lock failed: {error}", file=sys.stderr, flush=True)
         staging_note = _cleanup_staging(root, staging)
         relative = Path(".anechoic_runtime/simple_local_release/reports") / f"{run_id}.md"
         report_path: str | None = None
@@ -510,6 +547,8 @@ def run_local_release(
             "test_modules": selected_test_modules,
             "image_mode": image_mode,
         }
+    finally:
+        installation_lock.close()
 
     return {
         "outcome": "completed_with_cleanup_pending" if cleanup_pending else "completed",

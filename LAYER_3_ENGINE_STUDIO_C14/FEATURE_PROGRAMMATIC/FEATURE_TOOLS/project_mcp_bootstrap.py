@@ -7,7 +7,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import stat
-import tempfile
+from project_runtime import TemporaryBoundaryError, atomic_tempfile
 
 
 BOOTSTRAP_RELATIVE = Path(
@@ -74,16 +74,13 @@ def deploy_project_mcp_bootstrap(project_root: Path | str, package_root: Path | 
     runtime = root / TARGET_RELATIVE.parent
     if runtime.exists() or runtime.is_symlink():
         _directory(runtime)
-    else:
-        runtime.mkdir(mode=0o700)
-        _directory(runtime)
     target = root / TARGET_RELATIVE
     if target.exists() or target.is_symlink():
         _regular(target)
     try:
         payload = source.read_bytes()
         source_mode = stat.S_IMODE(source.stat().st_mode)
-        descriptor, temporary_name = tempfile.mkstemp(prefix=".start_mcp.", dir=runtime)
+        descriptor, temporary_name = atomic_tempfile(target, "project_mcp_bootstrap", repository=root)
         temporary = Path(temporary_name)
         with os.fdopen(descriptor, "wb") as stream:
             stream.write(payload)
@@ -92,7 +89,7 @@ def deploy_project_mcp_bootstrap(project_root: Path | str, package_root: Path | 
         temporary.chmod(source_mode)
         os.replace(temporary, target)
         return target
-    except OSError as error:
+    except (OSError, TemporaryBoundaryError) as error:
         try:
             temporary.unlink(missing_ok=True)
         except (UnboundLocalError, OSError):

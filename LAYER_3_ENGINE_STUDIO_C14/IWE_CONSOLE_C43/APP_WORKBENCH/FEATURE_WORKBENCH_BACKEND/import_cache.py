@@ -12,7 +12,7 @@ _SCHEMA = "_anechoic_import_cache"
 
 def _exists(connection) -> bool:
     return bool(connection.execute(
-        "SELECT count(*) FROM information_schema.schemata WHERE schema_name = ?", [_SCHEMA]
+        "SELECT count(*) FROM information_schema.schemata WHERE catalog_name = current_database() AND schema_name = ?", [_SCHEMA]
     ).fetchone()[0])
 
 

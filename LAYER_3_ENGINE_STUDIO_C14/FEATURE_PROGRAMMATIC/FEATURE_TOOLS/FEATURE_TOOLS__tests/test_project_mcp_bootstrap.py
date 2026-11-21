@@ -1,6 +1,7 @@
 """Package-owned Project MCP bootstrap deployment boundary."""
 
 from pathlib import Path
+import os
 import stat
 import shutil
 import sys
@@ -30,6 +31,7 @@ class ProjectMcpBootstrapTests(unittest.TestCase):
         self.root = Path(self.temporary.name).resolve()
         self.target_root = self.root / "target"
         self.target_root.mkdir()
+        (self.target_root / ".git").mkdir()
         self.package = self.target_root / ".anechoic_install" / "releases" / ("a" * 64)
         self.source = self.package / RELATIVE
         self.source.parent.mkdir(parents=True)
@@ -69,6 +71,26 @@ class ProjectMcpBootstrapTests(unittest.TestCase):
         deploy_project_mcp_bootstrap(self.runtime.parent, self.package)
 
         self.assertEqual(self.source.read_bytes(), (self.runtime / "start_mcp.py").read_bytes())
+
+    def test_stages_below_project_temporary_root(self) -> None:
+        from unittest.mock import patch
+        import project_mcp_bootstrap
+
+        replace = os.replace
+        with patch.object(project_mcp_bootstrap.os, "replace", wraps=replace) as operation:
+            deploy_project_mcp_bootstrap(self.target_root, self.package)
+        self.assertTrue(Path(operation.call_args.args[0]).is_relative_to(self.target_root / ".anechoic_tmp"))
+
+    def test_failed_atomic_precondition_preserves_target(self) -> None:
+        from unittest.mock import patch
+        from project_runtime import TemporaryBoundaryError
+
+        target = self.runtime / "start_mcp.py"
+        target.write_bytes(b"previous")
+        with patch("project_mcp_bootstrap.atomic_tempfile", side_effect=TemporaryBoundaryError("different filesystems")):
+            with self.assertRaisesRegex(ProjectMcpBootstrapError, "copy-failed"):
+                deploy_project_mcp_bootstrap(self.target_root, self.package)
+        self.assertEqual(target.read_bytes(), b"previous")
 
     def test_missing_or_symlinked_source_or_destination_refuses(self) -> None:
         self.source.unlink()

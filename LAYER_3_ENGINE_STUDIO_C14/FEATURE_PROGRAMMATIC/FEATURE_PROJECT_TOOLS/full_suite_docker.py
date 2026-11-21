@@ -75,21 +75,21 @@ def current_code_test_image(root: Path, *, use_packaged_assets: bool = False):
     parent.mkdir(parents=True, exist_ok=True)
     if parent.resolve(strict=True) != parent or parent.is_symlink():
         raise OSError("test scratch must remain inside the selected Project")
-    scratch = Path(tempfile.mkdtemp(prefix="attempt-", dir=parent))
-    attempt = uuid.uuid4().hex
-    manager = ImageManager(root, executor=_executor(attempt), build_temp_root=scratch, project_root=root)
-    identity = manager.identity(use_packaged_assets=use_packaged_assets)
-    image = manager._build(identity, use_packaged_assets=use_packaged_assets)
-    print(f"Test image FINISH: {image}", flush=True)
-    environment = {
-        "ANECHOIC_IMAGE": image,
-        "ANECHOIC_FIRST_CUT_HTTP_IMAGE": image,
-        "ANECHOIC_FIRST_CUT_HTTP_SCRATCH": str(scratch),
-        "ANECHOIC_DOCKER_QUERY_IMAGE": image,
-        "TMPDIR": str(scratch),
-        "ANECHOIC_PROJECT_LAUNCHER_DOCKER_E2E": "1",
-    }
-    try:
-        yield environment
-    finally:
-        _remove_owned_image(root, image, attempt)
+    with tempfile.TemporaryDirectory(prefix="attempt-", dir=parent) as directory:
+        scratch = Path(directory)
+        attempt = uuid.uuid4().hex
+        manager = ImageManager(root, executor=_executor(attempt), build_temp_root=scratch, project_root=root)
+        identity = manager.identity(use_packaged_assets=use_packaged_assets)
+        image = manager._build(identity, use_packaged_assets=use_packaged_assets)
+        print(f"Test image FINISH: {image}", flush=True)
+        try:
+            yield {
+                "ANECHOIC_IMAGE": image,
+                "ANECHOIC_FIRST_CUT_HTTP_IMAGE": image,
+                "ANECHOIC_FIRST_CUT_HTTP_SCRATCH": str(scratch),
+                "ANECHOIC_DOCKER_QUERY_IMAGE": image,
+                "TMPDIR": str(scratch),
+                "ANECHOIC_PROJECT_LAUNCHER_DOCKER_E2E": "1",
+            }
+        finally:
+            _remove_owned_image(root, image, attempt)

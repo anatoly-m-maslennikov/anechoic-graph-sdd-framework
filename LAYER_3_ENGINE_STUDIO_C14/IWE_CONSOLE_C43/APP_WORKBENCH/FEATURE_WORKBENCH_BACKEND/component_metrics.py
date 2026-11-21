@@ -48,6 +48,20 @@ def _spec_sizes(capture, prefix, totals):
             values[2] += _lines(body)
 
 
+def refresh_spec_sizes(connection, capture, prefix):
+    """Recount Spec sizes using the existing realization measurements."""
+    totals = {}
+    offsets = {'implementation': 3, 'test_code': 5, 'test_assets': 7}
+    for component, denominator, size, lines in connection.execute("""
+        SELECT component_id, denominator, round(realization_kb * 1000)::BIGINT, realization_lines
+        FROM main.component_metrics WHERE denominator IN ('implementation', 'test_code', 'test_assets')
+    """).fetchall():
+        offset = offsets[denominator]
+        totals.setdefault(component, [0] * 9)[offset:offset + 2] = [size, lines]
+    _spec_sizes(capture, prefix, totals)
+    return [(component, *sizes) for component, sizes in totals.items()]
+
+
 def _test_sizes(root, reader, sources, tests, totals):
     test_files = {}
     for test_path, owner in sorted(tests.items(), key=lambda item: len(item[0].parts)):

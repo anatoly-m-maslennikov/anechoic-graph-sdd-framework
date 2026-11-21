@@ -5,7 +5,10 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.component_metrics import measure_components
+import duckdb
+
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.component_metrics import measure_components, refresh_spec_sizes
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_projection import replace_component_metrics
 from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.structure_host_pkg3.snapshot import StructureSnapshot
 
 
@@ -56,6 +59,17 @@ class ComponentMetricsTest(unittest.TestCase):
 
     def test_no_structure(self):
         self.assertEqual(measure_components(SimpleNamespace(structure_snapshot=None), None, {}, [], []), [])
+
+    def test_spec_refresh_keeps_realization_measurements(self):
+        capture = SimpleNamespace(
+            atoms=[{'id': 'CA-S-1', 'ref': 'CA-S-1', 'status_group': 'Current',
+                    '_source_bytes': 25, '_content_bytes': b'first\nsecond\n'}],
+            containment=[{'source_ref': 'CA-S-1', 'target_kind': 'Component', 'target_ref': 'C1'}],
+        )
+        with duckdb.connect() as connection:
+            replace_component_metrics(connection, [('C1', 20, 6, 1, 5, 2, 5, 1, 11, 3)])
+            self.assertEqual([('C1', 25, 13, 2, 5, 2, 5, 1, 11, 3)],
+                             refresh_spec_sizes(connection, capture, 'CA'))
 
 
 if __name__ == '__main__':

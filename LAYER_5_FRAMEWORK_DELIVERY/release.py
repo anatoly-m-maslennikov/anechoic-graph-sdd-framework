@@ -87,10 +87,11 @@ def _invoke(arguments: argparse.Namespace) -> dict[str, object]:
     )
     if re.fullmatch(pattern, arguments.run_id) is None:
         raise ValueError("release-run-id-invalid")
-    if arguments.operation == "local":
-        from native_project_selection import NativeProjectSelection
-        from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import select_runtime_project
+    from native_project_selection import NativeProjectSelection
+    from project_selection import ProjectSelectionError
+    from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import select_runtime_project
 
+    if arguments.operation == "local":
         selected = select_runtime_project(root)
         invoke = partial(run_local_release, root, run_id=arguments.run_id, image_mode=arguments.image_mode)
         if arguments.test_modules is not None:
@@ -102,8 +103,15 @@ def _invoke(arguments: argparse.Namespace) -> dict[str, object]:
     draft = _read_draft(arguments.content_draft)
     if draft is None:
         return run_public_release(root, run_id=arguments.run_id)
+    try:
+        selected = select_runtime_project(root)
+    except ProjectSelectionError:
+        selected = None
     invoke = partial(run_public_release, root, run_id=arguments.run_id, content_draft=draft)
-    return run_recorded_release(root, "public.release", arguments.run_id, invoke)
+    return run_recorded_release(
+        root, "public.release", arguments.run_id, invoke,
+        selection=selected if isinstance(selected, NativeProjectSelection) else None,
+    )
 
 
 def main(argv: list[str] | None = None) -> int:

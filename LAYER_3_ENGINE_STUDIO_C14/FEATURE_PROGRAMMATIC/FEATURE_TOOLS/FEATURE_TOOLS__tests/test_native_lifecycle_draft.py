@@ -232,6 +232,39 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
                 self.assertIn(b'New', path.read_bytes())
                 self.assertFalse(draft.exists())
 
+    def test_task_promotion_rejects_status_change_with_flat_child(self):
+        child = self.write('__TKT/TASKS/AN-T-2-TASK--child.md', 'AN-T-2')
+        _, header, body = child.read_text().split('---', 2)
+        metadata = yaml.safe_load(header)
+        metadata['context']['container'] = {'atom': 'AN-T-1'}
+        child.write_text('---\n' + yaml.safe_dump(metadata) + '---' + body)
+        result = create_draft(self.selection, self.params, current_rows=capture_native(self.selection).atoms)
+        draft = self.root / result['savedDraft']['path']
+        before = self.path.read_bytes(), child.read_bytes(), draft.read_bytes()
+        with self.assertRaisesRegex(InputError, 'container'):
+            promote_draft(self.selection,
+                {'target': {'ref_id': result['savedDraft']['ref_id'], 'version': 2}, 'targetStatus': 'done'},
+                current_rows=capture_native(self.selection).atoms, migration_refs=[])
+        self.assertEqual(before, (self.path.read_bytes(), child.read_bytes(), draft.read_bytes()))
+
+    def test_epic_body_revision_preserves_child_carrier(self):
+        epic = self.write('__TKT/TASKS/AN-T-4-EPIC--example.md', 'AN-T-4', template='epic')
+        child = self.write('__TKT/TASKS/AN-T-4-EPIC--example/done/AN-T-5-TASK--example.md', 'AN-T-5', status='done')
+        _, header, body = child.read_text().split('---', 2)
+        metadata = yaml.safe_load(header)
+        metadata['context']['container'] = {'atom': 'AN-T-4'}
+        child.write_text('---\n' + yaml.safe_dump(metadata) + '---' + body)
+        before = child.read_bytes()
+        result = create_draft(self.selection,
+            {'sourceCurrent': {'ref_id': 'AN-T-4', 'version': 1},
+             'changes': {'body': epic.read_text().split('---', 2)[2].replace('Old', 'New')}},
+            current_rows=capture_native(self.selection).atoms)
+        result = promote_draft(self.selection,
+            {'target': {'ref_id': result['savedDraft']['ref_id'], 'version': 2}, 'targetStatus': 'active'},
+            current_rows=capture_native(self.selection).atoms, migration_refs=[])
+        self.assertEqual('completed', result['outcome'])
+        self.assertEqual(before, child.read_bytes())
+
     def test_existing_component_lens_can_override_project_whitelist(self):
         manifest = self.selection.manifest_path
         manifest.write_text(manifest.read_text().replace("['DES', 'SPEC']", "['SPEC']"))
@@ -364,6 +397,38 @@ class NewNativeTaskTests(unittest.TestCase):
         self.assertFalse(capture.errors)
         self.assertIn('AN-T-9@1', [row['_exact_ref'] for row in capture.atoms])
         self.assertEqual(before, (self.path.read_bytes(), self.selection.manifest_path.read_bytes()))
+
+    def test_new_epic_and_sub_epic_create_and_promote(self):
+        self.new['newAtom']['template'] = 'epic'
+        for container, label in (({'component': 'C00'}, 'EPIC'), ({'atom': 'AN-T-2'}, 'SUB_EPIC')):
+            self.new['newAtom']['container'] = container
+            result = create_draft(self.selection, self.new, current_rows=capture_native(self.selection).atoms)
+            draft = self.root / result['savedDraft']['path']
+            self.assertIn(f'-{label}--', draft.name)
+            result = promote_draft(self.selection,
+                {'target': {'ref_id': result['savedDraft']['ref_id'], 'version': 1}, 'targetStatus': 'active'},
+                current_rows=capture_native(self.selection).atoms, migration_refs=[])
+            self.assertEqual('completed', result['outcome'])
+            self.assertIn(f'-{label}--', result['artifact']['path'])
+            self.assertFalse(draft.exists())
+        self.assertFalse(capture_native(self.selection).errors)
+
+    def test_epic_uses_admitted_project_component(self):
+        self.new['newAtom'].update(template='epic', container={'component': 'C21'})
+        snapshot = SimpleNamespace(components={'C21': object()})
+        result = create_draft(self.selection, self.new, current_rows=self.rows, structure_snapshot=snapshot)
+        draft = self.root / result['savedDraft']['path']
+        header = yaml.safe_load(draft.read_text().split('---', 2)[1])
+        self.assertEqual({'component': 'C21'}, header['structure']['container'])
+        result = promote_draft(self.selection,
+            {'target': {'ref_id': result['savedDraft']['ref_id'], 'version': 1}, 'targetStatus': 'active'},
+            current_rows=capture_native(self.selection).atoms, migration_refs=[], structure_snapshot=snapshot)
+        self.assertEqual('completed', result['outcome'])
+
+    def test_epic_cannot_be_created_under_task(self):
+        self.new['newAtom'].update(template='epic', container={'atom': 'AN-T-1'})
+        with self.assertRaises(InputError):
+            create_draft(self.selection, self.new, current_rows=self.rows)
 
     def test_canonical_flat_owned_task_keeps_validated_flat_revision_paths(self):
         flat = self.write('__TKT/TASKS/AN-T-2-SUBTASK--example.md', 'AN-T-2')

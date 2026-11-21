@@ -11,7 +11,7 @@ import os
 from pathlib import Path
 import re
 import sys
-from typing import Any
+from typing import Any, Callable, Iterable
 from urllib.parse import parse_qs, urlparse
 import uuid
 
@@ -32,9 +32,14 @@ _JOURNAL_AUTHOR = "workbench-saved-items"
 class SavedQueryStore:
     """Own saved items under one Project's Journal and legacy runtime files."""
 
-    def __init__(self, root: Path, *, journal_root: str | None = None) -> None:
+    def __init__(
+        self, root: Path, *, journal_root: str | None = None, journal_mode: str = "files",
+        read_journal_events: Callable[[str], Iterable[object]] | None = None,
+    ) -> None:
         self._root = Path(root)
         self._journal_root = journal_root
+        self._journal_mode = journal_mode
+        self._read_journal_events = read_journal_events
         self._legacy_directory = self._root / ".anechoic_runtime" / "workbench" / "saved_queries"
 
     @staticmethod
@@ -108,6 +113,7 @@ class SavedQueryStore:
                 local_date=saved_at[:10],
                 timezone="UTC",
                 journal_root=self._journal_root,
+                **({"storage": self._journal_mode} if self._journal_mode == "duckdb" else {}),
             )
         except Exception as error:
             raise ValueError(f"saved query failed: {error}") from error
@@ -178,6 +184,12 @@ class SavedQueryStore:
                     items.append(self._journal_record(json.loads(line)))
                 except (ValueError, json.JSONDecodeError) as error:
                     print(f"saved query skipped: {path}:{line_number}: {error}", file=sys.stderr)
+        if self._read_journal_events is not None:
+            for index, value in enumerate(self._read_journal_events(_JOURNAL_AUTHOR), 1):
+                try:
+                    items.append(self._journal_record(value))
+                except ValueError as error:
+                    print(f"saved query skipped: journal:{index}: {error}", file=sys.stderr)
         return items
 
     def _legacy_read(self, saved_query_id: str) -> dict[str, Any]:

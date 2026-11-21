@@ -18,6 +18,12 @@ from python_model_claim import parse_structured_python_model_claim
 
 
 class RoleFolderTests(unittest.TestCase):
+    def test_filename_role_is_taken_before_the_slug(self):
+        for name in ("CA-C-526-runtime-draft.md", "12-TEAM-PROJECT-C-527-follows-CA-P-1.md"):
+            with self.subTest(name=name):
+                self.assertTrue(filename_role_matches(Path("01_concern") / name))
+                self.assertFalse(filename_role_matches(Path("03_plan") / name))
+
     def test_formal_folders_round_trip_and_control_audit(self):
         analysis = parse_native_model_claim('''
 from anechoic.formal_claims import declare_entity

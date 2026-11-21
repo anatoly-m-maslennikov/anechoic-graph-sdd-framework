@@ -25,6 +25,8 @@ class WorkbenchProvider:
             except ValueError as error:
                 raise ExplicitBlockingRuntimeFailure("query_error", str(error)) from error
             name = RUN
+        if name == RUN:
+            arguments = {"result_delivery": "auto", **arguments}
         return await self.gateway.workbench.call(name, arguments)
 
     def prepare_arguments(self, name: str, arguments: dict[str, Any], context: Any) -> dict[str, Any]:

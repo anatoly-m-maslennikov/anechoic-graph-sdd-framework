@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from contextlib import nullcontext
 from datetime import datetime, timezone
 from hashlib import sha256
 import json
@@ -56,10 +57,10 @@ def _select_ticket(selection, target, current_rows, *, allow_draft=False):
     return selected, digest, path
 
 
-def _read_ticket(selection, target, selected, digest, path, *, close_epic=False, placement=False):
+def _read_ticket(selection, target, selected, digest, path, *, close_tree=False, placement=False, require_terminal=False):
     try:
         companion = path.with_suffix('')
-        tree = _read_tree(selection.root, companion) if close_epic and companion.is_dir() else None
+        tree = _read_tree(selection.root, companion) if close_tree and companion.is_dir() else None
         capture = capture_native(selection)
         if capture.errors:
             raise SourceChanged('Native carrier capture is incomplete.')
@@ -78,30 +79,33 @@ def _read_ticket(selection, target, selected, digest, path, *, close_epic=False,
                 if owner is not None:
                     children[owner].append(row)
         pending = list(children.get(selected['id'], ()))
-        if pending and not close_epic:
-            raise InputError('target', 'Direct updates of container Atoms are unsupported.')
+        if pending and (not close_tree or not companion.is_dir()):
+            raise InputError('target', 'Ticket descendants require their companion directory.')
         visited = {selected['id']}
+        terminal = {'done', 'canceled'}
         while pending:
             child = pending.pop()
-            if child['id'] in visited or child['status'] not in {'done', 'canceled', 'resolved'}:
-                raise InputError('target', 'An Epic needs terminal Current descendants before it can be Done.')
+            if child['id'] in visited:
+                raise InputError('target', 'Ticket containment contains a cycle.')
+            if require_terminal and child['status'] not in terminal:
+                raise InputError('target', 'Current descendants must be terminal before this Status change.')
             visited.add(child['id'])
             pending.extend(children.get(child['id'], ()))
         companion = path.with_suffix('')
         if companion.exists() or companion.is_symlink():
-            if not close_epic or companion.is_symlink() or not companion.is_dir():
+            if not close_tree or companion.is_symlink() or not companion.is_dir():
                 raise InputError('target', 'Direct updates of container Atoms are unsupported.')
             for child in capture.atoms:
                 child_path = selection.root / child['source_path']
                 if child['id'] in visited - {selected['id']} and not child_path.is_relative_to(companion):
-                    raise InputError('target', 'Epic descendants disagree with the companion directory.')
+                    raise InputError('target', 'Ticket descendants disagree with the companion directory.')
                 if child_path.is_relative_to(companion):
                     owner = native_header_view(child['header_json']).get('context', {}).get('container', {}).get('atom')
                     if owner not in visited:
-                        raise InputError('target', 'Epic companion contains an unrelated Atom.')
+                        raise InputError('target', 'Ticket companion contains an unrelated Atom.')
                     _branch(selection, child_path, child['status'], child, capture.atoms, allow_flat=False)
             if _read_tree(selection.root, companion) != tree:
-                raise SourceChanged('Epic companion changed during validation.')
+                raise SourceChanged('Ticket companion changed during validation.')
         reader = ReadContext(roots=[str(selection.control_root)], limits=dict(CEILINGS))
         raw = reader.read(path)
         bounds = frontmatter_bounds(raw)
@@ -116,7 +120,7 @@ def _read_ticket(selection, target, selected, digest, path, *, close_epic=False,
         raise
     except (OSError, RuntimeError, TypeError, ValueError) as error:
         raise SourceChanged('Native source is unavailable or changed.') from error
-    return raw, bounds, tree
+    return raw, bounds, tree, capture
 
 
 def direct_update(selection, params, *, current_rows):
@@ -133,7 +137,7 @@ def direct_update(selection, params, *, current_rows):
     if branch != 'ASSETS' and not linked_asset:
         raise InputError('target', 'Direct body updates are limited to Ticket Assets.')
     with _project_write_lock(selection.root):
-        raw, bounds, _ = _read_ticket(selection, target, selected, digest, path)
+        raw, bounds, _, _ = _read_ticket(selection, target, selected, digest, path)
         old_body = raw[bounds[2]:].decode('utf-8')
         old_summary = atom_summary(re.sub(r'(?m)^#(?= Summary[ \t]*\r?$)', '##', old_body)).group(1)
         new_summary = atom_summary(re.sub(r'(?m)^#(?= Summary[ \t]*\r?$)', '##', changes['body'])).group(1)
@@ -208,14 +212,18 @@ def _branch(selection, path, status, selected, rows, *, allow_flat=True, seen=No
     return branch
 
 
-def _move_ticket(selection, target, selected, digest, path, destination, status, check_definition, *, close_epic=False):
-    with _project_write_lock(selection.root):
+def _move_ticket(selection, target, selected, digest, path, destination, status, check_definition, *, close_tree=False, require_terminal=False, locked=False, preflight=None):
+    with nullcontext() if locked else _project_write_lock(selection.root):
         companion = path.with_suffix('')
         target_companion = destination.with_suffix('')
         if (destination.exists() or destination.is_symlink() or
-                (close_epic and (target_companion.exists() or target_companion.is_symlink()))):
+                (close_tree and (target_companion.exists() or target_companion.is_symlink()))):
             return result(errors=[{'code': 'destination_exists', 'message': 'Ticket destination already exists.'}])
-        raw, bounds, tree = _read_ticket(selection, target, selected, digest, path, close_epic=close_epic, placement=True)
+        if preflight is None:
+            raw, bounds, tree, _ = _read_ticket(selection, target, selected, digest, path, close_tree=close_tree, placement=True,
+                                                require_terminal=require_terminal)
+        else:
+            raw, bounds, tree = preflight
         candidate = _status_bytes(raw, bounds, path, status)
         recorded, recorded_errors = [], []
 
@@ -230,7 +238,8 @@ def _move_ticket(selection, target, selected, digest, path, destination, status,
         def source_intact():
             try:
                 reader = ReadContext(roots=[str(selection.control_root)], limits=dict(CEILINGS))
-                return sha256(reader.read(path)).hexdigest() == digest
+                return (sha256(reader.read(path)).hexdigest() == digest and not
+                        (close_tree and tree is None and (companion.exists() or companion.is_symlink())))
             except (OSError, RuntimeError, ValueError):
                 return False
 
@@ -264,10 +273,10 @@ def _move_ticket(selection, target, selected, digest, path, destination, status,
             if tree is not None:
                 try:
                     if _read_tree(selection.root, companion) != tree:
-                        raise ValueError('Epic companion changed before publication.')
+                        raise ValueError('Ticket companion changed before publication.')
                 except (OSError, RuntimeError, ValueError):
                     rollback()
-                    return result(effects=recorded, errors=[{'code': 'source_changed', 'message': 'Epic companion changed before publication.'}])
+                    return result(effects=recorded, errors=[{'code': 'source_changed', 'message': 'Ticket companion changed before publication.'}])
                 moved = move_directory(selection.root, companion, target_companion)
                 recorded.extend(moved.effects)
                 recorded_errors.extend(moved.errors)
@@ -305,6 +314,28 @@ def _move_ticket(selection, target, selected, digest, path, destination, status,
         return result(effects=recorded, errors=recorded_errors, **data)
 
 
+def _descendants(rows, atom_id):
+    children = defaultdict(list)
+    for row in rows:
+        if row.get('status_group') == 'Current':
+            owner = native_header_view(row['header_json']).get('context', {}).get('container', {}).get('atom')
+            if owner is not None:
+                children[owner].append(row)
+    ordered, seen = [], {atom_id}
+    stack = [(row, False) for row in reversed(sorted(children.get(atom_id, ()), key=lambda r: r['id']))]
+    while stack:
+        row, visited = stack.pop()
+        if visited:
+            ordered.append(row)
+            continue
+        if row['id'] in seen:
+            raise InputError('target', 'Ticket containment is cyclic or ambiguous.')
+        seen.add(row['id'])
+        stack.append((row, True))
+        stack.extend((child, False) for child in reversed(sorted(children.get(row['id'], ()), key=lambda r: r['id'])))
+    return ordered
+
+
 def change_ticket_status(selection, params, *, current_rows, check_definition):
     if not isinstance(params, dict) or set(params) != {'target', 'targetStatus'}:
         raise InputError('target', 'Supply one target and target Status.')
@@ -314,16 +345,66 @@ def change_ticket_status(selection, params, *, current_rows, check_definition):
     status = status.casefold()
     target = params['target']
     selected, digest, path = _select_ticket(selection, target, current_rows)
-    branch = _branch(selection, path, selected['status'], selected, current_rows)
-    destination = branch / ('' if status == 'active' else status) / path.name
-    close_epic = status == 'done' and native_header_view(selected['header_json']).get('context', {}).get('template') == 'epic'
-    if destination == path:
-        with _project_write_lock(selection.root):
-            _read_ticket(selection, target, selected, digest, path, close_epic=close_epic, placement=True)
-        return result(artifact=saved(selection, path, selected['id'], selected['id'],
-                                     target['version'], selected['status']))
-    return _move_ticket(selection, target, selected, digest, path, destination, status, check_definition,
-                        close_epic=close_epic)
+    template = native_header_view(selected['header_json']).get('context', {}).get('template')
+    move_tree = template in ('task', 'epic')
+    terminal = move_tree and status in ('done', 'canceled')
+    recorded = []
+    with _project_write_lock(selection.root):
+        branch = _branch(selection, path, selected['status'], selected, current_rows)
+        destination = branch / ('' if status == 'active' else status) / path.name
+        if destination != path and (destination.exists() or destination.is_symlink() or
+                (move_tree and (destination.with_suffix('').exists() or destination.with_suffix('').is_symlink()))):
+            return result(errors=[{'code': 'destination_exists', 'message': 'Ticket destination already exists.'}])
+        raw, bounds, tree, capture = _read_ticket(selection, target, selected, digest, path,
+                                                   close_tree=move_tree, placement=True)
+        planned = _descendants(current_rows, selected['id']) if move_tree else []
+        fresh = _descendants(capture.atoms, selected['id']) if move_tree else []
+        keys = ('id', 'version', 'status', 'source_path', '_source_sha256', 'header_json')
+        if len(planned) != len(fresh) or any(
+                any(before.get(key) != after.get(key) for key in keys)
+                for before, after in zip(planned, fresh)):
+            raise SourceChanged('Ticket descendants changed after selection.')
+        if (template == 'epic' and selected['status'] == 'backlog' and status == 'active' and any(
+                native_header_view(row['header_json']).get('context', {}).get('template') == 'task'
+                and row['status'] != 'active' for row in planned)):
+            raise InputError('target', 'Epic activation requires activating its contained Tasks; this operation is unsupported.')
+        reopen_epic = template == 'epic' and status == 'active'
+        if (move_tree and selected['status'] in ('done', 'canceled') and not terminal and not reopen_epic
+                and any(row['status'] != status for row in planned)):
+            raise InputError('target', 'Reopening requires changing contained Ticket statuses; this operation is unsupported.')
+        actions = [row for row in planned if terminal and row['status'] not in ('done', 'canceled')]
+        actions.append(selected)
+        for row in actions:
+            is_parent = row['id'] == selected['id']
+            action_status = status if is_parent else 'canceled'
+            action_target = {'ref_id': row['id'], 'version': row['version']}
+            try:
+                current, action_digest, action_path = _select_ticket(selection, action_target, current_rows)
+                branch = _branch(selection, action_path, current['status'], current, current_rows)
+                destination = branch / ('' if action_status == 'active' else action_status) / action_path.name
+                action_template = native_header_view(current['header_json']).get('context', {}).get('template')
+                action_tree = action_template in ('task', 'epic')
+                if destination == action_path:
+                    if len(actions) > 1:
+                        _read_ticket(selection, action_target, current, action_digest, action_path,
+                                     close_tree=action_tree, placement=True, require_terminal=terminal)
+                    outcome = result(artifact=saved(selection, action_path, current['id'], current['id'],
+                                                    action_target['version'], current['status']))
+                else:
+                    outcome = _move_ticket(selection, action_target, current, action_digest, action_path,
+                                           destination, action_status, check_definition, close_tree=action_tree,
+                                           require_terminal=terminal, locked=True,
+                                           preflight=(raw, bounds, tree) if len(actions) == 1 else None)
+            except (InputError, SourceChanged, OSError, ValueError, RuntimeError, TypeError, KeyError) as error:
+                if not recorded:
+                    raise
+                code = 'invalid_input' if isinstance(error, InputError) else 'source_changed'
+                return result(effects=recorded, errors=[{'code': code, 'message': f"{row['id']}: {error}"}])
+            recorded.extend(outcome.get('effects', ()))
+            if outcome.get('errors'):
+                return result(effects=recorded, errors=[{**error, 'target': row['id']}
+                                                         for error in outcome['errors']])
+        return result(effects=recorded, artifact=outcome['artifact'])
 
 
 def archive_ticket(selection, params, *, current_rows):

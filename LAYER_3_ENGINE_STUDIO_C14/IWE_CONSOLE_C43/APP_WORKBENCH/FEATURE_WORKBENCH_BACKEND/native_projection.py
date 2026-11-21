@@ -11,6 +11,7 @@ from typing import Any
 
 from .content_schema import ContentRule, DeclarationSource, _schema_from_rules
 from .graph_store import GraphState, register_graph
+from .index_delta import MaterializationDelta
 from .markdown_content import source_markdown
 from .native_source_rows import NativeCapture
 from .query_store import QueryStore
@@ -147,29 +148,18 @@ def project_native(store: QueryStore, capture: NativeCapture, *,
     if capture.errors or not capture.atoms:
         raise ValueError("Cannot project a native capture with invalid carriers")
     inverse = _relation_bindings(relation_types, inverses)
-    rows = _projected_rows(capture, relation_types, inverse)
-    for row in rows:
-        summaries = [record for record in row["content_properties_json"] if record.get("property_path") == ["summary"]]
-        if len(summaries) > 1:
-            row["content_properties_json"] = [record for record in row["content_properties_json"]
-                                              if record.get("property_path") != ["summary"] or record is summaries[0]]
-    content_schema = _schema_from_rules([
-        ContentRule(("summary",), None, None, True, DeclarationSource(None, None, None)),
-    ])
+    rows = _native_rows(capture, relation_types, inverse)
+    content_schema = _native_content_schema()
     component_refs = [("Component", cid) for cid in sorted(set(component_ids))]
     rows[0]["_graph_references"] = component_refs
     legacy, paths = _migration_rows(rows, migration_refs)
     with store._lock:
         connection = store._connection
         # Invalidate retained rows when the projection layout or inputs change.
-        frontier = sha256(repr((
-            3, store._schema_mode, sorted(relation_types), sorted(inverses.items()),
-            sorted(legacy), sorted(paths), component_refs,
-            sorted((row["source_path"], row["_source_sha256"]) for row in rows),
-        )).encode()).hexdigest()
+        frontier = _native_frontier(store, rows, relation_types, inverses, legacy, paths, component_refs)
         retained = use_retained and connection.execute(
             "SELECT 1 FROM information_schema.tables "
-            "WHERE table_schema = 'internal' AND table_name = 'native_frontier'"
+            "WHERE table_catalog = current_database() AND table_schema = 'internal' AND table_name = 'native_frontier'"
         ).fetchone() is not None and connection.execute(
             "SELECT frontier FROM internal.native_frontier"
         ).fetchall() == [(frontier,)]
@@ -189,6 +179,112 @@ def project_native(store: QueryStore, capture: NativeCapture, *,
 
         store.replace(rows, [], relation_types=set(relation_types), content_schema=content_schema,
                       reuse=retained, before_commit=finish)
+
+
+def _native_frontier(store, rows, relation_types, inverses, legacy, paths, component_refs):
+    return sha256(repr((
+        3, store._schema_mode, sorted(relation_types), sorted(inverses.items()),
+        sorted(legacy), sorted(paths), component_refs,
+        sorted((row["source_path"], row["_source_sha256"]) for row in rows),
+    )).encode()).hexdigest()
+
+
+def _native_rows(capture, relation_types, inverse):
+    rows = _projected_rows(capture, relation_types, inverse)
+    for row in rows:
+        summaries = [record for record in row["content_properties_json"] if record.get("property_path") == ["summary"]]
+        if len(summaries) > 1:
+            row["content_properties_json"] = [record for record in row["content_properties_json"]
+                                              if record.get("property_path") != ["summary"] or record is summaries[0]]
+    return rows
+
+
+def _native_content_schema():
+    return _schema_from_rules([
+        ContentRule(("summary",), None, None, True, DeclarationSource(None, None, None)),
+    ])
+
+
+def project_native_delta(store: QueryStore, capture: NativeCapture, *, paths: set[PurePosixPath],
+                         relation_types: Set[str], inverses: Mapping[str, str],
+                         migration_refs: Iterable[tuple[str | None, str, str]] = (),
+                         component_ids: Iterable[str] | None = None,
+                         before_commit: Callable[[GraphState], None] | None = None) -> bool:
+    """Publish touched owners together, or request a full projection for a layout change."""
+    if capture.errors or not capture.atoms:
+        raise ValueError("Cannot project a native capture with invalid carriers")
+    inverse = _relation_bindings(relation_types, inverses)
+    legacy, migration_paths = _migration_rows(capture.atoms, migration_refs)
+    touched = {path.as_posix() for path in paths}
+    changed_atoms = [row for row in capture.atoms if row["source_path"] in touched]
+    changed_refs = {row["ref"] for row in changed_atoms}
+    changed_capture = NativeCapture(changed_atoms, [edge for edge in capture.containment
+                                                    if edge["source_ref"] in changed_refs], {})
+    rows = _native_rows(changed_capture, relation_types, inverse)
+    with store._lock:
+        previous = store._projection
+        if previous is None or set(previous.graph.edges) != set(relation_types):
+            return False
+        old = {row["source_path"]: row for row in previous.atom_sources.values()}
+        new_changed = {row["source_path"]: row for row in rows}
+        anchor = next(row for row in old.values() if "_graph_references" in row)
+        component_refs = anchor["_graph_references"]
+        anchor_path = anchor["source_path"]
+        if anchor_path in touched:
+            owner = new_changed.get(anchor_path) or next(
+                (row for row in new_changed.values() if row["ref"] == anchor["ref"]), None,
+            )
+            if owner is None:
+                return False
+            owner["_graph_references"] = component_refs
+        if component_ids is not None and component_refs != [("Component", cid) for cid in sorted(set(component_ids))]:
+            return False
+        old_changed = {path: row for path, row in old.items() if path in touched}
+        delta = MaterializationDelta(old_changed, new_changed, {}, {})
+        source_changed = any(
+            old_changed.get(path, {}).get("_source_sha256") != new_changed.get(path, {}).get("_source_sha256")
+            or old_changed.get(path, {}).get("relation_edges_json") != new_changed.get(path, {}).get("relation_edges_json")
+            for path in touched
+        )
+
+        from native_carrier_header import native_header_view
+        def component_claim(row):
+            return native_header_view(row["header_json"])["context"].get("template") in {
+                "component_manifest", "component_purpose",
+            }
+        components_changed = any(component_claim(row) for row in [*old_changed.values(), *new_changed.values()])
+        connection = store._connection
+        frontier = _native_frontier(store, capture.atoms, relation_types, inverses, legacy, migration_paths, component_refs)
+
+        def finish(graph):
+            _apply_native_tables(connection, old_changed, new_changed, capture.atoms, legacy, migration_paths,
+                                 components_changed, frontier)
+            if source_changed and before_commit is not None:
+                before_commit(graph)
+
+        store.apply(rows, [], relation_types=set(relation_types), content_schema=_native_content_schema(),
+                    delta=delta, before_commit=finish)
+        return not store.schema_changed
+
+
+def _apply_native_tables(connection, old, new, rows, legacy, migration_paths, components_changed, frontier):
+    for row in old.values():
+        connection.execute("DELETE FROM internal.native_exact_refs WHERE reference = ?", [row["ref"]])
+    if new:
+        connection.executemany("INSERT INTO internal.native_exact_refs VALUES (?, ?)",
+                               [(row["ref"], row["_exact_ref"]) for row in new.values()])
+    if sorted(connection.execute("SELECT * FROM main.native_legacy_references").fetchall()) != sorted(legacy):
+        connection.execute("DELETE FROM main.native_legacy_references")
+        if legacy:
+            connection.executemany("INSERT INTO main.native_legacy_references VALUES (?, ?, ?)", legacy)
+    if sorted(connection.execute("SELECT * FROM main.native_migration_paths").fetchall()) != sorted(migration_paths):
+        connection.execute("DELETE FROM main.native_migration_paths")
+        if migration_paths:
+            connection.executemany("INSERT INTO main.native_migration_paths VALUES (?, ?)", migration_paths)
+    if components_changed:
+        _write_components(connection, rows)
+    connection.execute("DELETE FROM internal.native_frontier")
+    connection.execute("INSERT INTO internal.native_frontier VALUES (?)", [frontier])
 
 
 def _write_components(connection, rows) -> None:

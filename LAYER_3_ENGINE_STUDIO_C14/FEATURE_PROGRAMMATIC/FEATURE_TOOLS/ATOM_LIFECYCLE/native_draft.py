@@ -173,8 +173,8 @@ def _task_path(selection, header, body, status, version, owner, root=None):
 def create_draft(selection, params, *, current_rows, structure_snapshot=None):
     if isinstance(params, dict) and 'newAtom' in params:
         if set(params) != {'newAtom'}:
-            raise common.InputError('newAtom', 'Supply only new Task properties.')
-        return _create_task(selection, params['newAtom'], current_rows)
+            raise common.InputError('newAtom', 'Supply only new Task or Epic properties.')
+        return _create_task(selection, params['newAtom'], current_rows, structure_snapshot)
     if not isinstance(params, dict) or set(params) - {'sourceCurrent', 'changes'} or 'sourceCurrent' not in params:
         raise common.InputError('sourceCurrent', 'Supply one Current carrier and optional body change.')
     target = params['sourceCurrent']
@@ -287,10 +287,10 @@ def _check_owner(selection, container, rows, capture, seen=None):
     return path.with_suffix(''), template
 
 
-def _create_task(selection, values, current_rows):
+def _create_task(selection, values, current_rows, structure_snapshot):
     if (not isinstance(values, dict) or set(values) != {'template', 'container', 'body'}
-            or values['template'] != 'task' or not isinstance(values['body'], str)):
-        raise common.InputError('newAtom', 'Supply a Task template, container, and Markdown body.')
+            or values['template'] not in ('task', 'epic') or not isinstance(values['body'], str)):
+        raise common.InputError('newAtom', 'Supply a Task or Epic template, container, and Markdown body.')
     body = values['body']
     try:
         slug = _native_slug(body)
@@ -307,18 +307,25 @@ def _create_task(selection, values, current_rows):
             capture = capture_native(selection)
             if capture.errors:
                 raise common.SourceChanged('Native carrier capture is incomplete.')
-            if (not isinstance(values['container'], dict) or
-                    (values['container'] != {'component': 'C00'} and 'atom' not in values['container'])):
-                raise common.InputError('container', 'Supply C00 or a Current native Task or Epic in this Project.')
+            container = values['container']
+            if isinstance(container, dict) and set(container) == {'component'}:
+                component = container['component']
+                if (component != 'C00' and (not isinstance(component, str) or structure_snapshot is None
+                        or component not in structure_snapshot.components)):
+                    raise common.InputError('container', 'Supply a Component in this Project.')
+            elif not isinstance(container, dict) or set(container) != {'atom'}:
+                raise common.InputError('container', 'Supply a Project Component or a Current Task or Epic.')
             owner = _check_owner(selection, values['container'], current_rows, capture)
             _, owner_template = owner
+            if values['template'] == 'epic' and owner_template == 'task':
+                raise common.InputError('container', 'A Task cannot contain an Epic.')
             pattern = re.compile(re.escape(selection.project_prefix) + r'-T-([0-9]+)')
             numbers = [int(match[1]) for row in capture.atoms
                        if isinstance(row.get('id'), str) and (match := pattern.fullmatch(row['id']))]
             atom_id = f"{selection.project_prefix}-T-{max(numbers, default=0) + 1}"
             ref = f'{atom_id}@1-draft'
-            context = {'container': values['container'], 'priority': 2, 'template': 'task'}
-            label = native_ticket_label('task', owner_template)
+            context = {'container': values['container'], 'priority': 2, 'template': values['template']}
+            label = native_ticket_label(values['template'], owner_template)
             if label:
                 context['label'] = label
             header = canonical_native_header(
@@ -363,9 +370,11 @@ def _promote_new(selection, target, status, draft, current_rows):
                 raise common.SourceChanged('Task Draft changed or its identity already has history.')
             header = draft.get('header_json')
             context = native_header_view(header).get('context')
-            if not isinstance(context, dict) or context.get('template') != 'task':
-                raise common.InputError('target', 'Select a native Task Draft.')
+            if not isinstance(context, dict) or context.get('template') not in ('task', 'epic'):
+                raise common.InputError('target', 'Select a native Task or Epic Draft.')
             owner = _check_owner(selection, context.get('container'), current_rows, capture)
+            if context['template'] == 'epic' and owner[1] == 'task':
+                raise common.InputError('container', 'A Task cannot contain an Epic.')
             reader = ReadContext(roots=[str(selection.control_root)], limits=dict(CEILINGS))
             raw = reader.read(path)
             bounds = frontmatter_bounds(raw)
@@ -638,8 +647,12 @@ def promote_draft(selection, params, *, current_rows, migration_refs, structure_
             if archive_path.exists() or archive_path.is_symlink() or (destination != previous_path and
                     (destination.exists() or destination.is_symlink())):
                 raise common.InputError('target', 'A promotion destination already exists.')
-            if destination != previous_path and (previous_path.with_suffix('').exists() or previous_path.with_suffix('').is_symlink()):
-                raise common.InputError('target', 'A Task with a companion directory cannot change status here.')
+            if destination != previous_path and (previous_path.with_suffix('').exists() or
+                    previous_path.with_suffix('').is_symlink() or any(
+                        row.get('status_group') == 'Current' and
+                        native_header_view(row['header_json']).get('context', {}).get('container', {}).get('atom') == atom_id
+                        for row in capture.atoms)):
+                raise common.InputError('target', 'A container cannot change status during promotion.')
             for parent in (archive_path.parent, destination.parent):
                 if parent.is_symlink() or (parent.exists() and not parent.is_dir()):
                     raise common.InputError('target', 'A promotion destination directory is unsafe.')

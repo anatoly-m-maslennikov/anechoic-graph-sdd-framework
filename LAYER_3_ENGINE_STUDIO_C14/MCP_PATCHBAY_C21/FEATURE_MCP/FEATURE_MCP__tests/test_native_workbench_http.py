@@ -2,8 +2,10 @@
 
 import asyncio
 from dataclasses import replace
+from itertools import product
 from pathlib import Path
 import shlex
+import shutil
 import unittest
 from unittest.mock import patch
 
@@ -12,14 +14,84 @@ from mcp import types
 from starlette.applications import Starlette
 
 import test_native_query_stdio as fixture
-from native_query import create_native_gateway
+from native_query import NativeQueryOwner, create_native_gateway
 from direct_gateway import startup_selection
+from LAYER_5_FRAMEWORK_DELIVERY.release_events import record_release_event
+from native_project_selection import resolve_native_project
+from work_journal import PROJECT_DATABASE, journal_inbox
 from workbench_web import routes
 
 
 class NativeWorkbenchHttpTests(unittest.IsolatedAsyncioTestCase):
     setUp = fixture.NativeQueryStdioTests.setUp
     _write = fixture.NativeQueryStdioTests._write
+
+    def test_independent_storage_modes_keep_journal_across_rebuild_and_restart(self):
+        inputs = fixture._native_inputs()
+        for journal, workbench in product(("files", "duckdb"), ("disk", "memory")):
+            with self.subTest(journal=journal, workbench=workbench):
+                root = self.root / f"{journal}-{workbench}"
+                shutil.copytree(self.root / fixture.CONTROL, root / fixture.CONTROL)
+                selected = resolve_native_project(root, fixture.CONTROL, validate_manifest=inputs.validate_manifest)
+                selected = replace(selected, parameters={"runtime": {
+                    "journal": {"storage": journal},
+                    "workbench": {"storage": workbench, "import_graph": False},
+                }})
+                owner = NativeQueryOwner(selected, inputs)
+                try:
+                    owner.start()
+                    event_id, error = record_release_event(root, "release_version", "test", "started", None,
+                                                           selection=selected)
+                    self.assertIsNone(error)
+                    self.assertIsNotNone(event_id)
+                    saved = owner.save_view("SELECT 1")["saved_query_id"]
+                    if journal == "duckdb":
+                        self.assertEqual([[2]], owner.run("SELECT count(*) FROM work_journal",
+                                                          result_delivery="inline")["rows"])
+                    owner.rebuild("all")
+                    self.assertEqual("SELECT 1", owner.load(saved)["sql"])
+                    self.assertEqual(workbench == "disk" or journal == "duckdb", (root / PROJECT_DATABASE).is_file())
+                    self.assertEqual(journal == "files", (root / fixture.CONTROL / "_journal").is_dir())
+                finally:
+                    owner.close()
+                owner = NativeQueryOwner(selected, inputs)
+                try:
+                    owner.start()
+                    self.assertEqual("SELECT 1", owner.load(saved)["sql"])
+                    if journal == "duckdb":
+                        self.assertEqual([[2]], owner.run("SELECT count(*) FROM work_journal",
+                                                          result_delivery="inline")["rows"])
+                finally:
+                    owner.close()
+                if (journal, workbench) == ("duckdb", "disk"):
+                    database = root / PROJECT_DATABASE
+                    before = database.read_bytes()
+                    switched = replace(selected, parameters={"runtime": {
+                        "workbench": {"storage": "memory", "import_graph": False},
+                    }})
+                    owner = NativeQueryOwner(switched, inputs)
+                    try:
+                        owner.start()
+                        self.assertEqual("SELECT 1", owner.load(saved)["sql"])
+                        self.assertEqual([[2]], owner.run("SELECT count(*) FROM work_journal",
+                                                          result_delivery="inline")["rows"])
+                        owner.save_view("SELECT 2")
+                        self.assertTrue((root / fixture.CONTROL / "_journal").is_dir())
+                    finally:
+                        owner.close()
+                    self.assertEqual(before, database.read_bytes())
+                    _, error = record_release_event(root, "release_version", "pending", "started", None,
+                                                    selection=selected)
+                    self.assertIsNone(error)
+                    self.assertTrue(list(journal_inbox(root).glob("*.json")))
+                    owner = NativeQueryOwner(switched, inputs)
+                    try:
+                        owner.start()
+                        self.assertEqual([[3]], owner.run("SELECT count(*) FROM work_journal",
+                                                          result_delivery="inline")["rows"])
+                        self.assertFalse(list(journal_inbox(root).glob("*.json")))
+                    finally:
+                        owner.close()
 
     async def test_startup_rebinds_native_identity(self):
         gateway = create_native_gateway(self.root, fixture.CONTROL, fixture._native_inputs())
@@ -116,6 +188,9 @@ class NativeWorkbenchHttpTests(unittest.IsolatedAsyncioTestCase):
         with patch.dict('os.environ', {'ANECHOIC_RUNTIME_NAMESPACE': 'docker'}):
             await gateway.initialize()
         self.addAsyncCleanup(gateway.close)
+        replace_projection = self.enterContext(patch.object(
+            gateway._native_query._store, "replace", side_effect=AssertionError("Unexpected full rebuild"),
+        ))
 
         async def wait_for(predicate):
             async with asyncio.timeout(15):
@@ -155,6 +230,18 @@ class NativeWorkbenchHttpTests(unittest.IsolatedAsyncioTestCase):
                        and rows[0][1] == destination.name and rows[0][2] == 'AN-T-010@2')
         destination.unlink()
         await wait_for(lambda rows: not rows)
+
+        manifest = gateway.selection.manifest_path
+        renamed = manifest.with_name(manifest.name.replace("--declare-", "--define-"))
+        renamed.write_text(manifest.read_text().replace("version: 1", "version: 2", 1))
+        manifest.unlink()
+        self._write(original, 'AN-T-010', 'active', 1)
+        await wait_for(lambda rows: bool(rows) and any(
+            row['_exact_ref'] == 'AN-S-001@2' for row in gateway._native_query._capture.atoms
+        ))
+        self.assertEqual('AN-S-001@1', gateway.selection.manifest_ref)
+        self.assertEqual('AN-S-001@2', gateway._native_query._projection_selection.manifest_ref)
+        replace_projection.assert_not_called()
 
     async def test_rebuild_contract_over_mcp_and_http(self):
         gateway = create_native_gateway(self.root, fixture.CONTROL, fixture._native_inputs())

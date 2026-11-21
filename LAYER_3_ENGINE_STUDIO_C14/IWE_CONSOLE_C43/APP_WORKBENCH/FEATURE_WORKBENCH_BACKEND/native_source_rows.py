@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from hashlib import sha256
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import re
 from typing import Any
 
@@ -20,6 +20,10 @@ class NativeCapture:
     atoms: list[dict[str, Any]]
     containment: list[dict[str, Any]]
     errors: dict[str, str]
+
+
+class NativeManifestChanged(ValueError):
+    """The capture no longer matches its validated Project Manifest."""
 
 
 CURRENT_STATUSES = {
@@ -78,35 +82,80 @@ def _container(container, atom_id: str, pattern: str) -> tuple[str, str]:
     return kind, target
 
 
-def capture_native(selection: Any) -> NativeCapture:
+def _check_manifest(reader: ReadContext, selection: Any) -> None:
+    try:
+        manifest_sha256 = sha256(reader.read(selection.manifest_path)).hexdigest()
+    except FileNotFoundError as error:
+        raise NativeManifestChanged("Selected native Project Manifest moved or was removed") from error
+    if manifest_sha256 != selection.manifest_sha256:
+        raise NativeManifestChanged("Selected native Project Manifest changed")
+
+
+def _changed_inputs(root, control, previous, paths):
+    changed = set()
+    for relative in paths:
+        if relative.is_absolute() or ".." in relative.parts:
+            raise ValueError("Invalid changed carrier path")
+        if (root / relative).is_relative_to(control) and relative.suffix == ".md":
+            changed.add(relative.as_posix())
+    candidates = {row["source_path"]: (row, edge)
+                  for row, edge in zip(previous.atoms, previous.containment)
+                  if row["source_path"] not in changed}
+    errors = {path: error for path, error in previous.errors.items() if path not in changed}
+    return candidates, errors, [root / path for path in sorted(changed)]
+
+
+def capture_native(
+    selection: Any, *, previous: NativeCapture | None = None,
+    paths: set[PurePosixPath] | None = None,
+) -> NativeCapture:
     """Read one selected native tree. Callers must refuse a capture with errors."""
     root, control = selection.root, selection.control_root
     reader = ReadContext(roots=[str(control)], limits=dict(CEILINGS))
-    if sha256(reader.read(selection.manifest_path)).hexdigest() != selection.manifest_sha256:
-        raise ValueError("Selected native Project Manifest changed")
-    paths = [path for path in reader.inventory(control) if path.suffix == ".md"]
-    rows, containment, errors = [], [], {}
-    exact_paths: dict[str, str] = {}
-    current_paths: dict[str, str] = {}
-    for path in paths:
+    _check_manifest(reader, selection)
+    incremental = previous is not None and paths is not None
+    missing = []
+    if incremental:
+        candidates, errors, input_paths = _changed_inputs(root, control, previous, paths)
+    else:
+        candidates, errors = {}, {}
+        input_paths = [path for path in reader.inventory(control) if path.suffix == ".md"]
+    for path in input_paths:
         tree = path.relative_to(control).parts[0]
         if tree == "000_ANECHOIC_framework":
             continue
         relative = path.relative_to(root).as_posix()
         try:
+            if incremental:
+                reader.allowed(path)
+                try:
+                    path.lstat()
+                except FileNotFoundError:
+                    missing.append(path)
+                    continue
             family = {"_PMETA": "P", "__TKT": "T"}.get(tree, "S")
             row, edge = _carrier_row(path, root, family, selection.project_prefix, reader.read(path))
             row["_source_sha256"] = reader.fingerprints[str(path)]
-            exact, group, atom_id = row["_exact_ref"], row["status_group"], row["id"]
-            if exact in exact_paths or (group == "Current" and atom_id in current_paths):
-                raise ValueError("Duplicate native revision or Current identity")
-            rows.append(row)
-            containment.append(edge)
-            exact_paths[exact] = relative
-            if group == "Current":
-                current_paths[atom_id] = relative
+            candidates[relative] = (row, edge)
         except (OSError, RuntimeError, TypeError, ValueError, CarrierError) as error:
             errors[relative] = str(error)
-    if reader.currentness()["state"] != "unchanged":
+    if reader.currentness()["state"] != "unchanged" or any(path.exists() or path.is_symlink() for path in missing):
         raise ValueError("Native Project carriers changed during capture")
+    return _unique_revisions(candidates, errors)
+
+
+def _unique_revisions(candidates, errors):
+    rows, containment = [], []
+    exact_paths: set[str] = set()
+    current_paths: set[str] = set()
+    for relative, (row, edge) in sorted(candidates.items()):
+        exact, group, atom_id = row["_exact_ref"], row["status_group"], row["id"]
+        if exact in exact_paths or (group == "Current" and atom_id in current_paths):
+            errors[relative] = "Duplicate native revision or Current identity"
+            continue
+        rows.append(row)
+        containment.append(edge)
+        exact_paths.add(exact)
+        if group == "Current":
+            current_paths.add(atom_id)
     return NativeCapture(rows, containment, errors)

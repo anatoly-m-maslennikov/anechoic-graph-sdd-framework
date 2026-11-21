@@ -20,7 +20,8 @@ def public_schema(connection: Any, header_schema: HeaderSchema) -> dict[str, dic
                  "components", "component_metrics", "package_audit"):
         rows = connection.execute(
             "SELECT column_name, data_type FROM information_schema.columns "
-            "WHERE table_schema = 'main' AND table_name = ? ORDER BY ordinal_position", [name],
+            "WHERE table_catalog = current_database() AND table_schema = 'main' "
+            "AND table_name = ? ORDER BY ordinal_position", [name],
         ).fetchall()
         if rows:
             tables[name] = [{"name": column, "type": data_type} for column, data_type in rows]

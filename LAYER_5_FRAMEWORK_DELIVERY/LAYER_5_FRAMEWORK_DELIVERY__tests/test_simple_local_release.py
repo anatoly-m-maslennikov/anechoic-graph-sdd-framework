@@ -857,6 +857,61 @@ class SimpleLocalReleaseTests(unittest.TestCase):
                     self.assertEqual(snapshot, inventory(target))
                 self.assertEqual([], list((self.root / ".anechoic_tmp/simple_local_release").iterdir()))
 
+    def test_installed_copies_are_checked_for_corruption(self):
+        copy_tree = local_release._copy_tree
+        for destination, step in ((self.installed, "copy_product_to_installed_framework"),
+                                  (self.root / ".agents/skills/ane", "install_project_runtime")):
+            with self.subTest(destination=destination):
+                def corrupt(source, target, **kwargs):
+                    copy_tree(source, target, **kwargs)
+                    if target == destination:
+                        next(path for path in target.rglob("*") if path.is_file() and path.name != "config.toml").write_text("corrupt")
+                runner, _ = self._runner()
+                with patch.object(local_release, "_copy_tree", corrupt):
+                    result = run_local_release(self.root, run_id="corrupt-copy", runner=runner)
+                self.assertEqual("failed", result["outcome"])
+                self.assertEqual(step, result["failed_step"])
+
+    def test_installation_lock_refuses_contention_before_replacement(self):
+        runner, calls = self._runner()
+        version = (self.root / "version.toml").read_bytes()
+        product = {p.relative_to(self.product): p.read_bytes() for p in self.product.rglob("*") if p.is_file()}
+        stderr = io.StringIO()
+        with local_release._installation_lock(self.root), patch("sys.stderr", stderr):
+            result = run_local_release(self.root, run_id="locked-install", runner=runner)
+        self.assertEqual("failed", result["outcome"])
+        self.assertEqual("installation_lock", result["failed_step"])
+        self.assertIn("local-release-installation-lock-busy", stderr.getvalue())
+        self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
+        self.assertEqual(version, (self.root / "version.toml").read_bytes())
+        self.assertEqual(product, {p.relative_to(self.product): p.read_bytes() for p in self.product.rglob("*") if p.is_file()})
+        self.assertFalse(any(argv[0] == "git" for argv in calls))
+        self.assertFalse(any(self._is_mcp_bootstrap(argv) for argv in calls))
+        with local_release._installation_lock(self.root):
+            pass
+
+    def test_installation_lock_covers_copy_and_mcp_handoff(self):
+        runner, _ = self._runner()
+        copy_tree = local_release._copy_tree
+        checked = []
+        def check_locked():
+            with self.assertRaisesRegex(local_release.LocalReleaseError, "installation-lock-busy"):
+                with local_release._installation_lock(self.root):
+                    pass
+            checked.append(True)
+        def copy(source, target, **kwargs):
+            if target in (self.installed, self.runtime / "simple_local_release/package", self.root / ".agents/skills/ane"):
+                check_locked()
+            return copy_tree(source, target, **kwargs)
+        def run(argv, cwd):
+            if self._is_mcp_bootstrap(argv):
+                check_locked()
+            return runner(argv, cwd)
+        with patch.object(local_release, "_copy_tree", copy):
+            result = run_local_release(self.root, run_id="lock-coverage", runner=run)
+        self.assertEqual("completed", result["outcome"])
+        self.assertEqual(4, len(checked))
+
     def test_package_byte_or_mode_drift_refuses_before_installed_clear(self):
         import local_release
         prepare = local_release._prepare_package

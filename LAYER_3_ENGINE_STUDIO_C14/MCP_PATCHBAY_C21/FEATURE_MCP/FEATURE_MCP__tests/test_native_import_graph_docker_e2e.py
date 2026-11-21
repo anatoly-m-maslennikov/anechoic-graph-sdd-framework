@@ -12,6 +12,7 @@ from uuid import uuid4
 
 import test_native_startup as fixture
 from http_paths import HEALTH_PATH, WORKBENCH_PATH
+from work_journal import PROJECT_DATABASE, append_sealed_events
 
 sys.path.insert(0, str(fixture.MCP.parents[1] / "IWE_CONSOLE_C43/APP_WORKBENCH/APP_WORKBENCH__tests"))
 from workbench_docker_support import request
@@ -34,8 +35,9 @@ class NativeImportGraphDockerE2E(unittest.TestCase):
         subprocess.run(["git", "init", "--quiet", str(cls.root)], check=True)
         control = ".anechoic_anechoic"
         fixture.RuntimeSelectionTests.manifest(cls, cls.root / control, component="C00", parameters={
-            "runtime": {"workbench": {"import_graph": {}}},
+            "runtime": {"journal": {"storage": "duckdb"}, "workbench": {"storage": "memory", "import_graph": {}}},
         })
+        (cls.root / control / "__TKT/TASKS").mkdir(parents=True)
         cls._write("app/__init__.py", "")
         cls._write("app/main.py", "import dep.helper\nimport dep.helper\n")
         cls._write("app/package.json", '{"name": "app"}\n')
@@ -184,6 +186,69 @@ class NativeImportGraphDockerE2E(unittest.TestCase):
         self._wait_rows(sql, [["external"]])
         manifest.unlink()
         self._wait_rows(sql, [["unresolved"]])
+
+    def test_disk_journal_accepts_host_events_with_in_memory_workbench(self):
+        receipt, = append_sealed_events(
+            self.root, [{"event_id": "host-canary"}], author="release-canary",
+            local_date="2026-11-21", timezone="UTC", storage="duckdb",
+        )
+        sql = "SELECT record_id FROM work_journal WHERE author = 'release-canary'"
+        self._wait_rows(sql, [[receipt["record_id"]]])
+        saved = self._post("/run", {"sql": "SELECT 1", "save": True, "result_delivery": "inline"})
+        self.assertEqual("SELECT 1", self._post("/load", {"reference": saved["saved_query_id"]})["sql"])
+        self.assertEqual("ready", self._post("/rebuild", {"target": "all"})["status"])
+        self.assertEqual([[receipt["record_id"]]], self._rows(sql))
+        self.assertTrue((self.root / PROJECT_DATABASE).is_file())
+
+    def test_watcher_updates_native_atom_and_relations(self):
+        relative = ".anechoic_anechoic/__TKT/TASKS/AN-T-9901--watcher.md"
+        graph = """
+            FROM GRAPH_TABLE (anechoic
+            MATCH (s:Reference)-[e:CONTAINED_BY]->(t:Reference)
+            COLUMNS (s.ref AS source_ref, t.kind AS target_kind, t.ref AS target_ref))
+            SELECT target_kind, target_ref WHERE source_ref = 'AN-T-9901'
+        """
+        sql = """
+            SELECT a.filename, a.reference, n.exact_ref, r.target_kind, r.target_ref
+            FROM atoms a JOIN native_references n USING (relative_path, filename, reference)
+            JOIN relations r ON r.source_kind = 'Atom' AND r.source_ref = a.reference
+                AND r.relation_type = 'CONTAINED_BY' AND NOT r.derived
+            WHERE a.reference = 'AN-T-9901'
+        """
+
+        def check(label, started, expected):
+            deadline = started + 30
+            actual = self._rows(sql)
+            while actual != expected and monotonic() < deadline:
+                sleep(.1)
+                actual = self._rows(sql)
+            print(f"native Atom watcher {label}: {monotonic() - started:.3f}s", flush=True)
+            self.assertEqual(expected, actual, label)
+            self.assertEqual([expected[0][-2:]] if expected else [], self._rows(graph), label)
+
+        def contents(version, container):
+            return ("---\nidentity: {atom_id: AN-T-9901}\n"
+                    f"context: {{container: {{{container}}}}}\n"
+                    f"state: {{status: active, version: {version}}}\n"
+                    "---\n\n## Summary\n\nWatcher canary.\n")
+
+        started = monotonic()
+        path = self._write(relative, contents(1, "component: C00"))
+        check("create", started, [[path.name, "AN-T-9901", "AN-T-9901@1", "Component", "C00"]])
+        started = monotonic()
+        path.write_text(contents(2, "atom: AN-S-001"), encoding="utf-8")
+        check("edit", started, [[path.name, "AN-T-9901", "AN-T-9901@2", "Atom", "AN-S-001"]])
+        started = monotonic()
+        path = path.rename(path.with_name("AN-T-9901--renamed.md"))
+        check("rename", started, [[path.name, "AN-T-9901", "AN-T-9901@2", "Atom", "AN-S-001"]])
+        started = monotonic()
+        path.unlink()
+        sql = """
+            SELECT reference FROM atoms WHERE reference = 'AN-T-9901'
+            UNION ALL SELECT reference FROM native_references WHERE reference = 'AN-T-9901'
+            UNION ALL SELECT source_ref FROM relations WHERE source_ref = 'AN-T-9901'
+        """
+        check("delete", started, [])
 
     def test_watcher_stays_live_when_many_host_directories_appear(self):
         for index in range(80):

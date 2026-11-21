@@ -189,8 +189,18 @@ class WorkbenchService(ServiceRefresh, ServiceLifecycle, ServiceLifecycleEffects
     def discard_derived_state(self) -> None:
         """Discard only this Workbench's rebuildable database before a full reread."""
         self.close()
-        self._database_path.unlink(missing_ok=True)
-        self._database_path.with_name(f"{self._database_path.name}.wal").unlink(missing_ok=True)
+        if self._database_path.is_file():
+            import duckdb
+
+            with duckdb.connect(str(self._database_path), read_only=True) as connection:
+                durable_journal = connection.execute(
+                    "SELECT 1 FROM information_schema.tables WHERE table_schema = 'main' "
+                    "AND table_name = 'work_journal' AND table_type = 'BASE TABLE'"
+                ).fetchone()
+                if durable_journal:
+                    raise WorkbenchUnavailableError("Use native Workbench rebuild for a Project with a database Journal")
+                self._database_path.unlink()
+                self._database_path.with_name(f"{self._database_path.name}.wal").unlink(missing_ok=True)
         temporary = self._database_path.parent / "duckdb-temp"
         if temporary.is_dir():
             shutil.rmtree(temporary)

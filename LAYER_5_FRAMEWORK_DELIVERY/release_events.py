@@ -47,7 +47,7 @@ def record_release_event(
         if selection is None:
             append_record(root, record)
         else:
-            from work_journal import append_sealed_events
+            from work_journal import append_sealed_events, journal_storage
 
             canonical = (selection.control_relative / "_journal").as_posix()
             journal_root = selection.parameters.get("paths", {}).get("journal_root", canonical)
@@ -55,7 +55,7 @@ def record_release_event(
                 raise ValueError("Native Journal root contradicts the selected control root")
             append_sealed_events(root, [record], author="src-work-journal",
                                  local_date=record["occurred_at"][:10], timezone=timezone,
-                                 journal_root=journal_root)
+                                 journal_root=journal_root, storage=journal_storage(selection.parameters))
         event_id = record.get("event_id")
         return event_id if isinstance(event_id, str) else None, None
     except (AttributeError, ImportError, OSError, RuntimeError, TypeError, ValueError, ZoneInfoNotFoundError) as error:

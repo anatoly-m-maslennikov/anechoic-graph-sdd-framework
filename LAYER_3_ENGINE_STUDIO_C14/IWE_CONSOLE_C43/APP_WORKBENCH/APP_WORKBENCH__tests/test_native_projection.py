@@ -1,11 +1,13 @@
-from pathlib import Path
+from pathlib import Path, PurePosixPath
+from unittest.mock import patch
 import sys
 import yaml
 
 APP_ROOT = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(APP_ROOT), str(APP_ROOT.parent / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"), str(Path(__file__).parent)]
 
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_projection import project_native  # noqa: E402
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND import native_projection  # noqa: E402
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_projection import project_native, project_native_delta  # noqa: E402
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import capture_native, NativeCapture  # noqa: E402
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.query_store import QueryStore  # noqa: E402
 from smalltest_support import extension_directory  # noqa: E402
@@ -13,6 +15,90 @@ from test_native_source_rows import NativeCaptureTests  # noqa: E402
 
 
 class NativeProjectionTests(NativeCaptureTests):
+    def test_delta_move_relations_references_and_rollback(self):
+        source = self.write("AN-T-09--task.md", "AN-T-09", "active", 2)
+        header = yaml.safe_load(source.read_text().split("---\n")[1])
+        header["relations"] = {"REFERENCES": ["AN-S-001"]}
+        source.write_text("---\n" + yaml.safe_dump(header) + "---\n\n## Summary\n\nTask\n")
+        store = QueryStore(extension_directory=extension_directory(APP_ROOT.parents[1]), native=True)
+        self.addCleanup(store.close)
+        bindings = dict(relation_types={"CONTAINED_BY", "CONTAINS", "REFERENCES"},
+                        inverses={"CONTAINED_BY": "CONTAINS"})
+        aliases = [("CA-P-2@1", "old/task.md", "AN-T-09@2")]
+        project_native(store, capture_native(self.selection), migration_refs=aliases, component_ids=["C99"], **bindings)
+        old_path = PurePosixPath(source.relative_to(self.root).as_posix())
+        target = source.parent / "moved" / source.name
+        target.parent.mkdir()
+        header["relations"] = {"REFERENCES": ["AN-S-002"]}
+        target.write_text("---\n" + yaml.safe_dump(header) + "---\n\n## Summary\n\nUpdated\n")
+        source.unlink()
+        new_path = PurePosixPath(target.relative_to(self.root).as_posix())
+        capture = capture_native(self.selection)
+        def fail(_graph):
+            raise ValueError("injected failure")
+        with self.assertRaisesRegex(ValueError, "injected failure"):
+            project_native_delta(store, capture, paths={old_path, new_path}, migration_refs=aliases,
+                                 before_commit=fail, **bindings)
+        self.assertEqual([[old_path.as_posix()]], store.run(
+            "SELECT relative_path || '/' || filename FROM atoms WHERE reference = 'AN-T-09'")["rows"])
+        self.assertIn(["AN-T-09", "AN-S-001"], store.run(
+            "SELECT source_ref, target_ref FROM relations WHERE relation_type = 'REFERENCES'")["rows"])
+        with patch.object(native_projection, "_projected_rows", wraps=native_projection._projected_rows) as project:
+            self.assertTrue(project_native_delta(store, capture, paths={old_path, new_path}, migration_refs=aliases,
+                                                 **bindings))
+            self.assertEqual(["AN-T-09"], [row["id"] for row in project.call_args.args[0].atoms])
+        self.assertEqual([[new_path.as_posix(), "AN-T-09@2"]], store.run(
+            "SELECT relative_path || '/' || filename, exact_ref FROM native_references "
+            "WHERE reference = 'AN-T-09'")["rows"])
+        self.assertIn(["AN-T-09", "AN-S-002"], store.run(
+            "SELECT source_ref, target_ref FROM relations WHERE relation_type = 'REFERENCES'")["rows"])
+        self.assertIn(("Component", "C99"), store._projection.graph.references)
+        self.assertEqual(1, len(store._connection.execute("SELECT * FROM internal.native_frontier").fetchall()))
+        with patch.object(store, "replace", wraps=store.replace) as replace:
+            project_native(store, capture, migration_refs=aliases, component_ids=["C99"], use_retained=True, **bindings)
+            self.assertTrue(replace.call_args.kwargs["reuse"])
+        target.unlink()
+        with self.assertRaisesRegex(ValueError, "Invalid native migration"):
+            project_native_delta(store, capture_native(self.selection), paths={new_path}, migration_refs=aliases,
+                                 **bindings)
+        self.assertEqual([["AN-T-09@2"]], store.run(
+            "SELECT exact_ref FROM native_legacy_references")["rows"])
+
+    def test_delta_falls_back_for_schema_change_and_skips_noop_callback(self):
+        source = self.write("AN-T-09--task.md", "AN-T-09", "active", 2)
+        store = QueryStore(extension_directory=extension_directory(APP_ROOT.parents[1]), native=True)
+        self.addCleanup(store.close)
+        bindings = dict(relation_types={"CONTAINED_BY", "CONTAINS"}, inverses={"CONTAINED_BY": "CONTAINS"})
+        project_native(store, capture_native(self.selection), **bindings)
+        path = PurePosixPath(source.relative_to(self.root).as_posix())
+        callbacks = []
+        self.assertTrue(project_native_delta(store, capture_native(self.selection), paths={path},
+                                             before_commit=callbacks.append, **bindings))
+        self.assertEqual([], callbacks)
+        header = yaml.safe_load(source.read_text().split("---\n")[1])
+        header["new_field"] = "changes layout"
+        source.write_text("---\n" + yaml.safe_dump(header) + "---\n\n## Summary\n\nChanged\n")
+        self.assertFalse(project_native_delta(store, capture_native(self.selection), paths={path}, **bindings))
+        self.assertEqual([["Example"]], store.run(
+            "SELECT \"content.summary\" FROM atoms WHERE reference = 'AN-T-09'")["rows"])
+
+    def test_delta_preserves_component_reference_owner_and_falls_back_when_removed(self):
+        source = self.write("AN-T-09--task.md", "AN-T-09", "active", 2)
+        capture = capture_native(self.selection)
+        capture.atoms.sort(key=lambda row: row["id"] != "AN-T-09")
+        store = QueryStore(extension_directory=extension_directory(APP_ROOT.parents[1]), native=True)
+        self.addCleanup(store.close)
+        bindings = dict(relation_types={"CONTAINED_BY", "CONTAINS"}, inverses={"CONTAINED_BY": "CONTAINS"})
+        project_native(store, capture, component_ids=["C99"], **bindings)
+        path = PurePosixPath(source.relative_to(self.root).as_posix())
+        source.write_text(source.read_text().replace("Example", "Changed"))
+        self.assertTrue(project_native_delta(store, capture_native(self.selection), paths={path}, **bindings))
+        self.assertIn(("Component", "C99"), store._projection.graph.references)
+        source.unlink()
+        self.assertFalse(project_native_delta(store, capture_native(self.selection), paths={path}, **bindings))
+        self.assertEqual([["AN-T-09"]], store.run(
+            "SELECT reference FROM atoms WHERE reference = 'AN-T-09'")["rows"])
+
     def test_summary_projection_and_retained_upgrade(self):
         duplicate = self.write("AN-T-09--task.md", "AN-T-09", "active", 1)
         duplicate.write_text(duplicate.read_text() + "\n## Summary\n\nSecond\n")

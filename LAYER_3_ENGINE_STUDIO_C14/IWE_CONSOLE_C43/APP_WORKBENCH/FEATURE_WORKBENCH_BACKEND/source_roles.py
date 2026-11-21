@@ -20,7 +20,7 @@ ROLES = {
 }
 ARCHIVE_PARTS = {"archive", "archived", "_projection"}
 FILENAME_MARKER = re.compile(
-    rb"^(?:[0-9]+-)?[A-Za-z0-9-]+-(?P<role>[A-Za-z][A-Za-z0-9]*)-"
+    rb"^(?:[0-9]+-)?[A-Za-z0-9-]+?-(?P<role>[A-Za-z][A-Za-z0-9]*)-"
     rb"(?:[0-9]+|[Dd][Rr][Aa][Ff][Tt])(?:[-.@]|$)"
 )
 HEADER_MARKER = re.compile(

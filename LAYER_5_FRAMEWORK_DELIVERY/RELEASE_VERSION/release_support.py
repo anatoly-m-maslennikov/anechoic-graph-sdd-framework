@@ -134,7 +134,8 @@ def _read_structure(root: Path, config: Mapping[str, Any]) -> tuple[tuple[str, P
 def _walk_regular_files(root: Path, *, excluded_directories: frozenset[str] = frozenset(),
                         exclude_history: bool = False,
                         excluded_root_prefix: str = "",
-                        excluded_root_directories: frozenset[str] = frozenset()) -> list[Path]:
+                        excluded_root_directories: frozenset[str] = frozenset(),
+                        excluded_root_files: frozenset[str] = frozenset()) -> list[Path]:
     def fail(error: OSError) -> None:
         raise LocalReleaseError("local-release-source-read-failed") from error
 
@@ -151,7 +152,7 @@ def _walk_regular_files(root: Path, *, excluded_directories: frozenset[str] = fr
             if child.is_symlink():
                 raise LocalReleaseError("local-release-source-link-unsafe")
         for name in names:
-            if _ignored(name):
+            if _ignored(name) or (base == root and name in excluded_root_files):
                 continue
             child = base / name
             try:
@@ -428,9 +429,11 @@ def _file_identity(path: Path) -> tuple[str, int]:
     return hashlib.sha256(path.read_bytes()).hexdigest(), stat.S_IMODE(path.stat().st_mode)
 
 
-def _verify_package(package: Path, expected: Mapping[str, tuple[str, int]]) -> None:
+def _verify_package(package: Path, expected: Mapping[str, tuple[str, int]], *,
+                    preserve: frozenset[str] = frozenset()) -> None:
     actual = {entry.relative_to(package).as_posix(): _file_identity(entry)
-              for entry in _walk_regular_files(package)}
+              for entry in _walk_regular_files(package, excluded_root_directories=preserve,
+                                                excluded_root_files=preserve)}
     if actual != expected:
         raise LocalReleaseError("local-release-package-verification-failed")
 

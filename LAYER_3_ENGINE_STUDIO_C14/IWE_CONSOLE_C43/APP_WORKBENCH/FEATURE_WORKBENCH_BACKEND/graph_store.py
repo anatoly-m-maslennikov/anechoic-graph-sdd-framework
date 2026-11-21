@@ -187,7 +187,7 @@ def register_graph(connection: Any, state: GraphState) -> None:
     ]
     if connection.execute(
         "SELECT count(*) FROM information_schema.tables "
-        "WHERE table_schema = 'main' AND table_name = 'import_nodes'"
+        "WHERE table_catalog = current_database() AND table_schema = 'main' AND table_name = 'import_nodes'"
     ).fetchone()[0]:
         vertices.append("main.import_nodes LABEL ImportNode")
         edges.append(
@@ -196,7 +196,7 @@ def register_graph(connection: Any, state: GraphState) -> None:
         )
         if connection.execute(
             "SELECT count(*) FROM information_schema.tables "
-            "WHERE table_schema = 'realization_internal' AND table_name = 'package_tests'"
+            "WHERE table_catalog = current_database() AND table_schema = 'realization_internal' AND table_name = 'package_tests'"
         ).fetchone()[0]:
             for table, label in (("package_tests", "TESTS"), ("package_tested_by", "IS_TESTED_BY")):
                 edges.append(
@@ -213,7 +213,7 @@ def register_graph(connection: Any, state: GraphState) -> None:
             for table, label in (("test_edges", "TESTS"), ("tested_by_edges", "IS_TESTED_BY")):
                 if connection.execute(
                     "SELECT count(*) FROM information_schema.tables "
-                    "WHERE table_schema = 'main' AND table_name = ?", [table],
+                    "WHERE table_catalog = current_database() AND table_schema = 'main' AND table_name = ?", [table],
                 ).fetchone()[0]:
                     edges.append(
                         f"main.{table} SOURCE KEY(source_key) REFERENCES main.import_nodes(node_key) "

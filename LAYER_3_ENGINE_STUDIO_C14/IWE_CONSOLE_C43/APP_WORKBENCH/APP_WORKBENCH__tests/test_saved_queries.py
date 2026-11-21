@@ -9,6 +9,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import Mock, patch
 
 
 APP_ROOT = Path(__file__).resolve().parents[2]
@@ -37,6 +38,35 @@ class SavedQueryTests(unittest.TestCase):
 
     def tearDown(self) -> None:
         self._temporary.cleanup()
+
+    def test_disk_journal_merges_file_and_reader_records(self):
+        historical = self.store.save_query("SELECT 'file'")
+        native = {
+            "saved_query_id": "01940000-0002-7000-8000-000000000003",
+            "kind": "worksheet", "sql": "SELECT 'disk'", "saved_at": "9999",
+        }
+        reader = Mock(return_value=[native, {"invalid": True}])
+        store = SavedQueryStore(self.root, journal_mode="duckdb", read_journal_events=reader)
+        with redirect_stderr(StringIO()) as errors:
+            listed = store.list()["items"]
+            loaded = store.load(native["saved_query_id"])
+        self.assertEqual([native["saved_query_id"], historical["saved_query_id"]],
+                         [item["saved_query_id"] for item in listed])
+        self.assertEqual("view", loaded["kind"])
+        self.assertIn("saved query skipped", errors.getvalue())
+        reader.assert_called_with("workbench-saved-items")
+
+    def test_files_mode_reads_database_history_when_available(self):
+        reader = Mock(return_value=[])
+        SavedQueryStore(self.root, read_journal_events=reader).list()
+        reader.assert_called_once_with("workbench-saved-items")
+
+    def test_storage_keyword_only_passed_for_disk(self):
+        with patch("APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.saved_queries.append_sealed_events") as append:
+            self.store.save_query("SELECT 1")
+            self.assertNotIn("storage", append.call_args.kwargs)
+            SavedQueryStore(self.root, journal_mode="duckdb").save_query("SELECT 2")
+            self.assertEqual("duckdb", append.call_args.kwargs["storage"])
 
     def test_invalid_journal_row_does_not_hide_valid_saved_items(self):
         query = self.store.save_query("SELECT 1")

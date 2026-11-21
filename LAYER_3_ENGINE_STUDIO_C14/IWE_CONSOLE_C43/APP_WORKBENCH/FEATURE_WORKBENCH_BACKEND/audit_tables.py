@@ -82,7 +82,8 @@ def publish(connection: Any, issues: Mapping[str, list[tuple[str | None, ...]]] 
 
 def revision_query(connection: Any, *, stable_only: bool = True) -> str:
     columns = {row[0] for row in connection.execute(
-        "SELECT column_name FROM information_schema.columns WHERE table_schema='main' AND table_name='atoms'"
+        "SELECT column_name FROM information_schema.columns WHERE table_catalog=current_database() "
+        "AND table_schema='main' AND table_name='atoms'"
     ).fetchall()}
     ids = [f'try_cast("{name}" AS VARCHAR)' for name in ("header.identity.atom_id", "header.identity.id", "header.atom_id") if name in columns]
     versions = [f'try_cast("{name}" AS BIGINT)' for name in (
@@ -322,7 +323,8 @@ def query_content_rows(connection: Any, paths: set[str] | None) -> dict[tuple[st
     if paths is not None and not paths:
         return {}
     names = [row[0] for row in connection.execute(
-        "SELECT column_name FROM information_schema.columns WHERE table_schema='main' AND table_name='atoms'"
+        "SELECT column_name FROM information_schema.columns WHERE table_catalog=current_database() "
+        "AND table_schema='main' AND table_name='atoms'"
     ).fetchall() if row[0].startswith("content.")]
     columns = ["relative_path", "filename", *names]
     sql = ("SELECT " + ", ".join('"' + c.replace('"', '""') + '"' for c in columns)

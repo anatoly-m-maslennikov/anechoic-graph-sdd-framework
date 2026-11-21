@@ -37,6 +37,7 @@ for _parent in MODULE_PATH.parents:
 
 
 SETTINGS_PATH = Path(".anechoic_anechoic/anechoic_project_settings.toml")
+PROJECT_DATABASE = Path(".anechoic_runtime/workbench/projection.duckdb")
 MAX_EVENTS_PER_PART = 1000
 AUTHOR_RE = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$")
 
@@ -159,6 +160,85 @@ def canonical_json_bytes(value: object) -> bytes:
         separators=(",", ":"),
         allow_nan=False,
     ).encode("utf-8")
+
+
+def journal_storage(parameters: Mapping[str, Any]) -> str:
+    value: object = parameters
+    for key in ("runtime", "journal"):
+        if not isinstance(value, Mapping):
+            raise ValueError("runtime.journal.storage must be files or duckdb")
+        value = value.get(key, {})
+    if not isinstance(value, Mapping):
+        raise ValueError("runtime.journal.storage must be files or duckdb")
+    storage = value.get("storage", "files")
+    if storage not in ("files", "duckdb"):
+        raise ValueError("runtime.journal.storage must be files or duckdb")
+    return storage
+
+
+def journal_inbox(root: Path) -> Path:
+    return root / PROJECT_DATABASE.parent / "journal-inbox"
+
+
+MAX_DATABASE_EVENT_BYTES = 16 * 1024 * 1024
+
+
+def pending_database_journal(root: Path) -> bool:
+    try:
+        descriptor = open_regular(journal_inbox(root), directory=True)
+    except FileNotFoundError:
+        return False
+    try:
+        return any(name.endswith(".json") for name in os.listdir(descriptor))
+    finally:
+        os.close(descriptor)
+
+
+def _append_disk_event(root: Path, event: Any, author: str, local_date: str) -> dict[str, Any]:
+    payload = canonical_json_bytes({"author": author, "local_date": local_date, "event": event})
+    if len(payload) > MAX_DATABASE_EVENT_BYTES:
+        raise ValueError("Work Journal entry exceeds the database record size limit")
+    if root.is_symlink():
+        raise RuntimeError("Project root must not be a symlink")
+    directory = open_regular(root.resolve(strict=True), directory=True)
+    try:
+        for part in journal_inbox(Path()).parts:
+            try:
+                os.mkdir(part, 0o700, dir_fd=directory)
+                os.fsync(directory)
+            except FileExistsError:
+                pass
+            child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=directory)
+            os.close(directory)
+            directory = child
+        record_id = str(uuid.uuid7())
+        temporary = f".{record_id}.tmp"
+        descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                             0o600, dir_fd=directory)
+        try:
+            with os.fdopen(descriptor, "wb") as stream:
+                stream.write(payload)
+                stream.flush()
+                os.fsync(stream.fileno())
+            os.rename(temporary, f"{record_id}.json", src_dir_fd=directory, dst_dir_fd=directory)
+            os.fsync(directory)
+        except BaseException:
+            try:
+                os.unlink(temporary, dir_fd=directory)
+            except FileNotFoundError:
+                pass
+            raise
+    finally:
+        os.close(directory)
+    references = event if isinstance(event, Mapping) else {}
+    return {
+        "event_id": references.get("event_id"),
+        "action_id": references.get("action_id"),
+        "event_digest": references.get("event_digest"),
+        "carrier": PROJECT_DATABASE.as_posix(),
+        "record_id": record_id,
+        "status": "staged",
+    }
 
 
 def configured_journal_root(root: Path, *, control_root: str | Path | None = None) -> Path:
@@ -305,17 +385,23 @@ def append_sealed_events(
     append_context: Mapping[str, Any] | None = None,
     control_root: str | Path | None = None,
     journal_root: str | None = None,
+    storage: str = "files",
 ) -> list[dict[str, Any]]:
     """Append caller-supplied rows in order, including repeated rows.
 
     The existing signature is retained for callers; timezone and append_context
     do not impose storage prerequisites.
     """
+    if storage not in ("files", "duckdb"):
+        raise ValueError("journal storage must be files or duckdb")
     receipts: list[dict[str, Any]] = []
     for index, event in enumerate(events):
         try:
-            receipts.append(_append_event(root, event, str(author), str(local_date), control_root=control_root,
-                                          journal_root=journal_root))
+            if storage == "duckdb":
+                receipts.append(_append_disk_event(root, event, str(author), str(local_date)))
+            else:
+                receipts.append(_append_event(root, event, str(author), str(local_date), control_root=control_root,
+                                              journal_root=journal_root))
         except FutureCancelledError:
             raise
         except Exception as error:

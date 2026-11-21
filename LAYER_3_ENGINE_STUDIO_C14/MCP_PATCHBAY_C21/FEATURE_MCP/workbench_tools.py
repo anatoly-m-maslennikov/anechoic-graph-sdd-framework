@@ -327,11 +327,11 @@ class WorkbenchTools:
         return value
 
     @staticmethod
-    def _result_options(arguments: dict[str, Any], default_delivery: str = "file") -> tuple[int | None, str, str]:
+    def _result_options(arguments: dict[str, Any]) -> tuple[int | None, str, str]:
         preview = arguments.get("preview")
         if preview is not None and (isinstance(preview, bool) or not isinstance(preview, int) or preview < 0):
             raise ValueError("preview must be a non-negative integer")
-        delivery = arguments.get("result_delivery", default_delivery)
+        delivery = arguments.get("result_delivery", "file")
         if delivery not in DELIVERY_MODES:
             raise ValueError("result_delivery must be file, inline or auto")
         result_format = arguments.get("result_format", "json_matrix")
@@ -344,7 +344,7 @@ class WorkbenchTools:
         save = arguments.get("save", False)
         if type(save) is not bool:
             raise ValueError("save must be a boolean")
-        preview, delivery, result_format = self._result_options(arguments, default_delivery="auto")
+        preview, delivery, result_format = self._result_options(arguments)
         if "name" in arguments and not isinstance(arguments["name"], str):
             raise ValueError("name must be a string")
         query_name = arguments.get("name")

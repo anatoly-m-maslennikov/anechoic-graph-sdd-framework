@@ -189,6 +189,74 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
                 while await pins() != [module]:
                     await asyncio.sleep(.03)
 
+    async def test_sidecar_only_refresh_reads_only_affected_owner_and_updates_audit(self):
+        from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND import spec_trace
+
+        self._source('src/app/main.py', 'pass\n')
+        self._source('src/other/other.py', 'pass\n')
+        sidecar = self._source('src/app/app__spec_bind.yaml', 'implements: [AN-S-001@1]\n')
+        other_sidecar = self._source('src/other/other__spec_bind.yaml', 'implements: [AN-S-001@1]\n')
+        module_sidecar = self._source('src/app/main.py.spec_trace.md', '## Implements\n- CA-R-10@2\n')
+        gateway = create_native_gateway(self.root, fixture.CONTROL, fixture._native_inputs())
+        owner = gateway._native_query
+        owner.start()
+        self.addCleanup(owner.close)
+        store = owner._owner()
+
+        def snapshot():
+            with store._lock:
+                pins = store._connection.execute(
+                    'SELECT owner_path, entry_kind, atom_id, version FROM implementation_rmedo ORDER BY 1'
+                ).fetchall()
+                states = dict(store._connection.execute(
+                    'SELECT relative_path, binding_status FROM package_audit').fetchall())
+            return pins, states
+
+        other = ('src/other', 'implements', 'AN-S-001', 1)
+        module = ('src/app/main.py', 'implements', 'CA-R-10', 2)
+        with patch.object(spec_trace, '_read_pins', wraps=spec_trace._read_pins) as reads, \
+             patch.object(owner, '_prepare_realization', wraps=owner._prepare_realization) as prepare:
+            async def expect(pin, state):
+                async with asyncio.timeout(6):
+                    while True:
+                        pins, states = snapshot()
+                        if pins == sorted([row for row in (pin, module, other) if row]) and states['src/app'] == state:
+                            return
+                        await asyncio.sleep(.03)
+
+            sidecar.write_text('applies: [AN-S-001@1]\n')
+            await expect(('src/app', 'applies', 'AN-S-001', 1), 'valid')
+            stderr = StringIO()
+            with redirect_stderr(stderr):
+                sidecar.write_text('implements: invalid\n')
+                await expect(None, 'invalid')
+            self.assertIn('Invalid spec trace', stderr.getvalue())
+            fallback = self._source('src/app/app.p.spec_trace.md', '## Implements\n- AN-S-001@1\n')
+            sidecar.unlink()
+            await expect(('src/app', 'implements', 'AN-S-001', 1), 'missing')
+            fallback.unlink()
+            await expect(None, 'missing')
+            module = ('src/app/main.py', 'implements', 'CA-R-11', 3)
+            module_sidecar.write_text('## Implements\n- CA-R-11@3\n')
+            await expect(None, 'missing')
+            sidecar.write_text('applies: [AN-S-001@1]\n')
+            await expect(('src/app', 'applies', 'AN-S-001', 1), 'valid')
+            self.assertNotIn(other_sidecar, {call.args[2] for call in reads.call_args_list})
+            other = ('src/other', 'applies', 'AN-S-001', 1)
+            sidecar.replace(other_sidecar)
+            await expect(None, 'missing')
+            self.assertTrue(reads.call_count)
+            self.assertEqual({sidecar, other_sidecar, fallback, module_sidecar},
+                             {call.args[2] for call in reads.call_args_list})
+            prepare.assert_not_called()
+        before = snapshot()
+        replacement = [('src/app', 'src/app/app__spec_bind.yaml', 'implements', 'AN-S-001', 1)]
+        with patch('native_query.native_trace_snapshot', return_value=(replacement, {'src/app': 'valid'})), \
+             patch('native_query.replace_package_audit', side_effect=RuntimeError('audit failed')):
+            with self.assertRaisesRegex(RuntimeError, 'audit failed'):
+                owner._refresh_traces(store, {'src/app/app__spec_bind.yaml'})
+        self.assertEqual(before, snapshot())
+
     async def test_component_ratios_follow_formal_test_assets(self):
         self._source("src/UNIT_C1/main.py", "pass\npass\n")
         self._source("src/UNIT_C1/tests/test_legacy.py", "pass\n")

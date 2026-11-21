@@ -8,8 +8,8 @@ context:
   lens: SPEC
 state:
   status: "active"
-  version: 4
-  updated_at: "2026-11-20T21:44:43.815466+00:00"
+  version: 6
+  updated_at: "2026-11-21T10:04:49.140352+00:00"
 ---
 
 ## Summary
@@ -52,6 +52,16 @@ Store `Subtask` for a Task under a Task and `Sub-epic` for an Epic under
 an Epic. These labels apply at each depth. The authored Template stays
 Task or Epic. Workbench and the derived filename use the Label for
 navigation.
+
+Changing a Ticket preserves its containment tree at every depth. Move
+its companion folder with the Ticket when its path changes.
+
+When a Ticket becomes Done or Canceled, cancel every Current descendant
+whose Status is neither Done nor Canceled. Preserve the Status, Version,
+and history of the other descendants.
+
+Reopening a Done or Canceled Epic makes the Epic Active. Its descendants
+keep their current Status, Version, history, and containment.
 
 ### Content
 

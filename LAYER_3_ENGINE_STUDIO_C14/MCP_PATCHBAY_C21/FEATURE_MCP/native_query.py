@@ -20,8 +20,12 @@ from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.import_cache import (
     clear_import_sources, read_import_sources, replace_import_sources,
 )
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.import_tables import remove_imports, replace_imports
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_projection import project_native, replace_component_metrics
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import NativeCapture, capture_native
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_projection import (
+    project_native, project_native_delta, replace_component_metrics,
+)
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import (
+    NativeCapture, NativeManifestChanged, capture_native,
+)
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.package_audit import replace_package_audit
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.query_admission import is_duckdb_internal
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.query_log import QueryLog
@@ -31,14 +35,14 @@ from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.saved_queries import SavedQueryStor
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service_interface import ServiceInterface
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_watcher import SourceWatcher
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.spec_trace import (
-    is_trace_path, native_trace_snapshot, remove_native_traces, replace_native_traces,
+    PACKAGE_SUFFIX, SUFFIX, is_trace_path, native_trace_snapshot, remove_native_traces, replace_native_traces,
 )
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.statements import select_statement
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workspace import WorkspaceStore
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.watcher_change_log import WatcherChangeLog, mirror_change_log
 from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.structure_host_pkg3.snapshot import read_structure
-from native_project_selection import ManifestIdentity, NativeProjectSelection
-from work_journal import validated_journal_root
+from native_project_selection import ManifestIdentity, NativeProjectSelection, resolve_native_project
+from work_journal import PROJECT_DATABASE, journal_storage, pending_database_journal, validated_journal_root
 
 
 @dataclass(frozen=True)
@@ -59,7 +63,6 @@ class NativeQueryInputs:
 
 def create_native_gateway(root: Path, control_root: str, inputs: NativeQueryInputs):
     from direct_gateway import DirectGateway
-    from native_project_selection import resolve_native_project
 
     selection = resolve_native_project(root, control_root, validate_manifest=inputs.validate_manifest,
                                        require_atom_state=inputs.require_atom_state,
@@ -81,7 +84,7 @@ REALIZATION_TABLES = frozenset({
 })
 IMPORT_CACHE_TABLES = frozenset(f"_anechoic_import_cache.{name}" for name in ("sources", "sites", "version"))
 OBSERVATION_TABLES = frozenset({"change_log", "query_log", "live_runs", "runtime_diagnostics"})
-QUERY_TABLES = ATOM_TABLES | REALIZATION_TABLES | OBSERVATION_TABLES | frozenset(AUDIT_TABLES)
+QUERY_TABLES = ATOM_TABLES | REALIZATION_TABLES | OBSERVATION_TABLES | frozenset(AUDIT_TABLES) | {"work_journal"}
 
 
 def _test_asset_change(root: Path, relative: str) -> bool:
@@ -93,6 +96,7 @@ def _test_asset_change(root: Path, relative: str) -> bool:
 class NativeQueryOwner(ServiceInterface):
     def __init__(self, selection: NativeProjectSelection, inputs: NativeQueryInputs) -> None:
         self.selection = selection
+        self._projection_selection = selection
         self._root = selection.root
         self._inputs = inputs
         self._store: QueryStore | None = None
@@ -105,7 +109,11 @@ class NativeQueryOwner(ServiceInterface):
         if (journal_path.parts[0].startswith(".anechoic_")
                 and journal_path.parts[0] != selection.control_relative.name):
             raise ValueError("Native Journal cannot use another records tree")
-        self._saved_queries = SavedQueryStore(self._root, journal_root=journal_path.as_posix())
+        self._journal_mode = journal_storage(selection.parameters)
+        self._saved_queries = SavedQueryStore(
+            self._root, journal_root=journal_path.as_posix(), journal_mode=self._journal_mode,
+            read_journal_events=self._saved_journal_events,
+        )
         self._workspaces = WorkspaceStore(self._root, transient_results=True)
         self._query_log = QueryLog(self._root)
         self._change_log = WatcherChangeLog(self._root)
@@ -171,8 +179,8 @@ class NativeQueryOwner(ServiceInterface):
         return binding_states
 
     def _publish_realization_metadata(self, store: QueryStore, capture: NativeCapture,
-                                      binding_states: dict[str, str] | None = None) -> None:
-        from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.component_metrics import measure_components
+                                      binding_states: dict[str, str] | None = None, *, atoms_only=False) -> None:
+        from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.component_metrics import measure_components, refresh_spec_sizes
 
         connection = store._connection
         if self._realization_options is None:
@@ -185,30 +193,77 @@ class NativeQueryOwner(ServiceInterface):
         tests = connection.execute("SELECT source_key, target_key FROM main.test_edges").fetchall()
         replace_package_audit(connection, self.selection, capture, nodes, self._inputs.migration_refs,
                               binding_states, tests=tests)
-        sources = read_import_sources(connection)
-        try:
-            measurements = measure_components(self.selection, capture, sources, nodes, tests)
-        except (OSError, RuntimeError, ValueError) as error:
-            print(f"Component metrics unavailable: {error}", file=sys.stderr)
-            measurements = []
+        if atoms_only:
+            measurements = refresh_spec_sizes(connection, capture, self.selection.project_prefix)
+        else:
+            sources = read_import_sources(connection)
+            try:
+                measurements = measure_components(self.selection, capture, sources, nodes, tests)
+            except (OSError, RuntimeError, ValueError) as error:
+                print(f"Component metrics unavailable: {error}", file=sys.stderr)
+                measurements = []
         replace_component_metrics(connection, measurements)
+
+    def _refresh_traces(self, store: QueryStore, paths: set[str]) -> None:
+        owners = set()
+        for relative in paths:
+            path = PurePosixPath(relative)
+            parent_name = path.parent.name or self._root.name
+            if path.name == parent_name + PACKAGE_SUFFIX or path.name == parent_name + '.p' + SUFFIX:
+                owners.add(('package', path.parent.as_posix()))
+            elif path.name.endswith(SUFFIX) and path.name != SUFFIX:
+                owners.add(('module', path.with_name(path.name.removesuffix(SUFFIX)).as_posix()))
+        connection = store._connection
+        with store._lock, self._transaction(store):
+            nodes = []
+            for kind, relative in owners:
+                nodes.extend(connection.execute(
+                    'SELECT node_key, kind, language, relative_path, scan_status, package_key '
+                    'FROM main.import_nodes WHERE kind = ? AND relative_path = ?', [kind, relative],
+                ).fetchall())
+            traces, states = native_trace_snapshot(self._root, nodes)
+            for _, kind, _, relative, _, _ in nodes:
+                connection.execute('DELETE FROM main.implementation_rmedo WHERE owner_path = ?', [relative])
+                if kind == 'package':
+                    states.setdefault(relative, 'missing')
+            if traces:
+                connection.executemany('INSERT INTO main.implementation_rmedo VALUES (?, ?, ?, ?, ?)', traces)
+            if states:
+                retained = dict(connection.execute(
+                    'SELECT relative_path, binding_status FROM main.package_audit').fetchall())
+                retained.update(states)
+                nodes = connection.execute(
+                    'SELECT node_key, kind, language, relative_path, scan_status, package_key, package_type '
+                    'FROM main.import_nodes').fetchall()
+                tests = connection.execute('SELECT source_key, target_key FROM main.test_edges').fetchall()
+                replace_package_audit(connection, self.selection, self._capture, nodes,
+                                      self._inputs.migration_refs, retained, tests=tests)
 
     def _watch_sources(self, store: QueryStore) -> None:
         assert self._watcher is not None
+        pending: set[PurePosixPath] | None = set()
         while not self._watch_stop.is_set() and store._available:
             batch = self._watcher.changes(timeout=0.1)
+            if self._journal_mode == "duckdb":
+                try:
+                    store.sync_work_journal(self._root)
+                except Exception as error:
+                    print(f"Native Work Journal refresh failed: {error}", file=sys.stderr)
             if not batch:
                 continue
             with self._interface_lock:
                 if self._watch_stop.is_set() or not store._available:
                     break
-                if self._atom_sources_changed(batch):
-                    try:
-                        self._capture = self._project(store, skip_unchanged=True)
-                    except Exception as error:
-                        print(f"Native Atom refresh failed: {error}", file=sys.stderr)
+                pending = self._watch_atom_changes(store, batch, pending)
                 if self._realization_options is not None and store._available:
                     try:
+                        paths = {path for change in batch for key in ('old_path', 'new_path')
+                                 if (path := change.get(key)) is not None}
+                        if (paths and all(is_trace_path(path) and not _test_asset_change(self._root, path)
+                                          and not PurePosixPath(path).is_relative_to(self.selection.control_relative)
+                                          for path in paths)):
+                            self._refresh_traces(store, paths)
+                            continue
                         prepared = self._prepare_realization(store, changes=batch)
                         if prepared is not None:
                             with store._lock, self._transaction(store):
@@ -217,26 +272,92 @@ class NativeQueryOwner(ServiceInterface):
                     except Exception as error:
                         print(f"Realization Graph refresh failed. Batch discarded. {error}", file=sys.stderr)
 
-    def _atom_sources_changed(self, batch) -> bool:
+    def _watch_atom_changes(self, store: QueryStore, batch, pending):
+        changed = self._atom_source_paths(batch)
+        if changed is not None and not changed:
+            return pending
+        # Keep failed paths for the next Atom batch. None requests a rescan.
+        pending = None if changed is None or pending is None else pending | changed
+        try:
+            self._capture = self._refresh_atom_sources(store, pending)
+        except Exception as error:
+            print(f"Native Atom refresh failed: {error}", file=sys.stderr)
+            return pending
+        return set()
+
+    def _atom_source_paths(self, batch) -> set[PurePosixPath] | None:
         control = self.selection.control_relative
         generated = control / "000_ANECHOIC_framework"
-        paths = {PurePosixPath(path) for change in batch for key in ("old_path", "new_path")
-                 if (path := change.get(key)) is not None}
-        for path in paths:
-            if not path.is_relative_to(control) or path.is_relative_to(generated):
-                continue
-            if path.suffix == ".md" or (self._root / path).is_dir():
-                return True
-            # A removed or renamed directory may have arrived without child events.
-            if any(PurePosixPath(row["source_path"]).is_relative_to(path) for row in self._capture.atoms):
-                return True
-        return False
+        files: set[PurePosixPath] = set()
+        for change in batch:
+            for key in ("old_path", "new_path"):
+                raw_path = change.get(key)
+                if raw_path is None:
+                    continue
+                path = PurePosixPath(raw_path)
+                if not path.is_relative_to(control) or path.is_relative_to(generated):
+                    continue
+                if (self._root / path).is_dir() or (key == "old_path" and any(
+                    raw_path != row["source_path"] and row["source_path"].startswith(raw_path + "/")
+                    for row in self._capture.atoms
+                )):
+                    # A directory event may arrive without its child events.
+                    return None
+                if path.suffix == ".md":
+                    files.add(path)
+        return files
+
+    def _capture_for_projection(self, paths=None) -> tuple[NativeCapture, NativeProjectSelection]:
+        selection = self._projection_selection
+        try:
+            return capture_native(selection, previous=self._capture, paths=paths), selection
+        except NativeManifestChanged:
+            selection = resolve_native_project(
+                self._root, self.selection.control_relative, validate_manifest=self._inputs.validate_manifest,
+                require_atom_state=self._inputs.require_atom_state, require_atom_header=self._inputs.require_atom_header,
+            )
+            if (selection.project_name != self.selection.project_name
+                    or selection.project_prefix != self.selection.project_prefix
+                    or selection.manifest_ref.partition("@")[0] != self.selection.manifest_ref.partition("@")[0]):
+                raise ValueError("Project identity changed. Restart required.")
+            # Rebind the read projection. The gateway and write guards keep their startup selection.
+            return capture_native(selection), selection
+
+    def _refresh_atom_sources(self, store: QueryStore, paths: set[PurePosixPath] | None) -> NativeCapture:
+        previous = self._capture
+        capture, selection = self._capture_for_projection(paths)
+        if selection is not self._projection_selection:
+            paths = None
+        if capture != previous:
+            if paths is None:
+                before = {row["source_path"]: row["_source_sha256"] for row in previous.atoms}
+                after = {row["source_path"]: row["_source_sha256"] for row in capture.atoms}
+                paths = {PurePosixPath(path) for path in before.keys() | after.keys()
+                         if before.get(path) != after.get(path)}
+            if not project_native_delta(
+                store, capture, paths=paths, relation_types=self._inputs.relation_types,
+                inverses=self._inputs.inverses, migration_refs=self._inputs.migration_refs,
+                component_ids=self._component_ids(),
+                before_commit=lambda graph: self._publish_realization_metadata(store, capture, atoms_only=True),
+            ):
+                self._project(store, capture=capture)
+        self._projection_selection = selection
+        return capture
+
+    def _component_ids(self) -> list[str]:
+        component_ids = ["C00"]
+        if self._realization_options is not None and self.selection.structure_snapshot is not None:
+            component_ids.extend(read_structure(self.selection.structure_snapshot).components)
+        return component_ids
 
     def _project(self, store: QueryStore, *, use_retained=False, before_commit=None,
-                 skip_unchanged=False) -> NativeCapture:
-        capture = capture_native(self.selection)
-        if skip_unchanged and capture == self._capture:
-            return capture
+                 capture: NativeCapture | None = None, read_only=False) -> NativeCapture:
+        selection = self.selection
+        if capture is None:
+            if read_only:
+                capture, selection = self._capture_for_projection()
+            else:
+                capture = capture_native(self.selection)
 
         def finish(graph) -> None:
             if before_commit is None:
@@ -244,26 +365,32 @@ class NativeQueryOwner(ServiceInterface):
             else:
                 before_commit(graph, capture)
 
-        component_ids = ["C00"]
-        if self._realization_options is not None and self.selection.structure_snapshot is not None:
-            component_ids.extend(read_structure(self.selection.structure_snapshot).components)
-        project_native(store, capture, relation_types=self._inputs.relation_types, component_ids=component_ids,
+        project_native(store, capture, relation_types=self._inputs.relation_types, component_ids=self._component_ids(),
                        inverses=self._inputs.inverses, migration_refs=self._inputs.migration_refs,
                        use_retained=use_retained, before_commit=finish)
+        self._projection_selection = selection
         return capture
 
     def _open_store(self, workbench: dict) -> QueryStore:
         from duckdb import IOException
 
+        storage = workbench.get("storage", "disk")
+        if storage not in ("disk", "memory"):
+            raise ValueError("Project Manifest runtime.workbench.storage must be disk or memory")
         options = {key: workbench[key] for key in ("result_ttl_seconds", "schema_mode", "inline_result_limit_kib")
                    if key in workbench}
-        path = self._root / ".anechoic_runtime" / "workbench" / "projection.duckdb"
+        path = self._root / PROJECT_DATABASE
         spill = path.parent / "duckdb-temp"
         if path.resolve() != path or spill.resolve() != spill:
             raise ValueError("Workbench database and spill paths must use the Project runtime directory directly")
         try:
-            return QueryStore(extension_directory=self._inputs.extension_directory,
-                              database_path=path, native=True, **options)
+            journal_disk = self._journal_mode == "duckdb" or pending_database_journal(self._root)
+            return QueryStore(
+                extension_directory=self._inputs.extension_directory,
+                database_path=path if storage == "disk" else None,
+                journal_path=path if journal_disk or (storage == "memory" and path.is_file()) else None,
+                journal_disk=journal_disk, native=True, **options,
+            )
         except IOException as error:
             if "Could not set lock on file" in str(error):
                 raise WorkbenchUnavailableError(
@@ -280,6 +407,7 @@ class NativeQueryOwner(ServiceInterface):
                 raise ValueError("Project Manifest runtime.workbench must be a mapping")
             self._realization_options = self._import_options(workbench)
             store = self._open_store(workbench)
+            store.sync_work_journal(self._root)
             poll_bind_mount = os.environ.get("ANECHOIC_RUNTIME_NAMESPACE") == "docker"
             prepared = None
             if self._realization_options is not None:
@@ -437,7 +565,7 @@ class NativeQueryOwner(ServiceInterface):
                                                               tables=dependent_inputs)
 
                     if scope in ("all", "atoms"):
-                        self._capture = self._project(store, before_commit=rebuild_dependents)
+                        self._capture = self._project(store, before_commit=rebuild_dependents, read_only=True)
                     else:
                         with self._transaction(store):
                             rebuild_dependents(store._projection.graph, self._capture)
@@ -520,7 +648,14 @@ class NativeQueryOwner(ServiceInterface):
         self._owner()
 
     def _flush_lifecycle_changes(self) -> None:
-        self._owner()
+        self._owner().sync_work_journal(self._root)
+
+    def _saved_journal_events(self, author: str) -> list[object]:
+        if self._store is None and self._journal_mode == "files":
+            return []
+        store = self._owner()
+        store.sync_work_journal(self._root)
+        return store.work_journal_events(author)
 
     def save_view(self, sql: str, name: str | None = None) -> dict[str, Any]:
         return self._saved_queries.save_view(sql, name)

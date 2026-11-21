@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 def _exists(connection, name):
     return bool(connection.execute(
         "SELECT count(*) FROM information_schema.tables "
-        "WHERE table_schema = 'main' AND table_name = ?", [name],
+        "WHERE table_catalog = current_database() AND table_schema = 'main' AND table_name = ?", [name],
     ).fetchone()[0])
 
 
@@ -53,12 +53,12 @@ def replace_imports(connection, graph, nodes, occurrences, edges, test_edges, so
         connection.execute("CREATE TABLE main.import_read_issues "
                            "(relative_path VARCHAR PRIMARY KEY, error_message VARCHAR NOT NULL)")
     if not connection.execute(
-        "SELECT 1 FROM information_schema.columns WHERE table_schema = 'main' "
+        "SELECT 1 FROM information_schema.columns WHERE table_catalog = current_database() AND table_schema = 'main' "
         "AND table_name = 'import_nodes' AND column_name = 'package_type'"
     ).fetchone():
         connection.execute("ALTER TABLE main.import_nodes ADD COLUMN package_type VARCHAR")
         needs_registration = True
-    if not connection.execute("SELECT 1 FROM information_schema.tables WHERE table_schema = 'realization_internal' AND table_name = 'package_tests'").fetchone():
+    if not connection.execute("SELECT 1 FROM information_schema.tables WHERE table_catalog = current_database() AND table_schema = 'realization_internal' AND table_name = 'package_tests'").fetchone():
         connection.execute("CREATE SCHEMA IF NOT EXISTS realization_internal")
         for table in ("package_tests", "package_tested_by"):
             connection.execute(f"CREATE TABLE realization_internal.{table} (source_key VARCHAR, target_key VARCHAR)")

@@ -56,6 +56,11 @@ class FullSuiteDockerTests(unittest.TestCase):
                 self.assertEqual(str(scratch), environment["TMPDIR"])
                 self.assertTrue(scratch.is_relative_to(self.root / ".anechoic_tmp"))
                 self.assertTrue(scratch.is_dir())
+                (scratch / "fixture.txt").write_text("run output")
+                sibling = scratch.parent / "attempt-peer"
+                sibling.mkdir()
+            self.assertFalse(scratch.exists())
+            self.assertTrue(sibling.is_dir())
             manager._build.assert_called_once_with(manager.identity.return_value, use_packaged_assets=False)
             manager.resolve.assert_not_called()
             self.assertEqual(self.root, factory.call_args.args[0])
@@ -69,9 +74,29 @@ class FullSuiteDockerTests(unittest.TestCase):
         ):
             factory.return_value._build.return_value = IMAGE
             with self.assertRaisesRegex(RuntimeError, "test failure"):
-                with docker.current_code_test_image(self.root):
+                with docker.current_code_test_image(self.root) as environment:
+                    scratch = Path(environment["TMPDIR"])
+                    (scratch / "fixture.txt").write_text("failure output")
                     raise RuntimeError("test failure")
             cleanup.assert_called_once()
+            self.assertFalse(scratch.exists())
+
+    def test_failed_image_build_removes_attempt_files(self):
+        with (
+            patch.object(docker, "ImageManager", autospec=True) as factory,
+            patch.object(docker, "_remove_owned_image") as cleanup,
+        ):
+            def fail_build(*args, **kwargs):
+                scratch = factory.call_args.kwargs["build_temp_root"]
+                (scratch / "build.log").write_text("partial build")
+                raise RuntimeError("build failure")
+
+            factory.return_value._build.side_effect = fail_build
+            with self.assertRaisesRegex(RuntimeError, "build failure"):
+                with docker.current_code_test_image(self.root):
+                    self.fail("failed image setup yielded a test environment")
+            self.assertFalse(factory.call_args.kwargs["build_temp_root"].exists())
+            cleanup.assert_not_called()
 
     def test_build_executor_adds_only_unique_test_label_and_preserves_bounded_runner(self):
         with patch.object(docker, "_bounded_run") as execute:

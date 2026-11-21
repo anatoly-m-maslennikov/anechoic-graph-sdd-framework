@@ -42,6 +42,7 @@ from .result_values import group_key, result_value
 from .result_view import Grid, build_page_query, ctas_source_sql, parse_grid, validate_columns
 from .query_schema import public_schema
 from .watcher_change_log import WatcherChangeLog, mirror_change_log
+from .journal_table import initialize_journal, sync_journal, journal_events
 
 
 def _query_failure(error: Exception) -> str:
@@ -56,7 +57,8 @@ def _query_failure(error: Exception) -> str:
     return "query failed during execution"
 
 
-def _connect(extension_directory: Path | None, database_path: Path | None) -> Any:
+def _connect(extension_directory: Path | None, database_path: Path | None,
+             journal_path: Path | None, journal_disk: bool) -> Any:
     try:
         import duckdb
     except ImportError as exc:
@@ -75,6 +77,15 @@ def _connect(extension_directory: Path | None, database_path: Path | None) -> An
     try:
         connection.execute("LOAD duckpgq")
         connection.execute("SET active_grammar_extensions = ['duckpgq']")
+    except Exception as exc:
+        connection.close()
+        raise WorkbenchUnavailableError("DuckPGQ runtime initialization failed") from exc
+    try:
+        initialize_journal(connection, database_path, journal_path, journal_disk)
+    except Exception as exc:
+        connection.close()
+        raise WorkbenchUnavailableError(f"Work Journal database initialization failed: {exc}") from exc
+    try:
         connection.execute("SET enable_external_access = false")
         connection.execute("SET autoinstall_known_extensions = false")
         connection.execute("SET autoload_known_extensions = false")
@@ -105,7 +116,7 @@ class QueryStore:
     def __init__(
         self, *, extension_directory: Path | None = None, database_path: Path | None = None,
         result_ttl_seconds: int = 3600, schema_mode: int = 2, native: bool = False,
-        inline_result_limit_kib: int = 4,
+        inline_result_limit_kib: int = 4, journal_path: Path | None = None, journal_disk: bool = False,
     ) -> None:
         if type(result_ttl_seconds) is not int or result_ttl_seconds <= 0:
             raise ValueError("result_ttl_seconds must be a positive integer")
@@ -113,6 +124,8 @@ class QueryStore:
             raise ValueError("workbench.schema_mode must be 1 or 2")
         if type(inline_result_limit_kib) is not int or inline_result_limit_kib < 1:
             raise ValueError("workbench.inline_result_limit_kib must be a positive integer")
+        if type(journal_disk) is not bool or (journal_disk and journal_path is None):
+            raise ValueError("disk journal requires a journal_path")
         self._extension_directory = extension_directory
         self._database_path = database_path
         self._native = native
@@ -120,7 +133,9 @@ class QueryStore:
         self._schema_mode = schema_mode
         self.inline_result_limit_bytes = inline_result_limit_kib * 1024
         self._lock = threading.RLock()
-        self._connection = _connect(extension_directory, database_path)
+        self._journal_path = journal_path
+        self._journal_disk = journal_disk
+        self._connection = _connect(extension_directory, database_path, journal_path, journal_disk)
         self._available = True
         self._initialized = False
         self._live_runs: tuple[tuple[str, ...], ...] = ()
@@ -135,7 +150,7 @@ class QueryStore:
         if native:
             self._initialized = bool(self._connection.execute(
                 "SELECT 1 FROM information_schema.tables "
-                "WHERE table_schema = 'main' AND table_name = 'atoms'"
+                "WHERE table_catalog = current_database() AND table_schema = 'main' AND table_name = 'atoms'"
             ).fetchone())
         else:
             self.replace([], [])
@@ -179,6 +194,15 @@ class QueryStore:
         except Exception as exc:
             self._connection.close()
             raise WorkbenchUnavailableError("query store initialization failed") from exc
+
+    def sync_work_journal(self, root: Path) -> None:
+        with self._lock:
+            if self._journal_disk:
+                sync_journal(self._connection, root, self._database_path, self._journal_path)
+
+    def work_journal_events(self, author: str) -> list[Any]:
+        with self._lock:
+            return journal_events(self._connection, author)
 
     def lifecycle_candidates(self, atom_ids=(), references=(), prefix=None, under=None):
         clauses = ["regexp_full_match(atom_id, '.+-[A-Z]-[0-9]+')"]
@@ -261,7 +285,8 @@ class QueryStore:
 
     def _create_atom_version_max(self) -> None:
         if not self._connection.execute("SELECT count(*) FROM information_schema.tables "
-                                        "WHERE table_schema = 'main' AND table_name = 'archive_version_max'").fetchall()[0][0]:
+                                        "WHERE table_catalog = current_database() AND table_schema = 'main' "
+                                        "AND table_name = 'archive_version_max'").fetchall()[0][0]:
             return
         source = revision_query(self._connection, stable_only=False)
         self._connection.execute(
@@ -405,10 +430,11 @@ class QueryStore:
                 flush=True,
             )
 
-    def apply(
+    def apply(  # noqa: C901
         self, atom_rows: list[dict[str, Any]], scope_rows: list[dict[str, Any]],
         *, relation_types: set[str], content_schema: ContentSchema | None = None,
         delta: MaterializationDelta | None = None, header_schema: HeaderSchema | None = None,
+        before_commit=None,
     ) -> bool:
         """Apply the materialized delta without replacing unaffected public rows."""
         with self._lock:
@@ -417,9 +443,11 @@ class QueryStore:
             if self._projection is None:
                 self.replace(
                     atom_rows, scope_rows, relation_types=relation_types,
-                    content_schema=content_schema, header_schema=header_schema,
+                    content_schema=content_schema, header_schema=header_schema, before_commit=before_commit,
                 )
                 return True
+            transaction = False
+            self._graph_registration_changed = False
             try:
                 if header_schema is not None or self._schema_mode == 1:
                     header_state = self._header_state
@@ -439,18 +467,23 @@ class QueryStore:
                 if self._schema_changed:
                     return True
                 self._connection.execute("BEGIN TRANSACTION")
+                transaction = True
                 started = time.monotonic()
                 projection, change = apply_projection_delta(
                     self._connection, self._projection, atom_rows, scope_rows, relation_types,
                     header_schema, content_schema, delta=delta,
                 )
+                if before_commit is not None:
+                    before_commit(projection.graph)
                 self._connection.execute("COMMIT")
+                transaction = False
                 self._projection = projection
                 self._header_state = header_state
                 self._header_schema = header_schema
                 self._content_schema = content_schema
-                header_schema.write(schema_asset_path(self._database_path))
-                content_schema.write(content_schema_asset_path(self._database_path))
+                if not self._native:
+                    header_schema.write(schema_asset_path(self._database_path))
+                    content_schema.write(content_schema_asset_path(self._database_path))
                 self._info_edit("delete", "atoms", change.deleted_atoms, started, change.reference)
                 self._info_edit("delete", "scope_units", change.deleted_scopes, started)
                 self._info_edit("insert", "atoms", change.inserted_atoms, started, change.reference)
@@ -461,8 +494,13 @@ class QueryStore:
                     or change.inserted_scopes or change.graph_rows
                 )
             except Exception as exc:
-                self._available = False
+                if not self._native or self._graph_registration_changed or is_duckdb_internal(exc):
+                    self._available = False
+                if transaction:
+                    self._connection.execute("ROLLBACK")
                 print(f"query store refresh failed: {exc}", file=sys.stderr)
+                if self._native and self._available:
+                    raise
                 raise WorkbenchUnavailableError("query store unavailable; Workbench restart required") from exc
 
     @property
@@ -857,7 +895,15 @@ class QueryStore:
         with self._lock:
             if not self._available:
                 raise WorkbenchUnavailableError("query store unavailable; Workbench restart required")
-            return public_schema(self._connection, self._header_schema)
+            result = public_schema(self._connection, self._header_schema)
+            rows = self._connection.execute(
+                "SELECT column_name, data_type FROM information_schema.columns "
+                "WHERE table_catalog = current_database() AND table_schema = 'main' "
+                "AND table_name = 'work_journal' ORDER BY ordinal_position"
+            ).fetchall()
+            if rows:
+                result["tables"]["work_journal"] = [{"name": name, "type": kind} for name, kind in rows]
+            return result
 
     def close(self) -> None:
         with self._lock:

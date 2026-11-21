@@ -424,8 +424,8 @@ def tool_descriptors():
 
     def description(name, fields):
         if name == 'atom_lifecycle_create_draft':
-            return ("Create a Draft Atom. To create a new native Task, use newAtom.\n"
-                    "Supply the Task template, container, and Markdown body.\n"
+            return ("Create a Draft Atom. To create a new native Task or Epic, use newAtom.\n"
+                    "Supply the Task or Epic template, container, and Markdown body.\n"
                     "Use returned field errors to correct the input.")
         if 'targets' in fields:
             return 'Execute a Project Atom Lifecycle operation. Single inputs can be corrected; batches stop on failure.'

@@ -1,9 +1,10 @@
 from hashlib import sha256
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from types import SimpleNamespace
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import yaml
 
@@ -90,6 +91,33 @@ class NativeCaptureTests(unittest.TestCase):
         result = capture_native(self.selection)
         self.assertEqual({}, result.errors)
         self.assertEqual({"AN-S-001@1", "AN-S-2@1"}, {row["_exact_ref"] for row in result.atoms})
+
+    def test_incremental_capture_reads_changes_and_matches_full_after_move(self):
+        old = self.write("AN-S-2--old.md", "AN-S-2", "active", 1)
+        untouched = self.write("AN-S-3--untouched.md", "AN-S-3", "active", 1)
+        previous = capture_native(self.selection)
+        new = old.with_name("AN-S-2--new.md")
+        old.rename(new)
+        changed = {PurePosixPath(path.relative_to(self.root).as_posix()) for path in (old, new)}
+        from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext
+        read = ReadContext.read
+        with patch.object(ReadContext, "read", autospec=True, side_effect=read) as reads:
+            result = capture_native(self.selection, previous=previous, paths=changed)
+        self.assertNotIn(untouched, [call.args[1] for call in reads.call_args_list])
+        self.assertEqual(capture_native(self.selection), result)
+
+    def test_incremental_duplicate_and_repair(self):
+        original = self.write("one/AN-S-2--one.md", "AN-S-2", "active", 1)
+        duplicate = self.control / "two" / original.name
+        duplicate.parent.mkdir()
+        previous = capture_native(self.selection)
+        duplicate.write_bytes(original.read_bytes())
+        changed = {PurePosixPath(duplicate.relative_to(self.root).as_posix())}
+        result = capture_native(self.selection, previous=previous, paths=changed)
+        self.assertTrue(any("Duplicate" in error for error in result.errors.values()))
+        duplicate.unlink()
+        repaired = capture_native(self.selection, previous=result, paths=changed)
+        self.assertEqual(capture_native(self.selection), repaired)
 
     def test_manifest_drift_refuses_capture(self):
         self.manifest.write_text("changed", encoding="utf-8")

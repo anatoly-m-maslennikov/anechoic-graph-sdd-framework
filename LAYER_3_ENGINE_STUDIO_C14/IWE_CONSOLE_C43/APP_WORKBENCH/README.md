@@ -69,7 +69,6 @@ Each editor tab is a View containing one query. Run, Check and Run & Save valida
 Cmd+Enter runs and Shift+Cmd+Enter checks. Cmd+P opens the searchable command
 palette for every current UI action. Arrow Up/Ctrl+P and Arrow Down/Ctrl+N move
 the selection; Enter chooses and Escape closes. Settings contains Theme, Text zoom, Interface zoom, Density and result display preferences. Defaults are System, 100%, 100%, and Compact only for explicit `embedded=1` URLs; standalone defaults to Comfortable. Explicit saved preferences win.
-The standalone Workbench chat is disabled; use native Codex chat.
 The next utility tab lists saved queries and Views. Open Saved is available only in the command palette: Cmd+P, choose Open Saved,
 paste an ID or URL, then Enter.
 
@@ -88,12 +87,7 @@ The UI hides columns containing only NULL, empty strings or empty collections
 across the whole result. Zero and false remain visible. `columns[].has_values`
 is stable across pages; SQL rows and total column counts remain complete.
 
-A Codex plugin package is in `FEATURE_CODEX_EXTENSION/plugin`. It uses a native
-SessionStart session ID and the existing ANECHOIC MCP connection; it adds no
-standalone chat or second server. Local packaging does not install or trust it
-in Codex automatically.
-
-`workspace_open(session_id)` initializes or resumes a Workspace. Embedded Workbench uses the native Codex chat ID; standalone uses its own persisted browser Session ID. An explicit `?workspace=<id>` selects that Workspace. The plugin appends `embedded=1` for placement beside the native chat. Both interfaces use the same Workspace/View API. Existing unbound standalone browser drafts migrate once without executing SQL and remain locally preserved until accepted. `workspace_list` and `workspace_get` inspect known state.
+`workspace_open(session_id)` initializes or resumes a Workspace. A native MCP client supplies its session ID. Standalone Workbench uses its persisted browser Session ID. An explicit `?workspace=<id>` selects that Workspace. Both interfaces use the same Workspace/View API. Existing unbound standalone browser drafts migrate once without executing SQL and remain locally preserved until accepted. `workspace_list` and `workspace_get` inspect known state.
 
 Use `view_create` (first/last), `view_list`, `view_get`, `view_update`, `view_run`,
 `view_check`, `view_fetch`, `view_focus`, `view_rename`, `view_remove` and `view_save`

@@ -7,6 +7,7 @@ import json
 import sys
 import tempfile
 import unittest
+import uuid
 from pathlib import Path
 from unittest.mock import patch
 
@@ -59,6 +60,48 @@ class PlainJournalTests(unittest.TestCase):
         self.append(first)
         self.append(second)
         self.assertEqual(first + second, read_records(self.directory))
+
+    def test_storage_setting_defaults_and_validation(self) -> None:
+        self.assertEqual("files", journal.journal_storage({}))
+        self.assertEqual("duckdb", journal.journal_storage({"runtime": {"journal": {"storage": "duckdb"}}}))
+        for value in (None, "invalid", [], {}):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                journal.journal_storage({"runtime": {"journal": {"storage": value}}})
+
+    def test_disk_inbox_keeps_duplicate_records_in_order(self) -> None:
+        rows = [{"value": 1}, {"value": 1}, {"value": 2}]
+        receipts = journal.append_sealed_events(self.root, rows, **self.partition, storage="duckdb")
+        inbox = journal.journal_inbox(self.root)
+        files = sorted(inbox.glob("*.json"))
+        self.assertEqual([receipt["record_id"] for receipt in receipts], [path.stem for path in files])
+        self.assertEqual(rows, [json.loads(path.read_text())["event"] for path in files])
+        self.assertEqual(3, len({path.stem for path in files}))
+        for path, receipt, row in zip(files, receipts, rows):
+            self.assertEqual(7, uuid.UUID(path.stem).version)
+            self.assertEqual(0o600, path.stat().st_mode & 0o777)
+            self.assertEqual({"author": "observer", "local_date": "2026-10-14", "event": row},
+                             json.loads(path.read_text()))
+            self.assertEqual(".anechoic_runtime/workbench/projection.duckdb", receipt["carrier"])
+            self.assertEqual("staged", receipt["status"])
+            self.assertNotIn("line", receipt)
+        self.assertFalse(self.directory.exists())
+
+    def test_disk_inbox_rejects_symlink_directory(self) -> None:
+        outside = self.root / "outside"
+        outside.mkdir()
+        (self.root / ".anechoic_runtime").symlink_to(outside, target_is_directory=True)
+        with self.assertRaises(journal.PartialAppendError):
+            journal.append_sealed_events(self.root, [{}], **self.partition, storage="duckdb")
+        self.assertEqual([], list(outside.iterdir()))
+
+    def test_disk_failure_reports_completed_receipts(self) -> None:
+        original = journal._append_disk_event
+        with patch.object(journal, "_append_disk_event", side_effect=[original(self.root, 1, "observer", "2026-10-14"),
+                                                                     OSError("failed")]):
+            with self.assertRaises(journal.PartialAppendError) as caught:
+                journal.append_sealed_events(self.root, [1, 2], **self.partition, storage="duckdb")
+        self.assertEqual(1, len(caught.exception.completed_receipts))
+        self.assertEqual(1, caught.exception.uncertain_event_index)
 
     def test_duplicate_rows_and_reused_ids_are_not_filtered(self) -> None:
         row = {"event_id": "same-id", "value": "original", "event_digest": "supplied-value"}
