@@ -66,7 +66,7 @@ def descriptor():
             "parent, kind and statuses. list_relations takes a reference and defaults to outgoing. "
             "count_relations_by_type groups relation counts by type and derived flag. "
             "resolve_legacy_ref takes a legacy_ref, and resolve_legacy_path takes an original_path. "
-            "fetch_contracts (Tier 0), fetch_solutions (Tier 1), get_component_manifest, and "
+            "fetch_contracts, fetch_solutions, get_component_manifest, and "
             "get_component_purpose accept a Component name or ID in component."
         ),
         input_schema={
@@ -189,10 +189,13 @@ def run_arguments(arguments: dict) -> dict:
         elif template == "get_component_purpose":
             where = f"r.exact_ref IN (SELECT unnest(purpose_refs) FROM components WHERE component_id = {cid})"
         else:
-            tier = 0 if template == "fetch_contracts" else 1
+            tier = "coalesce(json_extract_string(to_json(a), '$.\"header.structure.tier\"'), " \
+                   "json_extract_string(to_json(a), '$.\"header.context.tier\"'))"
+            contract = "coalesce(json_extract_string(to_json(a), '$.\"header.context.template\"'), '') = 'component_contract'"
+            classification = (f"(({tier} = '0' AND NOT ({contract})) OR ({tier} = '1' AND {contract}))"
+                              if template == "fetch_contracts" else f"({tier} = '1' AND NOT ({contract}))")
             where = ("a.status_group = 'Current' AND split_part(a.reference, '-', 2) = 'S' "
-                     "AND coalesce(json_extract_string(to_json(a), '$.\"header.structure.tier\"'), "
-                     f"json_extract_string(to_json(a), '$.\"header.context.tier\"')) = '{tier}' "
+                     f"AND {classification} "
                      "AND EXISTS (SELECT 1 FROM relations AS edge WHERE edge.source_ref = a.reference "
                      "AND edge.source_kind = 'Atom' AND edge.target_kind = 'Component' "
                      f"AND edge.relation_type = 'CONTAINED_BY' AND NOT edge.derived AND edge.target_ref = {cid})")

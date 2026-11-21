@@ -1,6 +1,7 @@
 """Create and promote bounded same-ID native Draft revisions."""
 from __future__ import annotations
 
+from contextlib import ExitStack, contextmanager
 from datetime import datetime, timezone
 from hashlib import sha256
 import json
@@ -11,6 +12,7 @@ import re
 import yaml
 
 from native_carrier_header import canonical_native_header, native_header_view
+from native_component_contract import read_component_contract
 from native_carrier_placement import native_carrier_path, native_ticket_label, spec_lens_directories
 
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import capture_native
@@ -23,6 +25,16 @@ from . import common, effects
 from .effects import _project_write_lock
 from .placement import _slug
 from .source import bind_query_reader
+
+
+@contextmanager
+def _first_spec_write_lock(root):
+    with ExitStack() as stack:
+        try:
+            stack.enter_context(_project_write_lock(root))
+        except BlockingIOError as error:
+            raise common.SourceChanged('A native Atom write is in progress.') from error
+        yield
 
 
 def _revision_root(selection, row, structure_snapshot=None, current_rows=None):
@@ -174,6 +186,8 @@ def create_draft(selection, params, *, current_rows, structure_snapshot=None):
     if isinstance(params, dict) and 'newAtom' in params:
         if set(params) != {'newAtom'}:
             raise common.InputError('newAtom', 'Supply only new Task or Epic properties.')
+        if isinstance(params['newAtom'], dict) and params['newAtom'].get('template') == 'component_contract':
+            return _create_component_contract(selection, params['newAtom'], structure_snapshot)
         return _create_task(selection, params['newAtom'], current_rows, structure_snapshot)
     if not isinstance(params, dict) or set(params) - {'sourceCurrent', 'changes'} or 'sourceCurrent' not in params:
         raise common.InputError('sourceCurrent', 'Supply one Current carrier and optional body change.')
@@ -285,6 +299,128 @@ def _check_owner(selection, container, rows, capture, seen=None):
     except (OSError, RuntimeError, TypeError, ValueError) as error:
         raise common.SourceChanged('Containing Task or Epic source changed.') from error
     return path.with_suffix(''), template
+
+
+def _contract_owner(selection, component, lens, snapshot, capture):
+    from native_project_selection import _manifest_inputs
+
+    if (snapshot is None or not isinstance(component, str) or not re.fullmatch(r'C[0-9]+', component)
+            or (component != 'C00' and component not in snapshot.components)):
+        raise common.InputError('container', 'Supply a Component in the current Project Structure.')
+    try:
+        spec_lens_directories(lens)
+        reader = ReadContext(roots=[str(selection.control_root)], limits=dict(CEILINGS))
+        raw = reader.read(selection.manifest_path)
+        if sha256(raw).hexdigest() != selection.manifest_sha256:
+            raise ValueError('Project Manifest changed')
+        fields, project_component = _manifest_inputs(selection.manifest_path, parse_carrier(raw, selection.manifest_path))
+        if getattr(snapshot, 'project', {}).get('sha256', selection.manifest_sha256) != selection.manifest_sha256:
+            raise ValueError('Structure Project Manifest pin changed')
+        if project_component != 'C00':
+            raise ValueError('Invalid Project Component')
+        owner = selection.control_root
+        allowed = None
+        seen = set()
+        current = component
+        while current != 'C00':
+            if current in seen:
+                raise ValueError('Component cycle')
+            seen.add(current)
+            item = snapshot.component(current)
+            declaration = selection.control_root / item.source_path
+            if (not declaration.is_relative_to(selection.control_root) or '..' in Path(item.source_path).parts
+                    or sha256(reader.read(declaration)).hexdigest() != item.sha256):
+                raise ValueError('Component Manifest changed')
+            if current == component:
+                matches = [path for path in declaration.parent.glob('*_' + component)
+                           if path.is_dir() and not path.is_symlink()]
+                if len(matches) != 1:
+                    raise ValueError('Component directory is missing or ambiguous')
+                owner = matches[0]
+            if item.lens_whitelist is not None:
+                allowed = item.lens_whitelist
+                break
+            current = item.parent
+            if current is None:
+                raise ValueError('Component has no Project root')
+        if current == 'C00':
+            allowed = fields.get('lens_whitelist')
+        if any(part.startswith('_') or not re.search(r'_C[0-9]+$', part)
+               for part in owner.relative_to(selection.control_root).parts):
+            raise ValueError('Invalid Component directory')
+        if allowed is None or lens not in allowed:
+            raise common.InputError('lens', 'Lens is disabled for this Component.')
+        known = any(row.get('status_group') == 'Current' and
+                    native_header_view(row['header_json']).get('context', {}).get('lens') == lens
+                    for row in capture.atoms)
+        if not known:
+            raise common.InputError('lens', 'Supply an existing enabled Lens.')
+        if reader.currentness()['state'] != 'unchanged':
+            raise ValueError('Manifest changed')
+        return owner
+    except common.InputError:
+        raise
+    except (OSError, RuntimeError, TypeError, ValueError, KeyError, AttributeError) as error:
+        raise common.SourceChanged('Component or Project source is unavailable or changed.') from error
+
+
+def _validate_contract(selection, header, body, path, snapshot, capture):
+    if native_header_view(header).get('context', {}).get('template') != 'component_contract':
+        return
+    view = native_header_view(header)
+    context = view['context']
+    container = context.get('container')
+    if not isinstance(container, dict) or set(container) != {'component'}:
+        raise common.InputError('container', 'Component Contract requires one Component owner.')
+    component = container['component']
+    owner = _contract_owner(selection, component, context.get('lens'), snapshot, capture)
+    candidate = {**header, 'state': {**header['state'], 'status': 'active'}}
+    try:
+        read_component_contract(path, SimpleNamespace(metadata=candidate, body=body), component, selection.project_prefix)
+        _native_slug(body)
+    except (ValueError, TypeError, KeyError) as error:
+        raise common.InputError('target', 'Invalid Component Contract Header or Guarantee.') from error
+    return owner
+
+
+def _create_component_contract(selection, values, structure_snapshot):
+    if (set(values) != {'template', 'container', 'lens', 'body'} or not isinstance(values['body'], str)
+            or not isinstance(values['lens'], str) or not values['lens'].strip()
+            or not isinstance(values['container'], dict) or set(values['container']) != {'component'}
+            or not isinstance(values['container']['component'], str)
+            or not re.fullmatch(r'C[0-9]+', values['container']['component'])):
+        raise common.InputError('newAtom', 'Supply a Component Contract template, Component, Lens, and Markdown body.')
+    try:
+        spec_lens_directories(values['lens'])
+    except ValueError as error:
+        raise common.InputError('lens', 'Supply a valid Lens.') from error
+    if (not selection.root.is_absolute() or not selection.control_root.is_relative_to(selection.root)
+            or not selection.manifest_path.is_relative_to(selection.control_root)):
+        raise common.SourceChanged('Selected Project path is invalid.')
+    with _first_spec_write_lock(selection.root):
+        try:
+            capture = capture_native(selection)
+        except (OSError, RuntimeError, ValueError) as error:
+            raise common.SourceChanged('Native carriers changed during Contract selection.') from error
+        if capture.errors:
+            raise common.SourceChanged('Native carrier capture is incomplete.')
+        numbers = [int(match[1]) for row in capture.atoms if isinstance(row.get('id'), str)
+                   and (match := re.fullmatch(re.escape(selection.project_prefix) + r'-S-([0-9]+)', row['id']))]
+        atom_id = f"{selection.project_prefix}-S-{max(numbers, default=0) + 1}"
+        header = canonical_native_header({'identity': {'atom_id': atom_id},
+            'context': {'container': values['container'], 'tier': 1, 'template': 'component_contract', 'lens': values['lens']},
+            'state': {'status': 'draft', 'version': 1, 'updated_at': datetime.now(timezone.utc).isoformat()}})
+        body = values['body']
+        owner = _validate_contract(selection, header, body, selection.control_root, structure_snapshot, capture)
+        try:
+            path = native_carrier_path(header, _summary(body), project_root=selection.control_root, owner_directory=owner)
+            raw = b'---\n' + yaml.safe_dump(header, sort_keys=False).encode() + b'---\n' + body.encode('utf-8')
+        except (ValueError, UnicodeError) as error:
+            raise common.InputError('summary', 'Summary cannot be used in a Contract filename.') from error
+        with bind_query_reader(None):
+            outcome = common.write_destination(selection.root, path, raw)
+        data = {} if outcome.errors else {'savedDraft': common.saved(selection, path, atom_id, f'{atom_id}@1-draft', 1, 'Draft')}
+        return common.result(effects=outcome.effects, errors=outcome.errors, **data)
 
 
 def _create_task(selection, values, current_rows, structure_snapshot):
@@ -419,7 +555,7 @@ def _publish_first_spec(selection, draft, structure_snapshot, *, pinned):
     if (relative.is_absolute() or '..' in relative.parts or not path.is_relative_to(selection.control_root)
             or path.parent.name != '000_draft' or not re.fullmatch(re.escape(ref_id) + r'-.+\.md', path.name)):
         raise common.InputError('target', 'Select a Spec in its native Draft directory.')
-    with _project_write_lock(selection.root):
+    with _first_spec_write_lock(selection.root):
         try:
             capture = capture_native(selection)
             history = [row for row in capture.atoms if row['id'] == atom_id]
@@ -429,7 +565,7 @@ def _publish_first_spec(selection, draft, structure_snapshot, *, pinned):
             header = draft['header_json']
             context = native_header_view(header)['context']
             lens = context.get('lens')
-            if (context.get('template') is not None
+            if (context.get('template') not in (None, 'component_contract')
                     or re.search(r'-(?:PROJECT|COMPONENT)_MANIFEST(?:--|\.md$)', path.name, re.I)):
                 raise common.InputError('target', 'Select a Spec Draft with a lens and without a structural template.')
             owner = path.parent.parent
@@ -451,7 +587,10 @@ def _publish_first_spec(selection, draft, structure_snapshot, *, pinned):
                 raise common.SourceChanged('Spec Draft source changed after selection.')
             body = raw[bounds[2]:].decode('utf-8')
             summary = _summary(body)
-            if not pinned and 'atom_family' in header:
+            contract_owner = _validate_contract(selection, header, body, path, structure_snapshot, capture)
+            if contract_owner is not None and contract_owner != owner:
+                raise common.InputError('container', 'Component Contract owner disagrees with its path.')
+            if (not pinned or contract_owner is not None) and 'atom_family' in header:
                 try:
                     projected = native_carrier_path(header, summary, project_root=selection.control_root,
                                                     owner_directory=owner)
@@ -518,6 +657,14 @@ def _cleanup_published_draft(selection, target, status, draft, current, structur
             if reader.currentness()['state'] != 'unchanged':
                 raise common.SourceChanged('Draft or published carrier changed after selection.')
             draft_header, current_header = draft['header_json'], current['header_json']
+            contract_body = draft['_content_bytes'].decode('utf-8')
+            contract_owner = _validate_contract(selection, draft_header, contract_body, paths[0], structure_snapshot, capture)
+            if contract_owner is not None and (contract_owner != root or
+                    paths[0] != native_carrier_path(draft_header, _summary(contract_body),
+                        project_root=selection.control_root, owner_directory=root) or
+                    paths[1] != native_carrier_path(current_header, _summary(contract_body),
+                        project_root=selection.control_root, owner_directory=root)):
+                raise common.InputError('target', 'Component Contract paths disagree with their Headers and Summary.')
             if '-T-' in atom_id:
                 owner = _check_owner(selection, native_header_view(current_header)['context'].get('container'), current_rows, capture)
             if '-T-' in atom_id and 'atom_family' in current_header:
@@ -649,6 +796,15 @@ def promote_draft(selection, params, *, current_rows, migration_refs, structure_
             draft_bounds, previous_bounds = frontmatter_bounds(raw_draft), frontmatter_bounds(raw_previous)
             draft_body, previous_body = raw_draft[draft_bounds[2]:].decode(), raw_previous[previous_bounds[2]:].decode()
             draft_header, previous_header = draft['header_json'], previous['header_json']
+            contract_owner = _validate_contract(selection, draft_header, draft_body, draft_path, structure_snapshot, capture)
+            if contract_owner is not None:
+                if contract_owner != root:
+                    raise common.InputError('container', 'Component Contract owner disagrees with its path.')
+                if (draft_path != native_carrier_path(draft_header, _summary(draft_body),
+                        project_root=selection.control_root, owner_directory=root)
+                        or previous_path != native_carrier_path(previous_header, _summary(previous_body),
+                        project_root=selection.control_root, owner_directory=root)):
+                    raise common.InputError('target', 'Component Contract paths disagree with their Headers and Summaries.')
             if '-T-' in atom_id:
                 owner = _check_owner(selection, native_header_view(previous_header)['context'].get('container'), current_rows, capture)
             if '-T-' in atom_id and 'atom_family' in previous_header:

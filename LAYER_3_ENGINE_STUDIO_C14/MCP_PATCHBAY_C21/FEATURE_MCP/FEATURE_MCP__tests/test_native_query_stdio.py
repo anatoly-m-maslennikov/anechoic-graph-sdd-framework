@@ -117,7 +117,7 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
         self.args = [str(Path(__file__).resolve()), "--project-root", str(self.root), "--control-root", CONTROL]
 
     def _write(self, relative, atom_id, status, version, *, template="task", body="## Summary\n\nFixture.\n",
-               container=None, tier=None, lens=None):
+               container=None, tier=None, lens=None, structure_tier=None):
         path = self.root / CONTROL / relative
         path.parent.mkdir(parents=True, exist_ok=True)
         metadata = {
@@ -128,6 +128,12 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
         }
         if lens:
             metadata["context"]["lens"] = lens
+        if structure_tier is not None:
+            from native_carrier_header import canonical_native_header
+
+            metadata["context"]["tier"] = structure_tier
+            metadata["context"].setdefault("lens", "DES")
+            metadata = canonical_native_header(metadata)
         path.write_text(f"---\n{yaml.safe_dump(metadata)}---\n\n{body}", encoding="utf-8")
 
     def _carrier_digests(self):
@@ -310,6 +316,14 @@ declare_entity(
         self._write("AN-S-013-contract.md", "AN-S-013", "active", 1, container={"component": "C1"})
         self._write("AN-S-014-solution.md", "AN-S-014", "active", 1, container={"component": "C1"}, tier=1)
         self._write("AN-S-016@1-draft-contract.md", "AN-S-016", "draft", 1, container={"component": "C1"})
+        self._write("AN-S-017-contract.md", "AN-S-017", "active", 1, template="component_contract",
+                    container={"component": "C1"}, structure_tier=1, body="## Guarantee\n\nA guarantee.\n")
+        self._write("AN-S-018@1-draft-contract.md", "AN-S-018", "draft", 1, template="component_contract",
+                    container={"component": "C1"}, structure_tier=1)
+        self._write("AN-S-019-child-contract.md", "AN-S-019", "active", 1, template="component_contract",
+                    container={"component": "C2"}, structure_tier=1)
+        self._write("AN-S-020-wrong-tier-contract.md", "AN-S-020", "active", 1, template="component_contract",
+                    container={"component": "C1"}, structure_tier=0)
         async with (
             asyncio.timeout(25),
             stdio_client(StdioServerParameters(command=sys.executable, args=self.args)) as streams,
@@ -317,7 +331,7 @@ declare_entity(
         ):
             await client.initialize()
             for template, selector, expected in (
-                ("fetch_contracts", "tools", ["AN-S-012@1", "AN-S-013@1"]),
+                ("fetch_contracts", "tools", ["AN-S-012@1", "AN-S-013@1", "AN-S-017@1"]),
                 ("fetch_solutions", "c1", ["AN-S-014@1"]),
                 ("get_component_manifest", "C1", ["AN-S-011@1"]),
                 ("get_component_purpose", " Tools ", ["AN-S-011@1"]),

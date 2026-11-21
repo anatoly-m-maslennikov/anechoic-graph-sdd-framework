@@ -72,10 +72,25 @@ default to CSV and `query_run` defaults to `json_matrix`. Pass
 Use `component` with `fetch_contracts`, `fetch_solutions`,
 `get_component_manifest`, or `get_component_purpose`. It accepts a
 Component ID or a case-insensitive Manifest name. Contracts and Solutions
-list Active Spec Atoms owned by the Component at Tier 0 and Tier 1.
+list Current Spec Atoms directly owned by the Component. Contracts include
+Tier 0 Atoms and Tier 1 `component_contract` Atoms. Solutions include other
+Tier 1 Atoms.
 Use the ID if names coincide. The `components` table exposes Manifest
 settings and source references for custom SQL. Purpose lookup returns the
 Component Manifest when it contains a `## Purpose` section with prose.
+
+## Component Contract lifecycle
+
+Use `atom_lifecycle_create_draft` with `newAtom.template` set to
+`component_contract`. Supply `newAtom.container.component` as the Component ID,
+`newAtom.lens` as an enabled Lens, and `newAtom.body` as Markdown with
+`## Summary` and a nonempty `## Guarantee`. The tool sets Tier 1.
+
+Use the exact Draft reference and version from `savedDraft` with
+`atom_lifecycle_promote_draft` to publish the Contract. Put its exact Current
+revision in the `implements` list of the owning Component Package's
+`<package-folder-name>__spec_bind.yaml`. Workbench reports coverage for each
+Current Contract in `package_audit.component_contracts`.
 
 ## Run
 

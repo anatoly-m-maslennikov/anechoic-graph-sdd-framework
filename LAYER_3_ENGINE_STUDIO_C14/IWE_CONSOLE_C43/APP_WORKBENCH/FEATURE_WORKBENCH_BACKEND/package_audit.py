@@ -6,6 +6,7 @@ import sys
 from types import SimpleNamespace
 
 from native_carrier_header import native_header_view
+from native_component_contract import read_component_contract
 
 from LAYER_3_ENGINE_STUDIO_C14.FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.code_access import module_visibility
 from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.structure_host_pkg3.snapshot import read_structure
@@ -16,26 +17,37 @@ from .component_metrics import realization_component_paths
 def _contract_refs(selection, capture, package_paths):
     snapshot_path = getattr(selection, 'structure_snapshot', None)
     if snapshot_path is None:
-        return {}
+        return {}, {}
     try:
         snapshot = read_structure(snapshot_path)
         components = realization_component_paths(selection, snapshot, package_paths)
     except (OSError, ValueError) as error:
         print(f'Package Contract ownership unavailable: {error}', file=sys.stderr)
-        return {}
+        return {}, {}
 
     edges = {edge['source_ref']: edge for edge in capture.containment}
     specs = defaultdict(list)
+    component_contracts = defaultdict(list)
     for row in capture.atoms:
         edge = edges.get(row['ref'], {})
         if row['status_group'] != 'Current' or edge.get('target_kind') != 'Component':
             continue
         header = row['header_json']
         context = native_header_view(header).get('context', {})
-        if context.get('template') != 'PKG' or context.get('lens') != 'SPEC':
+        if context.get('template') != 'component_contract' and (
+                context.get('template') != 'PKG' or context.get('lens') != 'SPEC'):
             continue
         path = Path(row['source_path'])
         carrier = SimpleNamespace(metadata=header, body=row['_content_bytes'].decode('utf-8'))
+        if context.get('template') == 'component_contract':
+            try:
+                fields = read_component_contract(path, carrier, edge['target_ref'], selection.project_prefix)
+            except ValueError as error:
+                print(f'Invalid Component Contract {path}: {error}', file=sys.stderr)
+                continue
+            if fields:
+                component_contracts[edge['target_ref']].append(fields['ref_id'])
+            continue
         try:
             fields = read_package_spec(path, carrier, edge['target_ref'], selection.project_prefix)
         except ValueError as error:
@@ -53,7 +65,8 @@ def _contract_refs(selection, capture, package_paths):
                    for ref in refs]
         if len(matches) == 1:
             contracts[path] = matches[0]
-    return contracts
+    return contracts, {path: sorted(component_contracts.get(components.get(path), []))
+                       for path in package_paths}
 
 
 def replace_package_audit(connection, selection, capture, nodes, migration_refs, binding_states=None, *, tests):
@@ -63,6 +76,7 @@ def replace_package_audit(connection, selection, capture, nodes, migration_refs,
                        'has_public BOOLEAN, has_spec_bind BOOLEAN, binding_status VARCHAR, '
                        'all_pins_active BOOLEAN, pin_issues JSON, contract_ref VARCHAR, contract_covered BOOLEAN)')
     connection.execute('ALTER TABLE main.package_audit ADD COLUMN IF NOT EXISTS test_issue VARCHAR')
+    connection.execute('ALTER TABLE main.package_audit ADD COLUMN IF NOT EXISTS component_contracts JSON')
     if binding_states is None:
         binding_states = dict(connection.execute('SELECT relative_path, binding_status FROM main.package_audit').fetchall())
     packages = [(node[0], node[3]) for node in nodes if node[1] == 'package' and node[3]]
@@ -96,7 +110,7 @@ def replace_package_audit(connection, selection, capture, nodes, migration_refs,
         if binding_states.get(owner) == 'valid':
             pins[owner].append((kind, f'{atom}@{version}'))
 
-    contracts = _contract_refs(selection, capture, {path for _, path in packages})
+    contracts, component_contracts = _contract_refs(selection, capture, {path for _, path in packages})
 
     result = []
     for key, path in packages:
@@ -125,7 +139,9 @@ def replace_package_audit(connection, selection, capture, nodes, migration_refs,
                        state != 'missing', state, not issues if pins[path] else None,
                        json.dumps(issues), contract,
                        any(kind == 'implements' and ref == contract for kind, ref in resolved) if contract else None,
-                       test_issue))
+                       test_issue, json.dumps([
+                           {'ref': ref, 'covered': ('implements', ref) in pins[path]}
+                           for ref in component_contracts.get(path, [])])))
     connection.execute('DELETE FROM main.package_audit')
     if result:
-        connection.executemany('INSERT INTO main.package_audit VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', result)
+        connection.executemany('INSERT INTO main.package_audit VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', result)
