@@ -22,7 +22,9 @@ class CodeAccessTests(unittest.TestCase):
         return allows_import(self.entry, caller, self.provider, exports, **kwargs)
 
     def test_default_and_consumer_selectors(self):
-        for exports in (None, {self.entry: (None, None)}):
+        self.assertFalse(self.allows(self.parent))
+        self.assertFalse(self.allows(self.sibling))
+        for exports in ({self.entry: (None, None)},):
             self.assertTrue(self.allows(self.parent, exports))
             self.assertTrue(self.allows(self.sibling, exports))
             self.assertFalse(self.allows(self.outsider, exports))
@@ -39,7 +41,7 @@ class CodeAccessTests(unittest.TestCase):
         self.assertTrue(self.allows(self.outsider, marked_only=True, marker='public'))
         self.assertFalse(self.allows(self.outsider, marked_only=True, marker='internal'))
         self.assertFalse(self.allows(self.sibling, marked_only=True))
-        self.assertTrue(self.allows(self.sibling))
+        self.assertFalse(self.allows(self.sibling))
         self.assertFalse(self.allows(self.sibling, {}))
         self.assertTrue(self.allows(self.outsider, {self.entry: ('public', None)}, marked_only=True))
         self.assertFalse(allows_import('billing.api', self.outsider, self.provider,
@@ -78,6 +80,9 @@ class ParseCodeAccessTests(unittest.TestCase):
                                  'billing.api': ('internal', {'C43'}),
                                  'billing.other': (None, None),
                                  'billing.empty': ('public', set())}))
+        self.assertEqual(parse_code_access({'code_access': {'exports': {
+            'billing.family': 'family_pub', 'billing.any': {'pub': ['C43']},
+        }}}), (None, {'billing.family': ('internal', None), 'billing.any': ('public', {'C43'})}))
 
     def test_rejects_invalid_authored_values(self):
         for access in (

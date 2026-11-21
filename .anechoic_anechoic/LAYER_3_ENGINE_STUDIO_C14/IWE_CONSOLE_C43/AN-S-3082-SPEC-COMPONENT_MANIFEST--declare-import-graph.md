@@ -9,9 +9,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: active
-  version: 1
-  updated_at: '2026-11-20T10:44:30.157383+00:00'
+  status: "active"
+  version: 2
+  updated_at: "2026-11-21T12:14:05.597140+00:00"
 ---
 
 ## Summary
@@ -30,6 +30,19 @@ declare_entity(
         component_id='C61',
         name='IMPORT_GRAPH',
         lens_whitelist=['DES', 'QA', 'SWD'],
+        boundaries={
+            'code_access': {
+                'imports': [],
+                'exports': {
+                    'import_graph__family_pub': None,
+                    'import_graph__family_pub.ImportSite': None,
+                    'import_graph__family_pub.Source': None,
+                    'import_graph__family_pub.capture': None,
+                    'import_graph__family_pub.relevant_change': None,
+                    'import_graph__family_pub.resolve_realization': None,
+                },
+            },
+        },
     ),
 )
 ```

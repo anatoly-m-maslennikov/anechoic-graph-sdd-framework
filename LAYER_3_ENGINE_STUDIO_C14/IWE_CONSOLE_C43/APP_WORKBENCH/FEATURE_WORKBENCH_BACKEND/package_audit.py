@@ -7,6 +7,7 @@ from types import SimpleNamespace
 
 from native_carrier_header import native_header_view
 
+from LAYER_3_ENGINE_STUDIO_C14.FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.code_access import module_visibility
 from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.structure_host_pkg3.snapshot import read_structure
 from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.manifest_compiler_pkg1.package_spec_sources import read_package_spec
 from .component_metrics import realization_component_paths
@@ -71,9 +72,9 @@ def replace_package_audit(connection, selection, capture, nodes, migration_refs,
     for node in nodes:
         if node[1] == 'module' and node[3]:
             path = PurePosixPath(node[3])
-            for suffix in ('__internal', '__public'):
-                if path.stem.endswith(suffix):
-                    markers[path.parent.as_posix()].add(suffix)
+            visibility = module_visibility(path.stem)
+            if visibility:
+                markers[path.parent.as_posix()].add(visibility)
 
     exact = {row['_exact_ref']: row for row in capture.atoms}
     aliases = defaultdict(set)
@@ -120,7 +121,7 @@ def replace_package_audit(connection, selection, capture, nodes, migration_refs,
             test_issue = 'missing_test_target'
         elif key in test_targets and not markers[path]:
             test_issue = 'missing_visibility_marker'
-        result.append((key, path, '__internal' in markers[path], '__public' in markers[path],
+        result.append((key, path, 'internal' in markers[path], 'public' in markers[path],
                        state != 'missing', state, not issues if pins[path] else None,
                        json.dumps(issues), contract,
                        any(kind == 'implements' and ref == contract for kind, ref in resolved) if contract else None,

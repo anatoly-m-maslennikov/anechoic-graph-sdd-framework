@@ -297,7 +297,7 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
     async def test_package_audit_tracks_exact_pins_and_contracts(self):
         package = "src/UNIT_C1/service_pkg1"
         self._source("src/UNIT_C1/__init__.py", "")
-        marker = self._source(f"{package}/main__public.py", "pass\n")
+        marker = self._source(f"{package}/main__pub.py", "pass\n")
         self._source(f"{package}/child/main__internal.py", "pass\n")
         self._source(f"{package}/service_pkg1__tests/test_main.py", "pass\n")
         control = f"{fixture.CONTROL}/UNIT_C1"
@@ -460,7 +460,7 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
         issues = "SELECT relative_path, test_issue FROM package_audit WHERE test_issue IS NOT NULL ORDER BY relative_path"
         orphan = ["src/group/group__tests", "missing_test_target"]
         self.assertEqual([["src/UNIT_C1/service_pkg1", "missing_visibility_marker"], orphan], await rows(issues))
-        implementation.rename(implementation.with_name("main__internal.py"))
+        implementation.rename(implementation.with_name("main__family_pub.py"))
         async with asyncio.timeout(6):
             while await rows(issues) != [orphan]:
                 await asyncio.sleep(.03)

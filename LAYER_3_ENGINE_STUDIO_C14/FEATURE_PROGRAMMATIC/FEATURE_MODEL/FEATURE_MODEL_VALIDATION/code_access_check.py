@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from pathlib import PurePosixPath
 
-from .code_access import allows_import, parse_code_access
+from .code_access import allows_import, module_visibility, parse_code_access
 
 
 @dataclass(frozen=True)
@@ -39,14 +39,6 @@ def check_code_access(ownership, sources, occurrences):  # noqa: C901
     problems = []
     rules = {key: parse_code_access(owner['fields'].get('boundaries'))
              for key, owner in ownership.entries.items()}
-    marked = set()
-    for path in sources:
-        file = PurePosixPath(path)
-        if file.suffix == '.py' and file.stem.endswith(('__public', '__internal')):
-            owner = ownership.owner(path)
-            if owner and file.parent.as_posix() == owner['path']:
-                marked.add(owner['id'])
-
     for site in occurrences:
         def report(status, reason):
             problems.append(CodeAccessProblem(site.source_path, site.line, site.column,
@@ -92,13 +84,11 @@ def check_code_access(ownership, sources, occurrences):  # noqa: C901
                    for rule in imports]
         marker = None
         if site.target_kind == 'module' and path.parent.as_posix() == provider['path']:
-            for visibility in ('public', 'internal'):
-                if path.name.endswith('__' + visibility):
-                    marker = visibility
+            marker = module_visibility(path.name)
         layers = _ordered_layers(ownership, caller, provider)
         if not allows_import(entry, caller, provider, exports, inherited_imports=imports,
                              ordered_layers=layers,
-                             marked_only=provider['id'] in marked, marker=marker):
+                             marker=marker):
             reason = 'sibling layer order' if layers is not None and layers[1] >= layers[0] else 'code access rule'
             report('denied', reason)
     return tuple(problems)

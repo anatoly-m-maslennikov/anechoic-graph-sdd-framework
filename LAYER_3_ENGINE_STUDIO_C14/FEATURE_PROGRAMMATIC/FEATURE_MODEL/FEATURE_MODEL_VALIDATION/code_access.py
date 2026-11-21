@@ -2,6 +2,18 @@
 
 from collections.abc import Mapping
 
+_VISIBILITY_ALIASES = {'family_pub': 'internal', 'pub': 'public',
+                       'internal': 'internal', 'public': 'public'}
+
+
+def module_visibility(stem):
+    """Return the visibility of a marked Module filename stem."""
+    if stem.endswith(('__family_pub', '__internal')):
+        return 'internal'
+    if stem.endswith(('__pub', '__public')):
+        return 'public'
+    return None
+
 
 def allows_import(entry, caller, provider, exports, *, inherited_imports=(),
                   marked_only=False, marker=None, ordered_layers=None):
@@ -9,6 +21,8 @@ def allows_import(entry, caller, provider, exports, *, inherited_imports=(),
 
     ``inherited_imports`` contains caller-side allowlists, with None meaning
     unrestricted. ``marker`` is the visibility of the resolved root Module.
+    ``marked_only`` is accepted for compatibility. A Module without an export
+    declaration or a marker is Package-local in both cases.
     """
     if caller['id'] == provider['id']:
         return True
@@ -16,7 +30,7 @@ def allows_import(entry, caller, provider, exports, *, inherited_imports=(),
         return False
 
     if exports is None:
-        if marked_only and marker is None:
+        if marker is None:
             return False
         mode, consumers = marker, None
     elif entry in exports:
@@ -56,12 +70,12 @@ def _export(entry, declaration):
         if len(declaration) != 1:
             raise ValueError('an export must declare one visibility')
         mode, value = next(iter(declaration.items()))
-        if mode not in ('internal', 'public'):
+        if mode not in _VISIBILITY_ALIASES:
             raise ValueError('unknown export visibility')
         consumers = _selectors(value)
-    if mode is not None and mode not in ('internal', 'public'):
+    if mode is not None and (not isinstance(mode, str) or mode not in _VISIBILITY_ALIASES):
         raise ValueError('unknown export visibility')
-    return mode, consumers
+    return _VISIBILITY_ALIASES.get(mode), consumers
 
 
 def parse_code_access(boundaries):

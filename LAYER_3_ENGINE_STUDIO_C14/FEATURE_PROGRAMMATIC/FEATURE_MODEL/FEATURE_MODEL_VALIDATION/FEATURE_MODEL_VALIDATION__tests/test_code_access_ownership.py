@@ -42,6 +42,15 @@ class OwnershipTests(unittest.TestCase):
         self.assertEqual((sub['id'], sub['parent']), ('ENGINE_C1/FEATURE/pkg_pkg1/sub', 'pkg1'))
         self.assertEqual(result.owner('ENGINE_C1/bridge/file.py')['parent'], 'C1')
 
+    def test_component_alias_under_an_intermediate_realization_folder(self):
+        control = self.control / 'ENGINE_C1' / 'GRAPH_C3'
+        control.mkdir()
+        self.paths.remove('ENGINE_C1/bridge/GRAPH_C3')
+        self.paths.add('ENGINE_C1/bridge/GRAPH')
+        result = self.build()
+        self.assertEqual(result.owner('ENGINE_C1/bridge/GRAPH/api.py')['id'], 'C3')
+        self.assertEqual(result.entries['C3']['parent'], 'C1')
+
     def test_ambiguous_and_missing_declared_paths_fail(self):
         (self.root / 'ENGINE_C1/FEATURE/other_pkg1').mkdir()
         with self.assertRaisesRegex(ValueError, 'Package path'):

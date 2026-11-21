@@ -26,7 +26,34 @@ class CheckTests(unittest.TestCase):
         entries['provider']['fields'] = {}
         self.assertEqual(len(check_code_access(ownership, {'billing/api.py': None}, sites[:1])), 1)
         entries['other']['parent'] = 'root'
-        self.assertEqual(check_code_access(ownership, {'billing/api.py': None}, sites[:1]), ())
+        self.assertEqual(len(check_code_access(ownership, {'billing/api.py': None}, sites[:1])), 1)
+
+    def test_direct_visibility_is_provider_relative(self):
+        entries = {
+            'root': {'id': 'root', 'parent': None, 'path': '.', 'kind': 'component', 'fields': {}},
+            'provider': {'id': 'provider', 'parent': 'root', 'path': 'billing', 'kind': 'package', 'fields': {}},
+            'child': {'id': 'child', 'parent': 'provider', 'path': 'billing/child', 'kind': 'package', 'fields': {}},
+            'sibling': {'id': 'sibling', 'parent': 'root', 'path': 'sales', 'kind': 'package', 'fields': {}},
+            'descendant': {'id': 'descendant', 'parent': 'sibling', 'path': 'sales/sub', 'kind': 'package', 'fields': {}},
+            'other': {'id': 'other', 'parent': 'child', 'path': 'billing/child/other', 'kind': 'package', 'fields': {}},
+        }
+        ownership = CodeAccessOwnership(entries, {v['path']: k for k, v in entries.items()})
+        def allowed(source, target):
+            site = CodeAccessOccurrence(source, target, 'module', None, target, 1, 0, 'internal')
+            return not check_code_access(ownership, {target: None}, [site])
+        for target in ('billing/api__family_pub.py', 'billing/api__internal.py'):
+            for source in ('billing/a.py', 'root.py', 'sales/a.py'):
+                self.assertTrue(allowed(source, target), (source, target))
+            for source in ('billing/child/a.py', 'sales/sub/a.py', 'billing/child/other/a.py'):
+                self.assertFalse(allowed(source, target), (source, target))
+        for target in ('billing/api__pub.py', 'billing/api__public.py'):
+            self.assertTrue(allowed('sales/sub/a.py', target))
+        self.assertFalse(allowed('sales/a.py', 'billing/api.py'))
+        self.assertTrue(allowed('billing/a.py', 'billing/api.py'))
+        self.assertFalse(allowed('sales/a.py', 'billing/nested/api__family_pub.py'))
+        entries['provider']['fields'] = {'boundaries': {'code_access': {'exports': {'billing.api': 'public'}}}}
+        self.assertTrue(allowed('sales/sub/a.py', 'billing/api.py'))
+        self.assertFalse(allowed('sales/a.py', 'billing/api__pub.py'))
 
     def test_inherited_rules_and_uncertain_imports(self):
         entries = {

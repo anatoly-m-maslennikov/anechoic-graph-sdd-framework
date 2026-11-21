@@ -31,9 +31,9 @@ def _component_path(control, cid, component, parent, paths):
     if len(native) > 1:
         raise ValueError(f'Ambiguous native Component path: {cid}')
     if native:
-        alias = parent / native[0].removesuffix('_' + cid)
-        if alias in paths:
-            candidates.add(alias)
+        alias = native[0].removesuffix('_' + cid)
+        candidates.update(path for path in paths if path != parent
+                          and path.is_relative_to(parent) and path.name == alias)
     if len(candidates) > 1:
         raise ValueError(f'Ambiguous Component path: {cid}')
     return next(iter(candidates), None)
