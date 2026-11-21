@@ -8,8 +8,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 8
-  updated_at: '2026-11-21T19:14:35.061068+00:00'
+  version: 9
+  updated_at: '2026-11-21T20:42:37.490360+00:00'
 ---
 
 ## Summary
@@ -42,7 +42,7 @@ SPEC and TKT use this order:
 8. `state` contains `status`, `version`, and `updated_at`, in that order.
 
 The Project is the only Container for Axiom and Applicable Principle.
-Axiom requires Tier -1; Applicable Principle requires Tier 1. PMETA
+Axiom requires Tier -1; Applicable Principle requires Tier 2. Project Contracts require Tier 0. PMETA
 retains its existing Header representation.
 
 The citing Atom authors `IS_REFERENCE`. Derive `HAS_REFERENCE` as the

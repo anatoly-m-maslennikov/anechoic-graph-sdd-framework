@@ -65,8 +65,8 @@ def descriptor():
             "list_tickets lists Tasks and Epics with optional "
             "parent, kind, label and statuses. list_relations takes a reference and defaults to outgoing. "
             "count_relations_by_type groups relation counts by type and derived flag. "
-            "fetch_contracts, fetch_solutions, get_component_manifest, and "
-            "get_component_purpose accept a Component name or ID in component."
+            "fetch_contracts returns Current Tier 0 SPEC Atoms and fetch_solutions returns Current Tier 1 SPEC Atoms. "
+            "Both accept a Component name or ID in component, as do get_component_manifest and get_component_purpose."
         ),
         input_schema={
             "type": "object",
@@ -189,11 +189,9 @@ def run_arguments(arguments: dict) -> dict:
             tier = "coalesce(json_extract_string(to_json(a), '$.\"header.tier\"'), " \
                    "json_extract_string(to_json(a), '$.\"header.structure.tier\"'), " \
                    "json_extract_string(to_json(a), '$.\"header.context.tier\"'))"
-            contract = "coalesce(json_extract_string(to_json(a), '$.\"header.context.template\"'), '') = 'component_contract'"
-            classification = (f"(({tier} = '0' AND NOT ({contract})) OR ({tier} = '1' AND {contract}))"
-                              if template == "fetch_contracts" else f"({tier} = '1' AND NOT ({contract}))")
+            selected_tier = "0" if template == "fetch_contracts" else "1"
             where = ("a.status_group = 'Current' AND split_part(a.reference, '-', 2) = 'S' "
-                     f"AND {classification} "
+                     f"AND {tier} = '{selected_tier}' "
                      "AND EXISTS (SELECT 1 FROM relations AS edge WHERE edge.source_ref = a.reference "
                      "AND edge.source_kind = 'Atom' AND edge.target_kind = 'Component' "
                      f"AND edge.relation_type = 'CONTAINED_BY' AND NOT edge.derived AND edge.target_ref = {cid})")

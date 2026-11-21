@@ -196,7 +196,7 @@ class _NativeModel:
         if self.requires_atom_state:
             from types import SimpleNamespace
             fields.update(manifest_state_fields(SimpleNamespace(metadata=header), include_header=self.requires_atom_header))
-        names = {"axiom": ("Axiom", -1), "applicable_principle": ("Applicable Principle", 1)}
+        names = {"axiom": ("Axiom", -1), "applicable_principle": ("Applicable Principle", 2)}
         if template not in names or names[template][0] not in self._types:
             raise ValueError("Project SPEC template is not supported by the compiled Model")
         name, tier = names[template]

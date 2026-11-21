@@ -155,6 +155,47 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
                 for path in self.root.rglob("*") if path.is_file()
                 and path.relative_to(self.root).parts[0] not in {".anechoic_runtime", ".anechoic_tmp"}}
 
+    async def test_discovered_query_templates_and_statuses_are_callable(self):
+        samples = {
+            "get_atom": {"reference": "AN-T-009"},
+            "get_atom_state": {"reference": "AN-T-009"},
+            "find_atoms": {"text": "fixture"},
+            "list_versions": {"reference": "AN-T-009"},
+            "list_tickets": {"label": "Task"},
+            "list_atoms": {"family": "spec"},
+            "count_atoms": {"group_by": "status"},
+            "list_relations": {"reference": "AN-T-009"},
+            "count_relations_by_type": {},
+            "fetch_contracts": {"component": "C00"},
+            "fetch_solutions": {"component": "C00"},
+            "get_component_manifest": {"component": "C00"},
+            "get_component_purpose": {"component": "C00"},
+        }
+        async with (
+            asyncio.timeout(25),
+            stdio_client(StdioServerParameters(command=sys.executable, args=self.args)) as streams,
+            ClientSession(*streams) as client,
+        ):
+            await client.initialize()
+            tools = (await client.list_tools()).tools
+            descriptor = next(tool for tool in tools if tool.name == "query_template")
+            properties = descriptor.input_schema["properties"]
+            self.assertEqual(set(samples), set(properties["template"]["enum"]))
+            statuses = properties["statuses"]["items"]["enum"]
+            self.assertTrue({"ready", "in_queue", "complete"}.issubset(statuses))
+            for template, arguments in samples.items():
+                with self.subTest(template=template):
+                    response = await client.call_tool("query_template", {
+                        "template": template, "result_format": "json_matrix", **arguments,
+                    })
+                    self.assertFalse(response.is_error, response.structured_content)
+            for status in statuses:
+                with self.subTest(status=status):
+                    response = await client.call_tool("query_template", {
+                        "template": "list_tickets", "statuses": [status], "result_format": "json_matrix",
+                    })
+                    self.assertFalse(response.is_error, response.structured_content)
+
     async def test_ticket_label_queries_and_legacy_epic_kind(self):
         self._write("__TKT/TASKS/AN-T-011-EPIC--canonical.md", "AN-T-011", "active", 1, label="Epic")
         self._write("__TKT/TASKS/AN-T-012-SUB_EPIC--canonical.md", "AN-T-012", "active", 1, label="Sub-epic")
@@ -411,8 +452,8 @@ declare_entity(
         ):
             await client.initialize()
             for template, selector, expected in (
-                ("fetch_contracts", "tools", ["AN-S-012@1", "AN-S-013@1", "AN-S-017@1"]),
-                ("fetch_solutions", "c1", ["AN-S-014@1"]),
+                ("fetch_contracts", "tools", ["AN-S-012@1", "AN-S-013@1", "AN-S-020@1"]),
+                ("fetch_solutions", "c1", ["AN-S-014@1", "AN-S-017@1"]),
                 ("get_component_manifest", "C1", ["AN-S-011@1"]),
                 ("get_component_purpose", " Tools ", ["AN-S-011@1"]),
                 ("get_component_purpose", "Child", []),
@@ -431,6 +472,28 @@ declare_entity(
             self.assertFalse(result.is_error, result.structured_content)
             self.assertEqual([["C1", "Tools", "C0", 3, ["SPEC"], "AN-S-011@1", ["AN-S-011@1"]]],
                              result.structured_content["rows"])
+
+    async def test_project_queries_include_all_current_atoms_at_selected_tier(self):
+        self._write("AN-S-1428-axiom.md", "AN-S-1428", "active", 1, template="axiom", tier=-1)
+        self._write("AN-S-1429-contract.md", "AN-S-1429", "active", 1, template=None, tier=0)
+        self._write("AN-S-3190-principle.md", "AN-S-3190", "active", 1, template="applicable_principle", tier=2)
+        self._write("AN-S-3038-manifest.md", "AN-S-3038", "active", 1, template="component_manifest", tier=0)
+        self._write("AN-S-021-tier-one.md", "AN-S-021", "active", 1, template=None, tier=1)
+        async with (
+            asyncio.timeout(25),
+            stdio_client(StdioServerParameters(command=sys.executable, args=self.args)) as streams,
+            ClientSession(*streams) as client,
+        ):
+            await client.initialize()
+            for template, expected in (
+                ("fetch_contracts", ["AN-S-1429@1", "AN-S-3038@1"]),
+                ("fetch_solutions", ["AN-S-021@1"]),
+            ):
+                result = await client.call_tool("query_template", {
+                    "template": template, "component": "C0", "result_format": "json_matrix",
+                })
+                self.assertFalse(result.is_error, result.structured_content)
+                self.assertEqual(expected, [row[0] for row in result.structured_content["rows"]])
 
     async def test_http_queries_native_projection_without_legacy_routes(self):
         from http_paths import HEALTH_PATH, MCP_PATH, WORKBENCH_PATH

@@ -23,6 +23,29 @@ from ATOM_LIFECYCLE.native_update import (archive_spec_draft, archive_ticket, ch
                                            change_ticket_status, direct_update)
 
 
+# Shared case dimensions for static and MCP lifecycle checks.  None is the
+# admitted generic SPEC or template-free PMETA Draft, not a wildcard.
+LIFECYCLE_TEMPLATES = {
+    'TKT': ('task', 'epic', 'problem', 'question', 'code_spec_mismatch', 'opportunity',
+            'analysis_report', 'work_report', 'work_log', 'spec_proposal'),
+    'SPEC': (None, 'DECISION', 'PKG', 'POLICY', 'action', 'component_contract', 'component_manifest',
+             'project_goal', 'project_manifest', 'step', 'workflow', 'axiom', 'applicable_principle'),
+    'PMETA': ('action', 'step', 'workflow', None),
+}
+LIFECYCLE_ROUTES = ('create_draft', 'update', 'create_asset', 'direct_update',
+                    'promote_draft', 'change_status', 'archive')
+
+
+def lifecycle_cases():
+    for family, templates in LIFECYCLE_TEMPLATES.items():
+        for template in templates:
+            for situation in ('new', 'current', 'draft', 'archived'):
+                for contained in (False, True):
+                    for route in LIFECYCLE_ROUTES:
+                        yield {'route': route, 'family': family, 'template': template,
+                               'situation': situation, 'contained': contained}
+
+
 class LifecycleRouteMatrix(unittest.TestCase):
     def project(self):
         root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
@@ -171,6 +194,105 @@ class LifecycleRouteMatrix(unittest.TestCase):
 
     write = fixtures.NativeDraftTests.write
 
+    def test_ticket_situation_route_rejections(self):
+        templates = ('task', 'epic', 'problem', 'question', 'code_spec_mismatch', 'opportunity',
+                     'analysis_report', 'work_report', 'work_log', 'spec_proposal')
+        for template in templates:
+            for situation in ('new', 'current', 'draft', 'archived'):
+                for contained in (False, True):
+                    with self.subTest(family='TKT', template=template, situation=situation, contained=contained):
+                        project = self.project()
+                        container = {'atom': 'AN-T-1'} if contained else {'component': 'C00'}
+                        status = {'current': 'in_queue', 'draft': 'draft', 'archived': 'archived'}.get(situation)
+                        if status:
+                            header = canonical_native_header({'identity': {'atom_id': 'AN-T-2'},
+                                'context': {'container': container, 'template': template},
+                                'state': {'status': status, 'version': 1, 'updated_at': '2026-01-01'}})
+                            owner = project.control_root / '001_TICKETS/TASKS/AN-T-1-TASK--owner'
+                            path = native_carrier_path(header, 'Example', project_root=project.control_root,
+                                owner_directory=owner if contained else project.control_root,
+                                owner_template='task' if contained else None)
+                            path.parent.mkdir(parents=True, exist_ok=True)
+                            path.write_text('---\n' + yaml.safe_dump(header, sort_keys=False) +
+                                            '---\n\n## Summary\n\nExample\n')
+                        ref = 'AN-T-2' + ({'draft': '@1-draft', 'archived': '@1'}.get(situation, ''))
+                        target = {'ref_id': ref, 'version': 1}
+                        capture = capture_native(project)
+                        self.assertFalse(capture.errors, capture.errors)
+                        before = self.files(project)
+                        calls = [
+                            (change_spec_status, {'target': target, 'targetStatus': 'active'}),
+                            (archive_spec_draft, {'target': target}),
+                        ]
+                        if situation != 'current':
+                            calls.append((change_ticket_status, {'target': target, 'targetStatus': 'done'}))
+                        if situation in ('draft', 'archived') or (situation == 'current' and template not in ('task', 'epic')):
+                            calls.append((create_draft, {'sourceCurrent': target}))
+                        if situation in ('new', 'archived') or template in ('task', 'epic', 'problem', 'question', 'code_spec_mismatch', 'opportunity'):
+                            calls.append((direct_update, {'target': target, 'changes': {'body': '\n## Summary\n\nExample\n'}}))
+                        if situation != 'draft' or template not in ('task', 'epic'):
+                            calls.append((promote_draft, {'target': target, 'targetStatus': 'backlog'}))
+                        for operation, params in calls:
+                            with self.subTest(route=operation.__name__):
+                                kwargs = {'current_rows': capture.atoms}
+                                if operation is change_ticket_status:
+                                    kwargs['check_definition'] = lambda: None
+                                with self.assertRaises((InputError, SourceChanged)):
+                                    operation(project, params, **kwargs)
+                                self.assertEqual(before, self.files(project))
+
+    def test_non_ticket_situation_rejects_ticket_routes(self):
+        templates = [('SPEC', 'AN-S-2', template) for template in
+                     (None, 'DECISION', 'PKG', 'POLICY', 'action', 'component_contract', 'component_manifest',
+                      'project_goal', 'project_manifest', 'step', 'workflow', 'axiom', 'applicable_principle')]
+        templates += [('PMETA', 'AN-P-2', template) for template in ('action', 'step', 'workflow', None)]
+        for family, atom_id, template in templates:
+            for situation in ('new', 'current', 'draft', 'archived'):
+                for contained in (False, True):
+                    with self.subTest(family=family, template=template, situation=situation, contained=contained):
+                        project = self.project()
+                        container = {'atom': 'AN-T-1'} if contained else {'component': 'C00'}
+                        status = {'current': 'active', 'draft': 'draft', 'archived': 'archived'}.get(situation)
+                        if status and not (family == 'PMETA' and template is None and situation != 'draft'):
+                            context = {'container': container, 'template': template}
+                            if family == 'SPEC':
+                                context.update(lens='SPEC', tier=1)
+                            if template is None:
+                                context.pop('template')
+                            header = canonical_native_header({'identity': {'atom_id': atom_id}, 'context': context,
+                                'state': {'status': status, 'version': 1, 'updated_at': '2026-01-01'}})
+                            owner = project.control_root / '001_TICKETS/TASKS/AN-T-1-TASK--owner'
+                            path = native_carrier_path(header, 'Example', project_root=project.control_root,
+                                owner_directory=owner if contained else project.control_root,
+                                owner_template='task' if contained else None)
+                            path.parent.mkdir(parents=True, exist_ok=True)
+                            path.write_text('---\n' + yaml.safe_dump(header, sort_keys=False) +
+                                            '---\n\n## Summary\n\nExample\n')
+                        ref = atom_id + ({'draft': '@1-draft', 'archived': '@1'}.get(situation, ''))
+                        target = {'ref_id': ref, 'version': 1}
+                        capture = capture_native(project)
+                        self.assertFalse(capture.errors, capture.errors)
+                        before = self.files(project)
+                        calls = [(direct_update, {'target': target, 'changes': {'body': '\n## Summary\n\nExample\n'}}),
+                                 (change_ticket_status, {'target': target, 'targetStatus': 'done'}),
+                                 (archive_ticket, {'target': target})]
+                        if family == 'PMETA' or situation != 'current':
+                            calls.append((change_spec_status, {'target': target, 'targetStatus': 'active'}))
+                        if family == 'PMETA' or situation != 'draft':
+                            calls.append((archive_spec_draft, {'target': target}))
+                        if situation != 'current':
+                            calls.append((create_draft, {'sourceCurrent': target}))
+                        if situation != 'draft':
+                            calls.append((promote_draft, {'target': target, 'targetStatus': 'ready'}))
+                        for operation, params in calls:
+                            with self.subTest(route=operation.__name__):
+                                kwargs = {'current_rows': capture.atoms}
+                                if operation is change_ticket_status:
+                                    kwargs['check_definition'] = lambda: None
+                                with self.assertRaises((InputError, SourceChanged)):
+                                    operation(project, params, **kwargs)
+                                self.assertEqual(before, self.files(project))
+
     def test_flat_ticket_archive_requires_replacement(self):
         templates = ('task', 'epic', 'problem', 'question', 'code_spec_mismatch', 'opportunity',
                      'analysis_report', 'work_report', 'work_log', 'spec_proposal')
@@ -256,6 +378,45 @@ class LifecycleRouteMatrix(unittest.TestCase):
                     with self.assertRaises((InputError, SourceChanged)):
                         archive_spec_draft(project, {'target': target}, current_rows=rows())
                     self.assertEqual(before, self.files(project))
+
+    def test_asset_body_update_current_and_draft(self):
+        for template in ('analysis_report', 'work_report', 'work_log', 'spec_proposal'):
+            for situation in ('current', 'draft'):
+                for contained in (False, True):
+                    with self.subTest(route='direct_update', family='TKT', template=template,
+                                      situation=situation, contained=contained):
+                        project = self.project()
+                        container = {'atom': 'AN-T-1'} if contained else {'component': 'C00'}
+                        header = canonical_native_header({'identity': {'atom_id': 'AN-T-2'},
+                            'context': {'container': container, 'template': template},
+                            'state': {'status': 'draft' if situation == 'draft' else 'in_queue',
+                                      'version': 1, 'updated_at': '2026-01-01'}})
+                        owner = project.control_root / '001_TICKETS/TASKS/AN-T-1-TASK--owner'
+                        path = native_carrier_path(header, 'Example', project_root=project.control_root,
+                            owner_directory=owner if contained else project.control_root,
+                            owner_template='task' if contained else None)
+                        path.parent.mkdir(parents=True, exist_ok=True)
+                        path.write_text('---\n' + yaml.safe_dump(header, sort_keys=False) +
+                                        '---\n\n## Summary\n\nExample\n\n## Details\n\nOld\n')
+                        ref = 'AN-T-2@1-draft' if situation == 'draft' else 'AN-T-2'
+                        body = '\n## Summary\n\nExample\n\n## Details\n\nNew\n'
+                        before = self.files(project)
+                        with self.assertRaises(InputError):
+                            direct_update(project, {'target': {'ref_id': ref, 'version': 1},
+                                'changes': {'body': body.replace('Example', 'Changed')}},
+                                current_rows=capture_native(project).atoms)
+                        self.assertEqual(before, self.files(project))
+                        result = direct_update(project, {'target': {'ref_id': ref, 'version': 1},
+                                                        'changes': {'body': body}},
+                                               current_rows=capture_native(project).atoms)
+                        self.assertEqual('completed', result['outcome'], result)
+                        self.assertEqual(['modify'], [effect['operation'] for effect in result['effects']])
+                        capture = capture_native(project)
+                        self.assertFalse(capture.errors, capture.errors)
+                        row = next(row for row in capture.atoms if row['_exact_ref'] == (ref if situation == 'draft' else ref + '@1'))
+                        self.assertEqual(header, row['header_json'])
+                        self.assertEqual(body.encode(), row['_content_bytes'])
+                        self.assertEqual(path.relative_to(project.root).as_posix(), row['source_path'])
 
     def test_asset_create_is_direct_in_queue(self):
         for template in ('analysis_report', 'work_report', 'work_log', 'spec_proposal'):

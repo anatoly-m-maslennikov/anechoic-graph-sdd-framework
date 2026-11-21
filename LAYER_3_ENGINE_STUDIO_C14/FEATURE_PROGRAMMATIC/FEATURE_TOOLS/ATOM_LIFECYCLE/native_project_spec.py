@@ -11,7 +11,7 @@ from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import capture_n
 from . import common
 from .source import bind_query_reader
 
-PROJECT_SPEC_TIERS = {'axiom': -1, 'applicable_principle': 1}
+PROJECT_SPEC_TIERS = {'axiom': -1, 'applicable_principle': 2}
 
 
 def validate_project_spec(header, validate):

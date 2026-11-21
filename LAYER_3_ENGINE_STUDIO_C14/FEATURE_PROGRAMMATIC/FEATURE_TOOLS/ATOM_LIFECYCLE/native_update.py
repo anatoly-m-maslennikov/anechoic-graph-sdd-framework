@@ -132,8 +132,7 @@ def direct_update(selection, params, *, current_rows):
     selected, digest, path = _select_ticket(selection, target, current_rows, allow_draft=True)
     branch = path.relative_to(selection.control_root / ('__TKT' if '__TKT' in path.parts else TICKET_DIRECTORY)).parts[0]
     template = native_header_view(selected['header_json']).get('context', {}).get('template')
-    linked_asset = (branch in {'TASKS', 'ISSUES'} and isinstance(template, str)
-                    and template.casefold().replace(' ', '_') in {'analysis_report', 'work_log'})
+    linked_asset = branch in {'TASKS', 'ISSUES'} and native_ticket_asset(template)
     if branch != 'ASSETS' and not linked_asset:
         raise InputError('target', 'Direct body updates are limited to Ticket Assets.')
     with _project_write_lock(selection.root):
