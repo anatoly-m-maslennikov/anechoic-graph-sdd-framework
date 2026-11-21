@@ -9,8 +9,8 @@ context:
   template: problem
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-21T16:25:45+00:00'
+  version: 2
+  updated_at: '2026-11-21T17:50:46.330939+00:00'
 ---
 ## Summary
 
@@ -21,8 +21,8 @@ Draft promotion scans and rebuilds the full Workbench index
 ### Prose Claim
 
 The Operator reports repeated Draft promotion waits of about two minutes.
-The installed MCP checks the full Atom tree before writing, then scans it
-again and replaces the Workbench projection before replying.
+Before the first fix, MCP checked the full Atom tree before writing, then
+scanned it again and replaced the Workbench projection before replying.
 
 The production log recorded an 18-second projection rebuild. A separate
 read-only probe in the production container took 75 seconds to capture
@@ -30,10 +30,17 @@ read-only probe in the production container took 75 seconds to capture
 
 ## Current state
 
-The checkout refreshes the recorded changed paths after a write. A regression
-test verifies immediate visibility of the Current and Archived revisions
-without a full projection. The installed runtime still uses the previous path.
-The pre-write consistency check still reads the full tree.
+The installed runtime refreshes the recorded changed paths after each write.
+The checkout verifies the indexed population with file metadata. It reads
+changed or new carriers and retains duplicate and concurrent-edit checks.
+Local Release is pending for the pre-write fix.
+
+## Verification
+
+A Docker rehearsal on 6,816 carriers measured 1.79 s for pre-write
+verification, 5 ms for publication, and 171 ms for Workbench refresh.
+Promotion returned in 1.99 s with the Current and Archived revisions
+immediately queryable. 104 focused tests passed.
 
 ## Resolution criteria
 

@@ -15,7 +15,7 @@ from native_carrier_header import canonical_native_header, native_header_view
 from native_component_contract import read_component_contract
 from native_carrier_placement import native_carrier_path, native_ticket_label, spec_lens_directories
 
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import capture_native
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import capture_native, revalidate_native
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_rows import frontmatter_bounds
 from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier
 from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext
@@ -496,7 +496,7 @@ def _create_task(selection, values, current_rows, structure_snapshot, ticket_lab
         return common.result(effects=outcome.effects, errors=outcome.errors, **data)
 
 
-def _promote_new(selection, target, status, draft, current_rows):
+def _promote_new(selection, target, status, draft, current_rows, previous_capture):
     atom_id = target['ref_id'].split('@')[0]
     relative, digest = draft.get('source_path'), draft.get('_source_sha256')
     if (not isinstance(relative, str) or not isinstance(digest, str)
@@ -514,7 +514,7 @@ def _promote_new(selection, target, status, draft, current_rows):
     root = root if path.parent == root / '000_draft' else None
     with _project_write_lock(selection.root):
         try:
-            capture = capture_native(selection)
+            capture = revalidate_native(selection, previous_capture)
             rows = [row for row in capture.atoms if row.get('id') == atom_id]
             if (capture.errors or len(rows) != 1 or any(rows[0].get(key) != draft.get(key) for key in (
                     'source_path', 'id', 'ref', '_exact_ref', 'version', 'status', 'status_group',
@@ -563,7 +563,7 @@ def _promote_new(selection, target, status, draft, current_rows):
         return common.result(effects=recorded, errors=removed.errors, **data)
 
 
-def _publish_first_spec(selection, draft, structure_snapshot):
+def _publish_first_spec(selection, draft, structure_snapshot, previous_capture):
     atom_id, ref_id = draft['id'], draft['_exact_ref']
     relative, digest = draft.get('source_path'), draft.get('_source_sha256')
     if (not isinstance(relative, str) or not isinstance(digest, str)
@@ -576,7 +576,7 @@ def _publish_first_spec(selection, draft, structure_snapshot):
         raise common.InputError('target', 'Select a Spec in its native Draft directory.')
     with _first_spec_write_lock(selection.root):
         try:
-            capture = capture_native(selection)
+            capture = revalidate_native(selection, previous_capture)
             history = [row for row in capture.atoms if row['id'] == atom_id]
             matching = [row for row in history if row['_exact_ref'] == ref_id]
             if capture.errors or matching != [draft] or any(row['status_group'] != 'Draft' for row in history):
@@ -635,7 +635,8 @@ def _publish_first_spec(selection, draft, structure_snapshot):
         return common.result(effects=recorded, errors=errors, **data)
 
 
-def _cleanup_published_draft(selection, target, status, draft, current, structure_snapshot, current_rows):
+def _cleanup_published_draft(selection, target, status, draft, current, structure_snapshot, current_rows,
+                             previous_capture):
     atom_id, version = target['ref_id'].split('@')[0], target['version']
     if current.get('status') != status:
         raise common.InputError('targetStatus', 'Published carrier Status differs from the requested Status.')
@@ -659,7 +660,7 @@ def _cleanup_published_draft(selection, target, status, draft, current, structur
         if '-T-' in atom_id and (companion.exists() or companion.is_symlink()):
             raise common.InputError('target', 'Recover the interrupted Draft companion before removing its carrier.')
         try:
-            capture = capture_native(selection)
+            capture = revalidate_native(selection, previous_capture)
             if capture.errors:
                 raise common.SourceChanged('Native carrier capture is incomplete.')
             for row in (draft, current):
@@ -728,7 +729,7 @@ def _rollback_promotion(selection, previous_path, previous_digest, created, reco
     return common.result(effects=recorded, errors=errors)
 
 
-def promote_draft(selection, params, *, current_rows, structure_snapshot=None):
+def promote_draft(selection, params, *, current_rows, structure_snapshot=None, previous_capture=None):
     """Publish a native Draft."""
     if not isinstance(params, dict) or set(params) != {'target', 'targetStatus'}:
         raise common.InputError('target', 'Supply an exact Draft target and Current Status.')
@@ -750,13 +751,14 @@ def promote_draft(selection, params, *, current_rows, structure_snapshot=None):
         raise common.SourceChanged('Draft or Current predecessor is missing or ambiguous.')
     if not predecessors:
         if '-S-' in atom_id:
-            return _publish_first_spec(selection, chosen[0], structure_snapshot)
+            return _publish_first_spec(selection, chosen[0], structure_snapshot, previous_capture)
         if version == 1 and '-T-' in atom_id:
-            return _promote_new(selection, target, status, chosen[0], current_rows)
+            return _promote_new(selection, target, status, chosen[0], current_rows, previous_capture)
         raise common.SourceChanged('Current predecessor is missing.')
     draft, previous = chosen[0], predecessors[0]
     if previous.get('version') == version:
-        return _cleanup_published_draft(selection, target, status, draft, previous, structure_snapshot, current_rows)
+        return _cleanup_published_draft(selection, target, status, draft, previous, structure_snapshot, current_rows,
+                                        previous_capture)
     if type(previous.get('version')) is not int or previous['version'] >= version:
         raise common.InputError('target', 'Draft Version must be newer than its Current predecessor.')
     root = _revision_root(selection, previous, structure_snapshot, current_rows)
@@ -783,7 +785,7 @@ def promote_draft(selection, params, *, current_rows, structure_snapshot=None):
 
     with _project_write_lock(selection.root):
         try:
-            capture = capture_native(selection)
+            capture = revalidate_native(selection, previous_capture)
             if capture.errors:
                 raise common.SourceChanged('Native carrier capture is incomplete.')
             for row in (draft, previous):

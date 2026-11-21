@@ -11,7 +11,7 @@ import yaml
 APP_ROOT = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(APP_ROOT), str(APP_ROOT.parent / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS")]
 
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import capture_native  # noqa: E402
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import capture_native, revalidate_native  # noqa: E402
 
 
 class NativeCaptureTests(unittest.TestCase):
@@ -118,11 +118,24 @@ class NativeCaptureTests(unittest.TestCase):
         duplicate.unlink()
         repaired = capture_native(self.selection, previous=result, paths=changed)
         self.assertEqual(capture_native(self.selection), repaired)
+        self.assertEqual(repaired, revalidate_native(self.selection, result))
 
     def test_manifest_drift_refuses_capture(self):
         self.manifest.write_text("changed", encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "Manifest changed"):
             capture_native(self.selection)
+
+    def test_revalidation_refuses_new_carrier_between_inventory_passes(self):
+        previous = capture_native(self.selection)
+
+        def capture_then_add(*args, **kwargs):
+            captured = capture_native(*args, **kwargs)
+            self.write("new/AN-S-2--added.md", "AN-S-2", "active", 1)
+            return captured
+
+        with patch(f"{capture_native.__module__}.capture_native", side_effect=capture_then_add):
+            with self.assertRaisesRegex(ValueError, "carriers changed during capture"):
+                revalidate_native(self.selection, previous)
 
     def test_archive_rejects_a_draft_marker_and_wrong_tree(self):
         self.write("archived/AN-S-2@1-draft--withdrawn.md", "AN-S-2", "archived", 1)

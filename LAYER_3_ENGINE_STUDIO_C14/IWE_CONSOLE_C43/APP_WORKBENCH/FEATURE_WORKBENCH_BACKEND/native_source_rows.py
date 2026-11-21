@@ -175,6 +175,29 @@ def capture_native(
     return _unique_revisions(candidates, errors, versions)
 
 
+def revalidate_native(selection: Any, previous: NativeCapture | None) -> NativeCapture:
+    """Prove the indexed Atom population against disk before a write."""
+    if previous is None or previous.errors:
+        return capture_native(selection)
+    control, root = selection.control_root, selection.root
+    installed = control / "000_ANECHOIC_framework"
+    reader = ReadContext(roots=[str(control)], limits=dict(CEILINGS))
+
+    def versions():
+        observed = {}
+        paths = reader.inventory(control, remember=False, versions=observed)
+        return {str(path): observed[str(path)] for path in paths
+                if path.suffix == ".md" and not path.is_relative_to(installed)}
+
+    before = versions()
+    changed = {PurePosixPath(path).relative_to(root) for path in before.keys() | previous.versions.keys()
+               if before.get(path) != previous.versions.get(path)}
+    capture = capture_native(selection, previous=previous, paths=changed)
+    if versions() != before:
+        raise ValueError("Native Project carriers changed during capture")
+    return capture
+
+
 def _unique_revisions(candidates, errors, versions):
     rows, containment = [], []
     exact_paths: set[str] = set()

@@ -1,6 +1,5 @@
 """Bound all reads, reject protected paths, and fingerprint actual inputs."""
 
-from contextlib import suppress
 from dataclasses import dataclass, field
 import hashlib
 import os
@@ -116,19 +115,22 @@ class ReadContext:
         if self.bytes_read + size > self.limits["max_total_read_bytes"]:
             raise LimitReached("max_total_read_bytes")
 
-    def inventory(self, root: Path, *, remember: bool = True) -> list[Path]:
+    def inventory(self, root: Path, *, remember: bool = True,
+                  versions: dict[str, tuple[int, ...]] | None = None) -> list[Path]:
         root = self.allowed(root)
         pending = [root]
         found: list[Path] = []
         while pending:
             path = pending.pop()
             self.checkpoint()
-            mode = 0
-            with suppress(OSError):
-                mode = path.lstat().st_mode
-            if stat.S_ISLNK(mode):
-                found.append(path)
-            elif stat.S_ISDIR(mode):
+            try:
+                info = path.lstat()
+            except OSError:
+                if versions is not None:
+                    raise
+                info = None
+            mode = info.st_mode if info is not None else 0
+            if stat.S_ISDIR(mode):
                 self.allowed(path)
                 descriptor = open_regular(path, directory=True)
                 try:
@@ -141,8 +143,10 @@ class ReadContext:
                                 raise ReadFailure("Directory traversal exceeds host ceiling.")
                 finally:
                     os.close(descriptor)
-            elif path.suffix.lower() == ".md" or protected(path):
+            elif stat.S_ISLNK(mode) or path.suffix.lower() == ".md" or protected(path):
                 found.append(path)
+                if versions is not None and info is not None:
+                    versions[str(path)] = self.version(info)
             if len(found) > self.limits["max_candidates"]:
                 raise LimitReached("max_candidates")
         names = tuple(sorted(str(path) for path in found))

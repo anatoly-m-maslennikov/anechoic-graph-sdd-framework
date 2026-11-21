@@ -5,6 +5,7 @@ from contextlib import redirect_stderr
 from dataclasses import replace
 from io import StringIO
 import json
+import os
 from pathlib import Path
 import subprocess
 from types import SimpleNamespace
@@ -58,7 +59,7 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
         return gateway
 
     async def test_lifecycle_writes_refresh_atoms_without_full_projection(self):
-        self._source(f"{fixture.CONTROL}/__TKT/TASKS/AN-T-010-TASK--existing-task.md", """---
+        unrelated = self._source(f"{fixture.CONTROL}/__TKT/TASKS/AN-T-010-TASK--existing-task.md", """---
 atom_family: TKT
 atom_id: AN-T-010
 structure:
@@ -92,10 +93,19 @@ Existing task
                     'SELECT reference FROM atoms WHERE reference = ?', [draft['ref_id']]
                 ).fetchall(), [(draft['ref_id'],)])
 
-            promoted = owner.lifecycle('atom_lifecycle_promote_draft', {
-                'target': {'ref_id': draft['ref_id'], 'version': draft['version']},
-                'targetStatus': 'active',
-            })
+            reads = []
+            read = ReadContext.read
+
+            def record_read(reader, path, **kwargs):
+                reads.append(path)
+                return read(reader, path, **kwargs)
+
+            with patch.object(ReadContext, 'read', record_read):
+                promoted = owner.lifecycle('atom_lifecycle_promote_draft', {
+                    'target': {'ref_id': draft['ref_id'], 'version': draft['version']},
+                    'targetStatus': 'active',
+                })
+            self.assertNotIn(unrelated, reads)
             self.assertFalse(promoted['errors'], promoted)
             with store._lock:
                 self.assertEqual(store._connection.execute(
@@ -121,6 +131,57 @@ Existing task
                     'FROM atoms WHERE reference IN (?, ?, ?) ORDER BY "header.state.version"',
                     [active, archived, revision['ref_id']],
                 ).fetchall(), [(archived, 1, 'archived'), (active, 2, 'active')])
+
+    async def test_promotion_detects_unseen_duplicate_with_restored_mtime(self):
+        carrier = """---
+atom_family: TKT
+atom_id: AN-T-010
+structure:
+  container:
+    component: C00
+  priority: 2
+context:
+  template: task
+  label: Task
+state:
+  status: active
+  version: 1
+  updated_at: '2026-11-19T00:00:00Z'
+---
+## Summary
+
+Existing task
+"""
+        self._source(f"{fixture.CONTROL}/__TKT/TASKS/AN-T-010-TASK--existing-task.md", carrier)
+        duplicate = self._source(
+            f"{fixture.CONTROL}/__TKT/TASKS/099_archived/unrelated.md",
+            carrier.replace('AN-T-010', 'AN-T-999').replace('status: active', 'status: archived')
+                   .replace('version: 1', 'version: 2'),
+        )
+        gateway = await self._gateway(enabled=False)
+        owner = gateway._native_query
+        with owner._interface_lock:
+            result = owner.lifecycle('atom_lifecycle_update', {
+                'sourceCurrent': {'ref_id': 'AN-T-010', 'version': 1},
+                'changes': {'body': '## Summary\n\nExisting task\n\nRevised.\n'},
+            })
+            self.assertFalse(result['errors'], result)
+            self.assertIn('savedDraft', result, result)
+            draft = result['savedDraft']
+            before = duplicate.stat()
+            duplicate.write_text(duplicate.read_text().replace('AN-T-999', 'AN-T-010'))
+            os.utime(duplicate, ns=(before.st_atime_ns, before.st_mtime_ns))
+            self.assertEqual(duplicate.stat().st_size, before.st_size)
+            self.assertEqual(duplicate.stat().st_mtime_ns, before.st_mtime_ns)
+            promoted = owner.lifecycle('atom_lifecycle_promote_draft', {
+                'target': {'ref_id': draft['ref_id'], 'version': draft['version']},
+                'targetStatus': 'active',
+            })
+            self.assertEqual(promoted['outcome'], 'needs_input', promoted)
+            self.assertIn('already has a non-Draft revision',
+                          promoted['requested_input']['target']['error'])
+            self.assertFalse(promoted['effects'])
+            self.assertTrue(duplicate.exists())
 
     async def test_workbench_file_and_directory_changes_read_only_affected_carriers(self):
         gateway = await self._gateway(enabled=False)

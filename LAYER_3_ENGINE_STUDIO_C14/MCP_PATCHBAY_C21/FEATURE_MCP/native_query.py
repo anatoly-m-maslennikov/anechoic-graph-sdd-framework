@@ -630,6 +630,7 @@ class NativeQueryOwner(ServiceInterface):
                     outcome = promote_draft(
                         self.selection, arguments, current_rows=rows,
                         structure_snapshot=structure_snapshot,
+                        previous_capture=self._capture if self._projection_selection == self.selection else None,
                     )
                 else:
                     check_definition = bind_status_specifications(
