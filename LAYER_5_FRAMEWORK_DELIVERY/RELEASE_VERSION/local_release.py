@@ -38,12 +38,10 @@ from release_image_provenance import release_image_provenance  # noqa: E402
 from LAYER_5_FRAMEWORK_DELIVERY.local_release_test_process import run_logged_test_process  # noqa: E402
 from release_support import (  # noqa: E402
     LocalReleaseError,
-    _DEFAULT_INSTALLED,
     _DEFAULT_PRODUCT,
     _GENERATED_ASSETS,
     _PRESERVED_NAMES,
     _RUN_ID,
-    _SOURCE_UNITS,  # noqa: F401 - retained as the module's tested release-source contract.
     _build_predecessor,
     _cleanup_staging,
     _clear_target,
@@ -56,7 +54,6 @@ from release_support import (  # noqa: E402
     _project_path,
     _read_version,
     _relative,
-    _release_sources,
     _root,
     _target,
     _verify_package,
@@ -117,21 +114,19 @@ def run_local_release(
         raise LocalReleaseError("local-release-test-modules-invalid")
     root = _root(project_root)
     from project_selection import ProjectSelectionError
-    from native_project_selection import NativeProjectSelection
     from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import select_runtime_project
     installation_lock = ExitStack()
     try:
         selection = select_runtime_project(root)
     except ProjectSelectionError as error:
         raise LocalReleaseError("local-release-project-selection-invalid") from error
-    native = isinstance(selection, NativeProjectSelection)
     cleanup_runner = runner
     default_runner = runner is None
     if runner is None:
         runner = lambda argv, cwd: subprocess.run(argv, cwd=cwd, text=True, capture_output=True, check=False)
 
     product = _target(root, Path(_DEFAULT_PRODUCT), label="product-root")
-    installed = _target(root, selection.control_relative / "000_ANECHOIC_framework" if native else Path(_DEFAULT_INSTALLED), label="installed-root")
+    installed = _target(root, selection.control_relative / "000_ANECHOIC_framework", label="installed-root")
     package: Path | None = None
     prepared_product: Path | None = None
     staging: Path | None = None
@@ -161,7 +156,7 @@ def run_local_release(
     )
     try:
         failed_step = "installation_lock"
-        installation_lock.enter_context(_installation_lock(root, selection if native else None))
+        installation_lock.enter_context(_installation_lock(root, selection))
         failed_step = "validate_inputs"
         try:
             previous_image = _build_predecessor(selection)
@@ -173,10 +168,9 @@ def run_local_release(
         prior_project = selection.instance_id if prior_image is not None else None
         for phase in phases:
             print(f"Local release phase START: {phase}", file=sys.stderr, flush=True)
-            if native:
-                failed_step = "validate_project_selection"
-                if select_runtime_project(root) != selection:
-                    raise LocalReleaseError("local-release-project-selection-changed")
+            failed_step = "validate_project_selection"
+            if select_runtime_project(root) != selection:
+                raise LocalReleaseError("local-release-project-selection-changed")
             failed_step = f"git_before_{phase.replace(' ', '_')}"
             sensitive = runner((
                 "git", "diff", "--cached", "--name-only", "--", ":(glob)**/.env*", ":(glob)**/*.env",
@@ -219,11 +213,8 @@ def run_local_release(
                         asset = _project_path(root, Path(relative), label="image-asset")
                         if not asset.is_file() or asset.stat().st_size == 0:
                             raise LocalReleaseError(f"local-release-image-asset-missing: {relative}")
-                if native:
-                    from release_support import _native_release_sources
-                    _native_release_sources(selection)
-                else:
-                    _release_sources(root)
+                from release_support import _native_release_sources
+                _native_release_sources(selection)
                 ane = _target(root, Path(".agents/skills/ane"), label="project-ane")
                 for target in (product, installed, runtime, ane):
                     if target.exists():
@@ -236,11 +227,8 @@ def run_local_release(
                     "--managed-python", "--no-env-file", "--all-groups", "python", "-B", "-u",
                     str(Path(__file__).resolve().parents[2] / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/run_full_test_suite.py"), "--project-root", str(root),
                 )
-                if native:
-                    argv += ("--legacy-fixture",)
                 # Native test images use sealed assets; candidate assets are handled during packaging.
-                if image_mode == "existing" or native:
-                    argv += ("--image-mode", "existing")
+                argv += ("--image-mode", "existing")
                 if default_runner:
                     temporary = _target(root, Path(".anechoic_tmp/simple_local_release"), label="test-log")
                     temporary.mkdir(parents=True, exist_ok=True)
@@ -260,46 +248,31 @@ def run_local_release(
                     raise LocalReleaseError(f"local-release-command-failed: {detail}")
             elif phase == "copy active sources":
                 failed_step = "copy_active_sources"
-                if native:
-                    from project_runtime import bind_native_runtime, owned_temporary_root
-                    from release_support import _native_release_sources
-                    sources = _native_release_sources(selection)
-                    with bind_native_runtime(selection):
-                        temporary = owned_temporary_root(root, "simple_local_release")
-                    with tempfile.TemporaryDirectory(prefix=f"{run_id}-sources-", dir=temporary) as directory:
-                        staged = Path(directory)
-                        identities = {source: _file_identity(source) for source in sources.values()}
-                        for relative, source in sources.items():
-                            target = staged / _relative(relative.as_posix(), label="source-path")
-                            target.parent.mkdir(parents=True, exist_ok=True)
-                            shutil.copy2(source, target)
-                        if (_native_release_sources(selection) != sources
-                                or any(_file_identity(path) != identity for path, identity in identities.items())
-                                or select_runtime_project(root) != selection):
-                            raise LocalReleaseError("local-release-source-changed")
-                        _verify_package(staged, {
-                            relative.as_posix(): identities[source] for relative, source in sources.items()
-                        })
-                        version_path, next_version_text = _read_version(root)
-                        version_path.write_text(next_version_text, encoding="utf-8")
-                        _clear_target(product, root=root, preserve=_PRESERVED_NAMES, label="product-root")
-                        product_sources = product / "SUPERLAYER_1_METHODOLOGY_SOURCES"
-                        product_sources.mkdir(parents=True, exist_ok=True)
-                        _copy_tree(staged, product_sources, preserve=frozenset())
-                    continue
-                sources = _release_sources(root)
-                version_path, next_version_text = _read_version(root)
-                version_path.write_text(next_version_text, encoding="utf-8")
-                _clear_target(product, root=root, preserve=_PRESERVED_NAMES, label="product-root")
-                product_sources = product / "SUPERLAYER_1_METHODOLOGY_SOURCES"
-                product_sources.mkdir(parents=True, exist_ok=True)
-                for _, source, files in sources:
-                    target_root = product_sources / source.name
-                    target_root.mkdir(parents=True, exist_ok=True)
-                    for entry in files:
-                        target = target_root / entry.relative_to(source)
+                from project_runtime import bind_native_runtime, owned_temporary_root
+                from release_support import _native_release_sources
+                sources = _native_release_sources(selection)
+                with bind_native_runtime(selection):
+                    temporary = owned_temporary_root(root, "simple_local_release")
+                with tempfile.TemporaryDirectory(prefix=f"{run_id}-sources-", dir=temporary) as directory:
+                    staged = Path(directory)
+                    identities = {source: _file_identity(source) for source in sources.values()}
+                    for relative, source in sources.items():
+                        target = staged / _relative(relative.as_posix(), label="source-path")
                         target.parent.mkdir(parents=True, exist_ok=True)
-                        shutil.copy2(entry, target)
+                        shutil.copy2(source, target)
+                    if (_native_release_sources(selection) != sources
+                            or any(_file_identity(path) != identity for path, identity in identities.items())
+                            or select_runtime_project(root) != selection):
+                        raise LocalReleaseError("local-release-source-changed")
+                    _verify_package(staged, {
+                        relative.as_posix(): identities[source] for relative, source in sources.items()
+                    })
+                    version_path, next_version_text = _read_version(root)
+                    version_path.write_text(next_version_text, encoding="utf-8")
+                    _clear_target(product, root=root, preserve=_PRESERVED_NAMES, label="product-root")
+                    product_sources = product / "SUPERLAYER_1_METHODOLOGY_SOURCES"
+                    product_sources.mkdir(parents=True, exist_ok=True)
+                    _copy_tree(staged, product_sources, preserve=frozenset())
             elif phase == "copy product to installed framework":
                 failed_step = "copy_product_to_installed_framework"
                 _verify_package(package, package_identity)
@@ -311,7 +284,7 @@ def run_local_release(
                 failed_step = "build_package"
                 from project_runtime import bind_native_runtime, owned_temporary_root, repository_root
                 temporary = _target(root, Path(".anechoic_tmp/simple_local_release"), label="temporary-package")
-                with bind_native_runtime(selection) if native else nullcontext():
+                with bind_native_runtime(selection):
                     if repository_root(root) != root:
                         raise LocalReleaseError("local-release-temporary-project-mismatch")
                     owned_temporary_root(root, "simple_local_release")
@@ -328,8 +301,8 @@ def run_local_release(
                 package = staging / "package"
                 package.mkdir()
                 package_identity = _prepare_package(
-                    root, prepared_product, package, refresh_assets=image_mode == "refresh", previous_image=previous_image,
-                    **({"project_selection": selection} if native else {}),
+                    root, prepared_product, package, refresh_assets=image_mode == "refresh",
+                    project_selection=selection,
                 )
             elif phase == "prepare candidate image":
                 failed_step = "prepare_candidate_image"
@@ -368,7 +341,7 @@ def run_local_release(
                 _verify_package(ane, {path.removeprefix("SKILLS/ane/"): identity
                                       for path, identity in package_identity.items()
                                       if path.startswith("SKILLS/ane/")})
-                with bind_native_runtime(selection) if native else nullcontext():
+                with bind_native_runtime(selection):
                     _deploy_bootstrap(root, runtime)
             else:
                 failed_step = "start_mcp"

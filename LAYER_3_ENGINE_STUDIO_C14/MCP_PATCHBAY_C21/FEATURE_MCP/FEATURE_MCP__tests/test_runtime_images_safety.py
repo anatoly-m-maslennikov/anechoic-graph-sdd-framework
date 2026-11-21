@@ -280,7 +280,7 @@ class LifecycleImageAssetsTests(unittest.TestCase):
                        "image_id": IMAGE_ID, "readiness": True}
             path = state / "ready.json"
             path.write_text(json.dumps(receipt))
-            with patch.dict(sys.modules, {"project_selection": SimpleNamespace(resolve_project=lambda _: selection)}):
+            with patch("native_startup.select_runtime_project", return_value=selection):
                 manager = images.ImageManager(root, project_root=root)
                 self.assertEqual(IMAGE_ID, manager._build_predecessor())
                 path.write_text("{}")
@@ -299,7 +299,7 @@ class LifecycleImageAssetsTests(unittest.TestCase):
             path = state / "ready.json"
             receipt = {"project_root": str(root), "control_root": str(control), "project_id": "e" * 64,
                        "image_id": IMAGE_ID, "readiness": True}
-            with patch.dict(sys.modules, {"project_selection": SimpleNamespace(resolve_project=lambda _: selection)}):
+            with patch("native_startup.select_runtime_project", return_value=selection):
                 path.write_text(json.dumps(receipt))
                 with self.assertRaises(images.ImageError):
                     images.ImageManager(root, project_root=root)._build_predecessor()
@@ -431,13 +431,10 @@ class LifecycleImageAssetsTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "workflow files are unavailable"):
                 compile_lifecycle_assets(root, root, timeout=5, max_output=1024)
             sidecar.unlink()
-            (lifecycle / "status_cascade.py").write_text(
-                "from ATOM_LIFECYCLE.assets.change_current_status import change_current_status\n",
-                encoding="utf-8",
-            )
+            (lifecycle / "native_update.py").touch()
             (lifecycle / "assets/change_current_status.py").unlink()
             (lifecycle / "status_workflow_definition.py").unlink()
-            with self.assertRaisesRegex(ValueError, "workflow files are missing from the routed pilot"):
+            with self.assertRaisesRegex(ValueError, "workflow files are missing from the native runtime"):
                 compile_lifecycle_assets(root, root, timeout=5, max_output=1024)
 
 

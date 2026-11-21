@@ -458,7 +458,7 @@ def parse_native_model_claim(text: str) -> dict[str, Any] | None:  # noqa: C901
         if (function != "declare_entity" or not isinstance(value, ast.Call)
                 or not isinstance(value.func, ast.Name)
                 or value.func.id not in {"ScopeUnit", "Project", "Aspect", "ProjectManifest", "ComponentManifest",
-                                         "ComponentPurpose", "PackageSpec"}
+                                         "PackageSpec"}
                 or imports.get(value.func.id) != "anechoic.model"):
             _fail(value, "instance requires an imported Model class supported by the eDSL")
         fields = {}

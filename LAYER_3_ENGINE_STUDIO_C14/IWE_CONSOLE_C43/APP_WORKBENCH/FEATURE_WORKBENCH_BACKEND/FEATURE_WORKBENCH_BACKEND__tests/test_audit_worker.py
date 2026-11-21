@@ -110,24 +110,6 @@ class AuditWorkerTests(unittest.TestCase):
         finally:
             worker.close()
 
-    def test_real_projection_matches_synchronous_audits(self):
-        sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'APP_WORKBENCH__tests'))
-        from test_incremental_indexing import IncrementalIndexingTests
-        fixture = IncrementalIndexingTests()
-        fixture.setUp()
-        worker = AuditWorker(fixture.store)
-        try:
-            before = {table: fixture.store.run(f'SELECT * FROM {table}')['rows'] for table in TABLES}
-            worker.invalidate()
-            worker.submit(AuditSnapshot.capture(fixture.service._reader), None)
-            self.assertTrue(worker.wait(10))
-            self.assertIsNotNone(worker.status()['last_audit_ms'])
-            after = {table: fixture.store.run(f'SELECT * FROM {table}')['rows'] for table in TABLES}
-            self.assertEqual(before, after)
-        finally:
-            worker.close()
-            fixture.doCleanups()
-
     def test_full_finishes_once_then_coalesced_newer_deltas_publish(self):
         store = Store()
         worker = AuditWorker(store)

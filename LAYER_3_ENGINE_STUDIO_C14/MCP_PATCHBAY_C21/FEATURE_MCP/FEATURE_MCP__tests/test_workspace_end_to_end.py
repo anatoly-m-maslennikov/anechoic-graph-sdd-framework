@@ -32,7 +32,6 @@ for location in (MCP, PROGRAMMATIC / "FEATURE_TOOLS", APP.parent, APP / "APP_WOR
     if str(location) not in sys.path:
         sys.path.insert(0, str(location))
 
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service import WorkbenchService  # noqa: E402
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_reader import SourceReader  # noqa: E402
 from http_paths import MCP_PATH, WORKBENCH_PATH  # noqa: E402
 from http_server import create_app  # noqa: E402
@@ -42,16 +41,7 @@ from smalltest_support import built_assets, extension_directory, source_path, wr
 from workbench_tools import WorkbenchTools  # noqa: E402
 
 
-class _ConfiguredWorkbenchTools(WorkbenchTools):
-    def __init__(self, root: Path, extensions: Path) -> None:
-        super().__init__(root)
-        self.extensions = extensions
-        self.assets = built_assets(root)
-
-    def _owner(self):
-        if self._service is None:
-            self._service = WorkbenchService(self.root, extension_directory=self.extensions, **self.assets)
-        return self._service
+from test_native_startup import RuntimeSelectionTests, native_fixture_gateway  # noqa: E402
 
 
 class WorkspaceEndToEndTests(unittest.IsolatedAsyncioTestCase):
@@ -64,17 +54,15 @@ class WorkspaceEndToEndTests(unittest.IsolatedAsyncioTestCase):
         self.addCleanup(self.temporary.cleanup)
         self.root = (Path(self.temporary.name) / "project").resolve()
         self.root.mkdir()
-        control = write_settings(self.root)
-        declarations = write_scope_unit_declarations(
-            self.root,
-            ({"scope_unit_name": "ENGINE", "scope_unit_type": "Ordered", "scope_unit_label": "LAYER", "local_order": 1},),
-            control_root=control,
-        )
-        write_atom(source_path(declarations, "ENGINE", "04_requirement", "fixture.md"), "CA-R-684")
-        self.app = create_app(self.root, selection=startup_selection(self.root))
-        self.app.gateway.workbench = _ConfiguredWorkbenchTools(
-            self.root, extension_directory(REPOSITORY),
-        )
+        control = self.root / ".anechoic_fixture"
+        RuntimeSelectionTests.manifest(self, control, name="fixture", component="C00")
+        spec = control / "AN-S-684-DES--fixture.md"
+        spec.write_text("---\natom_family: SPEC\natom_id: AN-S-684\n"
+                        "structure: {container: {component: C00}}\ncontext: {lens: DES}\n"
+                        "state: {status: active, version: 1, updated_at: '2026-11-21T00:00:00Z'}\n"
+                        "---\n## Summary\n\nFixture\n")
+        gateway = native_fixture_gateway(self.root, extension_directory(REPOSITORY))
+        self.app = create_app(self.root, runtime_gateway=gateway)
         self.interface = f"{WORKBENCH_PATH}/fixture/interface"
 
     @asynccontextmanager
@@ -104,81 +92,6 @@ class WorkspaceEndToEndTests(unittest.IsolatedAsyncioTestCase):
     async def interface_call(self, client: httpx2.AsyncClient, operation: str, arguments: dict):
         return await client.post(self.interface, json={"operation": operation, "arguments": arguments})
 
-    async def test_ui_probe_uses_existing_mcp_without_starting_workbench(self) -> None:
-        from mcp import MCPError
-
-        async with self.session() as (session, _client):
-            service = self.app.gateway.workbench._service
-            descriptors = {tool.name: tool for tool in (await session.list_tools()).tools}
-            uri = descriptors["workbench_ui_probe"].meta["ui"]["resourceUri"]
-            self.assertEqual(
-                {"ui": {"resourceUri": "ui://anechoic/workbench.html"}},
-                descriptors["workspace_open"].meta,
-            )
-            self.assertIsNone(descriptors["workbench_ui_ping"].meta)
-            resources = (await session.list_resources()).resources
-            resource_uris = [resource.uri for resource in resources]
-            self.assertIn(uri, resource_uris)
-            self.assertIn("ui://anechoic/workbench.html", resource_uris)
-            contents = (await session.read_resource(uri)).contents
-            self.assertEqual("text/html;profile=mcp-app", contents[0].mime_type)
-            self.assertIn("ui/initialize", contents[0].text)
-            self.assertIn("ui/notifications/tool-result", contents[0].text)
-            self.assertEqual({"message": "ANECHOIC MCP App resource loaded"},
-                             await self.tool(session, "workbench_ui_probe", {}))
-            self.assertEqual({"message": "Tool bridge passed"},
-                             await self.tool(session, "workbench_ui_ping", {}))
-            invalid = await session.call_tool("workbench_ui_ping", {"sql": "SELECT 1"})
-            self.assertTrue(invalid.is_error)
-            self.assertIs(service, self.app.gateway.workbench._service)
-            with self.assertRaises(MCPError):
-                await session.read_resource("ui://anechoic/not-a-resource")
-
-    async def test_sync_status_is_shared_and_readable_during_initial_capture(self) -> None:
-        async with self.session() as (session, client):
-            await self.app.gateway.workbench.close()
-            initial = {"syncing": False, "last_synced_at": None, "loaded_archive_scopes": [],
-                       "audits_pending": False, "last_audit_ms": None, "audit_error": None}
-            self.assertEqual(initial, await self.tool(session, "workbench_status", {}))
-            self.assertIsNone(self.app.gateway.workbench._service)
-            endpoint = f"{WORKBENCH_PATH}/fixture/status"
-            response = await client.post(endpoint, json={})
-            self.assertEqual(200, response.status_code)
-            self.assertEqual(initial, response.json())
-            self.assertIsNone(self.app.gateway.workbench._service)
-
-            entered, release = threading.Event(), threading.Event()
-            capture = SourceReader.capture
-
-            def paused(reader, *args, **kwargs):
-                entered.set()
-                if not release.wait(10):
-                    raise RuntimeError("capture release timed out")
-                return capture(reader, *args, **kwargs)
-
-            with patch.object(SourceReader, "capture", paused):
-                query = asyncio.create_task(self.tool(session, "query_run", {"sql": "SELECT 1"}))
-                try:
-                    self.assertTrue(await asyncio.to_thread(entered.wait, 5))
-                    running = {**initial, "syncing": True}
-                    self.assertEqual(running, await asyncio.wait_for(self.tool(session, "workbench_status", {}), 2))
-                    response = await asyncio.wait_for(client.post(endpoint, json={}), 2)
-                    self.assertEqual(running, response.json())
-                finally:
-                    release.set()
-                    await query
-
-            self.assertTrue(await asyncio.to_thread(self.app.gateway.workbench._service.wait_for_audits, 10))
-            finished = await self.tool(session, "workbench_status", {})
-            self.assertEqual(set(initial), set(finished))
-            self.assertFalse(finished["syncing"])
-            self.assertFalse(finished["audits_pending"])
-            self.assertIsNone(finished["audit_error"])
-            self.assertGreaterEqual(finished["last_audit_ms"], 0)
-            self.assertIsNotNone(dt.datetime.fromisoformat(finished["last_synced_at"]).tzinfo)
-            self.assertEqual(finished, (await client.post(endpoint, json={})).json())
-            self.assertEqual(400, (await client.post(endpoint, json={"unexpected": True})).status_code)
-
     async def test_native_mcp_workspace_flow_matches_http_state(self) -> None:
         async with self.session() as (session, client):
             opened = await self.tool(session, "workspace_open", {"session_id": "native-session"})
@@ -198,7 +111,7 @@ class WorkspaceEndToEndTests(unittest.IsolatedAsyncioTestCase):
             view = created["view_id"]
             updated = await self.tool(session, "view_update", {
                 "workspace_id": opened["workspace_id"], "view_id": view,
-                "sql": "SELECT reference FROM atoms WHERE reference = 'CA-R-684'", "expected_revision": 0,
+                "sql": "SELECT reference FROM atoms WHERE reference = 'AN-S-684'", "expected_revision": 0,
             })
             self.assertEqual(1, updated["revision"])
             run = await self.tool(session, "view_run", {
@@ -210,7 +123,7 @@ class WorkspaceEndToEndTests(unittest.IsolatedAsyncioTestCase):
                 "workspace_id": opened["workspace_id"], "view_id": view, "offset": 0, "page_size": 1,
                 "result_delivery": "inline",
             })
-            self.assertEqual([["CA-R-684"]], fetched["rows"])
+            self.assertEqual([["AN-S-684"]], fetched["rows"])
             focused = await self.tool(session, "view_focus", {
                 "workspace_id": opened["workspace_id"], "view_id": first,
             })
@@ -355,7 +268,8 @@ class WorkspaceEndToEndTests(unittest.IsolatedAsyncioTestCase):
             opened = await self.tool(session, "workspace_open", {"session_id": "invalid-settings"})
             identity = {"workspace_id": opened["workspace_id"], "view_id": opened["active_view_id"]}
             await self.tool(session, "view_update", identity | {"sql": "SELECT 1", "expected_revision": 0})
-            with patch.object(WorkbenchService, '_run_store', side_effect=WorkbenchUnavailableError('unavailable')):
+            with patch.object(self.app.gateway._native_query, "_run_store",
+                              side_effect=WorkbenchUnavailableError("unavailable")):
                 failed = await session.call_tool("view_run", identity)
                 self.assertTrue(failed.is_error)
                 self.assertIn("workbench_unavailable", str(failed.structured_content))

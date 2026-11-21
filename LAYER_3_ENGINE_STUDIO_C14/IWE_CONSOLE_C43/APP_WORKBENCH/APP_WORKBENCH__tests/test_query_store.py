@@ -474,6 +474,38 @@ class QueryStoreTest(unittest.TestCase):
             self.store.run("SELECT CAST('not-an-integer' AS INTEGER)")
         self.assertEqual([[1]], self.store.run("SELECT 1")["rows"])
 
+    def test_file_backed_warm_restart_reuses_validated_projection(self) -> None:
+        with tempfile.TemporaryDirectory() as runtime:
+            database = Path(runtime) / "projection.duckdb"
+            options = {
+                "extension_directory": extension_directory(APP_ROOT.parents[1]),
+                "database_path": database, "retain_legacy": True,
+                "journal_path": database, "journal_disk": True,
+            }
+            store = QueryStore(**options)
+            store.replace([self.atom("CA-R-1")], [])
+            store._connection.execute(
+                "INSERT INTO work_journal VALUES ('test', 1, 'test', '2026-11-21', '{\"ok\":true}')"
+            )
+            store.close()
+            inode = database.stat().st_ino
+            warm = QueryStore(**options)
+            try:
+                with patch("APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.query_store.insert_rows",
+                           side_effect=AssertionError("Unexpected full projection write")):
+                    warm.replace([self.atom("CA-R-1")], [])
+                self.assertEqual([["CA-R-1"]], warm.run("SELECT reference FROM atoms")["rows"])
+            finally:
+                warm.close()
+            changed = QueryStore(**options)
+            try:
+                changed.replace([self.atom("CA-R-2")], [])
+                self.assertEqual([["CA-R-2"]], changed.run("SELECT reference FROM atoms")["rows"])
+                self.assertEqual([{"ok": True}], changed.work_journal_events("test"))
+            finally:
+                changed.close(retain_projection=False)
+            self.assertEqual(inode, database.stat().st_ino)
+
     def test_file_backed_materialized_pages_preserve_duplicate_metadata(self) -> None:
         with tempfile.TemporaryDirectory() as runtime:
             database_path = Path(runtime) / "workbench" / "projection.duckdb"

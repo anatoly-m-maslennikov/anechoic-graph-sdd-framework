@@ -77,11 +77,11 @@ test('completes qualified columns and escapes Status values without executing SQ
   await page.getByRole('option', { name: /header\.state\.status/ }).first().click();
   await expect(editor(page)).toHaveText('SELECT "header.state.status" FROM atoms');
 
-  await typeQuery(page, `SELECT * FROM atoms WHERE "header.state.status" = 'Active'`);
+  await typeQuery(page, `SELECT * FROM atoms WHERE "header.state.status" = 'active'`);
   await moveBefore(page, `ive'`);
   await page.keyboard.press('Control+Space');
-  await page.getByRole('option', { name: 'Active', exact: true }).click();
-  await expect(editor(page)).toHaveText(`SELECT * FROM atoms WHERE "header.state.status" = 'Active'`);
+  await page.getByRole('option', { name: 'active', exact: true }).click();
+  await expect(editor(page)).toHaveText(`SELECT * FROM atoms WHERE "header.state.status" = 'active'`);
 
   await typeQuery(page, `SELECT * FROM atoms WHERE "header.state.status" = 'O''R'`);
   await page.keyboard.press('ArrowLeft');

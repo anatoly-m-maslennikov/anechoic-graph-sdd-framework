@@ -9,8 +9,8 @@ context:
   lens: SWD
 state:
   status: "active"
-  version: 9
-  updated_at: "2026-11-21T10:12:38.818767+00:00"
+  version: 10
+  updated_at: "2026-11-21T10:35:05.920538+00:00"
 ---
 ## Summary
 
@@ -24,8 +24,8 @@ MCP exposure comes from installed code and configuration. Maintain an explicit c
 
 At startup load that asset and register enabled providers/routes. A source Atom edit alone cannot change exposure; preserve Project selection, global/configured exclusions, duplicate-name checks, typed request/result validation, and public protocols. Each operation retains its own business validation; route exposure does not assert prerequisites. Native Workbench tools remain available through installed registrations, while retired adapters stay absent.
 
-Expose Atom Lifecycle Tools only for native Projects. Omit these Tools
-from legacy Project discovery and reject direct calls to them.
+Single-Project and shared MCP runtimes require an active native Project
+Manifest. Workbench and query operations use its native Project owner.
 
 A missing/invalid asset is an explicit configuration error: do not fall back to Atom discovery. tools/list describes admitted registration after exclusions and does not authorize providers. Code changes require a normal server/container restart. MCP and Workbench are transport adapters over the same in-process backend/canonical Tool APIs; MCP translates protocol data but adds no business copy, internal HTTP hop, or second server. Use the official MCP Python SDK.
 

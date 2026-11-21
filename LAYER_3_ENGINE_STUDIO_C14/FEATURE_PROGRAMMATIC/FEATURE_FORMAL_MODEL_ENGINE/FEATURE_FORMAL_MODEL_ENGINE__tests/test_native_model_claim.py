@@ -8,9 +8,36 @@ import unittest
 FEATURE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(FEATURE))
 from native_model_claim import NativeModelClaimError, parse_native_model_claim, validate_aspect_instance  # noqa: E402
+from FEATURE_FORMAL_MODEL_ENGINE.native_component_claim import (  # noqa: E402
+    parse_component_manifest, parse_component_manifest_fields,
+)
 
 
 class NativeModelClaimTests(unittest.TestCase):
+    def test_component_manifest_markdown_sections(self):
+        formal = ('## Formal manifest\n\n```python\n'
+                  'from anechoic.formal_claims import declare_entity\n'
+                  'from anechoic.model import ComponentManifest\n'
+                  'declare_entity(entity_name="Component Manifest", instance=ComponentManifest('
+                  'tier=0, component_id="AN-C-14", name="Example", layer=3, lens_whitelist=None))\n```\n')
+        body = '## Purpose\n\nText\n\n### Details\n\n- Item\n\n' + formal
+        fields, purpose = parse_component_manifest(body)
+        self.assertEqual('Text\n\n### Details\n\n- Item', purpose)
+        self.assertEqual('AN-C-14', fields['component_id'])
+        self.assertEqual(fields, parse_component_manifest_fields(body))
+        self.assertIsNone(parse_component_manifest(formal)[1])
+        self.assertIsNone(parse_component_manifest('## Purpose\n\n' + formal)[1])
+        legacy = '## Claim\n\n### Component ID\n\nAN-C-14\n\n### Name\n\nExample\n'
+        self.assertEqual(({'component_id': 'AN-C-14', 'name': 'Example'}, None),
+                         parse_component_manifest(legacy))
+        invalid = (body + '\n## Purpose\nAgain\n', body + '\n' + formal,
+                   formal + '\n## Claim\n', formal.replace('## Formal manifest', '### Formal manifest'),
+                   formal.replace('```python', '```text'), formal + '\n```python\npass\n```\n',
+                   formal.replace('name="Example"', 'name=load_name()'))
+        for value in invalid:
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                parse_component_manifest(value)
+
     def test_unknown_declaration_and_constraint_keys_fail_closed(self):
         prefix = "from anechoic.formal_claims import declare_entity, declare_relation\n"
         cases = (

@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from hashlib import sha256
 import re
 import sys
 import threading
@@ -30,7 +31,7 @@ from .audit_tables import (
     TABLES as ATOM_AUDIT_TABLES, create_tables as create_audit_tables,
     publish as publish_atom_audits, revision_query,
 )
-from .graph_store import quote_identifier
+from .graph_store import quote_identifier, register_graph
 from .header_columns import HeaderSchema, HeaderSchemaState, header_schema_for_mode, schema_asset_path
 from .content_schema import ContentSchema, compile_content_schema, content_schema_asset_path
 from .index_delta import MaterializationDelta
@@ -58,7 +59,7 @@ def _query_failure(error: Exception) -> str:
 
 
 def _connect(extension_directory: Path | None, database_path: Path | None,
-             journal_path: Path | None, journal_disk: bool) -> Any:
+             journal_path: Path | None = None, journal_disk: bool = False) -> Any:
     try:
         import duckdb
     except ImportError as exc:
@@ -110,6 +111,17 @@ class _Result:
     released: bool = False
 
 
+def _legacy_projection_fingerprint(projection: ProjectionSnapshot) -> str:
+    graph = projection.graph
+    return sha256(repr((
+        1, projection.header_schema.shape, projection.content_schema.shape,
+        sorted((key, row["hash"]) for key, row in projection.atoms.items()),
+        sorted((key, row["hash"]) for key, row in projection.scopes.items()),
+        sorted(graph.references),
+        sorted((name, sorted(edges)) for name, edges in graph.edges.items()),
+    )).encode()).hexdigest()
+
+
 class QueryStore:
     """Serialize trusted refresh and paged public native SQL over one DuckDB connection."""
 
@@ -117,6 +129,7 @@ class QueryStore:
         self, *, extension_directory: Path | None = None, database_path: Path | None = None,
         result_ttl_seconds: int = 3600, schema_mode: int = 2, native: bool = False,
         inline_result_limit_kib: int = 4, journal_path: Path | None = None, journal_disk: bool = False,
+        retain_legacy: bool = False,
     ) -> None:
         if type(result_ttl_seconds) is not int or result_ttl_seconds <= 0:
             raise ValueError("result_ttl_seconds must be a positive integer")
@@ -146,8 +159,10 @@ class QueryStore:
         self._header_schema = HeaderSchema(())
         self._content_schema = compile_content_schema([])
         self._schema_changed = False
+        self._retain_legacy = retain_legacy and not native and database_path is not None
+        self._legacy_frontier = self._take_legacy_frontier()
         self._clear_startup_projection()
-        if native:
+        if native or self._legacy_frontier is not None:
             self._initialized = bool(self._connection.execute(
                 "SELECT 1 FROM information_schema.tables "
                 "WHERE table_catalog = current_database() AND table_schema = 'main' AND table_name = 'atoms'"
@@ -155,10 +170,21 @@ class QueryStore:
         else:
             self.replace([], [])
 
+    def _take_legacy_frontier(self) -> str | None:
+        if not self._retain_legacy or self._connection.execute(
+            "SELECT count(*) FROM information_schema.tables WHERE table_catalog = current_database() "
+            "AND ((table_schema = 'internal' AND table_name IN ('legacy_frontier', 'reference')) "
+            "OR (table_schema = 'main' AND table_name IN ('atoms', 'scope_units')))"
+        ).fetchone() != (4,):
+            return None
+        row = self._connection.execute("SELECT fingerprint FROM internal.legacy_frontier").fetchone()
+        self._connection.execute("DROP TABLE internal.legacy_frontier")
+        return row[0] if row is not None else None
+
     def _clear_startup_projection(self) -> None:
         """Discard the disposable projection and any prior process's query cache."""
         try:
-            if not self._native:
+            if not self._native and self._legacy_frontier is None:
                 self._connection.execute("DROP PROPERTY GRAPH IF EXISTS anechoic")
                 self._connection.execute("DROP SCHEMA IF EXISTS internal CASCADE")
                 self._connection.execute("DROP TABLE IF EXISTS main.atoms")
@@ -365,19 +391,9 @@ class QueryStore:
                     content_schema = compile_content_schema(atom_rows)
                 self._connection.execute("BEGIN TRANSACTION")
                 transaction = True
-                if self._initialized and not reuse:
-                    self.mark_graph_registration_changed()
-                    self._connection.execute("DROP PROPERTY GRAPH IF EXISTS anechoic")
-                    self._connection.execute("DROP SCHEMA internal CASCADE")
-                    self._connection.execute("DROP TABLE main.atoms")
-                    self._connection.execute("DROP TABLE main.scope_units")
                 started = time.monotonic()
-                public_rows = None if reuse else insert_rows(
-                    self._connection, atom_rows, scope_rows, header_schema=header_schema,
-                    content_schema=content_schema, relation_types=relation_types,
-                )
-                projection = snapshot(
-                    atom_rows, scope_rows, relation_types, header_schema, content_schema, public_rows=public_rows,
+                projection, reuse = self._replace_projection(
+                    atom_rows, scope_rows, relation_types, header_schema, content_schema, reuse,
                 )
                 if before_commit is not None:
                     before_commit(projection.graph)
@@ -394,7 +410,8 @@ class QueryStore:
                     content_schema.write(content_schema_asset_path(self._database_path))
                 self._projection = projection
                 self._info_edit(
-                    "replace", "projection", len(self._projection.atoms) + len(self._projection.scopes), started,
+                    "reuse" if reuse else "replace", "projection",
+                    len(self._projection.atoms) + len(self._projection.scopes), started,
                 )
             except Exception as exc:
                 if not self._native or self._graph_registration_changed or is_duckdb_internal(exc):
@@ -405,6 +422,33 @@ class QueryStore:
                 if self._native and self._available:
                     raise
                 raise WorkbenchUnavailableError("query store unavailable; Workbench restart required") from exc
+
+    def _replace_projection(self, atom_rows, scope_rows, relation_types, header_schema, content_schema, reuse):
+        projection = None
+        legacy_reuse = False
+        if self._legacy_frontier is not None:
+            projection = snapshot(atom_rows, scope_rows, relation_types, header_schema, content_schema)
+            legacy_reuse = self._initialized and _legacy_projection_fingerprint(projection) == self._legacy_frontier
+            self._legacy_frontier = None
+            reuse = legacy_reuse
+        if self._initialized and not reuse:
+            self.mark_graph_registration_changed()
+            self._connection.execute("DROP PROPERTY GRAPH IF EXISTS anechoic")
+            self._connection.execute("DROP SCHEMA internal CASCADE")
+            self._connection.execute("DROP TABLE main.atoms")
+            self._connection.execute("DROP TABLE main.scope_units")
+        public_rows = None if reuse else insert_rows(
+            self._connection, atom_rows, scope_rows, header_schema=header_schema,
+            content_schema=content_schema, relation_types=relation_types,
+        )
+        projection = projection or snapshot(
+            atom_rows, scope_rows, relation_types, header_schema, content_schema, public_rows=public_rows,
+        )
+        if legacy_reuse:
+            self.mark_graph_registration_changed()
+            self._connection.execute("DROP PROPERTY GRAPH IF EXISTS anechoic")
+            register_graph(self._connection, projection.graph)
+        return projection, reuse
 
     def mark_graph_registration_changed(self) -> None:
         """Mark non-transactional DuckPGQ registration as potentially changed."""
@@ -905,6 +949,15 @@ class QueryStore:
                 result["tables"]["work_journal"] = [{"name": name, "type": kind} for name, kind in rows]
             return result
 
-    def close(self) -> None:
+    def close(self, *, retain_projection: bool = True) -> None:
         with self._lock:
+            if self._retain_legacy and retain_projection and self._available and self._projection is not None:
+                try:
+                    self._connection.execute(
+                        "CREATE TABLE internal.legacy_frontier AS SELECT ?::VARCHAR AS fingerprint",
+                        [_legacy_projection_fingerprint(self._projection)],
+                    )
+                except Exception as error:
+                    print(f"Workbench projection could not be retained: {error}", file=sys.stderr)
+            self._retain_legacy = False
             self._connection.close()

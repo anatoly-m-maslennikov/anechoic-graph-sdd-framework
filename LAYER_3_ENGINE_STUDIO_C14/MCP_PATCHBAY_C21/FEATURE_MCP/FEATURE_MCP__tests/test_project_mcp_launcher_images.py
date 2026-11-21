@@ -183,6 +183,7 @@ class ImageGoldenTests(unittest.TestCase):
             return image
 
         with patch("project_mcp_backend.ImageManager", return_value=manager), \
+             patch.object(ProjectMcpBackend, "_native_package", return_value=object()), \
              patch.object(manager, "resolve", side_effect=resolve_then_change):
             with self.assertRaises(ImageError) as refused:
                 ProjectMcpBackend(build_if_missing=False).resolve_image(source, None, project_root=APP.parents[2])

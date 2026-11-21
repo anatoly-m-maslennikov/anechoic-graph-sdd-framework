@@ -20,10 +20,10 @@ Define Component Manifests and Purposes
 
 ### Prose Claim
 
-A Component Manifest is a Tier 0 Spec Atom declaring the described child Component’s existence, stable ID, name, parent, and layer where applicable. Its settings resolve from that Manifest. A Component Purpose is a Tier 0 Spec Atom stating why the child exists, with responsibilities and obligations in its details. A child can start with a Manifest and add one Purpose later. The parent Component contains both in its own Component Spec Section; each identifies the child it describes. A local extension defining a new Component kind belongs in PMETA.
+A Component Manifest is the Tier 0 Spec Atom that describes a child Component. Its Header gives the parent Component. In its Markdown body, `## Purpose` states why the child exists and describes its responsibilities and obligations. `## Formal manifest` contains the Anechoic Python eDSL declaration of the child's stable ID, name, and settings, including its layer where applicable. A child can add Purpose prose later. A local extension defining a new Component kind belongs in PMETA.
 
 ## Details
 
-Acceptance: a Manifest-only child is valid; a Purpose and Manifest for a child reside in the parent Spec Section and identify that child.
+Acceptance requires one Component Manifest in the parent Component's Spec root. Its declared Component ID identifies the child. Its Purpose belongs in that same Atom.
 
 Sources: CA-A-1461@1-draft, CA-A-1463@1-draft. Task: CA-P-3079.

@@ -129,11 +129,11 @@ def verify_status_workflow_asset(source_root: Path, model_root: Path, *, timeout
             or any(path.is_symlink() for path in (*required, asset.parent))):
         raise ValueError("lifecycle workflow files are unavailable")
     if not any(path.exists() for path in required):
-        route = lifecycle / "status_cascade.py"
+        route = lifecycle / "native_update.py"
         if route.is_symlink():
             raise ValueError("lifecycle workflow route is unavailable")
-        if route.is_file() and b"assets.change_current_status" in route.read_bytes():
-            raise ValueError("lifecycle workflow files are missing from the routed pilot")
+        if route.is_file():
+            raise ValueError("lifecycle workflow files are missing from the native runtime")
         return
     if not all(path.is_file() for path in required):
         raise ValueError("lifecycle workflow files are unavailable")

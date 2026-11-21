@@ -2,11 +2,9 @@
 
 from dataclasses import dataclass
 from pathlib import Path
-import shutil
 import sys
 import tempfile
 import unittest
-from unittest.mock import patch
 
 import yaml
 
@@ -17,7 +15,7 @@ sys.path[:0] = [str(MCP), str(PROGRAMMATIC), str(TOOLS), str(MCP.parents[1] / "I
 
 from native_project_selection import NativeProjectSelection
 from native_startup import select_runtime_project
-from project_selection import ProjectSelection, ProjectSelectionError, resolve_project
+from project_selection import ProjectSelectionError
 from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations
 
 
@@ -31,6 +29,17 @@ def validate(fields, owner):
     if owner != "C0" or set(fields) != {"atom_id", "ref_id", "version", "tier", "name", "prefix"}:
         raise ValueError("invalid Manifest")
     return Manifest(fields["name"], fields["prefix"])
+
+
+def native_fixture_gateway(root, cache, *, selection=None):
+    from dataclasses import replace
+    from direct_gateway import DirectGateway, startup_selection
+    from native_query import NativeQueryOwner
+    from native_startup import load_native_inputs
+
+    selected = selection if selection is not None else startup_selection(root)
+    inputs = replace(load_native_inputs(selected), extension_directory=cache)
+    return DirectGateway(root, native_query=NativeQueryOwner(selected, inputs))
 
 
 class RuntimeSelectionTests(unittest.TestCase):
@@ -70,26 +79,23 @@ class RuntimeSelectionTests(unittest.TestCase):
         old = self.legacy()
         staged = self.root / ".anechoic_new"
         self.manifest(staged)
-        self.assertIsInstance(self.select(), ProjectSelection)
-        self.assertEqual(old, self.select().control_root)
-        self.assertEqual(old, resolve_project(self.root).control_root)
+        with self.assertRaises(ProjectSelectionError):
+            self.select()
         old.rename(self.root / ".anechoic_legacy")
         staged.rename(old)
         selected = self.select()
         self.assertIsInstance(selected, NativeProjectSelection)
         self.assertEqual(old, selected.control_root)
         self.assertEqual("AN-S-001@1", selected.manifest_ref)
-        with self.assertRaises(ProjectSelectionError):
-            resolve_project(self.root)
 
-    def test_explicit_legacy_and_native(self):
+    def test_legacy_setting_is_ignored_even_when_explicit_native_project_exists(self):
         legacy = self.legacy(".anechoic_legacy")
         native = self.root / ".anechoic_anechoic"
         self.manifest(native)
-        self.assertEqual(legacy, self.select(legacy.name).control_root)
+        with self.assertRaises(ProjectSelectionError):
+            self.select(legacy.name)
         self.assertEqual(native, self.select(native.name).control_root)
-        with self.assertRaisesRegex(ProjectSelectionError, "ambiguous"):
-            self.select()
+        self.assertEqual(native, self.select().control_root)
 
     def test_invalid_native_does_not_fall_back_to_legacy(self):
         self.legacy(".anechoic_legacy")
@@ -99,36 +105,13 @@ class RuntimeSelectionTests(unittest.TestCase):
             with self.subTest(control=control), self.assertRaises(ProjectSelectionError):
                 self.select(control)
 
-    def test_refuses_manifest_added_during_legacy_selection(self):
-        control = self.legacy()
-
-        def resolve_then_add(*args, **kwargs):
-            selection = resolve_project(*args, **kwargs)
-            self.manifest(control)
-            return selection
-
-        with patch("native_startup.resolve_project", side_effect=resolve_then_add):
-            with self.assertRaisesRegex(ProjectSelectionError, "changed during selection"):
-                self.select(control.name)
-
-    def test_legacy_selection_ignores_a_manifest_in_the_old_spec_directory(self):
+    def test_refuses_legacy_with_manifest_inside_old_spec_directory(self):
         control = self.legacy()
         path = self.manifest(control)
         (control / "SPEC").mkdir()
         path.rename(control / "SPEC" / path.name)
-        self.assertIsInstance(self.select(), ProjectSelection)
-
-    def test_refuses_control_root_removed_during_legacy_selection(self):
-        control = self.legacy()
-
-        def resolve_then_remove(*args, **kwargs):
-            selection = resolve_project(*args, **kwargs)
-            shutil.rmtree(control)
-            return selection
-
-        with patch("native_startup.resolve_project", side_effect=resolve_then_remove):
-            with self.assertRaisesRegex(ProjectSelectionError, "changed during selection"):
-                self.select(control.name)
+        with self.assertRaises(ProjectSelectionError):
+            self.select()
 
     def test_missing_and_symlink_control_roots_are_refused(self):
         with self.assertRaises(ProjectSelectionError):
@@ -137,12 +120,12 @@ class RuntimeSelectionTests(unittest.TestCase):
         with self.assertRaises(ProjectSelectionError):
             self.select(".anechoic_anechoic")
 
-    def test_both_formats_in_one_root_are_ambiguous(self):
+    def test_project_settings_do_not_shadow_native_manifest(self):
         control = self.legacy()
         self.manifest(control)
         for explicit in (control.name, None):
-            with self.subTest(explicit=explicit), self.assertRaisesRegex(ProjectSelectionError, "ambiguous"):
-                self.select(explicit)
+            with self.subTest(explicit=explicit):
+                self.assertEqual(control, self.select(explicit).control_root)
 
     def test_default_model_validates_native_selection(self):
         self.manifest(self.root / ".anechoic_anechoic", component="C00")
@@ -167,15 +150,14 @@ class RuntimeSelectionTests(unittest.TestCase):
         with self.assertRaises(ProjectSelectionError):
             self.select()
 
-    def test_native_ambiguity_and_unrelated_invalid_legacy_are_refused(self):
+    def test_refuses_two_native_manifests_and_ignores_retained_legacy(self):
         self.manifest(self.root / ".anechoic_anechoic")
         self.manifest(self.root / ".anechoic_other", name="Other", prefix="OT")
-        with self.assertRaisesRegex(ProjectSelectionError, "ambiguous"):
+        with self.assertRaisesRegex(ProjectSelectionError, "unique native Project Manifest"):
             self.select()
         (self.root / ".anechoic_other" / "OT-S-001-PROJECT_MANIFEST--declare.md").unlink()
         self.legacy(".anechoic_legacy", declared=".anechoic_unknown")
-        with self.assertRaises(ProjectSelectionError):
-            self.select()
+        self.assertEqual(self.root / ".anechoic_anechoic", self.select().control_root)
 
 
 if __name__ == "__main__":

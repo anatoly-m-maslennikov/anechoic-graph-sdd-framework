@@ -14,8 +14,8 @@ MCP_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(MCP_ROOT))
 
 from workbench_tools import (  # noqa: E402
-    ARCHIVE_LOAD, CHECK, LOAD, NATIVE_TOOLS, PAGE, QUERY_LOG_LIST, RUN, SAVED_LIST, SAVE_VIEW, SCHEMA, SYNC_STATUS,
-    VIEW_CREATE, VIEW_DUPLICATE, WORKSPACE_OPEN, mcp_app_probe,
+    CHECK, LOAD, NATIVE_TOOLS, PAGE, QUERY_LOG_LIST, RUN, SAVED_LIST, SAVE_VIEW, SCHEMA, SYNC_STATUS,
+    VIEW_CREATE, VIEW_DUPLICATE, WORKSPACE_OPEN,
     WorkbenchTools, native_tools,
 )
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.errors import (  # noqa: E402
@@ -68,14 +68,6 @@ class FakeService:
         self.calls.append((SAVED_LIST, limit))
         return {"items": []}
 
-    def load_archives(self, scopes):
-        self.calls.append((ARCHIVE_LOAD, scopes))
-        return {"loaded_archive_scopes": scopes}
-
-    def sync_status(self):
-        return {"syncing": False, "last_synced_at": "2026-01-01", "loaded_archive_scopes": [
-            {"scope_unit": "PROJECT", "role": "Plan"}]}
-
     def interface_call(self, name, arguments):
         self.calls.append((name, arguments))
         return {"operation": name, **arguments}
@@ -85,41 +77,11 @@ class FakeService:
 
 
 class WorkbenchToolsTests(unittest.TestCase):
-    def test_archive_load_and_status(self):
-        owner = WorkbenchTools(Path('/project'))
-        scopes = [{'scope_unit': 'PROJECT', 'role': 'Plan'}]
-        self.assertEqual({'syncing': False, 'last_synced_at': None, 'loaded_archive_scopes': [],
-                          'audits_pending': False, 'last_audit_ms': None, 'audit_error': None},
-                         asyncio.run(owner.call(SYNC_STATUS, {})))
-        self.assertIsNone(owner._service)
-        fake = FakeService()
-        owner._service = fake
-        self.assertEqual({'loaded_archive_scopes': scopes}, asyncio.run(owner.call(ARCHIVE_LOAD, {'scopes': scopes})))
-        self.assertEqual(scopes, asyncio.run(owner.call(SYNC_STATUS, {}))['loaded_archive_scopes'])
-        descriptor = next(tool for tool in native_tools() if tool.name == ARCHIVE_LOAD)
-        self.assertEqual(['scopes'], descriptor.input_schema['required'])
-        self.assertEqual(['scope_unit', 'role'], descriptor.input_schema['properties']['scopes']['items']['required'])
-        self.assertFalse(descriptor.annotations.read_only_hint)
-
-    def test_archive_load_rejects_invalid_arguments_before_starting_service(self):
-        invalid = ({}, {'scopes': []}, {'scopes': 'all'}, {'scopes': [{}]},
-                   {'scopes': [{'scope_unit': 'PROJECT', 'role': ''}]},
-                   {'scopes': [{'scope_unit': 'PROJECT', 'role': 'Plan', 'extra': 1}]},
-                   {'scopes': [{'scope_unit': 'PROJECT', 'role': 'Plan'}], 'extra': 1})
-        for arguments in invalid:
-            owner = WorkbenchTools(Path('/project'))
-            with self.subTest(arguments=arguments), self.assertRaises(ExplicitBlockingRuntimeFailure):
-                asyncio.run(owner.call(ARCHIVE_LOAD, arguments))
-            self.assertIsNone(owner._service)
-
     def test_native_descriptors_and_one_owner_handle_all_calls_and_close(self):
         self.assertEqual(list(NATIVE_TOOLS), [tool.name for tool in native_tools()])
         tools = {tool.name: tool for tool in native_tools()}
         self.assertNotIn("query_save", tools)
-        self.assertEqual(
-            {"ui": {"resourceUri": mcp_app_probe.WORKBENCH_URI}},
-            tools[WORKSPACE_OPEN].meta,
-        )
+        self.assertIsNone(tools[WORKSPACE_OPEN].meta)
         self.assertIsNone(tools[VIEW_CREATE].meta)
         self.assertEqual(
             {
@@ -137,9 +99,8 @@ class WorkbenchToolsTests(unittest.TestCase):
         self.assertFalse(tools[RUN].annotations.read_only_hint)
         self.assertTrue(tools[CHECK].annotations.read_only_hint)
         self.assertTrue(tools[SCHEMA].annotations.read_only_hint)
-        owner = WorkbenchTools(Path("/project"))
         fake = FakeService()
-        owner._service = fake
+        owner = WorkbenchTools(query_owner=fake)
 
         async def exercise():
             run = await owner.call(RUN, {"sql": "SELECT 1"})
@@ -181,17 +142,15 @@ class WorkbenchToolsTests(unittest.TestCase):
         self.assertTrue(fake.closed)
 
     def test_invalid_arguments_are_not_sent_to_the_service(self):
-        owner = WorkbenchTools(Path("/project"))
-        owner._service = FakeService()
+        owner = WorkbenchTools(query_owner=FakeService())
         with self.assertRaises(ExplicitBlockingRuntimeFailure) as caught:
             asyncio.run(owner.call(RUN, {"sql": 1}))
         self.assertEqual("query_error", caught.exception.code)
         self.assertEqual("sql must be a string", caught.exception.message)
-        self.assertEqual([], owner._service.calls)
+        self.assertEqual([], owner._query_owner.calls)
 
     def test_arguments_and_tool_name_are_strict(self):
-        owner = WorkbenchTools(Path("/project"))
-        owner._service = FakeService()
+        owner = WorkbenchTools(query_owner=FakeService())
         for name, arguments, message in (
             (PAGE, {"query_id": "q", "offset": True}, "offset must be a non-negative integer"),
             (PAGE, {"query_id": "q", "offset": -1}, "offset must be a non-negative integer"),
@@ -209,42 +168,41 @@ class WorkbenchToolsTests(unittest.TestCase):
                 asyncio.run(owner.call(name, arguments))
             self.assertEqual("query_error", caught.exception.code)
             self.assertEqual(message, caught.exception.message)
-        self.assertEqual([], owner._service.calls)
+        self.assertEqual([], owner._query_owner.calls)
 
     def test_known_query_and_unavailable_failures_are_explicit_but_unexpected_failure_is_not(self):
-        owner = WorkbenchTools(Path("/project"))
-        owner._service = Mock(run=Mock(side_effect=QueryExecutionError("query failed: Parser Error")))
+        owner = WorkbenchTools(query_owner=Mock(run=Mock(side_effect=QueryExecutionError("query failed: Parser Error"))))
         with self.assertRaises(ExplicitBlockingRuntimeFailure) as caught:
             asyncio.run(owner.call(RUN, {"sql": "SELECT FROM"}))
         self.assertEqual("query_error", caught.exception.code)
         self.assertEqual("query failed: Parser Error", caught.exception.message)
 
-        owner._service.run.side_effect = QueryExecutionError("query failed: missing column 'restart required'")
+        owner._query_owner.run.side_effect = QueryExecutionError("query failed: missing column 'restart required'")
         with self.assertRaises(ExplicitBlockingRuntimeFailure) as caught:
             asyncio.run(owner.call(RUN, {"sql": 'SELECT "restart required"'}))
         self.assertEqual("query_error", caught.exception.code)
 
-        owner._service.run.side_effect = ValueError("query result delivery failed: unsupported value")
+        owner._query_owner.run.side_effect = ValueError("query result delivery failed: unsupported value")
         with self.assertRaises(ExplicitBlockingRuntimeFailure) as caught:
             asyncio.run(owner.call(RUN, {"sql": "SELECT unsupported"}))
         self.assertEqual("query_error", caught.exception.code)
         self.assertEqual("query result delivery failed: unsupported value", caught.exception.message)
 
-        owner._service.run.side_effect = WorkbenchUnavailableError("query store unavailable; Workbench restart required")
+        owner._query_owner.run.side_effect = WorkbenchUnavailableError("query store unavailable; Workbench restart required")
         with self.assertRaises(ExplicitBlockingRuntimeFailure) as caught:
             asyncio.run(owner.call(RUN, {"sql": "SELECT 1"}))
         self.assertEqual("workbench_unavailable", caught.exception.code)
         self.assertEqual("Workbench unavailable; restart required", caught.exception.message)
 
-        owner._service.run.side_effect = RuntimeError("unexpected connector fault")
+        owner._query_owner.run.side_effect = RuntimeError("unexpected connector fault")
         with self.assertRaisesRegex(RuntimeError, "unexpected connector fault"):
             asyncio.run(owner.call(RUN, {"sql": "SELECT 1"}))
 
-        owner._service.run.side_effect = RuntimeError("unexpected connector fault: restart required")
+        owner._query_owner.run.side_effect = RuntimeError("unexpected connector fault: restart required")
         with self.assertRaisesRegex(RuntimeError, "unexpected connector fault"):
             asyncio.run(owner.call(RUN, {"sql": "SELECT 1"}))
 
-        owner._service.page = Mock(side_effect=ValueError("unknown query_id"))
+        owner._query_owner.page = Mock(side_effect=ValueError("unknown query_id"))
         with self.assertRaises(ExplicitBlockingRuntimeFailure) as caught:
             asyncio.run(owner.call(PAGE, {"query_id": "expired", "offset": 0}))
         self.assertEqual("query_error", caught.exception.code)

@@ -1,12 +1,8 @@
 """Check authored Header Relation entries against the selected Model."""
 
-import re
-
-from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_field_validation import _bounds, _check_count
+from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_field_validation import _bounds
 from carrier_aliases import canonical_role_name, matches_named_value
-from header_groups import equal_values, header_value
-
-_IMPLICIT_HEADER_RELATIONS = {"HAS_ACTIVE_SUBJECT", "IS_CONTAINED_BY"}
+from header_groups import header_value
 
 
 def _claim_rows(rows):
@@ -100,47 +96,6 @@ def load_header_relation_rules(contract):
     return contract
 
 
-def validate_authored_relations(selection, model, supplied, previous, *, source_view=None):
-    from .common import InputError
-
-    rules = getattr(getattr(model, "candidate_schema", None), "header_relation_rules", None)
-    if rules is None:
-        return
-    if not isinstance(supplied, dict):
-        raise InputError("relations", "Relations must be a mapping")
-    if not supplied:
-        return  # An empty input clears the optional group before serialization.
-    try:
-        _check_count("Relations", "entry", len(supplied), rules["entries"])
-        changed = _validate_entries(selection, rules, supplied, previous if isinstance(previous, dict) else {})
-        if source_view is not None and changed and "endpoints" in rules:
-            _validate_endpoints(selection, model, rules, changed, source_view)
-    except ValueError as error:
-        raise InputError("relations", str(error)) from error
-
-
-def _validate_endpoints(selection, model, rules, changed, source_view):
-    from FEATURE_MODEL import FEATURE_GENERATED_MODEL as generated
-    from .carrier import logical_view
-    from .publish import resolve_replacement
-    from .source import select_current_sources
-
-    report_targets = changed.get("IS_WORK_REPORT_FOR")
-    report_rule = model.candidate_schema.work_report_target
-    if report_targets is not None and report_rule is not None:
-        _check_count("IS_WORK_REPORT_FOR", "target", len(report_targets), report_rule["targets_per_source"])
-    regular = sorted({ref for name, refs in changed.items() if name != "IS_REPLACEMENT_FOR" for ref in refs})
-    pins = select_current_sources(selection, regular) if regular else {}
-    for ref in changed.get("IS_REPLACEMENT_FOR", ()):
-        if ref not in pins:
-            pins[ref] = resolve_replacement(selection, ref)
-    context = model_endpoint_context(rules, source_view)
-    for name, refs in changed.items():
-        targets = [(_atom_kind(logical_view(pins[ref].metadata, model), context[0], generated.Atom), "instances")
-                   for ref in refs]
-        validate_resolved_relation(rules, context, name, targets)
-
-
 def model_endpoint_context(rules, source_view):
     from FEATURE_MODEL import FEATURE_GENERATED_MODEL as generated
     from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_relation_validation import effective_relation_constraints
@@ -201,28 +156,3 @@ def _atom_kind(view, model_types, atom_class):
         if expected is None or matches_named_value(form, expected.removeprefix("/")):
             return kind
     return atom_class
-
-
-def _validate_entries(selection, rules, supplied, previous):
-    prefix = selection.settings["artifacts"]["identity"]["project_prefix"]
-    pattern = re.compile(re.escape(prefix) + r"-[A-Z]-[0-9]+")
-    names = {name.casefold(): name for name in rules["names"]}
-    seen = {key.casefold() for key, targets in supplied.items()
-            if isinstance(key, str) and key in previous and equal_values(previous[key], targets)}
-    changed = {}
-    for key, targets in supplied.items():
-        if key in previous and equal_values(previous[key], targets):
-            continue
-        canonical = names.get(key.casefold()) if isinstance(key, str) else None
-        if canonical is None or key not in {canonical, canonical.lower()}:
-            raise ValueError(f"{key}: expected a declared direct Relation name")
-        if canonical in _IMPLICIT_HEADER_RELATIONS:
-            raise ValueError(f"{key}: supplied by Container or Main Subject")
-        if key.casefold() in seen:
-            raise ValueError(f"{key}: duplicate Relation name")
-        seen.add(key.casefold())
-        if not isinstance(targets, list) or any(not isinstance(ref, str) or not pattern.fullmatch(ref) for ref in targets):
-            raise ValueError(f"{key}: expected a list of Project base Atom IDs")
-        _check_count(key, "target", len(targets), rules["targets"])
-        changed[canonical] = targets
-    return changed

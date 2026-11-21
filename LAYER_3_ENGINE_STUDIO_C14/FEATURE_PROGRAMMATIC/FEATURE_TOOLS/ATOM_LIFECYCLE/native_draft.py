@@ -20,7 +20,7 @@ from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext
 from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
 
 from . import common, effects
-from .backend import _project_write_lock
+from .effects import _project_write_lock
 from .placement import _slug
 from .source import bind_query_reader
 

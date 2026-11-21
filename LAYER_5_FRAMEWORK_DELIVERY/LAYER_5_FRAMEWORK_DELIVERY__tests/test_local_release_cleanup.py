@@ -10,7 +10,7 @@ from unittest.mock import patch
 import test_release_cleanup as docker_tests
 import test_simple_local_release as local_tests
 from local_release import run_local_release
-from project_selection import resolve_project
+from native_startup import select_runtime_project
 
 
 class LocalReleaseCleanupTests(unittest.TestCase):
@@ -22,7 +22,7 @@ class LocalReleaseCleanupTests(unittest.TestCase):
         fixture = local_tests.SimpleLocalReleaseTests("runTest")
         fixture.setUp()
         self.addCleanup(fixture.doCleanups)
-        project_id = resolve_project(fixture.root).instance_id
+        project_id = select_runtime_project(fixture.root).instance_id
         return fixture, docker_tests.DockerFixture(fixture.root, project_id)
 
     def _launcher_image(self, fixture, before: str | None, after: str | None):

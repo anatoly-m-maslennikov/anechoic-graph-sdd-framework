@@ -18,7 +18,7 @@ from mcp import types
 
 from host_runtime_config import HostRuntimeConfig, resolve_host_project
 from operation_error_boundary import FailureRecord
-from project_selection import ProjectSelection
+from native_project_selection import NativeProjectSelection
 from runtime_failure_diagnostics import report_failure
 from shared_tool_contract import ToolContract, contract_digest, public_tool
 from tool_registry_runtime import ToolRegistryRuntimeError
@@ -41,7 +41,7 @@ class SharedToolFrontier:
             row["tool"] = tool
         try:
             secondary = report_failure(
-                root,
+                None,
                 FailureRecord("WARNING", code, "shared MCP catalog warning"),
                 component="SHARED_MCP_CATALOG",
                 operation="frontier_discovery",
@@ -104,7 +104,7 @@ def _candidate_paths(config: HostRuntimeConfig, frontier: SharedToolFrontier) ->
 
 
 def _add_project(
-    frontier: SharedToolFrontier, selection: ProjectSelection, tools: list[types.Tool]
+    frontier: SharedToolFrontier, selection: NativeProjectSelection, tools: list[types.Tool]
 ) -> None:
     contracts: dict[str, str] = {}
     for native in tools:

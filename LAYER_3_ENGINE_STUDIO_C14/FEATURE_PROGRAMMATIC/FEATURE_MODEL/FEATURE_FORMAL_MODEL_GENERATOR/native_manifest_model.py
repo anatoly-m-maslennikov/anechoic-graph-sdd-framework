@@ -28,7 +28,6 @@ _REVIEWED_CHECKS = {
     "check_project_manifest": "771c1c72eeae6ea67e1658e647fc3062dc07f725506372ff284d181b3cfe9b39",
     "check_component_manifest": "47532369ca1bc4cbd73611f09a27b6142aafb453e1eb156b10198bc4d98dc978",
     "check_purpose": "a080c8a08f9b2f066992045de8183f532eb0aa6fb1dc566e746bc3bed2701a3b",
-    "check_component_purpose": "0e2405b84739f53ad22f70f2db415ab7576996b295592d2c63863abaab7a0e13",
     "check_contract": "087afdc97f4a8add78336871fbf1f3698718b97200fad1518f96ef8c20a72007",
     "check_package_spec": "8fb0a7cb026469fd2d3a020be0f9eb852dd4fc16b4c4610fa4131f39b24e698b",
 }
@@ -43,13 +42,15 @@ def _native_imports(claim):
 def reviewed_model_records():
     """Return normalized reviewed Claims, their originals, and a source fingerprint."""
     records, originals = [], {}
-    digest = sha256()
+    digest = sha256(b"retire-component-purpose\0")
     for name, expected in _CLAIM_FILES.items():
         data = (_ASSETS / name).read_bytes()
         if sha256(data).hexdigest() != expected:
             raise ValueError(f"{name}: reviewed Claim file differs")
         digest.update(name.encode() + b"\0" + data)
         for row in json.loads(data):
+            if row["subject"] == "MODEL//ANECHOIC <+ Node//Artifact//Atom//Spec Atom//Purpose//Component Purpose":
+                continue
             claim = row["claim"]
             originals[row["subject"]] = claim
             records.append((name, row["subject"], _native_imports(claim)))

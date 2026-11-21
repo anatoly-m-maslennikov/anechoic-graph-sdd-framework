@@ -184,15 +184,10 @@ def resolve_host_project(config: HostRuntimeConfig, project_root: Path | str):
             raise OutsideProjectRootError("Project root is outside the shared host root")
     except ValueError as error:
         raise OutsideProjectRootError("Project root is outside the shared host root") from error
-    try:
-        from project_selection import resolve_project
-    except (ImportError, ModuleNotFoundError) as error:
-        raise _error("Project selection resolver is unavailable") from error
-    from technical_diagnostics import _project_prefix
+    from native_startup import select_runtime_project
 
-    selection = resolve_project(candidate)
-    _project_prefix(selection.settings)
-    return selection
+    return select_runtime_project(candidate)
+
 
 
 __all__ = [

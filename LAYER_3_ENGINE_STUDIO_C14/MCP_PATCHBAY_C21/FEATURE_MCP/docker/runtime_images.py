@@ -259,8 +259,8 @@ class ImageManager:
         if str(tools) not in sys.path:
             sys.path.insert(0, str(tools))
         try:
-            from project_selection import resolve_project
-            selection = resolve_project(root)
+            from native_startup import select_runtime_project
+            selection = select_runtime_project(root)
             if (selection.root != root or not selection.control_root.is_relative_to(root)
                     or selection.launcher_state != state / selection.instance_id):
                 raise ValueError("invalid Project launcher state")

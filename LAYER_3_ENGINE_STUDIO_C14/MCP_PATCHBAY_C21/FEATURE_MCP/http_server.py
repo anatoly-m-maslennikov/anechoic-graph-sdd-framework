@@ -9,17 +9,14 @@
 import argparse
 from concurrent.futures import CancelledError as FutureCancelledError
 from contextlib import ExitStack, asynccontextmanager
-from contextlib import nullcontext
 from pathlib import Path
 import re
 
 from starlette.requests import Request
-from starlette.responses import HTMLResponse, JSONResponse, Response
+from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
-from health_page import render_health_page
-from health_actions import restart_workbench, reread_workbench
-from direct_gateway import DirectGateway, bind_selection, native_runtime_gateway, startup_selection
+from direct_gateway import native_project_gateway, native_runtime_gateway, startup_selection
 from http_paths import HEALTH_PATH, MCP_PATH
 from mcp.server.transport_security import TransportSecuritySettings
 from operation_error_boundary import FailureRecord
@@ -41,15 +38,10 @@ SECURITY = TransportSecuritySettings(
 
 class LoopbackGuard:
     """Apply loopback Host and Origin admission before the MCP ASGI application."""
-    def __init__(self, app, selection=None):
+    def __init__(self, app):
         self.app = app
-        self.selection = selection
 
     async def __call__(self, scope, receive, send):
-        with bind_selection(self.selection) if self.selection is not None else nullcontext():
-            await self._call(scope, receive, send)
-
-    async def _call(self, scope, receive, send):
         if scope["type"] != "http":
             await self.app(scope, receive, send)
             return
@@ -115,90 +107,39 @@ def _accepts_html(value):
     )
 
 
-def _gateway_ready(gateway):
-    return gateway.ready
-
-
-async def health(request, gateway, restart_action=None, reread_action=None, *, allow_html=True):
-    ready = _gateway_ready(gateway)
-    status_code = 200 if ready else 503
-    health_warning = None
-    snapshot = {}
+async def health(gateway):
+    ready = gateway.ready
+    payload = {"ready": ready}
     observer = getattr(gateway, "health_observations", None)
     if observer is not None:
         try:
-            snapshot = observer.snapshot()
+            observer.snapshot()
         except FutureCancelledError:
             raise
         except Exception as error:
-            report_failure(
-                getattr(gateway, '_diagnostic_root', getattr(gateway, 'root', None)), error, component='MCP_HTTP',
-                operation='health_observations',
-            )
-            health_warning = 'health observations unavailable'
-    if restart_action is None and (not allow_html or not _accepts_html(request.headers.get("accept"))):
-        payload = {"ready": ready}
-        if health_warning is not None:
-            payload['health_warning'] = health_warning
-        return JSONResponse(payload, status_code=status_code)
-    page = render_health_page(
-        snapshot, ready=ready, gateway=gateway, restart_action=restart_action,
-        reread_action=reread_action,
-    )
-    headers = {"Cache-Control": "no-store"}
-    if health_warning is not None:
-        page = page.replace(
-            '</body>', '<p role="status">Health warning: health observations unavailable.</p></body>',
-        )
-        headers['X-Health-Warning'] = health_warning
-    return HTMLResponse(page, status_code=status_code, headers=headers)
+            report_failure(None, error, component="MCP_HTTP", operation="health_observations")
+            payload["health_warning"] = "health observations unavailable"
+    return JSONResponse(payload, status_code=200 if ready else 503)
 
 
 def create_app(root, *, selection=None, native_inputs=None, control_root=None, runtime_gateway=None):
-    from native_project_selection import NativeProjectSelection
-
-    native_project = isinstance(selection, NativeProjectSelection)
     if runtime_gateway is not None:
         gateway = runtime_gateway
     elif native_inputs is not None:
         if selection is not None or not control_root:
-            raise ValueError("Native selection requires a control root and no legacy selection")
+            raise ValueError("Native inputs require an explicit control root")
         from native_query import create_native_gateway
 
         gateway = create_native_gateway(root, control_root, native_inputs)
-    elif native_project:
-        from native_query import NativeQueryOwner
-        from native_startup import load_native_inputs
-
-        gateway = DirectGateway(root, native_query=NativeQueryOwner(selection, load_native_inputs(selection)))
     else:
-        gateway = DirectGateway(root, selection=selection)
+        selected = selection if selection is not None else startup_selection(root, control_root)
+        gateway = native_project_gateway(root, selection=selected)
     server = gateway.build_server()
-    legacy = native_inputs is None and not native_project
 
-    async def readiness(request):
-        return await health(request, gateway, allow_html=legacy)
+    async def readiness(_request):
+        return await health(gateway)
 
-    async def restart(request):
-        return await health(
-            request, gateway,
-            restart_action=await restart_workbench(request, gateway, shared=False),
-        )
-
-    async def reread(request):
-        return await health(
-            request, gateway,
-            reread_action=await reread_workbench(request, gateway, shared=False),
-        )
-
-    routes = [Route(HEALTH_PATH, readiness)]
-    if legacy:
-        routes.extend([
-            Route(f"{HEALTH_PATH}/workbench-restart", restart, methods=["POST"]),
-            Route(f"{HEALTH_PATH}/workbench-reread", reread, methods=["POST"]),
-        ])
-    if legacy or native_project:
-        routes.extend(workbench_routes(gateway))
+    routes = [Route(HEALTH_PATH, readiness), *workbench_routes(gateway)]
     app = server.streamable_http_app(
         streamable_http_path=PATH,
         transport_security=SECURITY,
@@ -218,7 +159,7 @@ def create_app(root, *, selection=None, native_inputs=None, control_root=None, r
                 await gateway.close()
 
     app.router.lifespan_context = lifespan
-    guarded = LoopbackGuard(app, selection if legacy else None)
+    guarded = LoopbackGuard(app)
     guarded.gateway = gateway
     guarded.starlette_app = app
     return guarded
@@ -228,15 +169,13 @@ def _serve(args, *, native_inputs=None):
     if args.host != "0.0.0.0" or args.port != PORT:
         raise ValueError("HTTP MCP requires the container bind 0.0.0.0:8092")
     import uvicorn
-    from native_project_selection import NativeProjectSelection
 
     with ExitStack() as stack:
         if native_inputs is not None:
             app = create_app(args.project_root, native_inputs=native_inputs, control_root=args.control_root)
         else:
             selection = startup_selection(args.project_root, args.control_root, args.instance_id, args.host_project_root)
-            gateway = (stack.enter_context(native_runtime_gateway(selection))
-                       if isinstance(selection, NativeProjectSelection) else None)
+            gateway = stack.enter_context(native_runtime_gateway(selection))
             app = create_app(args.project_root, selection=selection, runtime_gateway=gateway)
         uvicorn.run(app, host=args.host, port=args.port, log_level="warning")
 

@@ -3,6 +3,7 @@ import asyncio
 from pathlib import Path
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
 
 import httpx2
@@ -12,6 +13,7 @@ from mcp.client.streamable_http import streamable_http_client
 
 APP = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(APP))
+from direct_gateway import DirectGateway  # noqa: E402
 from http_server import create_app  # noqa: E402
 from http_paths import MCP_PATH  # noqa: E402
 
@@ -53,7 +55,12 @@ class HealthHTTPFixture(unittest.IsolatedAsyncioTestCase):
         return self.app.starlette_app.router.lifespan_context(self.app.starlette_app)
 
     def new_app(self):
-        app = create_app(self.root)
+        owner = SimpleNamespace(
+            selection=SimpleNamespace(root=self.root, parameters={}),
+            start=lambda: None,
+            close=lambda: None,
+        )
+        app = create_app(self.root, runtime_gateway=DirectGateway(self.root, native_query=owner))
         app.gateway.workbench.call = self.backend_call
         return app
 

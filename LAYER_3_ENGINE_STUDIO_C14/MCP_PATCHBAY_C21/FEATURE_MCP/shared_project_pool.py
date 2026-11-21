@@ -8,7 +8,7 @@ from dataclasses import dataclass
 import sys
 from typing import Any, Callable
 
-from project_selection import ProjectSelection
+from native_project_selection import NativeProjectSelection
 from runtime_failure_diagnostics import report_failure
 
 
@@ -18,7 +18,7 @@ class ProjectCapacityError(RuntimeError):
 
 @dataclass
 class LoadedProject:
-    selection: ProjectSelection
+    selection: NativeProjectSelection
     gateway: Any
     in_flight: int = 0
     touched: int = 0
@@ -39,7 +39,7 @@ class SharedProjectPool:
         self._lock = asyncio.Lock()
 
     @staticmethod
-    def _key(selection: ProjectSelection) -> str:
+    def _key(selection: NativeProjectSelection) -> str:
         return str(selection.root)
 
     def _touch(self, entry: LoadedProject) -> None:
@@ -56,9 +56,9 @@ class SharedProjectPool:
         except Exception:
             pass
 
-    def _report(self, selection: ProjectSelection | None, error: Exception, operation: str) -> None:
+    def _report(self, selection: NativeProjectSelection | None, error: Exception, operation: str) -> None:
         _, secondary = report_failure(
-            selection.root if selection is not None else None,
+            None,
             error,
             component="MCP_POOL",
             operation=operation,
@@ -67,7 +67,7 @@ class SharedProjectPool:
             self._stderr("anechoic: technical diagnostics unavailable\n")
 
     async def _close_gateway(
-        self, selection: ProjectSelection | None, gateway: Any, operation: str
+        self, selection: NativeProjectSelection | None, gateway: Any, operation: str
     ) -> None:
         closing = asyncio.create_task(gateway.close())
         try:
@@ -81,13 +81,13 @@ class SharedProjectPool:
             self._report(selection, error, operation)
 
     async def _cleanup_gateway(
-        self, selection: ProjectSelection, gateway: Any, operation: str
+        self, selection: NativeProjectSelection, gateway: Any, operation: str
     ) -> None:
         if gateway is not None:
             await self._close_gateway(selection, gateway, operation)
 
     async def _reserve(
-        self, selection: ProjectSelection
+        self, selection: NativeProjectSelection
     ) -> tuple[str, LoadedProject | None, LoadedProject | None]:
         key = self._key(selection)
         evicted = None
@@ -112,7 +112,7 @@ class SharedProjectPool:
             self._pending_tasks[key] = current
         return key, entry, evicted
 
-    async def acquire(self, selection: ProjectSelection) -> LoadedProject:
+    async def acquire(self, selection: NativeProjectSelection) -> LoadedProject:
         """Reserve a gateway, evicting only an idle least-recently-used entry."""
         key, entry, evicted = await self._reserve(selection)
         if entry is not None:

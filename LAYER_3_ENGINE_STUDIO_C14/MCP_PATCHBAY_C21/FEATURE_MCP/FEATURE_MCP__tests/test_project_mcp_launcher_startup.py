@@ -35,6 +35,10 @@ INSTANCE_ID = "c" * 64
 
 
 class BackendImageModeTests(unittest.TestCase):
+    def setUp(self):
+        self.selection = SimpleNamespace(root=Path("project"), control_relative=Path(".anechoic_fixture"))
+        self.enterContext(patch.object(ProjectMcpBackend, "_native_package", return_value=self.selection))
+
     def test_identity_uses_same_asset_mode_as_resolution(self):
         for build in (True, False):
             with self.subTest(build_if_missing=build), patch("project_mcp_backend.ImageManager") as factory:
@@ -44,10 +48,11 @@ class BackendImageModeTests(unittest.TestCase):
                 result = ProjectMcpBackend(build_if_missing=build).resolve_image(
                     "source", None, project_root="project")
                 self.assertEqual((IMAGE_ID, FINGERPRINT), result)
-                manager.resolve.assert_called_once_with(explicit_id=None, build_if_missing=build)
-                manager.identity.assert_called_once_with(use_packaged_assets=not build)
+                manager.resolve.assert_called_once_with(
+                    explicit_id=None, build_if_missing=build, use_packaged_assets=True)
+                manager.identity.assert_called_once_with(use_packaged_assets=True)
                 manager._inspect.assert_called_once_with(IMAGE_ID, manager.identity.return_value)
-                manager._current.assert_called_once_with(manager.identity.return_value, use_packaged_assets=not build)
+                manager._current.assert_called_once_with(manager.identity.return_value, use_packaged_assets=True)
 
     def test_changed_checkout_refuses_before_start(self):
         with patch("project_mcp_backend.ImageManager") as factory:
@@ -58,7 +63,7 @@ class BackendImageModeTests(unittest.TestCase):
             backend.resolve_image("source", None, project_root="project")
             manager._current.side_effect = ImageError("IMAGE_INPUT_UNAVAILABLE", "changed")
             with patch.object(backend, "_start") as start, self.assertRaises(ImageError):
-                backend.start(None, IMAGE_ID, FINGERPRINT, 1, 1234)
+                backend.start(self.selection, IMAGE_ID, FINGERPRINT, 1, 1234)
             start.assert_not_called()
 
     def test_fingerprint_must_match_digest_inspection(self):
@@ -66,8 +71,9 @@ class BackendImageModeTests(unittest.TestCase):
             manager = factory.return_value
             manager.resolve.return_value = IMAGE_ID
             manager._inspect.side_effect = ImageError("IMAGE_REFUSED", "mismatch")
-            with self.assertRaises(ImageError):
+            with self.assertRaises(ImageError) as refused:
                 ProjectMcpBackend().resolve_image("source", None, project_root="project")
+            self.assertEqual("IMAGE_REFUSED", refused.exception.code)
 
 
 class Backend:
@@ -152,8 +158,7 @@ class LauncherStartupContractTests(unittest.TestCase):
             control_relative=Path(".anechoic_local"),
             control_relativePath=Path(".anechoic_local"),
             instance_id=INSTANCE_ID,
-            settings={"project_mcp": {"http_port": 56317}},
-            structure={},
+            parameters={"project_mcp": {"http_port": 56317}},
         )
         self.backend = Backend()
         self.launcher = Launcher(backend=self.backend)
@@ -268,7 +273,7 @@ class LauncherStartupContractTests(unittest.TestCase):
                    {"project_mcp": {"http_port": 0}}, {"project_mcp": {"http_port": 65536}})
         for settings in invalid:
             with self.subTest(settings=settings):
-                self.selection.settings = settings
+                self.selection.parameters = settings
                 result = self.launch()
                 self.assert_public_failure(result, "refused", "PROJECT_SELECTION_REFUSED")
                 self.assertEqual(0, self.backend.resolve_image_calls)

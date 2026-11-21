@@ -10,15 +10,11 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import re
-from pathlib import Path
-import tomllib
 import uuid
 from typing import Any
 from urllib.parse import parse_qs, quote, urlencode, urlparse
 
 from http_paths import WORKBENCH_PATH
-from settings_carrier import read_settings_carrier
-from native_project_selection import NativeProjectSelection
 
 _LEGACY_SAVED_ID = re.compile(r"^[qw]_[0-9a-f]{32}$")
 
@@ -34,11 +30,7 @@ def _saved_id(value: str) -> bool:
 
 
 def project_name(selection: Any) -> str:
-    if isinstance(selection, NativeProjectSelection):
-        return selection.project_name
-    settings = getattr(selection, "settings", None)
-    project = settings.get("project") if isinstance(settings, Mapping) else None
-    name = project.get("name") if isinstance(project, Mapping) else None
+    name = getattr(selection, "project_name", None)
     if not isinstance(name, str) or not name:
         raise ValueError("Workbench Project name is unavailable")
     return name
@@ -49,11 +41,7 @@ def _saved_page(request: Any, selection: Any) -> str | None:
     if base_url is not None:
         return f"{str(base_url).rstrip('/')}{WORKBENCH_PATH}/{quote(project_name(selection), safe='')}"
     try:
-        if isinstance(selection, NativeProjectSelection):
-            document = selection.parameters.get("runtime", {})
-        else:
-            path = Path(selection.root) / ".anechoic_runtime" / "anechoic_runtime_settings.toml"
-            document = read_settings_carrier(path)
+        document = selection.parameters.get("runtime", {})
         page = document.get("workbench", {}).get("public_url")
         if not isinstance(page, str) or not page or any(c.isspace() or ord(c) < 32 for c in page):
             return None
@@ -63,7 +51,7 @@ def _saved_page(request: Any, selection: Any) -> str | None:
             return None
         _ = parsed.port  # Validate a supplied port.
         return page
-    except (AttributeError, OSError, TypeError, UnicodeError, ValueError, tomllib.TOMLDecodeError):
+    except (AttributeError, TypeError, ValueError):
         return None
 
 

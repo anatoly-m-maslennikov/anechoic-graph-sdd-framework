@@ -8,9 +8,9 @@ structure:
 context:
   lens: QA
 state:
-  status: active
-  version: 4
-  updated_at: '2026-11-12T16:59:54.242192+00:00'
+  status: "active"
+  version: 5
+  updated_at: "2026-11-21T10:23:29.783063+00:00"
 ---
 ## Summary
 
@@ -20,12 +20,16 @@ Measure live Atom Lifecycle Tools
 
 ### Prose Claim
 
-Measure each of the six live MCP Atom Lifecycle Tools from request to response on twenty randomized Atoms in one temporary Scope Unit. Verify the effects through Workbench. Record the running image, individual durations, median, maximum, and cleanup.
+Measure the six native Atom Lifecycle Tools in a disposable native Project.
+Record the running image and request durations. Verify the effects through
+Workbench and remove the fixture after the run.
 
 ## Details
 
-Include same-ID and replacement Update. Check that Create Draft without a source Version copies Current and an explicit Version copies exactly that revision. Check that fields absent from the request are preserved. Include distinct padded and unpadded decimal Atom IDs and verify selection preserves the exact spelling. Check independent Archive and Promote Draft batches for result order, stopping on the first failure, and accurate completed and remaining targets. Confirm grouped publication with no missing changed rows.
+Verify exact Current and Draft selectors, same-ID Draft creation and
+promotion, and preservation of the source Header and contained Atoms on a
+body revision. Check a Ticket Asset body update and Archive of a leaf Ticket.
 
-Check that a Current Epic can change from Backlog to Active with a Draft child. Verify that direct and nested Current Tasks become Active and the Draft child stays a Draft. Run a content-only Update of an Epic with children and verify that the children’s content and Status are unchanged.
-
-Check independent copying separately. Copy a Current Atom, an Archived revision and a Draft through Create Draft. Verify that each copy starts at Version 1 with a new ID, preserves fields and Relations not supplied in the request, including inherited IS_REPLACEMENT_FOR, and leaves the source unchanged. Promoting the copy must leave the source in place.
+Verify that a closing Epic or Task cancels unfinished descendants and
+preserves the contained tree. Reopening an Epic preserves all child
+Statuses, source bytes, and history.

@@ -35,7 +35,7 @@ class NativeImportGraphDockerE2E(unittest.TestCase):
         subprocess.run(["git", "init", "--quiet", str(cls.root)], check=True)
         control = ".anechoic_anechoic"
         fixture.RuntimeSelectionTests.manifest(cls, cls.root / control, component="C00", parameters={
-            "runtime": {"journal": {"storage": "duckdb"}, "workbench": {"storage": "memory", "import_graph": {}}},
+            "runtime": {"journal": {"storage": "duckdb"}, "workbench": {"storage": "disk", "import_graph": {}}},
         })
         (cls.root / control / "__TKT/TASKS").mkdir(parents=True)
         cls._write("app/__init__.py", "")
@@ -58,6 +58,10 @@ class NativeImportGraphDockerE2E(unittest.TestCase):
         ], text=True, timeout=60).strip()
         cls.addClassCleanup(subprocess.run, ["docker", "container", "rm", "-f", cls.container],
                             check=True, capture_output=True, timeout=30)
+        cls._wait_ready()
+
+    @classmethod
+    def _wait_ready(cls):
         binding = subprocess.check_output(["docker", "port", cls.container, "8092/tcp"],
                                           text=True, timeout=10).strip()
         if not re.fullmatch(r"127\.0\.0\.1:[0-9]+", binding):
@@ -75,6 +79,21 @@ class NativeImportGraphDockerE2E(unittest.TestCase):
         logs = subprocess.run(["docker", "logs", "--tail", "12", cls.container],
                               capture_output=True, text=True, check=True, timeout=10)
         raise RuntimeError(f"Canary Workbench failed to become ready\n{logs.stdout}{logs.stderr}")
+
+    def test_workbench_browser_flows(self):
+        repository = fixture.MCP.parents[2]
+        frontend = fixture.MCP.parents[1] / "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND"
+        environment = os.environ | {
+            "WORKBENCH_E2E_URL": f"{self.url}{WORKBENCH_PATH}/Anechoic",
+            "PLAYWRIGHT_BROWSERS_PATH": str(repository / ".anechoic_tmp/workbench/playwright-browsers"),
+        }
+        with tempfile.TemporaryDirectory(prefix="workbench-browser-") as output:
+            result = subprocess.run(
+                ["npm", "run", "test:e2e", "--", "--output", output, "--global-timeout", "115000"],
+                cwd=frontend, env=environment,
+                capture_output=True, text=True, timeout=120,
+            )
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
 
     @classmethod
     def _write(cls, relative, contents):
@@ -187,7 +206,7 @@ class NativeImportGraphDockerE2E(unittest.TestCase):
         manifest.unlink()
         self._wait_rows(sql, [["unresolved"]])
 
-    def test_disk_journal_accepts_host_events_with_in_memory_workbench(self):
+    def test_disk_journal_and_projection_survive_warm_restart(self):
         receipt, = append_sealed_events(
             self.root, [{"event_id": "host-canary"}], author="release-canary",
             local_date="2026-11-21", timezone="UTC", storage="duckdb",
@@ -198,7 +217,17 @@ class NativeImportGraphDockerE2E(unittest.TestCase):
         self.assertEqual("SELECT 1", self._post("/load", {"reference": saved["saved_query_id"]})["sql"])
         self.assertEqual("ready", self._post("/rebuild", {"target": "all"})["status"])
         self.assertEqual([[receipt["record_id"]]], self._rows(sql))
-        self.assertTrue((self.root / PROJECT_DATABASE).is_file())
+        database = self.root / PROJECT_DATABASE
+        inode = database.stat().st_ino
+        subprocess.run(["docker", "container", "restart", self.container],
+                       check=True, capture_output=True, timeout=30)
+        self._wait_ready()
+        self.assertEqual(inode, database.stat().st_ino)
+        self.assertEqual([[receipt["record_id"]]], self._rows(sql))
+        self.assertEqual("SELECT 1", self._post("/load", {"reference": saved["saved_query_id"]})["sql"])
+        logs = subprocess.run(["docker", "logs", self.container],
+                              check=True, capture_output=True, text=True, timeout=10)
+        self.assertIn("database_edit operation=reuse table=projection", logs.stdout + logs.stderr)
 
     def test_watcher_updates_native_atom_and_relations(self):
         relative = ".anechoic_anechoic/__TKT/TASKS/AN-T-9901--watcher.md"
@@ -217,13 +246,16 @@ class NativeImportGraphDockerE2E(unittest.TestCase):
         """
 
         def check(label, started, expected):
-            deadline = started + 30
+            limit = 1.5
+            deadline = started + limit
             actual = self._rows(sql)
             while actual != expected and monotonic() < deadline:
                 sleep(.1)
                 actual = self._rows(sql)
-            print(f"native Atom watcher {label}: {monotonic() - started:.3f}s", flush=True)
+            elapsed = monotonic() - started
+            print(f"native Atom watcher {label}: {elapsed:.3f}s", flush=True)
             self.assertEqual(expected, actual, label)
+            self.assertLessEqual(elapsed, limit, label)
             self.assertEqual([expected[0][-2:]] if expected else [], self._rows(graph), label)
 
         def contents(version, container):

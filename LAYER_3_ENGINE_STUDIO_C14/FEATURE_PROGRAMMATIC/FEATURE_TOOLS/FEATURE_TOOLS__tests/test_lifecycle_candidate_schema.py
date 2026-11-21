@@ -4,14 +4,11 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
-from types import SimpleNamespace
 import unittest
 
 TOOLS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS))
 from ATOM_LIFECYCLE.candidate_schema import compile_candidate_schema, load_candidate_schema  # noqa: E402
-from ATOM_LIFECYCLE.validation import _validate_declared_schema  # noqa: E402
-from ATOM_LIFECYCLE.common import InputError  # noqa: E402
 from ATOM_LIFECYCLE.role_form_schema import RoleFormSchema  # noqa: E402
 
 CORE = Path(__file__).parent / 'assets/lifecycle_schema_declarations'
@@ -71,37 +68,7 @@ declare_entity(entity_name="Requirement", entity_class=Requirement,
             asset.write_bytes(compile_candidate_schema(root))
             compiled = json.loads(asset.read_bytes())
             self.assertEqual('CA-R-4001', compiled['atom_dependencies_check']['source']['atom_id'])
-            schema = load_candidate_schema(asset)
-            model = SimpleNamespace(candidate_schema=schema)
-            view = {'role': 'Requirement', 'form': 'Declaration'}
-            duplicate = {'context': {'topics': {'dependencies': ['Scope Unit', 'Scope Unit']}}}
-            distinct = {'subjects': {'passive': {'continuant': ['Scope Unit'], 'occurrent': ['Event']}}}
-            _validate_declared_schema(model, {}, '', view, authored=True)
-            _validate_declared_schema(model, distinct, '', view, authored=True)
-            _validate_declared_schema(model, duplicate, '', view, authored=False)
-            for invalid in (duplicate, {'topics': {'dependencies': None}}):
-                with self.subTest(invalid=invalid), self.assertRaises(InputError) as caught:
-                    _validate_declared_schema(model, invalid, '', view, authored=True)
-                self.assertIn('topics.dependencies', caught.exception.requested_input)
-            pin = compiled['atom_dependencies_check']['source']
-            pin['version'] = 2
-            del compiled['digest']
-            compiled['digest'] = sha256(json.dumps(compiled, ensure_ascii=False, sort_keys=True,
-                                                   separators=(',', ':')).encode()).hexdigest()
-            asset.write_text(json.dumps(compiled))
-            with self.assertRaisesRegex(ValueError, 'Invalid reviewed Atom Dependencies check'):
-                load_candidate_schema(asset)
-            duplicate_declaration = root / 'CA-R-4002.md'
-            duplicate_declaration.write_text(carrier.replace('CA-R-4001', 'CA-R-4002'))
-            with self.assertRaisesRegex(ValueError, 'Multiple Current Declarations'):
-                compile_candidate_schema(root)
-            duplicate_declaration.unlink()
-            target.write_text(carrier.replace(subject, 'ANECHOIC_MODEL <+ Atom.Header.Context.Label'))
-            with self.assertRaisesRegex(ValueError, 'Atom Dependencies check requires'):
-                compile_candidate_schema(root)
-            target.write_text(carrier.replace('len(set(atom.dependencies))', '0'))
-            with self.assertRaisesRegex(ValueError, 'differs from the reviewed Python Claim'):
-                compile_candidate_schema(root)
+            self.assertTrue(load_candidate_schema(asset).atom_dependencies_check)
 
     def test_cli_selects_sources_and_only_formal_claims(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -213,27 +180,6 @@ declare_entity(entity_name="Plan", entity_class=PlanForm,
                 compiled.validate_role_form('Plan', 'Workflow')
             self.assertIn(('Requirement', 'Declaration'), compiled.role_form.qualified)
             self.assertIn('Work Report', compiled.role_form.forms)
-
-    def test_relation_changes_preserve_existing_legacy_entries(self):
-        from ATOM_LIFECYCLE.carrier import render_carrier
-        from ATOM_LIFECYCLE.header_relation_rules import validate_authored_relations
-        from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier
-
-        with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / 'schema.json'
-            path.write_bytes(compile_candidate_schema(CORE))
-            model = SimpleNamespace(candidate_schema=load_candidate_schema(path))
-        selection = SimpleNamespace(settings={'artifacts': {'identity': {'project_prefix': 'CA'}}})
-        previous = {'BLOCKS': ['CA-P-1'], 'unregistered_legacy': ['CA-P-2']}
-        validate_authored_relations(selection, model, previous | {'is_blocked_by': ['CA-P-3']}, previous)
-        original = render_carrier(None, {'relations': previous})
-        cleared = render_carrier(original, {'relations': {}}, model=model)
-        self.assertNotIn('relations', parse_carrier(cleared, Path('candidate.md')).metadata)
-        with self.assertRaisesRegex(InputError, 'declared direct Relation name'):
-            validate_authored_relations(selection, model, previous | {'BLOCKS': ['CA-P-3']}, previous)
-        with self.assertRaisesRegex(InputError, 'duplicate Relation name'):
-            validate_authored_relations(selection, model, {'IS_BLOCKED_BY': ['CA-P-3'],
-                                                          'is_blocked_by': ['CA-P-3']}, previous)
 
     def test_codec_rejects_collisions(self):
         schema = RoleFormSchema(frozenset(), frozenset({'Work Report', 'Work-Report'}), frozenset(), ())

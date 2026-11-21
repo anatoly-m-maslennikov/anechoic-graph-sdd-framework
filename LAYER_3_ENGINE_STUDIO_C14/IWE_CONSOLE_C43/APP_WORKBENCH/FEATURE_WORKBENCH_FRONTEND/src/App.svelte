@@ -2,7 +2,6 @@
 <!-- CA-R-2902@9 -->
 <script lang="ts">
   import { onMount } from 'svelte';
-  import ArchiveDialog from './lib/ArchiveDialog.svelte';
   import Button from './lib/Button.svelte';
   import CommandPalette, { type Command } from './lib/CommandPalette.svelte';
   import NameDialog from './lib/NameDialog.svelte';
@@ -18,7 +17,7 @@
   import type { NativeBootstrap } from './lib/mcp_app_transport';
   import { formatSql } from './lib/sql_format.js';
   import type { OperationCaller } from './lib/transport';
-  import type { ArchiveScope, CheckResult, GridState, QueryLogItem, QueryResult, ResultDisplayPreferences, SavedIdentity, SavedItem, Schema, SourceSyncStatus, ViewResult, WorkspaceState, WorkspaceView } from './lib/types';
+  import type { CheckResult, GridState, QueryLogItem, QueryResult, ResultDisplayPreferences, SavedIdentity, SavedItem, Schema, SourceSyncStatus, ViewResult, WorkspaceState, WorkspaceView } from './lib/types';
   import { cleanAfterSave, newView, persistable, restore, storageKey, workspaceTabs } from './lib/workspace.js';
 
   type Check = { sql: string; result: CheckResult } | { sql: string; error: string };
@@ -73,7 +72,6 @@
   let tabs = $state<Tab[]>([initial]); let activeId = $state(initial.id); let view = $state<'settings' | 'saved' | 'view'>('view');
   let schema = $state<Schema>({ tables: {} }); let savedItems = $state<SavedItem[]>([]); let logItems = $state<QueryLogItem[]>([]); let syncStatus = $state<SourceSyncStatus>({ mode: 'unavailable' }); let storageError = $state(''); let collapsed = $state(false);
   let workspaceReady = $state(false); let savedBusy = $state(false); let openSavedDialog = $state(false); let commandOpen = $state(false); let nameDialog = $state<{ kind: 'save' | 'rename'; id?: string; initialValue: string } | null>(null);
-  let archiveDialogOpen = $state(false);
   let preferenceCommands = $state<PreferenceCommand[]>([]); let api: WorkbenchApi; let boundApi: WorkspaceApi | undefined; const syncing = new Map<string, Promise<boolean>>(); const paging = new Map<string, number>(); let pageRequest = 0;
   let resultDisplay = $state<ResultDisplayPreferences>({ rowSizing: 'adaptive', fixedPageSize: 100, content: 'limited', contentLimit: 150 }); let grid = $state<GridState>({ sort: [], filters: [] }); let gridLayoutVersion = $state(0); let adaptedGeometry = $state('');
   let active = $derived(tabs.find((tab) => tab.id === activeId)); let commands = $derived(buildCommands());
@@ -159,10 +157,6 @@
     } catch (error) { storageError = message(error); }
   }
   async function refreshStatus() { try { syncStatus = await api.status(); } catch { syncStatus = { ...syncStatus, mode: 'unavailable' }; } }
-  async function loadArchives(scopes: ArchiveScope[]) {
-    const coverage = await api.loadArchives(scopes);
-    syncStatus = { ...syncStatus, ...coverage };
-  }
   function syncDraft(id: string): Promise<boolean> {
     const pending = syncing.get(id); if (pending) return pending;
     const tab = tabById(id);
@@ -339,7 +333,6 @@
     return [
       { id: 'settings', label: 'Settings', enabled: true, run: () => showUtility('settings') }, { id: 'saved', label: 'Bookmarks and saved Views', enabled: true, run: () => showUtility('saved') },
       ...(native || syncStatus.mode === 'startup_snapshot' ? [{ id: 'rebuild-results', label: 'Rebuild tables', enabled: workspaceReady, run: rebuildResults }] : []),
-      { id: 'load-archives', label: 'Load Archives', enabled: workspaceReady, run: () => { archiveDialogOpen = true; void refreshStatus(); } },
       { id: 'open', label: 'Open Saved', enabled: !savedBusy, run: () => openSavedDialog = true }, { id: 'focus-sql', label: 'Focus Query editor', enabled: !!active, run: focusSql }, { id: 'focus-results', label: 'Focus Results', enabled: !!result, run: focusResults },
       ...tabs.map((tab) => ({ id: `view-${tab.id}`, label: `View: ${tabName(tab)}`, enabled: workspaceReady, run: () => showView(tab.id) })), { id: 'new-first', label: 'New View first', enabled: workspaceReady, run: () => addView('first') }, { id: 'new-last', label: 'New View last', enabled: workspaceReady, run: () => addView('last') },
       { id: 'rename', label: 'Rename View', enabled: workspaceReady && !!active, run: renameActiveView }, { id: 'duplicate', label: 'Duplicate View', enabled: workspaceReady && !!active && !active.busy && !savedBusy, run: () => active && duplicateView(active.id) }, { id: 'close', label: 'Close View', enabled: workspaceReady && !!active, run: () => active && closeView(active.id) },
@@ -377,7 +370,7 @@
     };
     void initialize();
     const unload = (event: BeforeUnloadEvent) => { persist(); if (tabs.some((tab) => tab.dirty)) { event.preventDefault(); event.returnValue = ''; } };
-    const keys = (event: KeyboardEvent) => { if (workspaceReady && !archiveDialogOpen && event.metaKey && !event.ctrlKey && !event.altKey && event.key.toLowerCase() === 'p') { event.preventDefault(); nameDialog = null; openSavedDialog = false; commandOpen = true; } };
+    const keys = (event: KeyboardEvent) => { if (workspaceReady && event.metaKey && !event.ctrlKey && !event.altKey && event.key.toLowerCase() === 'p') { event.preventDefault(); nameDialog = null; openSavedDialog = false; commandOpen = true; } };
     const catchUpSync = () => { if (workspaceReady) void flushDrafts(); };
     window.addEventListener('beforeunload', unload); window.addEventListener('pagehide', persist); window.addEventListener('keydown', keys, true);
     window.addEventListener('focus', catchUpSync); document.addEventListener('visibilitychange', catchUpSync);
@@ -397,7 +390,6 @@
     </span></div>{#if active.result}<ResultsTable result={active.result} display={resultDisplay} {grid} layoutVersion={gridLayoutVersion} ondisplaychange={setResultDisplay} ongridchange={setGrid} oncapacity={adaptPage} /><nav class="query-actions" aria-label="Result pages"><Button disabled={active.busy || active.result.offset === 0} onclick={() => page(Math.max(0, active.result!.offset - active.result!.page_size))}>Previous</Button><Button disabled={active.busy || !active.result.has_more} onclick={() => page(active.result!.offset + active.result!.rows.length)}>Next</Button></nav>{/if}</section>{/if}
   {#if storageError}<p class="error" role="alert">{storageError}</p>{/if}
 </div></section></main>
-<ArchiveDialog open={archiveDialogOpen} loaded={syncStatus.loaded_archive_scopes ?? []} onload={loadArchives} onclose={() => archiveDialogOpen = false} />
 <OpenSavedDialog open={openSavedDialog} busy={savedBusy} onopen={openSaved} onclose={() => openSavedDialog = false} />
 <NameDialog open={nameDialog !== null} title={nameDialog?.kind === 'rename' ? 'View name' : 'Bookmark name'} initialValue={nameDialog?.initialValue ?? ''} onsubmit={submitName} onclose={() => nameDialog = null} />
 <CommandPalette open={commandOpen} {commands} onclose={() => commandOpen = false} />

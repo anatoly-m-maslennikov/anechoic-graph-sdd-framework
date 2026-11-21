@@ -176,8 +176,7 @@ class NativeWorkbenchHttpTests(unittest.IsolatedAsyncioTestCase):
             })
             self.assertEqual(404, wrong_name.status_code)
             unsupported = await client.post(f'{path}/archive-load', json={'scopes': []})
-            self.assertEqual(400, unsupported.status_code)
-            self.assertIsNone(gateway.workbench._service)
+            self.assertEqual(404, unsupported.status_code)
         self.assertEqual(before, {path: (source / path).read_bytes() for path in before})
 
     async def test_external_atom_changes_are_indexed_without_rebuild(self):

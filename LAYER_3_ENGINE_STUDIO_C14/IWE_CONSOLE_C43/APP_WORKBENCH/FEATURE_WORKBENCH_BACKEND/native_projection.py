@@ -1,7 +1,6 @@
 """Publish a native capture through the existing Workbench DuckDB store."""
 from __future__ import annotations
 
-from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Set
 from hashlib import sha256
 import json
@@ -183,7 +182,7 @@ def project_native(store: QueryStore, capture: NativeCapture, *,
 
 def _native_frontier(store, rows, relation_types, inverses, legacy, paths, component_refs):
     return sha256(repr((
-        3, store._schema_mode, sorted(relation_types), sorted(inverses.items()),
+        4, store._schema_mode, sorted(relation_types), sorted(inverses.items()),
         sorted(legacy), sorted(paths), component_refs,
         sorted((row["source_path"], row["_source_sha256"]) for row in rows),
     )).encode()).hexdigest()
@@ -248,11 +247,9 @@ def project_native_delta(store: QueryStore, capture: NativeCapture, *, paths: se
         )
 
         from native_carrier_header import native_header_view
-        def component_claim(row):
-            return native_header_view(row["header_json"])["context"].get("template") in {
-                "component_manifest", "component_purpose",
-            }
-        components_changed = any(component_claim(row) for row in [*old_changed.values(), *new_changed.values()])
+        def component_manifest(row):
+            return native_header_view(row["header_json"])["context"].get("template") == "component_manifest"
+        components_changed = any(component_manifest(row) for row in [*old_changed.values(), *new_changed.values()])
         connection = store._connection
         frontier = _native_frontier(store, capture.atoms, relation_types, inverses, legacy, migration_paths, component_refs)
 
@@ -288,50 +285,42 @@ def _apply_native_tables(connection, old, new, rows, legacy, migration_paths, co
 
 
 def _write_components(connection, rows) -> None:
-    from FEATURE_FORMAL_MODEL_ENGINE.native_component_claim import (
-        parse_component_manifest_fields, parse_component_purpose_id,
-    )
+    from FEATURE_FORMAL_MODEL_ENGINE.native_component_claim import parse_component_manifest
     from native_carrier_header import native_header_view
 
     manifests = []
-    purposes = defaultdict(list)
     for row in rows:
         if row["status_group"] != "Current" or row["tier"] != 0 or row["id"].split("-")[1] != "S":
             continue
         context = native_header_view(row["header_json"])["context"]
-        kind = context.get("template")
-        if kind not in {"component_manifest", "component_purpose"} or context.get("lens") != "SPEC":
+        if context.get("template") != "component_manifest" or context.get("lens") != "SPEC":
             continue
         owner = context["container"].get("component")
         if owner is None:
             continue
-        body = source_markdown(row)
         try:
-            if kind == "component_purpose":
-                purposes[parse_component_purpose_id(body)].append(row["_exact_ref"])
-            else:
-                fields = parse_component_manifest_fields(body)
-                cid = fields["component_id"]
-                name, layer, lenses = fields["name"], fields.get("layer"), fields.get("lens_whitelist")
-                if (isinstance(cid, str) and re.fullmatch(r"C[0-9]+", cid)
-                        and isinstance(name, str) and name.strip()
-                        and (layer is None or type(layer) is int)
-                        and (lenses is None or isinstance(lenses, list) and all(isinstance(lens, str) for lens in lenses))):
-                    boundaries = fields.get("boundaries")
-                    manifests.append((cid, name, owner, layer, lenses,
-                                      None if boundaries is None else json.dumps(boundaries),
-                                      row["_exact_ref"], row["source_path"]))
+            fields, purpose = parse_component_manifest(source_markdown(row))
         except ValueError:
-            # Malformed claims stay visible as Atoms but cannot supply Component fields.
+            # Malformed manifests stay visible as Atoms but cannot supply Component fields.
             continue
+        cid = fields.get("component_id")
+        name, layer, lenses = fields.get("name"), fields.get("layer"), fields.get("lens_whitelist")
+        if (isinstance(cid, str) and re.fullmatch(r"C[0-9]+", cid)
+                and isinstance(name, str) and name.strip()
+                and (layer is None or type(layer) is int)
+                and (lenses is None or isinstance(lenses, list) and all(isinstance(lens, str) for lens in lenses))):
+            boundaries = fields.get("boundaries")
+            ref = row["_exact_ref"]
+            manifests.append((cid, name, owner, layer, lenses,
+                              None if boundaries is None else json.dumps(boundaries),
+                              ref, row["source_path"], [ref] if purpose else []))
 
     connection.execute("""CREATE OR REPLACE TABLE main.components (
         component_id VARCHAR, name VARCHAR, parent_component_id VARCHAR, layer BIGINT,
         lens_whitelist VARCHAR[], boundaries JSON, manifest_ref VARCHAR, manifest_path VARCHAR, purpose_refs VARCHAR[]
     )""")
     if manifests:
-        connection.executemany("INSERT INTO main.components VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                               [(*manifest, sorted(purposes[manifest[0]])) for manifest in manifests])
+        connection.executemany("INSERT INTO main.components VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", manifests)
 
 
 def _write_references(connection, rows, legacy, paths) -> None:

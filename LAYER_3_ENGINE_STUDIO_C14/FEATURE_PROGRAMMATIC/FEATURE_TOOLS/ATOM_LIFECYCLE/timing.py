@@ -65,16 +65,3 @@ def trace(step):
                 return value
         return timed
     return decorate
-
-
-def lifecycle_tool(function):
-    timed = trace('execute')(function)
-
-    @wraps(function)
-    def call(selection, model, name, params, **kwargs):
-        token = _context.set((name, _logger(selection)) if name in _names else (None, None))
-        try:
-            return timed(selection, model, name, params, **kwargs)
-        finally:
-            _context.reset(token)
-    return call

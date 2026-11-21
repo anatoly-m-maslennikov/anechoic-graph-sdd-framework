@@ -1,4 +1,4 @@
-"""Select a validated legacy or native Project for normal runtime startup."""
+"""Select a validated native Project for runtime startup."""
 
 from __future__ import annotations
 
@@ -9,10 +9,7 @@ import re
 
 from native_carrier_header import native_header_view
 from native_project_selection import manifest_sources, resolve_native_project
-from project_selection import (
-    SETTINGS_FILENAME, ProjectSelectionError, _control_candidates, _control_relative,
-    _project_root, _read_toml, resolve_project,
-)
+from project_selection import ProjectSelectionError, _control_relative, _project_root
 from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext, open_regular
 from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
 
@@ -32,7 +29,7 @@ def _has_manifest(reader: ReadContext, control: Path) -> bool:
 
 
 def select_runtime_project(project_root, control_root=None, *, validate_manifest=None):
-    """Return exactly one selected Project, using the reviewed native Model when needed."""
+    """Return one native Project with an active Project Manifest."""
     root = _project_root(project_root)
     reader = ReadContext(roots=[str(root)], limits=dict(CEILINGS))
 
@@ -50,20 +47,7 @@ def select_runtime_project(project_root, control_root=None, *, validate_manifest
 
     try:
         if control_root is not None:
-            relative = _control_relative(control_root)
-            if _has_manifest(reader, root / relative):
-                selected = native(relative)
-                if os.path.lexists(root / relative / SETTINGS_FILENAME):
-                    try:
-                        resolve_project(root, relative)
-                    except ProjectSelectionError:
-                        pass
-                    else:
-                        raise ProjectSelectionError("Project control root is ambiguous")
-                return finish(selected)
-            if os.path.lexists(root / relative / SETTINGS_FILENAME):
-                return finish(resolve_project(root, relative))
-            return finish(native(relative))
+            return finish(native(_control_relative(control_root)))
 
         def control_roots():
             descriptor = open_regular(root, directory=True)
@@ -85,25 +69,10 @@ def select_runtime_project(project_root, control_root=None, *, validate_manifest
 
         controls = control_roots()
         natives = [native(relative) for relative in controls if _has_manifest(reader, root / relative)]
-        legacy = []
-        stale = []
-        legacy_roots = _control_candidates(root)
-        for relative in legacy_roots:
-            try:
-                legacy.append(resolve_project(root, relative))
-            except ProjectSelectionError as error:
-                if (relative != Path(".anechoic_legacy")
-                        or str(error) != "Project Settings control_root contradicts the selection"):
-                    raise
-                settings = _read_toml(reader, root / relative / SETTINGS_FILENAME)
-                stale.append(settings.get("paths", {}).get("control_root"))
-        if stale and (len(natives) != 1 or stale != [natives[0].control_relative.as_posix()]):
-            raise ProjectSelectionError("Retained Project Settings do not match the selected native control")
-        selections = legacy + natives
-        if len(selections) != 1:
-            raise ProjectSelectionError("Project control root is missing or ambiguous")
-        selected = finish(selections[0])
-        if control_roots() != controls or _control_candidates(root) != legacy_roots:
+        if len(natives) != 1:
+            raise ProjectSelectionError("A unique native Project Manifest is required")
+        selected = finish(natives[0])
+        if control_roots() != controls:
             raise ProjectSelectionError("Project control candidates changed during selection")
         return selected
     except ProjectSelectionError:

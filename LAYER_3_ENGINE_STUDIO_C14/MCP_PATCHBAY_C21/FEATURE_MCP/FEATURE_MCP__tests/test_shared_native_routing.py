@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import asynccontextmanager
+from dataclasses import replace
+from types import SimpleNamespace
 from pathlib import Path
 import sys
 import tempfile
@@ -21,14 +23,11 @@ TOOLS = APP.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 sys.path[:0] = [str(APP), str(TOOLS), str(TOOLS / "VALIDATE_ATOMS")]
 
 from host_runtime_config import load_host_runtime_config  # noqa: E402
-from direct_gateway import DirectGateway  # noqa: E402
-from project_selection import ProjectSelectionError, bind_selection, bound_selection  # noqa: E402
-from test_workspace_end_to_end import _ConfiguredWorkbenchTools  # noqa: E402
-from smalltest_support import extension_directory  # noqa: E402
+from APP_WORKBENCH.APP_WORKBENCH__tests.smalltest_support import extension_directory  # noqa: E402
 from http_paths import MCP_PATH  # noqa: E402
-from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
-from shared_gateway import SharedGateway  # noqa: E402
 from shared_http_server import create_app  # noqa: E402
+from native_startup import load_native_inputs  # noqa: E402
+import test_native_startup as fixtures  # noqa: E402
 
 
 class SharedNativeRoutingTests(unittest.IsolatedAsyncioTestCase):
@@ -46,6 +45,9 @@ class SharedNativeRoutingTests(unittest.IsolatedAsyncioTestCase):
         self.projects = self.root / "My_Repos"
         self.projects.mkdir()
         self.projects_by_name = {name: self._project(name) for name in ("alpha", "beta")}
+        self.legacy = self.projects / "legacy"
+        self.legacy.mkdir()
+        fixtures.RuntimeSelectionTests.legacy(SimpleNamespace(root=self.legacy))
         self.config_path = self.root / "host_runtime.toml"
         self.config_path.write_text(
             "schema_version=1\n"
@@ -60,37 +62,17 @@ class SharedNativeRoutingTests(unittest.IsolatedAsyncioTestCase):
     def _project(self, name: str) -> Path:
         root = self.projects / name
         control = root / f".anechoic_{name}"
-        control.mkdir(parents=True)
-        (control / "anechoic_project_settings.toml").write_text(
-            f"[project]\nname={name!r}\n[artifacts.identity]\nproject_prefix={name.upper()!r}\n"
-            f"[paths]\ncontrol_root={control.name!r}\n",
-            encoding="utf-8",
-        )
-        write_scope_unit_declarations(root, control_root=control)
+        fixtures.RuntimeSelectionTests.manifest(self, control, name=name, prefix=name.upper(), component="C00")
         return root.resolve()
-
-    def _native_factory(self):
-        def factory(root, *, selection):
-            gateway = DirectGateway(root, selection=selection)
-            with bind_selection(selection):
-                gateway.workbench = _ConfiguredWorkbenchTools(root, extension_directory(ROOT))
-            consistency = gateway.workbench.project_consistency
-            def checked_consistency():
-                self.assertIs(bound_selection(root), selection)
-                other = next(path for path in self.projects_by_name.values() if path != root)
-                with self.assertRaises(ProjectSelectionError):
-                    bound_selection(other)
-                return consistency()
-            gateway.workbench.project_consistency = checked_consistency
-            return gateway
-        return factory
 
     @asynccontextmanager
     async def _session(self):
-        def host_factory(config):
-            return SharedGateway(config, gateway_factory=self._native_factory())
+        cache = extension_directory(ROOT)
+        def inputs(selection):
+            return replace(load_native_inputs(selection), extension_directory=cache)
 
-        app = create_app(self.config, gateway_factory=host_factory)
+        app = create_app(self.config)
+        self.enterContext(patch("native_startup.load_native_inputs", side_effect=inputs))
         async with app.starlette_app.router.lifespan_context(app.starlette_app):
             async with httpx2.AsyncClient(
                 transport=httpx2.ASGITransport(app=app),
@@ -113,16 +95,12 @@ class SharedNativeRoutingTests(unittest.IsolatedAsyncioTestCase):
     async def test_frontdoor_routes_same_workspace_id_to_isolated_native_owners(self):
         async with self._session() as session:
             tools = {tool.name: tool for tool in (await session.list_tools()).tools}
-            self.assertEqual(29, len(tools))
-            self.assertIn("project_root", tools["workbench_ui_probe"].input_schema["required"])
-            retired = await session.call_tool("atom_lifecycle_update", {
-                "project_root": str(self.projects_by_name["alpha"]),
-            })
+            self.assertIn("project_root", tools["query_schema"].input_schema["required"])
+            self.assertIn("atom_lifecycle_update", tools)
+            self.assertNotIn("workbench_archive_load", tools)
+            retired = await session.call_tool("query_schema", {"project_root": str(self.legacy)})
             self.assertTrue(retired.is_error)
-            self.assertEqual(["tool_unavailable"], retired.structured_content["diagnostics"])
-            uri = tools["workbench_ui_probe"].meta["ui"]["resourceUri"]
-            resource = (await session.read_resource(uri)).contents[0]
-            self.assertEqual("text/html;profile=mcp-app", resource.mime_type)
+            self.assertEqual(["invalid_project_root"], retired.structured_content["diagnostics"])
             schemas = await asyncio.gather(*(
                 session.call_tool("query_schema", {"project_root": str(root)})
                 for root in self.projects_by_name.values()
@@ -151,9 +129,9 @@ class SharedNativeRoutingTests(unittest.IsolatedAsyncioTestCase):
     async def test_frontdoor_refuses_missing_and_outside_project_root(self):
         async with self._session() as session:
             common = {}
-            missing = await session.call_tool("workbench_ui_ping", common)
+            missing = await session.call_tool("query_schema", common)
             outside = await session.call_tool(
-                "workbench_ui_ping",
+                "query_schema",
                 {**common, "project_root": str(self.root)},
             )
             self.assertTrue(missing.is_error)

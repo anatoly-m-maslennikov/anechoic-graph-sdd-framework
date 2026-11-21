@@ -19,7 +19,7 @@ sys.path[:0] = [str(MCP), str(TOOLS), str(TOOLS / "VALIDATE_ATOMS")]
 from host_runtime_config import load_host_runtime_config  # noqa: E402
 from mcp import types  # noqa: E402
 from operation_error_boundary import ExplicitBlockingRuntimeFailure  # noqa: E402
-from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
+from test_native_startup import RuntimeSelectionTests  # noqa: E402
 from shared_gateway import SharedGateway, SharedGatewayRefusal  # noqa: E402
 
 
@@ -87,12 +87,9 @@ class SharedBackendParityTests(unittest.IsolatedAsyncioTestCase):
     def _project(self, name: str) -> Path:
         root = self.projects / name
         control = root / f".anechoic_{name}"
-        control.mkdir(parents=True)
-        (control / "anechoic_project_settings.toml").write_text(
-            f'[project]\nname="{name}"\n[paths]\ncontrol_root="{control.name}"\n'
-            f'[artifacts.identity]\nproject_prefix="{name.upper()}"\n'
+        RuntimeSelectionTests.manifest(
+            self, control, name=root.name, prefix=root.name.upper(), component="C00",
         )
-        write_scope_unit_declarations(root, control_root=control)
         return root
 
     async def _gateway(self, max_loaded: int = 2) -> SharedGateway:

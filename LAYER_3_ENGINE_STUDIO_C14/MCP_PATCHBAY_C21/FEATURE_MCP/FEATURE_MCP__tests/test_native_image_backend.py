@@ -74,19 +74,13 @@ class NativeImageBackendTests(unittest.TestCase):
                 backend.inspect(selection)
             docker.assert_not_called()
 
-    def test_explicit_selection_preserves_legacy_and_native_in_ambiguous_project(self):
-        startup_fixture.RuntimeSelectionTests.legacy(self, name='.anechoic_legacy')
-        legacy = resolve_project(self.root, '.anechoic_legacy')
-        native = select_runtime_project(self.root, self.control.name)
-        for selection, packaged in ((legacy, False), (native, True)):
-            with self.subTest(selection=selection.control_relative), \
-                    patch('project_mcp_backend.ImageManager') as factory:
-                manager = factory.return_value
-                manager.resolve.return_value = IMAGE
-                ProjectMcpBackend().resolve_image(self.package, None, project_root=self.root, selection=selection)
-                options = {'use_packaged_assets': True} if packaged else {}
-                manager.resolve.assert_called_once_with(explicit_id=None, build_if_missing=True, **options)
-                manager.identity.assert_called_once_with(use_packaged_assets=packaged)
+    def test_explicit_legacy_selection_is_refused_before_image_resolution(self):
+        startup_fixture.RuntimeSelectionTests.legacy(self, name=".anechoic_legacy")
+        legacy = resolve_project(self.root, ".anechoic_legacy")
+        with patch("project_mcp_backend.ImageManager") as factory:
+            with self.assertRaises(ImageError):
+                ProjectMcpBackend().resolve_image(self.package, None, project_root=self.root, selection=legacy)
+            factory.assert_not_called()
 
 
 if __name__ == '__main__':

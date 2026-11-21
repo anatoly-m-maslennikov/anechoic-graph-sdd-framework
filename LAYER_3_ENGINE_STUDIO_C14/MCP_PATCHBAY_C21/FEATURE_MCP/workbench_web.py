@@ -34,7 +34,7 @@ from runtime_failure_diagnostics import report_failure
 from shared_gateway import SharedGatewayRefusal
 from workbench_links import project_name as selection_project_name, public_saved, public_workspace, validate_reference
 from workbench_tools import (
-    ARCHIVE_LOAD, CHECK, INTERFACE_TOOLS, LOAD, PAGE, REBUILD, RUN, SAVED_LIST, SAVE_VIEW, SCHEMA, SYNC_STATUS,
+    CHECK, INTERFACE_TOOLS, LOAD, PAGE, REBUILD, RUN, SAVED_LIST, SAVE_VIEW, SCHEMA, SYNC_STATUS,
     WORKSPACE_GET, WORKSPACE_OPEN,
 )
 
@@ -62,9 +62,9 @@ async def _arguments(request: Request, shared: bool) -> dict[str, Any]:
     return value
 
 
-def _error(gateway: Any, request: Request, selection: Any, arguments: dict[str, Any], error: Exception) -> JSONResponse:
+def _error(error: Exception) -> JSONResponse:
     failure, secondary = report_failure(
-        getattr(gateway, "_diagnostic_root", getattr(gateway, "root", None)), error,
+        None, error,
         component="MCP_HTTP", operation="workbench",
     )
     payload = {"error": failure.message}
@@ -96,8 +96,7 @@ def _selection(gateway: Any, request: Request, shared: bool) -> Any:
 
 async def _execute(gateway: Any, name: str, arguments: dict[str, Any], shared: bool) -> dict[str, Any]:
     if not shared:
-        if (getattr(gateway, "_native_query", None) is not None
-                or name in (*INTERFACE_TOOLS, SAVE_VIEW, SYNC_STATUS, ARCHIVE_LOAD)) and name in getattr(gateway, "tool_blacklist", frozenset()):
+        if name in getattr(gateway, "tool_blacklist", frozenset()):
             raise ExplicitBlockingRuntimeFailure("query_error", "Unknown Tool")
         result: dict[str, Any] = await gateway.workbench.call(
             name, {key: value for key, value in arguments.items() if key != "project_root"}
@@ -137,7 +136,7 @@ def routes(gateway: Any, *, shared: bool = False) -> list[BaseRoute]:  # noqa: C
         project_name = request.path_params["project_name"]
         try:
             selection = _selection(gateway, request, shared)
-            if not shared and getattr(gateway, "_native_query", None) is not None and "project_root" in request.query_params:
+            if not shared and "project_root" in request.query_params:
                 native_arguments({"project_root": request.query_params["project_root"]}, selection, gateway.root)
         except (TypeError, ValueError) as error:
             return JSONResponse({"error": str(error)}, status_code=400)
@@ -151,14 +150,12 @@ def routes(gateway: Any, *, shared: bool = False) -> list[BaseRoute]:  # noqa: C
 
     def operation(name: str) -> Callable[[Request], Awaitable[Response]]:
         async def endpoint(request: Request) -> Response:  # noqa: C901
-            arguments: dict[str, Any] = {}
-            selection = None
             try:
                 arguments = await _arguments(request, shared)
                 selection = gateway._selection(arguments["project_root"]) if shared else getattr(gateway, "selection", None)
                 if not _project_name_matches(selection, request.path_params["project_name"]):
                     return _unknown_project()
-                if not shared and (name in {SYNC_STATUS, ARCHIVE_LOAD} or getattr(gateway, "_native_query", None) is not None):
+                if not shared:
                     try:
                         arguments = native_arguments(arguments, selection, gateway.root)
                     except ValueError as error:
@@ -176,12 +173,10 @@ def routes(gateway: Any, *, shared: bool = False) -> list[BaseRoute]:  # noqa: C
                     media_type="application/json",
                 )
             except Exception as error:
-                return _error(gateway, request, selection, arguments, error)
+                return _error(error)
         return endpoint
 
     async def interface(request: Request) -> Response:
-        arguments: dict[str, Any] = {}
-        selection = None
         try:
             name, arguments = await _interface_arguments(request, shared)
             selection = gateway._selection(arguments["project_root"]) if shared else getattr(gateway, "selection", None)
@@ -198,11 +193,11 @@ def routes(gateway: Any, *, shared: bool = False) -> list[BaseRoute]:  # noqa: C
                 value = public_workspace(value, request, selection, arguments.get("project_root"))
             return StreamingResponse(_json_stream(value), media_type="application/json")
         except Exception as error:
-            return _error(gateway, request, selection, arguments, error)
+            return _error(error)
 
     operations = [(path, operation(name)) for path, name in (
         ("run", RUN), ("page", PAGE), ("check", CHECK), ("schema", SCHEMA), ("status", SYNC_STATUS),
-        ("rebuild", REBUILD), ("archive-load", ARCHIVE_LOAD), ("view-save", SAVE_VIEW), ("load", LOAD), ("saved-list", SAVED_LIST),
+        ("rebuild", REBUILD), ("view-save", SAVE_VIEW), ("load", LOAD), ("saved-list", SAVED_LIST),
     )]
     return [
         Route(f"{WORKBENCH_PATH}/{{project_name}}", page),

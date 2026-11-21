@@ -18,7 +18,7 @@ Update the native Workbench Atom index incrementally
 
 ## Objective
 
-Publish Atom folder changes and their relation edges together. Read only the changed Markdown files for ordinary edits. Use the existing full rebuild for startup, repair, and projection schema changes.
+Publish Atom folder changes and their relation edges together. Read only the changed Markdown files for ordinary edits. Reuse a validated on-disk projection across warm restarts. Build or repair derived tables in place when required, preserving the Project database file and Journal.
 
 Configure journal and Workbench table storage independently. Use NDJSON files or an on-disk DuckDB table for the Work Journal. Use on-disk or in-memory DuckDB for other Workbench tables. All disk-backed tables share the Project database file delivered in AN-T-2922.
 

@@ -18,7 +18,7 @@ TOOLS = MCP.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 sys.path[:0] = [str(MCP), str(TOOLS), str(TOOLS / "VALIDATE_ATOMS")]
 
 from host_runtime_config import load_host_runtime_config  # noqa: E402
-from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
+from test_native_startup import RuntimeSelectionTests  # noqa: E402
 import shared_project_catalog as catalog  # noqa: E402
 from shared_project_catalog import (  # noqa: E402
     SharedToolFrontier,
@@ -90,13 +90,7 @@ class SharedProjectCatalogTests(unittest.IsolatedAsyncioTestCase):
     def _project(self, name):
         root = self.projects / name
         control = root / f".anechoic_{name}"
-        control.mkdir(parents=True)
-        (control / "anechoic_project_settings.toml").write_text(
-            f'[project]\nname = "{name}"\n[artifacts.identity]\n'
-            f'project_prefix = "{name.upper()}"\n[paths]\ncontrol_root = "{control.name}"\n',
-            encoding="utf-8",
-        )
-        write_scope_unit_declarations(root, control_root=control)
+        RuntimeSelectionTests.manifest(self, control, name=name, prefix=name.upper(), component="C00")
         return root
 
     def test_public_schema_keeps_nested_defs_and_is_valid(self):

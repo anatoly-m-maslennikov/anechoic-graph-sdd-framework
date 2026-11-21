@@ -20,7 +20,7 @@ from host_runtime_config import HostRuntimeConfigError, OutsideProjectRootError,
 from mcp import types  # noqa: E402
 from mcp.client._memory import InMemoryTransport  # noqa: E402
 from mcp.client.session import ClientSession  # noqa: E402
-from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
+from test_native_startup import RuntimeSelectionTests  # noqa: E402
 from shared_gateway import SharedGateway  # noqa: E402
 from tool_registry_runtime import ToolRegistryStaleError  # noqa: E402
 
@@ -85,12 +85,9 @@ class SharedGatewayTests(unittest.IsolatedAsyncioTestCase):
     def _project(self, name):
         root = self.projects / name
         control = root / (".anechoic_" + root.name)
-        control.mkdir(parents=True)
-        (control / "anechoic_project_settings.toml").write_text(
-            f'[project]\nname="{root.name}"\n[paths]\ncontrol_root="{control.name}"\n'
-            f'[artifacts.identity]\nproject_prefix="{root.name.upper()}"\n'
+        RuntimeSelectionTests.manifest(
+            self, control, name=root.name, prefix=root.name.upper(), component="C00",
         )
-        write_scope_unit_declarations(root, control_root=control)
         return root
 
     def _config(self, max_loaded):

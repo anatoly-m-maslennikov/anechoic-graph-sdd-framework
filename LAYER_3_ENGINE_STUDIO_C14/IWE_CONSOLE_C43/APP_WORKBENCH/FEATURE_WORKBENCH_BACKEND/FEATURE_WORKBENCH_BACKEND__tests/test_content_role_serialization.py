@@ -16,14 +16,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "FEATURE_PROGRAMMAT
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.content_schema import ContentSchema, DeclarationSource, compile_content_schema
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.declared_header_rules import HeaderRule
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.header_columns import HeaderColumn
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.relation_registry import carrier_read_view, compile_relation_registry, registry_contribution
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.query_store import QueryStore
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.relation_registry import carrier_read_view, registry_contribution
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_reader import SourceReader
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_content_schema import SourceContentSchema
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service import WorkbenchService
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workbench_schema_asset import compile_schema
 from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations
-from smalltest_support import extension_directory, source_path, write_atom, write_settings
+from smalltest_support import source_path, write_atom, write_settings
 
 
 def atom(role, form, body):
@@ -249,77 +246,6 @@ class CarrierSerializationTests(unittest.TestCase):
                     {"Method text."},
                     {reader.content_schema.values(row)["content.claim.prose_claim"] for row in candidates},
                 )
-
-    def test_declared_schema_refresh_is_visible_in_sql_for_both_modes(self):
-        temporary_root = Path.cwd() / ".anechoic_tmp" / "APP_WORKBENCH__tests"
-        temporary_root.mkdir(parents=True, exist_ok=True)
-        with tempfile.TemporaryDirectory(dir=temporary_root) as directory:
-            root = Path(directory)
-            control = write_settings(root)
-            declarations = write_scope_unit_declarations(
-                root, ({"scope_unit_name": "ENGINE", "scope_unit_label": "FEATURE"},),
-                control_root=control,
-            )
-            model = source_path(declarations, "ENGINE", "04_requirement", "CA-R-900.md")
-            write_atom(
-                model, "CA-R-900", body="## Claim\n\n### Formal Claim\n\n```CFEL\n"
-                "Atom.Content.*[string]{::0+};\nAtom.Content.**[string]{::0+};\n"
-                "Atom.Content.Objective:: {::1};\nAtom.Content.Objective.Scope:: {::0..1};\n```\n",
-            )
-            model.write_text(model.read_text().replace('form: "Definition"', 'form: "Declaration"'))
-            plan = source_path(declarations, "ENGINE", "03_plan", "CA-P-900.md")
-
-            def write_plan(body):
-                write_atom(plan, "CA-P-900", body=body)
-                plan.write_text(plan.read_text().replace('role: "Requirement"', 'role: "Plan"'))
-
-            def event():
-                return {"operation": "update", "old_path": None, "new_path": plan.relative_to(root).as_posix()}
-
-            for mode in (1, 2):
-                write_plan("## Objective\n\nBefore.\n")
-                builder = SourceReader(root, control)
-                rows, _ = builder.capture()
-                assert builder.content_schema is not None
-                compiled = compile_schema(rows, builder.content_schema, builder.header_schema)
-                service = WorkbenchService(
-                    root, compiled_schema=compiled, relation_registry=compile_relation_registry(rows),
-                )
-                service._schema_mode = mode
-                service._header_schema = compiled.mode_one if mode == 1 else None
-                service._reader = SourceReader(
-                    root, control, schema_mode=mode, compiled_schema=(compiled.content, compiled.mode_one),
-                )
-                service._store = QueryStore(
-                    schema_mode=mode, extension_directory=extension_directory(Path.cwd()),
-                )
-                try:
-                    service._refresh()
-                    self.assertEqual([["Before."]], service._store.run(
-                        'SELECT "content.objective" FROM atoms WHERE filename = \'CA-P-900.md\''
-                    )["rows"])
-                    write_plan("## Objective\n\nAfter.\n")
-                    service._refresh([event()])
-                    self.assertEqual([["After."]], service._store.run(
-                        'SELECT "content.objective" FROM atoms WHERE filename = \'CA-P-900.md\''
-                    )["rows"])
-                    write_plan("## Objective\n\nAfter.\n\n### Scope\n\nAll.\n")
-                    service._refresh([event()])
-                    self.assertEqual([["All."]], service._store.run(
-                        'SELECT "content.objective.scope" FROM atoms WHERE filename = \'CA-P-900.md\''
-                    )["rows"])
-                    self.assertEqual([["After."]], service._store.run(
-                        'SELECT "content.objective" FROM atoms WHERE filename = \'CA-P-900.md\''
-                    )["rows"])
-                    write_plan("## Objective\n\nAfter.\n")
-                    service._refresh([event()])
-                    columns = service._store.schema()["tables"]["atoms"]
-                    self.assertIn("content.objective.scope", {column["name"] for column in columns})
-                    self.assertEqual([[None]], service._store.run(
-                        'SELECT "content.objective.scope" FROM atoms WHERE filename = \'CA-P-900.md\''
-                    )["rows"])
-                finally:
-                    service.close()
 
 
 if __name__ == "__main__":

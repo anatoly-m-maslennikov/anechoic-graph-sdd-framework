@@ -13,15 +13,36 @@ from __future__ import annotations
 
 from .timing import trace
 
+import fcntl
 import hashlib
 import os
 import re
 import stat
-from contextlib import nullcontext
+from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from project_runtime import atomic_tempfile
+from project_runtime import atomic_tempfile, owned_temporary_root
+from VALIDATE_ATOMS.validate_atoms_workers.read_io import open_regular
+
+
+@contextmanager
+def _project_write_lock(root):
+    temporary = owned_temporary_root(root, "atom_lifecycle")
+    directory = open_regular(temporary, directory=True)
+    try:
+        flags = os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_NONBLOCK
+        lock = os.open("write.lock", flags, mode=0o600, dir_fd=directory)
+        try:
+            if not stat.S_ISREG(os.fstat(lock).st_mode):
+                raise OSError("Lifecycle write lock is not a regular file.")
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            yield
+        finally:
+            os.close(lock)
+    finally:
+        os.close(directory)
+
 
 
 @dataclass

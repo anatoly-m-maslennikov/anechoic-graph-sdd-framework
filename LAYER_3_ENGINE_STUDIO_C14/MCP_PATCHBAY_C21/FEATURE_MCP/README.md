@@ -74,8 +74,8 @@ Use `component` with `fetch_contracts`, `fetch_solutions`,
 Component ID or a case-insensitive Manifest name. Contracts and Solutions
 list Active Spec Atoms owned by the Component at Tier 0 and Tier 1.
 Use the ID if names coincide. The `components` table exposes Manifest
-settings and source references for custom SQL. Purpose lookup uses
-the Component ID declared by an Active `component_purpose` Atom.
+settings and source references for custom SQL. Purpose lookup returns the
+Component Manifest when it contains a `## Purpose` section with prose.
 
 ## Run
 

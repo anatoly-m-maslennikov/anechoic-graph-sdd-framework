@@ -19,9 +19,8 @@ from mcp import types
 from mcp.server.lowlevel import Server
 
 from health_observations import MAX_OBSERVATIONS, HealthObservations
-from direct_gateway import DirectGateway
+from direct_gateway import native_project_gateway
 from caller_context import CallerContextError, take_caller_context
-from workbench_tools import mcp_app_probe
 from host_runtime_config import (
     HostRuntimeConfig,
     HostRuntimeConfigError,
@@ -30,7 +29,8 @@ from host_runtime_config import (
     load_host_runtime_config,
     resolve_host_project,
 )
-from project_selection import ProjectSelection, ProjectSelectionError, bind_selection
+from native_project_selection import NativeProjectSelection
+from project_selection import ProjectSelectionError
 from shared_project_catalog import contract_digest, discover_frontier, native_tools
 from shared_project_pool import ProjectCapacityError, SharedProjectPool
 from shared_gateway_support import record_observation, refusal
@@ -46,21 +46,15 @@ class SharedGatewayRefusal(ValueError):
         super().__init__(code)
 
 
-def _project_context(selection: ProjectSelection) -> tuple[str, str]:
-    try:
-        prefix = selection.settings["artifacts"]["identity"]["project_prefix"]
-    except (KeyError, TypeError) as error:
-        raise SharedGatewayRefusal("invalid_project_root") from error
-    if not isinstance(prefix, str):
-        raise SharedGatewayRefusal("invalid_project_root")
-    return prefix, selection.instance_id
+def _project_context(selection: NativeProjectSelection) -> tuple[str, str]:
+    return selection.project_prefix, selection.instance_id
 
 
 class SharedGateway:
     """Project selection adapter; native Gateways retain all domain behavior."""
 
     def __init__(
-        self, config: HostRuntimeConfig, gateway_factory: Callable[..., Any] = DirectGateway
+        self, config: HostRuntimeConfig, gateway_factory: Callable[..., Any] = native_project_gateway
     ) -> None:
         self.config = config
         self.gateway_factory = gateway_factory
@@ -103,7 +97,7 @@ class SharedGateway:
         if current != self.config:
             raise SharedGatewayRefusal("host_configuration_stale")
 
-    def _selection(self, value: object) -> ProjectSelection:
+    def _selection(self, value: object) -> NativeProjectSelection:
         if not isinstance(value, str):
             raise SharedGatewayRefusal("invalid_project_root")
         try:
@@ -115,17 +109,14 @@ class SharedGateway:
         except ProjectSelectionError as error:
             raise SharedGatewayRefusal("invalid_project_root") from error
 
-    def _project_arguments(self, arguments: Any) -> tuple[ProjectSelection, dict[str, Any]]:
+    def _project_arguments(self, arguments: Any) -> tuple[NativeProjectSelection, dict[str, Any]]:
         if not isinstance(arguments, dict) or "project_root" not in arguments:
             raise SharedGatewayRefusal("missing_project_root")
         selection = self._selection(arguments["project_root"])
         return selection, {key: value for key, value in arguments.items() if key != "project_root"}
 
-    def _current_tool(self, entry: Any, selection: ProjectSelection, name: str) -> None:
-        if (
-            entry.selection.provenance != selection.provenance
-            or entry.selection.instance_id != selection.instance_id
-        ):
+    def _current_tool(self, entry: Any, selection: NativeProjectSelection, name: str) -> None:
+        if entry.selection != selection:
             raise SharedGatewayRefusal("project_declarations_stale")
         registry = getattr(entry.gateway, "registry", None)
         if registry is not None:
@@ -155,7 +146,7 @@ class SharedGateway:
             return "project_gateway_busy"
         return "shared_gateway_failure"
 
-    async def _lifecycle_selection(self, arguments: Any) -> tuple[Any, ProjectSelection, dict[str, Any]]:
+    async def _lifecycle_selection(self, arguments: Any) -> tuple[Any, NativeProjectSelection, dict[str, Any]]:
         if not isinstance(arguments, dict) or "project_root" not in arguments:
             raise SharedGatewayRefusal("missing_project_root")
         value = arguments["project_root"]
@@ -181,9 +172,9 @@ class SharedGateway:
         self,
         name: str,
         arguments: Any,
-        selection_for: Callable[[], tuple[ProjectSelection, dict[str, Any]]],
+        selection_for: Callable[[], tuple[NativeProjectSelection, dict[str, Any]]],
         invoke: Callable[[Any, dict[str, Any]], Awaitable[Any]],
-    ) -> tuple[Any, str | None, ProjectSelection | None]:
+    ) -> tuple[Any, str | None, NativeProjectSelection | None]:
         """Run either transport through one selected native Project lease."""
         response = None
         error = None
@@ -204,8 +195,7 @@ class SharedGateway:
             self._current_tool(entry, refreshed, name)
             prefix, identity = _project_context(refreshed)
             self._remember_project(prefix, identity)
-            with bind_selection(refreshed):
-                response = await invoke(entry.gateway, native_arguments)
+            response = await invoke(entry.gateway, native_arguments)
             return response, None, selection
         except asyncio.CancelledError as caught:
             error = caught
@@ -230,7 +220,7 @@ class SharedGateway:
                 arguments,
                 response,
                 error,
-                root=selection.root if selection is not None else None,
+                root=None,
                 project_prefix=prefix,
                 project_instance_id=identity,
             )
@@ -254,7 +244,7 @@ class SharedGateway:
         try:
             arguments, request_context = take_caller_context(getattr(params, "arguments", None))
         except CallerContextError as error:
-            return refusal(str(error), None)
+            return refusal(str(error))
         with bind_request_context(request_context) if request_context else nullcontext():
             response, code, selection = await self._backend_call(
                 params.name,
@@ -265,7 +255,7 @@ class SharedGateway:
                 ),
             )
         if code is not None:
-            return refusal(code, selection.root if selection is not None else None)
+            return refusal(code)
         return response
 
     def build_server(self) -> Server:
@@ -279,8 +269,6 @@ class SharedGateway:
 
         self.server = Server(
             "ANECHOIC", version="0.2.0", on_list_tools=list_tools, on_call_tool=self.call,
-            on_list_resources=mcp_app_probe.list_resources,
-            on_read_resource=mcp_app_probe.read_resource,
         )
         return self.server
 

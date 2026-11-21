@@ -281,16 +281,15 @@ test('restores local View state and opens a saved View without running it', asyn
   expect(executionRequests).toBe(0);
 });
 
-test('shows source indexing status in local time and keeps settings independent', async ({ browser }) => {
+test('shows native source indexing status and keeps settings independent', async ({ browser }) => {
   const standalone = await browser.newContext();
   const page = await standalone.newPage();
   try {
     const statusResponse = page.waitForResponse((response) => response.request().method() === 'POST' && new URL(response.url()).pathname.endsWith('/status') && response.status() === 200);
     await page.goto(url);
-    const status = await (await statusResponse).json() as { syncing: boolean; last_synced_at: string | null };
-    expect(Object.keys(status)).toEqual(expect.arrayContaining(['last_synced_at', 'syncing']));
-    const localTime = status.last_synced_at && await page.evaluate((timestamp) => new Date(timestamp).toLocaleString(), status.last_synced_at);
-    await expect(page.getByRole('status', { name: 'Source indexing status' })).toHaveText(status.syncing ? 'Source index: Syncing' : localTime ? `Source index: ${localTime}` : 'Source index: Not synced yet');
+    const status = await (await statusResponse).json();
+    expect(status.mode).toBe('live_index');
+    await expect(page.getByRole('status', { name: 'Source indexing status' })).toHaveText('Source index: Watching files');
     await expect.poll(() => page.evaluate(() => ({ theme: document.documentElement.dataset.theme, density: document.documentElement.dataset.density, interfaceText: getComputedStyle(document.documentElement).getPropertyValue('--interface-text-scale').trim(), contentText: getComputedStyle(document.documentElement).getPropertyValue('--content-text-scale').trim(), interface: getComputedStyle(document.documentElement).getPropertyValue('--interface-scale').trim() }))).toEqual({ theme: 'system', density: 'comfortable', interfaceText: '1', contentText: '1', interface: '1' });
 
     await page.getByRole('tab', { name: 'Settings', exact: true }).click();
@@ -417,7 +416,7 @@ test('uses palette navigation, quoted status completion, and focus after hiding 
   const schema = await (await schemaResponse).json() as {
     tables: { atoms: Array<{ name: string; values?: string[] }> };
   };
-  expect(schema.tables.atoms.find((column) => column.name === 'header.state.status')?.values).toContain('Active');
+  expect(schema.tables.atoms.find((column) => column.name === 'header.state.status')?.values).toContain('active');
   await page.keyboard.press('Meta+P');
   const palette = page.getByRole('dialog', { name: 'Command palette' });
   await expect(palette.getByRole('textbox')).toBeFocused();
@@ -434,13 +433,13 @@ test('uses palette navigation, quoted status completion, and focus after hiding 
   await expect(palette).toBeHidden();
   await expect(page.getByRole('region', { name: 'Settings' })).toBeVisible();
   await page.getByRole('tab', { name: /^View 1/ }).click();
-  await replaceSql(page, "SELECT \"header.state.status\" FROM atoms WHERE \"header.state.status\" = 'Act'");
+  await replaceSql(page, "SELECT \"header.state.status\" FROM atoms WHERE \"header.state.status\" = 'act'");
   await page.keyboard.press('ArrowLeft');
   await page.keyboard.press('Control+Space');
-  const active = page.getByRole('option', { name: 'Active', exact: true });
+  const active = page.getByRole('option', { name: 'active', exact: true });
   await expect(active).toBeVisible();
   await active.click();
-  await expect(editor(page)).toContainText("header.state.status\" = 'Active'");
+  await expect(editor(page)).toContainText("header.state.status\" = 'active'");
   const editorToggle = page.getByRole('button', { name: /Query editor.*Hide editor/ });
   await expect(editorToggle).toHaveAttribute('aria-expanded', 'true');
   await editorToggle.click();

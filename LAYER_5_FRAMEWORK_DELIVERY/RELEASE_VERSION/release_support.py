@@ -19,36 +19,23 @@ import subprocess
 import sys
 import tempfile
 import tomllib
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from contextlib import ExitStack
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-from carrier_aliases import carrier_read_view, carrier_status_folder
-from header_yaml import parse_header
-from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_relation_registry import (
-    compile_lifecycle_assets, verify_status_workflow_asset,
-)
-from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_docker_client import MAX_OUTPUT
+from carrier_aliases import carrier_status_folder
 from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images import (
     _GENERATED_ASSETS, ready_predecessor,
 )
-from project_selection import active_selection
 from release_assets import (
     LocalReleaseError,
-    generate_lifecycle_candidate_schema,
-    generate_lifecycle_status_model,
-    generate_relation_registry,
     generate_tool_registry,
-    generate_workbench_schema,
-    generate_scope_callback,
     verify_native_release_assets,
 )
 
 
-_SOURCE_UNITS = ("CORE_META_MODEL", "INSTALLED_EXTENSIONS", "PROJECT_CONFIGURATION")
 _DEFAULT_PRODUCT = "LAYER_1_FRAMEWORK_METHODOLOGY"
-_DEFAULT_INSTALLED = ".anechoic_anechoic/000_ANECHOIC_framework"
 _PRESERVED_NAMES = frozenset(
     {
         "settings.toml",
@@ -102,35 +89,6 @@ def _ignored(name: str) -> bool:
     return name == ".DS_Store" or name.startswith(".env") or name.endswith(".env")
 
 
-def _read_structure(root: Path, config: Mapping[str, Any]) -> tuple[tuple[str, Path], ...]:
-    if config:
-        raise LocalReleaseError("local-release-structure-config-invalid")
-    try:
-        selection = active_selection(root)
-        rows = selection.structure.get("scope_units")
-    except (OSError, RuntimeError, ValueError) as error:
-        raise LocalReleaseError("local-release-structure-invalid") from error
-    if not isinstance(rows, tuple):
-        raise LocalReleaseError("local-release-structure-invalid")
-    configured = config.get("source_units", _SOURCE_UNITS)
-    if not isinstance(configured, Sequence) or isinstance(configured, (str, bytes)):
-        raise LocalReleaseError("local-release-source-units-invalid")
-    names = tuple(configured)
-    if names != _SOURCE_UNITS:
-        raise LocalReleaseError("local-release-source-units-invalid")
-    selected: list[tuple[str, Path]] = []
-    for name in names:
-        matches = [row for row in rows if isinstance(row, Mapping) and row.get("scope_unit_name") == name]
-        if len(matches) != 1 or not isinstance(matches[0].get("authority_path"), str):
-            raise LocalReleaseError("local-release-source-path-missing")
-        source_relative = _relative(matches[0]["authority_path"], label="source-path")
-        source = _project_path(root, source_relative, label="source-path", require_exists=True)
-        if source.is_symlink() or not source.is_dir():
-            raise LocalReleaseError("local-release-source-path-unsafe")
-        selected.append((name, source))
-    return tuple(selected)
-
-
 def _walk_regular_files(root: Path, *, excluded_directories: frozenset[str] = frozenset(),
                         exclude_history: bool = False,
                         excluded_root_prefix: str = "",
@@ -163,37 +121,6 @@ def _walk_regular_files(root: Path, *, excluded_directories: frozenset[str] = fr
                 raise LocalReleaseError("local-release-source-entry-unsafe")
             collected.append(child)
     return sorted(collected)
-
-
-def _active_atom(path: Path) -> bool:
-    if path.suffix != ".md":
-        return False
-    try:
-        payload = path.read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError) as error:
-        raise LocalReleaseError("local-release-source-read-failed") from error
-    if not payload.startswith("---\n"):
-        return False
-    closing = payload.find("\n---\n", len("---\n"))
-    if closing < 0:
-        return False
-    try:
-        status = carrier_read_view(parse_header(payload[len("---\n"):closing])).get("status")
-    except ValueError:
-        return False
-    return status in ("Active", "active")
-
-
-def _release_sources(root: Path) -> list[tuple[str, Path, list[Path]]]:
-    selected = []
-    for name, source in _read_structure(root, {}):
-        files = [entry for entry in _walk_regular_files(source, excluded_directories=_NON_SOURCE_DIRECTORIES,
-                                                        exclude_history=True)
-                 if entry.suffix != ".md" or _active_atom(entry)]
-        if name == "CORE_META_MODEL" and not files:
-            raise LocalReleaseError("local-release-source-empty:CORE_META_MODEL")
-        selected.append((name, source, files))
-    return selected
 
 
 def _native_release_sources(selection) -> dict[Path, Path]:
@@ -438,13 +365,6 @@ def _verify_package(package: Path, expected: Mapping[str, tuple[str, int]], *,
         raise LocalReleaseError("local-release-package-verification-failed")
 
 
-def _verify_packaged_workflow(package: Path) -> None:
-    try:
-        verify_status_workflow_asset(package, package / "METHODOLOGY/sources", timeout=60)
-    except (OSError, subprocess.SubprocessError, ValueError) as error:
-        raise LocalReleaseError("local-release-lifecycle-workflow-verification-failed") from error
-
-
 def _publish_image_assets(root: Path, package: Path, previous: Mapping[str, tuple[str, int] | None],
                           expected: Mapping[str, tuple[str, int]]) -> None:
     """Keep one validated image asset set in the checkout for recovery."""
@@ -487,13 +407,11 @@ def _publish_image_assets(root: Path, package: Path, previous: Mapping[str, tupl
 
 
 def _prepare_package(root: Path, product: Path, package: Path, *,
-                     refresh_assets: bool = True, previous_image: str | None = None,
-                     scope_callback_selection=None, project_selection=None) -> dict[str, tuple[str, int]]:
-    selection = project_selection if project_selection is not None else active_selection(root)
-    if selection.root != root:
-        raise LocalReleaseError("local-release-project-selection-invalid")
+                     project_selection, refresh_assets: bool = True) -> dict[str, tuple[str, int]]:
+    selection = project_selection
     from native_project_selection import NativeProjectSelection
-    native = isinstance(selection, NativeProjectSelection)
+    if not isinstance(selection, NativeProjectSelection) or selection.root != root:
+        raise LocalReleaseError("local-release-project-selection-invalid")
     excluded = frozenset({selection.control_relative.name.casefold(), ".anechoic_runtime", ".anechoic_tmp", ".runtime", ".git", ".pytest_cache", "__pycache__", ".mypy_cache", ".ruff_cache", ".venv", ".vite", "node_modules"})
     programmatic = root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC"
     trees = (
@@ -529,62 +447,12 @@ def _prepare_package(root: Path, product: Path, package: Path, *,
     for source, relative in sources:
         if _file_identity(source) != expected[relative.as_posix()]:
             raise LocalReleaseError("local-release-package-source-changed")
-    if native:
-        verify_native_release_assets(package, root, selection.control_relative)
-    else:
-        _verify_packaged_workflow(package)
+    verify_native_release_assets(package, root, selection.control_relative)
     if refresh_assets:
-        previous_assets = {relative: expected.get(relative) for relative in sorted(_GENERATED_ASSETS)}
-        if not native:
-            relation_registry = generate_relation_registry(package, root)
-            workbench_schema = generate_workbench_schema(package, root)
-            if previous_image is None:
-                lifecycle_assets = (generate_lifecycle_status_model(package), generate_lifecycle_candidate_schema(package))
-            else:
-                try:
-                    assets = compile_lifecycle_assets(package, root, timeout=60, max_output=MAX_OUTPUT,
-                                                      previous_image=previous_image)
-                except (OSError, RuntimeError, subprocess.SubprocessError, ValueError) as error:
-                    raise LocalReleaseError("local-release-lifecycle-predecessor-query-failed") from error
-                lifecycle = package / programmatic.relative_to(root) / "FEATURE_TOOLS/ATOM_LIFECYCLE"
-                lifecycle_assets = (lifecycle / "status_model.json", lifecycle / "candidate_schema.json")
-                for output, data in zip(lifecycle_assets, assets, strict=True):
-                    output.write_bytes(data)
         tool_registry = generate_tool_registry(package)
-        assets = (tool_registry,) if native else (relation_registry, workbench_schema, *lifecycle_assets, tool_registry)
-        for asset in assets:
-            expected[asset.relative_to(package).as_posix()] = _file_identity(asset)
-    if not native and scope_callback_selection is None:
-        selection_file = package / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_FORMAL_MODEL_ENGINE/scope_callback_selection.json"
-        if selection_file.exists():
-            selection = json.loads(selection_file.read_bytes())
-            if set(selection) != {"version", "selected"} or selection["version"] != 1:
-                raise LocalReleaseError("local-release-scope-callback-selection-invalid")
-            if selection["selected"] is not None:
-                selected = selection["selected"]
-                if not isinstance(selected, dict) or set(selected) != {"source_path", "pin"}:
-                    raise LocalReleaseError("local-release-scope-callback-selection-invalid")
-                scope_callback_selection = (selected["source_path"], selected["pin"], (selected["pin"],))
-    if not native and scope_callback_selection is not None:
-        source_path, pin, release_sources = scope_callback_selection
-        source = _project_path(package, _relative(source_path, label="scope-callback-source"),
-                               label="scope-callback-source", require_exists=True)
-        asset_dir = package / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_FORMAL_MODEL_ENGINE/assets"
-        if refresh_assets:
-            for name in ("scope_level_check.py", "scope_level_check.bin", "scope_level_sources.json", "scope_level_metadata.json"):
-                relative = (asset_dir / name).relative_to(package).as_posix()
-                previous_assets[relative] = expected.get(relative)
-            generated_pin = generate_scope_callback(package, source.read_bytes(), selected_pin=pin,
-                                                    release_sources=release_sources)
-        else:
-            from FEATURE_FORMAL_MODEL_ENGINE.scope_callback_asset import verify_packaged_assets
-            generated_pin = verify_packaged_assets(asset_dir, source.read_bytes(), pin=pin,
-                                                  release_sources=release_sources)
-        if generated_pin is None:
-            raise LocalReleaseError("local-release-scope-callback-unavailable")
-        asset_dir = package / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_FORMAL_MODEL_ENGINE/assets"
-        for asset in _walk_regular_files(asset_dir):
-            expected[asset.relative_to(package).as_posix()] = _file_identity(asset)
+        relative = tool_registry.relative_to(package).as_posix()
+        previous_assets = {relative: expected.get(relative)}
+        expected[relative] = _file_identity(tool_registry)
     for relative in (
         "pyproject.toml", "uv.lock", "version.toml",
         "SKILLS/ane/SKILL.md",

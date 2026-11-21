@@ -30,7 +30,7 @@ class FullSuiteDockerTests(unittest.TestCase):
 
     def test_workbench_container_proof_uses_the_shared_image_lane(self):
         workbench = self.root / full.WORKBENCH / "APP_WORKBENCH__tests"
-        self.assertTrue(full._docker_module(self.root, workbench / "test_workbench_docker_e2e.py"))
+        self.assertTrue(full._docker_module(self.root, self.root / full.MCP_TESTS / "test_native_import_graph_docker_e2e.py"))
         self.assertFalse(full._docker_module(self.root, workbench / "test_query_store.py"))
 
     def test_builds_current_source_once_without_cached_resolution(self):

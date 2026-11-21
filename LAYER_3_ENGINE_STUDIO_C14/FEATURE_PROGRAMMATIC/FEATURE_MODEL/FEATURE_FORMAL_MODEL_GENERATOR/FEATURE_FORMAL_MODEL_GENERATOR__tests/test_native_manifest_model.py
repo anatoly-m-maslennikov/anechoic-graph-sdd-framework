@@ -80,6 +80,9 @@ class NativeManifestModelTests(unittest.TestCase):
 
     def test_active_declarations_drive_model_but_callbacks_stay_reviewed(self):
         reviewed, _, reviewed_hash = native_manifest_model.reviewed_model_records()
+        self.assertFalse(any(subject.endswith("//Component Purpose") for _, subject, _ in reviewed))
+        self.assertTrue(any(subject.endswith("//Purpose") for _, subject, _ in reviewed))
+        self.assertTrue(any(subject.endswith("//Project Goal") for _, subject, _ in reviewed))
         active = tuple((f"Meta_C9/AN-S-{i}-SPEC--claim.md@1", subject, claim)
                        for i, (_, subject, claim) in enumerate(reviewed, 1))
         admit = native_manifest_model.admit_active_model_records

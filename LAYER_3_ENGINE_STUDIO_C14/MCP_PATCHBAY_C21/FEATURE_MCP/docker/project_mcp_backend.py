@@ -120,15 +120,10 @@ class ProjectMcpBackend:
     @staticmethod
     def _native_package(source_root, project_root, control_root=None):
         # The launcher has already admitted the Project; reselect to bind image mode.
-        if not Path(project_root).is_dir():
-            return None
-        from native_project_selection import NativeProjectSelection
         from native_startup import select_runtime_project
         from start_mcp import _installed_source_root
         try:
             selection = select_runtime_project(project_root, control_root)
-            if not isinstance(selection, NativeProjectSelection):
-                return None
             if Path(source_root) != _installed_source_root(selection.root):
                 raise ValueError("native Project requires its installed runtime package")
             return selection
@@ -143,24 +138,19 @@ class ProjectMcpBackend:
 
     def resolve_image(self, source_root, explicit_id, *, project_root, selection=None):
         self._image_evidence = None
-        if selection is None:
-            self._native_selection = self._native_package(source_root, project_root)
-        else:
-            from native_project_selection import NativeProjectSelection
-            from project_selection import ProjectSelection
-            if isinstance(selection, NativeProjectSelection):
-                self._native_selection = self._native_package(source_root, project_root, selection.control_relative)
-                if self._native_selection != selection:
-                    raise ImageError("IMAGE_INPUT_UNAVAILABLE")
-            elif isinstance(selection, ProjectSelection) and selection.root == Path(project_root):
-                self._native_selection = None
-            else:
-                raise ImageError("IMAGE_INPUT_UNAVAILABLE")
+        from native_project_selection import NativeProjectSelection
+
+        if selection is not None and not isinstance(selection, NativeProjectSelection):
+            raise ImageError("IMAGE_INPUT_UNAVAILABLE")
+        control = selection.control_relative if selection is not None else None
+        self._native_selection = self._native_package(source_root, project_root, control)
+        if selection is not None and self._native_selection != selection:
+            raise ImageError("IMAGE_INPUT_UNAVAILABLE")
         self._native_source = source_root
         manager = ImageManager(source_root, timeout=self.build_timeout, project_root=project_root)
-        options = {"use_packaged_assets": True} if self._native_selection is not None else {}
-        image_id = manager.resolve(explicit_id=explicit_id, build_if_missing=self.build_if_missing, **options)
-        packaged = self._native_selection is not None or not self.build_if_missing
+        image_id = manager.resolve(explicit_id=explicit_id, build_if_missing=self.build_if_missing,
+                                   use_packaged_assets=True)
+        packaged = True
         identity = manager.identity(use_packaged_assets=packaged)
         manager._inspect(image_id, identity)
         manager._current(identity, use_packaged_assets=packaged)

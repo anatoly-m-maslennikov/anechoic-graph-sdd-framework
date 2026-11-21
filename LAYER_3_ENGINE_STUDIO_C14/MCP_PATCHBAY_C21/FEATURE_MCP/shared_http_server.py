@@ -21,7 +21,6 @@ from starlette.responses import HTMLResponse, JSONResponse
 from starlette.routing import Route
 
 from health_page import render_health_page
-from health_actions import restart_workbench, reread_workbench
 from http_paths import HEALTH_PATH
 from http_server import (
     MAX_REQUEST_BODY_SIZE,
@@ -83,25 +82,18 @@ def _ready(snapshot: Mapping[str, Any]) -> bool:
     )
 
 
-async def _health(request: Request, gateway: Any, restart_action=None, reread_action=None):
+async def health(request: Request, gateway: Any):
+    """Serve one read-only host health snapshot."""
     snapshot = _snapshot(gateway)
     ready = _ready(snapshot)
     status_code = 200 if ready else 503
-    if restart_action is None and not _accepts_html(request.headers.get("accept")):
+    if not _accepts_html(request.headers.get("accept")):
         return JSONResponse({"ready": ready}, status_code=status_code)
     return HTMLResponse(
-        render_health_page(
-            snapshot, ready=ready, gateway=gateway, shared=True,
-            restart_action=restart_action, reread_action=reread_action,
-        ),
+        render_health_page(snapshot, ready=ready, gateway=gateway),
         status_code=status_code,
         headers={"Cache-Control": "no-store"},
     )
-
-
-async def health(request: Request, gateway: Any):
-    """Serve one read-only host health snapshot."""
-    return await _health(request, gateway)
 
 
 def create_app(config: Any, *, gateway_factory: Callable[..., Any] = SharedGateway):
@@ -112,18 +104,6 @@ def create_app(config: Any, *, gateway_factory: Callable[..., Any] = SharedGatew
     async def health_endpoint(request: Request):
         return await health(request, gateway)
 
-    async def restart(request: Request):
-        return await _health(
-            request, gateway,
-            restart_action=await restart_workbench(request, gateway, shared=True),
-        )
-
-    async def reread(request: Request):
-        return await _health(
-            request, gateway,
-            reread_action=await reread_workbench(request, gateway, shared=True),
-        )
-
     app = server.streamable_http_app(
         streamable_http_path=PATH,
         transport_security=SECURITY,
@@ -131,8 +111,6 @@ def create_app(config: Any, *, gateway_factory: Callable[..., Any] = SharedGatew
         host="127.0.0.1",
         custom_starlette_routes=[
             Route(HEALTH_PATH, health_endpoint),
-            Route(f"{HEALTH_PATH}/workbench-restart", restart, methods=["POST"]),
-            Route(f"{HEALTH_PATH}/workbench-reread", reread, methods=["POST"]),
             *workbench_routes(gateway, shared=True),
         ],
     )

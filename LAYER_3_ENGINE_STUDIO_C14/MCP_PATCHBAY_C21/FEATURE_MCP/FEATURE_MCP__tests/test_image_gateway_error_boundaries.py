@@ -28,7 +28,9 @@ WARNING = FailureRecord("WARNING", "internal_failure", "operation failure")
 
 class GatewayErrorBoundaryTests(unittest.IsolatedAsyncioTestCase):
     def _gateway(self):
-        gateway = direct_gateway.DirectGateway(Path(self.tempdir.name))
+        root = Path(self.tempdir.name).resolve()
+        owner = SimpleNamespace(selection=SimpleNamespace(root=root, parameters={}))
+        gateway = direct_gateway.DirectGateway(root, native_query=owner)
         gateway.registry = SimpleNamespace(permits=lambda name: name == 'query_check')
         return gateway
 
@@ -80,7 +82,7 @@ class HTTPBoundaryTests(unittest.IsolatedAsyncioTestCase):
             messages.append(message)
 
         with patch.object(http_server, "report_failure", return_value=(WARNING, None)) as reported:
-            await guard._call(scope, lambda: None, send)
+            await guard(scope, lambda: None, send)
         return messages, reported
 
     async def test_host_and_origin_refusals_warn_without_crashing(self):
@@ -101,9 +103,8 @@ class HTTPBoundaryTests(unittest.IsolatedAsyncioTestCase):
             ready=True,
             health_observations=BrokenObserver(),
         )
-        request = SimpleNamespace(headers={"accept": "application/json"})
         with patch.object(http_server, "report_failure", return_value=(WARNING, None)) as reported:
-            response = await http_server.health(request, gateway)
+            response = await http_server.health(gateway)
         payload = json.loads(response.body)
         self.assertEqual(200, response.status_code)
         self.assertTrue(payload["ready"])

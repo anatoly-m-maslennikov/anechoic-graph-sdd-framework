@@ -199,6 +199,12 @@ def tool_descriptors():
 '''
 
 
+def _native_gateway(root, parameters=None):
+    owner = SimpleNamespace(selection=SimpleNamespace(root=root, parameters=parameters or {}),
+                            start=lambda: None, close=lambda: None)
+    return DirectGateway(root, native_query=owner)
+
+
 class ToolRegistryTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self) -> None:
         self.temporary = tempfile.TemporaryDirectory()
@@ -267,7 +273,7 @@ class ToolRegistryTests(unittest.IsolatedAsyncioTestCase):
             return self._registry(selected, gateway)
 
         with patch("direct_gateway.load_active_registry", side_effect=registry_loader):
-            gateway = DirectGateway(root)
+            gateway = _native_gateway(root)
             with self.assertLogs("generate_tool_registry", level="WARNING") as loaded:
                 await gateway.initialize()
             self.assertIn("broken", loaded.output[0])
@@ -336,7 +342,7 @@ class ToolRegistryTests(unittest.IsolatedAsyncioTestCase):
             return self._registry(selected, gateway)
 
         with patch("direct_gateway.load_active_registry", side_effect=registry_loader):
-            gateway = DirectGateway(root)
+            gateway = _native_gateway(root)
             await gateway.initialize()
             try:
                 async with InMemoryTransport(gateway.build_server(), raise_exceptions=True) as streams:
@@ -367,21 +373,14 @@ class ToolRegistryTests(unittest.IsolatedAsyncioTestCase):
         installed = json.loads(registry_path.read_text(encoding="utf-8"))
         descriptor = next(t for t in installed["providers"][0]["tools"] if t["name"] == "demo")
         root = Path(self.temporary.name).resolve()
-        control = root / ".anechoic_fixture"
-        control.mkdir()
-        (control / "anechoic_project_settings.toml").write_text(
-            '[paths]\ncontrol_root = ".anechoic_fixture"\n'
-            '[project_mcp]\ntool_blacklist = ["project_blocked"]\n', encoding="utf-8",
-        )
-
         def registry_loader(_asset: Path, selected: Path, gateway: object):
             return self._registry(selected, gateway)
 
         with patch("direct_gateway.load_active_registry", side_effect=registry_loader):
-            gateway = DirectGateway(root)
+            gateway = _native_gateway(root, {"project_mcp": {"tool_blacklist": ["project_blocked"]}})
             await gateway.initialize()
             try:
-                before = {p.relative_to(control) for p in control.rglob("*")}
+                before = {p.relative_to(root) for p in root.rglob("*")}
                 async with InMemoryTransport(gateway.build_server(), raise_exceptions=True) as streams:
                     async with ClientSession(*streams) as client:
                         await client.initialize()
@@ -394,7 +393,7 @@ class ToolRegistryTests(unittest.IsolatedAsyncioTestCase):
                 self.assertIsNone(gateway.registry.bindings[0].provider)
                 self.assertEqual(0, sys.modules[self.module].calls)
                 self.assertFalse((self.feature / f"{self.module}.py.written").exists())
-                self.assertEqual(before, {p.relative_to(control) for p in control.rglob("*")})
+                self.assertEqual(before, {p.relative_to(root) for p in root.rglob("*")})
             finally:
                 await gateway.close()
 
@@ -406,7 +405,7 @@ class ToolRegistryTests(unittest.IsolatedAsyncioTestCase):
             return self._registry(selected, gateway)
 
         with patch("direct_gateway.load_active_registry", side_effect=registry_loader):
-            gateway = DirectGateway(root)
+            gateway = _native_gateway(root)
             await gateway.initialize()
             try:
                 async with InMemoryTransport(gateway.build_server(), raise_exceptions=True) as streams:
@@ -434,7 +433,7 @@ class ToolRegistryTests(unittest.IsolatedAsyncioTestCase):
             return self._registry(selected, gateway)
 
         with patch("direct_gateway.load_active_registry", side_effect=registry_loader):
-            gateway = DirectGateway(root)
+            gateway = _native_gateway(root)
             await gateway.initialize()
             try:
                 async with InMemoryTransport(gateway.build_server(), raise_exceptions=True) as streams:
@@ -456,7 +455,7 @@ class ToolRegistryTests(unittest.IsolatedAsyncioTestCase):
             return self._registry(selected, gateway)
 
         with patch("direct_gateway.load_active_registry", side_effect=registry_loader):
-            gateway = DirectGateway(root)
+            gateway = _native_gateway(root)
             await gateway.initialize()
             try:
                 async with InMemoryTransport(gateway.build_server(), raise_exceptions=True) as streams:
@@ -506,22 +505,15 @@ class ToolRegistryTests(unittest.IsolatedAsyncioTestCase):
     async def test_project_blacklist_cannot_reenable_a_global_deny(self) -> None:
         generate(self.package)
         root = Path(self.temporary.name).resolve()
-        control = root / ".anechoic_fixture"
-        control.mkdir()
-        (control / "anechoic_project_settings.toml").write_text(
-            '[paths]\ncontrol_root = ".anechoic_fixture"\n'
-            '[project_mcp]\ntool_blacklist = ["demo"]\n', encoding="utf-8",
-        )
-
         def registry_loader(_asset: Path, selected: Path, gateway: object):
             return self._registry(selected, gateway)
 
         with patch("direct_gateway.load_active_registry", side_effect=registry_loader):
-            gateway = DirectGateway(root)
+            gateway = _native_gateway(root, {"project_mcp": {"tool_blacklist": ["demo"]}})
             await gateway.initialize()
             try:
                 self.assertEqual(set(), {tool.name for tool in gateway.tools})
-                self.assertEqual(frozenset({"blocked", "demo", "query_rebuild"}), gateway.tool_blacklist)
+                self.assertEqual(frozenset({"blocked", "demo"}), gateway.tool_blacklist)
             finally:
                 await gateway.close()
 
@@ -618,7 +610,7 @@ class ToolRegistryTests(unittest.IsolatedAsyncioTestCase):
             return self._registry(selected, gateway)
 
         with patch("direct_gateway.load_active_registry", side_effect=registry_loader):
-            gateway = DirectGateway(root)
+            gateway = _native_gateway(root)
             await gateway.initialize()
             try:
                 async with InMemoryTransport(gateway.build_server(), raise_exceptions=True) as streams:
@@ -649,10 +641,10 @@ class ToolRegistryTests(unittest.IsolatedAsyncioTestCase):
             return self._registry(selected, gateway)
 
         with patch("direct_gateway.load_active_registry", side_effect=registry_loader):
-            gateway = DirectGateway(root)
+            gateway = _native_gateway(root)
             await gateway.initialize()
             try:
-                gateway.selection = SimpleNamespace(settings={"project": {"name": "example"}})
+                gateway.selection = SimpleNamespace(project_name="example")
                 context = SimpleNamespace(
                     request=SimpleNamespace(base_url="http://mcp.test"),
                     params=SimpleNamespace(arguments={}),
@@ -672,7 +664,7 @@ class ToolRegistryTests(unittest.IsolatedAsyncioTestCase):
             "direct_gateway.report_failure", return_value=(None, None)
         ) as reported:
             with self.assertRaises(ToolRegistryRuntimeError):
-                await DirectGateway(root).initialize()
+                await _native_gateway(root).initialize()
         record = reported.call_args.args[1]
         self.assertEqual(("ERROR", "tool_registry_unavailable"), (record.severity, record.code))
 

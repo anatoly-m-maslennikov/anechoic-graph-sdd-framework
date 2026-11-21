@@ -95,7 +95,7 @@ class SharedProjectPoolTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(1, factory.gates["/projects/alpha"].closed)
         self.assertFalse(pool._pending)
 
-    async def test_initializer_failure_closes_gateway_and_reports_actual_root(self):
+    async def test_initializer_failure_closes_gateway_and_reports_diagnostic(self):
         error = RuntimeError("init failed")
         factory = _Factory({"/projects/alpha": {"initialize_error": error}})
         pool = SharedProjectPool(1, factory)
@@ -104,7 +104,7 @@ class SharedProjectPoolTests(unittest.IsolatedAsyncioTestCase):
                 await pool.acquire(_selection("alpha"))
         self.assertEqual(1, factory.gates["/projects/alpha"].closed)
         report.assert_called_once()
-        self.assertEqual(Path("/projects/alpha"), report.call_args.args[0])
+        self.assertIsNone(report.call_args.args[0])
         self.assertFalse(pool._pending)
 
     async def test_secondary_diagnostic_is_written_as_fixed_safe_stderr(self):
@@ -133,7 +133,7 @@ class SharedProjectPoolTests(unittest.IsolatedAsyncioTestCase):
         with patch("shared_project_pool.report_failure", return_value=(None, None)) as report:
             second = await pool.acquire(_selection("beta"))
         self.assertEqual(1, factory.gates["/projects/alpha"].closed)
-        self.assertEqual(Path("/projects/alpha"), report.call_args.args[0])
+        self.assertIsNone(report.call_args.args[0])
         self.assertEqual("/projects/beta", str(second.selection.root))
         self.assertFalse(pool._pending)
         await pool.close()
@@ -158,7 +158,7 @@ class SharedProjectPoolTests(unittest.IsolatedAsyncioTestCase):
             await pool.close()
         await pool.release(entry)
         self.assertEqual(0, pool.status()["loaded_projects"])
-        self.assertEqual(Path("/projects/alpha"), report.call_args.args[0])
+        self.assertIsNone(report.call_args.args[0])
 
     async def test_future_cancelled_gateway_close_propagates(self):
         factory = _Factory(

@@ -14,11 +14,9 @@ from ATOM_LIFECYCLE.source import select_source, SourceSelectionError  # noqa: E
 from project_selection import resolve_project  # noqa: E402
 from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
 from lifecycle_placement_test_support import bind_placement, fixture_rules  # noqa: E402
-from ATOM_LIFECYCLE.common import allocate_id  # noqa: E402
 from ATOM_LIFECYCLE.placement import _predecessor_status, _role_root  # noqa: E402
 from scope_unit_declarations import read_scope_unit_declarations  # noqa: E402
 from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier  # noqa: E402
-from ATOM_LIFECYCLE.draft import _summary  # noqa: E402
 
 
 class IndexedReader:
@@ -44,7 +42,6 @@ class IndexedReader:
         for identity, path in self.rows:
             if identity == ref_id:
                 carrier = parse_carrier(path.read_bytes(), path)
-                contexts.append((path, carrier.metadata, _summary(carrier.body)))
         return contexts
 
     def lifecycle_last_id(self, selection, prefix, *, ceiling=None):
@@ -118,7 +115,6 @@ class SourceTest(unittest.TestCase):
             select_source(self.selection, 'CA-R-10')
 
     def test_leading_zero_atom_ids_are_distinct_and_select_exact_revisions(self):
-        from ATOM_LIFECYCLE import common
         padded = self.carrier('CA-R-096-EXAMPLE--example.md', identity='CA-R-096', version=25)
         unpadded = self.carrier('CA-R-96-EXAMPLE--example.md', identity='CA-R-96', version=1)
         archived = self.carrier('CA-R-096@24-EXAMPLE--example.md', identity='CA-R-096',
@@ -126,8 +122,6 @@ class SourceTest(unittest.TestCase):
         self.assertEqual(padded, select_source(self.selection, 'CA-R-096').path)
         self.assertEqual(unpadded, select_source(self.selection, 'CA-R-96').path)
         self.assertEqual(archived, select_source(self.selection, 'CA-R-096@24').path)
-        with patch.object(common, '_matching_paths', return_value=(padded, unpadded, archived)):
-            self.assertEqual('CA-R-97', common.allocate_id(self.selection, 'Requirement'))
         zero = self.carrier('CA-R-000-EXAMPLE--example.md', identity='CA-R-000', version=1)
         self.assertEqual(zero, select_source(self.selection, 'CA-R-000').path)
         with self.assertRaises(SourceSelectionError):
@@ -242,31 +236,9 @@ class SourceTest(unittest.TestCase):
             self.assertEqual(select_source(self.selection, 'CA-R-10').path, current)
             pins = source_module.select_sources(self.selection, ['CA-R-10@1', 'CA-R-11@3-draft'])
             self.assertEqual((pins['CA-R-10@1'].path, pins['CA-R-11@3-draft'].path), (archived, draft))
-            self.assertEqual(allocate_id(self.selection, 'Requirement'), 'CA-R-12')
             self.assertEqual(_predecessor_status(current, 'CA-R-10', 2), 'active')
             _role_root(self.selection, 'Requirement', 'TEST')
         self.assertIsNone(source_module.query_reader())
-        self.assertTrue(any(call[1] == 'CA-R-' for call in indexed.calls))
-
-    def test_allocate_in_project_range_with_and_without_index(self):
-        settings = self.control / 'anechoic_project_settings.toml'
-        settings.write_text(settings.read_text().replace('project_prefix="CA"',
-                                                         'project_prefix="CA"\nautomatic_number_ceiling=100'))
-        self.selection = resolve_project(self.root)
-        current = self.carrier('CA-R-96-example.md', identity='CA-R-96')
-        archive = self.carrier('CA-R-098@1-old.md', identity='CA-R-098', status='Archived',
-                               folder=self.folder / '099_archived')
-        probe = self.carrier('CA-R-970308622-probe.md', identity='CA-R-970308622')
-        self.assertEqual('CA-R-99', allocate_id(self.selection, 'Requirement'))
-        indexed = IndexedReader(self.selection, [('CA-R-96', current), ('CA-R-098', archive),
-                                                 ('CA-R-970308622', probe)])
-        with source_module.bind_query_reader(indexed):
-            self.assertEqual('CA-R-99', allocate_id(self.selection, 'Requirement'))
-            self.assertEqual(probe, select_source(self.selection, 'CA-R-970308622').path)
-            last = self.carrier('CA-R-100-example.md', identity='CA-R-100')
-            indexed.rows.append(('CA-R-100', last))
-            with self.assertRaisesRegex(ValueError, 'reached its configured ceiling'):
-                allocate_id(self.selection, 'Requirement')
 
     def test_query_reader_rejects_outside_paths(self):
         indexed = IndexedReader(self.selection, [('CA-R-10', Path('/outside/CA-R-10-example.md'))])

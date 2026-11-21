@@ -20,8 +20,8 @@ from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext
 from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
 
 from . import effects
+from .effects import _project_write_lock
 from .directory_effect import _read_tree, move_directory
-from .backend import _project_write_lock
 from .common import InputError, SourceChanged, _create_parents, atom_summary, result, saved
 from .source import bind_query_reader
 

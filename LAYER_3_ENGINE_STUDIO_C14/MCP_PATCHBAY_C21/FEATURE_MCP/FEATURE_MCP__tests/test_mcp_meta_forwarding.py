@@ -15,7 +15,7 @@ sys.path[:0] = [str(MCP), str(TOOLS)]
 
 from health_observations import HealthObservations  # noqa: E402
 from mcp import types  # noqa: E402
-from project_selection import ProjectSelection  # noqa: E402
+from native_project_selection import NativeProjectSelection  # noqa: E402
 from shared_gateway import SharedGateway  # noqa: E402
 
 
@@ -30,9 +30,10 @@ class MetaForwardingTests(unittest.IsolatedAsyncioTestCase):
     async def test_shared_gateway_preserves_meta_when_stripping_project_root(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            selection = ProjectSelection(
-                root, root / ".anechoic_fixture", Path(".anechoic_fixture"), "a" * 64,
-                {"artifacts": {"identity": {"project_prefix": "TEST"}}}, {}, (), {}, "",
+            control = Path(".anechoic_fixture")
+            selection = NativeProjectSelection(
+                root, root / control, control, "a" * 64, "Test", "TEST",
+                root / control / "manifest.md", "TEST-S-1@1", "b" * 64,
             )
             inner = SimpleNamespace(call=AsyncMock(return_value=types.CallToolResult(content=[])))
             entry = SimpleNamespace(selection=selection, gateway=inner)

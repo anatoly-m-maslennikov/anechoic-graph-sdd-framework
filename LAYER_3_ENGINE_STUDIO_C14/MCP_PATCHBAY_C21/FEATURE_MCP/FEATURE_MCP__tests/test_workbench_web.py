@@ -11,7 +11,7 @@ from pathlib import Path
 import re
 import sys
 import tempfile
-from types import MappingProxyType
+from types import SimpleNamespace
 import unittest
 import uuid
 from unittest.mock import patch
@@ -81,9 +81,7 @@ class FakeWorkbench:
         if name == "query_schema":
             return {"atoms": []}
         if name == "workbench_status":
-            return {"syncing": False, "last_synced_at": None, "loaded_archive_scopes": [], "audits_pending": False, "last_audit_ms": None, "audit_error": None}
-        if name == "workbench_archive_load":
-            return {"loaded_archive_scopes": arguments["scopes"]}
+            return {"syncing": False, "last_synced_at": None, "audits_pending": False, "last_audit_ms": None, "audit_error": None}
         if name == "query_saved_list":
             return {"items": []}
         if name == "query_load":
@@ -138,10 +136,9 @@ class FakeGateway:
     def __init__(self):
         self.workbench = FakeWorkbench()
         self.roots = []
-        settings = MappingProxyType({"project": MappingProxyType({"name": PROJECT_NAME})})
         self.root = Path.cwd()
         self.tool_blacklist = frozenset()
-        self.selection = type("Selection", (), {"settings": settings, "root": self.root, "host_root": None})()
+        self.selection = SimpleNamespace(project_name=PROJECT_NAME, root=self.root, host_root=None)
 
     def _selection(self, root):
         if root != "/project":
@@ -171,24 +168,11 @@ class WorkbenchWebTests(unittest.TestCase):
 
     def test_project_named_assets_is_not_shadowed_by_static_files(self):
         gateway = FakeGateway()
-        gateway.selection.settings = MappingProxyType({"project": MappingProxyType({"name": "assets"})})
+        gateway.selection.project_name = "assets"
         with TestClient(Starlette(routes=routes(gateway))) as client:
             self.assertEqual(200, client.get(f"{WORKBENCH_PATH}/assets").status_code)
             self.assertEqual(200, client.post(f"{WORKBENCH_PATH}/assets/check", json={"sql": "SELECT 1"}).status_code)
             self.assertEqual(200, client.get(f"{WORKBENCH_PATH}/assets/app.js").status_code)
-
-    def test_archive_load_route_and_blacklist(self):
-        gateway = FakeGateway()
-        scopes = [{'scope_unit': 'PROJECT', 'role': 'Plan'}]
-        with TestClient(Starlette(routes=routes(gateway))) as client:
-            response = client.post(f'{PROJECT_PATH}/archive-load', json={'scopes': scopes})
-            self.assertEqual(200, response.status_code)
-            self.assertEqual({'loaded_archive_scopes': scopes}, response.json())
-            self.assertEqual(('workbench_archive_load', {'scopes': scopes}), gateway.workbench.calls[-1])
-            self.assertEqual(404, client.post(f'{WORKBENCH_PATH}/other/archive-load', json={'scopes': scopes}).status_code)
-            gateway.tool_blacklist = frozenset({'workbench_archive_load'})
-            self.assertEqual(400, client.post(f'{PROJECT_PATH}/archive-load', json={'scopes': scopes}).status_code)
-            self.assertEqual(1, len(gateway.workbench.calls))
 
     def test_project_api_and_legacy_routes_share_handlers_and_binding(self):
         gateway = FakeGateway()
@@ -196,7 +180,6 @@ class WorkbenchWebTests(unittest.TestCase):
         examples = {
             "run": {"sql": "SELECT 1"}, "check": {"sql": "SELECT 1"},
             "page": {"query_id": "query-1", "offset": 0}, "schema": {}, "status": {},
-            "archive-load": {"scopes": [{"scope_unit": "PROJECT", "role": "Plan"}]},
             "view-save": {"sql": "SELECT 1"}, "load": {"reference": "q_" + "0" * 32},
             "saved-list": {},
             "interface": {"operation": "view_create", "arguments": {"workspace_id": "ws"}},
@@ -219,15 +202,6 @@ class WorkbenchWebTests(unittest.TestCase):
                 response = client.post(f"{API_PATH}/run", json={"sql": "bad"})
         self.assertEqual(400, response.status_code)
         self.assertEqual({"error": "bad query", "diagnostic_error": "technical diagnostic emission failed"}, response.json())
-
-    def test_archive_load_route_selects_shared_project(self):
-        gateway = FakeGateway()
-        scopes = [{'scope_unit': 'PROJECT', 'role': 'Plan'}]
-        with TestClient(Starlette(routes=routes(gateway, shared=True))) as client:
-            response = client.post(f'{PROJECT_PATH}/archive-load', json={'project_root': '/project', 'scopes': scopes})
-        self.assertEqual(200, response.status_code)
-        self.assertEqual({'loaded_archive_scopes': scopes}, response.json())
-        self.assertEqual(['/project'], gateway.roots)
 
     def test_page_and_project_bound_run_check_routes(self):
         gateway = FakeGateway()

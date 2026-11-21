@@ -87,12 +87,10 @@ list. Focused runs are useful for iteration but can miss regressions outside
 the selected modules; they are not evidence that the complete release suite is
 green.
 
-Local Release defaults to `--image-mode refresh`. It regenerates the image assets
-from the selected declarations and records them with the checkout. For recovery,
-restore or cherry-pick the known-good code and its generated assets together,
-then run Local Release with `--image-mode existing`. The test and release
-images both use those files. A running ANECHOIC service or the old Docker image
-is unnecessary.
+Local Release defaults to `--image-mode refresh`. It generates the MCP Tool
+registry and uses the sealed Workbench and lifecycle assets. Test images use
+the checkout assets. To use a known-good asset set, restore it with its code and
+run Local Release with `--image-mode existing`.
 
 For a release that predates these Git snapshots, recover its generated files
 from the known-good image with `docker create` and `docker cp`. The files are
@@ -153,3 +151,18 @@ UV_PROJECT_ENVIRONMENT=.anechoic_runtime/launcher-venv uv run --locked --no-sync
 These tests use temporary fixtures, real scoped Git checkpoints and mocked
 external integrations. They are not a real release gate and do not publish,
 install or start the current Project.
+
+## macOS temporary files
+
+Use `.anechoic_tmp` for Project scratch. If an external tool leaves a completed
+run in a private directory directly under `/private/tmp`, mark that directory
+for the daily BB cleanup. Set `completed_run_dir` to its absolute path and run
+this from the Project checkout.
+
+```sh
+python3 LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/prune_private_tmp.py \
+  --mark "$completed_run_dir"
+```
+
+Cleanup removes marked directories after three days. Registered worktrees,
+Docker mounts and open files protect their directories from cleanup.

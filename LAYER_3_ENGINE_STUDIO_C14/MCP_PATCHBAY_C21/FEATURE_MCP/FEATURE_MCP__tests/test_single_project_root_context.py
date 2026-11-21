@@ -26,30 +26,21 @@ for location in (MCP, TOOLS, APP.parent, APP, APP / "APP_WORKBENCH__tests"):
     if str(location) not in sys.path:
         sys.path.insert(0, str(location))
 
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service import WorkbenchService  # noqa: E402
 from http_paths import MCP_PATH  # noqa: E402
 from http_server import create_app  # noqa: E402
 from direct_gateway import startup_selection  # noqa: E402
 from project_selection import resolve_project  # noqa: E402
 from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
-from smalltest_support import built_assets, extension_directory, write_settings  # noqa: E402
+from smalltest_support import extension_directory, polling_source_watcher  # noqa: E402
 from workbench_tools import WorkbenchTools  # noqa: E402
 
 
-class _ConfiguredWorkbenchTools(WorkbenchTools):
-    def __init__(self, root: Path, extension_directory: Path) -> None:
-        super().__init__(root)
-        self.extension_directory = extension_directory
-        self.assets = built_assets(root)
-
-    def _owner(self):
-        if self._service is None:
-            self._service = WorkbenchService(self.root, extension_directory=self.extension_directory, **self.assets)
-        return self._service
+from test_native_startup import RuntimeSelectionTests, native_fixture_gateway  # noqa: E402
 
 
 class SingleProjectRootContextTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self) -> None:
+        self.enterContext(polling_source_watcher())
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
         base = Path(self.temporary.name).resolve()
@@ -60,24 +51,15 @@ class SingleProjectRootContextTests(unittest.IsolatedAsyncioTestCase):
         self.alias.symlink_to(self.container, target_is_directory=True)
         selection = startup_selection(
             self.container,
-            instance_id=resolve_project(self.host).instance_id,
+            instance_id=startup_selection(self.host).instance_id,
             host_root=self.host,
         )
-        self.app = create_app(
-            self.container, selection=selection,
-        )
-        extensions = extension_directory(REPOSITORY)
-        self.app.gateway.workbench = _ConfiguredWorkbenchTools(self.container, extensions)
+        gateway = native_fixture_gateway(self.container, extension_directory(REPOSITORY), selection=selection)
+        self.app = create_app(self.container, runtime_gateway=gateway)
 
     @staticmethod
     def _project(root: Path) -> Path:
-        root.mkdir()
-        control = write_settings(root)
-        write_scope_unit_declarations(
-            root,
-            (({"scope_unit_name": "ENGINE", "scope_unit_type": "Ordered", "scope_unit_label": "LAYER", "local_order": 1}),),
-            control_root=control,
-        )
+        RuntimeSelectionTests.manifest(None, root / ".anechoic_fixture", name="fixture", component="C00")
         return root
 
     @asynccontextmanager
@@ -103,7 +85,7 @@ class SingleProjectRootContextTests(unittest.IsolatedAsyncioTestCase):
     async def test_single_project_envelope_is_advertised_validated_and_not_forwarded(self) -> None:
         async with self.session() as session:
             listed = {tool.name: tool for tool in (await session.list_tools()).tools}
-            self.assertIn("workbench_ui_ping", listed)
+            self.assertIn("query_schema", listed)
             for name, tool in listed.items():
                 with self.subTest(name=name):
                     schema = tool.input_schema
@@ -111,13 +93,13 @@ class SingleProjectRootContextTests(unittest.IsolatedAsyncioTestCase):
                     self.assertNotIn("project_root", schema.get("required", []))
 
             native = {tool.name: tool for tool in self.app.gateway.tools}
-            self.assertNotIn("project_root", native["workbench_ui_ping"].input_schema["properties"])
+            self.assertNotIn("project_root", native["query_schema"].input_schema["properties"])
 
             for root in (None, str(self.container), str(self.host)):
                 arguments = {} if root is None else {"project_root": root}
-                response = await session.call_tool("workbench_ui_ping", arguments)
+                response = await session.call_tool("query_schema", arguments)
                 self.assertFalse(response.is_error, response.structured_content)
-                self.assertEqual({"message": "Tool bridge passed"}, response.structured_content)
+                self.assertIn("atoms", response.structured_content["tables"])
 
             checked = await session.call_tool("query_check", {
                 "sql": "SELECT 1", "project_root": str(self.host),
@@ -135,7 +117,7 @@ class SingleProjectRootContextTests(unittest.IsolatedAsyncioTestCase):
             with patch.object(self.app.gateway.workbench, "call", wraps=backend_call) as backend:
                 for root in (str(self.foreign), ".", "../container", str(self.alias), "\0", 1):
                     with self.subTest(root=repr(root)):
-                        response = await session.call_tool("workbench_ui_ping", {"project_root": root})
+                        response = await session.call_tool("query_schema", {"project_root": root})
                         self.assertTrue(response.is_error)
                 backend.assert_not_awaited()
 

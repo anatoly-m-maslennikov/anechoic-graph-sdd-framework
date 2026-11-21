@@ -23,7 +23,6 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import contextmanager
 from pathlib import Path
 import sys
 import threading
@@ -32,7 +31,6 @@ from typing import TYPE_CHECKING, Any, NoReturn
 from mcp import types
 
 if TYPE_CHECKING:
-    from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service import WorkbenchService
     from native_query import NativeQueryOwner
 
 tools = str(Path(__file__).resolve().parents[2] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS")
@@ -41,7 +39,6 @@ for location in (tools, apps):
     if location not in sys.path:
         sys.path.insert(0, location)
 from operation_error_boundary import ExplicitBlockingRuntimeFailure  # noqa: E402
-from APP_WORKBENCH.FEATURE_CODEX_EXTENSION import mcp_app_probe  # noqa: E402
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.errors import (  # noqa: E402
     QueryExecutionError, WorkbenchUnavailableError,
 )
@@ -49,11 +46,8 @@ from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.result_delivery import DELIVERY_MOD
 
 RUN, PAGE, CHECK, SCHEMA = "query_run", "query_page", "query_check", "query_schema"
 SAVE_VIEW, LOAD, SAVED_LIST = "view_save", "query_load", "query_saved_list"
-RESTART = "workbench_restart"
-REREAD = "workbench_reread"
 REBUILD = "query_rebuild"
 SYNC_STATUS = "workbench_status"
-ARCHIVE_LOAD = "workbench_archive_load"
 WORKSPACE_OPEN, WORKSPACE_LIST, WORKSPACE_GET = "workspace_open", "workspace_list", "workspace_get"
 VIEW_CREATE, VIEW_DUPLICATE, VIEW_LIST, VIEW_GET, VIEW_UPDATE = (
     "view_create", "view_duplicate", "view_list", "view_get", "view_update"
@@ -66,7 +60,7 @@ INTERFACE_TOOLS = (
     VIEW_UPDATE, VIEW_RUN, VIEW_CHECK, VIEW_FETCH, VIEW_FOCUS, VIEW_RENAME, VIEW_REMOVE,
     QUERY_LOG_LIST, QUERY_LOG_GET,
 )
-NATIVE_TOOLS = (*mcp_app_probe.TOOL_NAMES, RUN, PAGE, CHECK, SCHEMA, SAVE_VIEW, LOAD, SAVED_LIST, *INTERFACE_TOOLS, RESTART, REREAD, SYNC_STATUS, ARCHIVE_LOAD, REBUILD)
+NATIVE_TOOLS = (RUN, PAGE, CHECK, SCHEMA, SAVE_VIEW, LOAD, SAVED_LIST, *INTERFACE_TOOLS, SYNC_STATUS, REBUILD)
 
 _CURSOR = {"type": "integer", "minimum": 0}
 _SQL = {"type": "string"}
@@ -84,11 +78,6 @@ _VIEW_SCHEMA = {"type": "object", "properties": {"sql": _SQL, "name": _SQL}, "re
 _LOAD_SCHEMA = {"type": "object", "properties": {"reference": _SQL}, "required": ["reference"], "additionalProperties": False}
 _LIST_SCHEMA = {"type": "object", "properties": {"limit": {"type": "integer", "minimum": 1, "maximum": 1000}}, "additionalProperties": False}
 _EMPTY_SCHEMA = {"type": "object", "properties": {}, "additionalProperties": False}
-_ARCHIVE_LOAD_SCHEMA = {"type": "object", "properties": {"scopes": {
-    "type": "array", "minItems": 1, "items": {"type": "object", "properties": {
-        "scope_unit": {"type": "string", "minLength": 1}, "role": {"type": "string", "minLength": 1}},
-        "required": ["scope_unit", "role"], "additionalProperties": False}}},
-    "required": ["scopes"], "additionalProperties": False}
 _WORKSPACE_ID = {"type": "string", "minLength": 1}
 _VIEW_ID = {"type": "string", "minLength": 1}
 _POSITION = {"type": "string", "enum": ["first", "last"], "default": "last"}
@@ -118,18 +107,17 @@ def native_tools() -> tuple[types.Tool, ...]:
                VIEW_CHECK: _VIEW_CHECK_SCHEMA, VIEW_FETCH: _VIEW_FETCH_SCHEMA,
                VIEW_FOCUS: _VIEW_GET_SCHEMA, VIEW_RENAME: _VIEW_RENAME_SCHEMA,
                VIEW_REMOVE: _VIEW_GET_SCHEMA, QUERY_LOG_LIST: _LIST_SCHEMA,
-               QUERY_LOG_GET: _QUERY_LOG_GET_SCHEMA, RESTART: _EMPTY_SCHEMA, REREAD: _EMPTY_SCHEMA,
-               SYNC_STATUS: _EMPTY_SCHEMA, ARCHIVE_LOAD: _ARCHIVE_LOAD_SCHEMA,
+               QUERY_LOG_GET: _QUERY_LOG_GET_SCHEMA,
+               SYNC_STATUS: _EMPTY_SCHEMA,
                REBUILD: {"type": "object", "properties": {"target": {"type": "string", "minLength": 1}}, "required": ["target"], "additionalProperties": False}}
     writes = {RUN, SAVE_VIEW, WORKSPACE_OPEN, VIEW_CREATE, VIEW_DUPLICATE, VIEW_UPDATE, VIEW_RUN, VIEW_FOCUS,
-              VIEW_RENAME, VIEW_REMOVE, RESTART, REREAD, ARCHIVE_LOAD, REBUILD}
+              VIEW_RENAME, VIEW_REMOVE, REBUILD}
     descriptions = {
         RUN: "Run SQL. Automatic delivery returns small results inline and larger results as files.",
         REBUILD: "Rebuild one query table or all query tables; return replacement result IDs.",
         LOAD: "Load an explicitly requested Bookmark or saved View.",
         SAVED_LIST: "List recent Bookmark and saved View metadata.",
         SYNC_STATUS: "Read source-indexing status without starting or restarting Workbench.",
-        ARCHIVE_LOAD: "Load Archived Atoms for selected Scope Units and Roles.",
         WORKSPACE_OPEN: "Initialize or resume the Workspace bound to one browser or native session.",
         WORKSPACE_LIST: "List known Workspace IDs for the selected Project.",
         WORKSPACE_GET: "Get Workspace Views, active View, and result metadata without result rows.",
@@ -147,146 +135,72 @@ def native_tools() -> tuple[types.Tool, ...]:
         QUERY_LOG_LIST: "List retained query-log records without result rows.",
         QUERY_LOG_GET: "Get one retained query-log record without result rows.",
     }
-    return mcp_app_probe.tools() + tuple(types.Tool(
+    return tuple(types.Tool(
         name=name, description=descriptions.get(name, f"Workbench {name.replace('_', ' ')}."),
-        annotations=types.ToolAnnotations(read_only_hint=name not in writes, destructive_hint=name in {RESTART, REREAD},
+        annotations=types.ToolAnnotations(read_only_hint=name not in writes, destructive_hint=False,
                                           idempotent_hint=name not in writes, open_world_hint=False),
         input_schema=schemas[name],
-        _meta={"ui": {"resourceUri": mcp_app_probe.WORKBENCH_URI}}
-        if name == WORKSPACE_OPEN else None,
-    ) for name in NATIVE_TOOLS if name not in mcp_app_probe.TOOL_NAMES)
+    ) for name in NATIVE_TOOLS)
 
 
 class WorkbenchTools:
-    """One lazy Workbench owner per Project Gateway."""
+    """Expose operations on the selected native Project's Workbench."""
 
-    def __init__(
-        self, root: Path, *, selection=None, diagnostics_snapshot=None, query_owner: NativeQueryOwner | None = None,
-    ) -> None:
-        self.root = root
-        self._project = (selection.root, selection.instance_id) if selection is not None else None
-        self._diagnostics_snapshot = diagnostics_snapshot
+    def __init__(self, *, query_owner: NativeQueryOwner) -> None:
         self._query_owner = query_owner
-        self._service: WorkbenchService | None = None
-        self._lifecycle_lock = threading.RLock()
-
-    def _owner(self) -> WorkbenchService:
-        if self._query_owner is not None:
-            raise ValueError("Operation is unavailable for a native Project")
-        if self._service is None:
-            from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.service import WorkbenchService
-            self._service = WorkbenchService(self.root)
-        return self._service
-
-    def _query(self) -> WorkbenchService | NativeQueryOwner:
-        return self._query_owner if self._query_owner is not None else self._owner()
-
-    @contextmanager
-    def lifecycle_reader(self):
-        """Keep the shared query owner open while a lifecycle action uses it."""
-        with self._lifecycle_lock:
-            yield self._owner()
-
-    def project_consistency(self):
-        """Build the Project projection and report its consistency at startup."""
-        with self._lifecycle_lock:
-            return self._owner().project_consistency()
+        self._lock = threading.RLock()
 
     async def call(self, name: str, arguments: Any) -> dict[str, Any]:
         try:
-            query = name in {RUN, CHECK, VIEW_RUN, VIEW_CHECK}
-            if self._project is None or not query:
-                rows = None
-            else:
-                from registry_lifecycle_provider import live_runs_snapshot
-                rows = live_runs_snapshot(self._project)
-            diagnostics = self._diagnostics_snapshot()['calls'] if query and self._diagnostics_snapshot else None
-            return await asyncio.to_thread(self._call, name, arguments, rows, diagnostics)
+            return await asyncio.to_thread(self._call, name, arguments)
         except Exception as error:
             self._raise_known(error)
 
-    def _call(self, name: str, arguments: Any, live_runs=None, diagnostics=None) -> dict[str, Any]:  # noqa: C901
-        """Keep an owner alive for the complete synchronous Workbench operation."""
-        if name in mcp_app_probe.TOOL_NAMES:
-            self._empty(arguments)
-            return mcp_app_probe.call(name)
+    def _call(self, name: str, arguments: Any) -> dict[str, Any]:  # noqa: C901
         if name == SYNC_STATUS:
             self._empty(arguments)
-            if self._query_owner is not None:
-                return self._query_owner.status()
-            owner = self._service
-            status = {"syncing": False, "last_synced_at": None, "loaded_archive_scopes": [],
-                      "audits_pending": False, "last_audit_ms": None, "audit_error": None}
-            return {**status, **owner.sync_status()} if owner is not None else status
-        with self._lifecycle_lock:
-            if live_runs is not None:
-                self._owner().set_live_runs(live_runs)
-            if diagnostics is not None:
-                self._owner().set_runtime_diagnostics(diagnostics)
+            return self._query_owner.status()
+        with self._lock:
             if name == REBUILD:
                 if not isinstance(arguments, dict) or set(arguments) != {"target"} or not isinstance(arguments["target"], str) or not arguments["target"].strip():
                     raise ValueError("Expected a non-empty target table selector or all")
-                if self._query_owner is None:
-                    raise ValueError("Query rebuild requires the native Project query backend")
                 try:
                     return self._query_owner.rebuild(arguments["target"])
                 except (ValueError, QueryExecutionError, WorkbenchUnavailableError):
                     raise
                 except Exception as error:
                     raise ExplicitBlockingRuntimeFailure("query_error", "Query rebuild failed. See process diagnostics.") from error
-            if name == ARCHIVE_LOAD:
-                scopes = self._archive_scopes(arguments)
-                return self._owner().load_archives(scopes)
             if name in INTERFACE_TOOLS:
-                return self._query().interface_call(name, arguments)
+                return self._query_owner.interface_call(name, arguments)
             if name == RUN:
                 sql, page_size, cursor, save, preview, query_name, delivery, result_format = self._run(arguments)
-                return self._query().run(
+                return self._query_owner.run(
                     sql, page_size=page_size, cursor_position=cursor,
                     save=save, preview=preview, name=query_name,
                     result_delivery=delivery, result_format=result_format,
                 )
             if name == CHECK:
                 sql, cursor = self._sql(arguments, {"sql", "cursor_position"})
-                return self._query().check(sql, cursor_position=cursor)
+                return self._query_owner.check(sql, cursor_position=cursor)
             if name == PAGE:
                 query_id, offset, page_size, grid, preview, delivery, result_format = self._page(arguments)
-                return self._query().page(
+                return self._query_owner.page(
                     query_id, offset, page_size=page_size, grid=grid, preview=preview,
                     result_delivery=delivery, result_format=result_format,
                 )
             if name == SCHEMA:
                 self._empty(arguments)
-                return self._query().schema()
+                return self._query_owner.schema()
             if name == SAVE_VIEW:
                 if isinstance(arguments, dict) and {"workspace_id", "view_id"} <= set(arguments):
-                    return self._query().interface_call(name, arguments)
+                    return self._query_owner.interface_call(name, arguments)
                 sql, _ = self._sql(arguments, {"sql", "name"})
-                return self._query().save_view(sql, name=self._name(arguments))
+                return self._query_owner.save_view(sql, name=self._name(arguments))
             if name == LOAD:
                 reference, _ = self._sql(arguments, {"reference"}, key="reference")
-                return self._query().load(reference)
+                return self._query_owner.load(reference)
             if name == SAVED_LIST:
-                return self._query().saved_list(limit=self._limit(arguments))
-            if name == RESTART:
-                self._empty(arguments)
-                if self._service is not None:
-                    self._service.close()
-                self._service = None
-                self._owner().schema()
-                return {"service": "workbench", "status": "ready"}
-            if name == REREAD:
-                self._empty(arguments)
-                previous = self._owner()
-                coverage = previous.sync_status()["loaded_archive_scopes"]
-                self._service = None
-                previous.discard_derived_state()
-                rebuilt = self._owner()
-                if coverage:
-                    rebuilt.load_archives(coverage)
-                else:
-                    rebuilt.schema()
-                return {"service": "workbench", "status": "ready"}
+                return self._query_owner.saved_list(limit=self._limit(arguments))
             raise ValueError("Unknown Workbench tool")
 
     @staticmethod
@@ -373,19 +287,6 @@ class WorkbenchTools:
             raise ValueError("Expected an empty object")
 
     @staticmethod
-    def _archive_scopes(arguments: Any) -> list[dict[str, str]]:
-        if not isinstance(arguments, dict) or set(arguments) != {"scopes"}:
-            raise ValueError("Expected scopes")
-        scopes = arguments["scopes"]
-        if not isinstance(scopes, list) or not scopes:
-            raise ValueError("scopes must be a nonempty list")
-        for scope in scopes:
-            if (not isinstance(scope, dict) or set(scope) != {"scope_unit", "role"}
-                    or any(not isinstance(scope[key], str) or not scope[key].strip() for key in ("scope_unit", "role"))):
-                raise ValueError("Each scope requires a nonempty scope_unit and role")
-        return scopes
-
-    @staticmethod
     def _limit(arguments: Any) -> int:
         if not isinstance(arguments, dict) or set(arguments) - {"limit"}:
             raise ValueError("Expected optional limit")
@@ -398,12 +299,8 @@ class WorkbenchTools:
         await asyncio.to_thread(self._close)
 
     def _close(self) -> None:
-        with self._lifecycle_lock:
-            if self._query_owner is not None:
-                self._query_owner.close()
-            if self._service is not None:
-                self._service.close()
-                self._service = None
+        with self._lock:
+            self._query_owner.close()
 
 
-__all__ = ["CHECK", "INTERFACE_TOOLS", "LOAD", "NATIVE_TOOLS", "PAGE", "QUERY_LOG_GET", "QUERY_LOG_LIST", "REBUILD", "REREAD", "RESTART", "RUN", "SAVED_LIST", "SAVE_VIEW", "SCHEMA", "SYNC_STATUS", "VIEW_CHECK", "VIEW_CREATE", "VIEW_DUPLICATE", "VIEW_FETCH", "VIEW_FOCUS", "VIEW_GET", "VIEW_LIST", "VIEW_REMOVE", "VIEW_RENAME", "VIEW_RUN", "VIEW_UPDATE", "WORKSPACE_GET", "WORKSPACE_LIST", "WORKSPACE_OPEN", "WorkbenchTools", "native_tools"]
+__all__ = ["CHECK", "INTERFACE_TOOLS", "LOAD", "NATIVE_TOOLS", "PAGE", "QUERY_LOG_GET", "QUERY_LOG_LIST", "REBUILD", "RUN", "SAVED_LIST", "SAVE_VIEW", "SCHEMA", "SYNC_STATUS", "VIEW_CHECK", "VIEW_CREATE", "VIEW_DUPLICATE", "VIEW_FETCH", "VIEW_FOCUS", "VIEW_GET", "VIEW_LIST", "VIEW_REMOVE", "VIEW_RENAME", "VIEW_RUN", "VIEW_UPDATE", "WORKSPACE_GET", "WORKSPACE_LIST", "WORKSPACE_OPEN", "WorkbenchTools", "native_tools"]

@@ -9,7 +9,8 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[4]
 TOOLS = ROOT / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS"
-sys.path[:0] = [str(TOOLS), str(TOOLS / "VALIDATE_ATOMS")]
+MCP = ROOT / "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP"
+sys.path[:0] = [str(TOOLS), str(TOOLS / "VALIDATE_ATOMS"), str(MCP / "FEATURE_MCP__tests")]
 
 from host_runtime_config import (  # noqa: E402
     HostRuntimeConfig,
@@ -17,7 +18,7 @@ from host_runtime_config import (  # noqa: E402
     load_host_runtime_config,
     resolve_host_project,
 )
-from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
+from test_native_startup import RuntimeSelectionTests  # noqa: E402
 
 
 class HostRuntimeConfigTests(unittest.TestCase):
@@ -36,13 +37,7 @@ class HostRuntimeConfigTests(unittest.TestCase):
     def _make_project(self, name: str, prefix: str = "DUP") -> Path:
         root = self.projects / name
         control = root / f".anechoic_{name}"
-        control.mkdir(parents=True)
-        (control / "anechoic_project_settings.toml").write_text(
-            f'[project]\nname = "{name}"\n[artifacts.identity]\nproject_prefix = "{prefix}"\n'
-            f'[paths]\ncontrol_root = ".anechoic_{name}"\n',
-            encoding="utf-8",
-        )
-        write_scope_unit_declarations(root, control_root=control)
+        RuntimeSelectionTests.manifest(self, control, name=name, prefix=prefix, component="C00")
         return root
 
     def _write_config(self, body: str | None = None, path: Path | None = None) -> Path:
@@ -117,8 +112,8 @@ class HostRuntimeConfigTests(unittest.TestCase):
         alpha = resolve_host_project(config, self.projects / "alpha")
         beta = config.resolve_project(self.projects / "beta")
         self.assertNotEqual(alpha.instance_id, beta.instance_id)
-        self.assertEqual("DUP", alpha.settings["artifacts"]["identity"]["project_prefix"])
-        self.assertEqual("DUP", beta.settings["artifacts"]["identity"]["project_prefix"])
+        self.assertEqual("DUP", alpha.project_prefix)
+        self.assertEqual("DUP", beta.project_prefix)
 
     def test_resolve_rejects_outside_parent_traversal_and_symlink_aliases(self):
         config = load_host_runtime_config(self._write_config())

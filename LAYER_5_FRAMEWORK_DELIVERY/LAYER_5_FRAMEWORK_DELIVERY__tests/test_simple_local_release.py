@@ -22,8 +22,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "RELEASE_VERSION"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS"))
 import local_release  # noqa: E402
 from local_release import run_local_release, _launcher_image  # noqa: E402
-from project_selection import resolve_project  # noqa: E402
-from release_support import _GENERATED_ASSETS, _file_identity, _publish_image_assets, _release_sources  # noqa: E402
+from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import select_runtime_project  # noqa: E402
+from release_support import _GENERATED_ASSETS, _file_identity, _publish_image_assets  # noqa: E402
 from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
 from release_registry_test_fixture import (  # noqa: E402
     write_relation_registry_generator,
@@ -49,8 +49,9 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             {"scope_unit_name": "PROJECT_CONFIGURATION", "parent": "METHODOLOGY_SOURCES", "scope_unit_type": "Ordered", "scope_unit_label": "003", "local_order": 3},
         ), control_root=self.control)
         self.sources = declared["METHODOLOGY_SOURCES"]["authority_path"]
-        self.source_units = {name: declared[name]["authority_path"] for name in local_release._SOURCE_UNITS}
-        for number, name in enumerate(local_release._SOURCE_UNITS, 1):
+        source_units = ("CORE_META_MODEL", "INSTALLED_EXTENSIONS", "PROJECT_CONFIGURATION")
+        self.source_units = {name: declared[name]["authority_path"] for name in source_units}
+        for number, name in enumerate(source_units, 1):
             unit = self.source_units[name]
             unit.mkdir(parents=True)
             for status in ("Active", "Draft", "Archived"):
@@ -158,10 +159,6 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         canary = patch("local_release.verify_candidate_image", return_value="http://127.0.0.1:49152/anechoic/mcp")
         self.canary = canary.start()
         self.addCleanup(canary.stop)
-        lifecycle_assets = patch("release_support.compile_lifecycle_assets",
-                                 return_value=(b'{"schema":1}\n', b'{"schema":1}\n'))
-        self.lifecycle_assets = lifecycle_assets.start()
-        self.addCleanup(lifecycle_assets.stop)
         provenance = patch("local_release.release_image_provenance", return_value={
             "project_id": "c" * 64, "project_root": str(self.root),
             "control_root": ".anechoic_anechoic", "project_name": "Fixture",
@@ -169,6 +166,9 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         })
         self.provenance = provenance.start()
         self.addCleanup(provenance.stop)
+
+        self._native_project()
+        self.enterContext(patch("release_support._native_release_sources", side_effect=lambda _selection: self._native_sources()))
 
     def _runner(self):
         calls = []
@@ -199,7 +199,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         return subprocess.CompletedProcess(argv, 0, "http://localhost:12345/mcp\n", "")
 
     def _native_project(self):
-        (self.control / "anechoic_project_settings.toml").unlink()
+        (self.control / "anechoic_project_settings.toml").unlink(missing_ok=True)
         manifest = self.control / "AN-S-001-PROJECT_MANIFEST--declare.md"
         manifest.parent.mkdir(exist_ok=True)
         manifest.write_text(
@@ -217,10 +217,10 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.native_assets = self.enterContext(patch("release_support.verify_native_release_assets"))
 
     def _native_sources(self):
-        return {Path(source.name) / "active.md": source / "active.md" for source in self.source_units.values()}
+        return {Path(source.name) / "active.md": source / "active.md"
+                for source in self.source_units.values() if (source / "active.md").is_file()}
 
     def test_native_release_runs_full_gates_and_copies_selected_sources(self):
-        self._native_project()
         runner, calls = self._runner()
         with patch("release_support._native_release_sources", return_value=self._native_sources(), create=True) as select, \
              patch("local_release._build_predecessor", return_value=None), \
@@ -230,7 +230,6 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertEqual("completed", result["outcome"], result)
         self.assertTrue(all(call.args[0].manifest_ref == "AN-S-001@1" for call in select.call_args_list))
         test_argv = next(call for call in calls if any(arg.endswith("run_full_test_suite.py") for arg in call))
-        self.assertIn("--legacy-fixture", test_argv)
         self.assertEqual(("--image-mode", "existing"), test_argv[-2:])
         self.assertEqual("refresh", result["image_mode"])
         self.assertTrue(any(self._is_mcp_bootstrap(call) for call in calls))
@@ -239,7 +238,6 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             self.assertEqual(source.read_bytes(), (product_sources / relative).read_bytes())
 
     def test_native_manifest_change_stops_before_product_replacement(self):
-        self._native_project()
         runner, _ = self._runner()
 
         def change_manifest(argv, cwd):
@@ -256,7 +254,6 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertEqual("obsolete", (self.product / "old.txt").read_text())
 
     def test_native_existing_mode_keeps_the_full_test_gate(self):
-        self._native_project()
         runner, calls = self._runner()
         with patch("release_support._native_release_sources", return_value=self._native_sources(), create=True), \
              patch("local_release._build_predecessor", return_value=None), \
@@ -265,11 +262,9 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.native_assets.assert_called_once()
         self.assertEqual("completed", result["outcome"], result)
         test_argv = next(call for call in calls if any(arg.endswith("run_full_test_suite.py") for arg in call))
-        self.assertIn("--legacy-fixture", test_argv)
         self.assertEqual(("--image-mode", "existing"), test_argv[-2:])
 
     def test_native_source_change_stops_before_product_replacement(self):
-        self._native_project()
         runner, _ = self._runner()
         original_copy = shutil.copy2
         changed = next(iter(self._native_sources().values()))
@@ -289,29 +284,8 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertEqual("obsolete", (self.product / "old.txt").read_text())
         self.assertIn('version = "0.4.1"', (self.root / "version.toml").read_text())
 
-    def test_previous_image_refreshes_checkout_assets_before_build(self):
-        runner, _ = self._runner()
-        previous = "sha256:" + "e" * 64
-        selection = resolve_project(self.root)
-        selection.launcher_state.mkdir(parents=True)
-        receipt = {"project_root": str(self.root), "control_root": str(self.control),
-                   "project_id": selection.instance_id, "image_id": previous, "readiness": True}
-        (selection.launcher_state / "ready.json").write_text(json.dumps(receipt), encoding="utf-8")
-        (selection.launcher_state / "last_launch.json").write_text(
-            json.dumps(dict(receipt, image_id="sha256:" + "f" * 64, readiness=False)), encoding="utf-8")
-        with patch("local_release._launcher_image", return_value=self.image_id):
-            result = run_local_release(self.root, run_id="predecessor-query", runner=runner)
-
-        self.assertIn(result["outcome"], {"completed", "completed_with_cleanup_pending"}, result)
-        self.assertEqual("refresh", result["image_mode"])
-        self.assertEqual(previous, self.lifecycle_assets.call_args.kwargs["previous_image"])
-        self.assertEqual({"use_packaged_assets": True}, self.image.resolve.call_args_list[0].kwargs)
-        runtime_package = self.runtime / "simple_local_release/package"
-        for relative in _GENERATED_ASSETS:
-            self.assertEqual((runtime_package / relative).read_bytes(), (self.root / relative).read_bytes())
-
     def test_existing_image_mode_preserves_checkout_assets_without_a_predecessor(self):
-        selection = resolve_project(self.root)
+        selection = select_runtime_project(self.root)
         selection.launcher_state.mkdir(parents=True)
         (selection.launcher_state / "ready.json").write_text("invalid receipt", encoding="utf-8")
         payloads = {relative: json.dumps({"existing": relative}).encode() for relative in _GENERATED_ASSETS}
@@ -323,7 +297,6 @@ class SimpleLocalReleaseTests(unittest.TestCase):
 
         self.assertEqual("completed", result["outcome"], result)
         self.assertEqual("existing", result["image_mode"])
-        self.lifecycle_assets.assert_not_called()
         test_argv = next(argv for argv in calls if any(arg.endswith("run_full_test_suite.py") for arg in argv))
         self.assertEqual(("--image-mode", "existing"), test_argv[-2:])
         self.assertEqual({"use_packaged_assets": True}, self.image.resolve.call_args_list[0].kwargs)
@@ -360,6 +333,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
 
     def test_existing_image_mode_refuses_missing_assets_before_tests(self):
         runner, calls = self._runner()
+        (self.root / next(iter(_GENERATED_ASSETS))).unlink()
         original_version = (self.root / "version.toml").read_bytes()
         result = run_local_release(self.root, run_id="missing-assets", runner=runner, image_mode="existing")
         self.assertEqual(("failed", "validate_inputs"), (result["outcome"], result["failed_step"]))
@@ -368,7 +342,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.image_factory.assert_not_called()
 
     def test_launcher_image_reads_only_exact_selected_runtime_namespace(self):
-        selection = resolve_project(self.root)
+        selection = select_runtime_project(self.root)
         old_image = "sha256:" + "c" * 64
         payload = {"project_root": str(self.root), "control_root": str(self.control),
                    "project_id": selection.instance_id, "image_id": old_image}
@@ -391,148 +365,6 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         current.symlink_to(legacy)
         self.assertIsNone(_launcher_image(selection))
         self.assertEqual(retained, legacy.read_bytes())
-
-    def test_active_sources_replace_product_and_installed_copy_preserves_config(self):
-        legacy = self.root / ".agents/skills/ca/SKILL.md"
-        legacy.parent.mkdir(parents=True)
-        legacy.write_text("custom legacy skill", encoding="utf-8")
-        protected = ("settings.toml", "project_settings.toml", "anechoic_framework_settings.toml",
-                     "operators_registry.toml", "operator_registry/entry.txt")
-        for target in (self.product, self.installed):
-            for relative in protected:
-                carrier = target / relative
-                carrier.parent.mkdir(parents=True, exist_ok=True)
-                carrier.write_text(f"preserve {relative}\n")
-        core = self.source_units["CORE_META_MODEL"]
-        (core / "active.md").chmod(0o640)
-        archived = core / "archived/active@1.md"
-        archived.parent.mkdir()
-        archived.write_bytes((archived.parent.parent / "active.md").read_bytes())
-        for directory in ("000_draft", "099_archived"):
-            folder = core / "04_requirement" / directory
-            folder.mkdir(parents=True)
-            (folder / "active.md").write_bytes((core / "active.md").read_bytes())
-            (folder / "data.json").write_text("{}\n", encoding="utf-8")
-        terminal = core / "04_requirement" / "020_done"
-        terminal.mkdir()
-        (terminal / "active.md").write_bytes((core / "active.md").read_bytes())
-        (terminal / "data.json").write_text("{}\n", encoding="utf-8")
-        selected_before = _release_sources(self.root)
-        records = self.root / ".anechoic_anechoic" / "_PMETA" / "record.md"
-        records.parent.mkdir(parents=True)
-        records.write_text("new raw record\n", encoding="utf-8")
-        nested = self.root / "LAYER_5_FRAMEWORK_DELIVERY" / ".anechoic_nested" / "ordinary.txt"
-        nested.parent.mkdir()
-        nested.write_text("ordinary package file\n", encoding="utf-8")
-        transient = self.root / ".anechoic_install" / "workflow_orchestrator" / "runtime.txt"
-        transient.parent.mkdir(parents=True)
-        transient.write_text("runtime state\n", encoding="utf-8")
-        nested_install = self.root / "LAYER_5_FRAMEWORK_DELIVERY" / ".anechoic_install" / "ordinary.txt"
-        nested_install.parent.mkdir()
-        nested_install.write_text("ordinary package file\n", encoding="utf-8")
-        similar = self.root / ".anechoic-install-extra" / "ordinary.txt"
-        similar.parent.mkdir()
-        similar.write_text("ordinary package file\n", encoding="utf-8")
-        self.assertEqual(selected_before, _release_sources(self.root))
-        runner, calls = self._runner()
-        result = run_local_release(self.root, run_id="happy", runner=runner)
-        self.assertEqual("completed", result["outcome"])
-        self.assertEqual(selected_before, _release_sources(self.root))
-        self.assertEqual("new raw record\n", records.read_text(encoding="utf-8"))
-        for target in (self.product, self.installed):
-            self.assertFalse((target / "old.txt").exists())
-            self.assertEqual("keep = true\n", (target / "config.toml").read_text())
-            self.assertFalse((target / "applicable_methodology").exists())
-            for relative in protected:
-                self.assertEqual(f"preserve {relative}\n", (target / relative).read_text())
-            self.assertEqual(0o640, stat.S_IMODE((target / "SUPERLAYER_1_METHODOLOGY_SOURCES" / core.name / "active.md").stat().st_mode))
-            for unit in self.source_units.values():
-                released = target / "SUPERLAYER_1_METHODOLOGY_SOURCES" / unit.name
-                expected = ["active.md", "active.md"] if unit == core else ["active.md"]
-                self.assertEqual(expected, sorted(path.name for path in released.rglob("*.md")))
-            self.assertTrue((target / "SUPERLAYER_1_METHODOLOGY_SOURCES" / core.name / "04_requirement/020_done/data.json").is_file())
-            for directory in ("000_draft", "099_archived"):
-                self.assertFalse((target / "SUPERLAYER_1_METHODOLOGY_SOURCES" / core.name / "04_requirement" / directory).exists())
-        self.assertEqual("keep = true\n", (self.runtime / "config.toml").read_text())
-        bootstrap = self.runtime / "start_mcp.py"
-        self.assertEqual(self.engine_bootstrap.read_bytes(), bootstrap.read_bytes())
-        self.assertEqual(0o755, stat.S_IMODE(bootstrap.stat().st_mode))
-        for package in (self.runtime / "simple_local_release/package",):
-            self.assertFalse((package / "METHODOLOGY/compiled").exists())
-            source_skill = self.root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane"
-            expected_skill = {p.relative_to(source_skill): p.read_bytes() for p in source_skill.rglob("*") if p.is_file()}
-            for relative in ("SKILLS/ane", "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane"):
-                packaged_skill = package / relative
-                self.assertEqual(expected_skill, {p.relative_to(packaged_skill): p.read_bytes()
-                                                  for p in packaged_skill.rglob("*") if p.is_file()})
-            self.assertEqual("# release source\n", (package / "LAYER_5_FRAMEWORK_DELIVERY/PUBLIC_RELEASE/public_release.py").read_text())
-            self.assertTrue((package / "LAYER_5_FRAMEWORK_DELIVERY/PUBLIC_RELEASE/PUBLIC_RELEASE__tests/test_private.py").is_file())
-            self.assertTrue((package / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/"
-                             "FEATURE_TOOLS/GENERATE_ENTITY_GRAPH/render_entity_tree.py").is_file())
-            self.assertTrue((package / "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/"
-                             "APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/generate_workbench_schema.py").is_file())
-            self.assertEqual(
-                '{"schema_version":1,"providers":[]}\n',
-                (package / "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/"
-                 "tool_registry.json").read_text(encoding="utf-8"),
-            )
-            self.assertTrue((package / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/retired.py").is_file())
-            packaged_tools = package / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS"
-            self.assertEqual(
-                '{"schema":1}\n', (packaged_tools / "ATOM_LIFECYCLE/status_model.json").read_text(encoding="utf-8")
-            )
-            self.assertTrue((packaged_tools / "ATOM_LIFECYCLE/candidate_schema.json").is_file())
-            for relative in ("tests/test_retired.py", "fixtures/input.json", "README.md",
-                             "scope_declaration_test_support.py", "scope_declaration_render.py"):
-                self.assertTrue((packaged_tools / relative).is_file())
-            self.assertTrue((package / nested.relative_to(self.root)).is_file())
-            self.assertTrue((package / nested_install.relative_to(self.root)).is_file())
-            self.assertTrue((package / similar.relative_to(self.root)).is_file())
-            for excluded in (".anechoic_anechoic", ".anechoic_runtime", ".anechoic_tmp", ".anechoic_anechoic", ".anechoic_install"):
-                self.assertFalse((package / excluded).exists())
-            self.assertEqual("retained implementation skill\n", (packaged_tools / "retained/SKILL.md").read_text())
-        self.assertEqual("ane skill", (self.root / ".agents/skills/ane/SKILL.md").read_text())
-        self.assertEqual("custom legacy skill", legacy.read_text(encoding="utf-8"))
-        self.assertIn('version = "0.4.1.1"', (self.root / "version.toml").read_text())
-        self.assertIn('version = "0.4.1.1"', (self.runtime / "simple_local_release/package/version.toml").read_text())
-        self.assertEqual(1, sum(self._is_mcp_bootstrap(argv) for argv in calls))
-        self.assertEqual("runtime state\n", transient.read_text(encoding="utf-8"))
-        self.assertEqual([], list((self.root / ".anechoic_tmp/simple_local_release").iterdir()))
-
-    def test_release_sources_accept_nested_and_lowercase_active_status(self):
-        core = self.source_units["CORE_META_MODEL"]
-        samples = {
-            "nested.md": "state:\n  status: Active",
-            "lowercase.md": "status: active",
-            "nested_lowercase.md": "state:\n  status: active",
-            "inactive_nested.md": "state:\n  status: Draft",
-            "unknown_case.md": "status: ACTIVE",
-            "conflict.md": "status: Active\nstate:\n  status: Draft",
-            "invalid.md": "status: Active\nstatus: Archived",
-            "missing.md": "atom_id: CA-R-9",
-        }
-        for name, header in samples.items():
-            (core / name).write_text(f"---\n{header}\n---\nbody\n", encoding="utf-8")
-        (core / "archive" / "nested.md").write_text("---\nstate:\n  status: Active\n---\nold\n", encoding="utf-8")
-        (core / "_projection" / "lowercase.md").write_text("---\nstatus: active\n---\nprojection\n", encoding="utf-8")
-
-        selected = dict((name, files) for name, _, files in _release_sources(self.root))
-        self.assertEqual(
-            {core / name for name in ("active.md", "nested.md", "lowercase.md", "nested_lowercase.md")},
-            set(selected["CORE_META_MODEL"]),
-        )
-        for name in ("INSTALLED_EXTENSIONS", "PROJECT_CONFIGURATION"):
-            self.assertEqual([self.source_units[name] / "active.md"], selected[name])
-
-    def test_active_delivery_does_not_require_atom_metadata_or_relations(self):
-        source = self.source_units["CORE_META_MODEL"] / "active.md"
-        source.write_text("---\natom_id: not-an-atom-id\nstatus: Active\n---\nNo Claim or relations.\n", encoding="utf-8")
-        runner, calls = self._runner()
-        result = run_local_release(self.root, run_id="no-atom-gate", runner=runner)
-        self.assertEqual("completed", result["outcome"])
-        self.assertEqual(1, sum(any(item.endswith("run_full_test_suite.py") for item in argv) for argv in calls))
-        for target in (self.product, self.installed):
-            self.assertEqual(source.read_bytes(), (target / "SUPERLAYER_1_METHODOLOGY_SOURCES" / source.parent.name / "active.md").read_bytes())
 
     def test_focused_request_runs_and_reports_full_suite(self):
         modules = (
@@ -596,23 +428,6 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertFalse(any(any(item.endswith("run_full_test_suite.py") for item in argv) for argv in calls))
         self.assertFalse(any(self._is_mcp_bootstrap(argv) for argv in calls))
         self.image_factory.assert_not_called()
-
-    def test_source_symlink_refuses_before_tests_version_or_product_replacement(self):
-        outside = self.root / "outside.md"
-        outside.write_bytes(b"untrusted payload")
-        (self.source_units["CORE_META_MODEL"] / "linked.md").symlink_to(outside)
-        self._assert_input_refused("unsafe-source")
-        self.assertIn('version = "0.4.1"', (self.root / "version.toml").read_text())
-        self.assertEqual(b"untrusted payload", outside.read_bytes())
-
-    def test_missing_source_path_refuses_before_tests_or_replacement(self):
-        self.source_units["CORE_META_MODEL"].rename(self.source_units["CORE_META_MODEL"].with_name("missing-core"))
-        self._assert_input_refused("missing-source")
-
-    def test_empty_selected_core_refuses_before_tests_version_or_replacement(self):
-        (self.source_units["CORE_META_MODEL"] / "active.md").unlink()
-        self._assert_input_refused("empty-core")
-        self.assertIn('version = "0.4.1"', (self.root / "version.toml").read_text())
 
     def test_unsafe_product_descendant_refuses_before_any_clear(self):
         (self.product / "linked.txt").symlink_to(self.installed / "old.txt")
@@ -877,7 +692,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         version = (self.root / "version.toml").read_bytes()
         product = {p.relative_to(self.product): p.read_bytes() for p in self.product.rglob("*") if p.is_file()}
         stderr = io.StringIO()
-        with local_release._installation_lock(self.root), patch("sys.stderr", stderr):
+        with local_release._installation_lock(self.root, select_runtime_project(self.root)), patch("sys.stderr", stderr):
             result = run_local_release(self.root, run_id="locked-install", runner=runner)
         self.assertEqual("failed", result["outcome"])
         self.assertEqual("installation_lock", result["failed_step"])
@@ -887,7 +702,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertEqual(product, {p.relative_to(self.product): p.read_bytes() for p in self.product.rglob("*") if p.is_file()})
         self.assertFalse(any(argv[0] == "git" for argv in calls))
         self.assertFalse(any(self._is_mcp_bootstrap(argv) for argv in calls))
-        with local_release._installation_lock(self.root):
+        with local_release._installation_lock(self.root, select_runtime_project(self.root)):
             pass
 
     def test_installation_lock_covers_copy_and_mcp_handoff(self):
@@ -896,7 +711,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         checked = []
         def check_locked():
             with self.assertRaisesRegex(local_release.LocalReleaseError, "installation-lock-busy"):
-                with local_release._installation_lock(self.root):
+                with local_release._installation_lock(self.root, select_runtime_project(self.root)):
                     pass
             checked.append(True)
         def copy(source, target, **kwargs):
@@ -940,6 +755,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         asset = lifecycle / "assets/change_current_status.py"
         asset.parent.mkdir()
         asset.write_text("# reviewed workflow\n", encoding="utf-8")
+        self.native_assets.side_effect = local_release.LocalReleaseError("unverified native status Workflow")
         runner, _ = self._runner()
         result = run_local_release(self.root, run_id="unverified-workflow", runner=runner)
         self.assertEqual(("failed", "build_package"), (result["outcome"], result["failed_step"]))

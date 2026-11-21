@@ -1,5 +1,7 @@
 # Workbench
 
+Workbench opens Projects with a native Project Manifest.
+
 Open `/anechoic/workbench/<project_name>` (here, `/anechoic/workbench/anechoic`) on the Project MCP server. Run executes SQL once
 and returns the first page and exact total counts. Previous and Next fetch
 pages from that stable result; Check returns exact row and column counts.
@@ -17,8 +19,7 @@ MCP tools:
 - `query_load(reference)` opens a saved ID or full URL without executing it.
 - `query_saved_list(limit=20)` lists the most recent saved queries and Views.
 - `workbench_status()` reads `{syncing, last_synced_at}` without starting the backend.
-- `workbench_restart()` restarts only this Project's Workbench index and query owner.
-- `workbench_reread()` discards the derived DuckDB database and rebuilds it from source, including changed table schemas.
+- `query_rebuild(target)` rebuilds a table or all tables and returns replacement result IDs.
 
 `preview=N` returns at most N rows while preserving an existing SQL LIMIT;
 omitting it adds no limit. `save=true` saves the exact original SQL
@@ -32,30 +33,8 @@ their bound host or container Project root. Shared MCP requires this field.
 The gateway validates and removes it before native dispatch; it cannot switch
 the Project of a single-project service.
 
-`workbench_restart()` is available through MCP and the fixed health-page
-`Restart Workbench` form. It has no Workbench frontend control and accepts no
-generic service, shell or Docker command. It closes the existing Workbench
-owner, rebuilds its index, and returns
-`{service: "workbench", status: "ready"}` only when the replacement is ready.
-Old query-result IDs become unavailable; saved query and View IDs remain
-loadable. MCP and other services continue running. A Scope Unit Declaration
-that remains invalid causes an explicit unavailable error; correct it and call
-`workbench_restart()` again. Restart does not retry automatically, control Docker,
-run shell commands, or write a Business Journal event.
-
-The native health form posts only to `/anechoic/health/workbench-restart`.
-On a shared host it requires exactly one `project_root` Project folder; a
-single-project host accepts an empty form only. It uses the same MCP tool
-boundary as direct callers. The ordinary health GET and JSON readiness response
-remain read-only.
-
-The health-page `Full reread` button posts to
-`/anechoic/health/workbench-reread` through the same MCP operation. It closes
-Workbench, removes only its derived database, WAL and temporary files, then
-creates a fresh database and reads Current and Draft sources. Old tables,
-columns and query-result IDs do not survive. Source files, saved queries,
-Views and their Journal remain unchanged. Failure reports unavailable;
-there is no automatic retry or fallback to the old database.
+`query_rebuild("all")` refreshes the derived tables from the selected Project.
+For a closed or unavailable Workbench connection, restart the Project's MCP process.
 
 Ordinary Run and Check do not create permanent saved-item IDs. Every actual Run records SQL, success/fail, error and row/column counts in the separate runtime query log; Check does not. Log records expire after two days (48 hours) on use and contain no result rows. New records append directly to UTC-hour NDJSON batches under `.anechoic_runtime/workbench/query_log/`; retained entries in the old `query-log.json` remain readable without rewriting that file. Saved Views do not expire. Run & Save and Save View
 create immutable entries in the configured Project Journal, in date-partitioned
@@ -243,12 +222,12 @@ does not change Mode 1 columns.
 
 `watchdog` watches only the selected repository's ANECHOIC source folder,
 even when a larger parent folder is mounted.
-Invalid or ambiguous Atom sources are excluded and reported to stderr. Invalid Current Scope Unit Declarations stop indexing until corrected and explicitly restarted. Native watcher events are retained in the technical `change_log` table and NDJSON log for 48 hours or 100,000 rows, whichever removes them first. Moves and renames come from native watcher events. The header shows synchronization status and the last successful sync in local time.
+Invalid or ambiguous Atom sources are excluded and reported to stderr. Native watcher events are retained in the technical `change_log` table and NDJSON log for 48 hours or 100,000 rows, whichever removes them first. Moves and renames come from native watcher events. The header shows the native indexing mode.
 
 SQL is trusted Operator input. The runtime admits one native read query and
 materializes it through a trusted internal cache write. Public SQL cannot edit
 source files or source tables. Unsupported DuckPGQ management functions can
-invalidate the connection; restart Workbench after such an error.
+invalidate the connection. Restart the Project's MCP process after such an error.
 
 `FEATURE_WORKBENCH_BACKEND` owns indexing and queries.
 `FEATURE_WORKBENCH_FRONTEND` owns the Svelte + TypeScript + Vite UI and shared
@@ -297,14 +276,9 @@ Right-click a cell to copy or show its full value, a row to copy it, or a column
 
 Each cached result is kept while younger than the configured TTL **or** its View remains open. Closing a View unpins it; editing SQL preserves its last result. A valid rerun drops the prior result before execution, including when the new query fails. Restart clears transient results but preserves saved items.
 
-The shared backend reads `.anechoic_runtime/anechoic_runtime_settings.toml` on start:
-
-```toml
-[workbench]
-result_ttl_seconds = 3600
-```
-
-The TTL must be a positive integer. Apply file edits with Workbench restart or full reread; this setting has no MCP editor or hot reload. Query-log retention is separate and fixed at two days.
+Set a positive integer in the Project Manifest at `runtime.workbench.result_ttl_seconds`.
+The default is 3,600 seconds. Restart the Project's MCP process to apply changes.
+Query-log retention is two days.
 
 
 Code hot reload is disabled by default. Vite development HMR and its filesystem watcher require `ANECHOIC_HOT_RELOAD=1`; ordinary builds remain static. Workbench source-data synchronization continues independently.

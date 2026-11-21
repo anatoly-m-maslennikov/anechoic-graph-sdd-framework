@@ -7,7 +7,7 @@ structure:
 context:
   lens: SPEC
 state:
-  status: active
+  status: archived
   version: 2
   updated_at: '2026-11-20T14:42:07.157939+00:00'
 ---
