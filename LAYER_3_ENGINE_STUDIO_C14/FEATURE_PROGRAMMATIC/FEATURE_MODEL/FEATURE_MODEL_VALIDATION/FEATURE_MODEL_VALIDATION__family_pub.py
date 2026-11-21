@@ -9,11 +9,10 @@ from .model_property_order import order_properties
 from .model_relation_endpoints import validate_relation_endpoint_levels
 from .model_relation_validation import effective_relation_constraints, validate_relation_targets
 from .reviewed_instance_check import bind_reviewed_instance_check
-from .validate_model_instance import validate_model_instance
 
 __all__ = [
     "bind_model_declarations", "bind_ordering_declarations", "bind_reviewed_instance_check",
     "build_code_access_ownership", "check_code_access", "code_access_occurrences",
-    "effective_relation_constraints", "order_properties", "validate_model_instance",
+    "effective_relation_constraints", "order_properties",
     "validate_relation_endpoint_levels", "validate_relation_targets",
 ]
