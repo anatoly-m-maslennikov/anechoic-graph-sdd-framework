@@ -31,6 +31,7 @@ class SourceWatcher:
         self, root: Path, control_root: Path,
         *, implementation_root: Path | None = None, observer_factory: Callable[[], Any] | None = None,
         exclude_directory: Callable[[str], bool] | None = None,
+        additional_directory: Path | None = None,
         poll_bind_mount: bool = False,
     ) -> None:
         self._root = Path(root).absolute()
@@ -44,6 +45,14 @@ class SourceWatcher:
         self._roots = tuple(path for path in dict.fromkeys(candidates)
                             if not any(path != other and path.is_relative_to(other) for other in candidates))
         self._resolved_roots = tuple(path.resolve() for path in self._roots)
+        self._additional_directory = (Path(additional_directory).absolute()
+                                      if additional_directory is not None else None)
+        if self._additional_directory is not None and (
+            not any(self._additional_directory.is_relative_to(path) for path in self._roots)
+            or not any(self._additional_directory.resolve().is_relative_to(path)
+                       for path in self._resolved_roots)
+        ):
+            raise ValueError("Workbench sources must be inside the selected repository")
         self._observer_factory = observer_factory
         self._exclude_directory = exclude_directory if self._root in self._roots else None
         self._poll_bind_mount = poll_bind_mount
@@ -66,6 +75,9 @@ class SourceWatcher:
                     for child in path.iterdir():
                         if child.is_dir() and not child.is_symlink() and not self._exclude_directory(child.relative_to(self._root).as_posix()):
                             self._watched_directories[child] = observer.schedule(_Handler(self), str(child), recursive=True)
+            extra = self._additional_directory
+            if extra is not None and extra not in self._watched_directories:
+                self._watched_directories[extra] = observer.schedule(_Handler(self), str(extra), recursive=False)
             observer.start()
         except BaseException:
             observer.stop()

@@ -128,12 +128,35 @@ sources:
 Read the Task and Epic files and the diff directly with Git. This work
 requires no ANECHOIC runtime, MCP, or Workbench.
 
-### Import policy and acceptance
+### Code Access
 
-- Record approved provider entries in `boundaries.code_access`. Use
-  `__family_pub` for eligible parent and sibling Packages and `__pub`
-  for consumers outside the Package family. Keep unmarked Modules
-  Package-local.
+- Under `boundaries.code.exports`, entries without a declaration or
+  marker stay private to the owning Package. An export with omitted
+  visibility defaults to shared for the parent and siblings. Public
+  exports admit any caller at the export boundary.
+- Mark shared entries with `__shared` and public entries with `__pub`.
+  An explicit export can grant access to named callers.
+- Under `boundaries.code.imports`, direct children, siblings, and
+  public entries are eligible by default. A list adds named dependencies.
+  Use `only` for a closed list. An empty `only` list allows zero
+  cross-Package imports.
+- Every cross-Package import must pass caller and provider rules.
+  Within an ordered sibling group, dependencies point from higher
+  layer numbers to lower ones. An allowlist cannot bypass layer order.
+- Preserve existing restricted imports and exports when migrating their
+  declarations. Rename `__family_pub` to `__shared` and migrate the
+  associated imports and visibility declarations together.
+
+### Runtime I/O
+
+Use `boundaries.io.client` to name the provider Component and interface.
+Under `boundaries.io.server`, the provider declares `transport: cli`,
+the runner, path, and any required command. For
+example, Local Release calls the named Test Suite CLI in Project Tools.
+MCP over stdio uses the MCP protocol and a separate interface.
+
+### Acceptance
+
 - Verify zero cross-Component imports from the web frontend, MCP, and
   Codex Hook. Verify that web and MCP use the API and that the Hook
   completes with host input and output only.

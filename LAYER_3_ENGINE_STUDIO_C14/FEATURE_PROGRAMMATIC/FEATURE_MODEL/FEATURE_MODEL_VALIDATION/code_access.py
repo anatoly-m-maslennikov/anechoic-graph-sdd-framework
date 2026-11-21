@@ -18,8 +18,8 @@ def allows_import(entry, caller, provider, exports, *, inherited_imports=(),
                   marked_only=False, marker=None, ordered_layers=None):
     """Return whether a resolved import passes all applicable access rules.
 
-    ``inherited_imports`` contains caller-side allowlists, with None meaning
-    unrestricted. ``marker`` is the visibility of the resolved root Module.
+    ``inherited_imports`` contains additive or closed selector rules.
+    ``marker`` is the visibility of the resolved root Module.
     ``marked_only`` is accepted for compatibility. A Module without an export
     declaration or a marker is Package-local in both cases.
     """
@@ -45,13 +45,16 @@ def allows_import(entry, caller, provider, exports, *, inherited_imports=(),
     visible = mode == 'public' or (mode == 'shared' and shared) or named
     default_import = (provider['parent'] == caller['id'] or
                       provider['parent'] == caller['parent'] or mode == 'public')
-    return visible and all(
-        (not closed and default_import) or entry in selectors or provider['id'] in selectors or
-        ('parent' in selectors and provider['id'] == caller['parent']) or
-        ('siblings' in selectors and provider['parent'] == caller['parent'])
-        for closed, selectors in (rule if rule is not None else (False, set()) for rule in inherited_imports)
-    ) and (bool(inherited_imports) or default_import)
 
+    def matches(selectors):
+        return (entry in selectors or provider['id'] in selectors or
+                ('parent' in selectors and provider['id'] == caller['parent']) or
+                ('siblings' in selectors and provider['parent'] == caller['parent']))
+
+    rules = [rule for rule in inherited_imports if rule is not None]
+    return (visible and
+            (default_import or any(matches(selectors) for _, selectors in rules)) and
+            all(matches(selectors) for closed, selectors in rules if closed))
 
 
 def _selectors(value):

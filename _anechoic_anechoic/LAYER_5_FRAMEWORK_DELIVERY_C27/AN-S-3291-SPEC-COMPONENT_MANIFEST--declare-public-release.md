@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 2
-  updated_at: '2026-11-21T21:49:45.763566+00:00'
+  version: 3
+  updated_at: '2026-11-21T22:51:12.819403+00:00'
 ---
 
 ## Summary
@@ -31,14 +31,14 @@ declare_entity(
         layer=2,
         lens_whitelist=['DES', 'DevOps', 'QA', 'SWD'],
         boundaries={
-            'code_access': {
-                'imports': [],
+            'code': {
+                'imports': {'only': []},
                 'exports': {
-                    'PUBLIC_RELEASE__family_pub.run_public_release': {'family_pub': ['parent']},
+                    'PUBLIC_RELEASE__shared.run_public_release': {'private': ['parent']},
                 },
             },
-            'runtime_io': {
-                'provides': {
+            'io': {
+                'server': {
                     'public_release': {
                         'transport': 'cli',
                         'runner': 'uv',
@@ -46,9 +46,9 @@ declare_entity(
                         'command': 'public',
                     },
                 },
-                'allows': [],
+                'client': [],
             },
-            'shared_state': {
+            'state': {
                 'reads': ['Git commits and completed Task and Epic Markdown', 'Public release content draft'],
                 'writes': [],
             },

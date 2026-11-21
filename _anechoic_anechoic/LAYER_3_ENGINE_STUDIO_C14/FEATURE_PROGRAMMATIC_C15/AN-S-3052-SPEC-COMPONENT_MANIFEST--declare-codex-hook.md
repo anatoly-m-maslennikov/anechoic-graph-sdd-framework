@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 2
-  updated_at: '2026-11-21T18:42:56.109454+00:00'
+  version: 3
+  updated_at: '2026-11-21T22:51:12.819403+00:00'
 ---
 
 ## Summary
@@ -30,11 +30,11 @@ declare_entity(
         name='CODEX_HOOK',
         lens_whitelist=['DES'],
         boundaries={
-            'code_access': {
-                'imports': [],
+            'code': {
+                'imports': {'only': []},
                 'exports': {
-                    'FEATURE_CODEX_HOOK__family_pub': None,
-                    'FEATURE_CODEX_HOOK__family_pub.main': None,
+                    'FEATURE_CODEX_HOOK__shared': None,
+                    'FEATURE_CODEX_HOOK__shared.main': None,
                 },
             },
         },

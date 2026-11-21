@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-22T00:00:00Z'
+  version: 2
+  updated_at: '2026-11-21T22:51:12.819403+00:00'
 ---
 
 ## Summary
@@ -35,9 +35,9 @@ declare_entity(
         layer=6,
         lens_whitelist=['DES', 'DevOps', 'QA', 'SWD'],
         boundaries={
-            'code_access': {'imports': []},
-            'runtime_io': {
-                'provides': {
+            'code': {'imports': {'only': []}},
+            'io': {
+                'server': {
                     'runtime_setup': {
                         'transport': 'cli',
                         'runner': 'uv',
@@ -45,13 +45,13 @@ declare_entity(
                         'command': 'install',
                     },
                 },
-                'allows': [
+                'client': [
                     {'component': 'C27', 'interface': 'release'},
                     {'component': 'C21', 'interface': 'shared_mcp_launcher'},
                     {'component': 'C21', 'interface': 'shared_runtime_mcp'},
                 ],
             },
-            'shared_state': {
+            'state': {
                 'writes': ['Machine-local runtime.toml', 'Explicitly initialized Project inputs', 'Codex user config when selected'],
             },
         },

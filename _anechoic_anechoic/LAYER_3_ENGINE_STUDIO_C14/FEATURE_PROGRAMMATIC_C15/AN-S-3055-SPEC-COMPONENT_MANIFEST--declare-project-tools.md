@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 2
-  updated_at: '2026-11-21T18:47:45.603340+00:00'
+  version: 3
+  updated_at: '2026-11-21T22:51:12.819403+00:00'
 ---
 
 ## Summary
@@ -30,10 +30,19 @@ declare_entity(
         name='PROJECT_TOOLS',
         lens_whitelist=['DES', 'DevOps', 'QA', 'SWD'],
         boundaries={
-            'code_access': {
+            'code': {
                 'exports': {
                     'test_suite__pub': 'public',
                     'test_suite__pub.run_full_suite': 'public',
+                },
+            },
+            'io': {
+                'server': {
+                    'test_suite': {
+                        'transport': 'cli',
+                        'runner': 'uv',
+                        'path': 'LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/test_suite__pub.py',
+                    },
                 },
             },
         },

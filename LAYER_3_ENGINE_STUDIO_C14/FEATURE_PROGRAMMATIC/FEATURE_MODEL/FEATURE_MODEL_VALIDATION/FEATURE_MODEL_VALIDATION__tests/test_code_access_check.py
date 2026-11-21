@@ -19,9 +19,9 @@ class CheckTests(unittest.TestCase):
         sites = [occurrence('billing/api.py', 'run'), occurrence('billing/open__public.py')]
         sources = {'billing/api.py': None, 'billing/open__public.py': None}
         self.assertEqual([p.written for p in check_code_access(ownership, sources, sites)], ['alias'])
-        entries['provider']['fields'] = {'boundaries': {'code_access': {'exports': {'billing.api.run': 'public'}}}}
+        entries['provider']['fields'] = {'boundaries': {'code': {'exports': {'billing.api.run': 'public'}}}}
         self.assertEqual([p.written for p in check_code_access(ownership, sources, sites)], ['alias'])
-        entries['provider']['fields']['boundaries']['code_access']['exports'] = {}
+        entries['provider']['fields']['boundaries']['code']['exports'] = {}
         self.assertEqual(len(check_code_access(ownership, sources, sites)), 2)
         entries['provider']['fields'] = {}
         self.assertEqual(len(check_code_access(ownership, {'billing/api.py': None}, sites[:1])), 1)
@@ -41,7 +41,7 @@ class CheckTests(unittest.TestCase):
         def allowed(source, target):
             site = CodeAccessOccurrence(source, target, 'module', None, target, 1, 0, 'internal')
             return not check_code_access(ownership, {target: None}, [site])
-        for target in ('billing/api__family_pub.py', 'billing/api__internal.py'):
+        for target in ('billing/api__shared.py', 'billing/api__family_pub.py', 'billing/api__internal.py'):
             for source in ('billing/a.py', 'root.py', 'sales/a.py'):
                 self.assertTrue(allowed(source, target), (source, target))
             for source in ('billing/child/a.py', 'sales/sub/a.py', 'billing/child/other/a.py'):
@@ -51,13 +51,13 @@ class CheckTests(unittest.TestCase):
         self.assertFalse(allowed('sales/a.py', 'billing/api.py'))
         self.assertTrue(allowed('billing/a.py', 'billing/api.py'))
         self.assertFalse(allowed('sales/a.py', 'billing/nested/api__family_pub.py'))
-        entries['provider']['fields'] = {'boundaries': {'code_access': {'exports': {'billing.api': 'public'}}}}
+        entries['provider']['fields'] = {'boundaries': {'code': {'exports': {'billing.api': 'public'}}}}
         self.assertTrue(allowed('sales/sub/a.py', 'billing/api.py'))
         self.assertFalse(allowed('sales/a.py', 'billing/api__pub.py'))
 
     def test_inherited_rules_and_uncertain_imports(self):
         entries = {
-            'root': {'id': 'root', 'parent': None, 'path': '.', 'kind': 'component', 'fields': {'boundaries': {'code_access': {'imports': []}}}},
+            'root': {'id': 'root', 'parent': None, 'path': '.', 'kind': 'component', 'fields': {'boundaries': {'code': {'imports': {'only': []}}}}},
             'a': {'id': 'a', 'parent': 'root', 'path': 'a', 'kind': 'package', 'fields': {}},
             'b': {'id': 'b', 'parent': 'root', 'path': 'b', 'kind': 'package', 'fields': {}},
         }
@@ -81,6 +81,22 @@ class CheckTests(unittest.TestCase):
                          ['sibling layer order'])
         entries['b']['fields'] = {}
         self.assertEqual(check_code_access(ownership, {target: None}, [site]), ())
+
+    def test_nested_divergent_component_lineage(self):
+        entries = {
+            'root': {'id': 'root', 'parent': None, 'path': '.', 'kind': 'component', 'fields': {}},
+            'a': {'id': 'a', 'parent': 'root', 'path': 'a', 'kind': 'component', 'fields': {'layer': 2}},
+            'b': {'id': 'b', 'parent': 'root', 'path': 'b', 'kind': 'component', 'fields': {'layer': 1}},
+            'a1': {'id': 'a1', 'parent': 'a', 'path': 'a/sub', 'kind': 'component', 'fields': {'layer': 1}},
+            'b1': {'id': 'b1', 'parent': 'b', 'path': 'b/sub', 'kind': 'component', 'fields': {'layer': 9}},
+            'pkg': {'id': 'pkg', 'parent': 'b1', 'path': 'b/sub/p', 'kind': 'package', 'fields': {}},
+        }
+        ownership = CodeAccessOwnership(entries, {v['path']: k for k, v in entries.items()})
+        target = 'b/sub/p/open__public.py'
+        site = CodeAccessOccurrence('a/sub/x.py', target, 'module', None, target, 1, 0, 'internal')
+        self.assertEqual(check_code_access(ownership, {}, [site]), ())
+        entries['b']['fields']['layer'] = 2
+        self.assertEqual(check_code_access(ownership, {}, [site])[0].reason, 'sibling layer order')
 
 
 if __name__ == '__main__':

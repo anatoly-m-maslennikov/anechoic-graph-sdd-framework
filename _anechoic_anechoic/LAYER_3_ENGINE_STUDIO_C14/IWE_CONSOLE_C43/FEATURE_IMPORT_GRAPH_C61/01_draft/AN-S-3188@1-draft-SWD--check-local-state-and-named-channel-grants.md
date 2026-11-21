@@ -26,7 +26,7 @@ Check local state and named channel grants
 ### Prose Claim
 
 - Use the existing source ownership to identify the Component or Package that owns private state. Follow aliases to the original owner.
-- Read the applicable `boundaries.shared_state` declaration. The owning Component Manifest supplies named channel grants.
+- Read the applicable `boundaries.state` declaration. The owning Component Manifest supplies named channel grants.
 - `pure` permits immutable constants and explicit inputs and returns. Reject mutable module state, writes to global or nonlocal state, and ambient access.
 - `local` is the default. Permit private mutation within its Component or Package boundary. Reject exporting mutable state or accessing another unit's private state.
 - A charter adds named channels with `r`, `w`, or `rw` grants to `local`. Reject unlisted channels and access outside the listed mode.

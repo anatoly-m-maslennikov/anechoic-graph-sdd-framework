@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 2
-  updated_at: '2026-11-21T13:07:38.642570+00:00'
+  version: 4
+  updated_at: '2026-11-21T23:08:26.211137+00:00'
 ---
 
 ## Summary
@@ -30,10 +30,12 @@ declare_entity(
         name='WORKBENCH_BACKEND',
         lens_whitelist=['DES', 'DES/DOM', 'DevOps', 'QA', 'SPEC', 'SWD'],
         boundaries={
-            'code_access': {
+            'code': {
+                'imports': ['C53'],
                 'exports': {
-                    'FEATURE_WORKBENCH_BACKEND__family_pub': None,
-                    'FEATURE_WORKBENCH_BACKEND__family_pub.SourceReader': None,
+                    'FEATURE_WORKBENCH_BACKEND__shared': None,
+                    'FEATURE_WORKBENCH_BACKEND__shared.SourceReader': None,
+                    'FEATURE_WORKBENCH_BACKEND__shared.boundary_tables': {'private': ['LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP']},
                     'FEATURE_WORKBENCH_BACKEND__pub': 'public',
                     'FEATURE_WORKBENCH_BACKEND__pub.ServiceInterface': 'public',
                 },

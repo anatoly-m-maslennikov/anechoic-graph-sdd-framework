@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 2
-  updated_at: '2026-11-21T12:14:05.597140+00:00'
+  version: 3
+  updated_at: '2026-11-21T22:51:12.819403+00:00'
 ---
 
 ## Summary
@@ -30,15 +30,15 @@ declare_entity(
         name='IMPORT_GRAPH',
         lens_whitelist=['DES', 'QA', 'SWD'],
         boundaries={
-            'code_access': {
-                'imports': [],
+            'code': {
+                'imports': {'only': []},
                 'exports': {
-                    'import_graph__family_pub': None,
-                    'import_graph__family_pub.ImportSite': None,
-                    'import_graph__family_pub.Source': None,
-                    'import_graph__family_pub.capture': None,
-                    'import_graph__family_pub.relevant_change': None,
-                    'import_graph__family_pub.resolve_realization': None,
+                    'import_graph__shared': None,
+                    'import_graph__shared.ImportSite': None,
+                    'import_graph__shared.Source': None,
+                    'import_graph__shared.capture': None,
+                    'import_graph__shared.relevant_change': None,
+                    'import_graph__shared.resolve_realization': None,
                 },
             },
         },

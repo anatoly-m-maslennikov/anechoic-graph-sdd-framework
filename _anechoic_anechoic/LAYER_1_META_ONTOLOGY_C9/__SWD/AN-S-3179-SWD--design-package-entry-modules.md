@@ -8,8 +8,8 @@ context:
   lens: SWD
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-21T12:43:52.360824+00:00'
+  version: 2
+  updated_at: '2026-11-21T22:53:41.251242+00:00'
 ---
 
 ## Summary
@@ -30,30 +30,32 @@ A Component Package is the Realization Package of a Component. An ordinary
 Package belongs to a Component and can have its own Package Spec. A Component
 Seed is the proposed name for that specified ordinary Package.
 
-Use these three visibility levels for Package Modules:
+Declare Module or symbol exports in `boundaries.code.exports`. Unlisted entries
+are private to the owning Package. When the export map is absent, use the Module
+marker. An explicit export with omitted visibility is shared.
 
-- **Package-local**. Only Modules in the owning Package can import the Module.
-  This is the default for unmarked Modules. In prose, use private for this
-  access level when the Package scope is clear.
-- **Package-family public**. The owning Package, its immediate parent,
-  and its immediate sibling Packages can import the entry Module. Mark the
-  filename with `__family_pub` before the file extension. AN-S-3015 calls this
-  scope Internal. A root Package has no parent or siblings.
-- **Public**. Callers beyond the Package family can import an eligible entry
-  Module. Mark the filename with `__pub` before the file extension.
+- `private` allows the owning Package.
+- `shared` also allows the immediate parent and siblings. Use `__shared`.
+- `public` allows any caller at the export boundary. Use `__pub`.
 
-For each Package with direct authored code, prefer one direct `__family_pub`
+An export can add named callers to its visibility. Each cross-Package import
+must satisfy the export and the applicable `boundaries.code.imports` rules.
+Imports default to direct children, siblings, and public entries. A list adds
+named dependencies. An `only` list restricts imports, and an empty `only` list
+allows zero cross-Package imports. Keep inherited restrictions in effect.
+
+At the first divergence in Component ancestry, when both siblings have numeric
+layers, require the provider's layer to be lower. Allowlists preserve this order.
+
+For each Package with direct authored code, prefer one direct `__shared`
 entry Module. Add an optional direct `__pub` entry Module when the Package
 has a Contract for external callers. Use more entry Modules when the Package
 has distinct interfaces. Keep the entry Modules and implementation Modules
 in the same Package directory.
 
-Each import must also pass the applicable caller rules. When a Package declares
-an explicit export list in SPEC, use that list for cross-Package access.
-
 ## Details
 
-In `orders/`, `orders__family_pub` can expose operations for the parent and
+In `orders/`, `orders__shared` can expose operations for the parent and
 immediate sibling Packages. `orders__pub` can expose the operations in the
 public Contract. `price_rules` stays Package-local. A child Package such as
 `orders/validation/` owns its own Modules and entry points.

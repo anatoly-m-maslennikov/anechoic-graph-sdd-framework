@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 2
-  updated_at: '2026-11-21T13:12:31.355497+00:00'
+  version: 4
+  updated_at: '2026-11-21T23:08:26.211137+00:00'
 ---
 
 ## Summary
@@ -30,19 +30,20 @@ declare_entity(
         name='MODEL_VALIDATION',
         lens_whitelist=['DES'],
         boundaries={
-            'code_access': {
+            'code': {
                 'exports': {
-                    'FEATURE_MODEL_VALIDATION__family_pub': None,
-                    'FEATURE_MODEL_VALIDATION__family_pub.bind_model_declarations': None,
-                    'FEATURE_MODEL_VALIDATION__family_pub.bind_ordering_declarations': None,
-                    'FEATURE_MODEL_VALIDATION__family_pub.bind_reviewed_instance_check': None,
-                    'FEATURE_MODEL_VALIDATION__family_pub.build_code_access_ownership': None,
-                    'FEATURE_MODEL_VALIDATION__family_pub.check_code_access': None,
-                    'FEATURE_MODEL_VALIDATION__family_pub.code_access_occurrences': None,
-                    'FEATURE_MODEL_VALIDATION__family_pub.effective_relation_constraints': None,
-                    'FEATURE_MODEL_VALIDATION__family_pub.order_properties': None,
-                    'FEATURE_MODEL_VALIDATION__family_pub.validate_relation_endpoint_levels': None,
-                    'FEATURE_MODEL_VALIDATION__family_pub.validate_relation_targets': None,
+                    'FEATURE_MODEL_VALIDATION__shared': None,
+                    'FEATURE_MODEL_VALIDATION__shared.bind_model_declarations': None,
+                    'FEATURE_MODEL_VALIDATION__shared.bind_ordering_declarations': None,
+                    'FEATURE_MODEL_VALIDATION__shared.bind_reviewed_instance_check': None,
+                    'FEATURE_MODEL_VALIDATION__shared.build_code_access_ownership': None,
+                    'FEATURE_MODEL_VALIDATION__shared.check_code_access': None,
+                    'FEATURE_MODEL_VALIDATION__shared.code_access_occurrences': None,
+                    'FEATURE_MODEL_VALIDATION__shared.evaluate_realization_access': {'private': ['C45']},
+                    'FEATURE_MODEL_VALIDATION__shared.effective_relation_constraints': None,
+                    'FEATURE_MODEL_VALIDATION__shared.order_properties': None,
+                    'FEATURE_MODEL_VALIDATION__shared.validate_relation_endpoint_levels': None,
+                    'FEATURE_MODEL_VALIDATION__shared.validate_relation_targets': None,
                     'FEATURE_MODEL_VALIDATION__pub': 'public',
                     'FEATURE_MODEL_VALIDATION__pub.validate_model_instance': 'public',
                 },

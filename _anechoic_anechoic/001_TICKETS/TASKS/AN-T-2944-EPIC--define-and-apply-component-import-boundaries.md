@@ -9,8 +9,8 @@ context:
   label: Epic
 state:
   status: in_queue
-  version: 5
-  updated_at: '2026-11-21T19:06:22.031079+00:00'
+  version: 6
+  updated_at: '2026-11-21T22:53:41.251242+00:00'
 ---
 
 ## Summary
@@ -108,7 +108,7 @@ checks.
 1. Resolve forbidden cross-Component imports first. Start with the highest Layer and work down.
    Verify each Component against declared ownership and Code Access.
 2. Declare Code Access in Component Manifests.
-3. Give each code-bearing Package a `__family_pub` entry Module for its parent and siblings. Prefer one such entry Module and add an optional `__pub` entry Module. Keep implementation Modules unmarked and Package-local. Apply the rule separately to each Package.
+3. Give each code-bearing Package a `__shared` entry Module for its parent and siblings. Prefer one such entry Module and add an optional `__pub` entry Module. Keep implementation Modules unmarked and Package-local. Apply the rule separately to each Package.
 4. Write each Component Contract and implement its code interface.
 5. Bind exact Contract revisions to their Realization Packages.
 6. Refactor to the target architecture after the forbidden cross-Component imports are resolved.

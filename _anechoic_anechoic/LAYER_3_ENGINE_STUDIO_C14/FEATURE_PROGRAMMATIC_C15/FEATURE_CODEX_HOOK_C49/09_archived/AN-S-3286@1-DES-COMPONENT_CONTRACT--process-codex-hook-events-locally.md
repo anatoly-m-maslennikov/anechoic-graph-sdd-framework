@@ -8,7 +8,7 @@ context:
   template: component_contract
   lens: DES
 state:
-  status: active
+  status: archived
   version: 1
   updated_at: '2026-11-21T18:44:22.234679+00:00'
 ---
