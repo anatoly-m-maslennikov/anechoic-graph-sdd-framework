@@ -306,7 +306,7 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
         reopened = await self._gateway(structure_snapshot=structure)
         self.assertEqual(expected, await audit(owner=reopened))
 
-    async def test_recursive_packages_follow_unsupported_source_removal(self):
+    async def test_direct_packages_follow_unsupported_source_removal(self):
         source = self._source("src/tree/nested/leaf/main.go", "package leaf\n")
         self._source("src/tree/assets/image.txt", "asset\n")
         self._source("src/tree/tree__tests/assets/input.txt", "asset\n")
@@ -330,8 +330,7 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
             WHERE n.kind = 'package' AND n.relative_path LIKE 'src/tree%'
             GROUP BY n.node_key ORDER BY n.node_key
         """
-        expected = [[f"package:local:{path}", 1] for path in
-                    ("src/tree", "src/tree/nested", "src/tree/nested/leaf")]
+        expected = [["package:local:src/tree/nested/leaf", 1]]
         self.assertEqual(expected, await rows(gateway, packages))
         self.assertEqual([["src/tree/nested/leaf/main.go", "unsupported"]], await rows(gateway, """
             SELECT relative_path, scan_status FROM import_nodes
@@ -348,6 +347,59 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
         async with asyncio.timeout(6):
             while await rows(reopened, packages) != expected:
                 await asyncio.sleep(.03)
+
+    async def test_component_test_package_and_unmarked_package(self):
+        self._source("src/UNIT_C1/UNIT_C1__tests/test_e2e.py", "pass\n")
+        implementation = self._source("src/UNIT_C1/service_pkg1/main.py", "pass\n")
+        self._source("src/UNIT_C1/service_pkg1/service_pkg1__tests/test_main.py", "pass\n")
+        self._source("src/group/group__tests/test_e2e.py", "pass\n")
+        structure = self._source(".anechoic_tmp/structure.json", json.dumps({
+            "model_sha256": "fixture", "project": {"ref": "AN-S-001@1", "sha256": "fixture"},
+            "components": {"C1": {"parent": "C00", "ref": "AN-S-006@1", "sha256": "fixture",
+                                  "source_path": "AN-S-006-SPEC-COMPONENT_MANIFEST--unit.md",
+                                  "fields": {"name": "Unit"}}},
+        }))
+        gateway = await self._gateway(structure_snapshot=structure)
+
+        async def rows(sql):
+            response = await gateway.call(None, types.CallToolRequestParams(name="query_run", arguments={
+                "sql": sql, "result_delivery": "inline",
+            }))
+            self.assertFalse(response.is_error, response.structured_content)
+            return response.structured_content["rows"]
+
+        self.assertEqual([["src/UNIT_C1/UNIT_C1__tests"], ["src/UNIT_C1/service_pkg1"],
+                          ["src/UNIT_C1/service_pkg1/service_pkg1__tests"]],
+                         await rows("SELECT relative_path FROM import_nodes WHERE kind = 'package' "
+                                    "AND relative_path LIKE 'src/UNIT_C1%' ORDER BY relative_path"))
+        self.assertEqual([
+            ["package:local:src/UNIT_C1/UNIT_C1__tests", "C1"],
+            ["package:local:src/UNIT_C1/service_pkg1/service_pkg1__tests",
+             "package:local:src/UNIT_C1/service_pkg1"],
+        ], await rows("SELECT source_key, target_key FROM test_edges ORDER BY source_key"))
+        self.assertEqual([["Component", "C1"]], await rows("""
+            FROM GRAPH_TABLE (anechoic
+                MATCH (test:ImportNode)-[edge:TESTS_COMPONENT]->(component:Reference)
+                COLUMNS (component.kind AS kind, component.ref AS ref))
+        """))
+        inverse = """
+            FROM GRAPH_TABLE (anechoic
+                MATCH (component:Reference)-[edge:COMPONENT_IS_TESTED_BY]->(test:ImportNode)
+                COLUMNS (component.ref AS component, test.relative_path AS test_path))
+        """
+        expected = [["C1", "src/UNIT_C1/UNIT_C1__tests"]]
+        self.assertEqual(expected, await rows(inverse))
+        issues = "SELECT relative_path, test_issue FROM package_audit WHERE test_issue IS NOT NULL ORDER BY relative_path"
+        orphan = ["src/group/group__tests", "missing_test_target"]
+        self.assertEqual([["src/UNIT_C1/service_pkg1", "missing_visibility_marker"], orphan], await rows(issues))
+        implementation.rename(implementation.with_name("main__internal.py"))
+        async with asyncio.timeout(6):
+            while await rows(issues) != [orphan]:
+                await asyncio.sleep(.03)
+        await gateway.close()
+        gateway = await self._gateway(structure_snapshot=structure)
+        self.assertEqual(expected, await rows(inverse))
+        self.assertEqual([orphan], await rows(issues))
 
     async def test_import_publication_failure_reports_stderr_once(self):
         self._source("src/from_source.py", "import to_source\n")

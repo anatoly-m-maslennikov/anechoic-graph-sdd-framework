@@ -13,8 +13,8 @@ relations:
   - AN-T-2928@1-draft
 state:
   status: "active"
-  version: 4
-  updated_at: "2026-11-20T22:44:56.273982+00:00"
+  version: 5
+  updated_at: "2026-11-20T23:12:09.705525+00:00"
 ---
 
 ## Summary
@@ -59,15 +59,17 @@ Verify the Import Graph through public Workbench queries
 - Query both `TESTS` and `IS_TESTED_BY` and check `package_type` is `Test Package`.
 - Check that imports and test Relations use the same Package keys.
 - Check that one folder with several source languages has one Package node.
-- Check that an executable in an unsupported language qualifies each ancestor. Skip dot, empty, and asset-only folders.
-- Add and remove the last executable in a subtree. Verify the Package and audit rows update.
+- Check that only the folder with direct executables qualifies, including executables without import parsers.
+- Add and remove its last direct executable. Verify the Package and audit rows update.
+- Test a declared Component with no direct executables. Query both directions against its existing Component vertex.
 - Move the test directory beside the Package, restore it, and delete it.
 - Verify the test Relation follows the direct test directory.
 - Check a test file with zero imports.
 
 ## Package audit acceptance
 
-- Query every local Package node. Verify both visibility flags and that a nested marked Module does not affect its ancestor Package.
+- Verify both visibility flags. Check that a nested marked Module cannot satisfy the parent Package.
+- Report missing visibility for a tested Package and a missing target for an orphan Test Package.
 - Check valid, missing, empty, malformed, and legacy-only bindings. Distinguish archived and missing exact pins.
 - Compare the Package Contract's current exact `implements` pin with an `applies` pin or an older revision. Verify Packages without a Spec have unknown Contract coverage.
 - Remove a Contract from the Package Spec and verify the audit remains queryable with unknown coverage and a stderr diagnostic.

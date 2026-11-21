@@ -55,6 +55,28 @@ mapping. The gateway validates and removes this outer field before dispatch.
 Shared MCP requires `project_root`; protocol operations such as initialization
 and listing do not.
 
+## Native query templates
+
+Use `query_template` for Atom lookups, state, search, revisions, inventory
+and counts, relations, and legacy references or paths. For an Epic queue, pass
+`{"template":"list_tickets","kind":"epic","statuses":["active","backlog","draft"]}`
+or pass `parent` with a Ticket ID to list its direct children.
+Each template runs through `query_run` with its own columns. Both tools
+use automatic delivery by default. Workbench reads
+`runtime.workbench.inline_result_limit_kib` from the Project Manifest at
+startup. It defaults to 4 KiB. Automatic delivery returns results inline
+when they fit within the first page and the byte limit. Templates
+default to CSV and `query_run` defaults to `json_matrix`. Pass
+`result_delivery: inline` or `result_delivery: file` to choose explicitly.
+
+Use `component` with `fetch_contracts`, `fetch_solutions`,
+`get_component_manifest`, or `get_component_purpose`. It accepts a
+Component ID or a case-insensitive Manifest name. Contracts and Solutions
+list Active Spec Atoms owned by the Component at Tier 0 and Tier 1.
+Use the ID if names coincide. The `components` table exposes Manifest
+settings and source references for custom SQL. Purpose lookup uses
+the Component ID declared by an Active `component_purpose` Atom.
+
 ## Run
 
 Use the project-local environment from the source checkout:

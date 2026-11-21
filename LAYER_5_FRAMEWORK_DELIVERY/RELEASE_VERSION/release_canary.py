@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
+from hashlib import sha256
 import json
 import re
 import subprocess
@@ -19,10 +21,40 @@ from project_mcp_backend import ProjectMcpBackend  # noqa: E402
 
 _HTTP = build_opener(ProxyHandler({}))
 
-def verify_candidate_image(root: Path, selection, package: Path, staging: Path, image: str) -> str:
+
+@contextmanager
+def _candidate_tag(root: Path, staging: Path, image: str, run_id: str):
+    if not isinstance(run_id, str) or re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", run_id) is None:
+        raise LocalReleaseError("local-release-canary-run-id-invalid")
+    attempt = sha256(str(staging).encode()).hexdigest()[:16]
+    tag = f"anechoic-runtime:candidate-{run_id[:96]}-{attempt}"
+    try:
+        subprocess.run(["docker", "image", "tag", image, tag], cwd=root, check=True,
+                       capture_output=True, text=True, timeout=30)
+    except (OSError, subprocess.SubprocessError) as error:
+        raise LocalReleaseError("local-release-canary-image-tag-failed") from error
+    try:
+        yield
+    finally:
+        failure = sys.exception()
+        try:
+            subprocess.run(["docker", "image", "rm", tag], cwd=root, check=True,
+                           capture_output=True, text=True, timeout=30)
+        except (OSError, subprocess.SubprocessError) as error:
+            if failure is None:
+                raise LocalReleaseError("local-release-canary-image-untag-failed") from error
+            failure.add_note(f"Candidate tag {tag} cleanup failed.")
+
+
+def verify_candidate_image(root: Path, selection, package: Path, staging: Path, image: str, *, run_id: str) -> str:
     """Start the immutable image on a Docker-assigned port and verify MCP readiness."""
     if not re.fullmatch(r"sha256:[0-9a-f]{64}", image):
         raise LocalReleaseError("local-release-canary-image-invalid")
+    with _candidate_tag(root, staging, image, run_id):
+        return _verify_candidate_image(root, selection, package, staging, image)
+
+
+def _verify_candidate_image(root: Path, selection, package: Path, staging: Path, image: str) -> str:
     project = staging / "canary-project"
     cidfile = staging / "canary-container-id"
     if "," in str(project):

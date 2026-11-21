@@ -1,4 +1,5 @@
 """Measure direct Component specifications and realized source files."""
+from dataclasses import replace
 from pathlib import Path, PurePosixPath
 
 from LAYER_3_ENGINE_STUDIO_C14.FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.code_access_ownership import build_code_access_ownership
@@ -6,6 +7,16 @@ from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.structure_h
 from APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.source import _event_path, _git_ignored, _iter_files
 from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext
 from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
+
+
+def realization_component_paths(selection, snapshot, folders):
+    """Find declared Components even when their folders only contain child Packages."""
+    candidates = {ancestor for folder in map(PurePosixPath, folders)
+                  for ancestor in (folder, *folder.parents)}
+    ownership = build_code_access_ownership(selection.root, selection.control_root,
+                                            replace(snapshot, packages={}), candidates)
+    return {owner['path']: owner['id'] for owner in ownership.entries.values()
+            if owner['kind'] == 'component'}
 
 
 def _lines(data):
@@ -84,19 +95,18 @@ def measure_components(selection, capture, sources, nodes, test_edges):
     root = Path(selection.root).resolve()
     reader = ReadContext(roots=[str(root)], limits=dict(CEILINGS))
     packages = {node[3] for node in nodes if node[1] == 'package' and node[3]}
-    ownership = build_code_access_ownership(root, selection.control_root, snapshot, packages)
+    components = realization_component_paths(selection, snapshot, packages)
     totals = {cid: [0] * 9 for cid in ('C00', *snapshot.components)}
     _spec_sizes(capture, selection.project_prefix, totals)
 
     def component(path):
-        owner = ownership.owner(path)
-        while owner and owner['kind'] != 'component':
-            owner = ownership.entries.get(owner['parent'])
-        return owner['id'] if owner else None
+        return next((components[folder.as_posix()] for folder in path.parents
+                     if folder.as_posix() in components), None)
 
     by_key = {node[0]: node[3] for node in nodes}
-    tests = {PurePosixPath(by_key[test]): owner for test, parent in test_edges
-             if (owner := component(PurePosixPath(by_key[parent]) / '_')) in totals}
+    tests = {PurePosixPath(by_key[test]): owner for test, target in test_edges
+             if (owner := (target if target in totals
+                           else component(PurePosixPath(by_key[target]) / '_'))) in totals}
     _test_sizes(root, reader, sources, tests, totals)
     _implementation_sizes(root, reader, sources, tests, totals, component)
     return [(cid, *values) for cid, values in totals.items()]

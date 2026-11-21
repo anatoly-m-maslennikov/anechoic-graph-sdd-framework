@@ -9,6 +9,14 @@ import os
 import re
 from pathlib import Path
 from typing import Any
+from unittest.mock import patch
+
+from watchdog.observers.polling import PollingObserver
+
+
+def polling_source_watcher():
+    """Use filesystem snapshots for transport fixtures that run in a sandbox."""
+    return patch("APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_watcher.NativeObserver", PollingObserver)
 
 
 def extension_directory(root: Path) -> Path:

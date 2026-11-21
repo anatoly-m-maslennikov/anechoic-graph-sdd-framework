@@ -8,9 +8,9 @@ structure:
 context:
   template: epic
 state:
-  status: "active"
+  status: "done"
   version: 1
-  updated_at: "2026-11-20T19:49:44.161937+00:00"
+  updated_at: "2026-11-20T23:05:37.010758+00:00"
 ---
 
 ## Summary

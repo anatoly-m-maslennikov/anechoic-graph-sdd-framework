@@ -19,13 +19,13 @@ class RealizationTests(unittest.TestCase):
 
     def test_direct_test_packages_follow_source_inventory(self):
         tmp_path = self._temporary_project()
-        for name in ("pkg/pkg__tests/test_one.py", "pkg/other__tests/test_two.py",
+        for name in ("pkg/__init__.py", "pkg/pkg__tests/test_one.py", "pkg/other__tests/test_two.py",
                      "other/pkg__tests/test_three.py", "pkg/pkg__tests/nested/test_four.py"):
             path = tmp_path / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text("pass\n")
         sources = capture(tmp_path, None)
-        nodes, occurrences, edges, tests = resolve_realization(tmp_path, sources)
+        nodes, occurrences, edges, tests, _ = resolve_realization(tmp_path, sources)
         packages = {node[0]: node for node in nodes if node[1] == "package"}
         assert ("package:local:pkg/pkg__tests", "package:local:pkg") in tests
         assert tests == [("package:local:pkg/pkg__tests", "package:local:pkg")]
@@ -80,7 +80,7 @@ class RealizationTests(unittest.TestCase):
             path = root / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(content)
-        nodes, _, edges, tests = resolve_realization(root, capture(root, None))
+        nodes, _, edges, tests, _ = resolve_realization(root, capture(root, None))
         packages = [node for node in nodes if node[1] == "package" and node[3] == "pkg"]
         assert len(packages) == 1
         node_by_key = {node[0]: node for node in nodes}
@@ -92,13 +92,15 @@ class RealizationTests(unittest.TestCase):
         }
         (root / "pkg/a.py").unlink()
         (root / "pkg/pkg__tests/test.py").unlink()
-        nodes, _, _, tests = resolve_realization(root, capture(root, None))
+        nodes, _, _, tests, _ = resolve_realization(root, capture(root, None))
         assert [node[0] for node in nodes if node[1] == "package" and node[3] == "pkg"] == ["package:local:pkg"]
         assert tests == [("package:local:pkg/pkg__tests", "package:local:pkg")]
 
     def test_executables_define_packages_without_becoming_python_import_targets(self):
         root = self._temporary_project()
-        (root / "main.py").write_text("import tool\n")
+        (root / "main.py").write_text("import tool\nimport namespace\n")
+        (root / "namespace/nested").mkdir(parents=True)
+        (root / "namespace/nested/library.py").write_text("pass\n")
         for name, body in (("tool/source.rs", "fn main() {}"), ("script/run", "#!/usr/bin/env lua\n"),
                            ("binary/run", "\x00")):
             path = root / name
@@ -106,10 +108,13 @@ class RealizationTests(unittest.TestCase):
             path.write_text(body)
         (root / "binary/run").chmod(0o755)
         sources = capture(root, None)
-        nodes, occurrences, edges, _ = resolve_realization(root, sources)
-        assert {node[3] for node in nodes if node[1] == "package"} == {"tool", "script", "binary"}
-        assert occurrences[0][6] == "unresolved"
-        assert not edges
+        nodes, occurrences, edges, _, _ = resolve_realization(root, sources)
+        assert {node[3] for node in nodes if node[1] == "package"} == {
+            "tool", "script", "binary", "namespace/nested",
+        }
+        assert [occurrence[6] for occurrence in occurrences] == ["unresolved", "internal"]
+        assert [node[1] for node in nodes if node[3] == "namespace"] == ["namespace"]
+        assert len(edges) == 1
 
     def test_read_error_is_retried_on_next_capture_without_stat_change(self):
         root = self._temporary_project()

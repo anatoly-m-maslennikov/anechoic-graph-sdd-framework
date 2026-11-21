@@ -948,10 +948,11 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.image.resolve.side_effect = resolve
         runner, calls = self._runner()
 
-        def verify_canary(root, selection, package, staging, image):
+        def verify_canary(root, selection, package, staging, image, *, run_id):
             events.append("candidate-canary")
             self.assertEqual(self.root, root)
             self.assertEqual(self.image_id, image)
+            self.assertEqual("image-order", run_id)
             self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
             self.assertEqual(staging, package.parent)
             return "http://127.0.0.1:49152/anechoic/mcp"

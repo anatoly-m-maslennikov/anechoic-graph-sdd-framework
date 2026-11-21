@@ -14,8 +14,8 @@ relations:
   - AN-T-2928@1-draft
 state:
   status: "active"
-  version: 5
-  updated_at: "2026-11-20T22:44:56.273982+00:00"
+  version: 6
+  updated_at: "2026-11-20T23:12:09.705525+00:00"
 ---
 
 ## Summary
@@ -62,21 +62,22 @@ Publish and query the Import Graph through Workbench
 | `import_nodes` | Node key, kind, language, local path and scan status where applicable. |
 | `import_nodes` | Module ownership when known. |
 | `import_nodes` | Include inventoried Modules and identified Package and external Module targets. |
-| `import_nodes` | Use `package:local:<relative path>` for each local folder across all languages. |
+| `import_nodes` | Use `package:local:<relative path>` for each folder with a direct executable. |
 | `import_nodes` | Set `package_type` to `Test Package` for the direct test directory. |
 | `module_imports` | Occurrence key, source Module, resolved target if known, and written specifier. |
 | `module_imports` | Line, column, resolution status, and type-only flag. |
 | `import_edges` | One row per occurrence and directed pair. |
 | `import_edges` | Source and target keys, occurrence key, and derived flag. |
 | `package_imports` | View grouping Package → Package edges and counting contributing occurrences. |
-| `test_edges` | Source Test Package key and target parent Package key for each qualifying direct test directory. |
-| `tested_by_edges` | Source parent Package key and target Test Package key. |
+| `test_edges` | Source Test Package key and target parent Package key or Component ID. |
+| `tested_by_edges` | Source parent Package key or Component ID and target Test Package key. |
 | `import_read_issues` | Project-relative file path and error message for each current failed source read. |
 
-- Derive `TESTS` from each qualifying direct `<full package folder name>__tests/` Package to its parent Package.
+- Derive `TESTS` from a direct `<parent folder name>__tests/` Package to its parent Package or declared Component.
 - Include the Relation when the parent has no Spec or Spec Binding.
 - Publish both directions with the same Package keys as imports.
-- Register `test_edges` as `TESTS` and `tested_by_edges` as `IS_TESTED_BY` in the `anechoic` property graph.
+- Register Package endpoints as `TESTS` and `IS_TESTED_BY` in `anechoic`.
+- Register Component endpoints as `TESTS_COMPONENT` and `COMPONENT_IS_TESTED_BY` against existing Component references.
 - Remove the Relations when the direct directory is removed or moved.
 - Register `import_nodes` as `ImportNode` vertices and `import_edges` as `Imports` edges in `anechoic`.
 - Keep that registration when an Atom graph rebuild changes the relation layout.
@@ -90,7 +91,9 @@ Publish and query the Import Graph through Workbench
 
 Publish `package_audit` with one row for each local Package node, including Test Packages and Packages without a Spec.
 
-- Report whether direct inventoried Modules have the `__internal` or `__public` filename suffix. Report each flag independently.
+- Report direct `__internal` and `__public` executable filename markers independently.
+- Report `missing_visibility_marker` on a tested Package with neither marker.
+- Report `missing_test_target` on a Test Package whose parent qualifies as neither Package nor Component.
 - Report canonical `__spec_bind.yaml` presence and whether the binding is missing, invalid, empty, or valid. Use the full Package folder name for the sidecar.
 - Check every `implements` and `applies` pin against the exact active Spec revision. Resolve legacy pins only through an unambiguous exact alias.
 - Report each failed pin and its reason. Distinguish archived, missing, ambiguous, and non-Spec references. Leave the active-pin result unknown if there are no valid pins.

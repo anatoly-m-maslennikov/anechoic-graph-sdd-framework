@@ -320,7 +320,7 @@ def run_local_release(
                     raise LocalReleaseError("local-release-packaged-image-mismatch")
                 _verify_package(package, package_identity)
                 failed_step = "verify_candidate_image"
-                canary_endpoint = verify_candidate_image(root, selection, package, staging, candidate_image)
+                canary_endpoint = verify_candidate_image(root, selection, package, staging, candidate_image, run_id=run_id)
             elif phase == "install project runtime":
                 failed_step = "install_project_runtime"
                 _verify_package(package, package_identity)

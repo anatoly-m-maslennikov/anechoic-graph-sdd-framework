@@ -18,6 +18,7 @@ from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP import native_startu
 
 class CanaryTests(unittest.TestCase):
     def test_probe_uses_candidate_and_cleans_up_on_success_and_failure(self):
+        tags = set()
         for ready in (True, False):
             with self.subTest(ready=ready), tempfile.TemporaryDirectory() as tmp:
                 root = Path(tmp) / "root"
@@ -39,22 +40,29 @@ class CanaryTests(unittest.TestCase):
                         return SimpleNamespace(stdout="")
                     return SimpleNamespace(stdout="127.0.0.1:54321\n")
                 health = io.BytesIO(b'{"ready": true}')
+                image = "sha256:" + "c" * 64
                 with patch.object(native_startup, "select_runtime_project", return_value=selection), \
                      patch.object(release_canary.subprocess, "run", side_effect=run), \
                      patch.object(release_canary._HTTP, "open", return_value=health), \
                      patch.object(release_canary.ProjectMcpBackend, "health", return_value=ready):
                     if ready:
-                        self.assertEqual(release_canary.verify_candidate_image(root, selection, package, staging, "sha256:" + "c" * 64),
+                        self.assertEqual(release_canary.verify_candidate_image(root, selection, package, staging, image, run_id="session-1"),
                                          "http://127.0.0.1:54321/anechoic/mcp")
                     else:
                         with self.assertRaises(release_canary.LocalReleaseError):
-                            release_canary.verify_candidate_image(root, selection, package, staging, "sha256:" + "c" * 64)
+                            release_canary.verify_candidate_image(root, selection, package, staging, image, run_id="session-1")
+                tag = calls[0][-1]
+                self.assertTrue(tag.startswith("anechoic-runtime:candidate-session-1-"))
+                self.assertEqual(calls[0], ["docker", "image", "tag", image, tag])
+                tags.add(tag)
                 launch = next(argv for argv in calls if argv[:2] == ["docker", "run"])
                 self.assertIn("127.0.0.1::8092", launch)
                 self.assertIn("sha256:" + "c" * 64, launch)
-                self.assertEqual(calls[-1], ["docker", "rm", "-f", "b" * 64])
+                self.assertEqual(calls[-2:], [["docker", "rm", "-f", "b" * 64],
+                                              ["docker", "image", "rm", tag]])
                 self.assertTrue((staging / "canary-project/candidate").is_file())
                 self.assertTrue((staging / "canary-project/.anechoic_test/control").is_file())
+        self.assertEqual(len(tags), 2)
 
 
 if __name__ == "__main__":

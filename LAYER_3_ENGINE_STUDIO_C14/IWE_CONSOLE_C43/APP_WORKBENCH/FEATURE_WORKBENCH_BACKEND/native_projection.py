@@ -1,13 +1,17 @@
 """Publish a native capture through the existing Workbench DuckDB store."""
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Set
 from hashlib import sha256
+import json
 from pathlib import PurePosixPath, PureWindowsPath
 import re
 from typing import Any
 
+from .content_schema import ContentRule, DeclarationSource, _schema_from_rules
 from .graph_store import GraphState, register_graph
+from .markdown_content import source_markdown
 from .native_source_rows import NativeCapture
 from .query_store import QueryStore
 
@@ -136,6 +140,7 @@ def replace_component_metrics(connection, measurements) -> None:
 def project_native(store: QueryStore, capture: NativeCapture, *,
                    relation_types: Set[str], inverses: Mapping[str, str],
                    migration_refs: Iterable[tuple[str | None, str, str]] = (),
+                   component_ids: Iterable[str] = (),
                    use_retained: bool = False,
                    before_commit: Callable[[GraphState], None] | None = None) -> None:
     """Replace the disposable projection. Relation declarations must be caller-validated."""
@@ -143,13 +148,23 @@ def project_native(store: QueryStore, capture: NativeCapture, *,
         raise ValueError("Cannot project a native capture with invalid carriers")
     inverse = _relation_bindings(relation_types, inverses)
     rows = _projected_rows(capture, relation_types, inverse)
+    for row in rows:
+        summaries = [record for record in row["content_properties_json"] if record.get("property_path") == ["summary"]]
+        if len(summaries) > 1:
+            row["content_properties_json"] = [record for record in row["content_properties_json"]
+                                              if record.get("property_path") != ["summary"] or record is summaries[0]]
+    content_schema = _schema_from_rules([
+        ContentRule(("summary",), None, None, True, DeclarationSource(None, None, None)),
+    ])
+    component_refs = [("Component", cid) for cid in sorted(set(component_ids))]
+    rows[0]["_graph_references"] = component_refs
     legacy, paths = _migration_rows(rows, migration_refs)
     with store._lock:
         connection = store._connection
         # Invalidate retained rows when the projection layout or inputs change.
         frontier = sha256(repr((
-            1, store._schema_mode, sorted(relation_types), sorted(inverses.items()),
-            sorted(legacy), sorted(paths),
+            3, store._schema_mode, sorted(relation_types), sorted(inverses.items()),
+            sorted(legacy), sorted(paths), component_refs,
             sorted((row["source_path"], row["_source_sha256"]) for row in rows),
         )).encode()).hexdigest()
         retained = use_retained and connection.execute(
@@ -166,12 +181,61 @@ def project_native(store: QueryStore, capture: NativeCapture, *,
                 register_graph(connection, graph)
             else:
                 _write_references(connection, rows, legacy, paths)
+                _write_components(connection, rows)
                 connection.execute("CREATE TABLE internal.native_frontier(frontier VARCHAR NOT NULL)")
                 connection.execute("INSERT INTO internal.native_frontier VALUES (?)", [frontier])
             if before_commit is not None:
                 before_commit(graph)
 
-        store.replace(rows, [], relation_types=set(relation_types), reuse=retained, before_commit=finish)
+        store.replace(rows, [], relation_types=set(relation_types), content_schema=content_schema,
+                      reuse=retained, before_commit=finish)
+
+
+def _write_components(connection, rows) -> None:
+    from FEATURE_FORMAL_MODEL_ENGINE.native_component_claim import (
+        parse_component_manifest_fields, parse_component_purpose_id,
+    )
+    from native_carrier_header import native_header_view
+
+    manifests = []
+    purposes = defaultdict(list)
+    for row in rows:
+        if row["status_group"] != "Current" or row["tier"] != 0 or row["id"].split("-")[1] != "S":
+            continue
+        context = native_header_view(row["header_json"])["context"]
+        kind = context.get("template")
+        if kind not in {"component_manifest", "component_purpose"} or context.get("lens") != "SPEC":
+            continue
+        owner = context["container"].get("component")
+        if owner is None:
+            continue
+        body = source_markdown(row)
+        try:
+            if kind == "component_purpose":
+                purposes[parse_component_purpose_id(body)].append(row["_exact_ref"])
+            else:
+                fields = parse_component_manifest_fields(body)
+                cid = fields["component_id"]
+                name, layer, lenses = fields["name"], fields.get("layer"), fields.get("lens_whitelist")
+                if (isinstance(cid, str) and re.fullmatch(r"C[0-9]+", cid)
+                        and isinstance(name, str) and name.strip()
+                        and (layer is None or type(layer) is int)
+                        and (lenses is None or isinstance(lenses, list) and all(isinstance(lens, str) for lens in lenses))):
+                    boundaries = fields.get("boundaries")
+                    manifests.append((cid, name, owner, layer, lenses,
+                                      None if boundaries is None else json.dumps(boundaries),
+                                      row["_exact_ref"], row["source_path"]))
+        except ValueError:
+            # Malformed claims stay visible as Atoms but cannot supply Component fields.
+            continue
+
+    connection.execute("""CREATE OR REPLACE TABLE main.components (
+        component_id VARCHAR, name VARCHAR, parent_component_id VARCHAR, layer BIGINT,
+        lens_whitelist VARCHAR[], boundaries JSON, manifest_ref VARCHAR, manifest_path VARCHAR, purpose_refs VARCHAR[]
+    )""")
+    if manifests:
+        connection.executemany("INSERT INTO main.components VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                               [(*manifest, sorted(purposes[manifest[0]])) for manifest in manifests])
 
 
 def _write_references(connection, rows, legacy, paths) -> None:

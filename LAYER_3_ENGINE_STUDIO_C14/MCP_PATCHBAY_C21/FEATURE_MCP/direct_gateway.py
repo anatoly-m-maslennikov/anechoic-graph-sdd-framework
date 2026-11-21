@@ -32,6 +32,7 @@ from project_selection import ProjectSelection, bind_selection, rebind_selection
 from project_tool_blacklist import project_tool_blacklist  # noqa: E402
 from project_settings_schema import mcp_tool_blacklist  # noqa: E402
 from project_tool_context import native_arguments  # noqa: E402
+from query_templates import QUERY_TEMPLATE  # noqa: E402
 from registry_release_command_provider import RELEASE_COMMAND_TOOLS  # noqa: E402
 from runtime_failure_diagnostics import report_failure  # noqa: E402
 from runtime_request_context import bind_request_context  # noqa: E402
@@ -41,7 +42,7 @@ from tool_registry_runtime import (  # noqa: E402
     ToolRegistryStaleError,
     load_active_registry,
 )
-from workbench_tools import INTERFACE_TOOLS, LOAD, REBUILD, SAVED_LIST, SAVE_VIEW, SYNC_STATUS, WorkbenchTools, mcp_app_probe  # noqa: E402
+from workbench_tools import INTERFACE_TOOLS, LOAD, PAGE, REBUILD, RUN, SAVED_LIST, SAVE_VIEW, SYNC_STATUS, WorkbenchTools, mcp_app_probe  # noqa: E402
 
 if TYPE_CHECKING:
     from native_query import NativeQueryOwner
@@ -79,9 +80,9 @@ def native_runtime_gateway(selection):
             sys.path.remove(str(generation))
 
 
-def result(value, error=False):
+def result(value, error=False, *, text=None):
     return types.CallToolResult(
-        content=[types.TextContent(type="text", text=json.dumps(value))],
+        content=[types.TextContent(type="text", text=json.dumps(value) if text is None else text)],
         structured_content=value, is_error=error,
     )
 
@@ -134,16 +135,19 @@ class DirectGateway:
 
                 self._native_query.start()
                 supported = QUERY_TOOLS | LIFECYCLE_TOOLS | frozenset((
-                    *INTERFACE_TOOLS, SAVE_VIEW, LOAD, SAVED_LIST, SYNC_STATUS, REBUILD,
+                    *INTERFACE_TOOLS, SAVE_VIEW, LOAD, SAVED_LIST, SYNC_STATUS, QUERY_TEMPLATE, REBUILD,
                 ))
                 if self.selection.parameters.get("project_mcp", {}).get("release_workflows_enabled") is True:
                     supported |= RELEASE_COMMAND_TOOLS
                 self.tool_blacklist |= frozenset(self.registry.routes) - supported
+                if RUN in self.tool_blacklist:
+                    self.tool_blacklist |= {QUERY_TEMPLATE}
                 self.tools = tuple(
                     tool for tool in self.registry.tools if tool.name not in self.tool_blacklist
                 )
             else:
-                self.tool_blacklist |= frozenset((REBUILD,))
+                self.tool_blacklist |= {REBUILD}
+                self.tool_blacklist |= {QUERY_TEMPLATE} & frozenset(self.registry.routes)
                 self.tool_blacklist |= RELEASE_COMMAND_TOOLS & frozenset(self.registry.routes)
                 self.tools = tuple(tool for tool in self.registry.tools if tool.name not in self.tool_blacklist)
                 if isinstance(self.selection, ProjectSelection):
@@ -254,7 +258,8 @@ class DirectGateway:
     async def _call(self, context, name, arguments):
         if self.registry is None:
             raise ToolRegistryRuntimeError("tool-registry-unavailable")
-        return result(await self.registry.call(name, arguments, context=context))
+        value = await self.registry.call(name, arguments, context=context)
+        return result(value, text=value.get("csv") if name in {QUERY_TEMPLATE, RUN, PAGE} else None)
 
     def build_server(self):
         async def list_tools(context, params):

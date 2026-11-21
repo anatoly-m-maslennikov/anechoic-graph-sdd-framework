@@ -13,6 +13,7 @@ from typing import Any
 
 from workbench_tools import CHECK, PAGE, RUN, SCHEMA
 
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.component_metrics import realization_component_paths
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.audit_tables import TABLES as AUDIT_TABLES, create_tables
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.errors import WorkbenchUnavailableError
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.import_cache import (
@@ -35,6 +36,7 @@ from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.spec_trace import (
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.statements import select_statement
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workspace import WorkspaceStore
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.watcher_change_log import WatcherChangeLog, mirror_change_log
+from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.structure_host_pkg3.snapshot import read_structure
 from native_project_selection import ManifestIdentity, NativeProjectSelection
 from work_journal import validated_journal_root
 
@@ -71,7 +73,7 @@ LIFECYCLE_TOOLS = frozenset({
     "atom_lifecycle_archive", "atom_lifecycle_promote_draft", "atom_lifecycle_update",
 })
 ATOM_TABLES = frozenset({
-    "atoms", "relations", "native_references", "native_legacy_references", "native_migration_paths",
+    "atoms", "relations", "native_references", "native_legacy_references", "native_migration_paths", "components",
 })
 REALIZATION_TABLES = frozenset({
     "import_nodes", "module_imports", "import_edges", "package_imports", "test_edges", "tested_by_edges",
@@ -149,15 +151,21 @@ class NativeQueryOwner(ServiceInterface):
             if not measurements_changed and not relevant_change(self._root, changes, previous):
                 return None
         sources = capture(self._root, None if force_parse else previous, include, changes=changes)
-        facts = resolve_realization(self._root, sources, roots)
+        component_paths = {".": "C00"}
+        if self.selection.structure_snapshot is not None:
+            snapshot = read_structure(self.selection.structure_snapshot)
+            folders = {PurePosixPath(path).parent for path in sources}
+            component_paths = realization_component_paths(self.selection, snapshot, folders)
+        facts = resolve_realization(self._root, sources, roots, components=component_paths)
         return previous, sources, facts, native_trace_snapshot(self._root, facts[0])
 
     @staticmethod
     def _publish_realization(store, graph, prepared) -> dict[str, str]:
         connection = store._connection
         previous, sources, facts, (traces, binding_states) = prepared
+        nodes, occurrences, edges, tests, test_keys = facts
         replace_import_sources(connection, sources, previous)
-        replace_imports(connection, graph, *facts, sources=sources,
+        replace_imports(connection, graph, nodes, occurrences, edges, tests, sources=sources, test_keys=test_keys,
                         mark_graph_changed=store.mark_graph_registration_changed)
         replace_native_traces(connection, traces)
         return binding_states
@@ -172,10 +180,11 @@ class NativeQueryOwner(ServiceInterface):
             connection.execute("DROP TABLE IF EXISTS main.package_audit")
             return
         nodes = connection.execute(
-            "SELECT node_key, kind, language, relative_path, scan_status, package_key FROM main.import_nodes"
+            "SELECT node_key, kind, language, relative_path, scan_status, package_key, package_type FROM main.import_nodes"
         ).fetchall()
-        replace_package_audit(connection, self.selection, capture, nodes, self._inputs.migration_refs, binding_states)
         tests = connection.execute("SELECT source_key, target_key FROM main.test_edges").fetchall()
+        replace_package_audit(connection, self.selection, capture, nodes, self._inputs.migration_refs,
+                              binding_states, tests=tests)
         sources = read_import_sources(connection)
         try:
             measurements = measure_components(self.selection, capture, sources, nodes, tests)
@@ -235,7 +244,10 @@ class NativeQueryOwner(ServiceInterface):
             else:
                 before_commit(graph, capture)
 
-        project_native(store, capture, relation_types=self._inputs.relation_types,
+        component_ids = ["C00"]
+        if self._realization_options is not None and self.selection.structure_snapshot is not None:
+            component_ids.extend(read_structure(self.selection.structure_snapshot).components)
+        project_native(store, capture, relation_types=self._inputs.relation_types, component_ids=component_ids,
                        inverses=self._inputs.inverses, migration_refs=self._inputs.migration_refs,
                        use_retained=use_retained, before_commit=finish)
         return capture
@@ -243,7 +255,8 @@ class NativeQueryOwner(ServiceInterface):
     def _open_store(self, workbench: dict) -> QueryStore:
         from duckdb import IOException
 
-        options = {key: workbench[key] for key in ("result_ttl_seconds", "schema_mode") if key in workbench}
+        options = {key: workbench[key] for key in ("result_ttl_seconds", "schema_mode", "inline_result_limit_kib")
+                   if key in workbench}
         path = self._root / ".anechoic_runtime" / "workbench" / "projection.duckdb"
         spill = path.parent / "duckdb-temp"
         if path.resolve() != path or spill.resolve() != spill:
@@ -450,7 +463,6 @@ class NativeQueryOwner(ServiceInterface):
             store = self._owner()
             assert self._capture is not None
             try:
-                from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.structure_host_pkg3.snapshot import read_structure
 
                 snapshot_path = getattr(self.selection, "structure_snapshot", None)
                 try:

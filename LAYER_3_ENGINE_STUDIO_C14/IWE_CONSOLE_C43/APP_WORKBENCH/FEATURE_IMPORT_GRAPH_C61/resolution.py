@@ -40,53 +40,22 @@ def _packages(sources: dict[str, Source], roots: list[PurePosixPath]) -> set[str
     return packages
 
 
-def _owner_for(path: PurePosixPath, roots: list[PurePosixPath], packages: set[str]) -> str | None:
-    for base in roots:
-        if path.is_relative_to(base):
-            parts = path.relative_to(base).parts
-            if len(parts) > 1:
-                package = base.joinpath(parts[0]).as_posix()
-                if package in packages:
-                    return f"package:local:{package}"
-            break
-    return None
-
-
-def _frontend_owner(root: Path, path: str, source: Source, manifests: dict, nodes: dict) -> str | None:
-    parent = (root / path).parent
-    while parent.is_relative_to(root):
-        manifest = parent / "package.json"
-        if manifest not in manifests:
-            name = None
-            if not manifest.is_symlink() and manifest.resolve().is_relative_to(root) and manifest.is_file():
-                with manifest.open(encoding="utf-8") as handle:
-                    name = json.load(handle).get("name")
-            manifests[manifest] = name
-        if manifests[manifest] is not None:
-            if manifests[manifest]:
-                relative = parent.relative_to(root).as_posix()
-                owner = f"package:local:{relative}"
-                nodes.setdefault(owner, (owner, "package", source.language, relative, None, None))
-                return owner
-            break
-        parent = parent.parent
-    return None
-
-
-def _nodes(root: Path, sources: dict[str, Source], roots: list[PurePosixPath], packages: set[str]) -> dict[str, tuple]:
+def _nodes(root: Path, sources: dict[str, Source]) -> dict[str, tuple]:
     nodes: dict[str, tuple] = {}
-    for package in sorted(packages):
-        key = f"package:local:{package}"
-        owner = _owner_for(PurePosixPath(package) / "__init__.py", roots, packages)
-        if owner == key:
-            owner = None
-        nodes[key] = (key, "package", "python", package, None, owner)
-    manifests: dict[Path, str | None] = {}
+    manifest = root / "package.json"
+    root_package = False
+    if (any(PurePosixPath(path).parent == PurePosixPath(".")
+            and source.language in {"javascript", "typescript", "svelte"}
+            for path, source in sources.items()) and not manifest.is_symlink() and manifest.is_file()):
+        with manifest.open(encoding="utf-8") as handle:
+            root_package = bool(json.load(handle).get("name"))
     for path, source in sorted(sources.items()):
+        relative = PurePosixPath(path).parent.as_posix()
+        owner = None
+        if relative != "." or root_package:
+            owner = f"package:local:{relative}"
+            nodes.setdefault(owner, (owner, "package", source.language, relative, None, None))
         key = f"module:{path}"
-        owner = _owner_for(PurePosixPath(path), roots, packages) if source.language == "python" else None
-        if source.language in {"javascript", "typescript", "svelte"}:
-            owner = _frontend_owner(root, path, source, manifests, nodes)
         nodes[key] = (key, "module", source.language, path, source.status, owner)
     return nodes
 
@@ -176,7 +145,7 @@ def resolve(
     root = root.resolve()
     roots = _roots(root, python_roots)
     packages = _packages(sources, roots)
-    nodes = _nodes(root, sources, roots, packages)
+    nodes = _nodes(root, sources)
     external = _external(root)
     occurrences: list[tuple] = []
     edges: list[tuple] = []
@@ -196,28 +165,29 @@ def resolve(
             occurrence_key = "occurrence:" + hashlib.sha256(repr(identity).encode()).hexdigest()
             occurrences.append((occurrence_key, source_key, target, written, site.line, site.column, status, False))
             if target:
+                if target not in nodes:
+                    relative = target.removeprefix("package:local:")
+                    nodes[target] = (target, "namespace", "python", relative, None, None)
                 edges.extend(_edges(source_key, target, occurrence_key, nodes))
     return list(nodes.values()), occurrences, edges
 
 
 def resolve_realization(
-    root: Path, sources: dict[str, Source], python_roots: tuple[str, ...] = (".",)
-) -> tuple[list[tuple], list[tuple], list[tuple], list[tuple]]:
-    """Resolve imports and direct test-package relations from selected sources."""
+    root: Path, sources: dict[str, Source], python_roots: tuple[str, ...] = (".",),
+    *, components: dict[str, str] | None = None,
+) -> tuple[list[tuple], list[tuple], list[tuple], list[tuple], set[str]]:
+    """Resolve imports and tests against direct Package paths and declared Components."""
     root = root.resolve()
     nodes, occurrences, edges = resolve(root, sources, python_roots)
-    packages = {row[3]: row for row in nodes if row[1] == "package" and row[3]}
-    for path, source in sorted(sources.items()):
-        for parent in PurePosixPath(path).parents:
-            relative = parent.as_posix()
-            if relative != "." and relative not in packages:
-                node = (f"package:local:{relative}", "package", source.language, relative, None, None)
-                packages[relative] = node
-                nodes.append(node)
+    packages = {row[3]: row[0] for row in nodes if row[1] == "package" and row[3] is not None}
+    targets = (components or {}) | packages
     test_edges = []
-    for path, parent in sorted(packages.items()):
+    test_keys = set()
+    for path, key in sorted(packages.items()):
         directory = PurePosixPath(path)
-        test_path = directory / ((directory.name or root.name) + "__tests")
-        if test_package := packages.get(test_path.as_posix()):
-            test_edges.append((test_package[0], parent[0]))
-    return nodes, occurrences, edges, test_edges
+        parent = directory.parent
+        if directory.name == (parent.name or root.name) + "__tests":
+            test_keys.add(key)
+            if target := targets.get(parent.as_posix()):
+                test_edges.append((key, target))
+    return nodes, occurrences, edges, test_edges, test_keys

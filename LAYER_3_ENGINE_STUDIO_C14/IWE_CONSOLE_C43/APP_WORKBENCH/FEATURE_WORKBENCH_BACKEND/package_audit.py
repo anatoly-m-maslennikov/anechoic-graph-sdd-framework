@@ -1,6 +1,5 @@
 """Publish Package binding and Contract coverage from one native capture."""
 from collections import defaultdict
-from dataclasses import replace
 import json
 from pathlib import Path, PurePosixPath
 import sys
@@ -8,9 +7,9 @@ from types import SimpleNamespace
 
 from native_carrier_header import native_header_view
 
-from LAYER_3_ENGINE_STUDIO_C14.FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.code_access_ownership import build_code_access_ownership
 from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.structure_host_pkg3.snapshot import read_structure
 from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.manifest_compiler_pkg1.package_spec_sources import read_package_spec
+from .component_metrics import realization_component_paths
 
 
 def _contract_refs(selection, capture, package_paths):
@@ -19,8 +18,7 @@ def _contract_refs(selection, capture, package_paths):
         return {}
     try:
         snapshot = read_structure(snapshot_path)
-        ownership = build_code_access_ownership(selection.root, selection.control_root,
-                                                replace(snapshot, packages={}), package_paths)
+        components = realization_component_paths(selection, snapshot, package_paths)
     except (OSError, ValueError) as error:
         print(f'Package Contract ownership unavailable: {error}', file=sys.stderr)
         return {}
@@ -48,7 +46,7 @@ def _contract_refs(selection, capture, package_paths):
     contracts = {}
     for path in package_paths:
         directory = PurePosixPath(path)
-        parent = ownership.by_path.get(directory.parent.as_posix())
+        parent = components.get(directory.parent.as_posix())
         matches = [ref for (component, package_id), refs in specs.items()
                    if component == parent and directory.name.endswith('_' + package_id)
                    for ref in refs]
@@ -57,15 +55,18 @@ def _contract_refs(selection, capture, package_paths):
     return contracts
 
 
-def replace_package_audit(connection, selection, capture, nodes, migration_refs, binding_states=None):
+def replace_package_audit(connection, selection, capture, nodes, migration_refs, binding_states=None, *, tests):
     """Replace the audit in the caller's transaction, reusing retained binding states if needed."""
     connection.execute('CREATE TABLE IF NOT EXISTS main.package_audit '
                        '(package_key VARCHAR, relative_path VARCHAR, has_internal BOOLEAN, '
                        'has_public BOOLEAN, has_spec_bind BOOLEAN, binding_status VARCHAR, '
                        'all_pins_active BOOLEAN, pin_issues JSON, contract_ref VARCHAR, contract_covered BOOLEAN)')
+    connection.execute('ALTER TABLE main.package_audit ADD COLUMN IF NOT EXISTS test_issue VARCHAR')
     if binding_states is None:
         binding_states = dict(connection.execute('SELECT relative_path, binding_status FROM main.package_audit').fetchall())
     packages = [(node[0], node[3]) for node in nodes if node[1] == 'package' and node[3]]
+    test_packages = {node[0] for node in nodes if node[6] == 'Test Package'}
+    test_sources, test_targets = {source for source, _ in tests}, {target for _, target in tests}
     markers = defaultdict(set)
     for node in nodes:
         if node[1] == 'module' and node[3]:
@@ -114,10 +115,16 @@ def replace_package_audit(connection, selection, capture, nodes, migration_refs,
             if reason:
                 issues.append({'entry_kind': kind, 'reference': ref, 'reason': reason})
         contract = contracts.get(path)
+        test_issue = None
+        if key in test_packages and key not in test_sources:
+            test_issue = 'missing_test_target'
+        elif key in test_targets and not markers[path]:
+            test_issue = 'missing_visibility_marker'
         result.append((key, path, '__internal' in markers[path], '__public' in markers[path],
                        state != 'missing', state, not issues if pins[path] else None,
                        json.dumps(issues), contract,
-                       any(kind == 'implements' and ref == contract for kind, ref in resolved) if contract else None))
+                       any(kind == 'implements' and ref == contract for kind, ref in resolved) if contract else None,
+                       test_issue))
     connection.execute('DELETE FROM main.package_audit')
     if result:
-        connection.executemany('INSERT INTO main.package_audit VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', result)
+        connection.executemany('INSERT INTO main.package_audit VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', result)

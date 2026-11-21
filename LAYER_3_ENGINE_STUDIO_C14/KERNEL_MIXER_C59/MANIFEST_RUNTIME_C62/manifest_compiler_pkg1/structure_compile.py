@@ -1,14 +1,10 @@
 """Compile a validated, fingerprinted snapshot of native Project Structure."""
 
-import json
 import os
 from pathlib import Path
 import re
 
-from markdown_it import MarkdownIt
-
-from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim
-from FEATURE_FORMAL_MODEL_ENGINE.scope_callback_asset import formal_claim
+from FEATURE_FORMAL_MODEL_ENGINE.native_component_claim import parse_component_manifest_fields as _fields
 from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.code_access import parse_code_access
 from native_atom_reference import derive_atom_ref
 from native_carrier_header import native_header_view
@@ -33,39 +29,6 @@ def _directories(reader, root):
     finally:
         os.close(fd)
     return result
-
-
-def _fields(body):
-    tokens = MarkdownIt('commonmark').parse(body)
-    if any(token.type == 'heading_open' and tokens[i + 1].content.strip().casefold() == 'formal claim'
-           for i, token in enumerate(tokens)):
-        claim = parse_native_model_claim(formal_claim(body))
-        args = claim['arguments'] if claim and claim['kind'] == 'entity' else {}
-        instance = args.get('instance', {})
-        if set(args) != {'entity_name', 'instance'} or args['entity_name'] != 'Component Manifest' or instance.get('type') != 'ComponentManifest':
-            raise ValueError('Expected one formal ComponentManifest instance')
-        return instance['fields']
-    sections = {}
-    in_claim = False
-    for i, token in enumerate(tokens):
-        if token.type != 'heading_open':
-            continue
-        title = tokens[i + 1].content.strip()
-        level = int(token.tag[1:])
-        if level == 2:
-            in_claim = title == 'Claim'
-        elif in_claim and level == 3:
-            key = {'Component ID': 'component_id', 'Name': 'name', 'Layer': 'layer',
-                   'Lens Whitelist': 'lens_whitelist'}.get(title)
-            if key is None or key in sections:
-                raise ValueError('Unknown or duplicate Component Manifest field')
-            start = token.map[1]
-            end = next((t.map[0] for t in tokens[i + 1:] if t.type == 'heading_open'), len(body.splitlines()))
-            value = '\n'.join(body.splitlines()[start:end]).strip()
-            sections[key] = json.loads(value) if key in {'layer', 'lens_whitelist'} else value
-    if not {'component_id', 'name'} <= sections.keys():
-        raise ValueError('Missing Component Manifest fields')
-    return sections
 
 
 def _component_inputs(path, carrier, parent, prefix):

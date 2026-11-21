@@ -105,16 +105,20 @@ class QueryStore:
     def __init__(
         self, *, extension_directory: Path | None = None, database_path: Path | None = None,
         result_ttl_seconds: int = 3600, schema_mode: int = 2, native: bool = False,
+        inline_result_limit_kib: int = 4,
     ) -> None:
         if type(result_ttl_seconds) is not int or result_ttl_seconds <= 0:
             raise ValueError("result_ttl_seconds must be a positive integer")
         if type(schema_mode) is not int or schema_mode not in {1, 2}:
             raise ValueError("workbench.schema_mode must be 1 or 2")
+        if type(inline_result_limit_kib) is not int or inline_result_limit_kib < 1:
+            raise ValueError("workbench.inline_result_limit_kib must be a positive integer")
         self._extension_directory = extension_directory
         self._database_path = database_path
         self._native = native
         self._result_ttl_seconds = result_ttl_seconds
         self._schema_mode = schema_mode
+        self.inline_result_limit_bytes = inline_result_limit_kib * 1024
         self._lock = threading.RLock()
         self._connection = _connect(extension_directory, database_path)
         self._available = True

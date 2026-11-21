@@ -23,7 +23,7 @@ PROGRAMMATIC = MCP.parents[1] / "FEATURE_PROGRAMMATIC"
 APP_TESTS = MCP.parents[1] / "IWE_CONSOLE_C43" / "APP_WORKBENCH" / "APP_WORKBENCH__tests"
 sys.path[:0] = [str(MCP), str(PROGRAMMATIC), str(PROGRAMMATIC / "FEATURE_TOOLS"), str(APP_TESTS)]
 
-from smalltest_support import extension_directory  # noqa: E402
+from smalltest_support import extension_directory, polling_source_watcher  # noqa: E402
 
 
 CONTROL = ".anechoic_anechoic"
@@ -77,11 +77,13 @@ declare_entity(entity_name="Project Manifest", entity_class=ProjectManifest)
 
 def _launch_server():
     from server import main
-    return main(sys.argv[1:], native_inputs=_native_inputs())
+    with polling_source_watcher():
+        return main(sys.argv[1:], native_inputs=_native_inputs())
 
 
 class NativeQueryStdioTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
+        self.enterContext(polling_source_watcher())
         self.root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
         self._write(MANIFEST, "AN-S-001", "active", 1, template="project_manifest", body="""
 ## Summary
@@ -98,7 +100,8 @@ from anechoic.model import ProjectManifest
 declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="Anechoic", prefix="AN"))
 ```
 """)
-        self._write("__TKT/TASKS/AN-T-009-TASK--verify-runtime.md", "AN-T-009", "active", 2)
+        self._write("__TKT/TASKS/AN-T-009-TASK--verify-runtime.md", "AN-T-009", "active", 2,
+                    body="## Summary\n\nVerify the operator's runtime.\n")
         self._write("__TKT/TASKS/archived/AN-T-009@1-TASK--verify-runtime.md", "AN-T-009", "archived", 1)
         self._write("__TKT/TASKS/draft/AN-T-009@3-draft-TASK--verify-runtime.md", "AN-T-009", "draft", 3)
         self._write("_PMETA/AN-P-001-WORKFLOW--fixture.md", "AN-P-001", "active", 1)
@@ -113,23 +116,28 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
         )
         self.args = [str(Path(__file__).resolve()), "--project-root", str(self.root), "--control-root", CONTROL]
 
-    def _write(self, relative, atom_id, status, version, *, template="task", body="## Summary\n\nFixture.\n"):
+    def _write(self, relative, atom_id, status, version, *, template="task", body="## Summary\n\nFixture.\n",
+               container=None, tier=None, lens=None):
         path = self.root / CONTROL / relative
         path.parent.mkdir(parents=True, exist_ok=True)
         metadata = {
             "identity": {"atom_id": atom_id},
-            "context": {"container": {"component": "C0"}, "template": template,
-                        "tier": -1 if template == "project_manifest" else 0},
+            "context": {"container": container or {"component": "C0"}, "template": template,
+                        "tier": tier if tier is not None else -1 if template == "project_manifest" else 0},
             "state": {"version": version, "status": status, "updated_at": "2026-11-19T00:00:00Z"},
         }
+        if lens:
+            metadata["context"]["lens"] = lens
         path.write_text(f"---\n{yaml.safe_dump(metadata)}---\n\n{body}", encoding="utf-8")
 
     def _carrier_digests(self):
         return {path.relative_to(self.root): hashlib.sha256(path.read_bytes()).hexdigest()
                 for path in self.root.rglob("*") if path.is_file()
-                and path.relative_to(self.root).parts[0] != ".anechoic_runtime"}
+                and path.relative_to(self.root).parts[0] not in {".anechoic_runtime", ".anechoic_tmp"}}
 
     async def test_queries_the_native_tree_and_keeps_legacy_inputs_unchanged(self):
+        self._write("__TKT/TASKS/AN-T-010-TASK--child.md", "AN-T-010", "done", 1,
+                    container={"atom": "AN-T-009"})
         before = self._carrier_digests()
         async with (
             asyncio.timeout(25),
@@ -142,12 +150,12 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
             initialized = await client.initialize()
             self.assertIsNone(initialized.capabilities.resources)
             tools = {tool.name: tool for tool in (await client.list_tools()).tools}
-            self.assertTrue({"query_run", "query_page", "query_check", "query_schema", "workspace_open"} <= set(tools))
+            self.assertTrue({"query_run", "query_page", "query_check", "query_schema", "query_template", "workspace_open"} <= set(tools))
             schema = await client.call_tool("query_schema", {})
             self.assertFalse(schema.is_error, schema.structured_content)
             tables = schema.structured_content["tables"]
             self.assertEqual({
-                "atoms", "relations", "native_references", "native_legacy_references", "native_migration_paths",
+                "atoms", "relations", "native_references", "native_legacy_references", "native_migration_paths", "components",
                 "import_nodes", "module_imports", "import_edges", "package_imports", "test_edges",
                 "tested_by_edges", "import_read_issues", "implementation_rmedo", "component_metrics", "package_audit",
                 "change_log", "query_log", "live_runs", "runtime_diagnostics", "atom_parse_issues",
@@ -156,6 +164,18 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
             }, set(tables))
             self.assertEqual(["original_path", "exact_ref"],
                              [column["name"] for column in tables["native_migration_paths"]])
+            small = await client.call_tool("query_run", {"sql": "SELECT 0 AS n FROM range(120)"})
+            self.assertFalse(small.is_error, small.structured_content)
+            self.assertEqual([[0]] * 120, small.structured_content["rows"])
+            self.assertLessEqual(len(small.content[0].text.encode("utf-8")), 4096)
+            large = await client.call_tool("query_run", {"sql": "SELECT repeat('a', 4096) AS payload"})
+            self.assertFalse(large.is_error, large.structured_content)
+            file = large.structured_content["result_file"]
+            self.assertEqual("json_matrix", file["format"])
+            self.assertEqual([["a" * 4096]], json.loads((self.root / file["path"]).read_text())["rows"])
+            csv = await client.call_tool("query_run", {"sql": "SELECT 1 AS n", "result_format": "csv"})
+            self.assertFalse(csv.is_error, csv.structured_content)
+            self.assertEqual('"n"\r\n"1"\r\n', csv.content[0].text)
 
             async def query(sql, **options):
                 response = await client.call_tool("query_run", {
@@ -164,8 +184,68 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
                 self.assertFalse(response.is_error, response.structured_content)
                 return response.structured_content
 
+            async def template(name, **arguments):
+                response = await client.call_tool("query_template", {
+                    "template": name, "result_format": "json_matrix", **arguments,
+                })
+                self.assertFalse(response.is_error, response.structured_content)
+                return response.structured_content
+
+            current = await template("get_atom", reference="AN-T-009")
+            self.assertEqual(["exact_ref", "summary", "status", "path"], [column["name"] for column in current["columns"]])
+            self.assertEqual([[
+                "AN-T-009@2", "Verify the operator's runtime.", "active",
+                f"{CONTROL}/__TKT/TASKS/AN-T-009-TASK--verify-runtime.md",
+            ]], current["rows"])
+            exact = await template("get_atom", reference="AN-T-009@1")
+            self.assertEqual("AN-T-009@1", exact["rows"][0][0])
+            state = await template("get_atom_state", reference="AN-T-009")
+            self.assertEqual(["status", "version"], [column["name"] for column in state["columns"]])
+            self.assertEqual([["active", 2]], state["rows"])
+            state_csv = await client.call_tool("query_template", {
+                "template": "get_atom_state", "reference": "AN-T-009",
+            })
+            self.assertFalse(state_csv.is_error, state_csv.structured_content)
+            self.assertEqual('"status","version"\r\n"active","2"\r\n', state_csv.content[0].text)
+            self.assertEqual(state_csv.content[0].text, state_csv.structured_content["csv"])
+            self.assertNotIn("rows", state_csv.structured_content)
+            self.assertNotIn("result_file", state_csv.structured_content)
+            csv_file = await template("list_versions", reference="AN-T-009", result_format="csv", page_size=1)
+            self.assertEqual("csv", csv_file["result_file"]["format"])
+            self.assertEqual(3, csv_file["result_file"]["row_count"])
+            versions = await template("list_versions", reference="AN-T-009")
+            self.assertEqual(["AN-T-009@3-draft", "AN-T-009@2", "AN-T-009@1"],
+                             [item[0] for item in versions["rows"]])
+            found = await template("find_atoms", text="OPERATOR'S")
+            self.assertEqual([["AN-T-009", "Verify the operator's runtime.",
+                               f"{CONTROL}/__TKT/TASKS/AN-T-009-TASK--verify-runtime.md"]], found["rows"])
+            self.assertEqual(found["rows"], (await template("find_atoms", text="TASK--verify-runtime"))["rows"])
+            tickets = await template("list_tickets", kind="task")
+            self.assertEqual({"AN-T-009", "AN-T-009@3-draft", "AN-T-010"}, {item[0] for item in tickets["rows"]})
+            children = await template("list_tickets", parent="AN-T-009", statuses=["done"])
+            self.assertEqual([["AN-T-010", "Fixture.", "task", "done",
+                               f"{CONTROL}/__TKT/TASKS/AN-T-010-TASK--child.md"]], children["rows"])
+            listed = await template("list_atoms", family="pmeta", statuses=["active"])
+            self.assertEqual([["AN-P-001", "Fixture.", "task", "active",
+                               f"{CONTROL}/_PMETA/AN-P-001-WORKFLOW--fixture.md"]], listed["rows"])
+            counted = await template("count_atoms", family="tkt", kind="task", statuses=["archived"])
+            self.assertEqual(["count"], [column["name"] for column in counted["columns"]])
+            self.assertEqual([[1]], counted["rows"])
+            grouped = await template("count_atoms", family="tkt", group_by="status")
+            self.assertEqual([["active", 1], ["archived", 1], ["done", 1], ["draft", 1]], grouped["rows"])
+            edges = await template("list_relations", reference="AN-T-010@1")
+            self.assertEqual([["CONTAINED_BY", "AN-T-009", False]], edges["rows"])
+            incoming = await template("list_relations", reference="AN-T-010", direction="incoming")
+            self.assertEqual([["CONTAINS", "AN-T-009", True]], incoming["rows"])
+            edge_counts = await template("count_relations_by_type")
+            self.assertEqual([["CONTAINED_BY", False, 6], ["CONTAINS", True, 6]], edge_counts["rows"])
+            migrated = await template("resolve_legacy_ref", legacy_ref="CA-P-9")
+            self.assertEqual([["AN-T-009@2", OLD_PATH]], migrated["rows"])
+            migrated = await template("resolve_legacy_path", original_path=UNNUMBERED_PATH)
+            self.assertEqual([["AN-T-009@1"]], migrated["rows"])
+
             sql = ("SELECT stable_ref, exact_ref FROM native_references "
-                   "WHERE exact_ref LIKE 'AN-T-%' ORDER BY exact_ref")
+                   "WHERE exact_ref LIKE 'AN-T-009@%' ORDER BY exact_ref")
             checked = await client.call_tool("query_check", {"sql": sql})
             self.assertTrue(checked.structured_content["valid"])
             first = await query(sql, page_size=1)
@@ -193,13 +273,68 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
                 ("query_run", {"sql": "SELECT 1", "project_root": str(self.root.parent)}),
                 ("query_run", {"sql": "SELECT 1", "save": "yes"}),
                 ("query_run", {"sql": "DELETE FROM atoms"}),
+                ("query_template", {"template": "list_versions", "reference": "AN-T-009@2"}),
+                ("query_template", {"template": "get_atom", "reference": "AN-T-009", "text": "wrong input"}),
                 ("workspace_get", {"workspace_id": "unavailable"}),
             ):
                 with self.subTest(name=name, arguments=arguments):
                     refused = await client.call_tool(name, arguments)
                     self.assertTrue(refused.is_error)
-            self.assertEqual(5, (await query("SELECT count(*) AS atoms FROM atoms"))["rows"][0][0])
+            self.assertEqual(6, (await query("SELECT count(*) AS atoms FROM atoms"))["rows"][0][0])
         self.assertEqual(before, self._carrier_digests())
+
+    async def test_component_queries_use_declared_id_and_owned_spec_tiers(self):
+        self._write("AN-S-011-manifest.md", "AN-S-011", "active", 1, template="component_manifest", lens="SPEC",
+                    body='## Summary\n\nTools.\n\n## Claim\n\n### Component ID\n\nC1\n\n'
+                         '### Name\n\nTools\n\n### Layer\n\n3\n\n### Lens Whitelist\n\n["SPEC"]\n')
+        self._write("AN-S-012-child-manifest.md", "AN-S-012", "active", 1, template="component_manifest",
+                    lens="SPEC", container={"component": "C1"},
+                    body="## Claim\n\n### Component ID\n\nC2\n\n### Name\n\nChild\n")
+        self._write("AN-S-013-contract.md", "AN-S-013", "active", 1, container={"component": "C1"})
+        self._write("AN-S-014-solution.md", "AN-S-014", "active", 1, container={"component": "C1"}, tier=1)
+        self._write("AN-S-015-purpose.md", "AN-S-015", "active", 1, template="component_purpose", lens="SPEC",
+                    body="""## Summary
+
+Tell why Tools exists.
+
+## Claim
+
+### Formal Claim
+
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentPurpose
+declare_entity(entity_name="Component Purpose", instance=ComponentPurpose(component_id="C1"))
+```
+""")
+        self._write("AN-S-016@1-draft-contract.md", "AN-S-016", "draft", 1, container={"component": "C1"})
+        async with (
+            asyncio.timeout(25),
+            stdio_client(StdioServerParameters(command=sys.executable, args=self.args)) as streams,
+            ClientSession(*streams) as client,
+        ):
+            await client.initialize()
+            for template, selector, expected in (
+                ("fetch_contracts", "tools", ["AN-S-012@1", "AN-S-013@1"]),
+                ("fetch_solutions", "c1", ["AN-S-014@1"]),
+                ("get_component_manifest", "C1", ["AN-S-011@1"]),
+                ("get_component_purpose", " Tools ", ["AN-S-015@1"]),
+                ("get_component_purpose", "Child", []),
+            ):
+                with self.subTest(template=template, selector=selector):
+                    result = await client.call_tool("query_template", {
+                        "template": template, "component": selector, "result_format": "json_matrix",
+                    })
+                    self.assertFalse(result.is_error, result.structured_content)
+                    self.assertEqual(expected, [row[0] for row in result.structured_content["rows"]])
+            result = await client.call_tool("query_run", {
+                "sql": "SELECT component_id, name, parent_component_id, layer, lens_whitelist, "
+                       "manifest_ref, purpose_refs FROM components WHERE component_id = 'C1'",
+                "result_delivery": "inline",
+            })
+            self.assertFalse(result.is_error, result.structured_content)
+            self.assertEqual([["C1", "Tools", "C0", 3, ["SPEC"], "AN-S-011@1", ["AN-S-015@1"]]],
+                             result.structured_content["rows"])
 
     async def test_http_queries_native_projection_without_legacy_routes(self):
         from http_paths import HEALTH_PATH, MCP_PATH, WORKBENCH_PATH

@@ -45,6 +45,7 @@ from APP_WORKBENCH.FEATURE_CODEX_EXTENSION import mcp_app_probe  # noqa: E402
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.errors import (  # noqa: E402
     QueryExecutionError, WorkbenchUnavailableError,
 )
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.result_delivery import DELIVERY_MODES  # noqa: E402
 
 RUN, PAGE, CHECK, SCHEMA = "query_run", "query_page", "query_check", "query_schema"
 SAVE_VIEW, LOAD, SAVED_LIST = "view_save", "query_load", "query_saved_list"
@@ -69,10 +70,10 @@ NATIVE_TOOLS = (*mcp_app_probe.TOOL_NAMES, RUN, PAGE, CHECK, SCHEMA, SAVE_VIEW, 
 
 _CURSOR = {"type": "integer", "minimum": 0}
 _SQL = {"type": "string"}
-_DELIVERY = {"type": "string", "enum": ["file", "inline"], "default": "file"}
+_DELIVERY = {"type": "string", "enum": list(DELIVERY_MODES), "default": "file"}
 _RESULT_FORMAT = {"type": "string", "enum": ["json_matrix", "csv", "toon"], "default": "json_matrix"}
 _PREVIEW = {"type": "integer", "minimum": 0}
-_RUN_SCHEMA = {"type": "object", "properties": {"sql": _SQL, "page_size": {"type": "integer", "minimum": 1, "maximum": 1000}, "cursor_position": _CURSOR, "preview": _PREVIEW, "save": {"type": "boolean", "default": False}, "name": _SQL, "result_delivery": _DELIVERY, "result_format": _RESULT_FORMAT}, "required": ["sql"], "additionalProperties": False}
+_RUN_SCHEMA = {"type": "object", "properties": {"sql": _SQL, "page_size": {"type": "integer", "minimum": 1, "maximum": 1000}, "cursor_position": _CURSOR, "preview": _PREVIEW, "save": {"type": "boolean", "default": False}, "name": _SQL, "result_delivery": {**_DELIVERY, "default": "auto"}, "result_format": _RESULT_FORMAT}, "required": ["sql"], "additionalProperties": False}
 _CHECK_SCHEMA = {"type": "object", "properties": {"sql": _SQL, "cursor_position": _CURSOR}, "required": ["sql"], "additionalProperties": False}
 _COLUMN_INDEX = {"type": "integer", "minimum": 0}
 _GRID_ORDER = {"type": "object", "properties": {"column": _COLUMN_INDEX, "direction": {"type": "string", "enum": ["asc", "desc"]}}, "required": ["column", "direction"], "additionalProperties": False}
@@ -123,6 +124,7 @@ def native_tools() -> tuple[types.Tool, ...]:
     writes = {RUN, SAVE_VIEW, WORKSPACE_OPEN, VIEW_CREATE, VIEW_DUPLICATE, VIEW_UPDATE, VIEW_RUN, VIEW_FOCUS,
               VIEW_RENAME, VIEW_REMOVE, RESTART, REREAD, ARCHIVE_LOAD, REBUILD}
     descriptions = {
+        RUN: "Run SQL. Automatic delivery returns small results inline and larger results as files.",
         REBUILD: "Rebuild one query table or all query tables; return replacement result IDs.",
         LOAD: "Load an explicitly requested Bookmark or saved View.",
         SAVED_LIST: "List recent Bookmark and saved View metadata.",
@@ -309,8 +311,8 @@ class WorkbenchTools:
         return value, cursor
 
     @staticmethod
-    def _page_size(arguments: dict[str, Any]) -> int:
-        value = arguments.get("page_size", 100)
+    def _page_size(arguments: dict[str, Any], default: int = 100) -> int:
+        value = arguments.get("page_size", default)
         if isinstance(value, bool) or not isinstance(value, int):
             raise ValueError("page_size must be an integer")
         if not 1 <= value <= 1000:
@@ -325,13 +327,13 @@ class WorkbenchTools:
         return value
 
     @staticmethod
-    def _result_options(arguments: dict[str, Any]) -> tuple[int | None, str, str]:
+    def _result_options(arguments: dict[str, Any], default_delivery: str = "file") -> tuple[int | None, str, str]:
         preview = arguments.get("preview")
         if preview is not None and (isinstance(preview, bool) or not isinstance(preview, int) or preview < 0):
             raise ValueError("preview must be a non-negative integer")
-        delivery = arguments.get("result_delivery", "file")
-        if not isinstance(delivery, str) or delivery not in {"file", "inline"}:
-            raise ValueError("result_delivery must be file or inline")
+        delivery = arguments.get("result_delivery", default_delivery)
+        if delivery not in DELIVERY_MODES:
+            raise ValueError("result_delivery must be file, inline or auto")
         result_format = arguments.get("result_format", "json_matrix")
         if not isinstance(result_format, str) or result_format not in {"json_matrix", "csv", "toon"}:
             raise ValueError("result_format must be json_matrix, csv or toon")
@@ -342,13 +344,14 @@ class WorkbenchTools:
         save = arguments.get("save", False)
         if type(save) is not bool:
             raise ValueError("save must be a boolean")
-        preview, delivery, result_format = self._result_options(arguments)
+        preview, delivery, result_format = self._result_options(arguments, default_delivery="auto")
         if "name" in arguments and not isinstance(arguments["name"], str):
             raise ValueError("name must be a string")
         query_name = arguments.get("name")
         if query_name is not None and not save:
             raise ValueError("name is only valid when save is true")
-        return sql, self._page_size(arguments), cursor, save, preview, query_name, delivery, result_format
+        page_size_default = 1000 if delivery == "auto" and result_format != "toon" else 100
+        return sql, self._page_size(arguments, page_size_default), cursor, save, preview, query_name, delivery, result_format
 
     def _page(self, arguments: Any) -> tuple[str, int, int, Any, int | None, str, str]:
         allowed = {"query_id", "offset", "page_size", "grid", "preview", "result_delivery", "result_format"}

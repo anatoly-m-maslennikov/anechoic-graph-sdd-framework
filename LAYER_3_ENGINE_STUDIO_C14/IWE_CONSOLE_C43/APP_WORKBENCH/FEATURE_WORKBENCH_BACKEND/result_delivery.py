@@ -2,14 +2,19 @@
 """Deliver a cached result inline or as a temporary Project file."""
 from __future__ import annotations
 
+from io import StringIO
+import json
 from typing import Any
 
-from .result_files import write_result_file
+from .result_files import _write_csv, write_result_file
+
+
+DELIVERY_MODES = ("file", "inline", "auto")
 
 
 def validate_delivery(delivery: str, result_format: str) -> None:
-    if delivery not in {"inline", "file"}:
-        raise ValueError("result_delivery must be inline or file")
+    if delivery not in DELIVERY_MODES:
+        raise ValueError("result_delivery must be file, inline or auto")
     if result_format not in {"json_matrix", "csv", "toon"}:
         raise ValueError("unsupported result format")
 
@@ -17,8 +22,21 @@ def validate_delivery(delivery: str, result_format: str) -> None:
 def deliver(store: Any, root: Any, page: dict[str, Any], delivery: str, result_format: str, *, full: bool = False) -> dict[str, Any]:
     validate_delivery(delivery, result_format)
     page.pop("sql", None)
-    if delivery == "inline":
+    if delivery == "inline" and result_format != "csv":
         return page
+    columns = [column["name"] for column in page["columns"]]
+    auto = delivery == "auto" and (not full or not page["has_more"])
+    if result_format == "csv" and (delivery == "inline" or auto):
+        stream = StringIO(newline="")
+        _write_csv(stream, columns, iter(page["rows"]))
+        csv_text = stream.getvalue()
+        if delivery == "inline" or len(csv_text.encode("utf-8")) <= store.inline_result_limit_bytes:
+            page.pop("rows")
+            page["csv"] = csv_text
+            return page
+    elif auto and result_format == "json_matrix":
+        if len(json.dumps(page).encode("utf-8")) <= store.inline_result_limit_bytes:
+            return page
     try:
         if full:
             def rows():
@@ -30,9 +48,9 @@ def deliver(store: Any, root: Any, page: dict[str, Any], delivery: str, result_f
                     if not chunk["rows"]:
                         break
             with store._lock:
-                artifact = write_result_file(root, [column["name"] for column in page["columns"]], rows(), result_format=result_format, offset=0, has_more=False)
+                artifact = write_result_file(root, columns, rows(), result_format=result_format, offset=0, has_more=False)
         else:
-            artifact = write_result_file(root, [column["name"] for column in page["columns"]], page["rows"], result_format=result_format, offset=page["offset"], has_more=page["has_more"])
+            artifact = write_result_file(root, columns, page["rows"], result_format=result_format, offset=page["offset"], has_more=page["has_more"])
         page.pop("rows", None)
         page["result_file"] = artifact
     except Exception as error:

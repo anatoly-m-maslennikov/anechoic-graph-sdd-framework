@@ -17,7 +17,7 @@ def _exists(connection, name):
     ).fetchone()[0])
 
 
-def replace_imports(connection, graph, nodes, occurrences, edges, test_edges, sources=None, *, mark_graph_changed=None) -> None:
+def replace_imports(connection, graph, nodes, occurrences, edges, test_edges, sources=None, *, test_keys=None, mark_graph_changed=None) -> None:
     """Replace a realization snapshot within the caller's transaction."""
     needs_registration = not _exists(connection, "test_edges")
     if not _exists(connection, "import_nodes"):
@@ -58,7 +58,29 @@ def replace_imports(connection, graph, nodes, occurrences, edges, test_edges, so
     ).fetchone():
         connection.execute("ALTER TABLE main.import_nodes ADD COLUMN package_type VARCHAR")
         needs_registration = True
-    test_keys = {source for source, _ in test_edges}
+    if not connection.execute("SELECT 1 FROM information_schema.tables WHERE table_schema = 'realization_internal' AND table_name = 'package_tests'").fetchone():
+        connection.execute("CREATE SCHEMA IF NOT EXISTS realization_internal")
+        for table in ("package_tests", "package_tested_by"):
+            connection.execute(f"CREATE TABLE realization_internal.{table} (source_key VARCHAR, target_key VARCHAR)")
+        connection.execute("CREATE TABLE realization_internal.component_tests (source_key VARCHAR, target_kind VARCHAR, target_key VARCHAR)")
+        connection.execute("CREATE TABLE realization_internal.component_tested_by (source_kind VARCHAR, source_key VARCHAR, target_key VARCHAR)")
+        needs_registration = True
+    if test_keys is None:
+        test_keys = {source for source, _ in test_edges}
+    package_keys = {node[0] for node in nodes if node[1] == "package"}
+    package_tests = [(source, target) for source, target in test_edges if target in package_keys]
+    component_tests = [(source, target) for source, target in test_edges if target not in package_keys]
+    for _, target in component_tests:
+        if ("Component", target) not in graph.references:
+            raise ValueError(f"Missing Component test endpoint: {target}")
+    for table, rows in (("package_tests", package_tests),
+                        ("package_tested_by", [(target, source) for source, target in package_tests]),
+                        ("component_tests", [(source, "Component", target) for source, target in component_tests]),
+                        ("component_tested_by", [("Component", target, source) for source, target in component_tests])):
+        connection.execute(f"DELETE FROM realization_internal.{table}")
+        if rows:
+            placeholders = ", ".join("?" for _ in rows[0])
+            connection.executemany(f"INSERT INTO realization_internal.{table} VALUES ({placeholders})", rows)
     typed_nodes = [(*node, "Test Package" if node[0] in test_keys else None) for node in nodes]
     for table, rows in (
         ("import_edges", edges), ("module_imports", occurrences), ("test_edges", test_edges),
@@ -85,6 +107,7 @@ def remove_imports(connection, graph, *, mark_graph_changed=None) -> None:
     if mark_graph_changed is not None:
         mark_graph_changed()
     connection.execute("DROP PROPERTY GRAPH anechoic")
+    connection.execute("DROP SCHEMA IF EXISTS realization_internal CASCADE")
     connection.execute("DROP VIEW IF EXISTS main.package_imports")
     for table in ("test_edges", "tested_by_edges", "import_edges", "module_imports", "import_nodes", "import_read_issues"):
         connection.execute(f"DROP TABLE IF EXISTS main.{table}")

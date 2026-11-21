@@ -75,6 +75,7 @@ def _contribution_counts(
     for row in atoms:
         if row.get("_graph_excluded"):
             continue
+        references.update(row.get("_graph_references", ()))
         if isinstance(ref := row.get("ref"), str):
             references[("Atom", ref)] += 1
     for row in scopes:
@@ -193,15 +194,31 @@ def register_graph(connection: Any, state: GraphState) -> None:
             "main.import_edges SOURCE KEY(source_key) REFERENCES main.import_nodes(node_key) "
             "DESTINATION KEY(target_key) REFERENCES main.import_nodes(node_key) LABEL Imports"
         )
-        for table, label in (("test_edges", "TESTS"), ("tested_by_edges", "IS_TESTED_BY")):
-            if connection.execute(
-                "SELECT count(*) FROM information_schema.tables "
-                "WHERE table_schema = 'main' AND table_name = ?", [table],
-            ).fetchone()[0]:
+        if connection.execute(
+            "SELECT count(*) FROM information_schema.tables "
+            "WHERE table_schema = 'realization_internal' AND table_name = 'package_tests'"
+        ).fetchone()[0]:
+            for table, label in (("package_tests", "TESTS"), ("package_tested_by", "IS_TESTED_BY")):
                 edges.append(
-                    f"main.{table} SOURCE KEY(source_key) REFERENCES main.import_nodes(node_key) "
+                    f"realization_internal.{table} SOURCE KEY(source_key) REFERENCES main.import_nodes(node_key) "
                     f"DESTINATION KEY(target_key) REFERENCES main.import_nodes(node_key) LABEL {label}"
                 )
+            edges.extend((
+                "realization_internal.component_tests SOURCE KEY(source_key) REFERENCES main.import_nodes(node_key) "
+                "DESTINATION KEY(target_kind, target_key) REFERENCES internal.reference(kind, ref) LABEL TESTS_COMPONENT",
+                "realization_internal.component_tested_by SOURCE KEY(source_kind, source_key) REFERENCES internal.reference(kind, ref) "
+                "DESTINATION KEY(target_key) REFERENCES main.import_nodes(node_key) LABEL COMPONENT_IS_TESTED_BY",
+            ))
+        else:
+            for table, label in (("test_edges", "TESTS"), ("tested_by_edges", "IS_TESTED_BY")):
+                if connection.execute(
+                    "SELECT count(*) FROM information_schema.tables "
+                    "WHERE table_schema = 'main' AND table_name = ?", [table],
+                ).fetchone()[0]:
+                    edges.append(
+                        f"main.{table} SOURCE KEY(source_key) REFERENCES main.import_nodes(node_key) "
+                        f"DESTINATION KEY(target_key) REFERENCES main.import_nodes(node_key) LABEL {label}"
+                    )
     sql = "CREATE PROPERTY GRAPH anechoic VERTEX TABLES (" + ", ".join(vertices) + ")"
     if edges:
         sql += " EDGE TABLES (" + ", ".join(edges) + ")"

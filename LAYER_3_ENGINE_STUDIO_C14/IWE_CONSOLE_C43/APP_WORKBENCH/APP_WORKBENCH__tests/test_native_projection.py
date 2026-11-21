@@ -13,6 +13,25 @@ from test_native_source_rows import NativeCaptureTests  # noqa: E402
 
 
 class NativeProjectionTests(NativeCaptureTests):
+    def test_summary_projection_and_retained_upgrade(self):
+        duplicate = self.write("AN-T-09--task.md", "AN-T-09", "active", 1)
+        duplicate.write_text(duplicate.read_text() + "\n## Summary\n\nSecond\n")
+        missing = self.write("AN-T-10--task.md", "AN-T-10", "active", 1)
+        missing.write_text(missing.read_text().replace("## Summary", "## Details"))
+        store = QueryStore(extension_directory=extension_directory(APP_ROOT.parents[1]))
+        self.addCleanup(store.close)
+        capture = capture_native(self.selection)
+        bindings = dict(relation_types={"CONTAINED_BY", "CONTAINS"}, inverses={"CONTAINED_BY": "CONTAINS"})
+        project_native(store, capture, **bindings)
+        query = 'SELECT reference, "content.summary" FROM atoms ORDER BY reference'
+        expected = [["AN-S-001", "Example"], ["AN-T-09", "Example"], ["AN-T-10", None]]
+        self.assertEqual(expected, store.run(query)["rows"])
+        store._connection.execute("UPDATE internal.native_frontier SET frontier = 'v1'")
+        project_native(store, capture, use_retained=True, **bindings)
+        self.assertEqual(expected, store.run(query)["rows"])
+        project_native(store, capture, use_retained=True, **bindings)
+        self.assertEqual(expected, store.run(query)["rows"])
+
     def test_query_real_duckdb_native_refs_and_relations(self):
         self.write("AN-T-09--task.md", "AN-T-09", "active", 2)
         self.write("AN-T-09@3-draft--task.md", "AN-T-09", "draft", 3)

@@ -24,12 +24,13 @@ from http_paths import MCP_PATH  # noqa: E402
 from http_server import create_app  # noqa: E402
 from native_project_selection import NativeProjectSelection  # noqa: E402
 from project_selection import ProjectSelectionError  # noqa: E402
-from smalltest_support import extension_directory  # noqa: E402
+from smalltest_support import extension_directory, polling_source_watcher  # noqa: E402
 import test_native_startup as fixture  # noqa: E402
 
 
 class NativeProductionStartupTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
+        self.enterContext(polling_source_watcher())
         self.root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
         legacy = fixture.RuntimeSelectionTests.legacy(self, '.anechoic_legacy', declared='.anechoic_anechoic')
         fixture.RuntimeSelectionTests.manifest(self, self.root / '.anechoic_anechoic', component='C00')

@@ -9,8 +9,9 @@ from pathlib import Path
 from typing import Any
 
 from operation_error_boundary import ExplicitBlockingRuntimeFailure
+from query_templates import QUERY_TEMPLATE, descriptor as template_descriptor, run_arguments
 from workbench_links import context_project_root, public_saved, public_workspace, validate_reference
-from workbench_tools import LOAD, WORKSPACE_GET, WORKSPACE_OPEN, native_tools
+from workbench_tools import LOAD, RUN, WORKSPACE_GET, WORKSPACE_OPEN, native_tools
 
 
 class WorkbenchProvider:
@@ -18,6 +19,12 @@ class WorkbenchProvider:
         self.gateway = gateway
 
     async def call(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
+        if name == QUERY_TEMPLATE:
+            try:
+                arguments = run_arguments(arguments)
+            except ValueError as error:
+                raise ExplicitBlockingRuntimeFailure("query_error", str(error)) from error
+            name = RUN
         return await self.gateway.workbench.call(name, arguments)
 
     def prepare_arguments(self, name: str, arguments: dict[str, Any], context: Any) -> dict[str, Any]:
@@ -49,4 +56,4 @@ def create_provider(_root: Path, gateway: Any) -> WorkbenchProvider:
 
 
 def tool_descriptors():
-    return native_tools()
+    return (*native_tools(), template_descriptor())

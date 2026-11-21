@@ -9,6 +9,28 @@ from test_incremental_indexing import IncrementalIndexingTests
 
 
 class ResultDeliveryTests(IncrementalIndexingTests):
+    def test_auto_delivery_uses_utf8_size_and_keeps_the_full_result(self):
+        inline = self.service.run("select repeat('a', 1000)", result_delivery="auto")
+        self.assertEqual([["a" * 1000]], inline["rows"])
+        self.assertNotIn("result_file", inline)
+        exported = self.service.run("select repeat('文', 1500)", result_delivery="auto")
+        self.assertNotIn("rows", exported)
+        data = json.loads((self.root / exported["result_file"]["path"]).read_text())
+        self.assertEqual([["文" * 1500]], data["rows"])
+        paged = self.service.run("select i from range(2) as t(i)", page_size=1, result_delivery="auto")
+        data = json.loads((self.root / paged["result_file"]["path"]).read_text())
+        self.assertEqual([[0], [1]], data["rows"])
+
+    def test_auto_csv_measures_the_encoded_table(self):
+        inline = self.service.run("select repeat('a', 4087) as x", result_delivery="auto", result_format="csv")
+        self.assertEqual(4096, len(inline["csv"].encode("utf-8")))
+        self.assertNotIn("rows", inline)
+        exported = self.service.run("select repeat('文', 1363) as x", result_delivery="auto", result_format="csv")
+        self.assertNotIn("csv", exported)
+        self.assertEqual("csv", exported["result_file"]["format"])
+        data = (self.root / exported["result_file"]["path"]).read_bytes()
+        self.assertEqual(4098, len(data))
+
     def test_full_file_and_page_and_check(self):
         result = self.service.run("select i from range(250) t(i)", page_size=10)
         self.assertNotIn("sql", result)

@@ -9,8 +9,8 @@ context:
   template: epic
 state:
   status: "done"
-  version: 5
-  updated_at: "2026-11-20T22:44:56.273982+00:00"
+  version: 6
+  updated_at: "2026-11-20T23:12:09.705525+00:00"
 ---
 ## Summary
 
@@ -72,3 +72,13 @@ Package Spec in `implements`.
 
 The 26 focused tests and the separate polling-mode check passed.
 An isolated Project run found 78 local Packages across 709 executable files.
+
+## Direct Package discovery and Component tests
+
+14. Update the Realization Graph Specs for direct executables and Component-level tests.
+15. Publish Package and Component test targets and audit missing Package markers or test targets.
+16. Verify import resolution, test Relations, watcher updates, and persistent startup.
+
+The 27 focused tests and eight polling-mode startup tests passed.
+The isolated Project projection found 65 Packages, 24 Package test links,
+and five Test Packages without a target.

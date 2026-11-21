@@ -10,11 +10,11 @@ context:
   lens: DES
 relations:
   REFERENCES:
-  - AN-S-3159@1
+  - AN-S-3159@2
 state:
   status: "active"
-  version: 3
-  updated_at: "2026-11-20T22:44:56.273982+00:00"
+  version: 4
+  updated_at: "2026-11-20T23:12:09.705525+00:00"
 ---
 
 ## Summary
@@ -26,15 +26,15 @@ Extend Workbench with the Import Graph
 ### Prose Claim
 
 Call the Workbench projection the Realization Graph. Reuse Module and Package
-node identities across import and test Relations. Each local folder with an executable file in its subtree has one Package
+node identities across import and test Relations. A local folder with a direct executable file has one Package
 node across all languages. Skip dot folders. Record each static import with its source
 Module, written target, and file location. Resolve it without running source.
 Keep all four Module and Package import pairs and direct Package imports.
 
 Derive `TESTS` from a direct `<full package folder name>__tests/` subdirectory
-to its parent Package. Expose the inverse as `IS_TESTED_BY`. A qualifying test folder
-uses a Package node of type Test Package. Derive these Relations for Packages
-in the selected source scope, including those without a Spec or Spec Binding.
+to its parent Package, or to the declared Component when the parent has no direct executables.
+Expose `IS_TESTED_BY` as the inverse. Audit missing visibility on tested Packages.
+A qualifying test folder uses a Package node of type Test Package.
 
 Reuse the Workbench index and `SourceWatcher`. Parse changed files and
 resolve affected imports again when targets change. Publish each update

@@ -107,13 +107,18 @@ class NativeWorkspaceTests(unittest.TestCase):
     def test_manifest_workbench_options_configure_native_store(self):
         inputs = fixture._native_inputs()
         selection = resolve_native_project(self.root, fixture.CONTROL, validate_manifest=inputs.validate_manifest)
-        workbench = {"schema_mode": 1, "result_ttl_seconds": 180}
+        workbench = {"schema_mode": 1, "result_ttl_seconds": 180, "inline_result_limit_kib": 1}
         native = replace(selection, parameters={"runtime": {"workbench": workbench}})
         owner = NativeQueryOwner(native, inputs)
         self.addCleanup(owner.close)
         owner.start()
         self.assertEqual(1, owner._store._schema_mode)
         self.assertEqual(180, owner._store._result_ttl_seconds)
+        small = owner.run("SELECT 'small' AS value", result_delivery="auto", result_format="csv")
+        self.assertEqual('"value"\r\n"small"\r\n', small["csv"])
+        large = owner.run("SELECT repeat('a', 1100) AS value", result_delivery="auto", result_format="csv")
+        self.assertEqual("csv", large["result_file"]["format"])
+        self.assertNotIn("csv", large)
         self.assertEqual([["AN-T-009@2"]], owner.run(
             "SELECT exact_ref FROM native_references WHERE stable_ref = 'AN-T-009'", result_delivery="inline",
         )["rows"])
