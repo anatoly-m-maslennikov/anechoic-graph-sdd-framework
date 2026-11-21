@@ -29,7 +29,7 @@ class NativeManifestChanged(ValueError):
 
 
 CURRENT_STATUSES = {
-    "S": {"active", "ready"}, "T": {"active", "in_queue", "backlog", "done", "canceled", "resolved", "complete"}, "P": {"active"},
+    "S": {"active", "ready"}, "T": {"active", "in_queue", "backlog", "done", "canceled", "resolved", "complete"}, "P": {"active"}, "C": {"active"},
 }
 
 
@@ -42,12 +42,12 @@ def _carrier_row(path: Path, root: Path, family: str, prefix: str, raw: bytes) -
     if not all(isinstance(group, dict) for group in (identity, context, state)):
         raise ValueError("Native identity, context and state must be mappings")
     atom_id = identity.get("atom_id")
-    pattern = rf"{re.escape(prefix)}-([STP])-[0-9]+"
+    pattern = rf"{re.escape(prefix)}-([STPC])-[0-9]+"
     match = re.fullmatch(pattern, atom_id) if isinstance(atom_id, str) else None
     version, status, container = state.get("version"), state.get("status"), context.get("container")
     if match is None or type(version) is not int or version < 1:
         raise ValueError("Invalid native Atom identity or version")
-    if not canonical and match[1] != family:
+    if not canonical and match[1] not in family:
         raise ValueError("Native Atom family disagrees with its logical tree")
     if status in CURRENT_STATUSES[match[1]]:
         group = "Current"
@@ -154,7 +154,7 @@ def capture_native(
                     missing.append(path)
                     versions.pop(str(path), None)
                     continue
-            family = {"_PMETA": "P", "__TKT": "T", PROJECT_CONFIG_DIRECTORY: "P", TICKET_DIRECTORY: "T"}.get(tree, "S")
+            family = {"_PMETA": "P", "__TKT": "T", PROJECT_CONFIG_DIRECTORY: "PC", TICKET_DIRECTORY: "T"}.get(tree, "S")
             raw = manifest if path == selection.manifest_path else reader.read(
                 path, metadata_guard=incremental, skip_version=versions.get(str(path)) if incremental else None,
             )

@@ -20,11 +20,11 @@ from .model_declaration_sources import _check_relation_references, _merge_constr
 
 _ASSETS = Path(__file__).resolve().parent.parent / "FEATURE_GENERATED_MODEL"
 _CLAIM_FILES = {
-    "native-graph-claims.json": "777f959c571424e73503cde96c78065d9da3cb1b04eb312cb8976f4b8faf60eb",
+    "native-graph-claims.json": "69700992be5b44bf0280676e9def93edb1fd2181cb25777d0e7dd7a8816b3ba5",
     "native-spec-template-claims.json": "7fd4e65d4c758a77dc731e3e6410233d683f36f5fa067bd48b995f101072db98",
 }
 _REVIEWED_CHECKS = {
-    "check_atom_identity": "1756b0e117c6b68ae719f52cb805a69d2a2d198feb9a2996b94869698e13cd09",
+    "check_atom_identity": "21e3fcf50054aba8e582ae4c8f81bdcdd05ba6794ca16537c6bb00dfe7deeff1",
     "check_project_manifest": "771c1c72eeae6ea67e1658e647fc3062dc07f725506372ff284d181b3cfe9b39",
     "check_component_manifest": "ae53cc8bacccac9d36d5a2d5b40f1a83e723f0ca903bc445e0f8d1e219d39c65",
     "check_purpose": "a080c8a08f9b2f066992045de8183f532eb0aa6fb1dc566e746bc3bed2701a3b",

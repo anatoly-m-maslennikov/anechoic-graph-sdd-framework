@@ -151,7 +151,8 @@ class ManifestPropertyFieldsTests(unittest.TestCase):
         instance = namespace["SpecAtom"](atom_family="SPEC", **values)
         self.assertEqual(instance.ref_id, "AN-S-1@2-draft")
         self.assertNotIn("ref_id", asdict(instance))
-        namespace["SpecAtom"](atom_family="PROJECT_CONFIG", **(values | {"atom_id": "AN-P-1"}))
+        for atom_id in ("AN-C-1", "AN-P-1"):
+            namespace["SpecAtom"](atom_family="PROJECT_CONFIG", **(values | {"atom_id": atom_id}))
         with self.assertRaisesRegex(ValueError, "Atom Family disagrees"):
             namespace["SpecAtom"](atom_family="PMETA", **(values | {"atom_id": "AN-P-1"}))
         with self.assertRaisesRegex(ValueError, "Atom Family disagrees"):

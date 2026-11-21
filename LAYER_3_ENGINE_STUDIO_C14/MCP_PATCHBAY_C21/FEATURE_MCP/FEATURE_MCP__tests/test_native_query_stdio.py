@@ -250,6 +250,8 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
     async def test_queries_the_native_tree_and_keeps_legacy_inputs_unchanged(self):
         self._write("__TKT/TASKS/AN-T-010-TASK--child.md", "AN-T-010", "done", 1,
                     container={"atom": "AN-T-009"})
+        self._write("002_PROJECT_CONFIG/CUSTOM_MODEL/AN-C-001--definition.md", "AN-C-001", "active", 1,
+                    container={"atom": "AN-P-001"})
         before = self._carrier_digests()
         async with (
             asyncio.timeout(25),
@@ -336,9 +338,11 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
             self.assertEqual([["AN-T-010", "Fixture.", "task", "done",
                                f"{CONTROL}/__TKT/TASKS/AN-T-010-TASK--child.md", None]], children["rows"])
             listed = await template("list_atoms", family="project_config", statuses=["active"])
-            self.assertEqual([["AN-P-001", "Fixture.", "task", "active",
-                               f"{CONTROL}/_PMETA/AN-P-001-WORKFLOW--fixture.md"]], listed["rows"])
-            self.assertEqual(listed["rows"], (await template("list_atoms", family="pmeta", statuses=["active"]))["rows"])
+            self.assertEqual({"AN-P-001", "AN-C-001"}, {row[0] for row in listed["rows"]})
+            self.assertEqual({"AN-P-001"}, {row[0] for row in (await template("list_atoms", family="pmeta", statuses=["active"]))["rows"]})
+            self.assertEqual([["active", 1]], (await template("get_atom_state", reference="AN-C-001@1"))["rows"])
+            self.assertEqual([["CONTAINED_BY", "AN-P-001", False]],
+                             (await template("list_relations", reference="AN-C-001@1"))["rows"])
             counted = await template("count_atoms", family="tkt", kind="task", statuses=["archived"])
             self.assertEqual(["count"], [column["name"] for column in counted["columns"]])
             self.assertEqual([[1]], counted["rows"])
@@ -349,7 +353,7 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
             incoming = await template("list_relations", reference="AN-T-010", direction="incoming")
             self.assertEqual([["CONTAINS", "AN-T-009", True]], incoming["rows"])
             edge_counts = await template("count_relations_by_type")
-            self.assertEqual([["CONTAINED_BY", False, 6], ["CONTAINS", True, 6]], edge_counts["rows"])
+            self.assertEqual([["CONTAINED_BY", False, 7], ["CONTAINS", True, 7]], edge_counts["rows"])
             sql = ("SELECT stable_ref, exact_ref FROM native_references "
                    "WHERE exact_ref LIKE 'AN-T-009@%' ORDER BY exact_ref")
             checked = await client.call_tool("query_check", {"sql": sql})
@@ -378,7 +382,7 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
                 with self.subTest(name=name, arguments=arguments):
                     refused = await client.call_tool(name, arguments)
                     self.assertTrue(refused.is_error)
-            self.assertEqual(6, (await query("SELECT count(*) AS atoms FROM atoms"))["rows"][0][0])
+            self.assertEqual(7, (await query("SELECT count(*) AS atoms FROM atoms"))["rows"][0][0])
         self.assertEqual(before, self._carrier_digests())
 
     async def test_ticket_asset_and_spec_draft_archive_tools(self):

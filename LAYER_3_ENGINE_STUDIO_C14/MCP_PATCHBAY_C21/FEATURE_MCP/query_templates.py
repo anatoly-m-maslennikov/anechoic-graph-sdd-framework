@@ -23,10 +23,10 @@ TEMPLATES = {
     "get_component_manifest": ("component",),
     "get_component_purpose": ("component",),
 }
-_ATOM_ID = r"[A-Z]+-[STP]-[0-9]+"
+_ATOM_ID = r"[A-Z]+-[STPC]-[0-9]+"
 _VERSION = r"@[1-9][0-9]*(?:-draft)?"
 _STATUSES = ["active", "in_queue", "ready", "backlog", "draft", "done", "complete", "canceled", "resolved", "archived"]
-_FAMILIES = {"spec": "S", "tkt": "T", "project_config": "P", "pmeta": "P"}
+_FAMILIES = {"spec": "S", "tkt": "T", "project_config": "PC", "pmeta": "P"}
 _INVENTORIES = {"list_atoms", "count_atoms", "list_tickets"}
 _COMPONENT_QUERIES = {"fetch_contracts", "fetch_solutions", "get_component_manifest", "get_component_purpose"}
 _RESULT_OPTIONS = ("page_size", "result_delivery", "result_format")
@@ -131,7 +131,8 @@ def run_arguments(arguments: dict) -> dict:
         if template == "list_tickets":
             filters += ["split_part(r.exact_ref, '-', 2) = 'T'", f"{_TEMPLATE} IN ('task', 'epic')"]
         if "family" in arguments:
-            filters.append(f"split_part(r.exact_ref, '-', 2) = '{_FAMILIES[arguments['family']]}'")
+            markers = ", ".join(map(_literal, _FAMILIES[arguments["family"]]))
+            filters.append(f"split_part(r.exact_ref, '-', 2) IN ({markers})")
         if "kind" in arguments:
             if template == "list_tickets" and arguments["kind"] == "epic":
                 filters.append(f"({_TEMPLATE} = 'epic' OR ({_TEMPLATE} = 'task' AND "

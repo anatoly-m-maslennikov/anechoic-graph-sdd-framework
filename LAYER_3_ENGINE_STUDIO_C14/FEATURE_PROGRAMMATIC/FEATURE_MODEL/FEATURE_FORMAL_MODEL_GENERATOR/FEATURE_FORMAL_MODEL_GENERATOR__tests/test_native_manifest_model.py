@@ -29,6 +29,16 @@ class NativeManifestModelTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Project C00"):
             self.model.validate_manifest(fields, "C01")
 
+    def test_project_config_identity_accepts_current_and_legacy_markers(self):
+        check = self.model._checks["Atom"][1]
+        for marker in ("C", "P"):
+            atom_id = f"AN-{marker}-1"
+            atom = self.model._types["Project Config Atom"](atom_id=atom_id, version=1, ref_id=f"{atom_id}@1")
+            self.assertTrue(check(atom))
+        atom.atom_id = "AN-S-1"
+        atom.ref_id = "AN-S-1@1"
+        self.assertFalse(check(atom))
+
     def test_reviewed_component_manifest_accepts_optional_boundaries(self):
         fields = {"atom_id": "AN-S-124", "ref_id": "AN-S-124@1", "version": 1,
                   "tier": 0, "component_id": "C01", "name": "Engine"}

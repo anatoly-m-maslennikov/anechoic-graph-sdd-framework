@@ -15,6 +15,11 @@ from test_native_source_rows import NativeCaptureTests  # noqa: E402
 
 
 class NativeProjectionTests(NativeCaptureTests):
+    def test_authored_relation_to_config_exact_reference(self):
+        row = {"ref": "AN-P-1", "header_json": {"relations": {"REFERENCES": ["AN-C-2@3-draft"]}}}
+        edges = list(native_projection._authored_edges(row))
+        self.assertEqual(("Atom", "AN-C-2@3-draft"), (edges[0]["target_kind"], edges[0]["target_ref"]))
+
     def test_delta_move_relations_references_and_rollback(self):
         source = self.write("AN-T-09--task.md", "AN-T-09", "active", 2)
         header = yaml.safe_load(source.read_text().split("---\n")[1])

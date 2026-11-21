@@ -29,7 +29,7 @@ class NativeWorkflowDefinitionError(ValueError):
 def _pin_path(selection: NativeProjectSelection, pin: NativeDefinitionPin) -> Path:
     relative = Path(pin.relative_path)
     atom_id = pin.ref_id.partition("@")[0]
-    exact = rf"{re.escape(selection.project_prefix)}-P-[0-9]+@[1-9][0-9]*"
+    exact = rf"{re.escape(selection.project_prefix)}-[PC]-[0-9]+@[1-9][0-9]*"
     if (re.fullmatch(exact, pin.ref_id) is None
             or relative.as_posix() != pin.relative_path
             or relative.parent not in {selection.control_relative / PROJECT_CONFIG_DIRECTORY,

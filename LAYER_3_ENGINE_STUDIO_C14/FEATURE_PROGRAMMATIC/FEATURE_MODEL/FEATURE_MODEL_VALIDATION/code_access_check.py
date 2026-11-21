@@ -79,8 +79,9 @@ def check_code_access(ownership, sources, occurrences):  # noqa: C901
                       if exports is not None and name in exports), None)
         if entry is None:
             entry = '.'.join(parts)
-        imports = [rule | {entry} if rule is not None and rule.intersection(names) else rule
-                   for rule in imports]
+        imports = [(closed, selectors | {entry} if selectors.intersection(names) else selectors)
+                   if rule is not None else None
+                   for rule in imports for closed, selectors in [rule or (False, set())]]
         marker = None
         if site.target_kind == 'module' and path.parent.as_posix() == provider['path']:
             marker = module_visibility(path.name)

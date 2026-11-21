@@ -77,7 +77,7 @@ def _revision_root(selection, row, structure_snapshot=None, current_rows=None):
         return root
     if status not in {"active", "ready"} or not re.fullmatch(re.escape(atom_id) + r"-.+\.md", path.name):
         raise common.InputError("sourceCurrent", "Select an active native carrier.")
-    if "-P-" in atom_id:
+    if "-P-" in atom_id or "-C-" in atom_id:
         root = selection.control_root / ('_PMETA' if '_PMETA' in path.parts else PROJECT_CONFIG_DIRECTORY)
         if path.parent != root:
             raise common.InputError("sourceCurrent", "Select a direct PROJECT_CONFIG carrier.")
@@ -223,7 +223,7 @@ def create_draft(selection, params, *, current_rows, structure_snapshot=None, ti
     target = params['sourceCurrent']
     if (not isinstance(target, dict) or set(target) != {'ref_id', 'version'}
             or not isinstance(target['ref_id'], str)
-            or not re.fullmatch(re.escape(selection.project_prefix) + r'-[STP]-[0-9]+', target['ref_id'])
+            or not re.fullmatch(re.escape(selection.project_prefix) + r'-[STPC]-[0-9]+', target['ref_id'])
             or type(target['version']) is not int or target['version'] < 1):
         raise common.InputError('sourceCurrent', 'Supply a Current carrier reference and positive Version.')
     changes = params.get('changes', {})
@@ -770,12 +770,12 @@ def promote_draft(selection, params, *, current_rows, structure_snapshot=None, p
             or not isinstance(target['ref_id'], str) or type(target['version']) is not int
             or target['version'] < 1):
         raise common.InputError('target', 'Supply an exact Draft reference and Version.')
-    match = re.fullmatch(rf'({re.escape(selection.project_prefix)}-[STP]-[0-9]+)@([1-9][0-9]*)-draft', target['ref_id'])
+    match = re.fullmatch(rf'({re.escape(selection.project_prefix)}-[STPC]-[0-9]+)@([1-9][0-9]*)-draft', target['ref_id'])
     if match is None or int(match[2]) != target['version']:
         raise common.InputError('target', 'Supply an exact Draft reference and matching Version.')
     if (not isinstance(status, str) or status not in {'active', 'ready', 'in_queue', 'backlog', 'done', 'canceled', 'resolved'}
             or ('-S-' in match[1] and status != 'ready')
-            or ('-P-' in match[1] and status != 'active')
+            or (('-P-' in match[1] or '-C-' in match[1]) and status != 'active')
             or ('-T-' in match[1] and status in {'ready', 'in_queue'})):
         raise common.InputError('targetStatus', 'Supply an applicable Current Status.')
     atom_id, version = match[1], target['version']

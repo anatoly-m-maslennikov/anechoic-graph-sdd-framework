@@ -8,8 +8,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 10
-  updated_at: '2026-11-21T20:59:25.755919+00:00'
+  version: 11
+  updated_at: '2026-11-21T22:33:01.947364+00:00'
 ---
 
 ## Summary
@@ -41,7 +41,7 @@ SPEC and TKT use this order:
    stable Atom IDs or exact revision references.
 8. `state` contains `status`, `version`, and `updated_at`, in that order.
 
-Project Config Atoms use `atom_family: PROJECT_CONFIG` and P IDs. They
+Project Config Atoms use `atom_family: PROJECT_CONFIG` and C IDs. They
 store their Container in `structure.container`. Their published
 revisions require `context.template`.
 
@@ -150,6 +150,13 @@ The YAML Lens value and the filename Lens token use the Lens name.
 - **Project Workflows.** Local Release and Public Release, with their
   Steps and Actions.
 
+Store the Project's Custom Model Manifests in
+`002_PROJECT_CONFIG/CUSTOM_MODEL/`. Use the `model_manifest` Template
+and the Project as Container. The compiler admits Active Manifests
+from this directory. Use `## Semantics` for the meaning and
+`## Formal Manifest` for the eDSL. Keep the type, properties, and
+constraints for one Template in its Manifest.
+
 Attach properties, constraints, and classification axes to their Node
 types. Add Node types such as Event Record or Ephemeral when the Project
 extends them. Keep Component and Package Manifests with their owners.
@@ -162,7 +169,7 @@ migrated authored values to exact Git revisions through the migration
 bindings. Restore admitted values and preserve evidence for unresolved
 fields. Preserve Atom IDs, exact revision references, and Markdown Content
 during a mechanical format migration.
-Use `PROJECT_CONFIG` for the former `PMETA` Atom Family. Keep its P IDs.
+Existing P IDs remain valid references to Project Config Atoms.
 
 ## References
 

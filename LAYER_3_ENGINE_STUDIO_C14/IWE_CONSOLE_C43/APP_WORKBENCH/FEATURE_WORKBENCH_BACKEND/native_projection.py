@@ -39,7 +39,7 @@ def _authored_edges(row):
         for target in targets:
             if isinstance(target, str) and re.fullmatch(r"C[0-9]+", target):
                 kind = "Component"
-            elif isinstance(target, str) and re.fullmatch(r"[A-Z]+-[STP]-[0-9]+(?:@[1-9][0-9]*(?:-draft)?)?", target):
+            elif isinstance(target, str) and re.fullmatch(r"[A-Z]+-[STPC]-[0-9]+(?:@[1-9][0-9]*(?:-draft)?)?", target):
                 kind = "Atom"
             else:
                 raise ValueError("Invalid native relation target")

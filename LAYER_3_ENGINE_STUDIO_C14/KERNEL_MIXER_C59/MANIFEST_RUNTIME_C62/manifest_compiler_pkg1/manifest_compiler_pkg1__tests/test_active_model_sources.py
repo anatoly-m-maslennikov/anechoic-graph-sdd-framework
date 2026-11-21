@@ -18,6 +18,13 @@ def carrier(identifier='AN-S-1', subject='MODEL//ANECHOIC <+ Atom', status='acti
             f'## Claim scope\n\n{subject}\n\n## Claim\n\n### Formal Claim\n\n```python\n{CLAIM}```\n')
 
 
+def custom_carrier(identifier='AN-C-1', subject='MODEL//ANECHOIC <+ Node', status='active'):
+    return (f'---\natom_family: PROJECT_CONFIG\natom_id: {identifier}\nstructure:\n  container:\n    component: C00\n'
+            f'context:\n  template: model_manifest\nstate:\n  status: {status}\n  version: 1\n'
+            f'  updated_at: 2026-11-20T00:00:00Z\n---\n'
+            f'## Semantics\n\nSemantics.\n\n## Formal Manifest\n\n### Node\n\n{subject}\n\n```python\n{CLAIM}```\n')
+
+
 class ActiveModelSourcesTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -61,6 +68,56 @@ class ActiveModelSourcesTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     self.read()
                 (self.component / name).unlink()
+
+    def test_custom_sources_are_shallow_and_share_duplicate_checks(self):
+        self.put('AN-S-1-SPEC--atom.md', carrier())
+        custom = self.root / '002_PROJECT_CONFIG' / 'CUSTOM_MODEL'
+        custom.mkdir(parents=True)
+        declaration = custom / 'AN-C-1-MODEL_MANIFEST--node.md'
+        declaration.write_text(custom_carrier())
+        (custom / 'AN-C-2-MODEL_MANIFEST--draft.md').write_text(custom_carrier('AN-C-2', status='draft'))
+        (custom / '099_archived').mkdir()
+        (custom / '099_archived' / 'bad.md').write_text('bad')
+        self.assertEqual(len(self.read()), 2)
+        declaration.write_text(custom_carrier(subject='MODEL//ANECHOIC <+ Atom'))
+        with self.assertRaisesRegex(ValueError, 'duplicate'):
+            self.read()
+
+    def test_custom_source_requires_native_identity_and_model_scope(self):
+        self.put('AN-S-1-SPEC--atom.md', carrier())
+        custom = self.root / '002_PROJECT_CONFIG' / 'CUSTOM_MODEL'
+        custom.mkdir(parents=True)
+        declaration = custom / 'AN-C-1-MODEL_MANIFEST--node.md'
+        declaration.write_text(custom_carrier(subject='Other'))
+        with self.assertRaisesRegex(ValueError, 'Model Claim scope'):
+            self.read()
+        declaration.write_text(custom_carrier('AN-P-1'))
+        with self.assertRaisesRegex(ValueError, 'identity'):
+            self.read()
+
+    def test_custom_multiple_declarations_and_rejections(self):
+        self.put('AN-S-1-SPEC--atom.md', carrier())
+        custom = self.root / '002_PROJECT_CONFIG' / 'CUSTOM_MODEL'
+        custom.mkdir(parents=True)
+        declaration = custom / 'AN-C-1-MODEL_MANIFEST--node.md'
+        text = custom_carrier() + f'\n### Other\n\nMODEL//ANECHOIC <+ Other\n\n```python\n{CLAIM}```\n'
+        declaration.write_text(text)
+        self.assertEqual(len(self.read()), 3)
+        for invalid in (
+            text.replace('MODEL//ANECHOIC <+ Other', 'MODEL//ANECHOIC <+ Node'),
+            text.replace('MODEL//ANECHOIC <+ Other', 'Other'),
+            text + '\n#### Nested\n\nignored\n',
+            text + '\nExtra text\n',
+            text.replace("declare_entity(entity_name='Atom')", "declare_entity(entity_name='Atom')\nprint('unsafe')"),
+        ):
+            with self.subTest(invalid=invalid[-60:]):
+                declaration.write_text(invalid)
+                with self.assertRaises(ValueError):
+                    self.read()
+        declaration.write_text(custom_carrier())
+        (custom / 'AN-C-1-MODEL_MANIFEST--duplicate.md').write_text(custom_carrier(subject='MODEL//ANECHOIC <+ Other'))
+        with self.assertRaisesRegex(ValueError, 'duplicate Model source ID'):
+            self.read()
 
     def test_changed_input_rejected(self):
         self.put('AN-S-1-SPEC--atom.md', carrier())

@@ -52,6 +52,17 @@ class NativeCarrierPlacementTests(unittest.TestCase):
             with self.subTest(template=template):
                 self.assertEqual(path(header('TKT', template, status='done')), f'/project/001_TICKETS/{branch}/done/AN-T-1-{template.upper()}--a-useful-summary.md')
 
+    def test_model_manifest_placement(self):
+        for status, folder, marker in [('active', '', 'AN-C-3193'),
+                                       ('draft', '01_draft/', 'AN-C-3193@2-draft'),
+                                       ('archived', '09_archived/', 'AN-C-3193@2')]:
+            h = header('PROJECT_CONFIG', 'model_manifest', status=status, container={'component': 'C00'})
+            h['atom_id'] = 'AN-C-3193'
+            self.assertEqual(path(h), f'/project/002_PROJECT_CONFIG/CUSTOM_MODEL/{folder}{marker}-MODEL_MANIFEST--a-useful-summary.md')
+        h['structure']['container'] = {'component': 'C1'}
+        with self.assertRaisesRegex(ValueError, 'Project Component'):
+            path(h)
+
     def test_ticket_queue_and_complete_placement(self):
         self.assertEqual(path(header('TKT', 'task', status='in_queue')),
                          '/project/001_TICKETS/TASKS/AN-T-1-TASK--a-useful-summary.md')

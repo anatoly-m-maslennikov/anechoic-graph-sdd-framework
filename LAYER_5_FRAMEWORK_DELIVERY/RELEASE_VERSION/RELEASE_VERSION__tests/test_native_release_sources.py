@@ -48,7 +48,7 @@ Native Spec.
     def test_uses_native_paths_and_includes_specs_without_migration_entries(self):
         new = self.ontology / "AN-S-7-SPEC--new.md"
         self.carrier(new, atom_id="AN-S-7")
-        for directory in ("_PMETA", "__TKT", "000_ANECHOIC_framework", "UNRELATED_C10"):
+        for directory in ("_PMETA", "002_PROJECT_CONFIG", "__TKT", "000_ANECHOIC_framework", "UNRELATED_C10"):
             self.carrier(self.control / directory / self.source.name)
         self.carrier(self.ontology / "000_draft/AN-S-1@3-draft-DOM--current.md", status="draft", version=3)
         self.carrier(self.ontology / "099_archived/AN-S-2@1-DOM--retired.md",

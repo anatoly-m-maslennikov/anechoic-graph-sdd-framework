@@ -2,14 +2,13 @@
 
 from collections.abc import Mapping
 
-_VISIBILITY_ALIASES = {'family_pub': 'internal', 'pub': 'public',
-                       'internal': 'internal', 'public': 'public'}
+_VISIBILITY_ALIASES = {'shared': 'shared', 'private': 'private', 'public': 'public'}
 
 
 def module_visibility(stem):
     """Return the visibility of a marked Module filename stem."""
-    if stem.endswith(('__family_pub', '__internal')):
-        return 'internal'
+    if stem.endswith(('__shared', '__family_pub', '__internal')):
+        return 'shared'
     if stem.endswith(('__pub', '__public')):
         return 'public'
     return None
@@ -38,20 +37,21 @@ def allows_import(entry, caller, provider, exports, *, inherited_imports=(),
     else:
         return False
 
-    if consumers is None:
-        visible = (mode == 'public' or caller['id'] == provider['parent'] or
-                   caller['parent'] == provider['parent'])
-    else:
-        visible = (caller['id'] in consumers or
-                   ('parent' in consumers and caller['id'] == provider['parent']) or
-                   ('siblings' in consumers and caller['parent'] == provider['parent']))
-
+    shared = caller['id'] == provider['parent'] or caller['parent'] == provider['parent']
+    named = consumers is not None and (
+        caller['id'] in consumers or
+        ('parent' in consumers and caller['id'] == provider['parent']) or
+        ('siblings' in consumers and caller['parent'] == provider['parent']))
+    visible = mode == 'public' or (mode == 'shared' and shared) or named
+    default_import = (provider['parent'] == caller['id'] or
+                      provider['parent'] == caller['parent'] or mode == 'public')
     return visible and all(
-        rule is None or entry in rule or provider['id'] in rule or
-        ('parent' in rule and provider['id'] == caller['parent']) or
-        ('siblings' in rule and provider['parent'] == caller['parent'])
-        for rule in (inherited_imports or ())
-    )
+        (not closed and default_import) or entry in selectors or provider['id'] in selectors or
+        ('parent' in selectors and provider['id'] == caller['parent']) or
+        ('siblings' in selectors and provider['parent'] == caller['parent'])
+        for closed, selectors in (rule if rule is not None else (False, set()) for rule in inherited_imports)
+    ) and (bool(inherited_imports) or default_import)
+
 
 
 def _selectors(value):
@@ -75,24 +75,29 @@ def _export(entry, declaration):
         consumers = _selectors(value)
     if mode is not None and (not isinstance(mode, str) or mode not in _VISIBILITY_ALIASES):
         raise ValueError('unknown export visibility')
-    return _VISIBILITY_ALIASES.get(mode), consumers
+    return ('shared' if mode is None else _VISIBILITY_ALIASES[mode]), consumers
 
 
 def parse_code_access(boundaries):
     """Normalize the authored Code Access rules for ``allows_import``."""
     if boundaries is None:
         return None, None
-    if not isinstance(boundaries, Mapping) or set(boundaries) - {'code_access', 'shared_state', 'runtime_io'}:
+    if not isinstance(boundaries, Mapping) or set(boundaries) - {'code', 'state', 'io'}:
         raise ValueError('boundaries must map known boundary names')
-    access = boundaries.get('code_access')
+    access = boundaries.get('code')
     if access is None:
         return None, None
     if not isinstance(access, Mapping) or set(access) - {'imports', 'exports'}:
-        raise ValueError('code_access must contain only imports and exports')
+        raise ValueError('code must contain only imports and exports')
 
     imports = access.get('imports')
     if imports is not None:
-        imports = _selectors(imports)
+        if isinstance(imports, Mapping):
+            if set(imports) != {'only'}:
+                raise ValueError('imports mapping must contain only only')
+            imports = (True, _selectors(imports['only']))
+        else:
+            imports = (False, _selectors(imports))
     exports = access.get('exports')
     if exports is not None:
         if not isinstance(exports, Mapping):

@@ -125,6 +125,21 @@ class NativeCaptureTests(unittest.TestCase):
         self.assertEqual({"AN-T-10@1-draft", "AN-P-10@1"},
                          {row["ref"] for row in result.atoms if row["id"] in {"AN-T-10", "AN-P-10"}})
 
+    def test_mixed_project_config_markers_and_nested_definitions(self):
+        self.write("002_PROJECT_CONFIG/AN-P-20--legacy.md", "AN-P-20", "active", 1)
+        self.write("002_PROJECT_CONFIG/CUSTOM_MODEL/AN-C-21--definition.md", "AN-C-21", "active", 2,
+                   {"atom": "AN-P-20"})
+        self.write("002_PROJECT_CONFIG/AN-C-21@3-draft--definition.md", "AN-C-21", "draft", 3)
+        self.write("002_PROJECT_CONFIG/AN-C-21@1--definition.md", "AN-C-21", "archived", 1)
+        result = capture_native(self.selection)
+        self.assertEqual({}, result.errors)
+        rows = {row["_exact_ref"]: row for row in result.atoms}
+        self.assertEqual(("Current", "AN-C-21"), (rows["AN-C-21@2"]["status_group"], rows["AN-C-21@2"]["ref"]))
+        self.assertEqual("AN-C-21@3-draft", rows["AN-C-21@3-draft"]["ref"])
+        self.assertEqual("AN-C-21@1", rows["AN-C-21@1"]["ref"])
+        self.assertEqual("AN-P-20", next(edge for edge in result.containment
+                                         if edge["source_ref"] == "AN-C-21")["target_ref"])
+
     def test_invalid_and_duplicate_carriers_are_reported(self):
         self.write("one/AN-S-1--one.md", "AN-S-1", "active", 1)
         self.write("two/AN-S-1--two.md", "AN-S-1", "active", 2)

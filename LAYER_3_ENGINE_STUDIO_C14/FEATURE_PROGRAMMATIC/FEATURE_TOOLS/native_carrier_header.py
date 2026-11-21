@@ -4,7 +4,7 @@ from datetime import datetime
 import re
 
 
-_FAMILIES = {"S": "SPEC", "T": "TKT", "P": "PROJECT_CONFIG"}
+_FAMILIES = {"S": "SPEC", "T": "TKT", "P": "PROJECT_CONFIG", "C": "PROJECT_CONFIG"}
 _HEADER = {"atom_family", "atom_id", "concern", "structure", "container", "tier", "priority", "context", "relations", "state"}
 _STATE = ("status", "version", "updated_at")
 _CONCERN_LOCATOR = ("subject", "path", "relation")
@@ -13,7 +13,7 @@ _CONTEXT = ("template", "label", "lens")
 
 
 def _family(atom_id):
-    match = re.fullmatch(r"[A-Z]+-([STP])-[0-9]+", atom_id) if isinstance(atom_id, str) else None
+    match = re.fullmatch(r"[A-Z]+-([STPC])-[0-9]+", atom_id) if isinstance(atom_id, str) else None
     if not match:
         raise ValueError("Invalid native Atom ID")
     return _FAMILIES[match[1]]

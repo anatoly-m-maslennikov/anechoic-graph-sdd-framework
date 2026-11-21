@@ -62,6 +62,10 @@ def _native_claim(body: object, source: str, subject: str) -> str:
     sections = [record for record in records if record["property_path"] == ["claim", "formal_claim"]]
     if len(sections) != 1 or not isinstance(text := sections[0]["direct_markdown"], str):
         raise ValueError(f"{source}: expected one Formal Claim")
+    return _native_claim_text(text, source, subject)
+
+
+def _native_claim_text(text: str, source: str, subject: str) -> str:
     tokens = MarkdownIt("commonmark").parse(text)
     if len(tokens) != 1 or tokens[0].type != "fence" or tokens[0].info.strip().casefold() != "python":
         raise ValueError(f"{source}: Formal Claim must contain one Python fence")

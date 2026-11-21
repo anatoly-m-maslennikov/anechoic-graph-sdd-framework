@@ -124,7 +124,7 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
                     owner_path.write_text('---\n' + yaml.safe_dump(owner_header, sort_keys=False) + '---\n\n## Summary\n\nOwner\n')
                     owner_dir = owner_path.with_suffix('')
                     container = {'atom': 'AN-T-1'} if contained else {'component': 'C00' if template in project_specs or template == 'project_manifest' or family != 'SPEC' else 'C9'}
-                    atom_id = {'TKT': 'AN-T-2', 'SPEC': 'AN-S-3', 'PROJECT_CONFIG': 'AN-P-1'}[family]
+                    atom_id = {'TKT': 'AN-T-2', 'SPEC': 'AN-S-3', 'PROJECT_CONFIG': 'AN-C-1'}[family]
                     if family == 'SPEC' and template == 'project_manifest' and situation == 'current' and not contained:
                         atom_id = 'AN-S-1'
                     elif situation != 'new':

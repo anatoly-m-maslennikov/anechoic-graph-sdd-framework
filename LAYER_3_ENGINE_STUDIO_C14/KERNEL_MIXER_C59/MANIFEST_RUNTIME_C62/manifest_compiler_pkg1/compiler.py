@@ -19,9 +19,11 @@ from .structure_compile import compile_structure
 def write_model(directory: Path, control_root: Path) -> str:
     """Write a complete generation into an empty staging directory."""
     ontology = control_root / "LAYER_1_META_ONTOLOGY_C9"
-    declarations = None
-    if ontology.exists() or ontology.is_symlink():
-        declarations = read_active_model_sources(control_root, ontology)
+    declarations = read_active_model_sources(control_root, ontology)
+    if not ontology.exists() and not ontology.is_symlink():
+        if declarations:
+            raise ValueError("Custom Model sources require an active C9 Model")
+        declarations = None
     records, _, fingerprint = (
         reviewed_model_records() if declarations is None else admit_active_model_records(declarations)
     )

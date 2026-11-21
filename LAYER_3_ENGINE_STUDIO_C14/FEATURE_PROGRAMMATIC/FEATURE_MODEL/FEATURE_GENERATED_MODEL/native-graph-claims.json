@@ -45,7 +45,7 @@
   },
   {
     "subject": "MODEL//ANECHOIC <+ Node//Artifact//Atom",
-    "claim": "from caprmedio.formal_claims import declare_entity\nfrom caprmedio.model import Artifact\nfrom dataclasses import field\nfrom typing import ClassVar\n\nclass Atom(Artifact):\n    atom_id: str\n    version: int = field(metadata={\"minimum_value\": 1})\n    ref_id: str\n    family_marker: ClassVar[str | None] = None\n\ndef check_atom_identity(atom: Atom) -> bool:\n    parts = atom.atom_id.split(\"-\")\n    if len(parts) != 3:\n        return False\n    prefix, family, number = parts\n    if not (prefix.isascii() and prefix.isalpha() and prefix.isupper()\n            and family == atom.family_marker and number.isascii() and number.isdecimal()):\n        return False\n    revision = f\"{atom.atom_id}@{atom.version}\"\n    return atom.ref_id in (revision, f\"{revision}-draft\")\n\ndeclare_entity(\n    entity_name=\"Atom\",\n    entity_class=Atom,\n    instance_check=check_atom_identity,\n    instance_relation_constraints={\n        \"CONTAINED_BY\": {\"target_entity_paths\": (\"Node//Artifact//Component\", \"Node//Artifact//Atom\"), \"targets_per_source\": 1},\n    },\n    population_unique_constraints=({\"keys\": (\"Ref ID\",)},),\n)\n"
+    "claim": "from caprmedio.formal_claims import declare_entity\nfrom caprmedio.model import Artifact\nfrom dataclasses import field\nfrom typing import ClassVar\n\nclass Atom(Artifact):\n    atom_id: str\n    version: int = field(metadata={\"minimum_value\": 1})\n    ref_id: str\n    family_marker: ClassVar[str | None] = None\n\ndef check_atom_identity(atom: Atom) -> bool:\n    parts = atom.atom_id.split(\"-\")\n    if len(parts) != 3:\n        return False\n    prefix, family, number = parts\n    if not (prefix.isascii() and prefix.isalpha() and prefix.isupper()\n            and (family == atom.family_marker or (atom.family_marker == 'C' and family == 'P'))\n            and number.isascii() and number.isdecimal()):\n        return False\n    revision = f\"{atom.atom_id}@{atom.version}\"\n    return atom.ref_id in (revision, f\"{revision}-draft\")\n\ndeclare_entity(\n    entity_name=\"Atom\",\n    entity_class=Atom,\n    instance_check=check_atom_identity,\n    instance_relation_constraints={\n        \"CONTAINED_BY\": {\"target_entity_paths\": (\"Node//Artifact//Component\", \"Node//Artifact//Atom\"), \"targets_per_source\": 1},\n    },\n    population_unique_constraints=({\"keys\": (\"Ref ID\",)},),\n)\n"
   },
   {
     "subject": "MODEL//ANECHOIC <+ Node//Artifact//Atom//Spec Atom",
@@ -57,7 +57,7 @@
   },
   {
     "subject": "MODEL//ANECHOIC <+ Node//Artifact//Atom//PMETA Atom",
-    "claim": "from caprmedio.formal_claims import declare_entity\nfrom caprmedio.model import Atom\nfrom typing import ClassVar\n\nclass PMETAAtom(Atom):\n    family_marker: ClassVar[str] = \"P\"\n\ndeclare_entity(entity_name=\"PMETA Atom\", entity_class=PMETAAtom)\n"
+    "claim": "from caprmedio.formal_claims import declare_entity\nfrom caprmedio.model import Atom\nfrom typing import ClassVar\n\nclass PMETAAtom(Atom):\n    family_marker: ClassVar[str] = \"C\"\n\ndeclare_entity(entity_name=\"PMETA Atom\", entity_class=PMETAAtom)\n"
   },
   {
     "subject": "MODEL//ANECHOIC <+ Node//Artifact//Event Record",

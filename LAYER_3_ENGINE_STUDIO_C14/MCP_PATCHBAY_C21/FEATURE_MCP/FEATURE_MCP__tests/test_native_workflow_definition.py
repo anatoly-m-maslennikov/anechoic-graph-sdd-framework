@@ -70,6 +70,9 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
         pin = self._pin("workflow", "AN-P-4", 1,
                         relative=f"{self.control}/002_PROJECT_CONFIG/AN-P-4-WORKFLOW--fixture.md")
         self._bind(workflow=pin)()
+        pin = self._pin("workflow", "AN-C-4", 1,
+                        relative=f"{self.control}/002_PROJECT_CONFIG/AN-C-4-WORKFLOW--fixture.md")
+        self._bind(workflow=pin)()
 
     def _bind(self, **changes):
         binding = {"workflow": self.workflow, "steps": (self.step,), "actions": (self.action,)}

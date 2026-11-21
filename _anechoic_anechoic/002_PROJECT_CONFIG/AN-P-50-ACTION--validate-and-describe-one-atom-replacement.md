@@ -1,5 +1,5 @@
 ---
-atom_family: PMETA
+atom_family: PROJECT_CONFIG
 atom_id: AN-P-50
 structure:
   container:

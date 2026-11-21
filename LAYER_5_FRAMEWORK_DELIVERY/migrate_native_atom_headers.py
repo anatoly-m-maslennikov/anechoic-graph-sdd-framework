@@ -149,7 +149,7 @@ def convert_carrier(source, path, rel, new, recovery, refs, header_codec, placem
     view = header_codec.native_header_view(metadata)
     family = view.get('atom_family')
     if family is None:
-        family = {'S': 'SPEC', 'T': 'TKT', 'P': 'PROJECT_CONFIG'}[view['identity']['atom_id'].split('-')[-2]]
+        family = {'S': 'SPEC', 'T': 'TKT', 'C': 'PROJECT_CONFIG', 'P': 'PROJECT_CONFIG'}[view['identity']['atom_id'].split('-')[-2]]
     elif family == 'PMETA':
         family = 'PROJECT_CONFIG'
     state, atom_id = view['state'], view['identity']['atom_id']
