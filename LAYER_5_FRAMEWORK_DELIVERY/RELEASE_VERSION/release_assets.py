@@ -39,15 +39,6 @@ def generate_tool_registry(package: Path) -> Path:
     return output
 
 
-def generate_scope_callback(package: Path, raw: bytes, *, selected_pin, release_sources):
-    """Build the explicitly selected callback; no selection preserves legacy release."""
-    if selected_pin is None:
-        return None
-    from FEATURE_FORMAL_MODEL_ENGINE.scope_callback_asset import generated_assets, write_package
-    generated = generated_assets(raw, pin=selected_pin, release_sources=release_sources)
-    return write_package(package / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_FORMAL_MODEL_ENGINE/assets", generated)
-
-
 def verify_native_release_assets(package: Path, project_root: Path, control_relative: Path) -> None:
     """Verify the native Model, Structure, source capture and lifecycle binding."""
     verifier = '''
