@@ -104,12 +104,11 @@ def run_local_release(
     if test_modules is not None and any(not isinstance(module, str) for module in test_modules):
         raise LocalReleaseError("local-release-test-modules-invalid")
     root = _root(project_root)
-    from project_selection import ProjectSelectionError
     from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import select_runtime_project
     installation_lock = ExitStack()
     try:
         selection = select_runtime_project(root)
-    except ProjectSelectionError as error:
+    except ValueError as error:
         raise LocalReleaseError("local-release-project-selection-invalid") from error
     cleanup_runner = runner
     default_runner = runner is None

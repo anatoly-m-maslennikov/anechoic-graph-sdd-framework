@@ -86,7 +86,6 @@ def _invoke(arguments: argparse.Namespace) -> dict[str, object]:
     )
     if re.fullmatch(pattern, arguments.run_id) is None:
         raise ValueError("release-run-id-invalid")
-    from project_selection import ProjectSelectionError
     from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import select_runtime_project
 
     if arguments.operation == "local":
@@ -103,7 +102,7 @@ def _invoke(arguments: argparse.Namespace) -> dict[str, object]:
         return run_public_release(root, run_id=arguments.run_id)
     try:
         selected = select_runtime_project(root)
-    except ProjectSelectionError:
+    except ValueError:
         selected = None
     invoke = partial(run_public_release, root, run_id=arguments.run_id, content_draft=draft)
     return run_recorded_release(
