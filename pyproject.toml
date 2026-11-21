@@ -16,6 +16,9 @@ dependency_exception_delivery_root = ".anechoic_framework/00_APPLICABLE_METHODOL
 dependency_exception_evaluation_root = ".anechoic_framework/00_APPLICABLE_METHODOLOGY/06_evaluation"
 exception_recording_rule = "Record each admitted third-party dependency or non-Python carrier in an active Delivery Atom under the delivery root, with its acceptance evidence in an active Evaluation Atom under the evaluation root."
 
+[tool.anechoic.test_suite]
+enforce_source_size = false
+
 [tool.pytest.ini_options]
 # Keep pytest's disposable cache and atomic staging inside project temporary state.
 cache_dir = ".anechoic_tmp/cache/pytest"

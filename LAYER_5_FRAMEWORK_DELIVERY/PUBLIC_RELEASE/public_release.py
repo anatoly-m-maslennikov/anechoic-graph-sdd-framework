@@ -90,7 +90,6 @@ def run_public_release(
     if content_draft is not None:
         description, history = _draft(content_draft, base, head, version)
         return {**result, "outcome": "completed", "pr_description": description, "version_history_entry": history}
-    # Raw diff supplies object IDs and modes, so one batch reads only changed ticket blobs.
     raw = _git(root, "diff", "--raw", "--no-abbrev", "--no-renames", "-z", "--diff-filter=AM", merge_base, head, "--",
                ":(glob)[._]anechoic_*/001_TICKETS/TASKS/**/*-TASK--*.md",
                ":(glob)[._]anechoic_*/001_TICKETS/TASKS/**/*-EPIC--*.md").split("\0")

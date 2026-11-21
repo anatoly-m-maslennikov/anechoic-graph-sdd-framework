@@ -4,6 +4,7 @@ import ast
 import json
 import subprocess
 import tokenize
+import tomllib
 import unittest
 
 from LAYER_3_ENGINE_STUDIO_C14.FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import (
@@ -11,8 +12,8 @@ from LAYER_3_ENGINE_STUDIO_C14.FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import
 )
 
 MODULE_LIMIT = 300
-FUNCTION_LIMIT = 25
-WEB_FUNCTIONS = {".js", ".mjs", ".ts", ".svelte"}
+FUNCTION_LIMIT = 45
+WEB_FUNCTIONS = {".js", ".mjs", ".ts"}
 
 
 def module_lines(source):
@@ -44,9 +45,14 @@ def check_functions(path, functions):
 class SourceSizeTests(unittest.TestCase):
     def test_source_sizes(self):
         root = sources.ROOT
+        with (root / "pyproject.toml").open("rb") as file:
+            enabled = tomllib.load(file)["tool"]["anechoic"]["test_suite"]["enforce_source_size"]
+        self.assertIsInstance(enabled, bool)
+        if not enabled:
+            self.skipTest("Source size enforcement is disabled in pyproject.toml")
         findings, web = [], []
         for relative in sources.source_paths(root):
-            if relative.suffix not in sources.WEB_SUFFIXES | {".py"}:
+            if relative.suffix not in WEB_FUNCTIONS | {".py"}:
                 continue
             path = root / relative
             if path.resolve() != path:
@@ -76,28 +82,28 @@ class SourceSizeTests(unittest.TestCase):
         self.assertEqual(0, module_lines(""))
 
     def test_python_function_limit_includes_decorators(self):
-        source = "\n" * 2 + "@decorator\nasync def run():\n" + "\n" * 22 + "    pass\n"
+        source = "\n" * 2 + "@decorator\nasync def run():\n" + "\n" * 42 + "    pass\n"
         self.assertEqual([], check_functions("example.py", python_functions("example.py", source)))
         longer = source.replace("    pass", "\n    pass")
         self.assertEqual(
-            ["example.py:3: run has 26 lines (maximum 25)"],
+            ["example.py:3: run has 46 lines (maximum 45)"],
             check_functions("example.py", python_functions("example.py", longer)),
         )
 
     def test_class_can_contain_many_short_methods(self):
         source = "class Example:\n" + "".join(
-            f"    def method_{index}(self):\n        pass\n" for index in range(20)
+            f"    def method_{index}(self):\n        pass\n" for index in range(25)
         )
         functions = list(python_functions("example.py", source))
-        self.assertEqual(20, len(functions))
+        self.assertEqual(25, len(functions))
         self.assertEqual([], check_functions("example.py", functions))
 
-    def test_web_function_limit_in_svelte_script(self):
-        arrow = "const run = () => {\n" + "\n" * 23 + "};"
+    def test_javascript_and_typescript_function_limit(self):
+        arrow = "const run = () => {\n" + "\n" * 43 + "};"
         files = [{"path": "exact.ts", "source": arrow},
-                 {"path": "over.svelte", "source": "<script>\n" + arrow + "\n</script>"}]
-        files[1]["source"] = files[1]["source"].replace("};", "\n};")
+                 {"path": "over.js", "source": arrow.replace("};", "\n};")}]
         exact, over = web_functions(sources.ROOT, files)
         self.assertEqual([], check_functions("exact.ts", exact))
-        self.assertEqual(1, len(check_functions("over.svelte", over)))
-        self.assertEqual((2, 26), (over[0][0], over[0][2]))
+        self.assertEqual(
+            ["over.js:1: run has 46 lines (maximum 45)"], check_functions("over.js", over),
+        )

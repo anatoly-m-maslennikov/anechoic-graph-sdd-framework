@@ -23,8 +23,6 @@ from ATOM_LIFECYCLE.native_update import (archive_spec_draft, archive_ticket, ch
                                            change_ticket_status, direct_update)
 
 
-# Shared case dimensions for static and MCP lifecycle checks.  None is the
-# admitted generic SPEC or template-free PROJECT_CONFIG Draft, not a wildcard.
 LIFECYCLE_TEMPLATES = {
     'TKT': ('task', 'epic', 'problem', 'question', 'code_spec_mismatch', 'opportunity',
             'analysis_report', 'work_report', 'work_log', 'spec_proposal'),
@@ -138,7 +136,6 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
                         status = {'current': ('active' if route == 'archive' else 'ready') if family == 'SPEC' else 'active' if family == 'PROJECT_CONFIG' else 'in_queue',
                                   'draft': 'draft', 'archived': 'archived'}[situation]
                         if family == 'PROJECT_CONFIG' and template is None and situation != 'draft':
-                            # Template-free PROJECT_CONFIG exists only as a Draft.
                             pass
                         else:
                             version = 2 if family == 'PROJECT_CONFIG' and situation == 'draft' and template is not None and not contained else 1
