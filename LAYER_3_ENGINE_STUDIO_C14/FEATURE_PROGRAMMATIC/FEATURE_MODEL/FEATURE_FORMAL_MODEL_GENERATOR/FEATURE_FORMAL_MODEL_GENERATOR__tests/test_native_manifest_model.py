@@ -29,6 +29,16 @@ class NativeManifestModelTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Project C00"):
             self.model.validate_manifest(fields, "C01")
 
+    def test_reviewed_component_manifest_accepts_optional_boundaries(self):
+        fields = {"atom_id": "AN-S-124", "ref_id": "AN-S-124@1", "version": 1,
+                  "tier": 0, "component_id": "C01", "name": "Engine"}
+        boundaries = {"code_access": {"imports": ["C02"]}}
+        self.assertIsNone(self.model.validate_component_manifest(fields, "C00").boundaries)
+        manifest = self.model.validate_component_manifest(fields | {"boundaries": boundaries}, "C00")
+        self.assertEqual(manifest.boundaries, boundaries)
+        with self.assertRaisesRegex(ValueError, "boundaries:"):
+            self.model.validate_component_manifest(fields | {"boundaries": ["C02"]}, "C00")
+
     def test_release_workflow_setting_is_an_optional_exact_boolean(self):
         self.model.validate_manifest(self.fields | {"parameters": {"project_mcp": {}}}, "C00")
         for enabled in (True, False):

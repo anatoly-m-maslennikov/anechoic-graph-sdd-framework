@@ -9,7 +9,7 @@
   },
   {
     "subject": "MODEL//ANECHOIC <+ Node//Artifact//Atom//Spec Atom//Manifest//Component Manifest",
-    "claim": "from caprmedio.formal_claims import declare_entity\nfrom caprmedio.model import Manifest\nfrom dataclasses import field\n\nclass ComponentManifest(Manifest):\n    tier: int = field(metadata={\"allowed_values\": (0,)})\n    component_id: str\n    name: str\n    layer: int | None = None\n\ndef check_component_manifest(manifest: ComponentManifest) -> bool:\n    return bool(manifest.component_id.strip() and manifest.name.strip())\n\ndeclare_entity(\n    entity_name=\"Component Manifest\",\n    entity_class=ComponentManifest,\n    instance_relation_constraints={\n        \"CONTAINED_BY\": {\"target_entity_paths\": (\"Node//Artifact//Component\",), \"targets_per_source\": 1},\n    },\n    instance_check=check_component_manifest,\n)\n"
+    "claim": "from caprmedio.formal_claims import declare_entity\nfrom caprmedio.model import Manifest\nfrom dataclasses import field\n\nclass ComponentManifest(Manifest):\n    tier: int = field(metadata={\"allowed_values\": (0,)})\n    component_id: str\n    name: str\n    layer: int | None = None\n    boundaries: dict[str, object] | None = None\n\ndef check_component_manifest(manifest: ComponentManifest) -> bool:\n    return bool(manifest.component_id.strip() and manifest.name.strip())\n\ndeclare_entity(\n    entity_name=\"Component Manifest\",\n    entity_class=ComponentManifest,\n    instance_relation_constraints={\n        \"CONTAINED_BY\": {\"target_entity_paths\": (\"Node//Artifact//Component\",), \"targets_per_source\": 1},\n    },\n    instance_check=check_component_manifest,\n)\n"
   },
   {
     "subject": "MODEL//ANECHOIC <+ Node//Artifact//Atom//Spec Atom//Purpose",

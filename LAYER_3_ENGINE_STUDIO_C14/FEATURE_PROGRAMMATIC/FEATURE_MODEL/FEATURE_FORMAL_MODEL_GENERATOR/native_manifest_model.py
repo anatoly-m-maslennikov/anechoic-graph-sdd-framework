@@ -21,12 +21,12 @@ from .model_declaration_sources import _check_relation_references, _merge_constr
 _ASSETS = Path(__file__).resolve().parent.parent / "FEATURE_GENERATED_MODEL"
 _CLAIM_FILES = {
     "native-graph-claims.json": "777f959c571424e73503cde96c78065d9da3cb1b04eb312cb8976f4b8faf60eb",
-    "native-spec-template-claims.json": "1d847774691f91b37db6445ce892810d8fe47e86f9d87b960d951dc2a3da437a",
+    "native-spec-template-claims.json": "7fd4e65d4c758a77dc731e3e6410233d683f36f5fa067bd48b995f101072db98",
 }
 _REVIEWED_CHECKS = {
     "check_atom_identity": "1756b0e117c6b68ae719f52cb805a69d2a2d198feb9a2996b94869698e13cd09",
     "check_project_manifest": "771c1c72eeae6ea67e1658e647fc3062dc07f725506372ff284d181b3cfe9b39",
-    "check_component_manifest": "47532369ca1bc4cbd73611f09a27b6142aafb453e1eb156b10198bc4d98dc978",
+    "check_component_manifest": "ae53cc8bacccac9d36d5a2d5b40f1a83e723f0ca903bc445e0f8d1e219d39c65",
     "check_purpose": "a080c8a08f9b2f066992045de8183f532eb0aa6fb1dc566e746bc3bed2701a3b",
     "check_contract": "087afdc97f4a8add78336871fbf1f3698718b97200fad1518f96ef8c20a72007",
     "check_package_spec": "8fb0a7cb026469fd2d3a020be0f9eb852dd4fc16b4c4610fa4131f39b24e698b",
