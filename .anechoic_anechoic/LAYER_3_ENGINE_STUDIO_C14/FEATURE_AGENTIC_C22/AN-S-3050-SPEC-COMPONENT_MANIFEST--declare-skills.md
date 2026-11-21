@@ -18,16 +18,18 @@ state:
 
 Declare SKILLS
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C23
-
-### Name
-
-SKILLS
-
-### Lens Whitelist
-
-["DES", "DevOps", "QA", "SWD"]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C23',
+        name='SKILLS',
+        lens_whitelist=['DES', 'DevOps', 'QA', 'SWD'],
+    ),
+)
+```

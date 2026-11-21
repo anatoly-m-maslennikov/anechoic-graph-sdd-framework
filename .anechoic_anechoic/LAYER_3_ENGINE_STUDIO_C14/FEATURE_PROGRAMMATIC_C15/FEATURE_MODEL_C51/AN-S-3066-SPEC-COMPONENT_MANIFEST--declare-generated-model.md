@@ -18,16 +18,18 @@ state:
 
 Declare GENERATED_MODEL
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C52
-
-### Name
-
-GENERATED_MODEL
-
-### Lens Whitelist
-
-[]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C52',
+        name='GENERATED_MODEL',
+        lens_whitelist=[],
+    ),
+)
+```

@@ -18,16 +18,18 @@ state:
 
 Declare ATOM_AUTHORING_PROMPT
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C54
-
-### Name
-
-ATOM_AUTHORING_PROMPT
-
-### Lens Whitelist
-
-["DES"]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C54',
+        name='ATOM_AUTHORING_PROMPT',
+        lens_whitelist=['DES'],
+    ),
+)
+```

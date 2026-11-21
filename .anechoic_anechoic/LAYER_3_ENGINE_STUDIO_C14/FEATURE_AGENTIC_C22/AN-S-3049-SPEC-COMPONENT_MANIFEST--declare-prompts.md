@@ -18,16 +18,18 @@ state:
 
 Declare PROMPTS
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C24
-
-### Name
-
-PROMPTS
-
-### Lens Whitelist
-
-["DES", "DevOps", "QA", "SPEC", "SWD"]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C24',
+        name='PROMPTS',
+        lens_whitelist=['DES', 'DevOps', 'QA', 'SPEC', 'SWD'],
+    ),
+)
+```

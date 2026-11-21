@@ -18,16 +18,18 @@ state:
 
 Declare SCOPE_UNIT_ACTIONS
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C36
-
-### Name
-
-SCOPE_UNIT_ACTIONS
-
-### Lens Whitelist
-
-[]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C36',
+        name='SCOPE_UNIT_ACTIONS',
+        lens_whitelist=[],
+    ),
+)
+```

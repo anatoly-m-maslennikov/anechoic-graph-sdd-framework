@@ -18,20 +18,18 @@ state:
 
 Declare Manifest Runtime
 
-## Claim
-
-### Formal Claim
+## Formal manifest
 
 ```python
 from anechoic.formal_claims import declare_entity
 from anechoic.model import ComponentManifest
 
 declare_entity(
-    entity_name="Component Manifest",
+    entity_name='Component Manifest',
     instance=ComponentManifest(
-        component_id="C62",
-        name="Manifest Runtime",
-        lens_whitelist=["SPEC"],
+        component_id='C62',
+        name='Manifest Runtime',
+        lens_whitelist=['SPEC'],
     ),
 )
 ```

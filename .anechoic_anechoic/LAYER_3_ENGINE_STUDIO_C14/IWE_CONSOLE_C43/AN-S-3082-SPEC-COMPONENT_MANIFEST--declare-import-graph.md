@@ -18,16 +18,18 @@ state:
 
 Declare IMPORT_GRAPH
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C61
-
-### Name
-
-IMPORT_GRAPH
-
-### Lens Whitelist
-
-["DES", "QA", "SWD"]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C61',
+        name='IMPORT_GRAPH',
+        lens_whitelist=['DES', 'QA', 'SWD'],
+    ),
+)
+```

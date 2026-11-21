@@ -18,16 +18,18 @@ state:
 
 Declare PROJECTION_ACTIONS
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C37
-
-### Name
-
-PROJECTION_ACTIONS
-
-### Lens Whitelist
-
-["DES", "DevOps", "QA", "SWD"]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C37',
+        name='PROJECTION_ACTIONS',
+        lens_whitelist=['DES', 'DevOps', 'QA', 'SWD'],
+    ),
+)
+```

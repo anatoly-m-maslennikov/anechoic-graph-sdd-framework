@@ -18,16 +18,18 @@ state:
 
 Declare MODEL_VALIDATION
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C53
-
-### Name
-
-MODEL_VALIDATION
-
-### Lens Whitelist
-
-["DES"]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C53',
+        name='MODEL_VALIDATION',
+        lens_whitelist=['DES'],
+    ),
+)
+```

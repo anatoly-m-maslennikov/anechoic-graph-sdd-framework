@@ -18,20 +18,19 @@ state:
 
 Declare Meta-ontology
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C9
-
-### Name
-
-Meta-ontology
-
-### Layer
-
-1
-
-### Lens Whitelist
-
-["DES", "DES/DOM", "DevOps", "QA", "SWD"]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C9',
+        name='Meta-ontology',
+        layer=1,
+        lens_whitelist=['DES', 'DES/DOM', 'DevOps', 'QA', 'SWD'],
+    ),
+)
+```

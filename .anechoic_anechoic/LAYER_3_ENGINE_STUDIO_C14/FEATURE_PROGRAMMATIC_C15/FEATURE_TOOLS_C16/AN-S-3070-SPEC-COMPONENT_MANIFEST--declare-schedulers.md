@@ -18,16 +18,18 @@ state:
 
 Declare SCHEDULERS
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C32
-
-### Name
-
-SCHEDULERS
-
-### Lens Whitelist
-
-["DES", "SPEC", "SWD"]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C32',
+        name='SCHEDULERS',
+        lens_whitelist=['DES', 'SPEC', 'SWD'],
+    ),
+)
+```

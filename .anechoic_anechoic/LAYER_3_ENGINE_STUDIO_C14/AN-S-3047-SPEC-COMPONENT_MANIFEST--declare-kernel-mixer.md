@@ -18,16 +18,18 @@ state:
 
 Declare Kernel Mixer
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C59
-
-### Name
-
-Kernel Mixer
-
-### Lens Whitelist
-
-["SPEC"]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C59',
+        name='Kernel Mixer',
+        lens_whitelist=['SPEC'],
+    ),
+)
+```

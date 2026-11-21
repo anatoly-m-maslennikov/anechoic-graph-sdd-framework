@@ -18,16 +18,18 @@ state:
 
 Declare WORKBENCH_BURST_500_RENAMED
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C910647071
-
-### Name
-
-WORKBENCH_BURST_500_RENAMED
-
-### Lens Whitelist
-
-["DES"]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C910647071',
+        name='WORKBENCH_BURST_500_RENAMED',
+        lens_whitelist=['DES'],
+    ),
+)
+```

@@ -18,16 +18,18 @@ state:
 
 Declare AGENTIC
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C22
-
-### Name
-
-AGENTIC
-
-### Lens Whitelist
-
-["DES", "DevOps", "SPEC", "SWD"]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C22',
+        name='AGENTIC',
+        lens_whitelist=['DES', 'DevOps', 'SPEC', 'SWD'],
+    ),
+)
+```

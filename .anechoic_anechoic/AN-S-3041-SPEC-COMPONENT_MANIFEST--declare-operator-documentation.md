@@ -18,20 +18,19 @@ state:
 
 Declare Operator Documentation
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C25
-
-### Name
-
-Operator Documentation
-
-### Layer
-
-3
-
-### Lens Whitelist
-
-["DevOps"]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C25',
+        name='Operator Documentation',
+        layer=3,
+        lens_whitelist=['DevOps'],
+    ),
+)
+```

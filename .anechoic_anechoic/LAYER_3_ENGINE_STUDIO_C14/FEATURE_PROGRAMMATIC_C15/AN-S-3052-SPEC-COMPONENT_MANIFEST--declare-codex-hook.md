@@ -18,16 +18,18 @@ state:
 
 Declare CODEX_HOOK
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C49
-
-### Name
-
-CODEX_HOOK
-
-### Lens Whitelist
-
-[]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C49',
+        name='CODEX_HOOK',
+        lens_whitelist=[],
+    ),
+)
+```

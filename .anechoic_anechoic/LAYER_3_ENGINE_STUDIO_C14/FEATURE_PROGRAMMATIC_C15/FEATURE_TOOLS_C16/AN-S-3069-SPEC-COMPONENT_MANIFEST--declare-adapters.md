@@ -18,16 +18,18 @@ state:
 
 Declare ADAPTERS
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C30
-
-### Name
-
-ADAPTERS
-
-### Lens Whitelist
-
-["SWD"]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C30',
+        name='ADAPTERS',
+        lens_whitelist=['SWD'],
+    ),
+)
+```

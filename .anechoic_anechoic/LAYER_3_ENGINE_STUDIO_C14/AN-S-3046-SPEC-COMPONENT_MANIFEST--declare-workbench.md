@@ -18,16 +18,18 @@ state:
 
 Declare WORKBENCH
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C43
-
-### Name
-
-WORKBENCH
-
-### Lens Whitelist
-
-["DES", "DevOps", "QA", "SPEC", "SWD"]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C43',
+        name='WORKBENCH',
+        lens_whitelist=['DES', 'DevOps', 'QA', 'SPEC', 'SWD'],
+    ),
+)
+```

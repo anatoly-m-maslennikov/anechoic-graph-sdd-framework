@@ -18,16 +18,18 @@ state:
 
 Declare APPS
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C20
-
-### Name
-
-APPS
-
-### Lens Whitelist
-
-["DES", "DevOps", "QA", "SPEC", "SWD"]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C20',
+        name='APPS',
+        lens_whitelist=['DES', 'DevOps', 'QA', 'SPEC', 'SWD'],
+    ),
+)
+```

@@ -18,16 +18,18 @@ state:
 
 Declare SINGLE_ACTIONS
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C31
-
-### Name
-
-SINGLE_ACTIONS
-
-### Lens Whitelist
-
-["DES", "SPEC", "SWD"]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C31',
+        name='SINGLE_ACTIONS',
+        lens_whitelist=['DES', 'SPEC', 'SWD'],
+    ),
+)
+```

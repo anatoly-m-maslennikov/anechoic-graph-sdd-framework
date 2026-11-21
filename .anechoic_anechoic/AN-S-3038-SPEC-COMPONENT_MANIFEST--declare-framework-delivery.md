@@ -18,20 +18,19 @@ state:
 
 Declare Framework Delivery
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C27
-
-### Name
-
-Framework Delivery
-
-### Layer
-
-5
-
-### Lens Whitelist
-
-["DES", "DevOps", "QA", "SWD"]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C27',
+        name='Framework Delivery',
+        layer=5,
+        lens_whitelist=['DES', 'DevOps', 'QA', 'SWD'],
+    ),
+)
+```

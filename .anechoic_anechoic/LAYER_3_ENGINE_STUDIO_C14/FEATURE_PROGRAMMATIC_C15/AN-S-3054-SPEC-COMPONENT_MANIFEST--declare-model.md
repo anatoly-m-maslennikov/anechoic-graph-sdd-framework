@@ -18,16 +18,18 @@ state:
 
 Declare MODEL
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C51
-
-### Name
-
-MODEL
-
-### Lens Whitelist
-
-["DES", "SPEC"]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C51',
+        name='MODEL',
+        lens_whitelist=['DES', 'SPEC'],
+    ),
+)
+```

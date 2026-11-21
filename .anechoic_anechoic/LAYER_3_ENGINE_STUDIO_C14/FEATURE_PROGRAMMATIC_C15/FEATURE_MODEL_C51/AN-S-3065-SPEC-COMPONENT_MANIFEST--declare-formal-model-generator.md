@@ -18,16 +18,18 @@ state:
 
 Declare FORMAL_MODEL_GENERATOR
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C50
-
-### Name
-
-FORMAL_MODEL_GENERATOR
-
-### Lens Whitelist
-
-["DES", "QA", "SWD"]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C50',
+        name='FORMAL_MODEL_GENERATOR',
+        lens_whitelist=['DES', 'QA', 'SWD'],
+    ),
+)
+```

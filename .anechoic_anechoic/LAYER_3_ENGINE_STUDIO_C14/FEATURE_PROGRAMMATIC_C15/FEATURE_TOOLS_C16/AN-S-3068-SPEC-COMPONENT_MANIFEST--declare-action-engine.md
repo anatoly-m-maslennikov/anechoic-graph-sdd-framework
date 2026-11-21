@@ -18,16 +18,18 @@ state:
 
 Declare ACTION_ENGINE
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C34
-
-### Name
-
-ACTION_ENGINE
-
-### Lens Whitelist
-
-["DES", "DevOps", "QA", "SWD"]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C34',
+        name='ACTION_ENGINE',
+        lens_whitelist=['DES', 'DevOps', 'QA', 'SWD'],
+    ),
+)
+```

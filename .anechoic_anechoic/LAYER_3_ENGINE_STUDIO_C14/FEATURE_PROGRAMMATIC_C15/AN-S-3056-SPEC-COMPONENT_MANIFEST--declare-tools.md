@@ -18,16 +18,18 @@ state:
 
 Declare TOOLS
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C16
-
-### Name
-
-TOOLS
-
-### Lens Whitelist
-
-["DES", "DevOps", "QA", "SPEC", "SWD"]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C16',
+        name='TOOLS',
+        lens_whitelist=['DES', 'DevOps', 'QA', 'SPEC', 'SWD'],
+    ),
+)
+```

@@ -18,16 +18,18 @@ state:
 
 Declare ATOM_ACTIONS
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C35
-
-### Name
-
-ATOM_ACTIONS
-
-### Lens Whitelist
-
-["DES", "QA"]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C35',
+        name='ATOM_ACTIONS',
+        lens_whitelist=['DES', 'QA'],
+    ),
+)
+```

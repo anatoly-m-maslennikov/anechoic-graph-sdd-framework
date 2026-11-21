@@ -18,16 +18,18 @@ state:
 
 Declare SUBJECT_ATOM_GATHERER_PROMPT
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C57
-
-### Name
-
-SUBJECT_ATOM_GATHERER_PROMPT
-
-### Lens Whitelist
-
-["DES"]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C57',
+        name='SUBJECT_ATOM_GATHERER_PROMPT',
+        lens_whitelist=['DES'],
+    ),
+)
+```

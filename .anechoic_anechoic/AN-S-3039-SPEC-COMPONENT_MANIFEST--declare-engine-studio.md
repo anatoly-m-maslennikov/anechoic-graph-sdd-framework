@@ -18,20 +18,19 @@ state:
 
 Declare Engine Studio
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C14
-
-### Name
-
-Engine Studio
-
-### Layer
-
-3
-
-### Lens Whitelist
-
-["DES", "DevOps", "QA", "SPEC", "SWD"]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C14',
+        name='Engine Studio',
+        layer=3,
+        lens_whitelist=['DES', 'DevOps', 'QA', 'SPEC', 'SWD'],
+    ),
+)
+```

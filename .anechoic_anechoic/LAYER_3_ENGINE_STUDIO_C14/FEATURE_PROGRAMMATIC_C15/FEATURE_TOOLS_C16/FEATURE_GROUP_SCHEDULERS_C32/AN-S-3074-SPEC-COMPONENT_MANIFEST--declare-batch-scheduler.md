@@ -18,16 +18,18 @@ state:
 
 Declare BATCH_SCHEDULER
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C41
-
-### Name
-
-BATCH_SCHEDULER
-
-### Lens Whitelist
-
-[]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C41',
+        name='BATCH_SCHEDULER',
+        lens_whitelist=[],
+    ),
+)
+```

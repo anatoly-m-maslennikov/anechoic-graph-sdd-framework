@@ -18,16 +18,18 @@ state:
 
 Declare AUTONOMOUS_ATOM_REWRITE_PROMPT
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C55
-
-### Name
-
-AUTONOMOUS_ATOM_REWRITE_PROMPT
-
-### Lens Whitelist
-
-["DES"]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C55',
+        name='AUTONOMOUS_ATOM_REWRITE_PROMPT',
+        lens_whitelist=['DES'],
+    ),
+)
+```

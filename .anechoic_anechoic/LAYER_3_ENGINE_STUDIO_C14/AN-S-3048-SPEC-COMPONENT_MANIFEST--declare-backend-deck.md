@@ -18,16 +18,18 @@ state:
 
 Declare Backend Deck
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C60
-
-### Name
-
-Backend Deck
-
-### Lens Whitelist
-
-["SPEC"]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C60',
+        name='Backend Deck',
+        lens_whitelist=['SPEC'],
+    ),
+)
+```

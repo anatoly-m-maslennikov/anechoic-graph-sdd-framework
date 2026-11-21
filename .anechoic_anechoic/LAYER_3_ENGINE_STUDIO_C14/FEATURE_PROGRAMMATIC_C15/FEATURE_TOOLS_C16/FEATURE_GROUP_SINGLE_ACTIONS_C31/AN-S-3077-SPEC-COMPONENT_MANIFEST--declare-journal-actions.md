@@ -18,16 +18,18 @@ state:
 
 Declare JOURNAL_ACTIONS
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C38
-
-### Name
-
-JOURNAL_ACTIONS
-
-### Lens Whitelist
-
-[]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C38',
+        name='JOURNAL_ACTIONS',
+        lens_whitelist=[],
+    ),
+)
+```

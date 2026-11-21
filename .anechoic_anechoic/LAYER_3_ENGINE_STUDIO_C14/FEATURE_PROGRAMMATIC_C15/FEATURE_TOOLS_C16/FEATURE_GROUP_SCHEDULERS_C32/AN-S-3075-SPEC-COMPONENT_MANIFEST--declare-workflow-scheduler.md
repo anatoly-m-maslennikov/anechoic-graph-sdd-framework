@@ -18,16 +18,18 @@ state:
 
 Declare WORKFLOW_SCHEDULER
 
-## Claim
+## Formal manifest
 
-### Component ID
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
 
-C42
-
-### Name
-
-WORKFLOW_SCHEDULER
-
-### Lens Whitelist
-
-[]
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C42',
+        name='WORKFLOW_SCHEDULER',
+        lens_whitelist=[],
+    ),
+)
+```
