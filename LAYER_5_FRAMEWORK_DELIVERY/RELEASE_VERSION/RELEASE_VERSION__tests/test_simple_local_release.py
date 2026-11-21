@@ -208,12 +208,13 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             self.assertEqual(source.read_bytes(), (product_sources / relative).read_bytes())
 
     def test_production_tag_failure_keeps_successful_deployment(self):
-        self.image.mark_production_image.side_effect = local_release.ImageError("tag unavailable")
+        self.image.mark_production_image.side_effect = RuntimeError("tag unavailable")
         runner, _ = self._runner()
         result = run_local_release(self.root, run_id="tag-failed", runner=runner)
         self.assertEqual("completed_with_cleanup_pending", result["outcome"])
         self.assertIn("Production image display tag failed: Runtime image operation failed",
                       (self.root / result["receipt_path"]).read_text())
+        self.assertNotIn("tag unavailable", (self.root / result["receipt_path"]).read_text())
 
     def test_native_manifest_change_stops_before_product_replacement(self):
         runner, _ = self._runner()

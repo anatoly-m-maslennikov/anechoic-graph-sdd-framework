@@ -25,7 +25,6 @@ from release_cleanup import cleanup_obsolete_images, cleanup_stopped_containers 
 from release_cleanup_identity import image_labels  # noqa: E402
 from release_cleanup_images import record_ready_images  # noqa: E402
 from release_image_provenance import release_image_provenance  # noqa: E402
-from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images import ImageError  # noqa: E402
 from LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.local_release_test_process import run_logged_test_process  # noqa: E402
 from release_support import (  # noqa: E402
     LocalReleaseError,
@@ -465,9 +464,9 @@ def run_local_release(
                     raise LocalReleaseError("local-release-installed-image-mismatch")
                 try:
                     manager.mark_production_image(candidate_image)
-                except ImageError as error:
+                except RuntimeError:
                     cleanup.pending = True
-                    cleanup.notes.append(f"Production image display tag failed: {error}")
+                    cleanup.notes.append("Production image display tag failed: Runtime image operation failed")
                 cleanup_stopped_containers(
                     root, selection.instance_id, selection.control_relative.as_posix(),
                     candidate_image, candidate_fingerprint, cleanup_runner, cleanup=cleanup,

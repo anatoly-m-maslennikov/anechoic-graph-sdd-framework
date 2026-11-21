@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS"))
@@ -17,6 +17,27 @@ from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP import native_startu
 
 
 class CanaryTests(unittest.TestCase):
+    def test_mcp_probe_initializes_on_the_loopback_port(self):
+        with (
+            patch("httpx2.AsyncClient") as client,
+            patch("mcp.client.streamable_http.streamable_http_client") as transport,
+            patch("mcp.client.session.ClientSession") as session,
+        ):
+            streams = (object(), object())
+            transport.return_value.__aenter__.return_value = streams
+            initialize = AsyncMock()
+            session.return_value.__aenter__.return_value.initialize = initialize
+            self.assertTrue(release_canary._mcp_ready(54321, 2.0))
+            client.assert_called_once_with(trust_env=False, follow_redirects=False, timeout=2.0)
+            transport.assert_called_once_with(
+                "http://127.0.0.1:54321/anechoic/mcp",
+                http_client=client.return_value.__aenter__.return_value,
+            )
+            session.assert_called_once_with(*streams)
+            initialize.assert_awaited_once_with()
+            initialize.side_effect = RuntimeError("could not initialize")
+            self.assertFalse(release_canary._mcp_ready(54321, 2.0))
+
     def test_probe_uses_candidate_and_cleans_up_on_success_and_failure(self):
         tags = set()
         for ready in (True, False):
@@ -44,13 +65,15 @@ class CanaryTests(unittest.TestCase):
                 with patch.object(native_startup, "select_runtime_project", return_value=selection), \
                      patch.object(release_canary.subprocess, "run", side_effect=run), \
                      patch.object(release_canary._HTTP, "open", return_value=health), \
-                     patch.object(release_canary.ProjectMcpBackend, "health", return_value=ready):
+                     patch.object(release_canary, "_mcp_ready", return_value=ready) as probe:
                     if ready:
                         self.assertEqual(release_canary.verify_candidate_image(root, selection, package, staging, image, run_id="session-1"),
                                          "http://127.0.0.1:54321/anechoic/mcp")
                     else:
                         with self.assertRaises(release_canary.LocalReleaseError):
                             release_canary.verify_candidate_image(root, selection, package, staging, image, run_id="session-1")
+                    self.assertEqual(54321, probe.call_args.args[0])
+                    self.assertGreater(probe.call_args.args[1], 0)
                 tag = calls[0][-1]
                 self.assertTrue(tag.startswith("anechoic-runtime:candidate-session-1-"))
                 self.assertEqual(calls[0], ["docker", "image", "tag", image, tag])
