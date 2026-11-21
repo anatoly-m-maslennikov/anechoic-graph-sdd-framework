@@ -33,13 +33,8 @@ try:
     )
     from .image_display_tags import ensure_display_tag
     from .image_provenance import ImageBuildProvenance, label_arguments
-    from .image_relation_registry import compile_lifecycle_assets as _compile_lifecycle_assets
-    from .image_relation_registry import RELATION_REGISTRY_COMPILER
-    from .image_relation_registry import compile_relation_registry as _compile_relation_registry
-    from .image_relation_registry import WORKBENCH_SCHEMA_COMPILER
-    from .image_relation_registry import compile_workbench_schema as _compile_workbench_schema
-    from .image_relation_registry import TOOL_REGISTRY, TOOL_REGISTRY_COMPILER, TOOL_PROVIDERS
-    from .image_relation_registry import compile_tool_registry as _compile_tool_registry
+    from .image_tool_registry import TOOL_REGISTRY
+    from .image_tool_registry import compile_tool_registry as _compile_tool_registry
     from .image_docker_client import MAX_OUTPUT as _MAX_OUTPUT
     from .image_docker_client import bounded_run as _bounded_run
     from .image_docker_client import docker_client_environment as _docker_client_environment
@@ -48,13 +43,8 @@ except ImportError:  # direct execution/import with docker/ on sys.path
     from image_metadata import OCI_VERSION_LABEL, docker_created_utc, read_framework_version
     from image_display_tags import ensure_display_tag
     from image_provenance import ImageBuildProvenance, label_arguments
-    from image_relation_registry import compile_lifecycle_assets as _compile_lifecycle_assets
-    from image_relation_registry import RELATION_REGISTRY_COMPILER
-    from image_relation_registry import compile_relation_registry as _compile_relation_registry
-    from image_relation_registry import WORKBENCH_SCHEMA_COMPILER
-    from image_relation_registry import compile_workbench_schema as _compile_workbench_schema
-    from image_relation_registry import TOOL_REGISTRY, TOOL_REGISTRY_COMPILER, TOOL_PROVIDERS
-    from image_relation_registry import compile_tool_registry as _compile_tool_registry
+    from image_tool_registry import TOOL_REGISTRY
+    from image_tool_registry import compile_tool_registry as _compile_tool_registry
     from image_docker_client import MAX_OUTPUT as _MAX_OUTPUT
     from image_docker_client import bounded_run as _bounded_run
     from image_docker_client import docker_client_environment as _docker_client_environment
@@ -64,16 +54,18 @@ ENGINE_ROOT = "LAYER_3_ENGINE_STUDIO_C14"
 DOCKER_ROOT = ENGINE_ROOT + "/MCP_PATCHBAY_C21/FEATURE_MCP/docker"
 DOCKERFILE = DOCKER_ROOT + "/Dockerfile"
 DOCKERIGNORE = DOCKER_ROOT + "/Dockerfile.dockerignore"
-RELATION_REGISTRY = (ENGINE_ROOT
-                     + "/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/"
-                     + "canonical_relation_registry.json")
-WORKBENCH_SCHEMA = (ENGINE_ROOT
-                    + "/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/"
-                    + "workbench_schema.json")
-LIFECYCLE_ROOT = ENGINE_ROOT + "/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_LIFECYCLE/"
-STATUS_MODEL = LIFECYCLE_ROOT + "status_model.json"
-CANDIDATE_SCHEMA = LIFECYCLE_ROOT + "candidate_schema.json"
-_GENERATED_ASSETS = frozenset({RELATION_REGISTRY, WORKBENCH_SCHEMA, TOOL_REGISTRY, STATUS_MODEL, CANDIDATE_SCHEMA})
+# Retired build outputs may still be present in a source checkout.
+RETIRED_ASSETS = frozenset(
+    ENGINE_ROOT + "/" + directory + "/" + name
+    for directory, names in (
+        ("IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND",
+         ("canonical_relation_registry.json", "workbench_schema.json")),
+        ("FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_LIFECYCLE",
+         ("status_model.json", "candidate_schema.json")),
+    )
+    for name in names
+)
+_GENERATED_ASSETS = frozenset({TOOL_REGISTRY})
 SCHEMA_LABEL = "org.anechoic.runtime.schema"
 FINGERPRINT_LABEL = "org.anechoic.runtime.fingerprint"
 SCHEMA = "1"
@@ -122,11 +114,8 @@ class ImageIdentity:
     manifest: tuple[BuildInput, ...]
     uid: int
     gid: int
-    relation_registry: bytes
-    workbench_schema: bytes
     tool_registry: bytes
-    status_model: bytes
-    candidate_schema: bytes
+    model_sha256: str | None
 
 
 def _canonical(value: object) -> bytes:
@@ -256,8 +245,10 @@ class ImageManager:
             if state.is_symlink() or not state.is_dir():
                 raise self._input_error()
         tools = Path(__file__).resolve().parents[3] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
-        if str(tools) not in sys.path:
-            sys.path.insert(0, str(tools))
+        for directory in (tools, tools.parent, tools.parents[1] / "IWE_CONSOLE_C43",
+                          Path(__file__).resolve().parents[1]):
+            if str(directory) not in sys.path:
+                sys.path.insert(0, str(directory))
         try:
             from native_startup import select_runtime_project
             selection = select_runtime_project(root)
@@ -275,25 +266,18 @@ class ImageManager:
         except Exception as error:
             raise self._input_error() from error
 
-    def _generated_assets(self, root: Path) -> tuple[bytes, bytes, bytes, bytes, bytes]:
-        try:
-            project = self._project_root()
-            registry = _compile_relation_registry(
-                root, project, timeout=self.timeout, max_output=_MAX_OUTPUT,
-            )
-            schema = _compile_workbench_schema(
-                root, project, timeout=self.timeout, max_output=_MAX_OUTPUT,
-            )
-            tools = _compile_tool_registry(root, timeout=self.timeout, max_output=_MAX_OUTPUT)
-            previous_image = self._build_predecessor()
-            options = {"previous_image": previous_image} if previous_image is not None else {}
-            status, candidate = _compile_lifecycle_assets(root, project, timeout=self.timeout,
-                                                          max_output=_MAX_OUTPUT, **options)
-        except Exception as error:
-            raise self._input_error() from error
-        if not all(isinstance(asset, bytes) and asset for asset in (registry, schema, tools, status, candidate)):
-            raise self._input_error()
-        return registry, schema, tools, status, candidate
+    def _refresh_model(self, root: Path) -> str:
+        previous = self._build_predecessor()
+        command = [sys.executable, "-B", str(self._file(root, DOCKER_ROOT + "/native_model_refresh.py")),
+                   str(self._project_root()), str(self.timeout)]
+        if previous is not None:
+            command.append(previous)
+        result = subprocess.run(command, cwd=root, stdin=subprocess.DEVNULL,
+                                stdout=subprocess.PIPE, text=True, timeout=self.timeout, check=False)
+        fingerprint = result.stdout.strip()
+        if result.returncode or re.fullmatch(r"[0-9a-f]{64}", fingerprint) is None:
+            raise ImageError("IMAGE_INPUT_UNAVAILABLE", "Native Model refresh failed")
+        return fingerprint
 
     def _build_parent(self) -> Path:
         temporary = self._project_root() / ".anechoic_tmp"
@@ -347,7 +331,7 @@ class ImageManager:
                     continue
                 path = folder / name
                 relative = path.relative_to(root).as_posix()
-                if relative in _GENERATED_ASSETS:
+                if relative in _GENERATED_ASSETS | RETIRED_ASSETS:
                     if path.is_symlink() or not path.is_file():
                         raise self._input_error()
                     continue
@@ -361,33 +345,28 @@ class ImageManager:
         root = self._root()
         try:
             version = read_framework_version(self._file(root, "version.toml"))
+            model_sha256 = None
             if use_packaged_assets:
-                registry, schema, tools, status, candidate = (
-                    self._file(root, path).read_bytes()
-                    for path in (RELATION_REGISTRY, WORKBENCH_SCHEMA, TOOL_REGISTRY, STATUS_MODEL, CANDIDATE_SCHEMA)
-                )
-                if not all((registry, schema, tools, status, candidate)):
-                    raise self._input_error()
+                tools = self._file(root, TOOL_REGISTRY).read_bytes()
             else:
-                registry, schema, tools, status, candidate = self._generated_assets(root)
+                model_sha256 = self._refresh_model(root)
+                tools = _compile_tool_registry(root, timeout=self.timeout, max_output=_MAX_OUTPUT)
+            if not tools:
+                raise self._input_error()
             rows = [BuildInput(path.relative_to(root).as_posix(),
                                hashlib.sha256(path.read_bytes()).hexdigest(),
                                path.stat().st_mode & 0o777)
                     for path in self._files(root)]
-            rows.append(BuildInput(RELATION_REGISTRY, hashlib.sha256(registry).hexdigest(), 0o644))
-            rows.append(BuildInput(WORKBENCH_SCHEMA, hashlib.sha256(schema).hexdigest(), 0o644))
             rows.append(BuildInput(TOOL_REGISTRY, hashlib.sha256(tools).hexdigest(), 0o644))
-            rows.append(BuildInput(STATUS_MODEL, hashlib.sha256(status).hexdigest(), 0o644))
-            rows.append(BuildInput(CANDIDATE_SCHEMA, hashlib.sha256(candidate).hexdigest(), 0o644))
             rows = tuple(sorted(rows, key=lambda row: row.path))
-        except (OSError, ValueError, UnicodeError) as error:
+        except (OSError, ValueError, UnicodeError, subprocess.SubprocessError) as error:
             raise self._input_error() from error
         payload = {"schema": SCHEMA, "platform": self.platform,
                    "build_arguments": {"RUNTIME_UID": self.uid, "RUNTIME_GID": self.gid},
                    "files": [[row.path, row.sha256, row.mode] for row in rows]}
         fingerprint = hashlib.sha256(_canonical(payload)).hexdigest()
         return ImageIdentity(fingerprint, "anechoic-runtime:inputs-" + fingerprint, version,
-                             self.platform, rows, self.uid, self.gid, registry, schema, tools, status, candidate)
+                             self.platform, rows, self.uid, self.gid, tools, model_sha256)
 
     def _run(self, argv, *, code="IMAGE_REFUSED", cwd=None, buildx_config=None,
              allow_failure=False):
@@ -544,16 +523,8 @@ class ImageManager:
         root = self._root()
         try:
             for row in identity.manifest:
-                if row.path == RELATION_REGISTRY:
-                    payload = identity.relation_registry
-                elif row.path == WORKBENCH_SCHEMA:
-                    payload = identity.workbench_schema
-                elif row.path == TOOL_REGISTRY:
+                if row.path == TOOL_REGISTRY:
                     payload = identity.tool_registry
-                elif row.path == STATUS_MODEL:
-                    payload = identity.status_model
-                elif row.path == CANDIDATE_SCHEMA:
-                    payload = identity.candidate_schema
                 else:
                     source = self._file(root, row.path)
                     payload = source.read_bytes()
@@ -583,6 +554,7 @@ class ImageManager:
             raise self._input_error()
 
         try:
+            ignore_finder = self._file(context, DOCKERIGNORE).read_bytes().rstrip().endswith(b"\n**/.DS_Store")
             for current, directories, names in os.walk(context, followlinks=False, onerror=unavailable):
                 folder = Path(current)
                 for name in directories:
@@ -595,6 +567,8 @@ class ImageManager:
                 for name in names:
                     path = folder / name
                     relative = path.relative_to(context).as_posix()
+                    if ignore_finder and name == ".DS_Store" and not path.is_symlink() and path.is_file():
+                        continue
                     if relative not in expected or path.is_symlink() or not path.is_file():
                         # Reject an unadmitted name before any content read.
                         raise self._input_error()

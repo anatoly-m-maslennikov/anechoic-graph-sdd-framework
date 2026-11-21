@@ -251,6 +251,23 @@ declare_relation(
         self.assertIs(result["arguments"]["source_endpoint"]["classification_axis"], True)
         self.assertIs(result["arguments"]["target_endpoint"]["ephemeral"], False)
 
+    def test_relation_classifications_require_trimmed_nonempty_mappings(self):
+        prefix = ('from anechoic.formal_claims import declare_relation\n'
+                  'declare_relation(relation_name="R", source_endpoint={}, target_endpoint={}')
+        metadata = ', inverse_alias="R_INVERSE", classifications={"Axis": "Value"}, inverse_classifications={"Axis": "Other"}'
+        arguments = parse_native_model_claim(prefix + metadata + ')')["arguments"]
+        self.assertEqual({"Axis": "Value"}, arguments["classifications"])
+        self.assertEqual({"Axis": "Other"}, arguments["inverse_classifications"])
+        self.assertNotIn("classifications", parse_native_model_claim(prefix + ')')["arguments"])
+        for field in ("classifications", "inverse_classifications"):
+            for value in ('{}', '[]', '{"": "Value"}', '{" Axis": "Value"}',
+                          '{"Axis": ""}', '{"Axis": " Value"}', '{"Axis": 1}'):
+                claim = prefix + f', inverse_alias="R_INVERSE", {field}={value})'
+                with self.subTest(field=field, value=value), self.assertRaises(NativeModelClaimError):
+                    parse_native_model_claim(claim)
+        with self.assertRaisesRegex(NativeModelClaimError, "requires inverse_alias"):
+            parse_native_model_claim(prefix + ', inverse_classifications={"Axis": "Value"})')
+
     def test_legacy_claim_is_identified_for_existing_reader(self):
         self.assertIsNone(parse_native_model_claim('property_rule(address="Atom.Name", values="1")'))
 

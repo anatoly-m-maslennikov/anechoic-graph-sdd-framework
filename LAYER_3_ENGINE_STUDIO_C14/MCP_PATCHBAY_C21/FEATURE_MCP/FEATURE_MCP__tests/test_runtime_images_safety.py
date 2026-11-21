@@ -20,7 +20,6 @@ APP = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(APP / "docker"))
 import runtime_images as images  # noqa: E402
 import image_docker_client as docker_client  # noqa: E402
-from image_relation_registry import compile_lifecycle_assets  # noqa: E402
 from project_mcp_backend import ProjectMcpBackend  # noqa: E402
 
 
@@ -183,18 +182,12 @@ class ImageOutputSafetyTests(unittest.TestCase):
 
 class ImageCredentialContextTests(unittest.TestCase):
     def test_known_credential_stores_are_neither_read_hashed_nor_copied(self):
-        compiler = patch.object(images, "_compile_relation_registry", return_value=b'{"schema_version":1}\n')
-        compiler.start()
-        self.addCleanup(compiler.stop)
-        schema = patch.object(images, "_compile_workbench_schema", return_value=b'{"schema_version":1}\n')
-        schema.start()
-        self.addCleanup(schema.stop)
+        model = patch.object(images.ImageManager, "_refresh_model", return_value="a" * 64)
+        model.start()
+        self.addCleanup(model.stop)
         tools = patch.object(images, "_compile_tool_registry", return_value=b'{"schema_version":1}\n')
         tools.start()
         self.addCleanup(tools.stop)
-        lifecycle = patch("runtime_images._compile_lifecycle_assets", return_value=(b'{"schema_version":1}\n', b'{"schema_version":1}\n'))
-        lifecycle.start()
-        self.addCleanup(lifecycle.stop)
         parent = APP.parents[2] / ".anechoic_tmp/launcher-epic-1829/images"
         parent.mkdir(parents=True, exist_ok=True)
         source = Path(tempfile.mkdtemp(prefix="image-credentials-", dir=parent))
@@ -318,124 +311,30 @@ class LifecycleImageAssetsTests(unittest.TestCase):
                 self.assertIsNone(manager._build_predecessor())
                 resolver.assert_not_called()
 
-    def test_image_manager_passes_explicit_predecessor(self):
+    def test_refresh_uses_explicit_predecessor(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
+            selector = root / images.DOCKER_ROOT / "native_model_refresh.py"
+            selector.parent.mkdir(parents=True)
+            selector.touch()
             manager = images.ImageManager(root, project_root=root, previous_image=IMAGE_ID)
-            with patch.object(images, "_compile_relation_registry", return_value=b"{}"), \
-                 patch.object(images, "_compile_workbench_schema", return_value=b"{}"), \
-                 patch.object(images, "_compile_tool_registry", return_value=b"{}"), \
-                 patch.object(images, "_compile_lifecycle_assets", return_value=(b"{}", b"{}")) as compile_assets:
-                manager._generated_assets(root)
-            self.assertEqual(IMAGE_ID, compile_assets.call_args.kwargs["previous_image"])
+            with patch.object(images.subprocess, "run", return_value=SimpleNamespace(
+                stdout="b" * 64 + "\n", returncode=0,
+            )) as run:
+                self.assertEqual("b" * 64, manager._refresh_model(root))
+                self.assertEqual(IMAGE_ID, run.call_args.args[0][-1])
             with self.assertRaises(images.ImageError):
                 images.ImageManager(root, project_root=root, previous_image="mutable:tag")
 
-    def test_previous_image_runs_staged_read_only_selector_for_candidate_only(self):
+    def test_previous_ready_image_is_required_when_recorded(self):
+        from native_model_refresh import previous_claims
+
         with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            (root / ".anechoic_tmp").mkdir()
-            model = root / "METHODOLOGY/sources"
-            model.mkdir(parents=True)
-            (model / "source.md").write_text("source", encoding="utf-8")
-            lifecycle = root / images.LIFECYCLE_ROOT
-            lifecycle.mkdir(parents=True)
-            for name in ("placement_sources", "status_model", "candidate_schema"):
-                (lifecycle / f"{name}.py").write_text("# fixture", encoding="utf-8")
-            calls, compilers = [], []
-
-            def docker(argv, **kwargs):
-                calls.append(argv)
-                self.assertEqual(1024, kwargs["max_output"])
-                if argv[1:3] == ["image", "inspect"]:
-                    payload = [{"Id": IMAGE_ID, "Os": "linux", "Architecture": "arm64",
-                                "Config": {"Labels": {images.SCHEMA_LABEL: images.SCHEMA}}}]
-                else:
-                    self.assertTrue({"--rm", "--pull=never", "--network=none", "--read-only"} <= set(argv))
-                    self.assertEqual(IMAGE_ID, argv[-3])
-                    mounts = [argv[i + 1] for i, value in enumerate(argv) if value == "--mount"]
-                    self.assertEqual(2, len(mounts))
-                    self.assertTrue(all(value.endswith(",readonly") for value in mounts))
-                    staged = Path(mounts[0].split(",")[1].removeprefix("src="))
-                    self.assertNotEqual(model, staged)
-                    self.assertEqual("source", (staged / "source.md").read_text())
-                    payload = {"placement": []}
-                return subprocess.CompletedProcess(argv, 0, json.dumps(payload), "")
-
-            def compiler(argv, **_kwargs):
-                compilers.append(argv)
-                Path(argv[argv.index("--output") + 1]).write_text("{}", encoding="utf-8")
-                if argv[2].endswith("candidate_schema.py"):
-                    selected = Path(argv[argv.index("--placement-selection") + 1])
-                    self.assertEqual({"placement": []}, json.loads(selected.read_text()))
-                else:
-                    self.assertNotIn("--placement-selection", argv)
-                return subprocess.CompletedProcess(argv, 0)
-
-            with patch("image_relation_registry.bounded_run", side_effect=docker), \
-                 patch("image_relation_registry.verify_status_workflow_asset"), \
-                 patch("image_relation_registry.subprocess.run", side_effect=compiler):
-                self.assertEqual((b"{}", b"{}"), compile_lifecycle_assets(
-                    root, root, timeout=5, max_output=1024, previous_image=IMAGE_ID))
-            self.assertEqual(2, len(calls))
-            self.assertEqual(2, len(compilers))
-
-    def test_missing_previous_image_fails_without_native_fallback(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            (root / ".anechoic_tmp").mkdir()
-            (root / "METHODOLOGY/sources").mkdir(parents=True)
             failed = subprocess.CompletedProcess([], 1, "", "")
-            with patch("image_relation_registry.bounded_run", return_value=failed), \
-                 patch("image_relation_registry.verify_status_workflow_asset"), \
-                 patch("image_relation_registry.subprocess.run") as compiler:
-                with self.assertRaisesRegex(ValueError, "previous image is unavailable"):
-                    compile_lifecycle_assets(root, root, timeout=5, max_output=1024, previous_image=IMAGE_ID)
-                compiler.assert_not_called()
-
-    def test_image_compiles_the_packaged_sources_after_workflow_verification(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            (root / ".anechoic_tmp").mkdir()
-            sources = root / "METHODOLOGY/sources"
-            sources.mkdir(parents=True)
-            pin = sources / "workflow.md"
-            pin.write_text("reviewed", encoding="utf-8")
-            lifecycle = root / images.LIFECYCLE_ROOT
-            (lifecycle / "assets").mkdir(parents=True)
-            (lifecycle / "assets/change_current_status.py").touch()
-            sidecar = lifecycle / "assets/change_current_status_sources.json"
-            sidecar.write_text("{}", encoding="utf-8")
-            (lifecycle / "status_workflow_definition.py").write_text(
-                "from pathlib import Path\nimport sys\n"
-                "assert (Path(sys.argv[2]) / 'workflow.md').read_text() == 'reviewed'\n",
-                encoding="utf-8",
-            )
-            for name in ("status_model", "candidate_schema"):
-                (lifecycle / f"{name}.py").write_text(
-                    "from pathlib import Path\nimport sys\n"
-                    "Path(sys.argv[4]).write_bytes((Path(sys.argv[2]) / 'workflow.md').read_bytes())\n",
-                    encoding="utf-8",
-                )
-            self.assertEqual(
-                (b"reviewed", b"reviewed"),
-                compile_lifecycle_assets(root, root, timeout=5, max_output=1024),
-            )
-            pin.write_text("changed", encoding="utf-8")
-            with self.assertRaisesRegex(ValueError, "workflow verification failed"):
-                compile_lifecycle_assets(root, root, timeout=5, max_output=1024)
-            sidecar.unlink()
-            with self.assertRaisesRegex(ValueError, "workflow files are unavailable"):
-                compile_lifecycle_assets(root, root, timeout=5, max_output=1024)
-            sidecar.symlink_to(pin)
-            with self.assertRaisesRegex(ValueError, "workflow files are unavailable"):
-                compile_lifecycle_assets(root, root, timeout=5, max_output=1024)
-            sidecar.unlink()
-            (lifecycle / "native_update.py").touch()
-            (lifecycle / "assets/change_current_status.py").unlink()
-            (lifecycle / "status_workflow_definition.py").unlink()
-            with self.assertRaisesRegex(ValueError, "workflow files are missing from the native runtime"):
-                compile_lifecycle_assets(root, root, timeout=5, max_output=1024)
+            with patch.object(docker_client, "bounded_run", return_value=failed) as docker:
+                with self.assertRaisesRegex(ValueError, "Previous ready image is unavailable"):
+                    previous_claims(Path(temporary), IMAGE_ID, timeout=5)
+                docker.assert_called_once()
 
 
 if __name__ == "__main__":

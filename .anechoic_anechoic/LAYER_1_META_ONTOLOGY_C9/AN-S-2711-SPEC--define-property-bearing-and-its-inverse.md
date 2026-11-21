@@ -8,8 +8,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 9
-  updated_at: '2026-11-20T11:17:59+00:00'
+  version: 10
+  updated_at: '2026-11-21T12:25:59+00:00'
 ---
 
 ## Summary
@@ -33,3 +33,11 @@ declare_relation(
     target_endpoint={"level": "model_entities"},
 )
 ```
+
+## Classifications
+
+| Relation | Transitive | Functional |
+| --- | --- | --- |
+| `IS_PROPERTY_OF` | no | yes |
+
+The link targets the immediate bearer. AN-S-2692 requires exactly one bearer for each Property occurrence.

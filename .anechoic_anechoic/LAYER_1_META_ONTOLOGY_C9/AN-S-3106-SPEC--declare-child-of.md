@@ -8,8 +8,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-20T11:17:59+00:00'
+  version: 2
+  updated_at: '2026-11-21T12:25:59+00:00'
 ---
 
 ## Summary
@@ -35,3 +35,12 @@ declare_relation(
     acyclic=True,
 )
 ```
+
+## Classifications
+
+| Relation | Transitive | Functional |
+| --- | --- | --- |
+| `CHILD_OF` | no | yes |
+| `CHILDREN` | no | no |
+
+`CHILD_OF` identifies an immediate parent. AN-S-3148 gives each Component one parent, and AN-S-3146 gives Project zero parents. `CHILDREN` can return multiple immediate children.

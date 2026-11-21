@@ -138,6 +138,11 @@ class _NativeModel:
                 del sys.modules[module.__name__]
             raise
         self.relation_types = frozenset(self._endpoints)
+        self._parent_relation = "IS_CHILD_OF" if "IS_CHILD_OF" in self.relation_types else "CHILD_OF"
+        self.relation_classifications = {
+            name: args.get("inverse_classifications" if reverse else "classifications", {}).copy()
+            for name, (args, reverse) in self._endpoints.items()
+        }
         self.requires_atom_header = "atom_family" in self._types["Atom"].__dataclass_fields__
         self.inverses = {name: args["inverse_alias"] for name, (args, reverse) in self._endpoints.items()
                          if not reverse and "inverse_alias" in args}
@@ -168,13 +173,13 @@ class _NativeModel:
 
     def validate_component_manifest(self, fields, parent_id):
         project = self._validate("Project", {}, {})
-        parent = project if parent_id == "C00" else self._validate("Component", {}, {"CHILD_OF": [project]})
-        self._validate("Component", {}, {"CHILD_OF": [parent]})
+        parent = project if parent_id == "C00" else self._validate("Component", {}, {self._parent_relation: [project]})
+        self._validate("Component", {}, {self._parent_relation: [parent]})
         return self._validate("Component Manifest", fields, {"CONTAINED_BY": [parent]})
 
     def validate_package_spec(self, fields, owner_id):
         project = self._validate("Project", {}, {})
-        owner = project if owner_id == "C00" else self._validate("Component", {}, {"CHILD_OF": [project]})
+        owner = project if owner_id == "C00" else self._validate("Component", {}, {self._parent_relation: [project]})
         return self._validate("Package Spec", fields, {"CONTAINED_BY": [owner]})
 
 

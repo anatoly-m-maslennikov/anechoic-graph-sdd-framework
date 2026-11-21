@@ -24,12 +24,7 @@ import local_release  # noqa: E402
 from local_release import run_local_release, _launcher_image  # noqa: E402
 from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import select_runtime_project  # noqa: E402
 from release_support import _GENERATED_ASSETS, _file_identity, _publish_image_assets  # noqa: E402
-from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
-from release_registry_test_fixture import (  # noqa: E402
-    write_relation_registry_generator,
-    write_tool_registry_generator,
-    write_workbench_schema_generator,
-)
+from release_registry_test_fixture import write_tool_registry_generator  # noqa: E402
 
 
 class SimpleLocalReleaseTests(unittest.TestCase):
@@ -39,28 +34,14 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.root = Path(self.temporary.name).resolve()
         self.control = self.root / ".anechoic_anechoic"
         self.control.mkdir()
-        (self.control / "anechoic_project_settings.toml").write_text(
-            '[project]\nname = "anechoic"\n[paths]\ncontrol_root = ".anechoic_anechoic"\n', encoding="utf-8")
-        declared = write_scope_unit_declarations(self.root, (
-            {"scope_unit_name": "FRAMEWORK_METHODOLOGY", "scope_unit_type": "Unordered"},
-            {"scope_unit_name": "METHODOLOGY_SOURCES", "parent": "FRAMEWORK_METHODOLOGY", "scope_unit_type": "Unordered"},
-            {"scope_unit_name": "CORE_META_MODEL", "parent": "METHODOLOGY_SOURCES", "scope_unit_type": "Ordered", "scope_unit_label": "001", "local_order": 1},
-            {"scope_unit_name": "INSTALLED_EXTENSIONS", "parent": "METHODOLOGY_SOURCES", "scope_unit_type": "Ordered", "scope_unit_label": "002", "local_order": 2},
-            {"scope_unit_name": "PROJECT_CONFIGURATION", "parent": "METHODOLOGY_SOURCES", "scope_unit_type": "Ordered", "scope_unit_label": "003", "local_order": 3},
-        ), control_root=self.control)
-        self.sources = declared["METHODOLOGY_SOURCES"]["authority_path"]
-        source_units = ("CORE_META_MODEL", "INSTALLED_EXTENSIONS", "PROJECT_CONFIGURATION")
-        self.source_units = {name: declared[name]["authority_path"] for name in source_units}
-        for number, name in enumerate(source_units, 1):
-            unit = self.source_units[name]
-            unit.mkdir(parents=True)
-            for status in ("Active", "Draft", "Archived"):
-                (unit / f"{status.lower()}.md").write_text(
-                    f"---\natom_id: CA-R-{number}\nstatus: {status}\n---\n## Claim\n{status}\n", encoding="utf-8")
-            for directory in ("archive", "draft", "_projection"):
-                historical = unit / directory / "active.md"
-                historical.parent.mkdir()
-                historical.write_text("---\nstatus: Active\n---\nold\n", encoding="utf-8")
+        ontology = self.control / "LAYER_1_META_ONTOLOGY_C9"
+        ontology.mkdir()
+        self.native_sources = (
+            ontology / "AN-S-10-SPEC--model.md",
+            ontology / "AN-S-11-SPEC--related-spec.md",
+        )
+        for path in self.native_sources:
+            path.write_text("## Claim\nNative source\n", encoding="utf-8")
         (self.root / ".gitignore").write_text(".anechoic_tmp/\n", encoding="utf-8")
         self.product = self.root / "LAYER_1_FRAMEWORK_METHODOLOGY"
         self.installed = self.control / "000_ANECHOIC_framework"
@@ -118,26 +99,6 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         (mcp / "tool_providers.json").write_text(
             '{"mcp_blacklist":[],"providers":[]}\n', encoding="utf-8")
         write_tool_registry_generator(mcp)
-        workbench_backend = (
-            self.root / "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/"
-            "APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND"
-        )
-        workbench_backend.mkdir(parents=True)
-        write_relation_registry_generator(workbench_backend)
-        write_workbench_schema_generator(workbench_backend)
-        lifecycle = tools / "ATOM_LIFECYCLE"
-        lifecycle.mkdir()
-        (lifecycle / "status_model.py").write_text(
-            "from pathlib import Path\n"
-            "import sys\n"
-            "sources = Path(sys.argv[sys.argv.index('--model-root') + 1])\n"
-            "assert sources == Path.cwd() / 'METHODOLOGY/sources'\n"
-            f"assert (sources / {self.source_units['CORE_META_MODEL'].name!r} / 'active.md').is_file()\n"
-            "output = Path(sys.argv[sys.argv.index('--output') + 1])\n"
-            "output.write_text('{\"schema\":1}\\n', encoding='utf-8')\n",
-            encoding="utf-8",
-        )
-        shutil.copy2(lifecycle / "status_model.py", lifecycle / "candidate_schema.py")
         self.image_id = "sha256:" + "a" * 64
         self.image = SimpleNamespace(resolve=Mock(return_value=self.image_id),
                                      identity=Mock(return_value=SimpleNamespace(fingerprint="b" * 64)))
@@ -199,7 +160,6 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         return subprocess.CompletedProcess(argv, 0, "http://localhost:12345/mcp\n", "")
 
     def _native_project(self):
-        (self.control / "anechoic_project_settings.toml").unlink(missing_ok=True)
         manifest = self.control / "AN-S-001-PROJECT_MANIFEST--declare.md"
         manifest.parent.mkdir(exist_ok=True)
         manifest.write_text(
@@ -217,8 +177,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.native_assets = self.enterContext(patch("release_support.verify_native_release_assets"))
 
     def _native_sources(self):
-        return {Path(source.name) / "active.md": source / "active.md"
-                for source in self.source_units.values() if (source / "active.md").is_file()}
+        return {source.relative_to(self.control): source for source in self.native_sources if source.is_file()}
 
     def test_native_release_runs_full_gates_and_copies_selected_sources(self):
         runner, calls = self._runner()
@@ -306,30 +265,20 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             self.assertEqual(payload, (runtime_package / relative).read_bytes())
 
     def test_failed_asset_publication_restores_checkout(self):
-        first, second, *_ = sorted(_GENERATED_ASSETS)
+        relative, = _GENERATED_ASSETS
+        target = self.root / relative
+        target.write_bytes(b"known-good\n")
+        previous = {relative: _file_identity(target)}
         package = self.root / ".anechoic_tmp/package"
-        previous = {}
-        expected = {}
-        for relative in (first, second):
-            target = self.root / relative
-            target.write_bytes(b"known-good\n")
-            previous[relative] = _file_identity(target)
-            staged = package / relative
-            staged.parent.mkdir(parents=True, exist_ok=True)
-            staged.write_bytes(b"replacement\n")
-            expected[relative] = _file_identity(staged)
+        staged = package / relative
+        staged.parent.mkdir(parents=True, exist_ok=True)
+        staged.write_bytes(b"replacement\n")
+        expected = {relative: _file_identity(staged)}
 
-        replace = os.replace
-        def replace_except_second(source, destination):
-            if destination == self.root / second:
-                raise OSError("asset cannot be replaced")
-            return replace(source, destination)
-
-        with patch("release_support.os.replace", side_effect=replace_except_second):
+        with patch("release_support.os.replace", side_effect=OSError("asset cannot be replaced")):
             with self.assertRaisesRegex(OSError, "asset cannot be replaced"):
                 _publish_image_assets(self.root, package, previous, expected)
-        for relative in (first, second):
-            self.assertEqual(previous[relative], _file_identity(self.root / relative))
+        self.assertEqual(previous[relative], _file_identity(target))
 
     def test_existing_image_mode_refuses_missing_assets_before_tests(self):
         runner, calls = self._runner()
@@ -479,10 +428,11 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertFalse((packaged / "node_modules").exists())
 
     def test_preserved_ds_store_directories_do_not_block_replacement(self):
-        (self.source_units["INSTALLED_EXTENSIONS"] / "active.md").unlink()
+        kept, removed = (path.relative_to(self.control) for path in self.native_sources)
+        self.native_sources[1].unlink()
         retained = (
             self.product / "SUPERLAYER_1_METHODOLOGY_SOURCES",
-            self.product / "SUPERLAYER_1_METHODOLOGY_SOURCES" / self.source_units["CORE_META_MODEL"].name,
+            self.product / "SUPERLAYER_1_METHODOLOGY_SOURCES" / kept.parent,
             self.installed / "obsolete",
             self.runtime / "simple_local_release/package/LAYER_3_ENGINE_STUDIO_C14",
         )
@@ -496,9 +446,9 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         for directory in retained:
             self.assertEqual(b"ignored", (directory / ".DS_Store").read_bytes())
             self.assertFalse((directory / "obsolete.txt").exists())
-        self.assertTrue((self.product / "SUPERLAYER_1_METHODOLOGY_SOURCES" / self.source_units["CORE_META_MODEL"].name / "active.md").is_file())
+        self.assertTrue((self.product / "SUPERLAYER_1_METHODOLOGY_SOURCES" / kept).is_file())
         for target in (self.product, self.installed):
-            self.assertEqual([], list((target / "SUPERLAYER_1_METHODOLOGY_SOURCES" / self.source_units["INSTALLED_EXTENSIONS"].name).rglob("*.md")))
+            self.assertFalse((target / "SUPERLAYER_1_METHODOLOGY_SOURCES" / removed).exists())
 
     def test_test_failure_leaves_both_methodology_destinations_untouched(self):
         calls = []
@@ -748,13 +698,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
                 self.image_factory.assert_not_called()
                 self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
 
-    def test_shipped_workflow_without_source_proof_stops_at_package_build(self):
-        lifecycle = self.root / (
-            "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_LIFECYCLE"
-        )
-        asset = lifecycle / "assets/change_current_status.py"
-        asset.parent.mkdir()
-        asset.write_text("# reviewed workflow\n", encoding="utf-8")
+    def test_unverified_native_status_specifications_stop_package_build(self):
         self.native_assets.side_effect = local_release.LocalReleaseError("unverified native status Workflow")
         runner, _ = self._runner()
         result = run_local_release(self.root, run_id="unverified-workflow", runner=runner)

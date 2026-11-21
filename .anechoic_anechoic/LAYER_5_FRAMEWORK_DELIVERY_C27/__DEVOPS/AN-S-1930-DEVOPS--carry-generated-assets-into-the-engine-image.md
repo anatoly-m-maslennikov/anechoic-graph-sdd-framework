@@ -8,9 +8,9 @@ structure:
 context:
   lens: DevOps
 state:
-  status: active
-  version: 1
-  updated_at: '2026-11-12T09:56:54.214180+00:00'
+  status: "active"
+  version: 2
+  updated_at: "2026-11-21T13:08:28.580728+00:00"
 ---
 ## Summary
 
@@ -20,4 +20,6 @@ Carry generated assets into the Engine image
 
 ### Prose Claim
 
-Build the image with the exact Workbench schema, relation registry, Tool registry, lifecycle status model and lifecycle candidate schema in its build context. Existing mode copies these files from the checkout as-is. Refresh mode replaces the set with verified compiler output and records the files at the next Local Release Git checkpoint. The build uses the supplied files unchanged.
+Include the MCP Tool Registry in the Engine image. Existing mode copies the checkout Registry. Local Release refresh generates and verifies it before recording it at the Git checkpoint.
+
+Compile the native Model at Project startup. Workbench derives its schema and relation metadata from the native runtime.

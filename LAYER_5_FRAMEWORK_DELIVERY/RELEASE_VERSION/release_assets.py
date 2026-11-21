@@ -1,6 +1,4 @@
-"""Generate the two Workbench assets that a release package owns."""
-
-# CA-D-704@6
+"""Generate and verify native release inputs."""
 
 from __future__ import annotations
 
@@ -14,65 +12,7 @@ class LocalReleaseError(RuntimeError):
     """A pre-effect refusal from the bounded local-release runner."""
 
 
-_WORKBENCH_BACKEND = Path(
-    "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/"
-    "FEATURE_WORKBENCH_BACKEND"
-)
 _MCP = Path("LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP")
-_ATOM_LIFECYCLE = Path("LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_LIFECYCLE")
-
-
-def _generate_asset(
-    package: Path, source_root: Path, script_path: Path, output_name: str, error_name: str,
-    *, source_option: str = "--project-root",
-) -> Path:
-    script = package / script_path
-    output = script.with_name(output_name)
-    unavailable = f"local-release-{error_name}-unavailable"
-    if not script.is_file() or script.is_symlink():
-        raise LocalReleaseError(unavailable)
-    try:
-        output.unlink(missing_ok=True)
-        result = subprocess.run(
-            (
-                sys.executable, "-B", str(script), source_option, str(source_root),
-                "--output", str(output),
-            ),
-            cwd=package, stdout=subprocess.DEVNULL, check=False,
-        )
-    except OSError as error:
-        raise LocalReleaseError(unavailable) from error
-    if result.returncode != 0 or not output.is_file() or output.is_symlink():
-        raise LocalReleaseError(f"local-release-{error_name}-generation-failed")
-    return output
-
-
-def generate_relation_registry(package: Path, project_root: Path) -> Path:
-    return _generate_asset(
-        package, project_root, _WORKBENCH_BACKEND / "generate_relation_registry.py", "canonical_relation_registry.json",
-        "relation-registry",
-    )
-
-
-def generate_workbench_schema(package: Path, project_root: Path) -> Path:
-    return _generate_asset(
-        package, project_root, _WORKBENCH_BACKEND / "generate_workbench_schema.py", "workbench_schema.json",
-        "workbench-schema",
-    )
-
-
-def generate_lifecycle_status_model(package: Path) -> Path:
-    return _generate_asset(
-        package, package / "METHODOLOGY/sources", _ATOM_LIFECYCLE / "status_model.py",
-        "status_model.json", "lifecycle-status-model", source_option="--model-root",
-    )
-
-
-def generate_lifecycle_candidate_schema(package: Path) -> Path:
-    return _generate_asset(
-        package, package / "METHODOLOGY/sources", _ATOM_LIFECYCLE / "candidate_schema.py",
-        "candidate_schema.json", "lifecycle-candidate-schema", source_option="--model-root",
-    )
 
 
 def generate_tool_registry(package: Path) -> Path:
@@ -108,16 +48,8 @@ def generate_scope_callback(package: Path, raw: bytes, *, selected_pin, release_
     return write_package(package / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_FORMAL_MODEL_ENGINE/assets", generated)
 
 
-def verify_native_release_assets(package: Path, project_root: Path, control_relative: Path) -> tuple[Path, ...]:
-    """Verify native runtime bindings and the retained legacy compatibility assets."""
-    assets = (
-        package / _WORKBENCH_BACKEND / "canonical_relation_registry.json",
-        package / _WORKBENCH_BACKEND / "workbench_schema.json",
-        package / _ATOM_LIFECYCLE / "status_model.json",
-        package / _ATOM_LIFECYCLE / "candidate_schema.json",
-    )
-    if any(path.is_symlink() or not path.is_file() for path in assets):
-        raise LocalReleaseError("local-release-native-assets-unavailable")
+def verify_native_release_assets(package: Path, project_root: Path, control_relative: Path) -> None:
+    """Verify the native Model, Structure, source capture and lifecycle binding."""
     verifier = '''
 import sys
 from pathlib import Path
@@ -126,13 +58,9 @@ package, root, control = map(Path, sys.argv[1:])
 for directory in ("FEATURE_PROGRAMMATIC", "FEATURE_PROGRAMMATIC/FEATURE_TOOLS",
                   "IWE_CONSOLE_C43", "MCP_PATCHBAY_C21/FEATURE_MCP"):
     sys.path.insert(0, str(package / "LAYER_3_ENGINE_STUDIO_C14" / directory))
-from native_startup import select_runtime_project, load_native_inputs
+from native_startup import select_runtime_project
 from native_workflow_definition import bind_status_specifications
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import capture_native
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.relation_registry_asset import load_registry_asset
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workbench_schema_asset import load_image_schema
-from ATOM_LIFECYCLE.status_model import load_status_model
-from ATOM_LIFECYCLE.candidate_schema import load_candidate_schema
 from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.manifest_compiler_pkg1.compiler import load_generation_model, write_model
 from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.manifest_compiler_pkg1.structure_compile import compile_structure
 from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.model_host_pkg2.host import verify_model
@@ -143,17 +71,10 @@ with TemporaryDirectory(prefix="anechoic-model-check-") as directory:
     sys.path.insert(0, directory)
     model = load_generation_model(Path(directory))
     compile_structure(selection, model)
-    inputs = load_native_inputs(selection, model=model)
 capture = capture_native(selection)
 if capture.errors:
     raise ValueError("native Project capture is incomplete")
-bind_status_specifications(selection, migration_refs=inputs.migration_refs, current_rows=capture.atoms)()
-workbench = package / "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND"
-lifecycle = package / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_LIFECYCLE"
-load_registry_asset(workbench / "canonical_relation_registry.json")
-load_image_schema(workbench / "workbench_schema.json")
-load_status_model(lifecycle / "status_model.json")
-load_candidate_schema(lifecycle / "candidate_schema.json")
+bind_status_specifications(selection, current_rows=capture.atoms)()
 '''
     try:
         result = subprocess.run(
@@ -165,4 +86,3 @@ load_candidate_schema(lifecycle / "candidate_schema.json")
         raise LocalReleaseError("local-release-native-assets-verification-failed") from error
     if result.returncode != 0:
         raise LocalReleaseError("local-release-native-assets-verification-failed")
-    return assets

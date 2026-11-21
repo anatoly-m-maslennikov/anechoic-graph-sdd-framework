@@ -22,10 +22,8 @@ from runtime_images import (  # noqa: E402
     ImageError,
     ImageManager,
     OCI_VERSION_LABEL,
-    RELATION_REGISTRY,
     SCHEMA_LABEL,
     TOOL_REGISTRY,
-    WORKBENCH_SCHEMA,
 )
 import runtime_images  # noqa: E402
 import runtime  # noqa: E402
@@ -99,18 +97,12 @@ class ImageMetadataTests(unittest.TestCase):
         self.project_temp = self.root / ".anechoic_tmp"
         self.project_temp.mkdir()
         self.scratch = Path(tempfile.mkdtemp(dir=self.project_temp))
-        compiler = patch.object(runtime_images, "_compile_relation_registry", return_value=b'{"schema_version":1}\n')
-        compiler.start()
-        self.addCleanup(compiler.stop)
-        schema = patch.object(runtime_images, "_compile_workbench_schema", return_value=b'{"schema_version":1}\n')
-        schema.start()
-        self.addCleanup(schema.stop)
+        model = patch.object(ImageManager, "_refresh_model", return_value="a" * 64)
+        model.start()
+        self.addCleanup(model.stop)
         tools = patch.object(runtime_images, "_compile_tool_registry", return_value=b'{"schema_version":1}\n')
         tools.start()
         self.addCleanup(tools.stop)
-        lifecycle = patch("runtime_images._compile_lifecycle_assets", return_value=(b'{"schema_version":1}\n', b'{"schema_version":1}\n'))
-        lifecycle.start()
-        self.addCleanup(lifecycle.stop)
         self._write_fixture(VERSION)
 
     def _write_fixture(self, version: str) -> None:
@@ -125,7 +117,7 @@ class ImageMetadataTests(unittest.TestCase):
             path = self.root / relative
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(content, encoding="utf-8")
-        for relative in (RELATION_REGISTRY, WORKBENCH_SCHEMA, TOOL_REGISTRY, runtime_images.STATUS_MODEL, runtime_images.CANDIDATE_SCHEMA):
+        for relative in (TOOL_REGISTRY,):
             path = self.root / relative
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(b'{"schema_version":1}\n')
@@ -178,13 +170,12 @@ class ImageMetadataTests(unittest.TestCase):
         probe = DockerProbe(tags=(EXPECTED_TAG,))
         manager = self._manager(probe)
         manager.project_root = self.root / "absent-project"
-        with (patch.object(runtime_images, "_compile_relation_registry", side_effect=AssertionError),
-              patch.object(runtime_images, "_compile_workbench_schema", side_effect=AssertionError),
+        with (patch.object(ImageManager, "_refresh_model", side_effect=AssertionError),
               patch.object(runtime_images, "_compile_tool_registry", side_effect=AssertionError)):
             self.assertEqual(IMAGE, manager.resolve(explicit_id=IMAGE, build_if_missing=False))
 
     def test_no_build_rejects_missing_symlinked_or_changed_packaged_assets(self) -> None:
-        for relative in (RELATION_REGISTRY, WORKBENCH_SCHEMA, TOOL_REGISTRY, runtime_images.STATUS_MODEL, runtime_images.CANDIDATE_SCHEMA):
+        for relative in (TOOL_REGISTRY,):
             with self.subTest(relative=relative):
                 path = self.root / relative
                 original = path.read_bytes()
@@ -204,7 +195,7 @@ class ImageMetadataTests(unittest.TestCase):
         def tampering_executor(argv, **kwargs):
             result = probe(argv, **kwargs)
             if argv[:3] == ["docker", "image", "inspect"]:
-                (self.root / WORKBENCH_SCHEMA).write_bytes(b"tampered")
+                (self.root / TOOL_REGISTRY).write_bytes(b"tampered")
             return result
         manager.executor = tampering_executor
         with self.assertRaises(ImageError) as changed:

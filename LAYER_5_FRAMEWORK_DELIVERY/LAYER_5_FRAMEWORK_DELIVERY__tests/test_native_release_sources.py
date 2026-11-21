@@ -1,8 +1,6 @@
-"""Native release sources retain the selected migration groups."""
-from __future__ import annotations
+"""Select active native Methodology Specs for Local Release."""
 
-import hashlib
-import json
+from hashlib import sha256
 from pathlib import Path
 import sys
 import tempfile
@@ -17,163 +15,106 @@ sys.path[:0] = [str(ROOT / 'LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION'),
                str(ROOT / 'LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43')]
 from release_support import LocalReleaseError, _native_release_sources
 
-PREFIX = '.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES'
-CORE = 'CA-SU-11_LAYER_1_CORE_META_MODEL'
+MODEL_SOURCES = (
+    "LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62."
+    "manifest_compiler_pkg1.active_model_sources.read_active_model_sources"
+)
+ADMIT_MODEL = "FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.native_manifest_model.admit_active_model_records"
 
 
 class NativeReleaseSourcesTests(unittest.TestCase):
     def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self.tmp.cleanup)
-        self.root = Path(self.tmp.name).resolve()
-        self.control = self.root / '.anechoic_anechoic'
-        self.control.mkdir()
-        manifest = self.control / 'manifest.md'
-        manifest.write_bytes(b'manifest')
-        self.selection = SimpleNamespace(root=self.root, control_root=self.control,
-                                         manifest_path=manifest, manifest_sha256=hashlib.sha256(b'manifest').hexdigest(),
-                                         project_prefix='AN')
-        self.aliases = self.control / '_migration/native-aliases.json'
-        self.aliases.parent.mkdir()
-        self.rows = [['CA-R-1@1', f'{PREFIX}/{CORE}/04_requirement/CA-R-1-old.md', 'AN-S-1@1']]
-        self.write_aliases()
-        self.source = self.control / 'LAYER_C9/__DES/AN-S-1-DES--current.md'
-        self.carrier(self.source, 2)
+        self.root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
+        self.control = self.root / ".anechoic_fixture"
+        self.ontology = self.control / "LAYER_1_META_ONTOLOGY_C9"
+        manifest = self.control / "manifest.md"
+        manifest.parent.mkdir()
+        manifest.write_bytes(b"manifest")
+        self.selection = SimpleNamespace(root=self.root, control_root=self.control, manifest_path=manifest,
+                                         manifest_sha256=sha256(b"manifest").hexdigest(), project_prefix="AN")
+        self.source = self.ontology / "__DES/__DOM/AN-S-1-DOM--current.md"
+        self.carrier(self.source)
+        self.read_model = self.enterContext(patch(MODEL_SOURCES, return_value=()))
+        self.enterContext(patch(ADMIT_MODEL))
 
-    def write_aliases(self):
-        self.aliases.write_text(json.dumps(self.rows))
-
-    def carrier(self, path, version, status='active'):
+    def carrier(self, path, *, atom_id="AN-S-1", status="active", version=2):
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(f'''---
-identity:
-  atom_id: AN-S-1
-context:
+        path.write_text(f"""---
+atom_family: SPEC
+atom_id: {atom_id}
+structure:
   container:
     component: C9
   tier: 1
-  lens: DES
+context:
+  lens: DES/DOM
 state:
   status: {status}
   version: {version}
+  updated_at: '2026-11-21T00:00:00Z'
 ---
 ## Summary
 
-Current.
+Native Spec.
+""")
 
-## Claim
-
-Current claim.
-''')
-
-    def test_maps_current_successor_and_ignores_historical_and_installed(self):
-        self.rows.append(['CA-R-1@2-draft', f'{PREFIX}/{CORE}/04_requirement/000_draft/CA-R-1-draft.md', 'AN-S-1@2-draft'])
-        self.write_aliases()
-        self.carrier(self.control / '000_ANECHOIC_framework/AN-S-1-DES--copy.md', 2)
-        self.assertEqual({Path(CORE) / '04_requirement' / self.source.name: self.source},
+    def test_uses_native_paths_and_includes_specs_without_migration_entries(self):
+        new = self.ontology / "AN-S-7-SPEC--new.md"
+        self.carrier(new, atom_id="AN-S-7")
+        for directory in ("_PMETA", "__TKT", "000_ANECHOIC_framework", "UNRELATED_C10"):
+            self.carrier(self.control / directory / self.source.name)
+        self.carrier(self.ontology / "000_draft/AN-S-1@3-draft-DOM--current.md", status="draft", version=3)
+        self.carrier(self.ontology / "099_archived/AN-S-2@1-DOM--retired.md",
+                     atom_id="AN-S-2", status="archived", version=1)
+        self.assertEqual({p.relative_to(self.control): p for p in (self.source, new)},
                          _native_release_sources(self.selection))
+        self.read_model.assert_called_once_with(self.control, self.ontology)
 
-    def test_duplicate_active_id_is_refused(self):
-        self.carrier(self.control / 'OTHER/DES/AN-S-1-DES--duplicate.md', 2)
+    def test_rejects_duplicate_current_identity_in_the_component(self):
+        self.carrier(self.ontology / "AN-S-1-DOM--duplicate.md")
+        with self.assertRaisesRegex(LocalReleaseError, "duplicate Current identity"):
+            _native_release_sources(self.selection)
+
+    def test_rejects_linked_carrier_and_linked_component(self):
+        other = self.ontology / "AN-S-2-DOM--link.md"
+        other.symlink_to(self.source)
+        with self.assertRaises(LocalReleaseError):
+            _native_release_sources(self.selection)
+        other.unlink()
+        moved = self.root / "moved"
+        self.ontology.rename(moved)
+        self.ontology.symlink_to(moved)
         with self.assertRaises(LocalReleaseError):
             _native_release_sources(self.selection)
 
-    def test_duplicate_alias_is_refused(self):
-        self.rows.append(self.rows[0])
-        self.write_aliases()
-        with self.assertRaises(LocalReleaseError):
+    def test_rejects_changed_manifest(self):
+        self.selection.manifest_path.write_bytes(b"changed")
+        with self.assertRaisesRegex(LocalReleaseError, "Manifest changed"):
             _native_release_sources(self.selection)
 
-    def test_missing_current_carrier_is_refused(self):
-        self.rows.append(['CA-R-2@1', f'{PREFIX}/{CORE}/04_requirement/CA-R-2-old.md', 'AN-S-2@1'])
-        self.write_aliases()
-        with self.assertRaises(LocalReleaseError):
-            _native_release_sources(self.selection)
+    def test_rejects_changed_source_or_membership_after_selection(self):
+        def change_source(*_args):
+            self.source.write_text(self.source.read_text() + "\nchanged")
+            return ()
 
-    def admit_retirement(self):
-        self.rows.append(['CA-R-2@1', f'{PREFIX}/{CORE}/04_requirement/CA-R-2-old.md', 'AN-S-2@1'])
-        self.write_aliases()
-        archive = self.control / 'LAYER_C9/DES/099_archived/AN-S-2@2-DES--archived.md'
-        self.carrier(archive, 2, status='archived')
-        archive.write_text(archive.read_text().replace('AN-S-1', 'AN-S-2'))
-        retirement = self.control / '_migration/native-archive-only.json'
-        retirement.write_text(json.dumps([{'exact_ref': 'AN-S-2@2',
-                                           'path': archive.relative_to(self.control).as_posix()}]))
-        return archive, retirement
+        def add_source(*_args):
+            self.carrier(self.ontology / "AN-S-7-SPEC--new.md", atom_id="AN-S-7")
+            return ()
 
-    def test_archive_only_identity_is_admitted(self):
-        self.admit_retirement()
-        self.assertEqual({Path(CORE) / '04_requirement' / self.source.name: self.source},
-                         _native_release_sources(self.selection))
-
-    def test_missing_or_unadmitted_archive_is_refused(self):
-        archive, retirement = self.admit_retirement()
-        retirement.unlink()
-        with self.assertRaises(LocalReleaseError):
-            _native_release_sources(self.selection)
-        self.admit_retirement()
-        archive.unlink()
-        with self.assertRaises(LocalReleaseError):
-            _native_release_sources(self.selection)
-
-    def test_current_and_retirement_conflict_is_refused(self):
-        self.admit_retirement()
-        current = self.control / 'LAYER_C9/DES/AN-S-2-DES--current.md'
-        self.carrier(current, 3)
-        current.write_text(current.read_text().replace('AN-S-1', 'AN-S-2'))
-        with self.assertRaises(LocalReleaseError):
-            _native_release_sources(self.selection)
-
-    def test_changed_retirement_inputs_are_refused(self):
-        import release_support
-        archive, retirement = self.admit_retirement()
-        original = release_support._file_identity
-        for target in (archive, retirement):
-            counts = {}
-            def changed(path):
-                counts[path] = counts.get(path, 0) + 1
-                identity = original(path)
-                return ('0' * 64, identity[1]) if path == target and counts[path] > 1 else identity
-            with self.subTest(target=target), patch.object(release_support, '_file_identity', side_effect=changed):
-                with self.assertRaises(LocalReleaseError):
+        for change in (change_source, add_source):
+            with self.subTest(change=change.__name__):
+                self.read_model.side_effect = change
+                with self.assertRaisesRegex(LocalReleaseError, "sources changed"):
                     _native_release_sources(self.selection)
 
-    def test_archive_symlink_swap_with_same_bytes_is_refused(self):
-        import release_support
-        archive, _ = self.admit_retirement()
-        outside = self.root / 'outside.md'
-        outside.write_bytes(archive.read_bytes())
-        original = release_support._file_identity
-        count = 0
-        def swap(path):
-            nonlocal count
-            if path == archive:
-                count += 1
-                if count == 2:
-                    archive.unlink()
-                    archive.symlink_to(outside)
-            return original(path)
-        with patch.object(release_support, '_file_identity', side_effect=swap):
-            with self.assertRaises(LocalReleaseError):
-                _native_release_sources(self.selection)
-
-    def test_changed_manifest_is_refused(self):
-        self.selection.manifest_path.write_bytes(b'changed')
-        with self.assertRaises(LocalReleaseError):
+    def test_rejects_model_compiler_errors_and_empty_scope(self):
+        self.read_model.side_effect = ValueError("invalid Model Claim")
+        with self.assertRaisesRegex(LocalReleaseError, "invalid Model Claim"):
+            _native_release_sources(self.selection)
+        self.source.unlink()
+        with self.assertRaisesRegex(LocalReleaseError, "No Active Meta-ontology Specs"):
             _native_release_sources(self.selection)
 
-    def test_changed_source_is_refused(self):
-        import release_support
-        original = release_support._file_identity
-        counts = {}
-        def changed(path):
-            counts[path] = counts.get(path, 0) + 1
-            identity = original(path)
-            return ('0' * 64, identity[1]) if path == self.source and counts[path] > 1 else identity
-        with patch.object(release_support, '_file_identity', side_effect=changed):
-            with self.assertRaises(LocalReleaseError):
-                _native_release_sources(self.selection)
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

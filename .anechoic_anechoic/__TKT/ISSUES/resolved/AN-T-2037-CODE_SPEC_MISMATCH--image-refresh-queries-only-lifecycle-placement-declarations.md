@@ -8,9 +8,9 @@ structure:
 context:
   template: Code-Spec Mismatch
 state:
-  status: active
+  status: "resolved"
   version: 1
-  updated_at: '2026-11-12T12:43:47.663665+00:00'
+  updated_at: "2026-11-21T13:15:00.861778+00:00"
 ---
 ## Summary
 

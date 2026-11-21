@@ -1,11 +1,9 @@
 """Check workflow and status specification pins in the selected native Project."""
 from __future__ import annotations
 
-import base64
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from hashlib import sha256
-import json
 from pathlib import Path
 import re
 
@@ -87,73 +85,47 @@ def bind_native_workflow(
     return check
 
 
+STATUS_SPECIFICATIONS = {
+    'workflow': ('AN-S-1928@4',
+        'aa687f42ead0f4f6fe800880b31ad36167a5c40ae9d03db444a1990aea0c057d'),
+    'step': ('AN-S-1834@1',
+        'cf13a7f20adf79c318e0ea52dfb4466ef1bcec6f0eae4246935a31880c7ab9e2'),
+    'action': ('AN-S-1831@1',
+        'ff28938b3a725b2aee728e8cad99bb14f202446c0183e5ab9428d5f26c6b7448'),
+}
+
+
 def bind_status_specifications(
-    selection: NativeProjectSelection, *, migration_refs: Iterable[tuple[str | None, str, str]],
-    current_rows: Iterable[Mapping[str, object]],
-) -> tuple[Callable[[], None], dict[str, str]]:
-    """Bind the installed status specification to its migrated Current SPEC carriers."""
-    from ATOM_LIFECYCLE import status_workflow_definition as installed
-    from ATOM_LIFECYCLE.assets.change_current_status import SOURCE_SHA256, WORKFLOW_BINDING
-
-    expected = {"workflow": "CA-O-10011@4", "step": "CA-O-10010@1", "action": "CA-O-10007@1"}
-    if WORKFLOW_BINDING != expected or set(SOURCE_SHA256) != set(expected.values()):
-        raise NativeWorkflowDefinitionError("Installed status Workflow binding is invalid")
-    try:
-        asset_reader = ReadContext(roots=[str(installed._CODE_ROOT)], limits=dict(CEILINGS))
-        asset = asset_reader.read(installed.ASSET)
-        snapshot = asset_reader.read(installed.SNAPSHOT)
-        encoded = json.loads(snapshot)
-        if not isinstance(encoded, dict) or set(encoded) != set(expected.values()) or installed._snapshot_bytes(encoded) != snapshot:
-            raise ValueError("Invalid snapshot")
-        sources = {ref: base64.b64decode(value, validate=True) for ref, value in encoded.items()}
-        if any(sha256(sources[ref]).hexdigest() != SOURCE_SHA256[ref] for ref in expected.values()):
-            raise ValueError("Snapshot digest differs")
-        header = '# Generated from the admitted Workflow Formal Claim.\n\n'
-        header += f'WORKFLOW_BINDING = {expected!r}\nSOURCE_SHA256 = {{\n'
-        header += ''.join(f'    {ref!r}: {SOURCE_SHA256[ref]!r},\n' for ref in expected.values())
-        generated = (header + '}\n\n\n').encode() + installed._claim_code(sources[expected['workflow']], expected)
-        if asset != generated or asset_reader.currentness()["state"] != "unchanged":
-            raise ValueError("Installed Workflow asset differs")
-    except (OSError, RuntimeError, TypeError, ValueError, KeyError) as error:
-        raise NativeWorkflowDefinitionError("Installed status Workflow assets are invalid") from error
-
-    refs, rows = tuple(migration_refs), tuple(current_rows)
+    selection: NativeProjectSelection, *, current_rows: Iterable[Mapping[str, object]],
+) -> Callable[[], None]:
+    """Bind the installed status operation to its exact native SPEC carriers."""
+    rows = tuple(current_rows)
     reader = ReadContext(roots=[str(selection.control_root)], limits=dict(CEILINGS))
     _pinned_bytes(reader, selection.manifest_path, selection.manifest_ref, selection.manifest_sha256)
-    pins, mapping = [], {}
-    for kind, atom_id, version, source_path in installed.SOURCES:
-        legacy = f"{atom_id}@{version}"
-        matches = [(old, path, target) for old, path, target in refs if old == legacy]
-        original = (installed.CHECKOUT_MODEL / source_path).as_posix()
-        if len(matches) != 1 or matches[0][1] != original:
-            raise NativeWorkflowDefinitionError(f"Missing or ambiguous migration for {legacy}")
-        native = matches[0][2]
-        if not isinstance(native, str) or re.fullmatch(rf"{re.escape(selection.project_prefix)}-S-[0-9]+@[1-9][0-9]*", native) is None:
-            raise NativeWorkflowDefinitionError(f"Invalid native migration target for {legacy}")
-        selected = [row for row in rows if row.get('_exact_ref') == native and row.get('status_group') == 'Current']
+    pins = []
+    for kind, (ref, expected_body) in STATUS_SPECIFICATIONS.items():
+        atom_id = ref.partition("@")[0]
+        selected = [row for row in rows if row.get("_exact_ref") == ref and row.get("status_group") == "Current"]
         if len(selected) != 1:
-            raise NativeWorkflowDefinitionError(f"Missing or ambiguous native carrier for {legacy}")
+            raise NativeWorkflowDefinitionError(f"Missing or ambiguous native status specification {ref}")
         row = selected[0]
-        relative, digest = row.get('source_path'), row.get('_source_sha256')
-        if not isinstance(relative, str) or not isinstance(digest, str) or re.fullmatch(r'[0-9a-f]{64}', digest) is None:
-            raise NativeWorkflowDefinitionError(f"Invalid native carrier for {legacy}")
+        relative, digest = row.get("source_path"), row.get("_source_sha256")
+        if not isinstance(relative, str) or not isinstance(digest, str):
+            raise NativeWorkflowDefinitionError(f"Invalid native status specification {ref}")
         path = Path(relative)
-        if (path.is_absolute() or '..' in path.parts or path.as_posix() != relative
-                or not path.is_relative_to(selection.control_relative) or path.suffix != '.md'
-                or not path.name.startswith(native.partition('@')[0] + '-')
-                or path.relative_to(selection.control_relative).parts[0] in {'_PMETA', '__TKT'}):
-            raise NativeWorkflowDefinitionError(f"Invalid native SPEC path for {legacy}")
+        if (path.is_absolute() or ".." in path.parts or path.as_posix() != relative
+                or not path.is_relative_to(selection.control_relative / "LAYER_1_META_ONTOLOGY_C9")
+                or path.suffix != ".md" or not path.name.startswith(atom_id + "-")):
+            raise NativeWorkflowDefinitionError(f"Invalid native status specification path {ref}")
         full_path = selection.root / path
-        raw = _pinned_bytes(reader, full_path, native, digest)
-        _check_header(full_path, raw, kind, native)
-        old_body = sources[legacy].partition(b'\n---\n')
-        native_body = raw.partition(b'\n---\n')
-        if not old_body[1] or not native_body[1] or old_body[2] != native_body[2]:
-            raise NativeWorkflowDefinitionError(f"Native source body differs for {legacy}")
-        pins.append((full_path, native, digest))
-        mapping[legacy] = native
-    if len(set(mapping.values())) != len(mapping) or reader.currentness()["state"] != "unchanged":
-        raise NativeWorkflowDefinitionError("Native status Workflow sources changed or overlap")
+        raw = _pinned_bytes(reader, full_path, ref, digest)
+        _check_header(full_path, raw, kind, ref)
+        _, delimiter, body = raw.partition(b"\n---\n")
+        if not delimiter or sha256(body).hexdigest() != expected_body:
+            raise NativeWorkflowDefinitionError(f"Native status specification body differs for {ref}")
+        pins.append((full_path, ref, digest))
+    if reader.currentness()["state"] != "unchanged":
+        raise NativeWorkflowDefinitionError("Native status Workflow sources changed during verification")
 
     def check() -> None:
         current = ReadContext(roots=[str(selection.control_root)], limits=dict(CEILINGS))

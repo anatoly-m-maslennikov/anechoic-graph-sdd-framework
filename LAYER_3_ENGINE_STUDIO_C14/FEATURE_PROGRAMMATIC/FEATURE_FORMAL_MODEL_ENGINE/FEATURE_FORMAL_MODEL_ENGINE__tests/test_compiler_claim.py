@@ -375,6 +375,20 @@ declare_entity(entity_class=Decision, entity_name="Decision", qualification_prop
         self.assertIn({"kind": "qualified", "value": "Decision", "role": "Method", "source": "CA-R-2"},
                       compile_role_form([_native_row(role), _native_row(form, "CA-R-2")]))
 
+    def test_relation_classifications_compile_only_when_explicit(self):
+        source = """from anechoic.formal_claims import declare_relation
+declare_relation(relation_name="LINKS", inverse_alias="LINKED_BY",
+    source_endpoint={"level": "model_entities"}, target_endpoint={"level": "model_entities"},
+    classifications={"Direction": "Forward"}, inverse_classifications={"Direction": "Reverse"})
+"""
+        self.assertEqual(_compile(source), (
+            "Relation//LINKS", "Relation//LINKED_BY ((IS_INVERSE_ALIAS_FOR)) Relation//LINKS",
+            "Relation//LINKS >| Direction == Forward", "Relation//LINKED_BY >| Direction == Reverse",
+        ))
+        self.assertEqual(_compile(source.replace(',\n    classifications={"Direction": "Forward"}, inverse_classifications={"Direction": "Reverse"}', '')), (
+            "Relation//LINKS", "Relation//LINKED_BY ((IS_INVERSE_ALIAS_FOR)) Relation//LINKS",
+        ))
+
     def test_relation_registry_keeps_instance_reverse_views(self):
         native = '''
 from anechoic.formal_claims import declare_relation

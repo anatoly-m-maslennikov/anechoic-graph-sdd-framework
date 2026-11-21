@@ -51,6 +51,7 @@ _DECLARATION_KEYS = {
         "relation_name", "source_endpoint", "target_endpoint", "endpoint_pairs", "inverse_alias", "written_alias", "derived_from",
         "reverse_written_alias", "targets_per_source", "sources_per_target", "acyclic",
         "same_immediate_bearer", "swap_endpoints", "swap_endpoint_cardinalities",
+        "classifications", "inverse_classifications",
     },
 }
 _RELATION_CONSTRAINT_KEYS = {"target_entity_paths", "targets_per_source", "sources_per_target"}
@@ -743,6 +744,15 @@ def parse_native_model_claim(text: str) -> dict[str, Any] | None:  # noqa: C901
                 or not roles or any(not isinstance(role, str) or not role.strip() for role in roles)):
             _fail(declaration, "ordered dependent Property roles require ordering pairs and nonempty Roles")
     if function == "declare_relation":
+        for field in ("classifications", "inverse_classifications"):
+            if field in arguments:
+                values = arguments[field]
+                if (not isinstance(values, dict) or not values
+                        or any(not isinstance(item, str) or not item or item != item.strip()
+                               for pair in values.items() for item in pair)):
+                    _fail(declaration, f"{field} must map nonempty trimmed axis names to values")
+        if "inverse_classifications" in arguments and not arguments.get("inverse_alias"):
+            _fail(declaration, "inverse_classifications requires inverse_alias")
         if "derived_from" in arguments:
             base = arguments["derived_from"]
             if (not isinstance(base, str) or not re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]*", base)

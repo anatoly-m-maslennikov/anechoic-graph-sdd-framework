@@ -179,6 +179,45 @@ class NativeManifestModelTests(unittest.TestCase):
             "CHILD_OF": "CHILDREN", "CONTAINED_BY": "CONTAINS", "IS_CLASSIFIED_BY": "CLASSIFIES",
         })
 
+    def test_upgraded_parent_relation_is_used_for_manifest_validation(self):
+        records, _, _ = native_manifest_model.reviewed_model_records()
+        upgraded = [(path, subject.replace("CHILD_OF", "IS_CHILD_OF").replace("CHILDREN", "HAS_CHILDREN"),
+                     claim.replace("CHILD_OF", "IS_CHILD_OF").replace("CHILDREN", "HAS_CHILDREN"))
+                    for path, subject, claim in records]
+        model = native_manifest_model._NativeModel(records=upgraded)
+        fields = {"atom_id": "AN-S-124", "ref_id": "AN-S-124@1", "version": 1,
+                  "tier": 0, "component_id": "C01", "name": "Engine"}
+        for parent in ("C00", "C01"):
+            self.assertEqual(model.validate_component_manifest(fields, parent).name, "Engine")
+        with patch.object(model, "_validate", wraps=model._validate) as validate:
+            with self.assertRaises(ValueError):
+                model.validate_package_spec({}, "C01")
+            self.assertEqual(next(iter(validate.call_args_list[1].args[2])), "IS_CHILD_OF")
+
+    def test_relation_classifications_use_admitted_values_per_direction(self):
+        records, _, _ = native_manifest_model.reviewed_model_records()
+        axis = (
+            "functional",
+            "MODEL//ANECHOIC <+ Graph/Relation >| Functional",
+            'from anechoic.formal_claims import declare_entity\n'
+            'declare_entity(entity_name="Relation", allowed_classification_values={"Functional": ("yes", "no")})',
+        )
+        relation_index = next(i for i, (_, subject, _) in enumerate(records) if subject.endswith("//CHILD_OF"))
+        path, subject, claim = records[relation_index]
+        classified = claim.replace(
+            '    inverse_alias="CHILDREN",',
+            '    inverse_alias="CHILDREN",\n'
+            '    classifications={"Functional": "yes"},\n'
+            '    inverse_classifications={"Functional": "no"},',
+        )
+        records[relation_index] = (path, subject, classified)
+        model = native_manifest_model._NativeModel(records=[*records, axis])
+        self.assertEqual({"Functional": "yes"}, model.relation_classifications["CHILD_OF"])
+        self.assertEqual({"Functional": "no"}, model.relation_classifications["CHILDREN"])
+        self.assertEqual({}, model.relation_classifications["CONTAINS"])
+        with self.assertRaisesRegex(ValueError, "CHILD_OF: unadmitted Relation classification Functional=yes"):
+            native_manifest_model.admit_active_model_records(records)
+
 
 if __name__ == "__main__":
     unittest.main()

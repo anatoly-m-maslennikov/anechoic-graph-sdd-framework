@@ -8,9 +8,9 @@ structure:
 context:
   lens: DevOps
 state:
-  status: active
-  version: 25
-  updated_at: 2026-11-09 15:54:30 +0400
+  status: "active"
+  version: 26
+  updated_at: "2026-11-21T14:24:52.329085+00:00"
 ---
 
 ## Summary
@@ -29,11 +29,11 @@ Release Version **must** bind Methodology delivery to its selected source inputs
 
 ### Direct local release
 
-1. Resolve the Project root and source roots through the Project's declared controls. Copy the selected Active sources into `LAYER_1_FRAMEWORK_METHODOLOGY/SUPERLAYER_1_METHODOLOGY_SOURCES/`; do not change the authoring sources or silently include unselected Configuration or Extensions.
-2. Reuse `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/COMPILE_APPLICABLE_METHODOLOGY/compile_applicable_methodology.py` and its existing selection, conflict and projection-rendering rules. Compile the copied sources into `LAYER_1_FRAMEWORK_METHODOLOGY/applicable_methodology/`. An unresolved conflict stops compilation; delivery does not invent an approval.
-3. Prepare the runtime package from those sources and compiled bytes under `METHODOLOGY/sources/` and `METHODOLOGY/compiled/`, following CA-D-562. Verify the prepared bytes before copying them to the declared destinations. The full release test suite, including required integration tests, precedes delivery.
-4. Preserve the compiler's source Atom ID, Version, source path/digest and original Relations metadata. Relocation may change a relative link, not source identity. Binding projections remain discovery metadata, not Methodology authority or permission.
-5. Resolve output paths through the declared Project structure. Refuse unsafe paths and collisions; replace only the intended derived destinations. Preserve settings, unrelated files and authoring sources. Delivery does not rewrite Project Structure.
+1. Select the Active native Specs in the Meta-ontology Component. Exclude Drafts and Archived revisions.
+2. Validate the native Model declarations. Refuse duplicate Current identities, unsafe paths, or changes during selection.
+3. Copy the selected files under `LAYER_1_FRAMEWORK_METHODOLOGY/SUPERLAYER_1_METHODOLOGY_SOURCES/`. Preserve their paths relative to the Project control root.
+4. Copy those sources to `METHODOLOGY/sources/` in the runtime package. Verify the prepared bytes before installation. The full release test suite precedes delivery.
+5. Preserve source Atom IDs, Versions, Relations and bytes. Replace only the derived delivery and preserve settings and unrelated files.
 
 ### Shared Methodology export
 

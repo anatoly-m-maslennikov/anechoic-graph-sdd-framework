@@ -43,7 +43,6 @@
 !**/SKILL.md
 **/node_modules
 LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/scope_declaration_render.py
-**/.DS_Store
 **/*.pyc
 **/*.pyo
 **/.anechoic_*
@@ -51,3 +50,4 @@ LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/scope_declaration_r
 **/.anechoic_install
 **/.anechoic_runtime
 **/tmp
+**/.DS_Store

@@ -578,11 +578,12 @@ class NativeQueryOwner(ServiceInterface):
                     "result_ids": {old: item["query_id"] for old, item in replaced.items()}}
 
     def lifecycle(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
-        from ATOM_LIFECYCLE.assets.change_current_status import WORKFLOW_BINDING
         from ATOM_LIFECYCLE.common import InputError, SourceChanged, result
         from ATOM_LIFECYCLE.native_draft import create_draft, promote_draft
         from ATOM_LIFECYCLE.native_update import archive_ticket, change_ticket_status, direct_update
-        from native_workflow_definition import NativeWorkflowDefinitionError, bind_status_specifications
+        from native_workflow_definition import (
+            STATUS_SPECIFICATIONS, NativeWorkflowDefinitionError, bind_status_specifications,
+        )
         from project_runtime import bind_native_runtime
 
         if name not in LIFECYCLE_TOOLS:
@@ -603,8 +604,8 @@ class NativeQueryOwner(ServiceInterface):
                     target = arguments.get(field)
                     ref = target.get("ref_id") if isinstance(target, dict) else None
                     if isinstance(ref, str) and any(
-                        old in WORKFLOW_BINDING.values() and native.partition("@")[0] == ref.partition("@")[0]
-                        for old, _, native in self._inputs.migration_refs
+                        native.partition("@")[0] == ref.partition("@")[0]
+                        for native, _ in STATUS_SPECIFICATIONS.values()
                     ):
                         raise InputError(field, "Installed status definitions can change only with their runtime binding.")
                 if name == "atom_lifecycle_direct_update":
@@ -620,7 +621,7 @@ class NativeQueryOwner(ServiceInterface):
                     )
                 else:
                     check_definition = bind_status_specifications(
-                        self.selection, current_rows=rows, migration_refs=self._inputs.migration_refs,
+                        self.selection, current_rows=rows,
                     )
                     outcome = change_ticket_status(
                         self.selection, arguments, current_rows=rows, check_definition=check_definition,

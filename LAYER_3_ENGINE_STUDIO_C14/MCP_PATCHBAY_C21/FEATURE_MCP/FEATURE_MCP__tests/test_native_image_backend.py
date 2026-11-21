@@ -10,8 +10,7 @@ import test_native_startup as startup_fixture
 from native_startup import select_runtime_project
 from project_mcp_backend import BackendError, ProjectMcpBackend
 from project_selection import resolve_project
-from runtime_images import (ImageError, ImageManager, RELATION_REGISTRY, WORKBENCH_SCHEMA,
-                            TOOL_REGISTRY, STATUS_MODEL, CANDIDATE_SCHEMA)
+from runtime_images import ImageError, ImageManager, TOOL_REGISTRY
 
 IMAGE = 'sha256:' + 'a' * 64
 
@@ -28,10 +27,8 @@ class NativeImageBackendTests(unittest.TestCase):
             (self.package / name).write_text(contents)
         for name in ('Dockerfile', 'Dockerfile.dockerignore', 'runtime.py'):
             (docker / name).write_text('fixture\n')
-        for relative in (RELATION_REGISTRY, WORKBENCH_SCHEMA, TOOL_REGISTRY, STATUS_MODEL, CANDIDATE_SCHEMA):
-            path = self.package / relative
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text('{"asset":true}\n')
+        registry = self.package / TOOL_REGISTRY
+        registry.write_text('{"asset":true}\n')
 
     def test_installed_assets_are_pinned_for_build_and_rechecked_before_start(self):
         selection = select_runtime_project(self.root)
@@ -40,7 +37,7 @@ class NativeImageBackendTests(unittest.TestCase):
         with patch('project_mcp_backend.ImageManager', return_value=manager), \
              patch.object(manager, 'resolve', return_value=IMAGE) as resolve, \
              patch.object(manager, '_inspect'), \
-             patch.object(manager, '_generated_assets', side_effect=AssertionError('unexpected refresh')):
+             patch.object(manager, '_refresh_model', side_effect=AssertionError('unexpected refresh')):
             image, fingerprint = backend.resolve_image(self.package, None, project_root=self.root)
             resolve.assert_called_once_with(explicit_id=None, build_if_missing=True, use_packaged_assets=True)
             self.assertEqual((IMAGE, manager.identity(use_packaged_assets=True).fingerprint), (image, fingerprint))
@@ -49,7 +46,7 @@ class NativeImageBackendTests(unittest.TestCase):
                 start.assert_called_once()
             with self.assertRaises(BackendError):
                 backend.start(replace(selection, manifest_sha256='0' * 64), image, fingerprint, 1, 56318)
-            (self.package / STATUS_MODEL).write_text('{"changed":true}')
+            (self.package / TOOL_REGISTRY).write_text('{"changed":true}')
             with self.assertRaises(ImageError):
                 backend.start(selection, image, fingerprint, 1, 56318)
 

@@ -762,6 +762,11 @@ def _native_constraints(declaration: Mapping[str, Any], source: Mapping[str, Any
         name = args["relation_name"]
         result.append(_record(source, block, "native_relation_declaration", group="model",
                               relation=name, arguments={**args, **({"derivation": "Derived"} if "derived_from" in args else {})}))
+        for key, relation in (("classifications", name), ("inverse_classifications", args.get("inverse_alias"))):
+            for axis, value in args.get(key, {}).items():
+                subject = f"Relation//{relation}"
+                result.append(_record(source, f"{subject} >| {axis} == {value}", "classification_condition",
+                                      group="model", subject_selector=subject, axis=axis, operator="==", value=value))
         if base := args.get("derived_from"):
             result.append(_record(source, block, "relation_cardinality", group="model",
                                   source_selector=f"Relation//{name}", relation="IS_DERIVED_RELATION_OF",

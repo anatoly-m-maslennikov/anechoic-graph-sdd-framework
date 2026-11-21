@@ -8,9 +8,9 @@ structure:
 context:
   lens: SWD
 state:
-  status: active
-  version: 9
-  updated_at: '2026-11-13T19:29:19.097366+00:00'
+  status: "active"
+  version: 12
+  updated_at: "2026-11-21T13:10:57.653426+00:00"
 ---
 ## Summary
 
@@ -20,11 +20,6 @@ Generate canonical relation metadata from declarations
 
 ### Prose Claim
 
-Generate one rebuildable relation registry from Current Requirement relation Declarations for Workbench relation-name resolution and direct/derived materialization. Include canonical names, explicit inverse aliases, literal unqualified inverse bindings, and source IDs/versions. An inverse alias needs no separate Relation Declaration.
+Use the Model compiled from active native Formal Claims for Workbench canonical Relation names and inverses. Project authored Relation facts using those bindings. Build each declared inverse by reversing its endpoints.
 
-Normalize an explicit inverse by swapping endpoints once; preserve an unambiguous legacy named inverse through its declared counterpart without source edits or invented bindings. Derive container facts from effective Header.Container, including Context carrier layout, and resolve the Project root as `uppercase(Project prefix)-SU-00`. Build each inverse view once and refresh only affected rows/hashes on source change. Preserve exact model addresses: ambiguous/unsupported metadata is diagnosed and omitted, never guessed; prose, expressions outside supported relation declarations, and qualified derivation rules are not runtime facts.
-
-In refresh mode, use the Current Declaration inputs selected under CA-M-1011, including its first-refresh bootstrap. Generate deterministic JSON metadata before image fingerprint and context assembly. In existing mode, use the checkout registry unchanged. Its fingerprint excludes a changing timestamp. A missing or invalid asset or a failed refresh prevents image or package acceptance. Load the delivered registry at startup. Source changes refresh relation facts under that registry. Apply relation declaration changes by refreshing the registry and rebuilding the image. MCP tool discovery remains separate.
-
-
-Generate declaration-derived model facts only from code blocks in `Content.Claim.Formal Claim` that the build-time compiler accepts. Comments outside strings do not supply model facts or decide whether a block is a declaration. Prose Claim, Semantics, Details, examples and Header Topics do not supply model facts. Source identity, lifecycle and provenance metadata may select and bind inputs. Register Relation names, inverse bindings and aliases from their formal declarations, not from Header Topics.
+Compile the Model at Project startup. Source refresh updates Relation facts under the loaded Model. Restart to apply changes to the Model.

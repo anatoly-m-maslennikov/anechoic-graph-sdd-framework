@@ -97,7 +97,19 @@ def _projected_rows(capture, relation_types, inverse):
     for edge in capture.containment:
         add(dict(edge))
     for row in rows:
+        relations = row["header_json"].get("relations", {})
+        if ("HAS_REFERENCE" in relation_types and isinstance(relations, dict)
+                and "IS_REFERENCE_FOR" in relations):
+            raise ValueError("Native relation IS_REFERENCE_FOR is derived")
+        citations = set()
         for edge in _authored_edges(row):
+            if "HAS_REFERENCE" in relation_types:
+                if edge["relation_type"] in {"REFERENCES", "HAS_REFERENCE"}:
+                    edge["relation_type"] = "HAS_REFERENCE"
+                    key = edge["target_kind"], edge["target_ref"]
+                    if key in citations:
+                        continue
+                    citations.add(key)
             add(edge)
     return rows
 

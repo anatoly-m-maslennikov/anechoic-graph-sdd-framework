@@ -26,13 +26,13 @@ def docker_client_environment(*, buildx_config=None):
 
 
 def bounded_run(argv, *, cwd, timeout, capture_stdout=True, max_output=MAX_OUTPUT,
-                buildx_config=None):
-    """Read a finite stdout prefix; never retain command stderr or build logs."""
+                buildx_config=None, report_stderr=False):
+    """Read a finite stdout prefix without retaining stderr or build logs."""
     deadline = time.monotonic() + timeout
     environment = docker_client_environment(buildx_config=buildx_config)
     process = subprocess.Popen(argv, cwd=cwd, stdin=subprocess.DEVNULL,
                                stdout=subprocess.PIPE if capture_stdout else subprocess.DEVNULL,
-                               stderr=subprocess.DEVNULL, shell=False, env=environment)
+                               stderr=None if report_stderr else subprocess.DEVNULL, shell=False, env=environment)
     selector = None
     output = bytearray()
     try:

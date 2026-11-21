@@ -9,8 +9,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 21
-  updated_at: '2026-11-13T22:48:44.142840+00:00'
+  version: 22
+  updated_at: '2026-11-21T12:25:59+00:00'
 ---
 ## Summary
 
@@ -34,3 +34,11 @@ declare_relation(
 ## Semantics
 
 The Host recursively contains the Target when one or more successive `CONTAINS` links lead from Host to Target. Intermediate Entities need only satisfy the endpoint constraints of `CONTAINS`. Derive this Relation from the existing links.
+
+## Classifications
+
+| Relation | Transitive | Functional |
+| --- | --- | --- |
+| `RECURSIVELY_CONTAINS` | yes | no |
+
+A `CONTAINS` path can be extended by another `CONTAINS` path. A Host can recursively contain several targets.

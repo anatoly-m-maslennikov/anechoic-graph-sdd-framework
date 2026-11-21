@@ -227,6 +227,24 @@ class NativeProjectionTests(NativeCaptureTests):
             'SELECT "header.context.template", "header.context.label" FROM atoms WHERE reference = \'AN-T-09\''
         )["rows"])
 
+        header["relations"] = {"REFERENCES": ["AN-S-001"], "HAS_REFERENCE": ["AN-S-001", "AN-S-002@1"]}
+        source.write_text("---\n" + yaml.safe_dump(header) + "---\n\n## Summary\n\nTask\n")
+        bindings["HAS_REFERENCE"] = "IS_REFERENCE_FOR"
+        types = set(bindings) | set(bindings.values()) | {"REFERENCES"}
+        project_native(store, capture_native(self.selection), relation_types=types, inverses=bindings)
+        facts = store.run("SELECT source_ref, target_ref, relation_type, derived FROM relations "
+                          "WHERE relation_type IN ('REFERENCES', 'HAS_REFERENCE', 'IS_REFERENCE_FOR')")['rows']
+        self.assertCountEqual(facts, [
+            ["AN-T-09", "AN-S-001", "HAS_REFERENCE", False],
+            ["AN-S-001", "AN-T-09", "IS_REFERENCE_FOR", True],
+            ["AN-T-09", "AN-S-002@1", "HAS_REFERENCE", False],
+            ["AN-S-002@1", "AN-T-09", "IS_REFERENCE_FOR", True],
+        ])
+        header["relations"] = {"IS_REFERENCE_FOR": ["AN-S-001"]}
+        source.write_text("---\n" + yaml.safe_dump(header) + "---\n\n## Summary\n\nTask\n")
+        with self.assertRaisesRegex(ValueError, "IS_REFERENCE_FOR is derived"):
+            project_native(store, capture_native(self.selection), relation_types=types, inverses=bindings)
+
     def test_authored_cross_revision_relation_and_reprojection(self):
         source = self.write("AN-T-09--task.md", "AN-T-09", "active", 2)
         header = yaml.safe_load(source.read_text().split("---\n")[1])

@@ -38,7 +38,7 @@ from tool_registry_runtime import (  # noqa: E402
 class MovedRegistryStagingTests(unittest.TestCase):
     def test_staged_compiler_loads_moved_components(self):
         sys.path.insert(0, str(MCP / "docker"))
-        from image_relation_registry import compile_tool_registry
+        from image_tool_registry import compile_tool_registry
 
         registry = json.loads(compile_tool_registry(MCP.parents[2], timeout=60, max_output=2_000_000))
         self.assertEqual({provider["provider_id"] for provider in registry["providers"]},

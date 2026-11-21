@@ -8,8 +8,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-20T16:37:26.178362+00:00'
+  version: 2
+  updated_at: '2026-11-21T12:25:59+00:00'
 ---
 
 ## Summary
@@ -44,3 +44,11 @@ declare_relation(
 - Verify direct Workbench edges to a base Atom ID and an exact Draft reference.
 - Quote the label as `"REFERENCES"` in `GRAPH_TABLE` patterns.
 - Resolve legacy citations through an admitted native migration binding.
+
+## Classifications
+
+| Relation | Transitive | Functional |
+| --- | --- | --- |
+| `REFERENCES` | no | no |
+
+An Atom can cite several targets. Each edge records a citation by its source Atom.

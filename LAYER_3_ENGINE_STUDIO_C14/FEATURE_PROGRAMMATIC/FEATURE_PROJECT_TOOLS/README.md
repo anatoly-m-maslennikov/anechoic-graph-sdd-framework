@@ -88,9 +88,13 @@ the selected modules; they are not evidence that the complete release suite is
 green.
 
 Local Release defaults to `--image-mode refresh`. It generates the MCP Tool
-registry and uses the sealed Workbench and lifecycle assets. Test images use
-the checkout assets. To use a known-good asset set, restore it with its code and
-run Local Release with `--image-mode existing`.
+registry and verifies the native Model and lifecycle Specs. Test images use
+the checkout registry. To reuse a known-good registry, restore it with its code
+and run Local Release with `--image-mode existing`.
+
+Standalone `build --image-mode refresh` also checks the native Model against the
+previous ready image's Workbench selection. The first refresh compiles staged
+native Claims directly.
 
 For a release that predates these Git snapshots, recover its generated files
 from the known-good image with `docker create` and `docker cp`. The files are

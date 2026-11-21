@@ -163,6 +163,12 @@ def compiler_model_statements(declaration: Mapping[str, Any], *, model_class_bin
                 statements.append(f"Relation//{name} ((HAS_INVERSE)) Relation//{inverse}")
             else:
                 statements.append(f"Relation//{inverse} ((IS_INVERSE_ALIAS_FOR)) Relation//{name}")
+        for key, relation in (("classifications", name), ("inverse_classifications", args.get("inverse_alias"))):
+            values = args.get(key, {})
+            if not isinstance(values, Mapping) or (values and not relation):
+                raise ValueError(f"invalid {key}")
+            statements.extend(f"Relation//{_name(relation, relation=True)} >| {_name(axis)} == {_name(value)}"
+                              for axis, value in values.items())
         return tuple(statements)
 
     if declaration["kind"] != "entity":

@@ -24,9 +24,8 @@ from contextlib import ExitStack
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-from carrier_aliases import carrier_status_folder
 from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images import (
-    _GENERATED_ASSETS, ready_predecessor,
+    RETIRED_ASSETS, _GENERATED_ASSETS, ready_predecessor,
 )
 from release_assets import (
     LocalReleaseError,
@@ -47,7 +46,7 @@ _PRESERVED_NAMES = frozenset(
     }
 )
 _RUN_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*\Z")
-_NON_SOURCE_DIRECTORIES = frozenset({"archive", "archived", "draft", "drafts", "journal", "projection", "_journal", "_projection", ".anechoic_tmp", "__pycache__"})
+_NON_SOURCE_DIRECTORIES = frozenset({"000_draft", "099_archived", "_journal", "_projection"})
 
 
 def _relative(value: object, *, label: str) -> Path:
@@ -90,7 +89,6 @@ def _ignored(name: str) -> bool:
 
 
 def _walk_regular_files(root: Path, *, excluded_directories: frozenset[str] = frozenset(),
-                        exclude_history: bool = False,
                         excluded_root_prefix: str = "",
                         excluded_root_directories: frozenset[str] = frozenset(),
                         excluded_root_files: frozenset[str] = frozenset()) -> list[Path]:
@@ -103,8 +101,7 @@ def _walk_regular_files(root: Path, *, excluded_directories: frozenset[str] = fr
         directories[:] = [name for name in directories if not _ignored(name)
                           and name.casefold() not in excluded_directories
                           and (base != root or name.casefold() not in excluded_root_directories)
-                          and (base != root or not excluded_root_prefix or not name.casefold().startswith(excluded_root_prefix))
-                          and not (exclude_history and carrier_status_folder(name) in {"draft", "archived"})]
+                          and (base != root or not excluded_root_prefix or not name.casefold().startswith(excluded_root_prefix))]
         for name in directories:
             child = base / name
             if child.is_symlink():
@@ -124,130 +121,47 @@ def _walk_regular_files(root: Path, *, excluded_directories: frozenset[str] = fr
 
 
 def _native_release_sources(selection) -> dict[Path, Path]:
-    """Deliver the Active native Methodology and its admitted Model declarations."""
+    """Select Active Specs from the native Meta-ontology Component."""
     from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import _carrier_row
+    from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.native_manifest_model import admit_active_model_records
+    from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.manifest_compiler_pkg1.active_model_sources import (
+        read_active_model_sources,
+    )
     from VALIDATE_ATOMS.validate_atoms_workers.read_io import LimitReached, ReadContext
     from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
 
     root, control = selection.root, selection.control_root
-    alias_file = _project_path(root, control.relative_to(root) / "_migration/native-aliases.json",
-                               label="native-aliases", require_exists=True)
+    ontology = control / "LAYER_1_META_ONTOLOGY_C9"
+    reader = ReadContext(roots=[str(control)], limits=dict(CEILINGS))
+    selected, identities = {}, set()
+    prefix = f"{selection.project_prefix}-S-"
     try:
-        alias_identity = _file_identity(alias_file)
-        rows = json.loads(alias_file.read_bytes())
-        if not isinstance(rows, list):
-            raise ValueError("invalid aliases")
-        prefix = (".anechoic_anechoic", "CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY",
-                  "CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES")
-        units = ("CA-SU-11_LAYER_1_CORE_META_MODEL", "CA-SU-12_LAYER_2_INSTALLED_EXTENSIONS",
-                 "CA-SU-13_LAYER_3_PROJECT_CONFIGURATION")
-        bindings: dict[str, Path] = {}
-        old_paths: set[Path] = set()
-        for row in rows:
-            if (not isinstance(row, list) or len(row) != 3 or
-                    (row[0] is not None and not isinstance(row[0], str)) or
-                    not isinstance(row[1], str) or not isinstance(row[2], str)):
-                raise ValueError("invalid alias row")
-            old_ref, old_path, native_ref = row
-            relative = _relative(old_path, label="native-alias-path")
-            parts = relative.parts
-            if (len(parts) < 5 or parts[:3] != prefix or parts[3] not in units or not old_ref
-                    or any(part.casefold() in _NON_SOURCE_DIRECTORIES or
-                           carrier_status_folder(part) in {"draft", "archived"} for part in parts[4:-1])
-                    or old_ref.endswith(("-draft", "-archived"))):
-                continue
-            match = re.fullmatch(r"([A-Z]+-[A-Z]+-[0-9]+)@[0-9]+", native_ref)
-            if match is None or relative in old_paths or match.group(1) in bindings:
-                raise ValueError("duplicate or invalid release alias")
-            old_paths.add(relative)
-            bindings[match.group(1)] = Path(*parts[3:-1])
-
-        retirement_file = _project_path(root, control.relative_to(root) / "_migration/native-archive-only.json",
-                                        label="native-archive-only")
-        retirement_reader = ReadContext(roots=[str(control)], limits=dict(CEILINGS))
-        retirement_exists = retirement_file.exists()
-        retired: set[str] = set()
-        retirement_identities: dict[Path, tuple[str, int]] = {}
-        if retirement_exists:
-            retirement_identities[retirement_file] = _file_identity(retirement_file)
-            retirement_rows = json.loads(retirement_reader.read(retirement_file))
-            if not isinstance(retirement_rows, list):
-                raise ValueError("invalid archive-only list")
-            for item in retirement_rows:
-                if not isinstance(item, dict) or set(item) != {"exact_ref", "path"}:
-                    raise ValueError("invalid archive-only row")
-                ref = item["exact_ref"]
-                match = re.fullmatch(r"([A-Z]+-[STP]-[0-9]+)@([1-9][0-9]*)", ref) if isinstance(ref, str) else None
-                relative = _relative(item["path"], label="native-archive-path")
-                if (match is None or match[1] in retired or match[1] not in bindings or
-                        not any(carrier_status_folder(part) == "archived" for part in relative.parts[:-1])):
-                    raise ValueError("invalid archive-only identity or path")
-                path = _project_path(root, control.relative_to(root) / relative,
-                                     label="native-archive-path", require_exists=True)
-                retirement_identities[path] = _file_identity(path)
-                family = {"_PMETA": "P", "__TKT": "T"}.get(relative.parts[0], "S")
-                row, _ = _carrier_row(path, root, family, selection.project_prefix, retirement_reader.read(path))
-                if row["id"] != match[1] or row["status"] != "archived" or row["_exact_ref"] != ref:
-                    raise ValueError("archive-only carrier mismatch")
-                retired.add(match[1])
-
-        excluded = _NON_SOURCE_DIRECTORIES | frozenset({"_migration", "000_anechoic_framework"})
-        members = _walk_regular_files(control, excluded_directories=excluded, exclude_history=True)
-        selected: dict[Path, Path] = {}
-        found: set[str] = set()
-        identities: dict[Path, tuple[str, int]] = {}
-        manifest = _project_path(root, selection.manifest_path.relative_to(root),
-                                 label="native-manifest", require_exists=True)
-        identities[manifest] = _file_identity(manifest)
-        if identities[manifest][0] != selection.manifest_sha256:
-            raise ValueError("native manifest changed")
+        manifest = reader.read(selection.manifest_path)
+        if hashlib.sha256(manifest).hexdigest() != selection.manifest_sha256:
+            raise ValueError("Project Manifest changed")
+        if not reader.allowed(ontology).is_dir():
+            raise ValueError("Meta-ontology Component is missing")
+        members = _walk_regular_files(ontology, excluded_directories=_NON_SOURCE_DIRECTORIES)
         for path in members:
-            match = re.match(r"^([A-Z]+-[STP]-[0-9]+)-", path.name)
-            atom_id = match.group(1) if match else None
-            if atom_id not in bindings:
+            if path.suffix != ".md" or not path.name.startswith(prefix):
                 continue
-            identities[path] = _file_identity(path)
-            tree = path.relative_to(control).parts[0]
-            family = {"_PMETA": "P", "__TKT": "T"}.get(tree, "S")
-            row, _ = _carrier_row(path, root, family, selection.project_prefix, path.read_bytes())
-            if row["id"] != atom_id or atom_id in found:
-                raise ValueError("invalid or duplicate Current carrier")
-            found.add(atom_id)
+            row, _ = _carrier_row(path, root, "S", selection.project_prefix, reader.read(path))
             if row["status"] != "active":
                 continue
-            destination = bindings[atom_id] / path.name
-            if destination in selected:
-                raise ValueError("duplicate release destination")
-            selected[destination] = path
-        if found & retired or found | retired != bindings.keys():
-            raise ValueError("missing or conflicting Current carrier")
-        ontology = control / "LAYER_1_META_ONTOLOGY_C9"
-        if ontology.exists() or ontology.is_symlink():
-            from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.native_manifest_model import admit_active_model_records
-            from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.manifest_compiler_pkg1.active_model_sources import read_active_model_sources
-
-            sources, _, _ = admit_active_model_records(read_active_model_sources(control, ontology))
-            delivered = set(selected.values())
-            for source, _, _ in sources:
-                path = control / source.rsplit("@", 1)[0]
-                if path not in delivered:
-                    destination = Path(units[0], "SPEC", path.name)
-                    if destination in selected:
-                        raise ValueError("duplicate Model delivery destination")
-                    selected[destination] = path
-                    identities[path] = _file_identity(path)
-        if not any(path.parts[0] == units[0] and path.suffix == ".md" for path in selected):
-            raise ValueError("empty core model")
-        if (retirement_file.exists() != retirement_exists or
-                any(_file_identity(path) != identity for path, identity in retirement_identities.items()) or
-                alias_identity != _file_identity(alias_file) or
-                members != _walk_regular_files(control, excluded_directories=excluded, exclude_history=True) or
-                any(_file_identity(path) != identity for path, identity in identities.items()) or
-                retirement_reader.currentness()["state"] != "unchanged"):
-            raise ValueError("release sources changed")
+            atom_id = row["id"]
+            if atom_id in identities or not path.name.startswith(atom_id + "-"):
+                raise ValueError(f"{path}: duplicate Current identity or mismatched Spec filename")
+            identities.add(atom_id)
+            selected[path.relative_to(control)] = path
+        if not selected:
+            raise ValueError("No Active Meta-ontology Specs were selected")
+        admit_active_model_records(read_active_model_sources(control, ontology))
+        if (members != _walk_regular_files(ontology, excluded_directories=_NON_SOURCE_DIRECTORIES)
+                or reader.currentness()["state"] != "unchanged"):
+            raise ValueError("Meta-ontology sources changed during selection")
         return selected
-    except (OSError, UnicodeError, ValueError, TypeError, LimitReached) as error:
-        raise LocalReleaseError("local-release-native-sources-invalid") from error
+    except (OSError, ValueError, TypeError, LimitReached) as error:
+        raise LocalReleaseError(f"local-release-native-sources-invalid: {error}") from error
 
 
 def _clear_target(target: Path, *, root: Path, preserve: frozenset[str], label: str) -> None:
@@ -431,7 +345,8 @@ def _prepare_package(root: Path, product: Path, package: Path, *,
             raise LocalReleaseError("local-release-package-source-unavailable")
         inventories.append((source, members))
         (package / destination).mkdir(parents=True, exist_ok=True)
-        sources.extend((entry, destination / entry.relative_to(source)) for entry in members)
+        sources.extend((entry, destination / entry.relative_to(source)) for entry in members
+                       if (destination / entry.relative_to(source)).as_posix() not in RETIRED_ASSETS)
     expected = {}
     for source, relative in sources:
         expected[relative.as_posix()] = _file_identity(source)
@@ -462,10 +377,6 @@ def _prepare_package(root: Path, product: Path, package: Path, *,
         "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/runtime.py",
         "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/generate_tool_registry.py",
         "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/tool_providers.json",
-        "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/"
-        "FEATURE_WORKBENCH_BACKEND/generate_relation_registry.py",
-        "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/"
-        "FEATURE_WORKBENCH_BACKEND/generate_workbench_schema.py",
         *_GENERATED_ASSETS,
     ):
         if relative not in expected:

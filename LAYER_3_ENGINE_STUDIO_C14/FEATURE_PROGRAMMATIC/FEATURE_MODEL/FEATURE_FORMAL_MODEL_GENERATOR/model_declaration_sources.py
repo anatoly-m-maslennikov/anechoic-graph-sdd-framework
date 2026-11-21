@@ -204,6 +204,20 @@ def _relation_registry(records: list) -> dict:
     return relations
 
 
+def _check_relation_classifications(records: list, relations: dict) -> None:
+    allowed = {
+        axis: values
+        for _, _, declaration in records
+        if declaration["kind"] == "entity" and declaration["arguments"].get("entity_name") == "Relation"
+        for axis, values in declaration["arguments"].get("allowed_classification_values", {}).items()
+    }
+    for name, (args, reverse) in relations.items():
+        key = "inverse_classifications" if reverse else "classifications"
+        for axis, value in args.get(key, {}).items():
+            if value not in allowed.get(axis, ()):
+                raise ValueError(f"{name}: unadmitted Relation classification {axis}={value}")
+
+
 def _merge_constraint_claims(parsed: list) -> list:
     """Attach separate constraint declarations to their canonical class owner."""
     owners = {}
@@ -287,6 +301,7 @@ def _check_relation_references(records: list[tuple[str, str, str]]) -> None:
     )
     _check_manifest_property_bearers(parsed)
     relations = _relation_registry(parsed)
+    _check_relation_classifications(parsed, relations)
     addresses = {subject for _, subject, _ in records}
     addresses.update(_class_property_aliases(parsed))
     short_names = {}

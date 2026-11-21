@@ -62,6 +62,19 @@ declare_entity(
             rule['relation']: rule['contract']['target_entity_paths'] for rule in rules
         })
 
+    def test_relation_classifications_are_separate_explicit_conditions(self):
+        declaration = carrier('CA-R-1', 'Relation//LINKS', """from anechoic.formal_claims import declare_relation
+declare_relation(relation_name="LINKS", inverse_alias="LINKED_BY",
+    source_endpoint={"level": "model_entities"}, target_endpoint={"level": "model_entities"},
+    classifications={"Direction": "Forward"}, inverse_classifications={"Direction": "Reverse"})""", 'python', 'Relation Declaration')
+        clauses, diagnostics = extract_claim_constraints(declaration)
+        self.assertEqual([], diagnostics)
+        conditions = [row for row in clauses if row['kind'] == 'classification_condition']
+        self.assertEqual([(row['subject_selector'], row['axis'], row['operator'], row['value']) for row in conditions], [
+            ('Relation//LINKS', 'Direction', '==', 'Forward'),
+            ('Relation//LINKED_BY', 'Direction', '==', 'Reverse'),
+        ])
+
     def test_instance_property_native(self):
         native=carrier('CA-R-2524','Project', '''from anechoic.formal_claims import declare_entity
 from anechoic.model import ScopeUnit

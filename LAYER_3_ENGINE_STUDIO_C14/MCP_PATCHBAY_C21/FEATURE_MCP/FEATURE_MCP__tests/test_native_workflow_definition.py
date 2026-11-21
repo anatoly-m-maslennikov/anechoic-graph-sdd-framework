@@ -1,8 +1,6 @@
 """Exercise native Workflow pins and the SPEC contract for status changes."""
 
-import base64
 from dataclasses import replace
-import json
 from hashlib import sha256
 from pathlib import Path
 import sys
@@ -19,6 +17,7 @@ sys.path[:0] = [str(MCP), str(PROGRAMMATIC), str(PROGRAMMATIC / "FEATURE_TOOLS")
 
 from native_project_selection import resolve_native_project  # noqa: E402
 from native_workflow_definition import (  # noqa: E402
+    STATUS_SPECIFICATIONS,
     NativeDefinitionPin,
     NativeWorkflowDefinitionError,
     bind_native_workflow,
@@ -72,28 +71,23 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
         return bind_native_workflow(self.selection, **(binding | changes))
 
     def _status_binding(self):
-        from ATOM_LIFECYCLE import status_workflow_definition as installed
-        snapshot = json.loads(installed.SNAPSHOT.read_bytes())
-        refs, rows = [], []
-        for index, (kind, atom_id, version, original) in enumerate(installed.SOURCES, 10):
-            legacy = f"{atom_id}@{version}"
-            native = f"AN-S-{index}@{version}"
-            relative = f"{self.control}/LAYER_1_META_ONTOLOGY_C9/__DES/__DOM/AN-S-{index}-DOM-{kind.upper()}--fixture.md"
-            body = base64.b64decode(snapshot[legacy]).partition(b"\n---\n")[2].decode()
-            path = self._write(relative, {
-                "identity": {"atom_id": f"AN-S-{index}"},
-                "context": {"template": kind, "container": {"component": "C9"}},
-                "state": {"status": "active", "version": version},
-            }, "")
-            path.write_bytes(path.read_bytes().partition(b"\n---\n")[0] + b"\n---\n" + body.encode())
-            refs.append((legacy, (installed.CHECKOUT_MODEL / original).as_posix(), native))
-            rows.append({"_exact_ref": native, "status_group": "Current", "source_path": relative,
+        ontology = Path(self.control) / "LAYER_1_META_ONTOLOGY_C9"
+        source = STUDIO.parent / ontology
+        rows = []
+        for (native, _) in STATUS_SPECIFICATIONS.values():
+            atom_id = native.partition("@")[0]
+            original, = source.rglob(f"{atom_id}-DOM-*.md")
+            relative = ontology / original.relative_to(source)
+            path = self.root / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(original.read_bytes())
+            rows.append({"_exact_ref": native, "status_group": "Current", "source_path": relative.as_posix(),
                          "_source_sha256": sha256(path.read_bytes()).hexdigest()})
-        return refs, rows
+        return rows
 
-    def test_migrated_status_binding_checks_sources_and_manifest(self):
-        refs, rows = self._status_binding()
-        check = bind_status_specifications(self.selection, migration_refs=refs, current_rows=rows)
+    def test_native_status_binding_checks_sources_and_manifest(self):
+        rows = self._status_binding()
+        check = bind_status_specifications(self.selection, current_rows=rows)
         check()
         for row in rows:
             path = self.root / row["source_path"]
@@ -103,34 +97,30 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
                 check()
             row["_source_sha256"] = sha256(path.read_bytes()).hexdigest()
             with self.assertRaisesRegex(NativeWorkflowDefinitionError, "body differs"):
-                bind_status_specifications(self.selection, migration_refs=refs, current_rows=rows)
+                bind_status_specifications(self.selection, current_rows=rows)
             path.write_bytes(original)
             row["_source_sha256"] = sha256(original).hexdigest()
         self.manifest.write_bytes(self.manifest.read_bytes() + b"changed")
         with self.assertRaisesRegex(NativeWorkflowDefinitionError, "AN-S-1@1 changed"):
             check()
 
-    def test_migrated_status_binding_refuses_invalid_mapping_and_header(self):
-        refs, rows = self._status_binding()
-        with self.assertRaisesRegex(NativeWorkflowDefinitionError, "native migration target"):
-            pmeta = [*refs[1:], (refs[0][0], refs[0][1], refs[0][2].replace('-S-', '-P-'))]
-            bind_status_specifications(self.selection, migration_refs=pmeta, current_rows=rows)
-        with self.assertRaisesRegex(NativeWorkflowDefinitionError, "migration"):
-            bind_status_specifications(self.selection, migration_refs=refs + refs[:1], current_rows=rows)
-        with self.assertRaisesRegex(NativeWorkflowDefinitionError, "native carrier"):
-            bind_status_specifications(self.selection, migration_refs=refs, current_rows=rows[1:])
+    def test_native_status_binding_refuses_invalid_inventory_and_header(self):
+        rows = self._status_binding()
+        for invalid in (rows + rows[:1], rows[1:]):
+            with self.assertRaisesRegex(NativeWorkflowDefinitionError, "Missing or ambiguous"):
+                bind_status_specifications(self.selection, current_rows=invalid)
         path = self.root / rows[0]["source_path"]
         path.write_bytes(path.read_bytes().replace(b"status: active", b"status: draft"))
         rows[0]["_source_sha256"] = sha256(path.read_bytes()).hexdigest()
         with self.assertRaisesRegex(NativeWorkflowDefinitionError, "Expected active native workflow"):
-            bind_status_specifications(self.selection, migration_refs=refs, current_rows=rows)
+            bind_status_specifications(self.selection, current_rows=rows)
 
-    def test_status_action_uses_migrated_specifications(self):
+    def test_status_action_uses_native_specifications(self):
         from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import capture_native
         from ATOM_LIFECYCLE.native_update import change_ticket_status
         from project_runtime import bind_native_runtime
 
-        refs, _ = self._status_binding()
+        self._status_binding()
         path = self._write(f'{self.control}/__TKT/TASKS/AN-T-4-TASK--verify.md', {
             'identity': {'atom_id': 'AN-T-4'},
             'context': {'template': 'TASK', 'container': {'component': 'C0'}},
@@ -138,7 +128,7 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
         }, '## Summary\n\nVerify the status action.\n')
         before = capture_native(self.selection)
         self.assertEqual({}, before.errors)
-        check = bind_status_specifications(self.selection, migration_refs=refs, current_rows=before.atoms)
+        check = bind_status_specifications(self.selection, current_rows=before.atoms)
         with bind_native_runtime(self.selection):
             outcome = change_ticket_status(self.selection, {
                 'target': {'ref_id': 'AN-T-4', 'version': 3}, 'targetStatus': 'Backlog',
@@ -154,9 +144,9 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
     def test_lifecycle_cannot_revise_or_promote_installed_status_pin(self):
         from native_query import NativeQueryInputs, NativeQueryOwner
 
-        refs, rows = self._status_binding()
+        rows = self._status_binding()
         owner = NativeQueryOwner(self.selection, NativeQueryInputs(
-            lambda *args: None, frozenset(), {}, tuple(refs),
+            lambda *args: None, frozenset(), {}, (),
         ))
         owner._store = SimpleNamespace(_available=True)
         owner._capture = SimpleNamespace(atoms=rows)

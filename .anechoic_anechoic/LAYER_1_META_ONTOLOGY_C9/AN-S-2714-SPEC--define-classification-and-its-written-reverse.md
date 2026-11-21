@@ -8,8 +8,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 7
-  updated_at: '2026-11-20T11:17:59+00:00'
+  version: 8
+  updated_at: '2026-11-21T12:25:59+00:00'
 ---
 
 ## Summary
@@ -46,3 +46,12 @@ declare_relation(
     ),
 )
 ```
+
+## Classifications
+
+| Relation | Transitive | Functional |
+| --- | --- | --- |
+| `IS_CLASSIFIED_BY` | no | no |
+| `CLASSIFIES` | no | no |
+
+A Spec Atom can be classified through both the Continuant and SSOT endpoint pairs. A classifier can have multiple members.

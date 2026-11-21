@@ -8,8 +8,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 8
-  updated_at: '2026-11-20T11:17:59+00:00'
+  version: 9
+  updated_at: '2026-11-21T12:25:59+00:00'
 ---
 
 ## Summary
@@ -63,3 +63,12 @@ declare_relation(
     ),
 )
 ```
+
+## Classifications
+
+| Relation | Transitive | Functional |
+| --- | --- | --- |
+| `CONTAINED_BY` | no | no |
+| `CONTAINS` | no | no |
+
+Both directions describe direct containment. AN-S-3147 gives each Atom one container. That constraint applies to Atom sources. Recursive containment is defined in AN-S-2674.

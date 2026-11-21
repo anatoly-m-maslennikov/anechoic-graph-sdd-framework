@@ -19,7 +19,7 @@ APP = Path(__file__).resolve().parents[1]
 DOCKER = APP / "docker"
 sys.path.insert(0, str(DOCKER))
 
-from runtime_images import ImageError, ImageManager, RELATION_REGISTRY, WORKBENCH_SCHEMA, TOOL_REGISTRY, STATUS_MODEL, CANDIDATE_SCHEMA  # noqa: E402
+from runtime_images import DOCKERIGNORE, ImageError, ImageManager, RETIRED_ASSETS, TOOL_REGISTRY  # noqa: E402
 from project_mcp_backend import ProjectMcpBackend  # noqa: E402
 
 
@@ -33,18 +33,12 @@ class ImageGoldenTests(unittest.TestCase):
         parent = APP.parents[2] / ".anechoic_tmp/CA-P-2791/CA-P-2818/images"
         parent.mkdir(parents=True, exist_ok=True)
         self.fixture_root = Path(tempfile.mkdtemp(dir=parent))
-        self.registry = patch("runtime_images._compile_relation_registry", return_value=b'{"schema_version":1}\n')
-        self.registry.start()
-        self.addCleanup(self.registry.stop)
-        self.schema = patch("runtime_images._compile_workbench_schema", return_value=b'{"schema_version":1}\n')
-        self.schema.start()
-        self.addCleanup(self.schema.stop)
+        model = patch.object(ImageManager, "_refresh_model", return_value="a" * 64)
+        model.start()
+        self.addCleanup(model.stop)
         self.tools = patch("runtime_images._compile_tool_registry", return_value=b'{"schema_version":1}\n')
         self.tools.start()
         self.addCleanup(self.tools.stop)
-        lifecycle = patch("runtime_images._compile_lifecycle_assets", return_value=(b'{"schema_version":1}\n', b'{"schema_version":1}\n'))
-        lifecycle.start()
-        self.addCleanup(lifecycle.stop)
 
     def manager(self, source_root: Path, executor) -> ImageManager:
         tagged, sources, inspections = set(), {}, {}
@@ -87,7 +81,7 @@ class ImageGoldenTests(unittest.TestCase):
         (docker / "Dockerfile").write_text("FROM scratch\n", encoding="utf-8")
         (docker / "Dockerfile.dockerignore").write_text(".git\n", encoding="utf-8")
         (docker.parent / "server.py").write_text("SERVER = 'one'\n", encoding="utf-8")
-        for relative in (RELATION_REGISTRY, WORKBENCH_SCHEMA, TOOL_REGISTRY, STATUS_MODEL, CANDIDATE_SCHEMA):
+        for relative in (TOOL_REGISTRY,):
             path = root / relative
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(b'{"schema_version":1}\n')
@@ -124,20 +118,40 @@ class ImageGoldenTests(unittest.TestCase):
         self.assertTrue((context / "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/server.py").is_file())
         self.assertTrue((context / "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/package.json").is_file())
 
-    def test_lifecycle_assets_enter_context_and_fingerprint(self) -> None:
+    def test_retired_assets_stay_out_of_context_and_fingerprint(self) -> None:
         source = self.source_fixture()
         manager = self.manager(source, lambda *_a, **_k: self.fail("Docker is not needed"))
         before = manager.identity()
+        for relative in RETIRED_ASSETS:
+            path = source / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("{}")
+        self.assertEqual(before, manager.identity())
         context = self.fixture_root / "context"
         context.mkdir()
         manager._assemble(context, before)
-        self.assertEqual(before.status_model, (context / STATUS_MODEL).read_bytes())
-        self.assertEqual(before.candidate_schema, (context / CANDIDATE_SCHEMA).read_bytes())
-        for index in (0, 1):
-            assets = [before.status_model, before.candidate_schema]
-            assets[index] += b"changed"
-            with patch("runtime_images._compile_lifecycle_assets", return_value=tuple(assets)):
-                self.assertNotEqual(before.fingerprint, manager.identity().fingerprint)
+        self.assertEqual(before.tool_registry, (context / TOOL_REGISTRY).read_bytes())
+        self.assertTrue(all(not (context / path).exists() for path in RETIRED_ASSETS))
+        with patch.object(ImageManager, "_refresh_model", return_value="b" * 64):
+            self.assertEqual(before.fingerprint, manager.identity().fingerprint)
+            with self.assertRaises(ImageError):
+                manager._current(before)
+
+    def test_context_allows_finder_metadata_only_when_docker_excludes_it(self) -> None:
+        source = self.source_fixture()
+        (source / DOCKERIGNORE).write_text(".git\n**/.DS_Store\n")
+        manager = self.manager(source, lambda *_a, **_k: self.fail("Docker is not needed"))
+        identity = manager.identity()
+        context = self.fixture_root / "context"
+        context.mkdir()
+        manager._assemble(context, identity)
+        metadata = context / ".DS_Store"
+        metadata.touch()
+        manager._verify_context(context, identity)
+        metadata.unlink()
+        metadata.symlink_to(context / "version.toml")
+        with self.assertRaises(ImageError):
+            manager._verify_context(context, identity)
 
     def test_admitted_source_change_changes_fingerprint(self) -> None:
         source = self.source_fixture()
@@ -375,7 +389,7 @@ class ImageGoldenTests(unittest.TestCase):
 
     def test_packaged_assets_can_build_without_resolving_a_predecessor(self) -> None:
         source = self.source_fixture()
-        assets = (RELATION_REGISTRY, WORKBENCH_SCHEMA, TOOL_REGISTRY, STATUS_MODEL, CANDIDATE_SCHEMA)
+        assets = (TOOL_REGISTRY,)
         payloads = {path: json.dumps({"asset": Path(path).stem}).encode() for path in assets}
         for path, payload in payloads.items():
             (source / path).write_bytes(payload)
@@ -406,7 +420,7 @@ class ImageGoldenTests(unittest.TestCase):
         manager = self.manager(source, executor)
         manager.build_temp_root = self.fixture_root / "builds"
         manager.build_temp_root.mkdir()
-        with patch.object(manager, "_generated_assets", side_effect=AssertionError("asset refresh invoked")):
+        with patch.object(manager, "_refresh_model", side_effect=AssertionError("asset refresh invoked")):
             identity = manager.identity(use_packaged_assets=True)
             with self.assertRaises(ImageError) as refused:
                 manager.resolve(build_if_missing=False, use_packaged_assets=True)
