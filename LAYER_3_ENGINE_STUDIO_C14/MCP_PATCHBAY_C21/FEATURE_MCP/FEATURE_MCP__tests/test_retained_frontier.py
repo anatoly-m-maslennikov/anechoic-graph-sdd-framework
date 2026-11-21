@@ -43,21 +43,22 @@ class RetainedFrontierTests(unittest.IsolatedAsyncioTestCase):
         with tempfile.TemporaryDirectory() as directory:
             gateway = DirectGateway(Path(directory))
             await gateway.initialize()
-            self.assertEqual(WORKBENCH_NAMES | LIFECYCLE_NAMES, {tool.name for tool in shared_native_tools(gateway)})
+            self.assertEqual(WORKBENCH_NAMES, {tool.name for tool in shared_native_tools(gateway)})
             try:
                 async with InMemoryTransport(gateway.build_server(), raise_exceptions=True) as streams:
                     async with ClientSession(*streams) as client:
                         await client.initialize()
                         names = {tool.name for tool in (await client.list_tools()).tools}
                         self.assertEqual(29, len(WORKBENCH_NAMES))
-                        self.assertEqual(WORKBENCH_NAMES | LIFECYCLE_NAMES, names)
+                        self.assertEqual(WORKBENCH_NAMES, names)
                         response = await client.call_tool("workbench_ui_ping", {})
                         self.assertFalse(response.is_error)
                         self.assertEqual({"message": "Tool bridge passed"}, response.structured_content)
-                        for name in RETIRED_NAMES:
+                        for name in sorted(LIFECYCLE_NAMES | set(RETIRED_NAMES)):
                             with self.subTest(name=name):
                                 response = await client.call_tool(name, {"request": {}})
                                 self.assertTrue(response.is_error)
+                                self.assertEqual(["Unknown Tool"], response.structured_content["diagnostics"])
             finally:
                 await gateway.close()
 

@@ -64,9 +64,9 @@ class NativeProductionStartupTests(unittest.IsolatedAsyncioTestCase):
         connect = query_store._connect
         cache = extension_directory(MCP.parents[2])
 
-        def connect_with_cache(directory, database):
+        def connect_with_cache(directory, database, journal_path, journal_disk):
             self.assertIsNone(directory)
-            return connect(cache, database)
+            return connect(cache, database, journal_path, journal_disk)
 
         with patch.object(query_store, '_connect', side_effect=connect_with_cache):
             async with app.starlette_app.router.lifespan_context(app.starlette_app):
@@ -75,7 +75,8 @@ class NativeProductionStartupTests(unittest.IsolatedAsyncioTestCase):
                     async with streamable_http_client('http://127.0.0.1:18093' + MCP_PATH,
                                                       http_client=http) as streams, ClientSession(*streams) as client:
                         await client.initialize()
-                        self.assertIn('query_run', {tool.name for tool in (await client.list_tools()).tools})
+                        tools = {tool.name for tool in (await client.list_tools()).tools}
+                        self.assertTrue({'query_run', 'atom_lifecycle_update', 'atom_lifecycle_direct_update'} <= tools)
                         result = await client.call_tool('query_run', {
                             'sql': 'SELECT legacy_ref, original_path, exact_ref FROM native_legacy_references',
                             'result_delivery': 'inline',

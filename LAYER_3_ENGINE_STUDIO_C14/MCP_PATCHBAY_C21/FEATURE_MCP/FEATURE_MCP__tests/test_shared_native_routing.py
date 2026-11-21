@@ -113,8 +113,13 @@ class SharedNativeRoutingTests(unittest.IsolatedAsyncioTestCase):
     async def test_frontdoor_routes_same_workspace_id_to_isolated_native_owners(self):
         async with self._session() as session:
             tools = {tool.name: tool for tool in (await session.list_tools()).tools}
-            self.assertEqual(38, len(tools))
+            self.assertEqual(29, len(tools))
             self.assertIn("project_root", tools["workbench_ui_probe"].input_schema["required"])
+            retired = await session.call_tool("atom_lifecycle_update", {
+                "project_root": str(self.projects_by_name["alpha"]),
+            })
+            self.assertTrue(retired.is_error)
+            self.assertEqual(["tool_unavailable"], retired.structured_content["diagnostics"])
             uri = tools["workbench_ui_probe"].meta["ui"]["resourceUri"]
             resource = (await session.read_resource(uri)).contents[0]
             self.assertEqual("text/html;profile=mcp-app", resource.mime_type)

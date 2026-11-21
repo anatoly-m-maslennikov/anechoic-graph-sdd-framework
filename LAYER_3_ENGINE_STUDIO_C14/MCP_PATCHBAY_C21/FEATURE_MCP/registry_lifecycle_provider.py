@@ -46,6 +46,7 @@ _CONNECTION_IDS = WeakKeyDictionary()
 _PROJECT_RUNS = {}
 _PROJECT_RUNS_LOCK = threading.RLock()
 _RUN_TOOLS = {'lifecycle_run_list', 'lifecycle_run_continue', 'lifecycle_run_cancel'}
+LIFECYCLE_TOOL_NAMES = frozenset(_INPUTS) | _RUN_TOOLS
 
 
 def live_runs_snapshot(project, session_id=None):

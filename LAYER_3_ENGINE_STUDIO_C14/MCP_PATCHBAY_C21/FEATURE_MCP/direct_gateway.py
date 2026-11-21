@@ -33,6 +33,7 @@ from project_tool_blacklist import project_tool_blacklist  # noqa: E402
 from project_settings_schema import mcp_tool_blacklist  # noqa: E402
 from project_tool_context import native_arguments  # noqa: E402
 from query_templates import QUERY_TEMPLATE  # noqa: E402
+from registry_lifecycle_provider import LIFECYCLE_TOOL_NAMES  # noqa: E402
 from registry_release_command_provider import RELEASE_COMMAND_TOOLS  # noqa: E402
 from runtime_failure_diagnostics import report_failure  # noqa: E402
 from runtime_request_context import bind_request_context  # noqa: E402
@@ -146,7 +147,7 @@ class DirectGateway:
                     tool for tool in self.registry.tools if tool.name not in self.tool_blacklist
                 )
             else:
-                self.tool_blacklist |= {REBUILD}
+                self.tool_blacklist |= {REBUILD} | (LIFECYCLE_TOOL_NAMES & self.registry.routes.keys())
                 self.tool_blacklist |= {QUERY_TEMPLATE} & frozenset(self.registry.routes)
                 self.tool_blacklist |= RELEASE_COMMAND_TOOLS & frozenset(self.registry.routes)
                 self.tools = tuple(tool for tool in self.registry.tools if tool.name not in self.tool_blacklist)
