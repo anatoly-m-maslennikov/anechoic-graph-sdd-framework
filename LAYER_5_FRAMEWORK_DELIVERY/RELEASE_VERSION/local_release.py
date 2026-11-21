@@ -13,8 +13,9 @@ import subprocess
 import sys
 import tempfile
 from collections.abc import Callable
-from contextlib import ExitStack, contextmanager, nullcontext
+from contextlib import ExitStack, contextmanager
 from pathlib import Path
+from secrets import token_urlsafe
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -103,13 +104,46 @@ def _git_checkpoint(root: Path, runner: Callable, phase: str, paths: tuple[str, 
 
 
 @contextmanager
-def _installation_lock(root: Path, selection=None):
-    from project_runtime import bind_native_runtime, owned_temporary_root
-    from VALIDATE_ATOMS.validate_atoms_workers.read_io import open_regular
+def _release_temporary_owner(root: Path, owner: str):
+    flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+    with ExitStack() as descriptors:
+        try:
+            directory = os.open(root.anchor, flags)
+            descriptors.callback(os.close, directory)
+            for name in root.parts[1:]:
+                directory = os.open(name, flags, dir_fd=directory)
+                descriptors.callback(os.close, directory)
+            for name in (".anechoic_tmp", owner):
+                try:
+                    os.mkdir(name, dir_fd=directory)
+                except FileExistsError:
+                    pass
+                directory = os.open(name, flags, dir_fd=directory)
+                descriptors.callback(os.close, directory)
+        except OSError as error:
+            raise LocalReleaseError("local-release-temporary-directory-unsafe") from error
+        yield directory
 
-    with bind_native_runtime(selection) if selection is not None else nullcontext():
-        directory = open_regular(owned_temporary_root(root, "local_release_installation"), directory=True)
-    try:
+
+def _new_staging_directory(root: Path, prefix: str) -> Path:
+    owner = root / ".anechoic_tmp/simple_local_release"
+    name = prefix + token_urlsafe(6)
+    with _release_temporary_owner(root, owner.name) as descriptor:
+        os.mkdir(name, mode=0o700, dir_fd=descriptor)
+        try:
+            if not os.path.samestat(os.fstat(descriptor), owner.stat(follow_symlinks=False)):
+                raise LocalReleaseError("local-release-temporary-directory-changed")
+        except (OSError, LocalReleaseError):
+            os.rmdir(name, dir_fd=descriptor)
+            raise
+    return owner / name
+
+
+@contextmanager
+def _installation_lock(root: Path, selection):
+    if selection.root != root:
+        raise LocalReleaseError("local-release-temporary-project-mismatch")
+    with _release_temporary_owner(root, "local_release_installation") as directory:
         descriptor = os.open("installation.lock", os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_NONBLOCK,
                              mode=0o600, dir_fd=directory)
         try:
@@ -122,8 +156,6 @@ def _installation_lock(root: Path, selection=None):
             yield
         finally:
             os.close(descriptor)
-    finally:
-        os.close(directory)
 
 
 def run_local_release(
@@ -276,13 +308,11 @@ def run_local_release(
                     raise LocalReleaseError(f"local-release-command-failed: {detail}")
             elif phase == "copy active sources":
                 failed_step = "copy_active_sources"
-                from project_runtime import bind_native_runtime, owned_temporary_root
                 from release_support import _native_release_sources
                 sources = _native_release_sources(selection)
-                with bind_native_runtime(selection):
-                    temporary = owned_temporary_root(root, "simple_local_release")
-                with tempfile.TemporaryDirectory(prefix=f"{run_id}-sources-", dir=temporary) as directory:
-                    staged = Path(directory)
+                with ExitStack() as source_stage:
+                    staged = _new_staging_directory(root, f"{run_id}-sources-")
+                    source_stage.callback(shutil.rmtree, staged)
                     identities = {source: _file_identity(source) for source in sources.values()}
                     for relative, source in sources.items():
                         target = staged / _relative(relative.as_posix(), label="source-path")
@@ -308,13 +338,7 @@ def run_local_release(
                 _verify_package(installed, product_identity, preserve=_PRESERVED_NAMES)
             elif phase == "build package":
                 failed_step = "build_package"
-                from project_runtime import bind_native_runtime, owned_temporary_root, repository_root
-                temporary = _target(root, Path(".anechoic_tmp/simple_local_release"), label="temporary-package")
-                with bind_native_runtime(selection):
-                    if repository_root(root) != root:
-                        raise LocalReleaseError("local-release-temporary-project-mismatch")
-                    owned_temporary_root(root, "simple_local_release")
-                staging = Path(tempfile.mkdtemp(prefix=f"{run_id}-", dir=temporary))
+                staging = _new_staging_directory(root, f"{run_id}-")
                 prepared_product = staging / "framework"
                 prepared_product.mkdir()
                 product_identity = {
@@ -369,6 +393,8 @@ def run_local_release(
                 _verify_package(ane, {path.removeprefix("SKILLS/ane/"): identity
                                       for path, identity in package_identity.items()
                                       if path.startswith("SKILLS/ane/")})
+                from project_runtime import bind_native_runtime
+
                 with bind_native_runtime(selection):
                     _deploy_bootstrap(root, runtime)
             else:

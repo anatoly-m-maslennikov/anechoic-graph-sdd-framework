@@ -726,6 +726,39 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         with local_release._installation_lock(self.root, select_runtime_project(self.root)):
             pass
 
+    def test_installation_lock_and_staging_refuse_symlinked_owners(self):
+        temporary = self.root / ".anechoic_tmp"
+        temporary.mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory() as other:
+            outside = Path(other)
+            (temporary / "local_release_installation").symlink_to(outside, target_is_directory=True)
+            (temporary / "simple_local_release").symlink_to(outside, target_is_directory=True)
+
+            runner, calls = self._runner()
+            result = run_local_release(self.root, run_id="linked-lock", runner=runner)
+            self.assertEqual(("failed", "installation_lock"), (result["outcome"], result["failed_step"]))
+            self.assertEqual([], calls)
+            with self.assertRaisesRegex(local_release.LocalReleaseError, "temporary-directory-unsafe"):
+                local_release._new_staging_directory(self.root, "linked-stage-")
+            self.assertEqual([], list(outside.iterdir()))
+
+    def test_staging_refuses_an_owner_replaced_during_allocation(self):
+        owner = self.root / ".anechoic_tmp/simple_local_release"
+        owner.mkdir(parents=True)
+        moved = owner.with_name("moved")
+        mkdir = os.mkdir
+
+        def replace_owner(path, *args, **kwargs):
+            mkdir(path, *args, **kwargs)
+            if str(path).startswith("swap-"):
+                owner.rename(moved)
+                owner.symlink_to(moved, target_is_directory=True)
+
+        with patch.object(local_release.os, "mkdir", side_effect=replace_owner):
+            with self.assertRaisesRegex(local_release.LocalReleaseError, "temporary-directory-changed"):
+                local_release._new_staging_directory(self.root, "swap-")
+        self.assertEqual([], list(moved.iterdir()))
+
     def test_installation_lock_covers_copy_and_mcp_handoff(self):
         runner, _ = self._runner()
         copy_tree = local_release._copy_tree
