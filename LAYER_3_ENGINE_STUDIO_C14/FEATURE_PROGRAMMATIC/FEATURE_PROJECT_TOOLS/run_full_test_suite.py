@@ -13,7 +13,10 @@ import subprocess
 import sys
 import time
 
-from full_suite_docker import APP, current_code_test_image
+if __package__:
+    from .full_suite_docker import APP, current_code_test_image
+else:
+    from full_suite_docker import APP, current_code_test_image
 
 PROGRAMMATIC = Path("LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC")
 WORKBENCH = Path("LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH")

@@ -9,9 +9,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: active
-  version: 1
-  updated_at: '2026-11-19T00:00:00Z'
+  status: "active"
+  version: 2
+  updated_at: "2026-11-21T18:47:45.603340+00:00"
 ---
 
 ## Summary
@@ -30,6 +30,14 @@ declare_entity(
         component_id='C19',
         name='PROJECT_TOOLS',
         lens_whitelist=['DES', 'DevOps', 'QA', 'SWD'],
+        boundaries={
+            'code_access': {
+                'exports': {
+                    'test_suite__pub': 'public',
+                    'test_suite__pub.run_full_suite': 'public',
+                },
+            },
+        },
     ),
 )
 ```
