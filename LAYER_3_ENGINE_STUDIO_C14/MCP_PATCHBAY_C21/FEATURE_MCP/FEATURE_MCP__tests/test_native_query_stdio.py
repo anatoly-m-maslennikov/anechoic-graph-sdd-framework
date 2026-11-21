@@ -274,7 +274,7 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
                 "tested_by_edges", "import_read_issues", "implementation_rmedo", "component_metrics", "package_audit",
                 "change_log", "query_log", "live_runs", "runtime_diagnostics", "atom_parse_issues",
                 "atom_schema_issues", "atom_declared_carrier_issues", "atom_physical_carrier_issues",
-                "atom_duplicate_revision_issues",
+                "atom_duplicate_revision_issues", "boundary_declarations", "code_access_findings",
             }, set(tables))
             small = await client.call_tool("query_run", {"sql": "SELECT 0 AS n FROM range(120)"})
             self.assertFalse(small.is_error, small.structured_content)
