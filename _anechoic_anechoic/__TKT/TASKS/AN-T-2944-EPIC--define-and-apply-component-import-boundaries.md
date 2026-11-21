@@ -10,8 +10,8 @@ context:
   label: Epic
 state:
   status: "active"
-  version: 3
-  updated_at: "2026-11-21T18:31:22.080833+00:00"
+  version: 4
+  updated_at: "2026-11-21T18:55:23.441511+00:00"
 ---
 
 ## Summary
@@ -26,76 +26,77 @@ Give each current Component an authored Contract and declare the Code Access tha
 
 ### Approach
 
-Use two server-side Components. The stateless API Backend handles API
-requests, selects Tools, and supplies Adapters with the Kernel operations
-they need. The stateful Kernel owns authoritative state for each Project.
-Kernel Core alone controls DB access, transactions, and state invariants.
+Use three server-side Components. The API Backend serves Web and MCP.
+It calls the Workers API for job submission, status, and results. It
+calls the Kernel directly for database requests. Interactive Run Query
+uses this direct path, so a query can return without starting a worker.
 
-Web and MCP use the API. The Codex Hook processes host input and returns
-output to the host. Keep Tool workers in the Backend and source and graph
-workers in Kernel+. This keeps dispatch separate from state ownership and
-lets workers run in separate processes when needed.
+The Kernel is the database server for each Project. Its Model Host and
+Structure Host are read-only interfaces in the same process. They expose
+one compatible generation of JSON schemas and Structure data.
 
-Kernel+ runs the Manifest Builder in a short-lived worker. It publishes
-a compatible Model and Structure generation atomically. Thin read-only
-hosts expose the accepted artifacts from disk. Each operation holds one
-generation, and a failed build leaves the last accepted one available.
+The Workers supervisor receives file events and starts one-shot or batch
+workers. Tool operations, graph builds, and the Manifest Builder run
+there. The supervisor owns the job lifecycle and stores durable job
+records through the Kernel. A separate Builder process releases its
+build memory at exit. Publish a compatible Model and Structure generation
+atomically and keep the previous generation available on failure.
 
-C27 Framework Delivery imports and calls one public Test Suite entry point.
-The suite owns discovery, fixtures, and execution, and returns its outcome
-and report to C27.
+The Codex Hook processes host input and returns output to the host.
+C27 Framework Delivery imports and calls the single public Test Suite
+entry point.
 
 ### Processes and calls
 
 Arrows show runtime calls, host input and output, or artifact handoffs.
-The Manifest Builder is a separate process. A host can be a reader entry
-point, with its own process when it needs to serve requests or share a cache.
 
 ```mermaid
 flowchart LR
-    WEB["Web frontend"] -->|API request| API
+    WEB["Web frontend"] -->|API request| API["API Backend"]
     MCP["MCP"] -->|API request| API
     HOST["Codex host"] -->|input| HOOK["Codex Hook"]
     HOOK -->|return output| HOST
 
-    subgraph BACKEND["Stateless API Backend"]
-        API["API and Tool dispatch"] --> TOOL["Tool or Backend worker"]
-        TOOL --> ADAPTER["Adapter"]
+    subgraph WORKERS["Workers Component"]
+        WATCH["File watcher"] -->|file event| JOBS["Jobs API and supervisor"]
+        JOBS -->|start one-shot or batch| TASK["Tool or graph worker"]
+        JOBS -->|start build| BUILD["Manifest Builder process"]
+        TASK -->|result| JOBS
+        BUILD -->|validated artifacts| JOBS
     end
 
-    subgraph KERNEL["Stateful Kernel"]
-        KAPI["Kernel public API"] --> CORE["Kernel Core and DB"]
-        GRAPH["Kernel+ graph workers"] -->|publish state| CORE
-        WATCH["Kernel+ watcher and supervisor"]
-        ART["Accepted Model and Structure on disk"]
-        WATCH -->|activate generation| ART
-        ART --> MODEL["Model Host"]
-        ART --> STRUCTURE["Structure Host"]
+    subgraph KERNEL["Kernel process"]
+        DB["Database server"]
+        READERS["Read-only Model and Structure Hosts"]
     end
 
-    API -->|Kernel operation| KAPI
-    ADAPTER -->|injected operation| KAPI
-    WATCH -->|start worker| BUILD["Manifest Builder process"]
-    BUILD -->|validated artifacts| WATCH
+    API -->|submit, check status, fetch result| JOBS
+    API -->|Run Query or other DB request| DB
+    JOBS -->|store durable job records| DB
+    TASK -->|DB access through an Adapter| DB
+    JOBS -->|activate compatible generation| ART["Versioned JSON artifacts"]
+    ART -->|read| READERS
     RELEASE["C27 Release"] -->|run suite| SUITE["Test Suite entry point"]
 ```
 
 ### Code imports
 
-Arrows show allowed code imports across the named boundaries. Each Tool
-imports only Adapters across Components. Adapters import zero other
-Components. Web, MCP, and the Hook have zero cross-Component imports.
-The Model and Structure Hosts read artifacts with zero Builder imports.
+Process calls use public interfaces. Where code imports a client entry
+Module, record the exact export in the caller's allowance. Tools import
+only Adapters across Components. Adapters import zero other Components.
+Web, MCP, and the Hook have zero cross-Component imports. The Kernel's
+reader interfaces import zero Builder code.
 
 ```mermaid
 flowchart LR
-    API["API Backend composition"] -->|public API| KERNEL["Kernel"]
-    API -->|Tool entry| TOOL["Tool"]
+    API["API Backend"] -->|database client entry| KERNEL["Kernel API"]
+    API -->|Jobs API client entry| JOBS["Workers API"]
+    WRUN["Worker process composition"] -->|Tool entry| TOOL["Tool"]
     TOOL -->|only cross-Component import| ADAPTER["Adapter"]
     RELEASE["C27 Release"] -->|single public entry| SUITE["Test Suite"]
 
     ENTRY["Web, MCP, and Codex Hook<br/>Zero cross-Component imports"]
-    READERS["Model and Structure Hosts<br/>Zero Builder imports"]
+    READERS["Kernel Model and Structure Hosts<br/>Zero Builder imports"]
 ```
 
 Record exact providers and entry Modules in Component Manifests. Bind

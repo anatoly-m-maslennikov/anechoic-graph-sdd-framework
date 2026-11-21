@@ -18,10 +18,10 @@ Define target Component import and call boundaries
 
 ## Proposal
 
-Use two server-side runtime Components, a stateless API Backend and a
-stateful Kernel. Treat the web frontend, MCP, and Codex Hook as entry
-points with their own boundaries. Declare code imports and protocol
-requests separately.
+Use three server-side runtime Components, the API Backend, Workers,
+and Kernel. Treat the web frontend, MCP, and Codex Hook as entry points
+with their own boundaries. Declare code imports and protocol requests
+separately.
 
 ### Entry points
 
@@ -32,59 +32,52 @@ requests separately.
 - The API Contract defines Project identity, request and response shapes,
   errors, and the lifecycle of asynchronous operations.
 
-### API Backend, Tools, and Adapters
+### API Backend
 
-The API Backend owns request handling, Tool dispatch, and runtime
-composition. It can import the Kernel's public API. The Backend supplies
-the Adapter with the specific Kernel operations that the selected Tool
-needs.
+The API Backend serves Web and MCP. It calls the Workers Jobs API to
+submit jobs and read status and results. It calls the Kernel's database
+API directly for database requests, including interactive Run Query.
+The Kernel executes SQL. The Backend handles the request and response.
 
-Each Tool may import Adapters as its only cross-Component code
-dependency. An Adapter imports zero other Project Components. When an
-Adapter needs a Kernel operation, it receives that operation from the
-Backend as an explicit dependency.
+Use a worker for an explicit asynchronous job, such as a long export,
+when the caller needs job status or a result delivered later.
+
+### Workers, Tools, and Adapters
+
+The Workers Component owns the Jobs API, file watcher, and supervisor.
+The supervisor turns file events and submitted requests into one-shot
+or batch jobs. It coordinates worker processes and owns the meaning of
+job status. Store durable job records and results through the Kernel.
+
+Tool operations, graph builds, and Manifest Builder runs execute in
+worker processes. Each Tool imports Adapters as its only cross-Component
+code dependency. Adapters import zero other Project Components.
+Worker process composition supplies any authorized Kernel operations to
+the Adapter for the selected job.
 
 ### Kernel
 
-The Kernel owns authoritative shared and durable state for each Project.
-Kernel Core owns DB access, transactions, and state invariants. Kernel+
-owns source watching, graph building, and related projections. Kernel+
-publishes state through Kernel Core.
-
-The Kernel imports zero code from the API Backend, Tools, or entry
-points. The Backend accesses Kernel services through the public Kernel
-API.
+The Kernel is the database server for each Project. It owns DB access,
+transactions, and database invariants. It serves the Backend and
+Workers through its public database API. The Model Host and Structure
+Host are read-only interfaces in this same Kernel process.
 
 ### Manifest Runtime
 
-Kernel+ owns the Manifest Builder, Model Host, and Structure Host.
-The watcher triggers the Manifest Builder. Each build runs in a
-short-lived separate worker process. The builder compiles the admitted
-Model and validates the Structure against it.
+The Workers supervisor starts the Manifest Builder in a short-lived
+separate process. The builder compiles the admitted Model and validates
+the Structure against it. It emits a versioned Model schema and
+Structure snapshot. Start with JSON for both artifacts.
 
-The builder produces versioned Model and Structure artifacts on disk.
-Each Structure snapshot records its Model fingerprint. Kernel+ publishes
-the accepted pair atomically. Each operation holds one generation. A
-failed build leaves the last accepted generation available.
+Record the Model fingerprint in each Structure snapshot. The supervisor
+activates the accepted pair atomically. Each read operation holds one
+compatible generation. A failed build leaves the last accepted pair
+available.
 
-The hosts expose accepted artifacts through read-only interfaces and
-import zero builder code. The Model Host exposes generated modules or
-a schema, and consumers load any required Python types locally. Keep
-the reader outside the builder Package.
-
-Start with a disk-backed JSON snapshot for Structure. Use an indexed
-snapshot with record-level access if measurements show that whole-file
-parsing uses too much memory. Start with thin reader entry points. Use
-a long-lived host process when it needs to serve requests or manage a
-shared cache.
-
-### Workers
-
-Put Tool execution workers in the API Backend by default. Put source
-watching and graph workers in Kernel+. The Kernel owns durable job
-status and results. A separate worker process can remain inside its
-owning Component. Introduce a Workers Component if it needs a separate
-Contract and owner.
+The Kernel's Model and Structure Hosts expose the accepted artifacts
+with zero Builder imports. Consumers that need executable Python types
+load them locally. Use an indexed Structure snapshot if measurements
+show that whole-file JSON parsing uses too much memory.
 
 ### Framework Delivery (C27)
 
@@ -105,14 +98,14 @@ installation and startup when mapping release responsibilities.
 - Verify zero cross-Component imports from the web frontend, MCP, and
   Codex Hook. Verify that web and MCP use the API and that the Hook
   completes with host input and output only.
-- Verify that the Backend uses the public Kernel API, each Tool imports
-  only Adapters across Components, and Adapters import zero other
-  Project Components.
-- Verify that Kernel Core alone accesses the DB, Kernel+ uses Core for
-  state writes, and the Kernel imports zero Backend, Tool, or UI code.
-- Verify that builds run in their own worker process and that both
-  hosts read the accepted generation without importing builder code.
-  Reject a mismatched Model and Structure pair. Verify that a failed
+- Verify that the Backend reads job state through the Workers Jobs API
+  and executes interactive Run Query through the Kernel database API.
+- Verify that each Tool imports only Adapters across Components and that
+  Adapters import zero other Project Components.
+- Verify that the Kernel owns persistent state and serves its Model and
+  Structure interfaces in one process. Verify that the Manifest Builder
+  runs in a separate worker and that the hosts import zero Builder code.
+- Reject a mismatched Model and Structure pair. Verify that a failed
   build leaves the last accepted pair readable.
 - Verify that C27 imports and calls only the approved Test Suite entry
   point across Component code boundaries.
