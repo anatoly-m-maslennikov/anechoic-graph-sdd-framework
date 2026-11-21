@@ -65,8 +65,17 @@ def _contract_refs(selection, capture, package_paths):
                    for ref in refs]
         if len(matches) == 1:
             contracts[path] = matches[0]
-    return contracts, {path: sorted(component_contracts.get(components.get(path), []))
-                       for path in package_paths}
+    component_refs = {}
+    for path in package_paths:
+        directory = PurePosixPath(path)
+        for ancestor in (directory, *directory.parents):
+            if ancestor != directory and ancestor.as_posix() in package_paths:
+                break
+            component = components.get(ancestor.as_posix())
+            if component is not None:
+                component_refs[path] = sorted(component_contracts.get(component, []))
+                break
+    return contracts, component_refs
 
 
 def replace_package_audit(connection, selection, capture, nodes, binding_states=None, *, tests):

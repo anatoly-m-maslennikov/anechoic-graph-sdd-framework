@@ -47,3 +47,28 @@ class PackageComponentContractsTests(unittest.TestCase):
         self.assertEqual([{'ref': refs[0], 'covered': True}, {'ref': refs[1], 'covered': False}],
                          json.loads(rows['unit']))
         self.assertEqual([], json.loads(rows['unit/child']))
+
+    def test_first_packages_below_code_free_component_and_nested_ownership(self):
+        refs = ('AN-S-1@1', 'AN-S-2@1', 'AN-S-3@1')
+        capture = SimpleNamespace(
+            atoms=[{'ref': ref, 'status_group': 'Current', 'source_path': ref,
+                    'header_json': {'context': {'template': 'component_contract'}},
+                    '_content_bytes': b'body'} for ref in refs],
+            containment=[{'source_ref': ref, 'target_kind': 'Component', 'target_ref': component}
+                         for ref, component in zip(refs, ('C1', 'C2', 'C3'))],
+        )
+        paths = {'outer/feature', 'outer/other', 'outer/feature/child',
+                 'outer/nested/feature', 'direct', 'direct/child'}
+        components = {'outer': 'C1', 'outer/nested': 'C2', 'direct': 'C3'}
+        selection = SimpleNamespace(structure_snapshot='snapshot', project_prefix='AN')
+        with patch.object(package_audit, 'read_structure'), \
+             patch.object(package_audit, 'realization_component_paths', return_value=components), \
+             patch.object(package_audit, 'read_component_contract',
+                          side_effect=lambda path, *args: {'ref_id': str(path)}):
+            _, result = package_audit._contract_refs(selection, capture, paths)
+        self.assertEqual([refs[0]], result['outer/feature'])
+        self.assertEqual([refs[0]], result['outer/other'])
+        self.assertNotIn('outer/feature/child', result)
+        self.assertEqual([refs[1]], result['outer/nested/feature'])
+        self.assertEqual([refs[2]], result['direct'])
+        self.assertNotIn('direct/child', result)
