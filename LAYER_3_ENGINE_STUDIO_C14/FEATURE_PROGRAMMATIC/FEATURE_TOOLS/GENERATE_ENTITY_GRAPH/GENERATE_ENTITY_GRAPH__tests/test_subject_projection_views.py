@@ -62,8 +62,6 @@ def projection(*, namespace=False):
         rows.append(carrier("CA-R-NS", "ANECHOIC <+ MODEL", claim("Namespace declaration.")))
     data = build_subject_projection_data(rows)
     if namespace:
-        # ``namespaces`` is the canonical optional namespace record in the
-        # projection API; its source is one of the helper input carriers.
         data.setdefault("namespaces", []).append({
             "subject": "ANECHOIC <+ MODEL",
             "source": {"atom_id": "CA-R-NS", "version": 1},

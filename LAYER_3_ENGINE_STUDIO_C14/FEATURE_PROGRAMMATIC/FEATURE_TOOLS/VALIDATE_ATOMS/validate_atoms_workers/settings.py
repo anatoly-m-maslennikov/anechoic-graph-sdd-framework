@@ -7,7 +7,6 @@ from typing import Any
 from settings_carrier import parse_settings_carrier
 from .read_io import ReadContext
 
-# Host safety ceilings for bootstrap reads and impossible requests, not defaults.
 CEILINGS = dict(
     max_candidates=1_000_000,
     max_file_bytes=64 * 1024 * 1024,

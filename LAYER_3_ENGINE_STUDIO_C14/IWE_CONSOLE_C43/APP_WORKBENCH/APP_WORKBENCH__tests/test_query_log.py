@@ -1,5 +1,3 @@
-# CA-M-502@1
-# CA-D-698@2
 from __future__ import annotations
 
 import datetime as dt

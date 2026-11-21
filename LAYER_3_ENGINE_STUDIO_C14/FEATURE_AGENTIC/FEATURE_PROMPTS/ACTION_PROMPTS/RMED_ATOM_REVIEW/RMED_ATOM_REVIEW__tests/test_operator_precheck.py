@@ -25,7 +25,6 @@ class OperatorPrecheckTests(unittest.TestCase):
             word_inventory('1. modality: **must**')
 
     def test_indented_literals_and_list_continuations_need_classification(self):
-        # Never blanket-mask indentation: the second example is list prose.
         base = SOURCE.replace('only when', '**only** **when**')
         raw = base + '\n    must stay literal\n\n- prose\n    and a continuation\n'
         candidates = rendering_candidates(raw, OPS)

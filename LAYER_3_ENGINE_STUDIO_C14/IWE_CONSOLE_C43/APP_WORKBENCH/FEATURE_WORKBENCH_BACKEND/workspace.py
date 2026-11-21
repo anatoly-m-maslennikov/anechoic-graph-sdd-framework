@@ -1,8 +1,3 @@
-# CA-R-2792@3
-# CA-R-2793@3
-# CA-R-2902@5
-# CA-M-476@4
-# CA-D-681@8
 
 """Persistent Workspace documents; result tables remain process-local."""
 

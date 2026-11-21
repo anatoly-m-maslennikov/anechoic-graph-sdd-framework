@@ -93,8 +93,6 @@ def start_turn(identifier: int | str, params: dict[str, Any]) -> None:
     turn_number += 1
     turn_id = f"native-turn-{turn_number}"
     result(identifier, {"turn": {"id": turn_id, "status": "inProgress"}})
-    # Let the bridge publish active_turn_id after its turn/start response
-    # before native notifications arrive.
     time.sleep(0.2)
     emit("turn/started", {"thread": {"id": THREAD_ID}, "turn": {"id": turn_id}})
     items = params.get("input")
@@ -177,9 +175,6 @@ def start_turn(identifier: int | str, params: dict[str, Any]) -> None:
 
 def main() -> int:
     global THREAD_CWD
-    # The wrapper passes app-server exactly as the only argument.  Keep the
-    # audit so the integration test can prove no model/tool/auth overrides
-    # were injected into the external process.
     audit({"argv": sys.argv[1:]})
     for line in sys.stdin:
         packet = json.loads(line)
@@ -200,9 +195,6 @@ def main() -> int:
         elif method == "turn/start":
             start_turn(identifier, params if isinstance(params, dict) else {})
         elif method == "turn/interrupt":
-            # The active turn's blocking loop handles this and emits the
-            # terminal event.  This branch is for a bridge that interrupts
-            # before the fixture enters that loop.
             result(identifier, {})
         else:
             if identifier is not None:

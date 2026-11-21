@@ -44,7 +44,6 @@ class NumberedStatusTests(unittest.TestCase):
         self.delivery('CA-D-1005',
                       'ANECHOIC_MODEL <+ Atom/(.Header.Context.Role := Plan).Header.State.Status >| Status Group := Backlog',
                       statement('Backlog', '<owning scope unit>/<role folder>/001_backlog', plan=True))
-        # A copied carrier can still say Active, but its revision folder excludes it.
         self.delivery('CA-D-1006', prefix + 'Draft', statement('Draft', '<owning scope unit>/<role folder>/wrong'),
                       directory=self.root / '000_draft')
         self.delivery('CA-D-1007', prefix + 'Archived', statement('Archived', '<owning scope unit>/<role folder>/wrong'),

@@ -29,7 +29,6 @@ class CarrierTest(unittest.TestCase):
 
     def test_crlf_body_and_omitted_fields(self):
         raw = b'---\r\nstatus: Draft\r\n---\r\n\r\nText\r\n\xff'
-        # Non-UTF-8 is rejected even when body is untouched.
         with self.assertRaises(ValueError):
             render_carrier(raw, {'status': 'Active'})
         raw = raw[:-1] + 'ñ'.encode()

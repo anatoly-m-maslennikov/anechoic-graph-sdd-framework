@@ -47,7 +47,6 @@ def _model_subject(subject: object, source: str) -> str | None:
     elif not (isinstance(expression.head, notation.Name)
               and expression.head.value == "ANECHOIC_MODEL" and not expression.steps):
         return None
-    # Legacy Claim syntax remains available to its transitional consumers.
     if _is_claim_language_reference(expression):
         return None
     return notation.render_subject(expression)
@@ -164,7 +163,7 @@ def _check_constraint_endpoints(parsed: list, relations: dict) -> None:
                 if constraint.get("targets_per_source") == 0 or constraint.get("sources_per_target") == 0:
                     continue
                 if name not in relations:
-                    continue  # The reference lint reports this error.
+                    continue
                 relation, reverse = relations[name]
                 if not _constraint_compatibility(relation, reverse, level, subject,
                                                  constraint.get("target_entity_paths", ()), kinds, classes):
@@ -331,7 +330,6 @@ def _check_relation_references(records: list[tuple[str, str, str]]) -> None:
         except ValueError as error:
             raise ValueError(f"{source}:{declaration['line']}:1: {error}") from error
         arguments = {key: value for key, value in declaration["arguments"].items() if key in keys}
-        # A Relation's own name defines it; only entity Relation references need resolving.
         if declaration["kind"] == "relation":
             arguments.pop("relation_name", None)
         check = {**declaration, "arguments": arguments, "imports": {}, "classes": ()}

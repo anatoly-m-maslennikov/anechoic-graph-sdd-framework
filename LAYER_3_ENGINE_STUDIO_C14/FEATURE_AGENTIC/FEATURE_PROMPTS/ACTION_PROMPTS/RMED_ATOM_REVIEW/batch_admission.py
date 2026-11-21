@@ -105,9 +105,6 @@ def _validate_prompt_bindings(parts_by_path: Mapping[str, Sequence[dict[str, Any
 def _combine_summaries(summaries: Sequence[dict[str, Any]]) -> dict[str, Any]:
     if not summaries:
         raise ValueError("batch summaries must be nonempty")
-    # Each summary has already been validated under its caller's contract.
-    # Preserve that profile instead of adding excluded legacy checks to a
-    # local review, and never combine different coverage promises.
     profile = summaries[0].get("review_profile")
     checks = list(summaries[0]["check_counts"])
     if any(summary.get("review_profile") != profile
@@ -168,8 +165,6 @@ def admit_batch(candidates: Sequence[dict[str, Any]],
         for binding in candidates:
             path = binding["path"]
             context = _context_for(contexts, path)
-            # candidate_text proves this exact caller selection occurs in its
-            # supplied context before the existing contract reads raw parts.
             context.candidate_text(binding)
             parts = raw_parts_by_candidate[path]
             if not isinstance(parts, Sequence) or isinstance(parts, (str, bytes)):
@@ -196,8 +191,6 @@ def admit_batch(candidates: Sequence[dict[str, Any]],
             "reasons": [],
             "evaluations": [deepcopy(record) for _, record in merged_records],
             "summary": summary,
-            # This module is evidence admission only.  A later governed action
-            # must obtain its own Journal/change-set authorization.
             "source_repair_authorized": False,
         }
     except (AttributeError, TypeError, ValueError, KeyError) as error:

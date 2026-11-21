@@ -1,8 +1,3 @@
-# CA-R-2724@5
-# CA-M-464@9
-# CA-M-465@29
-# CA-M-509@7
-# CA-D-672@22
 
 """Materialize authored references and literal declared inverse bindings in memory."""
 from __future__ import annotations

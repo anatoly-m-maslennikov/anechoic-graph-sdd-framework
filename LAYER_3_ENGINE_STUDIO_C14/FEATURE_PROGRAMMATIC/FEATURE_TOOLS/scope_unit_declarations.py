@@ -1,4 +1,3 @@
-# CA-D-442@29
 
 """Read current Scope Unit Declaration Atoms; no declaration writing lives here."""
 
@@ -68,7 +67,6 @@ def _selects_structural_form(raw: bytes, source: Path | None = None) -> bool:
     if closing < 0:
         return False
     frontmatter = text[4:closing]
-    # Folded values can span lines, and double-quoted YAML can spell a value with escapes.
     if "\\" not in frontmatter and _STRUCTURAL_FORM_TEXT.search(frontmatter) is None:
         return False
     try:
@@ -111,7 +109,6 @@ def _structural_form_hint(frontmatter: str) -> bool:
     return False
 
 
-# Compatibility for current consumers; structural forms now include Delegation.
 _selects_declaration_form = _selects_structural_form
 
 
@@ -192,7 +189,6 @@ def read_scope_unit_declarations(
             try:
                 declaration = parse_scope_unit_declaration(raw, path)
             except ScopeDeclarationError as error:
-                # A selected structural carrier cannot fall back to an unrelated Requirement.
                 if "not an active Requirement Scope Unit Declaration" in str(error):
                     raise ScopeDeclarationError(f"{path}: declaration Form contradicts its required carrier fields") from error
                 raise

@@ -1,6 +1,3 @@
-# CA-R-2791@1
-# CA-M-475@1
-# CA-D-680@1
 
 """Loopback HTTP/SSE server for the Workbench Codex bridge."""
 

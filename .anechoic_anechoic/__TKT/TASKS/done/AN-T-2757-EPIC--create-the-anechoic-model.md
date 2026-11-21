@@ -6,7 +6,8 @@ structure:
     component: C9
   priority: 2
 context:
-  template: epic
+  template: task
+  label: Epic
 state:
   status: done
   version: 1

@@ -1,4 +1,3 @@
-# CA-M-1008@2
 """Saved query links across HTTP and stdio transports."""
 from dataclasses import replace
 from pathlib import Path

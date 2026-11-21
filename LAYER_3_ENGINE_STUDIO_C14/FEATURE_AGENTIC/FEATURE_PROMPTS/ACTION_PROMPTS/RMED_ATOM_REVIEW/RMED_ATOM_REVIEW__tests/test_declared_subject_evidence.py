@@ -10,9 +10,6 @@ from declared_subject_evidence import validate_declared_subject_evidence  # noqa
 from review_evidence import ReviewContext, _validate_resolved_mention  # noqa: E402
 
 
-# CA-P-032 is a historical principle fixture.  Its live carrier is no longer
-# part of the sealed source closure, so this regression owns the exact legacy
-# bytes it exercises instead of reopening a deleted repository path.
 LEGACY_P032_BYTES = b'''---
 atom_id: "CA-P-032"
 cce_version: "cce_1"
@@ -101,8 +98,6 @@ class DeclaredSubjectEvidenceTests(unittest.TestCase):
                 validate_declared_subject_evidence(item, {'R@1': raw})
 
     def test_historical_r1636_leading_policy_declares_checklist_without_new_definition(self):
-        # R-1636 was split and archived. Preserve this grammar regression as
-        # explicit fixture text; do not reactivate archived repository bytes.
         excerpt = ('**every** production-relevant component **must** define a Logging Policy '
                    'that supports its Evaluation Controls **and** is referenced by its '
                    'Production Evaluation Checklist. the policy identifies the events **and** '
@@ -155,8 +150,6 @@ class DeclaredSubjectEvidenceTests(unittest.TestCase):
                 self.assertTrue(validate_declared_subject_evidence(item, {authority: source(entity, excerpt)}))
 
     def test_historical_r1312_declared_transition_grammar(self):
-        # Current R-1312 no longer declares Artifact Transition. This test
-        # checks evidence grammar, not continued admission of that Entity.
         entity = 'Artifact Transition'
         excerpt = ('admission, acceptance, commitment, activation, completion, **and** '
                    'archival transitions **must** remain distinct from the Artifact Revision '

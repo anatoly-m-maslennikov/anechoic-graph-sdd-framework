@@ -1,4 +1,3 @@
-# CA-D-657@11
 
 """Declared Header paths and ordered authoring, independent of Carrier storage."""
 

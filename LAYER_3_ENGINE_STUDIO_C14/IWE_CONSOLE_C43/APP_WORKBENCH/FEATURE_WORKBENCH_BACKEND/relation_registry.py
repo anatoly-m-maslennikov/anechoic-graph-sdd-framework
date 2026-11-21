@@ -1,5 +1,3 @@
-# CA-M-465@24
-# CA-M-509@7
 
 """Compile literal Current Relation declarations without evaluating CFEL."""
 

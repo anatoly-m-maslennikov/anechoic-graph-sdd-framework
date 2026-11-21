@@ -1,16 +1,3 @@
-# CA-M-1013@1
-# CA-R-2725@6
-# CA-M-493@2
-# CA-D-673@18
-# CA-D-697@2
-# CA-R-2950@2
-# CA-R-2724@5
-# CA-M-490@3
-# CA-D-695@3
-# CA-M-500@3
-# CA-D-672@24
-# CA-D-675@17
-# CA-M-465@29
 
 """The DuckDB and DuckPGQ owner for disk-backed, paged Workbench queries."""
 
@@ -108,6 +95,7 @@ class _Result:
     preview: int | None = None
     pinned: bool = False
     dependencies: frozenset[str] = frozenset()
+    dependencies_unknown: bool = False
     released: bool = False
 
 
@@ -665,7 +653,8 @@ class QueryStore:
             raise ValueError("preview must be a non-negative integer")
         return value
 
-    def _materialize(self, sql: str, preview: int | None = None, *, admitted: bool = False) -> tuple[str, _Result]:
+    def _materialize(self, sql: str, preview: int | None = None, *, admitted: bool = False,
+                     source: _Result | None = None) -> tuple[str, _Result]:
         if not self._available:
             raise WorkbenchUnavailableError("query store unavailable; Workbench restart required")
         try:
@@ -697,8 +686,6 @@ class QueryStore:
         table = quote_identifier(table_name)
         private_ordinal = f"__workbench_snapshot_{query_id}"
         try:
-            # The generated CTAS is one DuckDB statement-atomic cache write.  Do not wrap it
-            # in an explicit transaction: a user-data conversion error then remains recoverable.
             materialized_sql = ctas_source_sql(relation.sql_query())
             self._connection.execute(
                 f"CREATE TABLE workbench_results.{table} AS "
@@ -714,13 +701,17 @@ class QueryStore:
                 raise WorkbenchUnavailableError("query store unavailable; Workbench restart required") from exc
             print(_query_failure(exc), file=sys.stderr)
             raise QueryExecutionError(_query_failure(exc)) from exc
-        try:
-            dependencies = frozenset(name.lower() for name in self._connection.get_table_names(sql))
-        except Exception:
-            dependencies = frozenset(re.findall(r"(?i)\bquery_[0-9a-f]{32}\b", sql))
-            dependencies = frozenset(name.lower() for name in dependencies)
+        if source is not None:
+            dependencies, unknown = source.dependencies, source.dependencies_unknown
+        else:
+            try:
+                dependencies = frozenset(name.lower() for name in self._connection.get_table_names(sql))
+                unknown = False
+            except Exception:
+                dependencies = frozenset(name.lower() for name in re.findall(r"(?i)\bquery_[0-9a-f]{32}\b", sql))
+                unknown = True
         return query_id, _Result(columns, row_count, sql, stored_columns, time.monotonic(), table_name,
-                                 preview, dependencies=dependencies)
+                                 preview, dependencies=dependencies, dependencies_unknown=unknown)
 
     def _read_page(
         self, query_id: str, result: _Result, offset: int, page_size: int, grid: Grid,
@@ -814,14 +805,9 @@ class QueryStore:
             if (selected is not None or tables is not None) and old_id != selected:
                 if not affected_tables:
                     continue
-                try:
-                    dependencies = {name.lower() for name in self._connection.get_table_names(old.sql)}
-                except Exception:
-                    # Unclassified reads can still depend on the selected table.
-                    dependencies = affected_tables
-                if not affected_tables.intersection(dependencies):
+                if not old.dependencies_unknown and not affected_tables.intersection(old.dependencies):
                     continue
-            new_id, result = self._materialize(old.sql, old.preview, admitted=True)
+            new_id, result = self._materialize(old.sql, old.preview, admitted=True, source=old)
             result.created_at, result.pinned, result.released = old.created_at, old.pinned, old.released
             self._connection.execute(f"DROP TABLE workbench_results.{quote_identifier(old.table_name)}")
             self._connection.execute(

@@ -1,7 +1,3 @@
-# CA-R-2726@9
-# CA-M-464@9
-# CA-M-465@24
-# CA-D-672@22
 
 """CommonMark heading sections for the Workbench in-memory projection."""
 
@@ -37,9 +33,6 @@ def parse_content(
 ) -> list[dict[str, Any]]:
     """Return Content Properties in CommonMark heading order."""
     if include_spans is None:
-        # Source rows already request duplicate-tolerant records and need their
-        # spans for exact declared-child removal. Ordinary parser callers keep
-        # the concise public record shape.
         include_spans = tolerate_duplicate_siblings
     if compact:
         include_spans = True

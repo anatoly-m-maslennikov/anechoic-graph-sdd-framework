@@ -1,5 +1,3 @@
-# CA-M-284@32
-# CA-E-454@23
 """Shared TOML Settings Carrier I/O; callers retain their own schemas and paths."""
 
 from pathlib import Path

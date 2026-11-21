@@ -1,3 +1,3 @@
 ## Implements
 
-- CA-M-508@7
+- AN-S-1355@7

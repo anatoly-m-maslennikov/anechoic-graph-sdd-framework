@@ -1,5 +1,3 @@
-# CA-D-578@21
-# CA-D-639@14
 
 """Use the MCP service's fixed routes without importing its server runtime."""
 

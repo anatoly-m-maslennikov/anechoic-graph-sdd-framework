@@ -54,8 +54,6 @@ def _settings_control_relative(value: str | Path) -> Path:
 def _read_project_settings(root: Path, control_root: str | Path | None = None) -> tuple[Path, dict[str, Any]]:
     """Read one Project-local settings carrier without repository fallback."""
     try:
-        # Canonicalize the supplied boundary (including macOS's /var spelling),
-        # then use non-following I/O for every Project-local path component.
         supplied = Path(root).expanduser()
         if ".." in supplied.parts or protected(supplied) or supplied.is_symlink():
             raise RuntimeError("Project root must not be unsafe or a symlink")
@@ -351,7 +349,6 @@ def _open_part(directory: Path, author: str, local_date: str) -> tuple[Path, byt
 
 def _append_event(root: Path, event: Any, author: str, local_date: str,
                   *, control_root: str | Path | None = None, journal_root: str | None = None) -> dict[str, Any]:
-    # shortcut: concurrent appends may exceed 1000 rows; serialize only if a strict limit is required.
     directory = root / (configured_journal_root(root, control_root=control_root) if journal_root is None
                         else validated_journal_root(root, journal_root))
     path, _, count = _open_part(directory, author, local_date)

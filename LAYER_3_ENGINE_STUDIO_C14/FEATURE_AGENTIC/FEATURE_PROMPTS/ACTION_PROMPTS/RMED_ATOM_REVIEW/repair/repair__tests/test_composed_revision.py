@@ -224,8 +224,6 @@ class ComposedRevisionTests(unittest.TestCase):
             'core-REQUIREMENT--rules/MOCK-R-001-CORE-REQUIREMENT--a-REQUIREMENT--rule.md')
         proposal = data[2]
         output = proposal['outputs'][0]
-        # Override the fixture's simple default path construction: only the
-        # basename prefix's final token is the carrier Type coordinate.
         output['path'] = 'core-REQUIREMENT--rules/MOCK-R-001-CORE--a-REQUIREMENT--rule.md'
         data[3]['paths'].append(output['path'])
         self.assertEqual(self.gate(data)['result'], 'candidate')

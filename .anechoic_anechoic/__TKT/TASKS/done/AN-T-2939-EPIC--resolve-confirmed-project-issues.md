@@ -6,7 +6,8 @@ structure:
     component: C00
   priority: 2
 context:
-  template: epic
+  template: task
+  label: Epic
 relations:
   REFERENCES:
   - AN-T-1034

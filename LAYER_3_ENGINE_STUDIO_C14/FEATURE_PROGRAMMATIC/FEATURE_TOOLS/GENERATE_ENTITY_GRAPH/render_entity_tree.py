@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# CA-D-634@23
-# CA-D-635@17
 
 """Build readable Markdown directly from current Atom Subjects in a folder.
 
@@ -155,7 +153,6 @@ def _image_main():
 
 
 if __name__ == "__main__":
-    # Direct script execution needs the shared process boundary available from the tools root.
     import sys
     from pathlib import Path
     _TOOLS_ROOT = next(p for p in Path(__file__).resolve().parents if p.name in {"FEATURE_TOOLS", "TOOLS"})

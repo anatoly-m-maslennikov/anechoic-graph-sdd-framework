@@ -1,6 +1,3 @@
-# CA-D-578@21
-# CA-D-639@18
-# CA-D-721@1
 
 """Canonical fixed HTTP paths for the local ANECHOIC service."""
 

@@ -1,4 +1,3 @@
-# CA-O-10002@2
 
 """Compile a bounded subset of explicit Header property declarations.
 

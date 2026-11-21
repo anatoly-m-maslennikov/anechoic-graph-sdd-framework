@@ -1,9 +1,5 @@
 """The release-owned starter creates a bounded host bridge process."""
 
-# Implemented by:
-# CA-R-2791@1
-# CA-M-475@1
-# CA-D-680@1
 from __future__ import annotations
 
 from contextlib import redirect_stdout

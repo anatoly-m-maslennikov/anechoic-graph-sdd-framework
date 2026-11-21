@@ -111,9 +111,6 @@ def frozen_sources(
     selected: dict[str, tuple[str, dict[str, Any]]] = {}
     for group in groups:
         for identifier, row in entries(group).items():
-            # R-793's historical identifier remains directly addressable for
-            # legacy regressions, but it is no longer part of the current
-            # governed-source inventory after normalization.
             if identifier == "ANECHOIC-R-793":
                 continue
             if not retain_first:

@@ -10,7 +10,7 @@ Children = dict[str, list[tuple[str, Record]]]
 LABELS = {
     "NARROWER_THAN": "/",
     "INSTANCE_OF": "//",
-    "IS_BORNE_BY": ".",  # Historical graphs retain their source vocabulary.
+    "IS_BORNE_BY": ".",
     "IS_PROPERTY_OF": ".",
     "IS_CONTAINED_BY": "<+",
     "HAS_CLASSIFICATION": ">|",
@@ -173,7 +173,6 @@ def primary_tree(
     main: list[str] = []
     appearances: dict[str, None] = {}
     cycles: set[str] = set()
-    # Rootless cyclic components still need a visible traversal entry.
     for root in roots + sorted(primaries, key=root_key):
         if root not in appearances:
             lines, visited, found_cycles = tree(root, primaries, nodes, children)

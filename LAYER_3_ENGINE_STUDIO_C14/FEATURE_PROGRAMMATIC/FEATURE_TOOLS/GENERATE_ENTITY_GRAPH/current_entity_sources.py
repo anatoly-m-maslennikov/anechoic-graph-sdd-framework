@@ -81,8 +81,6 @@ def _raw_body(text: str, path: Path) -> str:
     opening = _FRONTMATTER_OPEN.match(text)
     closing = _FRONTMATTER_CLOSE.search(text, opening.end()) if opening else None
     if closing is None:
-        # parse_carrier already validates this boundary; keep failure explicit if its
-        # splitting contract ever changes rather than silently losing source bytes.
         raise ValueError(f"{path}: parsed carrier has no exact body boundary")
     return text[closing.end() :]
 

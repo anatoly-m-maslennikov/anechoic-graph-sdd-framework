@@ -27,10 +27,6 @@ def _subject_finding():
 def combined_fixture(*, role='Requirement'):
     """Adapt the existing layout fixture into the one admitted composite delta."""
     data = layout_fixture(role=role)
-    # First reuse the established layout fixture to bind the extended legacy
-    # Claim and final Markdown.  DEPENDS_ON and its authority are introduced
-    # only after that ordinary fixture rebind, because its helper intentionally
-    # keeps one-rule authority lists.
     original_record = data['context']['sources'][0]
     original_record['text'] = original_record['text'].replace(
         'Atom must comply.\n', 'Atom must comply. Atom Context.\n')
@@ -173,9 +169,6 @@ class LayoutSubjectRepairGateTests(unittest.TestCase):
                 admit_layout_subject_recoding(**data)
 
     def test_rejects_any_delta_beyond_layout_dependency_and_optional_role_echo(self):
-        # These deltas are fully rebound to the final candidate/context before
-        # admission.  Their rejection therefore reaches the layout/identity
-        # proof rather than merely observing a stale final report hash.
         mutations = {
             'governs': ('governs: Atom', 'governs: Other'),
             'body_claim': ('Atom Context.', 'Atom Context. Extra Claim bytes.'),

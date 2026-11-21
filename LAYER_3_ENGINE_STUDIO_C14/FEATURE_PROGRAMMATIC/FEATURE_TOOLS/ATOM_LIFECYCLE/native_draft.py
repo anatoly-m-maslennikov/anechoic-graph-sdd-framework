@@ -182,13 +182,13 @@ def _task_path(selection, header, body, status, version, owner, root=None):
         raise common.InputError('summary', 'Task Header or Summary cannot be projected to a path.') from error
 
 
-def create_draft(selection, params, *, current_rows, structure_snapshot=None):
+def create_draft(selection, params, *, current_rows, structure_snapshot=None, ticket_labels=()):
     if isinstance(params, dict) and 'newAtom' in params:
         if set(params) != {'newAtom'}:
             raise common.InputError('newAtom', 'Supply only new Task or Epic properties.')
         if isinstance(params['newAtom'], dict) and params['newAtom'].get('template') == 'component_contract':
             return _create_component_contract(selection, params['newAtom'], structure_snapshot)
-        return _create_task(selection, params['newAtom'], current_rows, structure_snapshot)
+        return _create_task(selection, params['newAtom'], current_rows, structure_snapshot, ticket_labels)
     if not isinstance(params, dict) or set(params) - {'sourceCurrent', 'changes'} or 'sourceCurrent' not in params:
         raise common.InputError('sourceCurrent', 'Supply one Current carrier and optional body change.')
     target = params['sourceCurrent']
@@ -249,7 +249,7 @@ def create_draft(selection, params, *, current_rows, structure_snapshot=None):
         return common.result(effects=outcome.effects, errors=outcome.errors, **data)
 
 
-def _check_owner(selection, container, rows, capture, seen=None):
+def _check_owner(selection, container, rows, capture, seen=None, *, allow_draft=False):
     if isinstance(container, dict) and set(container) == {'component'}:
         return None, None
     if (not isinstance(container, dict) or set(container) != {'atom'}
@@ -261,8 +261,11 @@ def _check_owner(selection, container, rows, capture, seen=None):
     if owner_id in seen:
         raise common.InputError('container', 'Containing Atom cycle is invalid.')
     seen.add(owner_id)
-    selected = [row for row in rows if row.get('id') == owner_id and row.get('status_group') == 'Current']
-    fresh = [row for row in capture.atoms if row.get('id') == owner_id and row.get('status_group') == 'Current']
+    owner_rows = [row for row in capture.atoms if row.get('id') == owner_id]
+    group = 'Draft' if (allow_draft and len(owner_rows) == 1 and owner_rows[0].get('version') == 1
+                        and owner_rows[0].get('status_group') == 'Draft') else 'Current'
+    selected = [row for row in rows if row.get('id') == owner_id and row.get('status_group') == group]
+    fresh = [row for row in owner_rows if row.get('status_group') == group]
     if len(selected) != 1 or len(fresh) != 1 or any(selected[0].get(key) != fresh[0].get(key) for key in (
             'source_path', 'id', '_exact_ref', 'version', 'status', 'status_group', 'header_json', '_source_sha256')):
         raise common.SourceChanged('Containing Task or Epic is missing or changed.')
@@ -271,23 +274,25 @@ def _check_owner(selection, container, rows, capture, seen=None):
     context = header.get('context') if isinstance(header, dict) else None
     template = context.get('template') if isinstance(context, dict) else None
     status = row.get('status')
-    if template not in {'task', 'epic'} or status not in {'active', 'backlog', 'done', 'canceled', 'resolved'}:
-        raise common.InputError('container', 'Containing Atom must be a Current Task or Epic.')
+    if template not in {'task', 'epic'} or status not in {'active', 'backlog', 'done', 'canceled', 'resolved', 'draft'}:
+        raise common.InputError('container', 'Containing Atom must be a planning Ticket.')
     relative = row.get('source_path')
     if not isinstance(relative, str):
         raise common.SourceChanged('Containing Atom path is invalid.')
     relative = Path(relative)
-    parent_directory, _ = _check_owner(selection, context.get('container'), rows, capture, seen)
+    parent_directory, _ = _check_owner(selection, context.get('container'), rows, capture, seen,
+                                       allow_draft=allow_draft)
     root = parent_directory or selection.control_root / '__TKT' / 'TASKS'
     path = selection.root / relative
     flat_root = selection.control_root / '__TKT' / 'TASKS'
-    if path.parent == flat_root / ('' if status == 'active' else status):
+    directory = {'active': '', 'draft': '000_draft'}.get(status, status)
+    if path.parent == flat_root / directory:
         root = flat_root
-    directory = () if status == 'active' else (status,)
+    marker = f'{owner_id}@1-draft' if status == 'draft' else owner_id
     if (relative.is_absolute() or '..' in relative.parts or not path.is_relative_to(root)
-            or path.relative_to(root).parts[:-1] != directory
-            or not re.fullmatch(re.escape(owner_id) + (r'-.+\.md' if 'atom_family' in row['header_json']
-                                                          else '-' + template.upper() + r'--.+\.md'), path.name)):
+            or path.parent != root / directory
+            or not re.fullmatch(re.escape(marker) + (r'-.+\.md' if 'atom_family' in row['header_json']
+                                                     else '-' + template.upper() + r'--.+\.md'), path.name)):
         raise common.InputError('container', 'Containing Atom is outside its native Task branch.')
     try:
         reader = ReadContext(roots=[str(selection.control_root)], limits=dict(CEILINGS))
@@ -423,13 +428,15 @@ def _create_component_contract(selection, values, structure_snapshot):
         return common.result(effects=outcome.effects, errors=outcome.errors, **data)
 
 
-def _create_task(selection, values, current_rows, structure_snapshot):
-    if (not isinstance(values, dict) or set(values) != {'template', 'container', 'body'}
+def _create_task(selection, values, current_rows, structure_snapshot, ticket_labels):
+    if (not isinstance(values, dict) or set(values) - {'label'} != {'template', 'container', 'body'}
             or values['template'] not in ('task', 'epic') or not isinstance(values['body'], str)):
-        raise common.InputError('newAtom', 'Supply a Task or Epic template, container, and Markdown body.')
+        raise common.InputError('newAtom', 'Supply the Task template, container, Markdown body, and optional Label.')
+    if 'label' in values and not isinstance(values['label'], str):
+        raise common.InputError('label', 'Supply a text navigation Label.')
     body = values['body']
     try:
-        slug = _native_slug(body)
+        _native_slug(body)
         body_bytes = body.encode('utf-8')
     except (ValueError, UnicodeError) as error:
         if isinstance(error, common.InputError):
@@ -451,19 +458,28 @@ def _create_task(selection, values, current_rows, structure_snapshot):
                     raise common.InputError('container', 'Supply a Component in this Project.')
             elif not isinstance(container, dict) or set(container) != {'atom'}:
                 raise common.InputError('container', 'Supply a Project Component or a Current Task or Epic.')
-            owner = _check_owner(selection, values['container'], current_rows, capture)
-            _, owner_template = owner
-            if values['template'] == 'epic' and owner_template == 'task':
-                raise common.InputError('container', 'A Task cannot contain an Epic.')
+            owner = _check_owner(selection, values['container'], current_rows, capture, allow_draft=True)
+            owner_directory, owner_template = owner
+            owner_label = None
+            if owner_directory is not None:
+                owner_path = owner_directory.with_name(owner_directory.name + '.md').relative_to(selection.root).as_posix()
+                owner_row = next(row for row in capture.atoms if row.get('source_path') == owner_path)
+                owner_label = native_header_view(owner_row['header_json'])['context'].get('label')
+            try:
+                label = native_ticket_label(values['template'], owner_template, owner_label,
+                                            label=values.get('label'))
+            except ValueError as error:
+                raise common.InputError('label', 'Supply a filename-safe navigation Label.') from error
+            if ticket_labels:
+                label = next((value for value in ticket_labels if value.casefold() == label.casefold()), None)
+                if label is None:
+                    raise common.InputError('label', 'Supply a declared navigation Label.', allowed_values=ticket_labels)
             pattern = re.compile(re.escape(selection.project_prefix) + r'-T-([0-9]+)')
             numbers = [int(match[1]) for row in capture.atoms
                        if isinstance(row.get('id'), str) and (match := pattern.fullmatch(row['id']))]
             atom_id = f"{selection.project_prefix}-T-{max(numbers, default=0) + 1}"
             ref = f'{atom_id}@1-draft'
-            context = {'container': values['container'], 'priority': 2, 'template': values['template']}
-            label = native_ticket_label(values['template'], owner_template)
-            if label:
-                context['label'] = label
+            context = {'container': values['container'], 'priority': 2, 'template': 'task', 'label': label}
             header = canonical_native_header(
                 {'identity': {'atom_id': atom_id},
                  'context': context,
@@ -509,8 +525,6 @@ def _promote_new(selection, target, status, draft, current_rows):
             if not isinstance(context, dict) or context.get('template') not in ('task', 'epic'):
                 raise common.InputError('target', 'Select a native Task or Epic Draft.')
             owner = _check_owner(selection, context.get('container'), current_rows, capture)
-            if context['template'] == 'epic' and owner[1] == 'task':
-                raise common.InputError('container', 'A Task cannot contain an Epic.')
             reader = ReadContext(roots=[str(selection.control_root)], limits=dict(CEILINGS))
             raw = reader.read(path)
             bounds = frontmatter_bounds(raw)
@@ -533,6 +547,11 @@ def _promote_new(selection, target, status, draft, current_rows):
             raise
         except (OSError, RuntimeError, TypeError, ValueError) as error:
             raise common.SourceChanged('Native source is unavailable or changed.') from error
+        if status in ('active', 'backlog'):
+            from .native_update import promote_ticket_tree
+            return promote_ticket_tree(selection, draft, destination, status, current_rows, capture.atoms, lambda: None)
+        if path.with_suffix('').exists() or path.with_suffix('').is_symlink():
+            raise common.InputError('targetStatus', 'Draft trees can only be published to Active or Backlog.')
         with bind_query_reader(None):
             written = common.write_destination(selection.root, destination, promoted)
             recorded = list(written.effects)
@@ -544,7 +563,7 @@ def _promote_new(selection, target, status, draft, current_rows):
         return common.result(effects=recorded, errors=removed.errors, **data)
 
 
-def _publish_first_spec(selection, draft, structure_snapshot, *, pinned):
+def _publish_first_spec(selection, draft, structure_snapshot):
     atom_id, ref_id = draft['id'], draft['_exact_ref']
     relative, digest = draft.get('source_path'), draft.get('_source_sha256')
     if (not isinstance(relative, str) or not isinstance(digest, str)
@@ -590,7 +609,7 @@ def _publish_first_spec(selection, draft, structure_snapshot, *, pinned):
             contract_owner = _validate_contract(selection, header, body, path, structure_snapshot, capture)
             if contract_owner is not None and contract_owner != owner:
                 raise common.InputError('container', 'Component Contract owner disagrees with its path.')
-            if (not pinned or contract_owner is not None) and 'atom_family' in header:
+            if 'atom_family' in header:
                 try:
                     projected = native_carrier_path(header, summary, project_root=selection.control_root,
                                                     owner_directory=owner)
@@ -598,7 +617,7 @@ def _publish_first_spec(selection, draft, structure_snapshot, *, pinned):
                     raise common.InputError('target', 'Spec Draft Header or Summary cannot be projected to a path.') from error
                 if path != projected:
                     raise common.InputError('target', 'Spec Draft path disagrees with its Header and Summary.')
-            version = max(row['version'] for row in history) + 1 if pinned else draft['version']
+            version = draft['version']
             promoted = _state_bytes(raw, bounds, path, version, body, 'active')
         except (common.InputError, common.SourceChanged):
             raise
@@ -608,7 +627,7 @@ def _publish_first_spec(selection, draft, structure_snapshot, *, pinned):
             written = common.write_destination(selection.root, destination, promoted)
             recorded = list(written.effects)
             errors = list(written.errors)
-            if not errors and not pinned:
+            if not errors:
                 removed = effects.remove(selection.root, path, digest)
                 recorded.extend(removed.effects)
                 errors.extend(removed.errors)
@@ -636,6 +655,9 @@ def _cleanup_published_draft(selection, target, status, draft, current, structur
     if paths[0].name[len(target['ref_id']):] != paths[1].name[len(atom_id):]:
         raise common.InputError('target', 'Published carrier filename differs from the Draft.')
     with _project_write_lock(selection.root):
+        companion = paths[0].with_suffix('')
+        if '-T-' in atom_id and (companion.exists() or companion.is_symlink()):
+            raise common.InputError('target', 'Recover the interrupted Draft companion before removing its carrier.')
         try:
             capture = capture_native(selection)
             if capture.errors:
@@ -706,8 +728,8 @@ def _rollback_promotion(selection, previous_path, previous_digest, created, reco
     return common.result(effects=recorded, errors=errors)
 
 
-def promote_draft(selection, params, *, current_rows, migration_refs, structure_snapshot=None):
-    """Publish a native Draft and keep any exact reference required by migration."""
+def promote_draft(selection, params, *, current_rows, structure_snapshot=None):
+    """Publish a native Draft."""
     if not isinstance(params, dict) or set(params) != {'target', 'targetStatus'}:
         raise common.InputError('target', 'Supply an exact Draft target and Current Status.')
     target, status = params['target'], params['targetStatus']
@@ -721,30 +743,18 @@ def promote_draft(selection, params, *, current_rows, migration_refs, structure_
     if (not isinstance(status, str) or status not in {'active', 'backlog', 'done', 'canceled', 'resolved'}
             or ('-T-' not in match[1] and status != 'active')):
         raise common.InputError('targetStatus', 'Supply an applicable Current Status.')
-    try:
-        refs = tuple(migration_refs)
-        if any(not isinstance(item, (tuple, list)) or len(item) != 3 or not isinstance(item[2], str) for item in refs):
-            raise ValueError('Invalid migration references')
-    except (TypeError, ValueError) as error:
-        raise common.SourceChanged('Migration references are unavailable or invalid.') from error
     atom_id, version = match[1], target['version']
     chosen = [row for row in current_rows if row.get('_exact_ref') == target['ref_id'] and row.get('status_group') == 'Draft']
     predecessors = [row for row in current_rows if row.get('id') == atom_id and row.get('status_group') == 'Current']
-    if any(item[2] == target['ref_id'] for item in refs):
-        if '-S-' in atom_id and len(chosen) == 1 and not predecessors:
-            return _publish_first_spec(selection, chosen[0], structure_snapshot, pinned=True)
-        raise common.InputError('target', 'A migration-pinned Draft cannot be promoted.')
     if len(chosen) != 1 or len(predecessors) > 1:
         raise common.SourceChanged('Draft or Current predecessor is missing or ambiguous.')
     if not predecessors:
         if '-S-' in atom_id:
-            return _publish_first_spec(selection, chosen[0], structure_snapshot, pinned=False)
+            return _publish_first_spec(selection, chosen[0], structure_snapshot)
         if version == 1 and '-T-' in atom_id:
             return _promote_new(selection, target, status, chosen[0], current_rows)
         raise common.SourceChanged('Current predecessor is missing.')
     draft, previous = chosen[0], predecessors[0]
-    if native_header_view(previous['header_json'])['context'].get('template') == 'epic' and status != previous['status']:
-        raise common.InputError('targetStatus', 'Publish the Epic at its Current Status. Use Change Status for transitions.')
     if previous.get('version') == version:
         return _cleanup_published_draft(selection, target, status, draft, previous, structure_snapshot, current_rows)
     if type(previous.get('version')) is not int or previous['version'] >= version:

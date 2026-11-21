@@ -168,7 +168,6 @@ class LayoutRepairGateTests(unittest.TestCase):
         data = fixture(contract=6)
         data['proposal']['outputs'][0]['path'] = 'core/renamed.md'
         data['permission']['paths'].append('core/renamed.md')
-        # Rebinding candidate selection remains caller-owned, not inferred.
         data['final_context']['candidate_bindings'][0]['path'] = 'core/renamed.md'
         rebind(data)
         with self.assertRaisesRegex(ValueError, 'outside-path'):
@@ -177,7 +176,6 @@ class LayoutRepairGateTests(unittest.TestCase):
     def test_local_layout_recoding_rejects_changed_graph_targets(self):
         data = fixture(contract=6)
         data['proposal']['outputs'][0]['text'] = data['proposal']['outputs'][0]['text'].replace('governs: Atom', 'governs: Artifact')
-        # rebind updates the packet's source binding; synchronize only this test selection.
         new_sha = hashlib.sha256(data['proposal']['outputs'][0]['text'].encode()).hexdigest()
         data['final_context']['candidate_bindings'][0]['sha256'] = new_sha
         rebind(data)
@@ -206,8 +204,6 @@ class LayoutRepairGateTests(unittest.TestCase):
     def test_other_or_fabricated_original_gaps_are_rejected(self):
         for kind in ('reviewer_incomplete', 'unresolved_interpretation', 'conflicting_authority', 'missing_context'):
             data = fixture()
-            # Retain the legitimate layout gap and add another kind: never clear
-            # a known authority/reviewer gap merely because final checks pass.
             part = data['evaluation']['parts'][2]
             part['coverage_gaps'].append(dict(check_id='scope', kind=kind, reason='Unresolved non-layout evidence.'))
             if kind == 'missing_context':
@@ -313,8 +309,6 @@ class LayoutRepairGateTests(unittest.TestCase):
 
     def test_original_merged_finding_must_still_match_retained_raw_parts(self):
         data = fixture()
-        # A disk-loaded JSON report has separate merged/raw objects; the merge
-        # helper's in-memory result intentionally shares their equal rows.
         data['evaluation']['checks'] = copy.deepcopy(data['evaluation']['checks'])
         data['evaluation']['checks'][1]['findings'][1]['proposed_fix'] = 'Different Summary repair interpretation.'
         with self.assertRaisesRegex(ValueError, 'merged evaluation contradicts'):

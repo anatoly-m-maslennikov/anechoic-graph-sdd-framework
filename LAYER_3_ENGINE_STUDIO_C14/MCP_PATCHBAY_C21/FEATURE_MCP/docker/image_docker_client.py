@@ -1,6 +1,5 @@
 """Bounded Docker CLI execution for runtime-image admission."""
 
-# CA-M-409@14
 
 from __future__ import annotations
 

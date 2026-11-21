@@ -1,6 +1,5 @@
 """Strict Docker observations and immutable runtime-image identity checks."""
 
-# CA-D-564@19
 
 from collections.abc import Callable
 from dataclasses import dataclass, field

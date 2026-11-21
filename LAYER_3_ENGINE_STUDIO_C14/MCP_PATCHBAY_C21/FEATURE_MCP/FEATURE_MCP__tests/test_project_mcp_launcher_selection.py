@@ -53,7 +53,6 @@ class ProjectSelectionGoldenTests(unittest.TestCase):
         repository = self.fixture_root / "repository"
         alpha = self.project("repository/projects/alpha")
         beta = self.project("repository/projects/beta")
-        # The parent may be a Git repository, but neither selected Project is.
         (repository / ".git").mkdir(parents=True)
 
         selected_alpha = resolve_project(alpha)

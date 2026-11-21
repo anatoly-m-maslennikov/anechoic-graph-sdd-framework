@@ -1,6 +1,5 @@
 """Plain, nonblocking Journal recording for host release invocations."""
 
-# CA-M-347@19
 
 from collections.abc import Callable
 from datetime import UTC, datetime

@@ -1,6 +1,3 @@
-# CA-E-676@11
-# CA-E-673@3
-# CA-E-684@7
 
 from __future__ import annotations
 

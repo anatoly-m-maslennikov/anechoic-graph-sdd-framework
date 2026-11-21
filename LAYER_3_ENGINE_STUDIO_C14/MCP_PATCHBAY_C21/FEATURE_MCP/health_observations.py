@@ -1,4 +1,3 @@
-# CA-E-640@16
 from __future__ import annotations
 
 from collections.abc import Mapping

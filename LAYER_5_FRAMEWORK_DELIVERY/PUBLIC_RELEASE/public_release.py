@@ -1,8 +1,3 @@
-# CA-D-583@15
-# CA-D-610@15
-# CA-D-612@17
-# CA-M-366@20
-# CA-D-613@20
 
 """Direct Project-owned public release, without selector or admission gates."""
 

@@ -1,5 +1,6 @@
 """Check the native Import Graph through a disposable Docker Workbench."""
 
+import asyncio
 import os
 from pathlib import Path
 import re
@@ -10,8 +11,11 @@ from time import monotonic, sleep
 import unittest
 from uuid import uuid4
 
+from mcp.client.session import ClientSession
+from mcp.client.streamable_http import streamable_http_client
+
 import test_native_startup as fixture
-from http_paths import HEALTH_PATH, WORKBENCH_PATH
+from http_paths import HEALTH_PATH, MCP_PATH, WORKBENCH_PATH
 from work_journal import PROJECT_DATABASE, append_sealed_events
 
 sys.path.insert(0, str(fixture.MCP.parents[1] / "IWE_CONSOLE_C43/APP_WORKBENCH/APP_WORKBENCH__tests"))
@@ -177,6 +181,44 @@ class NativeImportGraphDockerE2E(unittest.TestCase):
         fetched = self._post("/interface", {"operation": "view_fetch",
                                            "arguments": view | {"result_delivery": "inline"}})
         self.assertEqual((second, expected), (fetched["query_id"], fetched["rows"]))
+
+    def test_promotion_immediately_refreshes_workbench(self):
+        async def exercise():
+            async with streamable_http_client(self.url + MCP_PATH) as streams, ClientSession(*streams) as client:
+                await client.initialize()
+
+                async def call(name, arguments, status="completed"):
+                    result = await client.call_tool(name, arguments)
+                    self.assertFalse(result.is_error, result.structured_content)
+                    self.assertEqual(status, result.structured_content["status"], result.structured_content)
+                    return result.structured_content
+
+                created = await call("atom_lifecycle_create_draft", {"newAtom": {
+                    "template": "task", "container": {"component": "C00"},
+                    "body": "## Summary\n\nPromotion canary.\n",
+                }})
+                draft = created["savedDraft"]
+                await call("atom_lifecycle_promote_draft", {
+                    "target": {"ref_id": draft["ref_id"], "version": draft["version"]},
+                    "targetStatus": "active",
+                })
+                revised = await call("atom_lifecycle_update", {
+                    "sourceCurrent": {"ref_id": draft["atom_id"], "version": 1},
+                    "changes": {"body": "## Summary\n\nPromotion canary.\n\nRevised.\n"},
+                }, status="draft_created")
+                revision = revised["savedDraft"]
+                await call("atom_lifecycle_promote_draft", {
+                    "target": {"ref_id": revision["ref_id"], "version": revision["version"]},
+                    "targetStatus": "active",
+                })
+                atom = draft["atom_id"]
+                self.assertEqual([[atom + "@1", 1, "archived"], [atom, 2, "active"]], self._rows(
+                    'SELECT reference, "header.state.version", "header.state.status" FROM atoms '
+                    f"WHERE reference IN ('{atom}', '{atom}@1', '{revision['ref_id']}') "
+                    'ORDER BY "header.state.version"'
+                ))
+
+        asyncio.run(exercise())
 
     def test_watcher_adds_renames_and_removes_targets(self):
         self._write("consumer.py", "import moving.target\n")

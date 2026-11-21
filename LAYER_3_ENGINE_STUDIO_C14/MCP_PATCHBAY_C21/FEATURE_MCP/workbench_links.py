@@ -1,8 +1,3 @@
-# CA-M-1008@2
-# CA-R-2902@4
-# CA-M-476@5
-# CA-D-681@9
-# CA-D-673@18
 
 """Public links for persisted Workbench queries."""
 
@@ -49,7 +44,7 @@ def _saved_page(request: Any, selection: Any) -> str | None:
         if (parsed.scheme not in {"http", "https"} or not parsed.hostname or parsed.username is not None
                 or parsed.password is not None or not parsed.path or parsed.params or parsed.query or parsed.fragment):
             return None
-        _ = parsed.port  # Validate a supplied port.
+        _ = parsed.port
         return page
     except (AttributeError, TypeError, ValueError):
         return None

@@ -1,4 +1,3 @@
-# CA-M-1011@3
 
 """Select and pin staged declarations for the image build."""
 from __future__ import annotations
@@ -10,8 +9,6 @@ from pathlib import Path
 import re
 import sys
 
-# In the selector container this file is mounted at /selector.py.  The parser
-# and query backend must come from the previous image, never the staged source.
 _PACKAGED = Path('/workspace/LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC')
 _TOOLS = (_PACKAGED / 'FEATURE_TOOLS' if _PACKAGED.is_dir()
           else Path(__file__).resolve().parents[1])
@@ -171,7 +168,6 @@ def query_pins(root: Path, store_factory=None, *, role: str = "Delivery",
                       for key in ('role', 'status', 'subject')}
         row = atom(Path(root) / record['source_path'], Path(root), projection,
                    {'atom_id': record['id'], 'version': record['version']}, b'', 'Current')
-        # A duplicate or invalid ID must still be visible to the selection query.
         row['ref'] = record['source_path']
         rows.append(row)
     header = HeaderSchema(tuple(HeaderColumn((key,), 'header.' + key, 'VARCHAR', True)

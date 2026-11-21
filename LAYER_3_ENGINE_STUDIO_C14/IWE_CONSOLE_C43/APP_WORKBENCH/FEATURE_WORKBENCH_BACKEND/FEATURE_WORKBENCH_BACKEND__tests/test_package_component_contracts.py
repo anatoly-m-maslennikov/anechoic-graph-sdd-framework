@@ -41,7 +41,7 @@ class PackageComponentContractsTests(unittest.TestCase):
         ])
         with patch.object(package_audit, 'read_structure'), \
              patch.object(package_audit, 'realization_component_paths', return_value={'unit': 'C1'}):
-            package_audit.replace_package_audit(connection, selection, capture, nodes, [],
+            package_audit.replace_package_audit(connection, selection, capture, nodes,
                                                 {'unit': 'valid', 'unit/child': 'valid'}, tests=[])
         rows = dict(connection.execute('SELECT relative_path, component_contracts FROM package_audit').fetchall())
         self.assertEqual([{'ref': refs[0], 'covered': True}, {'ref': refs[1], 'covered': False}],

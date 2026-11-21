@@ -1,8 +1,3 @@
-# CA-D-674@12
-# CA-D-639@18
-# CA-D-677@1
-# CA-M-322@13
-# CA-R-1820@9
 
 """Shared host Streamable HTTP transport for multiple Project gateways."""
 

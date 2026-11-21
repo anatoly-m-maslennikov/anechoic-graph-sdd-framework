@@ -155,7 +155,7 @@ class QualifiedLiteralEvidenceTests(unittest.TestCase):
         span = item['subject_inventory']['mentions'][0]['qualified_literal_evidence']['mention_span']
         self.assertEqual(span['start'], body.index(PHRASE))
         self.validate(source, item)
-        span['start'] += 3  # UTF-8 byte surplus for the two-codepoint prefix.
+        span['start'] += 3
         with self.assertRaisesRegex(ValueError, 'qualified literal mention span'):
             self.validate(source, item)
 

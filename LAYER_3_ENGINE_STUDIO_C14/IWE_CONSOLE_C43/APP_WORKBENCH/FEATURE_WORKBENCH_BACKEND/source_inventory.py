@@ -1,4 +1,3 @@
-# CA-R-2723@6
 """Recognize selected Atom carriers and inventory Markdown paths."""
 
 from __future__ import annotations

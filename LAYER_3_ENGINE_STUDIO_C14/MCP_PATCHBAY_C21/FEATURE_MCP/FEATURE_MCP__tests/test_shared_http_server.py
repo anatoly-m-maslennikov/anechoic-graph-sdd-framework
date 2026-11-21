@@ -1,4 +1,3 @@
-# CA-E-680@1
 
 """Focused checks for the shared host HTTP boundary."""
 

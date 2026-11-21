@@ -87,8 +87,6 @@ def _resolve(text: str, declared: set[str], relations: Collection[str], aliases:
                     raise ValueError(f"unknown participant Property: {property_address}")
         aliases[variable] = kind
         return True
-    # The Subject resolver admits a single qualifier value. For reference
-    # checking a membership qualifier selects the same Property.
     text = _MEMBERSHIP.sub(lambda match: f'/(.{match[1]} := Value)', text)
     text = _QUOTED_INSTANCE.sub(r"//\1", text)
     if text.endswith(".*"):
@@ -127,7 +125,7 @@ def _resolved_address(expression, declared, relations, aliases, address_bindings
             address += "." + step.operand.value
             named_instance = False
         elif step.operator == "." and isinstance(step.operand, SelectionSuffix) and index == len(expression.steps) - 1:
-            pass  # Wildcard selects descendants of the declared base.
+            pass
         elif step.operator == "/" and isinstance(step.operand, Qualification):
             relative = step.operand.relative_path
             if not isinstance(relative.head, Name):
@@ -378,7 +376,6 @@ def lint_python_model_claim(text: str, *, declared_addresses: Collection[str],
         if match:
             return (f"{path}:{first_line + int(match[1]) - 1}:{match[2]}: {match[3]}",)
         return (f"{path}:{first_line}: {message}",)
-    # The registry supplies names, while callers may supply separately declared aliases.
     known_aliases = {} if require_declared_aliases else {
         "<+": "CONTAINS", ">|": "HAS_CLASSIFICATION", ";>": "IS_ORDERED_RIGHT_BEFORE",
     }

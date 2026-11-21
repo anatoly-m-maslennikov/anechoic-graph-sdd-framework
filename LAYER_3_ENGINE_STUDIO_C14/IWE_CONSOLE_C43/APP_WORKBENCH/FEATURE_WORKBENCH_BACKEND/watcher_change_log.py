@@ -1,5 +1,3 @@
-# CA-M-490@3
-# CA-D-695@3
 
 """Bounded durable watcher observations for one Workbench Project."""
 

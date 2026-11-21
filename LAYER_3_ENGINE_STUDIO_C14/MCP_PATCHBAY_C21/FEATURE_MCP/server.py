@@ -1,5 +1,3 @@
-# CA-M-322@13
-# CA-R-1820@9
 
 """MCP entry point for the native Workbench gateway."""
 from __future__ import annotations
@@ -47,7 +45,6 @@ def main(argv=None, *, native_inputs: NativeQueryInputs | None = None):
         )
     else:
         from http_server import main as serve_http
-        # The HTTP entrypoint owns its process boundary; do not report this delegation twice.
         http_argv = ['--project-root', str(args.project_root)]
         for flag, value in (('--control-root', args.control_root), ('--instance-id', args.instance_id),
                             ('--host-project-root', args.host_project_root)):

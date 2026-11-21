@@ -37,7 +37,7 @@ class AuthorityContext:
 
 
 def _verified(source: Record, entry: Record) -> bool:
-    del entry  # A manifest pin is checked separately; this binds observed carrier bytes.
+    del entry
     binding, metadata = source.get("binding"), source.get("metadata")
     if not isinstance(binding, dict) or not isinstance(metadata, dict):
         return False

@@ -1,4 +1,3 @@
-# CA-D-296@33
 
 """Compile explicit Role ordering claims into canonical directory names."""
 import re

@@ -45,7 +45,6 @@ class TypedReferenceIntegration(unittest.TestCase):
           print('target_move','recompiled complete capture')
          owner.write_text(original_owner)
          reader=SourceReader(root);reader.capture()
-         # A class rename is an update to a selected Declaration; the previously compiled dependent must not survive.
          owner.write_text(owner.read_text().replace('NamedSelection','RenamedSelection'))
          try:
           reader.capture([{'operation':'update','old_path':None,'new_path':owner.relative_to(root).as_posix()}])

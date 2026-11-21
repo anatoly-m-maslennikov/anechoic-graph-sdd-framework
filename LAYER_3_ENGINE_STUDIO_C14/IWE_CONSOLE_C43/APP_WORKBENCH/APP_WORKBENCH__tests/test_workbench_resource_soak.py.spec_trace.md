@@ -1,3 +1,3 @@
 ## Implements
 
-- CA-E-800@6
+- AN-S-1469@6

@@ -1,22 +1,3 @@
-# CA-D-672@24
-# CA-D-718@1
-# CA-O-10025@1
-# CA-R-2728@6
-# CA-R-2776@6
-# CA-M-470@8
-# CA-D-673@18
-# CA-R-2902@4
-# CA-R-2903@2
-# CA-D-681@8
-# CA-R-2782@5
-# CA-D-676@2
-# CA-R-2786@5
-# CA-M-474@1
-# CA-D-679@1
-# CA-R-2953@1
-# CA-R-2952@5
-# CA-M-491@1
-# CA-D-696@1
 
 """Native MCP adapters for the Project-owned Workbench service."""
 
@@ -92,7 +73,6 @@ _VIEW_FETCH_SCHEMA = {"type": "object", "properties": {"grid": _GRID_SCHEMA, "wo
 _VIEW_CHECK_SCHEMA = {"type": "object", "properties": {"workspace_id": _WORKSPACE_ID, "view_id": _VIEW_ID, "cursor_position": _CURSOR}, "required": ["workspace_id", "view_id"], "additionalProperties": False}
 _VIEW_RENAME_SCHEMA = {"type": "object", "properties": {"workspace_id": _WORKSPACE_ID, "view_id": _VIEW_ID, "name": _SQL}, "required": ["workspace_id", "view_id", "name"], "additionalProperties": False}
 _QUERY_LOG_GET_SCHEMA = {"type": "object", "properties": {"log_id": _WORKSPACE_ID}, "required": ["log_id"], "additionalProperties": False}
-# shortcut: backend validates exclusive save modes, upgrade when the shared selector supports root schema unions.
 _SAVE_VIEW_SCHEMA = {"type": "object", "properties": {"workspace_id": _WORKSPACE_ID, "view_id": _VIEW_ID, "sql": _SQL, "name": _SQL}, "additionalProperties": False}
 
 

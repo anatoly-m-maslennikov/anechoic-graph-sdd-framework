@@ -1,5 +1,3 @@
-# CA-M-500@12
-# CA-D-672@22
 
 """Compile literal Current-model Header declarations into typed rules."""
 

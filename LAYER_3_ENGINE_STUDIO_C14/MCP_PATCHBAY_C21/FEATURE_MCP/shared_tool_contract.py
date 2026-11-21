@@ -1,7 +1,3 @@
-# CA-R-1113@23
-# CA-M-175@19
-# CA-D-593@17
-# CA-M-517@1
 
 """Native Tool contract validation and the shared public schema adapter."""
 

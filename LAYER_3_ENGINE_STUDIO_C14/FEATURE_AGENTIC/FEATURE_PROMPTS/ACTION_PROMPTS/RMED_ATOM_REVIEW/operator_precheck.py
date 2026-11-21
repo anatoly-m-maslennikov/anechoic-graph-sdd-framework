@@ -33,7 +33,6 @@ def rendering_candidates(source: str, operators: list[str]) -> list[dict]:
     result = []
     for location, section in body_section_texts(source).items():
         visible = list(section)
-        # Mask code and headings without shifting offsets.
         fence = None
         offset = 0
         for line in section.splitlines(keepends=True):

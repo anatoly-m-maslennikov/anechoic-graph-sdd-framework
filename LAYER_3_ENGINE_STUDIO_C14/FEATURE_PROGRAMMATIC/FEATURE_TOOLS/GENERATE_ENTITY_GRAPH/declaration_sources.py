@@ -253,8 +253,6 @@ def _authority_rows(carriers: list[dict]) -> list[Record]:
 
 
 def _body_check(carriers: list[dict]) -> Check:
-    # Check only the exact source bytes and metadata provided by the caller.
-    # require_sources verifies them against the current support manifests.
     context = AuthorityContext([], 0, 0, 0, [], (), {}, True)
     obligation = Obligation(
         "declaration.graph_rule.body",

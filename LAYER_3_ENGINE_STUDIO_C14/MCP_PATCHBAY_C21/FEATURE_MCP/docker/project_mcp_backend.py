@@ -1,6 +1,3 @@
-# CA-D-578@21
-# CA-M-409@14
-# CA-R-1901@21
 
 """Docker and loopback-MCP backend for the bounded Project MCP launcher."""
 
@@ -119,7 +116,6 @@ class ProjectMcpBackend:
 
     @staticmethod
     def _native_package(source_root, project_root, control_root=None):
-        # The launcher has already admitted the Project; reselect to bind image mode.
         from native_startup import select_runtime_project
         from start_mcp import _installed_source_root
         try:

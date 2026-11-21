@@ -1,5 +1,3 @@
-# CA-M-1008@2
-# CA-D-673@18
 
 """Registry provider that delegates the retained Workbench frontier."""
 

@@ -1,5 +1,3 @@
-# CA-R-2008@17
-# CA-M-396@17
 
 """Read the machine-local shared MCP host configuration."""
 

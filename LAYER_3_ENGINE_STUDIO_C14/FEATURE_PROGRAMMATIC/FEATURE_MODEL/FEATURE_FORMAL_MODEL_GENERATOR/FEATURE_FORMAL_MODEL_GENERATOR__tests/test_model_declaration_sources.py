@@ -274,7 +274,7 @@ class ModelDeclarationSourceTests(unittest.TestCase):
                      row("A.Content"), row("B.Content")]
         self.assertNotIn("C.Content", _class_property_aliases(ambiguous))
         ambiguous.append(row("C.Content"))
-        self.assertNotIn("C.Content", _class_property_aliases(ambiguous))  # canonical address wins
+        self.assertNotIn("C.Content", _class_property_aliases(ambiguous))
 
     def test_qualified_endpoint_classes_are_checked(self):
         def model(subject, identifier, claim):

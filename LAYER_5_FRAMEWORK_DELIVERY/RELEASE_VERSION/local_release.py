@@ -1,13 +1,3 @@
-# CA-M-332@25
-# CA-M-422@13
-# CA-R-1880@19
-# CA-D-562@26
-# CA-D-564@20
-# CA-D-633@16
-# CA-D-561@25
-# CA-D-583@15
-# CA-D-720@1
-# CA-O-164@37
 
 """Direct local replacement workflow for the Project-owned framework release."""
 
@@ -35,6 +25,7 @@ from release_cleanup import cleanup_obsolete_images, cleanup_stopped_containers 
 from release_cleanup_identity import image_labels  # noqa: E402
 from release_cleanup_images import record_ready_images  # noqa: E402
 from release_image_provenance import release_image_provenance  # noqa: E402
+from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images import ImageError  # noqa: E402
 from LAYER_5_FRAMEWORK_DELIVERY.local_release_test_process import run_logged_test_process  # noqa: E402
 from release_support import (  # noqa: E402
     LocalReleaseError,
@@ -227,7 +218,6 @@ def run_local_release(
                     "--managed-python", "--no-env-file", "--all-groups", "python", "-B", "-u",
                     str(Path(__file__).resolve().parents[2] / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/run_full_test_suite.py"), "--project-root", str(root),
                 )
-                # Native test images use sealed assets; candidate assets are handled during packaging.
                 argv += ("--image-mode", "existing")
                 if default_runner:
                     temporary = _target(root, Path(".anechoic_tmp/simple_local_release"), label="test-log")
@@ -433,6 +423,11 @@ def run_local_release(
                 current_image = _launcher_image(selection)
                 if current_image != candidate_image:
                     raise LocalReleaseError("local-release-installed-image-mismatch")
+                try:
+                    manager.mark_production_image(candidate_image)
+                except ImageError as error:
+                    cleanup.pending = True
+                    cleanup.notes.append(f"Production image display tag failed: {error}")
                 cleanup_stopped_containers(
                     root, selection.instance_id, selection.control_relative.as_posix(),
                     candidate_image, candidate_fingerprint, cleanup_runner, cleanup=cleanup,

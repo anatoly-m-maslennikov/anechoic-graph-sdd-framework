@@ -20,9 +20,6 @@ from http_server import MAX_REQUEST_BODY_SIZE, create_app  # noqa: E402
 from http_paths import MCP_PATH  # noqa: E402
 
 
-# The current execute JSON-RPC envelope measured 7,266,044 mostly ASCII
-# characters. Initialization metadata with that byte size tests transport
-# admission independently of any Operator authorization or Release Action.
 CURRENT_RELEASE_ENVELOPE_BYTES = 7_266_044
 
 

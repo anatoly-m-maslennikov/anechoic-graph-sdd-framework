@@ -132,7 +132,6 @@ def _group_source(path, group, children):
 def _group_fields(path, group, children):
     names = group.get("allowed_dependent_property_names", ())
     if path == _PARTIAL_CONTEXT:
-        # shortcut: bind Context groups separately while existing Carriers use flat aliases.
         selected = tuple(name for name in names if name in _CONTEXT_FIELDS)
         if set(selected) == set(_CONTEXT_FIELDS) and set(selected) <= children.keys():
             return selected
@@ -154,7 +153,6 @@ def _field_source(path, name, owner, args):
     annotation = _FORMATS[format_name]
     if _bounds(count)[1] != 1:
         annotation = f"list[{annotation}]"
-    # The Status compiler combines the base domain with Role and Form additions.
     if "allowed_values" in args and path != "Atom.Header.State.Status":
         metadata["allowed_values"] = args["allowed_values"]
     default = "default=None, kw_only=True, " if not _bounds(occurrence)[0] else ""

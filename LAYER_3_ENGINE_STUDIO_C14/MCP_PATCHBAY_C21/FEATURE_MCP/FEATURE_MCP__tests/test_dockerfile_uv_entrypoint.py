@@ -1,6 +1,5 @@
 """Keep image startup inside the built, isolated Python environment."""
 
-# CA-M-356@19
 
 import json
 from pathlib import Path

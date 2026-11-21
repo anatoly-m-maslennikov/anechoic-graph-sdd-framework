@@ -1,5 +1,3 @@
-# CA-M-284@32
-# CA-E-454@23
 import sys
 import tempfile
 import unittest

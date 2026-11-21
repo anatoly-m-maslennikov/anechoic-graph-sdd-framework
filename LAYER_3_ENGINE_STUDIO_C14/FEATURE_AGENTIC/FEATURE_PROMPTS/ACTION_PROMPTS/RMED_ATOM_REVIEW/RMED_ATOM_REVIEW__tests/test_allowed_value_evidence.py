@@ -391,9 +391,6 @@ class AllowedValueEvidenceTests(unittest.TestCase):
                     validate_allowed_value_evidence(
                         item, {authority: raw}, {authority: ACTIVITY_PROPERTY})
 
-        # Historical wording is test data, not a lookup of current authority.
-        # A renamed/revised source must not make this regression pass merely
-        # because its quoted sentence disappeared.
         classification = (
             "the Artifact Property Activity **means** the derived Property that classifies "
             "an Artifact as Active **or** Inactive from its current Revision Status within "

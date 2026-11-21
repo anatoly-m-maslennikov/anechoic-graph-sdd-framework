@@ -1,7 +1,7 @@
 """Bounded updates for a selected Current native Ticket."""
 from __future__ import annotations
 
-from collections import defaultdict
+from collections import Counter, defaultdict
 from contextlib import nullcontext
 from datetime import datetime, timezone
 from hashlib import sha256
@@ -12,6 +12,7 @@ import re
 import yaml
 
 from native_carrier_header import native_header_view
+from native_carrier_placement import native_ticket_asset
 
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import CURRENT_STATUSES, capture_native
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_rows import frontmatter_bounds
@@ -111,7 +112,6 @@ def _read_ticket(selection, target, selected, digest, path, *, close_tree=False,
         bounds = frontmatter_bounds(raw)
         if bounds is None or sha256(raw).hexdigest() != digest or raw[bounds[2]:] != selected.get('_content_bytes'):
             raise SourceChanged('Current Ticket source changed after selection.')
-        # Recheck the header after the independent guarded source read.
         if parse_carrier(raw, path).metadata != selected.get('header_json'):
             raise SourceChanged('Current Ticket header changed after selection.')
     except InputError:
@@ -201,11 +201,11 @@ def _branch(selection, path, status, selected, rows, *, allow_flat=True, seen=No
         raise SourceChanged('Containing Ticket path is invalid.')
     owner_template = native_header_view(owner['header_json']).get('context', {}).get('template')
     template = context.get('template')
-    if owner_template not in {'task', 'epic'} or (owner_template == 'epic' and template not in {'task', 'epic', 'work_report'}):
+    if owner_template not in {'task', 'epic'}:
         raise InputError('target', 'Ticket container is invalid.')
     _branch(selection, owner_path, owner['status'], owner, rows, seen=seen)
     branch = owner_path.with_suffix('')
-    if owner_template == 'epic' and template == 'work_report':
+    if native_ticket_asset(template) and path.parent == (branch / 'ASSETS').joinpath(*old_folder):
         branch /= 'ASSETS'
     if path.parent != branch.joinpath(*old_folder):
         raise InputError('target', 'Ticket path disagrees with its Current Status placement.')
@@ -314,10 +314,13 @@ def _move_ticket(selection, target, selected, digest, path, destination, status,
         return result(effects=recorded, errors=recorded_errors, **data)
 
 
-def _descendants(rows, atom_id):
+def _descendants(rows, atom_id, *, include_drafts=False):
     children = defaultdict(list)
+    history = Counter(row['id'] for row in rows) if include_drafts else {}
     for row in rows:
-        if row.get('status_group') == 'Current':
+        first_draft = (include_drafts and row.get('status_group') == 'Draft'
+                       and row.get('version') == 1 and history[row['id']] == 1)
+        if row.get('status_group') == 'Current' or first_draft:
             owner = native_header_view(row['header_json']).get('context', {}).get('container', {}).get('atom')
             if owner is not None:
                 children[owner].append(row)
@@ -334,6 +337,90 @@ def _descendants(rows, atom_id):
         stack.append((row, True))
         stack.extend((child, False) for child in reversed(sorted(children.get(row['id'], ()), key=lambda r: r['id'])))
     return ordered
+
+
+def _check_promotion_companion(selection, companion, rows, owners):
+    for row in rows:
+        row_path = selection.root / row['source_path']
+        if row['status_group'] == 'Archived' or not row_path.is_relative_to(companion):
+            continue
+        current = owners.get(row['id'])
+        if (row['status_group'] == 'Draft' and current is not None
+                and current['status_group'] == 'Current' and row['version'] == current['version']):
+            raise InputError('target', 'Recover the interrupted child publication before promoting its owner.')
+        owner_id = native_header_view(row['header_json']).get('context', {}).get('container', {}).get('atom')
+        if owner_id not in owners:
+            raise InputError('target', 'Ticket companion contains an unrelated Atom.')
+
+
+def promote_ticket_tree(selection, selected, destination, status, original_rows, rows, check_definition):
+    root_path = selection.root / selected['source_path']
+    before = _descendants(original_rows, selected['id'], include_drafts=True)
+    descendants = _descendants(rows, selected['id'], include_drafts=True)
+    if before != descendants:
+        raise SourceChanged('Ticket descendants changed after selection.')
+    owners = {row['id']: row for row in [selected, *descendants]}
+    _check_promotion_companion(selection, root_path.with_suffix(''), rows, owners)
+    actions = []
+    for row in descendants:
+        context = native_header_view(row['header_json']).get('context', {})
+        source = selection.root / row['source_path']
+        owner = owners[context['container']['atom']]
+        owner_context = native_header_view(owner['header_json']).get('context', {})
+        branch = (selection.root / owner['source_path']).with_suffix('')
+        folder = {'draft': '000_draft', 'active': ''}.get(row['status'], row['status'])
+        expected = {branch / folder}
+        if native_ticket_asset(context.get('template')):
+            expected.add(branch / 'ASSETS' / folder)
+        if owner_context.get('template') not in ('task', 'epic') or source.parent not in expected:
+            raise InputError('target', 'Ticket descendant placement disagrees with its container.')
+        if context.get('template') not in ('task', 'epic') or (
+                row['status'] != 'draft' and (row['status'] != 'backlog' or status != 'active')):
+            continue
+        name = source.name
+        prefix = row['_exact_ref'] if row['status'] == 'draft' else row['id']
+        if not name.startswith(prefix + '-'):
+            raise InputError('target', 'Ticket descendant filename is invalid.')
+        dest = branch / ('' if status == 'active' else status) / (row['id'] + name[len(prefix):])
+        actions.append((row, source, dest))
+    actions.append((selected, root_path, destination))
+    return _apply_promotions(selection, actions, status, check_definition)
+
+
+def _apply_promotions(selection, actions, status, check_definition):
+    planned_destinations = set()
+    prepared = []
+    for row, source, dest in actions:
+        if dest in planned_destinations or dest.exists() or dest.is_symlink() or dest.with_suffix('').exists() or dest.with_suffix('').is_symlink():
+            return result(errors=[{'code': 'destination_exists', 'message': 'Ticket destination already exists.', 'target': row['id']}])
+        planned_destinations.add(dest)
+        try:
+            reader = ReadContext(roots=[str(selection.control_root)], limits=dict(CEILINGS))
+            raw = reader.read(source)
+            bounds = frontmatter_bounds(raw)
+            if (bounds is None or sha256(raw).hexdigest() != row.get('_source_sha256')
+                    or parse_carrier(raw, source).metadata != row.get('header_json')):
+                raise ValueError('Ticket carrier changed.')
+            if source.with_suffix('').exists() or source.with_suffix('').is_symlink():
+                _read_tree(selection.root, source.with_suffix(''))
+        except (OSError, RuntimeError, TypeError, ValueError) as error:
+            raise SourceChanged('Ticket or companion changed after selection.') from error
+        _status_bytes(raw, bounds, source, status)
+        prepared.append((row, source, dest, raw, bounds))
+    recorded = []
+    for row, source, dest, raw, bounds in prepared:
+        try:
+            tree = _read_tree(selection.root, source.with_suffix('')) if source.with_suffix('').is_dir() else None
+        except (OSError, RuntimeError, ValueError) as error:
+            return result(effects=recorded, errors=[{'code': 'source_changed', 'target': row['id'],
+                                                     'message': str(error)}])
+        outcome = _move_ticket(selection, {'ref_id': row['ref'], 'version': row['version']}, row,
+                               row['_source_sha256'], source, dest, status, check_definition,
+                               close_tree=True, locked=True, preflight=(raw, bounds, tree))
+        recorded.extend(outcome.get('effects', ()))
+        if outcome.get('errors'):
+            return result(effects=recorded, errors=[{**error, 'target': row['id']} for error in outcome['errors']])
+    return result(effects=recorded, artifact=outcome['artifact'])
 
 
 def change_ticket_status(selection, params, *, current_rows, check_definition):
@@ -355,6 +442,12 @@ def change_ticket_status(selection, params, *, current_rows, check_definition):
         if destination != path and (destination.exists() or destination.is_symlink() or
                 (move_tree and (destination.with_suffix('').exists() or destination.with_suffix('').is_symlink()))):
             return result(errors=[{'code': 'destination_exists', 'message': 'Ticket destination already exists.'}])
+        if move_tree and selected['status'] == 'backlog' and status == 'active':
+            capture = capture_native(selection)
+            if capture.errors:
+                raise SourceChanged('Native carrier capture is incomplete.')
+            return promote_ticket_tree(selection, selected, destination, status, current_rows,
+                                       capture.atoms, check_definition)
         raw, bounds, tree, capture = _read_ticket(selection, target, selected, digest, path,
                                                    close_tree=move_tree, placement=True)
         planned = _descendants(current_rows, selected['id']) if move_tree else []
@@ -364,12 +457,7 @@ def change_ticket_status(selection, params, *, current_rows, check_definition):
                 any(before.get(key) != after.get(key) for key in keys)
                 for before, after in zip(planned, fresh)):
             raise SourceChanged('Ticket descendants changed after selection.')
-        if (template == 'epic' and selected['status'] == 'backlog' and status == 'active' and any(
-                native_header_view(row['header_json']).get('context', {}).get('template') == 'task'
-                and row['status'] != 'active' for row in planned)):
-            raise InputError('target', 'Epic activation requires activating its contained Tasks; this operation is unsupported.')
-        reopen_epic = template == 'epic' and status == 'active'
-        if (move_tree and selected['status'] in ('done', 'canceled') and not terminal and not reopen_epic
+        if (move_tree and selected['status'] in ('done', 'canceled') and not terminal and status != 'active'
                 and any(row['status'] != status for row in planned)):
             raise InputError('target', 'Reopening requires changing contained Ticket statuses; this operation is unsupported.')
         actions = [row for row in planned if terminal and row['status'] not in ('done', 'canceled')]

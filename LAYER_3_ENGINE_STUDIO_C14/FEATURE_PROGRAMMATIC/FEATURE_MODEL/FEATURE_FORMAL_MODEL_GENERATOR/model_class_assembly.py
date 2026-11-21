@@ -167,7 +167,7 @@ def model_module_name(class_name: str) -> str:
 def assemble_model_modules(claims: Iterable[str]) -> dict[str, str]:
     """Return one importable package module per selected Model class."""
     claims = tuple(claims)
-    assemble_model_classes(claims)  # Retain the aggregate generator's validation.
+    assemble_model_classes(claims)
     classes, imports = _classes(claims)
     filenames = {name: model_module_name(name) + ".py" for name in classes}
     if len(set(filenames.values())) != len(filenames):
@@ -177,7 +177,6 @@ def assemble_model_modules(claims: Iterable[str]) -> dict[str, str]:
     for name, node in classes.items():
         used = {item.id for item in ast.walk(node) if isinstance(item, ast.Name) and isinstance(item.ctx, ast.Load)}
         dependencies[name] = sorted((used & classes.keys()) - {name})
-    # Imports must be acyclic for every module to be importable directly.
     tuple(TopologicalSorter(dependencies).static_order())
     for name in sorted(classes, key=filenames.get):
         node = classes[name]

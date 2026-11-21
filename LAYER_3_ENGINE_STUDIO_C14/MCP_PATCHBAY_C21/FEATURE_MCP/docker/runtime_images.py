@@ -5,11 +5,6 @@ inspected immutable Docker image ID leaves this boundary; no runtime resources
 are started, replaced or retired here.
 """
 
-# CA-D-705@1
-# CA-M-500@3
-# CA-M-1011@3
-# CA-D-562@25
-# CA-D-720@1
 
 from __future__ import annotations
 
@@ -29,19 +24,19 @@ import tempfile
 try:
     from .image_reference import IMMUTABLE_IMAGE
     from .image_metadata import (
-        OCI_VERSION_LABEL, docker_created_utc, read_framework_version,
+        OCI_VERSION_LABEL, display_image_tag, docker_created_utc, read_framework_version,
     )
-    from .image_display_tags import ensure_display_tag
+    from .image_display_tags import ensure_display_tag, set_display_role
     from .image_provenance import ImageBuildProvenance, label_arguments
     from .image_tool_registry import TOOL_REGISTRY
     from .image_tool_registry import compile_tool_registry as _compile_tool_registry
     from .image_docker_client import MAX_OUTPUT as _MAX_OUTPUT
     from .image_docker_client import bounded_run as _bounded_run
     from .image_docker_client import docker_client_environment as _docker_client_environment
-except ImportError:  # direct execution/import with docker/ on sys.path
+except ImportError:
     from image_reference import IMMUTABLE_IMAGE
-    from image_metadata import OCI_VERSION_LABEL, docker_created_utc, read_framework_version
-    from image_display_tags import ensure_display_tag
+    from image_metadata import OCI_VERSION_LABEL, display_image_tag, docker_created_utc, read_framework_version
+    from image_display_tags import ensure_display_tag, set_display_role
     from image_provenance import ImageBuildProvenance, label_arguments
     from image_tool_registry import TOOL_REGISTRY
     from image_tool_registry import compile_tool_registry as _compile_tool_registry
@@ -54,7 +49,6 @@ ENGINE_ROOT = "LAYER_3_ENGINE_STUDIO_C14"
 DOCKER_ROOT = ENGINE_ROOT + "/MCP_PATCHBAY_C21/FEATURE_MCP/docker"
 DOCKERFILE = DOCKER_ROOT + "/Dockerfile"
 DOCKERIGNORE = DOCKER_ROOT + "/Dockerfile.dockerignore"
-# Retired build outputs may still be present in a source checkout.
 RETIRED_ASSETS = frozenset(
     ENGINE_ROOT + "/" + directory + "/" + name
     for directory, names in (
@@ -377,7 +371,6 @@ class ImageManager:
                                       capture_stdout=not build, max_output=_MAX_OUTPUT,
                                       buildx_config=buildx_config)
             else:
-                # Test executors keep the existing CompletedProcess interface.
                 kwargs = {"cwd": cwd or self._root(), "stdin": subprocess.DEVNULL,
                           "capture_output": True, "text": True, "shell": False,
                           "timeout": self.timeout, "check": False}
@@ -403,7 +396,7 @@ class ImageManager:
         return output
 
     def _inspect_details(self, image: str, identity: ImageIdentity, *,
-                         code: str = "IMAGE_REFUSED", built: bool = False) -> str:
+                         code: str = "IMAGE_REFUSED", built: bool = False) -> tuple[str, list[str]]:
         raw = self._run(("docker", "image", "inspect", image), code=code)
         try:
             values = json.loads(raw, object_pairs_hook=_unique_object)
@@ -423,20 +416,26 @@ class ImageManager:
                     or (len(platform) == 3 and value.get("Variant") != platform[2])):
                 raise ValueError("image identity differs")
             created = value["Created"]
+            tags = value.get("RepoTags") or []
+            if not isinstance(tags, list) or any(not isinstance(tag, str) for tag in tags):
+                raise ValueError("image tags are invalid")
             docker_created_utc(created)
         except (ValueError, TypeError, KeyError) as error:
             raise ImageError(code, "Image schema, source fingerprint, platform or immutable identity does not match") from error
-        return created
+        return created, tags
 
     def _inspect(self, image: str, identity: ImageIdentity, *, code: str = "IMAGE_REFUSED", built: bool = False) -> str:
         self._inspect_details(image, identity, code=code, built=built)
         return image
 
-    def ensure_display_tag(self, image: str, version: str, created: object) -> str:
+    def ensure_display_tag(self, image: str, version: str, created: object, *, role="test") -> str:
         return ensure_display_tag(
             self._run, image, version, created,
-            lambda message: ImageError("IMAGE_REFUSED", message),
+            lambda message: ImageError("IMAGE_REFUSED", message), role=role,
         )
+
+    def mark_production_image(self, image: str) -> str:
+        return set_display_role(self._run, image, "prod", lambda message: ImageError("IMAGE_REFUSED", message))
 
     def _current(self, identity: ImageIdentity, *, use_packaged_assets: bool = False):
         if self.identity(use_packaged_assets=use_packaged_assets) != identity:
@@ -453,7 +452,7 @@ class ImageManager:
         identity = self.identity(use_packaged_assets=use_packaged_assets)
         if explicit_id is not None:
             image = explicit_id
-            created = self._inspect_details(explicit_id, identity)
+            created, tags = self._inspect_details(explicit_id, identity)
         else:
             raw = self._run(("docker", "image", "ls", "--all", "--quiet", "--no-trunc",
                              "--filter", f"label={SCHEMA_LABEL}={SCHEMA}",
@@ -463,22 +462,25 @@ class ImageManager:
                 raise ImageError("IMAGE_REFUSED", "Matching local image identity is invalid or ambiguous")
             if ids:
                 image = next(iter(ids))
-                created = self._inspect_details(image, identity)
+                created, tags = self._inspect_details(image, identity)
             elif build_if_missing:
                 self._current(identity, use_packaged_assets=use_packaged_assets)
                 return self._build(identity, use_packaged_assets=use_packaged_assets)
             else:
                 raise ImageError("IMAGE_REFUSED", "No matching local runtime image is present; build is disabled")
         self._current(identity, use_packaged_assets=use_packaged_assets)
-        self.ensure_display_tag(image, identity.version, created)
+        try:
+            production = any(display_image_tag(identity.version, created, image, role="prod", compact=compact) in tags
+                             for compact in (False, True))
+        except ValueError as error:
+            raise ImageError("IMAGE_REFUSED", "Display tag metadata is invalid") from error
+        self.ensure_display_tag(image, identity.version, created, role="prod" if production else "test")
         return image
 
     def _build(self, identity: ImageIdentity, *, use_packaged_assets: bool) -> str:
         """Build one image, then add its inspect-derived display tag if safe."""
         self._current(identity, use_packaged_assets=use_packaged_assets)
         try:
-            # Retain one private attempt as build evidence.  Cleanup must never
-            # mask a build result or retry a denied directory deletion.
             parent = self._build_parent()
             attempt = Path(tempfile.mkdtemp(prefix="anechoic-runtime-image-", dir=parent))
             attempt.chmod(0o700)
@@ -513,7 +515,7 @@ class ImageManager:
                 raise ValueError("immutable builder identity is invalid")
         except (OSError, ValueError, UnicodeError) as error:
             raise ImageError("BUILD_FAILED", "Builder did not capture one immutable sha256 image ID") from error
-        created = self._inspect_details(image, identity, code="BUILD_FAILED", built=True)
+        created, _ = self._inspect_details(image, identity, code="BUILD_FAILED", built=True)
         self.ensure_display_tag(image, identity.version, created)
         self._current(identity, use_packaged_assets=use_packaged_assets)
         self._verify_context(context, identity)
@@ -570,7 +572,6 @@ class ImageManager:
                     if ignore_finder and name == ".DS_Store" and not path.is_symlink() and path.is_file():
                         continue
                     if relative not in expected or path.is_symlink() or not path.is_file():
-                        # Reject an unadmitted name before any content read.
                         raise self._input_error()
                     row = expected[relative]
                     if (hashlib.sha256(path.read_bytes()).hexdigest() != row.sha256

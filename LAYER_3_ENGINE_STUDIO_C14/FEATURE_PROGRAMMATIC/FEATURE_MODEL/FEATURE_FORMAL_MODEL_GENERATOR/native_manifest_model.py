@@ -34,7 +34,6 @@ _REVIEWED_CHECKS = {
 
 
 def _native_imports(claim):
-    # The approved bytes predate the Engine package rename.
     claim = claim.replace("from caprmedio.formal_claims import ", "from anechoic.formal_claims import ")
     return claim.replace("from caprmedio.model import ", "from anechoic.model import ")
 
@@ -164,6 +163,12 @@ class _NativeModel:
         if has_supplied_ref and supplied_ref != instance.ref_id:
             raise ValueError("ref_id: supplied value differs from derived Ref ID")
         return instance
+
+    @property
+    def ticket_labels(self):
+        ticket = self._types.get("Ticket Atom")
+        label = getattr(ticket, "__dataclass_fields__", {}).get("label")
+        return tuple(label.metadata.get("allowed_values", ())) if label is not None else ()
 
     def validate_manifest(self, fields, component_id):
         if component_id != "C00":

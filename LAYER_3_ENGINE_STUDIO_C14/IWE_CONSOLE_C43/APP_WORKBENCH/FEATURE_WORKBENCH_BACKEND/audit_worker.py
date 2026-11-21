@@ -1,4 +1,3 @@
-# CA-M-465@29
 """Compute source diagnostics away from the query and lifecycle response path."""
 from __future__ import annotations
 

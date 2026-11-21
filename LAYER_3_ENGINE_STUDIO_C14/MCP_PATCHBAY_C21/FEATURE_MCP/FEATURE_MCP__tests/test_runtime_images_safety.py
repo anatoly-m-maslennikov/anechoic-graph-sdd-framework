@@ -1,6 +1,5 @@
 """Bounded process output and known credential-store image negatives."""
 
-# CA-E-265@25
 
 from __future__ import annotations
 

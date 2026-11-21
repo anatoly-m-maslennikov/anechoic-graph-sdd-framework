@@ -1,5 +1,3 @@
-# CA-M-500@12
-# CA-D-672@22
 
 """Retain literal Header declaration contributions between source deltas."""
 

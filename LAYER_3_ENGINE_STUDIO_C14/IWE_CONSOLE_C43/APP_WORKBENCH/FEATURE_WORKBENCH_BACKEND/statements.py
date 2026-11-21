@@ -1,5 +1,3 @@
-# CA-R-2729@8
-# CA-D-673@15
 
 """Validate caret metadata while DuckDB admits one complete query."""
 

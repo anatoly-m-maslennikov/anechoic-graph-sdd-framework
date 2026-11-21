@@ -92,9 +92,6 @@ def admit_layout_subject_recoding(
     parts = _frontmatter(original)
     if parts is None or metadata(original).get('content_role') not in ('Requirement', 'Method', 'Delivery'):
         raise ValueError('layout_subject recoding requires an R/M/D Carrier with complete frontmatter')
-    # The candidate Markdown, paired with untouched original frontmatter, is a
-    # virtual proof object.  It is never emitted as an output or admitted for a
-    # write, so the only candidate is the real final carrier above.
     layout_text = parts[0] + markdown(output['text'])
     layout = admit_layout_preview(proposal['source'], original, layout_text,
                                   section_mapping=section_mapping)
@@ -104,10 +101,6 @@ def admit_layout_subject_recoding(
             or proposal.get('after_summary') != _summary(output['text'])):
         raise ValueError('declared Summary must preserve the exact legacy title value')
 
-    # The dependency comparator strips just DEPENDS_ON on each side.  The
-    # established identity gate then byte-checks the remaining frontmatter and
-    # body, including ID, Version, GOVERNS, every other relation/property, and
-    # optional ordinary role-echo Type/path recoding.
     stripped_old, stripped_new = _dependency_change(layout_text, output['text'])
     stripped_output = dict(output, text=stripped_new)
     removes_type = 'type' in metadata(layout_text) and 'type' not in metadata(output['text'])

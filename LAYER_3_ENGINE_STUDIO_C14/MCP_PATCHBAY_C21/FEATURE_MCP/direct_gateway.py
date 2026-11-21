@@ -1,9 +1,3 @@
-# CA-D-672@24
-# CA-R-3013@2
-# CA-M-506@8
-# CA-M-1008@1
-# CA-M-512@2
-# CA-M-517@1
 
 """In-process MCP gateway for the Project-owned Workbench."""
 
@@ -247,7 +241,6 @@ class DirectGateway:
         return self.server
 
     async def serve(self):
-        # The transport must capture the wire before Python output is redirected.
         async with stdio_server() as streams:
             with redirect_stdout(sys.stderr):
                 try:

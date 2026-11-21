@@ -1,5 +1,3 @@
-# CA-E-677@30
-# CA-E-821@2
 """Authority-root discovery is independent of declared Scope membership."""
 
 from __future__ import annotations

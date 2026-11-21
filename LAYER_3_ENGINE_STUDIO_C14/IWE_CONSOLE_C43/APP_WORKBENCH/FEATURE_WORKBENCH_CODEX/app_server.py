@@ -1,6 +1,3 @@
-# CA-R-2791@1
-# CA-M-475@1
-# CA-D-680@1
 
 """Small JSON-RPC stdio client for the installed Codex app-server."""
 

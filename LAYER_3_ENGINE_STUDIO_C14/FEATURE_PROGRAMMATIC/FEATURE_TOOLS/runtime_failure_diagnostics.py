@@ -1,5 +1,3 @@
-# CA-M-396@17
-# CA-M-462@14
 
 """Shared technical diagnostic facade for public runtime failures."""
 

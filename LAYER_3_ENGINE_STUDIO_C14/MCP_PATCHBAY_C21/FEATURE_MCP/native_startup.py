@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-import json
 import os
 from pathlib import Path
-import re
 
 from native_carrier_header import native_header_view
 from native_project_selection import manifest_sources, resolve_native_project
@@ -82,32 +80,13 @@ def select_runtime_project(project_root, control_root=None, *, validate_manifest
 
 
 def load_native_inputs(selection, *, model=None):
-    """Bind the reviewed Model and the migration's existing alias-map format."""
+    """Bind the reviewed native Model."""
     from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.native_manifest_model import load_native_model
     from native_query import NativeQueryInputs
 
     if model is None:
         model = load_native_model()
-    alias_path = selection.control_root / "_migration" / "native-aliases.json"
-    aliases = ()
-    if os.path.lexists(alias_path):
-        reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
-        try:
-            rows = json.loads(reader.read(alias_path))
-            if not isinstance(rows, list) or any(
-                not isinstance(row, list) or len(row) != 3
-                or row[0] is not None and not isinstance(row[0], str)
-                or not isinstance(row[1], str) or not isinstance(row[2], str)
-                for row in rows
-            ):
-                raise ValueError("Expected legacy reference, original path, and native exact reference rows")
-            if reader.currentness()["state"] != "unchanged":
-                raise ValueError("Native alias map changed during startup")
-        except (OSError, RuntimeError, ValueError) as error:
-            raise ProjectSelectionError("Native alias map is unavailable, invalid, or unsafe") from error
-        aliases = tuple(map(tuple, rows))
-    elif os.path.lexists(selection.root / ".anechoic_legacy"):
-        raise ProjectSelectionError("The migrated Project requires its verified native alias map")
-    return NativeQueryInputs(model.validate_manifest, model.relation_types, model.inverses, aliases,
+    return NativeQueryInputs(model.validate_manifest, model.relation_types, model.inverses,
                              require_atom_state=model.requires_atom_state,
-                             require_atom_header=model.requires_atom_header)
+                             require_atom_header=model.requires_atom_header,
+                             ticket_labels=model.ticket_labels)

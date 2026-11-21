@@ -1,4 +1,3 @@
-# CA-D-613@20
 
 """Concrete Git, PR and subprocess boundary for one public release."""
 

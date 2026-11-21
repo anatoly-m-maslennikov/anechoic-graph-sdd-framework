@@ -1,11 +1,3 @@
-# CA-D-282@26
-# CA-D-283@34
-# CA-D-296@33
-# CA-D-461@33
-# CA-D-475@28
-# CA-D-466@27
-# CA-D-565@28
-# CA-D-716@4
 
 """Private derivation of a single admitted Atom's Markdown Carrier path.
 
@@ -54,7 +46,6 @@ def _token(value: str) -> str:
 
 
 def _slug(summary: str) -> str:
-    # Refuse cases whose transliteration is not specified by CA-D-282.
     if not isinstance(summary, str) or not summary.isascii() or not summary.isprintable():
         raise PlacementError("Unsupported Summary serialization")
     slug = re.sub(r"[^A-Za-z0-9]+", "-", summary).strip("-").lower()
@@ -66,7 +57,6 @@ def _slug(summary: str) -> str:
 def _inside(path: Path, root: Path) -> Path:
     if not path.is_absolute() or ".." in path.parts or not path.is_relative_to(root):
         raise PlacementError("Carrier context is outside the selected Project")
-    # Existing symlinks must not redirect a derived destination.
     if path.resolve(strict=False) != path:
         raise PlacementError("Carrier context traverses a symlink")
     return path
@@ -204,7 +194,6 @@ def _archive_destination(root, role_root, parent, role, atom_id, version, source
     model = active_placement()
     if source.parent != _status_directory(role_root, role, old_state, parent):
         raise PlacementError("Predecessor Status does not match its location")
-    # Preserve the actual old components, without normalizing legacy names.
     match = re.fullmatch(r"((?:[1-9][0-9]*-)?)" + re.escape(atom_id) + r"(?!@)(.*)\.md", source.name)
     if not match:
         raise PlacementError("Unsupported predecessor filename")

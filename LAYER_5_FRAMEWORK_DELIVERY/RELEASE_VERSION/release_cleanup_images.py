@@ -1,6 +1,5 @@
 """Remove only verified unused Project-owned noncandidate runtime images."""
 
-# CA-D-564@20
 
 import json
 import os

@@ -8,8 +8,8 @@ context:
   lens: SPEC
 state:
   status: "active"
-  version: 6
-  updated_at: "2026-11-21T10:04:49.140352+00:00"
+  version: 7
+  updated_at: "2026-11-21T15:48:18+00:00"
 ---
 
 ## Summary
@@ -43,24 +43,27 @@ Preserve previous authored values in the migration evidence.
 
 ### Ticket containment
 
-A Ticket can act as a Container. An Epic can own Tasks, Epics, and Work
-Reports. A Task can own Tasks and Assets such as Work Logs, Analysis
-Reports, and Spec Proposals. TKT Assets holds unbound Assets. A Work
-Report bound to an Epic goes in `ASSETS/` in that Epic's companion folder.
+A planning Ticket uses the Task Template and can contain planning Tickets
+and Assets at every depth. Place new bound Assets in `ASSETS/` in the
+owning Ticket's companion folder. TKT Assets holds unbound Assets.
 
-Store `Subtask` for a Task under a Task and `Sub-epic` for an Epic under
-an Epic. These labels apply at each depth. The authored Template stays
-Task or Epic. Workbench and the derived filename use the Label for
-navigation.
+The Label is for navigation in Workbench and derived filenames. AN-S-3176
+declares its vocabulary. Default to `Subtask` for a Task under a Task and
+`Sub-epic` for an Epic under an Epic. An explicit Label takes precedence.
 
-Changing a Ticket preserves its containment tree at every depth. Move
-its companion folder with the Ticket when its path changes.
+Changing a planning Ticket preserves its containment tree at every depth.
+Move its companion folder with the Ticket when its path changes.
+
+Promote its contained planning Tickets recursively when it moves from
+Draft to Backlog or Active, or from Backlog to Active. Promote only lower
+statuses. Preserve Assets, terminal statuses, and unpublished revisions
+of Tickets that already have a Current carrier.
 
 When a Ticket becomes Done or Canceled, cancel every Current descendant
 whose Status is neither Done nor Canceled. Preserve the Status, Version,
 and history of the other descendants.
 
-Reopening a Done or Canceled Epic makes the Epic Active. Its descendants
+Reopening a Done or Canceled planning Ticket makes it Active. Its descendants
 keep their current Status, Version, history, and containment.
 
 ### Content

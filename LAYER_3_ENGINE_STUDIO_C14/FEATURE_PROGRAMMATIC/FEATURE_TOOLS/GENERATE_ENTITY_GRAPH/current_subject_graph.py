@@ -413,9 +413,6 @@ def compose_narrowing_graph(carriers: list[Record]) -> tuple[Record, Record]:
             return False
         kind = _target_kind(right)
         if kind in {"property", "instance", "relation"}:
-            # These are explicit component contracts, not Primary Nodes. The
-            # contract catalog retains them; the narrowing tree has nothing to
-            # render and must not manufacture a composition edge or diagnostic.
             return True
         if kind != "primary_node":
             return False
@@ -611,7 +608,6 @@ def compose_narrowing_graph(carriers: list[Record]) -> tuple[Record, Record]:
             exact_class = matches is not None
             if not exact_class:
                 matches = symbols.get(python_name(base), [])
-            # The immediate qualified Topic parent disambiguates repeated Form names.
             try:
                 parsed = notation.parse_subject_expression(target, subject_profile="approved").expression
                 if isinstance(parsed, notation.Path) and parsed.steps:
@@ -760,7 +756,6 @@ def _enhanced_categories(
                 continue
             kind = _target_kind(expression)
             if kind is None:
-                # A Relation chain is not one Node declaration target.
                 continue
             assert isinstance(expression, notation.Path)
             target = _model_target(expression)

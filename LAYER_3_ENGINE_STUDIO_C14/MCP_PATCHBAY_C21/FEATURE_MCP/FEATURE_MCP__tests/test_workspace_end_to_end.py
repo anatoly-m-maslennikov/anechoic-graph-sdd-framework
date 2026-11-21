@@ -1,8 +1,3 @@
-# CA-E-684@7
-# CA-D-681@9
-# CA-E-781@1
-# CA-D-696@1
-# CA-E-819@1
 
 """Real MCP and HTTP boundary proof for Workspace Views."""
 
@@ -46,7 +41,6 @@ from test_native_startup import RuntimeSelectionTests, native_fixture_gateway  #
 
 class WorkspaceEndToEndTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self) -> None:
-        # This suite exercises transports; native watcher coverage runs in Docker.
         observer = patch("APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_watcher.NativeObserver", PollingObserver)
         observer.start()
         self.addCleanup(observer.stop)

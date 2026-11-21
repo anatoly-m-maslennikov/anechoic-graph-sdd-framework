@@ -5,10 +5,10 @@ from __future__ import annotations
 import json
 
 try:
-    from .image_metadata import display_image_tag
+    from .image_metadata import OCI_VERSION_LABEL, display_image_tag
     from .image_reference import IMMUTABLE_IMAGE
-except ImportError:  # direct execution/import with docker/ on sys.path
-    from image_metadata import display_image_tag
+except ImportError:
+    from image_metadata import OCI_VERSION_LABEL, display_image_tag
     from image_reference import IMMUTABLE_IMAGE
 
 
@@ -46,10 +46,10 @@ def _state(run, tag: str, refused):
         raise refused("Display tag inventory is invalid") from error
 
 
-def ensure_display_tag(run, image: str, version: str, created: object, refused) -> str:
+def ensure_display_tag(run, image: str, version: str, created: object, refused, *, role="test") -> str:
     """Add one display tag only when its Docker binding remains exact."""
     try:
-        tag = display_image_tag(version, created, image)
+        tag = display_image_tag(version, created, image, role=role)
     except ValueError as error:
         raise refused("Display tag metadata is invalid") from error
     existing = _state(run, tag, refused)
@@ -60,4 +60,35 @@ def ensure_display_tag(run, image: str, version: str, created: object, refused) 
     run(("docker", "image", "tag", image, tag), code="BUILD_FAILED")
     if _state(run, tag, refused) != image:
         raise refused("Docker did not retain the requested display tag")
+    return tag
+
+
+def set_display_role(run, image: str, role: str, refused) -> str:
+    if not isinstance(image, str) or IMMUTABLE_IMAGE.fullmatch(image) is None:
+        raise refused("Display role requires an immutable image ID")
+    if role not in ("test", "prod"):
+        raise refused("Display role must be test or prod")
+    try:
+        row, = json.loads(run(("docker", "image", "inspect", image)), object_pairs_hook=_unique_object)
+        version = row["Config"]["Labels"][OCI_VERSION_LABEL]
+        created = row["Created"]
+        tags = row.get("RepoTags") or []
+        if row["Id"] != image or not isinstance(tags, list) or any(not isinstance(tag, str) for tag in tags):
+            raise ValueError("image identity or tags differ")
+        previous = [display_image_tag(version, created, image, role=old_role, compact=True)
+                    for old_role in (None, role)]
+        if role == "prod":
+            previous.extend(display_image_tag(version, created, image, role="test", compact=compact)
+                            for compact in (False, True))
+        elif any(display_image_tag(version, created, image, role="prod", compact=compact) in tags
+                 for compact in (False, True)):
+            raise ValueError("image already carries its production tag")
+    except (AttributeError, KeyError, TypeError, ValueError) as error:
+        raise refused("Display role image metadata is invalid") from error
+    tag = ensure_display_tag(run, image, version, created, refused, role=role)
+    for obsolete in previous:
+        if obsolete in tags:
+            if _state(run, obsolete, refused) != image:
+                raise refused("Previous display tag changed before removal")
+            run(("docker", "image", "rm", obsolete), code="IMAGE_REFUSED")
     return tag

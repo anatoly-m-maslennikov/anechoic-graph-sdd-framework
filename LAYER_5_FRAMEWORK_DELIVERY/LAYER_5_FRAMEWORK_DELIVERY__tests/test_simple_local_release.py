@@ -1,6 +1,5 @@
 """The concrete Local release flow, without running Docker or installing packages."""
 
-# CA-E-573@19
 
 from __future__ import annotations
 
@@ -101,7 +100,8 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         write_tool_registry_generator(mcp)
         self.image_id = "sha256:" + "a" * 64
         self.image = SimpleNamespace(resolve=Mock(return_value=self.image_id),
-                                     identity=Mock(return_value=SimpleNamespace(fingerprint="b" * 64)))
+                                     identity=Mock(return_value=SimpleNamespace(fingerprint="b" * 64)),
+                                     mark_production_image=Mock())
         original_launcher_image = local_release._launcher_image
 
         def scoped_launcher_image(selection):
@@ -187,6 +187,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             result = run_local_release(self.root, run_id="native-release", runner=runner)
         self.native_assets.assert_called_once()
         self.assertEqual("completed", result["outcome"], result)
+        self.image.mark_production_image.assert_called_once_with(self.image_id)
         self.assertTrue(all(call.args[0].manifest_ref == "AN-S-001@1" for call in select.call_args_list))
         test_argv = next(call for call in calls if any(arg.endswith("run_full_test_suite.py") for arg in call))
         self.assertEqual(("--image-mode", "existing"), test_argv[-2:])
@@ -195,6 +196,14 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         product_sources = self.product / "SUPERLAYER_1_METHODOLOGY_SOURCES"
         for relative, source in self._native_sources().items():
             self.assertEqual(source.read_bytes(), (product_sources / relative).read_bytes())
+
+    def test_production_tag_failure_keeps_successful_deployment(self):
+        self.image.mark_production_image.side_effect = local_release.ImageError("tag unavailable")
+        runner, _ = self._runner()
+        result = run_local_release(self.root, run_id="tag-failed", runner=runner)
+        self.assertEqual("completed_with_cleanup_pending", result["outcome"])
+        self.assertIn("Production image display tag failed: Runtime image operation failed",
+                      (self.root / result["receipt_path"]).read_text())
 
     def test_native_manifest_change_stops_before_product_replacement(self):
         runner, _ = self._runner()

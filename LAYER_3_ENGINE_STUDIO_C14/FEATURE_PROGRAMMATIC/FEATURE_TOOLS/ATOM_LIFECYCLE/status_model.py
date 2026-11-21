@@ -1,9 +1,3 @@
-# CA-M-551@2
-# CA-R-1308@27
-# CA-R-1521@34
-# CA-R-1539@25
-# CA-R-1608@23
-# CA-R-2696@3
 
 """Build and load a bounded, source-bound Atom Status declaration asset."""
 from __future__ import annotations

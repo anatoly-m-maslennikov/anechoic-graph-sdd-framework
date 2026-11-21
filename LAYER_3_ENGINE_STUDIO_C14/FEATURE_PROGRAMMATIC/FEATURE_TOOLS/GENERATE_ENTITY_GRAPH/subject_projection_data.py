@@ -118,8 +118,6 @@ def _resolve_property_formats(properties: list[Record], entries: list[Record]) -
             if applies:
                 matches.append(clause)
         if not matches and property.get("applicable_entity_classes"):
-            # The legacy extractor does not interpret the Current double-colon
-            # recursive format. Retain its source for native scoped properties.
             for entry in entries:
                 for block in entry["cfel_blocks"]:
                     for match in re.finditer(
@@ -144,8 +142,6 @@ def _resolve_property_formats(properties: list[Record], entries: list[Record]) -
         if unresolved:
             continue
         matches = resolved
-        # R2632's native str replaces its legacy string for these two
-        # immediate children. Keep other native formats and source text intact.
         authority_modes = "Project.Settings.Authority Modes"
         authority_children = {authority_modes + ".Default Scope Unit Authority Mode",
                               authority_modes + ".Project Authority Mode"}

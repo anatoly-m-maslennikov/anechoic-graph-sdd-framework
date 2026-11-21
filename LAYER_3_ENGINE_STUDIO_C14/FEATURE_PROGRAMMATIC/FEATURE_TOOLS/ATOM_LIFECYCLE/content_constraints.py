@@ -1,4 +1,3 @@
-# CA-O-10002@2
 
 """Compile finite Content constraints from Current formal declarations."""
 from __future__ import annotations

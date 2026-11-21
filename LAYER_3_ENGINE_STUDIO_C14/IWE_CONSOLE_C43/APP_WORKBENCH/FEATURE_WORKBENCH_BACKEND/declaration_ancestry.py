@@ -1,4 +1,3 @@
-# CA-M-500@12
 """Compile the literal named ancestry needed by the Atom schema projection.
 
 This is deliberately not a CFEL evaluator. Inputs are already extracted Formal
@@ -68,7 +67,6 @@ def _path(text: str) -> tuple[list[tuple[str, str, str]], str] | None:  # noqa: 
             return None
         name = m.group(1).strip()
         if name.startswith('$'):
-            # Variables denote populations, not reusable names, and must end the path.
             if '/' in text[pos + m.end():]:
                 return None
             pos += m.end()
@@ -198,7 +196,6 @@ def compile_ancestry(statements: Iterable[tuple[str, S]]) -> tuple[ProjectedStat
                     if owner == source and selected_forms == frozenset({form}):
                         roles = _intersect(roles, allowed)
             except ValueError:
-                # Existing direct-declaration validation reports unsupported selectors.
                 pass
         result.append(ProjectedStatement(statement, source, roles=roles, provenance=(source,), original_statement=statement))
 

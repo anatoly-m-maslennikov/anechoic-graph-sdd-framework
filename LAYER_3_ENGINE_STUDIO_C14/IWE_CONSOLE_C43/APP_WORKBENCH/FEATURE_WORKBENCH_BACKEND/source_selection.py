@@ -1,4 +1,3 @@
-# CA-M-464@15
 """Keep the first readable carrier of each Atom reference."""
 
 from __future__ import annotations

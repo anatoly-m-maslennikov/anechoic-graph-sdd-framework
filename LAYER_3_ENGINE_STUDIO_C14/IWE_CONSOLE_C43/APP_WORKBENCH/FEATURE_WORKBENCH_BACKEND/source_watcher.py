@@ -1,6 +1,3 @@
-# CA-M-465@29
-# CA-M-490@3
-# CA-D-695@3
 
 """Translate native selected-source watcher callbacks into Workbench changes."""
 
@@ -19,7 +16,7 @@ try:
     from watchdog.observers import Observer
     from watchdog.observers.polling import PollingObserverVFS
     NativeObserver = Observer
-except ImportError:  # Tests can inject an Observer without an installed runtime dependency.
+except ImportError:
     FileSystemEventHandler = object  # type: ignore[assignment,misc]
     NativeObserver = None
 
@@ -60,7 +57,6 @@ class SourceWatcher:
         factory = self._observer_factory or NativeObserver
         if factory is None:
             raise RuntimeError("watchdog runtime is unavailable")
-        # Docker bind mounts can misclassify directories and exhaust watcher threads.
         observer = PollingObserverVFS(os.lstat, self._source_entries) if self._poll_bind_mount else factory()
         try:
             for path in self._roots:
@@ -219,7 +215,6 @@ class _Handler(FileSystemEventHandler):
         self._watcher = watcher
 
     def on_created(self, event: Any) -> None:
-        # Docker bind mounts can report a directory as a file.
         if event.is_directory or Path(event.src_path).is_dir():
             self._watcher._watch_directory_tree(event.src_path)
         self._watcher._created(event.src_path)

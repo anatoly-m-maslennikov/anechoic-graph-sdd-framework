@@ -1,5 +1,3 @@
-# CA-E-812@3
-# CA-E-813@2
 """Focused shared-MCP routing checks; native behavior remains a fixture."""
 
 from __future__ import annotations

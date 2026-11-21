@@ -40,14 +40,12 @@ def route(state, slots=1, active=()):
 
 
 def acknowledge(result, slots=1):
-    # Simulate the caller's acknowledged canonical JSON, not filesystem durability.
     state = json.loads(json.dumps(result["checkpoint"]))
     return next_action(state, durable_sha256=result["checkpoint_sha256"],
                        available_slots=slots)
 
 
 def verify(item):
-    # Trusted caller fixture only: the router must still request real closure gates.
     item.update(stage="verified", evidence=[pin(f"reports/{item['ordinal']}.json")])
 
 
@@ -142,7 +140,6 @@ class ContinuationTests(unittest.TestCase):
                 self.assertEqual(waiting["action"], "wait_for_slot")
                 self.assertEqual(waiting["reason"], state["blocker"])
                 self.assertEqual(route(state)["action"], "blocked")
-                # The caller records actual worker completion before clearing refusal.
                 state["host_events"] = [{"kind": "worker_completed", "ordinal": 1,
                                          "previous_denial": deepcopy(state["blocker"])}]
                 verify(state["items"][0])

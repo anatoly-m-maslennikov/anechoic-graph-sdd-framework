@@ -1,14 +1,3 @@
-# CA-D-718@2
-# CA-D-721@1
-# CA-M-396@17
-# CA-R-2902@2
-# CA-R-2903@2
-# CA-D-681@4
-# CA-R-2952@5
-# CA-D-696@1
-# CA-M-506@2
-# CA-D-673@18
-# CA-D-674@26
 
 """Small HTTP representation of the shared Project Workbench connector."""
 

@@ -465,9 +465,6 @@ class ScopeExtractionRepairGateTests(unittest.TestCase):
 
     def test_requires_a_real_depends_on_delta_and_exact_scope_evidence(self):
         data = fixture()
-        # The synthetic original report retains its explicit Subjects finding,
-        # but both fully rebound carriers now contain the same dependency. This
-        # reaches the comparator rather than relying on a stale final binding.
         for part in data['evaluation']['parts']:
             for row in part['checks']:
                 if row['id'] == 'subjects':

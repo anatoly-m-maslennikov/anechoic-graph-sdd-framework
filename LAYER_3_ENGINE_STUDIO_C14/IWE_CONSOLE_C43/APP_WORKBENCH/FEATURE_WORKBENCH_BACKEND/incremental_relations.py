@@ -1,7 +1,3 @@
-# CA-R-2724@5
-# CA-M-465@29
-# CA-M-509@7
-# CA-D-672@22
 
 """Copy-on-write relation materialization for an incremental source batch."""
 
@@ -321,8 +317,6 @@ def materialize_delta(  # noqa: C901
     changed_paths = set(changes)
     changed_facts: set[tuple] = set()
     touched_refs: set[str] = set()
-    # A carrier rename retains its reference. Remove every old source fact
-    # before any replacement fact can use that reference.
     for path in changes:
         old = raw.get(path)
         if old is not None and old.get("ref") is not None and refs.get(old["ref"]) == path:

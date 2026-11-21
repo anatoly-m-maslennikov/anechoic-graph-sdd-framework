@@ -1,4 +1,3 @@
-# CA-E-804@5
 
 """Tool registry generation must succeed before building the release image."""
 

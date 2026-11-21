@@ -1,7 +1,3 @@
-# CA-R-2726@9
-# CA-M-500@8
-# CA-M-509@5
-# CA-D-672@14
 
 """Narrow literal-CFEL primitives shared by declared Content and Header schemas."""
 

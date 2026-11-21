@@ -1,6 +1,5 @@
 """Observe build provenance from the owning Project, never the copied package."""
 
-# CA-D-562@25
 
 from collections.abc import Mapping
 from pathlib import Path

@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Mapping, Set
 from hashlib import sha256
 import json
-from pathlib import PurePosixPath, PureWindowsPath
+from pathlib import PurePosixPath
 import re
 from typing import Any
 
@@ -27,32 +27,6 @@ def _relation_bindings(relation_types, inverses):
     if "CONTAINED_BY" not in inverse:
         raise ValueError("Native containment requires a declared inverse")
     return inverse
-
-
-def _migration_rows(rows, migration_refs):
-    exact_refs = {row["_exact_ref"] for row in rows}
-    if len(exact_refs) != len(rows):
-        raise ValueError("Duplicate native exact references")
-    legacy = []
-    paths = {}
-    seen = set()
-    for old_ref, original_path, target_ref in migration_refs:
-        path = PurePosixPath(original_path)
-        if (path.is_absolute() or PureWindowsPath(original_path).drive or "\\" in original_path
-                or "\x00" in original_path or ".." in path.parts or path.suffix != ".md"
-                or original_path != path.as_posix() or target_ref not in exact_refs):
-            raise ValueError("Invalid native migration path or exact reference")
-        if paths.setdefault(original_path, target_ref) != target_ref:
-            raise ValueError(f"Conflicting exact references for native migration path {original_path!r}")
-        if old_ref is None:
-            continue
-        key = old_ref, original_path
-        # A reviewed migration can assign a new version to a path-bound revision.
-        if not re.fullmatch(r"[A-Z]+-[A-Z]-[0-9]+@[1-9][0-9]*(?:-draft)?", old_ref) or key in seen:
-            raise ValueError("Invalid legacy migration reference")
-        seen.add(key)
-        legacy.append((old_ref, original_path, target_ref))
-    return legacy, list(paths.items())
 
 
 def _authored_edges(row):
@@ -151,7 +125,6 @@ def replace_component_metrics(connection, measurements) -> None:
 
 def project_native(store: QueryStore, capture: NativeCapture, *,
                    relation_types: Set[str], inverses: Mapping[str, str],
-                   migration_refs: Iterable[tuple[str | None, str, str]] = (),
                    component_ids: Iterable[str] = (),
                    use_retained: bool = False,
                    before_commit: Callable[[GraphState], None] | None = None) -> None:
@@ -163,11 +136,9 @@ def project_native(store: QueryStore, capture: NativeCapture, *,
     content_schema = _native_content_schema()
     component_refs = [("Component", cid) for cid in sorted(set(component_ids))]
     rows[0]["_graph_references"] = component_refs
-    legacy, paths = _migration_rows(rows, migration_refs)
     with store._lock:
         connection = store._connection
-        # Invalidate retained rows when the projection layout or inputs change.
-        frontier = _native_frontier(store, rows, relation_types, inverses, legacy, paths, component_refs)
+        frontier = _native_frontier(store, rows, relation_types, inverses, component_refs)
         retained = use_retained and connection.execute(
             "SELECT 1 FROM information_schema.tables "
             "WHERE table_catalog = current_database() AND table_schema = 'internal' AND table_name = 'native_frontier'"
@@ -181,7 +152,9 @@ def project_native(store: QueryStore, capture: NativeCapture, *,
                 connection.execute("DROP PROPERTY GRAPH IF EXISTS anechoic")
                 register_graph(connection, graph)
             else:
-                _write_references(connection, rows, legacy, paths)
+                _write_references(connection, rows)
+                connection.execute("DROP TABLE IF EXISTS main.native_legacy_references")
+                connection.execute("DROP TABLE IF EXISTS main.native_migration_paths")
                 _write_components(connection, rows)
                 connection.execute("CREATE TABLE internal.native_frontier(frontier VARCHAR NOT NULL)")
                 connection.execute("INSERT INTO internal.native_frontier VALUES (?)", [frontier])
@@ -192,10 +165,10 @@ def project_native(store: QueryStore, capture: NativeCapture, *,
                       reuse=retained, before_commit=finish)
 
 
-def _native_frontier(store, rows, relation_types, inverses, legacy, paths, component_refs):
+def _native_frontier(store, rows, relation_types, inverses, component_refs):
     return sha256(repr((
-        4, store._schema_mode, sorted(relation_types), sorted(inverses.items()),
-        sorted(legacy), sorted(paths), component_refs,
+        5, store._schema_mode, sorted(relation_types), sorted(inverses.items()),
+        component_refs,
         sorted((row["source_path"], row["_source_sha256"]) for row in rows),
     )).encode()).hexdigest()
 
@@ -218,14 +191,12 @@ def _native_content_schema():
 
 def project_native_delta(store: QueryStore, capture: NativeCapture, *, paths: set[PurePosixPath],
                          relation_types: Set[str], inverses: Mapping[str, str],
-                         migration_refs: Iterable[tuple[str | None, str, str]] = (),
                          component_ids: Iterable[str] | None = None,
                          before_commit: Callable[[GraphState], None] | None = None) -> bool:
     """Publish touched owners together, or request a full projection for a layout change."""
     if capture.errors or not capture.atoms:
         raise ValueError("Cannot project a native capture with invalid carriers")
     inverse = _relation_bindings(relation_types, inverses)
-    legacy, migration_paths = _migration_rows(capture.atoms, migration_refs)
     touched = {path.as_posix() for path in paths}
     changed_atoms = [row for row in capture.atoms if row["source_path"] in touched]
     changed_refs = {row["ref"] for row in changed_atoms}
@@ -263,10 +234,10 @@ def project_native_delta(store: QueryStore, capture: NativeCapture, *, paths: se
             return native_header_view(row["header_json"])["context"].get("template") == "component_manifest"
         components_changed = any(component_manifest(row) for row in [*old_changed.values(), *new_changed.values()])
         connection = store._connection
-        frontier = _native_frontier(store, capture.atoms, relation_types, inverses, legacy, migration_paths, component_refs)
+        frontier = _native_frontier(store, capture.atoms, relation_types, inverses, component_refs)
 
         def finish(graph):
-            _apply_native_tables(connection, old_changed, new_changed, capture.atoms, legacy, migration_paths,
+            _apply_native_tables(connection, old_changed, new_changed, capture.atoms,
                                  components_changed, frontier)
             if source_changed and before_commit is not None:
                 before_commit(graph)
@@ -276,20 +247,12 @@ def project_native_delta(store: QueryStore, capture: NativeCapture, *, paths: se
         return not store.schema_changed
 
 
-def _apply_native_tables(connection, old, new, rows, legacy, migration_paths, components_changed, frontier):
+def _apply_native_tables(connection, old, new, rows, components_changed, frontier):
     for row in old.values():
         connection.execute("DELETE FROM internal.native_exact_refs WHERE reference = ?", [row["ref"]])
     if new:
         connection.executemany("INSERT INTO internal.native_exact_refs VALUES (?, ?)",
                                [(row["ref"], row["_exact_ref"]) for row in new.values()])
-    if sorted(connection.execute("SELECT * FROM main.native_legacy_references").fetchall()) != sorted(legacy):
-        connection.execute("DELETE FROM main.native_legacy_references")
-        if legacy:
-            connection.executemany("INSERT INTO main.native_legacy_references VALUES (?, ?, ?)", legacy)
-    if sorted(connection.execute("SELECT * FROM main.native_migration_paths").fetchall()) != sorted(migration_paths):
-        connection.execute("DELETE FROM main.native_migration_paths")
-        if migration_paths:
-            connection.executemany("INSERT INTO main.native_migration_paths VALUES (?, ?)", migration_paths)
     if components_changed:
         _write_components(connection, rows)
     connection.execute("DELETE FROM internal.native_frontier")
@@ -313,7 +276,6 @@ def _write_components(connection, rows) -> None:
         try:
             fields, purpose = parse_component_manifest(source_markdown(row))
         except ValueError:
-            # Malformed manifests stay visible as Atoms but cannot supply Component fields.
             continue
         cid = fields.get("component_id")
         name, layer, lenses = fields.get("name"), fields.get("layer"), fields.get("lens_whitelist")
@@ -335,7 +297,7 @@ def _write_components(connection, rows) -> None:
         connection.executemany("INSERT INTO main.components VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", manifests)
 
 
-def _write_references(connection, rows, legacy, paths) -> None:
+def _write_references(connection, rows) -> None:
     connection.execute('''CREATE TABLE internal.native_exact_refs AS
                 SELECT unnest(?::VARCHAR[]) AS reference, unnest(?::VARCHAR[]) AS exact_ref''',
                        [[row["ref"] for row in rows], [row["_exact_ref"] for row in rows]])
@@ -344,12 +306,3 @@ def _write_references(connection, rows, legacy, paths) -> None:
                        CASE WHEN status_group = 'Current' THEN reference END AS stable_ref,
                        exact_ref
                 FROM main.atoms JOIN internal.native_exact_refs USING (reference)''')
-    connection.execute('''CREATE OR REPLACE TABLE main.native_legacy_references (
-                legacy_ref VARCHAR, original_path VARCHAR, exact_ref VARCHAR,
-                PRIMARY KEY (legacy_ref, original_path))''')
-    if legacy:
-        connection.executemany("INSERT INTO main.native_legacy_references VALUES (?, ?, ?)", legacy)
-    connection.execute('''CREATE OR REPLACE TABLE main.native_migration_paths (
-                original_path VARCHAR PRIMARY KEY, exact_ref VARCHAR NOT NULL)''')
-    if paths:
-        connection.executemany("INSERT INTO main.native_migration_paths VALUES (?, ?)", paths)

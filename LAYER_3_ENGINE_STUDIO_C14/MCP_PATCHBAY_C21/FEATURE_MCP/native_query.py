@@ -47,18 +47,15 @@ from work_journal import PROJECT_DATABASE, journal_storage, pending_database_jou
 
 @dataclass(frozen=True)
 class NativeQueryInputs:
-    """Trusted startup inputs from a compiled model and an optional migration map.
-
-    Omit a legacy reference with None when only the original path identifies a revision.
-    """
+    """Trusted startup inputs from the compiled native Model."""
 
     validate_manifest: Callable[[dict[str, object], str], ManifestIdentity]
     relation_types: frozenset[str]
     inverses: Mapping[str, str]
-    migration_refs: tuple[tuple[str | None, str, str], ...] = ()
     extension_directory: Path | None = None
     require_atom_state: bool = False
     require_atom_header: bool = False
+    ticket_labels: tuple[str, ...] = ()
 
 
 def create_native_gateway(root: Path, control_root: str, inputs: NativeQueryInputs):
@@ -76,7 +73,7 @@ LIFECYCLE_TOOLS = frozenset({
     "atom_lifecycle_archive", "atom_lifecycle_promote_draft", "atom_lifecycle_update",
 })
 ATOM_TABLES = frozenset({
-    "atoms", "relations", "native_references", "native_legacy_references", "native_migration_paths", "components",
+    "atoms", "relations", "native_references", "components",
 })
 REALIZATION_TABLES = frozenset({
     "import_nodes", "module_imports", "import_edges", "package_imports", "test_edges", "tested_by_edges",
@@ -191,7 +188,7 @@ class NativeQueryOwner(ServiceInterface):
             "SELECT node_key, kind, language, relative_path, scan_status, package_key, package_type FROM main.import_nodes"
         ).fetchall()
         tests = connection.execute("SELECT source_key, target_key FROM main.test_edges").fetchall()
-        replace_package_audit(connection, self.selection, capture, nodes, self._inputs.migration_refs,
+        replace_package_audit(connection, self.selection, capture, nodes,
                               binding_states, tests=tests)
         if atoms_only:
             measurements = refresh_spec_sizes(connection, capture, self.selection.project_prefix)
@@ -237,7 +234,7 @@ class NativeQueryOwner(ServiceInterface):
                     'FROM main.import_nodes').fetchall()
                 tests = connection.execute('SELECT source_key, target_key FROM main.test_edges').fetchall()
                 replace_package_audit(connection, self.selection, self._capture, nodes,
-                                      self._inputs.migration_refs, retained, tests=tests)
+                                      retained, tests=tests)
 
     def _watch_sources(self, store: QueryStore) -> None:
         assert self._watcher is not None
@@ -276,7 +273,6 @@ class NativeQueryOwner(ServiceInterface):
         changed = self._atom_source_paths(batch)
         if changed is not None and not changed:
             return pending
-        # Keep failed paths for the next Atom batch. None requests a rescan.
         pending = None if changed is None or pending is None else pending | changed
         try:
             self._capture = self._refresh_atom_sources(store, pending)
@@ -297,13 +293,10 @@ class NativeQueryOwner(ServiceInterface):
                 path = PurePosixPath(raw_path)
                 if not path.is_relative_to(control) or path.is_relative_to(generated):
                     continue
-                if (self._root / path).is_dir() or (key == "old_path" and any(
+                if path.suffix == ".md" or (self._root / path).is_dir() or (key == "old_path" and any(
                     raw_path != row["source_path"] and row["source_path"].startswith(raw_path + "/")
                     for row in self._capture.atoms
                 )):
-                    # A directory event may arrive without its child events.
-                    return None
-                if path.suffix == ".md":
                     files.add(path)
         return files
 
@@ -320,23 +313,19 @@ class NativeQueryOwner(ServiceInterface):
                     or selection.project_prefix != self.selection.project_prefix
                     or selection.manifest_ref.partition("@")[0] != self.selection.manifest_ref.partition("@")[0]):
                 raise ValueError("Project identity changed. Restart required.")
-            # Rebind the read projection. The gateway and write guards keep their startup selection.
             return capture_native(selection), selection
 
     def _refresh_atom_sources(self, store: QueryStore, paths: set[PurePosixPath] | None) -> NativeCapture:
         previous = self._capture
         capture, selection = self._capture_for_projection(paths)
-        if selection is not self._projection_selection:
-            paths = None
         if capture != previous:
-            if paths is None:
-                before = {row["source_path"]: row["_source_sha256"] for row in previous.atoms}
-                after = {row["source_path"]: row["_source_sha256"] for row in capture.atoms}
-                paths = {PurePosixPath(path) for path in before.keys() | after.keys()
-                         if before.get(path) != after.get(path)}
+            before = {row["source_path"]: row["_source_sha256"] for row in previous.atoms}
+            after = {row["source_path"]: row["_source_sha256"] for row in capture.atoms}
+            paths = {PurePosixPath(path) for path in before.keys() | after.keys()
+                     if before.get(path) != after.get(path)}
             if not project_native_delta(
                 store, capture, paths=paths, relation_types=self._inputs.relation_types,
-                inverses=self._inputs.inverses, migration_refs=self._inputs.migration_refs,
+                inverses=self._inputs.inverses,
                 component_ids=self._component_ids(),
                 before_commit=lambda graph: self._publish_realization_metadata(store, capture, atoms_only=True),
             ):
@@ -366,7 +355,7 @@ class NativeQueryOwner(ServiceInterface):
                 before_commit(graph, capture)
 
         project_native(store, capture, relation_types=self._inputs.relation_types, component_ids=self._component_ids(),
-                       inverses=self._inputs.inverses, migration_refs=self._inputs.migration_refs,
+                       inverses=self._inputs.inverses,
                        use_retained=use_retained, before_commit=finish)
         self._projection_selection = selection
         return capture
@@ -456,9 +445,31 @@ class NativeQueryOwner(ServiceInterface):
             raise
         self._store = store
 
-    def _refresh_after_write(self, store: QueryStore) -> None:
+    def _lifecycle_atom_paths(self, effects) -> set[PurePosixPath] | None:
+        changes = []
+        for effect in effects:
+            if not isinstance(effect, dict):
+                return None
+            operation, target = effect.get("operation"), effect.get("target")
+            if (operation not in ("create", "modify", "remove") or effect.get("state") != "known"
+                    or not isinstance(target, str) or not target):
+                return None
+            path = PurePosixPath(target)
+            if path.is_absolute() or ".." in path.parts:
+                return None
+            if effect.get("evidence") in ("directory", "directory created", "directory absent after removal"):
+                continue
+            key = "old_path" if operation == "remove" else "new_path"
+            changes.append({key: target})
+        return self._atom_source_paths(changes)
+
+    def _refresh_after_write(self, store: QueryStore, effects=None) -> None:
         try:
-            self._capture = self._project(store)
+            paths = self._lifecycle_atom_paths(effects) if effects is not None else None
+            if paths is None:
+                self._capture = self._project(store)
+            elif paths:
+                self._capture = self._refresh_atom_sources(store, paths)
         except Exception:
             self._capture = None
             with store._lock:
@@ -611,12 +622,13 @@ class NativeQueryOwner(ServiceInterface):
                 if name == "atom_lifecycle_direct_update":
                     outcome = direct_update(self.selection, arguments, current_rows=rows)
                 elif name in {"atom_lifecycle_create_draft", "atom_lifecycle_update"}:
-                    outcome = create_draft(self.selection, arguments, current_rows=rows, structure_snapshot=structure_snapshot)
+                    outcome = create_draft(self.selection, arguments, current_rows=rows,
+                                           structure_snapshot=structure_snapshot, ticket_labels=self._inputs.ticket_labels)
                 elif name == "atom_lifecycle_archive":
                     outcome = archive_ticket(self.selection, arguments, current_rows=rows)
                 elif name == "atom_lifecycle_promote_draft":
                     outcome = promote_draft(
-                        self.selection, arguments, current_rows=rows, migration_refs=self._inputs.migration_refs,
+                        self.selection, arguments, current_rows=rows,
                         structure_snapshot=structure_snapshot,
                     )
                 else:
@@ -636,7 +648,7 @@ class NativeQueryOwner(ServiceInterface):
                 }])
             if outcome.get("effects"):
                 try:
-                    self._refresh_after_write(store)
+                    self._refresh_after_write(store, outcome["effects"])
                 except Exception:
                     outcome["outcome"] = "failed"
                     outcome.setdefault("errors", []).append({

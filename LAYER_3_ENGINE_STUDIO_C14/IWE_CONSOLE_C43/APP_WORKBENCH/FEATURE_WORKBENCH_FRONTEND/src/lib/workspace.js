@@ -1,5 +1,5 @@
 // @ts-nocheck
-// CA-D-674@26
+
 const empty = () => ({ id: crypto.randomUUID(), title: 'View', sql: '', savedSql: '', cursor: 0, dirty: false });
 
 export function newView(number) {
@@ -60,7 +60,7 @@ export function workspaceTabs(state, previous = []) {
       ...(localAcknowledged ? { sql: local.sql, cursor: local.cursor, dirty: local.dirty, savedSql: local.savedSql, revision: Number.isInteger(local.revision) ? local.revision : view.revision, syncDirty: false } : {}),
       ...(local?.result && local.result.query_id === view.result?.query_id ? { result: local.result } : {}),
     };
-    // Keep a draft on the old revision so the next update reports, rather than hides, a conflict.
+
     return { ...remote, ...local, run: view.result, result: local.result?.query_id === view.result?.query_id ? local.result : undefined, serverSql: view.sql, serverRevision: view.revision };
   });
   return { tabs, activeId: state.active_view_id && tabs.some((tab) => tab.id === state.active_view_id) ? state.active_view_id : tabs[0]?.id };

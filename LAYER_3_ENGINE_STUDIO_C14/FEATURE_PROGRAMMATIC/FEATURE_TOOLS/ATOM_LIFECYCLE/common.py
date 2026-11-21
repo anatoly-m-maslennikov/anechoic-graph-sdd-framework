@@ -1,6 +1,3 @@
-# CA-M-1013@1
-# CA-O-10002@2
-# CA-D-625@14
 
 """Input and carrier helpers shared by the six Atom Lifecycle workflows."""
 

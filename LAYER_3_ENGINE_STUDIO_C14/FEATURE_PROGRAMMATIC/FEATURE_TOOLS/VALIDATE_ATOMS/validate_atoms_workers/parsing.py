@@ -1,4 +1,3 @@
-# CA-D-657@11
 
 """Reuse Carrier splitting and PyYAML's safe parser without constructing tags."""
 
@@ -82,7 +81,6 @@ def parse_carrier(raw: bytes, path: Path) -> ParsedCarrier:
     except CarrierError:
         raise
     except (UnicodeError, yaml.YAMLError, RuntimeError, ValueError) as error:
-        # Parser errors can include arbitrary input: do not expose their message.
         raise CarrierError(
             "CARRIER_INVALID", "Unreadable UTF-8 or malformed frontmatter."
         ) from error

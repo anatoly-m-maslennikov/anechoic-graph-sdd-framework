@@ -1,5 +1,3 @@
-# CA-R-2902@4
-# CA-D-681@9
 
 """Read-only MCP Apps compatibility probe, served by the existing MCP gateway."""
 

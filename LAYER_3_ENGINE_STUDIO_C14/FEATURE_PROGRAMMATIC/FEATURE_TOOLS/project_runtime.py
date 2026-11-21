@@ -1,4 +1,3 @@
-# CA-M-422@13
 
 """Shared ANECHOIC runtime and temporary-path boundaries."""
 

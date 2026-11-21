@@ -1,4 +1,3 @@
-# CA-E-814@1
 
 """Exercise the Codex command-hook boundary without an installed plugin."""
 

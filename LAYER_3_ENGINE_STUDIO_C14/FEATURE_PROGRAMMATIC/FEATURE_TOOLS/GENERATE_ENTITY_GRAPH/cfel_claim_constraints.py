@@ -1064,10 +1064,6 @@ def extract_claim_constraints(carrier: Mapping[str, Any]) -> tuple[list[Record],
                                        value_format=None, value_cardinality=None))
                 continue
             property_constraint = _PROPERTY.fullmatch(expression)
-            # The direct-value form is a different constraint: the count applies
-            # to values per Property, not to Property occurrences.  Keep it out
-            # of the broader Property matcher, whose path token may otherwise
-            # absorb the colon.
             property_selector = _property_selector(property_constraint.group("property")) if property_constraint is not None else None
             if property_constraint is not None and property_selector is not None and not (
                 property_constraint.group("descendants") is None

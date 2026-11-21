@@ -1,10 +1,3 @@
-# CA-E-798@5
-# CA-E-810@3
-# CA-E-811@3
-# CA-E-812@3
-# CA-E-813@2
-# CA-E-814@1
-# CA-E-820@2
 
 """Functional registry generation and generic MCP Provider dispatch."""
 

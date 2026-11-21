@@ -1,6 +1,5 @@
 """Retire only inspected obsolete resources belonging to the selected Project."""
 
-# CA-D-562@25
 
 from pathlib import Path
 import re

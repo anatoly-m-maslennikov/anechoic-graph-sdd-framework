@@ -1,6 +1,3 @@
-# CA-E-600@21
-# CA-M-504@2
-# CA-E-796@4
 """Focused checks for bounded Docker stdout/stderr retention."""
 
 import json

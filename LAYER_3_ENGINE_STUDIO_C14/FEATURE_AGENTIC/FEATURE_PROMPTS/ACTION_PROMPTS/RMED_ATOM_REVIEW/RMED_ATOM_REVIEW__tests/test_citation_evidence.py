@@ -162,7 +162,6 @@ class CitationEvidenceTests(unittest.TestCase):
 
     def test_filename_is_not_reconstructed_from_the_source_summary(self):
         raw = candidate()
-        # Source Summary/layout validity is a separate check, not citation proof.
         self.validate(raw, row(raw), source=authority().replace(SUMMARY, 'Different source heading'))
 
     def test_missing_or_stale_source_path_fails_closed(self):

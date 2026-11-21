@@ -1,6 +1,5 @@
 """Owned orphan discovery never upgrades missing or foreign ownership claims."""
 
-# CA-E-573@19
 
 from __future__ import annotations
 

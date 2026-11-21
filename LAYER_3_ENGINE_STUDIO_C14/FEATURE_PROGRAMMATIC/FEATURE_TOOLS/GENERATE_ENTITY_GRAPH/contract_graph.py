@@ -251,9 +251,6 @@ def _conditional_target(
                 and all(("property", property) in catalog for property in properties)):
             return target, "property_qualification", {"properties": properties, "condition": notation.render_subject(expression)}
 
-    # A trailing grouped Property condition can qualify an already-declared
-    # narrow Kind.  Its Property may be inherited from the root Kind, e.g.
-    # Atom/(.Role:=Analysis)/(Form:=FPFReport) uses Atom.Form.
     for index in range(len(expression.steps) - 1, 0, -1):
         step = expression.steps[index]
         if step.operator != "/" or not isinstance(step.operand, (notation.Path, notation.Qualification)):
@@ -439,7 +436,7 @@ def _metadata(entries: list[Record], relation: str) -> list[Record]:
             try:
                 calls = parse_structured_python_model_claim(block["block"])
             except ValueError:
-                continue  # Native Declarations are already represented by clauses.
+                continue
             for call in calls:
                 args = call["arguments"]
                 if (call["scope"] != "instances" and call["name"] == "classify"
@@ -739,13 +736,11 @@ def compose_contract_graph(carriers: list[Record]) -> Record:
                 kind = "primary_node"
                 entry["kind"] = kind
         catalog[(kind, identity)].append(entry)
-        # Named Relations belong to the relation catalog, including legacy Declaration Forms.
         if kind != "relation" and any(
             matches_named_value(view.get("type"), name) for name in {"Declaration", "Entity Definition"}
         ):
             declaration_carriers.append(carrier)
 
-    # Resolve explicitly bound Properties after the complete declaration catalog exists.
     from cfel_claim_constraints import native_declaration
     pending = []
     for (kind, identity), entries in list(catalog.items()):

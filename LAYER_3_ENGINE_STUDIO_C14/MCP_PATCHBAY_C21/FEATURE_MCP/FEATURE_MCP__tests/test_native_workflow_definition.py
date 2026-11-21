@@ -146,7 +146,7 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
 
         rows = self._status_binding()
         owner = NativeQueryOwner(self.selection, NativeQueryInputs(
-            lambda *args: None, frozenset(), {}, (),
+            lambda *args: None, frozenset(), {},
         ))
         owner._store = SimpleNamespace(_available=True)
         owner._capture = SimpleNamespace(atoms=rows)

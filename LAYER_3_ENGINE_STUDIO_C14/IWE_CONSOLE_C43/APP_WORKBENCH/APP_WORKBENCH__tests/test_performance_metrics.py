@@ -1,5 +1,3 @@
-# CA-E-677@18
-# CA-E-780@7
 """Prove performance violations fail after reporting, without waiting in tests."""
 from contextlib import redirect_stdout
 import io

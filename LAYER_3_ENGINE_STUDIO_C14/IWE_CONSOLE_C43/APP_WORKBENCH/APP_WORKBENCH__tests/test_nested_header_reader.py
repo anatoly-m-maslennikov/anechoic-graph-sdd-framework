@@ -1,5 +1,3 @@
-# CA-E-675@14
-# CA-E-677@14
 """Nested Header reading stays source-faithful and graph-compatible."""
 
 from __future__ import annotations

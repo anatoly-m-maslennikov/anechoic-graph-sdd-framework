@@ -1,5 +1,5 @@
-// CA-D-674@26
-// CA-D-721@1
+
+
 export interface OperationCaller {
   call<T>(name: string, arguments_: Record<string, unknown>): Promise<T>;
 }

@@ -19,7 +19,6 @@ TEMP_PARENT = HERE.parents[4] / ".anechoic_tmp"
 
 @contextmanager
 def isolated_directory() -> Iterator[str]:
-    # Cleanup is a harness operation, separate from validator read-only checks.
     root = Path(tempfile.mkdtemp(prefix="validate-atoms-e2e-", dir=TEMP_PARENT)).resolve()
     try:
         yield str(root)
@@ -63,8 +62,6 @@ def fingerprint(root: Path) -> dict[str, tuple[str, int] | tuple[str, int, str]]
     """Include every directory/file/link and mode, except host Finder metadata."""
     result: dict[str, tuple[str, int] | tuple[str, int, str]] = {}
     for path in sorted(root.rglob("*")):
-        # macOS may create this Finder metadata file beneath a temporary test
-        # root. It is not part of the validator input or a meaningful mutation.
         if path.name == ".DS_Store":
             continue
         name = str(path.relative_to(root))

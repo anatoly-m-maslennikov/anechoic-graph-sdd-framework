@@ -6,7 +6,7 @@ structure:
     atom: AN-T-1611
   priority: 2
 context:
-  template: epic
+  template: task
   label: Sub-epic
 state:
   status: canceled

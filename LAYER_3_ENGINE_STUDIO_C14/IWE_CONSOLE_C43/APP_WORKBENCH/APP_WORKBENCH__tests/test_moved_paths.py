@@ -24,14 +24,14 @@ class MovedPathsTests(unittest.TestCase):
             module = root / PILOT / 'example.py'
             module.parent.mkdir(parents=True)
             module.write_text('pass\n')
-            module.with_name('example.py.spec_trace.md').write_text('## Implements\n\n- CA-R-501@1\n')
+            module.with_name('example.py.spec_trace.md').write_text('## Implements\n\n- AN-S-501@1\n')
             connection = duckdb.connect(':memory:')
             self.addCleanup(connection.close)
             store = SpecTraceStore(connection, root)
             store.initialize()
             store.refresh()
             self.assertEqual(connection.execute('SELECT atom_id, version FROM implementation_rmedo').fetchall(),
-                             [('CA-R-501', 1)])
+                             [('AN-S-501', 1)])
 
 
 if __name__ == '__main__':

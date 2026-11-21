@@ -79,6 +79,20 @@ Use the ID if names coincide. The `components` table exposes Manifest
 settings and source references for custom SQL. Purpose lookup returns the
 Component Manifest when it contains a `## Purpose` section with prose.
 
+## Planning Ticket lifecycle
+
+Use `atom_lifecycle_create_draft` with `newAtom.template: task` and an
+optional `newAtom.label`. The Ticket Model declares the navigation labels.
+Use the stable ID of a Current planning Ticket or a first Draft as the
+container when creating a child.
+
+Publishing a first Draft to Backlog or Active, or activating a Backlog
+Ticket, promotes lower-status planning descendants with it. Assets and
+terminal descendants retain their statuses.
+
+Use `list_tickets` with `label` to filter by navigation label. The result
+reports Label separately from Template.
+
 ## Component Contract lifecycle
 
 Use `atom_lifecycle_create_draft` with `newAtom.template` set to

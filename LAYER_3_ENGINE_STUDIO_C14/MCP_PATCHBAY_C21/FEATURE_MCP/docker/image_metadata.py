@@ -27,7 +27,7 @@ def read_framework_version(path: Path | str) -> str:
     return version
 
 
-def docker_created_utc(value: object) -> str:
+def docker_created_utc(value: object, *, compact: bool = False) -> str:
     """Render Docker's timezone-aware Created value as UTC tag text."""
     if not isinstance(value, str):
         raise ValueError("Docker image Created metadata is unavailable")
@@ -38,19 +38,25 @@ def docker_created_utc(value: object) -> str:
         raise ValueError("Docker image Created metadata is invalid") from error
     if parsed.tzinfo is None:
         raise ValueError("Docker image Created metadata has no timezone")
-    return parsed.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    pattern = "%Y%m%dT%H%M%SZ" if compact else "%Y-%m-%d_%H-%M-%SZ"
+    return parsed.astimezone(timezone.utc).strftime(pattern)
 
 
-def display_image_tag(version: str, created: object, image_id: str) -> str:
+def display_image_tag(
+    version: str, created: object, image_id: str, *, role: str | None = "test", compact: bool = False
+) -> str:
     """Build the additive repository tag from verified image metadata."""
     if (
         not isinstance(version, str)
         or not isinstance(image_id, str)
+        or role not in ("test", "prod", None)
         or _SAFE_VERSION.fullmatch(version) is None
         or _IMAGE_ID.fullmatch(image_id) is None
     ):
         raise ValueError("display-tag inputs are not exact safe image values")
-    component = f"{version}-{docker_created_utc(created)}-{image_id[7:19]}"
+    middle = f"-{role}-" if role is not None else "-"
+    stamp = docker_created_utc(created, compact=compact or role is None)
+    component = f"{version}{middle}{stamp}-{image_id[7:19]}"
     if len(component) > 128:
         raise ValueError("display tag exceeds Docker's tag length limit")
     return f"{IMAGE_REPOSITORY}:{component}"

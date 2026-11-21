@@ -1,6 +1,5 @@
 """Explicit build provenance, separate from source and immutable image identity."""
 
-# CA-D-562@25
 
 from dataclasses import dataclass
 from pathlib import PurePosixPath

@@ -127,8 +127,6 @@ def _admitted_claim_section(raw: str, excerpt: str) -> str:
         title = next(name for address, _, name in headings if address == titles[0])
         has_structured_claim = any(depth == 2 and name in ('scope', 'claim')
                                    for _, depth, name in headings)
-        # A structured Summary/preamble or explicitly hypothetical title is not
-        # Claim authority. Later headings cannot expand the admitted region.
         if (title not in _STRUCTURED_HEADINGS and not has_structured_claim
                 and not _UNSUPPORTED_CLAUSE.search(title)):
             return sections[candidate]
@@ -155,8 +153,6 @@ def _is_complete_claim_clause(section: str, excerpt: str) -> bool:
     for following in lines[index + 1:]:
         if not following.strip() or re.match(r"^[-*+]\s+|^#{1,6}\s", following):
             return True
-        # Markdown's indented and lazy continuations both belong to the same
-        # bullet. A one-line quotation must not crop either form.
         return False
     return True
 

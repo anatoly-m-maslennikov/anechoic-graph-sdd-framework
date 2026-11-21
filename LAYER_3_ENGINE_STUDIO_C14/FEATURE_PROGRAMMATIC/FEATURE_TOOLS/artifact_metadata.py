@@ -1,4 +1,3 @@
-# CA-D-390@28
 
 """Shared metadata reads and atomic artifact writes."""
 
@@ -61,7 +60,6 @@ def atom_identifier(filename: str, explicit: str | None = None) -> str:
     canonical = re.match(r"(?:[0-9]+-)?(CA-[ACDEIMOPR]-[0-9]+)(?:-|\.|@|$)", name)
     if canonical:
         return canonical.group(1)
-    # Unmigrated legacy identities remain opaque; never allocate or renumber here.
     return name.removesuffix(".md").split("--", 1)[0]
 
 

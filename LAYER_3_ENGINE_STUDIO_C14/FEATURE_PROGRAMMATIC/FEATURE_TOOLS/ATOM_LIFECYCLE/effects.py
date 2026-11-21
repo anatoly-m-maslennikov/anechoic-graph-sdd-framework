@@ -1,7 +1,3 @@
-# CA-M-405@14
-# CA-M-409@14
-# CA-M-422@13
-# CA-D-625@14
 
 """Private mechanical effects for already admitted lifecycle operations.
 
@@ -65,7 +61,6 @@ def _parent(root: Path, path: Path) -> tuple[int, str, str]:
     path = Path(path)
     if not path.is_absolute():
         path = root / path
-    # Do not normalize away traversal: reject it even if it would remain inside.
     try:
         relative = path.relative_to(root)
     except ValueError as exc:
@@ -181,7 +176,6 @@ def _changed(reader, old: Path | None, new: Path | None) -> None:
 
 
 def _message(exc: Exception) -> str:
-    # Do not disclose host paths carried by filesystem exceptions.
     if isinstance(exc, RuntimeError) and str(exc) in {
         "Workbench carrier read failed", "Workbench carrier read returned invalid bytes",
         "Workbench synchronization failed",
@@ -198,7 +192,6 @@ def _cleanup_temp(root: Path, temp: str | None, result: Result) -> None:
     except FileNotFoundError:
         pass
     except OSError:
-        # Staging is under project temp; report its project-relative path.
         try:
             retained = Path(temp).relative_to(Path(root).absolute()).as_posix()
         except ValueError:
@@ -230,8 +223,6 @@ def _write(root: Path, path: Path, data: bytes, expected: str | None, result: Re
             with lock() if callable(lock) else nullcontext():
                 os.link(temp, name, dst_dir_fd=parent, follow_symlinks=False)
                 committed = True
-                # Removing the staging link changes the published inode's ctime.
-                # Keep watcher reads out until the inode is stable.
                 staging, temp = temp, None
                 os.unlink(staging)
         else:

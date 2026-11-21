@@ -17,7 +17,7 @@ PILOT = Path('LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH')
 EXCLUDED = {'FEATURE_WORKBENCH_CODEX', 'FEATURE_CODEX_EXTENSION', 'node_modules',
             '__pycache__', 'dist', 'build', 'coverage', 'assets', 'generated', 'benchmark', 'benchmarks'}
 EXTENSIONS = {'.py', '.svelte', '.ts', '.js', '.mjs'}
-PIN = re.compile(r'((?:CA-[RMEDO]|AN-[SP])-[0-9]+)@([0-9]+)')
+PIN = re.compile(r'([A-Z]+-[SP]-[0-9]+)@([0-9]+)')
 SUFFIX = '.spec_trace.md'
 PACKAGE_SUFFIX = '__spec_bind.yaml'
 
@@ -163,7 +163,6 @@ class SpecTraceStore:
             return False
         if any(part in EXCLUDED or part.lower() in EXCLUDED for part in rel.parts):
             return False
-        # Never follow a symlink, including one in an ancestor.
         return not any((self.root / Path(*rel.parts[:i])).is_symlink()
                        for i in range(1, len(rel.parts) + 1))
 

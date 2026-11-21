@@ -1,5 +1,3 @@
-# CA-M-551@2
-# CA-O-10002@2
 
 """Build a candidate-validation schema from explicitly staged model sources."""
 from __future__ import annotations

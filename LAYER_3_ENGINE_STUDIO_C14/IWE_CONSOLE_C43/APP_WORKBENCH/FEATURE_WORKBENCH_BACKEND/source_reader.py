@@ -1,11 +1,3 @@
-# CA-M-1013@1
-# CA-R-2723@7
-# CA-R-2726@9
-# CA-R-3009@2
-# CA-M-464@18
-# CA-M-465@29
-# CA-D-672@24
-# CA-R-2725@6
 """Governed Workbench carrier reader; scheduling belongs to the service."""
 from __future__ import annotations
 import sys
@@ -766,7 +758,6 @@ class SourceReader:
             and "_projection" not in path.relative_to(self.control_root).parts
             and any(path.is_relative_to(directory) for directory in authority)
         ]
-        # Other Current rows suppress obsolete copies even when their form changed.
         errors = self._content_schema.validation_errors(row for row in rows if predicate(row))
         references = {row.get("ref") for row in rows if row.get("ref") is not None}
         fallback = [
@@ -879,7 +870,6 @@ class SourceReader:
         directory = None
         archived_directory = False
         for path in _markdown_paths(self.control_root, excluded_directories=self._excluded_directories):
-            # The walk already excludes symlink files and directories.
             if not self._atom_filename.fullmatch(path.name):
                 continue
             if path.parent != directory:

@@ -1,5 +1,4 @@
 #!/usr/bin/env -S uv run --no-project --isolated --managed-python --python 3.14 --no-env-file python -I
-# CA-M-409@14
 
 """Start or reuse one Project's Docker MCP endpoint and print its URL."""
 

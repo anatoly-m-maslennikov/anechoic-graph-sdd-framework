@@ -1,4 +1,3 @@
-# CA-M-399@20
 """INFO timing for lifecycle steps, with no input or carrier data in logs."""
 
 from contextlib import contextmanager

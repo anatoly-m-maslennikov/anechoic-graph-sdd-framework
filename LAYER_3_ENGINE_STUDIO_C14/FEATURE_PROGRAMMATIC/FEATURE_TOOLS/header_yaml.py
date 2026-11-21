@@ -1,4 +1,3 @@
-# CA-D-657@11
 
 """Safe, source-preserving scalar reads for declared Headers."""
 

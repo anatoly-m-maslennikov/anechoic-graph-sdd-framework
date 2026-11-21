@@ -86,7 +86,7 @@ class CurrentSourceImageBuildTests(unittest.TestCase):
         self.assertEqual(32, len(labels[docker.ATTEMPT_LABEL]))
         self.assertEqual(1, sum(argv[:2] == ["docker", "build"] for argv in commands))
         self.assertEqual(["docker", "image", "rm", IMAGE], commands[-1])
-        expected = "anechoic-runtime:0.4.4.9-20261021T141516Z-aaaaaaaaaaaa"
+        expected = "anechoic-runtime:0.4.4.9-test-2026-10-21_14-15-16Z-aaaaaaaaaaaa"
         self.assertEqual(["docker", "image", "tag", IMAGE, expected],
                          next(argv for argv in commands if argv[:3] == ["docker", "image", "tag"]))
         self.assertEqual([expected], [argv[-1] for argv in commands

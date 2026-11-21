@@ -1,4 +1,3 @@
-# CA-E-311@23
 
 from __future__ import annotations
 

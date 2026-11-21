@@ -1,4 +1,3 @@
-# CA-D-657@11
 
 """Private mechanical serialization of lifecycle Atom Carriers.
 
@@ -41,7 +40,6 @@ def _source_parts(raw: bytes) -> tuple[dict[str, Any], str, str, str]:
 
 
 def _apply_fields(metadata: dict[str, Any], fields: dict[str, Any]) -> None:
-    # Role determines where role-specific properties belong in a new Header.
     names = sorted(fields, key=lambda name: name not in ("role", "content_role", "context.role"))
     touched: set[tuple[str, ...]] = set()
     for name in names:

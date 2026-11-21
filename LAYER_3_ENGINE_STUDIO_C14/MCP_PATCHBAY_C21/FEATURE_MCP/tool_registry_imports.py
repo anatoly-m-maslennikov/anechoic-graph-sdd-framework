@@ -1,5 +1,3 @@
-# CA-M-506@8
-# CA-D-704@6
 
 """Import configured Provider symbols only from an installed MCP package."""
 

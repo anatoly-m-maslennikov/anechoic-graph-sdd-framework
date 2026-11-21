@@ -1,5 +1,3 @@
-# CA-M-500@12
-# CA-D-672@22
 
 """Generate the deterministic Workbench schema asset from one Project capture."""
 

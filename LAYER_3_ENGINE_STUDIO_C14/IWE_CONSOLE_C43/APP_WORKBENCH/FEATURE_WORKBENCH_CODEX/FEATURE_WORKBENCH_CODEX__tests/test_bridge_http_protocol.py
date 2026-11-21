@@ -1,4 +1,3 @@
-# CA-E-682@1
 
 """Real HTTP/SSE coverage for the one-Project Workbench Codex bridge.
 
@@ -410,8 +409,6 @@ class BridgeHTTPTests(unittest.TestCase):
         self.assertGreaterEqual(len(final["thread"].get("turns", [])), 1)
 
     def test_origin_guard_health_route_and_runtime_state(self) -> None:
-        # Establish the persistent state independently of unittest method
-        # ordering; the rejection itself must not create a thread.
         status, _ = self.json_request("GET", "/conversation")
         self.assertEqual(200, status)
         status, _, _ = self.request("GET", "/conversation", origin="http://attacker.invalid")

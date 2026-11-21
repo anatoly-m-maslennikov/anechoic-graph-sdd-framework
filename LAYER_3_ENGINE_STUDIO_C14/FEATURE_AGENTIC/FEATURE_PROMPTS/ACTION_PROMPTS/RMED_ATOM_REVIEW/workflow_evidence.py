@@ -171,7 +171,6 @@ class RunEvidence:
             entry['receipt'] = append_sealed_events(self.root, [value],
                 author=state['author'], local_date=now[:10], timezone=state['timezone'])[0]
         except (OSError, RuntimeError, ValueError) as error:
-            # The Run is already saved; a log failure never retries its effects.
             state['recording_blockers'].append({'stage': 'journal',
                 'event_id': value['event_id'], 'error': str(error)})
 

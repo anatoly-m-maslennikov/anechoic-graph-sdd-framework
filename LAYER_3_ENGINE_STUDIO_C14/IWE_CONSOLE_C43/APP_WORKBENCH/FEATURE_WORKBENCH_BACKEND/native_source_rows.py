@@ -1,7 +1,7 @@
 """Capture native carriers without interpreting legacy Scope Units or folders."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from hashlib import sha256
 from pathlib import Path, PurePosixPath
 import re
@@ -20,6 +20,7 @@ class NativeCapture:
     atoms: list[dict[str, Any]]
     containment: list[dict[str, Any]]
     errors: dict[str, str]
+    versions: dict[str, tuple[int, ...]] = field(default_factory=dict, compare=False)
 
 
 class NativeManifestChanged(ValueError):
@@ -82,27 +83,42 @@ def _container(container, atom_id: str, pattern: str) -> tuple[str, str]:
     return kind, target
 
 
-def _check_manifest(reader: ReadContext, selection: Any) -> None:
+def _check_manifest(reader: ReadContext, selection: Any, previous: NativeCapture | None) -> bytes | None:
     try:
-        manifest_sha256 = sha256(reader.read(selection.manifest_path)).hexdigest()
+        raw = reader.read(selection.manifest_path, metadata_guard=previous is not None,
+                          skip_version=previous.versions.get(str(selection.manifest_path)) if previous else None)
     except FileNotFoundError as error:
         raise NativeManifestChanged("Selected native Project Manifest moved or was removed") from error
-    if manifest_sha256 != selection.manifest_sha256:
+    if raw is not None and sha256(raw).hexdigest() != selection.manifest_sha256:
         raise NativeManifestChanged("Selected native Project Manifest changed")
+    return raw
 
 
-def _changed_inputs(root, control, previous, paths):
-    changed = set()
+def _changed_inputs(reader, root, control, previous, paths):
+    scopes = set()
     for relative in paths:
         if relative.is_absolute() or ".." in relative.parts:
             raise ValueError("Invalid changed carrier path")
-        if (root / relative).is_relative_to(control) and relative.suffix == ".md":
-            changed.add(relative.as_posix())
+        if (root / relative).is_relative_to(control):
+            scopes.add(relative)
+    changed, directories = set(), set()
+    previous_paths = {row["source_path"] for row in previous.atoms} | previous.errors.keys()
+    for relative in scopes:
+        if any(parent in scopes for parent in relative.parents):
+            continue
+        path = root / relative
+        name = relative.as_posix()
+        changed.update(item for item in previous_paths if item.startswith(name + "/"))
+        if relative.suffix == ".md":
+            changed.add(name)
+        if path.is_dir():
+            directories.add(name)
+            changed.update(item.relative_to(root).as_posix() for item in reader.inventory(path) if item.suffix == ".md")
     candidates = {row["source_path"]: (row, edge)
                   for row, edge in zip(previous.atoms, previous.containment)
                   if row["source_path"] not in changed}
     errors = {path: error for path, error in previous.errors.items() if path not in changed}
-    return candidates, errors, [root / path for path in sorted(changed)]
+    return candidates, errors, [root / path for path in sorted(changed - directories)]
 
 
 def capture_native(
@@ -112,11 +128,14 @@ def capture_native(
     """Read one selected native tree. Callers must refuse a capture with errors."""
     root, control = selection.root, selection.control_root
     reader = ReadContext(roots=[str(control)], limits=dict(CEILINGS))
-    _check_manifest(reader, selection)
     incremental = previous is not None and paths is not None
+    manifest = _check_manifest(reader, selection, previous if incremental else None)
+    versions = dict(previous.versions) if incremental else {}
+    previous_rows = {row["source_path"]: (row, edge)
+                     for row, edge in zip(previous.atoms, previous.containment)} if incremental else {}
     missing = []
     if incremental:
-        candidates, errors, input_paths = _changed_inputs(root, control, previous, paths)
+        candidates, errors, input_paths = _changed_inputs(reader, root, control, previous, paths)
     else:
         candidates, errors = {}, {}
         input_paths = [path for path in reader.inventory(control) if path.suffix == ".md"]
@@ -130,21 +149,33 @@ def capture_native(
                 reader.allowed(path)
                 try:
                     path.lstat()
-                except FileNotFoundError:
+                except (FileNotFoundError, NotADirectoryError):
                     missing.append(path)
+                    versions.pop(str(path), None)
                     continue
             family = {"_PMETA": "P", "__TKT": "T"}.get(tree, "S")
-            row, edge = _carrier_row(path, root, family, selection.project_prefix, reader.read(path))
-            row["_source_sha256"] = reader.fingerprints[str(path)]
+            raw = manifest if path == selection.manifest_path else reader.read(
+                path, metadata_guard=incremental, skip_version=versions.get(str(path)) if incremental else None,
+            )
+            if raw is None:
+                old = previous_rows.get(relative)
+                if old is not None:
+                    candidates[relative] = old
+                elif relative in previous.errors:
+                    errors[relative] = previous.errors[relative]
+                continue
+            row, edge = _carrier_row(path, root, family, selection.project_prefix, raw)
+            row["_source_sha256"] = sha256(raw).hexdigest()
             candidates[relative] = (row, edge)
         except (OSError, RuntimeError, TypeError, ValueError, CarrierError) as error:
             errors[relative] = str(error)
     if reader.currentness()["state"] != "unchanged" or any(path.exists() or path.is_symlink() for path in missing):
         raise ValueError("Native Project carriers changed during capture")
-    return _unique_revisions(candidates, errors)
+    versions.update(reader.versions)
+    return _unique_revisions(candidates, errors, versions)
 
 
-def _unique_revisions(candidates, errors):
+def _unique_revisions(candidates, errors, versions):
     rows, containment = [], []
     exact_paths: set[str] = set()
     current_paths: set[str] = set()
@@ -158,4 +189,4 @@ def _unique_revisions(candidates, errors):
         exact_paths.add(exact)
         if group == "Current":
             current_paths.add(atom_id)
-    return NativeCapture(rows, containment, errors)
+    return NativeCapture(rows, containment, errors, versions)

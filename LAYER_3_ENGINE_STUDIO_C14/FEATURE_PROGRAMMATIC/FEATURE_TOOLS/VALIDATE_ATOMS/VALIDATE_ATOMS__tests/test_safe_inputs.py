@@ -10,7 +10,6 @@ from unittest.mock import patch
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
-# The standalone Tool root must be importable before loading its public test subjects.
 from validate_atoms_workers.parsing import CarrierError, parse_carrier  # noqa: E402
 from validate_atoms_workers.read_io import ReadContext, ReadFailure, LimitReached  # noqa: E402
 

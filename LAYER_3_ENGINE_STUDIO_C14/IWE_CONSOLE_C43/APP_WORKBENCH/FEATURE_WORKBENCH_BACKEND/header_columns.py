@@ -1,6 +1,3 @@
-# CA-R-2726@9
-# CA-M-500@12
-# CA-D-672@22
 
 """Build the Workbench Header SQL schema from raw source Headers."""
 

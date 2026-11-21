@@ -6,7 +6,8 @@ structure:
     component: C15
   priority: 2
 context:
-  template: epic
+  template: task
+  label: Epic
 state:
   status: "canceled"
   version: 7

@@ -1,6 +1,5 @@
 """Obsolete cleanup is integrated around the native installed launcher."""
 
-# CA-E-573@18
 
 import subprocess
 from pathlib import Path

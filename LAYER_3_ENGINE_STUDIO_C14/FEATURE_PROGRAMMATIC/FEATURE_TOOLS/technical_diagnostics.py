@@ -1,5 +1,3 @@
-# CA-M-414@17
-# CA-D-709@1
 
 """Bounded structured diagnostics for the container stderr stream."""
 

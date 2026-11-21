@@ -157,15 +157,12 @@ def migrate(text, path=None):
         chunks.append(source[last:])
         return "".join(chunks)
 
-    # Atom.Header.* is an Atom reference. Special role leaves are held below
-    # unless the source gives an approved, proven Concern or Plan role.
     def direct_atom(match):
         mapped = replacement(match.group("field"))
         return f"Atom.Header.{mapped}" if mapped else None
 
     result = replace_match(DIRECT_ATOM, text, direct_atom, "direct_atom")
 
-    # A variable is an Atom only when the source explicitly binds it as one.
     def direct_var(match):
         role = bindings.get(match.group("var"))
         if match.group("var") not in bindings:
@@ -175,7 +172,6 @@ def migrate(text, path=None):
 
     result = replace_match(DIRECT_VAR, result, direct_var, "typed_atom")
 
-    # Existing role-root declarations are the authoritative contracts.
     def direct_role(match):
         mapped = replacement(match.group("field"), match.group("role"))
         return f"{match.group('role')}.Header.{mapped}" if mapped else None
@@ -188,8 +184,6 @@ def migrate(text, path=None):
 
     result = replace_match(ROLE_QUALIFIED, result, role_qualified, "role_qualified")
 
-    # Relative .Header.X belongs to Atom only in a CFEL statement chained from
-    # Atom. This handles both Atom/(...) and Atom/(...)/(.Header.Form ...).
     pieces = []
     offset = 0
     for statement in re.split(r"(;)", result):
@@ -215,8 +209,6 @@ def migrate(text, path=None):
         pieces.append(RELATIVE.sub(qualified, statement))
     result = "".join(pieces)
 
-    # E240's prose claim is an explicit Atom claim despite omitting `Atom.`;
-    # no other bare Header owner is inferred from text alone.
     if path in E240_PATHS:
         result = replace_match(
             E240_BARE,
@@ -225,8 +217,6 @@ def migrate(text, path=None):
             "known_e240_bare_atom",
         )
 
-    # These paths were individually reviewed as Atom Header prose/plan claims.
-    # Keep the path gate so generic Entity.Header.* references cannot move.
     if path in BARE_COMMON_PATHS:
         result = replace_match(
             BARE_COMMON,
@@ -235,8 +225,6 @@ def migrate(text, path=None):
             "known_reviewed_bare_atom",
         )
 
-    # These holds have real source snippets: unproven variables and unsupported
-    # role-specific properties are intentionally not guessed.
     def add_hold(match, reason):
         if in_spans(match.start(), protected_summary_spans(result)):
             return

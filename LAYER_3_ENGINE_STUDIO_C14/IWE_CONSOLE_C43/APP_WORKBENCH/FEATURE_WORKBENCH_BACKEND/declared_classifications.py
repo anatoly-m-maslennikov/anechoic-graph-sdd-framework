@@ -1,5 +1,3 @@
-# CA-M-500@14
-# CA-D-672@24
 
 """Compile Status Groups and Role folders from parsed Python Model Claims."""
 

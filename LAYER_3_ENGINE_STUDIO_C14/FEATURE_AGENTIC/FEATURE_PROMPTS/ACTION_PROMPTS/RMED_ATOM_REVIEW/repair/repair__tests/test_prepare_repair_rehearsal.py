@@ -49,7 +49,6 @@ class PrepareRepairRehearsalTests(unittest.TestCase):
     def test_build_emits_untyped_carriers_with_matching_permissions(self):
         before = {spec["fixture"]: hashlib.sha256((FIXTURE_ROOT / spec["fixture"]).read_bytes()).hexdigest()
                   for spec in CASES}
-        # Builder behavior must not depend on changing live authority carriers.
         authority = [
             synthetic_authority(identifier, "Fixture Authority", "Explicit fixture authority.")
             for identifier in REPAIR_AUTHORITY_IDS

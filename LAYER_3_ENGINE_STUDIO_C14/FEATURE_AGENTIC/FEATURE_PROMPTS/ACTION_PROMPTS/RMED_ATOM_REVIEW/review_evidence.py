@@ -227,7 +227,6 @@ def validate_obligations(row: dict[str, Any], authorities: dict[str, str]) -> No
 
 
 def _markdown(source: str) -> str:
-    # Exclude frontmatter from body-mention evidence. This is not a YAML parser.
     lines = source.splitlines(keepends=True)
     if lines and lines[0].strip() == "---":
         end = next((i for i, line in enumerate(lines[1:], 1) if line.strip() == "---"), None)
@@ -287,12 +286,7 @@ def _validate_resolved_mention(mention: dict[str, Any], authorities: dict[str, s
             raise ValueError('evaluation candidate cannot self-admit an exact Entity anchor')
         if excerpt not in prose(authorities[ref]) or len(excerpt.split()) < 4:
             raise ValueError('Entity definition needs substantive body evidence, not a title or metadata')
-        # Every citation must be substantive and bound, but supplementary
-        # sources may explain an anchored Entity without creating its identity.
         anchored = anchored or mention['entity'] == targets.get(ref)
-    # A directly registered value qualifies its exact Property without needing
-    # a duplicate Definition Atom governing the whole composed path. A supplied
-    # proof is always checked, even when another exact anchor exists.
     value_admitted = validate_allowed_value_evidence(
         mention, authorities, targets, candidate_source=candidate_source)
     declared_admitted = validate_declared_subject_evidence(
@@ -486,8 +480,6 @@ def _validate_literal_identity(mention: dict[str, Any], authorities: dict[str, s
 def _validate_mention_location(mention: dict[str, Any], source: str) -> None:
     sections = body_section_texts(source)
     address = mention['location']
-    # Accept an unambiguous registered heading alias as well as its exact
-    # line-address. Never let an excerpt elsewhere validate a wrong location.
     candidates = [value for key, value in sections.items()
                   if key == address or key.split(':', 2)[-1].lstrip('# ') == address]
     if len(candidates) != 1 or mention['excerpt'] not in candidates[0]:
@@ -553,8 +545,6 @@ def _validate_subject_accounting(row: dict[str, Any], resolved: set[str],
     extras = {f['entity'] for f in row['findings'] if f.get('subject_issue') == 'extra'}
     if resolved - declarations - omissions - governing:
         raise ValueError('complete Subject inventory has unaccounted resolved targets')
-    # A coordinated replacement of GOVERNS accounts for the old target without
-    # demanding a second, redundant deletion finding for that same correction.
     replaced = {governs} if governing and isinstance(governs, str) else set()
     if declarations - resolved - extras - replaced:
         raise ValueError('complete Subject inventory has unaccounted declared targets')

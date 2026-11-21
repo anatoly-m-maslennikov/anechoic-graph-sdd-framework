@@ -1,8 +1,5 @@
 """Runtime boundary tests for retained Docker MCP services."""
 
-# CA-M-504@2
-# CA-E-796@4
-# CA-E-533@13
 
 import json
 import os
@@ -60,9 +57,6 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(expected_command, actual_command)
         self.assertEqual(runtime.environment(), execute.call_args.kwargs["env"])
 
-        # Unit scope must not require an installed Docker daemon.  Parse the
-        # exact Compose inputs here; Docker's fully resolved config is covered
-        # by the opt-in container E2E harness.
         config = yaml.safe_load((APP / "docker/compose.yaml").read_text())
         services = config["services"]
         for service in services.values():

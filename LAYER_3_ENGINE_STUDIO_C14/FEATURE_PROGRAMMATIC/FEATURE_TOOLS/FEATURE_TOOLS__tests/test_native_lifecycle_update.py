@@ -417,26 +417,82 @@ class NativeDirectUpdateTests(unittest.TestCase):
         self.assertEqual(before, (destination / child.name).read_bytes())
         self.assertFalse(parent.exists())
 
-    def test_epic_activation_refuses_unimplemented_child_cascade(self):
-        for number, template, status, reason in (
-                (30, 'epic', 'backlog', 'activation'), (40, 'task', 'done', 'Reopening')):
-            with self.subTest(status=status):
-                atom_id = f'AN-T-{number}'
-                prefix = f'__TKT/TASKS/{status}/{atom_id}-{template.upper()}--parent'
-                parent = self.write(prefix + '.md', atom_id)
-                parent.write_bytes(parent.read_bytes().replace(b'context:\n', f'context:\n  template: {template}\n'.encode())
-                                   .replace(b'status: active', f'status: {status}'.encode()))
-                child_id = f'AN-T-{number + 1}'
-                label = 'TASK' if template == 'epic' else 'SUBTASK'
-                child = self.write(f'{prefix}/done/{child_id}-{label}--child.md', child_id, {'atom': atom_id})
-                child.write_bytes(child.read_bytes().replace(b'context:\n', b'context:\n  template: task\n')
-                                  .replace(b'status: active', b'status: done'))
-                before = parent.read_bytes(), child.read_bytes()
-                with self.assertRaisesRegex(InputError, reason):
-                    change_ticket_status(self.selection,
-                        {'target': {'ref_id': atom_id, 'version': 1}, 'targetStatus': 'active'},
-                        current_rows=capture_native(self.selection).atoms, check_definition=lambda: None)
-                self.assertEqual(before, (parent.read_bytes(), child.read_bytes()))
+    def test_task_reopening_preserves_descendant_status(self):
+        prefix = '__TKT/TASKS/done/AN-T-40-TASK--parent'
+        parent = self.write(prefix + '.md', 'AN-T-40')
+        parent.write_bytes(parent.read_bytes().replace(b'context:\n', b'context:\n  template: task\n')
+                           .replace(b'status: active', b'status: done'))
+        child = self.write(f'{prefix}/done/AN-T-41-SUBTASK--child.md', 'AN-T-41', {'atom': 'AN-T-40'})
+        child.write_bytes(child.read_bytes().replace(b'context:\n', b'context:\n  template: task\n')
+                          .replace(b'status: active', b'status: done'))
+        before = child.read_bytes()
+        reopened = change_ticket_status(self.selection,
+            {'target': {'ref_id': 'AN-T-40', 'version': 1}, 'targetStatus': 'active'},
+            current_rows=capture_native(self.selection).atoms, check_definition=lambda: None)
+        self.assertEqual('completed', reopened['outcome'], reopened)
+        current = self.control / '__TKT/TASKS/AN-T-40-TASK--parent' / 'done' / child.name
+        self.assertEqual(before, current.read_bytes())
+
+    def test_backlog_activation_promotes_nested_tasks_and_preserves_assets(self):
+        parent = self.write('__TKT/TASKS/backlog/AN-T-30-EPIC--parent.md', 'AN-T-30')
+        parent.write_bytes(parent.read_bytes().replace(b'context:\n', b'context:\n  template: epic\n')
+                           .replace(b'status: active', b'status: backlog'))
+        branch = '__TKT/TASKS/backlog/AN-T-30-EPIC--parent'
+        child = self.write(f'{branch}/backlog/AN-T-31-TASK--child.md', 'AN-T-31', {'atom': 'AN-T-30'})
+        child.write_bytes(child.read_bytes().replace(b'context:\n', b'context:\n  template: task\n')
+                          .replace(b'status: active', b'status: backlog'))
+        grand = self.write(f'{branch}/backlog/AN-T-31-TASK--child/backlog/AN-T-32-SUBTASK--grand.md',
+                           'AN-T-32', {'atom': 'AN-T-31'})
+        grand.write_bytes(grand.read_bytes().replace(b'context:\n', b'context:\n  template: task\n')
+                          .replace(b'status: active', b'status: backlog'))
+        asset = grand.parent.parent / 'notes.txt'
+        asset.write_text('keep')
+        outcome = change_ticket_status(self.selection,
+            {'target': {'ref_id': 'AN-T-30', 'version': 1}, 'targetStatus': 'active'},
+            current_rows=capture_native(self.selection).atoms, check_definition=lambda: None)
+        self.assertEqual('completed', outcome['outcome'], outcome)
+        dest = self.control / '__TKT/TASKS/AN-T-30-EPIC--parent/AN-T-31-TASK--child'
+        self.assertEqual('active', yaml.safe_load((dest / grand.name).read_text().split('---', 2)[1])['state']['status'])
+        self.assertEqual('keep', (dest / 'notes.txt').read_text())
+        self.assertEqual('active', yaml.safe_load(dest.with_suffix('.md').read_text().split('---', 2)[1])['state']['status'])
+
+    def test_backlog_activation_publishes_first_draft_descendant(self):
+        parent = self.write('__TKT/TASKS/backlog/AN-T-30-EPIC--parent.md', 'AN-T-30')
+        parent.write_bytes(parent.read_bytes().replace(b'context:\n', b'context:\n  template: epic\n')
+                           .replace(b'status: active', b'status: backlog'))
+        child = self.write('__TKT/TASKS/backlog/AN-T-30-EPIC--parent/000_draft/AN-T-31@1-draft-TASK--child.md',
+                           'AN-T-31', {'atom': 'AN-T-30'})
+        child.write_bytes(child.read_bytes().replace(b'context:\n', b'context:\n  template: task\n')
+                          .replace(b'status: active', b'status: draft'))
+        outcome = change_ticket_status(self.selection,
+            {'target': {'ref_id': 'AN-T-30', 'version': 1}, 'targetStatus': 'active'},
+            current_rows=capture_native(self.selection).atoms, check_definition=lambda: None)
+        self.assertEqual('completed', outcome['outcome'], outcome)
+        destination = self.control / '__TKT/TASKS/AN-T-30-EPIC--parent/AN-T-31-TASK--child.md'
+        self.assertEqual('active', yaml.safe_load(destination.read_text().split('---', 2)[1])['state']['status'])
+        self.assertFalse(child.exists())
+
+    def test_activation_preflights_all_child_destinations(self):
+        parent = self.write('__TKT/TASKS/backlog/AN-T-30-EPIC--parent.md', 'AN-T-30')
+        parent.write_bytes(parent.read_bytes().replace(b'context:\n', b'context:\n  template: epic\n')
+                           .replace(b'status: active', b'status: backlog'))
+        branch = '__TKT/TASKS/backlog/AN-T-30-EPIC--parent'
+        children = []
+        for number in (31, 32):
+            child = self.write(f'{branch}/backlog/AN-T-{number}-TASK--child.md', f'AN-T-{number}', {'atom': 'AN-T-30'})
+            child.write_bytes(child.read_bytes().replace(b'context:\n', b'context:\n  template: task\n')
+                              .replace(b'status: active', b'status: backlog'))
+            children.append(child)
+        collision = (children[1].parent.parent / children[1].name).with_suffix('')
+        collision.mkdir()
+        before = [path.read_bytes() for path in [parent, *children]]
+        outcome = change_ticket_status(self.selection,
+            {'target': {'ref_id': 'AN-T-30', 'version': 1}, 'targetStatus': 'active'},
+            current_rows=capture_native(self.selection).atoms, check_definition=lambda: None)
+        self.assertEqual('failed', outcome['outcome'])
+        self.assertEqual('destination_exists', outcome['errors'][0]['code'])
+        self.assertEqual(before, [path.read_bytes() for path in [parent, *children]])
+        self.assertTrue(collision.is_dir())
 
     def test_reopening_epic_preserves_nested_tree_bytes(self):
         for number, status in ((50, 'done'), (60, 'canceled')):

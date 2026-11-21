@@ -1,4 +1,4 @@
-# Deny by default: Project authority, runtime data and credentials never enter a layer.
+
 **
 !pyproject.toml
 !uv.lock

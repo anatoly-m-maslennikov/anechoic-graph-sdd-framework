@@ -1,4 +1,3 @@
-# CA-M-464@18
 
 """Prepublication reference lookup for parsed carriers."""
 from __future__ import annotations

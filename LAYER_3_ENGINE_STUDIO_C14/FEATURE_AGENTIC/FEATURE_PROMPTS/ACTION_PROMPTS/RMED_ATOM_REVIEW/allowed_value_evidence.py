@@ -36,8 +36,6 @@ _INTERNAL_CARRIER_OWNERSHIP_DOMAIN = re.compile(
 )
 _INTERNAL_CARRIER_OWNERSHIP_PROPERTY = "Carrier/Ownership Class"
 _NAMED_VALUE_BULLET = re.compile(rf"^- (?P<value>{_VALUE_TOKEN}): (?P<meaning>.+)$")
-# Formatting is not an authority boundary: unbolded qualifiers are equally
-# disqualifying. This is a conservative supported grammar, not an English parser.
 _UNSUPPORTED_CONTEXT = re.compile(
     r"\b(?:if|then|when|unless|until|otherwise|not|without|except|only|"
     r"conditional|conditionally|proposed|proposal|draft|example|illustration|"

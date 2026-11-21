@@ -1,7 +1,3 @@
-# CA-R-1113@23
-# CA-M-175@19
-# CA-D-593@17
-# CA-M-512@2
 
 """Validate the optional single-Project MCP envelope without selecting Projects."""
 

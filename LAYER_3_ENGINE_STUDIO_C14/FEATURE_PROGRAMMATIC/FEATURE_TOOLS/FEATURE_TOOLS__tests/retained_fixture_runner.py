@@ -66,8 +66,6 @@ def run_selected_tests(names: Sequence[str], *, stream: io.TextIOBase) -> unitte
 
     paths: list[str] = []
     with retained_temporary_directories(paths):
-        # Load within the retained boundary so tests that import
-        # ``TemporaryDirectory`` directly receive the test-only carrier too.
         suite = unittest.defaultTestLoader.loadTestsFromNames(list(names))
         result = unittest.TextTestRunner(stream=stream, verbosity=2).run(suite)
     stream.write(format_retained_paths(paths) + "\n")

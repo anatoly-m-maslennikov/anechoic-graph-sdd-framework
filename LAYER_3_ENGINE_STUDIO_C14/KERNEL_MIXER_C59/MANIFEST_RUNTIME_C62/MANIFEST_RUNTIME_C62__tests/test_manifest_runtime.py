@@ -99,8 +99,14 @@ class ManifestRuntimeTests(unittest.TestCase):
                     self.assertEqual(len(declared), len(descriptor["declarations"]))
                     module = generation / "anechoic_runtime_model" / "component_manifest.py"
                     self.assertEqual(descriptor["modules"][module.name], hashlib.sha256(module.read_bytes()).hexdigest())
-                    subprocess.run([sys.executable, "-c", "from anechoic_runtime_model.component_manifest import ComponentManifest; assert ComponentManifest.__name__ == 'ComponentManifest'"],
-                                   cwd=generation, check=True)
+                    subprocess.run([sys.executable, "-c", """
+from pathlib import Path
+from anechoic_runtime_model.component_manifest import ComponentManifest
+from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.manifest_compiler_pkg1.compiler import load_generation_model
+assert ComponentManifest.__name__ == 'ComponentManifest'
+model = load_generation_model(Path.cwd())
+assert {'Task', 'Subtask', 'Sub-epic', 'Epic', 'Version'} <= set(model.ticket_labels)
+"""], cwd=generation, env=runtime._environment(), check=True)
                     initial = read_structure(active)
                     self.assertEqual("Engine Studio", initial.component("C14").name)
                     self.assertEqual("AN-S-3039@1", initial.component("C14").ref)

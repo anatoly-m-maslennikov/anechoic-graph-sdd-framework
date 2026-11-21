@@ -6,9 +6,9 @@ context:
     component: C00
   template: task
 state:
-  status: draft
+  status: "active"
   version: 1
-  updated_at: '2026-11-20T17:22:57.275252+00:00'
+  updated_at: "2026-11-21T16:35:52.153844+00:00"
 ---
 ## Summary
 

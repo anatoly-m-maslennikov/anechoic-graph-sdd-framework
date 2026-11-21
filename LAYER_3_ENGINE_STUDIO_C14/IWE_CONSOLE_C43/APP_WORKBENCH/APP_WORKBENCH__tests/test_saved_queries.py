@@ -1,5 +1,3 @@
-# CA-E-676@11
-# CA-D-673@12
 """Project-Journal saved-query records retain legacy-file access."""
 
 from contextlib import redirect_stderr

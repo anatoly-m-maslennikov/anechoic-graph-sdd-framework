@@ -1,6 +1,5 @@
 """Fixture-only discovery and execution of the shared full-suite entry point."""
 
-# CA-E-265@25
 
 from __future__ import annotations
 

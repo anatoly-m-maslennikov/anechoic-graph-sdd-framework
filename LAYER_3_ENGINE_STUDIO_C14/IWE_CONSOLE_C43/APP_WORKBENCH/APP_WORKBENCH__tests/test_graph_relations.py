@@ -1,5 +1,3 @@
-# CA-E-676@15
-# CA-E-677@30
 """Native graph relation projection tests."""
 
 from __future__ import annotations

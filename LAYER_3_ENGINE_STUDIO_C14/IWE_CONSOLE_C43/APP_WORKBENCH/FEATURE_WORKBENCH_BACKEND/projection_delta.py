@@ -1,7 +1,3 @@
-# CA-R-2726@9
-# CA-M-500@3
-# CA-D-672@22
-# CA-M-465@29
 
 """Apply the materialized source delta to the public Workbench projection."""
 

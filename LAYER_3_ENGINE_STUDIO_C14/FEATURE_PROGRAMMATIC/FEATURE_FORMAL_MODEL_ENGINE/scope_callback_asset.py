@@ -59,8 +59,6 @@ def generated_assets(raw, *, pin, release_sources):
     if check is None or check["parameter_type"] != "ScopeUnit":
         raise ValueError("Expected the Scope Unit instance check")
     statements, check = compile_scope_level_with_check(declaration)
-    # This narrow asset supports only local names and selected pure builtins.
-    # Reject unresolved imported/global dependencies before emitting code.
     tree = ast.parse(check["source"])
     locals_ = {check["parameter"], check["name"]}
     locals_.update(node.id for node in ast.walk(tree) if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store))

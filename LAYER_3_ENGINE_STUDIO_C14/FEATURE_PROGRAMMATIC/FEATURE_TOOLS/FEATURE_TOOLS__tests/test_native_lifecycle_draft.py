@@ -4,6 +4,7 @@ from types import SimpleNamespace
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import yaml
 
@@ -68,7 +69,7 @@ class NativeDraftTests(unittest.TestCase):
         output = create_draft(self.selection, self.params, current_rows=capture_native(self.selection).atoms)
         ref = output['savedDraft']['ref_id']
         result = promote_draft(self.selection, {'target': {'ref_id': ref, 'version': 2}, 'targetStatus': 'active'},
-                               current_rows=capture_native(self.selection).atoms, migration_refs=[])
+                               current_rows=capture_native(self.selection).atoms)
         self.assertEqual('completed', result['outcome'])
         archive = self.control / '__TKT/TASKS/099_archived/AN-T-1@1-TASK--example.md'
         _, archived_header, archived_body = archive.read_text().split('---', 2)
@@ -183,7 +184,7 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
                 published[0] = later
                 return rows
 
-        owner = NativeQueryOwner(self.selection, NativeQueryInputs(lambda *args: None, frozenset(), {}, ()))
+        owner = NativeQueryOwner(self.selection, NativeQueryInputs(lambda *args: None, frozenset(), {}))
         owner._store = SimpleNamespace(_available=True)
         owner._capture = Capture()
         with patch('native_query.read_structure', side_effect=lambda path: published[0]) as read, \
@@ -217,13 +218,8 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
                 draft = self.root / output['savedDraft']['path']
                 self.assertEqual(self.control / owner / '000_draft', draft.parent)
                 ref = output['savedDraft']['ref_id']
-                if kind == 'epic':
-                    with self.assertRaisesRegex(InputError, 'Current Status'):
-                        promote_draft(self.selection, {'target': {'ref_id': ref, 'version': 2},
-                            'targetStatus': 'done'}, current_rows=capture_native(self.selection).atoms, migration_refs=[])
-                    self.assertTrue(draft.is_file())
                 result = promote_draft(self.selection, {'target': {'ref_id': ref, 'version': 2},
-                    'targetStatus': 'active'}, current_rows=capture_native(self.selection).atoms, migration_refs=[])
+                    'targetStatus': 'active'}, current_rows=capture_native(self.selection).atoms)
                 self.assertEqual('completed', result['outcome'])
                 rows = capture_native(self.selection)
                 self.assertFalse(rows.errors)
@@ -244,7 +240,7 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
         with self.assertRaisesRegex(InputError, 'container'):
             promote_draft(self.selection,
                 {'target': {'ref_id': result['savedDraft']['ref_id'], 'version': 2}, 'targetStatus': 'done'},
-                current_rows=capture_native(self.selection).atoms, migration_refs=[])
+                current_rows=capture_native(self.selection).atoms)
         self.assertEqual(before, (self.path.read_bytes(), child.read_bytes(), draft.read_bytes()))
 
     def test_epic_body_revision_preserves_child_carrier(self):
@@ -261,7 +257,7 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
             current_rows=capture_native(self.selection).atoms)
         result = promote_draft(self.selection,
             {'target': {'ref_id': result['savedDraft']['ref_id'], 'version': 2}, 'targetStatus': 'active'},
-            current_rows=capture_native(self.selection).atoms, migration_refs=[])
+            current_rows=capture_native(self.selection).atoms)
         self.assertEqual('completed', result['outcome'])
         self.assertEqual(before, child.read_bytes())
 
@@ -282,7 +278,7 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
             current_rows=capture_native(self.selection).atoms)
         ref = output['savedDraft']['ref_id']
         result = promote_draft(self.selection, {'target': {'ref_id': ref, 'version': 2}, 'targetStatus': 'active'},
-                               current_rows=capture_native(self.selection).atoms, migration_refs=[])
+                               current_rows=capture_native(self.selection).atoms)
         self.assertEqual('completed', result['outcome'])
         current = next(row for row in capture_native(self.selection).atoms if row['_exact_ref'] == 'AN-S-6@2')
         self.assertEqual(previous_header['context'], current['header_json']['context'])
@@ -301,58 +297,6 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
                     create_draft(self.selection, {'sourceCurrent': {'ref_id': atom_id, 'version': 1}},
                                  current_rows=capture_native(self.selection).atoms)
 
-    def test_spec_draft_migration_pin_is_refused(self):
-        self.spec('UNIT_C9/__DES/AN-S-4-DES--example.md', 'AN-S-4')
-        result = create_draft(self.selection, {'sourceCurrent': {'ref_id': 'AN-S-4', 'version': 1}},
-                              current_rows=capture_native(self.selection).atoms)
-        ref = result['savedDraft']['ref_id']
-        with self.assertRaises(InputError):
-            promote_draft(self.selection, {'target': {'ref_id': ref, 'version': 2}, 'targetStatus': 'active'},
-                          current_rows=capture_native(self.selection).atoms, migration_refs=[('old', 'old.md', ref)])
-
-    def test_first_migration_pinned_spec_publishes_and_preserves_draft(self):
-        draft = self.spec('UNIT_C9/000_draft/AN-S-8@1-draft-DES--example.md', 'AN-S-8')
-        header, body = draft.read_text().split('---\n', 2)[1:]
-        data = yaml.safe_load(header)
-        data['state']['status'] = 'draft'
-        draft.write_text('---\n' + yaml.safe_dump(data) + '---\n' + body)
-        original = draft.read_bytes()
-        ref = 'AN-S-8@1-draft'
-        params = {'target': {'ref_id': ref, 'version': 1}, 'targetStatus': 'active'}
-        refs = [('old', 'old.md', ref)]
-        rows = capture_native(self.selection).atoms
-
-        draft.write_bytes(original + b'changed')
-        before = {p.relative_to(self.control): p.read_bytes() for p in self.control.rglob('*.md')}
-        with self.assertRaises(SourceChanged):
-            promote_draft(self.selection, params, current_rows=rows, migration_refs=refs)
-        self.assertEqual(before, {p.relative_to(self.control): p.read_bytes() for p in self.control.rglob('*.md')})
-        draft.write_bytes(original)
-
-        result = promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms,
-                               migration_refs=refs)
-        self.assertEqual('completed', result['outcome'], result)
-        current = self.control / 'UNIT_C9/__DES/AN-S-8-DES--example.md'
-        self.assertEqual(current, self.root / result['artifact']['path'])
-        self.assertEqual(('AN-S-8', 2, 'active'), (result['artifact']['ref_id'],
-                         result['artifact']['version'], result['artifact']['status']))
-        self.assertEqual(original, draft.read_bytes())
-        capture = capture_native(self.selection)
-        self.assertFalse(capture.errors)
-        self.assertEqual({'AN-S-8@1-draft', 'AN-S-8@2'},
-                         {row['_exact_ref'] for row in capture.atoms if row['id'] == 'AN-S-8'})
-        self.assertEqual([current], [self.root / row['source_path'] for row in capture.atoms
-                                    if row['id'] == 'AN-S-8' and row['status_group'] == 'Current'])
-
-        before = {p.relative_to(self.control): p.read_bytes() for p in self.control.rglob('*.md')}
-        try:
-            retry = promote_draft(self.selection, params, current_rows=capture.atoms, migration_refs=refs)
-        except (InputError, SourceChanged):
-            pass
-        else:
-            self.assertFalse(retry.get('effects'), retry)
-        self.assertEqual(before, {p.relative_to(self.control): p.read_bytes() for p in self.control.rglob('*.md')})
-
     def test_first_unpinned_spec_publishes_its_version_and_cleans_up(self):
         for atom_id, lens, version in [('AN-S-8', 'SWD', 1), ('AN-S-9', 'SPEC', 3)]:
             suffix = lens + '--example.md'
@@ -363,8 +307,7 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
             data['state'].update(status='draft', version=version)
             draft.write_text('---\n' + yaml.safe_dump(canonical_native_header(data), sort_keys=False) + '---\n' + body)
             params = {'target': {'ref_id': ref, 'version': version}, 'targetStatus': 'active'}
-            result = promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms,
-                                   migration_refs=[])
+            result = promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms)
             self.assertEqual('completed', result['outcome'], result)
             current = self.control / 'UNIT_C9' / ('__SWD' if lens == 'SWD' else '') / f'{atom_id}-{suffix}'
             self.assertEqual((current, version), (self.root / result['artifact']['path'], result['artifact']['version']))
@@ -379,16 +322,16 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
         draft.write_text(draft.read_text().replace('status: active', 'status: draft'))
         params = {'target': {'ref_id': 'AN-S-8@1-draft', 'version': 1}, 'targetStatus': 'active'}
         with patch('ATOM_LIFECYCLE.native_draft.effects.remove', return_value=effects.Result(errors=[{'code': 'injected'}])):
-            result = promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms, migration_refs=[])
+            result = promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms)
         self.assertEqual('failed', result['outcome'])
         self.assertNotIn('artifact', result)
         self.assertTrue(draft.exists())
-        result = promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms, migration_refs=[])
+        result = promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms)
         self.assertEqual('completed', result['outcome'])
         self.assertEqual(['remove'], [e['operation'] for e in result['effects']])
         self.assertFalse(draft.exists())
 
-    def test_first_spec_preserves_other_pinned_drafts(self):
+    def test_first_spec_preserves_other_drafts(self):
         old = self.spec('UNIT_C9/000_draft/AN-S-8@1-draft-DES--example.md', 'AN-S-8')
         old.write_text(old.read_text().replace('status: active', 'status: draft'))
         draft = self.spec('UNIT_C9/000_draft/AN-S-8@2-draft-DES--example.md', 'AN-S-8')
@@ -396,7 +339,7 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
         original = old.read_bytes()
         result = promote_draft(self.selection,
             {'target': {'ref_id': 'AN-S-8@2-draft', 'version': 2}, 'targetStatus': 'active'},
-            current_rows=capture_native(self.selection).atoms, migration_refs=[('old', 'old.md', 'AN-S-8@1-draft')])
+            current_rows=capture_native(self.selection).atoms)
         self.assertEqual('completed', result['outcome'])
         self.assertEqual(2, result['artifact']['version'])
         self.assertEqual(original, old.read_bytes())
@@ -426,7 +369,7 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
                 params = {'target': {'ref_id': 'AN-S-8@1-draft', 'version': 1},
                           'targetStatus': 'done' if case == 'status' else 'active'}
                 with self.assertRaises((InputError, SourceChanged)):
-                    promote_draft(self.selection, params, current_rows=rows, migration_refs=[])
+                    promote_draft(self.selection, params, current_rows=rows)
                 self.assertEqual(before, {p.relative_to(self.control): p.read_bytes() for p in self.control.rglob('*.md')})
                 draft.unlink()
                 if history:
@@ -441,9 +384,9 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
         ref = output['savedDraft']['ref_id']
         params = {'target': {'ref_id': ref, 'version': 2}, 'targetStatus': 'active'}
         with patch('ATOM_LIFECYCLE.native_draft.effects.remove', return_value=effects.Result(errors=[{'code': 'injected'}])):
-            result = promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms, migration_refs=[])
+            result = promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms)
         self.assertEqual('failed', result['outcome'])
-        result = promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms, migration_refs=[])
+        result = promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms)
         self.assertEqual('completed', result['outcome'])
         self.assertEqual(['remove'], [effect['operation'] for effect in result['effects']])
 
@@ -465,17 +408,92 @@ class NewNativeTaskTests(unittest.TestCase):
         header = yaml.safe_load(draft.read_text().split('---', 2)[1])
         self.assertEqual(('TKT', 'AN-T-9', 2),
                          (header['atom_family'], header['atom_id'], header['structure']['priority']))
-        self.assertEqual({'template': 'task'}, header['context'])
+        self.assertEqual({'template': 'task', 'label': 'Task'}, header['context'])
         self.assertEqual('AN-T-9@1-draft-TASK--create-a-task.md', draft.name)
         rows = capture_native(self.selection).atoms
         result = promote_draft(self.selection, {'target': {'ref_id': 'AN-T-9@1-draft', 'version': 1}, 'targetStatus': 'active'},
-                               current_rows=rows, migration_refs=[])
+                               current_rows=rows)
         self.assertEqual(('AN-T-9', 1, 'active'), (result['artifact']['ref_id'], result['artifact']['version'], result['artifact']['status']))
         self.assertFalse(draft.exists())
         capture = capture_native(self.selection)
         self.assertFalse(capture.errors)
         self.assertIn('AN-T-9@1', [row['_exact_ref'] for row in capture.atoms])
         self.assertEqual(before, (self.path.read_bytes(), self.selection.manifest_path.read_bytes()))
+
+    def test_new_draft_publishes_nested_drafts_and_preserves_assets(self):
+        created = create_draft(self.selection, self.new, current_rows=self.rows)
+        ref = created['savedDraft']['ref_id']
+        draft = self.root / created['savedDraft']['path']
+        labels = ('Task', 'Epic', 'Version')
+        child_result = create_draft(self.selection, {'newAtom': {
+            'template': 'task', 'label': 'Epic', 'container': {'atom': ref.split('@')[0]},
+            'body': '\n## Summary\n\nChild\n'}}, current_rows=capture_native(self.selection).atoms,
+            ticket_labels=labels)
+        child = self.root / child_result['savedDraft']['path']
+        self.assertEqual(draft.with_suffix('') / '000_draft', child.parent)
+        child_id = child_result['savedDraft']['atom_id']
+        grand_result = create_draft(self.selection, {'newAtom': {
+            'template': 'task', 'label': 'Version', 'container': {'atom': child_id},
+            'body': '\n## Summary\n\nGrand\n'}}, current_rows=capture_native(self.selection).atoms,
+            ticket_labels=labels)
+        grand = self.root / grand_result['savedDraft']['path']
+        asset = grand.parent.parent / 'notes.txt'
+        asset.write_text('keep')
+        outcome = promote_draft(self.selection, {'target': {'ref_id': ref, 'version': 1}, 'targetStatus': 'backlog'},
+                                current_rows=capture_native(self.selection).atoms)
+        self.assertEqual('completed', outcome['outcome'], outcome)
+        parent = self.root / outcome['artifact']['path']
+        child_current = parent.with_suffix('') / f'backlog/{child_id}-EPIC--child.md'
+        grand_id = grand_result['savedDraft']['atom_id']
+        grand_current = child_current.with_suffix('') / f'backlog/{grand_id}-VERSION--grand.md'
+        header = yaml.safe_load(grand_current.read_text().split('---', 2)[1])
+        self.assertEqual('backlog', header['state']['status'])
+        self.assertEqual({'template': 'task', 'label': 'Version'}, header['context'])
+        self.assertEqual('keep', (child_current.with_suffix('') / 'notes.txt').read_text())
+        self.assertFalse(draft.exists())
+
+    def test_draft_tree_destination_collision_has_no_effect(self):
+        created = create_draft(self.selection, self.new, current_rows=self.rows)
+        ref = created['savedDraft']['ref_id']
+        draft = self.root / created['savedDraft']['path']
+        child = draft.with_suffix('') / '000_draft/AN-T-10@1-draft-TASK--child.md'
+        child.parent.mkdir(parents=True)
+        header = {'identity': {'atom_id': 'AN-T-10'},
+                  'context': {'container': {'atom': ref.split('@')[0]}, 'template': 'task'},
+                  'state': {'status': 'draft', 'version': 1, 'updated_at': '2026-01-01'}}
+        child.write_text('---\n' + yaml.safe_dump(header) + '---\n\n## Summary\n\nChild\n')
+        collision = child.parent.parent / 'backlog/AN-T-10-TASK--child'
+        collision.mkdir(parents=True)
+        before = draft.read_bytes(), child.read_bytes()
+        outcome = promote_draft(self.selection, {'target': {'ref_id': ref, 'version': 1}, 'targetStatus': 'backlog'},
+                                current_rows=capture_native(self.selection).atoms)
+        self.assertEqual('destination_exists', outcome['errors'][0]['code'])
+        self.assertEqual(before, (draft.read_bytes(), child.read_bytes()))
+        self.assertTrue(collision.is_dir())
+
+    def test_incomplete_child_companion_blocks_parent_retry(self):
+        parent = create_draft(self.selection, self.new, current_rows=self.rows)['savedDraft']
+        child = create_draft(self.selection, {'newAtom': {
+            'template': 'task', 'container': {'atom': parent['atom_id']}, 'body': '## Summary\n\nChild\n',
+        }}, current_rows=capture_native(self.selection).atoms)['savedDraft']
+        companion = (self.root / child['path']).with_suffix('')
+        companion.mkdir()
+        note = companion / 'notes.txt'
+        note.write_text('keep')
+        params = {'target': {'ref_id': parent['ref_id'], 'version': 1}, 'targetStatus': 'active'}
+
+        def partial_move(root, source, destination):
+            destination.mkdir()
+            return SimpleNamespace(effects=[{'operation': 'create', 'target': str(destination)}],
+                                   errors=[{'code': 'backend_failure', 'message': 'copy interrupted'}])
+
+        with patch('ATOM_LIFECYCLE.native_update.move_directory', side_effect=partial_move):
+            outcome = promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms)
+        self.assertEqual('backend_failure', outcome['errors'][0]['code'])
+        with self.assertRaisesRegex(InputError, 'interrupted child publication'):
+            promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms)
+        self.assertEqual('keep', note.read_text())
+        self.assertTrue((self.root / parent['path']).is_file())
 
     def test_new_epic_and_sub_epic_create_and_promote(self):
         self.new['newAtom']['template'] = 'epic'
@@ -486,7 +504,7 @@ class NewNativeTaskTests(unittest.TestCase):
             self.assertIn(f'-{label}--', draft.name)
             result = promote_draft(self.selection,
                 {'target': {'ref_id': result['savedDraft']['ref_id'], 'version': 1}, 'targetStatus': 'active'},
-                current_rows=capture_native(self.selection).atoms, migration_refs=[])
+                current_rows=capture_native(self.selection).atoms)
             self.assertEqual('completed', result['outcome'])
             self.assertIn(f'-{label}--', result['artifact']['path'])
             self.assertFalse(draft.exists())
@@ -501,13 +519,13 @@ class NewNativeTaskTests(unittest.TestCase):
         self.assertEqual({'component': 'C21'}, header['structure']['container'])
         result = promote_draft(self.selection,
             {'target': {'ref_id': result['savedDraft']['ref_id'], 'version': 1}, 'targetStatus': 'active'},
-            current_rows=capture_native(self.selection).atoms, migration_refs=[], structure_snapshot=snapshot)
+            current_rows=capture_native(self.selection).atoms, structure_snapshot=snapshot)
         self.assertEqual('completed', result['outcome'])
 
-    def test_epic_cannot_be_created_under_task(self):
-        self.new['newAtom'].update(template='epic', container={'atom': 'AN-T-1'})
-        with self.assertRaises(InputError):
-            create_draft(self.selection, self.new, current_rows=self.rows)
+    def test_create_rejects_label_outside_model_vocabulary(self):
+        self.new['newAtom']['label'] = 'Milestone'
+        with self.assertRaisesRegex(InputError, 'declared navigation Label'):
+            create_draft(self.selection, self.new, current_rows=self.rows, ticket_labels=('Task',))
 
     def test_canonical_flat_owned_task_keeps_validated_flat_revision_paths(self):
         flat = self.write('__TKT/TASKS/AN-T-2-SUBTASK--example.md', 'AN-T-2')
@@ -522,7 +540,7 @@ class NewNativeTaskTests(unittest.TestCase):
         self.assertEqual(flat.parent / '000_draft', draft.parent)
         result = promote_draft(self.selection, {'target': {'ref_id': result['savedDraft']['ref_id'], 'version': 2},
                                                 'targetStatus': 'done'},
-                               current_rows=capture_native(self.selection).atoms, migration_refs=[])
+                               current_rows=capture_native(self.selection).atoms)
         self.assertEqual(flat.parent / 'done' / flat.name, self.root / result['artifact']['path'])
         self.assertTrue((flat.parent / '099_archived' / flat.name.replace('AN-T-2-', 'AN-T-2@1-')).exists())
 
@@ -536,7 +554,7 @@ class NewNativeTaskTests(unittest.TestCase):
             self.assertEqual(owner.with_suffix('') / '000_draft', draft.parent)
             ref = result['savedDraft']['ref_id']
             result = promote_draft(self.selection, {'target': {'ref_id': ref, 'version': 1}, 'targetStatus': 'active'},
-                                   current_rows=capture_native(self.selection).atoms, migration_refs=[])
+                                   current_rows=capture_native(self.selection).atoms)
             owner = self.root / result['artifact']['path']
             self.assertEqual(draft.parent.parent, owner.parent)
         result = create_draft(self.selection, {'sourceCurrent': {'ref_id': 'AN-T-3', 'version': 1}},
@@ -545,7 +563,7 @@ class NewNativeTaskTests(unittest.TestCase):
         self.assertEqual(owner.parent / '000_draft', draft.parent)
         result = promote_draft(self.selection, {'target': {'ref_id': result['savedDraft']['ref_id'], 'version': 2},
                                                 'targetStatus': 'active'},
-                               current_rows=capture_native(self.selection).atoms, migration_refs=[])
+                               current_rows=capture_native(self.selection).atoms)
         self.assertEqual('completed', result['outcome'])
         self.assertTrue((owner.parent / '099_archived' / owner.name.replace('AN-T-3-', 'AN-T-3@1-')).exists())
 
@@ -563,7 +581,7 @@ class NewNativeTaskTests(unittest.TestCase):
         self.assertEqual({'template': 'task', 'label': 'Subtask'}, metadata['context'])
         ref = output['savedDraft']['ref_id']
         promoted = promote_draft(self.selection, {'target': {'ref_id': ref, 'version': 1}, 'targetStatus': 'active'},
-                                 current_rows=capture_native(self.selection).atoms, migration_refs=[])
+                                 current_rows=capture_native(self.selection).atoms)
         self.assertTrue(promoted['artifact']['path'].endswith('-SUBTASK--create-a-task.md'))
         self.new['newAtom']['container'] = {'atom': 'XX-T-1'}
         with self.assertRaises(InputError):
@@ -583,7 +601,7 @@ class NewNativeTaskTests(unittest.TestCase):
         self.assertEqual('completed', output['outcome'])
         result = promote_draft(self.selection,
             {'target': {'ref_id': output['savedDraft']['ref_id'], 'version': 1}, 'targetStatus': 'active'},
-            current_rows=capture_native(self.selection).atoms, migration_refs=[])
+            current_rows=capture_native(self.selection).atoms)
         self.assertEqual('completed', result['outcome'])
 
     def test_epic_owner_is_checked_again_at_promotion(self):
@@ -595,7 +613,7 @@ class NewNativeTaskTests(unittest.TestCase):
         epic.write_bytes(epic.read_bytes() + b'changed')
         with self.assertRaises(SourceChanged):
             promote_draft(self.selection, {'target': {'ref_id': ref, 'version': 1}, 'targetStatus': 'active'},
-                          current_rows=rows, migration_refs=[])
+                          current_rows=rows)
         self.assertTrue((self.root / output['savedDraft']['path']).exists())
 
     def test_rejects_unselected_component_and_unknown_fields(self):
@@ -607,17 +625,15 @@ class NewNativeTaskTests(unittest.TestCase):
         with self.assertRaises(InputError):
             create_draft(self.selection, self.new, current_rows=self.rows)
 
-    def test_first_promotion_rejects_migration_pin_and_stale_draft(self):
+    def test_first_promotion_rejects_stale_draft(self):
         output = create_draft(self.selection, self.new, current_rows=self.rows)
         ref = output['savedDraft']['ref_id']
         params = {'target': {'ref_id': ref, 'version': 1}, 'targetStatus': 'active'}
         rows = capture_native(self.selection).atoms
-        with self.assertRaises(InputError):
-            promote_draft(self.selection, params, current_rows=rows, migration_refs=[(None, 'old.md', ref)])
         draft = self.root / output['savedDraft']['path']
         draft.write_bytes(draft.read_bytes() + b'changed')
         with self.assertRaises(SourceChanged):
-            promote_draft(self.selection, params, current_rows=rows, migration_refs=[])
+            promote_draft(self.selection, params, current_rows=rows)
 
 
     def test_retry_after_draft_cleanup_failure_is_guarded_and_idempotent(self):
@@ -629,15 +645,13 @@ class NewNativeTaskTests(unittest.TestCase):
         params = {'target': {'ref_id': ref, 'version': 1}, 'targetStatus': 'active'}
         rows = capture_native(self.selection).atoms
         with patch('ATOM_LIFECYCLE.native_draft.effects.remove', return_value=effects.Result(errors=[{'code': 'injected'}])):
-            failed = promote_draft(self.selection, params, current_rows=rows, migration_refs=[])
+            failed = promote_draft(self.selection, params, current_rows=rows)
         self.assertEqual('failed', failed['outcome'])
         self.assertTrue(path.exists())
         rows = capture_native(self.selection).atoms
         with self.assertRaises(InputError):
-            promote_draft(self.selection, params, current_rows=rows, migration_refs=[(None, 'old.md', ref)])
-        with self.assertRaises(InputError):
-            promote_draft(self.selection, {**params, 'targetStatus': 'done'}, current_rows=rows, migration_refs=[])
-        result = promote_draft(self.selection, params, current_rows=rows, migration_refs=[])
+            promote_draft(self.selection, {**params, 'targetStatus': 'done'}, current_rows=rows)
+        result = promote_draft(self.selection, params, current_rows=rows)
         self.assertEqual('completed', result['outcome'])
         self.assertEqual(['remove'], [item['operation'] for item in result['effects']])
         self.assertFalse(path.exists())
@@ -649,11 +663,11 @@ class NewNativeTaskTests(unittest.TestCase):
         ref = output['savedDraft']['ref_id']
         params = {'target': {'ref_id': ref, 'version': 1}, 'targetStatus': 'active'}
         with patch('ATOM_LIFECYCLE.native_draft.effects.remove', return_value=effects.Result(errors=[{'code': 'injected'}])):
-            promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms, migration_refs=[])
+            promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms)
         current = self.control / '__TKT/TASKS/AN-T-2-TASK--create-a-task.md'
         current.write_bytes(current.read_bytes() + b'changed')
         with self.assertRaises(InputError):
-            promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms, migration_refs=[])
+            promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms)
         self.assertTrue((self.root / output['savedDraft']['path']).exists())
 
 
@@ -669,8 +683,7 @@ class NativePromotionTests(unittest.TestCase):
 
     def test_promotes_same_id_and_archives_pinned_current(self):
         old = self.path.read_bytes()
-        output = promote_draft(self.selection, self.promotion, current_rows=self.rows,
-                               migration_refs=[('CA-P-1@1', 'old.md', 'AN-T-1@1')])
+        output = promote_draft(self.selection, self.promotion, current_rows=self.rows)
         self.assertEqual('completed', output['outcome'])
         self.assertEqual(('AN-T-1', 2, 'active'), (output['artifact']['ref_id'], output['artifact']['version'], output['artifact']['status']))
         self.assertFalse(self.draft.exists())
@@ -686,7 +699,7 @@ class NativePromotionTests(unittest.TestCase):
 
     def test_promotes_to_another_current_status(self):
         self.promotion['targetStatus'] = 'done'
-        output = promote_draft(self.selection, self.promotion, current_rows=self.rows, migration_refs=[])
+        output = promote_draft(self.selection, self.promotion, current_rows=self.rows)
         self.assertEqual('completed', output['outcome'])
         self.assertFalse(self.path.exists())
         self.assertEqual(self.control / '__TKT/TASKS/done/AN-T-1-TASK--example.md', self.root / output['artifact']['path'])
@@ -696,40 +709,30 @@ class NativePromotionTests(unittest.TestCase):
         from unittest.mock import patch
         from ATOM_LIFECYCLE import effects
         with patch('ATOM_LIFECYCLE.native_draft.effects.remove', return_value=effects.Result(errors=[{'code': 'injected'}])):
-            output = promote_draft(self.selection, self.promotion, current_rows=self.rows, migration_refs=[])
+            output = promote_draft(self.selection, self.promotion, current_rows=self.rows)
         self.assertEqual('failed', output['outcome'])
         rows = capture_native(self.selection).atoms
-        output = promote_draft(self.selection, self.promotion, current_rows=rows, migration_refs=[])
+        output = promote_draft(self.selection, self.promotion, current_rows=rows)
         self.assertEqual('completed', output['outcome'])
         self.assertEqual(['remove'], [item['operation'] for item in output['effects']])
         self.assertEqual(2, output['artifact']['version'])
         self.assertFalse(self.draft.exists())
         self.assertFalse(capture_native(self.selection).errors)
 
-    def test_pinned_draft_is_refused_without_effects(self):
-        before = self.path.read_bytes(), self.draft.read_bytes()
-        with self.assertRaises(InputError):
-            promote_draft(self.selection, self.promotion, current_rows=self.rows,
-                          migration_refs=[('CA-P-1@2-draft', 'old.md', 'AN-T-1@2-draft')])
-        self.assertEqual(before, (self.path.read_bytes(), self.draft.read_bytes()))
-        self.assertFalse((self.control / '__TKT/TASKS/099_archived').exists())
-
     def test_conflict_and_stale_sources_have_no_effects(self):
-        for case in ('collision', 'draft', 'current', 'manifest', 'selector', 'invalid_refs'):
+        for case in ('collision', 'draft', 'current', 'manifest', 'selector'):
             with self.subTest(case=case):
                 old, draft, manifest = self.path.read_bytes(), self.draft.read_bytes(), self.selection.manifest_path.read_bytes()
                 params = {'target': dict(self.promotion['target']), 'targetStatus': 'active'}
                 conflict = None
-                refs = []
                 if case == 'collision':
                     conflict = self.write('__TKT/TASKS/099_archived/AN-T-1@2-TASK--example.md', 'AN-T-1', version=2, status='archived')
                 if case == 'draft': self.draft.write_bytes(draft.replace(b'New', b'Changed'))
                 if case == 'current': self.path.write_bytes(old.replace(b'Old', b'Changed'))
                 if case == 'manifest': self.selection.manifest_path.write_bytes(manifest + b'changed')
                 if case == 'selector': params['target']['ref_id'] = 'AN-T-1@2'
-                if case == 'invalid_refs': refs = [('broken',)]
                 with self.assertRaises((InputError, SourceChanged)):
-                    promote_draft(self.selection, params, current_rows=self.rows, migration_refs=refs)
+                    promote_draft(self.selection, params, current_rows=self.rows)
                 self.assertTrue(self.path.exists())
                 self.assertTrue(self.draft.exists())
                 self.path.write_bytes(old)
@@ -743,7 +746,7 @@ class NativePromotionTests(unittest.TestCase):
         (self.control / '__TKT/TASKS/done').symlink_to(outside, target_is_directory=True)
         self.promotion['targetStatus'] = 'done'
         with self.assertRaises(InputError):
-            promote_draft(self.selection, self.promotion, current_rows=self.rows, migration_refs=[])
+            promote_draft(self.selection, self.promotion, current_rows=self.rows)
         self.assertFalse((self.control / '__TKT/TASKS/099_archived').exists())
         self.assertEqual([], list(outside.iterdir()))
 
@@ -752,7 +755,7 @@ class NativePromotionTests(unittest.TestCase):
         from ATOM_LIFECYCLE.effects import Result
         failure = Result(errors=[{'code': 'stale_state', 'message': 'injected failure'}])
         with patch('ATOM_LIFECYCLE.native_draft.effects.replace', return_value=failure):
-            output = promote_draft(self.selection, self.promotion, current_rows=self.rows, migration_refs=[])
+            output = promote_draft(self.selection, self.promotion, current_rows=self.rows)
         self.assertEqual('failed', output['outcome'])
         self.assertTrue(output['effects'])
         self.assertTrue(self.draft.exists())
@@ -771,7 +774,7 @@ class NativePromotionTests(unittest.TestCase):
                 return effects.Result(errors=[{'code': 'stale_state', 'message': 'injected failure'}])
             return original_remove(root, path, digest)
         with patch('ATOM_LIFECYCLE.native_draft.effects.remove', side_effect=remove):
-            output = promote_draft(self.selection, self.promotion, current_rows=self.rows, migration_refs=[])
+            output = promote_draft(self.selection, self.promotion, current_rows=self.rows)
         self.assertEqual('failed', output['outcome'])
         self.assertTrue(self.path.exists())
         self.assertTrue(self.draft.exists())
@@ -790,7 +793,7 @@ class NativePromotionTests(unittest.TestCase):
                 return effects.Result(errors=[{'code': 'stale_state', 'message': 'injected failure'}])
             return original_remove(root, path, digest)
         with patch('ATOM_LIFECYCLE.native_draft.effects.remove', side_effect=remove):
-            output = promote_draft(self.selection, self.promotion, current_rows=self.rows, migration_refs=[])
+            output = promote_draft(self.selection, self.promotion, current_rows=self.rows)
         self.assertEqual('failed', output['outcome'])
         self.assertIn('rollback_unconfirmed', [item['code'] for item in output['errors']])
         self.assertTrue(self.path.read_bytes().endswith(b'external'))
@@ -806,7 +809,7 @@ class NativePromotionTests(unittest.TestCase):
             archive.write_bytes(archive.read_bytes() + b'external')
             return Result(errors=[{'code': 'stale_state', 'message': 'injected failure'}])
         with patch('ATOM_LIFECYCLE.native_draft.effects.replace', side_effect=replace):
-            output = promote_draft(self.selection, self.promotion, current_rows=self.rows, migration_refs=[])
+            output = promote_draft(self.selection, self.promotion, current_rows=self.rows)
         self.assertEqual('failed', output['outcome'])
         self.assertIn('rollback_unconfirmed', [item['code'] for item in output['errors']])
         self.assertTrue(archive.read_bytes().endswith(b'external'))
@@ -822,7 +825,7 @@ class NativePromotionTests(unittest.TestCase):
             self.draft.write_bytes(self.draft.read_bytes() + b'external')
             return outcome
         with patch('ATOM_LIFECYCLE.native_draft.common.write_destination', side_effect=write):
-            output = promote_draft(self.selection, self.promotion, current_rows=self.rows, migration_refs=[])
+            output = promote_draft(self.selection, self.promotion, current_rows=self.rows)
         self.assertEqual('failed', output['outcome'])
         self.assertEqual('source_changed', output['errors'][0]['code'])
         self.assertFalse((self.control / '__TKT/TASKS/099_archived/AN-T-1@1-TASK--example.md').exists())
@@ -853,9 +856,9 @@ class ComponentContractLifecycleTests(unittest.TestCase):
         return create_draft(self.selection, self.new, current_rows=capture_native(self.selection).atoms,
                             structure_snapshot=self.snapshot)
 
-    def promote(self, ref, version, refs=()):
+    def promote(self, ref, version):
         return promote_draft(self.selection, {'target': {'ref_id': ref, 'version': version}, 'targetStatus': 'active'},
-                             current_rows=capture_native(self.selection).atoms, migration_refs=refs,
+                             current_rows=capture_native(self.selection).atoms,
                              structure_snapshot=self.snapshot)
 
     def test_new_contract_reports_a_busy_writer_without_effects(self):
@@ -874,19 +877,19 @@ class ComponentContractLifecycleTests(unittest.TestCase):
         metadata = yaml.safe_load(draft.read_text().split('---', 2)[1])
         self.assertEqual({'container': {'component': 'C9'}, 'tier': 1}, metadata['structure'])
         self.assertEqual({'template': 'component_contract', 'lens': 'DES'}, metadata['context'])
-        result = self.promote('AN-S-5@1-draft', 1, [('migration', 'old', 'AN-S-5@1-draft')])
+        result = self.promote('AN-S-5@1-draft', 1)
         self.assertEqual('completed', result['outcome'])
-        self.assertTrue(draft.exists())
-        self.assertEqual(2, result['artifact']['version'])
+        self.assertFalse(draft.exists())
+        self.assertEqual(1, result['artifact']['version'])
         current = self.root / result['artifact']['path']
         self.assertEqual(self.control / 'UNIT_C9/__DES/AN-S-5-DES-COMPONENT_CONTRACT--import-graph-contract.md', current)
-        revised = create_draft(self.selection, {'sourceCurrent': {'ref_id': 'AN-S-5', 'version': 2},
+        revised = create_draft(self.selection, {'sourceCurrent': {'ref_id': 'AN-S-5', 'version': 1},
                                'changes': {'body': self.body.replace('includes imports', 'includes direct imports')}},
                                current_rows=capture_native(self.selection).atoms, structure_snapshot=self.snapshot)
-        result = self.promote(revised['savedDraft']['ref_id'], 3, [('migration', 'old', 'AN-S-5@2')])
+        result = self.promote(revised['savedDraft']['ref_id'], 2)
         self.assertEqual('completed', result['outcome'])
         self.assertIn('direct imports', current.read_text())
-        self.assertTrue((self.control / 'UNIT_C9/099_archived/AN-S-5@2-DES-COMPONENT_CONTRACT--import-graph-contract.md').exists())
+        self.assertTrue((self.control / 'UNIT_C9/099_archived/AN-S-5@1-DES-COMPONENT_CONTRACT--import-graph-contract.md').exists())
 
     def test_rejects_wrong_owner_lens_and_invalid_guarantees(self):
         from copy import deepcopy

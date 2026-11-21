@@ -1,7 +1,3 @@
-# CA-R-2791@1
-# CA-R-2792@1
-# CA-M-475@1
-# CA-D-680@1
 
 """One native Codex thread and turn stream for one selected Project."""
 

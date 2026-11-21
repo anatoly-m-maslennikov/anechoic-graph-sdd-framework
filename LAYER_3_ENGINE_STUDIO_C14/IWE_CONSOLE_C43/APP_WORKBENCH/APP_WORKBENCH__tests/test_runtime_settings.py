@@ -1,5 +1,3 @@
-# CA-D-675@13
-# CA-E-785@1
 from __future__ import annotations
 
 from pathlib import Path

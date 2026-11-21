@@ -142,7 +142,6 @@ def convert_statement(statement: str) -> str | None:
     text = statement.strip()
     if not text:
         return None
-    # Normalize line wrapping only when every token remains the same.
     flattened = ' '.join(text.splitlines())
     if _LEXEMES.findall(text) != _LEXEMES.findall(flattened):
         return None

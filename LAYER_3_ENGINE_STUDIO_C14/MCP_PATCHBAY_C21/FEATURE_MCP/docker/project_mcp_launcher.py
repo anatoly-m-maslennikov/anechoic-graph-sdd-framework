@@ -188,8 +188,6 @@ def _requested_port(value: object) -> int | None:
     if value is None:
         return None
     if isinstance(value, bool) or not isinstance(value, int) or not 1 <= value <= 65535:
-        # CA-O-188 has a closed public condition vocabulary.  This defensive
-        # programmatic seam is never reached by the CLI's argument validator.
         raise LaunchError("DOCKER_START_FAILED")
     return value
 
@@ -338,8 +336,6 @@ def _record_safe_metadata(selection: object, result: Mapping[str, Any]) -> None:
         if result.get("readiness") is True:
             _atomic_metadata(state, "ready.json", metadata)
     except (LaunchError, OSError, TypeError, ValueError):
-        # A metadata write can neither turn an uncertain Docker effect into a
-        # retry nor expose an exception/credential in the launcher result.
         pass
 
 
@@ -492,12 +488,6 @@ class Launcher:
                     return complete(self._failure(self._failure_code(
                         error, "DOCKER_PUBLICATION_FAILED"), selection, image_id, fingerprint))
                 if isinstance(candidate, str):
-                    # The service was absent before one bounded start attempt.
-                    # If Docker leaves no selected runtime afterwards (for
-                    # example, an occupied explicitly requested host port),
-                    # that attempt failed to start.  A present runtime with
-                    # malformed publication still retains its distinct
-                    # DOCKER_PUBLICATION_FAILED classification.
                     return complete(self._failure(candidate if candidate != "absent"
                                                   else "DOCKER_START_FAILED", selection,
                                                   image_id, fingerprint))

@@ -1,5 +1,3 @@
-# CA-R-2791@1
-# CA-D-680@1
 
 """Read the deliberately small Workbench Codex runtime state."""
 

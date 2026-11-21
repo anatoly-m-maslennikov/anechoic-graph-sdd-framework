@@ -1,4 +1,4 @@
-"""Exercise migrated Project startup with the reviewed Model and alias map."""
+"""Exercise native startup with an untouched legacy archive."""
 
 import hashlib
 import json
@@ -23,7 +23,6 @@ from direct_gateway import startup_selection  # noqa: E402
 from http_paths import MCP_PATH  # noqa: E402
 from http_server import create_app  # noqa: E402
 from native_project_selection import NativeProjectSelection  # noqa: E402
-from project_selection import ProjectSelectionError  # noqa: E402
 from smalltest_support import extension_directory, polling_source_watcher  # noqa: E402
 import test_native_startup as fixture  # noqa: E402
 
@@ -54,7 +53,8 @@ class NativeProductionStartupTests(unittest.IsolatedAsyncioTestCase):
         return {p.relative_to(self.legacy): hashlib.sha256(p.read_bytes()).hexdigest()
                 for p in self.legacy.rglob('*') if p.is_file()}
 
-    async def test_production_http_queries_reviewed_model_and_alias(self):
+    async def test_production_http_uses_native_model_without_alias_map(self):
+        self.alias_path.unlink()
         before = self.legacy_digests()
         selection = startup_selection(self.root)
         self.assertIsInstance(selection, NativeProjectSelection)
@@ -77,13 +77,9 @@ class NativeProductionStartupTests(unittest.IsolatedAsyncioTestCase):
                         await client.initialize()
                         tools = {tool.name for tool in (await client.list_tools()).tools}
                         self.assertTrue({'query_run', 'atom_lifecycle_update', 'atom_lifecycle_direct_update'} <= tools)
-                        result = await client.call_tool('query_run', {
-                            'sql': 'SELECT legacy_ref, original_path, exact_ref FROM native_legacy_references',
-                            'result_delivery': 'inline',
-                        })
-                        self.assertFalse(result.is_error, result.structured_content)
-                        self.assertEqual([['CA-P-9@2', self.old_path, 'AN-T-009@2']],
-                                         result.structured_content['rows'])
+                        schema = await client.call_tool('query_schema', {})
+                        self.assertNotIn('native_legacy_references', schema.structured_content['tables'])
+                        self.assertNotIn('native_migration_paths', schema.structured_content['tables'])
                         updated = await client.call_tool('atom_lifecycle_direct_update', {
                             'target': {'ref_id': 'AN-T-009', 'version': 2},
                             'changes': {'body': '## Summary\n\nFixture.\n\n## Work\n\nUpdated through MCP.\n'},
@@ -101,17 +97,11 @@ class NativeProductionStartupTests(unittest.IsolatedAsyncioTestCase):
                         self.assertIn(b'Updated through MCP.', ticket['_content_bytes'])
         self.assertEqual(before, self.legacy_digests())
 
-    def test_missing_or_malformed_alias_map_refuses_startup(self):
+    def test_bad_migration_map_is_outside_startup_inputs(self):
+        self.alias_path.write_text('{')
         before = self.legacy_digests()
         selection = startup_selection(self.root)
-        for contents in (None, '{', '{}', '[["CA-P-9@2", "path.md"]]', '[[1, "path.md", "AN-T-009@2"]]'):
-            with self.subTest(contents=contents):
-                if contents is None:
-                    self.alias_path.unlink(missing_ok=True)
-                else:
-                    self.alias_path.write_text(contents, encoding='utf-8')
-                with self.assertRaises(ProjectSelectionError):
-                    create_app(self.root, selection=selection)
+        self.assertIsInstance(create_app(self.root, selection=selection).gateway.selection, NativeProjectSelection)
         self.assertEqual(before, self.legacy_digests())
 
     def test_http_entrypoint_uses_production_selection(self):

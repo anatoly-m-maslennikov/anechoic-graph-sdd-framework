@@ -16,7 +16,6 @@ GROUPS = {
                   "content_role", "alignment", "summary"),
 }
 
-# Contracts 4/5 retain their full-audit meaning for historical evidence.
 LOCAL_GROUPS = {
     "cce": ("cce",),
     "properties": ("properties",),

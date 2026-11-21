@@ -1,7 +1,3 @@
-# CA-R-2902@4
-# CA-M-476@4
-# CA-E-684@5
-# CA-D-681@7
 
 """Resource-registry checks for the native Workbench MCP App."""
 

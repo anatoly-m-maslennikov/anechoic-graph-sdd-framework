@@ -1,6 +1,5 @@
 """Run every source test module in a fresh interpreter; report skips honestly."""
 
-# CA-M-409@14
 
 from __future__ import annotations
 

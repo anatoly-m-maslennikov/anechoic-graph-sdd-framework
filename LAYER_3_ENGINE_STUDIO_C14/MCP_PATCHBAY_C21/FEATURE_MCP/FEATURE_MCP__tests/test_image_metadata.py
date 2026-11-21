@@ -1,6 +1,5 @@
 """Functional image naming checks through the controlled Docker seam."""
 
-# CA-E-573@18
 import json
 import io
 from pathlib import Path
@@ -30,7 +29,11 @@ import runtime  # noqa: E402
 
 IMAGE, OTHER_IMAGE = "sha256:" + "a" * 64, "sha256:" + "b" * 64
 VERSION, CREATED = "0.4.4.9", "2026-10-21T14:15:16.987654321Z"
-EXPECTED_TAG = "anechoic-runtime:0.4.4.9-20261021T141516Z-aaaaaaaaaaaa"
+EXPECTED_TAG = "anechoic-runtime:0.4.4.9-test-2026-10-21_14-15-16Z-aaaaaaaaaaaa"
+PROD_TAG = "anechoic-runtime:0.4.4.9-prod-2026-10-21_14-15-16Z-aaaaaaaaaaaa"
+LEGACY_TAG = "anechoic-runtime:0.4.4.9-20261021T141516Z-aaaaaaaaaaaa"
+COMPACT_TEST = "anechoic-runtime:0.4.4.9-test-20261021T141516Z-aaaaaaaaaaaa"
+COMPACT_PROD = "anechoic-runtime:0.4.4.9-prod-20261021T141516Z-aaaaaaaaaaaa"
 
 
 class DockerProbe:
@@ -72,14 +75,17 @@ class DockerProbe:
             Path(argv[argv.index("--iidfile") + 1]).write_text(IMAGE, encoding="ascii")
             return subprocess.CompletedProcess(argv, 0, "", "")
         if argv[:3] == ["docker", "image", "ls"]:
-            output = "" if argv[-1] == EXPECTED_TAG else "\n".join(self.listed)
+            output = "" if argv[-1].startswith("anechoic-runtime:") else "\n".join(self.listed)
             return subprocess.CompletedProcess(argv, 0, output, "")
         if argv[:3] == ["docker", "image", "inspect"]:
-            if argv[-1] == EXPECTED_TAG and not self.tags and not self.collision and not self.missing_tag:
+            if argv[-1].startswith("anechoic-runtime:") and argv[-1] not in self.tags and not (self.collision or self.missing_tag):
                 return subprocess.CompletedProcess(argv, 1, "", "")
             return subprocess.CompletedProcess(argv, 0, self._inspect(argv[-1]), "")
         if argv[:3] == ["docker", "image", "tag"]:
             self.tags.add(argv[-1])
+            return subprocess.CompletedProcess(argv, 0, "", "")
+        if argv[:3] == ["docker", "image", "rm"]:
+            self.tags.remove(argv[-1])
             return subprocess.CompletedProcess(argv, 0, "", "")
         return subprocess.CompletedProcess(argv, 1, "", "")
 
@@ -211,6 +217,23 @@ class ImageMetadataTests(unittest.TestCase):
         probe = DockerProbe(tags=(EXPECTED_TAG,), listed=(IMAGE,))
         self.assertEqual(IMAGE, self._manager(probe).resolve(build_if_missing=False))
         self._assert_no_mutation(probe)
+
+    def test_production_promotion_retags_the_same_image_and_restart_keeps_prod(self) -> None:
+        probe = DockerProbe(tags=(EXPECTED_TAG, LEGACY_TAG, COMPACT_TEST, COMPACT_PROD))
+        manager = self._manager(probe)
+        self.assertEqual(PROD_TAG, manager.mark_production_image(IMAGE))
+        self.assertEqual({PROD_TAG}, probe.tags)
+        promote = ("docker", "image", "tag", IMAGE, PROD_TAG)
+        remove_test = ("docker", "image", "rm", EXPECTED_TAG)
+        self.assertLess(probe.calls.index(promote), probe.calls.index(remove_test))
+        probe.calls.clear()
+        self.assertEqual(IMAGE, manager.resolve(explicit_id=IMAGE, build_if_missing=False))
+        self._assert_no_mutation(probe)
+
+    def test_compact_production_tag_preserves_production_role_on_reuse(self) -> None:
+        probe = DockerProbe(tags=(COMPACT_PROD,))
+        self.assertEqual(IMAGE, self._manager(probe).resolve(explicit_id=IMAGE, build_if_missing=False))
+        self.assertEqual({COMPACT_PROD, PROD_TAG}, probe.tags)
 
     def test_existing_tag_collision_refuses_without_moving_or_deleting(self) -> None:
         probe = DockerProbe(tags=(), listed=(IMAGE,), collision=True)

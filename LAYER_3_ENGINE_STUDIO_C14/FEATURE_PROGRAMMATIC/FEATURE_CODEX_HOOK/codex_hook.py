@@ -1,5 +1,3 @@
-# CA-M-517@1
-# CA-D-706@2
 
 """Attach the native Codex session and its folder to a ANECHOIC MCP call."""
 

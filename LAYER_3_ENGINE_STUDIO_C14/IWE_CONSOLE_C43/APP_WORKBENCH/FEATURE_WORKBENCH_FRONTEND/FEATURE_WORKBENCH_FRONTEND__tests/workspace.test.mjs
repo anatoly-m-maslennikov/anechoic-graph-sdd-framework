@@ -1,4 +1,4 @@
-// CA-E-683@6
+
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { cleanAfterSave, newView, persistable, restore, storageKey, workspaceTabs } from '../src/lib/workspace.js';

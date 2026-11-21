@@ -1,7 +1,3 @@
-# CA-E-751@1
-# CA-E-780@4
-# CA-E-677@30
-# CA-M-472@1
 from __future__ import annotations
 
 from contextlib import redirect_stderr
@@ -150,6 +146,35 @@ class QueryStoreTest(unittest.TestCase):
         self.assertIn(first, self.store._results)
         self.assertNotIn(unrelated, self.store._results)
         self.assertEqual([[1]], self.store.page(dependent, 0)["rows"])
+
+    def test_rebuild_uses_cached_unclassified_dependencies(self) -> None:
+        self.store._connection.execute("CREATE TABLE source_join (id INTEGER, value INTEGER)")
+        self.store._connection.execute("INSERT INTO source_join VALUES (1, 10)")
+        first = self.store.run("SELECT * FROM source_join")["query_id"]
+        connection = self.store._connection
+
+        class UnclassifiedConnection:
+            def __getattr__(self, name):
+                if name == "get_table_names":
+                    return lambda _sql: connection.execute("SELECT * FROM missing_dependency_table")
+                return getattr(connection, name)
+
+        self.store._connection = UnclassifiedConnection()
+        try:
+            sql = (f"SELECT value FROM workbench_results.query_{first} "
+                   "JOIN (SELECT 1 AS id) USING (id)")
+            dependent = self.store.run(sql)["query_id"]
+            self.assertTrue(self.store._results[dependent].dependencies_unknown)
+            connection.execute("UPDATE source_join SET value = 20")
+            connection.execute("BEGIN")
+            staged = self.store.prepare_result_rebuild(first)
+            connection.execute("COMMIT")
+            replacements = self.store.commit_result_rebuild(staged)
+            new_dependent = replacements[dependent]["query_id"]
+            self.assertEqual([[20]], self.store.page(new_dependent, 0)["rows"])
+            self.assertTrue(self.store._results[new_dependent].dependencies_unknown)
+        finally:
+            self.store._connection = connection
 
     def test_drop_retains_source_for_dependent_rebuild(self) -> None:
         first = self.store.run("SELECT 1 AS value")["query_id"]

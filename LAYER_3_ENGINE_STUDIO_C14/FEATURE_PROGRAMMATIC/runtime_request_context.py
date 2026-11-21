@@ -1,4 +1,3 @@
-# CA-M-517@1
 """Bind generic request context for the duration of one runtime call."""
 
 from collections.abc import Iterator

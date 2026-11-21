@@ -32,7 +32,6 @@ class ProjectRuntimeBoundaryTests(unittest.TestCase):
                 return iter(())
             return glob(path, pattern, *args, **kwargs)
 
-        # The suite's temporary root may belong to an unrelated enclosing checkout.
         self.enterContext(patch.object(Path, "exists", local_exists))
         self.enterContext(patch.object(Path, "glob", local_glob))
 

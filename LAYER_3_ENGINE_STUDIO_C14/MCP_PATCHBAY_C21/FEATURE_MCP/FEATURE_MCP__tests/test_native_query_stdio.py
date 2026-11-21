@@ -66,12 +66,8 @@ declare_entity(entity_name="Project Manifest", entity_class=ProjectManifest)
         validate_manifest=validate_manifest,
         relation_types=frozenset({"CONTAINED_BY", "CONTAINS"}),
         inverses={"CONTAINED_BY": "CONTAINS"},
-        migration_refs=(
-            ("CA-P-9@2", OLD_PATH, "AN-T-009@2"),
-            (None, UNNUMBERED_PATH, "AN-T-009@1"),
-            (None, STAGING_COPY_PATH, "AN-T-009@1"),
-        ),
         extension_directory=extension_directory(MCP.parents[2]),
+        ticket_labels=("Task", "Subtask", "Sub-epic", "Epic", "Version"),
     )
 
 
@@ -117,7 +113,7 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
         self.args = [str(Path(__file__).resolve()), "--project-root", str(self.root), "--control-root", CONTROL]
 
     def _write(self, relative, atom_id, status, version, *, template="task", body="## Summary\n\nFixture.\n",
-               container=None, tier=None, lens=None, structure_tier=None):
+               container=None, tier=None, lens=None, structure_tier=None, label=None):
         path = self.root / CONTROL / relative
         path.parent.mkdir(parents=True, exist_ok=True)
         metadata = {
@@ -126,6 +122,8 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
                         "tier": tier if tier is not None else -1 if template == "project_manifest" else 0},
             "state": {"version": version, "status": status, "updated_at": "2026-11-19T00:00:00Z"},
         }
+        if label is not None:
+            metadata["context"]["label"] = label
         if lens:
             metadata["context"]["lens"] = lens
         if structure_tier is not None:
@@ -140,6 +138,57 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
         return {path.relative_to(self.root): hashlib.sha256(path.read_bytes()).hexdigest()
                 for path in self.root.rglob("*") if path.is_file()
                 and path.relative_to(self.root).parts[0] not in {".anechoic_runtime", ".anechoic_tmp"}}
+
+    async def test_ticket_label_queries_and_legacy_epic_kind(self):
+        self._write("__TKT/TASKS/AN-T-011-EPIC--canonical.md", "AN-T-011", "active", 1, label="Epic")
+        self._write("__TKT/TASKS/AN-T-012-SUB_EPIC--canonical.md", "AN-T-012", "active", 1, label="Sub-epic")
+        self._write("__TKT/TASKS/AN-T-013-EPIC--legacy.md", "AN-T-013", "active", 1, template="epic")
+        self._write("__TKT/TASKS/AN-T-014-TASK--custom.md", "AN-T-014", "active", 1, label="Custom Group")
+        async with (
+            asyncio.timeout(25),
+            stdio_client(StdioServerParameters(
+                command=sys.executable, args=self.args,
+                env={"ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY": str(extension_directory(MCP.parents[2]))},
+            )) as streams,
+            ClientSession(*streams) as client,
+        ):
+            await client.initialize()
+
+            async def query(**arguments):
+                response = await client.call_tool("query_template", {
+                    "template": "list_tickets", "result_format": "json_matrix", **arguments,
+                })
+                self.assertFalse(response.is_error, response.structured_content)
+                return response.structured_content
+
+            epics = await query(kind="epic")
+            self.assertEqual(["ref", "summary", "kind", "status", "path", "label"],
+                             [column["name"] for column in epics["columns"]])
+            self.assertEqual({("AN-T-011", "task", "Epic"), ("AN-T-012", "task", "Sub-epic"),
+                              ("AN-T-013", "epic", None)},
+                             {(row[0], row[2], row[5]) for row in epics["rows"]})
+            self.assertEqual(["AN-T-012"], [row[0] for row in (await query(label="sub epic"))["rows"]])
+            self.assertEqual(["AN-T-014"], [row[0] for row in (await query(label="CUSTOM-GROUP"))["rows"]])
+
+            async def create(label, container, summary):
+                response = await client.call_tool("atom_lifecycle_create_draft", {"newAtom": {
+                    "template": "task", "label": label, "container": container,
+                    "body": f"## Summary\n\n{summary}\n",
+                }})
+                result = response.structured_content
+                self.assertEqual("completed", result["status"], result)
+                return result["savedDraft"]
+
+            parent = await create("Version", {"component": "C00"}, "Parent version")
+            child = await create("Epic", {"atom": parent["atom_id"]}, "Child epic")
+            promoted = await client.call_tool("atom_lifecycle_promote_draft", {
+                "target": {"ref_id": parent["ref_id"], "version": parent["version"]},
+                "targetStatus": "active",
+            })
+            self.assertEqual("completed", promoted.structured_content["status"], promoted.structured_content)
+            children = (await query(parent=parent["atom_id"], statuses=["active"]))["rows"]
+            self.assertEqual([(child["atom_id"], "task", "Epic")],
+                             [(row[0], row[2], row[5]) for row in children])
 
     async def test_queries_the_native_tree_and_keeps_legacy_inputs_unchanged(self):
         self._write("__TKT/TASKS/AN-T-010-TASK--child.md", "AN-T-010", "done", 1,
@@ -161,15 +210,13 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
             self.assertFalse(schema.is_error, schema.structured_content)
             tables = schema.structured_content["tables"]
             self.assertEqual({
-                "atoms", "relations", "native_references", "native_legacy_references", "native_migration_paths", "components",
+                "atoms", "relations", "native_references", "components",
                 "import_nodes", "module_imports", "import_edges", "package_imports", "test_edges",
                 "tested_by_edges", "import_read_issues", "implementation_rmedo", "component_metrics", "package_audit",
                 "change_log", "query_log", "live_runs", "runtime_diagnostics", "atom_parse_issues",
                 "atom_schema_issues", "atom_declared_carrier_issues", "atom_physical_carrier_issues",
                 "atom_duplicate_revision_issues",
             }, set(tables))
-            self.assertEqual(["original_path", "exact_ref"],
-                             [column["name"] for column in tables["native_migration_paths"]])
             small = await client.call_tool("query_run", {"sql": "SELECT 0 AS n FROM range(120)"})
             self.assertFalse(small.is_error, small.structured_content)
             self.assertEqual([[0]] * 120, small.structured_content["rows"])
@@ -230,7 +277,7 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
             self.assertEqual({"AN-T-009", "AN-T-009@3-draft", "AN-T-010"}, {item[0] for item in tickets["rows"]})
             children = await template("list_tickets", parent="AN-T-009", statuses=["done"])
             self.assertEqual([["AN-T-010", "Fixture.", "task", "done",
-                               f"{CONTROL}/__TKT/TASKS/AN-T-010-TASK--child.md"]], children["rows"])
+                               f"{CONTROL}/__TKT/TASKS/AN-T-010-TASK--child.md", None]], children["rows"])
             listed = await template("list_atoms", family="pmeta", statuses=["active"])
             self.assertEqual([["AN-P-001", "Fixture.", "task", "active",
                                f"{CONTROL}/_PMETA/AN-P-001-WORKFLOW--fixture.md"]], listed["rows"])
@@ -245,11 +292,6 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
             self.assertEqual([["CONTAINS", "AN-T-009", True]], incoming["rows"])
             edge_counts = await template("count_relations_by_type")
             self.assertEqual([["CONTAINED_BY", False, 6], ["CONTAINS", True, 6]], edge_counts["rows"])
-            migrated = await template("resolve_legacy_ref", legacy_ref="CA-P-9")
-            self.assertEqual([["AN-T-009@2", OLD_PATH]], migrated["rows"])
-            migrated = await template("resolve_legacy_path", original_path=UNNUMBERED_PATH)
-            self.assertEqual([["AN-T-009@1"]], migrated["rows"])
-
             sql = ("SELECT stable_ref, exact_ref FROM native_references "
                    "WHERE exact_ref LIKE 'AN-T-009@%' ORDER BY exact_ref")
             checked = await client.call_tool("query_check", {"sql": sql})
@@ -267,14 +309,6 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
                 "OR (source_ref = 'AN-T-009' AND target_ref = 'C0') ORDER BY derived"
             )
             self.assertEqual([["CONTAINED_BY", False], ["CONTAINS", True]], inverse["rows"])
-            legacy = await query("SELECT exact_ref FROM native_legacy_references WHERE original_path = "
-                                 f"'{OLD_PATH}' AND legacy_ref = 'CA-P-9@2'")
-            self.assertEqual([["AN-T-009@2"]], legacy["rows"])
-            paths = await query("SELECT original_path, exact_ref FROM native_migration_paths ORDER BY original_path")
-            self.assertEqual([[OLD_PATH, "AN-T-009@2"], [UNNUMBERED_PATH, "AN-T-009@1"],
-                              [STAGING_COPY_PATH, "AN-T-009@1"]], paths["rows"])
-            legacy_paths = await query("SELECT original_path FROM native_legacy_references")
-            self.assertEqual([[OLD_PATH]], legacy_paths["rows"])
             for name, arguments in (
                 ("query_run", {"sql": "SELECT 1", "project_root": str(self.root.parent)}),
                 ("query_run", {"sql": "SELECT 1", "save": "yes"}),

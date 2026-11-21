@@ -24,7 +24,6 @@ def _roots(root: Path, python_roots: tuple[str, ...]) -> list[PurePosixPath]:
 
 
 def _packages(sources: dict[str, Source], roots: list[PurePosixPath]) -> set[str]:
-    # Index only inventoried files; directories containing them provide namespace evidence.
     packages: set[str] = set()
     for path, source in sources.items():
         if source.language != "python":

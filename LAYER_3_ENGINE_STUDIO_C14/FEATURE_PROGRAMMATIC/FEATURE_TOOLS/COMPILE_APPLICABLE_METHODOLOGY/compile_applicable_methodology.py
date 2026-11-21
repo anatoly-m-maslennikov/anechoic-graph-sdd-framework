@@ -1,9 +1,4 @@
 #!/usr/bin/env python3
-# CA-D-253@30
-# CA-D-306@30
-# CA-D-326@27
-# CA-D-359@30
-# CA-D-561@25
 
 """Compile an Applicable Methodology projection for local release."""
 

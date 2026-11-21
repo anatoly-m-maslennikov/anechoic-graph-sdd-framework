@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 try:
     from . import test_full_test_suite as fixtures
-except ImportError:  # The full-suite child imports this test as a top-level module.
+except ImportError:
     import test_full_test_suite as fixtures
 
 full = fixtures.full

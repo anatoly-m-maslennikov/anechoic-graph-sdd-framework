@@ -1,9 +1,3 @@
-# CA-R-2723@6
-# CA-R-2726@9
-# CA-D-672@22
-# CA-M-465@29
-# CA-M-500@3
-# CA-M-464@15
 
 """Map parsed Atom and Scope Unit sources to raw Workbench rows."""
 

@@ -1,4 +1,3 @@
-# CA-E-796@1
 """Static contract checks for the short Implementation Workflow prompts."""
 
 import re

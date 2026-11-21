@@ -45,8 +45,6 @@ def _without_dependencies(raw: str) -> str:
     stripped, count = re.subn(pattern, '', block)
     if count != int('depends_on' in metadata(raw)['subjects']):
         raise ValueError('DEPENDS_ON field has unsupported or duplicate encoding')
-    # Reject alternate indentation/duplicate spellings that YAML equality could
-    # otherwise hide. Everything outside the admitted property stays exact.
     if re.search(r'(?m)^\s*depends_on\s*:', stripped):
         raise ValueError('ambiguous DEPENDS_ON field encoding')
     return header[:start] + stripped + header[end:] + body
@@ -111,8 +109,6 @@ def admit_subject_recoding(evaluation: dict[str, Any], proposal: dict[str, Any],
         raise ValueError('final evaluation does not bind the exact proposed output')
     original = original_context.candidate_text(proposal['source'])
     stripped_old, stripped_new = _dependency_change(original, output['text'])
-    # Mechanically compare all other bytes using the existing strict helpers;
-    # the independent assessment still binds the unmodified original and final.
     stripped_output = dict(output, text=stripped_new)
     removes_type = 'type' in metadata(original) and 'type' not in metadata(output['text'])
     _identity(stripped_output, proposal['source'], stripped_old,

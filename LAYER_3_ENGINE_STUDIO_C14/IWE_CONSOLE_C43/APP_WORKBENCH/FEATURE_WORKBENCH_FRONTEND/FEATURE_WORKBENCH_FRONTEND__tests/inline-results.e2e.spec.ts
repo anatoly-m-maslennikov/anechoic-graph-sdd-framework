@@ -1,4 +1,4 @@
-// CA-E-683@6
+
 import { expect, test } from '@playwright/test';
 
 test('browser fetches inline rows while MCP defaults to files', async ({ page }) => {

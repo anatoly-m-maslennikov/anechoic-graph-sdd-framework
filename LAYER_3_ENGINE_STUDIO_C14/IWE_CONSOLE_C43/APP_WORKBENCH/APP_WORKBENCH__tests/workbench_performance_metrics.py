@@ -1,6 +1,3 @@
-# CA-E-677@18
-# CA-E-795@1
-# CA-E-780@7
 """Shared reporting and hard limits for Workbench performance acceptance."""
 
 from __future__ import annotations

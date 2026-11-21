@@ -1,13 +1,3 @@
-# CA-R-3049@5
-# CA-R-1539@25
-# CA-R-1608@23
-# CA-R-2696@3
-# CA-D-296@33
-# CA-D-475@28
-# CA-D-466@27
-# CA-D-565@28
-# CA-D-716@4
-# CA-D-717@1
 
 """Immutable compiled placement bindings for lifecycle operations."""
 from contextlib import contextmanager

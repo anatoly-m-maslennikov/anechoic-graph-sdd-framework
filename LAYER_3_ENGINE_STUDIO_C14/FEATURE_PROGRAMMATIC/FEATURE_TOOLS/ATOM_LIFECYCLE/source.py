@@ -1,5 +1,3 @@
-# CA-M-1006@7
-# CA-D-625@14
 
 """Private, read-only exact Atom source binding for lifecycle workflows."""
 from __future__ import annotations
@@ -171,8 +169,6 @@ def _inventory_paths(reader: ReadContext, selection: ProjectSelection, classify)
                     path = directory / entry.name
                     identity = classify(entry.name)
                     if entry.is_symlink():
-                        # A matching symlink is never read; a directory symlink
-                        # could hide another source and cannot be traversed safely.
                         if identity is not None or descend:
                             raise SourceSelectionError("Symlink in Atom source boundary")
                     elif descend and entry.is_dir(follow_symlinks=False):
@@ -210,7 +206,6 @@ def _carrier_revision(path: Path, atom_id: str) -> tuple[str | None, bool]:
     if not marker:
         raise SourceSelectionError("Malformed candidate carrier identity")
     candidate_version, candidate_draft = marker.groups()
-    # Retained archived carriers also use the historical suffix form.
     if not candidate_version:
         suffix = re.search(r"@([1-9][0-9]*)\.md$", path.name)
         if suffix:
@@ -300,8 +295,6 @@ def select_source(selection: ProjectSelection, ref_id: str, *, expected_version:
     try:
         if query_reader() is None:
             selection._revalidate_boundary(reader=reader)
-        # The retained declaration tree is the source authority, not delivery paths,
-        # applicable-methodology projections, arbitrary Project files or caller paths.
         candidates = _candidate_paths(reader, selection, atom_id, references=(ref_id,))
         selected = _unique_candidate(reader, candidates, ref_id, atom_id, qualified, draft,
                                      retained_history=bool(qualified and not draft))

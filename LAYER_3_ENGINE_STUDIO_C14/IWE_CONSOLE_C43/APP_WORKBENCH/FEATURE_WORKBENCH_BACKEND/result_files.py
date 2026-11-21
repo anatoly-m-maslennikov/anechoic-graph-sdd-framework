@@ -1,4 +1,3 @@
-# CA-D-673@18
 """Export already-materialized query rows to disposable Project files."""
 
 from __future__ import annotations

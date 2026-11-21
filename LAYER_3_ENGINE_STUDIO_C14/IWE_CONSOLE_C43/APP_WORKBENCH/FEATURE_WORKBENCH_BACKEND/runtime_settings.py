@@ -1,5 +1,3 @@
-# CA-D-675@17
-# CA-M-500@12
 
 """Read the fixed Workbench runtime retention setting at startup."""
 

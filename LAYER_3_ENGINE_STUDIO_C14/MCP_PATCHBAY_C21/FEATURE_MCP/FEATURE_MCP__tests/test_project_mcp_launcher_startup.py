@@ -99,8 +99,6 @@ class Backend:
         return IMAGE_ID, FINGERPRINT
 
     def inspect(self, selection):
-        # Model the backend subprocess boundary: only its sanitized environment
-        # is observable by Docker inspection, never the launcher credential.
         environment = dict(os.environ)
         environment.pop("ANECHOIC_MCP_HTTP_SECRET_TOKEN", None)
         self.inspect_envs.append(environment)
@@ -329,10 +327,6 @@ class LauncherStartupContractTests(unittest.TestCase):
         self.assertEqual([], self.backend.rows)
 
     def test_requested_port_without_post_start_publication_is_a_start_failure(self):
-        # Docker may return from the compose invocation but expose no selected
-        # container on the immediately following inspection (for example when
-        # a requested host listener is unavailable).  This is an attempted
-        # start that failed to publish, not a malformed pre-existing runtime.
         self.backend.publish_after_start = False
         result = self.launch(port=56317)
         self.assert_public_failure(result, "failed", "DOCKER_START_FAILED")

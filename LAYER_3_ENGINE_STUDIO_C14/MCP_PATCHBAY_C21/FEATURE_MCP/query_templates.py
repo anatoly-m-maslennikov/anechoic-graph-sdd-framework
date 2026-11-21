@@ -12,14 +12,12 @@ TEMPLATES = {
     "get_atom": ("reference",),
     "find_atoms": ("text",),
     "list_versions": ("reference",),
-    "list_tickets": ("kind", "parent", "statuses"),
+    "list_tickets": ("kind", "label", "parent", "statuses"),
     "list_atoms": ("family", "kind", "statuses"),
     "count_atoms": ("family", "kind", "statuses", "group_by"),
     "get_atom_state": ("reference",),
     "list_relations": ("reference", "direction"),
     "count_relations_by_type": (),
-    "resolve_legacy_ref": ("legacy_ref",),
-    "resolve_legacy_path": ("original_path",),
     "fetch_contracts": ("component",),
     "fetch_solutions": ("component",),
     "get_component_manifest": ("component",),
@@ -38,6 +36,8 @@ _SUMMARY = 'a."content.summary" AS summary'
 _PATH = "concat_ws('/', nullif(a.relative_path, ''), a.filename) AS path"
 _STATUS = 'a."header.state.status"'
 _TEMPLATE = 'a."header.context.template"'
+_LABEL = "json_extract_string(to_json(a), '$.\"header.context.label\"')"
+_NORMALIZED_LABEL = f"lower(replace(replace({_LABEL}, '-', ''), ' ', ''))"
 _UPDATED = 'a."header.state.updated_at"'
 _NUMBER = 'a."header.state.version"'
 _GROUPS = {"status": _STATUS, "status_group": "a.status_group", "kind": _TEMPLATE}
@@ -45,7 +45,7 @@ _COLUMNS = {
     "get_atom": f"r.exact_ref, {_SUMMARY}, {_STATUS} AS status, {_PATH}",
     "find_atoms": f"a.reference AS ref, {_SUMMARY}, {_PATH}",
     "list_versions": f"r.exact_ref, {_STATUS} AS status, {_UPDATED} AS updated_at, {_PATH}",
-    "list_tickets": f"a.reference AS ref, {_SUMMARY}, {_TEMPLATE} AS kind, {_STATUS} AS status, {_PATH}",
+    "list_tickets": f"a.reference AS ref, {_SUMMARY}, {_TEMPLATE} AS kind, {_STATUS} AS status, {_PATH}, {_LABEL} AS label",
     "list_atoms": f"a.reference AS ref, {_SUMMARY}, {_TEMPLATE} AS kind, {_STATUS} AS status, {_PATH}",
     "count_atoms": "count(*) AS count",
     "get_atom_state": f"{_STATUS} AS status, {_NUMBER} AS version",
@@ -63,9 +63,8 @@ def descriptor():
             "filter by family, kind or statuses. count_atoms includes archived Atoms unless filtered "
             "and can group by status, status_group or kind. "
             "list_tickets lists Tasks and Epics with optional "
-            "parent, kind and statuses. list_relations takes a reference and defaults to outgoing. "
+            "parent, kind, label and statuses. list_relations takes a reference and defaults to outgoing. "
             "count_relations_by_type groups relation counts by type and derived flag. "
-            "resolve_legacy_ref takes a legacy_ref, and resolve_legacy_path takes an original_path. "
             "fetch_contracts, fetch_solutions, get_component_manifest, and "
             "get_component_purpose accept a Component name or ID in component."
         ),
@@ -76,14 +75,13 @@ def descriptor():
                 "reference": {"type": "string", "pattern": f"^{_ATOM_ID}(?:{_VERSION})?$"},
                 "text": _TEXT,
                 "kind": {"type": "string", "pattern": r"^[a-z][a-z0-9_]*$"},
+                "label": _TEXT,
                 "family": {"type": "string", "enum": list(_FAMILIES)},
                 "group_by": {"type": "string", "enum": list(_GROUPS)},
                 "parent": {"type": "string", "pattern": r"^[A-Z]+-T-[0-9]+$"},
                 "statuses": {"type": "array", "minItems": 1, "uniqueItems": True,
                              "items": {"type": "string", "enum": _STATUSES}},
                 "direction": {"type": "string", "enum": ["outgoing", "incoming"]},
-                "legacy_ref": {"type": "string", "pattern": rf"^[A-Z]+-[A-Z]-[0-9]+(?:{_VERSION})?$"},
-                "original_path": _TEXT,
                 "component": _TEXT | {"description": "Component name or ID, such as Kernel Mixer or C59."},
                 **{key: _RUN_SCHEMA["properties"][key] for key in _RESULT_OPTIONS},
                 "result_format": {**_RUN_SCHEMA["properties"]["result_format"], "default": "csv"},
@@ -135,7 +133,14 @@ def run_arguments(arguments: dict) -> dict:
         if "family" in arguments:
             filters.append(f"split_part(r.exact_ref, '-', 2) = '{_FAMILIES[arguments['family']]}'")
         if "kind" in arguments:
-            filters.append(f"{_TEMPLATE} = {_literal(arguments['kind'])}")
+            if template == "list_tickets" and arguments["kind"] == "epic":
+                filters.append(f"({_TEMPLATE} = 'epic' OR ({_TEMPLATE} = 'task' AND "
+                               f"{_NORMALIZED_LABEL} IN ('epic', 'subepic')))")
+            else:
+                filters.append(f"{_TEMPLATE} = {_literal(arguments['kind'])}")
+        if "label" in arguments:
+            label = arguments["label"].lower().replace("-", "").replace(" ", "")
+            filters.append(f"{_NORMALIZED_LABEL} = {_literal(label)}")
         if "parent" in arguments:
             filters.append(
                 "EXISTS (SELECT 1 FROM relations AS edge "
@@ -160,7 +165,6 @@ def run_arguments(arguments: dict) -> dict:
         table = "relations"
         columns = f"relation_type, {other}_ref AS related_ref, derived"
         reference = _literal(arguments["reference"])
-        # Current edges use the stable reference. Resolve exact Current references the same way as archived ones.
         where = (f"{side}_kind = 'Atom' AND ({side}_ref = {reference} OR {side}_ref IN "
                  f"(SELECT reference FROM native_references WHERE exact_ref = {reference}))")
         order = "relation_type, related_ref, derived"
@@ -169,13 +173,6 @@ def run_arguments(arguments: dict) -> dict:
         columns = "relation_type, derived, count(*) AS count"
         where = ""
         group = order = "relation_type, derived"
-    elif template == "resolve_legacy_ref":
-        table = "native_legacy_references"
-        columns = "exact_ref, original_path"
-        reference = arguments["legacy_ref"]
-        column = "legacy_ref" if "@" in reference else "split_part(legacy_ref, '@', 1)"
-        where = f"{column} = {_literal(reference)}"
-        order = "exact_ref, original_path"
     elif template in _COMPONENT_QUERIES:
         label = arguments["component"].strip()
         if not label:
@@ -199,11 +196,6 @@ def run_arguments(arguments: dict) -> dict:
                      "AND EXISTS (SELECT 1 FROM relations AS edge WHERE edge.source_ref = a.reference "
                      "AND edge.source_kind = 'Atom' AND edge.target_kind = 'Component' "
                      f"AND edge.relation_type = 'CONTAINED_BY' AND NOT edge.derived AND edge.target_ref = {cid})")
-    else:
-        table = "native_migration_paths"
-        columns = "exact_ref"
-        where = f"original_path = {_literal(arguments['original_path'])}"
-
     sql = f"SELECT {columns} FROM {table}"
     if where:
         sql += f" WHERE {where}"

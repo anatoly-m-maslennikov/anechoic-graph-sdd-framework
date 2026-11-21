@@ -1,4 +1,3 @@
-# CA-E-676@15
 """Result-file format and failure checks at the real filesystem boundary."""
 
 from __future__ import annotations

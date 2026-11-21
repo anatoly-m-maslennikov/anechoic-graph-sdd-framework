@@ -1,7 +1,3 @@
-# CA-R-2998@1
-# CA-M-503@1
-# CA-D-703@1
-# CA-E-795@1
 
 """Opt-in, isolated Workbench profiler; it is never a latency or throughput gate."""
 

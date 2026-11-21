@@ -1,4 +1,3 @@
-# CA-E-675@14
 from __future__ import annotations
 
 from importlib.util import module_from_spec, spec_from_file_location

@@ -1,6 +1,3 @@
-# CA-M-504@4
-# CA-D-578@21
-# CA-M-409@14
 
 """Explicit Project-scoped Docker lifecycle; never creates Workflow requests."""
 
@@ -15,7 +12,7 @@ import subprocess
 try:
     from .image_reference import IMMUTABLE_IMAGE, image_reference
     from .mcp_paths import MCP_PATH
-except ImportError:  # direct execution: docker/ is the import root
+except ImportError:
     from image_reference import IMMUTABLE_IMAGE, image_reference
     from mcp_paths import MCP_PATH
 
@@ -97,7 +94,7 @@ class Runtime:
     def _image_manager(self, *, create_temp=False, timeout=600):
         try:
             from .runtime_images import ImageManager
-        except ImportError:  # direct execution: docker/ is the import root
+        except ImportError:
             from runtime_images import ImageManager
         return ImageManager(SOURCE_ROOT, project_root=self.root, timeout=timeout,
                             build_temp_root=self._project_temp_root(create=create_temp))
@@ -170,7 +167,6 @@ class Runtime:
         self.prepare()
         port = self._http_port()
         self._ensure_launch_image()
-        # Full Project indexing can take several minutes; leave a margin for Compose.
         self.call("up", "-d", "--wait", "--wait-timeout", "420", "--force-recreate", "mcp-http",
                   http=True, timeout=450)
         if not self._http_publisher_admitted(self.mcp_http_status(), port):

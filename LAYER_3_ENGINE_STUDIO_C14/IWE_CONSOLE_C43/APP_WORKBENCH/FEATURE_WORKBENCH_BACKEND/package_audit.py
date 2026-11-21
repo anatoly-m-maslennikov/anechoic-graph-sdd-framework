@@ -69,7 +69,7 @@ def _contract_refs(selection, capture, package_paths):
                        for path in package_paths}
 
 
-def replace_package_audit(connection, selection, capture, nodes, migration_refs, binding_states=None, *, tests):
+def replace_package_audit(connection, selection, capture, nodes, binding_states=None, *, tests):
     """Replace the audit in the caller's transaction, reusing retained binding states if needed."""
     connection.execute('CREATE TABLE IF NOT EXISTS main.package_audit '
                        '(package_key VARCHAR, relative_path VARCHAR, has_internal BOOLEAN, '
@@ -91,19 +91,6 @@ def replace_package_audit(connection, selection, capture, nodes, migration_refs,
                 markers[path.parent.as_posix()].add(visibility)
 
     exact = {row['_exact_ref']: row for row in capture.atoms}
-    aliases = defaultdict(set)
-    for old, _, target in migration_refs:
-        if old:
-            aliases[old].add(target)
-
-    def resolve(ref):
-        if ref in exact:
-            return exact[ref], None
-        targets = aliases.get(ref, set())
-        if len(targets) > 1:
-            return None, 'ambiguous'
-        return (exact.get(next(iter(targets))), None) if targets else (None, 'missing')
-
     pins = defaultdict(list)
     for owner, kind, atom, version in connection.execute(
             'SELECT owner_path, entry_kind, atom_id, version FROM main.implementation_rmedo').fetchall():
@@ -117,7 +104,7 @@ def replace_package_audit(connection, selection, capture, nodes, migration_refs,
         state = binding_states.get(path, 'missing')
         issues, resolved = [], []
         for kind, ref in pins[path]:
-            row, reason = resolve(ref)
+            row, reason = exact.get(ref), None
             if row is not None:
                 if not row['id'].startswith(selection.project_prefix + '-S-'):
                     reason = 'non_spec'

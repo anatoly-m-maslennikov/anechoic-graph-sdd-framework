@@ -8,7 +8,8 @@ from mcp import types
 
 _TOOLS = {
     'atom_lifecycle_create_draft': (
-        'Create a Draft from a Current Atom or create a new Task, Epic, or Component Contract Draft.',
+        'Create a Draft from a Current Atom or create a Task or Component Contract Draft. '
+        'Use newAtom.label for Task navigation, such as Epic or Version.',
         {'sourceCurrent': {}, 'changes': {}, 'newAtom': {}},
     ),
     'atom_lifecycle_archive': ('Archive an exact Current Ticket.', {'target': {}}),

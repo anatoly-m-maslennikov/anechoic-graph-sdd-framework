@@ -1,9 +1,5 @@
 """Start one selected Project's Workbench Codex bridge."""
 
-# Implemented by:
-# CA-R-2791@1
-# CA-M-475@1
-# CA-D-680@1
 from __future__ import annotations
 
 import argparse

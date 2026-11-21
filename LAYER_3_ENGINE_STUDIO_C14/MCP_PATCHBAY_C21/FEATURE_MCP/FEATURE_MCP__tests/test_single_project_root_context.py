@@ -1,5 +1,3 @@
-# CA-E-281@18
-# CA-E-599@15
 
 """Real MCP proof for the optional single-Project root envelope."""
 

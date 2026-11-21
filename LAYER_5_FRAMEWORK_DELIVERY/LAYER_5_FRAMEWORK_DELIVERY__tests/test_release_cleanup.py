@@ -1,6 +1,5 @@
 """Cleanup uses exact ownership and immutable IDs, without a Docker daemon."""
 
-# CA-E-573@18
 
 from __future__ import annotations
 

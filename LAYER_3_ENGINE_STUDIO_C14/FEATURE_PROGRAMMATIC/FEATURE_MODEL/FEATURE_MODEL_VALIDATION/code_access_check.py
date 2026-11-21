@@ -75,7 +75,6 @@ def check_code_access(ownership, sources, occurrences):  # noqa: C901
                 imports.append(rules[ancestor['id']][0])
             ancestor = ownership.entries.get(ancestor['parent'])
         exports = rules[provider['id']][1]
-        # Selectors use physical names down to the owning Package's local name.
         entry = next((name for name in sorted(names, key=len, reverse=True)
                       if exports is not None and name in exports), None)
         if entry is None:

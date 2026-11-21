@@ -6,7 +6,8 @@ structure:
     component: C21
   priority: 2
 context:
-  template: epic
+  template: task
+  label: Epic
 relations:
   REFERENCES:
   - AN-S-1958

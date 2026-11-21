@@ -1,6 +1,3 @@
-# CA-R-3067@2
-# CA-M-549@2
-# CA-R-3068@2
 """Pure, best-effort carrier placement expectations from cached source rows."""
 from pathlib import Path, PurePosixPath
 import sys
@@ -64,7 +61,6 @@ def _parent_context(container, role, form, scopes, parents, placement, seen):
 
 
 def _expected_name(row, view, scope, status, role, form):
-    # Archive filenames retain predecessor bytes, and have no reconstructible grammar.
     special = str(form).casefold().replace('_', ' ') in {'scope unit declaration', 'scope delegation'}
     if str(status).casefold() == 'archived' or special:
         return None

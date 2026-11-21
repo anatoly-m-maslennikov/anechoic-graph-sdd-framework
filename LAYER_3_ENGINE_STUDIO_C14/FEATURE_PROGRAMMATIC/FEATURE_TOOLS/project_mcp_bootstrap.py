@@ -1,4 +1,3 @@
-# CA-D-562@25
 
 """Copy the package-owned Project MCP bootstrap without activating it."""
 

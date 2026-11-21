@@ -1,4 +1,3 @@
-# CA-D-442@29
 
 """Parse native Scope Unit Declarations and prose Scope Delegations."""
 

@@ -1,6 +1,3 @@
-# CA-D-639@18
-# CA-D-677@1
-# CA-D-679@1
 
 """Bounded HTML representation of the MCP health snapshot."""
 

@@ -1,4 +1,3 @@
-# CA-M-517@1
 """Validate and remove the MCP caller-context envelope."""
 
 from typing import Any

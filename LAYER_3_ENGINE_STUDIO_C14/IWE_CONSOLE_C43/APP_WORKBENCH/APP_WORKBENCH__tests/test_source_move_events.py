@@ -1,4 +1,3 @@
-# CA-E-677@30
 """A native destination-create event can arrive before its source-remove event."""
 
 from pathlib import Path
@@ -75,7 +74,6 @@ class SourceMoveEventTests(unittest.TestCase):
             self.assertIsNone(reader.capture_delta[source.relative_to(root).as_posix()])
             self.assertIsNotNone(reader.capture_delta[target.relative_to(root).as_posix()])
 
-            # Both existing carriers remain queryable.
             write_atom(source, "CA-R-424242")
             rows, _ = reader.capture([{
                 "operation": "create", "old_path": None,

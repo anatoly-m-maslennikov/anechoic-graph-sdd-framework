@@ -1,5 +1,3 @@
-# CA-R-2725@4
-# CA-D-673@15
 
 """Admit one native read-only Workbench query without changing it."""
 

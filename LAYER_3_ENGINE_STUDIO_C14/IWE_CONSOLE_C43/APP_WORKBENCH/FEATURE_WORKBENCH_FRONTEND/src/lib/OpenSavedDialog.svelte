@@ -1,4 +1,4 @@
-<!-- CA-D-674@26 -->
+
 <script lang="ts">
   import { tick } from 'svelte';
   let { open = false, busy = false, onopen, onclose }: { open?: boolean; busy?: boolean; onopen: (reference: string) => void; onclose: () => void } = $props();

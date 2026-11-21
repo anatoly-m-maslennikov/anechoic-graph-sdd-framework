@@ -1,4 +1,3 @@
-# CA-E-752@1
 """Focused checks for the shared runtime failure diagnostic facade."""
 
 from __future__ import annotations

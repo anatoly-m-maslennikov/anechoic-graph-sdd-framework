@@ -1,5 +1,3 @@
-# CA-E-677@23
-# CA-E-675@14
 """Both Workbench schema modes and their deterministic generated asset."""
 
 from __future__ import annotations

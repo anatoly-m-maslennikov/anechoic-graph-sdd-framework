@@ -1,4 +1,3 @@
-# CA-D-363@29
 
 """Resolve and bind one explicit Project without repository or sibling fallback.
 
@@ -140,7 +139,6 @@ def _control_candidates(root: Path) -> list[Path]:
                 if not entry.is_dir(follow_symlinks=False):
                     continue
                 control = root / entry.name
-                # Runtime/install/scratch directories are not Project candidates.
                 if os.path.lexists(control / SETTINGS_FILENAME):
                     candidates.append(_control_relative(entry.name))
             return sorted(candidates)
@@ -252,7 +250,6 @@ def _declaration_boundary_proof(
                 continue
             settings = marker(directory)
             if settings is not None:
-                # A matching Name does not merge distinct root/control instances.
                 if _instance_id(directory.parent, Path(directory.name)) != _instance_id(root, control.relative_to(root)):
                     raise ProjectSelectionError("Scope Unit Declaration path crosses another Project control root")
         proof = _DeclarationBoundaryProof(root, pins, reader)

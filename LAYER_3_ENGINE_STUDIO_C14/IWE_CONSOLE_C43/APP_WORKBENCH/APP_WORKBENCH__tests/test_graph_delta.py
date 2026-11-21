@@ -1,4 +1,3 @@
-# CA-E-677@30
 """Incremental Workbench graph/public projection checks against real DuckPGQ."""
 
 from __future__ import annotations

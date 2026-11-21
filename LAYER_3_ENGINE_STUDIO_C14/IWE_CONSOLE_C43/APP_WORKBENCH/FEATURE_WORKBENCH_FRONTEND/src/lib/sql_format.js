@@ -1,4 +1,4 @@
-// CA-M-501@5
+
 import { sql } from '@codemirror/lang-sql';
 import { duckdb, formatDialect } from '@dlh.io/dlh-sql-formatter';
 

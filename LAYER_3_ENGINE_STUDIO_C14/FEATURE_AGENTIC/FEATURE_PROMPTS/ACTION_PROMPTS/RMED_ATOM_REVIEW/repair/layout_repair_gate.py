@@ -221,8 +221,6 @@ def admit_layout_recoding(evaluation: dict[str, Any], proposal: dict[str, Any], 
     parts = _frontmatter(original)
     if parts is None or metadata(original).get('content_role') not in ('Requirement', 'Method', 'Delivery'):
         raise ValueError('layout recoding requires an R/M/D Carrier with complete frontmatter')
-    # This virtual intermediate is never admitted or written. Recompute the
-    # original-to-layout proof; do not trust a caller-supplied preview status.
     layout_text = parts[0] + markdown(output['text'])
     layout = admit_layout_preview(proposal['source'], original, layout_text, section_mapping=section_mapping)
     if layout['result'] != 'preview':

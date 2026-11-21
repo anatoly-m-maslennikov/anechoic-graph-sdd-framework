@@ -1,4 +1,3 @@
-# CA-E-675@10
 """Content declarations apply to admitted Role/Form serializations."""
 
 from pathlib import Path

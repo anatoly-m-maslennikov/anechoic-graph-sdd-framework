@@ -1,4 +1,3 @@
-# CA-E-814@1
 """Real MCP transport and standalone hook caller-context checks."""
 
 from __future__ import annotations

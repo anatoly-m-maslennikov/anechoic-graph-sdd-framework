@@ -16,13 +16,8 @@ from evaluation_contract import summarize_evaluations
 from review_evidence import ReviewContext, probability, text
 
 
-# Fixer operations are not the canonical semantic change classes returned by
-# CA-O-067 under CA-R-1432. In particular, a split is a replacement class.
 CHANGE_CLASSES = {
     'formatting': ('carrier_only',),
-    # A recoding is the deliberately narrow carrier-only path change: it may
-    # remove an invalid R/M/D role echo and rename the carrier accordingly.
-    # It is not a general metadata-edit escape hatch.
     'recoding': ('carrier_only',),
     'revision': ('refinement', 'semantic_revision'),
     'replacement': ('replacement',),
@@ -163,8 +158,6 @@ def _recoding_identity(output: dict[str, Any], before: dict[str, Any], original:
         raise ValueError('recoding may only remove the role-echo Type metadata')
     old_header = original.removesuffix(markdown(original))
     new_header = output['text'].removesuffix(markdown(output['text']))
-    # Semantic YAML equality alone permits unrelated comment, quoting, ordering
-    # or whitespace edits. Only a standalone scalar Type field is supported.
     pattern = rf'''(?m)^type:[ \t]*(?:{role}|"{role}"|'{role}')[ \t]*\r?\n'''
     expected_header, count = re.subn(pattern, '', old_header)
     if count != 1 or _timestamp_normalized_header(new_header) != _timestamp_normalized_header(expected_header):

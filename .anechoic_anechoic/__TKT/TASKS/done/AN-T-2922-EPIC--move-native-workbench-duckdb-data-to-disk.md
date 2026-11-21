@@ -6,7 +6,8 @@ structure:
     component: C43
   priority: 2
 context:
-  template: epic
+  template: task
+  label: Epic
 relations:
   REFERENCES:
   - AN-T-2915

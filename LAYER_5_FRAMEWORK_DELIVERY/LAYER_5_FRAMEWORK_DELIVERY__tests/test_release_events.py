@@ -1,6 +1,5 @@
 """Release Journal events preserve failures without becoming release gates."""
 
-# CA-E-590@18
 
 from __future__ import annotations
 

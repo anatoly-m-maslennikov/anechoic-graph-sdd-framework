@@ -1,8 +1,3 @@
-# CA-R-2726@9
-# CA-M-464@9
-# CA-M-465@24
-# CA-M-500@12
-# CA-D-672@22
 
 """Compile declared Markdown Content properties into a Workbench SQL schema."""
 

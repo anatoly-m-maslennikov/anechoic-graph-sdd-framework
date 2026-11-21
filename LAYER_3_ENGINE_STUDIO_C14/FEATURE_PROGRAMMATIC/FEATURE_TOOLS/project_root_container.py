@@ -1,4 +1,3 @@
-# CA-R-2779@1
 
 """Resolve the effective Container of the selected root Project Declaration."""
 from collections.abc import Mapping

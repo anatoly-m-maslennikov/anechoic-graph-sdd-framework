@@ -1,5 +1,3 @@
-# CA-M-506@8
-# CA-D-704@6
 
 """Strict asset formats for generated MCP tool registration."""
 

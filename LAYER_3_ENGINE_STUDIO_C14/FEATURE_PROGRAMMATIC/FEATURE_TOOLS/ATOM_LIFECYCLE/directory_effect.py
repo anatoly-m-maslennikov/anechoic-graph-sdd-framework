@@ -1,4 +1,3 @@
-# CA-M-405@14
 
 """Private directory carrier relocation under the lifecycle writer lock."""
 from __future__ import annotations

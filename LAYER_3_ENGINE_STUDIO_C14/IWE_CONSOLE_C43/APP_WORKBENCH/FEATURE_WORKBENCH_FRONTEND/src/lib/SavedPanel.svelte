@@ -1,4 +1,4 @@
-<!-- CA-D-674@26 -->
+
 <script lang="ts">
   import type { QueryLogItem, SavedItem } from './types';
   let { items, logs = [], busy = false, onopen, onopenlog }: { items: SavedItem[]; logs?: QueryLogItem[]; busy?: boolean; onopen: (reference: string) => void; onopenlog?: (id: string) => void } = $props();

@@ -1,7 +1,5 @@
 """Golden contract for Project MCP image identity and admission."""
 
-# CA-E-573@18
-# CA-E-600@25
 
 from __future__ import annotations
 
@@ -296,7 +294,6 @@ class ImageGoldenTests(unittest.TestCase):
         def executor(argv, **_kwargs):
             calls.append(tuple(argv))
             if "ls" in argv:
-                # Docker's default listing omits intermediate untagged images.
                 output = IMAGE_ID + "\n" if "--all" in argv else ""
                 return subprocess.CompletedProcess(argv, 0, output, "")
             self.assertIn("inspect", argv)

@@ -195,7 +195,6 @@ class SubjectNotationError(ValueError):
         super().__init__(message)
 
 
-# Legacy syntax deliberately names archived history, not current rule authority.
 _LEGACY_PINS = (
     GrammarPin(
         "CA-R-1204",
@@ -465,12 +464,8 @@ def _looks_like_selector(value: str) -> bool:
     )
 
 
-# Every reserved character is either syntax or explicitly escaped in a name.
 _RESERVED = frozenset('\\/.:@()[]{}+<>|*&?,="\'')
 _RELATION_OPERATORS = ("+>", "<+", ">|", "|<", "<-->", "<((", "((")
-# ``:=`` keeps the authored qualification marker.  It has the same endpoint
-# shape as ``:`` in a Subject address, but callers can retain the distinction
-# between an allowed value and the condition used to select the address.
 _PATH_OPERATORS = ("//", "/", ".", ":=", ":")
 
 

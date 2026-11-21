@@ -1,4 +1,3 @@
-# CA-E-827@1
 from pathlib import Path
 import hashlib
 import os

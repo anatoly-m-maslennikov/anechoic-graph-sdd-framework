@@ -1,9 +1,3 @@
-# CA-D-674@12
-# CA-D-639@18
-# CA-M-357@15
-# CA-D-677@1
-# CA-M-322@13
-# CA-R-1820@9
 
 """Loopback-only Streamable HTTP transport for the MCP gateway."""
 import argparse
@@ -26,8 +20,6 @@ from workbench_web import routes as workbench_routes
 
 PATH = MCP_PATH
 PORT = 8092
-# A sealed Release carries its complete source inventory in the request.  Keep
-# a finite transport bound while allowing that inventory and its authorization.
 MAX_REQUEST_BODY_SIZE = 16 * 1024 * 1024
 SECURITY = TransportSecuritySettings(
     enable_dns_rebinding_protection=True,

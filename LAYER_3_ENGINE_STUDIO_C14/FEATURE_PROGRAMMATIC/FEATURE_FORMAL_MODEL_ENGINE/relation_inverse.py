@@ -3,7 +3,6 @@
 
 def emits_instance_inverse(arguments):
     """Return whether the legacy compiler emits an instance inverse binding."""
-    # Ordering is read from the declared sequence of sibling Properties.
     if arguments["relation_name"] == "IS_ORDERED_RIGHT_AFTER":
         return False
     instance_levels = {"instances", "model_entities_or_instances"}

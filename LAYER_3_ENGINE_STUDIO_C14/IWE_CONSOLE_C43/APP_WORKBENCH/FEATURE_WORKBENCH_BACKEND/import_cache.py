@@ -5,7 +5,6 @@ from __future__ import annotations
 from ..FEATURE_IMPORT_GRAPH_C61.source import ImportSite, Source
 
 
-# Increment when the stored schema or parser semantics change.
 _CACHE_VERSION = 2
 _SCHEMA = "_anechoic_import_cache"
 

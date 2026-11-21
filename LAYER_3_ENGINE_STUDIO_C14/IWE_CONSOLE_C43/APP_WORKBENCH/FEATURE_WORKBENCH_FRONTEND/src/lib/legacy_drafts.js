@@ -16,7 +16,7 @@ function readReceipt(storage, key) {
   for (const [sourceId, entry] of Object.entries(value)) {
     if (!sourceId) invalid('receipt ' + key + ' has an invalid source-to-target entry');
     if (typeof entry === 'string' && entry) {
-      // Compatibility with the original progress map: a string means fully acknowledged.
+
       receipt[sourceId] = { targetId: entry, updated: true };
       continue;
     }

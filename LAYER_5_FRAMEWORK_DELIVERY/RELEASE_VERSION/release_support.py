@@ -1,8 +1,3 @@
-# CA-D-561@25
-# CA-D-704@6
-# CA-D-720@1
-# CA-D-562@26
-# CA-D-633@16
 
 """Filesystem and package support for the direct local-release runner."""
 
@@ -16,7 +11,6 @@ import re
 import shutil
 import stat
 import subprocess
-import sys
 import tempfile
 import tomllib
 from collections.abc import Mapping
@@ -24,8 +18,9 @@ from contextlib import ExitStack
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_provenance import ImageBuildProvenance
 from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images import (
-    RETIRED_ASSETS, _GENERATED_ASSETS, ready_predecessor,
+    ImageManager, RETIRED_ASSETS, _GENERATED_ASSETS, ready_predecessor,
 )
 from release_assets import (
     LocalReleaseError,
@@ -399,11 +394,6 @@ def _cleanup_staging(root: Path, staging: Path | None) -> str:
 
 def _image_manager(source: Path, temporary: Path | None = None, *, project_root: Path,
                    build_provenance: dict[str, str] | None = None):
-    docker = Path(__file__).resolve().parents[2] / "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker"
-    if str(docker) not in sys.path:
-        sys.path.insert(0, str(docker))
-    from runtime_images import ImageManager
-    from image_provenance import ImageBuildProvenance
     provenance = ImageBuildProvenance(**build_provenance) if build_provenance is not None else None
     return ImageManager(source, project_root=project_root, build_temp_root=temporary, build_provenance=provenance)
 

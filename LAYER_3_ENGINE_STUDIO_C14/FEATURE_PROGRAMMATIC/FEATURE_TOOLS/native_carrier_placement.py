@@ -14,6 +14,10 @@ _TKT_BRANCH = {
 }
 
 
+def native_ticket_asset(template):
+    return isinstance(template, str) and re.sub(r'[ _-]+', '_', template.lower()) in _ASSETS
+
+
 def _token(value):
     if not isinstance(value, str) or not re.fullmatch(r'[A-Za-z0-9]+(?:[ _-][A-Za-z0-9]+)*', value):
         raise ValueError('Unsupported authored filename token')
@@ -23,7 +27,6 @@ def _token(value):
 def _slug(summary):
     if not isinstance(summary, str) or not summary.isprintable():
         raise ValueError('Unsupported Summary serialization')
-    # Non-ASCII letters need an authored transliteration; punctuation is a separator.
     if any(not c.isascii() and not unicodedata.category(c).startswith('P') for c in summary):
         raise ValueError('Summary requires an ASCII transliteration')
     slug = re.sub(r'[^A-Za-z0-9]+', '-', summary).strip('-').lower()
@@ -32,12 +35,16 @@ def _slug(summary):
     return slug
 
 
-def native_ticket_label(template, owner_template):
-    if template == owner_template == 'task':
-        return 'Subtask'
-    if template == owner_template == 'epic':
-        return 'Sub-epic'
-    return None
+def native_ticket_label(template, owner_template, owner_label=None, *, label=None):
+    if label is not None:
+        _token(label)
+        return label
+    owner_is_epic = owner_template == 'epic' or (
+        isinstance(owner_label, str) and owner_label.casefold() in {'epic', 'sub-epic'}
+    )
+    if template == 'epic':
+        return 'Sub-epic' if owner_is_epic else 'Epic'
+    return 'Subtask' if owner_template == 'task' and not owner_is_epic else 'Task'
 
 
 def spec_lens_directories(lens):
@@ -105,16 +112,13 @@ def native_carrier_path(header, summary, *, project_root, owner_directory, owner
             branch = 'ASSETS' if key in _ASSETS else _TKT_BRANCH.get(key)
             if branch is None:
                 raise ValueError('Unsupported TKT Template')
-            if owner_template == 'epic' and key not in {'task', 'epic', 'work_report'}:
-                raise ValueError('An Epic can contain only Tasks, Epics and Work Reports')
             if atom_owned and owner_template is None:
                 raise ValueError('Resolve the authored Atom owner before deriving its path')
-            if atom_owned and key in _ASSETS and not (owner_template == 'task' or
-                    (key == 'work_report' and owner_template == 'epic')):
-                raise ValueError('An Asset can only be bound to a Task, or a Work Report to an Epic')
+            if atom_owned and key in _ASSETS and owner_template not in {'task', 'epic'}:
+                raise ValueError('An Asset can only be bound to a planning Ticket')
             if atom_owned:
                 root = Path(owner_directory)
-                if owner_template == 'epic' and key == 'work_report':
+                if key in _ASSETS:
                     root /= 'ASSETS'
             else:
                 root = root / '__TKT' / branch

@@ -8,9 +8,9 @@ structure:
 context:
   lens: SWD
 state:
-  status: active
-  version: 2
-  updated_at: '2026-11-20T14:16:10.334733+00:00'
+  status: "active"
+  version: 3
+  updated_at: "2026-11-21T14:59:32.174634+00:00"
 ---
 ## Summary
 
@@ -26,7 +26,7 @@ Authoring implementation trace and package policy records in PROGRAMMATIC.
 
 Store Module pins in `<full module filename with extension>.spec_trace.md` beside the Module, including the Module’s original extension. Store Package pins in `<folder name>__spec_bind.yaml` at the Package root. Use the full Module filename or Package folder name to identify the owner. Standalone CI/CD workflow files that implement Delivery behavior count as Modules for tracing. Assets and individual golden corpus files are outside the trace scope. If a golden corpus itself realizes an Evaluation Claim, record the pin once in the owning evaluation Package’s spec trace.
 
-Record what the Module or Package implements or follows today. In a Module sidecar, use a Markdown list under `## Implements`. In a Package Spec Binding file, use YAML lists under `implements` and `applies`. Each entry contains one exact Atom ID and Version.
+Record what the Module or Package implements or follows today. In a Module sidecar, use a Markdown list under `## Implements`. In a Package Spec Binding file, use YAML lists under `implements` and `applies`. Each entry contains one exact native Atom ID and Version. Resolve pins directly against native revisions.
 
 - Put Solutions in the owning Package’s `implements` list when the Package directly implements them.
 - Put Engineering Standards that the Package follows in its current implementation in its `applies` list.
@@ -42,7 +42,7 @@ For example, `query.py` and a sibling `query/` Package use `query.py.spec_trace.
 
 ```yaml
 implements:
-  - CA-M-123@4
+  - AN-S-123@4
 applies:
-  - CA-M-456@2
+  - AN-S-456@2
 ```

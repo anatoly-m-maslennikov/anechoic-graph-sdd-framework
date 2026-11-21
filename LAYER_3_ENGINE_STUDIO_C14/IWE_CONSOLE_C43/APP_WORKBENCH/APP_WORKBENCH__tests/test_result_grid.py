@@ -1,4 +1,3 @@
-# CA-M-493@1
 from __future__ import annotations
 
 from pathlib import Path

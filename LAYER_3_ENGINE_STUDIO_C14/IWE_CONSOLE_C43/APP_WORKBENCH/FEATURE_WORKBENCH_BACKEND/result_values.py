@@ -1,5 +1,3 @@
-# CA-D-673@18
-# CA-D-697@2
 
 """Convert native result values without changing their positional structure."""
 

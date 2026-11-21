@@ -20,6 +20,7 @@ from watchdog.observers.polling import PollingObserver
 import test_native_query_stdio as fixture
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.import_cache import read_import_sources
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.import_tables import publish_imports
+from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext
 from native_query import create_native_gateway
 from workbench_web import routes
 
@@ -29,7 +30,6 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
 
     def setUp(self):
         fixture.NativeQueryStdioTests.setUp(self)
-        # The full suite places temporary Projects inside its ignored Git scratch tree.
         subprocess.run(["git", "init", "--quiet", str(self.root)], check=True)
 
     def _source(self, name, text):
@@ -56,6 +56,137 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
             await gateway.initialize()
         self.addAsyncCleanup(gateway.close)
         return gateway
+
+    async def test_lifecycle_writes_refresh_atoms_without_full_projection(self):
+        self._source(f"{fixture.CONTROL}/__TKT/TASKS/AN-T-010-TASK--existing-task.md", """---
+atom_family: TKT
+atom_id: AN-T-010
+structure:
+  container:
+    component: C00
+  priority: 2
+context:
+  template: task
+  label: Task
+state:
+  status: active
+  version: 1
+  updated_at: '2026-11-19T00:00:00Z'
+---
+## Summary
+
+Existing task
+""")
+        gateway = await self._gateway(enabled=False)
+        owner = gateway._native_query
+        store = owner._owner()
+        with owner._interface_lock, patch.object(owner, '_project', side_effect=AssertionError('full projection')):
+            created = owner.lifecycle('atom_lifecycle_create_draft', {'newAtom': {
+                'template': 'task', 'label': 'Task', 'container': {'component': 'C00'},
+                'body': '## Summary\n\nIncremental lifecycle refresh.\n',
+            }})
+            self.assertFalse(created['errors'], created)
+            draft = created['savedDraft']
+            with store._lock:
+                self.assertEqual(store._connection.execute(
+                    'SELECT reference FROM atoms WHERE reference = ?', [draft['ref_id']]
+                ).fetchall(), [(draft['ref_id'],)])
+
+            promoted = owner.lifecycle('atom_lifecycle_promote_draft', {
+                'target': {'ref_id': draft['ref_id'], 'version': draft['version']},
+                'targetStatus': 'active',
+            })
+            self.assertFalse(promoted['errors'], promoted)
+            with store._lock:
+                self.assertEqual(store._connection.execute(
+                    'SELECT reference FROM atoms WHERE reference IN (?, ?) ORDER BY reference',
+                    [draft['ref_id'], draft['atom_id']],
+                ).fetchall(), [(draft['atom_id'],)])
+
+            revised = owner.lifecycle('atom_lifecycle_update', {
+                'sourceCurrent': {'ref_id': draft['atom_id'], 'version': 1},
+                'changes': {'body': '## Summary\n\nIncremental lifecycle refresh.\n\nRevised.\n'},
+            })
+            self.assertFalse(revised['errors'], revised)
+            revision = revised['savedDraft']
+            published = owner.lifecycle('atom_lifecycle_promote_draft', {
+                'target': {'ref_id': revision['ref_id'], 'version': revision['version']},
+                'targetStatus': 'active',
+            })
+            self.assertFalse(published['errors'], published)
+            active, archived = draft['atom_id'], draft['atom_id'] + '@1'
+            with store._lock:
+                self.assertEqual(store._connection.execute(
+                    'SELECT reference, "header.state.version", "header.state.status" '
+                    'FROM atoms WHERE reference IN (?, ?, ?) ORDER BY "header.state.version"',
+                    [active, archived, revision['ref_id']],
+                ).fetchall(), [(archived, 1, 'archived'), (active, 2, 'active')])
+
+    async def test_workbench_file_and_directory_changes_read_only_affected_carriers(self):
+        gateway = await self._gateway(enabled=False)
+        owner = gateway._native_query
+        store = owner._owner()
+        control = self.root / fixture.CONTROL
+        source = control / "__TKT/TASKS/AN-T-010-TASK--created.md"
+        read, inventory = ReadContext.read, ReadContext.inventory
+        reads = []
+
+        def record_read(reader, path, **kwargs):
+            raw = read(reader, path, **kwargs)
+            if raw is not None:
+                reads.append(path)
+            return raw
+
+        def scoped_inventory(reader, path, **kwargs):
+            self.assertNotEqual(path, control)
+            return inventory(reader, path, **kwargs)
+
+        def refresh(operations, *, expected, files):
+            batch = [{"old_path": old.relative_to(self.root).as_posix() if old else None,
+                      "new_path": new.relative_to(self.root).as_posix() if new else None}
+                     for old, new in operations]
+            reads.clear()
+            self.assertEqual(owner._watch_atom_changes(store, batch, set()), set())
+            self.assertCountEqual(reads, expected)
+            with store._lock:
+                rows = store._connection.execute(
+                    "SELECT relative_path, filename FROM atoms WHERE reference IN ('AN-T-010', 'AN-T-011')"
+                ).fetchall()
+            self.assertCountEqual([self.root / folder / name for folder, name in rows], files)
+
+        with (owner._interface_lock, patch.object(ReadContext, "read", record_read),
+              patch.object(ReadContext, "inventory", scoped_inventory)):
+            self._write(source.relative_to(control), "AN-T-010", "active", 1)
+            refresh([(None, source), (None, source)], expected=[source], files=[source])
+            refresh([(None, source)], expected=[], files=[source])
+            self._write(source.relative_to(control), "AN-T-010", "active", 2)
+            refresh([(None, source)], expected=[source], files=[source])
+            temporary = source.with_suffix(".tmp")
+            temporary.write_bytes(source.read_bytes().replace(b"version: 2", b"version: 3"))
+            temporary.replace(source)
+            refresh([(temporary, source)], expected=[source], files=[source])
+            with store._lock:
+                self.assertEqual(store._connection.execute(
+                    'SELECT "header.state.version" FROM atoms WHERE reference = ?', ['AN-T-010'],
+                ).fetchall(), [(3,)])
+            renamed = source.rename(source.with_name("AN-T-010-TASK--renamed.md"))
+            refresh([(source, renamed)], expected=[renamed], files=[renamed])
+            folder = control / "__TKT/TASKS/container"
+            added = folder / "nested/AN-T-011-TASK--nested.md"
+            self._write(added.relative_to(control), "AN-T-011", "active", 1)
+            refresh([(None, folder), (None, added)], expected=[added], files=[renamed, added])
+            moved = renamed.rename(folder / renamed.name)
+            refresh([(renamed, moved)], expected=[moved], files=[moved, added])
+            destination = folder.rename(folder.with_name("renamed-folder"))
+            new_moved, new_added = [destination / path.relative_to(folder) for path in (moved, added)]
+            refresh([(folder, destination), (added, new_added)], expected=[new_moved, new_added],
+                    files=[new_moved, new_added])
+            new_moved.unlink()
+            refresh([(new_moved, None)], expected=[], files=[new_added])
+            new_added.unlink()
+            new_added.parent.rmdir()
+            destination.rmdir()
+            refresh([(destination, None)], expected=[], files=[])
 
     async def test_queries_four_relations_and_notices_target_changes(self):
         self._source("src/app/__init__.py", "")
@@ -160,7 +291,7 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
     async def test_spec_bindings_are_indexed_and_follow_sidecar_changes(self):
         self._source("src/app/main.py", "pass\n")
         sidecar = self._source("src/app/app__spec_bind.yaml", "implements:\n  - AN-S-001@1\n")
-        self._source("src/app/main.py.spec_trace.md", "## Implements\n- CA-R-10@2\n")
+        self._source("src/app/main.py.spec_trace.md", "## Implements\n- AN-S-10@2\n")
         gateway = await self._gateway()
         app = Starlette(routes=routes(gateway))
         async with httpx2.AsyncClient(transport=httpx2.ASGITransport(app=app),
@@ -178,7 +309,7 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(result.status_code, 200, result.text)
                 return result.json()["rows"]
 
-            module = ["src/app/main.py", "implements", "CA-R-10", 2]
+            module = ["src/app/main.py", "implements", "AN-S-10", 2]
             self.assertEqual(await pins(), [["src/app", "implements", "AN-S-001", 1], module])
             sidecar.write_text("applies:\n  - AN-S-007@3\n", encoding="utf-8")
             async with asyncio.timeout(6):
@@ -196,7 +327,7 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
         self._source('src/other/other.py', 'pass\n')
         sidecar = self._source('src/app/app__spec_bind.yaml', 'implements: [AN-S-001@1]\n')
         other_sidecar = self._source('src/other/other__spec_bind.yaml', 'implements: [AN-S-001@1]\n')
-        module_sidecar = self._source('src/app/main.py.spec_trace.md', '## Implements\n- CA-R-10@2\n')
+        module_sidecar = self._source('src/app/main.py.spec_trace.md', '## Implements\n- AN-S-10@2\n')
         gateway = create_native_gateway(self.root, fixture.CONTROL, fixture._native_inputs())
         owner = gateway._native_query
         owner.start()
@@ -213,7 +344,7 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
             return pins, states
 
         other = ('src/other', 'implements', 'AN-S-001', 1)
-        module = ('src/app/main.py', 'implements', 'CA-R-10', 2)
+        module = ('src/app/main.py', 'implements', 'AN-S-10', 2)
         with patch.object(spec_trace, '_read_pins', wraps=spec_trace._read_pins) as reads, \
              patch.object(owner, '_prepare_realization', wraps=owner._prepare_realization) as prepare:
             async def expect(pin, state):
@@ -236,8 +367,8 @@ class NativeImportGraphTests(unittest.IsolatedAsyncioTestCase):
             await expect(('src/app', 'implements', 'AN-S-001', 1), 'missing')
             fallback.unlink()
             await expect(None, 'missing')
-            module = ('src/app/main.py', 'implements', 'CA-R-11', 3)
-            module_sidecar.write_text('## Implements\n- CA-R-11@3\n')
+            module = ('src/app/main.py', 'implements', 'AN-S-11', 3)
+            module_sidecar.write_text('## Implements\n- AN-S-11@3\n')
             await expect(None, 'missing')
             sidecar.write_text('applies: [AN-S-001@1]\n')
             await expect(('src/app', 'applies', 'AN-S-001', 1), 'valid')

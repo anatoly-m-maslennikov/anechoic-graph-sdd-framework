@@ -30,9 +30,6 @@ REPAIR_AUTHORITY_IDS = (
     "CA-O-111", "CA-O-067", "CA-R-1432", "CA-R-1464", "CA-R-1766",
     "CA-R-1700", "CA-D-276", "CA-D-283", "CA-D-496",
 )
-# These sources make the mock resource carriers inspectable under the same
-# live schema used by the production prompts.  They are not a fixture policy
-# override and never supply a result for a candidate.
 RESOURCE_AUTHORITY_IDS = (
     "CA-D-282", "CA-D-283", "CA-D-284",
     "CA-D-302", "CA-D-359", "CA-D-361", "CA-D-364", "CA-D-366", "CA-D-407", "CA-D-408",
@@ -99,10 +96,6 @@ def rewrite_fixture(spec: dict[str, Any]) -> tuple[str, str]:
     if type_count != 1:
         raise ValueError(f"cannot remove generic Requirement Type from {spec['fixture']}")
     if spec["id"] == "unbold_must_formatting":
-        # The inherited corpus case also leaves the Scope predicate unbold and
-        # uses a noncanonical uppercase spelling.  Normalize those unrelated
-        # CCE defects so this rehearsal has exactly one intentionally unbold
-        # lowercase modality operator in Claim.
         raw, scope_count = re.subn(
             r"the Color of a Widget in a public display\.",
             "the Color of a Widget **in** a public display.", raw, count=1)

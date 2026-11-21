@@ -1,7 +1,3 @@
-# CA-R-2950@1
-# CA-M-490@1
-# CA-D-695@1
-# CA-E-677@22
 """Watcher callback translation is deterministic before service batch handling."""
 
 from pathlib import Path

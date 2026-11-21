@@ -36,7 +36,6 @@ def compile_work_report_target(rows):
 
 
 def verify_work_report_target(constraint):
-    # shortcut: this adapter resolves one Task reference, revisit for other endpoint shapes.
     if (not isinstance(constraint, dict) or set(constraint) != {"targets_per_source", "target_entity_paths"}
             or constraint["target_entity_paths"] not in ([TASK_PATH], (TASK_PATH,))
             or _bounds(constraint["targets_per_source"]) != (1, 1)):

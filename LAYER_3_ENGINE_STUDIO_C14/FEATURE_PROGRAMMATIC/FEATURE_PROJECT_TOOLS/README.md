@@ -36,8 +36,10 @@ Fresh Local-release image builds carry exact Project ownership, Project name and
 the full build-time owning-repository HEAD commit ID; missing or invalid name or
 HEAD stops fresh preparation before building. Name and HEAD record provenance;
 the source fingerprint and immutable image ID identify built bytes. Canonical
-version/build-date/digest naming follows the green full suite; the exact admitted
-candidate alone earns release retention, not another digest with equal code.
+images use `version-test-builddate-digest` until the release verifies the
+running MCP and changes the exact candidate tag to `version-prod-builddate-digest`.
+The UTC build date uses `YYYY-MM-DD_HH-MM-SSZ`. Release retention applies to
+the exact admitted candidate.
 Complete matching Project/root/control ownership labels allow
 cleanup to identify labelled orphan images. Cached images keep their existing
 labels and reuse behavior; no metadata-only rebuild or ownership claim is added.
@@ -155,6 +157,24 @@ UV_PROJECT_ENVIRONMENT=.anechoic_runtime/launcher-venv uv run --locked --no-sync
 These tests use temporary fixtures, real scoped Git checkpoints and mocked
 external integrations. They are not a real release gate and do not publish,
 install or start the current Project.
+
+## Source comments
+
+Engine QA Standard AN-S-3183 defines the source comment rule.
+The full suite reports ordinary comments in the Engine and Delivery source.
+The check covers Python, Docker recipes, and the JavaScript, TypeScript, Svelte,
+CSS, and HTML sources. It retains executable and tooling directives and reports
+any CSS comment that needs a manual edit to preserve token boundaries.
+
+Run the same check from the Project root with the locked Python environment and
+the Workbench frontend dependencies installed. Add `--fix` to remove reported
+comments.
+
+```sh
+UV_PROJECT_ENVIRONMENT=.anechoic_runtime/launcher-venv \
+uv run --locked --no-sync --no-env-file --all-groups python -B \
+  LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/source_comments.py
+```
 
 ## macOS temporary files
 

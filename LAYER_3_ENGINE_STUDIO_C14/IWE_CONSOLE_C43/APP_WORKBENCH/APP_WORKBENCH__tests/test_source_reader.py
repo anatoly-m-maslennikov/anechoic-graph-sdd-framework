@@ -1,5 +1,3 @@
-# CA-E-675@14
-# CA-E-677@30
 from __future__ import annotations
 
 from contextlib import redirect_stderr
@@ -74,7 +72,6 @@ class SourceReaderTests(unittest.TestCase):
             ),
             control_root=self.control,
         )
-        # The no-argument path is the canonical Project Settings resolution.
         self.reader = SourceReader(self.root)
 
     def _path(self, scope: str, role: str, filename: str, *parts: str) -> Path:

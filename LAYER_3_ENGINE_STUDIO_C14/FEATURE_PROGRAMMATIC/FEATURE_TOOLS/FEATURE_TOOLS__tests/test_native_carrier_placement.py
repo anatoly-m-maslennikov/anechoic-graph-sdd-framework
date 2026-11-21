@@ -38,16 +38,15 @@ class NativeCarrierPlacementTests(unittest.TestCase):
     def test_analysis_owner_and_revisions(self):
         self.assertEqual(path(header('TKT', 'analysis_report')), '/project/__TKT/ASSETS/AN-T-1-ANALYSIS_REPORT--a-useful-summary.md')
         h = header('TKT', 'analysis_report', container={'atom': 'AN-T-4'})
-        self.assertEqual(path(h, owner='/project/__TKT/TASKS/backlog', owner_template='task'), '/project/__TKT/TASKS/backlog/AN-T-1-ANALYSIS_REPORT--a-useful-summary.md')
+        self.assertEqual(path(h, owner='/project/__TKT/TASKS/backlog', owner_template='task'), '/project/__TKT/TASKS/backlog/ASSETS/AN-T-1-ANALYSIS_REPORT--a-useful-summary.md')
         for template in ('work_report', 'work_log', 'spec_proposal'):
             bound = header('TKT', template, container={'atom': 'AN-T-4'})
             self.assertEqual(path(bound, owner='/project/__TKT/TASKS/backlog', owner_template='task'),
-                             f'/project/__TKT/TASKS/backlog/AN-T-1-{template.upper()}--a-useful-summary.md')
+                             f'/project/__TKT/TASKS/backlog/ASSETS/AN-T-1-{template.upper()}--a-useful-summary.md')
         h['state']['status'] = 'archived'
-        self.assertEqual(path(h, owner_template='task'), '/project/unit/099_archived/AN-T-1@2-ANALYSIS_REPORT--a-useful-summary.md')
-        with self.assertRaisesRegex(ValueError, 'Epic can contain only Tasks, Epics and Work Reports'):
-            path(h, owner_template='epic')
-        with self.assertRaisesRegex(ValueError, 'Asset can only be bound to a Task'):
+        self.assertEqual(path(h, owner_template='task'), '/project/unit/ASSETS/099_archived/AN-T-1@2-ANALYSIS_REPORT--a-useful-summary.md')
+        self.assertEqual(path(h, owner_template='epic'), path(h, owner_template='task'))
+        with self.assertRaisesRegex(ValueError, 'Asset can only be bound to a planning Ticket'):
             path(h, owner_template='question')
         with self.assertRaises(ValueError):
             path(h)
@@ -78,8 +77,11 @@ class NativeCarrierPlacementTests(unittest.TestCase):
                 h['context']['label'] = label
                 self.assertEqual(path(h, owner_template=template),
                                  f'/project/unit/AN-T-1-{token}--a-useful-summary.md')
-        self.assertIsNone(native_ticket_label('task', 'epic'))
-        self.assertIsNone(native_ticket_label('task', None))
+        self.assertEqual('Task', native_ticket_label('task', 'epic'))
+        self.assertEqual('Task', native_ticket_label('task', 'task', 'Epic'))
+        self.assertEqual('Sub-epic', native_ticket_label('epic', 'task', 'Sub-epic'))
+        self.assertEqual('Task', native_ticket_label('task', None))
+        self.assertEqual('Version', native_ticket_label('task', 'task', label='Version'))
         self.assertIn('-TASK--', path(header('TKT', 'task', container={'atom': 'AN-T-4'}), owner_template='task'))
 
     def test_atom_owned_nested_status_and_spec(self):

@@ -1,5 +1,3 @@
-# CA-M-464@18
-# CA-R-2723@7
 """Filename-only Archive allocation metadata for the Workbench database."""
 from __future__ import annotations
 

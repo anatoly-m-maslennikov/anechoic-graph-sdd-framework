@@ -1,4 +1,3 @@
-# CA-D-673@18
 """Deliver a cached result inline or as a temporary Project file."""
 from __future__ import annotations
 
