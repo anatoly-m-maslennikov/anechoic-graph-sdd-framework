@@ -168,7 +168,7 @@ alphanumeric runs joined by hyphens. Preserve the authored Summary.
   Project's Tier -1 Manifest, Goal, and Active Axioms at the Project root.
 - At the Project control root, use `001_TICKETS/` for Tickets and
   `002_PROJECT_CONFIG/` for configuration files. Project Config Atoms
-  use `atom_family: PROJECT_CONFIG` and keep their P IDs.
+  use `atom_family: PROJECT_CONFIG` and C IDs.
 - TKT uses the `TASKS/`, `ISSUES/`, and `ASSETS/` branches below
   `001_TICKETS/`. In Queue records live at their branch root. Use
   `01_draft/`, `09_archived/`, or the applicable status directory.
@@ -207,7 +207,7 @@ Draft-qualified reference in the migration map.
 ## References
 
 AN-T-2959, AN-T-2960, AN-T-2964, AN-T-2965, AN-S-3160, AN-S-3117,
-AN-S-3176, AN-S-3193, AN-S-3196, AN-S-3199.
+AN-S-3176, AN-C-3193, AN-S-3196, AN-S-3199.
 
 Earlier migration inputs are CA-C-746, CA-P-3087, CA-P-3075, CA-A-1461,
 CA-A-1462, CA-A-1463, and CA-A-1465.

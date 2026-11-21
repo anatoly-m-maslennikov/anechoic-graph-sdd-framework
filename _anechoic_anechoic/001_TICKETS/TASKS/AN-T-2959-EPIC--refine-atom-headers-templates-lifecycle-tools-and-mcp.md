@@ -32,4 +32,4 @@ The authored Header defines each Atom. The compiled Model validates its Header a
 
 ## References
 
-AN-S-3160, AN-S-3176, AN-S-3193, AN-S-3196, AN-S-3199, AN-T-2932.
+AN-S-3160, AN-S-3176, AN-C-3193, AN-S-3196, AN-S-3199, AN-T-2932.
