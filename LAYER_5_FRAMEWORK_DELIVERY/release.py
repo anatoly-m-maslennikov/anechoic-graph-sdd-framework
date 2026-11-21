@@ -80,20 +80,23 @@ def _invoke(arguments: argparse.Namespace) -> dict[str, object]:
         options = {}
         if arguments.test_modules is not None:
             options["test_modules"] = tuple(arguments.test_modules)
-        return run_local_release(
+        result = run_local_release(
             root, run_id=arguments.run_id, image_mode=arguments.image_mode, **options
         )
-    from LAYER_5_FRAMEWORK_DELIVERY.PUBLIC_RELEASE.PUBLIC_RELEASE__family_pub import (
-        PublicReleaseError,
-        run_public_release,
-    )
+        result.update(run_id=arguments.run_id, project_root=str(root))
+        return result
+    return _invoke_public(root, arguments)
+
+
+def _invoke_public(root: Path, arguments: argparse.Namespace) -> dict[str, object]:
+    from LAYER_5_FRAMEWORK_DELIVERY.PUBLIC_RELEASE.PUBLIC_RELEASE__family_pub import run_public_release
 
     draft = _read_draft(arguments.content_draft)
     try:
         return run_public_release(
             root, run_id=arguments.run_id, base_ref=arguments.base, head_ref=arguments.head, content_draft=draft,
         )
-    except PublicReleaseError as error:
+    except ValueError as error:
         return {
             "outcome": "failed", "run_id": arguments.run_id,
             "failed_step": "changelog", "error_type": type(error).__name__, "error": str(error),
