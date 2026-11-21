@@ -353,6 +353,85 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
             self.assertFalse(retry.get('effects'), retry)
         self.assertEqual(before, {p.relative_to(self.control): p.read_bytes() for p in self.control.rglob('*.md')})
 
+    def test_first_unpinned_spec_publishes_its_version_and_cleans_up(self):
+        for atom_id, lens, version in [('AN-S-8', 'SWD', 1), ('AN-S-9', 'SPEC', 3)]:
+            suffix = lens + '--example.md'
+            ref = f'{atom_id}@{version}-draft'
+            draft = self.spec(f'UNIT_C9/000_draft/{ref}-{suffix}', atom_id, lens)
+            header, body = draft.read_text().split('---\n', 2)[1:]
+            data = yaml.safe_load(header)
+            data['state'].update(status='draft', version=version)
+            draft.write_text('---\n' + yaml.safe_dump(canonical_native_header(data), sort_keys=False) + '---\n' + body)
+            params = {'target': {'ref_id': ref, 'version': version}, 'targetStatus': 'active'}
+            result = promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms,
+                                   migration_refs=[])
+            self.assertEqual('completed', result['outcome'], result)
+            current = self.control / 'UNIT_C9' / ('__SWD' if lens == 'SWD' else '') / f'{atom_id}-{suffix}'
+            self.assertEqual((current, version), (self.root / result['artifact']['path'], result['artifact']['version']))
+            self.assertFalse(draft.exists())
+            self.assertEqual(['create', 'remove'], [e['operation'] for e in result['effects'] if e.get('evidence') != 'directory'])
+            self.assertFalse(capture_native(self.selection).errors)
+
+    def test_first_spec_cleanup_failure_can_retry_without_rewriting(self):
+        from unittest.mock import patch
+        from ATOM_LIFECYCLE import effects
+        draft = self.spec('UNIT_C9/000_draft/AN-S-8@1-draft-DES--example.md', 'AN-S-8')
+        draft.write_text(draft.read_text().replace('status: active', 'status: draft'))
+        params = {'target': {'ref_id': 'AN-S-8@1-draft', 'version': 1}, 'targetStatus': 'active'}
+        with patch('ATOM_LIFECYCLE.native_draft.effects.remove', return_value=effects.Result(errors=[{'code': 'injected'}])):
+            result = promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms, migration_refs=[])
+        self.assertEqual('failed', result['outcome'])
+        self.assertNotIn('artifact', result)
+        self.assertTrue(draft.exists())
+        result = promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms, migration_refs=[])
+        self.assertEqual('completed', result['outcome'])
+        self.assertEqual(['remove'], [e['operation'] for e in result['effects']])
+        self.assertFalse(draft.exists())
+
+    def test_first_spec_preserves_other_pinned_drafts(self):
+        old = self.spec('UNIT_C9/000_draft/AN-S-8@1-draft-DES--example.md', 'AN-S-8')
+        old.write_text(old.read_text().replace('status: active', 'status: draft'))
+        draft = self.spec('UNIT_C9/000_draft/AN-S-8@2-draft-DES--example.md', 'AN-S-8')
+        draft.write_text(draft.read_text().replace('status: active', 'status: draft').replace('version: 1', 'version: 2'))
+        original = old.read_bytes()
+        result = promote_draft(self.selection,
+            {'target': {'ref_id': 'AN-S-8@2-draft', 'version': 2}, 'targetStatus': 'active'},
+            current_rows=capture_native(self.selection).atoms, migration_refs=[('old', 'old.md', 'AN-S-8@1-draft')])
+        self.assertEqual('completed', result['outcome'])
+        self.assertEqual(2, result['artifact']['version'])
+        self.assertEqual(original, old.read_bytes())
+        self.assertFalse(draft.exists())
+
+    def test_first_spec_rejects_unsafe_or_stale_inputs(self):
+        for case in ('owner', 'lens', 'template', 'manifest_name', 'filename', 'history', 'stale', 'status'):
+            with self.subTest(case=case):
+                name = ('SPEC-PROJECT_MANIFEST--example.md' if case == 'manifest_name' else
+                        'SWD--example.md' if case == 'filename' else 'DES--example.md')
+                draft = self.spec(f'UNIT_C9/000_draft/AN-S-8@1-draft-{name}', 'AN-S-8',
+                                  'invalid/lens!' if case == 'lens' else 'DES', 'C8' if case == 'owner' else 'C9')
+                header, body = draft.read_text().split('---\n', 2)[1:]
+                data = yaml.safe_load(header)
+                data['state']['status'] = 'draft'
+                if case == 'template':
+                    data['context']['template'] = 'component_manifest'
+                draft.write_text('---\n' + yaml.safe_dump(canonical_native_header(data) if case == 'filename' else data) + '---\n' + body)
+                history = None
+                if case == 'history':
+                    history = self.spec('UNIT_C9/099_archived/AN-S-8@2-DES--example.md', 'AN-S-8')
+                    history.write_text(history.read_text().replace('status: active', 'status: archived').replace('version: 1', 'version: 2'))
+                rows = capture_native(self.selection).atoms
+                if case == 'stale':
+                    draft.write_bytes(draft.read_bytes() + b'changed')
+                before = {p.relative_to(self.control): p.read_bytes() for p in self.control.rglob('*.md')}
+                params = {'target': {'ref_id': 'AN-S-8@1-draft', 'version': 1},
+                          'targetStatus': 'done' if case == 'status' else 'active'}
+                with self.assertRaises((InputError, SourceChanged)):
+                    promote_draft(self.selection, params, current_rows=rows, migration_refs=[])
+                self.assertEqual(before, {p.relative_to(self.control): p.read_bytes() for p in self.control.rglob('*.md')})
+                draft.unlink()
+                if history:
+                    history.unlink()
+
     def test_spec_retry_after_cleanup_failure(self):
         from unittest.mock import patch
         from ATOM_LIFECYCLE import effects

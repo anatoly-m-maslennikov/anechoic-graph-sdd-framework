@@ -408,7 +408,7 @@ def _promote_new(selection, target, status, draft, current_rows):
         return common.result(effects=recorded, errors=removed.errors, **data)
 
 
-def _publish_first_pinned_spec(selection, draft, structure_snapshot):
+def _publish_first_spec(selection, draft, structure_snapshot, *, pinned):
     atom_id, ref_id = draft['id'], draft['_exact_ref']
     relative, digest = draft.get('source_path'), draft.get('_source_sha256')
     if (not isinstance(relative, str) or not isinstance(digest, str)
@@ -429,7 +429,8 @@ def _publish_first_pinned_spec(selection, draft, structure_snapshot):
             header = draft['header_json']
             context = native_header_view(header)['context']
             lens = context.get('lens')
-            if context.get('template') is not None:
+            if (context.get('template') is not None
+                    or re.search(r'-(?:PROJECT|COMPONENT)_MANIFEST(?:--|\.md$)', path.name, re.I)):
                 raise common.InputError('target', 'Select a Spec Draft with a lens and without a structural template.')
             owner = path.parent.parent
             try:
@@ -449,8 +450,16 @@ def _publish_first_pinned_spec(selection, draft, structure_snapshot):
                     or parse_carrier(raw, path).metadata != header or reader.currentness()['state'] != 'unchanged'):
                 raise common.SourceChanged('Spec Draft source changed after selection.')
             body = raw[bounds[2]:].decode('utf-8')
-            _summary(body)
-            version = max(row['version'] for row in history) + 1
+            summary = _summary(body)
+            if not pinned and 'atom_family' in header:
+                try:
+                    projected = native_carrier_path(header, summary, project_root=selection.control_root,
+                                                    owner_directory=owner)
+                except ValueError as error:
+                    raise common.InputError('target', 'Spec Draft Header or Summary cannot be projected to a path.') from error
+                if path != projected:
+                    raise common.InputError('target', 'Spec Draft path disagrees with its Header and Summary.')
+            version = max(row['version'] for row in history) + 1 if pinned else draft['version']
             promoted = _state_bytes(raw, bounds, path, version, body, 'active')
         except (common.InputError, common.SourceChanged):
             raise
@@ -458,8 +467,14 @@ def _publish_first_pinned_spec(selection, draft, structure_snapshot):
             raise common.SourceChanged('Native Spec source is unavailable or changed.') from error
         with bind_query_reader(None):
             written = common.write_destination(selection.root, destination, promoted)
-        data = {} if written.errors else {'artifact': common.saved(selection, destination, atom_id, atom_id, version, 'active')}
-        return common.result(effects=written.effects, errors=written.errors, **data)
+            recorded = list(written.effects)
+            errors = list(written.errors)
+            if not errors and not pinned:
+                removed = effects.remove(selection.root, path, digest)
+                recorded.extend(removed.effects)
+                errors.extend(removed.errors)
+        data = {} if errors else {'artifact': common.saved(selection, destination, atom_id, atom_id, version, 'active')}
+        return common.result(effects=recorded, errors=errors, **data)
 
 
 def _cleanup_published_draft(selection, target, status, draft, current, structure_snapshot, current_rows):
@@ -570,14 +585,16 @@ def promote_draft(selection, params, *, current_rows, migration_refs, structure_
     predecessors = [row for row in current_rows if row.get('id') == atom_id and row.get('status_group') == 'Current']
     if any(item[2] == target['ref_id'] for item in refs):
         if '-S-' in atom_id and len(chosen) == 1 and not predecessors:
-            return _publish_first_pinned_spec(selection, chosen[0], structure_snapshot)
+            return _publish_first_spec(selection, chosen[0], structure_snapshot, pinned=True)
         raise common.InputError('target', 'A migration-pinned Draft cannot be promoted.')
     if len(chosen) != 1 or len(predecessors) > 1:
         raise common.SourceChanged('Draft or Current predecessor is missing or ambiguous.')
     if not predecessors:
-        if version != 1 or '-T-' not in atom_id:
-            raise common.SourceChanged('Current predecessor is missing.')
-        return _promote_new(selection, target, status, chosen[0], current_rows)
+        if '-S-' in atom_id:
+            return _publish_first_spec(selection, chosen[0], structure_snapshot, pinned=False)
+        if version == 1 and '-T-' in atom_id:
+            return _promote_new(selection, target, status, chosen[0], current_rows)
+        raise common.SourceChanged('Current predecessor is missing.')
     draft, previous = chosen[0], predecessors[0]
     if native_header_view(previous['header_json'])['context'].get('template') == 'epic' and status != previous['status']:
         raise common.InputError('targetStatus', 'Publish the Epic at its Current Status. Use Change Status for transitions.')
