@@ -11,7 +11,8 @@ import yaml
 
 
 APP_ROOT = Path(__file__).resolve().parents[2]
-REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
+ASSETS = Path(__file__).resolve().parent / "assets" / "content_declaration_schema"
+SEALED_MODEL = APP_ROOT.parent / "FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests/assets/lifecycle_schema_declarations/04_requirement"
 sys.path[:0] = [
     str(APP_ROOT), str(APP_ROOT / "APP_WORKBENCH"), str(APP_ROOT.parent),
     str(APP_ROOT.parent / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"),
@@ -399,20 +400,15 @@ Keep this heading.""",
     def _current_model_rows(cls) -> list[dict]:
         return [
             cls._current_declaration(path)
-            for path in (
-                REPOSITORY_ROOT / ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/"
-                "CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement"
-            ).glob("*.md")
+            for directory in (SEALED_MODEL, ASSETS / "04_requirement")
+            for path in directory.glob("*.md")
             if not {"archive", "archived", "draft", "drafts"} & {part.casefold() for part in path.parts}
             and cls._is_current(path)
         ]
 
     @staticmethod
     def _prepared_reference_transform():
-        path = (
-            REPOSITORY_ROOT / ".anechoic_anechoic/02_analysis_and_advisory/000_draft/"
-            "header-groups-20261106/references/prepare_reference_impact.py"
-        )
+        path = ASSETS / "prepare_reference_impact.py"
         spec = spec_from_file_location("prepared_header_impact", path)
         assert spec is not None and spec.loader is not None
         module = module_from_spec(spec)

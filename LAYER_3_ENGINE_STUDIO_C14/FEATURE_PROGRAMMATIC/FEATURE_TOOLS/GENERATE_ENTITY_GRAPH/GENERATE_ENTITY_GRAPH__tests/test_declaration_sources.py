@@ -309,8 +309,9 @@ class DeclarationSourcesTests(unittest.TestCase):
         self.assertIn("CA-E-833", GRAPH_RULE_SOURCES)
         self.assertTrue(set(GRAPH_RULE_SOURCES).issubset(entries))
         entry = entries["CA-E-833"]
-        root = TOOL.parents[3]
-        raw = (root / entry["source_path"]).read_bytes()
+        source_path = Path(entry["source_path"])
+        self.assertEqual(".anechoic_anechoic", source_path.parts[0])
+        raw = (Path(__file__).parent / "assets" / source_path.name).read_bytes()
         self.assertEqual(entry["sha256"], hashlib.sha256(raw).hexdigest())
         supports, _ = support_carriers()
         evaluation = next(row for row in supports if row["source"]["atom_id"] == "CA-E-833")

@@ -39,7 +39,7 @@ class NativeModelLintTests(unittest.TestCase):
 
     def test_current_workspace_and_view_field_contracts(self):
         from FEATURE_FORMAL_MODEL_ENGINE.model_catalog import _native_block
-        root = PROGRAMMATIC.parents[1] / '.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement'
+        root = Path(__file__).parent / 'assets'
         for number in (2792, 2793):
             path = next(root.glob(f'CA-R-{number}-*.md'))
             source = next(_native_block(path.read_text()))

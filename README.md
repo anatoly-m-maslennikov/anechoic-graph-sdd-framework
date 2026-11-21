@@ -334,6 +334,17 @@ actual Docker MCP initialization succeeded. This is not a claim that every
 historical test or deferred capability passes. The entity-model candidate and
 its research remain non-authoritative; full migration is not claimed complete.
 
+### Retained legacy records
+
+Keep `.anechoic_legacy/` and `.anechoic_legacy_archive/` in Git as read-only
+archives. They preserve the original records, including held Drafts and pinned
+revisions. The native alias map resolves old references to exact native
+revisions. See [native aliases](.anechoic_anechoic/_migration/native-aliases.json).
+
+Use native sources for runtime, QA, and Local Release. Store historical test
+inputs under `assets/` in their Test Packages. QA and Local Release must run in
+a checkout without either legacy archive.
+
 ## Current boundaries
 
 - More than one person can use Anechoic on a project, but the framework does not yet provide native support for team workflows.

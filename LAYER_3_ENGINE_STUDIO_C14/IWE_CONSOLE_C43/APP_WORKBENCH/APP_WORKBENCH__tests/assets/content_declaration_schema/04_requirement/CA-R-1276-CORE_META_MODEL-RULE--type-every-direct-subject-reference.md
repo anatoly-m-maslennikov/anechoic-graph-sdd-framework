@@ -1,0 +1,37 @@
+---
+atom_id: CA-R-1276
+ref_id: CA-R-1276
+container:
+  scope_unit: CA-SU-11
+role: Requirement
+form: Rule
+topics:
+  main_subject: ANECHOIC_MODEL <+ Atom.Header.Context.Topics
+  dependencies:
+  - ANECHOIC_MODEL <+ Relation
+  - ANECHOIC_MODEL <+ Relation//GOVERNS
+  - ANECHOIC_MODEL <+ Atom.Header.Context.Topics.Dependencies
+tier: 1
+status: Active
+version: 25
+updated_at: 2026-11-02 00:18:22 +0400
+carrier_destination:
+  file:
+    name: CA-R-1276-CORE_META_MODEL-RULE--type-every-direct-subject-reference.md
+    path: .anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement
+current_scope_unit: CORE_META_MODEL
+claim_target_scope_unit: CORE_META_MODEL
+---
+## Summary
+
+Type Every Direct Subject Reference
+
+## Claim
+
+### Prose Claim
+
+
+direct references in an Atom's Subjects Property.
+
+
+**every** direct reference **in** an Atom's Subjects Property **must** use **`=1`** Relation Kind **in** (GOVERNS, DEPENDS_ON). the relation entry supplies this kind **without** an additional kind Property on a Subject object.

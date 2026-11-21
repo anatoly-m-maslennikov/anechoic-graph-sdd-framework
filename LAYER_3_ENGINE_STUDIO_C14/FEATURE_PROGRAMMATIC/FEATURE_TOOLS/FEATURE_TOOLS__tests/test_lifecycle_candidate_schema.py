@@ -14,7 +14,7 @@ from ATOM_LIFECYCLE.validation import _validate_declared_schema  # noqa: E402
 from ATOM_LIFECYCLE.common import InputError  # noqa: E402
 from ATOM_LIFECYCLE.role_form_schema import RoleFormSchema  # noqa: E402
 
-CORE = TOOLS.parents[2] / '.anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL'
+CORE = Path(__file__).parent / 'assets/lifecycle_schema_declarations'
 
 
 def source(atom_id, status='Active', body=''):
@@ -187,7 +187,7 @@ declare_entity(entity_name="Plan", entity_class=PlanForm,
             with self.assertRaisesRegex(ValueError, 'digest mismatch'):
                 load_candidate_schema(output)
 
-    def test_current_core_compiles(self):
+    def test_sealed_core_declarations_compile(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'schema.json'
             path.write_bytes(compile_candidate_schema(CORE))

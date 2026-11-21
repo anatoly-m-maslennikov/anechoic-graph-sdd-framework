@@ -47,9 +47,9 @@ class CarrierSerializationTests(unittest.TestCase):
         self.assertFalse(registry_contribution(row).names)
 
     def test_current_model_presentation_headings_do_not_create_columns(self):
-        model = Path.cwd() / (
-            ".anechoic_anechoic/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/"
-            "CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement"
+        model = Path(__file__).resolve().parents[4] / (
+            "FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests/assets/"
+            "lifecycle_schema_declarations/04_requirement"
         )
         declarations = []
         for identifier in ("2498", "2499"):
