@@ -8,8 +8,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 2
-  updated_at: '2026-11-20T20:37:23.107919+00:00'
+  version: 3
+  updated_at: '2026-11-21T09:54:37.122704+00:00'
 ---
 
 ## Summary
@@ -80,6 +80,7 @@ Paths below are relative to `ProjectManifest.parameters`. A group holds the sett
 | `project_mcp.http_port` | Loopback TCP port for Project MCP. An integer from 1 to 65535. |
 | `project_mcp.tool_blacklist` | Exact Tool names to hide and reject for this Project. It can further restrict release workflows. |
 | `project_mcp.release_workflows_enabled` | Boolean. `True` exposes MCP Tools that return host uv commands for Local Release and Public Release. `False` or omission hides both Tools and rejects direct calls. |
+| `runtime.journal.storage` | Journal storage. `files` (default) uses append-only NDJSON; `duckdb` uses a durable standalone Journal table in the Project DuckDB file. |
 | `runtime.project_mcp.build_if_missing` | Permit the launcher to build an absent compatible runtime image. |
 | `runtime.project_mcp.build_timeout_seconds` | Maximum seconds the launcher allows for an image build. |
 | `runtime.project_mcp.startup_timeout_seconds` | Maximum seconds the launcher allows for startup and readiness. |
@@ -89,6 +90,7 @@ Paths below are relative to `ProjectManifest.parameters`. A group holds the sett
 | `runtime.workbench.public_url` | Workbench page URL used for saved query links when no request URL is available. |
 | `runtime.workbench.result_ttl_seconds` | Retention time in seconds for query results that an open View does not pin. |
 | `runtime.workbench.schema_mode` | Header column selection. `1` uses declared paths. `2` uses observed paths. |
+| `runtime.workbench.storage` | Workbench table storage. `disk` (default) uses the Project DuckDB file; `memory` makes other Workbench tables ephemeral. Independent of Journal storage. |
 | `projection.bindings.<parameter path>` | Source bindings for the named parameter in the generated configuration. |
 | `projection.configuration` | Configuration identity used to generate the projection. |
 | `projection.configuration_artifact` | Reference to the configuration Artifact. |
