@@ -41,7 +41,7 @@ class MigrationTest(unittest.TestCase):
         return path, body
 
     def read_header(self, path):
-        return yaml.safe_load(path.read_bytes().split(b'---\n', 2)[1])
+        return yaml.safe_load(migration.BOUNDARY.match(path.read_bytes()).group(1))
 
     def test_ready_recovery_default_and_companion(self):
         ready, body = self.carrier('component/__DES/AN-S-1-DES--ready.md', 'AN-S-1', status='ready',
@@ -77,6 +77,40 @@ class MigrationTest(unittest.TestCase):
         self.assertEqual(self.read_header(ticket)['state']['status'], 'in_queue')
         asset = self.output / '001_TICKETS/ASSETS/08_complete/AN-T-5-WORK_REPORT--report.md'
         self.assertEqual(self.read_header(asset)['state']['status'], 'complete')
+
+    def test_flat_legacy_pmeta_changes_family_only(self):
+        body = b'\r\n## Summary\r\n\r\nKeep AN-P-9@3 exact in this Markdown body.\r\n'
+        header = {
+            'atom_family': 'PMETA',
+            'atom_id': 'AN-P-9',
+            'container': {'component': 'C1'},
+            'context': {'template': 'action'},
+            'relations': {'IS_REFERENCE': ['AN-P-42@1']},
+            'state': {'status': 'active', 'version': 3,
+                      'updated_at': '2026-11-21T00:00:00+00:00'},
+        }
+        legacy = self.source / '_PMETA/AN-P-9-ACTION--legacy.md'
+        legacy.parent.mkdir(parents=True)
+        original = b'---\r\n' + yaml.safe_dump(header, sort_keys=False).encode().replace(b'\n', b'\r\n')
+        original += b'---\r\n' + body
+        legacy.write_bytes(original)
+
+        receipt = migration.run(self.source, self.output, {})
+        migrated = self.output / '002_PROJECT_CONFIG/AN-P-9-ACTION--legacy.md'
+        self.assertEqual(legacy.read_bytes(), original)
+        migrated_bytes = migrated.read_bytes()
+        migrated_header = self.read_header(migrated)
+        self.assertEqual(migrated_header['atom_family'], 'PROJECT_CONFIG')
+        self.assertEqual(migrated_header['atom_id'], 'AN-P-9')
+        self.assertEqual(migrated_header['relations'], header['relations'])
+        match = migration.BOUNDARY.match(migrated_bytes)
+        self.assertIsNotNone(match)
+        self.assertEqual(migrated_bytes[match.end():], body)
+        record = receipt['carriers'][0]
+        self.assertEqual(record['old_path'], '_PMETA/AN-P-9-ACTION--legacy.md')
+        self.assertEqual(record['new_path'], '002_PROJECT_CONFIG/AN-P-9-ACTION--legacy.md')
+        self.assertEqual(record['old_ref'], record['new_ref'])
+        self.assertEqual(record['old_ref'], 'AN-P-9@3')
 
     def test_collision_has_no_output(self):
         self.carrier('component/__DES/AN-S-6-DES--same.md', 'AN-S-6', tier=1)

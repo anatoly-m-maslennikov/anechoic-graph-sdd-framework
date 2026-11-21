@@ -8,8 +8,8 @@ context:
   lens: DevOps
 state:
   status: active
-  version: 26
-  updated_at: '2026-11-21T14:24:52.329085+00:00'
+  version: 28
+  updated_at: '2026-11-21T21:51:42.719385+00:00'
 ---
 
 ## Summary
@@ -18,20 +18,20 @@ Bind Release Version source, compilation, and package carriers
 
 ## Scope
 
-The Methodology sources, compilation and package copies used by direct local release, and the shared Methodology export helper.
+The checked-in Methodology sources and package copies used by direct local release, and the shared Methodology export helper.
 
 ## Claim
 
-Release Version **must** bind Methodology delivery to its selected source inputs and the canonical compiler. The direct `LAYER_1_FRAMEWORK_METHODOLOGY/` product, runtime package copies and any shared export remain derived deliveries that preserve their original source relations, never replacement authoring authority or Action authorization.
+Release Version **must** bind Methodology delivery to its selected checked-in assets without importing ANECHOIC runtime Components. The direct `LAYER_1_FRAMEWORK_METHODOLOGY/` product, runtime package copies and any shared export remain derived deliveries that preserve their original source relations, never replacement authoring authority or Action authorization.
 
 ## Details
 
 ### Direct local release
 
 1. Select the Active native Specs in the Meta-ontology Component. Exclude Drafts and Archived revisions.
-2. Validate the native Model declarations. Refuse duplicate Current identities, unsafe paths, or changes during selection.
+2. Check selected paths and inputs for safety and refuse changes during selection. Do not invoke the native Model or runtime Components.
 3. Copy the selected files under `LAYER_1_FRAMEWORK_METHODOLOGY/SUPERLAYER_1_METHODOLOGY_SOURCES/`. Preserve their paths relative to the Project control root.
-4. Copy those sources to `METHODOLOGY/sources/` in the runtime package. Verify the prepared bytes before installation. The full release test suite precedes delivery.
+4. Copy those sources to `METHODOLOGY/sources/` in the runtime package. Verify the prepared bytes before installation. C19 unit checks precede preparation; C19 end-to-end and canary checks precede installation.
 5. Preserve source Atom IDs, Versions, Relations and bytes. Replace only the derived delivery and preserve settings and unrelated files.
 
 ### Shared Methodology export
@@ -47,4 +47,4 @@ The existing `methodology_export.py` and inventory helper remain reusable. Their
 
 ### Publication boundary
 
-Direct local release uses its verified prepared product and runtime package. It does not require the retired reusable-package promotion, standalone installer, Full Gate, closed release registry or previous Journal records. Keep file/path checks and source-preservation checks at the copying boundary. Any Journal entry describes the actual publication or partial failure; it neither grants permission nor changes the real operation outcome.
+Direct local release uses its verified prepared product and runtime package. It does not require the retired reusable-package promotion, standalone installer, Full Gate, closed release registry or previous Journal records. Keep file/path checks and source-preservation checks at the copying boundary. Release Version does not call Journal.

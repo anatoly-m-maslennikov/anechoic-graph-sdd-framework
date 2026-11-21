@@ -264,10 +264,35 @@ def main() -> int:
     parser.add_argument("--project-root", type=Path, default=Path.cwd())
     parser.add_argument("--test-module", action="append", dest="test_modules", metavar="PATH")
     parser.add_argument("--image-mode", choices=("refresh", "existing"), default="existing")
-    parser.add_argument("--phase", choices=("full", "unit", "e2e"), default="full")
+    parser.add_argument("--phase", choices=("full", "unit", "e2e", "canary"), default="full")
     parser.add_argument("--candidate-image")
+    parser.add_argument("--canary-package", type=Path)
+    parser.add_argument("--run-id")
     arguments = parser.parse_args()
     root = arguments.project_root.resolve(strict=True)
+    if arguments.phase == "canary":
+        if (arguments.test_modules is not None or arguments.image_mode != "existing" or
+                arguments.candidate_image is None or arguments.canary_package is None or not arguments.run_id):
+            print("Invalid canary selection", file=sys.stderr)
+            return 1
+        try:
+            sys.path.insert(0, str(root))
+            sys.path.insert(0, str(root / PROGRAMMATIC))
+            sys.path.insert(0, str(root / PROGRAMMATIC / "FEATURE_TOOLS"))
+            if __package__:
+                from ._release_canary import verify_candidate_image
+            else:
+                from _release_canary import verify_candidate_image
+            endpoint = verify_candidate_image(root, arguments.canary_package, arguments.candidate_image,
+                                              run_id=arguments.run_id)
+        except Exception as error:
+            print(f"Canary failed: {error}", file=sys.stderr)
+            return 1
+        print(f"ANECHOIC_CANARY_ENDPOINT {endpoint}")
+        return 0
+    if arguments.canary_package is not None or arguments.run_id is not None:
+        print("Canary arguments require the canary phase", file=sys.stderr)
+        return 1
     return run_full_suite(
         root, test_modules=tuple(arguments.test_modules) if arguments.test_modules is not None else None,
         image_mode=arguments.image_mode, phase=arguments.phase, candidate_image=arguments.candidate_image,

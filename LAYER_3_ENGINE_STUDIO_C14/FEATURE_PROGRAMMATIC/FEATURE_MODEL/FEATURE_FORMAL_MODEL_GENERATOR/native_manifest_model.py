@@ -52,7 +52,9 @@ def reviewed_model_records():
                 continue
             claim = row["claim"]
             originals[row["subject"]] = claim
-            records.append((name, row["subject"], _native_imports(claim)))
+            subject = row["subject"].replace("PMETA Atom", "Project Config Atom")
+            claim = claim.replace("PMETA Atom", "Project Config Atom").replace("PMETAAtom", "ProjectConfigAtom")
+            records.append((name, subject, _native_imports(claim)))
     _check_relation_references(records)
     return records, originals, digest.hexdigest()
 
@@ -204,6 +206,8 @@ class _NativeModel:
                 or view["context"].get("template") != template
                 or type(fields.get("tier")) is not int or fields["tier"] != tier):
             raise ValueError("Project SPEC requires Project C00 and its declared Tier")
+        if template == "axiom" and view["context"].get("lens") != "SPEC":
+            raise ValueError("Axiom requires the SPEC Lens")
         project = self._validate("Project", {}, {})
         return self._validate(name, fields, {"CONTAINED_BY": [project]})
 

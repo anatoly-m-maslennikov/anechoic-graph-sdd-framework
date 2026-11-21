@@ -9,8 +9,8 @@ context:
   lens: DES
 state:
   status: "active"
-  version: 3
-  updated_at: "2026-11-21T20:42:01.989204+00:00"
+  version: 4
+  updated_at: '2026-11-21T21:49:45.763566+00:00'
 ---
 
 ## Summary
@@ -28,11 +28,13 @@ UV_PROJECT_ENVIRONMENT="$PWD/.anechoic_runtime/launcher-venv" \
     python -B "$PWD/LAYER_5_FRAMEWORK_DELIVERY/release.py" --help
 ```
 
-Replace `--help` with `local --project-root <root> --run-id <id>` for Local Release or `public --project-root <root> --run-id <id>` for Public Release. The child CLI Contracts define the additional arguments and the result guarantees.
+Replace `--help` with `local --project-root <root> --run-id <id>` for Local Release or `public --project-root <root> --run-id <id>` for Public Release.
 
-The command writes one JSON result to stdout for an invoked release and sends progress to stderr. Exit 0 means completed. Exit 1 means another reported outcome. Exit 2 means invalid CLI usage. Exit 130 means interruption. `--help` lists the commands and exits 0.
+The child CLI Contracts define the additional arguments and result guarantees.
 
-A Local Release that completes delivers the verified Framework and a ready Project MCP endpoint. A failed candidate verification leaves the running production container in place. A failure after effects reports the observed state.
+The host dispatches to C63 or C64. Release code imports no Project code outside the Release subtree. C63 calls C19 Test Suite through its command interface; C64 calls no subsystem.
+
+The command writes one JSON result to stdout and sends progress to stderr. Exit 0 means completed. Exit 1 means another reported outcome. Exit 2 means invalid CLI usage. Exit 130 means interruption. `--help` lists the commands and exits 0.
 
 ## References
 

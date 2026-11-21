@@ -187,7 +187,7 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
                           f"{self.control}/_PMETA/archived", ".anechoic_legacy/_PMETA"):
             with self.subTest(directory=directory):
                 pin = self._pin("workflow", "AN-P-1", 3, relative=f"{directory}/AN-P-1-WORKFLOW--fixture.md")
-                with self.assertRaisesRegex(NativeWorkflowDefinitionError, "Invalid native PMETA pin"):
+                with self.assertRaisesRegex(NativeWorkflowDefinitionError, "Invalid native PROJECT_CONFIG pin"):
                     self._bind(workflow=pin)
 
     def test_refuses_header_mismatch_even_with_trusted_matching_digest(self):

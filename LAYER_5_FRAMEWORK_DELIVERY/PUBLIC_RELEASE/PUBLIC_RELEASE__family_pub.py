@@ -1,6 +1,5 @@
 """Public release family interface."""
 
-from .public_release import run_public_release
-from .public_release_materials import validate_draft
+from .public_release import PublicReleaseError, run_public_release
 
-__all__ = ["run_public_release", "validate_draft"]
+__all__ = ["PublicReleaseError", "run_public_release"]

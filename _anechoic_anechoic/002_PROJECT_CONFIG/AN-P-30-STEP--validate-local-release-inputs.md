@@ -8,8 +8,8 @@ context:
   template: step
 state:
   status: active
-  version: 11
-  updated_at: 2026-11-09 15:54:30 +0400
+  version: 12
+  updated_at: '2026-11-21T21:51:04.697298+00:00'
 ---
 
 # Summary
@@ -18,8 +18,4 @@ Validate local release inputs
 
 ## Step
 
-This Step invokes CA-O-165 once with phase `validate` to check current active Core Meta-Model, installed extension, Project Configuration sources, and delivery paths.
-
-## Details
-
-Missing, inactive, ambiguous, or mismatched inputs stop before tests or delivery effects and are reported for manual handling. This Step does not copy, compile, install, publish, or retry.
+Invoke AN-P-25 to validate the selected Project, checked-in assets and delivery paths. Stop on missing or unsafe input.

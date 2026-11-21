@@ -135,7 +135,7 @@ class ManifestPropertyFieldsTests(unittest.TestCase):
                   primary("SpecAtom", "Atom"),
                   prop("Header", atom, ", value_cardinality=0, "
                        "allowed_dependent_property_names=('Atom Family', 'Atom ID', 'State', 'Structure')"),
-                  prop("Atom Family", atom + ".Header", ", value_format=str, allowed_values=('SPEC', 'TKT', 'PMETA')"),
+                  prop("Atom Family", atom + ".Header", ", value_format=str, allowed_values=('SPEC', 'TKT', 'PROJECT_CONFIG')"),
                   prop("Atom ID", atom + ".Header", ", value_format=str"),
                   prop("State", atom + ".Header", ", value_cardinality=0, allowed_dependent_property_names=('Version', 'Status', 'Updated At')"),
                   prop("Version", atom + ".Header.State", ", value_format=int"),
@@ -151,6 +151,9 @@ class ManifestPropertyFieldsTests(unittest.TestCase):
         instance = namespace["SpecAtom"](atom_family="SPEC", **values)
         self.assertEqual(instance.ref_id, "AN-S-1@2-draft")
         self.assertNotIn("ref_id", asdict(instance))
+        namespace["SpecAtom"](atom_family="PROJECT_CONFIG", **(values | {"atom_id": "AN-P-1"}))
+        with self.assertRaisesRegex(ValueError, "Atom Family disagrees"):
+            namespace["SpecAtom"](atom_family="PMETA", **(values | {"atom_id": "AN-P-1"}))
         with self.assertRaisesRegex(ValueError, "Atom Family disagrees"):
             namespace["SpecAtom"](atom_family="TKT", **values)
         with self.assertRaisesRegex(ValueError, "Unresolved Property group bearer"):

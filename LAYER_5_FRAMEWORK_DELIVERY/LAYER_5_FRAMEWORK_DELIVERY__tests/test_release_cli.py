@@ -17,7 +17,6 @@ from unittest.mock import patch
 REPOSITORY = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPOSITORY))
 from LAYER_5_FRAMEWORK_DELIVERY import release  # noqa: E402
-from LAYER_5_FRAMEWORK_DELIVERY import release_events  # noqa: E402
 
 LOCAL_ENTRY = "LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.RELEASE_VERSION__family_pub.run_local_release"
 PUBLIC_MODULE = "LAYER_5_FRAMEWORK_DELIVERY.PUBLIC_RELEASE.PUBLIC_RELEASE__family_pub"
@@ -25,19 +24,15 @@ PUBLIC_ENTRY = PUBLIC_MODULE + ".run_public_release"
 
 
 DRAFT = {
-    "description": "## New\n- Host command.\n\n## Fixed\n- Routing.\n",
-    "summary": ["Host command."],
+    "base_commit": "a" * 40,
+    "head_commit": "b" * 40,
+    "changes": [
+        {"title": "Host command", "details": "Route through the host CLI.", "evidence": ["AN-T-1"], "highlight": True}
+    ],
 }
 
 
 class ReleaseCliTests(unittest.TestCase):
-    def setUp(self) -> None:
-        recording = patch.object(
-            release_events, "record_release_event", return_value=("event", None)
-        )
-        self.record = recording.start()
-        self.addCleanup(recording.stop)
-
     def invoke(self, arguments: list[str]) -> tuple[int, dict[str, object]]:
         output = io.StringIO()
         with redirect_stdout(output):
@@ -91,71 +86,29 @@ class ReleaseCliTests(unittest.TestCase):
             test_modules=modules,
         )
 
-    def test_public_dispatch_and_failed_result(self) -> None:
-        temporary = REPOSITORY / ".anechoic_tmp/verification/release-cli"
-        temporary.mkdir(parents=True, exist_ok=True)
-        with tempfile.TemporaryDirectory(dir=temporary) as directory:
+    def test_public_dispatch_without_runtime_settings(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
             draft = Path(directory) / "draft.json"
             draft.write_text(json.dumps(DRAFT), encoding="utf-8")
-            control = Path(directory) / "_anechoic_fixture"
-            control.mkdir()
-            (control / "FX-S-1-SPEC-PROJECT_MANIFEST--declare-fixture.md").write_text(
-                "---\natom_family: SPEC\natom_id: FX-S-1\ncontainer:\n  component: C00\n"
-                "tier: -1\ncontext:\n  template: project_manifest\n  lens: SPEC\n"
-                "state:\n  status: active\n  version: 1\n  updated_at: '2026-11-21T00:00:00Z'\n---\n"
-                "## Summary\n\nDeclare Fixture\n\n## Claim\n\n### Formal Claim\n\n```python\n"
-                "from anechoic.formal_claims import declare_entity\n"
-                "from anechoic.model import ProjectManifest\n"
-                "declare_entity(entity_name='Project Manifest', instance=ProjectManifest("
-                "name='Fixture', prefix='FX', parameters={'project': {'repository_slug': 'fixture-repo'}}))\n```\n",
-                encoding="utf-8",
-            )
-            result = {"outcome": "failed", "failed_step": "tests", "report_path": "issue.md"}
+            result = {"outcome": "completed", "version_history_entry": "## 1.0.1"}
             with patch(PUBLIC_ENTRY, return_value=result) as run:
-                status, actual = self.invoke(
-                    [
-                        "public",
-                        "--run-id",
-                        "public-1",
-                        "--project-root",
-                        directory,
-                        "--content-draft",
-                        str(draft),
-                    ]
-                )
-            self.assertEqual((status, actual), (1, result))
+                status, actual = self.invoke([
+                    "public", "--run-id", "public-1", "--project-root", directory,
+                    "--base", "main", "--head", "candidate", "--content-draft", str(draft),
+                ])
+            self.assertEqual((status, actual), (0, result))
             run.assert_called_once_with(
-                Path(directory), run_id="public-1", content_draft=DRAFT, repository_slug="fixture-repo",
+                Path(directory).resolve(), run_id="public-1", base_ref="main", head_ref="candidate",
+                content_draft=DRAFT,
             )
 
-    def test_public_release_refuses_a_checkout_with_only_legacy_settings(self) -> None:
-        temporary = REPOSITORY / ".anechoic_tmp/verification/release-cli"
-        temporary.mkdir(parents=True, exist_ok=True)
-        with tempfile.TemporaryDirectory(dir=temporary) as directory, patch(PUBLIC_ENTRY) as run:
-            root = Path(directory)
-            draft = root / "draft.json"
-            draft.write_text(json.dumps(DRAFT), encoding="utf-8")
-            control = root / ".anechoic_anechoic"
-            control.mkdir()
-            (control / "anechoic_project_settings.toml").write_text(
-                '[project]\nname = "fixture"\nkey = "fixture"\nrepository_slug = "fixture-repo"\n'
-                '[artifacts.identity]\nproject_prefix = "FX"\n', encoding="utf-8",
-            )
-            status, actual = self.invoke([
-                "public", "--run-id", "legacy-only", "--project-root", directory, "--content-draft", str(draft),
-            ])
-        self.assertEqual(1, status)
-        self.assertEqual("invocation", actual["failed_step"])
-        run.assert_not_called()
-        self.record.assert_not_called()
-
-    def test_missing_draft_uses_native_input_required_without_effects(self) -> None:
-        with patch("subprocess.run", side_effect=AssertionError("release effect")):
-            status, result = self.invoke(["public", "--run-id", "public-1"])
-        self.assertEqual(status, 1)
-        self.assertEqual(result["outcome"], "input_required")
-        self.assertIn("content_draft_schema", result)
-        self.record.assert_not_called()
+    def test_missing_draft_requests_evidence(self) -> None:
+        result = {"outcome": "input_required", "completed_tickets": []}
+        with patch(PUBLIC_ENTRY, return_value=result) as run:
+            self.assertEqual(self.invoke(["public", "--run-id", "public-1"]), (1, result))
+        run.assert_called_once_with(
+            REPOSITORY, run_id="public-1", base_ref="origin/main", head_ref="amm/dev", content_draft=None,
+        )
 
     def test_malformed_drafts_do_not_dispatch(self) -> None:
         temporary = REPOSITORY / ".anechoic_tmp/verification/release-cli"
@@ -165,11 +118,8 @@ class ReleaseCliTests(unittest.TestCase):
             for payload in (
                 b"{",
                 b"[]",
-                b"{}",
                 b"\xff",
                 b" " * 1_048_577,
-                json.dumps({**DRAFT, "extra": True}).encode(),
-                json.dumps({**DRAFT, "summary": [7]}).encode(),
             ):
                 with self.subTest(payload=payload[:10]):
                     draft.write_bytes(payload)
@@ -186,7 +136,6 @@ class ReleaseCliTests(unittest.TestCase):
                     self.assertEqual(status, 1)
                     self.assertEqual(result["failed_step"], "invocation")
                     run.assert_not_called()
-            self.record.assert_not_called()
 
     def test_native_exception_is_bounded_and_not_retried(self) -> None:
         with patch(
@@ -236,16 +185,6 @@ class ReleaseCliTests(unittest.TestCase):
             },
         )
 
-    def test_terminal_record_interruption_preserves_completion_and_exits_130(self) -> None:
-        self.record.side_effect = [("start", None), KeyboardInterrupt]
-        with patch(
-            LOCAL_ENTRY, return_value={"outcome": "completed"}):
-            status, result = self.invoke(["local", "--run-id", "interrupted"])
-        self.assertEqual(status, 130)
-        self.assertEqual(result["outcome"], "completed")
-        self.assertEqual(result["error_type"], "KeyboardInterrupt")
-        self.assertIn("completed recording interrupted", str(result["recording_error"]))
-
     def test_invalid_file_path_does_not_dispatch(self) -> None:
         with patch(PUBLIC_ENTRY) as run:
             status, result = self.invoke(
@@ -283,7 +222,7 @@ class ReleaseCliTests(unittest.TestCase):
         self.assertEqual(status, 0)
         self.assertEqual(result["outcome"], "completed")
 
-    def test_invalid_root_and_run_id_do_not_record_or_dispatch(self) -> None:
+    def test_invalid_root_and_run_id_do_not_dispatch(self) -> None:
         for arguments in (
             ["local", "--run-id", "../unsafe"],
             ["local", "--run-id", "safe", "--project-root", "/"],
@@ -294,7 +233,6 @@ class ReleaseCliTests(unittest.TestCase):
             ):
                 self.assertEqual(self.invoke(arguments)[0], 1)
                 run.assert_not_called()
-        self.record.assert_not_called()
 
 
 if __name__ == "__main__":

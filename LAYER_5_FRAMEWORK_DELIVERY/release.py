@@ -1,34 +1,20 @@
-"""Run the existing Project release workflows directly from the host."""
+"""Run the Project release commands directly from the host."""
 
 
 from __future__ import annotations
 
 import argparse
-from collections.abc import Mapping
 from contextlib import redirect_stdout
-from functools import partial
 import json
+import os
 from pathlib import Path
 import re
+import stat
 import sys
-
-from pydantic import BaseModel, ConfigDict
 
 sys.dont_write_bytecode = True
 REPOSITORY = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPOSITORY))
-sys.path.insert(0, str(REPOSITORY / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC"))
-sys.path.insert(0, str(REPOSITORY / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS"))
-
-from LAYER_5_FRAMEWORK_DELIVERY.release_events import run_recorded_release  # noqa: E402
-
-
-class ContentDraft(BaseModel):
-    """The existing closed draft contract, validated before release effects."""
-
-    model_config = ConfigDict(strict=True, extra="forbid")
-    description: str
-    summary: list[str]
 
 
 def _arguments(argv: list[str] | None) -> argparse.Namespace:
@@ -39,15 +25,17 @@ def _arguments(argv: list[str] | None) -> argparse.Namespace:
         command.add_argument("--project-root", type=Path, default=REPOSITORY)
         command.add_argument("--run-id", required=True)
         if operation == "public":
+            command.add_argument("--base", default="origin/main", help="PR base Git ref")
+            command.add_argument("--head", default="amm/dev", help="PR head Git ref")
             command.add_argument(
-                "--content-draft", type=Path, help="UTF-8 JSON description/summary object"
+                "--content-draft", type=Path, help="UTF-8 JSON with the reviewed change entries"
             )
         else:
             command.add_argument(
                 "--image-mode",
                 choices=("refresh", "existing"),
                 default="refresh",
-                help="refresh generated image assets or use the assets already in the checkout",
+                help="candidate image mode; both use the checked-in build assets",
             )
             command.add_argument(
                 "--test-module",
@@ -62,17 +50,17 @@ def _arguments(argv: list[str] | None) -> argparse.Namespace:
 def _read_draft(path: Path | None) -> dict[str, object] | None:
     if path is None:
         return None
-    if path.is_symlink() or not path.is_file():
-        raise ValueError("content-draft-file-invalid")
-    with path.open("rb") as source:
+    descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    with os.fdopen(descriptor, "rb") as source:
+        if not stat.S_ISREG(os.fstat(source.fileno()).st_mode):
+            raise ValueError("content-draft-file-invalid")
         payload = source.read(1_048_577)
     if len(payload) > 1_048_576:
         raise ValueError("content-draft-file-too-large")
-    validated = ContentDraft.model_validate_json(payload.decode("utf-8")).model_dump()
-    from LAYER_5_FRAMEWORK_DELIVERY.PUBLIC_RELEASE.PUBLIC_RELEASE__family_pub import validate_draft
-
-    validate_draft(validated)
-    return validated
+    draft = json.loads(payload.decode("utf-8"))
+    if not isinstance(draft, dict):
+        raise ValueError("content-draft-object-required")
+    return draft
 
 
 def _invoke(arguments: argparse.Namespace) -> dict[str, object]:
@@ -86,35 +74,30 @@ def _invoke(arguments: argparse.Namespace) -> dict[str, object]:
     )
     if re.fullmatch(pattern, arguments.run_id) is None:
         raise ValueError("release-run-id-invalid")
-    from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import select_runtime_project
-
     if arguments.operation == "local":
         from LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.RELEASE_VERSION__family_pub import run_local_release
 
-        selected = select_runtime_project(root)
-        invoke = partial(run_local_release, root, run_id=arguments.run_id, image_mode=arguments.image_mode)
+        options = {}
         if arguments.test_modules is not None:
-            invoke = partial(invoke, test_modules=tuple(arguments.test_modules))
-        return run_recorded_release(
-            root, "release_version", arguments.run_id, invoke,
-            selection=selected,
+            options["test_modules"] = tuple(arguments.test_modules)
+        return run_local_release(
+            root, run_id=arguments.run_id, image_mode=arguments.image_mode, **options
         )
-    from LAYER_5_FRAMEWORK_DELIVERY.PUBLIC_RELEASE.PUBLIC_RELEASE__family_pub import run_public_release
+    from LAYER_5_FRAMEWORK_DELIVERY.PUBLIC_RELEASE.PUBLIC_RELEASE__family_pub import (
+        PublicReleaseError,
+        run_public_release,
+    )
 
     draft = _read_draft(arguments.content_draft)
-    if draft is None:
-        return run_public_release(root, run_id=arguments.run_id)
-    selected = select_runtime_project(root)
-    project = selected.parameters.get("project")
-    repository_slug = project.get("repository_slug") if isinstance(project, Mapping) else None
-    invoke = partial(
-        run_public_release, root, run_id=arguments.run_id, content_draft=draft,
-        repository_slug=repository_slug,
-    )
-    return run_recorded_release(
-        root, "public.release", arguments.run_id, invoke,
-        selection=selected,
-    )
+    try:
+        return run_public_release(
+            root, run_id=arguments.run_id, base_ref=arguments.base, head_ref=arguments.head, content_draft=draft,
+        )
+    except PublicReleaseError as error:
+        return {
+            "outcome": "failed", "run_id": arguments.run_id,
+            "failed_step": "changelog", "error_type": type(error).__name__, "error": str(error),
+        }
 
 
 def main(argv: list[str] | None = None) -> int:

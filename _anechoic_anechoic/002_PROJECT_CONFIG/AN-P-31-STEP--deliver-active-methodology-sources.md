@@ -8,8 +8,8 @@ context:
   template: step
 state:
   status: active
-  version: 15
-  updated_at: 2026-11-09 15:54:30 +0400
+  version: 16
+  updated_at: '2026-11-21T21:51:04.697298+00:00'
 ---
 
 # Summary
@@ -18,8 +18,4 @@ Deliver active Methodology sources
 
 ## Step
 
-This Step invokes CA-O-166 once with phase `deliver_sources`, clearing replaceable product members and copying only the current active Core Meta-Model, installed extension, and Project Configuration sources into `LAYER_1_FRAMEWORK_METHODOLOGY/`.
-
-## Details
-
-It preserves protected product settings, does not broaden source membership, and does not compile, install, test, publish, or retry. A source or destination mismatch stops and is reported for manual handling.
+Invoke AN-P-26 to prepare the selected Methodology product from current sources and checked-in assets. Preserve protected settings and source bytes; stop on a failed copy.

@@ -8,8 +8,8 @@ context:
   template: step
 state:
   status: active
-  version: 14
-  updated_at: 2026-11-09 15:54:30 +0400
+  version: 15
+  updated_at: '2026-11-21T21:51:27.960780+00:00'
 ---
 
 # Summary
@@ -18,8 +18,4 @@ Stage the candidate Framework package and ca Skill
 
 ## Step
 
-This Step invokes CA-O-167 once with phase `stage_candidate`, binding CA-O-165's frozen active boundary to one private active-source copy, compiled package, runtime, and complete `ca` payload before CA-O-185's complete suite.
-
-## Details
-
-It stages the complete candidate package and complete `ca` directory without selecting a runtime or replacing a Project Skill. A target mismatch, incomplete Methodology or Skill directory, hook, partial staging, permission failure, or missing Journal receipt stops before image build or testing.
+Prepare and verify the candidate package and Skill from checked-in assets in Project temporary state. Preserve the installed package and Skill until the replacement is ready.

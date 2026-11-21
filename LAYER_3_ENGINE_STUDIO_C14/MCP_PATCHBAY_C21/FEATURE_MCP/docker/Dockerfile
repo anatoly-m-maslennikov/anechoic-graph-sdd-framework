@@ -41,4 +41,6 @@ RUN mkdir -p /workspace/.anechoic_install \
     && chown -R ${RUNTIME_UID}:${RUNTIME_GID} /home/anechoic
 ENV PATH=/opt/venv/bin:/usr/local/bin:/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1
 USER anechoic
+HEALTHCHECK --interval=2s --timeout=5s --start-period=420s --retries=25 \
+    CMD ["python", "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/healthcheck.py"]
 ENTRYPOINT ["/opt/venv/bin/python", "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/entrypoint.py"]

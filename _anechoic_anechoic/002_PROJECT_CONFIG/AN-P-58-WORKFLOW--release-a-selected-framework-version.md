@@ -8,65 +8,35 @@ context:
   template: workflow
 state:
   status: active
-  version: 37
-  updated_at: '2026-11-12T09:55:17.478134+00:00'
+  version: 38
+  updated_at: '2026-11-21T21:51:04.697298+00:00'
 ---
 ## Summary
 
 Release a selected Framework Version
 
-## Claim
+## Operation
 
-### Prose Claim
+Local Release is the Operator-invoked local Workflow for one Project. It validates input paths, commits permitted pending changes, bumps the candidate Version, and runs C19 Test Suite unit checks. It reads checked-in assets, prepares the Framework and runtime package, and builds one candidate image directly with Docker.
 
-Local Release **means** the one Operator-invoked local Workflow that runs intended tool tests, copies active Methodology Sources, compiles them, installs Engine `.install` into the Project runtime package, and verifies the installed Docker/MCP path. It owns the local Engine, package, runtime, `ca`, and Project-MCP work; none is another release Workflow.
+C19 then runs end-to-end checks against that exact image and a disposable canary. After both pass, Local Release installs the verified package and Skill, starts the same candidate for Project MCP, verifies readiness, and applies the production tag. A failed or unsafe phase stops and reports its observed effects.
 
-#### Scope
+The Workflow preserves protected settings, authoring sources, Project state, and unrelated resources. It invokes no ANECHOIC runtime Components or Journal and does not compile or regenerate assets. Public Release is separate and prepares drafts without running a suite.
 
-The Workflow uses the current active Atoms in the Project-owned `METHODOLOGY_SOURCES` Core Meta-Model, installed extensions, and Project Configuration units. `LAYER_1_FRAMEWORK_METHODOLOGY/` is the derived product; `.anechoic_anechoic/000_ANECHOIC_framework/` is the installed copy. Settings, Scope Unit Declarations, and Project state are protected. Neither derived nor installed bytes become authoring authority.
+## Steps
 
-#### Steps
-
-| Step | Action | Bound phase |
+| Step | Action | Boundary |
 | --- | --- | --- |
-| CA-O-170 | CA-O-165 | validate current active sources and delivery paths |
-| CA-O-172 | CA-O-166 | clear the derived product except protected settings, then copy only the active source units |
-| CA-O-173 | CA-O-166 | compile applicable Methodology in that product |
-| CA-O-178 | CA-O-169 | clear the installed Framework except protected configuration, copy `LAYER_1_FRAMEWORK_METHODOLOGY` as-is, install `ca`, remove eligible stopped obsolete Project-owned containers before MCP startup, restart or reuse Project MCP for smoke, then retain the exact admitted candidate and finish eligible selected-Project container/image cleanup |
+| AN-P-30 | AN-P-25 | validate input and delivery paths |
+| AN-P-31 | AN-P-26 | prepare checked-in Methodology assets |
+| AN-P-35 | AN-P-29 | install verified delivery and check Project MCP |
 
-#### Transitions
-
-| Step result | Next step or outcome |
-| --- | --- |
-| current active sources and delivery paths are valid and the declared local-release validation scope passes | CA-O-172 |
-| verified derived source product | CA-O-173 |
-| compiled product | CA-O-178 |
-| verified installed copy, `ca`, and Project-MCP smoke | complete |
-| failed or unsafe result | stop and report it for manual handling |
-
-### Mermaid Scheme
-
-```mermaid
-flowchart TD
-    validate["CA-O-170 Validate local release inputs"]
-    deliver["CA-O-172 Deliver active Methodology sources"]
-    compile["CA-O-173 Compile applicable Methodology"]
-    install["CA-O-178 Install runtime and verify Project MCP"]
-    validate --> deliver --> compile --> install
-```
+The C19 unit, end-to-end and canary checks, Git checkpoints, package preparation and Docker operations are internal Workflow work. The image is built only after the unit checks pass; installation starts only after end-to-end and canary checks pass.
 
 ## Details
 
-Invoke this Workflow from the repository host through `LAYER_5_FRAMEWORK_DELIVERY/release.py local --project-root <project-root> --run-id <run-id> [--image-mode refresh|existing] [--test-module <repo-relative-module> ...]` in the governed uv environment; `--project-root` defaults to the repository root. The Project's MCP blacklist disables `release_version` exposure and invocation while preserving its adapter for later reuse. This entrypoint reuses the existing local runner and required validation, installation, smoke and safe cleanup behavior.
+Invoke `LAYER_5_FRAMEWORK_DELIVERY/release.py local --project-root <project-root> --run-id <run-id> [--image-mode refresh|existing] [--test-module <repo-relative-module> ...]` in the governed environment. Both image modes use checked-in assets. A focused test selection is reported as focused; it is not a complete-suite result.
 
-Use `refresh` by default. For image assets, regenerate them from the selected declarations and retain the resulting files with the checkout. For `existing`, use the selected checkout's generated assets for the Docker test image and the release candidate. If recovering from a bad container, first restore or cherry-pick the known-good code and asset files, then run Local Release with `--image-mode existing`. Both modes run the declared tests and verify the candidate before reporting success.
+The initial Git checkpoint commits permitted tracked and untracked nonignored changes and requires a clean index and worktree. Environment-file exclusions and path protections remain. Failure stops before tests or Docker work. Later checkpoints retain their actual results without empty commits.
 
-The four named Step/Action occurrences are the complete registered graph. Intended local-release tool tests are mandatory internal Workflow work after successful CA-O-170 validation and before CA-O-172 delivery; they are not another Atom Step or Action and cannot be bypassed by interpreting an edge label as execution. The admitted native Workflow runner must actually run the declared tests, retain their observed result, and stop before delivery on failure, unavailable execution, or unknown completion. CA-O-165 remains validation-only. This clarification creates no test Atom ID, restored retired Step, or second Workflow.
-
-The complete discovered test suite is the default local validation. A single explicitly Operator-authorized local continuation may pass repeatable `--test-module` arguments to the same entrypoint. The current planning carrier must record the exact module list, fresh Run ID, source-currentness proof and focused result; the receipt must be labelled `focused` and must not be reported as complete-suite green. This one-run local choice does not create a permanent bypass and does not alter CA-O-188's public full-suite gate.
-
-This Workflow starts on one Operator command. It runs Git before every listed Step and before intended tool tests, then runs Git again after final completion. It validates the current inputs, runs intended local-release tests under the declared validation scope, copies active sources into the product, compiles them, installs Engine `.install` into the Project runtime package, and smokes the installed Docker/MCP path. A failed step or test stops and is reported for manual handling. It never starts CA-O-188, pushes, opens a PR, or makes an installed copy authoritative.
-
-Its first release step commits all tracked changes and all untracked nonignored files allowed by the existing file-safety exclusions, then verifies that the worktree and index are clean. Ignored files remain ignored and environment-file exclusions remain; an excluded nonignored dirty file stops release rather than being committed or waived. An already clean repository needs no empty commit. A failed commit or any remaining tracked or nonignored untracked change stops the release before tests, image preparation/build or Docker work. Verify cleanliness after each later checkpoint as well. This checkpoint is internal work of this Workflow, not a new Step or Action.
-
-Canonical image naming is prepared after the declared local validation scope passes, using the existing ImageManager and actual Docker build timestamp; the complete suite remains the default prerequisite. Post-smoke image retention is selected-Project-only: keep this release's exact current-Version candidate; other positively owned unused digests, including same-fingerprint rebuilds, are eligible for non-force removal. Preserve foreign/unowned images and all container references, and report incomplete cleanup as pending. This is internal work of CA-O-178/CA-O-169, not an additional Workflow or Step; CA-O-179 is not another occurrence in this registered graph.
+Cleanup removes only positively identified obsolete Project-owned resources that are safe to remove. Preserve container-referenced, foreign, unowned, protected, and uncertain resources. Report incomplete cleanup.

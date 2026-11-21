@@ -8,8 +8,8 @@ context:
   template: action
 state:
   status: active
-  version: 16
-  updated_at: 2026-11-09 15:54:30 +0400
+  version: 17
+  updated_at: '2026-11-21T21:49:04.407565+00:00'
 ---
 
 # Summary
@@ -18,8 +18,6 @@ Prepare bound public-release materials
 
 ## Action
 
-Prepare bound public-release materials **means** the sole content prompt for one selected Version and source snapshot. It returns the full public PR body and concise Version History summary.
+Prepare a detailed Pull Request description and a brief Version History entry from completed Task and Epic content read at the pinned Git head and a Luna review of the pinned diff. The review identifies changes missing from the tickets.
 
-## Details
-
-The PR body distinguishes What’s new and What’s fixed. README, Version History edits, and all remote effects are mechanical later work. If the actual URL is not yet known, CA-O-198 appends it after PR creation; no placeholder is valid. A different Version or changed code, Methodology, or package requires a fresh full suite before public release.
+Bind reviewed content to the exact base and head commits. Return the two drafts without editing files or publishing them.

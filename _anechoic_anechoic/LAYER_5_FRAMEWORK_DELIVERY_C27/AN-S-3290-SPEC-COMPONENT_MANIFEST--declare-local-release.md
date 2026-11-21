@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-21T20:32:36.227088+00:00'
+  version: 2
+  updated_at: '2026-11-21T21:49:45.763566+00:00'
 ---
 
 ## Summary
@@ -32,9 +32,9 @@ declare_entity(
         lens_whitelist=['DES', 'DevOps', 'QA', 'SWD'],
         boundaries={
             'code_access': {
-                'imports': ['test_suite__pub.run_full_suite'],
+                'imports': [],
                 'exports': {
-                    'RELEASE_VERSION__family_pub.run_local_release': {'family_pub': ['parent', 'C64']},
+                    'RELEASE_VERSION__family_pub.run_local_release': {'family_pub': ['parent']},
                 },
             },
             'runtime_io': {
@@ -49,8 +49,8 @@ declare_entity(
                 'allows': [{'component': 'C19', 'interface': 'test_suite'}],
             },
             'shared_state': {
-                'reads': ['Project Manifest', 'Project checkout'],
-                'writes': ['Project checkout', 'Local Framework installation', 'Project MCP runtime'],
+                'reads': ['Project Manifest literals', 'Checked-in registry', 'Active sources', 'Project checkout'],
+                'writes': ['Project checkout', 'Local Framework installation', 'Project MCP runtime', 'Local Release receipts'],
             },
         },
     ),

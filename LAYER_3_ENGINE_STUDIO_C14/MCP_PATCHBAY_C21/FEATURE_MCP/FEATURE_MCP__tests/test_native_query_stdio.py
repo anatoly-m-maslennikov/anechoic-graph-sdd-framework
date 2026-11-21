@@ -335,9 +335,10 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
             children = await template("list_tickets", parent="AN-T-009", statuses=["done"])
             self.assertEqual([["AN-T-010", "Fixture.", "task", "done",
                                f"{CONTROL}/__TKT/TASKS/AN-T-010-TASK--child.md", None]], children["rows"])
-            listed = await template("list_atoms", family="pmeta", statuses=["active"])
+            listed = await template("list_atoms", family="project_config", statuses=["active"])
             self.assertEqual([["AN-P-001", "Fixture.", "task", "active",
                                f"{CONTROL}/_PMETA/AN-P-001-WORKFLOW--fixture.md"]], listed["rows"])
+            self.assertEqual(listed["rows"], (await template("list_atoms", family="pmeta", statuses=["active"]))["rows"])
             counted = await template("count_atoms", family="tkt", kind="task", statuses=["archived"])
             self.assertEqual(["count"], [column["name"] for column in counted["columns"]])
             self.assertEqual([[1]], counted["rows"])

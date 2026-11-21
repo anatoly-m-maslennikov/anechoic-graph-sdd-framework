@@ -39,8 +39,10 @@ class LocalReleaseGitPreflightTests(unittest.TestCase):
                     "?? .env.local\n" if mode == "residual-dirty" else "",
                     "",
                 )
-            if fixture._is_mcp_bootstrap(argv):
-                return fixture._mcp_bootstrap_success(argv)
+            if "--phase" in argv and argv[argv.index("--phase") + 1] == "canary":
+                return subprocess.CompletedProcess(
+                    argv, 0, "ANECHOIC_CANARY_ENDPOINT http://127.0.0.1:49152/anechoic/mcp\n", ""
+                )
             return subprocess.CompletedProcess(argv, 0, "", "")
 
         result = run_local_release(fixture.root, run_id="first-commit", runner=runner)

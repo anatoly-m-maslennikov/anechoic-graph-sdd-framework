@@ -74,8 +74,8 @@ def native_carrier_path(header, summary, *, project_root, owner_directory, owner
     check collisions; those checks belong to the caller.
     """
     view = native_header_view(header)
-    family = header.get('atom_family')
-    if family not in {'SPEC', 'PMETA', 'TKT'}:
+    family = view.get('atom_family')
+    if family not in {'SPEC', 'PROJECT_CONFIG', 'TKT'}:
         raise ValueError('An authored native Atom Family is required')
     atom_id = view['identity']['atom_id']
     context, state = view['context'], view['state']
@@ -140,9 +140,9 @@ def _ticket_root(root, key, status, revision, owner_directory, owner_template, a
 
 def _other_placement(family, context, status, revision, marker, root, owner_directory, owner_template, atom_owned):
     template = context.get('template')
-    if family == 'PMETA':
+    if family == 'PROJECT_CONFIG':
         root = Path(owner_directory) if atom_owned else root / PROJECT_CONFIG_DIRECTORY
-    if family == 'PMETA' and status == 'draft' and not template:
+    if family == 'PROJECT_CONFIG' and status == 'draft' and not template:
         return root / DRAFT_DIRECTORY, marker
     if not template:
         raise ValueError('Authored Template is required')

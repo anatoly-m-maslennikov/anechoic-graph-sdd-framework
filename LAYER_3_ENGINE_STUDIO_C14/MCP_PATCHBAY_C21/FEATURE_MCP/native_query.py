@@ -86,17 +86,20 @@ OBSERVATION_TABLES = frozenset({"change_log", "query_log", "live_runs", "runtime
 QUERY_TABLES = ATOM_TABLES | REALIZATION_TABLES | OBSERVATION_TABLES | frozenset(AUDIT_TABLES) | {"work_journal"}
 
 
-def _lifecycle_ref(arguments, field):
+def _lifecycle_target(name, arguments):
     from ATOM_LIFECYCLE.common import InputError
     from native_workflow_definition import STATUS_SPECIFICATIONS
 
+    field = "sourceCurrent" if name in {"atom_lifecycle_create_draft", "atom_lifecycle_update"} else "target"
+    if name == "atom_lifecycle_update" and field not in arguments:
+        raise InputError(field, "Supply one Current carrier to revise.")
     target = arguments.get(field)
     ref = target.get("ref_id") if isinstance(target, dict) else None
     if isinstance(ref, str) and any(
         native.partition("@")[0] == ref.partition("@")[0] for native, _ in STATUS_SPECIFICATIONS.values()
     ):
         raise InputError(field, "Installed status definitions can change only with their runtime binding.")
-    return ref
+    return field, ref
 
 
 def _test_asset_change(root: Path, relative: str) -> bool:
@@ -613,8 +616,7 @@ class NativeQueryOwner(ServiceInterface):
         validate = self._inputs.validate_project_spec
         if name == "atom_lifecycle_create_asset":
             return create_asset(selection, arguments, current_rows=rows)
-        field = "sourceCurrent" if name in {"atom_lifecycle_create_draft", "atom_lifecycle_update"} else "target"
-        ref = _lifecycle_ref(arguments, field)
+        field, ref = _lifecycle_target(name, arguments)
         if name == "atom_lifecycle_direct_update":
             return direct_update(selection, arguments, current_rows=rows)
         if field == "sourceCurrent":

@@ -35,7 +35,7 @@ def _pin_path(selection: NativeProjectSelection, pin: NativeDefinitionPin) -> Pa
             or relative.parent not in {selection.control_relative / PROJECT_CONFIG_DIRECTORY,
                                        selection.control_relative / "_PMETA"}
             or relative.suffix != ".md" or not relative.name.startswith(f"{atom_id}-")):
-        raise NativeWorkflowDefinitionError(f"Invalid native PMETA pin: {pin.ref_id}")
+        raise NativeWorkflowDefinitionError(f"Invalid native PROJECT_CONFIG pin: {pin.ref_id}")
     return selection.root / relative
 
 

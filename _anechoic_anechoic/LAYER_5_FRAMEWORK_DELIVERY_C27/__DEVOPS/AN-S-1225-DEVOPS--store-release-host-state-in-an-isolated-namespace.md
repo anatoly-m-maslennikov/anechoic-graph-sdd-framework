@@ -8,8 +8,8 @@ context:
   lens: DevOps
 state:
   status: active
-  version: 15
-  updated_at: 2026-11-09 15:54:30 +0400
+  version: 16
+  updated_at: '2026-11-21T21:49:04.407565+00:00'
 ---
 
 ## Summary
@@ -29,7 +29,7 @@ the direct host release implementation's mutable delivery artifacts **must** rem
 the Local and Public Release artifacts written by the direct host implementation.
 
 - Local Release writes its installed runtime package and reports below `.anechoic_runtime/simple_local_release/` and uses `.anechoic_tmp/simple_local_release/` only for temporary staging and test output.
-- Public Release writes an input-required report below `.anechoic_tmp/public_release/<run-id>/` when it needs content input.
+- Public Release returns pinned Git evidence and draft text without writing release artifacts.
 - all locations are derived from the resolved Project root and must remain project-relative. They do not create a Workflow Orchestrator namespace, scheduler database, worker lock, Queue, DBOS store or private IPC carrier.
 - reports and temporary artifacts describe delivery results; they do not become authoring authority or a second Journal.
 - the Docker/MCP runtime remains independently packaged and managed by the release implementation.

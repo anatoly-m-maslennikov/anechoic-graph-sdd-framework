@@ -1,169 +1,94 @@
-"""Direct public release fixtures and retained publication-boundary checks."""
-
-from __future__ import annotations
-
-import json
-from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import unittest
+from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from public_release import run_public_release
+from public_release import PublicReleaseError, run_public_release
 
 
-class PublicReleaseFixture(unittest.TestCase):
-    def setUp(self) -> None:
-        temp_root = (
-            Path(__file__).resolve().parents[3] / ".anechoic_tmp/verification/public-release-tests"
-        )
-        temp_root.mkdir(parents=True, exist_ok=True)
-        self.temp = tempfile.TemporaryDirectory(dir=temp_root, ignore_cleanup_errors=True)
-        self.addCleanup(self.temp.cleanup)
-        self.root = Path(self.temp.name)
-        (self.root / "version.toml").write_text('[framework]\nversion = "0.4.2.1"\n')
-        (self.root / "README.md").write_text("# Project\n")
-        (self.root / "VERSION_HISTORY.md").write_text("# Version History\n")
-        self.draft = {
-            "description": "## New\n- Direct public release.\n\n## Fixed\n- Removed selector dependency.\n",
-            "summary": ["Direct public release with one supplied PR description."],
-        }
-        self.snapshots: list[tuple[tuple[str, ...], dict[str, str]]] = []
+class PublicReleaseTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        self.git('init', '-q')
+        self.git('config', 'user.email', 'test@example.com')
+        self.git('config', 'user.name', 'Test')
+        (self.root / 'version.toml').write_text('[framework]\nversion = "1.2.3"\n')
+        self.git('add', '.')
+        self.git('commit', '-qm', 'base')
+        self.base = self.git('rev-parse', 'HEAD')
+        (self.root / 'version.toml').write_text('[framework]\nversion = "1.2.4"\n')
+        self.tickets = self.root / '_anechoic_anechoic/001_TICKETS/TASKS'
+        self.tickets.mkdir(parents=True)
+        (self.tickets / 'AN-T-1-TASK--done.md').write_text('---\natom_id: AN-T-1\ncontext:\n  template: task\nstate:\n  status: "done"\n---\n# Summary\n\nDone task\n')
+        (self.tickets / 'AN-T-2-EPIC--open.md').write_text('---\natom_id: AN-T-2\ncontext:\n  template: epic\nstate:\n  status: active\n---\n')
+        self.git('add', '.')
+        self.git('commit', '-qm', 'head')
+        self.head = self.git('rev-parse', 'HEAD')
+        self.addCleanup(self.tmp.cleanup)
 
-    def _materials(self) -> dict[str, str]:
-        return {
-            name: (self.root / name).read_text()
-            for name in ("version.toml", "README.md", "VERSION_HISTORY.md")
-        }
+    def git(self, *args):
+        return subprocess.run(['git', *args], cwd=self.root, check=True, capture_output=True, text=True).stdout.strip()
 
-    def _runner(
-        self,
-        *,
-        fail_tests=False,
-        branch="amm/dev",
-        existing_pr=False,
-        origin="git@githuba:acme/project.git",
-        push_origin=None,
-        discovery=None,
-        created_url=None,
-        change_after_tests=None,
-        wrong_head=False,
-        fail_push=False,
-        staged_environment_at=None,
-    ):
-        calls: list[tuple[str, ...]] = []
-        tracked = staged = self._materials()
-        head = "a" * 40 + "\n"
+    def run_release(self, **kwargs):
+        return run_public_release(self.root, run_id='test', base_ref=self.base, head_ref=self.head, **kwargs)
 
-        def run(argv: tuple[str, ...], cwd: Path) -> subprocess.CompletedProcess[str]:
-            nonlocal tracked, staged, head
-            self.assertEqual(self.root, cwd)
-            calls.append(argv)
-            self.snapshots.append((argv, self._materials()))
-            if argv[:4] == ("git", "diff", "--cached", "--name-only"):
-                checkpoint = any(call[:2] == ("git", "add") for call in calls)
-                phase = "candidate_commit" if checkpoint else "git_preflight"
-                return subprocess.CompletedProcess(argv, 0, "private.env\n" if staged_environment_at == phase else "", "")
-            if argv[:2] == ("git", "show"):
-                return subprocess.CompletedProcess(argv, 0, tracked[argv[2].split(":", 1)[1]], "")
-            if argv[:2] == ("git", "add"):
-                staged = self._materials()
-            if argv[:2] == ("git", "commit"):
-                tracked = staged
-            if fail_push and argv[:2] == ("git", "push"):
-                return subprocess.CompletedProcess(argv, 1, "", "push uncertain")
-            if fail_tests and argv[:2] == ("uv", "run"):
-                return subprocess.CompletedProcess(argv, 1, "", "tests failed")
-            if change_after_tests and argv[:2] == ("uv", "run"):
-                if change_after_tests == "head":
-                    head = "changed-head\n"
-                else:
-                    (self.root / "README.md").write_text("Changed after tested preparation.\n")
-            match = {
-                "url": "https://github.com/acme/project/pull/41",
-                "state": "OPEN",
-                "headRefName": "amm/dev",
-                "baseRefName": "main",
-            }
-            responses = {
-                ("git", "branch", "--show-current"): (0, branch + "\n"),
-                ("git", "rev-parse", "HEAD"): (0, head),
-                ("git", "status", "--porcelain"): (
-                    0,
-                    " M README.md\n" if self._materials() != tracked else "",
-                ),
-                ("git", "remote", "get-url"): (
-                    0,
-                    ((push_origin or origin) if "--push" in argv else origin) + "\n",
-                ),
-                ("git", "diff", "--cached"): (int(staged != tracked), ""),
-                ("gh", "pr", "list"): (
-                    0,
-                    discovery
-                    if discovery is not None
-                    else json.dumps([match] if existing_pr else []),
-                ),
-                ("gh", "pr", "view"): (0, json.dumps(dict(match, url=("https://github.com/acme/project/pull/41" if existing_pr else "https://github.com/acme/project/pull/42"), isDraft=True, headRefOid=("b" * 40 if wrong_head else head.strip())))),
-                ("gh", "pr", "create"): (
-                    0,
-                    created_url or "https://github.com/acme/project/pull/42\n",
-                ),
-            }
-            code, output = responses.get(argv[:3], (0, ""))
-            return subprocess.CompletedProcess(argv, code, output, "")
+    def test_comparison_and_rendering_are_read_only(self):
+        before = self.git('status', '--porcelain')
+        result = self.run_release()
+        self.assertEqual(result['outcome'], 'input_required')
+        self.assertEqual(result['version'], '1.2.4')
+        self.assertEqual(result['merge_base'], self.base)
+        self.assertEqual(result['diff_argv'], ['git', 'diff', '--find-renames', self.base, self.head, '--'])
+        self.assertEqual([ticket['path'] for ticket in result['completed_tickets']], ['_anechoic_anechoic/001_TICKETS/TASKS/AN-T-1-TASK--done.md'])
+        draft = {'base_commit': self.base, 'head_commit': self.head, 'changes': [{'title': 'Add feature', 'details': 'Adds a feature.', 'evidence': ['AN-T-1'], 'highlight': True}]}
+        rendered = self.run_release(content_draft=draft)
+        self.assertIn('Adds a feature.', rendered['pr_description'])
+        self.assertEqual(rendered['version_history_entry'], '## 1.2.4\n\n- Add feature\n')
+        self.assertEqual(self.git('status', '--porcelain'), before)
 
-        return run, calls
+    def test_rejects_stale_pins_and_invalid_entries(self):
+        draft = {'base_commit': self.base, 'head_commit': 'bad', 'changes': []}
+        with self.assertRaises(PublicReleaseError):
+            self.run_release(content_draft=draft)
+        draft['head_commit'] = self.head
+        with self.assertRaises(PublicReleaseError):
+            self.run_release(content_draft=draft)
+        draft['changes'] = [{'title': 'Feature', 'details': 'Details', 'evidence': [], 'highlight': True}]
+        with self.assertRaises(PublicReleaseError):
+            self.run_release(content_draft=draft)
 
 
-class PublicReleaseTests(PublicReleaseFixture):
-    def test_legacy_history_entries_are_sorted_without_losing_details(self):
-        history = self.root / "VERSION_HISTORY.md"
-        older = "## Version 0.3\n\nOld details.\n\n"
-        newer = "## Version 0.4.1\n\nNewer details.\n\n"
-        history.write_text("# Version History\n\nIntroduction.\n\n" + older + newer)
-        runner, _ = self._runner(existing_pr=True)
-        result = run_public_release(self.root, run_id="legacy", content_draft=self.draft, runner=runner, repository_slug="project")
-        self.assertEqual("completed", result["outcome"], result)
-        text = history.read_text()
-        self.assertLess(text.index("## 0.4.3"), text.index(newer))
-        self.assertLess(text.index(newer), text.index(older))
-        self.assertIn("Introduction.", text)
+    def test_excludes_archives_snapshots_and_symlinks_and_rejects_duplicates(self):
+        done = (self.tickets / 'AN-T-1-TASK--done.md').read_text()
+        for folder in ('09_archived', 'snapshot'):
+            (self.tickets / folder).mkdir()
+            (self.tickets / folder / 'AN-T-1-TASK--copy.md').write_text(done)
+        (self.tickets / 'AN-T-3-TASK--link.md').symlink_to('AN-T-1-TASK--done.md')
+        self.git('add', '.')
+        self.git('commit', '-qm', 'lookalikes')
+        self.head = self.git('rev-parse', 'HEAD')
+        self.assertEqual(len(self.run_release()['completed_tickets']), 1)
+        (self.tickets / 'AN-T-1-TASK--duplicate.md').write_text(done)
+        self.git('add', '.')
+        self.git('commit', '-qm', 'duplicate')
+        self.head = self.git('rev-parse', 'HEAD')
+        with self.assertRaisesRegex(PublicReleaseError, 'duplicate'):
+            self.run_release()
 
-    def test_single_tested_push_for_existing_and_new_pr(self):
-        for existing in (False, True):
-            with self.subTest(existing=existing):
-                runner, calls = self._runner(existing_pr=existing)
-                result = run_public_release(self.root, run_id="public-" + str(existing), content_draft=self.draft, runner=runner, repository_slug="project")
-                self.assertEqual("completed", result["outcome"], result)
-                push = next(x for x in calls if x[:2] == ("git", "push"))
-                self.assertEqual(1, sum(x[:2] == ("git", "push") for x in calls))
-                self.assertEqual("a" * 40 + ":refs/heads/amm/dev", push[-1])
-                tests = next(i for i, x in enumerate(calls) if x[:2] == ("uv", "run"))
-                self.assertLess(tests, calls.index(push))
-                self.assertLess(calls.index(push), next(i for i, x in enumerate(calls) if x[:3] == ("gh", "pr", "ready")))
-                materials = next(snapshot for x, snapshot in self.snapshots if x[:2] == ("uv", "run"))
-                self.assertIn("[PR](" + result["pr_url"] + ")", materials["VERSION_HISTORY.md"])
-                self.assertTrue(materials["VERSION_HISTORY.md"].startswith("# Version History\n\n<!-- public-release:"))
-                (self.root / "version.toml").write_text('[framework]\nversion = "0.4.2.1"\n')
-                (self.root / "README.md").write_text("# Project\n")
-                (self.root / "VERSION_HISTORY.md").write_text("# Version History\n")
-                self.snapshots.clear()
-
-    def test_failures_stop_without_push_or_retry(self):
-        for options in ({"fail_tests": True}, {"change_after_tests": "head"}, {"change_after_tests": "tracked"}, {"created_url": "https://github.com/other/project/pull/42"}, {"fail_push": True}, {"wrong_head": True}):
-            with self.subTest(options=options):
-                runner, calls = self._runner(**options)
-                result = run_public_release(self.root, run_id="failure", content_draft=self.draft, runner=runner, repository_slug="project")
-                self.assertEqual("failed", result["outcome"], result)
-                pushes = sum(x[:2] == ("git", "push") for x in calls)
-                self.assertEqual(int(bool(options.get("fail_push") or options.get("wrong_head"))), pushes)
-                self.assertFalse(any(x[:3] == ("gh", "pr", "ready") for x in calls))
-                (self.root / "version.toml").write_text('[framework]\nversion = "0.4.2.1"\n')
-                (self.root / "README.md").write_text("# Project\n")
-                (self.root / "VERSION_HISTORY.md").write_text("# Version History\n")
-                self.snapshots.clear()
+    def test_highlight_limits(self):
+        change = {'title': 'Feature', 'details': 'Details', 'evidence': ['file'], 'highlight': True}
+        draft = {'base_commit': self.base, 'head_commit': self.head, 'changes': [change.copy() for _ in range(6)]}
+        with self.assertRaises(PublicReleaseError):
+            self.run_release(content_draft=draft)
+        draft['changes'][0]['highlight'] = False
+        self.assertEqual(self.run_release(content_draft=draft)['version_history_entry'].count('- Feature'), 5)
+        draft['changes'][1]['title'] = 'x' * 121
+        with self.assertRaises(PublicReleaseError):
+            self.run_release(content_draft=draft)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

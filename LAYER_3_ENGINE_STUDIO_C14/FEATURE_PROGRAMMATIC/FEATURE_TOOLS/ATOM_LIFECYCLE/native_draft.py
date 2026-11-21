@@ -80,7 +80,7 @@ def _revision_root(selection, row, structure_snapshot=None, current_rows=None):
     if "-P-" in atom_id:
         root = selection.control_root / ('_PMETA' if '_PMETA' in path.parts else PROJECT_CONFIG_DIRECTORY)
         if path.parent != root:
-            raise common.InputError("sourceCurrent", "Select a direct PMETA carrier.")
+            raise common.InputError("sourceCurrent", "Select a direct PROJECT_CONFIG carrier.")
         return root
     lens = context.get("lens")
     container = context.get("container")
@@ -138,6 +138,13 @@ def _native_slug(body):
     return _slug(''.join(char if char.isascii() else '-' for char in summary))
 
 
+def _revision_header(header):
+    result = {key: value for key, value in header.items() if key != 'state'}
+    if result.get('atom_family') == 'PMETA':
+        result['atom_family'] = 'PROJECT_CONFIG'
+    return result
+
+
 def _state_bytes(raw, bounds, path, version, body, status):
     header = raw[bounds[0]:bounds[1]].decode('utf-8')
     try:
@@ -150,6 +157,9 @@ def _state_bytes(raw, bounds, path, version, body, status):
         if any(key.value == 'updated_at' for key, _ in fields):
             values['updated_at'] = datetime.now(timezone.utc).isoformat()
         edits = []
+        family = [value for key, value in node.value if key.value == 'atom_family']
+        if len(family) == 1 and isinstance(family[0], yaml.ScalarNode) and family[0].value == 'PMETA':
+            edits.append((family[0].start_mark.index, family[0].end_mark.index, 'PROJECT_CONFIG'))
         for name, value in values.items():
             found = [item for key, item in fields if key.value == name]
             if len(found) != 1 or not isinstance(found[0], yaml.ScalarNode):
@@ -161,6 +171,8 @@ def _state_bytes(raw, bounds, path, version, body, status):
         before = parse_carrier(raw, path).metadata
         after = parse_carrier(candidate, path).metadata
         expected = dict(before)
+        if expected.get('atom_family') == 'PMETA':
+            expected['atom_family'] = 'PROJECT_CONFIG'
         expected['state'] = {**before['state'], **values}
         if after != expected:
             raise ValueError('Unexpected header change')
@@ -715,8 +727,7 @@ def _cleanup_published_draft(selection, target, status, draft, current, structur
                 if (paths[0] != _task_path(selection, draft_header, body, 'draft', version, owner, root)
                         or paths[1] != _task_path(selection, current_header, body, status, version, owner, root)):
                     raise common.InputError('target', 'Task paths disagree with their authored Headers and Summary.')
-            if ({key: value for key, value in draft_header.items() if key != 'state'}
-                    != {key: value for key, value in current_header.items() if key != 'state'}
+            if (_revision_header(draft_header) != _revision_header(current_header)
                     or draft['_content_bytes'] != current['_content_bytes']):
                 raise common.InputError('target', 'Published carrier differs from the Draft.')
         except (common.InputError, common.SourceChanged):
@@ -854,8 +865,7 @@ def promote_draft(selection, params, *, current_rows, structure_snapshot=None, p
                     raise common.InputError('target', 'Task paths disagree with their authored Headers and Summaries.')
                 archive_path = _task_path(selection, previous_header, previous_body, 'archived', previous['version'], owner, root)
                 destination = _task_path(selection, draft_header, draft_body, status, version, owner, root)
-            if ({key: value for key, value in draft_header.items() if key != 'state'}
-                    != {key: value for key, value in previous_header.items() if key != 'state'}
+            if (_revision_header(draft_header) != _revision_header(previous_header)
                     or _summary(draft_body) != _summary(previous_body)):
                 raise common.InputError('target', 'Only a body revision with unchanged Summary is supported.')
             if archive_path.exists() or archive_path.is_symlink() or (destination != previous_path and

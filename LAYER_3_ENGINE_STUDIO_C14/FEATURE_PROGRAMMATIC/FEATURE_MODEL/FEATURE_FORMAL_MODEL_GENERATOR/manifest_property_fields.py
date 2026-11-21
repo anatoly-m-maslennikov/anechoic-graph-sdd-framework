@@ -270,7 +270,7 @@ def _emit_family_check(atom, classes):
 def __post_init__(self):
     parts = self.atom_id.split("-") if isinstance(self.atom_id, str) else ()
     if len(parts) != 3 or (parts[1], self.atom_family) not in (
-            ("S", "SPEC"), ("T", "TKT"), ("P", "PMETA")):
+            ("S", "SPEC"), ("T", "TKT"), ("P", "PROJECT_CONFIG")):
         raise ValueError("Atom Family disagrees with the Atom ID")
 ''').body[0])
 

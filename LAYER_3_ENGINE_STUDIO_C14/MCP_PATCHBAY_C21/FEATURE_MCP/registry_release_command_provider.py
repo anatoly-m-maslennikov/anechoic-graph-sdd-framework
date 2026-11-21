@@ -22,7 +22,7 @@ class ReleaseCommandProvider:
         if name not in RELEASE_COMMAND_TOOLS:
             raise ValueError('Unknown release command Tool')
         public = name == 'public_release_command'
-        if set(arguments) - ({'run_id', 'content_draft'} if public else {'run_id'}):
+        if set(arguments) - ({'run_id', 'base', 'head', 'content_draft'} if public else {'run_id'}):
             raise ValueError('Unexpected release command input')
         run_id = arguments.get('run_id')
         pattern = r'[A-Za-z0-9][A-Za-z0-9._:-]*' if public else r'[A-Za-z0-9][A-Za-z0-9._-]*'
@@ -32,11 +32,12 @@ class ReleaseCommandProvider:
                 '--python', '3.14', '--managed-python', '--no-env-file', '--all-groups',
                 'python', '-B', str(self.root / 'LAYER_5_FRAMEWORK_DELIVERY/release.py'),
                 'public' if public else 'local', '--project-root', str(self.root), '--run-id', run_id]
-        if 'content_draft' in arguments:
-            draft = arguments['content_draft']
-            if not isinstance(draft, str) or not draft or '\0' in draft:
-                raise ValueError('content-draft-path-invalid')
-            args.extend(('--content-draft', draft))
+        for key in ('base', 'head', 'content_draft'):
+            if key in arguments:
+                value = arguments[key]
+                if not isinstance(value, str) or not value or '\0' in value or value.startswith('-'):
+                    raise ValueError(f'{key}-invalid')
+                args.extend((f"--{key.replace('_', '-')}", value))
         env = shlex.quote(str(self.root / '.anechoic_runtime/launcher-venv'))
         return {'working_directory': str(self.root),
                 'command': f'UV_PROJECT_ENVIRONMENT={env} {shlex.join(args)}'}
@@ -56,7 +57,9 @@ def tool_descriptors():
         description=f"Return the host uv command for {'Public Release' if name == 'public_release_command' else 'Local Release'}.",
         input_schema={'type': 'object', 'properties': {
             'run_id': run_id,
-            **({'content_draft': {'type': 'string', 'description': 'Host path to the public release JSON draft.'}}
+            **({'base': {'type': 'string', 'description': 'PR base Git ref. Defaults to origin/main.'},
+                'head': {'type': 'string', 'description': 'PR head Git ref. Defaults to amm/dev.'},
+                'content_draft': {'type': 'string', 'description': 'Host path to the reviewed changelog evidence JSON.'}}
                if name == 'public_release_command' else {}),
         }, 'required': ['run_id'], 'additionalProperties': False},
     ) for name in sorted(RELEASE_COMMAND_TOOLS))

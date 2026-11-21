@@ -8,8 +8,8 @@ context:
   template: step
 state:
   status: active
-  version: 13
-  updated_at: 2026-11-09 15:54:30 +0400
+  version: 14
+  updated_at: '2026-11-21T21:49:04.407565+00:00'
 ---
 
 # Summary
@@ -18,8 +18,4 @@ Prepare bound public-release materials
 
 ## Step
 
-This Step invokes CA-O-192 once for the sole public-release content prompt: the full PR description and concise selected-Version History summary.
-
-## Details
-
-README, Version History, Git, and PR updates are mechanical later steps. A newly created actual PR URL is appended only by CA-O-198; this Step does not guess a URL, publish, or merge.
+This Step invokes AN-P-42 to prepare a detailed Pull Request description and a brief Version History entry from completed tickets and a Luna review of the pinned Git diff. It returns drafts for the Operator.

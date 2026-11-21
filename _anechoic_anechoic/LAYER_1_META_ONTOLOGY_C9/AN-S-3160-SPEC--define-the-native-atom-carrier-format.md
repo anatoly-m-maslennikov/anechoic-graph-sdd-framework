@@ -8,8 +8,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 9
-  updated_at: '2026-11-21T20:42:37.490360+00:00'
+  version: 10
+  updated_at: '2026-11-21T20:59:25.755919+00:00'
 ---
 
 ## Summary
@@ -25,9 +25,9 @@ Atom's Properties. The Markdown Content follows the Header.
 
 SPEC and TKT use this order:
 
-1. `atom_family` is required: SPEC or TKT.
+1. `atom_family` is required. Use `SPEC` or `TKT`.
 2. `atom_id` is required. Preserve its stable ID and numeric suffix.
-   Its S or T marker agrees with Atom Family.
+   The S and T markers identify SPEC and TKT.
 3. `concern` is optional. SPEC can declare a Subject with Path and
    Relation, affected Components, or both. TKT uses one list of typed
    references, such as `component(id=C51)`. Reserve `@` for eDSL calls.
@@ -41,9 +41,14 @@ SPEC and TKT use this order:
    stable Atom IDs or exact revision references.
 8. `state` contains `status`, `version`, and `updated_at`, in that order.
 
+Project Config Atoms use `atom_family: PROJECT_CONFIG` and P IDs. They
+store their Container in `structure.container`. Their published
+revisions require `context.template`.
+
 The Project is the only Container for Axiom and Applicable Principle.
-Axiom requires Tier -1; Applicable Principle requires Tier 2. Project Contracts require Tier 0. PMETA
-retains its existing Header representation.
+For Project-local SPEC, the Axiom Template uses the SPEC Lens and Tier -1.
+The Contract Template uses Tier 0, and the Applicable Principle Template
+uses Tier 2.
 
 The citing Atom authors `IS_REFERENCE`. Derive `HAS_REFERENCE` as the
 inverse. Migrate `REFERENCES` with the same targets and direction.
@@ -118,14 +123,37 @@ family-specific Lens and Template or navigation Label tokens and
 runs joined by hyphens. Preserve the authored Summary.
 
 Active SPEC Atoms at Tiers 0, 1, and 2 use the Component owning root,
-regardless of Lens. The Project Tier -1 Manifest, Goal, and Axioms use
-the Project root. SPEC Drafts, Ready Atoms, and Archives use `01_draft/`,
+regardless of Lens. The Project Tier -1 Manifest, Goal, and Active Axioms
+use the Project root.
+SPEC Drafts, Ready Atoms, and Archives use `01_draft/`,
 `02_ready/`, and `09_archived/`, respectively.
 The Project control root uses `001_TICKETS/` and `002_PROJECT_CONFIG/`.
+The Project Config directory holds configuration files.
 
 The SPEC Lens uses the owning root. Prefix each named Lens directory
 with two underscores. For example, Lens `DES/DOM` uses `__DES/__DOM/`.
 The YAML Lens value and the filename Lens token use the Lens name.
+
+### Project Config catalog
+
+- **Custom Model**
+  - **Custom Nodes**
+    - **Atom.** Shared properties, constraints, and lifecycle.
+      - **SPEC Atom.** Templates such as Axiom and axes such as Tier and
+        Lens.
+      - **Ticket Atom.** Templates and Ticket-specific properties.
+    - **Component**, including Project.
+    - **Package**.
+  - **Custom Relations.** Relation types and inverse names, allowed
+    endpoints, cardinality, and classifications such as transitive
+    and functional.
+- **Project Workflows.** Local Release and Public Release, with their
+  Steps and Actions.
+
+Attach properties, constraints, and classification axes to their Node
+types. Add Node types such as Event Record or Ephemeral when the Project
+extends them. Keep Component and Package Manifests with their owners.
+Keep Project settings in the Project Manifest at the Project root.
 
 ### Migration
 
@@ -134,6 +162,7 @@ migrated authored values to exact Git revisions through the migration
 bindings. Restore admitted values and preserve evidence for unresolved
 fields. Preserve Atom IDs, exact revision references, and Markdown Content
 during a mechanical format migration.
+Use `PROJECT_CONFIG` for the former `PMETA` Atom Family. Keep its P IDs.
 
 ## References
 

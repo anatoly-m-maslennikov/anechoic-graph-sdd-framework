@@ -25,16 +25,20 @@ _OWNER_KEYS = (
 )
 
 
+def read_ready_images(path: Path, project_id: str) -> list[str]:
+    if not path.exists():
+        return []
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if (not isinstance(payload, dict) or payload.get("project_id") != project_id
+            or not isinstance(payload.get("images"), list) or len(payload["images"]) > 3
+            or any(not isinstance(item, str) or IMAGE.fullmatch(item) is None for item in payload["images"])):
+        raise ValueError("Local release image history is invalid")
+    return payload["images"]
+
+
 def record_ready_images(path: Path, project_id: str, current: str, previous: str | None) -> tuple[str, ...]:
     """Remember verified production images in deployment order."""
-    history = []
-    if path.exists():
-        payload = json.loads(path.read_text(encoding="utf-8"))
-        if (not isinstance(payload, dict) or payload.get("project_id") != project_id
-                or not isinstance(payload.get("images"), list) or len(payload["images"]) > 3
-                or any(not isinstance(item, str) or IMAGE.fullmatch(item) is None for item in payload["images"])):
-            raise ValueError("Local release image history is invalid")
-        history = payload["images"]
+    history = read_ready_images(path, project_id)
     images = list(dict.fromkeys(image for image in (current, previous, *history) if image is not None))[:3]
     path.parent.mkdir(parents=True, exist_ok=True)
     with NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent, delete=False) as output:

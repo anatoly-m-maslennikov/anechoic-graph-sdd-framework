@@ -78,6 +78,17 @@ class NativeCarrierHeaderTests(unittest.TestCase):
             native_header_view(flat)
         self.assertEqual(native_header_model_fields(flat | {"tier": 2})["tier"], 2)
 
+    def test_project_config_and_legacy_pmeta_headers(self):
+        source = self.old | {"identity": {"atom_id": "AN-P-1"},
+                             "context": {"container": {"component": "C00"}},
+                             "state": self.old["state"] | {"status": "draft"}}
+        canonical = canonical_native_header(source)
+        self.assertEqual(canonical["atom_family"], "PROJECT_CONFIG")
+        legacy = canonical | {"atom_family": "PMETA"}
+        self.assertEqual(native_header_view(legacy)["atom_family"], "PROJECT_CONFIG")
+        self.assertEqual(native_header_model_fields(legacy)["atom_family"], "PROJECT_CONFIG")
+        self.assertEqual(canonical_native_header(legacy), canonical)
+
     def test_optional_ticket_label_is_separate_from_template(self):
         header = canonical_native_header(self.old | {"context": self.old["context"] | {"label": "Subtask"}})
         self.assertEqual(tuple(header["context"]), ("template", "label"))

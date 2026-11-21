@@ -9,8 +9,8 @@ context:
   lens: DES
 state:
   status: "active"
-  version: 2
-  updated_at: "2026-11-21T20:54:47.544610+00:00"
+  version: 3
+  updated_at: '2026-11-21T21:49:45.763566+00:00'
 ---
 
 ## Summary
@@ -19,16 +19,20 @@ Run Public Release from the command line
 
 ## Guarantee
 
-From the Framework checkout, append `public --run-id <id>` to the host `uv` command in AN-S-3288. The command enters `LAYER_5_FRAMEWORK_DELIVERY/release.py`. Use `--project-root <path>` to select a different Project checkout. Supply `--content-draft <file>` as UTF-8 JSON with a description and a list of summary strings.
+From the Framework checkout, append `public --run-id <id>` to the host `uv` command in AN-S-3288. Use `--project-root <path>` to select a Project checkout. The defaults are `--base origin/main` and `--head amm/dev`; those options select other Git refs.
 
-Without a content draft, the command returns the required input schema.
+C64 imports no Project code outside the Release subtree and calls no subsystem. It reads Git directly through the host operating-system interface.
 
-To publish, the checkout must have a valid active Project Manifest that declares `parameters.project.repository_slug`. The configured fetch and push origins must resolve to the same GitHub repository with that slug. Invalid or mismatched identity stops the request before staging or writing to the remote.
+It selects changed, completed Task and Epic Markdown at the pinned head and returns that evidence, the commit pins, and a Luna diff-review handoff.
 
-A completed request publishes the verified release changes to the selected pull request branch and reports the pull request. A failed request reports the failed step and any effects that already occurred.
+A second invocation supplies `--content-draft <file>` as UTF-8 JSON with `base_commit`, `head_commit`, and `changes`. Each change has `title`, `details`, `evidence`, and `highlight`.
 
-The command writes one JSON result to stdout and sends progress to stderr. Exit 0 means completed. Exit 1 means another reported outcome, including a request for input. Exit 2 means invalid CLI usage. Exit 130 means interruption.
+The commit pins must match the comparison. Mark one to five changes as highlights for short Version History bullets.
+
+The result contains Markdown drafts for the pull request description and Version History entry in its JSON stdout. C64 does not publish externally or write those drafts to the checkout.
+
+Progress goes to stderr. Exit 0 means completed. Exit 1 means another reported outcome, including the evidence handoff. Exit 2 means invalid CLI usage. Exit 130 means interruption.
 
 ## References
 
-AN-S-3291@1 and AN-S-2314.
+AN-S-3291@2.

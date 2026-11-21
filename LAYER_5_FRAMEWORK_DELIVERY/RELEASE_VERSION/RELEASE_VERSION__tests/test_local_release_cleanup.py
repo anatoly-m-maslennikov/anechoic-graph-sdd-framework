@@ -9,20 +9,27 @@ from unittest.mock import patch
 import test_release_cleanup as docker_tests
 import test_simple_local_release as local_tests
 from local_release import run_local_release
-from native_startup import select_runtime_project
+from release_inputs import read_release_selection
+from release_assets import LocalReleaseError
 
 
 class LocalReleaseCleanupTests(unittest.TestCase):
     @staticmethod
     def _successful_host_command(argv: tuple[str, ...]) -> subprocess.CompletedProcess[str]:
-        output = "d" * 40 if argv[:2] == ("git", "rev-parse") else ""
+        output = ("d" * 40 if argv[:2] == ("git", "rev-parse") else
+                  "ANECHOIC_CANARY_ENDPOINT http://127.0.0.1:49152/anechoic/mcp\n"
+                  if any(Path(part).name == "test_suite__pub.py" for part in argv)
+                  and "--phase" in argv and argv[argv.index("--phase") + 1] == "canary" else "")
         return subprocess.CompletedProcess(argv, 0, output, "")
 
     def fixture(self) -> tuple[local_tests.SimpleLocalReleaseTests, docker_tests.DockerFixture]:
         fixture = local_tests.SimpleLocalReleaseTests("runTest")
         fixture.setUp()
         self.addCleanup(fixture.doCleanups)
-        project_id = select_runtime_project(fixture.root).instance_id
+        startup = patch("local_release.start_container", return_value="http://127.0.0.1:18092/anechoic/mcp")
+        fixture.startup = startup.start()
+        self.addCleanup(startup.stop)
+        project_id = read_release_selection(fixture.root).instance_id
         return fixture, docker_tests.DockerFixture(fixture.root, project_id)
 
     def _launcher_image(self, fixture, before: str | None, after: str | None):
@@ -45,7 +52,7 @@ class LocalReleaseCleanupTests(unittest.TestCase):
         remove = next(index for index, argv in enumerate(calls) if argv[1:3] == ("container", "rm"))
         launch = next(
             index for index, argv in enumerate(calls)
-            if len(argv) > 1 and Path(argv[1]).name == "start_mcp.py"
+            if argv == ("launch",)
         )
         inspect = next(
             index for index, argv in enumerate(calls)
@@ -66,12 +73,14 @@ class LocalReleaseCleanupTests(unittest.TestCase):
             if argv[0] == "docker":
                 order.append(" ".join(argv[1:3]))
                 return docker.run(argv, root)
-            if fixture._is_mcp_bootstrap(argv):
-                self.assertEqual(docker.containers, {})
-                order.append("launch")
-                return fixture._mcp_bootstrap_success(argv)
             return self._successful_host_command(argv)
 
+        def launch(*args, **kwargs):
+            self.assertEqual(docker.containers, {})
+            order.append("launch")
+            return "http://127.0.0.1:18092/anechoic/mcp"
+
+        fixture.startup.side_effect = launch
         with (
             patch("local_release._launcher_image", side_effect=self._launcher_image(fixture, None, fixture.image_id)),
         ):
@@ -89,7 +98,7 @@ class LocalReleaseCleanupTests(unittest.TestCase):
         self.assertLess(order.index("container rm"), order.index("launch"))
         self.assertGreater(order.index("image rm"), order.index("launch"))
 
-    def test_unverified_post_start_image_fails_before_image_cleanup(self) -> None:
+    def test_failed_start_fails_before_image_cleanup(self) -> None:
         fixture, docker = self.fixture()
         orphan = "sha256:" + "f" * 64
         docker.images[orphan] = "f" * 64
@@ -97,10 +106,9 @@ class LocalReleaseCleanupTests(unittest.TestCase):
         def runner(argv: tuple[str, ...], root: Path) -> subprocess.CompletedProcess[str]:
             if argv[0] == "docker":
                 return docker.run(argv, root)
-            if fixture._is_mcp_bootstrap(argv):
-                return fixture._mcp_bootstrap_success(argv)
             return self._successful_host_command(argv)
 
+        fixture.startup.side_effect = LocalReleaseError("start failed")
         with (
             patch("local_release._launcher_image", return_value=None),
         ):
@@ -119,8 +127,6 @@ class LocalReleaseCleanupTests(unittest.TestCase):
                 return subprocess.CompletedProcess(argv, 0, "\n".join(docker.containers), "")
             if argv[0] == "docker":
                 return docker.run(argv, root)
-            if fixture._is_mcp_bootstrap(argv):
-                return fixture._mcp_bootstrap_success(argv)
             return self._successful_host_command(argv)
 
         with (
@@ -129,6 +135,7 @@ class LocalReleaseCleanupTests(unittest.TestCase):
             result = run_local_release(fixture.root, run_id="reuse", runner=runner)
         self.assertEqual(result["outcome"], "completed", (result, docker.calls))
         self.assertEqual(len(docker.containers), 1)
+        self.assertEqual(fixture.startup.call_args.kwargs["existing_container"], next(iter(docker.containers)))
         self.assertFalse(
             any(
                 argv[1:3] in {("container", "stop"), ("container", "rm"), ("image", "rm")}
@@ -149,12 +156,15 @@ class LocalReleaseCleanupTests(unittest.TestCase):
                 return subprocess.CompletedProcess(argv, 0, identifier, "")
             if argv[0] == "docker":
                 return docker.run(argv, root)
-            if fixture._is_mcp_bootstrap(argv):
-                self.assertNotIn(identifier, docker.containers)
-                self.assertEqual(fixture.image_id, argv[argv.index("--image") + 1])
-                return fixture._mcp_bootstrap_success(argv)
             return self._successful_host_command(argv)
 
+        def launch(*args, **kwargs):
+            self.assertNotIn(identifier, docker.containers)
+            self.assertEqual(fixture.image_id, args[2])
+            calls.append(("launch",))
+            return "http://127.0.0.1:18092/anechoic/mcp"
+
+        fixture.startup.side_effect = launch
         with (
             patch(
                 "local_release._launcher_image",
@@ -173,10 +183,9 @@ class LocalReleaseCleanupTests(unittest.TestCase):
         def runner(argv: tuple[str, ...], root: Path) -> subprocess.CompletedProcess[str]:
             if argv[0] == "docker":
                 return docker.run(argv, root)
-            if fixture._is_mcp_bootstrap(argv):
-                return subprocess.CompletedProcess(argv, 1, "", "")
             return self._successful_host_command(argv)
 
+        fixture.startup.side_effect = LocalReleaseError("start failed")
         result = run_local_release(fixture.root, run_id="launch-failed", runner=runner)
         self.assertEqual(result["outcome"], "failed")
         self.assertEqual(result["failed_step"], "start_mcp")
@@ -194,8 +203,6 @@ class LocalReleaseCleanupTests(unittest.TestCase):
                 return subprocess.CompletedProcess(argv, 0, "\n".join(docker.containers), "")
             if argv[0] == "docker":
                 return docker.run(argv, root)
-            if fixture._is_mcp_bootstrap(argv):
-                return fixture._mcp_bootstrap_success(argv)
             return self._successful_host_command(argv)
 
         with (
@@ -214,10 +221,9 @@ class LocalReleaseCleanupTests(unittest.TestCase):
                 return subprocess.CompletedProcess(argv, 0, "\n".join(docker.containers), "")
             if argv[0] == "docker":
                 return docker.run(argv, root)
-            if fixture._is_mcp_bootstrap(argv):
-                return subprocess.CompletedProcess(argv, 1, "", "")
             return self._successful_host_command(argv)
 
+        fixture.startup.side_effect = LocalReleaseError("start failed")
         with patch("local_release._launcher_image", return_value=image):
             result = run_local_release(fixture.root, run_id="prior-failed", runner=runner)
         self.assertEqual(result["outcome"], "failed")
@@ -236,8 +242,6 @@ class LocalReleaseCleanupTests(unittest.TestCase):
                 docker.containers[identifier]["State"] = {"Running": False, "Status": "exited"}
             if argv[0] == "docker":
                 return docker.run(argv, root)
-            if fixture._is_mcp_bootstrap(argv):
-                return fixture._mcp_bootstrap_success(argv)
             return self._successful_host_command(argv)
 
         with (

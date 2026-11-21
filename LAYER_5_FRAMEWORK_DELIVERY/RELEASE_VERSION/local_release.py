@@ -19,13 +19,12 @@ from secrets import token_urlsafe
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC"))
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43"))
-from release_canary import verify_candidate_image  # noqa: E402
 from release_cleanup import cleanup_obsolete_images, cleanup_stopped_containers  # noqa: E402
 from release_cleanup_identity import image_labels  # noqa: E402
 from release_cleanup_images import record_ready_images  # noqa: E402
+from release_container import start_container  # noqa: E402
 from release_image_provenance import release_image_provenance  # noqa: E402
+from release_inputs import read_release_selection  # noqa: E402
 from LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.local_release_test_process import run_logged_test_process  # noqa: E402
 from release_support import (  # noqa: E402
     LocalReleaseError,
@@ -37,10 +36,11 @@ from release_support import (  # noqa: E402
     _cleanup_staging,
     _clear_target,
     _copy_tree,
-    _deploy_bootstrap,
     _file_identity,
     _image_manager,
+    _install_bootstrap,
     _launcher_image,
+    _native_release_sources,
     _prepare_package,
     _project_path,
     _read_version,
@@ -104,7 +104,7 @@ def _git_checkpoint(root: Path, runner: Callable, phase: str, paths: tuple[str, 
 
 
 @contextmanager
-def _release_temporary_owner(root: Path, owner: str):
+def _owned_directory(root: Path, relative: Path):
     flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
     with ExitStack() as descriptors:
         try:
@@ -113,9 +113,9 @@ def _release_temporary_owner(root: Path, owner: str):
             for name in root.parts[1:]:
                 directory = os.open(name, flags, dir_fd=directory)
                 descriptors.callback(os.close, directory)
-            for name in (".anechoic_tmp", owner):
+            for name in relative.parts:
                 try:
-                    os.mkdir(name, dir_fd=directory)
+                    os.mkdir(name, mode=0o700, dir_fd=directory)
                 except FileExistsError:
                     pass
                 directory = os.open(name, flags, dir_fd=directory)
@@ -128,7 +128,7 @@ def _release_temporary_owner(root: Path, owner: str):
 def _new_staging_directory(root: Path, prefix: str) -> Path:
     owner = root / ".anechoic_tmp/simple_local_release"
     name = prefix + token_urlsafe(6)
-    with _release_temporary_owner(root, owner.name) as descriptor:
+    with _owned_directory(root, owner.relative_to(root)) as descriptor:
         os.mkdir(name, mode=0o700, dir_fd=descriptor)
         try:
             if not os.path.samestat(os.fstat(descriptor), owner.stat(follow_symlinks=False)):
@@ -143,16 +143,22 @@ def _new_staging_directory(root: Path, prefix: str) -> Path:
 def _installation_lock(root: Path, selection):
     if selection.root != root:
         raise LocalReleaseError("local-release-temporary-project-mismatch")
-    with _release_temporary_owner(root, "local_release_installation") as directory:
-        descriptor = os.open("installation.lock", os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_NONBLOCK,
+    with _release_lock(root, Path(".anechoic_tmp/local_release_installation/installation.lock"), "installation"):
+        yield
+
+
+@contextmanager
+def _release_lock(root: Path, relative: Path, label: str):
+    with _owned_directory(root, relative.parent) as directory:
+        descriptor = os.open(relative.name, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_NONBLOCK,
                              mode=0o600, dir_fd=directory)
         try:
             if not stat.S_ISREG(os.fstat(descriptor).st_mode):
-                raise LocalReleaseError("local-release-installation-lock-invalid")
+                raise LocalReleaseError(f"local-release-{label}-lock-invalid")
             try:
                 fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
             except BlockingIOError as error:
-                raise LocalReleaseError("local-release-installation-lock-busy") from error
+                raise LocalReleaseError(f"local-release-{label}-lock-busy") from error
             yield
         finally:
             os.close(descriptor)
@@ -179,10 +185,9 @@ def run_local_release(
     if test_modules is not None and any(not isinstance(module, str) for module in test_modules):
         raise LocalReleaseError("local-release-test-modules-invalid")
     root = _root(project_root)
-    from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import select_runtime_project
     installation_lock = ExitStack()
     try:
-        selection = select_runtime_project(root)
+        selection = read_release_selection(root)
     except ValueError as error:
         raise LocalReleaseError("local-release-project-selection-invalid") from error
     cleanup_runner = runner
@@ -205,7 +210,6 @@ def run_local_release(
         raise LocalReleaseError("local-release-target-invalid")
 
     failed_step = "validate_inputs"
-    mcp: Any = None
     endpoint: str | None = None
     canary_endpoint: str | None = None
     receipt_path: str | None = None
@@ -226,7 +230,6 @@ def run_local_release(
         "validate inputs": (".",),
         "unit tests": ("version.toml",),
         "build package": (product.relative_to(root).as_posix(),),
-        "prepare candidate image": tuple(sorted(_GENERATED_ASSETS)) if image_mode == "refresh" else (),
         "install project runtime": (installed.relative_to(root).as_posix(),),
         "start mcp": (".agents/skills/ane",),
     }
@@ -246,7 +249,7 @@ def run_local_release(
         for phase in phases:
             print(f"Local release phase START: {phase}", file=sys.stderr, flush=True)
             failed_step = "validate_project_selection"
-            if select_runtime_project(root) != selection:
+            if read_release_selection(root) != selection:
                 raise LocalReleaseError("local-release-project-selection-changed")
             failed_step = f"git_before_{phase.replace(' ', '_')}"
             head = _git_checkpoint(root, runner, phase, checkpoint_paths.get(phase, ()), head)
@@ -259,12 +262,14 @@ def run_local_release(
                 production_port = mcp_settings.get("http_port") if isinstance(mcp_settings, dict) else None
                 if type(production_port) is not int or not 1 <= production_port <= 65535:
                     raise LocalReleaseError("local-release-production-port-invalid")
-                if image_mode == "existing":
-                    for relative in sorted(_GENERATED_ASSETS):
-                        asset = _project_path(root, Path(relative), label="image-asset")
-                        if not asset.is_file() or asset.stat().st_size == 0:
-                            raise LocalReleaseError(f"local-release-image-asset-missing: {relative}")
-                from release_support import _native_release_sources
+                for relative in sorted(_GENERATED_ASSETS):
+                    asset = _project_path(root, Path(relative), label="image-asset")
+                    if not asset.is_file() or asset.stat().st_size == 0:
+                        raise LocalReleaseError(f"local-release-image-asset-missing: {relative}")
+                    if asset.stat().st_size > 1_048_576 or not isinstance(
+                        json.loads(asset.read_text(encoding="utf-8")), dict
+                    ):
+                        raise LocalReleaseError(f"local-release-image-asset-invalid: {relative}")
                 _native_release_sources(selection)
                 ane = _target(root, Path(".agents/skills/ane"), label="project-ane")
                 for target in (product, installed, runtime, ane):
@@ -274,9 +279,9 @@ def run_local_release(
                 failed_step = "bump_candidate_version"
                 version_path, next_version_text = _read_version(root)
                 version_path.write_text(next_version_text, encoding="utf-8")
-            elif phase in {"unit tests", "e2e tests"}:
+            elif phase in {"unit tests", "e2e tests", "verify candidate image"}:
                 failed_step = phase.replace(" ", "_")
-                suite_phase = phase.split()[0]
+                suite_phase = "canary" if phase == "verify candidate image" else phase.split()[0]
                 test_log_path = None
                 argv = (
                     "uv", "run", "--project", str(root), "--locked", "--no-sync", "--python", "3.14",
@@ -284,10 +289,13 @@ def run_local_release(
                     str(Path(__file__).resolve().parents[2] / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/test_suite__pub.py"), "--project-root", str(root),
                 )
                 argv += ("--phase", suite_phase)
-                if suite_phase == "e2e":
+                if suite_phase != "unit":
                     if candidate_image is None:
                         raise LocalReleaseError("local-release-candidate-image-invalid")
                     argv += ("--candidate-image", candidate_image)
+                if suite_phase == "canary":
+                    _verify_package(package, package_identity)
+                    argv += ("--canary-package", str(package), "--run-id", run_id)
                 if default_runner:
                     temporary = _target(root, Path(".anechoic_tmp/simple_local_release"), label="test-log")
                     temporary.mkdir(parents=True, exist_ok=True)
@@ -306,9 +314,16 @@ def run_local_release(
                 if getattr(result, "returncode", 1) != 0:
                     detail = _failed_test_output(root, run_id, result, log_path=test_log_path)
                     raise LocalReleaseError(f"local-release-command-failed: {detail}")
+                if suite_phase == "canary":
+                    observed = re.findall(
+                        r"(?m)^ANECHOIC_CANARY_ENDPOINT (http://127\.0\.0\.1:([1-9][0-9]{0,4})/anechoic/mcp)$",
+                        result.stdout,
+                    )
+                    if len(observed) != 1 or int(observed[0][1]) > 65535:
+                        raise LocalReleaseError("local-release-canary-endpoint-invalid")
+                    canary_endpoint = observed[0][0]
             elif phase == "copy active sources":
                 failed_step = "copy_active_sources"
-                from release_support import _native_release_sources
                 sources = _native_release_sources(selection)
                 with ExitStack() as source_stage:
                     staged = _new_staging_directory(root, f"{run_id}-sources-")
@@ -320,7 +335,7 @@ def run_local_release(
                         shutil.copy2(source, target)
                     if (_native_release_sources(selection) != sources
                             or any(_file_identity(path) != identity for path, identity in identities.items())
-                            or select_runtime_project(root) != selection):
+                            or read_release_selection(root) != selection):
                         raise LocalReleaseError("local-release-source-changed")
                     _verify_package(staged, {
                         relative.as_posix(): identities[source] for relative, source in sources.items()
@@ -331,6 +346,9 @@ def run_local_release(
                     _copy_tree(staged, product_sources, preserve=frozenset())
             elif phase == "copy product to installed framework":
                 failed_step = "copy_product_to_installed_framework"
+                installation_lock.enter_context(_release_lock(
+                    root, selection.launcher_state.relative_to(root) / "launch.lock", "launcher",
+                ))
                 _verify_package(package, package_identity)
                 _verify_package(prepared_product, product_identity)
                 _clear_target(installed, root=root, preserve=_PRESERVED_NAMES, label="installed-root")
@@ -351,7 +369,7 @@ def run_local_release(
                 package = staging / "package"
                 package.mkdir()
                 package_identity = _prepare_package(
-                    root, prepared_product, package, refresh_assets=image_mode == "refresh",
+                    root, prepared_product, package,
                     control_relative=selection.control_relative,
                 )
             elif phase == "prepare candidate image":
@@ -373,10 +391,6 @@ def run_local_release(
                 if manager.identity(use_packaged_assets=True).fingerprint != candidate_fingerprint:
                     raise LocalReleaseError("local-release-packaged-image-mismatch")
                 _verify_package(package, package_identity)
-            elif phase == "verify candidate image":
-                failed_step = "verify_candidate_image"
-                _verify_package(package, package_identity)
-                canary_endpoint = verify_candidate_image(root, selection, package, staging, candidate_image, run_id=run_id)
             elif phase == "install project runtime":
                 failed_step = "install_project_runtime"
                 _verify_package(package, package_identity)
@@ -393,15 +407,10 @@ def run_local_release(
                 _verify_package(ane, {path.removeprefix("SKILLS/ane/"): identity
                                       for path, identity in package_identity.items()
                                       if path.startswith("SKILLS/ane/")})
-                from project_runtime import bind_native_runtime
-
-                with bind_native_runtime(selection):
-                    _deploy_bootstrap(root, runtime)
+                _install_bootstrap(root, runtime, package_identity)
             else:
                 failed_step = "start_mcp"
-                bootstrap = root / ".anechoic_runtime/start_mcp.py"
-                if not bootstrap.is_file() or bootstrap.is_symlink():
-                    raise LocalReleaseError("local-release-bootstrap-unavailable")
+                existing_container = None
                 cleanup = cleanup_stopped_containers(
                     root, selection.instance_id, selection.control_relative.as_posix(),
                     candidate_image, candidate_fingerprint, cleanup_runner,
@@ -411,7 +420,7 @@ def run_local_release(
                 if prior_project is not None:
                     try:
                         result = runner((
-                            "docker", "ps", "--all", "--filter", f"label=org.anechoic.project={prior_project}",
+                            "docker", "ps", "--all", "--no-trunc", "--filter", f"label=org.anechoic.project={prior_project}",
                             "--format", "{{.ID}}",
                         ), root)
                     except OSError:
@@ -451,6 +460,7 @@ def run_local_release(
                                 prior_id = row.get("Image", "")
                                 protected = prior_id == candidate_image
                                 if protected:
+                                    existing_container = identifiers[0]
                                     cleanup_note = "Retained the exact candidate Project MCP container for canonical reuse."
                                 else:
                                     image_labels(root, cleanup_runner, prior_id)
@@ -473,21 +483,10 @@ def run_local_release(
                         except (OSError, TypeError, ValueError, json.JSONDecodeError):
                             cleanup_note = "A prior Project MCP container was retained because inspection was unavailable."
                             cleanup_pending = True
-                try:
-                    mcp = runner((
-                        sys.executable, str(bootstrap), "--project-root", str(root),
-                        "--source-root", str(runtime), "--control-root", selection.control_relative.as_posix(),
-                        "--image", candidate_image, "--port", str(production_port), "--no-build",
-                    ), root)
-                except OSError as error:
-                    raise LocalReleaseError("local-release-command-unavailable") from error
-                if getattr(mcp, "returncode", 0) != 0:
-                    raise LocalReleaseError("local-release-command-failed")
-                output = getattr(mcp, "stdout", None)
-                endpoint = output.strip() if isinstance(output, str) and output.strip() else None
-                current_image = _launcher_image(selection)
-                if current_image != candidate_image:
-                    raise LocalReleaseError("local-release-installed-image-mismatch")
+                endpoint = start_container(
+                    root, selection, candidate_image, candidate_fingerprint, production_port,
+                    cleanup_runner, existing_container=existing_container,
+                )
                 try:
                     manager.mark_production_image(candidate_image)
                 except RuntimeError:

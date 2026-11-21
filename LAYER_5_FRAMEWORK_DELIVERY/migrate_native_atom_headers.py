@@ -141,15 +141,17 @@ def convert_carrier(source, path, rel, new, recovery, refs, header_codec, placem
     if not isinstance(metadata, dict) or not ('atom_family' in metadata or (
             isinstance(metadata.get('identity'), dict) and 'atom_id' in metadata['identity'])):
         return None
-    family = metadata.get('atom_family')
-    if family is None:
-        family = {'S': 'SPEC', 'T': 'TKT', 'P': 'PMETA'}.get(metadata['identity']['atom_id'].split('-')[-2])
     original, fallback = timestamp_fallback(metadata, path)
     structure = metadata.get('structure', metadata if 'atom_family' in metadata else metadata.get('context', {}))
     was_core = structure.get('tier') == 'core'
     if was_core:
         structure['tier'] = 1
     view = header_codec.native_header_view(metadata)
+    family = view.get('atom_family')
+    if family is None:
+        family = {'S': 'SPEC', 'T': 'TKT', 'P': 'PROJECT_CONFIG'}[view['identity']['atom_id'].split('-')[-2]]
+    elif family == 'PMETA':
+        family = 'PROJECT_CONFIG'
     state, atom_id = view['state'], view['identity']['atom_id']
     old_ref, old_status = reference(atom_id, state), state['status']
     if old_ref in refs:

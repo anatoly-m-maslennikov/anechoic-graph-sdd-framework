@@ -7,9 +7,9 @@ priority: 2
 context:
   template: task
 state:
-  status: in_queue
-  version: 1
-  updated_at: '2026-11-21T16:35:52.153844+00:00'
+  status: "in_queue"
+  version: 2
+  updated_at: "2026-11-21T20:52:24.872271+00:00"
 ---
 ## Summary
 
@@ -24,7 +24,7 @@ Project root.
 | --- | ---: | --- |
 | Project Axiom | -1 | State a premise the Project accepts. |
 | Project Contract | 0 | State what a user supplies and what the Project provides in return. |
-| Project Applicable Principle | 1 | State a rule that guides decisions when its applicability conditions hold. |
+| Project Applicable Principle | 2 | State a rule that guides decisions when its applicability conditions hold. |
 
 Each Project has exactly one Current Project Manifest at Tier -1. It
 declares the Project and its configuration. The Project Goal also stays
@@ -36,7 +36,7 @@ independently of Contracts.
 
 Admit the Project Axiom, Project Contract, and Project Applicable Principle
 templates. Move the existing Project Axioms to Tier -1 and classify the
-existing Applicable Principles at Tier 1. Preserve authored content, stable
+existing Applicable Principles at Tier 2. Preserve authored content, stable
 IDs, exact revision references, and source history. Keep the legacy release
 inputs intact.
 

@@ -4,7 +4,7 @@ from datetime import datetime
 import re
 
 
-_FAMILIES = {"S": "SPEC", "T": "TKT", "P": "PMETA"}
+_FAMILIES = {"S": "SPEC", "T": "TKT", "P": "PROJECT_CONFIG"}
 _HEADER = {"atom_family", "atom_id", "concern", "structure", "container", "tier", "priority", "context", "relations", "state"}
 _STATE = ("status", "version", "updated_at")
 _CONCERN_LOCATOR = ("subject", "path", "relation")
@@ -29,7 +29,7 @@ def _container(value):
 
 
 def _validate_context_state(family, context, state):
-    incomplete_draft = family == "PMETA" and isinstance(state, dict) and state.get("status") == "draft"
+    incomplete_draft = family == "PROJECT_CONFIG" and isinstance(state, dict) and state.get("status") == "draft"
     if (not isinstance(context, dict) or set(context) - set(_CONTEXT)
             or any(not _text(value) for value in context.values())
             or (family != "SPEC" and "lens" in context)
@@ -75,6 +75,8 @@ def _validate_concern(metadata, family):
 
 def _validate_header(metadata):
     family = metadata.get("atom_family")
+    if family == "PMETA":
+        family = "PROJECT_CONFIG"
     if set(metadata) - _HEADER or family != _family(metadata.get("atom_id")):
         raise ValueError("Native Atom Family, ID, or Header keys are invalid")
     structure = metadata.get("structure")
@@ -111,7 +113,8 @@ def native_header_view(metadata):
     if isinstance(concern, list):
         components = [ref[13:-1] for ref in concern if re.fullmatch(r"component\(id=C[0-9]+\)", ref)]
         concern = {"components": components} if components else {}
-    return {**metadata, **({"concern": concern} if concern is not None else {}),
+    return {**metadata, "atom_family": _family(metadata["atom_id"]),
+            **({"concern": concern} if concern is not None else {}),
             "identity": {"atom_id": metadata["atom_id"]},
             "context": {**structure, **metadata["context"]}}
 
@@ -173,7 +176,7 @@ def canonical_native_header(metadata):
         structure["priority"] = context.get("priority", 2)
     elif family == "SPEC" and "tier" in context:
         structure["tier"] = context["tier"]
-    if family == "PMETA":
+    if family == "PROJECT_CONFIG":
         header["structure"] = structure
     else:
         header.update(structure)

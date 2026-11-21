@@ -8,8 +8,8 @@ context:
   template: action
 state:
   status: active
-  version: 23
-  updated_at: 2026-11-09 15:54:30 +0400
+  version: 24
+  updated_at: '2026-11-21T21:51:04.697298+00:00'
 ---
 
 # Summary
@@ -18,12 +18,4 @@ Validate local release inputs
 
 ## Action
 
-Validate local release inputs **means** the Action that checks the explicit local-release inputs and configured delivery paths for file/path safety before the declared local validation scope. The complete discovered suite remains the default; a focused scope requires the explicit current Operator record admitted by CA-O-164.
-
-## Scope
-
-The Action checks the configured source and delivery paths, Project Structure, protected settings, compiler, and target paths `LAYER_1_FRAMEWORK_METHODOLOGY/` and `.anechoic_anechoic/000_ANECHOIC_framework/` for ordinary input and file/path safety. It does not separately validate Active Atom metadata, placement or relations; release verification uses the declared scope and records whether it is complete or focused.
-
-## Details
-
-Missing, ambiguous or unsafe required input stops before tests or delivery writes and is reported for manual handling. This Action does not copy or clear product or installed contents, compile, install, push, or open a PR.
+Validate the selected Project, required checked-in assets, and configured delivery paths for ordinary input and file/path safety. Missing, ambiguous or unsafe input stops before tests or delivery writes. This Action does not invoke a compiler or ANECHOIC runtime Component.

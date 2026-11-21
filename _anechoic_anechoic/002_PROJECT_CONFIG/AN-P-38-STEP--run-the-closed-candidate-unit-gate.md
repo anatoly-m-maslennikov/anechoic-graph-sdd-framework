@@ -8,18 +8,14 @@ context:
   template: step
 state:
   status: active
-  version: 12
-  updated_at: 2026-11-09 15:54:30 +0400
+  version: 13
+  updated_at: '2026-11-21T21:51:27.960780+00:00'
 ---
 
 # Summary
 
-Run the closed candidate Unit gate
+Run the closed candidate unit gate
 
 ## Step
 
-This Step invokes CA-O-168 once with phase `closed_unit_gate`, binding CA-O-175's exact private compiled candidate, frozen active-source boundary, and declared Unit/source partition.
-
-## Details
-
-Every declared Unit/source testcase must terminal-pass for the frozen candidate; skipped, excluded, missing, focused, cached, or historical results are non-pass. Host-capable Candidate E2E remains CA-O-182, and CA-O-184 alone aggregates the complete Release Gate. This Step does not clear, copy, compile, install, publish, or retry.
+Invoke C19 Test Suite unit checks for the selected scope before preparing the candidate image. A failed or incomplete result stops release; report focused scope as focused.

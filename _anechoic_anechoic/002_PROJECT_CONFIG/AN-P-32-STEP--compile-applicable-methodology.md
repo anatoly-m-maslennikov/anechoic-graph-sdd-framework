@@ -8,18 +8,14 @@ context:
   template: step
 state:
   status: active
-  version: 17
-  updated_at: 2026-11-09 15:54:30 +0400
+  version: 18
+  updated_at: '2026-11-21T21:51:04.697298+00:00'
 ---
 
 # Summary
 
-Compile applicable Methodology
+Prepare checked-in Methodology assets
 
 ## Step
 
-This Step invokes CA-O-166 once with phase `compile` for `LAYER_1_FRAMEWORK_METHODOLOGY/` and the canonical compiler. Its output remains in that derived product; it does not write the installed Framework.
-
-## Details
-
-This is not another compiler graph. An incomplete product, unavailable Tool/layout, or output mismatch stops before installation and is reported for manual handling.
+Prepare the selected checked-in Methodology assets without compilation or regeneration. Missing, changed or unsafe input stops the release.

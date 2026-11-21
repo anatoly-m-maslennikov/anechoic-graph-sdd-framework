@@ -16,9 +16,8 @@ from starlette.applications import Starlette
 import test_native_query_stdio as fixture
 from native_query import NativeQueryOwner, create_native_gateway
 from direct_gateway import startup_selection
-from LAYER_5_FRAMEWORK_DELIVERY.release_events import record_release_event
 from native_project_selection import resolve_native_project
-from work_journal import PROJECT_DATABASE, journal_inbox
+from work_journal import PROJECT_DATABASE, append_sealed_events, journal_inbox
 from workbench_web import routes
 
 
@@ -40,10 +39,10 @@ class NativeWorkbenchHttpTests(unittest.IsolatedAsyncioTestCase):
                 owner = NativeQueryOwner(selected, inputs)
                 try:
                     owner.start()
-                    event_id, error = record_release_event(root, "release_version", "test", "started", None,
-                                                           selection=selected)
-                    self.assertIsNone(error)
-                    self.assertIsNotNone(event_id)
+                    append_sealed_events(root, [{"event": "test"}], author="test",
+                                         local_date="2026-11-21", timezone="UTC",
+                                         journal_root=(selected.control_relative / "_journal").as_posix(),
+                                         storage=journal)
                     saved = owner.save_view("SELECT 1")["saved_query_id"]
                     if journal == "duckdb":
                         self.assertEqual([[2]], owner.run("SELECT count(*) FROM work_journal",
@@ -80,9 +79,10 @@ class NativeWorkbenchHttpTests(unittest.IsolatedAsyncioTestCase):
                     finally:
                         owner.close()
                     self.assertEqual(before, database.read_bytes())
-                    _, error = record_release_event(root, "release_version", "pending", "started", None,
-                                                    selection=selected)
-                    self.assertIsNone(error)
+                    append_sealed_events(root, [{"event": "pending"}], author="test",
+                                         local_date="2026-11-21", timezone="UTC",
+                                         journal_root=(selected.control_relative / "_journal").as_posix(),
+                                         storage=journal)
                     self.assertTrue(list(journal_inbox(root).glob("*.json")))
                     owner = NativeQueryOwner(switched, inputs)
                     try:

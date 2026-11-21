@@ -12,7 +12,7 @@ def header(family='SPEC', template=None, lens='SPEC', status='active', container
     structure = {'container': container or {'component': 'C1'}}
     if family == 'TKT':
         structure['priority'] = 2
-    return {'atom_family': family, 'atom_id': f'AN-{dict(SPEC="S", TKT="T", PMETA="P")[family]}-1',
+    return {'atom_family': family, 'atom_id': f'AN-{dict(SPEC="S", TKT="T", PROJECT_CONFIG="P", PMETA="P")[family]}-1',
             'structure': structure, 'context': context,
             'state': {'status': status, 'version': 2, 'updated_at': '2026-01-01T00:00:00'}}
 
@@ -46,7 +46,8 @@ class NativeCarrierPlacementTests(unittest.TestCase):
         self.assertEqual(path(h), '/project/unit/__DES/__DOM/AN-S-1-DOM--a-useful-summary.md')
 
     def test_pmeta_and_ticket_branches(self):
-        self.assertEqual(path(header('PMETA', 'action', status='draft')), '/project/002_PROJECT_CONFIG/01_draft/AN-P-1@2-draft-ACTION--a-useful-summary.md')
+        self.assertEqual(path(header('PMETA', 'action', status='draft')), path(header('PROJECT_CONFIG', 'action', status='draft')))
+        self.assertEqual(path(header('PROJECT_CONFIG', 'action', status='draft')), '/project/002_PROJECT_CONFIG/01_draft/AN-P-1@2-draft-ACTION--a-useful-summary.md')
         for template, branch in [('task', 'TASKS'), ('work_report', 'ASSETS'), ('question', 'ISSUES'), ('code_spec_mismatch', 'ISSUES'), ('spec_proposal', 'ASSETS')]:
             with self.subTest(template=template):
                 self.assertEqual(path(header('TKT', template, status='done')), f'/project/001_TICKETS/{branch}/done/AN-T-1-{template.upper()}--a-useful-summary.md')
@@ -123,7 +124,7 @@ class NativeCarrierPlacementTests(unittest.TestCase):
                                  f'{owner}/{folder}/{marker}-TASK--a-useful-summary.md')
         self.assertEqual(path(header(lens='DES/DOM', container=container), owner=owner),
                          f'{owner}/__DES/__DOM/AN-S-1-DOM--a-useful-summary.md')
-        self.assertEqual(path(header('PMETA', 'action', status='draft', container=container), owner=owner),
+        self.assertEqual(path(header('PROJECT_CONFIG', 'action', status='draft', container=container), owner=owner),
                          f'{owner}/01_draft/AN-P-1@2-draft-ACTION--a-useful-summary.md')
 
     def test_unsupported_inputs_fail(self):
@@ -133,7 +134,7 @@ class NativeCarrierPlacementTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             path(header('TKT', 'unknown'))
         self.assertEqual(path(header(container={'atom': 'AN-S-2'})), '/project/unit/AN-S-1-SPEC--a-useful-summary.md')
-        self.assertEqual(path(header('PMETA', status='draft')), '/project/002_PROJECT_CONFIG/01_draft/AN-P-1@2-draft--a-useful-summary.md')
+        self.assertEqual(path(header('PROJECT_CONFIG', status='draft')), '/project/002_PROJECT_CONFIG/01_draft/AN-P-1@2-draft--a-useful-summary.md')
 
 
 if __name__ == '__main__':

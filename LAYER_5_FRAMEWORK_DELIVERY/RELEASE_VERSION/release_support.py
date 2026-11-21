@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import hashlib
-import importlib.util
 import json
 import os
 import re
@@ -14,21 +13,19 @@ import subprocess
 import tempfile
 import tomllib
 from collections.abc import Mapping
-from contextlib import ExitStack
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_provenance import ImageBuildProvenance
-from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images import (
-    ImageManager, RETIRED_ASSETS, _GENERATED_ASSETS, ready_predecessor,
-)
-from native_carrier_placement import ARCHIVE_DIRECTORY, DRAFT_DIRECTORY, READY_DIRECTORY
-from release_assets import (
-    LocalReleaseError,
-    generate_tool_registry,
-    verify_native_release_assets,
-)
+import yaml
 
+from release_assets import LocalReleaseError
+from release_cleanup_images import read_ready_images
+from release_images import ImageManager, RETIRED_ASSETS, TOOL_REGISTRY, ready_predecessor
+from release_inputs import read_atom_header
+
+
+_GENERATED_ASSETS = frozenset({TOOL_REGISTRY})
+_BOOTSTRAP = Path("LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/start_mcp.py")
 
 _DEFAULT_PRODUCT = "LAYER_1_FRAMEWORK_METHODOLOGY"
 _PRESERVED_NAMES = frozenset(
@@ -42,7 +39,7 @@ _PRESERVED_NAMES = frozenset(
     }
 )
 _RUN_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*\Z")
-_NON_SOURCE_DIRECTORIES = frozenset({DRAFT_DIRECTORY, READY_DIRECTORY, ARCHIVE_DIRECTORY, "000_draft", "099_archived", "_journal", "_projection"})
+_NON_SOURCE_DIRECTORIES = frozenset({"01_draft", "02_ready", "09_archived", "000_draft", "099_archived", "_journal", "_projection"})
 
 
 def _relative(value: object, *, label: str) -> Path:
@@ -118,45 +115,42 @@ def _walk_regular_files(root: Path, *, excluded_directories: frozenset[str] = fr
 
 def _native_release_sources(selection) -> dict[Path, Path]:
     """Select Active Specs from the native Meta-ontology Component."""
-    from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import _carrier_row
-    from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.native_manifest_model import admit_active_model_records
-    from LAYER_3_ENGINE_STUDIO_C14.KERNEL_MIXER_C59.MANIFEST_RUNTIME_C62.manifest_compiler_pkg1.active_model_sources import (
-        read_active_model_sources,
-    )
-    from VALIDATE_ATOMS.validate_atoms_workers.read_io import LimitReached, ReadContext
-    from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
-
     root, control = selection.root, selection.control_root
     ontology = control / "LAYER_1_META_ONTOLOGY_C9"
-    reader = ReadContext(roots=[str(control)], limits=dict(CEILINGS))
     selected, identities = {}, set()
     prefix = f"{selection.project_prefix}-S-"
     try:
-        manifest = reader.read(selection.manifest_path)
-        if hashlib.sha256(manifest).hexdigest() != selection.manifest_sha256:
+        manifest = _project_path(root, selection.manifest_path.relative_to(root), label="manifest", require_exists=True)
+        if _file_identity(manifest)[0] != selection.manifest_sha256:
             raise ValueError("Project Manifest changed")
-        if not reader.allowed(ontology).is_dir():
+        _project_path(root, ontology.relative_to(root), label="meta-ontology", require_exists=True)
+        if not ontology.is_dir():
             raise ValueError("Meta-ontology Component is missing")
         members = _walk_regular_files(ontology, excluded_directories=_NON_SOURCE_DIRECTORIES)
         for path in members:
             if path.suffix != ".md" or not path.name.startswith(prefix):
                 continue
-            row, _ = _carrier_row(path, root, "S", selection.project_prefix, reader.read(path))
-            if row["status"] != "active":
+            try:
+                metadata, _ = read_atom_header(path.read_text(encoding="utf-8"))
+            except (UnicodeError, ValueError, yaml.YAMLError) as error:
+                raise ValueError(f"{path}: invalid Spec header") from error
+            if metadata.get("atom_family") != "SPEC":
+                raise ValueError(f"{path}: invalid Spec family")
+            state = metadata.get("state")
+            if not isinstance(state, dict) or not isinstance(state.get("status"), str):
+                raise ValueError(f"{path}: missing Spec status")
+            if state["status"] != "active":
                 continue
-            atom_id = row["id"]
-            if atom_id in identities or not path.name.startswith(atom_id + "-"):
+            atom_id = metadata.get("atom_id")
+            if (not isinstance(atom_id, str) or not re.fullmatch(rf"{re.escape(prefix)}[0-9]+", atom_id)
+                    or atom_id in identities or not path.name.startswith(atom_id + "-")):
                 raise ValueError(f"{path}: duplicate Current identity or mismatched Spec filename")
             identities.add(atom_id)
             selected[path.relative_to(control)] = path
         if not selected:
             raise ValueError("No Active Meta-ontology Specs were selected")
-        admit_active_model_records(read_active_model_sources(control, ontology))
-        if (members != _walk_regular_files(ontology, excluded_directories=_NON_SOURCE_DIRECTORIES)
-                or reader.currentness()["state"] != "unchanged"):
-            raise ValueError("Meta-ontology sources changed during selection")
         return selected
-    except (OSError, ValueError, TypeError, LimitReached) as error:
+    except (OSError, ValueError) as error:
         raise LocalReleaseError(f"local-release-native-sources-invalid: {error}") from error
 
 
@@ -245,23 +239,6 @@ def _copy_tree(source: Path, destination: Path, *, preserve: frozenset[str]) -> 
             shutil.copy2(entry, target)
 
 
-def _deploy_bootstrap(root: Path, package: Path) -> None:
-    """Refresh only the copied package bootstrap; never execute it."""
-    source = package / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/project_mcp_bootstrap.py"
-    try:
-        mode = source.lstat().st_mode
-        if source.is_symlink() or not stat.S_ISREG(mode):
-            raise LocalReleaseError("local-release-bootstrap-unavailable")
-        spec = importlib.util.spec_from_file_location("release_project_mcp_bootstrap", source)
-        if spec is None or spec.loader is None:
-            raise LocalReleaseError("local-release-bootstrap-unavailable")
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        module.deploy_project_mcp_bootstrap(root, package)
-    except (ImportError, OSError, RuntimeError) as error:
-        raise LocalReleaseError("local-release-bootstrap-unavailable") from error
-
-
 def _file_identity(path: Path) -> tuple[str, int]:
     return hashlib.sha256(path.read_bytes()).hexdigest(), stat.S_IMODE(path.stat().st_mode)
 
@@ -275,49 +252,28 @@ def _verify_package(package: Path, expected: Mapping[str, tuple[str, int]], *,
         raise LocalReleaseError("local-release-package-verification-failed")
 
 
-def _publish_image_assets(root: Path, package: Path, previous: Mapping[str, tuple[str, int] | None],
-                          expected: Mapping[str, tuple[str, int]]) -> None:
-    """Keep one validated image asset set in the checkout for recovery."""
-    with tempfile.TemporaryDirectory(dir=package.parent) as directory, ExitStack() as rollback:
-        staging = Path(directory)
-        writes = []
-        for index, (relative, original) in enumerate(previous.items()):
-            target = _project_path(root, Path(relative), label="image-asset")
-            if (_file_identity(target) if target.exists() else None) != original:
-                raise LocalReleaseError("local-release-package-source-changed")
-            source = package / relative
-            if expected[relative] == original:
-                continue
-            replacement = staging / f"{index}.new"
-            shutil.copy2(source, replacement)
-            if _file_identity(replacement) != expected[relative]:
-                raise LocalReleaseError("local-release-package-verification-failed")
-            backup = staging / f"{index}.old"
-            if original is not None:
-                shutil.copy2(target, backup)
-            writes.append((target, replacement, backup, original))
-        for target, _replacement, _backup, _original in writes:
-            parent = target.parent
-            if not parent.exists():
-                _project_path(root, parent.relative_to(root), label="image-asset")
-                if not parent.parent.is_dir() or parent.parent.is_symlink():
-                    raise LocalReleaseError("local-release-image-asset-unsafe")
-                parent.mkdir()
-                rollback.callback(parent.rmdir)
-        for target, replacement, backup, original in writes:
-            _project_path(root, target.relative_to(root), label="image-asset")
-            if (_file_identity(target) if target.exists() else None) != original:
-                raise LocalReleaseError("local-release-package-source-changed")
-            os.replace(replacement, target)
-            if original is None:
-                rollback.callback(target.unlink)
-            else:
-                rollback.callback(os.replace, backup, target)
-        rollback.pop_all()
+def _install_bootstrap(root: Path, package: Path, expected: Mapping[str, tuple[str, int]]) -> None:
+    """Copy the verified restart script as data."""
+    source = _project_path(root, (package / _BOOTSTRAP).relative_to(root), label="bootstrap-source")
+    target = _project_path(root, Path(".anechoic_runtime/start_mcp.py"), label="bootstrap-target")
+    if target.exists() and not target.is_file():
+        raise LocalReleaseError("local-release-bootstrap-target-unsafe")
+    digest, mode = expected[_BOOTSTRAP.as_posix()]
+    if not source.is_file() or not mode & 0o111 or _file_identity(source) != (digest, mode):
+        raise LocalReleaseError("local-release-bootstrap-source-invalid")
+    with tempfile.NamedTemporaryFile(dir=target.parent, prefix=".start-mcp-", delete=False) as output:
+        temporary = Path(output.name)
+    try:
+        shutil.copy2(source, temporary)
+        if _file_identity(temporary) != (digest, mode):
+            raise LocalReleaseError("local-release-bootstrap-source-changed")
+        os.replace(temporary, target)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def _prepare_package(root: Path, product: Path, package: Path, *,
-                     control_relative: Path, refresh_assets: bool = True) -> dict[str, tuple[str, int]]:
+                     control_relative: Path) -> dict[str, tuple[str, int]]:
     if (len(control_relative.parts) != 1
             or not control_relative.name.startswith((".anechoic_", "_anechoic_"))):
         raise LocalReleaseError("local-release-project-selection-invalid")
@@ -325,7 +281,6 @@ def _prepare_package(root: Path, product: Path, package: Path, *,
     if not control_root.is_dir():
         raise LocalReleaseError("local-release-project-selection-invalid")
     excluded = frozenset({control_relative.name.casefold(), ".anechoic_runtime", ".anechoic_tmp", ".runtime", ".git", ".pytest_cache", "__pycache__", ".mypy_cache", ".ruff_cache", ".venv", ".vite", "node_modules"})
-    programmatic = root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC"
     trees = (
         (root, Path(".")),
         (product / "SUPERLAYER_1_METHODOLOGY_SOURCES", Path("METHODOLOGY/sources")),
@@ -360,28 +315,16 @@ def _prepare_package(root: Path, product: Path, package: Path, *,
     for source, relative in sources:
         if _file_identity(source) != expected[relative.as_posix()]:
             raise LocalReleaseError("local-release-package-source-changed")
-    verify_native_release_assets(package, root, control_relative)
-    if refresh_assets:
-        tool_registry = generate_tool_registry(package)
-        relative = tool_registry.relative_to(package).as_posix()
-        previous_assets = {relative: expected.get(relative)}
-        expected[relative] = _file_identity(tool_registry)
     for relative in (
         "pyproject.toml", "uv.lock", "version.toml",
         "SKILLS/ane/SKILL.md",
         "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane/SKILL.md",
-        "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/project_mcp_bootstrap.py",
-        "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/start_mcp.py",
-        "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/runtime.py",
-        "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/generate_tool_registry.py",
-        "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/tool_providers.json",
+        _BOOTSTRAP.as_posix(),
         *_GENERATED_ASSETS,
     ):
         if relative not in expected:
             raise LocalReleaseError("local-release-package-source-unavailable")
     _verify_package(package, expected)
-    if refresh_assets:
-        _publish_image_assets(root, package, previous_assets, expected)
     return expected
 
 
@@ -397,8 +340,7 @@ def _cleanup_staging(root: Path, staging: Path | None) -> str:
 
 def _image_manager(source: Path, temporary: Path | None = None, *, project_root: Path,
                    build_provenance: dict[str, str] | None = None):
-    provenance = ImageBuildProvenance(**build_provenance) if build_provenance is not None else None
-    return ImageManager(source, project_root=project_root, build_temp_root=temporary, build_provenance=provenance)
+    return ImageManager(source, project_root=project_root, build_temp_root=temporary, build_provenance=build_provenance)
 
 
 def _launcher_image(selection) -> str | None:
@@ -422,6 +364,13 @@ def _launcher_image(selection) -> str | None:
 
 def _build_predecessor(selection) -> str | None:
     try:
+        history = _project_path(
+            selection.root, Path(".anechoic_runtime/simple_local_release/ready-images.json"),
+            label="simple-image-history",
+        )
+        images = read_ready_images(history, selection.instance_id)
+        if images:
+            return images[0]
         _project_path(selection.root, selection.launcher_state.relative_to(selection.root) / "ready.json",
                       label="project-launch-state")
         return ready_predecessor(selection)

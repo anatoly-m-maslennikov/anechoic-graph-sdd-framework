@@ -8,8 +8,8 @@ context:
   template: step
 state:
   status: active
-  version: 13
-  updated_at: 2026-11-09 15:54:30 +0400
+  version: 14
+  updated_at: '2026-11-21T21:51:27.960780+00:00'
 ---
 
 # Summary
@@ -18,8 +18,4 @@ Build the candidate release image
 
 ## Step
 
-This Step invokes CA-O-168 once with phase `candidate_image_build`, binding CA-O-175's staged package, exact source/context rows and immutable candidate image identity. The frozen Docker worker has no Docker socket and cannot substitute for host Candidate E2E.
-
-## Details
-
-It creates no authority from a tag, cached image or successful build alone. A build mismatch, host mount, stale package/source, unsafe context, failed result or missing Journal receipt stops without proof, promotion or old-image removal.
+Build the candidate image directly with Docker after C19 unit checks pass. Bind subsequent checks to its immutable image identity. A failed or unsafe build stops release.

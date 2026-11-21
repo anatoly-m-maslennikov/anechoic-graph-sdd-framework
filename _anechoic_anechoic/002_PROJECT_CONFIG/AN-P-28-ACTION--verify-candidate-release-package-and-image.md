@@ -8,8 +8,8 @@ context:
   template: action
 state:
   status: active
-  version: 18
-  updated_at: 2026-11-09 15:54:30 +0400
+  version: 19
+  updated_at: '2026-11-21T21:51:27.960780+00:00'
 ---
 
 # Summary
@@ -18,12 +18,4 @@ Verify candidate release package and image
 
 ## Action
 
-Verify candidate release package and image **means** the Action that performs one bound `closed_unit_gate`, `candidate_image_build`, or `candidate_image_canary` phase for the frozen local boundary.
-
-## Scope
-
-The `closed_unit_gate` phase binds the Version, active source identities and digests, Project Structure, settings, exact private compiled candidate, and declared Unit/source partition. It is not host Candidate E2E or the complete Release Gate. `candidate_image_build` and `candidate_image_canary` bind the exact staged package, runtime, compiled product, and `ca` payload after that Unit gate. Host-capable Candidate E2E is CA-O-182; CA-O-184 alone aggregates the complete Release Gate. These phases do not create another release Workflow.
-
-## Details
-
-A partial, cached, focused, stale, source-only, or unjournaled result is not proof. This Action never clears, copies, installs, publishes, or retries. Each actual Action Run is journaled once with its exact inputs and result.
+Use C19 Test Suite to run unit checks before image preparation, then end-to-end and canary checks against the exact candidate image. Build the candidate directly with Docker. A failed or incomplete check stops before installation; report the observed result without Journal.

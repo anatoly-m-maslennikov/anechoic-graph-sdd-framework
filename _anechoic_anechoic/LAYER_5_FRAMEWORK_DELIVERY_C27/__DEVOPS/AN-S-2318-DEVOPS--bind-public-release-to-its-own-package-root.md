@@ -8,8 +8,8 @@ context:
   lens: DevOps
 state:
   status: active
-  version: 15
-  updated_at: 2026-11-11 00:17:19 +0400
+  version: 16
+  updated_at: '2026-11-21T21:49:04.407565+00:00'
 ---
 
 ## Summary
@@ -24,7 +24,7 @@ the installed-source root of the public-release Tool.
 
 ### Prose Claim
 
-the public-release Tool **must** retain `LAYER_5_FRAMEWORK_DELIVERY/PUBLIC_RELEASE/` as its own installed package-relative root and resolve sibling `RELEASE_VERSION` evidence through the selected installed Framework package.
+the public-release Tool **must** retain `LAYER_5_FRAMEWORK_DELIVERY/PUBLIC_RELEASE/` as its own installed package-relative root.
 
 ## Details
 

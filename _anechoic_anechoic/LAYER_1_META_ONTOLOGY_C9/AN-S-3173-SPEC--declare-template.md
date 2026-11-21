@@ -18,7 +18,7 @@ Declare Template
 
 ## Claim scope
 
-MODEL//ANECHOIC <+ Node//Artifact//Atom//PMETA Atom.Header.Context.Template
+MODEL//ANECHOIC <+ Node//Artifact//Atom//Project Config Atom.Header.Context.Template
 
 ## Claim
 
@@ -27,5 +27,5 @@ MODEL//ANECHOIC <+ Node//Artifact//Atom//PMETA Atom.Header.Context.Template
 ```python
 from anechoic.formal_claims import Cardinality, declare_entity
 declare_entity(entity_name='Template', entity_kind='Property', relation_name='IS_PROPERTY_OF',
-    base_path='Node//Artifact//Atom.Header.Context', value_format=str | None, field_options={'default': None, 'kw_only': True}, applies_to_entity_classes=('Node//Artifact//Atom//PMETA Atom',))
+    base_path='Node//Artifact//Atom.Header.Context', value_format=str | None, field_options={'default': None, 'kw_only': True}, applies_to_entity_classes=('Node//Artifact//Atom//Project Config Atom',))
 ```

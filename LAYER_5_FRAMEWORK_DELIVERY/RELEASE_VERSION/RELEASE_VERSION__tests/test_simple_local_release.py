@@ -18,12 +18,10 @@ from pathlib import Path
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS"))
 import local_release  # noqa: E402
 from local_release import run_local_release, _launcher_image  # noqa: E402
-from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import select_runtime_project  # noqa: E402
-from release_support import _GENERATED_ASSETS, _file_identity, _publish_image_assets  # noqa: E402
-from release_registry_test_fixture import write_tool_registry_generator  # noqa: E402
+from release_inputs import read_release_selection  # noqa: E402
+from release_support import _GENERATED_ASSETS  # noqa: E402
 
 
 class SimpleLocalReleaseTests(unittest.TestCase):
@@ -40,7 +38,8 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             ontology / "AN-S-11-SPEC--related-spec.md",
         )
         for path in self.native_sources:
-            path.write_text("## Claim\nNative source\n", encoding="utf-8")
+            atom_id = path.name.split("-SPEC--")[0]
+            path.write_text(f"---\natom_family: SPEC\natom_id: {atom_id}\nstate:\n  status: active\n  version: 1\n---\n## Claim\nNative source\n", encoding="utf-8")
         (self.root / ".gitignore").write_text(".anechoic_tmp/\n/.anechoic_runtime/\n", encoding="utf-8")
         self.product = self.root / "LAYER_1_FRAMEWORK_METHODOLOGY"
         self.installed = self.control / "000_ANECHOIC_framework"
@@ -64,12 +63,6 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         (self.root / "version.toml").write_text('[framework]\nversion = "0.4.1"\n', encoding="utf-8")
         tools = self.root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS"
         tools.mkdir(parents=True)
-        bootstrap_helper = (
-            Path(__file__).resolve().parents[3]
-            / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/project_mcp_bootstrap.py"
-        )
-        (tools / "project_mcp_bootstrap.py").write_bytes(bootstrap_helper.read_bytes())
-        (tools / "project_mcp_bootstrap.py").chmod(0o644)
         (tools / "tests").mkdir()
         (tools / "tests/test_retired.py").write_text("# package-excluded test\n", encoding="utf-8")
         (tools / "fixtures").mkdir()
@@ -97,7 +90,6 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         mcp = self.engine_bootstrap.parent.parent
         (mcp / "tool_providers.json").write_text(
             '{"mcp_blacklist":[],"providers":[]}\n', encoding="utf-8")
-        write_tool_registry_generator(mcp)
         self.image_id = "sha256:" + "a" * 64
         self.image = SimpleNamespace(resolve=Mock(return_value=self.image_id),
                                      identity=Mock(return_value=SimpleNamespace(fingerprint="b" * 64)),
@@ -117,9 +109,9 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         image_factory = patch("local_release._image_manager", return_value=self.image)
         self.image_factory = image_factory.start()
         self.addCleanup(image_factory.stop)
-        canary = patch("local_release.verify_candidate_image", return_value="http://127.0.0.1:49152/anechoic/mcp")
-        self.canary = canary.start()
-        self.addCleanup(canary.stop)
+        self.start_container = self.enterContext(patch(
+            "local_release.start_container", return_value="http://localhost:12345/mcp"
+        ))
         provenance = patch("local_release.release_image_provenance", return_value={
             "project_id": "c" * 64, "project_root": str(self.root),
             "control_root": ".anechoic_anechoic", "project_name": "Fixture",
@@ -129,7 +121,6 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.addCleanup(provenance.stop)
 
         self._native_project()
-        self.enterContext(patch("release_support._native_release_sources", side_effect=lambda _selection: self._native_sources()))
 
     def _runner(self):
         calls = []
@@ -147,8 +138,8 @@ class SimpleLocalReleaseTests(unittest.TestCase):
                 return subprocess.CompletedProcess(argv, 0, "d" * 40 + "\n", "")
             if argv == ("git", "diff", "--cached", "--quiet"):
                 return subprocess.CompletedProcess(argv, int(staged), "", "")
-            if self._is_mcp_bootstrap(argv):
-                return self._mcp_bootstrap_success(argv)
+            if "--phase" in argv and argv[argv.index("--phase") + 1] == "canary":
+                return subprocess.CompletedProcess(argv, 0, "ANECHOIC_CANARY_ENDPOINT http://127.0.0.1:49152/anechoic/mcp\n", "")
             return subprocess.CompletedProcess(argv, 0, "", "")
 
         return run, calls
@@ -183,26 +174,25 @@ class SimpleLocalReleaseTests(unittest.TestCase):
 
         for relative in _GENERATED_ASSETS:
             (self.root / relative).write_text('{"sealed": true}\n', encoding="utf-8")
-        self.native_assets = self.enterContext(patch("release_support.verify_native_release_assets"))
 
     def _native_sources(self):
         return {source.relative_to(self.control): source for source in self.native_sources if source.is_file()}
 
     def test_native_release_runs_full_gates_and_copies_selected_sources(self):
         runner, calls = self._runner()
-        with patch("release_support._native_release_sources", return_value=self._native_sources(), create=True) as select, \
+        with patch("local_release._native_release_sources", wraps=local_release._native_release_sources) as select, \
              patch("local_release._build_predecessor", return_value=None), \
              patch("local_release._launcher_image", side_effect=[None, self.image_id]):
             result = run_local_release(self.root, run_id="native-release", runner=runner)
-        self.native_assets.assert_called_once()
         self.assertEqual("completed", result["outcome"], result)
         self.image.mark_production_image.assert_called_once_with(self.image_id)
+        self.assertGreaterEqual(select.call_count, 2)
         self.assertTrue(all(call.args[0].manifest_ref == "AN-S-001@1" for call in select.call_args_list))
         gates = [call for call in calls if any(arg.endswith("test_suite__pub.py") for arg in call)]
-        self.assertEqual(["unit", "e2e"], [argv[argv.index("--phase") + 1] for argv in gates])
+        self.assertEqual(["unit", "e2e", "canary"], [argv[argv.index("--phase") + 1] for argv in gates])
         self.assertEqual(self.image_id, gates[1][gates[1].index("--candidate-image") + 1])
         self.assertEqual("refresh", result["image_mode"])
-        self.assertTrue(any(self._is_mcp_bootstrap(call) for call in calls))
+        self.start_container.assert_called_once()
         product_sources = self.product / "SUPERLAYER_1_METHODOLOGY_SOURCES"
         for relative, source in self._native_sources().items():
             self.assertEqual(source.read_bytes(), (product_sources / relative).read_bytes())
@@ -225,8 +215,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
                 path.write_text(path.read_text() + "\nchanged\n", encoding="utf-8")
             return runner(argv, cwd)
 
-        with patch("release_support._native_release_sources", return_value=self._native_sources(), create=True), \
-             patch("local_release._build_predecessor", return_value=None), \
+        with patch("local_release._build_predecessor", return_value=None), \
              patch("local_release._launcher_image", return_value=None):
             result = run_local_release(self.root, run_id="native-changed", runner=change_manifest)
         self.assertEqual(("failed", "validate_project_selection"), (result["outcome"], result["failed_step"]))
@@ -234,14 +223,12 @@ class SimpleLocalReleaseTests(unittest.TestCase):
 
     def test_native_existing_mode_keeps_the_full_test_gate(self):
         runner, calls = self._runner()
-        with patch("release_support._native_release_sources", return_value=self._native_sources(), create=True), \
-             patch("local_release._build_predecessor", return_value=None), \
+        with patch("local_release._build_predecessor", return_value=None), \
              patch("local_release._launcher_image", side_effect=[None, self.image_id]):
             result = run_local_release(self.root, run_id="native-existing", runner=runner, image_mode="existing")
-        self.native_assets.assert_called_once()
         self.assertEqual("completed", result["outcome"], result)
         gates = [call for call in calls if any(arg.endswith("test_suite__pub.py") for arg in call)]
-        self.assertEqual(["unit", "e2e"], [argv[argv.index("--phase") + 1] for argv in gates])
+        self.assertEqual(["unit", "e2e", "canary"], [argv[argv.index("--phase") + 1] for argv in gates])
         self.assertEqual(self.image_id, gates[1][gates[1].index("--candidate-image") + 1])
 
     def test_native_source_change_stops_before_product_replacement(self):
@@ -255,8 +242,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
                 changed.write_text("changed", encoding="utf-8")
             return result
 
-        with patch("release_support._native_release_sources", return_value=self._native_sources(), create=True), \
-             patch("local_release._build_predecessor", return_value=None), \
+        with patch("local_release._build_predecessor", return_value=None), \
              patch("local_release._launcher_image", return_value=None), \
              patch("local_release.shutil.copy2", side_effect=mutate_after_copy):
             result = run_local_release(self.root, run_id="native-source-change", runner=runner)
@@ -265,7 +251,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertIn('version = "0.4.1.1"', (self.root / "version.toml").read_text())
 
     def test_existing_image_mode_preserves_checkout_assets_without_a_predecessor(self):
-        selection = select_runtime_project(self.root)
+        selection = read_release_selection(self.root)
         selection.launcher_state.mkdir(parents=True)
         (selection.launcher_state / "ready.json").write_text("invalid receipt", encoding="utf-8")
         payloads = {relative: json.dumps({"existing": relative}).encode() for relative in _GENERATED_ASSETS}
@@ -278,7 +264,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertEqual("completed", result["outcome"], result)
         self.assertEqual("existing", result["image_mode"])
         gates = [argv for argv in calls if any(arg.endswith("test_suite__pub.py") for arg in argv)]
-        self.assertEqual(["unit", "e2e"], [argv[argv.index("--phase") + 1] for argv in gates])
+        self.assertEqual(["unit", "e2e", "canary"], [argv[argv.index("--phase") + 1] for argv in gates])
         self.assertEqual(self.image_id, gates[1][gates[1].index("--candidate-image") + 1])
         self.assertEqual({"use_packaged_assets": True}, self.image.resolve.call_args_list[0].kwargs)
         runtime_package = self.runtime / "simple_local_release/package"
@@ -286,34 +272,20 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             self.assertEqual(payload, (self.root / relative).read_bytes())
             self.assertEqual(payload, (runtime_package / relative).read_bytes())
 
-    def test_failed_asset_publication_restores_checkout(self):
-        relative, = _GENERATED_ASSETS
-        target = self.root / relative
-        target.write_bytes(b"known-good\n")
-        previous = {relative: _file_identity(target)}
-        package = self.root / ".anechoic_tmp/package"
-        staged = package / relative
-        staged.parent.mkdir(parents=True, exist_ok=True)
-        staged.write_bytes(b"replacement\n")
-        expected = {relative: _file_identity(staged)}
-
-        with patch("release_support.os.replace", side_effect=OSError("asset cannot be replaced")):
-            with self.assertRaisesRegex(OSError, "asset cannot be replaced"):
-                _publish_image_assets(self.root, package, previous, expected)
-        self.assertEqual(previous[relative], _file_identity(target))
-
-    def test_existing_image_mode_refuses_missing_assets_before_tests(self):
-        runner, calls = self._runner()
+    def test_image_modes_refuse_missing_assets_before_tests(self):
         (self.root / next(iter(_GENERATED_ASSETS))).unlink()
         original_version = (self.root / "version.toml").read_bytes()
-        result = run_local_release(self.root, run_id="missing-assets", runner=runner, image_mode="existing")
-        self.assertEqual(("failed", "validate_inputs"), (result["outcome"], result["failed_step"]))
-        self.assertEqual(original_version, (self.root / "version.toml").read_bytes())
-        self.assertFalse(any(any(item.endswith("test_suite__pub.py") for item in argv) for argv in calls))
+        for mode in ("existing", "refresh"):
+            with self.subTest(mode=mode):
+                runner, calls = self._runner()
+                result = run_local_release(self.root, run_id=f"missing-assets-{mode}", runner=runner, image_mode=mode)
+                self.assertEqual(("failed", "validate_inputs"), (result["outcome"], result["failed_step"]))
+                self.assertEqual(original_version, (self.root / "version.toml").read_bytes())
+                self.assertFalse(any(any(item.endswith("test_suite__pub.py") for item in argv) for argv in calls))
         self.image_factory.assert_not_called()
 
     def test_launcher_image_reads_only_exact_selected_runtime_namespace(self):
-        selection = select_runtime_project(self.root)
+        selection = read_release_selection(self.root)
         old_image = "sha256:" + "c" * 64
         payload = {"project_root": str(self.root), "control_root": str(self.control),
                    "project_id": selection.instance_id, "image_id": old_image}
@@ -383,7 +355,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertEqual(("failed", "unit_tests"), (result["outcome"], result["failed_step"]))
         self.assertEqual("full", result["test_scope"])
         self.assertIsNone(result["test_modules"])
-        self.assertFalse(any(self._is_mcp_bootstrap(argv) for argv in calls))
+        self.start_container.assert_not_called()
         report = (self.root / result["report_path"]).read_text(encoding="utf-8")
         self.assertIn("Test scope: `full`", report)
         self.assertIn("Selected test modules: all discovered modules", report)
@@ -397,7 +369,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         for target in (self.product, self.installed):
             self.assertEqual("obsolete", (target / "old.txt").read_text())
         self.assertFalse(any(any(item.endswith("test_suite__pub.py") for item in argv) for argv in calls))
-        self.assertFalse(any(self._is_mcp_bootstrap(argv) for argv in calls))
+        self.start_container.assert_not_called()
         self.image_factory.assert_not_called()
 
     def test_unsafe_product_descendant_refuses_before_any_clear(self):
@@ -410,24 +382,19 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self._assert_input_refused("invalid-version", "bump_candidate_version")
         self.assertIn('version = "invalid"', version.read_text())
 
-    def test_installer_refreshes_bootstrap_without_touching_runtime_config_or_state(self):
-        runner, calls = self._runner()
-        first = run_local_release(self.root, run_id="bootstrap-one", runner=runner)
-        self.assertEqual("completed", first["outcome"])
+    def test_release_preserves_launcher_and_runtime_config(self):
+        launcher = self.runtime / "start_mcp.py"
+        launcher.write_bytes(b"existing launcher\n")
         state = self.runtime / "project_mcp_state.json"
         state.write_text("retain this runtime state\n", encoding="utf-8")
-        self.engine_bootstrap.write_bytes(b"#!/usr/bin/env python3\n# refreshed package bootstrap\n")
-        self.engine_bootstrap.chmod(0o755)
-
-        second = run_local_release(self.root, run_id="bootstrap-two", runner=runner)
-
-        self.assertEqual("completed", second["outcome"])
-        bootstrap = self.runtime / "start_mcp.py"
-        self.assertEqual(self.engine_bootstrap.read_bytes(), bootstrap.read_bytes())
-        self.assertEqual(0o755, stat.S_IMODE(bootstrap.stat().st_mode))
+        runner, _ = self._runner()
+        result = run_local_release(self.root, run_id="launcher-state", runner=runner)
+        self.assertEqual("completed", result["outcome"], result)
+        self.assertEqual(self.engine_bootstrap.read_bytes(), launcher.read_bytes())
+        self.assertEqual(0o755, stat.S_IMODE(launcher.stat().st_mode))
         self.assertEqual("keep = true\n", (self.runtime / "config.toml").read_text())
         self.assertEqual("retain this runtime state\n", state.read_text())
-        self.assertEqual(2, sum(self._is_mcp_bootstrap(argv) for argv in calls))
+        self.start_container.assert_called_once()
 
     def test_four_component_local_version_increments_without_rollover(self):
         (self.root / "version.toml").write_text('[framework]\nversion = "0.4.1.9"\n', encoding="utf-8")
@@ -552,7 +519,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertIn(result["test_log_path"], output.getvalue())
         for target in (self.product, self.installed):
             self.assertEqual("obsolete", (target / "old.txt").read_text())
-        self.assertFalse(any(self._is_mcp_bootstrap(argv) for argv in calls))
+        self.start_container.assert_not_called()
 
     def test_default_test_log_survives_later_failure_without_whole_output_capture(self):
         runner, _ = self._runner()
@@ -578,11 +545,12 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             phase = argv[argv.index("--phase") + 1]
             phases.append(phase)
             log.write(f"{phase} evidence\n".encode())
-            return subprocess.CompletedProcess(argv, 0, "", "")
+            output = "ANECHOIC_CANARY_ENDPOINT http://127.0.0.1:49152/anechoic/mcp\n" if phase == "canary" else ""
+            return subprocess.CompletedProcess(argv, 0, output, "")
 
         original_run = subprocess.run
         def run(argv, **kwargs):
-            if argv[0] == "git" or self._is_mcp_bootstrap(argv):
+            if argv[0] == "git":
                 return runner(argv, self.root)
             return original_run(argv, **kwargs)
 
@@ -590,11 +558,11 @@ class SimpleLocalReleaseTests(unittest.TestCase):
                 patch("local_release.run_logged_test_process", side_effect=passed):
             result = run_local_release(self.root, run_id="two-logs")
         self.assertEqual("completed", result["outcome"], result)
-        self.assertEqual(["unit", "e2e"], phases)
+        self.assertEqual(["unit", "e2e", "canary"], phases)
         for phase in phases:
             path = self.root / result["test_log_paths"][phase]
             self.assertEqual(f"{phase} evidence\n", path.read_text())
-        self.assertEqual(result["test_log_paths"]["e2e"], result["test_log_path"])
+        self.assertEqual(result["test_log_paths"]["canary"], result["test_log_path"])
 
     def test_interrupt_before_tests_reports_actual_git_step_without_claiming_log(self):
         def interrupted(argv, cwd):
@@ -613,11 +581,10 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         adds = [argv for argv in calls if argv[:3] == ("git", "add", "-A")]
         self.assertEqual(".", adds[0][4])
         self.assertEqual("version.toml", adds[1][4])
-        self.assertEqual(6, len(adds))
+        self.assertEqual(5, len(adds))
         self.assertTrue(all("." not in argv[4:-2] for argv in adds[1:]))
         commits = [argv[-1] for argv in calls if argv[:2] == ("git", "commit")]
-        self.assertEqual(["validate inputs", "unit tests", "build package", "prepare candidate image",
-                          "install project runtime", "start mcp"],
+        self.assertEqual(["validate inputs", "unit tests", "build package", "install project runtime", "start mcp"],
                          [message.removeprefix("chore(release): simple local ") for message in commits])
 
     def test_unit_gate_worktree_drift_is_refused_before_build(self):
@@ -650,11 +617,9 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             self.assertEqual(self.root, cwd)
             if argv[0] == "git":
                 return subprocess.run(argv, cwd=cwd, capture_output=True, text=True, check=False)
-            if self._is_mcp_bootstrap(argv):
-                return self._mcp_bootstrap_success(argv)
             if argv[0] == "docker":
                 return subprocess.CompletedProcess(argv, 0, "", "")
-            return subprocess.CompletedProcess(argv, 0, "http://localhost:12345/mcp", "")
+            return subprocess.CompletedProcess(argv, 0, "ANECHOIC_CANARY_ENDPOINT http://127.0.0.1:49152/anechoic/mcp\n", "")
 
         result = run_local_release(self.root, run_id="real-git", runner=runner)
         self.assertEqual("completed", result["outcome"], (result, git("status", "--porcelain").stdout))
@@ -663,6 +628,8 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertIn('version = "0.4.1.1"', git("show", "HEAD:version.toml").stdout)
         for relative in _GENERATED_ASSETS:
             self.assertEqual((self.root / relative).read_text(), git("show", f"HEAD:{relative}").stdout)
+            self.assertEqual("chore(release): simple local validate inputs",
+                             git("log", "-1", "--format=%s", "--", relative).stdout.strip())
 
     def test_package_inputs_fail_before_any_installed_replacement(self):
         runtime_package = self.runtime / "simple_local_release/package"
@@ -675,8 +642,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             return {path.relative_to(target).as_posix(): (path.read_bytes(), stat.S_IMODE(path.stat().st_mode))
                     for path in target.rglob("*") if path.is_file()}
         before = {target: inventory(target) for target in (self.installed, runtime_package, skill)}
-        for relative in ("uv.lock", "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane/SKILL.md",
-                         "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/runtime.py"):
+        for relative in ("uv.lock", "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane/SKILL.md"):
             with self.subTest(relative=relative):
                 missing = self.root / relative
                 payload = missing.read_bytes()
@@ -688,7 +654,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
                 missing.chmod(mode)
                 self.assertEqual("failed", result["outcome"])
                 self.assertEqual("build_package", result["failed_step"])
-                self.assertFalse(any(self._is_mcp_bootstrap(argv) for argv in calls))
+                self.start_container.assert_not_called()
                 for target, snapshot in before.items():
                     self.assertEqual(snapshot, inventory(target))
                 self.assertEqual([], list((self.root / ".anechoic_tmp/simple_local_release").iterdir()))
@@ -713,7 +679,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         version = (self.root / "version.toml").read_bytes()
         product = {p.relative_to(self.product): p.read_bytes() for p in self.product.rglob("*") if p.is_file()}
         stderr = io.StringIO()
-        with local_release._installation_lock(self.root, select_runtime_project(self.root)), patch("sys.stderr", stderr):
+        with local_release._installation_lock(self.root, read_release_selection(self.root)), patch("sys.stderr", stderr):
             result = run_local_release(self.root, run_id="locked-install", runner=runner)
         self.assertEqual("failed", result["outcome"])
         self.assertEqual("installation_lock", result["failed_step"])
@@ -722,8 +688,8 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertEqual(version, (self.root / "version.toml").read_bytes())
         self.assertEqual(product, {p.relative_to(self.product): p.read_bytes() for p in self.product.rglob("*") if p.is_file()})
         self.assertFalse(any(argv[0] == "git" for argv in calls))
-        self.assertFalse(any(self._is_mcp_bootstrap(argv) for argv in calls))
-        with local_release._installation_lock(self.root, select_runtime_project(self.root)):
+        self.start_container.assert_not_called()
+        with local_release._installation_lock(self.root, read_release_selection(self.root)):
             pass
 
     def test_installation_lock_and_staging_refuse_symlinked_owners(self):
@@ -765,19 +731,19 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         checked = []
         def check_locked():
             with self.assertRaisesRegex(local_release.LocalReleaseError, "installation-lock-busy"):
-                with local_release._installation_lock(self.root, select_runtime_project(self.root)):
+                with local_release._installation_lock(self.root, read_release_selection(self.root)):
                     pass
             checked.append(True)
         def copy(source, target, **kwargs):
             if target in (self.installed, self.runtime / "simple_local_release/package", self.root / ".agents/skills/ane"):
                 check_locked()
             return copy_tree(source, target, **kwargs)
-        def run(argv, cwd):
-            if self._is_mcp_bootstrap(argv):
-                check_locked()
-            return runner(argv, cwd)
-        with patch.object(local_release, "_copy_tree", copy):
-            result = run_local_release(self.root, run_id="lock-coverage", runner=run)
+        def start(*args, **kwargs):
+            check_locked()
+            return "http://localhost:12345/mcp"
+        with patch.object(local_release, "_copy_tree", copy), \
+                patch.object(local_release, "start_container", side_effect=start):
+            result = run_local_release(self.root, run_id="lock-coverage", runner=runner)
         self.assertEqual("completed", result["outcome"])
         self.assertEqual(4, len(checked))
 
@@ -802,14 +768,6 @@ class SimpleLocalReleaseTests(unittest.TestCase):
                 self.image_factory.assert_not_called()
                 self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
 
-    def test_unverified_native_status_specifications_stop_package_build(self):
-        self.native_assets.side_effect = local_release.LocalReleaseError("unverified native status Workflow")
-        runner, _ = self._runner()
-        result = run_local_release(self.root, run_id="unverified-workflow", runner=runner)
-        self.assertEqual(("failed", "build_package"), (result["outcome"], result["failed_step"]))
-        self.image_factory.assert_not_called()
-        self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
-
     def test_unreadable_package_subtree_refuses_before_replacement(self):
         blocked = self.root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/blocked"
         blocked.mkdir()
@@ -831,7 +789,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
         for target in (runtime_package, skill):
             self.assertEqual(b"previous payload", (target / "old.txt").read_bytes())
-        self.assertFalse(any(self._is_mcp_bootstrap(argv) for argv in calls))
+        self.start_container.assert_not_called()
 
     def test_staging_is_run_private_and_verified_before_replacement(self):
         import local_release
@@ -872,29 +830,26 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.image.resolve.side_effect = resolve
         runner, calls = self._runner()
 
-        def verify_canary(root, selection, package, staging, image, *, run_id):
-            events.append("candidate-canary")
-            self.assertEqual(self.root, root)
-            self.assertEqual(self.image_id, image)
-            self.assertEqual("image-order", run_id)
-            self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
-            self.assertEqual(staging, package.parent)
-            return "http://127.0.0.1:49152/anechoic/mcp"
-
-        self.canary.side_effect = verify_canary
-
         def record(argv, cwd):
             result = runner(argv, cwd)
-            if any(item.endswith("test_suite__pub.py") for item in argv):
+            if "--phase" in argv:
                 phase = argv[argv.index("--phase") + 1]
                 self.assertIn('version = "0.4.1.1"', (self.root / "version.toml").read_text())
+                if phase == "canary":
+                    self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
+                    self.assertEqual(self.image_id, argv[argv.index("--candidate-image") + 1])
+                    self.assertEqual("image-order", argv[argv.index("--run-id") + 1])
                 events.append(f"{phase}-green")
-            elif self._is_mcp_bootstrap(argv):
-                events.append("launch")
             elif argv[:3] == ("docker", "image", "ls"):
                 events.append("post-smoke-image-cleanup")
             return result
 
+        def start(root, selection, image, fingerprint, port, runner, **kwargs):
+            events.append("launch")
+            self.assertEqual((self.root, self.image_id, "b" * 64, 12345), (root, image, fingerprint, port))
+            return "http://localhost:12345/mcp"
+
+        self.start_container.side_effect = start
         result = run_local_release(self.root, run_id="image-order", runner=record)
         self.assertEqual("completed", result["outcome"], result)
         self.assertEqual(2, self.image_factory.call_count)
@@ -903,16 +858,10 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertTrue(source.is_relative_to(self.root / ".anechoic_tmp/simple_local_release"))
         self.assertEqual(source.parent / "image_builds", temporary)
         self.assertEqual(self.runtime / "simple_local_release/package", self.image_factory.call_args_list[1].args[0])
-        launch = next(argv for argv in calls if self._is_mcp_bootstrap(argv))
-        self.assertEqual((sys.executable, str(self.runtime / "start_mcp.py")), launch[:2])
-        self.assertEqual(str(self.runtime / "simple_local_release/package"), launch[launch.index("--source-root") + 1])
-        self.assertEqual(self.image_id, launch[launch.index("--image") + 1])
-        self.assertEqual("12345", launch[launch.index("--port") + 1])
-        self.assertIn("--no-build", launch)
         self.assertLess(events.index("unit-green"), events.index("candidate-resolve"))
         self.assertLess(events.index("candidate-resolve"), events.index("e2e-green"))
-        self.assertLess(events.index("e2e-green"), events.index("candidate-canary"))
-        self.assertLess(events.index("candidate-canary"), events.index("installed-resolve"))
+        self.assertLess(events.index("e2e-green"), events.index("canary-green"))
+        self.assertLess(events.index("canary-green"), events.index("installed-resolve"))
         self.assertLess(events.index("installed-resolve"), events.index("launch"))
         self.assertLess(events.index("launch"), events.index("post-smoke-image-cleanup"))
         self.assertEqual("http://127.0.0.1:49152/anechoic/mcp", result["canary_endpoint"])
@@ -929,18 +878,22 @@ class SimpleLocalReleaseTests(unittest.TestCase):
 
         result = run_local_release(self.root, run_id="e2e-failed", runner=fail_e2e)
         self.assertEqual(("failed", "e2e_tests"), (result["outcome"], result["failed_step"]))
-        self.canary.assert_not_called()
+        self.assertFalse(any("canary" in argv for argv in calls))
         self.image.mark_production_image.assert_not_called()
-        self.assertFalse(any(self._is_mcp_bootstrap(argv) for argv in calls))
+        self.start_container.assert_not_called()
         self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
 
     def test_failed_candidate_canary_preserves_the_installed_release(self):
-        self.canary.side_effect = local_release.LocalReleaseError("local-release-canary-probe-failed")
         runner, calls = self._runner()
-        result = run_local_release(self.root, run_id="canary-failed", runner=runner)
+        def fail_canary(argv, cwd):
+            result = runner(argv, cwd)
+            if "--phase" in argv and argv[argv.index("--phase") + 1] == "canary":
+                return subprocess.CompletedProcess(argv, 1, "", "canary failed")
+            return result
+        result = run_local_release(self.root, run_id="canary-failed", runner=fail_canary)
         self.assertEqual("verify_candidate_image", result["failed_step"])
         self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
-        self.assertFalse(any(self._is_mcp_bootstrap(argv) for argv in calls))
+        self.start_container.assert_not_called()
         self.assertFalse(any(argv[:3] == ("docker", "image", "rm") for argv in calls))
 
     def test_image_preparation_failure_preserves_previous_installation(self):
@@ -963,7 +916,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
         self.assertEqual(b"previous payload", (runtime_package / "old.txt").read_bytes())
         self.assertEqual(b"previous payload", (skill / "old.txt").read_bytes())
-        self.assertFalse(any(self._is_mcp_bootstrap(argv) for argv in calls))
+        self.start_container.assert_not_called()
 
     def test_packaged_fingerprint_mismatch_preserves_previous_installation(self):
         runtime_package = self.runtime / "simple_local_release/package"
@@ -977,7 +930,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertEqual("prepare_candidate_image", result["failed_step"])
         self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
         self.assertEqual(b"previous payload", (runtime_package / "old.txt").read_bytes())
-        self.assertFalse(any(self._is_mcp_bootstrap(argv) for argv in calls))
+        self.start_container.assert_not_called()
 
 
 if __name__ == "__main__":

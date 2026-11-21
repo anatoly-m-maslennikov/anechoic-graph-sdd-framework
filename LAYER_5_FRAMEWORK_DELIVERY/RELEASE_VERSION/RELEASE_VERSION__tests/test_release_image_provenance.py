@@ -74,9 +74,9 @@ class ReleaseImageProvenanceTests(unittest.TestCase):
         self.addCleanup(fixture.doCleanups)
 
         def runner(argv: tuple[str, ...], root: Path) -> subprocess.CompletedProcess[str]:
-            if fixture._is_mcp_bootstrap(argv):
-                return fixture._mcp_bootstrap_success(argv)
-            output = "d" * 40 if argv[:2] == ("git", "rev-parse") else ""
+            output = ("d" * 40 if argv[:2] == ("git", "rev-parse") else
+                      "ANECHOIC_CANARY_ENDPOINT http://127.0.0.1:49152/anechoic/mcp\n"
+                      if "--phase" in argv and argv[argv.index("--phase") + 1] == "canary" else "")
             return subprocess.CompletedProcess(argv, 0, output, "")
 
         result = run_local_release(fixture.root, run_id="provenance", runner=runner)
@@ -121,8 +121,10 @@ class ReleaseImageProvenanceTests(unittest.TestCase):
                 return subprocess.CompletedProcess(argv, int(dirty), "", "")
             if argv[:2] == ("git", "commit"):
                 dirty, head = False, "e" * 40
-            if fixture._is_mcp_bootstrap(argv):
-                return fixture._mcp_bootstrap_success(argv)
+            if "--phase" in argv and argv[argv.index("--phase") + 1] == "canary":
+                return subprocess.CompletedProcess(
+                    argv, 0, "ANECHOIC_CANARY_ENDPOINT http://127.0.0.1:49152/anechoic/mcp\n", ""
+                )
             return subprocess.CompletedProcess(
                 argv, 0, head if argv[:3] == ("git", "rev-parse", "--verify") else "", ""
             )

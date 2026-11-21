@@ -18,7 +18,7 @@ Declare Family Marker
 
 ## Claim scope
 
-MODEL//ANECHOIC <+ Node//Artifact//Atom//PMETA Atom.Family Marker
+MODEL//ANECHOIC <+ Node//Artifact//Atom//Project Config Atom.Family Marker
 
 ## Claim
 
@@ -34,6 +34,6 @@ declare_entity(
     base_path='Node//Artifact//Atom',
     value_format=str,
     field_options={'class_var': True, 'default': 'P'},
-    applies_to_entity_classes=('Node//Artifact//Atom//PMETA Atom',),
+    applies_to_entity_classes=('Node//Artifact//Atom//Project Config Atom',),
 )
 ```

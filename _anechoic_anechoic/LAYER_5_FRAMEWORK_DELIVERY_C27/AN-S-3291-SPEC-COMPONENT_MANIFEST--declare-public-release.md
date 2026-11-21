@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-21T20:32:36.237351+00:00'
+  version: 2
+  updated_at: '2026-11-21T21:49:45.763566+00:00'
 ---
 
 ## Summary
@@ -32,10 +32,9 @@ declare_entity(
         lens_whitelist=['DES', 'DevOps', 'QA', 'SWD'],
         boundaries={
             'code_access': {
-                'imports': ['C63', 'test_suite__pub.run_full_suite'],
+                'imports': [],
                 'exports': {
                     'PUBLIC_RELEASE__family_pub.run_public_release': {'family_pub': ['parent']},
-                    'PUBLIC_RELEASE__family_pub.validate_draft': {'family_pub': ['parent']},
                 },
             },
             'runtime_io': {
@@ -47,14 +46,11 @@ declare_entity(
                         'command': 'public',
                     },
                 },
-                'allows': [
-                    {'component': 'C19', 'interface': 'test_suite'},
-                    {'component': 'C63', 'interface': 'local_release'},
-                ],
+                'allows': [],
             },
             'shared_state': {
-                'reads': ['Project Manifest', 'Project checkout', 'Public release content draft'],
-                'writes': ['Project checkout', 'Public release pull request and branch'],
+                'reads': ['Git commits and completed Task and Epic Markdown', 'Public release content draft'],
+                'writes': [],
             },
         },
     ),

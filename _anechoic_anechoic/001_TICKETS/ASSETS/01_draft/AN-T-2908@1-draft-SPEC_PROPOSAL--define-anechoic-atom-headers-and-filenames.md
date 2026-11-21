@@ -41,10 +41,42 @@ The Header is the frontmatter. Use this order for SPEC and TKT:
    Atom IDs or exact revision references as targets.
 8. `state` contains `status`, `version`, and `updated_at`, in that order.
 
-The Project is the only Container for Axiom and Applicable Principle.
-Axiom requires Tier -1 and Applicable Principle requires Tier 1.
-Spec Proposal is a Ticket Asset. A PKG Spec declares its Package ID in
-its Formal Claim.
+### Project-local SPEC Templates
+
+- Contract uses Tier 0 (`template: contract`).
+- Applicable Principle uses Tier 2.
+- Supporting Principle is proposed. Its Tier is open.
+
+The Project is the Container for these Templates. Spec Proposal is a
+Ticket Asset. A PKG Spec declares its Package ID in its Formal Claim.
+
+### Project Config catalog
+
+- **Custom Model**
+  - **Custom Nodes**
+    - **Atom.** Shared properties, constraints, and lifecycle.
+      - **SPEC Atom.** Templates such as Axiom and axes such as Tier and
+        Lens.
+      - **Ticket Atom.** Templates and Ticket-specific properties.
+    - **Component**, including Project.
+    - **Package**.
+  - **Custom Relations.** Relation types and inverse names, allowed
+    endpoints, cardinality, and classifications such as transitive
+    and functional.
+- **Project Workflows.** Local Release and Public Release, with their
+  Steps and Actions.
+
+Attach properties, constraints, and classification axes to the Node
+type they apply to. Add other Node types, such as Event Record or
+Ephemeral, when the Project extends them.
+
+Component and Package Manifests stay with their owners. The Project
+Manifest at the Project root holds identity, paths, enabled Lenses, and
+runtime parameters.
+
+Axiom Atoms use the SPEC Lens and Tier -1. Their only Container is the
+level 0 Project. Their files live at the Project root and in its
+lifecycle status directories.
 
 ### SPEC example
 
@@ -53,7 +85,7 @@ atom_family: SPEC
 atom_id: AN-S-3190
 container:
   component: C00
-tier: 1
+tier: 2
 context:
   template: applicable_principle
   lens: SPEC
@@ -133,10 +165,10 @@ alphanumeric runs joined by hyphens. Preserve the authored Summary.
   token. Other Atoms use the existing subfolder rules, including named
   Lens directories such as `__DES/`, `__DEVOPS/`, `__QA/`, and `__SWD/`.
   Drafts and Archives use `01_draft/` and `09_archived/`. Keep the
-  Project's Tier -1 Manifest, Goal, and Axioms at the Project root.
-- At the Project control root, rename `__TKT/` to `001_TICKETS/` and
-  `_PMETA/` to `002_PROJECT_CONFIG/`. Keep the existing child directories
-  and status placement inside both roots.
+  Project's Tier -1 Manifest, Goal, and Active Axioms at the Project root.
+- At the Project control root, use `001_TICKETS/` for Tickets and
+  `002_PROJECT_CONFIG/` for configuration files. Project Config Atoms
+  use `atom_family: PROJECT_CONFIG` and keep their P IDs.
 - TKT uses the `TASKS/`, `ISSUES/`, and `ASSETS/` branches below
   `001_TICKETS/`. In Queue records live at their branch root. Use
   `01_draft/`, `09_archived/`, or the applicable status directory.
@@ -150,7 +182,7 @@ alphanumeric runs joined by hyphens. Preserve the authored Summary.
 
 AN-T-2959 owns the sequence. Finalize the SPEC and TKT Header and Model
 rules in AN-T-2960, migrate carriers in AN-T-2964, then revise the
-lifecycle backend and MCP. The PMETA change covers its folder name.
+lifecycle backend and MCP.
 
 Preserve Atom IDs, exact revision references, and Markdown Content during
 mechanical migration. Convert existing TKT `active` to `in_queue` and

@@ -38,6 +38,8 @@ def create_project_spec(selection, values, validate):
     tier = PROJECT_SPEC_TIERS[values['template']]
     if 'tier' in values and (type(values['tier']) is not int or values['tier'] != tier):
         raise common.InputError('tier', 'Tier must match the selected Project SPEC template.')
+    if values['template'] == 'axiom' and values['lens'] != 'SPEC':
+        raise common.InputError('lens', 'Axiom requires the SPEC Lens.')
     try:
         spec_lens_directories(values['lens'])
     except ValueError as error:

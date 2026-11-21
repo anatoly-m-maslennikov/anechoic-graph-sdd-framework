@@ -8,8 +8,8 @@ context:
   lens: SWD
 state:
   status: active
-  version: 26
-  updated_at: '2026-11-21T19:44:44.942315+00:00'
+  version: 28
+  updated_at: '2026-11-21T21:49:31.686927+00:00'
 ---
 
 ## Summary
@@ -18,13 +18,13 @@ Deliver one selected release directly
 
 ## Claim scope
 
-The direct Local release path from active Methodology source through compilation, package installation, runtime/Skill verification, and Docker/MCP smoke.
+The direct Local release path from checked-in assets through package installation, runtime/Skill verification, and Docker/MCP smoke.
 
 ## Claim
 
 ### Prose Claim
 
-The Tool commits pending nonignored changes under existing protections, bumps and commits the candidate Version, and invokes the single C19 Test Suite entry for unit tests and linters. After that gate passes, it prepares the retained governed Framework, runtime and `ca` Skill package and builds one immutable candidate image. It invokes the same entry in end-to-end mode against that exact image, then runs a disposable canary before production. After both pass, it installs verified files, starts the exact candidate on the Project-owned Manifest `project_mcp.http_port`, verifies readiness, and applies the production tag to the same image ID. It stops on failure and reports observed effects without automatic replay. Public Release retains its full-suite behavior.
+The Tool commits pending nonignored changes under existing protections, bumps and commits the candidate Version, and invokes the single C19 Test Suite entry for unit tests and linters. After that gate passes, it reads checked-in assets and prepares the retained governed Framework, runtime and `ca` Skill package and builds one immutable candidate image. It invokes the same entry in end-to-end mode against that exact image, then invokes the same entry for a disposable canary before production. After both pass, it installs verified files, starts the exact candidate on the Project-owned Manifest `project_mcp.http_port`, verifies readiness, and applies the production tag to the same image ID. It stops on failure and reports observed effects without automatic replay. Public Release prepares drafts without running a suite.
 
 ## Details
 

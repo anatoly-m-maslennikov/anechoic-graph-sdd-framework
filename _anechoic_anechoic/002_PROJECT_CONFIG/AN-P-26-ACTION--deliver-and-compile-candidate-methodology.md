@@ -8,24 +8,14 @@ context:
   template: action
 state:
   status: active
-  version: 16
-  updated_at: 2026-11-09 15:54:30 +0400
+  version: 17
+  updated_at: '2026-11-21T21:51:04.697298+00:00'
 ---
 
 # Summary
 
-Deliver and compile candidate Methodology
+Deliver candidate Methodology
 
 ## Action
 
-Deliver and compile candidate Methodology **means** the Action that rebuilds the derived Framework Methodology product from the frozen active source boundary, then invokes the canonical applicable compiler.
-
-## Scope
-
-`deliver_sources` clears only replaceable product members under `LAYER_1_FRAMEWORK_METHODOLOGY/`, preserves declared settings, and copies only active Core Meta-Model, installed extension, and Project Configuration source members from the Project-owned authority. `compile` applies CA-O-011 to that exact product and verifies that its bytes and source relations equal the private tested preparation. Neither phase writes the installed Framework.
-
-## Details
-
-Commit the successful product clear, active-source copy, and compilation separately, staging only each transition's owned changes. These checkpoints remain separate even when one Step invokes both clear and copy. A read-only or unchanged transition records its result without an empty commit; a failed transition or commit stops before the next transition.
-
-No inactive source Atom, partial source set, implicit path, stale compiler output, altered source byte, or changed boundary is success. This Action does not run the full suite, install, publish, alter authoring, or create another compiler Workflow. A failed phase retains actual evidence without claiming delivery or compilation complete.
+Prepare the derived Framework Methodology product from the selected current sources and checked-in assets. Preserve protected settings and source bytes. Do not compile, regenerate assets, alter authoring authority, or install the product. A missing or unsafe input, changed source, or failed copy stops delivery.

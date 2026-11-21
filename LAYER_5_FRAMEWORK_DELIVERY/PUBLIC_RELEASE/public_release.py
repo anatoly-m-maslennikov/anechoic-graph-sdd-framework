@@ -1,233 +1,150 @@
-
-"""Direct Project-owned public release, without selector or admission gates."""
+"""Prepare public release drafts from pinned Git evidence without side effects."""
 
 from __future__ import annotations
 
 from collections.abc import Mapping
-from functools import partial
 from pathlib import Path
 import re
-import sys
+import subprocess
 import tomllib
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from public_release_materials import (
-    PublicReleaseError,
-    matching_pr,
-    next_public_version,
-    prepare_documents,
-    validate_draft,
-)
 
-from public_release_git import (
-    Command, Runner, _check_staged_environment, _checkpoint, _command, _repository, _create_pr, _verify_pr,
-)
+class PublicReleaseError(ValueError):
+    """The release comparison or reviewed content is invalid."""
 
 
-def _prepare_materials(root: Path, run_id: str, summary: list[str], pr_url: str) -> str:
-    version_path, readme, history = (
-        root / name for name in ("version.toml", "README.md", "VERSION_HISTORY.md")
-    )
-    if any(path.is_symlink() or not path.is_file() for path in (version_path, readme, history)):
-        raise PublicReleaseError("public-release-documents-missing-or-unsafe")
-    version_text = version_path.read_text(encoding="utf-8")
+def _git(root: Path, *args: str) -> str:
     try:
-        old_version = tomllib.loads(version_text)["framework"]["version"]
-    except (KeyError, TypeError, tomllib.TOMLDecodeError) as error:
-        raise PublicReleaseError("version.toml must declare [framework].version") from error
-    version = next_public_version(old_version)
-    readme_text, history_text = prepare_documents(
-        readme.read_text(encoding="utf-8"),
-        history.read_text(encoding="utf-8"),
-        version,
-        run_id,
-        summary,
-        pr_url,
-    )
-    version_path.write_text(
-        version_text.replace(f'"{old_version}"', f'"{version}"', 1), encoding="utf-8"
-    )
-    readme.write_text(readme_text, encoding="utf-8")
-    history.write_text(history_text, encoding="utf-8")
-    return version
-
-
-def _test_materials(root: Path, command: Command, candidate: str) -> None:
-    observations = (
-        ("git", "rev-parse", "HEAD"),
-        ("git", "status", "--porcelain", "--untracked-files=all"),
-    )
-    before = tuple(command(argv).stdout for argv in observations)
-    if before[0].strip() != candidate or before[1]:
-        raise PublicReleaseError("public-release-tested-source-changed")
-    command(
-        (
-            "uv",
-            "run",
-            "--project",
-            str(root),
-            "--locked",
-            "--no-sync",
-            "--python",
-            "3.14",
-            "--managed-python",
-            "--no-env-file",
-            "--all-groups",
-            "python",
-            "-B",
-            str(Path(__file__).resolve().parents[2] / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/test_suite__pub.py"),
-            "--project-root",
-            str(root),
+        result = subprocess.run(
+            ("git", *args), cwd=root, capture_output=True, text=True, encoding="utf-8", check=False, timeout=120,
         )
-    )
-    if tuple(command(argv).stdout for argv in observations) != before:
-        raise PublicReleaseError("public-release-tested-source-changed")
+    except (OSError, UnicodeError, subprocess.TimeoutExpired) as error:
+        raise PublicReleaseError(f"git {args[0]} could not read the release comparison") from error
+    if result.returncode:
+        raise PublicReleaseError(f"git {args[0]} failed")
+    return result.stdout
 
 
-def _release(
-    root: Path, run_id: str, draft: Mapping[str, object], command: Command, repository_slug: str | None
-) -> dict[str, object]:
-    step = "content_draft"
-    effects: list[str] = []
-    try:
-        description, summary = validate_draft(draft)
-        if (
-            not isinstance(repository_slug, str)
-            or re.fullmatch(r"[A-Za-z0-9_.-]+", repository_slug) is None
-            or repository_slug in (".", "..")
-        ):
-            raise PublicReleaseError("public-release-repository-slug-invalid")
-        repository = _repository(command, repository_slug)
-        step = "git_preflight"
-        _check_staged_environment(command)
-        step = "discover_pr"
-        discovered = command(
-            (
-                "gh",
-                "pr",
-                "list",
-                "--repo",
-                repository,
-                "--head",
-                "amm/dev",
-                "--base",
-                "main",
-                "--state",
-                "open",
-                "--json",
-                "url,state,headRefName,baseRefName",
-                "--limit",
-                "2",
-            )
-        )
-        pr_url = matching_pr(discovered.stdout, repository)
-        if pr_url is None:
-            step = "create_pr"
-            effects.append("Draft PR creation attempted; remote effect may be uncertain")
-            pr_url = _create_pr(command, repository, description)
-            effects[-1] = f"Draft PR created: {pr_url}"
-        if not _verify_pr(command, repository, pr_url):
-            effects.append(f"PR draft conversion attempted: {pr_url}; remote effect may be uncertain")
-            command(("gh", "pr", "ready", pr_url, "--undo", "--repo", repository))
-            effects[-1] = f"Converted PR to draft: {pr_url}"
-        step = "write_docs"
-        version = _prepare_materials(root, run_id, summary, pr_url)
-        effects.append(f"Prepared release materials for {version}")
-        paths = [root / name for name in ("version.toml", "README.md", "VERSION_HISTORY.md")]
-        prepared = [path.read_bytes() for path in paths]
-        step = "candidate_commit"
-        _checkpoint(command, "tests")
-        candidate = command(("git", "rev-parse", "HEAD")).stdout.strip()
-        if not re.fullmatch(r"[0-9a-f]{40,64}", candidate):
-            raise PublicReleaseError("public-release-candidate-invalid")
-        effects.append(f"Candidate commit: {candidate}")
-        if command(("git", "status", "--porcelain", "--untracked-files=all")).stdout:
-            raise PublicReleaseError("public-release-candidate-dirty")
-        if [path.read_bytes() for path in paths] != prepared:
-            raise PublicReleaseError("public-release-prepared-materials-changed")
-        if any(
-            command(("git", "show", f"{candidate}:{path.name}")).stdout.encode("utf-8") != content
-            for path, content in zip(paths, prepared, strict=True)
-        ):
-            raise PublicReleaseError("public-release-candidate-materials-mismatch")
-        step = "tests"
-        _test_materials(root, command, candidate)
-        if [path.read_bytes() for path in paths] != prepared:
-            raise PublicReleaseError("public-release-prepared-materials-changed")
-        step = "push"
-        effects.append(f"Push attempted for {candidate}; remote effect may be uncertain")
-        command(("git", "push", "origin", f"{candidate}:refs/heads/amm/dev"))
-        effects[-1] = f"Pushed candidate: {candidate}"
-        step = "verify_pr_head"
-        if not _verify_pr(command, repository, pr_url, candidate):
-            raise PublicReleaseError("public-release-pr-not-draft")
-        step = "update_pr"
-        effects.append(f"PR update attempted: {pr_url}; remote effect may be uncertain")
-        command(("gh", "pr", "edit", pr_url, "--repo", repository, "--title", f"ANECHOIC {version} public release", "--body", description))
-        effects[-1] = f"Updated PR: {pr_url}"
-        step = "ready_pr"
-        effects.append(f"PR readiness attempted: {pr_url}; remote effect may be uncertain")
-        command(("gh", "pr", "ready", pr_url, "--repo", repository))
-        effects[-1] = f"Marked PR ready: {pr_url}"
-    except Exception as error:
-        return _report_failure(root, run_id, step, error, effects)
-    return {
-        "outcome": "completed",
-        "run_id": run_id,
-        "project_root": str(root),
-        "version": version,
-        "pr_url": pr_url,
-        "candidate_sha": candidate,
-        "effects": effects,
-        "failed_step": None,
-        "report_path": None,
-    }
+def _commit(root: Path, ref: str) -> str:
+    if not isinstance(ref, str) or not ref or ref.startswith("-"):
+        raise PublicReleaseError("invalid Git ref")
+    commit = _git(root, "rev-parse", "--verify", "--end-of-options", f"{ref}^{{commit}}").strip()
+    if not re.fullmatch(r"(?:[0-9a-f]{40}|[0-9a-f]{64})", commit):
+        raise PublicReleaseError("invalid Git commit resolved")
+    return commit
 
 
-def _report_failure(root: Path, run_id: str, step: str, error: Exception, effects: list[str]) -> dict[str, object]:
-    report = root / ".anechoic_tmp" / "public_release" / run_id / "issue.md"
-    report.parent.mkdir(parents=True, exist_ok=True)
-    report.write_text(
-        f"# Public release issue\n\n- Run: `{run_id}`\n- Step: `{step}`\n- Error: {error}\n" + "".join(f"- Effect: {effect}\n" for effect in effects),
-        encoding="utf-8",
-    )
-    return {
-        "outcome": "failed",
-        "run_id": run_id,
-        "project_root": str(root),
-        "failed_step": step,
-        "report_path": report.relative_to(root).as_posix(),
-        "error": str(error),
-        "effects": effects,
-    }
+def _draft(draft: Mapping[str, object], base: str, head: str, version: str) -> tuple[str, str]:
+    if not isinstance(draft, Mapping) or set(draft) != {"base_commit", "head_commit", "changes"}:
+        raise PublicReleaseError("content_draft must contain base_commit, head_commit and changes")
+    if draft["base_commit"] != base or draft["head_commit"] != head:
+        raise PublicReleaseError("content_draft commit pins do not match the comparison")
+    changes = draft["changes"]
+    if not isinstance(changes, list) or not changes:
+        raise PublicReleaseError("content_draft.changes must be a non-empty list")
+    for change in changes:
+        if not isinstance(change, Mapping) or set(change) != {"title", "details", "evidence", "highlight"}:
+            raise PublicReleaseError("each change must contain title, details, evidence and highlight")
+        if any(not isinstance(change[key], str) or not change[key].strip() or "\n" in change[key] for key in ("title", "details")):
+            raise PublicReleaseError("change title and details must be non-empty single-line strings")
+        if not isinstance(change["highlight"], bool):
+            raise PublicReleaseError("change highlight must be a boolean")
+        if change["highlight"] and len(change["title"].strip()) > 120:
+            raise PublicReleaseError("highlight titles must be at most 120 characters")
+        evidence = change["evidence"]
+        if not isinstance(evidence, list) or not evidence or any(not isinstance(item, str) or not item.strip() or "\n" in item for item in evidence):
+            raise PublicReleaseError("change evidence must be a non-empty list of single-line strings")
+    if not 1 <= sum(change["highlight"] for change in changes) <= 5:
+        raise PublicReleaseError("mark between one and five changes as highlights")
+    description = f"# ANECHOIC {version}\n\n## Changes\n\n"
+    for change in changes:
+        description += f"### {change['title'].strip()}\n\n{change['details'].strip()}\n\nEvidence: {', '.join(item.strip() for item in change['evidence'])}\n\n"
+    history = f"## {version}\n\n" + "".join(f"- {change['title'].strip()}\n" for change in changes if change["highlight"])
+    return description, history
 
 
 def run_public_release(
-    project_root: Path | str,
-    *,
-    run_id: str,
+    root: Path | str, *, run_id: str, base_ref: str = "origin/main", head_ref: str = "amm/dev",
     content_draft: Mapping[str, object] | None = None,
-    runner: Runner | None = None,
-    repository_slug: str | None = None,
 ) -> dict[str, object]:
-    """Discover the selected PR, prepare and test materials, then publish Draft."""
-    if content_draft is None:
-        return {
-            "outcome": "input_required",
-            "run_id": run_id,
-            "project_root": str(Path(project_root)),
-            "prompt": "Provide content_draft as one object with exactly description and summary. description is the full Markdown PR body with non-empty ## New and ## Fixed sections; summary is a non-empty list of concise Version History bullets.",
-            "content_draft_schema": {
-                "description": "Markdown with ## New and ## Fixed",
-                "summary": ["concise Version History bullet"],
-            },
-        }
-    if not isinstance(run_id, str) or re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:-]*", run_id) is None:
-        raise PublicReleaseError("public-release-run-id-invalid")
+    """Return evidence for review, or render drafts from a pinned reviewed mapping."""
+    if not isinstance(run_id, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:-]*", run_id):
+        raise PublicReleaseError("invalid run_id")
     try:
-        root = Path(project_root).resolve(strict=True)
-    except OSError as error:
-        raise PublicReleaseError("public-release-project-root-invalid") from error
-    if not root.is_dir() or root == Path(root.anchor):
-        raise PublicReleaseError("public-release-project-root-invalid")
-    return _release(root, run_id, content_draft, partial(_command, root, runner), repository_slug)
+        root = Path(root).resolve(strict=True)
+        if not root.is_dir():
+            raise ValueError
+    except (OSError, TypeError, ValueError) as error:
+        raise PublicReleaseError("invalid project root") from error
+    if _git(root, "rev-parse", "--show-toplevel").rstrip("\n") != str(root):
+        raise PublicReleaseError("project root must be the Git checkout root")
+    base, head = _commit(root, base_ref), _commit(root, head_ref)
+    merge_base = _git(root, "merge-base", base, head).strip()
+    try:
+        version = tomllib.loads(_git(root, "show", f"{head}:version.toml"))["framework"]["version"]
+        if not isinstance(version, str) or re.fullmatch(r"[0-9]+(?:\.[0-9]+){2,3}", version) is None:
+            raise ValueError
+    except (KeyError, TypeError, ValueError, tomllib.TOMLDecodeError) as error:
+        raise PublicReleaseError("head version.toml must declare a framework version") from error
+    result: dict[str, object] = {"run_id": run_id, "base_commit": base, "head_commit": head, "merge_base": merge_base, "version": version}
+    if content_draft is not None:
+        description, history = _draft(content_draft, base, head, version)
+        return {**result, "outcome": "completed", "pr_description": description, "version_history_entry": history}
+    # Raw diff supplies object IDs and modes, so one batch reads only changed ticket blobs.
+    raw = _git(root, "diff", "--raw", "--no-abbrev", "--no-renames", "-z", "--diff-filter=AM", merge_base, head, "--",
+               ":(glob)[._]anechoic_*/001_TICKETS/TASKS/**/*-TASK--*.md",
+               ":(glob)[._]anechoic_*/001_TICKETS/TASKS/**/*-EPIC--*.md").split("\0")
+    candidates = []
+    for meta, path in zip(raw[0::2], raw[1::2]):
+        fields = meta.split()
+        parts = Path(path).parts
+        name = re.fullmatch(r"([A-Z]+-T-[0-9]+)-(TASK|EPIC)--[^/]+\.md", parts[-1])
+        if (len(fields) == 5 and fields[1] in ("100644", "100755") and name
+                and not any(re.fullmatch(r"(?:[0-9]+_)?(?:archive|archived|snapshot|snapshots)", part, re.I) for part in parts)):
+            candidates.append((path, fields[3], name.group(1), name.group(2).lower()))
+    tickets = []
+    if candidates:
+        try:
+            batch = subprocess.run(
+                ("git", "cat-file", "--batch"), cwd=root,
+                input="".join(f"{oid}\n" for _, oid, _, _ in candidates).encode(),
+                capture_output=True, check=False, timeout=120,
+            )
+        except (OSError, subprocess.TimeoutExpired) as error:
+            raise PublicReleaseError("git cat-file could not read the ticket evidence") from error
+        if batch.returncode:
+            raise PublicReleaseError("git cat-file failed")
+        output = batch.stdout
+        seen = set()
+        for path, oid, ticket_id, kind in candidates:
+            header, separator, output = output.partition(b"\n")
+            fields = header.split()
+            if not separator or len(fields) != 3 or fields[0].decode() != oid or fields[1] != b"blob":
+                raise PublicReleaseError("invalid Git ticket batch")
+            size = int(fields[2])
+            content, output = output[:size], output[size:]
+            if not output.startswith(b"\n") or len(content) != size:
+                raise PublicReleaseError("invalid Git ticket batch")
+            output = output[1:]
+            try:
+                text = content.decode("utf-8")
+            except UnicodeDecodeError as error:
+                raise PublicReleaseError(f"ticket is not UTF-8: {path}") from error
+            header = re.match(r"\A---\r?\n(.*?)\r?\n---\r?\n", text, flags=re.DOTALL)
+            if header is None:
+                continue
+            front = header[1].replace("\r\n", "\n")
+            if (not re.search(rf"""(?m)^atom_id:[ \t]*(['"]?){re.escape(ticket_id)}\1[ \t]*$""", front)
+                    or not re.search(rf"""(?m)^  template:[ \t]*(['"]?){kind}\1[ \t]*$""", front)
+                    or not re.search(r"""(?m)^state:[ \t]*\n(?:  [^\n]*\n)*?  status:[ \t]*(['"]?)done\1[ \t]*$""", front)):
+                continue
+            if ticket_id in seen:
+                raise PublicReleaseError(f"duplicate completed ticket ID: {ticket_id}")
+            seen.add(ticket_id)
+            tickets.append({"path": path, "content": text})
+    diff_argv = ["git", "diff", "--find-renames", merge_base, head, "--"]
+    return {**result, "outcome": "input_required", "completed_tickets": tickets, "diff_argv": diff_argv,
+            "instructions": "Delegate a Luna review of the pinned Git diff against completed Task and Epic evidence. Start with the pinned --stat and --name-status commands, then inspect path-scoped patches to narrow the diff. Include missed changes. Return one UTF-8 JSON object matching content_draft_schema; use full commit pins.",
+            "diff_stat_argv": ["git", "diff", "--stat", merge_base, head, "--"],
+            "diff_name_status_argv": ["git", "diff", "--name-status", merge_base, head, "--"],
+            "content_draft_schema": {"base_commit": base, "head_commit": head, "changes": [{"title": "brief history bullet", "details": "detailed PR description", "evidence": ["ticket ID or changed path"], "highlight": True}]}}

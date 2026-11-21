@@ -228,6 +228,31 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
                 self.assertIn(b'New', (self.root / result['artifact']['path']).read_bytes())
                 self.assertFalse(draft.exists())
 
+    def test_legacy_pmeta_revision_serializes_project_config(self):
+        path = self.write('002_PROJECT_CONFIG/AN-P-4-ACTION--example.md', 'AN-P-4', template='action')
+        _, text, body = path.read_text().split('---', 2)
+        header = canonical_native_header(yaml.safe_load(text))
+        header['atom_family'] = 'PMETA'
+        header['relations'] = {'REFERENCES': ['AN-S-1@1']}
+        path.write_text('---\n' + yaml.safe_dump(header, sort_keys=False) + '---' + body)
+        original = path.read_bytes()
+        rows = lambda: capture_native(self.selection).atoms
+        output = create_draft(self.selection, {'sourceCurrent': {'ref_id': 'AN-P-4', 'version': 1}}, current_rows=rows())
+        draft = self.root / output['savedDraft']['path']
+        _, draft_text, draft_body = draft.read_text().split('---', 2)
+        self.assertEqual('PROJECT_CONFIG', yaml.safe_load(draft_text)['atom_family'])
+        self.assertEqual(body, draft_body)
+        self.assertEqual(original, path.read_bytes())
+        result = promote_draft(self.selection, {'target': {'ref_id': 'AN-P-4@2-draft', 'version': 2},
+                                                'targetStatus': 'active'}, current_rows=rows())
+        for saved in (self.root / result['artifact']['path'],
+                      self.control / '002_PROJECT_CONFIG/09_archived/AN-P-4@1-ACTION--example.md'):
+            _, saved_text, saved_body = saved.read_text().split('---', 2)
+            saved_header = yaml.safe_load(saved_text)
+            self.assertEqual('PROJECT_CONFIG', saved_header['atom_family'])
+            self.assertEqual(header['relations'], saved_header['relations'])
+            self.assertEqual(body, saved_body)
+
     def test_task_promotion_rejects_status_change_with_flat_child(self):
         child = self.write('001_TICKETS/TASKS/AN-T-2-TASK--child.md', 'AN-T-2')
         _, header, body = child.read_text().split('---', 2)

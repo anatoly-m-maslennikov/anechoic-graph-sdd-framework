@@ -8,18 +8,14 @@ context:
   template: action
 state:
   status: active
-  version: 15
-  updated_at: 2026-11-09 15:54:30 +0400
+  version: 16
+  updated_at: '2026-11-21T21:51:27.960780+00:00'
 ---
 
 # Summary
 
-Aggregate the full Release Gate
+Aggregate the full release gate
 
 ## Action
 
-Aggregate the full Release Gate **means** the read-only decision over the exact closed-unit, image-canary and host Candidate E2E receipts for one frozen N/N+1 candidate.
-
-## Details
-
-Every receipt must name the same candidate manifest, source frontier, compiled output, package, immutable image and parent lineage. The Unit receipt must cover every declared testcase outside the current `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/FEATURE_MCP/tests/` host-capable runtime-test set; the E2E receipt must cover every testcase in that set. Every declared testcase must terminal-pass: skipped, excluded, missing or zero-coverage testcase is non-pass. Missing, stale, mixed-candidate, partial or unjournalable evidence is non-pass. This Action creates no runtime/Skill selection, image removal, retry, Docker effect or new authority.
+Assess the actual C19 unit, end-to-end and canary results for the selected candidate. Missing, failed or incomplete required checks stop installation. Report the actual validation scope; no Journal receipt is required.
