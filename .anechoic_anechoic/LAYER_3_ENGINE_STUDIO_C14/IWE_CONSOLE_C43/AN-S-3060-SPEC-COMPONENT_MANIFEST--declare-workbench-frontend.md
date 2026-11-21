@@ -9,9 +9,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: active
-  version: 1
-  updated_at: '2026-11-19T00:00:00Z'
+  status: "active"
+  version: 2
+  updated_at: "2026-11-21T12:30:01.390349+00:00"
 ---
 
 ## Summary
@@ -30,6 +30,19 @@ declare_entity(
         component_id='C46',
         name='WORKBENCH_FRONTEND',
         lens_whitelist=['DES', 'DevOps', 'QA', 'SWD'],
+        boundaries={
+            'code_access': {
+                'imports': [],
+                'exports': {
+                    'FEATURE_WORKBENCH_FRONTEND__family_pub': None,
+                    'FEATURE_WORKBENCH_FRONTEND__family_pub.WorkbenchApi': None,
+                    'FEATURE_WORKBENCH_FRONTEND__family_pub.WorkspaceApi': None,
+                    'FEATURE_WORKBENCH_FRONTEND__family_pub.HttpOperationCaller': None,
+                    'FEATURE_WORKBENCH_FRONTEND__family_pub.McpAppTransport': None,
+                    'FEATURE_WORKBENCH_FRONTEND__family_pub.OperationCaller': None,
+                },
+            },
+        },
     ),
 )
 ```
