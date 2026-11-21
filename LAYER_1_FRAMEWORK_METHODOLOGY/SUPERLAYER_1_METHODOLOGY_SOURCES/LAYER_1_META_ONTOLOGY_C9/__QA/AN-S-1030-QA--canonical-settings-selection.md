@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1030
-structure:
-  container:
-    component: C9
-  tier: 7
+container:
+  component: C9
+tier: 7
 context:
   lens: QA
 state:

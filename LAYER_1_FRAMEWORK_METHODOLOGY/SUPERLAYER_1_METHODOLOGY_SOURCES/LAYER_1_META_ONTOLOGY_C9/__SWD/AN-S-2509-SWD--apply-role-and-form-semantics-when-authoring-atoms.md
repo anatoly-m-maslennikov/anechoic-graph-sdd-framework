@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-2509
-structure:
-  container:
-    component: C9
-  tier: 4
+container:
+  component: C9
+tier: 4
 context:
   lens: SWD
 state:

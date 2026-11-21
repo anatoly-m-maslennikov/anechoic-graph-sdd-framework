@@ -1,15 +1,15 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-3160
-structure:
-  container:
-    component: C9
+container:
+  component: C9
+tier: 2
 context:
   lens: SPEC
 state:
-  status: "active"
-  version: 7
-  updated_at: "2026-11-21T15:48:18+00:00"
+  status: active
+  version: 8
+  updated_at: '2026-11-21T19:14:35.061068+00:00'
 ---
 
 ## Summary
@@ -23,23 +23,50 @@ Atom's Properties. The Markdown Content follows the Header.
 
 ### Header order
 
-1. `atom_family` is required. Use SPEC, TKT, or PMETA.
-2. `atom_id` is required. Its project prefix and numeric identity remain
-   stable. Its family marker is S, T, or P and agrees with Atom Family.
-3. `concern` is optional on Atom. An explicit Concern names its subject,
-   path, and relation, in that order.
-4. `structure` contains the required Container, then Tier when a SPEC Atom
-   declares it. A Container references one Component or Atom.
-5. `context` carries Template, optional TKT Label, then SPEC Lens.
-   TKT and Current PMETA require Template. A PMETA Draft can omit it.
-   SPEC can declare Template according to its Template rule.
-6. `relations` is optional on Atom. Each entry follows the target reference
-   form and endpoint rules of its declared Relation.
-7. `state` carries Status, Version, and Updated At, in that order.
+SPEC and TKT use this order:
 
-TKT stores integer Priority in Structure after Container. Set the Priority
-of every migrated Ticket to 2. Use 2 as the default for new Tickets.
-Preserve previous authored values in the migration evidence.
+1. `atom_family` is required: SPEC or TKT.
+2. `atom_id` is required. Preserve its stable ID and numeric suffix.
+   Its S or T marker agrees with Atom Family.
+3. `concern` is optional. SPEC can declare a Subject with Path and
+   Relation, affected Components, or both. TKT uses one list of typed
+   references, such as `component(id=C51)`. Reserve `@` for eDSL calls.
+4. `container` is a required top-level mapping with exactly one
+   `component` or `atom` key and its owner's ID.
+5. SPEC requires top-level integer `tier`. TKT requires top-level integer
+   `priority`. Use Priority 2 for migrated and new Tickets.
+6. `context` contains `template` first when present, then SPEC `lens`.
+   TKT requires `template` and can add a navigation `label`.
+7. `relations` is optional. Each authored Relation contains a list of
+   stable Atom IDs or exact revision references.
+8. `state` contains `status`, `version`, and `updated_at`, in that order.
+
+The Project is the only Container for Axiom and Applicable Principle.
+Axiom requires Tier -1; Applicable Principle requires Tier 1. PMETA
+retains its existing Header representation.
+
+The citing Atom authors `IS_REFERENCE`. Derive `HAS_REFERENCE` as the
+inverse. Migrate `REFERENCES` with the same targets and direction.
+Derive containment from `container`.
+
+### SPEC lifecycle
+
+A finalized Draft becomes Ready, with YAML Status `ready`. When
+implementation starts, Ready becomes Active. When retired, Active becomes
+Archived.
+
+### Ticket lifecycle
+
+Tickets progress from Draft to Backlog, then to In Queue at the branch
+root. In Progress is ephemeral; YAML Status remains `in_queue` while work
+is in progress. Planning Tasks, including their Labels, finish Done or
+Canceled. Issues of every Template finish Resolved or Canceled.
+
+A standalone Asset can finish Complete, with YAML Status `complete`,
+and uses `08_complete/`.
+
+Replacement by another Atom permits Archive from any state. Historical
+revisions remain addressable.
 
 ### Ticket containment
 
@@ -54,17 +81,17 @@ declares its vocabulary. Default to `Subtask` for a Task under a Task and
 Changing a planning Ticket preserves its containment tree at every depth.
 Move its companion folder with the Ticket when its path changes.
 
-Promote its contained planning Tickets recursively when it moves from
-Draft to Backlog or Active, or from Backlog to Active. Promote only lower
-statuses. Preserve Assets, terminal statuses, and unpublished revisions
-of Tickets that already have a Current carrier.
+Promote contained planning Tickets recursively when their parent moves
+from Draft to Backlog or In Queue, or from Backlog to In Queue. Promote
+only lower statuses. Preserve Assets, terminal statuses, and unpublished
+revisions of Tickets that already have a Current carrier.
 
-When a Ticket becomes Done or Canceled, cancel every Current descendant
-whose Status is neither Done nor Canceled. Preserve the Status, Version,
-and history of the other descendants.
+When a planning Ticket becomes Done or Canceled, cancel every Current
+nonterminal descendant. Preserve the Status, Version, and history of
+terminal descendants, including Resolved Issues and Archived Tickets.
 
-Reopening a Done or Canceled planning Ticket makes it Active. Its descendants
-keep their current Status, Version, history, and containment.
+Reopening a Done or Canceled planning Ticket makes it In Queue. Its
+descendants keep their current Status, Version, history, and containment.
 
 ### Content
 
@@ -81,7 +108,20 @@ The folder uses the full filename without `.md`. Its children live inside
 the folder and use the same rule for their own children. The authored
 Container determines the owner. Destination and Ref ID are computed
 values. Ref ID derives from Atom ID, Version, and Status. A Draft suffix
-identifies a Draft revision.
+identifies a Draft revision. A bare ID selects Current; `ID@Version`
+selects an exact Current or Archived revision; `ID@Version-draft` selects
+an exact Draft. Resolve a collision before archiving a Draft.
+
+Use the corresponding Ref ID as the filename marker, followed by the
+family-specific Lens and Template or navigation Label tokens and
+`--<summary-slug>.md`. Form the slug from lowercase ASCII alphanumeric
+runs joined by hyphens. Preserve the authored Summary.
+
+Active SPEC Atoms at Tiers 0, 1, and 2 use the Component owning root,
+regardless of Lens. The Project Tier -1 Manifest, Goal, and Axioms use
+the Project root. SPEC Drafts, Ready Atoms, and Archives use `01_draft/`,
+`02_ready/`, and `09_archived/`, respectively.
+The Project control root uses `001_TICKETS/` and `002_PROJECT_CONFIG/`.
 
 The SPEC Lens uses the owning root. Prefix each named Lens directory
 with two underscores. For example, Lens `DES/DOM` uses `__DES/__DOM/`.

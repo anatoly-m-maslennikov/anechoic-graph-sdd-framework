@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-426
-structure:
-  container:
-    component: C9
-  tier: 8
+container:
+  component: C9
+tier: 8
 context:
   lens: QA
 state:

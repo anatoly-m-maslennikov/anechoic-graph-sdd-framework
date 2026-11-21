@@ -1,15 +1,15 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-3163
-structure:
-  container:
-    component: C9
+container:
+  component: C9
+tier: 2
 context:
   lens: SPEC
 state:
-  status: "active"
-  version: 2
-  updated_at: "2026-11-20T21:44:52.682849+00:00"
+  status: active
+  version: 3
+  updated_at: '2026-11-21T19:14:35.061068+00:00'
 ---
 
 ## Summary
@@ -24,7 +24,7 @@ MODEL//ANECHOIC <+ Node//Artifact//Atom.Header.Concern
 
 ### Prose Claim
 
-A Concern records affected Component IDs, a Subject with its Path and Relation, or both. Supply Subject, Path, and Relation together when you use any of them.
+A SPEC Concern records affected Component IDs, a Subject with its Path and Relation, or both. Supply Subject, Path, and Relation together when you use any of them. A TKT Concern is an optional single list of typed references. Reference kinds share that list; reserve `@` for eDSL function calls. The generated Model fields do not prescribe the Carrier representation.
 
 ### Formal Claim
 

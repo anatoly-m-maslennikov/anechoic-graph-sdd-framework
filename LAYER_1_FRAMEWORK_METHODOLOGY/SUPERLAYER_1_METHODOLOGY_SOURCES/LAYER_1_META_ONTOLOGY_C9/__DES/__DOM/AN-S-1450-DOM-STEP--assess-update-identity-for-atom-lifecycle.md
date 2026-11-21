@@ -1,10 +1,9 @@
 ---
 atom_family: SPEC
 atom_id: AN-S-1450
-structure:
-  container:
-    component: C9
-  tier: 3
+container:
+  component: C9
+tier: 3
 context:
   template: step
   lens: DES/DOM
