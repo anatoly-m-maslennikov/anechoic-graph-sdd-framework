@@ -15,6 +15,7 @@ from workbench_tools import CHECK, PAGE, RUN, SCHEMA
 
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.component_metrics import realization_component_paths
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.audit_tables import TABLES as AUDIT_TABLES, create_tables
+from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import boundary_tables
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.errors import WorkbenchUnavailableError
 from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.import_cache import (
     clear_import_sources, read_import_sources, replace_import_sources,
@@ -80,6 +81,7 @@ ATOM_TABLES = frozenset({
 REALIZATION_TABLES = frozenset({
     "import_nodes", "module_imports", "import_edges", "package_imports", "test_edges", "tested_by_edges",
     "import_read_issues", "implementation_rmedo", "component_metrics", "package_audit",
+    *boundary_tables.BOUNDARY_TABLES,
 })
 IMPORT_CACHE_TABLES = frozenset(f"_anechoic_import_cache.{name}" for name in ("sources", "sites", "version"))
 OBSERVATION_TABLES = frozenset({"change_log", "query_log", "live_runs", "runtime_diagnostics"})
@@ -158,7 +160,7 @@ class NativeQueryOwner(ServiceInterface):
             result.append(tuple(values))
         return result[0], result[1]
 
-    def _prepare_realization(self, store, *, changes=None, force_parse=False):
+    def _prepare_realization(self, store, *, changes=None, force_parse=False, structure_changed=False):
         from APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.source import capture, relevant_change
         from APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.resolution import resolve_realization
 
@@ -166,7 +168,7 @@ class NativeQueryOwner(ServiceInterface):
         roots, include = self._realization_options
         with store._lock:
             previous = read_import_sources(store._connection)
-        if changes is not None:
+        if changes is not None and not structure_changed:
             measurements_changed = any(
                 is_trace_path(path) or _test_asset_change(self._root, path)
                 for change in changes for key in ("old_path", "new_path") if (path := change.get(key)) is not None
@@ -175,22 +177,25 @@ class NativeQueryOwner(ServiceInterface):
                 return None
         sources = capture(self._root, None if force_parse else previous, include, changes=changes)
         component_paths = {".": "C00"}
+        snapshot = None
         if self.selection.structure_snapshot is not None:
             snapshot = read_structure(self.selection.structure_snapshot)
             folders = {PurePosixPath(path).parent for path in sources}
             component_paths = realization_component_paths(self.selection, snapshot, folders)
         facts = resolve_realization(self._root, sources, roots, components=component_paths)
-        return previous, sources, facts, native_trace_snapshot(self._root, facts[0])
+        boundaries = boundary_tables.prepare_boundaries(self.selection, snapshot, sources, facts[0], roots, component_paths)
+        return previous, sources, facts, native_trace_snapshot(self._root, facts[0]), boundaries
 
     @staticmethod
     def _publish_realization(store, graph, prepared) -> dict[str, str]:
         connection = store._connection
-        previous, sources, facts, (traces, binding_states) = prepared
+        previous, sources, facts, (traces, binding_states), boundaries = prepared
         nodes, occurrences, edges, tests, test_keys = facts
         replace_import_sources(connection, sources, previous)
         replace_imports(connection, graph, nodes, occurrences, edges, tests, sources=sources, test_keys=test_keys,
                         mark_graph_changed=store.mark_graph_registration_changed)
         replace_native_traces(connection, traces)
+        boundary_tables.replace_boundaries(connection, boundaries)
         return binding_states
 
     def _publish_realization_metadata(self, store: QueryStore, capture: NativeCapture,
@@ -201,6 +206,7 @@ class NativeQueryOwner(ServiceInterface):
         if self._realization_options is None:
             connection.execute("DROP TABLE IF EXISTS main.component_metrics")
             connection.execute("DROP TABLE IF EXISTS main.package_audit")
+            boundary_tables.remove_boundaries(connection)
             return
         nodes = connection.execute(
             "SELECT node_key, kind, language, relative_path, scan_status, package_key, package_type FROM main.import_nodes"
@@ -279,11 +285,19 @@ class NativeQueryOwner(ServiceInterface):
                                           for path in paths)):
                             self._refresh_traces(store, paths)
                             continue
-                        prepared = self._prepare_realization(store, changes=batch)
+                        snapshot = self.selection.structure_snapshot
+                        structure_changed = snapshot is not None and snapshot.relative_to(self._root).as_posix() in paths
+                        prepared = self._prepare_realization(store, changes=batch, structure_changed=structure_changed)
                         if prepared is not None:
-                            with store._lock, self._transaction(store):
-                                bindings = self._publish_realization(store, store._projection.graph, prepared)
-                                self._publish_realization_metadata(store, self._capture, bindings)
+                            def publish(graph, capture):
+                                bindings = self._publish_realization(store, graph, prepared)
+                                self._publish_realization_metadata(store, capture, bindings)
+
+                            if structure_changed:
+                                self._project(store, capture=self._capture, before_commit=publish)
+                            else:
+                                with store._lock, self._transaction(store):
+                                    publish(store._projection.graph, self._capture)
                     except Exception as error:
                         print(f"Realization Graph refresh failed. Batch discarded. {error}", file=sys.stderr)
 
@@ -420,12 +434,14 @@ class NativeQueryOwner(ServiceInterface):
             if self._realization_options is not None:
                 from APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.source import excluded_source_path
 
+                snapshot = self.selection.structure_snapshot
                 self._watcher = SourceWatcher(
                     self._root, self.selection.control_root, implementation_root=self._root,
                     exclude_directory=lambda path: (
                         not PurePosixPath(path).is_relative_to(self.selection.control_relative)
                         and excluded_source_path(path, directory=True)
                     ),
+                    additional_directory=snapshot.parent if snapshot is not None else None,
                     poll_bind_mount=poll_bind_mount,
                 )
             else:

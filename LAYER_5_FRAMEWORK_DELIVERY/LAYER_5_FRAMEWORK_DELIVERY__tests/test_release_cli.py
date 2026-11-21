@@ -18,8 +18,8 @@ REPOSITORY = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPOSITORY))
 from LAYER_5_FRAMEWORK_DELIVERY import release  # noqa: E402
 
-LOCAL_ENTRY = "LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.RELEASE_VERSION__family_pub.run_local_release"
-PUBLIC_MODULE = "LAYER_5_FRAMEWORK_DELIVERY.PUBLIC_RELEASE.PUBLIC_RELEASE__family_pub"
+LOCAL_ENTRY = "LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.RELEASE_VERSION__shared.run_local_release"
+PUBLIC_MODULE = "LAYER_5_FRAMEWORK_DELIVERY.PUBLIC_RELEASE.PUBLIC_RELEASE__shared"
 PUBLIC_ENTRY = PUBLIC_MODULE + ".run_public_release"
 
 
@@ -41,7 +41,7 @@ class ReleaseCliTests(unittest.TestCase):
 
     def test_build_image_dispatch(self) -> None:
         result = {"outcome": "completed", "image_id": "sha256:" + "a" * 64}
-        entry = "LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.RELEASE_VERSION__family_pub.build_image"
+        entry = "LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.RELEASE_VERSION__shared.build_image"
         with patch(entry, return_value=result) as build:
             self.assertEqual(self.invoke(["build-image", "--run-id", "build-1"]), (0, result))
         build.assert_called_once_with(REPOSITORY, run_id="build-1")

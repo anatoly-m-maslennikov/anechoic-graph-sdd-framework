@@ -39,7 +39,7 @@ def _component_path(control, cid, component, parent, paths):
     return next(iter(candidates), None)
 
 
-def build_code_access_ownership(root, control_root, snapshot, package_paths):  # noqa: C901
+def build_code_access_ownership(root, control_root, snapshot, package_paths, *, allow_unrealized=False):  # noqa: C901
     """Return owners for resolved paths; never infer a declared ID from a name."""
     root, control = Path(root), Path(control_root)
     paths = {PurePosixPath(path) for path in package_paths}
@@ -74,11 +74,15 @@ def build_code_access_ownership(root, control_root, snapshot, package_paths):  #
 
     for package_id, package in snapshot.packages.items():
         if package.component not in entries:
+            if allow_unrealized:
+                continue
             raise ValueError(f'Missing Component realization for package: {package_id}')
         parent_path = PurePosixPath(entries[package.component]['path'])
         directory = root / parent_path
         candidates = [parent_path / p.name for p in directory.iterdir()
                       if not p.is_symlink() and p.is_dir() and p.name.endswith('_' + package_id)]
+        if not candidates and allow_unrealized:
+            continue
         if len(candidates) != 1:
             raise ValueError(f'Missing or ambiguous Package path: {package_id}')
         add(package_id, package.component, candidates[0], 'package', package.fields)

@@ -42,7 +42,7 @@ class NativeManifestModelTests(unittest.TestCase):
     def test_reviewed_component_manifest_accepts_optional_boundaries(self):
         fields = {"atom_id": "AN-S-124", "ref_id": "AN-S-124@1", "version": 1,
                   "tier": 0, "component_id": "C01", "name": "Engine"}
-        boundaries = {"code_access": {"imports": ["C02"]}}
+        boundaries = {"code": {"imports": ["C02"]}}
         self.assertIsNone(self.model.validate_component_manifest(fields, "C00").boundaries)
         manifest = self.model.validate_component_manifest(fields | {"boundaries": boundaries}, "C00")
         self.assertEqual(manifest.boundaries, boundaries)

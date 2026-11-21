@@ -66,7 +66,7 @@ class FocusedReleaseTests(unittest.TestCase):
     def test_default_selection_remains_the_complete_discovered_suite(self) -> None:
         first = self.file("LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_first.py")
         second = self.file("LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_second.py")
-        for name in ("test_suite__pub.py", "test_suite__family_pub.py"):
+        for name in ("test_suite__pub.py", "test_suite__shared.py"):
             self.file(f"LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/{name}", "")
         result = (True, 1, 0, "", "", 0.0, None)
         with patch.object(full, "run_module", return_value=result) as run:

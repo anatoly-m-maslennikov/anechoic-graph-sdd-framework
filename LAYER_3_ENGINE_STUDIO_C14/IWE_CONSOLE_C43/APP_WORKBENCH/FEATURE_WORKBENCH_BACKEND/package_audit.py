@@ -131,7 +131,7 @@ def replace_package_audit(connection, selection, capture, nodes, binding_states=
             test_issue = 'missing_test_target'
         elif key in test_targets and not markers[path]:
             test_issue = 'missing_visibility_marker'
-        result.append((key, path, 'internal' in markers[path], 'public' in markers[path],
+        result.append((key, path, 'shared' in markers[path], 'public' in markers[path],
                        state != 'missing', state, not issues if pins[path] else None,
                        json.dumps(issues), contract,
                        any(kind == 'implements' and ref == contract for kind, ref in resolved) if contract else None,

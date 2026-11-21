@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 4
-  updated_at: '2026-11-21T22:24:03.911363+00:00'
+  version: 5
+  updated_at: '2026-11-21T22:51:12.819403+00:00'
 ---
 
 ## Summary
@@ -31,9 +31,9 @@ declare_entity(
         layer=5,
         lens_whitelist=['DES', 'DevOps', 'QA', 'SWD'],
         boundaries={
-            'code_access': {'imports': ['C63', 'C64']},
-            'runtime_io': {
-                'provides': {
+            'code': {'imports': {'only': ['C63', 'C64']}},
+            'io': {
+                'server': {
                     'release': {
                         'transport': 'cli',
                         'runner': 'uv',

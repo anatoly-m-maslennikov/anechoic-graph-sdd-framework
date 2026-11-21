@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 3
-  updated_at: '2026-11-21T22:26:24.120851+00:00'
+  version: 4
+  updated_at: '2026-11-21T22:51:12.819403+00:00'
 ---
 
 ## Summary
@@ -30,11 +30,11 @@ declare_entity(
         name='MCP',
         lens_whitelist=['DES', 'DevOps', 'QA', 'SWD'],
         boundaries={
-            'code_access': {
-                'imports': ['C15', 'C16', 'C45', 'C62'],
+            'code': {
+                'imports': {'only': ['C15', 'C16', 'C45', 'C62']},
             },
-            'runtime_io': {
-                'provides': {
+            'io': {
+                'server': {
                     'shared_mcp_launcher': {
                         'transport': 'cli',
                         'runner': 'uv',

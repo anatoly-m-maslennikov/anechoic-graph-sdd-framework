@@ -9,6 +9,7 @@ from .graph_store import quote_identifier
 from .header_columns import HeaderSchema
 from .audit_tables import TABLES as AUDIT_TABLES
 from .archive_catalog import ARCHIVE_ROLE_MAX, ARCHIVE_VERSION_MAX
+from .boundary_tables import BOUNDARY_TABLES
 
 
 def public_schema(connection: Any, header_schema: HeaderSchema) -> dict[str, dict[str, list[dict[str, Any]]]]:
@@ -16,7 +17,7 @@ def public_schema(connection: Any, header_schema: HeaderSchema) -> dict[str, dic
     for name in ("atoms", "scope_units", "relations", "change_log", "query_log", "live_runs", "runtime_diagnostics",
                  "implementation_objects", "implementation_rmedo", "import_nodes", "module_imports", "import_edges", "package_imports", "test_edges", "tested_by_edges", "import_read_issues", ARCHIVE_VERSION_MAX, ARCHIVE_ROLE_MAX, "atom_version_max",
                  *AUDIT_TABLES, "native_references",
-                 "components", "component_metrics", "package_audit"):
+                 "components", "component_metrics", "package_audit", *BOUNDARY_TABLES):
         rows = connection.execute(
             "SELECT column_name, data_type FROM information_schema.columns "
             "WHERE table_catalog = current_database() AND table_schema = 'main' "

@@ -3,6 +3,8 @@
 from dataclasses import dataclass, replace
 from pathlib import Path, PurePosixPath
 
+from .code_access_check import check_code_access
+from .code_access_ownership import build_code_access_ownership
 from LAYER_3_ENGINE_STUDIO_C14.IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.resolution import (
     _external, _lookup, _packages, _roots,
 )
@@ -54,3 +56,13 @@ def code_access_occurrences(
                 unit, written, site.line, site.column, status,
             ))
     return tuple(facts)
+
+
+def evaluate_realization_access(selection, snapshot, sources, python_roots, package_paths):
+    """Evaluate the captured graph with resolved Structure ownership."""
+    root = selection.root
+    paths = _packages(sources, _roots(root, python_roots)) | set(package_paths)
+    ownership = build_code_access_ownership(root, selection.control_root, snapshot, paths,
+                                            allow_unrealized=True)
+    occurrences = code_access_occurrences(root, sources, python_roots)
+    return ownership, check_code_access(ownership, sources, occurrences)

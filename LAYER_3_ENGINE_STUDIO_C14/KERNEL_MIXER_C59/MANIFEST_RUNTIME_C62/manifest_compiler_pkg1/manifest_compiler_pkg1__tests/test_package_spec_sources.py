@@ -24,7 +24,7 @@ FORMAL = '''## Claim
 ```python
 from anechoic.formal_claims import declare_entity
 from anechoic.model import PackageSpec
-declare_entity(entity_name="Package Spec", instance=PackageSpec(package_id="pkg1", purpose="Test purpose.", contract="Test contract.", boundaries={"code_access": {"imports": ["pkg2"]}}))
+declare_entity(entity_name="Package Spec", instance=PackageSpec(package_id="pkg1", purpose="Test purpose.", contract="Test contract.", boundaries={"code": {"imports": ["pkg2"]}}))
 ```
 '''
 
@@ -46,7 +46,7 @@ class PackageSpecTests(unittest.TestCase):
 
     def test_prose_and_formal(self):
         self.assertEqual(self.read()['ref_id'], 'AN-S-123@1')
-        self.assertEqual(self.read(PROSE + FORMAL)['boundaries'], {'code_access': {'imports': ['pkg2']}})
+        self.assertEqual(self.read(PROSE + FORMAL)['boundaries'], {'code': {'imports': ['pkg2']}})
         with self.assertRaisesRegex(ValueError, 'differ'):
             self.read(PROSE.replace('Test purpose.', 'Other.') + FORMAL)
         with self.assertRaisesRegex(ValueError, 'ID differs'):

@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 2
-  updated_at: '2026-11-21T12:26:54.944132+00:00'
+  version: 3
+  updated_at: '2026-11-21T22:51:12.819403+00:00'
 ---
 
 ## Summary
@@ -30,14 +30,14 @@ declare_entity(
         name='CODEX_EXTENSION',
         lens_whitelist=['DES', 'DevOps', 'QA', 'SWD'],
         boundaries={
-            'code_access': {
-                'imports': [],
+            'code': {
+                'imports': {'only': []},
                 'exports': {
-                    'FEATURE_CODEX_EXTENSION__family_pub': None,
-                    'FEATURE_CODEX_EXTENSION__family_pub.call': None,
-                    'FEATURE_CODEX_EXTENSION__family_pub.list_resources': None,
-                    'FEATURE_CODEX_EXTENSION__family_pub.read_resource': None,
-                    'FEATURE_CODEX_EXTENSION__family_pub.tools': None,
+                    'FEATURE_CODEX_EXTENSION__shared': None,
+                    'FEATURE_CODEX_EXTENSION__shared.call': None,
+                    'FEATURE_CODEX_EXTENSION__shared.list_resources': None,
+                    'FEATURE_CODEX_EXTENSION__shared.read_resource': None,
+                    'FEATURE_CODEX_EXTENSION__shared.tools': None,
                 },
             },
         },

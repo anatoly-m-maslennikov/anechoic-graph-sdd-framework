@@ -77,7 +77,7 @@ def discover_test_modules(root: Path) -> list[Path]:
                     filename.startswith("test_")
                     and path.suffix == ".py"
                     and path.stem.isidentifier()
-                    and not path.stem.endswith(("__pub", "__family_pub"))
+                    and not path.stem.endswith(("__pub", "__shared"))
                 ):
                     if path.is_symlink():
                         raise OSError(f"test module is a symbolic link: {path}")

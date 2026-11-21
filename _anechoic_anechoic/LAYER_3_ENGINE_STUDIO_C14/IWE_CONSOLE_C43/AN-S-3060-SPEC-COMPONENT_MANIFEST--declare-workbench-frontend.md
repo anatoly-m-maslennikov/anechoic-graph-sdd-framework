@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 2
-  updated_at: '2026-11-21T12:30:01.390349+00:00'
+  version: 3
+  updated_at: '2026-11-21T22:51:12.819403+00:00'
 ---
 
 ## Summary
@@ -30,15 +30,15 @@ declare_entity(
         name='WORKBENCH_FRONTEND',
         lens_whitelist=['DES', 'DevOps', 'QA', 'SWD'],
         boundaries={
-            'code_access': {
-                'imports': [],
+            'code': {
+                'imports': {'only': []},
                 'exports': {
-                    'FEATURE_WORKBENCH_FRONTEND__family_pub': None,
-                    'FEATURE_WORKBENCH_FRONTEND__family_pub.WorkbenchApi': None,
-                    'FEATURE_WORKBENCH_FRONTEND__family_pub.WorkspaceApi': None,
-                    'FEATURE_WORKBENCH_FRONTEND__family_pub.HttpOperationCaller': None,
-                    'FEATURE_WORKBENCH_FRONTEND__family_pub.McpAppTransport': None,
-                    'FEATURE_WORKBENCH_FRONTEND__family_pub.OperationCaller': None,
+                    'FEATURE_WORKBENCH_FRONTEND__shared': None,
+                    'FEATURE_WORKBENCH_FRONTEND__shared.WorkbenchApi': None,
+                    'FEATURE_WORKBENCH_FRONTEND__shared.WorkspaceApi': None,
+                    'FEATURE_WORKBENCH_FRONTEND__shared.HttpOperationCaller': None,
+                    'FEATURE_WORKBENCH_FRONTEND__shared.McpAppTransport': None,
+                    'FEATURE_WORKBENCH_FRONTEND__shared.OperationCaller': None,
                 },
             },
         },

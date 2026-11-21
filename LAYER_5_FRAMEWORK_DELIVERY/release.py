@@ -75,11 +75,11 @@ def _invoke(arguments: argparse.Namespace) -> dict[str, object]:
     if re.fullmatch(pattern, arguments.run_id) is None:
         raise ValueError("release-run-id-invalid")
     if arguments.operation == "build-image":
-        from LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.RELEASE_VERSION__family_pub import build_image
+        from LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.RELEASE_VERSION__shared import build_image
 
         return build_image(root, run_id=arguments.run_id)
     if arguments.operation == "local":
-        from LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.RELEASE_VERSION__family_pub import run_local_release
+        from LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.RELEASE_VERSION__shared import run_local_release
 
         options = {}
         if arguments.test_modules is not None:
@@ -93,7 +93,7 @@ def _invoke(arguments: argparse.Namespace) -> dict[str, object]:
 
 
 def _invoke_public(root: Path, arguments: argparse.Namespace) -> dict[str, object]:
-    from LAYER_5_FRAMEWORK_DELIVERY.PUBLIC_RELEASE.PUBLIC_RELEASE__family_pub import run_public_release
+    from LAYER_5_FRAMEWORK_DELIVERY.PUBLIC_RELEASE.PUBLIC_RELEASE__shared import run_public_release
 
     draft = _read_draft(arguments.content_draft)
     try:
