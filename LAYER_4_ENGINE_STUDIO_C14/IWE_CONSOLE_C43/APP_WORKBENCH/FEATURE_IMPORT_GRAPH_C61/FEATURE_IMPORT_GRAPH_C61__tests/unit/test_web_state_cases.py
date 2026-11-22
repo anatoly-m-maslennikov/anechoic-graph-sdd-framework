@@ -1,5 +1,4 @@
 import json
-from pathlib import Path
 import subprocess
 import unittest
 from unittest.mock import patch
@@ -8,6 +7,34 @@ from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.web_state_cases impo
 
 
 class WebStateCasesTests(unittest.TestCase):
+    def test_node_observes_external_environment_write_and_restore(self):
+        source = """function action() {
+  process.env.ANECHOIC_STATE_CANARY = 'changed';
+  console.log(process.env.ANECHOIC_STATE_CANARY);
+  process.env.ANECHOIC_STATE_CANARY = 'original';
+}
+"""
+        row = next(row for row in web_state_cases({"action.js": source})["action.js"]
+                   if row["action"] == "action")
+        self.assertTrue(row["complete"])
+        self.assertEqual([("write", "ENV"), ("read", "ENV"), ("output", ""), ("write", "ENV")],
+                         [(item["kind"], item["name"]) for item in row["events"]])
+        result = subprocess.check_output([
+            'node', '-e', "process.env.ANECHOIC_STATE_CANARY = 'original';\n" + source
+            + "action(); console.log(process.env.ANECHOIC_STATE_CANARY);"
+        ], text=True)
+        self.assertEqual(["changed", "original"], result.splitlines())
+
+    def test_named_import_and_unresolved_short_circuit(self):
+        source = """import {thing} from './other';
+let state = false;
+function action() { state && (state = true); }
+"""
+        row = next(row for row in web_state_cases({"main.js": source})["main.js"]
+                   if row["action"] == "action")
+        self.assertFalse(row["complete"])
+        self.assertIsNone(row["input"])
+
     def test_paths_and_runtime_match_on_trusted_fixture(self):
         source = '''let count = 0;
 function action(go: boolean) {

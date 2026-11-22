@@ -9,8 +9,8 @@ context:
   lens: DES
 state:
   status: "active"
-  version: 13
-  updated_at: "2026-11-22T16:08:34.976462+00:00"
+  version: 15
+  updated_at: "2026-11-22T17:11:54.222566+00:00"
 ---
 ## Summary
 
@@ -63,6 +63,16 @@ Schema reads create no technical query attempt.
 Load saved SQL by its admitted Project ID. List bounded metadata without
 SQL bodies. Read compatible historical files and accepted DuckDB records
 across Journal storage changes. Saved reads do not alter their carriers.
+
+Deliver cached results inline or as disposable files under the admitted
+Project. Export the whole accepted Run or the requested Page or View
+Fetch as JSON matrix, CSV, or TOON. Preserve positional values and
+column names. Return a partial outcome with the existing query ID when
+an export fails. Keep the result available for later reads.
+
+Apply a Run preview cap before materializing the result. Apply a Page
+or View Fetch preview only to the delivered page. Preserve the Run
+preview cap when refreshing the retained result.
 
 ## References
 

@@ -3,12 +3,14 @@
 import duckdb
 
 from .query_results import query
+from .result_delivery import deliver, validate_delivery
 
 
 class ViewQueries:
-    def __init__(self, store, connection, queries, journal_sync=None):
+    def __init__(self, store, connection, queries, journal_sync=None, project_root=None):
         self.store, self.connection, self.queries = store, connection, queries
         self.journal_sync = journal_sync
+        self.project_root = project_root
         self.results = {}
 
     def replace_results(self, replacements):
@@ -61,10 +63,7 @@ class ViewQueries:
         if operation == "view_fetch":
             if "grid" in args and type(args["grid"]) is not dict:
                 raise ValueError("grid must be an object")
-            if args.get("result_delivery", "inline") not in ("inline", "auto"):
-                raise ValueError("result_delivery is not supported")
-            if args.get("result_format", "json_matrix") != "json_matrix":
-                raise ValueError("result_format is not supported")
+            validate_delivery(args.get("result_delivery", "inline"), args.get("result_format", "json_matrix"))
 
     @staticmethod
     def _cursor(sql, cursor):
@@ -100,7 +99,7 @@ class ViewQueries:
             if prior and prior.get("query_id"):
                 self.queries.drop(prior["query_id"])
             try:
-                page = self.queries.run(self.connection, view["sql"], 1)
+                page = self.queries.run(self.connection, view["sql"], 1, preview=args.get("preview"))
                 self.queries.pins.add(page["query_id"])
                 metadata = {"status": "success", "error": None, "query_id": page["query_id"],
                             "row_count": page["row_count"], "column_count": page["column_count"]}
@@ -120,5 +119,6 @@ class ViewQueries:
         if args.get("preview") is not None:
             size = min(size, args["preview"])
         page = self.queries.page(metadata["query_id"], offset, size, args.get("grid"))
-        page.pop("sql")
+        page = deliver(self.queries, self.project_root, page, args.get("result_delivery", "inline"),
+                       args.get("result_format", "json_matrix"), grid=args.get("grid"))
         return identity | page

@@ -1,6 +1,7 @@
 """Validate and evaluate grid operations over one bounded cached result."""
 
 import json
+import re
 
 import duckdb
 
@@ -42,7 +43,14 @@ def parse_grid(grid, count):
     return sort, filters, group
 
 
-def grid_page(rows, count, offset, size, grid):
+def _sort_column(names, columns, index):
+    kind = columns[index]["type"] if columns else ""
+    if re.fullmatch(r"(?:DECIMAL\([0-9]{1,2},[0-9]{1,2}\)|(?:U)?(?:TINYINT|SMALLINT|INTEGER|BIGINT|HUGEINT))", kind):
+        return f"CAST({names[index]} AS {kind})"
+    return names[index]
+
+
+def grid_page(rows, count, offset, size, grid, columns=None):
     sort, filters, group = parse_grid(grid, count)
     if not rows:
         return [], 0, [] if group else None
@@ -56,7 +64,8 @@ def grid_page(rows, count, offset, size, grid):
     predicates = [f'instr(lower(CAST({names[item["column"]]} AS VARCHAR)), lower(?)) > 0' for item in filters]
     filtered = source + ", filtered AS (SELECT * FROM source" + (" WHERE " + " AND ".join(predicates) if predicates else "") + ")"
     parameters += [item["value"] for item in filters]
-    order = [f'{names[item["column"]]} {item["direction"].upper()} NULLS LAST' for item in ([group] if group else []) + sort]
+    order = [f'{_sort_column(names, columns, item["column"])} {item["direction"].upper()} NULLS LAST'
+             for item in ([group] if group else []) + sort]
     order.append('"ordinal" ASC')
     connection = duckdb.connect(":memory:")
     try:

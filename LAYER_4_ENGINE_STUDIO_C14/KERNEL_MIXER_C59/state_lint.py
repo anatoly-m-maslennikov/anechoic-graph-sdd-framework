@@ -6,21 +6,36 @@ from pathlib import Path, PurePosixPath
 import shutil
 import subprocess
 import sys
+from tempfile import TemporaryDirectory
 
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.manifest_compiler_CS1.structure_compile__shared import compile_structure
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_structure
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.realization_ownership__pub import build_code_access_ownership
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__pub import discover_native_project
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import discover_native_project, is_native_control_name
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import capture
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.state_effects__shared import analyze_state
 
-from .MANIFEST_RUNTIME_C62.model_host_CS2.model_host_CS2__pub import reviewed_native_model
+from .MANIFEST_RUNTIME_C62.model_host_CS2.model_host_CS2__shared import reviewed_native_model
+
+
+_ENGINE = Path(__file__).resolve().parents[1]
+_COMPILER = ("FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR."
+             "manifest_compiler_CS1.compiler")
+
+
+def _structure(selection):
+    with TemporaryDirectory(prefix="anechoic-state-lint-") as stage:
+        result = subprocess.run(
+            [sys.executable, "-B", "-m", _COMPILER, str(selection.root),
+             selection.control_relative.as_posix(), selection.manifest_sha256, stage, "--build-model"],
+            cwd=_ENGINE, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, timeout=45, check=True,
+        )
+        return parse_structure(result.stdout)
 
 
 def _analyze(root):
     model = reviewed_native_model()
     selection = discover_native_project(root, manifest_validator=lambda: model.validate_manifest)
-    snapshot = parse_structure(json.dumps(compile_structure(selection, model)).encode())
+    snapshot = _structure(selection)
     config = selection.parameters.get("runtime", {}).get("workbench", {}).get("import_graph")
     include = tuple(config.get("include", ())) if isinstance(config, dict) else ()
     sources = capture(root, None, include)
@@ -45,6 +60,12 @@ def _report(rows):
     return int(failed)
 
 
+def _has_manifest(root):
+    directories = (path for path in root.iterdir() if is_native_control_name(path.name))
+    return any(path.is_dir() and next(path.glob("*-SPEC-PROJECT_MANIFEST--*.md"), None) is not None
+               for path in (root, *directories))
+
+
 def main():
     parser = ArgumentParser(description=__doc__)
     parser.add_argument("project_root", type=Path)
@@ -52,11 +73,12 @@ def main():
     if shutil.which("lean") is None:
         print("state lint: unresolved, Lean executable unavailable on PATH", file=sys.stderr)
         return 0
-    if not any(path.name.startswith(("_anechoic_", ".anechoic_")) for path in args.project_root.iterdir()):
-        print("state lint: unresolved, Project Structure unavailable", file=sys.stderr)
-        return 0
     try:
-        return _report(_analyze(args.project_root.resolve(strict=True)))
+        root = args.project_root.resolve(strict=True)
+        if not _has_manifest(root):
+            print("state lint: unresolved, Project Structure unavailable", file=sys.stderr)
+            return 0
+        return _report(_analyze(root))
     except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
         print(f"state lint: {error}", file=sys.stderr)
         return 1

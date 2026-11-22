@@ -128,6 +128,10 @@ For a focused Engine Studio run, use `--phase unit --test-module PATH`. Use
 repository-relative test paths and repeat `--test-module` to select more modules.
 The default unit phase runs discovered host tests. Component test packages may
 place tests in `static/`, `unit/`, and `image/`; flat host tests remain unit tests.
+When `lean` is on PATH, static checks reject confirmed state-boundary violations
+and witnessed silent actions. An `anechoic: no-op` comment directly above an action
+declares intentional silence. Workbench and MCP expose the ordered evidence in
+`state_effect_findings`. Unsupported paths and unavailable tools remain unresolved.
 The image phase requires `--candidate-image` with an immutable sha256 image ID,
 `--canary-package`, `--canary-selection` as JSON, and `--run-id`. It runs image
 tests and then the canary; required skips fail.

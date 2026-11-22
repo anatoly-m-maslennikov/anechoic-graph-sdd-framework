@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: "active"
-  version: 12
-  updated_at: "2026-11-22T16:08:35.309844+00:00"
+  version: 14
+  updated_at: "2026-11-22T17:11:54.690829+00:00"
 ---
 ## Summary
 
@@ -58,6 +58,8 @@ declare_entity(
                              'disk_argument': ['--database-path', '<bound-Project-file>'],
                              'schema': 'GET /schema',
                              'workspace': 'POST /workspace',
+                             'query': 'POST /database',
+                             'result_options': ['preview', 'result_delivery', 'result_format'],
                              'query_history_operations': ['query_log_list', 'query_log_get'],
                              'saved_query_operations': ['query_load', 'query_saved_list'],
                              'rebuild_results': 'POST /results/rebuild'},

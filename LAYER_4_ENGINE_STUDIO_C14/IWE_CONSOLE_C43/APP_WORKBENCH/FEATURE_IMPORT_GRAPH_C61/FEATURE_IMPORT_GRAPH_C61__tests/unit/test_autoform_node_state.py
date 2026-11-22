@@ -1,15 +1,16 @@
-"""Bounded Node/Autoform comparison, using Autoform's numeric proof harness."""
+"""Bounded Node/Autoform interpreter comparison; no kernel proof is claimed."""
 
+import json
 import os
 from pathlib import Path
 import subprocess
+import struct
 import sys
 from tempfile import TemporaryDirectory
 import unittest
 
 
-# The two aliases observe one array. The packed return exposes mutation,
-# output computation, restoration and the subsequent silent observation.
+# Both aliases observe one local array. The return exposes each observation.
 SOURCE = '''function indexTrace(a, b) {
   let state = [];
   state.push(a);
@@ -24,21 +25,54 @@ SOURCE = '''function indexTrace(a, b) {
 }'''
 
 
+def run(args, cwd):
+    result = subprocess.run(args, cwd=cwd, text=True, capture_output=True, timeout=240)
+    if result.returncode:
+        raise AssertionError(result.stdout + result.stderr)
+    return result.stdout
+
+
 @unittest.skipUnless(os.environ.get('AUTOFORM_CHECKOUT'), 'Set AUTOFORM_CHECKOUT for the Autoform canary')
 class AutoformNodeStateTests(unittest.TestCase):
-    def test_node_observations_are_kernel_proved(self):
+    def test_node_observations_match_autoform_interpreter(self):
         checkout = Path(os.environ['AUTOFORM_CHECKOUT']).resolve(strict=True)
+        joern = Path(os.environ['JOERN_HOME']).resolve(strict=True)
         with TemporaryDirectory(prefix='anechoic-node-effects-') as tmp:
-            test = Path(tmp) / 'test_state.py'
-            test.write_text('''from test_source_numeric import CASES, SOURCES, numeric_env
-from test_source_numeric import test_joern_native_numeric as prove_numeric
-
-def test_state(tmp_path, numeric_env, monkeypatch):
-    monkeypatch.setitem(SOURCES, 'js', ('JAVASCRIPT', 'numbers.js', %r))
-    monkeypatch.setitem(CASES, 'js', [('indexTrace', [1, 2]), ('indexTrace', [3, 4])])
-    prove_numeric('js', tmp_path, numeric_env)
-''' % SOURCE)
-            env = dict(os.environ, AUTOFORM_TEST_JOERN='1', AUTOFORM_REQUIRE_LEAN='1')
-            env['PYTHONPATH'] = str(checkout / 'tests') + os.pathsep + env.get('PYTHONPATH', '')
-            subprocess.run([sys.executable, '-m', 'pytest', '-q', test], cwd=checkout,
-                           env=env, check=True, timeout=900)
+            folder = Path(tmp)
+            source = folder / 'src'
+            source.mkdir()
+            (source / 'numbers.js').write_text(SOURCE)
+            runner = folder / 'runner.js'
+            runner.write_text(SOURCE + '\nconsole.log(indexTrace(1,2));\nconsole.log(indexTrace(3,4));\n')
+            native = run(['node', runner], folder).splitlines()
+            self.assertEqual(native, ['2311', '4533'])
+            run([joern / 'joern-parse', source, '--language', 'JAVASCRIPT', '--output', 'cpg.bin'], folder)
+            run([joern / 'joern', '--script', checkout / 'cartographer/export_ast.sc',
+                 '--param', 'cpgPath=cpg.bin', '--param', 'out=ast.json',
+                 '--param', 'dataModel=lp64'], folder)
+            functions = json.loads((folder / 'ast.json').read_text())
+            entries = [f for f in functions if f['name'] == 'numbers.js::program:indexTrace']
+            self.assertEqual(len(entries), 1)
+            params = entries[0]['params']
+            prefix = '.unit, ' if params and params[0] == 'this' else ''
+            self.assertEqual(params, ['this', 'a', 'b'] if prefix else ['a', 'b'])
+            model = folder / 'Model.lean'
+            run([sys.executable, '-B', checkout / 'cartographer/render_lean.py',
+                 folder / 'ast.json', model, 'Numeric'], folder)
+            code = model.read_text() + '''\nopen Autoform.Core Autoform.Generated.Numeric
+def main : IO Unit := do
+'''
+            for a, b in [(1, 2), (3, 4)]:
+                code += f'''  match runFunc program 200 "numbers.js::program:indexTrace" [{prefix}.int ({a}), .int ({b})] with
+  | .val (.int n) => IO.println n
+  | .val (.float n) =>
+    if n.fmt == .binary64 then IO.println ("float:" ++ toString n.bits)
+    else throw (IO.userError "unexpected float format")
+  | other => throw (IO.userError (reprStr other))
+'''
+            driver = folder / 'Check.lean'
+            driver.write_text(code)
+            actual = run(['lake', 'env', 'lean', '--run', driver], checkout).splitlines()
+            values = [struct.unpack('>d', int(s[6:]).to_bytes(8, 'big'))[0]
+                      if s.startswith('float:') else int(s) for s in actual]
+            self.assertEqual(values, [int(item) for item in native])

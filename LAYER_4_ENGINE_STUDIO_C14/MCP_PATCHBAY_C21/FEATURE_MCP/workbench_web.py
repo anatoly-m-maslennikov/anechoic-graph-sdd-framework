@@ -86,6 +86,8 @@ async def _selection(gateway: Any, project_root: Any, shared: bool) -> Any:
 
 async def _execute(gateway: Any, name: str, arguments: dict[str, Any], shared: bool,
                    public_base_url: str, asserted_project_root: str | None) -> dict[str, Any]:
+    if name == "query_run":
+        arguments = {"result_delivery": "file", **arguments}
     if not shared:
         if name in getattr(gateway, "tool_blacklist", frozenset()):
             raise WorkbenchRequestError("Unknown Tool")

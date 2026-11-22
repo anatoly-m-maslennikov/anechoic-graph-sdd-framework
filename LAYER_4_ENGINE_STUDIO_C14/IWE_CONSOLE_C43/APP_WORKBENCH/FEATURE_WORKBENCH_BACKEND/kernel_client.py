@@ -16,6 +16,7 @@ from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import QueryExecutionError, Workb
 
 
 _MODULE = "KERNEL_MIXER_C59.kernel_process"
+_STARTUP_SECONDS = 150
 _OPERATIONS = frozenset({"status", "interface_call", "run", "check", "page", "schema",
                          "save_view", "load", "saved_list", "rebuild", "lifecycle"})
 
@@ -38,7 +39,7 @@ class KernelClient:
     def start(self):
         expected = {"ready": True, "instance_id": self.selection.instance_id,
                     "manifest_sha256": self.selection.manifest_sha256, "pid": self._process.pid}
-        deadline = monotonic() + 85
+        deadline = monotonic() + _STARTUP_SECONDS
         while self.available and monotonic() < deadline:
             try:
                 response = self._http.get("/health", timeout=0.5)

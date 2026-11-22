@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: "active"
-  version: 16
-  updated_at: "2026-11-22T16:01:10.359720+00:00"
+  status: active
+  version: 17
+  updated_at: '2026-11-22T16:44:45.347890+00:00'
 ---
 
 ## Summary
@@ -68,6 +68,7 @@ declare_entity(
                     'import_graph__shared.ImportSite',
                     'import_graph__shared.Source',
                     'import_graph__shared.capture',
+                    'state_effects__shared.analyze_state',
                     'import_graph__shared.code_access_occurrences',
                     'import_graph__shared.event_path',
                     'import_graph__shared.excluded_source_path',
@@ -105,6 +106,9 @@ declare_entity(
                     'source_row__pub.json_value',
                     'source_watcher__pub.SourceWatcher',
                     'ADAPTERS_C30__shared.read_structure',
+                    'ADAPTERS_C30__shared.parse_structure',
+                    'FEATURE_TOOLS__shared.discover_native_project',
+                    'FEATURE_TOOLS__shared.is_native_control_name',
                     'work_journal__pub.MAX_DATABASE_EVENT_BYTES',
                     'work_journal__pub.PROJECT_DATABASE',
                     'work_journal__pub.append_sealed_events',
@@ -258,7 +262,11 @@ declare_entity(
                 },
             },
             'io': {
+                'client': [{'component': 'C50', 'interface': 'manifest_compile'}],
                 'server': {
+                    'state_lint': {'transport': 'cli', 'runner': 'managed_python',
+                                   'module': 'KERNEL_MIXER_C59.state_lint',
+                                   'arguments': ['<project-root>']},
                     'database_api': {
                         'transport': 'http',
                         'socket': 'private Unix socket',

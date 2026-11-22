@@ -9,8 +9,8 @@ context:
   lens: DES
 state:
   status: "active"
-  version: 12
-  updated_at: "2026-11-22T16:08:35.940467+00:00"
+  version: 15
+  updated_at: "2026-11-22T17:11:54.913973+00:00"
 ---
 ## Summary
 
@@ -45,14 +45,24 @@ Orchestrator. Return the replacement IDs that Kernel committed. Expose
 Project-scoped query history tools and the Kernel `query_log` SQL view.
 Keep their request and response fields the same through Workbench and MCP.
 
-Submit Task Draft creation, Task revision, and exact Draft promotion
-to Orchestrator. Return the lifecycle outcome after generation admission.
+Submit Task or Epic Draft creation, revision, exact Draft promotion, and
+Current Ticket status changes to Orchestrator. Return the lifecycle
+outcome after generation admission.
 Report projection failure with known file effects and distinguish an
 unknown write outcome from a rejected request.
 
 Expose Saved SQL load and list for the admitted Project. Validate the
 Project and origin of a load URL before forwarding its ID. Include links
 when the public Workbench address is available.
+
+When a successful query or View Run requests a save and the actor is
+unavailable, return the retained result with a partial outcome and a
+save error. Saved SQL writes require a trusted, sealed operator identity.
+
+Forward preview and delivery options to Kernel. Default to file delivery
+for HTTP Query Run, Query Page, and View Fetch. Default to automatic
+delivery for MCP Query Run. Honor explicit inline delivery. Preserve
+the bound file descriptor, query ID, and any partial export outcome.
 
 ## References
 

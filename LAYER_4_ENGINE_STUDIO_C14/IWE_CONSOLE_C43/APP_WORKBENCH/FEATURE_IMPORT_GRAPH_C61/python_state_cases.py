@@ -2,6 +2,10 @@
 
 import ast
 from collections import Counter
+from itertools import product
+
+
+_REGISTRIES = {'os.environ': 'ENV', 'sys.modules': 'SYS_MODULES'}
 
 
 def _module_bindings(tree):
@@ -17,9 +21,9 @@ def _module_bindings(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
                 name = alias.asname or alias.name.split('.')[0]
-                if counts[name] == 1 and alias.name in ('contextvars', 'threading', 'os'):
+                if counts[name] == 1 and alias.name in ('contextvars', 'threading', 'os', 'sys'):
                     imports[name] = alias.name
-        elif isinstance(node, ast.ImportFrom) and node.module in ('contextvars', 'threading', 'os'):
+        elif isinstance(node, ast.ImportFrom) and node.module in ('contextvars', 'threading', 'os', 'sys'):
             for alias in node.names:
                 name = alias.asname or alias.name
                 if counts[name] == 1:
@@ -34,7 +38,8 @@ def _module_bindings(tree):
         constructor = _qualified(value.func, imports)
         if (constructor == 'contextvars.ContextVar' and len(value.args) == 1
                 and isinstance(value.args[0], ast.Constant) and isinstance(value.args[0].value, str)
-                and value.args[0].value and not value.keywords):
+                and value.args[0].value and all(
+                    kw.arg == 'default' and isinstance(kw.value, ast.Constant) for kw in value.keywords)):
             channels[target.id] = ('context', value.args[0].value)
         elif constructor == 'threading.local' and not value.args and not value.keywords:
             channels[target.id] = ('thread', 'threading.local:' + target.id)
@@ -62,6 +67,7 @@ class _Lower:
         self.locals = set()
         self.globals = set()
         self.tokens = {}
+        self.booleans = {}
         self.events = []
         self.complete = True
         self.stopped = False
@@ -80,16 +86,15 @@ class _Lower:
             channel = self.channels.get(node.value.id)
             if channel and channel[0] == 'thread':
                 return 'ambient', channel[1]
-        if (isinstance(node, ast.Subscript) and _qualified(node.value, self.imports) == 'os.environ'
-                and _env_key(node.slice)):
-            return 'ambient', 'ENV'
+        if isinstance(node, ast.Subscript) and _env_key(node.slice):
+            channel = _REGISTRIES.get(_qualified(node.value, self.imports))
+            if channel:
+                return 'ambient', channel
         return None
 
     def expr(self, node):
         state = self.state(node)
         if state:
-            if isinstance(node, ast.Subscript):
-                self.expr(node.slice)
             self.event('read', *state, node)
         elif isinstance(node, ast.Constant):
             pass
@@ -115,12 +120,17 @@ class _Lower:
             self.complete = False
 
     def call(self, node):
+        if isinstance(node.func, ast.Name) and node.func.id == 'print' and 'print' not in self.shadowed and not node.keywords:
+            for arg in node.args:
+                self.expr(arg)
+            self.event('output', '', '', node)
+            return
         if not isinstance(node.func, ast.Attribute) or node.keywords:
             self.complete = False
             return
         base, method = node.func.value, node.func.attr
         channel = self.channels.get(base.id) if isinstance(base, ast.Name) else None
-        is_env = _qualified(base, self.imports) == 'os.environ'
+        registry = _REGISTRIES.get(_qualified(base, self.imports))
         allowed = {'get': ('read', (0, 1)), 'set': ('write', (1,)), 'reset': ('write', (1,))}
         if channel and channel[0] == 'context' and method in allowed:
             kind, arities = allowed[method]
@@ -134,26 +144,21 @@ class _Lower:
                     self.expr(arg)
                 self.event(kind, 'ambient', channel[1], node)
                 return
-        if (is_env and method == 'get' and len(node.args) in (1, 2)
+        if (registry and method == 'get' and len(node.args) in (1, 2)
                 and _env_key(node.args[0])):
             for arg in node.args:
                 self.expr(arg)
-            self.event('read', 'ambient', 'ENV', node)
+            self.event('read', 'ambient', registry, node)
             return
         self.complete = False
 
-    def target(self, node, read=False):
+    def target(self, node):
         state = self.state(node)
         if state:
-            if isinstance(node, ast.Subscript):
-                self.expr(node.slice)
-            if read:
-                self.event('read', *state, node)
             self.event('write', *state, node)
         elif isinstance(node, ast.Name) and node.id not in self.globals:
-            if read and node.id not in self.locals:
-                self.complete = False
             self.locals.add(node.id)
+            self.booleans.pop(node.id, None)
             self.channels.pop(node.id, None)
             self.tokens.pop(node.id, None)
         else:
@@ -163,6 +168,7 @@ class _Lower:
         if (isinstance(node.targets[0], ast.Name) and isinstance(node.value, ast.Name)
                 and node.value.id in self.channels and node.targets[0].id not in self.globals):
             self.locals.add(node.targets[0].id)
+            self.booleans.pop(node.targets[0].id, None)
             self.channels[node.targets[0].id] = self.channels[node.value.id]
         else:
             self.expr(node.value)
@@ -184,6 +190,8 @@ class _Lower:
             self.globals.update(node.names)
         elif isinstance(node, ast.Pass):
             pass
+        elif isinstance(node, ast.If) and isinstance(node.test, ast.Name) and node.test.id in self.booleans:
+            self.block(node.body if self.booleans[node.test.id] else node.orelse)
         elif isinstance(node, ast.Expr):
             self.expr(node.value)
         elif isinstance(node, ast.Assign) and len(node.targets) == 1:
@@ -197,8 +205,6 @@ class _Lower:
             # Python reads the target before evaluating the right-hand side.
             state = self.state(node.target)
             if state and state != ('ambient', 'ENV'):
-                if isinstance(node.target, ast.Subscript):
-                    self.expr(node.target.slice)
                 self.event('read', *state, node.target)
                 self.expr(node.value)
                 self.event('write', *state, node.target)
@@ -224,10 +230,16 @@ class _Lower:
         else:
             self.complete = False
 
+    def block(self, statements):
+        for stmt in statements:
+            if self.stopped or not self.complete:
+                break
+            self.statement(stmt)
+
 
 def _module_case(tree, imports, channels, shadowed):
     mutable = [n for n in tree.body if isinstance(n, ast.Assign) and len(n.targets) == 1
-               and isinstance(n.targets[0], ast.Name) and n.targets[0].id.startswith('_')
+               and isinstance(n.targets[0], ast.Name)
                and isinstance(n.value, (ast.Dict, ast.List, ast.Set))]
     if mutable:
         lower = _Lower(imports, channels, None, shadowed)
@@ -257,14 +269,15 @@ def python_state_cases(source: str) -> list[dict]:
     """Return cases without importing or executing the analyzed source."""
     try:
         tree = ast.parse(source)
+        compile(tree, '<state analysis>', 'exec')
     except (SyntaxError, ValueError):
-        return []
+        return [dict(action='<parse_error>', line=1, input=None, reachable=False,
+                     complete=False, declaredNoOp=False, events=[])]
     imports, channels = _module_bindings(tree)
     shadowed = {n.id for n in ast.walk(tree) if isinstance(n, ast.Name) and isinstance(n.ctx, (ast.Store, ast.Del))}
     shadowed.update(n.name for n in ast.walk(tree) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)))
     shadowed.update(a.asname or a.name.split('.')[0] for n in ast.walk(tree)
                     if isinstance(n, (ast.Import, ast.ImportFrom)) for a in n.names)
-    cases = []
     module_case = _module_case(tree, imports, channels, shadowed)
     cases = [module_case] if module_case else []
     functions = [(node, None, node.name) for node in tree.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))]
@@ -275,24 +288,32 @@ def python_state_cases(source: str) -> list[dict]:
         args = node.args
         positional = args.posonlyargs + args.args
         owner = positional[0].arg if cls and positional and positional[0].arg == 'self' else None
-        lower = _Lower(imports, channels, owner, shadowed)
-        if owner:
-            lower.locals.add(owner)
-        # shortcut: branches and argument-dependent paths stay unresolved until path witnessing is available.
-        if (isinstance(node, ast.AsyncFunctionDef) or node.decorator_list or args.vararg or args.kwarg
+        params = positional[1:] if owner else positional
+        unsupported = (isinstance(node, ast.AsyncFunctionDef) or node.decorator_list or args.vararg or args.kwarg
                 or (cls and (cls.bases or cls.keywords or cls.decorator_list or any(
                     isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and
                     (n.decorator_list or n.name in ('__getattribute__', '__setattr__', '__delattr__'))
                     or isinstance(n, (ast.Assign, ast.AnnAssign)) and not isinstance(n.value, ast.Constant)
                     for n in cls.body)))
-                or len(positional) != (1 if owner else 0) or args.kwonlyargs
-                or any(isinstance(n, (ast.Yield, ast.YieldFrom)) for n in ast.walk(node))):
-            lower.complete = False
-        for stmt in node.body:
-            if lower.stopped:
-                break
-            lower.statement(stmt)
-        cases.append(dict(action=name, line=node.lineno, input={} if lower.complete else None,
-                          reachable=True, complete=lower.complete, declaredNoOp=False,
-                          events=lower.events if lower.complete else []))
+                or len(params) > 2 or args.kwonlyargs or args.defaults
+                or any(not isinstance(param.annotation, ast.Name) or param.annotation.id != 'bool' for param in params)
+                or any(isinstance(n, (ast.Yield, ast.YieldFrom)) for n in ast.walk(node)))
+        cases.extend(_action_cases(name, node, imports, channels, owner, shadowed,
+                                   None if unsupported else [param.arg for param in params]))
     return cases
+
+
+def _action_cases(name, node, imports, channels, owner, shadowed, params):
+    inputs = [None] if params is None else (dict(zip(params, values)) for values in product((False, True), repeat=len(params)))
+    for witness in inputs:
+        lower = _Lower(imports, channels, owner, shadowed)
+        lower.globals.update(name for stmt in ast.walk(node) if isinstance(stmt, ast.Global) for name in stmt.names)
+        lower.complete = witness is not None
+        lower.booleans.update(witness or {})
+        lower.locals.update(witness or {})
+        if owner:
+            lower.locals.add(owner)
+        lower.block(node.body)
+        yield dict(action=name, line=node.lineno, input=witness if lower.complete else None,
+                   reachable=True, complete=lower.complete, declaredNoOp=False,
+                   events=lower.events if lower.complete else [])

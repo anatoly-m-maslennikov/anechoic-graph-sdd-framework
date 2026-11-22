@@ -8,8 +8,8 @@ context:
   lens: SWD
 state:
   status: "active"
-  version: 6
-  updated_at: "2026-11-22T15:27:10.277923+00:00"
+  version: 7
+  updated_at: "2026-11-22T16:49:43.023029+00:00"
 ---
 
 ## Summary
@@ -55,11 +55,17 @@ Give each Package with direct authored code exactly one direct
 Seeds, ordinary nested Packages, and Test Packages. Put the entry Module
 and implementation Modules in the same Package directory.
 
-An import from another Package must target the entry Module and comply
-with Code Access. Declare shared, public, and named exports on that
-Module. Implementation Modules are private to the Package.
+Use the defining Package's entry for cross-Package imports by default.
+Declare shared, public, and named exports on the entry Module.
+For a direct import from an implementation Module, declare the exact
+Module or symbol in the applicable imports and exports. Apply all
+visibility, inherited import restrictions, and layer order.
 
-Import a symbol through the entry of the Package that defines it. The
+Record declared direct imports in the Realization Graph review. A
+repeated dependency can indicate a Package or Component that belongs at
+a higher structural level with its own Contract.
+
+Import a symbol from the Package that defines it. The
 entry may expose a symbol from its own implementation Modules. A caller
 that lacks access can use an operation the permitted Package owns.
 That operation keeps foreign symbols inside its implementation.

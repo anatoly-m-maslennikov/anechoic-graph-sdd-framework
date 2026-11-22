@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass, field
 import hashlib
+from itertools import groupby
 import os
 from pathlib import Path
 import stat
@@ -238,23 +239,14 @@ class ReadContext:
                 current = ""
             if current != digest:
                 affected.append({"path": name, "sha256": digest})
-        for name in sorted(self.metadata_inputs):
-            try:
-                _, descriptor = self._open_input(Path(name))
-                try:
-                    info = os.fstat(descriptor)
-                    current = self.version(info) if stat.S_ISREG(info.st_mode) else None
-                finally:
-                    os.close(descriptor)
-            except OSError:
-                current = None
-            if current != self.versions[name]:
+        for name, version in sorted(self._observed_versions().items()):
+            if version != self.versions[name]:
                 affected.append({"path": name})
         for root, members in sorted(self.inventories.items()):
             try:
                 names = tuple(str(path) for path in self.inventory(Path(root), remember=False))
             except OSError:
-                names = ()
+                names = None
             if names != members:
                 affected.append({"path": root})
         for root, members in sorted(self.shallow_inventories.items()):
@@ -265,6 +257,46 @@ class ReadContext:
             if names != members:
                 affected.append({"path": root})
         return {"state": "changed" if affected else "unchanged", "affected_inputs": affected}
+
+    def _observed_versions(self) -> dict[str, tuple[int, ...] | None]:
+        observed = {}
+        paths = sorted(map(Path, self.metadata_inputs), key=lambda path: (path.parent, path.name))
+        for parent, siblings in groupby(paths, key=lambda path: path.parent):
+            members = list(siblings)
+            try:
+                observed.update(self._directory_versions(parent, members))
+            except OSError:
+                observed.update((str(path), self._input_version(path)) for path in members)
+        return observed
+
+    def _directory_versions(self, parent: Path, paths: list[Path]) -> dict[str, tuple[int, ...] | None]:
+        descriptor = open_regular(self._allowed_lexical(parent), directory=True)
+        try:
+            versions = {}
+            for path in paths:
+                self._allowed_lexical(path)
+                info = os.stat(path.name, dir_fd=descriptor, follow_symlinks=False)
+                versions[str(path)] = self.version(info) if stat.S_ISREG(info.st_mode) else None
+            check = open_regular(parent, directory=True)
+            try:
+                if not os.path.samestat(os.fstat(descriptor), os.fstat(check)):
+                    raise ReadFailure("Input directory changed during verification.")
+            finally:
+                os.close(check)
+            return versions
+        finally:
+            os.close(descriptor)
+
+    def _input_version(self, path: Path) -> tuple[int, ...] | None:
+        try:
+            _, descriptor = self._open_input(path)
+            try:
+                info = os.fstat(descriptor)
+                return self.version(info) if stat.S_ISREG(info.st_mode) else None
+            finally:
+                os.close(descriptor)
+        except OSError:
+            return None
 
 
 def _main(argv: list[str]) -> int:

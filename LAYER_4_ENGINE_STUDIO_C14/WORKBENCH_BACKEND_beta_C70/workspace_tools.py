@@ -6,8 +6,8 @@ _TEXT = {"type": "string"}
 _ID = {"type": "string", "minLength": 1}
 _NUMBER = {"type": "integer", "minimum": 0}
 _PAGE_SIZE = {"type": "integer", "minimum": 1, "maximum": 1000}
-_DELIVERY = {"type": "string", "enum": ["auto", "inline"]}
-_FORMAT = {"type": "string", "enum": ["json_matrix"]}
+_DELIVERY = {"type": "string", "enum": ["file", "inline", "auto"], "default": "file"}
+_FORMAT = {"type": "string", "enum": ["json_matrix", "csv", "toon"]}
 _SAVE = {"type": "boolean", "default": False}
 _COLUMN = {"type": "integer", "minimum": 0}
 _DIRECTION = {"type": "string", "enum": ["asc", "desc"]}
@@ -51,7 +51,7 @@ WORKSPACE_TOOLS = {tool["name"]: tool for tool in (
           cursor_position=_NUMBER, preview=_NUMBER, save=_SAVE, name=_TEXT),
     _tool("view_check", "Check one View without recording a query log entry.", _VIEW,
           read_only=True, cursor_position=_NUMBER),
-    _tool("view_fetch", "Fetch an inline JSON matrix page from one View’s current result.", _VIEW,
+    _tool("view_fetch", "Fetch a page from one View’s current result.", _VIEW,
           read_only=True, offset=_NUMBER, page_size=_PAGE_SIZE, preview=_NUMBER, grid=GRID,
           result_delivery=_DELIVERY, result_format=_FORMAT),
     _tool("view_focus", "Set the active View for a Workspace.", _VIEW),
@@ -82,7 +82,8 @@ def workspace_arguments(name, arguments, session_id):
             if type(value) is not int or not 1 <= value <= 1000:
                 raise ValueError(f"{key} must be an integer from 1 to 1000")
         elif field is _SAVE:
-            continue
+            if type(value) is not bool:
+                raise ValueError("save must be a boolean")
         elif field is GRID:
             if not isinstance(value, dict):
                 raise ValueError("grid must be an object")

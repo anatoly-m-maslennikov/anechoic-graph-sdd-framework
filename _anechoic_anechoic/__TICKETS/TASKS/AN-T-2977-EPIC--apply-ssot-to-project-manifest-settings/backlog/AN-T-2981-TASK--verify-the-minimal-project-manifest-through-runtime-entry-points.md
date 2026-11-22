@@ -9,8 +9,8 @@ context:
   label: Task
 state:
   status: "backlog"
-  version: 3
-  updated_at: "2026-11-22T16:34:52.774100+00:00"
+  version: 4
+  updated_at: "2026-11-22T17:07:14.791641+00:00"
 ---
 
 ## Summary
@@ -39,3 +39,13 @@ The full-project canary timed out before Workbench became ready.
 The Model and Structure compiled in both launch attempts. A later
 diagnostic run also hit the compiler deadline. Verify the installed
 runtime after a Local Release passes. Live MCP still reports AN-S-3037@16.
+
+A full-project Docker canary built a fresh DuckDB index and started
+on AN-S-3037@19. Both MCP release commands returned the host uv
+commands. The 4 KiB result limit and DuckDB storage passed again.
+The read, capture, Structure, and startup tests passed (40 tests).
+
+The first Local Release stopped at its Git checkpoint because the
+checkout changed during validation. The isolated release passed static
+QA and exposed Beta API and MCP failures in the checkpointed inputs.
+Verify the installed runtime after a full Local Release passes.

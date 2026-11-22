@@ -9,8 +9,8 @@ context:
   label: Task
 state:
   status: "in_queue"
-  version: 16
-  updated_at: "2026-11-22T16:28:47.210400+00:00"
+  version: 17
+  updated_at: "2026-11-22T17:13:10.621300+00:00"
 ---
 ## Summary
 
@@ -29,8 +29,10 @@ Complete the MCP bridge under AN-T-2944. MCP maps the Backend JSON Tool catalog,
   as a distinct image.
 - Confirm child Components and Component Seeds with the proposed map in
   AN-T-2958. Add one `__shared` entry Module to each Beta Package with
-  direct code. Other Packages may import only that Module, subject to
-  Code Access. Give each Seed one Manifest, an ID such as `CS123`, and
+  direct code. Import symbols from the owning Package's shared entry
+  under Code Access. Record exact owner bypasses in the Realization
+  Graph so repeated bypasses inform structural moves under AN-T-2986.
+  Give each Seed one Manifest, an ID such as `CS123`, and
   an exact Spec Binding in its implementation Package.
 - Inspect existing behavior and adopt the pieces that satisfy Beta's
   Contracts, state ownership, and interfaces.
@@ -217,3 +219,34 @@ request scope. They supply no verified operator identity. Define
 the provider and private propagation before enabling Saved SQL
 writes. For a successful query where saving is refused, retain
 the result and return a partial outcome with a save error.
+
+## Watcher, browser, and result delivery
+
+The next paired images were
+`sha256:1474d641915e956163a360eff958a16447a3b3ab787a598ca0eec3a90fa1eca5`
+(Current) and
+`sha256:036c11fee91addbfe8e751ef570567183b68766edb51dcf9783ef3cf7a4d18c2`
+(Beta). Both came from one frozen engine source and passed the Local
+Release canary.
+
+Current passed the three focused Docker cases. Beta passed Task promotion
+with immediate query visibility and the populated-directory watcher case.
+Beta's native Atom create was still absent at the existing 1.5-second
+deadline. Orchestrator had started the Worker by the failed observation.
+
+Current passed the browser suite. Beta passed 21 cases, failed five,
+and had seven unrun at the 115-second suite deadline. Three failures
+involved saved references. Two cases did not render a result grid.
+Keep the saved-write identity requirement and the existing deadlines.
+
+The checkout now delivers bounded inline and file results through the
+owning Kernel. Query Run preview caps capture. Query Page and View Fetch
+preview cap delivery. Socket tests verified JSON, CSV, TOON, retained
+query IDs, and delivery defaults. The checked-out lifecycle lane also
+supports Epic creation and Current Ticket status changes. The actual
+Worker verified rejection of an invalid status and a stale definition.
+
+The checked-out Realization Graph found zero denied or unresolved
+cross-Component imports. Its Beta check passed all 12 implementation
+and Test Packages. The broader package work continues under AN-T-2946
+and AN-T-2986.

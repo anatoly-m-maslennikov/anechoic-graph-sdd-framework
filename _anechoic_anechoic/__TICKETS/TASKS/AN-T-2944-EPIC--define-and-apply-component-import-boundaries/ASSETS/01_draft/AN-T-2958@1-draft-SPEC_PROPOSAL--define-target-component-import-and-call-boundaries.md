@@ -173,9 +173,11 @@ Record the exact provider and entry Module for each permitted import.
 
 Each Package with direct authored code has one `__shared` entry
 Module. The rule also applies to ordinary nested Packages and Test
-Packages. Other Packages may import only that Module and must satisfy
-the declared access rules. Declare broader exports on the same entry
-when the Contract requires them. Use declared process interfaces
+Packages. Use that entry for cross-Package imports by default.
+Declare broader exports on the entry when the Contract requires them.
+An exact import and export declaration can permit a direct import.
+Visibility, inherited import restrictions, and layer order still apply.
+Use declared process interfaces
 between Beta services. The static Test Suite limits each module to
 300 nonblank lines and each function to 45 nonblank lines.
 
@@ -183,9 +185,9 @@ The Realization Graph records each Package's direct third-party imports.
 Only dependencies outside the Project and its language runtime belong in
 this inventory. Keep unresolved import names available for review.
 
-Import symbols through the entry of the Package that defines them. The
-static Test Suite traces named imports through the Realization Graph. A
-Package entry can expose symbols from its own implementation Modules.
+Import symbols from the Package that defines them. The static Test Suite
+traces named imports through the Realization Graph. A Package entry can
+expose symbols from its own implementation Modules.
 
 Consider public visibility for a named entry export when the Realization
 Graph shows authorized production use by at least two independent
@@ -199,8 +201,11 @@ Consider moving a child Component to peer level when it owns an
 independent capability and several Components at that level use its
 Contract directly. Place it under their common owner. Check the proposed
 dependency direction for cycles before moving it. Use a lower layer for
-the provider when the peer group needs one-way dependencies. Imports
-still go through the defining Package's entry.
+the provider when the peer group needs one-way dependencies.
+
+Keep declared direct imports visible in the graph. Use recurring bypasses
+to identify owners that may belong at a higher structural level. Review
+wrapper-only migrations in AN-T-2986.
 
 ### Runtime interfaces
 

@@ -1,8 +1,6 @@
 """Execute admitted read-only SQL and keep bounded Project query results."""
 
 import json
-from datetime import datetime
-import math
 import re
 import time
 from uuid import uuid4
@@ -10,9 +8,16 @@ from uuid import uuid4
 import duckdb
 
 from .result_grid import grid_page, parse_grid
+from .result_values import result_value
 
 
-def query(connection, sql, *, in_transaction=False):
+def validate_preview(value):
+    if value is not None and (type(value) is not int or value < 0):
+        raise ValueError("preview must be a non-negative integer")
+    return value
+
+
+def query(connection, sql, *, in_transaction=False, preview=None):
     if not isinstance(sql, str) or not 1 <= len(sql) <= 16384:
         raise ValueError("SQL must be a non-empty string of at most 16384 characters")
     statements = connection.extract_statements(sql)
@@ -21,20 +26,21 @@ def query(connection, sql, *, in_transaction=False):
     if not in_transaction:
         connection.execute("BEGIN TRANSACTION READ ONLY")
     try:
-        cursor = connection.execute(sql)
-        description = cursor.description
-        rows = [tuple(value.isoformat() if isinstance(value, datetime) else value for value in row)
-                for row in cursor.fetchmany(1001)]
-        if len(rows) > 1000:
+        if preview is None:
+            cursor = connection.execute(sql)
+            description = [(name, str(kind)) for name, kind, *_ in cursor.description]
+            raw = cursor.fetchmany(1001)
+        else:
+            relation = connection.sql(sql).limit(min(preview, 1001))
+            description = list(zip(relation.columns, map(str, relation.types), strict=True))
+            raw = relation.fetchall()
+        if len(raw) > 1000:
             raise ValueError("Query exceeds 1000 rows")
-        if any(not (value is None or isinstance(value, (str, bool, int, float)))
-               or isinstance(value, float) and not math.isfinite(value)
-               for row in rows for value in row):
-            raise ValueError("Query returned a non-JSON scalar")
+        rows = [tuple(result_value(value) for value in row) for row in raw]
         columns = [
             {"name": name, "type": str(data_type),
              "has_values": not rows or any(row[index] is not None and row[index] != "" for row in rows)}
-            for index, (name, data_type, *_) in enumerate(description)
+            for index, (name, data_type) in enumerate(description)
         ]
         return {"columns": columns, "rows": rows}
     finally:
@@ -42,8 +48,8 @@ def query(connection, sql, *, in_transaction=False):
             connection.execute("ROLLBACK")
 
 
-def _capture(connection, sql, *, in_transaction=False):
-    result = query(connection, sql, in_transaction=in_transaction)
+def _capture(connection, sql, *, in_transaction=False, preview=None):
+    result = query(connection, sql, in_transaction=in_transaction, preview=preview)
     if len(json.dumps(result, ensure_ascii=False, separators=(",", ":")).encode("utf-8")) > 1024 * 1024:
         raise ValueError("Query result exceeds one MiB")
     return result
@@ -68,7 +74,7 @@ class QueryResults:
 
     def prune(self):
         now = time.monotonic()
-        for query_id, (_, _, created) in list(self.results.items()):
+        for query_id, (_, _, created, _) in list(self.results.items()):
             if query_id not in self.pins and now - created >= self.ttl_seconds:
                 del self.results[query_id]
 
@@ -76,9 +82,9 @@ class QueryResults:
         self.pins.discard(query_id)
         self.results.pop(query_id, None)
 
-    def run(self, connection, sql, page_size, grid=None):
+    def run(self, connection, sql, page_size, grid=None, preview=None):
         try:
-            result = _capture(connection, sql)
+            result = _capture(connection, sql, preview=preview)
             parse_grid(grid, len(result["columns"]))
             self.prune()
             if len(self.results) >= 16:
@@ -87,7 +93,7 @@ class QueryResults:
                     raise ValueError("Query result cache is full")
                 del self.results[victim]
             query_id = uuid4().hex
-            self.results[query_id] = (sql, result, time.monotonic())
+            self.results[query_id] = (sql, result, time.monotonic(), preview)
             page = self.page(query_id, 0, page_size, grid)
         except (duckdb.Error, TypeError, ValueError) as error:
             if self.history is not None and isinstance(sql, str) and sql.strip():
@@ -114,14 +120,14 @@ class QueryResults:
         return selected
 
     def stage_generation(self, connection, selected):
-        return {key: (uuid4().hex, sql, _capture(connection, sql, in_transaction=True), created)
-                for key, (sql, _, created) in selected.items()}
+        return {key: (uuid4().hex, sql, _capture(connection, sql, in_transaction=True, preview=preview), created, preview)
+                for key, (sql, _, created, preview) in selected.items()}
 
     def rebuild(self, connection, target):
         self.prune()
         selected = self._selection(connection, target)
-        captured = {key: (uuid4().hex, sql, _capture(connection, sql), created)
-                    for key, (sql, _, created) in selected.items()}
+        captured = {key: (uuid4().hex, sql, _capture(connection, sql, preview=preview), created, preview)
+                    for key, (sql, _, created, preview) in selected.items()}
         return self.publish(captured)
 
     def publish(self, captured):
@@ -131,8 +137,8 @@ class QueryResults:
             if old_id not in captured:
                 refreshed[old_id] = item
                 continue
-            new_id, sql, result, created = captured[old_id]
-            refreshed[new_id] = (sql, result, created)
+            new_id, sql, result, created, preview = captured[old_id]
+            refreshed[new_id] = (sql, result, created, preview)
             if old_id in self.pins:
                 self.pins.remove(old_id)
                 self.pins.add(new_id)
@@ -145,9 +151,9 @@ class QueryResults:
         self.prune()
         if not isinstance(query_id, str) or query_id not in self.results:
             raise ValueError("Unknown query_id")
-        sql, result, _ = self.results[query_id]
+        sql, result, _, _ = self.results[query_id]
         columns, rows = result["columns"], result["rows"]
-        page, total, groups = grid_page(rows, len(columns), offset, page_size, grid)
+        page, total, groups = grid_page(rows, len(columns), offset, page_size, grid, columns)
         response = {
             "query_id": query_id, "sql": sql, "columns": columns, "rows": page,
             "row_count": total, "source_row_count": len(rows), "column_count": len(columns),

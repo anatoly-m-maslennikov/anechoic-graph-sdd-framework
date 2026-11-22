@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from hashlib import sha256
+from itertools import groupby
+import os
 from pathlib import Path, PurePosixPath
 import re
 from typing import Any
@@ -15,7 +17,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_placement__p
     PROJECT_CONFIG_DIRECTORY, TICKET_DIRECTORY, project_goal_filename,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import CarrierError, parse_carrier
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__pub import CEILINGS, ReadContext
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__pub import CEILINGS, ReadContext, open_regular
 
 
 @dataclass(frozen=True)
@@ -126,9 +128,9 @@ def _changed_inputs(reader, selection, previous, paths):
     return candidates, errors, [root / path for path in sorted(changed - directories)]
 
 
-def _read_captured_carrier(reader, selection, path, tree, manifest, *, incremental, version):
+def _read_captured_carrier(reader, selection, path, tree, manifest, *, version, directory_fd):
     raw = manifest if path == selection.manifest_path else reader.read(
-        path, metadata_guard=incremental, skip_version=version,
+        path, metadata_guard=True, skip_version=version, directory_fd=directory_fd,
     )
     if raw is None:
         return None
@@ -162,7 +164,7 @@ def _root_carriers(reader, selection, *, remember=True):
 
 
 def _capture_inputs(reader, selection, input_paths, manifest, incremental, previous,
-                    previous_rows, candidates, errors, versions, missing):
+                    previous_rows, candidates, errors, versions, missing, directory_fd=None):
     root, control = selection.root, selection.control_root
     for path in input_paths:
         tree = path.relative_to(control).parts[0] if path.is_relative_to(control) else None
@@ -175,7 +177,7 @@ def _capture_inputs(reader, selection, input_paths, manifest, incremental, previ
                 versions.pop(str(path), None)
                 continue
             captured = _read_captured_carrier(
-                reader, selection, path, tree, manifest, incremental=incremental, version=versions.get(str(path)),
+                reader, selection, path, tree, manifest, version=versions.get(str(path)), directory_fd=directory_fd,
             )
             if captured is None:
                 old = previous_rows.get(relative)
@@ -189,13 +191,31 @@ def _capture_inputs(reader, selection, input_paths, manifest, incremental, previ
             errors[relative] = str(error)
 
 
+def _capture_full_inputs(reader, selection, manifest, candidates, errors):
+    installed = selection.control_root / "000_ANECHOIC_framework"
+    paths = [path for path in reader.inventory(selection.control_root)
+             if path.suffix == ".md" and not path.is_relative_to(installed)]
+    paths.extend(_root_carriers(reader, selection))
+    for directory, members in groupby(sorted(paths, key=lambda path: (path.parent, path.name)),
+                                      key=lambda path: path.parent):
+        try:
+            descriptor = open_regular(reader.allowed(directory), directory=True)
+        except OSError:
+            descriptor = None
+        try:
+            _capture_inputs(reader, selection, members, manifest, False, None,
+                            {}, candidates, errors, {}, [], directory_fd=descriptor)
+        finally:
+            if descriptor is not None:
+                os.close(descriptor)
+
+
 def capture_native(
     selection: Any, *, previous: NativeCapture | None = None,
     paths: set[PurePosixPath] | None = None,
 ) -> NativeCapture:
     """Read one selected native tree. Callers must refuse a capture with errors."""
-    root, control = selection.root, selection.control_root
-    reader = ReadContext(roots=[str(root)], limits=dict(CEILINGS))
+    reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
     incremental = previous is not None and paths is not None
     manifest = check_native_manifest(reader, selection, previous if incremental else None)
     versions = dict(previous.versions) if incremental else {}
@@ -204,12 +224,11 @@ def capture_native(
     missing = []
     if incremental:
         candidates, errors, input_paths = _changed_inputs(reader, selection, previous, paths)
+        _capture_inputs(reader, selection, input_paths, manifest, incremental, previous,
+                        previous_rows, candidates, errors, versions, missing)
     else:
         candidates, errors = {}, {}
-        input_paths = [path for path in reader.inventory(control) if path.suffix == ".md"]
-        input_paths.extend(_root_carriers(reader, selection))
-    _capture_inputs(reader, selection, input_paths, manifest, incremental, previous,
-                    previous_rows, candidates, errors, versions, missing)
+        _capture_full_inputs(reader, selection, manifest, candidates, errors)
     if reader.currentness()["state"] != "unchanged" or any(path.exists() or path.is_symlink() for path in missing):
         raise ValueError("Native Project carriers changed during capture")
     versions.update(reader.versions)

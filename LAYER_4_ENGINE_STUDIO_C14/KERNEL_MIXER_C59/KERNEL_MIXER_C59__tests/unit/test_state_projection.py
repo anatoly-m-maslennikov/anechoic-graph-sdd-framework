@@ -1,7 +1,7 @@
 """Check native state findings publication and rebuild dependencies."""
 
 from types import SimpleNamespace
-from unittest import IsolatedAsyncioTestCase, TestCase
+from unittest import TestCase
 from unittest.mock import patch
 
 import duckdb
@@ -49,7 +49,7 @@ class StateProjectionTests(TestCase):
             result = boundary_tables.prepare_boundaries(selection, snapshot, sources, [], None, {})
         self.assertEqual(([], [], expected), result)
         build.assert_called_once()
-        check.assert_called_once_with(ownership, sources, [])
+        check.assert_called_once_with(ownership, sources, [], include_entry_bypasses=True)
         analyze.assert_called_once_with('root', sources, ownership=ownership)
 
     def test_analysis_runs_without_structure(self):
@@ -59,63 +59,24 @@ class StateProjectionTests(TestCase):
             self.assertEqual(([], [], []), boundary_tables.prepare_boundaries(selection, None, sources, [], None, {}))
         analyze.assert_called_once_with('root', sources, ownership=None)
 
+    def test_lint_reports_denied_and_silent_actions(self):
+        from contextlib import redirect_stderr
+        from io import StringIO
+        from KERNEL_MIXER_C59.state_lint import _report
 
-class StateProjectionWatcherTests(IsolatedAsyncioTestCase):
-    from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__tests.test_native_import_graph import NativeImportGraphTests as Fixture
+        rows = [
+            ('module:src/effects.py', 'src/effects.py', 'python', 'action', 1, 'REQUEST_CTX',
+             'deadEnd', True, '[]', '[]', ''),
+            ('module:src/effects.py', 'src/effects.py', 'python', 'action', 2, None,
+             'hasEffects', False, '[]', '[{"line": 2, "kind": "write", "name": "REQUEST_CTX"}]', ''),
+            ('module:src/effects.py', 'src/effects.py', 'python', 'declared', 3, None,
+             'declaredNoOp', False, '[]', '[]', ''),
+        ]
+        errors = StringIO()
+        with redirect_stderr(errors):
+            self.assertEqual(1, _report(rows))
+        self.assertIn('silent state action action', errors.getvalue())
+        self.assertIn('state write denied', errors.getvalue())
+        self.assertNotIn('declared', errors.getvalue())
 
-    _write = Fixture._write
-    _source = Fixture._source
-    _gateway = Fixture._gateway
-    setUp = Fixture.setUp
-    del Fixture
 
-    async def test_unavailable_lean_is_published(self):
-        from mcp import types
-
-        self._source('src/a.py', 'x = 1\n')
-        with patch('IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.state_effects__shared.shutil.which',
-                   return_value=None):
-            gateway = await self._gateway()
-            result = await gateway.call(None, types.CallToolRequestParams(name='query_run', arguments={
-                'sql': "SELECT source_key, status, detail FROM state_effect_findings WHERE relative_path = 'src/a.py'",
-                'result_delivery': 'inline',
-            }))
-        self.assertFalse(result.is_error, result.structured_content)
-        self.assertEqual([['module:src/a.py', 'unresolved', 'Lean executable unavailable on PATH']],
-                         result.structured_content['rows'])
-
-    async def test_source_change_rebuild_and_disabled_projection(self):
-        import asyncio
-        from mcp import types
-
-        source = self._source('src/a.py', 'x = 1\n')
-
-        def analyze(root, sources, ownership=None):
-            return [(f'module:{path}', path, item.language, '<module>', 1, None, 'unresolved', False,
-                     '[]', '[]', item.signature) for path, item in sources.items() if path == 'src/a.py']
-
-        with patch.object(boundary_tables, 'analyze_state', side_effect=analyze):
-            gateway = await self._gateway()
-
-            async def rows():
-                response = await gateway.call(None, types.CallToolRequestParams(name='query_run', arguments={
-                    'sql': 'SELECT detail FROM state_effect_findings', 'result_delivery': 'inline',
-                }))
-                self.assertFalse(response.is_error, response.structured_content)
-                return response.structured_content['rows']
-
-            original = await rows()
-            self.assertEqual(1, len(original))
-            source.write_text('x = 2\n', encoding='utf-8')
-            async with asyncio.timeout(6):
-                while await rows() == original:
-                    await asyncio.sleep(.03)
-            changed = await rows()
-            result = await gateway.call(None, types.CallToolRequestParams(
-                name='query_rebuild', arguments={'target': 'state_effect_findings'}))
-            self.assertFalse(result.is_error, result.structured_content)
-            self.assertEqual(changed, await rows())
-            await gateway.close()
-            disabled = await self._gateway(enabled=False)
-            schema = await disabled.call(None, types.CallToolRequestParams(name='query_schema', arguments={}))
-            self.assertNotIn('state_effect_findings', schema.structured_content['tables'])

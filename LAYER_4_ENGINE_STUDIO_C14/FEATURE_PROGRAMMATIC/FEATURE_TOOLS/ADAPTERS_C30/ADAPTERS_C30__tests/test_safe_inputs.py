@@ -116,6 +116,29 @@ class ReadTests(unittest.TestCase):
             self.reader.read(alias / "a.md")
         self.assertEqual(self.reader.bytes_read, 0)
 
+    def test_inventory_checks_metadata_guard_without_rereading(self) -> None:
+        path = self.root / "a.md"
+        path.write_bytes(b"original")
+        self.reader.inventory(self.root)
+        self.reader.read(path, metadata_guard=True)
+        original = path.stat()
+        self.assertEqual(self.reader.currentness()["state"], "unchanged")
+        path.write_bytes(b"modified")
+        os.utime(path, ns=(original.st_atime_ns, original.st_mtime_ns))
+        self.assertEqual(self.reader.currentness()["state"], "changed")
+        self.assertEqual(self.reader.bytes_read, len(b"original"))
+
+    def test_metadata_guard_rejects_replaced_parent_with_same_file(self) -> None:
+        directory = self.root / "source"
+        directory.mkdir()
+        path = directory / "a.md"
+        path.write_bytes(b"original")
+        self.reader.inventory(self.root)
+        self.reader.read(path, metadata_guard=True)
+        moved = directory.rename(self.root / "moved")
+        directory.symlink_to(moved, target_is_directory=True)
+        self.assertIn({"path": str(path)}, self.reader.currentness()["affected_inputs"])
+
 
 if __name__ == "__main__":
     unittest.main()

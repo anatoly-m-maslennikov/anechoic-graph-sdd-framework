@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: "active"
-  version: 7
-  updated_at: "2026-11-22T16:04:33.665994+00:00"
+  version: 9
+  updated_at: "2026-11-22T17:11:53.994686+00:00"
 ---
 ## Summary
 
@@ -19,7 +19,7 @@ Declare Workers Beta
 ## Purpose
 
 Build a transient Project snapshot and staged generation for Kernel.
-Run an admitted Task lifecycle operation in a short-lived process.
+Run an admitted Task or Epic lifecycle operation in a short-lived process.
 
 ## Formal manifest
 
@@ -46,6 +46,10 @@ declare_entity(
                            'task_lifecycle': {'transport': 'cli', 'runner': 'managed_python',
                                               'module': 'WORKERS_beta_C69.lifecycle_worker',
                                               'input_fields': ['binding', 'name', 'arguments'],
+                                              'operations': ['atom_lifecycle_create_draft',
+                                                             'atom_lifecycle_update',
+                                                             'atom_lifecycle_promote_draft',
+                                                             'atom_lifecycle_change_status'],
                                               'output': 'native lifecycle outcome and effects on stdout'}},
                 'client': {'task_lifecycle': {'component': 'C16', 'interface': 'task_lifecycle'},
                            'manifest_build': {'component_seed': 'CS4', 'transport': 'cli'},
@@ -54,7 +58,7 @@ declare_entity(
                            'realization_graph': {'component': 'C61',
                                                  'interface': 'build_graph'}}},
          'state': {'reads': ['pinned Project Manifest and native Atom carriers'],
-                   'writes': ['staged artifacts for a generation build', 'admitted Task effects through C16']}},
+                   'writes': ['staged artifacts for a generation build', 'admitted Task and Epic effects through C16']}},
     ),
 )
 ```

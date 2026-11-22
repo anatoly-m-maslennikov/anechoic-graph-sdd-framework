@@ -51,27 +51,7 @@ class DatabaseServerTest(unittest.TestCase):
             self.assertEqual([["C00", "test"], ["p", "test"]],
                              _query(client, "SELECT * FROM tested_by_edges ORDER BY source_key").json()["result"]["rows"])
             self.assert_property_graph(client)
-            graph["state_effect_findings"] = [["m", "pkg/m.py", "python", "run", 1, None,
-                                                "unresolved", False, "[]", "[]", "no Lean"]]
-            # The source identity is part of the admitted protocol.
-            set_graph(graph)
-            self.assertEqual(400, client.put("/generation", json=payload).status_code)
-            graph["nodes"][2][0] = "module:pkg/m.py"
-            graph["occurrences"][0][1] = "module:pkg/m.py"
-            graph["edges"][0][0] = "module:pkg/m.py"
-            graph["state_effect_findings"][0][0] = "module:pkg/m.py"
-            event = {"kind": "write", "target": "ambient", "name": "cache", "line": 2}
-            graph["state_effect_findings"].append(["module:pkg/m.py", "pkg/m.py", "python", "write", 2,
-                                                   "{}", "hasEffects", False, json.dumps([event]),
-                                                   json.dumps([{"index": 0, **event}]), None])
-            set_graph(graph)
-            generation = self.admit(client, payload)
-            self.assertEqual([["hasEffects", False], ["unresolved", False]], _query(client, "SELECT status, dead_end FROM state_effect_findings ORDER BY status").json()["result"]["rows"])
-            invalid_state = deepcopy(graph)
-            invalid_state["state_effect_findings"][0][8] = "not JSON"
-            set_graph(invalid_state)
-            self.assertEqual(400, client.put("/generation", json=payload).status_code)
-            self.assertEqual([[2]], _query(client, "SELECT count(*) FROM state_effect_findings").json()["result"]["rows"])
+            generation = self.assert_state_projection(client, payload, graph, set_graph)
             bad = deepcopy(graph)
             bad["read_issues"].append(["bad.py", "duplicate"])
             set_graph(bad)
@@ -85,6 +65,30 @@ class DatabaseServerTest(unittest.TestCase):
             self.assertNotEqual(generation, self.admit(client, payload))
             self.assertEqual(400, _query(client, "SELECT * FROM import_nodes").status_code)
             self.assertEqual(400, _query(client, "SELECT * FROM state_effect_findings").status_code)
+
+    def assert_state_projection(self, client, payload, graph, set_graph):
+        graph["state_effect_findings"] = [["m", "pkg/m.py", "python", "run", 1, None,
+                                            "unresolved", False, "[]", "[]", "no Lean"]]
+        # The source identity is part of the admitted protocol.
+        set_graph(graph)
+        self.assertEqual(400, client.put("/generation", json=payload).status_code)
+        graph["nodes"][2][0] = "module:pkg/m.py"
+        graph["occurrences"][0][1] = "module:pkg/m.py"
+        graph["edges"][0][0] = "module:pkg/m.py"
+        graph["state_effect_findings"][0][0] = "module:pkg/m.py"
+        event = {"kind": "write", "target": "ambient", "name": "cache", "line": 2}
+        graph["state_effect_findings"].append(["module:pkg/m.py", "pkg/m.py", "python", "write", 2,
+                                               "{}", "hasEffects", False, json.dumps([event]),
+                                               json.dumps([{"index": 0, **event}]), None])
+        set_graph(graph)
+        generation = self.admit(client, payload)
+        self.assertEqual([["hasEffects", False], ["unresolved", False]], _query(client, "SELECT status, dead_end FROM state_effect_findings ORDER BY status").json()["result"]["rows"])
+        invalid_state = deepcopy(graph)
+        invalid_state["state_effect_findings"][0][8] = "not JSON"
+        set_graph(invalid_state)
+        self.assertEqual(400, client.put("/generation", json=payload).status_code)
+        self.assertEqual([[2]], _query(client, "SELECT count(*) FROM state_effect_findings").json()["result"]["rows"])
+        return generation
 
     def assert_property_graph(self, client):
         for label, target, target_key, expected in (

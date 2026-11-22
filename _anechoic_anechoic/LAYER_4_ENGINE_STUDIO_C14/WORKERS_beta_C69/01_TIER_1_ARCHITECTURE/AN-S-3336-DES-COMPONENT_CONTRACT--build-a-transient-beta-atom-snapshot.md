@@ -9,8 +9,8 @@ context:
   lens: DES
 state:
   status: "active"
-  version: 5
-  updated_at: "2026-11-22T16:04:34.749280+00:00"
+  version: 7
+  updated_at: "2026-11-22T17:11:54.458356+00:00"
 ---
 ## Summary
 
@@ -24,9 +24,11 @@ relations using the attested Model. Build the Model, Structure, and
 enabled Realization Graph from the same unchanged source capture. Seal
 the snapshot and Graph in the receipt. Refuse changed sources.
 
-Run one admitted Task operation per lifecycle invocation. Create a Task
-Draft, revise a Current Task into a Draft, or promote an exact Task Draft.
-Bind the operation to the pinned Project and fresh Model and Structure.
+Run one admitted Ticket operation per lifecycle invocation. Create a Task
+or Epic Draft, revise a Current Task or Epic into a Draft, promote
+an exact Draft, or change a Current Ticket's status. Apply the admitted
+lifecycle definition and its Ticket tree effects. Bind the operation
+to the pinned Project and fresh Model and Structure.
 Return the native outcome and known file effects.
 
 ## References

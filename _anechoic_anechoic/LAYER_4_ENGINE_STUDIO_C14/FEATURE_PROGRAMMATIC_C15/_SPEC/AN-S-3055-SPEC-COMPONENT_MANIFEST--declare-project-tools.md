@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: "active"
-  version: 14
-  updated_at: "2026-11-22T15:27:08.409583+00:00"
+  status: active
+  version: 15
+  updated_at: '2026-11-22T16:44:45.347890+00:00'
 ---
 
 ## Summary
@@ -186,13 +186,13 @@ declare_entity(
                         'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests',
                     ]},
                     'test_suite__pub': 'public',
-                    'test_suite__pub.run_full_suite': 'public',
                 },
             },
             'io': {
                 'client': [
                     {'component': 'C46', 'interface': 'source_function_sizes'},
                     {'component': 'C61', 'interface': 'import_ownership'},
+                    {'component': 'C59', 'interface': 'state_lint'},
                     {'component': 'C63', 'interface': 'test_packaged_image_identity'},
                     {'component': 'C21', 'interface': 'candidate_test_image_build'},
                     {'component': 'C21', 'interface': 'candidate_test_image_cleanup'},

@@ -1,4 +1,4 @@
-"""Run an admitted, bounded native Task lifecycle request."""
+"""Run an admitted, bounded native Ticket lifecycle request."""
 import base64
 from dataclasses import replace
 from hashlib import sha256
@@ -13,7 +13,7 @@ from .native_lifecycle import execute_native_lifecycle
 from .native_project_selection import resolve_native_project
 from .project_runtime import bind_native_runtime
 
-_NAMES = frozenset({"atom_lifecycle_create_draft", "atom_lifecycle_update", "atom_lifecycle_promote_draft"})
+_NAMES = frozenset({"atom_lifecycle_create_draft", "atom_lifecycle_update", "atom_lifecycle_promote_draft", "atom_lifecycle_change_status", "atom_lifecycle_archive"})
 _FIELDS = {"binding", "name", "arguments", "generation", "receipt", "stability_sha256"}
 
 
@@ -24,12 +24,12 @@ def _encode(value):
 
 
 def _task_scope(name, arguments, capture):
-    if name == "atom_lifecycle_create_draft":
-        value = arguments.get("newAtom")
-        if not isinstance(value, dict) or value.get("template") != "task":
-            raise ValueError("Only Task creation is available")
+    if name == "atom_lifecycle_create_draft" and "newAtom" in arguments:
+        value = arguments["newAtom"]
+        if not isinstance(value, dict) or value.get("template") not in {"task", "epic"}:
+            raise ValueError("Only Task and Epic creation is available")
         return
-    field = "sourceCurrent" if name == "atom_lifecycle_update" else "target"
+    field = "sourceCurrent" if name in {"atom_lifecycle_create_draft", "atom_lifecycle_update"} else "target"
     target = arguments.get(field)
     ref = target.get("ref_id") if isinstance(target, dict) else None
     if not isinstance(ref, str) or not re.fullmatch(r"[A-Z][A-Z0-9]*-T-[0-9]+(?:@[1-9][0-9]*-draft)?", ref):
@@ -37,6 +37,8 @@ def _task_scope(name, arguments, capture):
     matching = [row for row in capture.atoms if row["ref"] == ref or row["_exact_ref"] == ref]
     if len(matching) != 1 or matching[0]["header_json"].get("context", {}).get("template") != "task":
         raise ValueError("Task lifecycle target is unavailable or ambiguous")
+    if name == "atom_lifecycle_archive" and "atom_family" not in matching[0]["header_json"]:
+        raise ValueError("Only native Task and Epic archive is available")
 
 
 def _selection(binding, model, structure):

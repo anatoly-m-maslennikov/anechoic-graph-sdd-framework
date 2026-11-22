@@ -9,8 +9,8 @@ context:
   lens: DES
 state:
   status: "active"
-  version: 7
-  updated_at: "2026-11-22T16:08:35.644233+00:00"
+  version: 8
+  updated_at: "2026-11-22T17:01:49.709219+00:00"
 ---
 ## Summary
 
@@ -29,7 +29,7 @@ Return the admitted generation and requested result replacements, or a
 typed failure. Overlapping requests for the same target share one
 admission and result map.
 
-Serialize each accepted Task lifecycle job with generation builds. After
+Serialize each accepted Task or Epic lifecycle job with generation builds. After
 the Worker returns, offer a fresh generation for admission. Reply with
 the recorded write outcome and the projection result. Preserve known
 effects when admission fails. If the Worker response is lost, report

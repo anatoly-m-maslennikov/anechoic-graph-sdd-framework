@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: "active"
-  version: 14
-  updated_at: "2026-11-22T16:08:34.632398+00:00"
+  version: 16
+  updated_at: "2026-11-22T17:11:53.757942+00:00"
 ---
 ## Summary
 
@@ -62,7 +62,7 @@ declare_entity(
                                                               'query_id',
                                                               'offset',
                                                               'page_size']],
-                                            'optional_query_field': 'grid',
+                                            'optional_paged_query_fields': ['grid', 'preview', 'result_delivery', 'result_format'],
                                             'rebuild_fields': ['instance_id', 'target'],
                                             'workspace_fields': ['instance_id', 'operation', 'arguments'],
                                             'query_history_operations': ['query_log_list', 'query_log_get'],
@@ -82,6 +82,7 @@ declare_entity(
                               'previously accepted Saved SQL in Journal and legacy cache carriers'],
                    'writes': ['accepted Project rows and paired artifacts in the database',
                               'bounded paged results in Kernel memory',
+                              'disposable Project result files',
                               'Realization Graph rows in the accepted generation',
                               'durable Project Workspace and View documents',
                               'committed DuckDB Work Journal inbox records',

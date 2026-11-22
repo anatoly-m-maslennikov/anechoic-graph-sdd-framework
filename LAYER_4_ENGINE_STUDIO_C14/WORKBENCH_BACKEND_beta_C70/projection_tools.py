@@ -10,7 +10,8 @@ from .workspace_tools import _tool
 
 
 TABLES = ("atoms", "native_references", "relations", "import_nodes", "module_imports", "import_edges",
-          "package_imports", "test_edges", "tested_by_edges", "import_read_issues", "package_external_imports")
+          "package_imports", "test_edges", "tested_by_edges", "import_read_issues", "package_external_imports",
+          "state_effect_findings")
 TOOLS = {
     "workbench_status": _tool("workbench_status", "Read Project source indexing status.", {}, read_only=True),
     "query_rebuild": _tool("query_rebuild", "Rebuild a Project projection or refresh retained query results.",

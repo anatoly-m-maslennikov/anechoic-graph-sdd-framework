@@ -82,6 +82,8 @@ class ApiTests(unittest.TestCase):
                     self.assert_query_and_jobs(api)
                     self.assert_saved_reads(api)
                     self.assert_partial_save(api, saved)
+                    self.assert_file_delivery(api, root)
+                    self.assert_delivery_defaults_and_preview(api, root)
                     self.assert_refresh(api, db, control, digest)
             finally:
                 process.stdin.close()
@@ -149,7 +151,7 @@ class ApiTests(unittest.TestCase):
         self.assertEqual("partial", result["outcome"])
         self.assertIn("save_error", result)
         self.assertNotIn("saved_query_id", result)
-        page = call("query_page", {"query_id": result["query_id"]})["result"]["value"]
+        page = call("query_page", {"query_id": result["query_id"], "result_delivery": "inline"})["result"]["value"]
         self.assertEqual([[42]], page["rows"])
         self.assertEqual([], call("query_saved_list", {})["result"]["value"]["items"])
         for args in ({"sql": "SELECT 1", "save": 1}, {"sql": "SELECT 1", "name": "bad"},
@@ -164,10 +166,57 @@ class ApiTests(unittest.TestCase):
         self.assertEqual("partial", result["outcome"])
         self.assertIn("save_error", result)
         self.assertNotIn("saved_query_id", result)
-        self.assertEqual([[43]], call("view_fetch", view)["result"]["value"]["rows"])
+        self.assertEqual([[43]], call("view_fetch", view | {"result_delivery": "inline"})["result"]["value"]["rows"])
         self.assertEqual([], call("query_saved_list", {})["result"]["value"]["items"])
         self.assertEqual("tool_input_invalid", call("view_run", view | {"save": 1})["error"]["code"])
         self.assertEqual("tool_input_invalid", call("view_run", view | {"name": "bad"})["error"]["code"])
+
+    def assert_file_delivery(self, api, root):
+        envelope = {"instance_id": "instance", "session_id": None, "public_base_url": None,
+                    "asserted_project_root": None}
+        call = lambda name, args: api.post("/tools", json=envelope | {"name": name, "arguments": args}).json()
+        run = call("query_run", {"sql": "SELECT 42 AS answer", "result_delivery": "file", "result_format": "csv"})
+        result = run["result"]["value"]
+        file = result["result_file"]
+        self.assertEqual("csv", file["format"])
+        self.assertNotIn("rows", result)
+        self.assertIn(b"42", (root / file["path"]).read_bytes())
+        partial = call("query_run", {"sql": "SELECT 44", "save": True, "result_delivery": "file"})["result"]["value"]
+        self.assertEqual("partial", partial["outcome"])
+        self.assertIn("save_error", partial)
+        self.assertIn(b"44", (root / partial["result_file"]["path"]).read_bytes())
+        page = call("query_page", {"query_id": result["query_id"], "result_delivery": "file", "result_format": "json_matrix"})
+        self.assertIn(b"42", (root / page["result"]["value"]["result_file"]["path"]).read_bytes())
+        inline = call("query_page", {"query_id": result["query_id"], "result_delivery": "inline", "result_format": "csv"})
+        self.assertIn("42", inline["result"]["value"]["csv"])
+        opened = call("workspace_open", {"session_id": "file-delivery"})["result"]["value"]
+        view = {"workspace_id": opened["workspace_id"], "view_id": opened["views"][0]["id"]}
+        call("view_update", view | {"sql": "SELECT 43 AS answer", "expected_revision": opened["views"][0]["revision"]})
+        call("view_run", view)
+        fetch = call("view_fetch", view | {"result_delivery": "file", "result_format": "toon"})
+        self.assertIn(b"43", (root / fetch["result"]["value"]["result_file"]["path"]).read_bytes())
+        for args in ({"sql": "SELECT 1", "result_delivery": "invalid"}, {"sql": "SELECT 1", "result_format": "invalid"}):
+            self.assertEqual("tool_input_invalid", call("query_run", args)["error"]["code"])
+
+    def assert_delivery_defaults_and_preview(self, api, root):
+        envelope = {"instance_id": "instance", "session_id": None, "public_base_url": None,
+                    "asserted_project_root": None}
+        call = lambda name, args: api.post("/tools", json=envelope | {"name": name, "arguments": args}).json()
+        run = call("query_run", {"sql": "SELECT * FROM range(10)", "preview": 3})["result"]["value"]
+        self.assertEqual(3, run["row_count"])
+        self.assertEqual(3, len(run["rows"]))
+        page = call("query_page", {"query_id": run["query_id"], "preview": 2})["result"]["value"]
+        self.assertEqual(2, page["result_file"]["row_count"])
+        self.assertTrue((root / page["result_file"]["path"]).is_file())
+        for invalid in (-1, True, 1.5):
+            self.assertEqual("tool_input_invalid", call("query_run", {"sql": "SELECT 1", "preview": invalid})["error"]["code"])
+            self.assertEqual("tool_input_invalid", call("query_page", {"query_id": run["query_id"], "preview": invalid})["error"]["code"])
+        opened = call("workspace_open", {"session_id": "default-file"})["result"]["value"]
+        view = {"workspace_id": opened["workspace_id"], "view_id": opened["views"][0]["id"]}
+        call("view_update", view | {"sql": "SELECT 43", "expected_revision": opened["views"][0]["revision"]})
+        call("view_run", view)
+        fetch = call("view_fetch", view)["result"]["value"]
+        self.assertTrue((root / fetch["result_file"]["path"]).is_file())
 
     def assert_query_check(self, api, envelope):
         sql = "SELECT '😀' AS label"

@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: "active"
-  version: 39
-  updated_at: "2026-11-22T16:04:33.061008+00:00"
+  version: 41
+  updated_at: "2026-11-22T17:01:47.005338+00:00"
 ---
 
 ## Summary
@@ -192,9 +192,10 @@ declare_entity(
             },
             'io': {'server': {'task_lifecycle': {'transport': 'cli', 'runner': 'managed_python',
                        'module': 'FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_lifecycle_cli',
-                       'input': 'bound lifecycle request and fresh Model and Structure attestation on stdin',
+                       'input': 'bound Task or Epic lifecycle request and Model and Structure attestation on stdin',
                        'output': 'native outcome and file effects on stdout'}}},
             'state': {
+                'channels': {'lifecycle_query_reader': 'rw'},
                 'reads': ['admitted Project carriers and declarations', 'applicable framework sources'],
                 'writes': ['admitted Atom lifecycle changes', 'generated methodology projection', 'Project write locks and temporary staging'],
             },

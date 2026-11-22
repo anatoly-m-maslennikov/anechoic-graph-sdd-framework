@@ -78,6 +78,8 @@ function binary(ctx, node) {
     if (!ctx.complete) return unknown;
     if (ts.isIdentifier(node.left) && ctx.locals.has(node.left.text)) {
       ctx.locals.set(node.left.text, value); ctx.aliases.delete(node.left.text);
+    } else if (ts.isIdentifier(node.left) && ctx.objects.has(node.left.text)) {
+      bad(ctx);
     } else if (target) event(ctx, node.left, 'write', ...target);
     else bad(ctx);
     return value;

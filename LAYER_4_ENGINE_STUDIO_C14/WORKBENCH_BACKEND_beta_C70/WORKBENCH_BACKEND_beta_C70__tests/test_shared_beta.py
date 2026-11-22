@@ -197,7 +197,7 @@ class SharedBetaTests(unittest.IsolatedAsyncioTestCase):
                     "view_focus", "view_rename", "view_remove", "view_run", "view_check", "view_fetch",
                     "query_rebuild", "workbench_status", "query_log_list", "query_log_get",
                     "atom_lifecycle_create_draft", "atom_lifecycle_update", "atom_lifecycle_promote_draft",
-                    "query_load", "query_saved_list",
+                    "atom_lifecycle_change_status", "query_load", "query_saved_list",
                 }, {tool["name"] for tool in catalog})
                 self.assertIn("project_root", catalog[0]["inputSchema"]["required"])
                 cold = await _invoke(http, alpha, "workbench_status", {})
@@ -230,7 +230,7 @@ class SharedBetaTests(unittest.IsolatedAsyncioTestCase):
     async def assert_result_isolation(self, http, alpha, beta):
         result = await _invoke(http, alpha)
         query_id = result["result"]["value"]["query_id"]
-        params = {"query_id": query_id, "offset": 0, "page_size": 100}
+        params = {"query_id": query_id, "offset": 0, "page_size": 100, "result_delivery": "inline"}
         page = await _invoke(http, alpha, "query_page", params)
         self.assertEqual([["alpha"]], page["result"]["value"]["rows"])
         foreign = await _invoke(http, beta, "query_page", params)

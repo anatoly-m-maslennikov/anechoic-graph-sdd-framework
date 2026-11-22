@@ -11,7 +11,7 @@ from .jobs import ENGINE, FIELDS
 LIFECYCLE_DEADLINE_SECONDS = 300
 LIFECYCLE_WAIT_SECONDS = 610
 LIFECYCLE_TOOLS = frozenset({"atom_lifecycle_create_draft", "atom_lifecycle_update",
-                             "atom_lifecycle_promote_draft"})
+                             "atom_lifecycle_promote_draft", "atom_lifecycle_change_status", "atom_lifecycle_archive"})
 
 
 class LifecycleJobs:

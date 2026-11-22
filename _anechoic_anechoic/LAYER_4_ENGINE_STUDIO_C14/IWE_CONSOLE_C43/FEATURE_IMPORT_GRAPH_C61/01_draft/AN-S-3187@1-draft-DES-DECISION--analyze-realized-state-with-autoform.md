@@ -15,7 +15,7 @@ relations:
 state:
   status: draft
   version: 1
-  updated_at: '2026-11-21T16:47:20.457433+00:00'
+  updated_at: '2026-11-22T16:44:45.347890+00:00'
 ---
 
 ## Summary
@@ -26,14 +26,14 @@ Analyze realized state with Autoform
 
 ### Prose Claim
 
-Extend the Realization Graph with a State Analyzer. Use Autoform to translate
-selected Modules into a shared Lean model. Reuse graph identities and the
-existing source watcher. Keep source locations on observations.
+Extend the Realization Graph with a State Analyzer. Lower supported source paths to ordered Lean cases. Keep Autoform and runtime
+comparisons for representative paths. Reuse graph identities and the source
+watcher, and keep source locations on observations.
 
 Evaluate reads and writes against the authored state boundary. A reachable
 action with zero writes and zero observable outputs is a dead end unless
 declared as a no-op. Publish findings through the existing DuckDB projection.
 
-Pilot Python and JavaScript. Compare the ordered effects, outcome, and
-post-state with the runtime. Block lint only with confirmed evidence.
-Report incomplete analysis as unresolved.
+Analyze Python, JavaScript, and TypeScript. Publish evidence in
+`state_effect_findings`. Block lint on confirmed denied access and witnessed
+undeclared dead ends. Report unresolved cases when coverage or Lean is missing.

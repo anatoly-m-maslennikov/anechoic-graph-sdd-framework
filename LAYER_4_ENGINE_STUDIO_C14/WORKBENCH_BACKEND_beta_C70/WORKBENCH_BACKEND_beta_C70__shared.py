@@ -15,15 +15,15 @@ from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
-from . import lifecycle_tools, projection_tools, saved_sql_tools, schema_tools, workspace_tools
+from . import delivery_tools, lifecycle_tools, projection_tools, saved_sql_tools, schema_tools, workspace_tools
 from .peer_transport import tool_failure, upstream
 
 _FIELDS = {"name", "arguments", "instance_id", "session_id", "public_base_url", "asserted_project_root"}
 _ANNOTATIONS = {"readOnlyHint": True, "destructiveHint": False, "idempotentHint": True, "openWorldHint": False}
 _PAGE_SIZE = {"type": "integer", "minimum": 1, "maximum": 1000}
 _OFFSET = {"type": "integer", "minimum": 0}
-_DELIVERY = {"enum": ["auto", "inline"], "type": "string"}
-_FORMAT = {"enum": ["json_matrix"], "type": "string"}
+_DELIVERY = {"enum": ["file", "inline", "auto"], "type": "string", "default": "file"}
+_FORMAT = {"enum": ["json_matrix", "csv", "toon"], "type": "string"}
 
 
 def _descriptor(name, description, properties, required=()):
@@ -40,7 +40,7 @@ TOOLS = {
     "query_check": _descriptor("query_check", "Check read-only SQL without retaining the result.",
                                {"sql": {"type": "string"}, "cursor_position": _OFFSET}, ("sql",)),
     "query_page": _descriptor("query_page", "Read a page of a retained Project query result.",
-                              {"query_id": {"type": "string"}, "offset": _OFFSET, "page_size": _PAGE_SIZE,
+                              {"query_id": {"type": "string"}, "offset": _OFFSET, "page_size": _PAGE_SIZE, "preview": _OFFSET,
                                "result_delivery": _DELIVERY, "result_format": _FORMAT,
                                "grid": workspace_tools.GRID}, ("query_id",)),
     **projection_tools.TOOLS,
@@ -48,8 +48,6 @@ TOOLS = {
     **lifecycle_tools.TOOLS,
     **workspace_tools.WORKSPACE_TOOLS,
 }
-
-
 
 async def read_tool_request(request):
     body = bytearray()
@@ -68,7 +66,8 @@ async def _query(database_socket, instance_id, fields):
             message = error.get("message", "Query failed") if isinstance(error, dict) else "Query failed"
             return tool_failure("query_error", str(message))
         value = result["result"]
-        if not isinstance(value, dict) or not {"columns", "rows"} <= value.keys():
+        if (not isinstance(value, dict) or ("page_size" in fields and not delivery_tools.valid_page(value))
+                or ("page_size" not in fields and not {"columns", "rows"} <= value.keys())):
             raise ValueError("Invalid Kernel response")
         return {"result": {"value": value, "text": None}}
     except (ValueError, TypeError) as error:
@@ -95,9 +94,10 @@ def _query_fields(name, args):
         raise ValueError("Unexpected arguments")
     if name == "query_check":
         return {"sql": _sql(args)}
-    delivery = args.get("result_delivery", "auto" if name == "query_run" else "inline")
-    if delivery not in ("auto", "inline") or args.get("result_format", "json_matrix") != "json_matrix":
-        raise ValueError("Only inline JSON matrix delivery is supported")
+    delivery = args.get("result_delivery", "auto" if name == "query_run" else "file")
+    result_format = args.get("result_format", "json_matrix")
+    if delivery not in ("file", "inline", "auto") or result_format not in ("json_matrix", "csv", "toon"):
+        raise ValueError("Invalid result delivery or format")
     default_size = 1000 if name == "query_run" and delivery == "auto" else 100
     size = args.get("page_size", default_size)
     if type(size) is not int or not 1 <= size <= 1000:
@@ -109,16 +109,18 @@ def _query_fields(name, args):
             raise ValueError("name requires save and must be a string")
         if "name" in args:
             args["name"].encode("utf-8")
-        return {"sql": _sql(args), "page_size": size}
+        return delivery_tools.with_preview({"sql": _sql(args), "page_size": size, "result_delivery": delivery,
+                                            "result_format": result_format}, args)
     query_id, offset = args.get("query_id"), args.get("offset", 0)
     if not isinstance(query_id, str) or type(offset) is not int or offset < 0:
         raise ValueError("Expected query_id and a non-negative offset")
-    fields = {"query_id": query_id, "offset": offset, "page_size": size}
+    fields = {"query_id": query_id, "offset": offset, "page_size": size,
+              "result_delivery": delivery, "result_format": result_format}
     if "grid" in args:
         if not isinstance(args["grid"], dict):
             raise ValueError("grid must be an object")
         fields["grid"] = args["grid"]
-    return fields
+    return delivery_tools.with_preview(fields, args)
 
 
 async def _workspace(database_socket, instance_id, name, args, session_id, project_name, public_base_url, project_root):
@@ -126,6 +128,8 @@ async def _workspace(database_socket, instance_id, name, args, session_id, proje
         fields = workspace_tools.workspace_arguments(name, args, session_id)
         if name == "view_run":
             fields = {k: v for k, v in fields.items() if k not in {"save", "name"}}
+        if name == "view_fetch":
+            fields = {"result_delivery": "file", **fields}
         if name in workspace_tools.LINKED_TOOLS and not project_name:
             raise ValueError("Workbench Project name is unavailable")
     except ValueError as error:
@@ -140,7 +144,8 @@ async def _workspace(database_socket, instance_id, name, args, session_id, proje
                 raise ValueError("Invalid Workspace response")
             return tool_failure(error["code"], error["message"])
         value = result["result"]
-        if not workspace_tools.valid_workspace_response(name, value):
+        if (not workspace_tools.valid_workspace_response(name, value)
+                or (name == "view_fetch" and not delivery_tools.valid_page(value))):
             raise TypeError("Invalid Workspace response")
         if name == "view_run" and args.get("save", False) and value.get("status") == "success":
             value |= {"outcome": "partial", "save_error": "No admitted actor is available for saving"}

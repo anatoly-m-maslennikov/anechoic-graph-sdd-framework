@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: "active"
-  version: 33
-  updated_at: "2026-11-22T16:01:08.486603+00:00"
+  status: active
+  version: 34
+  updated_at: '2026-11-22T16:44:45.347890+00:00'
 ---
 
 ## Summary
@@ -107,7 +107,7 @@ declare_entity(
                     'component_seed_manifest__pub.read_component_seed_manifest': 'public',
                     'realization_ownership__pub.CodeAccessOwnership': 'public',
                     'realization_ownership__pub.build_code_access_ownership': 'public',
-                    'ADAPTERS_C30__shared.parse_structure': {'shared': ['C61']},
+                    'ADAPTERS_C30__shared.parse_structure': {'shared': ['C59', 'C61']},
                     'ADAPTERS_C30__shared.realization_component_paths': {'shared': ['C59', 'C61']},
                     'scope_declaration_parse__pub.ScopeUnitDeclaration': 'public',
                     'scope_declaration_parse__pub.ScopeUnitDeclarations': 'public',

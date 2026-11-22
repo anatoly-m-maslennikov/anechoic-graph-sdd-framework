@@ -1,4 +1,4 @@
-"""Expose the admitted Task lifecycle operations through Orchestrator."""
+"""Expose the admitted Ticket lifecycle operations through Orchestrator."""
 
 import httpx2
 
@@ -7,10 +7,13 @@ from .workspace_tools import _tool
 
 _FIELDS = {"type": "object"}
 TOOLS = {tool["name"]: tool for tool in (
-    _tool("atom_lifecycle_create_draft", "Create a Task Draft.", {"newAtom": _FIELDS}),
-    _tool("atom_lifecycle_update", "Create a Draft revision of a Current Task.",
+    _tool("atom_lifecycle_create_draft", "Create a Task or Epic Draft or revise a Current Ticket.", {},
+          newAtom=_FIELDS, sourceCurrent=_FIELDS, changes=_FIELDS),
+    _tool("atom_lifecycle_update", "Create a Draft revision of a Current Task or Epic.",
           {"sourceCurrent": _FIELDS}, changes=_FIELDS),
-    _tool("atom_lifecycle_promote_draft", "Publish an exact Task Draft revision.",
+    _tool("atom_lifecycle_promote_draft", "Publish an exact Task or Epic Draft revision.",
+          {"target": _FIELDS}, targetStatus={"type": "string"}),
+    _tool("atom_lifecycle_change_status", "Change a Current Task or Epic Status.",
           {"target": _FIELDS}, targetStatus={"type": "string"}),
 )}
 _UNKNOWN = {

@@ -5,13 +5,19 @@ import pathlib
 import unittest
 
 
-MODULE = pathlib.Path(__file__).resolve().parents[1] / 'python_state_cases.py'
+MODULE = pathlib.Path(__file__).resolve().parents[2] / 'python_state_cases.py'
 SPEC = importlib.util.spec_from_file_location('python_state_cases', MODULE)
 MOD = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MOD)
 
 
 class PythonStateCasesTest(unittest.TestCase):
+    def test_named_registry_read(self):
+        case, = MOD.python_state_cases("from sys import modules as registry\ndef lookup():\n    return registry.get('example')\n")
+        self.assertTrue(case['complete'])
+        self.assertEqual([('read', 'SYS_MODULES'), ('output', '')],
+                         [(event['kind'], event['name']) for event in case['events']])
+
     def test_local_writes_restore_and_output_are_ordered(self):
         case = MOD.python_state_cases('''\
 class Owner:
@@ -109,7 +115,9 @@ def action():
         self.assertEqual(unresolved['events'], [])
 
     def test_invalid_source(self):
-        self.assertEqual(MOD.python_state_cases('def broken('), [])
+        case, = MOD.python_state_cases('def broken(')
+        self.assertEqual(case['action'], '<parse_error>')
+        self.assertFalse(case['complete'])
 
 
 if __name__ == '__main__':

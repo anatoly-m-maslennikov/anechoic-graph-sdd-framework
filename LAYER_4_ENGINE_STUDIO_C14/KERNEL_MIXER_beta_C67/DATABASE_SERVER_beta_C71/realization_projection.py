@@ -40,9 +40,13 @@ def prepare(connection):
     connection.execute("CREATE VIEW IF NOT EXISTS package_external_imports AS SELECT p.relative_path AS package_path, s.language, split_part(t.node_key, ':', 3) AS import_name, count(*) AS occurrence_count, count(*) FILTER (WHERE i.type_only) AS type_only_count FROM module_imports i JOIN import_nodes s ON s.node_key = i.source_key JOIN import_nodes p ON p.node_key = s.package_key JOIN import_nodes t ON t.node_key = i.target_key WHERE s.kind = 'module' AND p.kind = 'package' AND p.relative_path IS NOT NULL AND i.resolution_status = 'external' AND t.node_key LIKE '%:external:%' AND (s.language <> 'python' OR split_part(t.node_key, ':', 3) NOT IN (" + stdlib + ")) GROUP BY p.relative_path, s.language, split_part(t.node_key, ':', 3)")
 
 
+def _reject_constant(value):
+    raise ValueError(f"Invalid JSON constant: {value}")
+
+
 def _state_json(inputs, events, violations, status):
     try:
-        decoded = [json.loads(value, parse_constant=lambda _: (_ for _ in ()).throw(ValueError()))
+        decoded = [json.loads(value, parse_constant=_reject_constant)
                    if value is not None else None for value in (inputs, events, violations)]
     except (ValueError, TypeError):
         raise ValueError('Invalid state finding JSON') from None
@@ -50,6 +54,8 @@ def _state_json(inputs, events, violations, status):
     if ((witness is not None and not isinstance(witness, dict)) or not isinstance(events, list)
             or not isinstance(violations, list) or (status in ('unresolved', 'unreachable') and violations)):
         raise ValueError('Invalid state finding JSON shape')
+    if status in ('declaredNoOp', 'deadEnd', 'hasEffects') and witness is None:
+        raise ValueError('Missing state finding witness')
     for event in events:
         if (not isinstance(event, dict) or set(event) != {'kind', 'target', 'name', 'line'}
                 or type(event['line']) is not int or event['line'] < 1

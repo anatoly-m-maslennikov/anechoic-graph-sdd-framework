@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: "active"
-  version: 17
-  updated_at: "2026-11-22T15:27:09.941757+00:00"
+  status: active
+  version: 18
+  updated_at: '2026-11-22T16:44:45.347890+00:00'
 ---
 
 ## Summary
@@ -31,9 +31,11 @@ declare_entity(
         lens_whitelist=['DES', 'QA', 'SWD'],
         boundaries={
             'code': {
-                'imports': {'only': ['ADAPTERS_C30__shared.parse_structure', 'ADAPTERS_C30__shared.realization_component_paths']},
+                'imports': {'only': ['ADAPTERS_C30__shared.parse_structure', 'ADAPTERS_C30__shared.realization_component_paths',
+                                     'realization_ownership__pub.build_code_access_ownership']},
                 'exports': {
                     'import_graph__shared': None,
+                    'state_effects__shared.analyze_state': {'shared': ['C59']},
                     'import_graph__shared.ImportSite': {'shared': ['C59', 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
                     'import_graph__shared.Source': {'shared': ['C59', 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
                     'import_graph__shared.capture': {'shared': ['C59', 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_IMPORT_GRAPH_C61/FEATURE_IMPORT_GRAPH_C61__tests']},
@@ -57,11 +59,14 @@ declare_entity(
                                                    'occurrences',
                                                    'edges',
                                                    'test_edges',
-                                                   'read_issues']},
+                                                   'read_issues',
+                                                   'state_effect_findings']},
                            'import_ownership': {'transport': 'cli', 'runner': 'managed_python',
                                                'module': 'LAYER_4_ENGINE_STUDIO_C14.IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.import_ownership',
                                                'arguments': ['<project-root>']}},
                 'client': [
+                    {'transport': 'cli', 'optional': True, 'command': ['lean', '--run', 'ActionEffects.lean'],
+                     'input': 'JSON batch of ordered state cases on stdin'},
                     {'transport': 'cli', 'optional': True, 'command': ['node',
                      'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/scripts/import-graph-scanner.mjs'],
                      'input': 'JSON source batch on stdin'},

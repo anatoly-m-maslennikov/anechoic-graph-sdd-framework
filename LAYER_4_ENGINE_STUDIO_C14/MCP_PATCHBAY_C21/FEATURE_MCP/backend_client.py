@@ -16,6 +16,7 @@ from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_stack import runtime_stack
 
 
 _MODULE = "IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.backend_process"
+_STARTUP_SECONDS = 180
 
 
 class ToolProtocolError(RuntimeError):
@@ -52,7 +53,7 @@ class BackendClient:
         """Finish admission before the frontend advertises readiness."""
         expected = {"ready": True, "instance_id": self.selection.instance_id,
                     "manifest_sha256": self.selection.manifest_sha256, "pid": self.backend_pid}
-        deadline = monotonic() + 90
+        deadline = monotonic() + _STARTUP_SECONDS
         while self.available and monotonic() < deadline:
             try:
                 response = self._http.get("/health", timeout=0.5)

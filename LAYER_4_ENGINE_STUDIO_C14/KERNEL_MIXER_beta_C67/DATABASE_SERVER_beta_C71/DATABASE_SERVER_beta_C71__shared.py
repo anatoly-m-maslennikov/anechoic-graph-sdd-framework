@@ -24,7 +24,8 @@ from .generation import replace_generation
 from .persistence import open_bound_database
 from .query_engine import connect
 from .query_history import QueryHistory
-from .query_results import QueryResults, query
+from .query_results import QueryResults, query, validate_preview
+from .result_delivery import deliver, validate_delivery
 from .query_schema import public_schema
 from .query_settings import result_ttl
 from .realization_projection import has_table, prepare, restore_property_graph
@@ -93,13 +94,14 @@ async def _read_object(request, size_limit, *allowed_fields):
     return data
 
 
-def _database_route(connection, instance_id, lock, queries, journal_sync):
+def _database_route(connection, instance_id, lock, queries, journal_sync, project_root):
     async def database(request: Request):
         try:
-            data = await _read_object(request, 65536, {"instance_id", "sql"}, {"instance_id", "sql", "page_size"},
-                                      {"instance_id", "query_id", "offset", "page_size"},
-                                      {"instance_id", "query_id", "offset", "page_size", "grid"},
-                                      {"instance_id", "sql", "page_size", "grid"})
+            bases = ({"instance_id", "sql", "page_size"}, {"instance_id", "query_id", "offset", "page_size"})
+            keys = ("grid", "result_delivery", "result_format", "preview")
+            optional = [{key for index, key in enumerate(keys) if mask & (1 << index)} for mask in range(16)]
+            data = await _read_object(request, 65536, {"instance_id", "sql"},
+                                      *(base | options for base in bases for options in optional))
             if data["instance_id"] != instance_id:
                 return _error("foreign_instance", "Instance does not match", 403)
             with lock:
@@ -107,7 +109,7 @@ def _database_route(connection, instance_id, lock, queries, journal_sync):
                     return _error("generation_required", "Generation admission required", 409)
                 if journal_sync is not None and "sql" in data:
                     journal_sync()
-                result = _database_result(connection, queries, data)
+                result = _database_result(connection, queries, data, project_root)
             return JSONResponse({"result": result})
         except (ValueError, TypeError, duckdb.Error) as error:
             return _error("invalid_query", str(error), 400)
@@ -117,18 +119,25 @@ def _database_route(connection, instance_id, lock, queries, journal_sync):
     return database
 
 
-def _database_result(connection, queries, data):
+def _database_result(connection, queries, data, project_root):
     if "page_size" not in data:
         return query(connection, data["sql"])
     page_size = data["page_size"]
     if type(page_size) is not int or not 1 <= page_size <= 1000:
         raise ValueError("page_size must be an integer from 1 to 1000")
+    delivery, result_format = data.get("result_delivery", "inline"), data.get("result_format", "json_matrix")
+    validate_delivery(delivery, result_format)
+    preview = validate_preview(data.get("preview"))
     if "query_id" not in data:
-        return queries.run(connection, data["sql"], page_size, data.get("grid"))
-    offset = data["offset"]
-    if type(offset) is not int or offset < 0:
-        raise ValueError("offset must be a non-negative integer")
-    return queries.page(data["query_id"], offset, page_size, data.get("grid"))
+        page = queries.run(connection, data["sql"], page_size, data.get("grid"), preview=preview)
+    else:
+        offset = data["offset"]
+        if type(offset) is not int or offset < 0:
+            raise ValueError("offset must be a non-negative integer")
+        page = queries.page(data["query_id"], offset, min(page_size, preview) if preview is not None else page_size,
+                            data.get("grid"))
+    return deliver(queries, project_root, page, delivery, result_format,
+                   full="query_id" not in data, grid=data.get("grid"))
 
 
 def _workspace_route(store, instance_id, lock, history, saved_queries):
@@ -236,7 +245,7 @@ def create_app(connection, instance_id, manifest_sha256, project_root=None, resu
         if history is not None:
             history.sync()
 
-    workspaces = ViewQueries(WorkspaceStore(project_root), connection, queries, sync_sources) if project_root is not None else None
+    workspaces = ViewQueries(WorkspaceStore(project_root), connection, queries, sync_sources, project_root) if project_root is not None else None
 
     @asynccontextmanager
     async def lifespan(_):
@@ -266,7 +275,7 @@ def create_app(connection, instance_id, manifest_sha256, project_root=None, resu
     return Starlette(routes=[
         Route("/health", health),
         Route("/schema", _schema_route(connection, instance_id, lock)),
-        Route("/database", _database_route(connection, instance_id, lock, queries, sync_sources), methods=["POST"]),
+        Route("/database", _database_route(connection, instance_id, lock, queries, sync_sources, project_root), methods=["POST"]),
         Route("/workspace", _workspace_route(workspaces, instance_id, lock, history, saved_queries), methods=["POST"]),
         Route("/results/rebuild", _rebuild_route(connection, instance_id, lock, queries, workspaces, sync_sources), methods=["POST"]),
         Route("/generation", _generation_route(connection, instance_id, manifest_sha256, lock, queries, workspaces, sync_sources), methods=["PUT"]),

@@ -71,6 +71,18 @@ class WorkbenchWebTests(unittest.TestCase):
                 self.assertEqual(404, client.post(f"/anechoic/other/api/{path}", json=body).status_code)
                 self.assertEqual(400, client.post(f"{API_PATH}/{path}", json={**body, "project_root": "/invalid"}).status_code)
 
+    def test_http_run_defaults_to_file_and_preserves_explicit_inline(self):
+        gateway = FakeGateway()
+        with TestClient(Starlette(routes=routes(gateway))) as client:
+            self.assertEqual(200, client.post(f"{API_PATH}/run", json={"sql": "SELECT 1"}).status_code)
+            self.assertEqual(200, client.post(f"{PROJECT_PATH}/run", json={
+                "sql": "SELECT 1", "result_delivery": "inline"}).status_code)
+        self.assertEqual("file", gateway.workbench.calls[-2][1]["result_delivery"])
+        self.assertEqual("inline", gateway.workbench.calls[-1][1]["result_delivery"])
+        with TestClient(Starlette(routes=routes(gateway, shared=True))) as client:
+            self.assertEqual(200, client.post(f"{API_PATH}/run", json={"project_root": "/project", "sql": "SELECT 1"}).status_code)
+        self.assertEqual("file", gateway.workbench.calls[-1][1]["result_delivery"])
+
     def test_backend_receives_public_url_and_original_root(self):
         gateway = FakeGateway()
         with TestClient(Starlette(routes=routes(gateway)), base_url="http://workbench.test") as client:
