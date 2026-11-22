@@ -126,7 +126,7 @@ class BoundNativeModel:
         if self.requires_atom_state:
             from types import SimpleNamespace
             fields.update(manifest_state_fields(SimpleNamespace(metadata=header), include_header=self.requires_atom_header))
-        names = {"project_contract": ("Project Contract", (0,)), "axiom": ("Axiom", (-1,)), "applicable_principle": ("Applicable Principle", (1, 2))}
+        names = {"project_contract": ("Project Contract", (0,)), "axiom": ("Axiom", (0,)), "applicable_principle": ("Applicable Principle", (1, 2))}
         if template not in names or names[template][0] not in self._types:
             raise ValueError("Project SPEC template is not supported by the compiled Model")
         name, tiers = names[template]

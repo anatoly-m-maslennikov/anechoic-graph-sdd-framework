@@ -217,7 +217,7 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
 
 
     async def test_project_queries_include_all_current_atoms_at_selected_tier(self):
-        self._write("AN-S-1428-axiom.md", "AN-S-1428", "active", 1, template="axiom", tier=-1)
+        self._write("AN-S-1428-axiom.md", "AN-S-1428", "active", 1, template="axiom", tier=0)
         self._write("AN-S-1429-contract.md", "AN-S-1429", "active", 1, template=None, tier=0)
         self._write("AN-S-3190-principle.md", "AN-S-3190", "active", 1, template="applicable_principle", tier=2)
         self._write("AN-S-3038-manifest.md", "AN-S-3038", "active", 1, template="component_manifest", tier=0)

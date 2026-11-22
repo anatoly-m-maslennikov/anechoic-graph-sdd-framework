@@ -47,6 +47,12 @@ def _authored_edges(row):
                    "target_ref": target, "relation_type": name, "derived": False}
 
 
+_HISTORICAL_RELATIONS = {
+    "ADVANCES": "SERVES", "IS_ADVANCED_BY": "IS_SERVED_BY",
+    "REFINES": "CONTRIBUTES_TO", "IS_REFINED_BY": "RECEIVES_CONTRIBUTION_FROM",
+}
+
+
 def _projected_rows(capture, relation_types, inverse):
     rows = [{**row, "relation_edges_json": []} for row in capture.atoms]
     by_ref = {row["ref"]: row for row in rows}
@@ -68,12 +74,8 @@ def _projected_rows(capture, relation_types, inverse):
                 "relation_type": inverse[name], "derived": True,
             })
 
-    historical = {
-        old: new for old, new in {
-            "ADVANCES": "SERVES", "IS_ADVANCED_BY": "IS_SERVED_BY",
-            "REFINES": "CONTRIBUTES_TO", "IS_REFINED_BY": "RECEIVES_CONTRIBUTION_FROM",
-        }.items() if old not in relation_types and new in relation_types
-    }
+    historical = {old: new for old, new in _HISTORICAL_RELATIONS.items()
+                  if old not in relation_types and new in relation_types}
     for edge in capture.containment:
         add(dict(edge))
     for row in rows:

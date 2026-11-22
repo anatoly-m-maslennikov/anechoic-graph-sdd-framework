@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: active
-  version: 1
-  updated_at: '2026-11-22T11:33:41.387153+00:00'
+  status: "active"
+  version: 2
+  updated_at: "2026-11-22T11:57:56.223650+00:00"
 ---
 ## Summary
 
@@ -28,7 +28,28 @@ declare_entity(
         component_id='C68',
         name='Orchestrator Beta',
         lens_whitelist=['DES', 'SPEC'],
-        boundaries={'code': {'imports': {'only': []}}, 'io': {'server': {'jobs': {'transport': 'http', 'socket': 'private Unix socket', 'runner': 'managed_python', 'module': 'ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__pub', 'arguments': ['--socket', '<socket>', '--instance-id', '<instance-id>'], 'routes': ['GET /health', 'POST /jobs/build', 'GET /jobs/worker-runs']}}, 'client': {'snapshot_worker': {'component': 'C69', 'transport': 'cli'}}}, 'state': {'reads': [], 'writes': ['active snapshot build and latest Worker outcome in memory']}},
+        boundaries={'code': {'imports': {'only': ['source_watcher__pub.SourceWatcher']}},
+         'io': {'server': {'jobs': {'transport': 'http',
+                                    'socket': 'private Unix socket',
+                                    'runner': 'managed_python',
+                                    'module': 'ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__pub',
+                                    'arguments': ['--socket',
+                                                  '<socket>',
+                                                  '--instance-id',
+                                                  '<instance-id>',
+                                                  '--binding-file',
+                                                  '<pinned-project-binding>',
+                                                  '--database-socket',
+                                                  '<kernel-socket>'],
+                                    'routes': ['GET /health',
+                                               'POST /jobs/build',
+                                               'GET /jobs/worker-runs']}},
+                'client': {'snapshot_worker': {'component': 'C69', 'transport': 'cli'},
+                           'database': {'component': 'C71',
+                                        'transport': 'http',
+                                        'route': 'PUT /generation'}}},
+         'state': {'reads': ['pinned Project binding', 'Project source change events'],
+                   'writes': ['active build and latest Worker outcome in memory']}},
     ),
 )
 ```

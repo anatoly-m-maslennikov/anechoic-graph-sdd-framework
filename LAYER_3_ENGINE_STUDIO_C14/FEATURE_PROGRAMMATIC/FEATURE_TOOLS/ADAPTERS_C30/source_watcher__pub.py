@@ -32,7 +32,7 @@ class SourceWatcher:
         *, implementation_root: Path | None = None, observer_factory: Callable[[], Any] | None = None,
         exclude_directory: Callable[[str], bool] | None = None,
         additional_directory: Path | None = None,
-        poll_bind_mount: bool = False,
+        poll_bind_mount: bool = False, watch_root_files: bool = False,
     ) -> None:
         self._root = Path(root).absolute()
         self._control_root = Path(control_root).absolute()
@@ -56,6 +56,7 @@ class SourceWatcher:
         self._observer_factory = observer_factory
         self._exclude_directory = exclude_directory if self._root in self._roots else None
         self._poll_bind_mount = poll_bind_mount
+        self._watch_root_files = watch_root_files
         self._observer: Any = None
         self._changes: Queue[Change] = Queue()
         self._watched_directories: dict[Path, Any] = {}
@@ -75,6 +76,8 @@ class SourceWatcher:
                     for child in path.iterdir():
                         if child.is_dir() and not child.is_symlink() and not self._exclude_directory(child.relative_to(self._root).as_posix()):
                             self._watched_directories[child] = observer.schedule(_Handler(self), str(child), recursive=True)
+            if self._watch_root_files and self._root not in self._watched_directories:
+                self._watched_directories[self._root] = observer.schedule(_Handler(self), str(self._root), recursive=False)
             extra = self._additional_directory
             if extra is not None and extra not in self._watched_directories:
                 self._watched_directories[extra] = observer.schedule(_Handler(self), str(extra), recursive=False)
@@ -137,6 +140,8 @@ class SourceWatcher:
             return None
         if ".." in candidate.parts:
             return None
+        if self._watch_root_files and candidate.parent == self._root:
+            return candidate.relative_to(self._root).as_posix()
         if any(candidate.is_relative_to(root) for root in self._roots):
             return candidate.relative_to(self._root).as_posix()
         resolved = candidate.resolve(strict=False)

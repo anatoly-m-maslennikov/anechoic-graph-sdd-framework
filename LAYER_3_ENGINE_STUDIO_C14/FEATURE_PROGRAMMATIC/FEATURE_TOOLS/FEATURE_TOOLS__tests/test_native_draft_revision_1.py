@@ -12,6 +12,7 @@ sys.path[:0] = [str(TOOLS), str(ENGINE / 'IWE_CONSOLE_C43')]
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_source_rows__pub import capture_native
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.common import InputError, SourceChanged
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_draft import create_draft, promote_draft
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_update_spec import change_spec_status
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_header__pub import canonical_native_header
 
 
@@ -20,6 +21,35 @@ import FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.test_native_lifec
 
 
 class NativeRevisionCarrierTests(fixtures.NativeRevisionCarrierTests, unittest.TestCase):
+    def test_project_goal_revision_returns_active_to_repository_root(self):
+        manifest = self.selection.manifest_path.rename(self.root / self.selection.manifest_path.name)
+        manifest.write_text(manifest.read_text().replace("component: C0", "component: C00"))
+        self.selection.manifest_path = manifest
+        self.selection.manifest_sha256 = sha256(manifest.read_bytes()).hexdigest()
+        goal = self.root / "AN-S-1233-SPEC-PROJECT_GOAL--goal.md"
+        goal.write_text(
+            "---\natom_family: SPEC\natom_id: AN-S-1233\ncontainer: {component: C00}\ntier: -1\n"
+            "context: {template: project_goal, lens: SPEC}\n"
+            "state: {status: active, version: 1, updated_at: '2026-11-19T00:00:00Z'}\n"
+            "---\n## Summary\n\nGoal\n\nOriginal.\n",
+        )
+        draft = create_draft(self.selection, {
+            "sourceCurrent": {"ref_id": "AN-S-1233", "version": 1},
+            "changes": {"body": "\n## Summary\n\nGoal\n\nRevised.\n"},
+        }, current_rows=capture_native(self.selection).atoms)["savedDraft"]
+        self.assertEqual(self.control / "01_draft", (self.root / draft["path"]).parent)
+        ready = promote_draft(self.selection, {
+            "target": {"ref_id": draft["ref_id"], "version": 2}, "targetStatus": "ready",
+        }, current_rows=capture_native(self.selection).atoms)
+        self.assertEqual("completed", ready["outcome"], ready)
+        self.assertEqual(self.control / "02_ready", (self.root / ready["artifact"]["path"]).parent)
+        active = change_spec_status(self.selection, {
+            "target": {"ref_id": "AN-S-1233", "version": 2}, "targetStatus": "active",
+        }, current_rows=capture_native(self.selection).atoms)
+        self.assertEqual("completed", active["outcome"], active)
+        self.assertEqual(goal.name, active["artifact"]["path"])
+        self.assertIn("Revised.", goal.read_text())
+
     def test_revision_archives_existing_epic_spec_and_pmeta(self):
         cases = [
             ('001_TICKETS/TASKS/AN-T-4-EPIC--example.md', 'AN-T-4', 'epic', '001_TICKETS/TASKS'),

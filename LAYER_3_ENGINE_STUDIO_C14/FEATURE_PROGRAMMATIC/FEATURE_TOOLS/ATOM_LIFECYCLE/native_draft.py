@@ -74,7 +74,7 @@ def _create_revision(selection, params, current_rows, structure_snapshot):
                     'source_path', 'id', 'ref', '_exact_ref', 'version', 'status', 'status_group',
                     'header_json', '_content_bytes', '_source_sha256')):
                 raise common.SourceChanged('Current carrier source changed after selection.')
-            raw = ReadContext(roots=[str(selection.control_root)], limits=dict(CEILINGS)).read(path)
+            raw = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS)).read(path)
             bounds = frontmatter_bounds(raw)
             if (bounds is None or sha256(raw).hexdigest() != digest
                     or raw[bounds[2]:] != selected.get('_content_bytes')
@@ -141,7 +141,7 @@ def _create_component_contract(selection, values, structure_snapshot):
     except ValueError as error:
         raise common.InputError('lens', 'Supply a valid Lens.') from error
     if (not selection.root.is_absolute() or not selection.control_root.is_relative_to(selection.root)
-            or not selection.manifest_path.is_relative_to(selection.control_root)):
+            or selection.manifest_path.parent not in {selection.root, selection.control_root}):
         raise common.SourceChanged('Selected Project path is invalid.')
     with _first_spec_write_lock(selection.root):
         try:

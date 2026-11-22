@@ -7,12 +7,12 @@ tier: 4
 context:
   lens: DES
 relations:
-  REFINES:
+  CONTRIBUTES_TO:
   - AN-S-3329
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-22T11:00:54.983176+00:00'
+  version: 2
+  updated_at: '2026-11-22T11:34:35.965837+00:00'
 ---
 ## Summary
 

@@ -35,7 +35,7 @@ def initialize_project(source_checkout: Path, project: Path, name: str, prefix: 
         raise ValueError("Invalid Project storage mode")
     control = root / (".anechoic_" + name.casefold())
     atom_id = f"{prefix}-S-1"
-    manifest = control / f"{atom_id}-SPEC-PROJECT_MANIFEST--declare-project.md"
+    manifest = root / f"{atom_id}-SPEC-PROJECT_MANIFEST--declare-project.md"
     body = _manifest_body(atom_id, name, prefix, workbench_storage, journal_storage)
     _write_manifest(root, control.name, manifest.name, body)
     return control
@@ -76,14 +76,12 @@ def _write_manifest(root: Path, control: str, manifest: str, body: str) -> None:
                 match = re.fullmatch(r"[._]anechoic_(.+)", entry.name)
                 if match and match.group(1) not in _RESERVED:
                     raise FileExistsError(f"Project control candidate already exists: {entry.name}")
+                if re.fullmatch(r".+-PROJECT_MANIFEST--.+\.md", entry.name):
+                    raise FileExistsError(f"Project Manifest already exists: {entry.name}")
         os.mkdir(control, dir_fd=root_fd)
         control_stat = os.stat(control, dir_fd=root_fd, follow_symlinks=False)
         try:
-            control_fd = os.open(control, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=root_fd)
-            try:
-                _publish_manifest(control_fd, manifest, body)
-            finally:
-                os.close(control_fd)
+            _publish_manifest(root_fd, manifest, body)
         except BaseException:
             try:
                 current = os.stat(control, dir_fd=root_fd, follow_symlinks=False)

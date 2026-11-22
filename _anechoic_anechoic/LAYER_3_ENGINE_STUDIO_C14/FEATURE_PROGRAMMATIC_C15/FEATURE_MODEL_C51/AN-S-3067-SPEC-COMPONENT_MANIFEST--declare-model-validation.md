@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: active
-  version: 21
-  updated_at: '2026-11-22T11:23:40.206159+00:00'
+  status: "active"
+  version: 22
+  updated_at: "2026-11-22T11:41:29.452942+00:00"
 ---
 
 ## Summary
@@ -48,7 +48,7 @@ declare_entity(
                 ],
                 'exports': {
                     'model_declaration_bindings.bind_model_declarations': {'private': ['LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
-                    'model_generation__pub.open_admitted_model': {'private': ['C62', 'CS1', 'CS2']},
+                    'model_generation__pub.open_admitted_model': {'private': ['C62', 'C70', 'CS1', 'CS2']},
                     'model_generation__pub.verify_model': {'private': ['CS1', 'CS2']},
                     'FEATURE_MODEL_VALIDATION__shared': None,
                     'FEATURE_MODEL_VALIDATION__shared.bind_model_declarations': {'shared': ['LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_FORMAL_MODEL_GENERATOR/FEATURE_FORMAL_MODEL_GENERATOR__tests']},

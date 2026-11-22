@@ -109,7 +109,8 @@ def _initialize(source: Path, values: Settings, arguments: argparse.Namespace) -
     )
     if root.returncode or Path(root.stdout.rstrip("\n")) != project:
         raise ValueError("--project must select the Git repository root")
-    if any(project.glob("[._]anechoic_*/*-PROJECT_MANIFEST--*.md")):
+    if (any(project.glob("*-PROJECT_MANIFEST--*.md"))
+            or any(project.glob("[._]anechoic_*/*-PROJECT_MANIFEST--*.md"))):
         return False
     if not arguments.init_project:
         raise ValueError("The repository needs a Project Manifest. Supply --init-project, --name and --prefix.")

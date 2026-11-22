@@ -24,6 +24,13 @@ _SHA = re.compile(r"[0-9a-f]{64}\Z")
 _SCHEMA = "org.anechoic.runtime.schema"
 _FINGERPRINT = "org.anechoic.runtime.fingerprint"
 _VERSION = "org.opencontainers.image.version"
+
+
+def _candidate_role(identity: ImageIdentity) -> str:
+    beta_entrypoint = ENGINE + "/WORKBENCH_BACKEND_beta_C70/WORKBENCH_BACKEND_beta_C70__pub.py"
+    return "beta" if any(path == beta_entrypoint for path, _, _ in identity.manifest) else "test"
+
+
 def _unique(pairs):
     result = {}
     for key, value in pairs:
@@ -201,8 +208,10 @@ class ImageManager(ImageInputIdentity):
             self._verify_context(context, identity)
             labels = {_SCHEMA: "1", _FINGERPRINT: identity.fingerprint, _VERSION: identity.version, **self.labels}
             label_args = tuple(arg for key, value in labels.items() for arg in ("--label", f"{key}={value}"))
+            role = _candidate_role(identity)
             iidfile = stage / "image.id"
             self._run(("docker", "build", "--iidfile", str(iidfile), *label_args, "--platform", self.platform,
+                       *(("--target", "beta") if role == "beta" else ()),
                        "--build-arg", f"RUNTIME_UID={self.uid}", "--build-arg", f"RUNTIME_GID={self.gid}",
                        "--file", str(context / DOCKERFILE), str(context)), cwd=context, buildx=buildx)
             if iidfile.is_symlink() or not iidfile.is_file() or iidfile.stat().st_size > 1024:
@@ -214,7 +223,7 @@ class ImageManager(ImageInputIdentity):
             self._verify_context(context, identity)
             if self.identity(use_packaged_assets=True) != identity:
                 raise RuntimeError("image inputs changed")
-            self._tag(image, "test")
+            self._tag(image, role)
             return image
 
     def _tag_images(self, tag: str) -> set[str]:
@@ -235,9 +244,12 @@ class ImageManager(ImageInputIdentity):
     def mark_production_image(self, image: str) -> str:
         if not isinstance(image, str) or _IMAGE.fullmatch(image) is None:
             raise ValueError("invalid immutable image")
-        self._inspect(image, self.identity(use_packaged_assets=True))
+        identity = self.identity(use_packaged_assets=True)
+        self._inspect(image, identity)
+        if self.identity(use_packaged_assets=True) != identity:
+            raise RuntimeError("image inputs changed")
         tag = self._tag(image, "prod")
-        test_tag = "anechoic-runtime:test-" + image[7:]
-        if self._tag_images(test_tag) == {image}:
-            self._run(("docker", "image", "rm", test_tag))
+        candidate_tag = f"anechoic-runtime:{_candidate_role(identity)}-{image[7:]}"
+        if self._tag_images(candidate_tag) == {image}:
+            self._run(("docker", "image", "rm", candidate_tag))
         return tag

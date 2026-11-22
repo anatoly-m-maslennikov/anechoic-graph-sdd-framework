@@ -135,7 +135,7 @@ class LifecycleRouteMatrix(LifecycleRouteSupport, unittest.TestCase):
     def _check_spec_lifecycle(self, project, template, values, rows, validate, calls, before):
         carrier_root = project.control_root
         if template == 'axiom':
-            for invalid in ({'tier': 0}, {'lens': 'DES'}, {'container': {'component': 'C9'}}):
+            for invalid in ({'tier': -1}, {'lens': 'DES'}, {'container': {'component': 'C9'}}):
                 with self.subTest(invalid=invalid), self.assertRaises(InputError):
                     create_draft(project, {'newAtom': {**values, **invalid}}, current_rows=rows(),
                                  validate_project_spec_model=validate)

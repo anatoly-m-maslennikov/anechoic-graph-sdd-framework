@@ -29,7 +29,7 @@ _CLAIM_FILES = {
 def reviewed_model_records():
     """Return normalized reviewed Claims, their originals, and a source fingerprint."""
     records, originals = [], {}
-    digest = sha256(b"retire-component-purpose\0")
+    digest = sha256(b"retire-component-purpose\0component-manifest-tier-4\0")
     for name, expected in _CLAIM_FILES.items():
         data = (_ASSETS / name).read_bytes()
         if sha256(data).hexdigest() != expected:
@@ -42,6 +42,11 @@ def reviewed_model_records():
             originals[row["subject"]] = claim
             subject = row["subject"].replace("PMETA Atom", "Project Config Atom")
             claim = claim.replace("PMETA Atom", "Project Config Atom").replace("PMETAAtom", "ProjectConfigAtom")
+            if subject.endswith("//Component Manifest"):
+                old = 'tier: int = field(metadata={"allowed_values": (0,)})'
+                if claim.count(old) != 1:
+                    raise ValueError(f"{subject}: reviewed tier declaration differs")
+                claim = claim.replace(old, 'tier: int = field(metadata={"allowed_values": (4,)})')
             records.append((name, subject, normalize_reviewed_claim(claim)))
     _check_relation_references(records)
     return records, originals, digest.hexdigest()

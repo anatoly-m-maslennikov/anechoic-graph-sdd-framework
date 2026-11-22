@@ -25,6 +25,19 @@ IMAGE_ID = "sha256:" + "a" * 64
 
 
 
+BETA_FIXTURE_FILES = (
+    "KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__pub.py",
+    "ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__pub.py",
+    "WORKERS_beta_C69/WORKERS_beta_C69__pub.py",
+    *("WORKBENCH_BACKEND_beta_C70/" + name for name in (
+        "WORKBENCH_BACKEND_beta_C70__pub.py", "runtime__pub.py",
+        "project_admission__pub.py", "shared_runtime__pub.py", "query_run.json")),
+    "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/index.html",
+    "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/legacy.py",
+    "KERNEL_MIXER_C59/legacy.py",
+)
+
+
 class LifecycleImageAssetsTests(unittest.TestCase):
     def test_stack_selector_controls_current_source_closure(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -46,11 +59,37 @@ class LifecycleImageAssetsTests(unittest.TestCase):
             self.assertNotEqual(before.fingerprint, selected.fingerprint)
             self.assertIn("project.toml", {entry.path for entry in selected.manifest})
             selector.write_text('stack = "beta"\n')
-            with self.assertRaisesRegex(images.ImageError, "Beta runtime entry point is not ready"):
+            with self.assertRaises(images.ImageError):
                 manager.identity()
+            for relative in BETA_FIXTURE_FILES:
+                path = root / image_inputs.ENGINE_ROOT / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("fixture")
+            with patch.object(manager, "_refresh_model", side_effect=AssertionError), \
+                 patch.object(images, "_compile_tool_registry", side_effect=AssertionError):
+                beta = manager.identity()
+            paths = {entry.path for entry in beta.manifest}
+            self.assertTrue(all(image_inputs.ENGINE_ROOT + "/" + name in paths for name in BETA_FIXTURE_FILES[:-2]))
+            self.assertTrue(all(image_inputs.ENGINE_ROOT + "/" + name not in paths for name in BETA_FIXTURE_FILES[-2:]))
+            self.assertNotIn(registry_stage.TOOL_REGISTRY, paths)
+            self.assert_beta_build_context(root, manager, beta, paths)
             selector.write_text('stack = "current"\nextra = true\n')
             with self.assertRaisesRegex(images.ImageError, "must specify"):
                 manager.identity()
+
+    def assert_beta_build_context(self, root, manager, beta, paths):
+        context = root / "context"
+        context.mkdir()
+        manager._assemble(context, beta)
+        self.assertEqual("beta", manager._stack_input(context)[0])
+        self.assertEqual(paths, {p.relative_to(context).as_posix() for p in context.rglob("*") if p.is_file()})
+        with patch.object(manager, "_build_parent", return_value=root), \
+             patch.object(manager, "_current"), \
+             patch.object(manager, "_run", side_effect=RuntimeError("captured")) as run:
+            with self.assertRaisesRegex(RuntimeError, "captured"):
+                manager._build(beta, use_packaged_assets=False)
+            command = run.call_args.args[0]
+            self.assertEqual("beta", command[command.index("--target") + 1])
 
     def test_registry_generator_stages_backend_assets_without_touching_source(self):
         backend = "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND"

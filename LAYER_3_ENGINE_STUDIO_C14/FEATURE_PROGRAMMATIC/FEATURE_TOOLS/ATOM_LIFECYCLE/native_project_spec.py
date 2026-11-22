@@ -11,7 +11,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_source_rows__pub imp
 from . import common
 from .source import bind_query_reader
 
-PROJECT_SPEC_TIERS = {'project_contract': (0,), 'axiom': (-1,), 'applicable_principle': (1, 2)}
+PROJECT_SPEC_TIERS = {'project_contract': (0,), 'axiom': (0,), 'applicable_principle': (1, 2)}
 
 
 def validate_project_spec(header, validate, body=None):
@@ -50,7 +50,7 @@ def create_project_spec(selection, values, validate):
         raise common.InputError('lens', 'Supply a valid Lens.') from error
     summary = _summary(values['body'])
     if (not selection.root.is_absolute() or not selection.control_root.is_relative_to(selection.root)
-            or not selection.manifest_path.is_relative_to(selection.control_root)):
+            or selection.manifest_path.parent not in {selection.root, selection.control_root}):
         raise common.SourceChanged('Selected Project path is invalid.')
     with _first_spec_write_lock(selection.root):
         try:

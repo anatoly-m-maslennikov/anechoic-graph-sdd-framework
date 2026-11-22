@@ -8,7 +8,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.component_manifest__pub imp
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.code_access_rules__pub import parse_code_access
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.atom_reference__pub import derive_atom_ref
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_header__pub import native_header_view
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.project_manifest__pub import active_manifest_carriers, manifest_inputs, manifest_state_fields
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.project_manifest__pub import select_manifest_carriers, manifest_inputs, manifest_state_fields
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import parse_carrier
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__pub import CEILINGS, ReadContext, open_regular
 
@@ -112,8 +112,9 @@ def _walk_structure(reader, pending, inventories, directory_ids, project_fields,
 def compile_structure(selection, model) -> dict:  # noqa: C901
     """Compile the selected Project and its active Component Manifests."""
     control = Path(os.path.abspath(selection.control_root))
-    reader = ReadContext(roots=[str(control)], limits=dict(CEILINGS))
-    sources = active_manifest_carriers(reader, control)
+    root = control.parent
+    reader = ReadContext(roots=[str(root)], limits=dict(CEILINGS))
+    sources = select_manifest_carriers(reader, root, control)
     selected = next(sources, None)
     if selected is None or next(sources, None) is not None:
         raise ValueError('Expected exactly one active Project Manifest')

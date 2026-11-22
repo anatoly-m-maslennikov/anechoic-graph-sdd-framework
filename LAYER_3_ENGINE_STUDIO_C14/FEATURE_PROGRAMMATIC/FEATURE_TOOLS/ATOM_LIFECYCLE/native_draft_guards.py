@@ -100,7 +100,7 @@ def _contract_owner(selection, component, lens, snapshot, capture):
         raise common.InputError('container', 'Supply a Component in the current Project Structure.')
     try:
         spec_lens_directories(lens)
-        reader = ReadContext(roots=[str(selection.control_root)], limits=dict(CEILINGS))
+        reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
         raw = reader.read(selection.manifest_path)
         if sha256(raw).hexdigest() != selection.manifest_sha256:
             raise ValueError('Project Manifest changed')

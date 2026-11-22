@@ -25,25 +25,37 @@ def _manifest_paths(reader: ReadContext, control: Path):
             yield path
 
 
-def manifest_sources(reader: ReadContext, control: Path):
+def manifest_sources(reader: ReadContext, control: Path, *, root_candidates=False):
     for path in _manifest_paths(reader, control):
+        if root_candidates and "-PROJECT_MANIFEST--" not in path.name:
+            continue
         try:
             carrier = parse_carrier(reader.read(path), path)
         except ValueError:
-            if re.match(r"[A-Z]+-S-", path.name):
+            if root_candidates or re.match(r"[A-Z]+-S-", path.name):
                 raise
             continue
         if "atom_family" in carrier.metadata or re.match(r"[A-Z]+-S-", path.name):
             yield path, carrier
 
 
-def active_manifest_carriers(reader: ReadContext, control: Path):
-    for path, carrier in manifest_sources(reader, control):
+def active_manifest_carriers(reader: ReadContext, control: Path, *, root_candidates=False):
+    for path, carrier in manifest_sources(reader, control, root_candidates=root_candidates):
         context = native_header_view(carrier.metadata).get("context")
         state = carrier.metadata.get("state")
         if (isinstance(context, dict) and context.get("template") == "project_manifest"
                 and isinstance(state, dict) and state.get("status") == "active"):
             yield path, carrier
+
+
+
+def select_manifest_carriers(reader: ReadContext, root: Path, control: Path):
+    """Select root candidates first, retaining the control-root compatibility path."""
+    candidates = [path for path in _manifest_paths(reader, root)
+                  if "-PROJECT_MANIFEST--" in path.name]
+    if candidates:
+        return active_manifest_carriers(reader, root, root_candidates=True)
+    return active_manifest_carriers(reader, control)
 
 
 def manifest_inputs(path: Path, carrier: ParsedCarrier) -> tuple[dict[str, object], str]:

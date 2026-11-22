@@ -8,6 +8,7 @@ import sys
 from . import boundary_tables, realization_projection
 from .import_cache import read_import_sources
 from .native_projection import project_native, project_native_delta, replace_component_metrics
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_placement__pub import project_goal_filename
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_source_rows__pub import NativeCapture, NativeManifestChanged, check_native_manifest, capture_native
 from .package_audit import replace_package_audit
 from .query_store import QueryStore
@@ -198,7 +199,8 @@ class NativeQueryProjection:
                 if raw_path is None:
                     continue
                 path = PurePosixPath(raw_path)
-                if not path.is_relative_to(control) or path.is_relative_to(generated):
+                if (not path.is_relative_to(control) and not (len(path.parts) == 1 and
+                        (path == self.selection.manifest_path.relative_to(self._root) or project_goal_filename(path.name)))) or path.is_relative_to(generated):
                     continue
                 if path.suffix == ".md" or (self._root / path).is_dir() or (key == "old_path" and any(
                     raw_path != row["source_path"] and row["source_path"].startswith(raw_path + "/")
@@ -208,7 +210,7 @@ class NativeQueryProjection:
         return files
 
     def _manifest_needs_reload(self, previous: NativeCapture | None) -> bool:
-        reader = ReadContext(roots=[str(self.selection.control_root)], limits=dict(CEILINGS))
+        reader = ReadContext(roots=[str(self.selection.root)], limits=dict(CEILINGS))
         try:
             check_native_manifest(reader, self.selection, previous)
         except (NativeManifestChanged, OSError):

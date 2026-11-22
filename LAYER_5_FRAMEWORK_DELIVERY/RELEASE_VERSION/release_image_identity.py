@@ -26,6 +26,16 @@ TOOL_REGISTRY = ENGINE + "/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKE
 _EXCLUDED = frozenset({".git", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", ".tox", ".nox", ".venv", ".virtualenv", "venv", "virtualenv", "node_modules", "testcache", ".testcache", "tmp", "vault", ".vault", "secrets", ".secrets", "credentials", ".credentials"})
 _SECRETS = frozenset({"auth.json", "credentials.json", "token.txt", "token.json", "secrets.json", "secrets.txt", ".DS_Store"})
 _REQUIRED = (ENGINE + "/pyproject.toml", ENGINE + "/uv.lock", "version.toml", DOCKERFILE, DOCKERIGNORE, TOOL_REGISTRY)
+_BETA_REQUIRED = tuple(ENGINE + "/" + path for path in (
+    "KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__pub.py",
+    "ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__pub.py", "WORKERS_beta_C69/WORKERS_beta_C69__pub.py",
+    "WORKBENCH_BACKEND_beta_C70/WORKBENCH_BACKEND_beta_C70__pub.py",
+    "WORKBENCH_BACKEND_beta_C70/runtime__pub.py", "WORKBENCH_BACKEND_beta_C70/shared_runtime__pub.py",
+    "WORKBENCH_BACKEND_beta_C70/project_admission__pub.py", "WORKBENCH_BACKEND_beta_C70/query_run.json",
+))
+_BETA_COMPONENTS = frozenset(path.split("/")[1] for path in _BETA_REQUIRED)
+_CURRENT_ONLY = frozenset({ENGINE + "/KERNEL_MIXER_C59",
+                           ENGINE + "/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND"})
 
 
 def _excluded(name: str) -> bool:
@@ -35,10 +45,10 @@ def _excluded(name: str) -> bool:
             or Path(name).suffix in {".pyc", ".pyo", ".pem", ".key"})
 
 
-def _stack_selector(root: Path) -> Path | None:
+def _stack_selector(root: Path) -> tuple[Path | None, str, str | None]:
     path = root / "project.toml"
     if not os.path.lexists(path):
-        return None
+        return None, "current", None
     try:
         if path.is_symlink():
             raise ValueError
@@ -55,9 +65,7 @@ def _stack_selector(root: Path) -> Path | None:
             raise ValueError
     except (OSError, UnicodeError, ValueError, TypeError) as error:
         raise ValueError('invalid project.toml: expected only stack = "current" or "beta"') from error
-    if document["stack"] == "beta":
-        raise ValueError("beta stack unavailable: Beta Components and entrypoint are incomplete")
-    return path
+    return path, document["stack"], hashlib.sha256(data).hexdigest()
 
 
 @dataclass(frozen=True)
@@ -73,18 +81,23 @@ class ImageInputIdentity:
         if root.is_symlink() or not root.is_dir() or root.resolve() != root:
             raise ValueError("image source unavailable")
         paths = []
-        selector = _stack_selector(root)
-        for relative in _REQUIRED:
+        selector, stack, selector_digest = _stack_selector(root)
+        required = _REQUIRED if stack == "current" else _REQUIRED[:-1] + _BETA_REQUIRED
+        for relative in required:
             path = root / relative
             if any((root / Path(*Path(relative).parts[:i])).is_symlink() for i in range(1, len(Path(relative).parts) + 1)) or not path.is_file():
-                raise ValueError("image input unavailable")
+                raise ValueError(f"image input unavailable: {relative}")
         engine = root / ENGINE
         def fail(error):
             raise error
         for current, directories, names in os.walk(engine, followlinks=False, onerror=fail):
             directory = Path(current)
             directories[:] = sorted(name for name in directories if not _excluded(name)
-                                    and re.search(r"_beta_C[0-9]+\Z", name) is None)
+                                    and (stack == "beta" or re.search(r"_beta_C[0-9]+\Z", name) is None)
+                                    and (stack != "beta" or (directory / name).relative_to(root).as_posix() not in _CURRENT_ONLY)
+                                    and (stack != "beta" or re.search(r"_beta_C[0-9]+\Z", name) is None
+                                         or (directory == engine and name in _BETA_COMPONENTS)
+                                         or (directory != engine and directory.relative_to(engine).parts[0] in _BETA_COMPONENTS)))
             if any(name == ".runtime" or name.startswith(".env") for name in directories):
                 raise ValueError("unsafe image input")
             for name in directories:
@@ -101,8 +114,9 @@ class ImageInputIdentity:
                     raise ValueError("unsafe image input")
                 if path.relative_to(root).as_posix() not in RETIRED_ASSETS:
                     paths.append(path)
-        return sorted(set(paths) | {root / relative for relative in _REQUIRED} | ({selector} if selector else set()),
-                      key=lambda p: p.relative_to(root).as_posix())
+        files = sorted(set(paths) | {root / relative for relative in required} | ({selector} if selector else set()),
+                       key=lambda p: p.relative_to(root).as_posix())
+        return files, (selector, stack, selector_digest)
 
     def identity(self, *, use_packaged_assets: bool = False) -> ImageIdentity:
         if not isinstance(use_packaged_assets, bool):
@@ -111,12 +125,16 @@ class ImageInputIdentity:
             version = tomllib.loads((self.source_root / "version.toml").read_text(encoding="utf-8"))["framework"]["version"]
             if not isinstance(version, str) or re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}", version) is None:
                 raise ValueError("invalid framework version")
-            files = self._files()
-            if not (self.source_root / TOOL_REGISTRY).stat().st_size:
+            files, selection = self._files()
+            if self.source_root / TOOL_REGISTRY in files and not (self.source_root / TOOL_REGISTRY).stat().st_size:
                 raise ValueError("image tool registry is empty")
             manifest = tuple((path.relative_to(self.source_root).as_posix(), hashlib.sha256(path.read_bytes()).hexdigest(),
                               0o644 if path.relative_to(self.source_root).as_posix() == TOOL_REGISTRY else path.stat().st_mode & 0o777)
                              for path in files)
+            if (_stack_selector(self.source_root) != selection or
+                    (selection[0] is not None and ("project.toml", selection[2]) not in
+                     {(path, digest) for path, digest, _ in manifest})):
+                raise ValueError("image stack selection changed")
             payload = {"schema": "1", "platform": self.platform,
                        "build_arguments": {"RUNTIME_UID": self.uid, "RUNTIME_GID": self.gid}, "files": manifest}
             fingerprint = hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False).encode("utf-8")).hexdigest()

@@ -1,5 +1,6 @@
 """Source closure and native model preparation for image admission."""
 
+from hashlib import sha256
 import os
 from pathlib import Path
 import re
@@ -19,6 +20,21 @@ except ImportError:
         DOCKER_ROOT, ENGINE_ROOT, RETIRED_ASSETS, _GENERATED_ASSETS, _REQUIRED,
         ImageError, _excluded_directory, _excluded_file, ready_predecessor,
     )
+
+_BETA_ROOTS = {"KERNEL_MIXER_beta_C67", "ORCHESTRATOR_beta_C68",
+               "WORKERS_beta_C69", "WORKBENCH_BACKEND_beta_C70"}
+_BETA_REQUIRED = (
+    "KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__pub.py",
+    "ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__pub.py",
+    "WORKERS_beta_C69/WORKERS_beta_C69__pub.py",
+    *("WORKBENCH_BACKEND_beta_C70/" + name for name in (
+        "WORKBENCH_BACKEND_beta_C70__pub.py", "runtime__pub.py",
+        "project_admission__pub.py", "shared_runtime__pub.py", "query_run.json")),
+)
+_REPLACED_COMPONENTS = {
+    ENGINE_ROOT + "/KERNEL_MIXER_C59",
+    ENGINE_ROOT + "/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND",
+}
 
 
 class ImageSource:
@@ -121,9 +137,9 @@ class ImageSource:
             raise self._input_error()
         return path
 
-    def _stack_input(self, root: Path) -> tuple[Path, ...]:
+    def _stack_input(self, root: Path) -> tuple[str, tuple[Path, ...], str | None]:
         if not os.path.lexists(root / "project.toml"):
-            return ()
+            return "current", (), None
         path = self._file(root, "project.toml")
         try:
             flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
@@ -137,14 +153,15 @@ class ImageSource:
             settings = tomllib.loads(raw.decode("utf-8"))
         except (OSError, ValueError) as error:
             raise ImageError("IMAGE_INPUT_UNAVAILABLE", "Invalid project.toml build selector") from error
-        if settings == {"stack": "beta"}:
-            raise ImageError("IMAGE_INPUT_UNAVAILABLE", "The Beta runtime entry point is not ready for image builds")
-        if settings != {"stack": "current"}:
+        if settings not in ({"stack": "current"}, {"stack": "beta"}):
             raise ImageError("IMAGE_INPUT_UNAVAILABLE", 'project.toml must specify stack = "current" or "beta"')
-        return (path,)
+        return settings["stack"], (path,), sha256(raw).hexdigest()
 
-    def _files(self, root: Path) -> tuple[Path, ...]:
-        required = tuple(self._file(root, relative) for relative in _REQUIRED) + self._stack_input(root)
+    def _files(self, root: Path, stack_input=None) -> tuple[Path, ...]:
+        stack, selector, _ = self._stack_input(root) if stack_input is None else stack_input
+        required = tuple(self._file(root, relative) for relative in _REQUIRED) + selector
+        if stack == "beta":
+            required += tuple(self._file(root, ENGINE_ROOT + "/" + path) for path in _BETA_REQUIRED)
         engine = root / ENGINE_ROOT
         if engine.is_symlink() or not engine.is_dir():
             raise self._input_error()
@@ -157,9 +174,13 @@ class ImageSource:
             folder = Path(current)
             retained = []
             for name in sorted(directories):
-                if _excluded_directory(name) or _excluded_file(name) or re.search(r"_beta_C[0-9]+\Z", name):
-                    continue
                 path = folder / name
+                relative = path.relative_to(root).as_posix()
+                if (_excluded_directory(name) or _excluded_file(name)
+                        or (re.search(r"_beta_C[0-9]+\Z", name) and
+                            (stack != "beta" or (folder == engine and name not in _BETA_ROOTS)))
+                        or (stack == "beta" and relative in _REPLACED_COMPONENTS)):
+                    continue
                 if path.is_symlink() or not path.is_dir():
                     raise self._input_error()
                 retained.append(name)

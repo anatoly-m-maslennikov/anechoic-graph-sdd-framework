@@ -30,7 +30,7 @@ def _promote_new(selection, target, status, draft, current_rows, previous_captur
     path = selection.root / relative
     root = selection.control_root / ('__TKT' if '__TKT' in path.parts else TICKET_DIRECTORY) / 'TASKS'
     if (not selection.root.is_absolute() or not selection.control_root.is_relative_to(selection.root)
-            or not selection.manifest_path.is_relative_to(selection.control_root)
+            or selection.manifest_path.parent not in {selection.root, selection.control_root}
             or relative.is_absolute() or '..' in relative.parts or not path.is_relative_to(root)
             or path.parent.name not in {DRAFT_DIRECTORY, '000_draft'}
             or not re.fullmatch(re.escape(target['ref_id']) + r'-.+--.+\.md', path.name)):

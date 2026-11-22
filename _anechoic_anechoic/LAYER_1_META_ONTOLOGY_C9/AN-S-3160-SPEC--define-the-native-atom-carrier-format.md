@@ -46,7 +46,7 @@ store their Container in `structure.container`. Their published
 revisions require `context.template`.
 
 The Project is the only Container for Axiom and Applicable Principle.
-For Project-local SPEC, the Axiom Template uses the SPEC Lens and Tier -1.
+For Project-local SPEC, the Axiom Template uses the SPEC Lens and Tier 0.
 The Contract Template uses Tier 0, and the Applicable Principle Template
 uses Tier 1 or Tier 2.
 
@@ -124,8 +124,8 @@ family-specific Lens and Template or navigation Label tokens and
 runs joined by hyphens. Preserve the authored Summary.
 
 Active SPEC Atoms at Tiers 0, 1, and 2 use the Component owning root,
-regardless of Lens. The Project Tier -1 Manifest, Goal, and Active Axioms
-use the Project root.
+regardless of Lens. The Project Tier -1 Manifest and Goal use the Project
+root. Active Project Axioms use the Project root.
 SPEC Drafts, Ready Atoms, and Archives use `01_draft/`,
 `02_ready/`, and `09_archived/`, respectively.
 The Project control root uses `001_TICKETS/` and `002_PROJECT_CONFIG/`.

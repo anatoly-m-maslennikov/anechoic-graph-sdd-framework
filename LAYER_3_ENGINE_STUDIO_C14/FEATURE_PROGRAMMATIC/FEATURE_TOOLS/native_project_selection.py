@@ -12,7 +12,8 @@ from typing import Protocol
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_header__pub import native_header_view
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.project_manifest__pub import (
-    ProjectSelectionError, active_manifest_carriers, manifest_inputs, manifest_sources, manifest_state_fields,
+    ProjectSelectionError, active_manifest_carriers, select_manifest_carriers, manifest_inputs,
+    manifest_sources, manifest_state_fields,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection import _instance_id, _project_root
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__pub import CEILINGS, ReadContext, open_regular, protected
@@ -99,8 +100,10 @@ def resolve_native_project(
                 or not is_native_control_name(relative.name) or protected(relative)):
             raise ProjectSelectionError("Native control root must name one explicit direct Project child")
         control = root / relative
-        reader = ReadContext(roots=[str(control)], limits=dict(CEILINGS))
-        sources = active_manifest_carriers(reader, control)
+        descriptor = open_regular(control, directory=True)
+        os.close(descriptor)
+        reader = ReadContext(roots=[str(root)], limits=dict(CEILINGS))
+        sources = select_manifest_carriers(reader, root, control)
         selected = next(sources, None)
         if selected is None or next(sources, None) is not None:
             raise ProjectSelectionError("Expected one Active Tier -1 Project Manifest at Project root")
@@ -179,7 +182,29 @@ def discover_native_project(project_root, control_root=None, *, manifest_validat
                 os.close(descriptor)
 
         controls = control_roots()
-        natives = [native(relative) for relative in controls if _has_manifest(reader, root / relative)]
+        root_candidates = any("-PROJECT_MANIFEST--" in path.name
+                              for path in reader.inventory_shallow(root))
+        if root_candidates:
+            sources = active_manifest_carriers(reader, root, root_candidates=True)
+            candidate = next(sources, None)
+            if candidate is None or next(sources, None) is not None:
+                raise ProjectSelectionError("A unique native Project Manifest is required")
+            fields, _ = manifest_inputs(*candidate)
+            name = fields["name"].casefold()
+            parameters = fields.get("parameters", {})
+            project = parameters.get("project") if isinstance(parameters, dict) else None
+            root_settings = project.get("root") if isinstance(project, dict) else None
+            markers = [".", "_"]
+            if isinstance(root_settings, dict) and "prefix" in root_settings:
+                marker = {"dot": ".", "underscore": "_"}.get(root_settings["prefix"])
+                if marker is None:
+                    raise ProjectSelectionError("Project Manifest root prefix contradicts the selection")
+                markers = [marker]
+            matches = [relative for relative in controls
+                       if relative.name in {f"{marker}anechoic_{name}" for marker in markers}]
+            natives = [native(matches[0])] if len(matches) == 1 else []
+        else:
+            natives = [native(relative) for relative in controls if _has_manifest(reader, root / relative)]
         if len(natives) != 1:
             raise ProjectSelectionError("A unique native Project Manifest is required")
         selected = finish(natives[0])

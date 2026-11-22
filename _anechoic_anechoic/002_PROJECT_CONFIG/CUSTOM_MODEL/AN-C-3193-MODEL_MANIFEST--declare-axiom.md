@@ -23,8 +23,8 @@ Declare Axiom
 
 ## Semantics
 
-An Axiom states an accepted premise for the Project. It uses the SPEC
-Lens and Tier -1. The level 0 Project is its only Container. An Active
+An Axiom states an accepted premise for the Project within the context of
+the Project Goal. It uses the SPEC Lens and Tier 0. The level 0 Project is its only Container. An Active
 Axiom lives at the Project root. Its other revisions use the Project's
 lifecycle status directories.
 
@@ -62,7 +62,7 @@ declare_entity(
     base_path='Node//Artifact//Atom//Spec Atom.Header',
     value_format=int,
     field_options={'kw_only': True},
-    allowed_values=(-1,),
+    allowed_values=(0,),
     value_cardinality=1,
     property_occurrence_cardinality=1,
     applies_to_entity_classes=('Node//Artifact//Atom//Spec Atom//Axiom',),

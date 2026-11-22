@@ -55,17 +55,17 @@ class SharedBackendGateway:
         async with self._lock:
             if self.ready:
                 return
-            if runtime_stack() == "beta":
-                raise RuntimeError("The shared Project coordinator for Beta is unavailable")
             try:
                 self._directory = TemporaryDirectory(prefix="anechoic-shared-", dir="/tmp")
                 socket = Path(self._directory.name).resolve() / "api.sock"
                 engine = Path(__file__).resolve().parents[2]
                 root = engine.parent
                 environment = {**{k: v for k, v in os.environ.items() if k != "PYTHONHOME"}, "PYTHONPATH": str(engine)}
-                command = [sys.executable, "-B", "-P", "-m",
-                           "IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.shared_backend_process",
-                           "--socket", str(socket)]
+                module = (
+                    "WORKBENCH_BACKEND_beta_C70.shared_runtime__pub" if runtime_stack() == "beta" else
+                    "IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.shared_backend_process"
+                )
+                command = [sys.executable, "-B", "-P", "-m", module, "--socket", str(socket)]
                 source = getattr(self.config, "source_path", self.config)
                 if source is not None:
                     command += ["--host-settings", str(source)]

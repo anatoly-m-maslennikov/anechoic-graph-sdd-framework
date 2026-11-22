@@ -9,8 +9,8 @@ context:
   lens: DES
 state:
   status: "active"
-  version: 1
-  updated_at: "2026-11-22T11:19:28.230475+00:00"
+  version: 3
+  updated_at: "2026-11-22T11:57:57.076800+00:00"
 ---
 ## Summary
 
@@ -18,10 +18,10 @@ Serve read-only SQL for the Beta Project snapshot
 
 ## Guarantee
 
-Load the supplied Atom snapshot only when its Manifest digest matches
-the Project binding. Serve one read-only SELECT per request with no
-external access. Return column names and at most 1,000 rows of JSON
-scalars. Refuse requests for a different instance.
+Admit matching Model and Structure artifacts and the Project rows in
+one transaction for the bound Project. Keep the prior generation on
+failed admission. Serve its exact artifact bytes and one read-only SQL
+SELECT per request, with no external access and at most 1,000 rows.
 
 ## References
 

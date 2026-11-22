@@ -67,13 +67,38 @@ def _peer(module, path, instance_id, *args):
         _stop(peer)
 
 
-def _snapshot(jobs, instance_id, binding, path):
-    response = jobs.post("/jobs/build", json={"instance_id": instance_id, **binding})
-    result = response.json()
-    if not response.is_success:
-        raise RuntimeError("Beta snapshot build failed: " + str(result.get("error", {}).get("message", "")))
-    with path.open("x", encoding="utf-8") as stream:
-        json.dump(result["result"], stream)
+def _wait_for_generation(kernel, jobs, instance_id):
+    deadline = monotonic() + 75
+    while monotonic() < deadline:
+        health = kernel.get("/health", timeout=2)
+        health.raise_for_status()
+        runs = jobs.get("/jobs/worker-runs", params={"instance_id": instance_id}, timeout=2)
+        runs.raise_for_status()
+        latest = runs.json()["result"]["latest"]
+        if health.json()["result"]["ready"] and latest and latest["state"] == "succeeded":
+            return
+        if latest and latest["state"] == "failed":
+            raise RuntimeError("Initial Beta build failed: " + str(latest.get("message", latest.get("code")))[:2048])
+        sleep(0.1)
+    raise RuntimeError("Kernel did not admit an initial Beta generation")
+
+
+def _serve_project(path, args, binding):
+    database, orchestrator, binding_file = (path.with_name(name) for name in (
+        "db.sock", "jobs.sock", "binding.json"))
+    with binding_file.open("x", encoding="utf-8") as stream:
+        json.dump(binding, stream)
+    try:
+        with _peer(DATABASE, database, args.instance_id, "--manifest-sha256", args.manifest_sha256) as kernel:
+            with _peer(ORCHESTRATOR, orchestrator, args.instance_id, "--binding-file", str(binding_file),
+                       "--database-socket", str(database)) as jobs:
+                _wait_for_generation(kernel, jobs, args.instance_id)
+                binding_file.unlink()
+                app = create_app(args.instance_id, args.manifest_sha256, args.project_root, str(database),
+                                 str(orchestrator), host_root=args.host_root, blacklist=args.blacklist)
+                serve(path, app)
+    finally:
+        binding_file.unlink(missing_ok=True)
 
 
 def _terminate(_signum, _frame):
@@ -90,20 +115,9 @@ def main():
     args = parser.parse_args()
     path = socket_path(args.socket)
     signal.signal(signal.SIGTERM, _terminate)
-    database, orchestrator, snapshot = (path.with_name(name) for name in ("db.sock", "jobs.sock", "snapshot.json"))
     binding = {"root": args.project_root, "control_root": args.control_root, "manifest_path": args.manifest_path,
                "manifest_sha256": args.manifest_sha256, "project_prefix": args.project_prefix}
-    with _peer(ORCHESTRATOR, orchestrator, args.instance_id) as jobs:
-        _snapshot(jobs, args.instance_id, binding, snapshot)
-        try:
-            with _peer(DATABASE, database, args.instance_id, "--snapshot", str(snapshot),
-                       "--manifest-sha256", args.manifest_sha256):
-                snapshot.unlink()
-                app = create_app(args.instance_id, args.manifest_sha256, args.project_root, str(database),
-                                 str(orchestrator), host_root=args.host_root, blacklist=args.blacklist)
-                serve(path, app)
-        finally:
-            snapshot.unlink(missing_ok=True)
+    _serve_project(path, args, binding)
 
 
 if __name__ == "__main__":

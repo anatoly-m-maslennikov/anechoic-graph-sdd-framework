@@ -41,8 +41,7 @@ def _relevant(relative, control, manifest):
     if relative is None:
         return False
     path = Path(relative)
-    return path.is_relative_to(control) and (
-        path == manifest or (
+    return path == manifest or (path.is_relative_to(control) and (
             not {DRAFT_DIRECTORY, READY_DIRECTORY, ARCHIVE_DIRECTORY, "000_draft", "099_archived"}.intersection(path.parts)
             and ("-COMPONENT_MANIFEST--" in path.name
                  or "-PROJECT_MANIFEST--" in path.name
@@ -78,7 +77,7 @@ def run_manifest_runtime(selection, *, orchestrator=None):
         generation = Path(directory)
         active = generation / "structure.json"
         watcher = SourceWatcher(
-            selection.root, selection.control_root,
+            selection.root, selection.control_root, watch_root_files=True,
             poll_bind_mount=os.environ.get("ANECHOIC_RUNTIME_NAMESPACE") == "docker",
         )
         watcher.start()

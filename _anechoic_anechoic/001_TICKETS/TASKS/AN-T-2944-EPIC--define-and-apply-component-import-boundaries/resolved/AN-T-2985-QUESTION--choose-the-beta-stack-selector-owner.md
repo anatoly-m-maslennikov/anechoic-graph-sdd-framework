@@ -7,9 +7,9 @@ priority: 2
 context:
   template: question
 state:
-  status: "backlog"
-  version: 2
-  updated_at: "2026-11-22T11:21:46.087633+00:00"
+  status: "resolved"
+  version: 3
+  updated_at: "2026-11-22T11:46:04.570866+00:00"
 ---
 ## Summary
 
@@ -22,8 +22,10 @@ Its one `stack` setting selects `current` or `beta`. The runtime image
 builder and Local Release read and fingerprint the same selector. The
 comparison passes the same admitted Project settings to both images.
 
-Current source closure selection is implemented. The Beta image needs
-its runtime entry point and the complete selected stack.
+Local Release built both selections as separate immutable images. The
+host runtime image manager admitted each by the same source fingerprint.
+Each image answered the same MCP and Web API query from its own copy of
+the Project fixture.
 
 ## Acceptance
 

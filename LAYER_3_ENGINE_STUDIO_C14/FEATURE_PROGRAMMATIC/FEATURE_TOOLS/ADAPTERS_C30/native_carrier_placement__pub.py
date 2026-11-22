@@ -64,6 +64,10 @@ def spec_lens_directories(lens):
     return () if lens.upper() == 'SPEC' else tuple(f'__{part.upper()}' for part in parts)
 
 
+def project_goal_filename(name):
+    return re.fullmatch(r'[A-Z]+-S-[0-9]+-SPEC-PROJECT_GOAL--.+\.md', name) is not None
+
+
 def native_carrier_path(header, summary, *, project_root, owner_directory, owner_template=None):
     """Project a path from authored Header and Summary, without filesystem access.
 
@@ -102,6 +106,9 @@ def _spec_placement(header, context, status, revision, marker, project_root, own
         raise ValueError('Resolved Component directory is required')
     tier = header.get('tier', context.get('tier'))
     root = Path(project_root if tier == -1 and not atom_owned else owner_directory)
+    if (status == 'active' and tier == -1 and context.get('container') == {'component': 'C00'}
+            and context.get('template') in {'project_manifest', 'project_goal'}):
+        root = root.parent
     lens = context.get('lens')
     lens_directories = spec_lens_directories(lens)
     stem = marker + '-' + lens.rsplit('/', 1)[-1].upper()

@@ -123,7 +123,7 @@ def _beta_arguments(selection, socket):
     args = ["WORKBENCH_BACKEND_beta_C70.runtime__pub", "--socket", str(socket),
             "--project-root", str(selection.root), "--control-root", selection.control_relative.as_posix(),
             "--instance-id", selection.instance_id, "--manifest-sha256", selection.manifest_sha256,
-            "--manifest-path", selection.manifest_path.relative_to(selection.control_root).as_posix(),
+            "--manifest-path", selection.manifest_path.relative_to(selection.root).as_posix(),
             "--project-prefix", selection.project_prefix]
     if selection.host_root is not None:
         args += ["--host-root", str(selection.host_root)]

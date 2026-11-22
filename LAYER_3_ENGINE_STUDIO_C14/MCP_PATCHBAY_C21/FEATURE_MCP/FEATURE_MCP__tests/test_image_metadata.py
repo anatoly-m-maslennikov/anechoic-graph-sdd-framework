@@ -28,6 +28,8 @@ import MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime as runtime  # noqa: E402
 IMAGE, OTHER_IMAGE = "sha256:" + "a" * 64, "sha256:" + "b" * 64
 VERSION, CREATED = "0.4.4.9", "2026-10-21T14:15:16.987654321Z"
 EXPECTED_TAG = "anechoic-runtime:0.4.4.9-test-2026-10-21_14-15-16Z-aaaaaaaaaaaa"
+BETA_TAG = "anechoic-runtime:0.4.4.9-beta-2026-10-21_14-15-16Z-aaaaaaaaaaaa"
+COMPACT_BETA = "anechoic-runtime:0.4.4.9-beta-20261021T141516Z-aaaaaaaaaaaa"
 PROD_TAG = "anechoic-runtime:0.4.4.9-prod-2026-10-21_14-15-16Z-aaaaaaaaaaaa"
 LEGACY_TAG = "anechoic-runtime:0.4.4.9-20261021T141516Z-aaaaaaaaaaaa"
 COMPACT_TEST = "anechoic-runtime:0.4.4.9-test-20261021T141516Z-aaaaaaaaaaaa"
@@ -126,6 +128,45 @@ class ImageMetadataTests(unittest.TestCase):
             path = self.root / relative
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(b'{"schema_version":1}\n')
+
+    def _select_beta(self) -> None:
+        (self.root / "project.toml").write_text('stack = "beta"\n')
+        engine = self.root / "LAYER_3_ENGINE_STUDIO_C14"
+        for relative in (
+            "KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__pub.py",
+            "ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__pub.py",
+            "WORKERS_beta_C69/WORKERS_beta_C69__pub.py",
+            *("WORKBENCH_BACKEND_beta_C70/" + name for name in (
+                "WORKBENCH_BACKEND_beta_C70__pub.py", "runtime__pub.py",
+                "project_admission__pub.py", "shared_runtime__pub.py", "query_run.json")),
+        ):
+            path = engine / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("fixture")
+
+    def test_beta_build_reuse_and_production_promotion(self) -> None:
+        self._select_beta()
+        probe = DockerProbe(listed=())
+        manager = self._manager(probe)
+        self.assertEqual(IMAGE, manager.resolve())
+        self.assertEqual({BETA_TAG}, probe.tags)
+        self.assertIn("--target", probe.commands("docker", "build")[0])
+        probe.calls.clear()
+        self.assertEqual(IMAGE, manager.resolve(explicit_id=IMAGE, build_if_missing=False))
+        self._assert_no_mutation(probe)
+        probe.tags.update({EXPECTED_TAG, COMPACT_TEST, COMPACT_BETA})
+        self.assertEqual(PROD_TAG, manager.mark_production_image(IMAGE))
+        self.assertEqual({PROD_TAG}, probe.tags)
+        probe.calls.clear()
+        self.assertEqual(IMAGE, manager.resolve(explicit_id=IMAGE, build_if_missing=False))
+        self._assert_no_mutation(probe)
+
+    def test_beta_reuse_adds_missing_beta_tag(self) -> None:
+        self._select_beta()
+        probe = DockerProbe()
+        self.assertEqual(IMAGE, self._manager(probe).resolve(build_if_missing=False))
+        self.assertEqual({BETA_TAG}, probe.tags)
+        self.assertEqual([], probe.commands("docker", "build"))
 
     def _manager(self, probe: DockerProbe) -> ImageManager:
         manager = ImageManager(self.root, executor=probe, timeout=5, uid=1000, gid=1000,

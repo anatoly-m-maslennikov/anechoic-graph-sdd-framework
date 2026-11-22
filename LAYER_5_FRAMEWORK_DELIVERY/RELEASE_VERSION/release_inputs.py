@@ -75,7 +75,7 @@ def _read(fd: int, name: str) -> tuple[bytes, tuple[int, ...]]:
         return raw, _version(before)
 
 
-def _names(fd: int, *, controls: bool) -> tuple[str, ...]:
+def _names(fd: int, *, controls: bool, ignore_control_symlinks: bool = False) -> tuple[str, ...]:
     with os.scandir(fd) as entries:
         names = []
         for index, entry in enumerate(entries, 1):
@@ -85,6 +85,8 @@ def _names(fd: int, *, controls: bool) -> tuple[str, ...]:
                 if not entry.name.startswith((".anechoic_", "_anechoic_")) or entry.name in _RESERVED:
                     continue
                 if entry.is_symlink():
+                    if ignore_control_symlinks:
+                        continue
                     raise ValueError("Project control candidates must not be symlinks")
                 if entry.is_dir(follow_symlinks=False):
                     names.append(entry.name)
@@ -179,7 +181,8 @@ def _claim(body: str) -> dict:
     return fields
 
 
-def _manifest(metadata: dict, body: str, name: str, relative: Path, digest: str, root: Path) -> ReleaseSelection:
+def _manifest(metadata: dict, body: str, name: str, relative: Path | None, digest: str, root: Path,
+              controls: tuple[str, ...] = (), explicit: Path | None = None) -> ReleaseSelection:
     context, state = metadata.get("context"), metadata.get("state")
     if not isinstance(context, dict) or not isinstance(state, dict):
         raise ValueError("Manifest context and state are required")
@@ -199,11 +202,26 @@ def _manifest(metadata: dict, body: str, name: str, relative: Path, digest: str,
     parameters = fields.get("parameters", {})
     if (not isinstance(project_name, str) or not project_name.strip() or not isinstance(prefix, str)
             or re.fullmatch(r"[A-Z]+", prefix) is None or not identity.startswith(prefix + "-S-")
-            or relative.name not in {f".anechoic_{project_name.casefold()}", f"_anechoic_{project_name.casefold()}"}
             or not isinstance(parameters, dict)):
         raise ValueError("Project Manifest identity contradicts the selected control root")
     project = parameters.get("project", {})
     project_root = project.get("root", {}) if isinstance(project, dict) else {}
+    manifest_at_root = relative is None
+    if relative is None:
+        matches = {f".anechoic_{project_name.casefold()}", f"_anechoic_{project_name.casefold()}"}
+        if isinstance(project_root, dict) and "prefix" in project_root:
+            marker = {"dot": ".", "underscore": "_"}.get(project_root["prefix"])
+            if marker is None:
+                raise ValueError("Invalid Project root prefix")
+            matches = {f"{marker}anechoic_{project_name.casefold()}"}
+        existing = matches.intersection(controls)
+        if len(existing) != 1:
+            raise ValueError("Expected one matching Project control root")
+        relative = Path(existing.pop())
+        if explicit is not None and relative != explicit:
+            raise ValueError("Project control root contradicts the selection")
+    if relative.name not in {f".anechoic_{project_name.casefold()}", f"_anechoic_{project_name.casefold()}"}:
+        raise ValueError("Project Manifest identity contradicts the selected control root")
     if isinstance(project_root, dict) and "prefix" in project_root:
         marker = {"dot": ".", "underscore": "_"}.get(project_root["prefix"])
         if marker is None or relative.name != f"{marker}anechoic_{project_name.casefold()}":
@@ -213,12 +231,15 @@ def _manifest(metadata: dict, body: str, name: str, relative: Path, digest: str,
         raise ValueError("Project control_root contradicts the selection")
     instance = sha256(f"{root}\0{relative.as_posix()}".encode("utf-8")).hexdigest()
     return ReleaseSelection(root, root / relative, relative, instance, project_name, prefix,
-                            root / relative / name, f"{identity}@{version}", digest, parameters)
+                            root / name if manifest_at_root else root / relative / name,
+                            f"{identity}@{version}", digest, parameters)
 
 
-def _scan_control(root_fd: int, control: str, root: Path, total_bytes: int):
+def _scan_control(root_fd: int, control: str, root: Path, total_bytes: int,
+                  controls: tuple[str, ...] = (), explicit: Path | None = None):
     selection = None
-    fd = os.open(control, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=root_fd)
+    fd = os.dup(root_fd) if control == "." else os.open(
+        control, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=root_fd)
     try:
         control_identity = (os.fstat(fd).st_dev, os.fstat(fd).st_ino)
         names = _names(fd, controls=False)
@@ -226,6 +247,8 @@ def _scan_control(root_fd: int, control: str, root: Path, total_bytes: int):
         candidates = []
         has_manifest = False
         for name in names:
+            if control == "." and not re.match(r"[A-Z]+-S-", name) and "PROJECT_MANIFEST" not in name:
+                continue
             raw, version = _read(fd, name)
             total_bytes += len(raw)
             if total_bytes > 1024 * 1024 * 1024:
@@ -235,14 +258,16 @@ def _scan_control(root_fd: int, control: str, root: Path, total_bytes: int):
             try:
                 metadata, body = read_atom_header(raw.decode("utf-8"))
             except (ValueError, UnicodeError, yaml.YAMLError, RecursionError):
-                if re.match(r"[A-Z]+-S-", name):
+                if ((control != "." and re.match(r"[A-Z]+-S-", name))
+                        or (control == "." and "PROJECT_MANIFEST" in name)):
                     raise
                 continue
             context = metadata.get("context")
             if isinstance(context, dict) and context.get("template") == "project_manifest":
                 has_manifest = True
                 if isinstance(metadata.get("state"), dict) and metadata["state"].get("status") == "active":
-                    candidates.append(_manifest(metadata, body, name, Path(control), digest, root))
+                    candidates.append(_manifest(metadata, body, name, None if control == "." else Path(control),
+                                                digest, root, controls, explicit))
             elif "atom_family" not in metadata and "PROJECT_MANIFEST" in name:
                 has_manifest = True
         if has_manifest:
@@ -257,7 +282,8 @@ def _scan_control(root_fd: int, control: str, root: Path, total_bytes: int):
 
 def _verify_snapshots(root_fd: int, snapshots, total_bytes: int) -> None:
     for control, identity, names, records in snapshots:
-        fd = os.open(control, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=root_fd)
+        fd = os.dup(root_fd) if control == "." else os.open(
+            control, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=root_fd)
         try:
             info = os.fstat(fd)
             if (info.st_dev, info.st_ino) != identity or _names(fd, controls=False) != names:
@@ -292,30 +318,54 @@ def read_release_selection(project_root: str | Path, control_relative: str | Pat
         root_fd = _directory(root)
         try:
             root_identity = (os.fstat(root_fd).st_dev, os.fstat(root_fd).st_ino)
-            if control_relative is None:
-                controls = _names(root_fd, controls=True)
-            else:
-                relative = Path(control_relative)
-                if (len(relative.parts) != 1 or str(control_relative) != relative.as_posix()
-                        or not relative.name.startswith((".anechoic_", "_anechoic_"))
-                        or relative.name in {".anechoic_", "_anechoic_"} or _protected(relative)):
+            explicit = None
+            if control_relative is not None:
+                explicit = Path(control_relative)
+                if (len(explicit.parts) != 1 or str(control_relative) != explicit.as_posix()
+                        or not explicit.name.startswith((".anechoic_", "_anechoic_"))
+                        or explicit.name in {".anechoic_", "_anechoic_"} or _protected(explicit)):
                     raise ValueError("Control root must be a normalized direct Project child")
-                controls = (relative.name,)
-            selections = []
-            snapshots = []
-            total_bytes = 0
-            for control in controls:
-                selection, snapshot, total_bytes = _scan_control(root_fd, control, root, total_bytes)
-                if selection is not None:
-                    selections.append(selection)
-                snapshots.append(snapshot)
-            if len(selections) != 1:
-                raise ValueError("A unique native Project Manifest is required")
-            if control_relative is None and _names(root_fd, controls=True) != controls:
+            controls = _names(root_fd, controls=True, ignore_control_symlinks=explicit is not None)
+            selection, root_snapshot, total_bytes = _scan_control(
+                root_fd, ".", root, 0, controls, explicit)
+            if selection is not None and explicit is not None:
+                controls = _names(root_fd, controls=True)
+            check_controls = selection is not None or explicit is None
+            snapshots = [root_snapshot]
+            control_identity = None
+            if selection is not None:
+                selected_fd = os.open(selection.control_relative.name,
+                                      os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=root_fd)
+                try:
+                    info = os.fstat(selected_fd)
+                    control_identity = (info.st_dev, info.st_ino)
+                finally:
+                    os.close(selected_fd)
+            if selection is None:
+                legacy_controls = controls if explicit is None else (explicit.name,)
+                selections = []
+                for control in legacy_controls:
+                    candidate, snapshot, total_bytes = _scan_control(root_fd, control, root, total_bytes)
+                    if candidate is not None:
+                        selections.append(candidate)
+                    snapshots.append(snapshot)
+                if len(selections) != 1:
+                    raise ValueError("A unique native Project Manifest is required")
+                selection = selections[0]
+            if check_controls and _names(root_fd, controls=True) != controls:
                 raise ValueError("Project control candidates changed during selection")
             _verify_snapshots(root_fd, snapshots, total_bytes)
-            if control_relative is None and _names(root_fd, controls=True) != controls:
+            if check_controls and _names(root_fd, controls=True) != controls:
                 raise ValueError("Project control candidates changed during selection")
+            if control_identity is not None:
+                selected_fd = os.open(selection.control_relative.name,
+                                      os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=root_fd)
+                try:
+                    info = os.fstat(selected_fd)
+                    if (info.st_dev, info.st_ino) != control_identity:
+                        raise ValueError("Project control changed during selection")
+                finally:
+                    os.close(selected_fd)
             current_root = _directory(root)
             try:
                 info = os.fstat(current_root)
@@ -323,7 +373,7 @@ def read_release_selection(project_root: str | Path, control_relative: str | Pat
                     raise ValueError("Project root changed during selection")
             finally:
                 os.close(current_root)
-            return selections[0]
+            return selection
         finally:
             os.close(root_fd)
     except (OSError, RuntimeError, TypeError, ValueError, AttributeError, yaml.YAMLError, RecursionError) as error:

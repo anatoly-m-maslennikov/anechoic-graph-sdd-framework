@@ -124,7 +124,7 @@ def _read_revision_sources(selection, draft, previous, previous_capture, paths, 
     if any(row.get('id') == atom_id and row.get('version') == version
            and row.get('status_group') != 'Draft' for row in capture.atoms):
         raise common.InputError('target', 'The Draft Version already has a non-Draft revision.')
-    reader = ReadContext(roots=[str(selection.control_root)], limits=dict(CEILINGS))
+    reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
     raw_draft, raw_previous = (reader.read(path) for path in paths)
     for row, path, raw in zip((draft, previous), paths, (raw_draft, raw_previous)):
         bounds = frontmatter_bounds(raw)
@@ -141,7 +141,7 @@ def _rollback_promotion(selection, previous_path, previous_digest, created, reco
     errors = list(errors)
     for path, raw in reversed(created):
         try:
-            reader = ReadContext(roots=[str(selection.control_root)], limits=dict(CEILINGS))
+            reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
             if sha256(reader.read(previous_path)).hexdigest() != previous_digest:
                 raise ValueError('Current changed')
             if reader.currentness()['state'] != 'unchanged':
@@ -170,7 +170,7 @@ def _commit_revision(selection, status, draft, previous, paths, archive_path, de
         if written.errors:
             return _rollback_promotion(selection, previous_path, previous['_source_sha256'], created, recorded, written.errors)
         try:
-            reader = ReadContext(roots=[str(selection.control_root)], limits=dict(CEILINGS))
+            reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
             if (sha256(reader.read(draft_path)).hexdigest() != draft['_source_sha256']
                     or sha256(reader.read(selection.manifest_path)).hexdigest() != selection.manifest_sha256
                     or reader.currentness()['state'] != 'unchanged'):

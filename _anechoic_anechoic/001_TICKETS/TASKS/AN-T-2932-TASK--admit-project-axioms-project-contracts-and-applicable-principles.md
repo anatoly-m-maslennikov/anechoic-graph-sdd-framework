@@ -8,8 +8,8 @@ context:
   template: task
 state:
   status: in_queue
-  version: 3
-  updated_at: '2026-11-22T11:02:07.551942+00:00'
+  version: 6
+  updated_at: '2026-11-22T11:59:13.546148+00:00'
 ---
 ## Summary
 
@@ -22,7 +22,7 @@ Project root.
 
 | Project Atom | Tier | Content |
 | --- | ---: | --- |
-| Project Axiom | -1 | State a premise the Project accepts. |
+| Project Axiom | 0 | State a premise accepted in the scope of the Project Goal. |
 | Project Contract | 0 | State what a user supplies and what the Project provides in return. |
 | Project Applicable Principle | 1 or 2 | State a rule that guides decisions when its applicability conditions hold. |
 | Main Project Solution, Policy, or Standard | 3 | State a main Project solution or governing rule. |
@@ -35,17 +35,18 @@ Create three Tier 0 Project Contract Atoms. Use the existing Contract base
 and the Project as their Container.
 
 Admit the Project Axiom, Project Contract, and Project Applicable Principle
-templates. Move the existing Project Axioms to Tier -1 and classify the
+templates. Move the existing Project Axioms to Tier 0 and classify the
 existing Applicable Principles at Tiers 1 and 2. Move main Project Solutions,
 Policies, and Standards to Tier 3. Preserve authored content, stable IDs,
 exact revision references, and source history. Keep legacy release inputs intact.
 
 Connect the Project Atoms in two chains.
 
-- Axioms and the Project Goal lead to Tier 1 Principles. Tier 2 Principles
-  refine or contribute to Tier 1. Tier 3 contributes to Tier 2. Tier 4
-  Solutions refine Tier 3 Solutions.
-- The Project Goal leads to Tier 0 Contracts. Tier 3 Solutions address
+- Tier 1 Principles apply Axioms and serve the Project Goal. Tier 2 Principles
+  contribute to Tier 1 Principles. Tier 3 Solutions, Policies, and Standards
+  contribute to Tier 2 Principles. Tier 4 Solutions and Component Manifests
+  contribute to Tier 3 Solutions.
+- Tier 0 Contracts serve the Project Goal. Tier 3 Solutions address
   the guarantees in those Contracts.
 
 Author relations from the more specific Atom to its target. Derive the
@@ -63,9 +64,11 @@ inverse direction for navigation.
   separate from those of other repositories.
   Reject a missing, ambiguous, or mismatched selection when the request
   cannot be bound to one repository.
-- ANECHOIC keeps all files it owns for a repository in `.anechoic_*`
-  directories. The sole exception is the Package Spec Binding sidecar,
-  named `<package folder name>__spec_bind.yaml` at the Package root.
+- New Projects place the Current Project Manifest and Project Goal at
+  the repository root. Existing Projects can keep them in the control
+  directory. Place each Package Spec Binding sidecar at its Package root
+  as `<package folder name>__spec_bind.yaml`. Keep all other ANECHOIC-owned
+  repository files in `.anechoic_*` directories.
 
 Reconcile the file-placement guarantee with the Current Module
 `.spec_trace.md` rule and the release-installed `.agents/skills/ane` path.
@@ -118,8 +121,9 @@ rendering before adding that guarantee.
   writes. Verify that selecting one repository cannot return the other
   repository's data or change its saved state. Reject an invalid selection.
 - Check the analysis coverage and diagnostics for unsupported and unreadable
-  inputs. Check where each ANECHOIC-owned file is written and that only
-  Package Spec Binding sidecars use the agreed exception.
+  inputs. Verify that repository-root and control-directory Project
+  Manifests and Goals resolve. Check owned-file placement against the
+  Project Manifest, Project Goal, and Package Spec Binding exceptions.
 - Verify that users can inspect a versioned Specification, act on a
   validation finding, and follow a trace to the exact revision.
 - Verify an inline MCP result, a file result, and query success with save

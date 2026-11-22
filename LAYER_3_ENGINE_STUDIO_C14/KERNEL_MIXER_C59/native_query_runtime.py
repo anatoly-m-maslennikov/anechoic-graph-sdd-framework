@@ -113,7 +113,7 @@ class NativeQueryRuntime(NativeQueryProjection, NativeQueryRebuild, ServiceInter
         if self._realization_options is not None:
             snapshot = self.selection.structure_snapshot
             self._watcher = SourceWatcher(
-                self._root, self.selection.control_root, implementation_root=self._root,
+                self._root, self.selection.control_root, implementation_root=self._root, watch_root_files=True,
                 exclude_directory=lambda path: realization_projection.exclude_directory(
                     path, self.selection.control_relative,
                 ),
@@ -121,7 +121,7 @@ class NativeQueryRuntime(NativeQueryProjection, NativeQueryRebuild, ServiceInter
                 poll_bind_mount=poll_bind_mount,
             )
         else:
-            self._watcher = SourceWatcher(self._root, self.selection.control_root, poll_bind_mount=poll_bind_mount)
+            self._watcher = SourceWatcher(self._root, self.selection.control_root, watch_root_files=True, poll_bind_mount=poll_bind_mount)
         self._watcher.start()
 
     def start(self) -> None:

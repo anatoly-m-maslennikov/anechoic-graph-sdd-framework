@@ -79,10 +79,10 @@ def create_app(instance_id, manifest_sha256, project_root, database_socket, orch
             data = await upstream(database_socket, "GET", "/health")
             result = data.get("result", {})
             if (result.get("instance_id") != instance_id or result.get("manifest_sha256") != manifest_sha256
-                    or type(result.get("pid")) is not int):
+                    or type(result.get("pid")) is not int or result.get("ready") is not True):
                 raise ValueError("Invalid Kernel binding")
             return JSONResponse({"ready": True, "instance_id": instance_id, "manifest_sha256": manifest_sha256,
-                                 "pid": os.getpid(), "kernel_pid": result["pid"]})
+                                 "pid": os.getpid(), "kernel_pid": result["pid"], "generation": result["generation"]})
         except (httpx2.HTTPError, ValueError, TypeError, AttributeError):
             return JSONResponse({"ready": False, "instance_id": instance_id, "manifest_sha256": manifest_sha256,
                                  "pid": os.getpid(), "kernel_pid": None}, status_code=503)

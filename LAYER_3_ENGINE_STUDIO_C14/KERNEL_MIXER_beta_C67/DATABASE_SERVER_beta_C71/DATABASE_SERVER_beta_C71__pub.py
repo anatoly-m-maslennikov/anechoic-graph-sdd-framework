@@ -1,6 +1,7 @@
 """Own the accepted Project snapshot and serve queries over a private Unix socket."""
 
 import argparse
+from hashlib import sha256
 import json
 import math
 import os
@@ -13,9 +14,12 @@ import threading
 import duckdb
 from starlette.applications import Starlette
 from starlette.requests import Request
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 import uvicorn
+
+from ..model_host_CS5.model_host_CS5__pub import reviewed_native_model
+from ..structure_host_CS6.structure_host_CS6__pub import read_structure
 
 
 _HEX = re.compile(r"[0-9a-f]{64}\Z")
@@ -35,7 +39,7 @@ def socket_path(value):
     return path
 
 
-def replace_snapshot(connection, snapshot, manifest_sha256):
+def validate_snapshot(snapshot, manifest_sha256):
     if _HEX.fullmatch(manifest_sha256) is None:
         raise ValueError("Invalid manifest SHA-256")
     if (not isinstance(snapshot, dict) or set(snapshot) != {"manifest_sha256", "atoms"}
@@ -47,25 +51,14 @@ def replace_snapshot(connection, snapshot, manifest_sha256):
            or not all(isinstance(atom[key], str) for key in ("reference", "summary"))
            for atom in atoms):
         raise ValueError("Invalid snapshot atoms")
-    connection.execute("BEGIN TRANSACTION")
-    try:
-        connection.execute("DELETE FROM atoms")
-        if atoms:
-            connection.executemany("INSERT INTO atoms VALUES (?, ?)",
-                                   [(atom["reference"], atom["summary"]) for atom in atoms])
-        connection.execute("COMMIT")
-    except BaseException:
-        connection.execute("ROLLBACK")
-        raise
+    return atoms
 
 
-def load_snapshot(path, manifest_sha256):
-    with open(path, encoding="utf-8") as source:
-        snapshot = json.load(source)
+def open_database():
     connection = duckdb.connect(":memory:", config={"enable_external_access": "false"})
     try:
         connection.execute("CREATE TABLE atoms (reference VARCHAR PRIMARY KEY, summary VARCHAR)")
-        replace_snapshot(connection, snapshot, manifest_sha256)
+        connection.execute("CREATE TABLE generation (id VARCHAR, model VARCHAR, structure VARCHAR)")
     except BaseException:
         connection.close()
         raise
@@ -117,6 +110,8 @@ def _database_route(connection, instance_id, lock):
             if data["instance_id"] != instance_id:
                 return _error("foreign_instance", "Instance does not match", 403)
             with lock:
+                if connection.execute("SELECT id FROM generation").fetchone() is None:
+                    return _error("generation_required", "Generation admission required", 409)
                 result = query(connection, data["sql"])
             return JSONResponse({"result": result})
         except (ValueError, TypeError, duckdb.Error) as error:
@@ -125,42 +120,111 @@ def _database_route(connection, instance_id, lock):
     return database
 
 
+def _unique(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("Duplicate JSON key")
+        result[key] = value
+    return result
+
+
+def replace_generation(connection, data, manifest_sha256):
+    receipt = data["receipt"]
+    fields = {"manifest_sha256", "model_sha256", "model_descriptor_sha256", "structure_sha256"}
+    if (not isinstance(receipt, dict) or set(receipt) != fields
+            or any(not isinstance(v, str) or _HEX.fullmatch(v) is None for v in receipt.values())
+            or receipt["manifest_sha256"] != manifest_sha256):
+        raise ValueError("Invalid receipt")
+    atoms = validate_snapshot(data["snapshot"], manifest_sha256)
+    model, structure = data["model"], data["structure"]
+    if not isinstance(model, str) or not isinstance(structure, str):
+        raise ValueError("Artifacts must be JSON strings")
+    if (sha256(model.encode("utf-8")).hexdigest() != receipt["model_descriptor_sha256"]
+            or sha256(structure.encode("utf-8")).hexdigest() != receipt["structure_sha256"]):
+        raise ValueError("Artifact digest mismatch")
+    m = json.loads(model, object_pairs_hook=_unique)
+    s = json.loads(structure, object_pairs_hook=_unique)
+    if (not isinstance(m, dict) or not isinstance(s, dict)
+            or m.get("binding_schema") != 1
+            or not isinstance(m.get("modules"), dict) or "__init__.py" not in m["modules"]
+            or not isinstance(m.get("module_order"), list)
+            or not isinstance(m.get("class_modules"), dict) or not isinstance(m.get("bindings"), dict)
+            or m.get("model_sha256") != receipt["model_sha256"]
+            or s.get("model_sha256") != receipt["model_sha256"]
+            or not isinstance(s.get("project"), dict)
+            or s["project"].get("sha256") != manifest_sha256
+            or not isinstance(s["project"].get("ref"), str) or not s["project"]["ref"]
+            or not isinstance(s.get("components"), dict)
+            or not isinstance(s.get("packages", {}), dict)):
+        raise ValueError("Invalid artifact shape or binding")
+    identity = json.dumps({"receipt": receipt, "snapshot": data["snapshot"]},
+                          sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    generation = sha256(identity).hexdigest()
+    connection.execute("BEGIN TRANSACTION")
+    try:
+        connection.execute("DELETE FROM atoms")
+        if atoms:
+            connection.executemany("INSERT INTO atoms VALUES (?, ?)",
+                                   [(a["reference"], a["summary"]) for a in atoms])
+        connection.execute("DELETE FROM generation")
+        connection.execute("INSERT INTO generation VALUES (?, ?, ?)", [generation, model, structure])
+        connection.execute("COMMIT")
+    except BaseException:
+        connection.execute("ROLLBACK")
+        raise
+    return generation
+
+
 def create_app(connection, instance_id, manifest_sha256):
     lock = threading.Lock()
 
     async def health(request):
+        with lock:
+            row = connection.execute("SELECT id FROM generation").fetchone()
         return JSONResponse({"result": {"instance_id": instance_id, "pid": os.getpid(),
-                                        "manifest_sha256": manifest_sha256}})
+            "manifest_sha256": manifest_sha256, "ready": row is not None,
+            "generation": row[0] if row else None}})
 
-    async def admit(request: Request):
+    async def admit_generation(request: Request):
         try:
-            data = await _read_object(request, {"instance_id", "snapshot"}, 64 * 1024 * 1024)
+            data = await _read_object(request, {"instance_id", "snapshot", "model", "structure", "receipt"}, 64 * 1024 * 1024)
             if data["instance_id"] != instance_id:
                 return _error("foreign_instance", "Instance does not match", 403)
             with lock:
-                replace_snapshot(connection, data["snapshot"], manifest_sha256)
-            return JSONResponse({"result": {"manifest_sha256": manifest_sha256}})
-        except (ValueError, TypeError, duckdb.Error) as error:
-            return _error("invalid_snapshot", str(error), 400)
+                generation = replace_generation(connection, data, manifest_sha256)
+            return JSONResponse({"result": {"generation": generation}})
+        except (ValueError, TypeError, UnicodeError, duckdb.Error) as error:
+            return _error("invalid_generation", str(error), 400)
+
+    async def artifact(request):
+        if list(request.query_params.multi_items()) != [("instance_id", instance_id)]:
+            return _error("foreign_instance", "Instance does not match", 403)
+        reader = reviewed_native_model if request.url.path == "/model" else read_structure
+        row = reader(connection, lock)
+        if row is None:
+            return _error("generation_required", "Generation admission required", 409)
+        return Response(row[1],
+                        media_type="application/json", headers={"x-anechoic-generation": row[0]})
 
     return Starlette(routes=[
         Route("/health", health),
         Route("/database", _database_route(connection, instance_id, lock), methods=["POST"]),
-        Route("/snapshot", admit, methods=["PUT"]),
+        Route("/generation", admit_generation, methods=["PUT"]),
+        Route("/model", artifact), Route("/structure", artifact),
     ])
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--socket", required=True)
-    parser.add_argument("--snapshot", required=True)
     parser.add_argument("--instance-id", required=True)
     parser.add_argument("--manifest-sha256", required=True)
     args = parser.parse_args()
-    if not args.instance_id:
-        parser.error("instance-id must not be empty")
+    if not args.instance_id or _HEX.fullmatch(args.manifest_sha256) is None:
+        parser.error("Invalid Project binding")
     socket = socket_path(args.socket)
-    connection = load_snapshot(args.snapshot, args.manifest_sha256)
+    connection = open_database()
     os.umask(0o077)
     bound = False
     try:

@@ -9,8 +9,8 @@ context:
   label: Task
 state:
   status: "in_queue"
-  version: 3
-  updated_at: "2026-11-22T11:17:51.436219+00:00"
+  version: 4
+  updated_at: "2026-11-22T11:41:29.946439+00:00"
 ---
 ## Summary
 
@@ -42,3 +42,16 @@ Complete the MCP bridge under AN-T-2944. MCP maps the Backend JSON Tool catalog,
 ## Outcome
 
 Use the two-image evidence to decide whether to continue with Beta and what corrections each stack needs.
+
+## Verification
+
+The first Current and Beta images built through Local Release from the
+two values of the same selector. Each image returned the same SQL value
+through MCP and the Web API on equivalent Project fixtures. Beta also
+returned distinct rows for two separately admitted Projects on a shared
+host.
+
+Beta's first catalog has one Tool and its query results omit paging and
+column type metadata. The paired Model and Structure build, live
+refresh, invalid-build recovery, and comparison against the applicable
+Contracts remain part of this task.

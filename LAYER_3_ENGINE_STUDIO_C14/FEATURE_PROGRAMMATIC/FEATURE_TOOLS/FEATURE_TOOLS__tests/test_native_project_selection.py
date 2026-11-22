@@ -17,7 +17,7 @@ sys.path[:0] = [str(TOOLS), str(TOOLS.parent)]
 
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.native_manifest_test_support__pub import validate_manifest  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.legacy_settings_to_manifest import legacy_settings_to_manifest  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_project_selection import resolve_native_project  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_project_selection import discover_native_project, resolve_native_project  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection import ProjectSelectionError, resolve_project  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.scope_declaration_test_support__pub import write_scope_unit_declarations  # noqa: E402
 
@@ -81,6 +81,38 @@ class NativeProjectSelectionTests(unittest.TestCase):
         self.assertEqual(legacy, legacy_default.control_root)
         self.assertNotEqual(legacy_default.instance_id, native.instance_id)
         self.assertFalse((self.root / ".anechoic_runtime").exists())
+
+    def test_root_manifest_takes_precedence_and_discovery_infers_control(self):
+        legacy = self.carrier()
+        root_manifest = legacy.rename(self.root / legacy.name)
+        self.carrier(name="Other")
+        (self.root / "README.md").write_text("unrelated content")
+        selected = self.select()
+        self.assertEqual(root_manifest, selected.manifest_path)
+        self.assertEqual(root_manifest, discover_native_project(
+            self.root, manifest_validator=lambda: validate_manifest).manifest_path)
+
+    def test_root_candidate_refuses_bad_or_duplicate_and_does_not_fall_back(self):
+        legacy = self.carrier()
+        root_manifest = self.root / legacy.name
+        root_manifest.write_text("---\ninvalid: [\n---\n")
+        with self.assertRaises(ProjectSelectionError):
+            self.select()
+        root_manifest.write_text(legacy.read_text().replace("status: active", "status: draft"))
+        with self.assertRaises(ProjectSelectionError):
+            self.select()
+        root_manifest.write_text(legacy.read_text())
+        second = self.carrier("AN-S-002-PROJECT_MANIFEST--declare-anechoic.md", atom_id="AN-S-002")
+        second.rename(self.root / second.name)
+        with self.assertRaises(ProjectSelectionError):
+            self.select()
+
+    def test_root_manifest_requires_safe_existing_control(self):
+        legacy = self.carrier()
+        legacy.rename(self.root / legacy.name)
+        self.native.rmdir()
+        with self.assertRaises(ProjectSelectionError):
+            self.select()
 
     def test_canonical_manifest_header(self):
         path = self.carrier()
@@ -253,7 +285,7 @@ class NativeProjectSelectionTests(unittest.TestCase):
 
     def test_refuses_symlink_manifest(self):
         outside = self.carrier()
-        renamed = outside.rename(self.root / outside.name)
+        renamed = outside.rename(self.root / "outside.md")
         outside.symlink_to(renamed)
         with self.assertRaisesRegex(ProjectSelectionError, "invalid, or unsafe"):
             self.select()

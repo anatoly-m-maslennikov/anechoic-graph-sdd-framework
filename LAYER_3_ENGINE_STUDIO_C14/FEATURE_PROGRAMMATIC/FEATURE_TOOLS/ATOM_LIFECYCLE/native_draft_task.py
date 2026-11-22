@@ -30,7 +30,7 @@ def _create_task(selection, values, current_rows, structure_snapshot, ticket_lab
             raise
         raise common.InputError('summary', 'Summary cannot be used in a Task filename.') from error
     if (not selection.root.is_absolute() or not selection.control_root.is_relative_to(selection.root)
-            or not selection.manifest_path.is_relative_to(selection.control_root)):
+            or selection.manifest_path.parent not in {selection.root, selection.control_root}):
         raise common.SourceChanged('Selected Project path is invalid.')
     with _project_write_lock(selection.root):
         try:

@@ -32,14 +32,13 @@ RUN rm -rf /usr/local/bin/uv /usr/local/bin/uvx /usr/local/bin/pip* \
     /usr/local/lib/python3.14/site-packages/pip /usr/local/lib/python3.14/site-packages/pip-*.dist-info \
     /usr/local/lib/python3.14/ensurepip /usr/local/include/python3.14
 
-FROM scratch
+FROM scratch AS runtime_base
 COPY --from=runtime_build / /
 ARG RUNTIME_UID=1000
 ARG RUNTIME_GID=1000
 WORKDIR /workspace
 COPY version.toml ./
 COPY LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC ./LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC
-COPY LAYER_3_ENGINE_STUDIO_C14/KERNEL_MIXER_C59 ./LAYER_3_ENGINE_STUDIO_C14/KERNEL_MIXER_C59
 COPY LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21 ./LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21
 COPY LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43 ./LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43
 COPY LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane \
@@ -51,7 +50,20 @@ RUN mkdir -p /workspace/.anechoic_install \
     && chmod -R a+rX /workspace/LAYER_3_ENGINE_STUDIO_C14 \
     && chown -R ${RUNTIME_UID}:${RUNTIME_GID} /home/anechoic
 ENV PATH=/opt/venv/bin:/usr/local/bin:/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1
-USER anechoic
 HEALTHCHECK --interval=2s --timeout=5s --start-period=420s --retries=25 \
     CMD ["python", "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/healthcheck.py"]
 ENTRYPOINT ["/opt/venv/bin/python", "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/entrypoint.py"]
+
+FROM runtime_base AS beta
+COPY project.toml ./
+COPY LAYER_3_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67 ./LAYER_3_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67
+COPY LAYER_3_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68 ./LAYER_3_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68
+COPY LAYER_3_ENGINE_STUDIO_C14/WORKERS_beta_C69 ./LAYER_3_ENGINE_STUDIO_C14/WORKERS_beta_C69
+COPY LAYER_3_ENGINE_STUDIO_C14/WORKBENCH_BACKEND_beta_C70 ./LAYER_3_ENGINE_STUDIO_C14/WORKBENCH_BACKEND_beta_C70
+RUN chmod -R a+rX /workspace/LAYER_3_ENGINE_STUDIO_C14 && chmod a+r /workspace/project.toml
+USER anechoic
+
+FROM runtime_base AS current
+COPY LAYER_3_ENGINE_STUDIO_C14/KERNEL_MIXER_C59 ./LAYER_3_ENGINE_STUDIO_C14/KERNEL_MIXER_C59
+RUN chmod -R a+rX /workspace/LAYER_3_ENGINE_STUDIO_C14/KERNEL_MIXER_C59
+USER anechoic

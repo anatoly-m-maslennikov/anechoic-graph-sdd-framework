@@ -67,7 +67,7 @@ def _change_spec_selected(selection, target, selected, path, digest, root, statu
                 native_header_view(row['header_json']).get('context', {}).get('container', {}).get('atom') == selected['id']
                 for row in capture.atoms):
             raise InputError('target', 'SPEC containers cannot change Status.')
-        reader = ReadContext(roots=[str(selection.control_root)], limits=dict(CEILINGS))
+        reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
         try:
             raw = reader.read(path)
             bounds = frontmatter_bounds(raw)
@@ -80,7 +80,9 @@ def _change_spec_selected(selection, target, selected, path, digest, root, statu
             body = raw[bounds[2]:].decode('utf-8')
             if status == 'active':
                 _validate_project_template(header, validate_project_spec_model, body)
-            if path != native_carrier_path(header, _summary(body), project_root=selection.control_root, owner_directory=root):
+            expected = native_carrier_path(header, _summary(body), project_root=selection.control_root, owner_directory=root)
+            if path != expected and not (
+                    expected.parent == selection.root and path == selection.control_root / expected.name):
                 raise InputError('target', 'SPEC path disagrees with its Header and Summary.')
             projected = {**header, 'state': {**header['state'], 'status': status}}
             destination = native_carrier_path(projected, _summary(body), project_root=selection.control_root, owner_directory=root)
@@ -136,7 +138,7 @@ def _archive_spec_selected(selection, target, draft, path, digest, owner):
                 'source_path', 'id', 'ref', '_exact_ref', 'version', 'status', 'status_group',
                 'header_json', '_content_bytes', '_source_sha256')):
             raise SourceChanged('SPEC Draft changed after selection.')
-        reader = ReadContext(roots=[str(selection.control_root)], limits=dict(CEILINGS))
+        reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
         try:
             raw = reader.read(path)
             bounds = frontmatter_bounds(raw)
@@ -177,7 +179,7 @@ def _write_archived_spec(selection, target, draft, path, digest, destination, ar
             errors = list(removed.errors)
             if not removed.effects and not any(error.get('code') == 'effect_uncertain' for error in errors):
                 try:
-                    if sha256(ReadContext(roots=[str(selection.control_root)], limits=dict(CEILINGS)).read(path)).hexdigest() == digest:
+                    if sha256(ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS)).read(path)).hexdigest() == digest:
                         rollback = effects.remove(selection.root, destination, sha256(archived).hexdigest())
                         recorded.extend(rollback.effects)
                         errors.extend(rollback.errors)

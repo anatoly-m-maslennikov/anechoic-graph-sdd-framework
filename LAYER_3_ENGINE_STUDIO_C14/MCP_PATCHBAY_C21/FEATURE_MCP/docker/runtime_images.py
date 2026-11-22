@@ -96,20 +96,27 @@ class ImageManager(ImageSource, ImageBuild):
         root = self._root()
         try:
             version = read_framework_version(self._file(root, "version.toml"))
-            files = self._files(root)
+            stack_input = self._stack_input(root)
+            stack, _, selector_sha256 = stack_input
+            files = self._files(root, stack_input)
             model_sha256 = None
-            if use_packaged_assets:
-                tools = self._file(root, TOOL_REGISTRY).read_bytes()
-            else:
-                model_sha256 = self._refresh_model(root)
-                tools = _compile_tool_registry(root, timeout=self.timeout, max_output=_MAX_OUTPUT)
-            if not tools:
-                raise self._input_error()
+            tools = b""
+            if stack == "current":
+                if use_packaged_assets:
+                    tools = self._file(root, TOOL_REGISTRY).read_bytes()
+                else:
+                    model_sha256 = self._refresh_model(root)
+                    tools = _compile_tool_registry(root, timeout=self.timeout, max_output=_MAX_OUTPUT)
+                if not tools:
+                    raise self._input_error()
             rows = [BuildInput(path.relative_to(root).as_posix(),
                                hashlib.sha256(path.read_bytes()).hexdigest(),
                                path.stat().st_mode & 0o777)
                     for path in files]
-            rows.append(BuildInput(TOOL_REGISTRY, hashlib.sha256(tools).hexdigest(), 0o644))
+            if next((row.sha256 for row in rows if row.path == "project.toml"), None) != selector_sha256:
+                raise self._input_error()
+            if stack == "current":
+                rows.append(BuildInput(TOOL_REGISTRY, hashlib.sha256(tools).hexdigest(), 0o644))
             rows = tuple(sorted(rows, key=lambda row: row.path))
         except (OSError, ValueError, UnicodeError, subprocess.SubprocessError) as error:
             raise self._input_error() from error
@@ -195,6 +202,13 @@ class ImageManager(ImageSource, ImageBuild):
     def mark_production_image(self, image: str) -> str:
         return set_display_role(self._run, image, "prod", lambda message: ImageError("IMAGE_REFUSED", message))
 
+    def _identity_role(self, identity: ImageIdentity) -> str:
+        stack, _, digest = self._stack_input(self._root())
+        expected = next((row.sha256 for row in identity.manifest if row.path == "project.toml"), None)
+        if digest != expected:
+            raise self._input_error()
+        return "beta" if stack == "beta" else "test"
+
     def _current(self, identity: ImageIdentity, *, use_packaged_assets: bool = False):
         if self.identity(use_packaged_assets=use_packaged_assets) != identity:
             raise self._input_error()
@@ -232,5 +246,5 @@ class ImageManager(ImageSource, ImageBuild):
                              for compact in (False, True))
         except ValueError as error:
             raise ImageError("IMAGE_REFUSED", "Display tag metadata is invalid") from error
-        self.ensure_display_tag(image, identity.version, created, role="prod" if production else "test")
+        self.ensure_display_tag(image, identity.version, created, role="prod" if production else self._identity_role(identity))
         return image

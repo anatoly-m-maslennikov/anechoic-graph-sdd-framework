@@ -7,7 +7,7 @@ tier: 2
 context:
   lens: SPEC
 state:
-  status: active
+  status: archived
   version: 1
   updated_at: '2026-11-22T00:00:00+00:00'
 ---

@@ -52,6 +52,28 @@ class NativeCaptureTests(unittest.TestCase):
         self.assertEqual(("Atom", "AN-T-09"), (asset["target_kind"], asset["target_ref"]))
         self.assertIn(b"Example", rows["AN-T-10@1"]["_content_bytes"])
 
+    def test_root_manifest_and_goal_capture_and_incremental_revalidation(self):
+        self.manifest = self.manifest.rename(self.root / self.manifest.name)
+        self.selection.manifest_path = self.manifest
+        goal = self.root / "AN-S-02-SPEC-PROJECT_GOAL--goal.md"
+        header = {"atom_family": "SPEC", "atom_id": "AN-S-02", "container": {"component": "C00"},
+                  "tier": -1, "context": {"template": "project_goal", "lens": "SPEC"},
+                  "state": {"status": "active", "version": 1, "updated_at": "2026-11-19T00:00:00Z"}}
+        text = "---\n" + yaml.safe_dump(header) + "---\n\n## Summary\n\n"
+        goal.write_text(text + "Goal\n")
+        (self.root / "AN-S-03-SPEC--unrelated.md").write_text("Unrelated Markdown")
+        first = capture_native(self.selection)
+        self.assertEqual({}, first.errors)
+        self.assertEqual({self.manifest.name, goal.name}, {row["source_path"] for row in first.atoms})
+
+        goal.write_text(text + "Updated goal\n")
+        updated = revalidate_native(self.selection, first)
+        row = next(row for row in updated.atoms if row["source_path"] == goal.name)
+        self.assertIn(b"Updated goal", row["_content_bytes"])
+        goal.unlink()
+        remaining = revalidate_native(self.selection, updated)
+        self.assertEqual([self.manifest.name], [row["source_path"] for row in remaining.atoms])
+
     def test_canonical_header_controls_identity_and_preserves_authored_metadata(self):
         path = self.control / "__TKT" / "arbitrary-name.md"
         path.parent.mkdir(parents=True)

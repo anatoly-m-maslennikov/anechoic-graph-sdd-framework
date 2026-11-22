@@ -45,6 +45,43 @@ class ReleaseInputsTests(unittest.TestCase):
             self.assertEqual(expected, selected.instance_id)
             self.assertEqual(self.root / ".anechoic_runtime/runtime/project_mcp" / expected, selected.launcher_state)
 
+    def test_root_manifest_takes_precedence_and_binds_control(self):
+        old = self.manifest()
+        root_manifest = self.root / old.name
+        root_manifest.write_bytes(old.read_bytes())
+        old.write_text("invalid legacy carrier", encoding="utf-8")
+        selected = release_inputs.read_release_selection(self.root)
+        self.assertEqual(root_manifest, selected.manifest_path)
+        self.assertEqual(self.root / ".anechoic_anechoic", selected.control_root)
+        self.assertEqual(selected, release_inputs.read_release_selection(self.root, ".anechoic_anechoic"))
+        with self.assertRaises(ValueError):
+            release_inputs.read_release_selection(self.root, "_anechoic_anechoic")
+
+    def test_root_manifest_duplicates_invalid_and_control_guards(self):
+        old = self.manifest(parameters={"project": {"root": {"prefix": "dot"}}})
+        root_manifest = self.root / old.name
+        root_manifest.write_bytes(old.read_bytes())
+        duplicate = self.root / "AN-S-001-PROJECT_MANIFEST--other.md"
+        duplicate.write_bytes(old.read_bytes())
+        with self.assertRaises(ValueError):
+            release_inputs.read_release_selection(self.root)
+        duplicate.unlink()
+        root_manifest.write_text(root_manifest.read_text().replace("prefix='AN'", "prefix='BAD'"))
+        with self.assertRaises(ValueError):
+            release_inputs.read_release_selection(self.root)
+        root_manifest.write_bytes(old.read_bytes())
+        old.unlink()
+        old.parent.rmdir()
+        with self.assertRaises(ValueError):
+            release_inputs.read_release_selection(self.root)
+
+    def test_root_manifest_infers_only_unique_control_without_prefix(self):
+        old = self.manifest()
+        (self.root / old.name).write_bytes(old.read_bytes())
+        (self.root / "_anechoic_anechoic").mkdir()
+        with self.assertRaises(ValueError):
+            release_inputs.read_release_selection(self.root)
+
     def test_real_project_manifest(self):
         root = Path(__file__).resolve().parents[3]
         selected = release_inputs.read_release_selection(root)

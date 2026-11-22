@@ -26,7 +26,7 @@ def _asset_input(selection, params):
     if container != {'component': 'C00'} and (not isinstance(container, dict) or set(container) != {'atom'}):
         raise common.InputError('container', 'Supply C00 or a Current planning Ticket.')
     if (not selection.root.is_absolute() or not selection.control_root.is_relative_to(selection.root)
-            or not selection.manifest_path.is_relative_to(selection.control_root)):
+            or selection.manifest_path.parent not in {selection.root, selection.control_root}):
         raise common.SourceChanged('Selected Project path is invalid.')
     body = values['body']
     summary = _summary(body)

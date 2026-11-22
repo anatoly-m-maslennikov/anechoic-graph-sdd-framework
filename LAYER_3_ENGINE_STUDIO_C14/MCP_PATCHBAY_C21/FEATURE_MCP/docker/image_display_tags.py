@@ -66,8 +66,8 @@ def ensure_display_tag(run, image: str, version: str, created: object, refused, 
 def set_display_role(run, image: str, role: str, refused) -> str:
     if not isinstance(image, str) or IMMUTABLE_IMAGE.fullmatch(image) is None:
         raise refused("Display role requires an immutable image ID")
-    if role not in ("test", "prod"):
-        raise refused("Display role must be test or prod")
+    if role not in ("test", "beta", "prod"):
+        raise refused("Display role must be test, beta or prod")
     try:
         row, = json.loads(run(("docker", "image", "inspect", image)), object_pairs_hook=_unique_object)
         version = row["Config"]["Labels"][OCI_VERSION_LABEL]
@@ -78,8 +78,8 @@ def set_display_role(run, image: str, role: str, refused) -> str:
         previous = [display_image_tag(version, created, image, role=old_role, compact=True)
                     for old_role in (None, role)]
         if role == "prod":
-            previous.extend(display_image_tag(version, created, image, role="test", compact=compact)
-                            for compact in (False, True))
+            previous.extend(display_image_tag(version, created, image, role=candidate, compact=compact)
+                            for candidate in ("test", "beta") for compact in (False, True))
         elif any(display_image_tag(version, created, image, role="prod", compact=compact) in tags
                  for compact in (False, True)):
             raise ValueError("image already carries its production tag")

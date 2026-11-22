@@ -67,6 +67,18 @@ class SourceWatcherTests(unittest.TestCase):
             is_directory=directory,
         )
 
+    def test_root_file_watch_is_nonrecursive(self) -> None:
+        observer = _Observer()
+        watcher = SourceWatcher(self.root, self.control, observer_factory=lambda: observer, watch_root_files=True)
+        observer.pending_changes = watcher.changes
+        watcher.start()
+        self.addCleanup(watcher.close)
+        self.assertIn((str(self.root.absolute()), False), observer.schedules)
+        watcher._modified(str(self.root / 'AN-S-1-SPEC-PROJECT_GOAL--goal.md'), False)
+        watcher._modified(str(self.root / 'outside' / 'nested.md'), False)
+        self.assertEqual([{'operation': 'update', 'old_path': None,
+                           'new_path': 'AN-S-1-SPEC-PROJECT_GOAL--goal.md'}], watcher.changes(0))
+
     def test_file_callbacks_keep_selected_repository_relative_paths(self) -> None:
         path = self.control / "04_requirement/CA-R-1.md"
         self.observer.handler.on_created(self.event(path))

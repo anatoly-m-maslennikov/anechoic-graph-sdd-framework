@@ -8,8 +8,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 3
-  updated_at: '2026-11-22T11:23:40.206159+00:00'
+  version: 4
+  updated_at: '2026-11-22T11:34:35.965837+00:00'
 ---
 
 ## Summary
@@ -24,11 +24,12 @@ MODEL//ANECHOIC <+ Relation//CONTRIBUTES_TO
 
 ### Prose Claim
 
-A Tier 2 Applicable Principle contributes to a Tier 1 Applicable Principle
-when it supports the Principle without refining it. A Tier 3 Project SPEC
-Solution, Policy, or Standard may contribute to a Tier 2 Applicable Principle.
-A Tier 4 Component Manifest may contribute to a Tier 3 Project Solution
-when the Component scope covers part of that Solution.
+An Atom contributes when it supplies guidance or part of the design needed
+to put the target claim into practice. Use this Relation in the Project for:
+
+- Tier 2 Applicable Principle to Tier 1 Applicable Principle.
+- Tier 3 Solution, Policy, or Standard to Tier 2 Applicable Principle.
+- Tier 4 Solution or Component Manifest to Tier 3 Solution.
 The authored Relation points from the stated source to its target.
 The inverse is derived. Tier and Solution restrictions are authoring rules.
 

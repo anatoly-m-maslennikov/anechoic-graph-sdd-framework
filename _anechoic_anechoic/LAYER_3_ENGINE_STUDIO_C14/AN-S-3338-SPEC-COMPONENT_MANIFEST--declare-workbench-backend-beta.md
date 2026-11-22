@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: active
-  version: 1
-  updated_at: '2026-11-22T11:33:41.414012+00:00'
+  status: "active"
+  version: 2
+  updated_at: "2026-11-22T11:41:29.816866+00:00"
 ---
 ## Summary
 
@@ -28,7 +28,7 @@ declare_entity(
         component_id='C70',
         name='Workbench Backend Beta',
         lens_whitelist=['DES', 'SPEC'],
-        boundaries={'code': {'imports': {'only': ['C16', 'C53']}}, 'io': {'server': {'project_admission': {'transport': 'json_lines', 'runner': 'managed_python', 'module': 'WORKBENCH_BACKEND_beta_C70.project_admission__pub'}, 'workbench_api': {'transport': 'http', 'socket': 'private Unix socket', 'runner': 'managed_python', 'module': 'WORKBENCH_BACKEND_beta_C70.runtime__pub', 'routes': ['GET /health', 'GET /tools', 'POST /tools', 'GET /jobs/worker-runs']}}, 'client': {'database': {'component': 'C71', 'transport': 'http'}, 'jobs': {'component': 'C68', 'transport': 'http'}, 'reviewed_model': {'transport': 'cli', 'runner': 'managed_python', 'module': 'FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.manifest_compiler_CS1.image_model_compile'}}}, 'state': {'reads': ['Project Manifest', 'reviewed Model', 'Project binding'], 'writes': []}},
+        boundaries={'code': {'imports': {'only': ['C16', 'C53']}}, 'io': {'server': {'project_admission': {'transport': 'json_lines', 'runner': 'managed_python', 'module': 'WORKBENCH_BACKEND_beta_C70.project_admission__pub'}, 'shared_workbench_api': {'transport': 'http', 'socket': 'private Unix socket', 'runner': 'managed_python', 'module': 'WORKBENCH_BACKEND_beta_C70.shared_runtime__pub', 'arguments': ['--socket', '<socket>', '--host-settings', '<config>'], 'routes': ['GET /health', 'GET /tools', 'POST /selection', 'POST /tools']}, 'workbench_api': {'transport': 'http', 'socket': 'private Unix socket', 'runner': 'managed_python', 'module': 'WORKBENCH_BACKEND_beta_C70.runtime__pub', 'routes': ['GET /health', 'GET /tools', 'POST /tools', 'GET /jobs/worker-runs']}}, 'client': {'database': {'component': 'C71', 'transport': 'http'}, 'jobs': {'component': 'C68', 'transport': 'http'}, 'reviewed_model': {'transport': 'cli', 'runner': 'managed_python', 'module': 'FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.manifest_compiler_CS1.image_model_compile'}}}, 'state': {'reads': ['Project Manifest', 'reviewed Model', 'Project binding'], 'writes': []}},
     ),
 )
 ```

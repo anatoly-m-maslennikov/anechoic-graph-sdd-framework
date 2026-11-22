@@ -74,6 +74,47 @@ class OrchestratorTests(unittest.TestCase):
             self.assertEqual([{"reference": "AN-S-001", "summary": "Manifest"}], result["result"]["atoms"])
             self.assertEqual("succeeded", jobs.status()["latest"]["state"])
 
+    def test_generation_handoff_and_recovery(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            (root / "control").mkdir()
+            binding = {"root": str(root), "control_root": "control", "manifest_path": "manifest.md",
+                       "manifest_sha256": "a" * 64, "project_prefix": "AN"}
+            jobs = module.GenerationJobs("test", binding, str(root / "kernel.sock"))
+            sent = []
+            class Worker:
+                returncode = 0
+                def __init__(self, command, **kwargs):
+                    output = Path(command[-1])
+                    (output / "model.json").write_bytes(b'{"line":"a"}\r\n')
+                    (output / "structure.json").write_bytes(b'{}')
+                def communicate(self, value=None, timeout=None):
+                    return json.dumps({"snapshot": {}, "receipt": {}}), ""
+            class Connection:
+                def __init__(self, path):
+                    pass
+                def request(self, method, path, body, headers):
+                    sent.append((method, path, json.loads(body)))
+                def getresponse(self):
+                    class Response:
+                        status = 200
+                        def read(self):
+                            return b'{"result":{"generation":"g1"}}'
+                    return Response()
+                def close(self):
+                    pass
+            with patch.object(module.subprocess, "Popen", side_effect=OSError("broken")):
+                jobs._generate()
+            self.assertEqual("failed", jobs.status()["latest"]["state"])
+            self.assertIn("broken", jobs.status()["latest"]["message"])
+            with patch.object(module.subprocess, "Popen", Worker), patch.object(module, "UnixConnection", Connection):
+                jobs._generate()
+            self.assertEqual("g1", jobs.status()["latest"]["generation"])
+            self.assertEqual(("PUT", "/generation"), sent[0][:2])
+            self.assertEqual('{"line":"a"}\r\n', sent[0][2]["model"])
+            self.assertEqual({"instance_id", "snapshot", "receipt", "model", "structure"}, set(sent[0][2]))
+            self.assertEqual(409, jobs.build({})[0])
+
     def test_single_active_build_and_timeout(self):
         jobs = module.Jobs("test")
         request = {key: "x" for key in module.FIELDS}

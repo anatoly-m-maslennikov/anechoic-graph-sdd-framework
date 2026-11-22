@@ -8,8 +8,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-22T00:00:00+00:00'
+  version: 2
+  updated_at: '2026-11-22T11:49:27.339015+00:00'
 ---
 
 ## Summary
@@ -24,7 +24,8 @@ MODEL//ANECHOIC <+ Relation//APPLIES
 
 ### Prose Claim
 
-A Tier 1 Applicable Principle applies an Axiom as a premise.
+A Tier 1 Applicable Principle applies a Tier 0 Axiom as a premise
+within the scope of its Project Goal.
 The authored Relation points from the stated source to its target.
 The inverse is derived. Tier and Solution restrictions are authoring rules.
 

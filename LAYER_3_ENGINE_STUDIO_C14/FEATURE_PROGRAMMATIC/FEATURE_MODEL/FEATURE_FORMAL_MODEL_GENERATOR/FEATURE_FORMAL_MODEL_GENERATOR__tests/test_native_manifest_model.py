@@ -41,11 +41,13 @@ class NativeManifestModelTests(unittest.TestCase):
 
     def test_reviewed_component_manifest_accepts_optional_boundaries(self):
         fields = {"atom_id": "AN-S-124", "ref_id": "AN-S-124@1", "version": 1,
-                  "tier": 0, "component_id": "C01", "name": "Engine"}
+                  "tier": 4, "component_id": "C01", "name": "Engine"}
         boundaries = {"code": {"imports": ["C02"]}}
         self.assertIsNone(self.model.validate_component_manifest(fields, "C00").boundaries)
         manifest = self.model.validate_component_manifest(fields | {"boundaries": boundaries}, "C00")
         self.assertEqual(manifest.boundaries, boundaries)
+        with self.assertRaises(ValueError):
+            self.model.validate_component_manifest(fields | {"tier": 0}, "C00")
         with self.assertRaisesRegex(ValueError, "boundaries:"):
             self.model.validate_component_manifest(fields | {"boundaries": ["C02"]}, "C00")
 
@@ -54,14 +56,14 @@ class NativeManifestModelTests(unittest.TestCase):
         active = []
         for path, subject, claim in records:
             if subject.endswith('//Component Manifest'):
-                claim = claim.replace('allowed_values\": (0,)', 'allowed_values\": (4,)')
+                claim = claim.replace('allowed_values\": (4,)', 'allowed_values\": (0,)')
             active.append((path, subject, claim))
         model = native_manifest_model._NativeModel(records=active)
         fields = {"atom_id": "AN-S-124", "ref_id": "AN-S-124@1", "version": 1,
-                  "tier": 4, "component_id": "C01", "name": "Engine"}
-        self.assertEqual(model.validate_component_manifest(fields, "C00").tier, 4)
+                  "tier": 0, "component_id": "C01", "name": "Engine"}
+        self.assertEqual(model.validate_component_manifest(fields, "C00").tier, 0)
         with self.assertRaises(ValueError):
-            model.validate_component_manifest(fields | {"tier": 0}, "C00")
+            model.validate_component_manifest(fields | {"tier": 4}, "C00")
 
     def test_component_seed_manifest_checks_identity_and_solution(self):
         fields = {"atom_id": "AN-S-125", "ref_id": "AN-S-125@1", "version": 1,
@@ -205,7 +207,7 @@ class NativeManifestModelTests(unittest.TestCase):
                 self.assertIs(type(model.validate_manifest(self.fields, "C00")), cls)
                 component_cls = importlib.import_module("anechoic_runtime_model.component_manifest").ComponentManifest
                 fields = {"atom_id": "AN-S-124", "ref_id": "AN-S-124@1", "version": 1,
-                          "tier": 0, "component_id": "C01", "name": "Engine"}
+                          "tier": 4, "component_id": "C01", "name": "Engine"}
                 for parent in ("C00", "C1"):
                     self.assertIs(type(model.validate_component_manifest(fields, parent)), component_cls)
                 with self.assertRaisesRegex(ValueError, "check_component_manifest"):
@@ -234,7 +236,7 @@ class NativeManifestModelTests(unittest.TestCase):
                     for path, subject, claim in records]
         model = native_manifest_model._NativeModel(records=upgraded)
         fields = {"atom_id": "AN-S-124", "ref_id": "AN-S-124@1", "version": 1,
-                  "tier": 0, "component_id": "C01", "name": "Engine"}
+                  "tier": 4, "component_id": "C01", "name": "Engine"}
         for parent in ("C00", "C01"):
             self.assertEqual(model.validate_component_manifest(fields, parent).name, "Engine")
         with patch.object(model, "_validate", wraps=model._validate) as validate:

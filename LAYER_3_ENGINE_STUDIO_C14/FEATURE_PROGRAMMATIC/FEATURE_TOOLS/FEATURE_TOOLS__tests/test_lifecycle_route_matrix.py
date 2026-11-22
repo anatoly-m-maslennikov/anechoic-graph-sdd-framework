@@ -114,7 +114,7 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
             if template is not None:
                 context['template'] = template
             if family == 'SPEC':
-                context.update(lens='SPEC', tier=-1 if template in {'axiom', 'project_manifest'} else 2 if template == 'applicable_principle' else 1)
+                context.update(lens='SPEC', tier=-1 if template == 'project_manifest' else 0 if template == 'axiom' else 2 if template == 'applicable_principle' else 1)
             status = {'current': ('active' if route == 'archive' else 'ready') if family == 'SPEC' else 'active' if family == 'PROJECT_CONFIG' else 'in_queue',
                       'draft': 'draft', 'archived': 'archived'}[situation]
             if family == 'PROJECT_CONFIG' and template is None and situation != 'draft':
@@ -249,6 +249,6 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
         self.assertEqual(derived, saved_path)
         self.assertEqual(expected_status, row['status'])
         if family == 'SPEC' and template in project_specs:
-            self.assertEqual(-1 if template == 'axiom' else 2, row['header_json']['tier'])
+            self.assertEqual(0 if template == 'axiom' else 2, row['header_json']['tier'])
         self.assertEqual((changed if route in {'direct_update', 'update', 'create_draft'} and situation != 'new' else body).encode(), row['_content_bytes'])
         self.assertNotEqual(before, self.files(project))

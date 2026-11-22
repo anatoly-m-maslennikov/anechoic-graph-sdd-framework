@@ -24,7 +24,7 @@ class ProjectInitTests(unittest.TestCase):
                                   journal_storage=kwargs.pop("journal_storage", "duckdb"), **kwargs)
 
     def manifest_fields(self, control):
-        [manifest] = list(control.iterdir())
+        manifest = self.root / "MP-S-1-SPEC-PROJECT_MANIFEST--declare-project.md"
         text = manifest.read_text(encoding="utf-8")
         self.assertIn("atom_id: MP-S-1\n", text)
         self.assertIn("  template: project_manifest\n", text)
@@ -36,12 +36,14 @@ class ProjectInitTests(unittest.TestCase):
 
     def test_manifest_contains_project_identity_and_storage(self):
         control = self.initialize()
+        self.assertEqual(self.root / ".anechoic_my project", control)
+        self.assertEqual([], list(control.iterdir()))
         fields = self.manifest_fields(control)
         self.assertEqual("My Project", fields["name"])
         self.assertEqual("MP", fields["prefix"])
         self.assertEqual({"workbench": {"storage": "memory"}, "journal": {"storage": "duckdb"}},
                          fields["parameters"]["runtime"])
-        [manifest] = control.iterdir()
+        manifest = self.root / "MP-S-1-SPEC-PROJECT_MANIFEST--declare-project.md"
         self.assertIn(
             "        parameters={\n"
             "            'runtime': {\n"
@@ -59,11 +61,19 @@ class ProjectInitTests(unittest.TestCase):
         self.assertTrue(candidate.is_symlink())
         candidate.unlink()
         control = self.initialize()
-        manifest = next(control.iterdir())
+        manifest = self.root / "MP-S-1-SPEC-PROJECT_MANIFEST--declare-project.md"
         before = manifest.read_bytes()
         with self.assertRaises(FileExistsError):
             self.initialize()
         self.assertEqual(before, manifest.read_bytes())
+
+    def test_existing_root_manifest_is_preserved(self):
+        manifest = self.root / "OTHER-S-1-SPEC-PROJECT_MANIFEST--declare-project.md"
+        manifest.write_text("preserve")
+        with self.assertRaises(FileExistsError):
+            self.initialize()
+        self.assertEqual("preserve", manifest.read_text())
+        self.assertFalse((self.root / ".anechoic_my project").exists())
 
     def test_disk_and_files_modes_are_persisted(self):
         control = self.initialize(workbench_storage="disk", journal_storage="files")
@@ -89,8 +99,8 @@ class ProjectInitTests(unittest.TestCase):
         with patch("project_init.os.link", side_effect=collide):
             with self.assertRaises(FileExistsError):
                 self.initialize()
-        control = self.root / ".anechoic_my project"
-        [manifest] = list(control.iterdir())
+        self.assertFalse((self.root / ".anechoic_my project").exists())
+        manifest = self.root / "MP-S-1-SPEC-PROJECT_MANIFEST--declare-project.md"
         self.assertEqual("preserve", manifest.read_text())
 
     def test_invalid_inputs_do_not_create_control(self):

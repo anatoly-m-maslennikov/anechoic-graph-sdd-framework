@@ -11,7 +11,9 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.source_row__pub import atom
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_body__pub import source_body
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.atom_reference__pub import derive_atom_ref
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_header__pub import native_header_view
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_placement__pub import PROJECT_CONFIG_DIRECTORY, TICKET_DIRECTORY
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_placement__pub import (
+    PROJECT_CONFIG_DIRECTORY, TICKET_DIRECTORY, project_goal_filename,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import CarrierError, parse_carrier
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__pub import CEILINGS, ReadContext
 
@@ -95,12 +97,14 @@ def check_native_manifest(reader: ReadContext, selection: Any, previous: NativeC
     return raw
 
 
-def _changed_inputs(reader, root, control, previous, paths):
+def _changed_inputs(reader, selection, previous, paths):
+    root, control = selection.root, selection.control_root
     scopes = set()
     for relative in paths:
         if relative.is_absolute() or ".." in relative.parts:
             raise ValueError("Invalid changed carrier path")
-        if (root / relative).is_relative_to(control):
+        if ((root / relative).is_relative_to(control) or root / relative == selection.manifest_path
+                or (relative.parent == PurePosixPath('.') and project_goal_filename(relative.name))):
             scopes.add(relative)
     changed, directories = set(), set()
     previous_paths = {row["source_path"] for row in previous.atoms} | previous.errors.keys()
@@ -130,6 +134,13 @@ def _read_captured_carrier(reader, selection, path, tree, manifest, *, increment
         return None
     family = {"_PMETA": "P", "__TKT": "T", PROJECT_CONFIG_DIRECTORY: "PC", TICKET_DIRECTORY: "T"}.get(tree, "S")
     row, edge = _carrier_row(path, selection.root, family, selection.project_prefix, raw)
+    if tree is None and path != selection.manifest_path:
+        context = native_header_view(row["header_json"])["context"]
+        if (row["status"] != "active" or context.get("template") != "project_goal"
+                or context.get("container") != {"component": "C00"} or context.get("tier") != -1
+                or context.get("lens") != "SPEC"
+                or not path.name.startswith(row["id"] + "-")):
+            raise ValueError("Invalid repository-root Project Goal")
     row["_source_sha256"] = sha256(raw).hexdigest()
     return row, edge
 
@@ -143,13 +154,18 @@ def _incremental_carrier_present(reader: ReadContext, path: Path) -> bool:
     return True
 
 
+def _root_carriers(reader, selection, *, remember=True):
+    return [path for path in reader.inventory_shallow(selection.root, remember=remember)
+            if path == selection.manifest_path or project_goal_filename(path.name)]
+
+
 def capture_native(
     selection: Any, *, previous: NativeCapture | None = None,
     paths: set[PurePosixPath] | None = None,
 ) -> NativeCapture:
     """Read one selected native tree. Callers must refuse a capture with errors."""
     root, control = selection.root, selection.control_root
-    reader = ReadContext(roots=[str(control)], limits=dict(CEILINGS))
+    reader = ReadContext(roots=[str(root)], limits=dict(CEILINGS))
     incremental = previous is not None and paths is not None
     manifest = check_native_manifest(reader, selection, previous if incremental else None)
     versions = dict(previous.versions) if incremental else {}
@@ -157,12 +173,13 @@ def capture_native(
                      for row, edge in zip(previous.atoms, previous.containment)} if incremental else {}
     missing = []
     if incremental:
-        candidates, errors, input_paths = _changed_inputs(reader, root, control, previous, paths)
+        candidates, errors, input_paths = _changed_inputs(reader, selection, previous, paths)
     else:
         candidates, errors = {}, {}
         input_paths = [path for path in reader.inventory(control) if path.suffix == ".md"]
+        input_paths.extend(_root_carriers(reader, selection))
     for path in input_paths:
-        tree = path.relative_to(control).parts[0]
+        tree = path.relative_to(control).parts[0] if path.is_relative_to(control) else None
         if tree == "000_ANECHOIC_framework":
             continue
         relative = path.relative_to(root).as_posix()
@@ -196,11 +213,14 @@ def revalidate_native(selection: Any, previous: NativeCapture | None) -> NativeC
         return capture_native(selection)
     control, root = selection.control_root, selection.root
     installed = control / "000_ANECHOIC_framework"
-    reader = ReadContext(roots=[str(control)], limits=dict(CEILINGS))
+    reader = ReadContext(roots=[str(root)], limits=dict(CEILINGS))
 
     def versions():
         observed = {}
         paths = reader.inventory(control, remember=False, versions=observed)
+        for path in _root_carriers(reader, selection, remember=False):
+            observed[str(path)] = reader.version(path.lstat())
+            paths.append(path)
         return {str(path): observed[str(path)] for path in paths
                 if path.suffix == ".md" and not path.is_relative_to(installed)}
 

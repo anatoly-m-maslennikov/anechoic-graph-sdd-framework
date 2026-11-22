@@ -10,7 +10,7 @@ import yaml
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_header__pub import native_header_view
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_placement__pub import (native_carrier_path, spec_lens_directories,
-    DRAFT_DIRECTORY, ARCHIVE_DIRECTORY, READY_DIRECTORY, TICKET_DIRECTORY, PROJECT_CONFIG_DIRECTORY)
+    DRAFT_DIRECTORY, ARCHIVE_DIRECTORY, READY_DIRECTORY, TICKET_DIRECTORY, PROJECT_CONFIG_DIRECTORY, project_goal_filename)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import parse_carrier
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.structure_snapshot__pub import read_structure
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__pub import CEILINGS, ReadContext
@@ -26,9 +26,10 @@ def _revision_root(selection, row, structure_snapshot=None, current_rows=None):
         raise common.SourceChanged("Current carrier path is invalid.")
     relative = Path(relative)
     path = selection.root / relative
+    root_goal = path.parent == selection.root and project_goal_filename(path.name)
     if (not selection.root.is_absolute() or not selection.control_root.is_relative_to(selection.root)
-            or not selection.manifest_path.is_relative_to(selection.control_root)
-            or relative.is_absolute() or ".." in relative.parts or not path.is_relative_to(selection.control_root)
+            or selection.manifest_path.parent not in {selection.root, selection.control_root}
+            or relative.is_absolute() or ".." in relative.parts or (not root_goal and not path.is_relative_to(selection.control_root))
             or path == selection.manifest_path):
         raise common.InputError("sourceCurrent", "Select an admitted Current carrier.")
     atom_id = row.get("id", "")
@@ -41,6 +42,11 @@ def _revision_root(selection, row, structure_snapshot=None, current_rows=None):
         return _task_revision_root(selection, row, current_rows, path, atom_id, context, status)
     if status not in {"active", "ready"} or not re.fullmatch(re.escape(atom_id) + r"-.+\.md", path.name):
         raise common.InputError("sourceCurrent", "Select an active native carrier.")
+    if root_goal:
+        if (status != "active" or context.get("template") != "project_goal" or context.get("lens") != "SPEC"
+                or context.get("tier") != -1 or context.get("container") != {"component": "C00"}):
+            raise common.InputError("sourceCurrent", "Select an Active Project Goal at the repository root.")
+        return selection.control_root
     if "-P-" in atom_id or "-C-" in atom_id:
         root = selection.control_root / ('_PMETA' if '_PMETA' in path.parts else PROJECT_CONFIG_DIRECTORY)
         if path.parent != root:
@@ -76,7 +82,7 @@ def _spec_revision_root(selection, structure_snapshot, path, header, context, st
         raise common.InputError("sourceCurrent", "Select a component-owned SPEC carrier.")
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.project_manifest__pub import manifest_inputs
     try:
-        reader = ReadContext(roots=[str(selection.control_root)], limits=dict(CEILINGS))
+        reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
         raw = reader.read(selection.manifest_path)
         if sha256(raw).hexdigest() != selection.manifest_sha256:
             raise ValueError("Manifest changed")

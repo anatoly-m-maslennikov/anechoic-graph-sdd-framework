@@ -11,7 +11,7 @@ import unittest
 from unittest.mock import patch
 
 from RUNTIME_SETUP__shared import select_settings, write_settings
-from setup import LAUNCHER, RELEASE, _arguments, _run_json, install, main
+from setup import LAUNCHER, RELEASE, _arguments, _initialize, _run_json, install, main
 
 
 class RuntimeSetupTests(unittest.TestCase):
@@ -120,6 +120,18 @@ class RuntimeSetupTests(unittest.TestCase):
             install(arguments, source=self.base)
         codex.assert_not_called()
 
+    def test_existing_root_and_legacy_manifests_skip_initialization(self):
+        subprocess.run(("git", "init", "-q", str(self.project)), check=True)
+        arguments = self.arguments("--project", str(self.project))
+        values, _ = select_settings(arguments)
+        for location in (self.project, self.project / ".anechoic_example"):
+            with self.subTest(location=location):
+                location.mkdir(exist_ok=True)
+                manifest = location / "EX-S-1-SPEC-PROJECT_MANIFEST--declare-project.md"
+                manifest.write_text("existing")
+                self.assertFalse(_initialize(self.base, values, arguments))
+                manifest.unlink()
+
     def test_single_initialization_carries_the_storage_defaults(self):
         subprocess.run(("git", "init", "-q", str(self.project)), check=True)
         argv = [
@@ -143,7 +155,7 @@ class RuntimeSetupTests(unittest.TestCase):
             {"workbench_storage": "memory", "journal_storage": "duckdb"},
             tomllib.loads(self.settings.read_text())["project_defaults"],
         )
-        manifest = self.project / ".anechoic_example" / "EX-S-1-SPEC-PROJECT_MANIFEST--declare-project.md"
+        manifest = self.project / "EX-S-1-SPEC-PROJECT_MANIFEST--declare-project.md"
         claim = manifest.read_text()
         self.assertIn("name='Example'", claim)
         self.assertIn("'workbench': {'storage': 'memory'}", claim)

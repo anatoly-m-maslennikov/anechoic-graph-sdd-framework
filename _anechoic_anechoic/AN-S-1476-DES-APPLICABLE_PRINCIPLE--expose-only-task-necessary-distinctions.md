@@ -9,10 +9,10 @@ context:
   template: applicable_principle
 state:
   status: active
-  version: 37
-  updated_at: '2026-11-22T11:00:54.983176+00:00'
+  version: 38
+  updated_at: '2026-11-22T11:34:35.965837+00:00'
 relations:
-  REFINES:
+  CONTRIBUTES_TO:
   - AN-S-1486
 ---
 ## Summary

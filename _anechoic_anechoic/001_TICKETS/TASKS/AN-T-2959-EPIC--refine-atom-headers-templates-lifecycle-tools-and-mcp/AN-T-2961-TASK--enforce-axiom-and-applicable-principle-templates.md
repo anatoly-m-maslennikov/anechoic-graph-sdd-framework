@@ -9,8 +9,8 @@ context:
   label: Task
 state:
   status: in_queue
-  version: 3
-  updated_at: '2026-11-22T11:02:07.553845+00:00'
+  version: 4
+  updated_at: '2026-11-22T11:49:27.339015+00:00'
 ---
 ## Summary
 
@@ -20,7 +20,7 @@ Enforce Axiom and Applicable Principle templates
 
 After Header migration, bind Axiom and Applicable Principle to their
 compiled Model validators. Require the Project Container for both,
-Tier -1 for Axiom, and Tier 1 or 2 for Applicable Principle. Validate at
+Tier 0 for Axiom, and Tier 1 or 2 for Applicable Principle. Validate at
 creation and promotion.
 
 Verify that wrong tiers and Component or Atom containers fail before writing. Coordinate existing carrier reclassification with AN-T-2932.

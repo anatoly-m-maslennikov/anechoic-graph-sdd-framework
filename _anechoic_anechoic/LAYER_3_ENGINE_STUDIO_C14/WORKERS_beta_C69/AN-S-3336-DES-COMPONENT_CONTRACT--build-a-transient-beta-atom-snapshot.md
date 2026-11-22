@@ -9,8 +9,8 @@ context:
   lens: DES
 state:
   status: "active"
-  version: 1
-  updated_at: "2026-11-22T11:21:07.088380+00:00"
+  version: 2
+  updated_at: "2026-11-22T11:57:56.936010+00:00"
 ---
 ## Summary
 
@@ -18,10 +18,10 @@ Build a transient Beta Atom snapshot
 
 ## Guarantee
 
-Given a pinned native Project binding, read the Current Atoms and emit
-their references and summaries in reference order. Include the pinned
-Manifest digest. Refuse an invalid binding, changed Manifest, or capture
-with errors. The worker exits after writing its result.
+Build Current Atom rows from a pinned Project. In a generation build,
+publish the rows and attested Model and Structure from the same unchanged
+source capture. Fail without publishing when the Project sources change
+during the build.
 
 ## References
 
