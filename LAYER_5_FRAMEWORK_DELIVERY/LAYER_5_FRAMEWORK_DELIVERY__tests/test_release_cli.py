@@ -15,29 +15,19 @@ import unittest
 from unittest.mock import patch
 
 REPOSITORY = Path(__file__).resolve().parents[2]
-import release  # noqa: E402
+import LAYER_5_FRAMEWORK_DELIVERY__shared as release  # noqa: E402
 
 LOCAL_ENTRY = "RELEASE_VERSION.RELEASE_VERSION__shared.run_local_release"
 PUBLIC_MODULE = "PUBLIC_RELEASE.PUBLIC_RELEASE__shared"
 PUBLIC_ENTRY = PUBLIC_MODULE + ".run_public_release"
 
 
-DRAFT = {
-    "base_commit": "a" * 40,
-    "head_commit": "b" * 40,
-    "changes": [
-        {"title": "Host command", "details": "Route through the host CLI.", "evidence": ["AN-T-1"], "highlight": True}
-    ],
-}
+from LAYER_5_FRAMEWORK_DELIVERY__tests.LAYER_5_FRAMEWORK_DELIVERY__tests__shared import (
+    DRAFT, ReleaseCliFixture,
+)
 
 
-class ReleaseCliTests(unittest.TestCase):
-    def invoke(self, arguments: list[str]) -> tuple[int, dict[str, object]]:
-        output = io.StringIO()
-        with redirect_stdout(output):
-            status = release.main(arguments)
-        return status, json.loads(output.getvalue())
-
+class ReleaseCliTests(ReleaseCliFixture, unittest.TestCase):
     def test_build_image_dispatch(self) -> None:
         result = {"outcome": "completed", "image_id": "sha256:" + "a" * 64}
         entry = "RELEASE_VERSION.RELEASE_VERSION__shared.build_image"
@@ -65,8 +55,8 @@ class ReleaseCliTests(unittest.TestCase):
     def test_local_dispatch_forwards_repeatable_focused_modules(self) -> None:
         result = {"outcome": "completed", "receipt_path": "receipt.json"}
         modules = (
-            "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_first.py",
-            "LAYER_3_ENGINE_STUDIO_C14/component/tests/test_second.py",
+            "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_first.py",
+            "LAYER_4_ENGINE_STUDIO_C14/component/tests/test_second.py",
         )
         with patch(LOCAL_ENTRY, return_value=result) as run:
             self.assertEqual(

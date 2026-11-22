@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: "active"
-  version: 17
-  updated_at: "2026-11-22T10:58:11.246679+00:00"
+  version: 19
+  updated_at: '2026-11-22T12:51:17.372084+00:00'
 ---
 
 ## Summary
@@ -32,7 +32,16 @@ declare_entity(
         lens_whitelist=['DES', 'DevOps', 'QA', 'SPEC', 'SWD'],
         prefix='AN',
         parameters={
-            'project': {'root': {'prefix': 'underscore'}},
+            'project': {
+                'root': {'prefix': 'underscore'},
+                'folder_layout': {
+                    'active_spec_by_tier': {
+                        '0': '.',
+                        '1': '01_TIER_1_ARCHITECTURE',
+                        '2+': '_{lens}/{sublenses}',
+                    },
+                },
+            },
             'project_mcp': {
                 'release_workflows_enabled': True,
                 'http_port': 56317,
@@ -45,7 +54,7 @@ declare_entity(
                     'inline_result_limit_kib': 4,
                     'import_graph': {
                         'python_image_imports': {
-                            'LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/native_model_selector.py': [
+                            'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/native_model_selector.py': [
                                 'APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.content_schema',
                                 'APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.header_columns',
                                 'APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.query_store',
@@ -65,3 +74,21 @@ declare_entity(
 ### Prose Claim
 
 At Workbench startup, `parameters.runtime.workbench.inline_result_limit_kib` is a whole positive KiB value. Workbench automatically sends complete query results up to this limit inline and larger results to files.
+
+### Folder Layout
+
+The Tier -1 Project Manifest and Project Goal are at the repository root.
+The Project control directory for Anechoic is `_anechoic_anechoic/`.
+The `project.root.prefix` setting selects a leading underscore or dot
+for the control directory.
+
+The Tier rules for Active SPEC Atoms are relative to the owning Project
+control or Component directory. Tier 0 uses the owning directory.
+Tier 1 uses `01_TIER_1_ARCHITECTURE/`. Tier 2 and above use the
+authored Lens. A single underscore marks the first Lens folder.
+Sublenses use plain folder names, as in `_DES/DOM/` and `_DES/IO/`.
+
+Two underscores mark the reserved branches `__TICKETS/` and
+`__PROJECT_CONFIG/` under the Project control directory.
+Each owner uses `01_draft/`, `02_ready/`, and `09_archived/`
+for SPEC Drafts, Ready Atoms, and Archives.

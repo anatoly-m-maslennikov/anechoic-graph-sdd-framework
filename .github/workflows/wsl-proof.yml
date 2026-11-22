@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   validate-wsl:
-    name: Engine Studio functional QA (WSL)
+    name: Engine Studio static and unit QA (WSL)
     runs-on: [self-hosted, windows, x64, wsl]
     steps:
       - name: Check out the tested commit
@@ -16,12 +16,18 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Run Engine Studio functional QA inside WSL
+      - name: Run Engine Studio static and unit QA inside WSL
         shell: wsl.exe bash -e {0}
         run: |
-          python3 -m pip install uv==0.11.28
-          engine="$PWD/LAYER_3_ENGINE_STUDIO_C14"
-          UV_PROJECT_ENVIRONMENT=.venv-dev PYTHONPATH="$engine" \
-            uv run --project "$engine" --locked --no-env-file python -B -P -m \
+          python3 -B -m pip install --no-compile uv==0.11.28
+          engine="$PWD/LAYER_4_ENGINE_STUDIO_C14"
+          UV_PROJECT_ENVIRONMENT="$engine/.venv-dev" PYTHONPATH="$engine" \
+            uv run --no-compile-bytecode --project "$PWD/LAYER_3_ENVIRONMENTS_C72/engine" \
+              --locked --no-env-file python -B -P -m \
               FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__pub \
-              --project-root "$PWD" --phase functional
+              --project-root "$PWD" --phase static
+          UV_PROJECT_ENVIRONMENT="$engine/.venv-dev" PYTHONPATH="$engine" \
+            uv run --no-compile-bytecode --project "$PWD/LAYER_3_ENVIRONMENTS_C72/engine" \
+              --locked --no-env-file python -B -P -m \
+              FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__pub \
+              --project-root "$PWD" --phase unit --required

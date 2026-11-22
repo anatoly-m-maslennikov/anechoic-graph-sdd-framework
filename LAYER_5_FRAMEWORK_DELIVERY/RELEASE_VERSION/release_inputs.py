@@ -5,7 +5,6 @@ This is a narrow Release input contract, not validation against the compiled Mod
 
 from __future__ import annotations
 
-import ast
 from dataclasses import dataclass
 from hashlib import sha256
 import os
@@ -13,8 +12,9 @@ from pathlib import Path
 import re
 import stat
 
-from markdown_it import MarkdownIt
 import yaml
+
+from ._release_manifest_parser import _claim, read_atom_header
 
 
 _RESERVED = {prefix + name for prefix in (".anechoic_", "_anechoic_")
@@ -97,88 +97,33 @@ def _names(fd: int, *, controls: bool, ignore_control_symlinks: bool = False) ->
         return tuple(sorted(names))
 
 
-def read_atom_header(text: str) -> tuple[dict, str]:
-    text = text.replace("\r\n", "\n")
-    if not text.startswith("---\n") or "\n---\n" not in text[4:]:
-        raise ValueError("Missing YAML frontmatter")
-    front, body = text[4:].split("\n---\n", 1)
-    depth = 0
-    for count, event in enumerate(yaml.parse(front, Loader=yaml.SafeLoader), 1):
-        if isinstance(event, yaml.events.AliasEvent):
-            raise ValueError("YAML aliases are unsupported")
-        if isinstance(event, (yaml.events.MappingStartEvent, yaml.events.SequenceStartEvent)):
-            depth += 1
-        if isinstance(event, (yaml.events.MappingEndEvent, yaml.events.SequenceEndEvent)):
-            depth -= 1
-        if depth > 64 or count > 100_000:
-            raise ValueError("YAML exceeds the parser safety ceiling")
-    node = yaml.compose(front, Loader=yaml.SafeLoader)
-    pending = [node]
-    while pending:
-        current = pending.pop()
-        if isinstance(current, yaml.MappingNode):
-            keys = [key.value for key, _ in current.value
-                    if isinstance(key, yaml.ScalarNode) and key.tag == "tag:yaml.org,2002:str"]
-            if len(keys) != len(current.value) or len(set(keys)) != len(keys):
-                raise ValueError("YAML keys must be unique strings")
-            pending.extend(child for pair in current.value for child in pair)
-        elif isinstance(current, yaml.SequenceNode):
-            pending.extend(current.value)
-    metadata = yaml.safe_load(front)
-    if not isinstance(metadata, dict):
-        raise ValueError("Atom header must be a mapping")
-    return metadata, body
-
-
-def _literal(node: ast.AST):
-    for item in ast.walk(node):
-        if isinstance(item, ast.Dict):
-            keys = [ast.literal_eval(key) if key is not None else None for key in item.keys]
-            if any(not isinstance(key, str) for key in keys) or len(keys) != len(set(keys)):
-                raise ValueError("Claim mapping keys must be unique strings")
-    return ast.literal_eval(node)
-
-
-def _claim(body: str) -> dict:
-    headings, claims = [], []
-    tokens = MarkdownIt("commonmark").parse(body)
-    for index, token in enumerate(tokens):
-        if token.type == "heading_open":
-            level = int(token.tag[1:])
-            headings = [item for item in headings if item[0] < level]
-            headings.append((level, tokens[index + 1].content.strip().casefold()))
-        elif (token.type == "fence" and token.info.strip().casefold() == "python"
-              and tuple(name for _, name in headings) == ("claim", "formal claim")):
-            claims.append(token.content)
-    if len(claims) != 1:
-        raise ValueError("Expected one Python Formal Claim")
-    tree = ast.parse(claims[0])
-    imports = (("anechoic.formal_claims", "declare_entity"), ("anechoic.model", "ProjectManifest"))
-    statements = tree.body
-    if len(statements) != 3 or any(
-        not isinstance(stmt, ast.ImportFrom) or stmt.level or stmt.module != module
-        or len(stmt.names) != 1 or stmt.names[0].name != name or stmt.names[0].asname is not None
-        for stmt, (module, name) in zip(statements[:2], imports)
-    ):
-        raise ValueError("Unsupported Project Manifest claim")
-    expression = statements[2]
-    if not isinstance(expression, ast.Expr) or not isinstance(expression.value, ast.Call):
-        raise ValueError("Unsupported Project Manifest declaration")
-    call = expression.value
-    if not isinstance(call.func, ast.Name) or call.func.id != "declare_entity" or call.args:
-        raise ValueError("Unsupported Project Manifest declaration")
-    args = {arg.arg: arg.value for arg in call.keywords}
-    if len(args) != len(call.keywords) or set(args) != {"entity_name", "instance"}:
-        raise ValueError("Unsupported Project Manifest declaration arguments")
-    instance = args["instance"]
-    if (_literal(args["entity_name"]) != "Project Manifest" or not isinstance(instance, ast.Call)
-            or not isinstance(instance.func, ast.Name) or instance.func.id != "ProjectManifest" or instance.args):
-        raise ValueError("Expected a ProjectManifest instance")
-    fields = {arg.arg: _literal(arg.value) for arg in instance.keywords}
-    if (len(fields) != len(instance.keywords) or not {"name", "prefix"} <= fields.keys()
-            or fields.keys() - {"name", "prefix", "parameters", "lens_whitelist"}):
-        raise ValueError("Unsupported ProjectManifest fields")
-    return fields
+def _manifest_control(parameters: dict, project_name: str, relative: Path | None,
+                      controls: tuple[str, ...], explicit: Path | None) -> Path:
+    project = parameters.get("project", {})
+    project_root = project.get("root", {}) if isinstance(project, dict) else {}
+    if relative is None:
+        matches = {f".anechoic_{project_name.casefold()}", f"_anechoic_{project_name.casefold()}"}
+        if isinstance(project_root, dict) and "prefix" in project_root:
+            marker = {"dot": ".", "underscore": "_"}.get(project_root["prefix"])
+            if marker is None:
+                raise ValueError("Invalid Project root prefix")
+            matches = {f"{marker}anechoic_{project_name.casefold()}"}
+        existing = matches.intersection(controls)
+        if len(existing) != 1:
+            raise ValueError("Expected one matching Project control root")
+        relative = Path(existing.pop())
+        if explicit is not None and relative != explicit:
+            raise ValueError("Project control root contradicts the selection")
+    if relative.name not in {f".anechoic_{project_name.casefold()}", f"_anechoic_{project_name.casefold()}"}:
+        raise ValueError("Project Manifest identity contradicts the selected control root")
+    if isinstance(project_root, dict) and "prefix" in project_root:
+        marker = {"dot": ".", "underscore": "_"}.get(project_root["prefix"])
+        if marker is None or relative.name != f"{marker}anechoic_{project_name.casefold()}":
+            raise ValueError("Project root prefix contradicts the selection")
+    paths = parameters.get("paths", {})
+    if isinstance(paths, dict) and "control_root" in paths and paths["control_root"] != relative.as_posix():
+        raise ValueError("Project control_root contradicts the selection")
+    return relative
 
 
 def _manifest(metadata: dict, body: str, name: str, relative: Path | None, digest: str, root: Path,
@@ -204,31 +149,8 @@ def _manifest(metadata: dict, body: str, name: str, relative: Path | None, diges
             or re.fullmatch(r"[A-Z]+", prefix) is None or not identity.startswith(prefix + "-S-")
             or not isinstance(parameters, dict)):
         raise ValueError("Project Manifest identity contradicts the selected control root")
-    project = parameters.get("project", {})
-    project_root = project.get("root", {}) if isinstance(project, dict) else {}
     manifest_at_root = relative is None
-    if relative is None:
-        matches = {f".anechoic_{project_name.casefold()}", f"_anechoic_{project_name.casefold()}"}
-        if isinstance(project_root, dict) and "prefix" in project_root:
-            marker = {"dot": ".", "underscore": "_"}.get(project_root["prefix"])
-            if marker is None:
-                raise ValueError("Invalid Project root prefix")
-            matches = {f"{marker}anechoic_{project_name.casefold()}"}
-        existing = matches.intersection(controls)
-        if len(existing) != 1:
-            raise ValueError("Expected one matching Project control root")
-        relative = Path(existing.pop())
-        if explicit is not None and relative != explicit:
-            raise ValueError("Project control root contradicts the selection")
-    if relative.name not in {f".anechoic_{project_name.casefold()}", f"_anechoic_{project_name.casefold()}"}:
-        raise ValueError("Project Manifest identity contradicts the selected control root")
-    if isinstance(project_root, dict) and "prefix" in project_root:
-        marker = {"dot": ".", "underscore": "_"}.get(project_root["prefix"])
-        if marker is None or relative.name != f"{marker}anechoic_{project_name.casefold()}":
-            raise ValueError("Project root prefix contradicts the selection")
-    paths = parameters.get("paths", {})
-    if isinstance(paths, dict) and "control_root" in paths and paths["control_root"] != relative.as_posix():
-        raise ValueError("Project control_root contradicts the selection")
+    relative = _manifest_control(parameters, project_name, relative, controls, explicit)
     instance = sha256(f"{root}\0{relative.as_posix()}".encode("utf-8")).hexdigest()
     return ReleaseSelection(root, root / relative, relative, instance, project_name, prefix,
                             root / name if manifest_at_root else root / relative / name,
@@ -311,6 +233,33 @@ def _canonical_root(project_root: str | Path) -> Path:
     return root
 
 
+def _control_identity(root_fd: int, relative: Path) -> tuple[int, int]:
+    fd = os.open(relative.name, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=root_fd)
+    try:
+        info = os.fstat(fd)
+        return info.st_dev, info.st_ino
+    finally:
+        os.close(fd)
+
+
+def _verify_selection(root: Path, root_fd: int, root_identity, selection: ReleaseSelection,
+                      controls, check_controls: bool, snapshots, total_bytes: int, control_identity) -> None:
+    if check_controls and _names(root_fd, controls=True) != controls:
+        raise ValueError("Project control candidates changed during selection")
+    _verify_snapshots(root_fd, snapshots, total_bytes)
+    if check_controls and _names(root_fd, controls=True) != controls:
+        raise ValueError("Project control candidates changed during selection")
+    if control_identity is not None and _control_identity(root_fd, selection.control_relative) != control_identity:
+        raise ValueError("Project control changed during selection")
+    current_root = _directory(root)
+    try:
+        info = os.fstat(current_root)
+        if (info.st_dev, info.st_ino) != root_identity:
+            raise ValueError("Project root changed during selection")
+    finally:
+        os.close(current_root)
+
+
 def read_release_selection(project_root: str | Path, control_relative: str | Path | None = None) -> ReleaseSelection:
     """Select one active native Project Manifest and pin the inputs read during selection."""
     try:
@@ -334,13 +283,7 @@ def read_release_selection(project_root: str | Path, control_relative: str | Pat
             snapshots = [root_snapshot]
             control_identity = None
             if selection is not None:
-                selected_fd = os.open(selection.control_relative.name,
-                                      os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=root_fd)
-                try:
-                    info = os.fstat(selected_fd)
-                    control_identity = (info.st_dev, info.st_ino)
-                finally:
-                    os.close(selected_fd)
+                control_identity = _control_identity(root_fd, selection.control_relative)
             if selection is None:
                 legacy_controls = controls if explicit is None else (explicit.name,)
                 selections = []
@@ -352,27 +295,8 @@ def read_release_selection(project_root: str | Path, control_relative: str | Pat
                 if len(selections) != 1:
                     raise ValueError("A unique native Project Manifest is required")
                 selection = selections[0]
-            if check_controls and _names(root_fd, controls=True) != controls:
-                raise ValueError("Project control candidates changed during selection")
-            _verify_snapshots(root_fd, snapshots, total_bytes)
-            if check_controls and _names(root_fd, controls=True) != controls:
-                raise ValueError("Project control candidates changed during selection")
-            if control_identity is not None:
-                selected_fd = os.open(selection.control_relative.name,
-                                      os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=root_fd)
-                try:
-                    info = os.fstat(selected_fd)
-                    if (info.st_dev, info.st_ino) != control_identity:
-                        raise ValueError("Project control changed during selection")
-                finally:
-                    os.close(selected_fd)
-            current_root = _directory(root)
-            try:
-                info = os.fstat(current_root)
-                if (info.st_dev, info.st_ino) != root_identity:
-                    raise ValueError("Project root changed during selection")
-            finally:
-                os.close(current_root)
+            _verify_selection(root, root_fd, root_identity, selection, controls, check_controls,
+                              snapshots, total_bytes, control_identity)
             return selection
         finally:
             os.close(root_fd)

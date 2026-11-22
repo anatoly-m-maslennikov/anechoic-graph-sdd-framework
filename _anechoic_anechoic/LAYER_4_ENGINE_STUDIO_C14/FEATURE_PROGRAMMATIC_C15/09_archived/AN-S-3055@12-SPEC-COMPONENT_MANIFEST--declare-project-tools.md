@@ -1,0 +1,64 @@
+---
+atom_family: SPEC
+atom_id: AN-S-3055
+container:
+  component: C15
+tier: 4
+context:
+  template: component_manifest
+  lens: SPEC
+state:
+  status: "archived"
+  version: 12
+  updated_at: "2026-11-22T14:35:37.409661+00:00"
+---
+
+## Summary
+
+Declare PROJECT_TOOLS
+
+## Formal manifest
+
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
+
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C19',
+        name='PROJECT_TOOLS',
+        lens_whitelist=['DES', 'DevOps', 'QA', 'SWD'],
+        boundaries={
+            'code': {
+                'imports': [
+                    'model_field_validation.validate_model_fields',
+                    'model_host_CS2__shared.reviewed_native_model',
+                    'native_workflow_definition.bind_status_specifications',
+                    'native_carrier_header__pub',
+                    'native_carrier_placement__pub',
+                ],
+                'exports': {
+                    'test_suite__pub': 'public',
+                    'test_suite__pub.run_full_suite': 'public',
+                },
+            },
+            'io': {
+                'client': [
+                    {'component': 'C46', 'interface': 'source_function_sizes'},
+                    {'component': 'C63', 'interface': 'test_packaged_image_identity'},
+                    {'component': 'C21', 'interface': 'candidate_test_image_build'},
+                    {'component': 'C21', 'interface': 'candidate_test_image_cleanup'},
+                ],
+                'server': {
+                    'test_suite': {
+                        'transport': 'cli',
+                        'runner': 'uv',
+                        'path': 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/test_suite__pub.py',
+                    },
+                },
+            },
+        },
+    ),
+)
+```

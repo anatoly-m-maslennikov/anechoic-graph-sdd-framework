@@ -7,9 +7,9 @@ __pycache__/
 # Python environments and uv cache
 /.venv/
 /.venv-*/
-/LAYER_3_ENGINE_STUDIO_C14/.venv-*/
+/LAYER_4_ENGINE_STUDIO_C14/.venv-*/
 /LAYER_5_FRAMEWORK_DELIVERY/.venv-release/
-/RUNTIME_SETUP/.venv-setup/
+/LAYER_6_RUNTIME_SETUP/.venv-setup/
 /.uv-cache/
 
 # Setuptools build artifacts
@@ -42,7 +42,7 @@ __pycache__/
 /.anechoic_archive/101_LAYER_1_FRAMEWORK_METHODOLOGY/.release-sources-*/
 /LAYER_1_FRAMEWORK_METHODOLOGY/.release-sources-prior-*/
 /LAYER_1_FRAMEWORK_METHODOLOGY/.release-sources-*/
-/LAYER_3_ENGINE_STUDIO_C14/.anechoic_tmp/
+/LAYER_4_ENGINE_STUDIO_C14/.anechoic_tmp/
 
 .env
 .env.*

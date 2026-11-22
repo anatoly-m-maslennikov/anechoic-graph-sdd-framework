@@ -22,7 +22,7 @@ from RELEASE_VERSION.release_inputs import read_release_selection  # noqa: E402
 from RELEASE_VERSION.release_support import _GENERATED_ASSETS  # noqa: E402
 
 
-from RELEASE_VERSION.RELEASE_VERSION__tests._simple_release_fixture import SimpleReleaseFixture  # noqa: E402
+from RELEASE_VERSION.RELEASE_VERSION__tests.RELEASE_VERSION__tests__shared import SimpleReleaseFixture  # noqa: E402
 
 
 class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
@@ -47,7 +47,7 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         self.assertEqual(5, len(adds))
         self.assertTrue(all("." not in argv[4:-2] for argv in adds[1:]))
         commits = [argv[-1] for argv in calls if argv[:2] == ("git", "commit")]
-        self.assertEqual(["validate inputs", "functional tests", "build package", "install project runtime", "start mcp"],
+        self.assertEqual(["validate inputs", "static tests", "build package", "install project runtime", "start mcp"],
                          [message.removeprefix("chore(release): simple local ") for message in commits])
 
 
@@ -58,7 +58,7 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         def changed(argv, cwd):
             nonlocal drifted
             result = runner(argv, cwd)
-            if "--phase" in argv and "functional" in argv:
+            if "--phase" in argv and "unit" in argv:
                 drifted = True
             if drifted and argv[:2] == ("git", "status"):
                 return subprocess.CompletedProcess(argv, 0, "?? unrelated.txt\n", "")
@@ -108,7 +108,7 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
             return {path.relative_to(target).as_posix(): (path.read_bytes(), stat.S_IMODE(path.stat().st_mode))
                     for path in target.rglob("*") if path.is_file()}
         before = {target: inventory(target) for target in (self.installed, runtime_package, skill)}
-        for relative in ("LAYER_3_ENGINE_STUDIO_C14/uv.lock", "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane/SKILL.md"):
+        for relative in ("LAYER_3_ENVIRONMENTS_C72/engine/uv.lock", "LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane/SKILL.md"):
             with self.subTest(relative=relative):
                 missing = self.root / relative
                 payload = missing.read_bytes()

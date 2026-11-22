@@ -1,50 +1,13 @@
 import json
-import subprocess
-import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-from PUBLIC_RELEASE.public_release import PublicReleaseError, run_public_release
+from PUBLIC_RELEASE.PUBLIC_RELEASE__shared import PublicReleaseError
+from PUBLIC_RELEASE.PUBLIC_RELEASE__tests.PUBLIC_RELEASE__tests__shared import PublicReleaseFixture
 
 
-class PublicReleaseTest(unittest.TestCase):
-    def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
-        self.root = Path(self.tmp.name)
-        self.git('init', '-q')
-        self.git('config', 'user.email', 'test@example.com')
-        self.git('config', 'user.name', 'Test')
-        (self.root / 'version.toml').write_text('[framework]\nversion = "1.2.3"\n')
-        self.git('add', '.')
-        self.git('commit', '-qm', 'base')
-        self.base = self.git('rev-parse', 'HEAD')
-        (self.root / 'version.toml').write_text('[framework]\nversion = "1.2.4"\n')
-        self.tickets = self.root / '_anechoic_anechoic/001_TICKETS/TASKS'
-        self.tickets.mkdir(parents=True)
-        (self.tickets / 'AN-T-1-TASK--done.md').write_text('---\natom_id: AN-T-1\ncontext:\n  template: task\nstate:\n  status: "done"\n---\n# Summary\n\nDone task\n')
-        (self.tickets / 'AN-T-2-EPIC--open.md').write_text('---\natom_id: AN-T-2\ncontext:\n  template: epic\nstate:\n  status: active\n---\n')
-        self.git('add', '.')
-        self.git('commit', '-qm', 'head')
-        self.head = self.git('rev-parse', 'HEAD')
-        self.addCleanup(self.tmp.cleanup)
-
-    def git(self, *args):
-        return subprocess.run(['git', *args], cwd=self.root, check=True, capture_output=True, text=True).stdout.strip()
-
-    def run_release(self, **kwargs):
-        return run_public_release(self.root, run_id='test', base_ref=self.base, head_ref=self.head, **kwargs)
-
-    def run_cli(self, *arguments):
-        release = Path(__file__).resolve().parents[2] / 'release.py'
-        result = subprocess.run(
-            [sys.executable, '-B', str(release), 'public', '--project-root', str(self.root),
-             '--run-id', 'test', '--base', self.base, '--head', self.head, *arguments],
-            cwd=self.root, capture_output=True, text=True, timeout=30, check=False,
-        )
-        self.assertEqual(1, len(result.stdout.splitlines()), result.stdout)
-        return result.returncode, json.loads(result.stdout)
-
+class PublicReleaseTest(PublicReleaseFixture, unittest.TestCase):
     def test_comparison_and_rendering_are_read_only(self):
         before = self.git('status', '--porcelain')
         code, result = self.run_cli()
@@ -56,7 +19,9 @@ class PublicReleaseTest(unittest.TestCase):
         self.assertIn('Luna', result['instructions'])
         self.assertEqual((result['content_draft_schema']['base_commit'], result['content_draft_schema']['head_commit']), (self.base, self.head))
         self.assertEqual(result['diff_argv'], ['git', 'diff', '--find-renames', self.base, self.head, '--'])
-        self.assertEqual([ticket['path'] for ticket in result['completed_tickets']], ['_anechoic_anechoic/001_TICKETS/TASKS/AN-T-1-TASK--done.md'])
+        self.assertEqual({ticket['path'] for ticket in result['completed_tickets']}, {
+            f'_anechoic_anechoic/{branch}/TASKS/AN-T-{number}-TASK--done.md'
+            for branch, number in (('001_TICKETS', 1), ('__TICKETS', 3), ('__TKT', 4))})
         draft = {'base_commit': self.base, 'head_commit': self.head, 'changes': [{'title': 'Add feature', 'details': 'Adds a feature.', 'evidence': ['AN-T-1'], 'highlight': True}]}
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'draft.json'
@@ -97,7 +62,7 @@ class PublicReleaseTest(unittest.TestCase):
         self.git('add', '.')
         self.git('commit', '-qm', 'lookalikes')
         self.head = self.git('rev-parse', 'HEAD')
-        self.assertEqual(len(self.run_release()['completed_tickets']), 1)
+        self.assertEqual(len(self.run_release()['completed_tickets']), 3)
         (self.tickets / 'AN-T-1-TASK--duplicate.md').write_text(done)
         self.git('add', '.')
         self.git('commit', '-qm', 'duplicate')

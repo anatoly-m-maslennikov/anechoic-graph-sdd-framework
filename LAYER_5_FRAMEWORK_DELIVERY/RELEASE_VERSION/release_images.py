@@ -27,7 +27,7 @@ _VERSION = "org.opencontainers.image.version"
 
 
 def _candidate_role(identity: ImageIdentity) -> str:
-    beta_entrypoint = ENGINE + "/WORKBENCH_BACKEND_beta_C70/WORKBENCH_BACKEND_beta_C70__pub.py"
+    beta_entrypoint = ENGINE + "/WORKBENCH_BACKEND_beta_C70/WORKBENCH_BACKEND_beta_C70__shared.py"
     return "beta" if any(path == beta_entrypoint for path, _, _ in identity.manifest) else "test"
 
 
@@ -210,6 +210,8 @@ class ImageManager(ImageInputIdentity):
             label_args = tuple(arg for key, value in labels.items() for arg in ("--label", f"{key}={value}"))
             role = _candidate_role(identity)
             iidfile = stage / "image.id"
+            self._run(("docker", "buildx", "prune", "--force", "--max-used-space", "4GB",
+                       "--min-free-space", "2GB"), cwd=context, buildx=buildx)
             self._run(("docker", "build", "--iidfile", str(iidfile), *label_args, "--platform", self.platform,
                        *(("--target", "beta") if role == "beta" else ()),
                        "--build-arg", f"RUNTIME_UID={self.uid}", "--build-arg", f"RUNTIME_GID={self.gid}",

@@ -12,7 +12,7 @@ from pathlib import Path, PurePosixPath
 
 from .release_assets import LocalReleaseError
 
-_BOOTSTRAP = Path("LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/start_mcp.py")
+_BOOTSTRAP = Path("LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/start_mcp.py")
 
 
 def _relative(value: object, *, label: str) -> Path:

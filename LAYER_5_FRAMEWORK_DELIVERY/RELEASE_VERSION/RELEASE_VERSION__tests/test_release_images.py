@@ -4,7 +4,6 @@ import json
 from pathlib import Path
 import shutil
 import subprocess
-import tempfile
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
@@ -12,59 +11,25 @@ from unittest.mock import patch
 from RELEASE_VERSION import release_images as images
 
 
-class ReleaseImagesTests(unittest.TestCase):
-    def setUp(self):
-        self.temporary = tempfile.TemporaryDirectory()
-        self.addCleanup(self.temporary.cleanup)
-        self.root = Path(self.temporary.name).resolve()
-        self.package = self.root / "package"
-        self.package.mkdir()
-        for relative in images._REQUIRED:
-            path = self.package / relative
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text('[framework]\nversion = "1.2.3"\n' if relative == "version.toml" else "content")
-        self.build = self.root / ".anechoic_tmp/build"
-        self.build.mkdir(parents=True)
-        self.image = "sha256:" + "a" * 64
-        self.provenance = {"project_id": "b" * 64, "project_root": str(self.root),
-                           "control_root": ".anechoic_test", "project_name": "Project", "head_commit": "c" * 40}
-        self.labels = {}
-        self.tags = set()
-        self.captured = set()
-        self.build_args = []
+from ._release_image_fixture import ReleaseImageFixture
 
-    def docker(self, argv, **kwargs):
-        if argv[:2] == ["docker", "build"]:
-            self.build_args = argv
-            labels = [argv[i + 1].split("=", 1) for i, item in enumerate(argv[:-1]) if item == "--label"]
-            self.labels = dict(labels)
-            context = Path(argv[-1])
-            self.captured = {p.relative_to(context).as_posix() for p in context.rglob("*") if p.is_file()}
-            Path(argv[argv.index("--iidfile") + 1]).write_text(self.image)
-        elif argv[:3] == ["docker", "image", "inspect"]:
-            data = [{"Id": self.image, "Os": "linux", "Architecture": self.manager.platform.split("/")[1],
-                     "Config": {"Labels": self.labels}}]
-            kwargs["stdout"].write(json.dumps(data).encode())
-        elif argv[:3] == ["docker", "image", "ls"]:
-            if argv[-1] in self.tags:
-                kwargs["stdout"].write((self.image + "\n").encode())
-        elif argv[:3] == ["docker", "image", "tag"]:
-            self.tags.add(argv[-1])
-        elif argv[:3] == ["docker", "image", "rm"]:
-            self.tags.remove(argv[-1])
-        else:
-            self.fail(str(argv))
-        return subprocess.CompletedProcess(argv, 0)
 
-    def make_manager(self, package=None, provenance=True):
-        self.manager = images.ImageManager(package or self.package, project_root=self.root,
-                                           build_temp_root=self.build, executor=self.docker,
-                                           build_provenance=self.provenance if provenance else None)
-        return self.manager
+class ReleaseImagesTests(ReleaseImageFixture):
+    def test_license_edits_keep_the_runtime_fingerprint(self):
+        from RELEASE_VERSION.release_image_identity import LICENSE_INPUTS
+
+        manager = self.make_manager()
+        baseline = manager.identity()
+        for relative in LICENSE_INPUTS:
+            with self.subTest(relative=relative):
+                (self.package / relative).write_text("Updated notice\n")
+                updated = manager.identity()
+                self.assertEqual(baseline.fingerprint, updated.fingerprint)
+                self.assertNotEqual(baseline.manifest, updated.manifest)
+                baseline = updated
 
     def test_registry_identity_uses_backend_asset(self):
-        expected = ("LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/"
-                    "FEATURE_WORKBENCH_BACKEND/tool_registry.json")
+        expected = "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/tool_registry.json"
         self.assertEqual(expected, images.TOOL_REGISTRY)
         manager = self.make_manager()
         before = manager.identity(use_packaged_assets=True)
@@ -79,20 +44,21 @@ class ReleaseImagesTests(unittest.TestCase):
         beta.parent.mkdir(parents=True)
         beta.write_text("beta")
         self.assertEqual(baseline, manager.identity())
-        selector = self.package / "project.toml"
+        selector = self.package / "LAYER_5_FRAMEWORK_DELIVERY/project.toml"
         selector.write_text('stack = "current"\n')
         selected = manager.identity()
         self.assertNotEqual(baseline.fingerprint, selected.fingerprint)
-        self.assertIn("project.toml", [path for path, _, _ in selected.manifest])
+        self.assertIn("LAYER_5_FRAMEWORK_DELIVERY/project.toml", [path for path, _, _ in selected.manifest])
         beta.write_text("changed")
         self.assertEqual(selected, manager.identity())
         manager.resolve()
         self.assertFalse(any("COMPONENT_beta_C123" in path for path in self.captured))
+        self.assertIn("LAYER_5_FRAMEWORK_DELIVERY/project.toml", self.captured)
         self.assertNotIn("--target", self.build_args)
 
     def test_selector_and_beta_fail_before_docker(self):
         manager = self.make_manager()
-        selector = self.package / "project.toml"
+        selector = self.package / "LAYER_5_FRAMEWORK_DELIVERY/project.toml"
         for contents, message in ((b'stack = "beta"\n', "image input unavailable"),
                                   (b'stack = "other"\n', "invalid project.toml"),
                                   (b'stack = "current"\nextra = 1\n', "invalid project.toml"),
@@ -107,105 +73,17 @@ class ReleaseImagesTests(unittest.TestCase):
         selector.symlink_to(self.package / "version.toml")
         with self.assertRaisesRegex(ValueError, "invalid project.toml"):
             manager.resolve()
+        selector.unlink()
+        selector.parent.rmdir()
+        selector.parent.symlink_to(self.package, target_is_directory=True)
+        (self.package / "project.toml").write_text('stack = "current"\n')
+        with self.assertRaisesRegex(ValueError, "invalid project.toml"):
+            manager.resolve()
         self.assertEqual({}, self.labels)
-
-    def test_beta_closure_build_and_installed_admission(self):
-        from RELEASE_VERSION.release_image_identity import _BETA_REQUIRED
-
-        (self.package / "project.toml").write_text('stack = "beta"\n')
-        for relative in _BETA_REQUIRED:
-            path = self.package / relative
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text("beta input")
-        current_kernel = self.package / images.ENGINE / "KERNEL_MIXER_C59/current.py"
-        current_kernel.parent.mkdir(parents=True)
-        current_kernel.write_text("current")
-        frontend = self.package / images.ENGINE / "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/source.js"
-        frontend.parent.mkdir(parents=True)
-        frontend.write_text("shared frontend")
-        unrelated = self.package / images.ENGINE / "OTHER_beta_C999/source.py"
-        unrelated.parent.mkdir(parents=True)
-        unrelated.write_text("other")
-        manager = self.make_manager()
-        identity = manager.identity()
-        paths = {path for path, _, _ in identity.manifest}
-        self.assertTrue(set(_BETA_REQUIRED) <= paths)
-        self.assertIn(frontend.relative_to(self.package).as_posix(), paths)
-        self.assertNotIn(images.TOOL_REGISTRY, paths)
-        self.assertNotIn(current_kernel.relative_to(self.package).as_posix(), paths)
-        self.assertNotIn(unrelated.relative_to(self.package).as_posix(), paths)
-        self.assertEqual(self.image, manager.resolve())
-        self.assertEqual("beta", self.build_args[self.build_args.index("--target") + 1])
-        self.assertEqual(paths, self.captured)
-        beta_tag = "anechoic-runtime:beta-" + self.image[7:]
-        test_tag = "anechoic-runtime:test-" + self.image[7:]
-        self.assertEqual({beta_tag}, self.tags)
-        self.tags.add(test_tag)
-        self.assertEqual("anechoic-runtime:prod-" + self.image[7:], manager.mark_production_image(self.image))
-        self.assertNotIn(beta_tag, self.tags)
-        self.assertIn(test_tag, self.tags)
-        installed = self.root / "installed"
-        shutil.copytree(self.package, installed)
-        manager = self.make_manager(installed, provenance=False)
-        self.assertEqual(self.image, manager.resolve(explicit_id=self.image, build_if_missing=False))
-        (installed / _BETA_REQUIRED[-1]).write_text("tampered")
-        with self.assertRaises(RuntimeError):
-            manager.resolve(explicit_id=self.image, build_if_missing=False)
-
-    def test_beta_candidate_tag_collision_fails_closed(self):
-        from RELEASE_VERSION.release_image_identity import _BETA_REQUIRED
-
-        (self.package / "project.toml").write_text('stack = "beta"\n')
-        for relative in _BETA_REQUIRED:
-            path = self.package / relative
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text("beta input")
-        manager = self.make_manager()
-        original = manager._tag_images
-        def collision(tag):
-            return {"sha256:" + "f" * 64} if ":beta-" in tag else original(tag)
-        with patch.object(manager, "_tag_images", side_effect=collision):
-            with self.assertRaisesRegex(RuntimeError, "release image tag collision"):
-                manager.resolve()
-        self.assertEqual(set(), self.tags)
-
-    def test_beta_promotion_does_not_remove_foreign_candidate_tag(self):
-        from RELEASE_VERSION.release_image_identity import _BETA_REQUIRED
-
-        (self.package / "project.toml").write_text('stack = "beta"\n')
-        for relative in _BETA_REQUIRED:
-            path = self.package / relative
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text("beta input")
-        manager = self.make_manager()
-        manager.resolve()
-        original = manager._tag_images
-        def foreign(tag):
-            return {"sha256:" + "f" * 64} if ":beta-" in tag else original(tag)
-        with patch.object(manager, "_tag_images", side_effect=foreign):
-            manager.mark_production_image(self.image)
-        self.assertIn("anechoic-runtime:beta-" + self.image[7:], self.tags)
-
-    def test_beta_missing_required_inputs_fail_before_docker(self):
-        from RELEASE_VERSION.release_image_identity import _BETA_REQUIRED
-
-        (self.package / "project.toml").write_text('stack = "beta"\n')
-        for relative in _BETA_REQUIRED:
-            path = self.package / relative
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text("beta input")
-        manager = self.make_manager()
-        for relative in _BETA_REQUIRED:
-            path = self.package / relative
-            path.unlink()
-            with self.subTest(relative=relative), self.assertRaisesRegex(ValueError, "image input unavailable"):
-                manager.resolve()
-            path.write_text("beta input")
-        self.assertEqual([], self.build_args)
 
     def test_selector_change_during_inventory_fails(self):
         manager = self.make_manager()
-        selector = self.package / "project.toml"
+        selector = self.package / "LAYER_5_FRAMEWORK_DELIVERY/project.toml"
         selector.write_text('stack = "current"\n')
         original_files = manager._files
 
@@ -236,6 +114,10 @@ class ReleaseImagesTests(unittest.TestCase):
         self.assertEqual(result["image_id"], self.image)
         self.assertEqual(result["fingerprint"], self.labels["org.anechoic.runtime.fingerprint"])
         self.assertEqual(result["version"], "1.2.3")
+        prune, build = self.commands[:2]
+        self.assertEqual(prune[0], ["docker", "buildx", "prune", "--force", "--max-used-space", "4GB", "--min-free-space", "2GB"])
+        self.assertEqual(build[0][:2], ["docker", "build"])
+        self.assertEqual(prune[1:], build[1:])
         self.assertEqual(list((self.package / ".anechoic_tmp/simple_local_release").iterdir()), [])
         self.assertEqual(self.tags, {"anechoic-runtime:test-" + self.image[7:]})
 
@@ -250,6 +132,17 @@ class ReleaseImagesTests(unittest.TestCase):
                 local_release.build_image(self.package, run_id="build-1")
         self.assertEqual(list((self.package / ".anechoic_tmp/simple_local_release").iterdir()), [])
 
+    def test_prune_failure_prevents_build(self):
+        manager = self.make_manager()
+        def fail_prune(argv, **kwargs):
+            if argv[:3] == ["docker", "buildx", "prune"]:
+                return subprocess.CompletedProcess(argv, 1)
+            return self.docker(argv, **kwargs)
+        manager.executor = fail_prune
+        with self.assertRaisesRegex(RuntimeError, "Docker image operation failed"):
+            manager.resolve()
+        self.assertEqual([], self.build_args)
+
     def test_build_and_installed_admission_bind_exact_package_and_labels(self):
         manager = self.make_manager()
         fingerprint = manager.identity(use_packaged_assets=True).fingerprint
@@ -259,8 +152,10 @@ class ReleaseImagesTests(unittest.TestCase):
         installed = self.root / "installed"
         shutil.copytree(self.package, installed)
         manager = self.make_manager(installed, provenance=False)
+        self.commands.clear()
         self.assertEqual(self.image, manager.resolve(explicit_id=self.image, build_if_missing=False))
-        (installed / images.ENGINE / "uv.lock").write_text("changed")
+        self.assertFalse(any(command[0][:3] == ["docker", "buildx", "prune"] for command in self.commands))
+        (installed / "LAYER_3_ENVIRONMENTS_C72/engine/uv.lock").write_text("changed")
         with self.assertRaises(RuntimeError):
             manager.resolve(explicit_id=self.image, build_if_missing=False)
 
@@ -296,7 +191,7 @@ class ReleaseImagesTests(unittest.TestCase):
         def mutate(argv, **kwargs):
             result = self.docker(argv, **kwargs)
             if argv[:2] == ["docker", "build"]:
-                (Path(argv[-1]) / images.ENGINE / "uv.lock").write_text("tampered")
+                (Path(argv[-1]) / "LAYER_3_ENVIRONMENTS_C72/engine/uv.lock").write_text("tampered")
             return result
         manager.executor = mutate
         with self.assertRaises(RuntimeError):

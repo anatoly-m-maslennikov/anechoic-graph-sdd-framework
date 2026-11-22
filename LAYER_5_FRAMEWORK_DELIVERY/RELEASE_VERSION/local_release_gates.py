@@ -10,22 +10,26 @@ import sys
 
 from .release_assets import LocalReleaseError
 
-_ENGINE_PROJECT = Path(__file__).resolve().parents[2] / "LAYER_3_ENGINE_STUDIO_C14"
+_ROOT = Path(__file__).resolve().parents[2]
+_ENGINE_PROJECT = _ROOT / "LAYER_4_ENGINE_STUDIO_C14"
+_ENGINE_ENVIRONMENT = _ROOT / "LAYER_3_ENVIRONMENTS_C72/engine"
 
 
 def _gate_command(root, phase, candidate_image, package, package_identity, selection, run_id, verify):
-    suite_phase = "canary" if phase == "verify candidate image" else phase.split()[0]
+    suite_phase = "image" if phase == "verify candidate image" else phase.split()[0]
     argv = (
-        "uv", "run", "--project", str(_ENGINE_PROJECT), "--locked", "--python", "3.14",
+        "uv", "run", "--project", str(_ENGINE_ENVIRONMENT), "--locked", "--python", "3.14",
         "--managed-python", "--no-env-file", "--all-groups", "python", "-P", "-B", "-u",
         str(_ENGINE_PROJECT / "FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/test_suite__pub.py"),
         "--project-root", str(root), "--phase", suite_phase,
     )
-    if suite_phase != "functional":
+    if suite_phase == "unit":
+        argv += ("--required",)
+    if suite_phase == "image":
         if candidate_image is None:
             raise LocalReleaseError("local-release-candidate-image-invalid")
         argv += ("--candidate-image", candidate_image)
-    if suite_phase == "canary":
+    if suite_phase == "image":
         verify(package, package_identity)
         project_mcp = selection.parameters.get("project_mcp", {})
         handoff = {
@@ -69,7 +73,7 @@ def run_gate(root, phase, candidate_image, package, package_identity, selection,
     if getattr(result, "returncode", 1) != 0:
         detail = failed_output(root, run_id, result, log_path=log_paths.get(suite_phase))
         raise LocalReleaseError(f"local-release-command-failed: {detail}")
-    if suite_phase == "canary":
+    if suite_phase == "image":
         observed = re.findall(
             r"(?m)^ANECHOIC_CANARY_ENDPOINT (http://127\.0\.0\.1:([1-9][0-9]{0,4})/anechoic/mcp)$",
             result.stdout,

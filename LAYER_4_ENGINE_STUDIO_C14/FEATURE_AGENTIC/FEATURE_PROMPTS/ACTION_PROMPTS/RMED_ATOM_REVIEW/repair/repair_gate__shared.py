@@ -1,0 +1,47 @@
+"""Named repair admission entry points."""
+
+from .repair_gate import (
+    _path,
+    _summary,
+    _same_summary_value,
+    _permission,
+    _resolutions,
+    _outputs,
+    _updated_at,
+    _timestamp_normalized_header,
+    _refreshes_updated_at,
+    _recoding_identity,
+    _formatting_identity,
+    _removes_role_echo,
+    _role_echo_path,
+    _identity,
+    _output_binding,
+    _candidate_bindings,
+    _preflight,
+    admit_proposal,
+    _local_repair_boundary,
+)
+from .layout_repair_gate import admit_layout_recoding
+
+__all__ = [
+    "_path",
+    "_summary",
+    "_same_summary_value",
+    "_permission",
+    "_resolutions",
+    "_outputs",
+    "_updated_at",
+    "_timestamp_normalized_header",
+    "_refreshes_updated_at",
+    "_recoding_identity",
+    "_formatting_identity",
+    "_removes_role_echo",
+    "_role_echo_path",
+    "_identity",
+    "_output_binding",
+    "_candidate_bindings",
+    "_preflight",
+    "admit_proposal",
+    "_local_repair_boundary",
+    "admit_layout_recoding",
+]

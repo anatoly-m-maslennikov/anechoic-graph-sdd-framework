@@ -12,9 +12,12 @@ import stat
 import tomllib
 
 
-ENGINE = "LAYER_3_ENGINE_STUDIO_C14"
-DOCKERFILE = ENGINE + "/MCP_PATCHBAY_C21/FEATURE_MCP/docker/Dockerfile"
+SELECTOR = "LAYER_5_FRAMEWORK_DELIVERY/project.toml"
+ENGINE = "LAYER_4_ENGINE_STUDIO_C14"
+DOCKER_ROOT = ENGINE + "/MCP_PATCHBAY_C21/FEATURE_MCP/docker"
+DOCKERFILE = DOCKER_ROOT + "/Dockerfile"
 DOCKERIGNORE = DOCKERFILE + ".dockerignore"
+LICENSE_INPUTS = ("LICENSE", "LICENSE.TLDR.md", DOCKER_ROOT + "/DuckPGQ.LICENSE")
 RETIRED_ASSETS = frozenset(
     ENGINE + "/" + directory + "/" + name
     for directory, names in (
@@ -25,15 +28,22 @@ RETIRED_ASSETS = frozenset(
 TOOL_REGISTRY = ENGINE + "/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/tool_registry.json"
 _EXCLUDED = frozenset({".git", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", ".tox", ".nox", ".venv", ".virtualenv", "venv", "virtualenv", "node_modules", "testcache", ".testcache", "tmp", "vault", ".vault", "secrets", ".secrets", "credentials", ".credentials"})
 _SECRETS = frozenset({"auth.json", "credentials.json", "token.txt", "token.json", "secrets.json", "secrets.txt", ".DS_Store"})
-_REQUIRED = (ENGINE + "/pyproject.toml", ENGINE + "/uv.lock", "version.toml", DOCKERFILE, DOCKERIGNORE, TOOL_REGISTRY)
+_REQUIRED = (
+    "LAYER_3_ENVIRONMENTS_C72/engine/pyproject.toml",
+    "LAYER_3_ENVIRONMENTS_C72/engine/uv.lock",
+    "version.toml", DOCKERFILE, DOCKERIGNORE, *LICENSE_INPUTS, TOOL_REGISTRY,
+)
 _BETA_REQUIRED = tuple(ENGINE + "/" + path for path in (
-    "KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__pub.py",
-    "ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__pub.py", "WORKERS_beta_C69/WORKERS_beta_C69__pub.py",
-    "WORKBENCH_BACKEND_beta_C70/WORKBENCH_BACKEND_beta_C70__pub.py",
-    "WORKBENCH_BACKEND_beta_C70/runtime__pub.py", "WORKBENCH_BACKEND_beta_C70/shared_runtime__pub.py",
-    "WORKBENCH_BACKEND_beta_C70/project_admission__pub.py", "WORKBENCH_BACKEND_beta_C70/query_run.json",
+    "KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__shared.py",
+    "ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__shared.py", "WORKERS_beta_C69/WORKERS_beta_C69__shared.py",
+    "WORKBENCH_BACKEND_beta_C70/WORKBENCH_BACKEND_beta_C70__shared.py",
+    "WORKBENCH_BACKEND_beta_C70/runtime.py", "WORKBENCH_BACKEND_beta_C70/shared_runtime.py",
+    "WORKBENCH_BACKEND_beta_C70/project_admission.py", "WORKBENCH_BACKEND_beta_C70/query_run.json",
 ))
 _BETA_COMPONENTS = frozenset(path.split("/")[1] for path in _BETA_REQUIRED)
+_BETA_REQUIRED += (ENGINE + "/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_MODEL_VALIDATION/project_admission__pub.py",
+                   ENGINE + "/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/native_snapshot_cli.py",
+                   ENGINE + "/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_IMPORT_GRAPH_C61/realization_graph_cli.py")
 _CURRENT_ONLY = frozenset({ENGINE + "/KERNEL_MIXER_C59",
                            ENGINE + "/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND"})
 
@@ -46,11 +56,11 @@ def _excluded(name: str) -> bool:
 
 
 def _stack_selector(root: Path) -> tuple[Path | None, str, str | None]:
-    path = root / "project.toml"
+    path = root / SELECTOR
     if not os.path.lexists(path):
         return None, "current", None
     try:
-        if path.is_symlink():
+        if path.parent.is_symlink() or path.is_symlink():
             raise ValueError
         fd = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0))
         with os.fdopen(fd, "rb") as stream:
@@ -132,11 +142,12 @@ class ImageInputIdentity:
                               0o644 if path.relative_to(self.source_root).as_posix() == TOOL_REGISTRY else path.stat().st_mode & 0o777)
                              for path in files)
             if (_stack_selector(self.source_root) != selection or
-                    (selection[0] is not None and ("project.toml", selection[2]) not in
+                    (selection[0] is not None and (SELECTOR, selection[2]) not in
                      {(path, digest) for path, digest, _ in manifest})):
                 raise ValueError("image stack selection changed")
             payload = {"schema": "1", "platform": self.platform,
-                       "build_arguments": {"RUNTIME_UID": self.uid, "RUNTIME_GID": self.gid}, "files": manifest}
+                       "build_arguments": {"RUNTIME_UID": self.uid, "RUNTIME_GID": self.gid},
+                       "files": [row for row in manifest if row[0] not in LICENSE_INPUTS]}
             fingerprint = hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False).encode("utf-8")).hexdigest()
             return ImageIdentity(fingerprint, version, manifest)
         except (OSError, UnicodeError, KeyError, TypeError) as error:

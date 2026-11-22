@@ -65,8 +65,8 @@ def _draft(draft: Mapping[str, object], base: str, head: str, version: str) -> t
 
 def _ticket_candidates(root: Path, merge_base: str, head: str):
     raw = _git(root, "diff", "--raw", "--no-abbrev", "--no-renames", "-z", "--diff-filter=AM", merge_base, head, "--",
-               ":(glob)[._]anechoic_*/001_TICKETS/TASKS/**/*-TASK--*.md",
-               ":(glob)[._]anechoic_*/001_TICKETS/TASKS/**/*-EPIC--*.md").split("\0")
+               *(f":(glob)[._]anechoic_*/{branch}/TASKS/**/*-{kind}--*.md"
+                 for branch in ("__TICKETS", "001_TICKETS", "__TKT") for kind in ("TASK", "EPIC"))).split("\0")
     candidates = []
     for meta, path in zip(raw[0::2], raw[1::2]):
         fields = meta.split()

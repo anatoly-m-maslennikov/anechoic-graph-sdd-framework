@@ -14,7 +14,7 @@ from RELEASE_VERSION import local_release_package_phases as package_phases  # no
 from RELEASE_VERSION.local_release import run_local_release  # noqa: E402
 
 
-from RELEASE_VERSION.RELEASE_VERSION__tests._simple_release_fixture import SimpleReleaseFixture  # noqa: E402
+from RELEASE_VERSION.RELEASE_VERSION__tests.RELEASE_VERSION__tests__shared import SimpleReleaseFixture  # noqa: E402
 
 
 class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
@@ -40,7 +40,7 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
 
 
     def test_unreadable_package_subtree_refuses_before_replacement(self):
-        blocked = self.root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/blocked"
+        blocked = self.root / "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/blocked"
         blocked.mkdir()
         (blocked / "required.py").write_bytes(b"required payload")
         runtime_package = self.runtime / "simple_local_release/package"
@@ -93,10 +93,10 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         self.assertTrue(source.is_relative_to(self.root / ".anechoic_tmp/simple_local_release"))
         self.assertEqual(source.parent / "image_builds", temporary)
         self.assertEqual(self.runtime / "simple_local_release/package", self.image_factory.call_args_list[1].args[0])
-        self.assertLess(events.index("functional-green"), events.index("candidate-resolve"))
-        self.assertLess(events.index("candidate-resolve"), events.index("e2e-green"))
-        self.assertLess(events.index("e2e-green"), events.index("canary-green"))
-        self.assertLess(events.index("canary-green"), events.index("installed-resolve"))
+        self.assertLess(events.index("static-green"), events.index("unit-green"))
+        self.assertLess(events.index("unit-green"), events.index("candidate-resolve"))
+        self.assertLess(events.index("candidate-resolve"), events.index("image-green"))
+        self.assertLess(events.index("image-green"), events.index("installed-resolve"))
         self.assertLess(events.index("installed-resolve"), events.index("launch"))
         self.assertLess(events.index("launch"), events.index("post-smoke-image-cleanup"))
         self.assertEqual("http://127.0.0.1:49152/anechoic/mcp", result["canary_endpoint"])
@@ -123,7 +123,7 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
             if "--phase" in argv:
                 phase = argv[argv.index("--phase") + 1]
                 self.assertIn('version = "0.4.1.1"', (self.root / "version.toml").read_text())
-                if phase == "canary":
+                if phase == "image":
                     self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
                     self.assertEqual(self.image_id, argv[argv.index("--candidate-image") + 1])
                     self.assertEqual("image-order", argv[argv.index("--run-id") + 1])
@@ -142,19 +142,19 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         self.assertEqual("completed", result["outcome"], result)
         self._assert_candidate_image_order(events, result)
 
-    def test_e2e_failure_stops_before_canary_install_and_production_tag(self):
+    def test_unit_failure_stops_before_image_install_and_production_tag(self):
         runner, calls = self._runner()
 
-        def fail_e2e(argv, cwd):
+        def fail_unit(argv, cwd):
             result = runner(argv, cwd)
-            if "--phase" in argv and argv[argv.index("--phase") + 1] == "e2e":
-                self.assertEqual(self.image_id, argv[argv.index("--candidate-image") + 1])
-                return subprocess.CompletedProcess(argv, 1, "", "e2e failed")
+            if "--phase" in argv and argv[argv.index("--phase") + 1] == "unit":
+                self.assertIn("--required", argv)
+                return subprocess.CompletedProcess(argv, 1, "", "unit failed")
             return result
 
-        result = run_local_release(self.root, run_id="e2e-failed", runner=fail_e2e)
-        self.assertEqual(("failed", "e2e_tests"), (result["outcome"], result["failed_step"]))
-        self.assertFalse(any("canary" in argv for argv in calls))
+        result = run_local_release(self.root, run_id="unit-failed", runner=fail_unit)
+        self.assertEqual(("failed", "unit_tests"), (result["outcome"], result["failed_step"]))
+        self.assertFalse(any("image" in argv for argv in calls))
         self.image.mark_production_image.assert_not_called()
         self.start_container.assert_not_called()
         self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
@@ -164,7 +164,7 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         runner, calls = self._runner()
         def fail_canary(argv, cwd):
             result = runner(argv, cwd)
-            if "--phase" in argv and argv[argv.index("--phase") + 1] == "canary":
+            if "--phase" in argv and argv[argv.index("--phase") + 1] == "image":
                 return subprocess.CompletedProcess(argv, 1, "", "canary failed")
             return result
         result = run_local_release(self.root, run_id="canary-failed", runner=fail_canary)

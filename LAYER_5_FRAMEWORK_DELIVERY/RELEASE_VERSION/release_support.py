@@ -26,7 +26,7 @@ from .release_package_files import (
 
 
 _GENERATED_ASSETS = frozenset({TOOL_REGISTRY})
-_BOOTSTRAP = Path("LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/start_mcp.py")
+_BOOTSTRAP = Path("LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/start_mcp.py")
 
 _DEFAULT_PRODUCT = "LAYER_1_FRAMEWORK_METHODOLOGY"
 _PRESERVED_NAMES = frozenset(
@@ -40,32 +40,87 @@ _PRESERVED_NAMES = frozenset(
     }
 )
 _RUN_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*\Z")
+_LAYER_NAMES = ("LAYER_1_META_ONTOLOGY_C9", "LAYER_2_META_METHODOLOGY_C58")
+_ROOT_PACKAGE_EXCLUDES = frozenset({".anechoic_install", *map(str.casefold, (_DEFAULT_PRODUCT, *_LAYER_NAMES))})
 _NON_SOURCE_DIRECTORIES = frozenset({"01_draft", "02_ready", "09_archived", "000_draft", "099_archived", "_journal", "_projection"})
+_DEFAULT_TIER_ONE_DIRECTORY = "01_TIER_1_ARCHITECTURE"
+
+
+def _tier_one_directory(parameters):
+    project = (parameters or {}).get("project", {})
+    if not isinstance(project, dict) or "folder_layout" not in project:
+        return _DEFAULT_TIER_ONE_DIRECTORY
+    folders = project["folder_layout"]
+    tiers = folders.get("active_spec_by_tier") if isinstance(folders, dict) else None
+    if (not isinstance(tiers, dict) or tiers.keys() != {"0", "1", "2+"}
+            or tiers["0"] != "." or tiers["2+"] != "_{lens}/{sublenses}"):
+        raise ValueError("Invalid Active SPEC folders in Project Manifest")
+    name = tiers["1"]
+    if (not isinstance(name, str) or len(name) > 255 or not re.fullmatch(r"01_[A-Z][A-Z0-9_]*", name)
+            or name.casefold() in _NON_SOURCE_DIRECTORIES or re.search(r"_C[0-9]+$", name)):
+        raise ValueError("Invalid Tier 1 SPEC folder in Project Manifest")
+    return name
+
+
+def _release_candidates(root, control, tier_one):
+    ontology, methodology = _LAYER_NAMES
+    environments = "LAYER_3_ENVIRONMENTS_C72"
+    scopes = [(control / ontology, ontology, None, control / ontology)]
+    for name, component in ((methodology, None), (environments, "C72")):
+        directory = control / name
+        if os.path.lexists(directory):
+            scopes.append((directory, methodology if component else name, component, directory))
+    project_folders = (tier_one, "__DES", "__DEVOPS", "__QA", "__SWD")
+    project_folders += tuple(path.name for path in control.iterdir()
+                             if re.fullmatch(r"_[A-Z][A-Z0-9_]*", path.name) and path.name != "_PMETA")
+    for name in dict.fromkeys(project_folders):
+        directory = control / name
+        if os.path.lexists(directory):
+            scopes.append((directory, methodology, "C00", control))
+    for directory, name, component, base in scopes:
+        _project_path(root, directory.relative_to(root), label="delivery-source", require_exists=True)
+        if not directory.is_dir():
+            raise ValueError("Delivery source is not a directory")
+        for path in _walk_regular_files(directory, excluded_directories=_NON_SOURCE_DIRECTORIES):
+            yield path, name, component, base
+    for path in control.iterdir():
+        if path.is_file() or path.is_symlink():
+            yield path, methodology, "C00", control
+
+
+def _release_spec_header(path):
+    if path.is_symlink():
+        raise ValueError(f"{path}: unsafe Spec source")
+    try:
+        return read_atom_header(path.read_text(encoding="utf-8"))[0]
+    except (UnicodeError, ValueError, yaml.YAMLError) as error:
+        raise ValueError(f"{path}: invalid Spec header") from error
 
 
 def _native_release_sources(selection) -> dict[Path, Path]:
-    """Select Active Specs from the native Meta-ontology Component."""
     root, control = selection.root, selection.control_root
-    ontology = control / "LAYER_1_META_ONTOLOGY_C9"
     selected, identities = {}, set()
     prefix = f"{selection.project_prefix}-S-"
     try:
         manifest = _project_path(root, selection.manifest_path.relative_to(root), label="manifest", require_exists=True)
         if _file_identity(manifest)[0] != selection.manifest_sha256:
             raise ValueError("Project Manifest changed")
-        _project_path(root, ontology.relative_to(root), label="meta-ontology", require_exists=True)
-        if not ontology.is_dir():
-            raise ValueError("Meta-ontology Component is missing")
-        members = _walk_regular_files(ontology, excluded_directories=_NON_SOURCE_DIRECTORIES)
-        for path in members:
+        tier_one = _tier_one_directory(getattr(selection, "parameters", {}))
+        for path, layer, component, base in _release_candidates(root, control, tier_one):
             if path.suffix != ".md" or not path.name.startswith(prefix):
                 continue
-            try:
-                metadata, _ = read_atom_header(path.read_text(encoding="utf-8"))
-            except (UnicodeError, ValueError, yaml.YAMLError) as error:
-                raise ValueError(f"{path}: invalid Spec header") from error
+            metadata = _release_spec_header(path)
+            context = metadata.get("context", {})
+            if component == "C00" and isinstance(context, dict) and context.get("template") in {
+                "project_manifest", "project_goal", "component_manifest", "component_seed_manifest", "project_contract"
+            }:
+                continue
             if metadata.get("atom_family") != "SPEC":
                 raise ValueError(f"{path}: invalid Spec family")
+            if component is not None:
+                container = metadata.get("container", {})
+                if not isinstance(container, dict) or container.get("component") != component:
+                    continue
             state = metadata.get("state")
             if not isinstance(state, dict) or not isinstance(state.get("status"), str):
                 raise ValueError(f"{path}: missing Spec status")
@@ -76,8 +131,8 @@ def _native_release_sources(selection) -> dict[Path, Path]:
                     or atom_id in identities or not path.name.startswith(atom_id + "-")):
                 raise ValueError(f"{path}: duplicate Current identity or mismatched Spec filename")
             identities.add(atom_id)
-            selected[path.relative_to(control)] = path
-        if not selected:
+            selected[Path(layer) / path.relative_to(base)] = path
+        if not any(path.parts[0] == _LAYER_NAMES[0] for path in selected):
             raise ValueError("No Active Meta-ontology Specs were selected")
         return selected
     except (OSError, ValueError) as error:
@@ -87,8 +142,8 @@ def _native_release_sources(selection) -> dict[Path, Path]:
 def _package_sources(root: Path, product: Path, package: Path, excluded: frozenset[str]):
     trees = (
         (root, Path(".")),
-        (product / "SUPERLAYER_1_METHODOLOGY_SOURCES", Path("METHODOLOGY/sources")),
-        (root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane", Path("SKILLS/ane")),
+        (product, Path(".")),
+        (root / "LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane", Path("SKILLS/ane")),
     )
     sources: list[tuple[Path, Path]] = []
     inventories: list[tuple[Path, list[Path]]] = []
@@ -97,7 +152,7 @@ def _package_sources(root: Path, product: Path, package: Path, excluded: frozens
             raise LocalReleaseError("local-release-package-source-unavailable")
         members = _walk_regular_files(source, excluded_directories=excluded,
                                       excluded_root_prefix=(".anechoic_", "_anechoic_") if source == root else (),
-                                      excluded_root_directories=frozenset({".anechoic_install"}) if source == root else frozenset())
+                                      excluded_root_directories=_ROOT_PACKAGE_EXCLUDES if source == root else frozenset())
         if not members:
             raise LocalReleaseError("local-release-package-source-unavailable")
         inventories.append((source, members))
@@ -126,7 +181,7 @@ def _prepare_package(root: Path, product: Path, package: Path, *,
     for source, members in inventories:
         current = _walk_regular_files(source, excluded_directories=excluded,
                                       excluded_root_prefix=(".anechoic_", "_anechoic_") if source == root else (),
-                                      excluded_root_directories=frozenset({".anechoic_install"}) if source == root else frozenset())
+                                      excluded_root_directories=_ROOT_PACKAGE_EXCLUDES if source == root else frozenset())
         if current != members:
             raise LocalReleaseError("local-release-package-source-changed")
     for source, relative in sources:
@@ -134,13 +189,13 @@ def _prepare_package(root: Path, product: Path, package: Path, *,
             raise LocalReleaseError("local-release-package-source-changed")
     child_inputs = tuple(
         f"{child}/{name}"
-        for child in ("LAYER_3_ENGINE_STUDIO_C14", "LAYER_5_FRAMEWORK_DELIVERY", "RUNTIME_SETUP")
+        for child in ("LAYER_3_ENVIRONMENTS_C72/engine", "LAYER_3_ENVIRONMENTS_C72/release", "LAYER_3_ENVIRONMENTS_C72/setup")
         for name in ("pyproject.toml", "uv.lock")
     )
     for relative in (
         "version.toml", *child_inputs,
         "SKILLS/ane/SKILL.md",
-        "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane/SKILL.md",
+        "LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane/SKILL.md",
         _BOOTSTRAP.as_posix(),
         *_GENERATED_ASSETS,
     ):

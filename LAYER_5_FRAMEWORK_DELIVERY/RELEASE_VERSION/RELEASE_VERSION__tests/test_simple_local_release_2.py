@@ -15,7 +15,7 @@ from unittest.mock import patch
 from RELEASE_VERSION.local_release import run_local_release  # noqa: E402
 
 
-from RELEASE_VERSION.RELEASE_VERSION__tests._simple_release_fixture import SimpleReleaseFixture  # noqa: E402
+from RELEASE_VERSION.RELEASE_VERSION__tests.RELEASE_VERSION__tests__shared import SimpleReleaseFixture  # noqa: E402
 
 
 class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
@@ -55,7 +55,7 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
 
 
     def test_workbench_node_dependencies_are_not_packaged(self):
-        frontend = self.root / "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND"
+        frontend = self.root / "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND"
         dependencies = frontend / "node_modules/.bin"
         dependencies.mkdir(parents=True)
         (frontend / "package.json").write_text('{"name":"workbench"}')
@@ -72,10 +72,10 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         kept, removed = (path.relative_to(self.control) for path in self.native_sources)
         self.native_sources[1].unlink()
         retained = (
-            self.product / "SUPERLAYER_1_METHODOLOGY_SOURCES",
-            self.product / "SUPERLAYER_1_METHODOLOGY_SOURCES" / kept.parent,
+            self.root / kept.parts[0],
+            self.root / kept.parent,
             self.installed / "obsolete",
-            self.runtime / "simple_local_release/package/LAYER_3_ENGINE_STUDIO_C14",
+            self.runtime / "simple_local_release/package/LAYER_4_ENGINE_STUDIO_C14",
         )
         for directory in retained:
             directory.mkdir(parents=True, exist_ok=True)
@@ -87,9 +87,9 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         for directory in retained:
             self.assertEqual(b"ignored", (directory / ".DS_Store").read_bytes())
             self.assertFalse((directory / "obsolete.txt").exists())
-        self.assertTrue((self.product / "SUPERLAYER_1_METHODOLOGY_SOURCES" / kept).is_file())
-        for target in (self.product, self.installed):
-            self.assertFalse((target / "SUPERLAYER_1_METHODOLOGY_SOURCES" / removed).exists())
+        self.assertTrue((self.root / kept).is_file())
+        for target in (self.root, self.installed):
+            self.assertFalse((target / removed).exists())
 
 
     def _failing_gate_runner(self, calls, stdout, stderr):
@@ -109,7 +109,7 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
             if any(item.endswith("test_suite__pub.py") for item in argv):
                 self.assertIn("--all-groups", argv)
                 self.assertIn("--managed-python", argv)
-                self.assertEqual("LAYER_3_ENGINE_STUDIO_C14", Path(argv[argv.index("--project") + 1]).name)
+                self.assertEqual("LAYER_3_ENVIRONMENTS_C72/engine", Path(argv[argv.index("--project") + 1]).relative_to(Path(__file__).resolve().parents[3]).as_posix())
                 self.assertIn("3.14", argv)
                 self.assertEqual(str(self.root), argv[argv.index("--project-root") + 1])
                 for target in (self.product, self.installed):
@@ -131,7 +131,7 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
             patch("RELEASE_VERSION.local_release_runner.cleanup_obsolete_images") as image_cleanup,
         ):
             result = run_local_release(self.root, run_id="tests-failed", runner=runner)
-        self.assertEqual("functional_tests", result["failed_step"])
+        self.assertEqual("static_tests", result["failed_step"])
         self.assertEqual("failed", result["outcome"])
         self.image_factory.assert_not_called()
         self.start_container.assert_not_called()
@@ -142,7 +142,7 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
             self.assertEqual("obsolete", (target / "old.txt").read_text())
         self.assertEqual(1, sum(any(item.endswith("test_suite__pub.py") for item in argv) for argv in calls))
         gate = next(argv for argv in calls if any(item.endswith("test_suite__pub.py") for item in argv))
-        self.assertEqual("functional", gate[gate.index("--phase") + 1])
+        self.assertEqual("static", gate[gate.index("--phase") + 1])
         self.assertNotIn("--candidate-image", gate)
         self.assertEqual(2, sum(argv[:2] == ("git", "commit") for argv in calls))
         report = (self.root / result["report_path"]).read_text()
@@ -153,7 +153,7 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         self.assertNotIn("early failure traceback", report)
         with patch("RELEASE_VERSION.local_release_runner.tempfile.NamedTemporaryFile", side_effect=OSError("unavailable")):
             unsaved = run_local_release(self.root, run_id="tests-log-unavailable", runner=runner)
-        self.assertEqual(("failed", "functional_tests"), (unsaved["outcome"], unsaved["failed_step"]))
+        self.assertEqual(("failed", "static_tests"), (unsaved["outcome"], unsaved["failed_step"]))
         self.assertIn("Complete test output could not be saved (OSError)",
                       (self.root / unsaved["report_path"]).read_text())
 
@@ -174,14 +174,14 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
                 patch("RELEASE_VERSION.local_release_runner.sys.stderr", output):
             result = run_local_release(self.root, run_id="interrupted")
 
-        self.assertEqual(("failed", "functional_tests", "KeyboardInterrupt"),
+        self.assertEqual(("failed", "static_tests", "KeyboardInterrupt"),
                          (result["outcome"], result["failed_step"], result["error_type"]))
         self.assertEqual("partial test evidence\n", (self.root / result["test_log_path"]).read_text())
         report = (self.root / result["report_path"]).read_text()
-        self.assertIn("Stopped at: `functional_tests`", report)
+        self.assertIn("Stopped at: `static_tests`", report)
         self.assertIn("Error class: `KeyboardInterrupt`", report)
         self.assertIn(result["test_log_path"], report)
-        self.assertIn("Local release phase START: functional tests", output.getvalue())
+        self.assertIn("Local release phase START: static tests", output.getvalue())
         self.assertIn(result["test_log_path"], output.getvalue())
         for target in (self.product, self.installed):
             self.assertEqual("obsolete", (target / "old.txt").read_text())
@@ -211,15 +211,16 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
 
         def passed(argv, cwd, log, *, env=None):
             project = Path(argv[argv.index("--project") + 1])
-            self.assertEqual(str(project / ".venv-dev"), env["UV_PROJECT_ENVIRONMENT"])
-            self.assertEqual(str(project), env["PYTHONPATH"])
+            engine = project.parents[1] / "LAYER_4_ENGINE_STUDIO_C14"
+            self.assertEqual(str(engine / ".venv-dev"), env["UV_PROJECT_ENVIRONMENT"])
+            self.assertEqual(str(engine), env["PYTHONPATH"])
             self.assertNotIn("PYTHONHOME", env)
             self.assertNotIn("VIRTUAL_ENV", env)
             self.assertIn("-P", argv)
             phase = argv[argv.index("--phase") + 1]
             phases.append(phase)
             log.write(f"{phase} evidence\n".encode())
-            output = "ANECHOIC_CANARY_ENDPOINT http://127.0.0.1:49152/anechoic/mcp\n" if phase == "canary" else ""
+            output = "ANECHOIC_CANARY_ENDPOINT http://127.0.0.1:49152/anechoic/mcp\n" if phase == "image" else ""
             return subprocess.CompletedProcess(argv, 0, output, "")
 
         original_run = subprocess.run
@@ -233,11 +234,11 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
                 patch("RELEASE_VERSION.local_release_runner.run_logged_test_process", side_effect=passed):
             result = run_local_release(self.root, run_id="two-logs")
         self.assertEqual("completed", result["outcome"], result)
-        self.assertEqual(["functional", "e2e", "canary"], phases)
+        self.assertEqual(["static", "unit", "image"], phases)
         for phase in phases:
             path = self.root / result["test_log_paths"][phase]
             self.assertEqual(f"{phase} evidence\n", path.read_text())
-        self.assertEqual(result["test_log_paths"]["canary"], result["test_log_path"])
+        self.assertEqual(result["test_log_paths"]["image"], result["test_log_path"])
 
 
 

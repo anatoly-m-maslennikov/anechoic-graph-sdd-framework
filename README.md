@@ -104,7 +104,7 @@ the same Tools and Prompts can work with both →\
 **the framework is built with the framework.**
 
 The framework must describe itself →\
-the [meta-model](LAYER_1_FRAMEWORK_METHODOLOGY/SUPERLAYER_1_METHODOLOGY_SOURCES/LAYER_1_CORE_META_MODEL) uses Atoms to describe Atoms and other framework concepts →\
+the [meta-ontology](LAYER_1_META_ONTOLOGY_C9/) uses Atoms to describe Atoms and other framework concepts →\
 this creates recursion and needs a starting point →\
 bootstrap seeds provided the first definitions; those seeds are now retired.
 
@@ -136,7 +136,7 @@ Workflows are defined in Operations →\
 the harness implements and runs them using Tools and Prompts/Skills.
 
 We cannot put everything into one prompt →\
-the built-in entry Skill, [ane](LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane/SKILL.md), connects agents to MCP →\
+the built-in entry Skill, [ane](LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane/SKILL.md), connects agents to MCP →\
 Tools retrieve the needed context and assemble Prompts/Skills →\
 MCP delivers them and exposes Tool and Workflow execution.
 
@@ -275,7 +275,13 @@ for example: one prompt for how to write code, built from all M Atoms that apply
 
 The Project Manifest derives the Atom tree from the Project name and `project.root.prefix`. Use `dot` for `.anechoic_<project_name>/` or `underscore` for `_anechoic_<project_name>/`. This Project uses `_anechoic_anechoic/`. Runtime and temporary data use `.anechoic_runtime/` and `.anechoic_tmp/`.
 
-The delivered product is `LAYER_1_FRAMEWORK_METHODOLOGY/`. The installed Framework is `_anechoic_anechoic/000_ANECHOIC_framework/`. Both preserve Methodology source provenance. Project-declared Methodology source remains authoritative.
+Local Release delivers Active Atoms directly in `LAYER_1_META_ONTOLOGY_C9/`
+and `LAYER_2_META_METHODOLOGY_C58/`. The installed Framework uses the same
+layer folders in
+`_anechoic_anechoic/000_ANECHOIC_framework/`. Project Atoms are authoritative.
+
+`LAYER_3_ENVIRONMENTS_C72/` holds the locked uv projects for Engine Studio,
+Release, and Setup. Their Python code and entry points live in L4, L5, and L6.
 
 Store file-based Journals in `_journal/` and general Projections in `_projection/`.
 
@@ -300,10 +306,10 @@ been reconciled or that an installed runtime has been replaced.
 
 The Release uv Project provides three host commands in the `release` environment.
 
-- **Local Release** checkpoints eligible changes, runs functional QA, and builds
-  the Engine package. It verifies the immutable image with end-to-end and canary
-  checks before it installs the package and project-local `ane` and starts and
-  verifies production MCP.
+- **Local Release** checkpoints eligible changes and runs static checks and
+  required unit tests before the build. The image suite runs end-to-end and
+  canary checks on the exact candidate before Local Release installs the package
+  and project-local `ane` and starts and verifies production MCP.
 - **Public Release** reads completed Task and Epic evidence at pinned Git commits.
   A second run with the reviewed JSON changes returns drafts for the pull request
   description and Version History entry. The Operator handles publication.
@@ -323,11 +329,11 @@ Configuration and existing Project records remain outside the replacement
 boundary. Engine Studio uses `dev` for QA and `prod` in the runtime image from the
 same uv lock. Setup has its own lock and `setup` environment.
 
-Use the locked host commands in [Project release tools](LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/README.md),
+Use the locked host commands in [Project release tools](LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/README.md),
 with an Operator-selected run ID. The host commands use Git and Docker
 independently of MCP. Regular
 Project MCP runs in Docker on localhost without a password; the
-[launcher documentation](LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/README.md)
+[launcher documentation](LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/README.md)
 describes Project selection and endpoint startup.
 
 Local numbering adds or increments the fourth component (`0.4.2.1` →
@@ -361,7 +367,8 @@ a checkout without either legacy archive.
 
 The current framework version is declared in [version.toml](version.toml). The framework foundation is under active development; this is not yet a complete production toolchain.
 
-License: [Apache 2.0](LICENSE).
+Anechoic is source-available. See the [license terms](LICENSE) and the
+[plain-language summary](LICENSE.TLDR.md).
 
 ## Version History
 

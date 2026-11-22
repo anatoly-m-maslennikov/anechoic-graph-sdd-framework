@@ -14,7 +14,8 @@ Use the supplied framework checkout as the working directory. Inspect existing c
 
 ## Prerequisites
 
-- A supplied checkout containing `RUNTIME_SETUP/setup.py` and its locked dependencies.
+- A supplied checkout containing `LAYER_6_RUNTIME_SETUP/setup.py` and
+  `LAYER_3_ENVIRONMENTS_C72/setup/`.
 - Git and `uv` available on the host.
 - Docker installed and running.
 - The Codex CLI, if you select Codex integration.
@@ -26,7 +27,11 @@ Run the command below from the Framework checkout root. It uses managed Python 3
 Replace the path with the absolute path to the Project repository:
 
 ```sh
-UV_PROJECT_ENVIRONMENT=.venv-setup uv run --project "$PWD/RUNTIME_SETUP" --locked --python 3.14 --managed-python --no-env-file python -B -E "$PWD/RUNTIME_SETUP/setup.py" install --project "/absolute/repo" --port 8092
+setup="$PWD/LAYER_6_RUNTIME_SETUP"
+UV_PROJECT_ENVIRONMENT="$setup/.venv-setup" \
+  uv run --no-compile-bytecode --project "$PWD/LAYER_3_ENVIRONMENTS_C72/setup" \
+    --locked --python 3.14 --managed-python --no-env-file \
+    python -B -E "$setup/setup.py" install --project "/absolute/repo" --port 8092
 ```
 
 For a new Project, add `--init-project --name NAME --prefix PREFIX` with the user's chosen name and prefix. Use these flags only for an explicit new single Project. Existing Projects retain their settings.
@@ -36,7 +41,7 @@ To set up multiple Project repositories under one containing folder, use `--proj
 ## Options
 
 - Add `--agent codex` (or `--codex`) to install the user-wide hook and register the loopback MCP endpoint. Ask the user to review and trust the hook in Codex with `/hooks`. See the [Codex hooks documentation](https://learn.chatgpt.com/docs/hooks).
-- Add `--settings PATH` to select a settings file. By default, it is `anechoic/runtime.toml` under `XDG_CONFIG_HOME`, or `~/.config/anechoic/runtime.toml` when `XDG_CONFIG_HOME` is unset. See the [settings example](RUNTIME_SETUP/runtime.example.toml).
+- Add `--settings PATH` to select a settings file. By default, it is `anechoic/runtime.toml` under `XDG_CONFIG_HOME`, or `~/.config/anechoic/runtime.toml` when `XDG_CONFIG_HOME` is unset. See the [settings example](LAYER_6_RUNTIME_SETUP/runtime.example.toml).
 - For new Projects, select storage with `--workbench-storage disk|memory` and `--journal-storage files|duckdb`. The defaults are `disk` and `files`.
 
 For example, add `--agent codex` to the install command if the user selected Codex. Do not change an existing endpoint or another service automatically to resolve a conflict.

@@ -76,7 +76,7 @@ class ReleaseImageProvenanceTests(unittest.TestCase):
         def runner(argv: tuple[str, ...], root: Path) -> subprocess.CompletedProcess[str]:
             output = ("d" * 40 if argv[:2] == ("git", "rev-parse") else
                       "ANECHOIC_CANARY_ENDPOINT http://127.0.0.1:49152/anechoic/mcp\n"
-                      if "--phase" in argv and argv[argv.index("--phase") + 1] == "canary" else "")
+                      if "--phase" in argv and argv[argv.index("--phase") + 1] == "image" else "")
             return subprocess.CompletedProcess(argv, 0, output, "")
 
         result = run_local_release(fixture.root, run_id="provenance", runner=runner)
@@ -121,7 +121,7 @@ class ReleaseImageProvenanceTests(unittest.TestCase):
                 return subprocess.CompletedProcess(argv, int(dirty), "", "")
             if argv[:2] == ("git", "commit"):
                 dirty, head = False, "e" * 40
-            if "--phase" in argv and argv[argv.index("--phase") + 1] == "canary":
+            if "--phase" in argv and argv[argv.index("--phase") + 1] == "image":
                 return subprocess.CompletedProcess(
                     argv, 0, "ANECHOIC_CANARY_ENDPOINT http://127.0.0.1:49152/anechoic/mcp\n", ""
                 )

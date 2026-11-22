@@ -22,17 +22,17 @@ class NativeReleaseSourcesTests(unittest.TestCase):
         self.source = self.ontology / "__DES/__DOM/AN-S-1-DOM--current.md"
         self.carrier(self.source)
 
-    def carrier(self, path, *, atom_id="AN-S-1", status="active", version=2):
+    def carrier(self, path, *, atom_id="AN-S-1", status="active", version=2, component="C9", template=""):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(f"""---
 atom_family: SPEC
 atom_id: {atom_id}
-structure:
-  container:
-    component: C9
-  tier: 1
+container:
+  component: {component}
+tier: 1
 context:
   lens: DES/DOM
+  template: {template}
 state:
   status: {status}
   version: {version}
@@ -56,6 +56,49 @@ Native Spec.
         self.carrier(self.ontology / "AN-S-8-SPEC--retired.md", atom_id="AN-S-8", status="retired")
         self.assertEqual({p.relative_to(self.control): p for p in (self.source, new)},
                          _native_release_sources(self.selection))
+
+    def test_selects_methodology_and_environment_owned_active_specs(self):
+        c58 = self.control / "LAYER_2_META_METHODOLOGY_C58"
+        c72 = self.control / "LAYER_3_ENVIRONMENTS_C72"
+        paths = [
+            (c58 / "__DES/AN-S-20-DES--method.md", "AN-S-20", "C58"),
+            (self.control / "AN-S-21-SPEC--axiom.md", "AN-S-21", "C00"),
+            (self.control / "_QA/AN-S-22-QA--project-goal-guidance.md", "AN-S-22", "C00"),
+            (self.control / "01_TIER_1_ARCHITECTURE/AN-S-29-SPEC--architecture.md", "AN-S-29", "C00"),
+            (self.control / "_DES/DOM/AN-S-30-DOM--design.md", "AN-S-30", "C00"),
+            (self.control / "_CUSTOM/AN-S-31-CUSTOM--custom.md", "AN-S-31", "C00"),
+            (c72 / "__DEVOPS/AN-S-23-DEVOPS--environment.md", "AN-S-23", "C72"),
+        ]
+        for path, atom_id, component in paths:
+            self.carrier(path, atom_id=atom_id, component=component)
+        self.carrier(self.control / "AN-S-24-SPEC-PROJECT_CONTRACT--exclude.md", atom_id="AN-S-24", component="C00", template="project_contract")
+        self.carrier(self.control / "__QA/AN-S-28-SPEC--objective.md", atom_id="AN-S-28", component="C00", template="project_goal")
+        self.carrier(self.control / "__QA/AN-S-25-QA--other-component.md", atom_id="AN-S-25", component="C9")
+        self.carrier(c72 / "AN-S-26-SPEC--other-component.md", atom_id="AN-S-26", component="C00")
+        self.carrier(c58 / "01_draft/AN-S-27-SPEC--draft.md", atom_id="AN-S-27", component="C58")
+        selected = _native_release_sources(self.selection)
+        self.assertEqual({self.source, *(path for path, _, _ in paths)}, set(selected.values()))
+        self.assertIn(Path("LAYER_2_META_METHODOLOGY_C58/_QA/AN-S-22-QA--project-goal-guidance.md"), selected)
+        self.assertIn(Path("LAYER_2_META_METHODOLOGY_C58/__DEVOPS/AN-S-23-DEVOPS--environment.md"), selected)
+
+    def test_uses_manifest_tier_one_directory_for_project_specs(self):
+        self.selection.parameters = {"project": {"folder_layout": {"active_spec_by_tier": {
+            "0": ".", "1": "01_PROJECT_DESIGN", "2+": "_{lens}/{sublenses}",
+        }}}}
+        selected = self.control / "01_PROJECT_DESIGN/AN-S-2-DES--selected.md"
+        default = self.control / "01_TIER_1_ARCHITECTURE/AN-S-3-DES--default.md"
+        self.carrier(selected, atom_id="AN-S-2", component="C00")
+        self.carrier(default, atom_id="AN-S-3", component="C00")
+        self.assertEqual({self.source, selected}, set(_native_release_sources(self.selection).values()))
+
+    def test_rejects_tier_one_directories_that_are_unsafe_or_reserved(self):
+        for name in ("../outside", "01_DRAFT", "01_DESIGN_C72"):
+            with self.subTest(name=name):
+                self.selection.parameters = {"project": {"folder_layout": {"active_spec_by_tier": {
+                    "0": ".", "1": name, "2+": "_{lens}/{sublenses}",
+                }}}}
+                with self.assertRaisesRegex(LocalReleaseError, "Invalid Tier 1 SPEC folder"):
+                    _native_release_sources(self.selection)
 
     def test_rejects_duplicate_current_identity_in_the_component(self):
         self.carrier(self.ontology / "AN-S-1-DOM--duplicate.md")

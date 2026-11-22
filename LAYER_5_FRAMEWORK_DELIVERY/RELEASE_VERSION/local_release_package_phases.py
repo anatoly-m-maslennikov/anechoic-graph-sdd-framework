@@ -11,7 +11,7 @@ from .release_image_provenance import release_image_provenance
 from .release_inputs import read_release_selection
 from .local_release_safety import _new_staging_directory, _release_lock
 from .release_support import (
-    _PRESERVED_NAMES, _GENERATED_ASSETS, _native_release_sources, _file_identity,
+    _PRESERVED_NAMES, _GENERATED_ASSETS, _LAYER_NAMES, _native_release_sources, _file_identity,
     _relative, _verify_package, _clear_target, _copy_tree, _walk_regular_files,
     _prepare_package, _image_manager, _target, _install_bootstrap, _project_path,
 )
@@ -34,10 +34,11 @@ def copy_sources(root, selection, run_id, product):
         _verify_package(staged, {
             relative.as_posix(): identities[source] for relative, source in sources.items()
         })
-        _clear_target(product, root=root, preserve=_PRESERVED_NAMES, label="product-root")
-        product_sources = product / "SUPERLAYER_1_METHODOLOGY_SOURCES"
-        product_sources.mkdir(parents=True, exist_ok=True)
-        _copy_tree(staged, product_sources, preserve=frozenset())
+        for name in _LAYER_NAMES:
+            (staged / name).mkdir(exist_ok=True)
+            destination = _target(root, Path(name), label="delivery-layer")
+            _clear_target(destination, root=root, preserve=frozenset(), label="delivery-layer")
+            _copy_tree(staged / name, destination, preserve=frozenset())
 
 
 def copy_product(root, selection, installation_lock, package, package_identity,
@@ -47,20 +48,23 @@ def copy_product(root, selection, installation_lock, package, package_identity,
     ))
     _verify_package(package, package_identity)
     _verify_package(prepared_product, product_identity)
-    _clear_target(installed, root=root, preserve=_PRESERVED_NAMES, label="installed-root")
-    _copy_tree(prepared_product, installed, preserve=_PRESERVED_NAMES)
-    _verify_package(installed, product_identity, preserve=_PRESERVED_NAMES)
+    preserve = _PRESERVED_NAMES | {"SUPERLAYER_1_METHODOLOGY_SOURCES", "applicable_methodology"}
+    _clear_target(installed, root=root, preserve=preserve, label="installed-root")
+    _copy_tree(prepared_product, installed, preserve=preserve)
+    _verify_package(installed, product_identity, preserve=preserve)
 
 
 def build_package(root, selection, product, staging):
     prepared_product = staging / "framework"
     prepared_product.mkdir()
+    for name in _LAYER_NAMES:
+        destination = prepared_product / name
+        destination.mkdir()
+        _copy_tree(root / name, destination, preserve=frozenset())
     product_identity = {
-        entry.relative_to(product).as_posix(): _file_identity(entry)
-        for entry in _walk_regular_files(product)
-        if entry.relative_to(product).parts[0] not in _PRESERVED_NAMES
+        entry.relative_to(prepared_product).as_posix(): _file_identity(entry)
+        for entry in _walk_regular_files(prepared_product)
     }
-    _copy_tree(product, prepared_product, preserve=_PRESERVED_NAMES)
     _verify_package(prepared_product, product_identity)
     package = staging / "package"
     package.mkdir()

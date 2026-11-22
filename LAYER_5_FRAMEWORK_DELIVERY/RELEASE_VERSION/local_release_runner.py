@@ -99,14 +99,14 @@ class LocalReleaseRun:
         self.cleanup_note = 'No proven superseded Project-owned image identity was available; none was removed.'
         self.cleanup_pending = False
         self.cleanup = None
-        self.test_scope = 'functional'
+        self.test_scope = 'static and unit'
         self.selected_test_modules = None
-        self.test_selection = 'configured functional modules'
+        self.test_selection = 'configured required tests'
         self.phases = ('validate inputs',
-                        'bump candidate version', 'functional tests', 'copy active sources', 'build package',
-                        'prepare candidate image', 'e2e tests', 'verify candidate image',
+                        'bump candidate version', 'static tests', 'unit tests', 'copy active sources', 'build package',
+                        'prepare candidate image', 'verify candidate image',
                         'copy product to installed framework', 'install project runtime', 'start mcp', 'final')
-        self.checkpoint_paths = {'validate inputs': ('.',), 'functional tests': ('version.toml',), 'build package': (self.product.relative_to(self.root).as_posix(),), 'install project runtime': (self.installed.relative_to(self.root).as_posix(),), 'start mcp': ('.agents/skills/ane',)}
+        self.checkpoint_paths = {'validate inputs': ('.',), 'static tests': ('version.toml',), 'build package': ('LAYER_1_META_ONTOLOGY_C9', 'LAYER_2_META_METHODOLOGY_C58'), 'install project runtime': (self.installed.relative_to(self.root).as_posix(),), 'start mcp': ('.agents/skills/ane',)}
 
     def _execute(self):
         self.failed_step = 'installation_lock'
@@ -137,7 +137,7 @@ class LocalReleaseRun:
             self._validate_inputs(phase)
         elif phase == 'bump candidate version':
             self._bump_version(phase)
-        elif phase in {'functional tests', 'e2e tests', 'verify candidate image'}:
+        elif phase in {'static tests', 'unit tests', 'verify candidate image'}:
             self._run_tests(phase)
         elif phase == 'copy active sources':
             self._copy_sources(phase)
@@ -163,13 +163,13 @@ class LocalReleaseRun:
 
     def _run_tests(self, phase):
         self.failed_step = phase.replace(' ', '_')
-        suite_phase = 'canary' if phase == 'verify candidate image' else phase.split()[0]
+        suite_phase = 'image' if phase == 'verify candidate image' else phase.split()[0]
         self.test_log_path = None
         try:
             observed_endpoint = run_gate(self.root, phase, self.candidate_image, self.package, self.package_identity, self.selection, self.run_id, None if self.default_runner else self.runner, self.test_log_paths, verify=_verify_package, target=_target, named_file=tempfile.NamedTemporaryFile, logged_process=run_logged_test_process, failed_output=_failed_test_output)
         finally:
             self.test_log_path = self.test_log_paths.get(suite_phase)
-        if suite_phase == 'canary':
+        if suite_phase == 'image':
             self.canary_endpoint = observed_endpoint
 
     def _copy_sources(self, phase):

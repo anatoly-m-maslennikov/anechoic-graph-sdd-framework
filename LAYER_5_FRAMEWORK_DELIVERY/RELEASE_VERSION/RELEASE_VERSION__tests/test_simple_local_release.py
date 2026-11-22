@@ -17,7 +17,7 @@ from RELEASE_VERSION.release_inputs import read_release_selection  # noqa: E402
 from RELEASE_VERSION.release_support import _GENERATED_ASSETS  # noqa: E402
 
 
-from RELEASE_VERSION.RELEASE_VERSION__tests._simple_release_fixture import SimpleReleaseFixture  # noqa: E402
+from RELEASE_VERSION.RELEASE_VERSION__tests.RELEASE_VERSION__tests__shared import SimpleReleaseFixture  # noqa: E402
 
 
 class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
@@ -32,10 +32,14 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         self.assertGreaterEqual(select.call_count, 2)
         self.assertTrue(all(call.args[0].manifest_ref == "AN-S-001@1" for call in select.call_args_list))
         gates = [call for call in calls if any(arg.endswith("test_suite__pub.py") for arg in call)]
-        self.assertEqual(["functional", "e2e", "canary"], [argv[argv.index("--phase") + 1] for argv in gates])
+        self.assertEqual(["static", "unit", "image"], [argv[argv.index("--phase") + 1] for argv in gates])
         self.assertNotIn("--candidate-image", gates[0])
-        self.assertEqual(self.image_id, gates[1][gates[1].index("--candidate-image") + 1])
+        self.assertNotIn("--required", gates[0])
+        self.assertIn("--required", gates[1])
+        self.assertNotIn("--candidate-image", gates[1])
         self.assertEqual(self.image_id, gates[2][gates[2].index("--candidate-image") + 1])
+        self.assertIn("--canary-package", gates[2])
+        self.assertEqual("native-release", gates[2][gates[2].index("--run-id") + 1])
         selection = read_release_selection(self.root)
         handoff = json.loads(gates[2][gates[2].index("--canary-selection") + 1])
         self.assertEqual({
@@ -47,9 +51,33 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         }, handoff)
         self.assertEqual("refresh", result["image_mode"])
         self.start_container.assert_called_once()
-        product_sources = self.product / "SUPERLAYER_1_METHODOLOGY_SOURCES"
+        product_sources = self.root
         for relative, source in self._native_sources().items():
             self.assertEqual(source.read_bytes(), (product_sources / relative).read_bytes())
+            self.assertEqual(source.read_bytes(), (self.installed / relative).read_bytes())
+            self.assertEqual(source.read_bytes(), (self.runtime / "simple_local_release/package" / relative).read_bytes())
+        self.assertEqual((self.root / "LAYER_3_ENVIRONMENTS_C72/engine/uv.lock").read_bytes(),
+                         (self.runtime / "simple_local_release/package/LAYER_3_ENVIRONMENTS_C72/engine/uv.lock").read_bytes())
+        self.assertFalse((self.installed / "LAYER_3_ENVIRONMENTS_C72").exists())
+        self.assertFalse((self.runtime / "simple_local_release/package/METHODOLOGY/sources").exists())
+        self.assertEqual("obsolete", (self.product / "old.txt").read_text())
+
+
+    def test_package_uses_prepared_layer_when_live_layer_changes(self):
+        original_prepare = package_phases._prepare_package
+        relative = next(iter(self._native_sources()))
+        expected = self._native_sources()[relative].read_bytes()
+
+        def mutate_live_layer(root, product, package, **kwargs):
+            (root / relative).write_bytes(b"changed after snapshot")
+            return original_prepare(root, product, package, **kwargs)
+
+        runner, _ = self._runner()
+        with patch("RELEASE_VERSION.local_release_package_phases._prepare_package", side_effect=mutate_live_layer):
+            result = run_local_release(self.root, run_id="snapshot-package", runner=runner)
+        self.assertEqual("completed", result["outcome"], result)
+        self.assertEqual(expected, (self.installed / relative).read_bytes())
+        self.assertEqual(expected, (self.runtime / "simple_local_release/package" / relative).read_bytes())
 
 
     def test_production_tag_failure_keeps_successful_deployment(self):
@@ -85,8 +113,8 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
             result = run_local_release(self.root, run_id="native-existing", runner=runner, image_mode="existing")
         self.assertEqual("completed", result["outcome"], result)
         gates = [call for call in calls if any(arg.endswith("test_suite__pub.py") for arg in call)]
-        self.assertEqual(["functional", "e2e", "canary"], [argv[argv.index("--phase") + 1] for argv in gates])
-        self.assertEqual(self.image_id, gates[1][gates[1].index("--candidate-image") + 1])
+        self.assertEqual(["static", "unit", "image"], [argv[argv.index("--phase") + 1] for argv in gates])
+        self.assertNotIn("--candidate-image", gates[1])
 
 
     def test_native_source_change_stops_before_product_replacement(self):
@@ -123,8 +151,8 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         self.assertEqual("completed", result["outcome"], result)
         self.assertEqual("existing", result["image_mode"])
         gates = [argv for argv in calls if any(arg.endswith("test_suite__pub.py") for arg in argv)]
-        self.assertEqual(["functional", "e2e", "canary"], [argv[argv.index("--phase") + 1] for argv in gates])
-        self.assertEqual(self.image_id, gates[1][gates[1].index("--candidate-image") + 1])
+        self.assertEqual(["static", "unit", "image"], [argv[argv.index("--phase") + 1] for argv in gates])
+        self.assertNotIn("--candidate-image", gates[1])
         self.assertEqual({"use_packaged_assets": True}, self.image.resolve.call_args_list[0].kwargs)
         runtime_package = self.runtime / "simple_local_release/package"
         for relative, payload in payloads.items():
@@ -173,8 +201,8 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
 
     def test_focused_request_runs_and_reports_functional_suite(self):
         modules = (
-            "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_one.py",
-            "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_two.py",
+            "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_one.py",
+            "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_two.py",
         )
         runner, calls = self._runner()
         result = run_local_release(
@@ -185,19 +213,19 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         )
 
         self.assertEqual("completed", result["outcome"])
-        self.assertEqual("functional", result["test_scope"])
+        self.assertEqual("static and unit", result["test_scope"])
         self.assertIsNone(result["test_modules"])
         test_command = next(argv for argv in calls if any(
             item.endswith("test_suite__pub.py") for item in argv
         ))
         self.assertNotIn("--test-module", test_command)
         receipt = (self.root / result["receipt_path"]).read_text(encoding="utf-8")
-        self.assertIn("Test scope: `functional`", receipt)
-        self.assertIn("Selected test modules: configured functional modules", receipt)
+        self.assertIn("Test scope: `static and unit`", receipt)
+        self.assertIn("Selected test modules: configured required tests", receipt)
 
 
     def test_focused_test_failure_blocks_downstream_release(self):
-        modules = ("LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_failing.py",)
+        modules = ("LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_failing.py",)
         base_runner, calls = self._runner()
 
         def failed_tests(argv, cwd):
@@ -215,13 +243,13 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
             test_modules=modules,
         )
 
-        self.assertEqual(("failed", "functional_tests"), (result["outcome"], result["failed_step"]))
-        self.assertEqual("functional", result["test_scope"])
+        self.assertEqual(("failed", "static_tests"), (result["outcome"], result["failed_step"]))
+        self.assertEqual("static and unit", result["test_scope"])
         self.assertIsNone(result["test_modules"])
         self.start_container.assert_not_called()
         report = (self.root / result["report_path"]).read_text(encoding="utf-8")
-        self.assertIn("Test scope: `functional`", report)
-        self.assertIn("Selected test modules: configured functional modules", report)
+        self.assertIn("Test scope: `static and unit`", report)
+        self.assertIn("Selected test modules: configured required tests", report)
         self.assertIn("focused test failure", report)
 
 

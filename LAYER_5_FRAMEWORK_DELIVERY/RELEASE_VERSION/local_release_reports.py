@@ -42,7 +42,7 @@ def write_failure(root, run_id, failed_step, image_mode, test_scope, test_select
             f"Test scope: `{test_scope}`\n\n"
             f"Selected test modules: {test_selection}\n\n"
             f"Error class: `{type(error).__name__}`\n\n"
-            + (f"{str(error)[:8500]}\n\n" if failed_step in {"functional_tests", "e2e_tests", "verify_candidate_image"} else "")
+            + (f"{str(error)[:8500]}\n\n" if failed_step in {"static_tests", "unit_tests", "verify_candidate_image"} else "")
             + "".join(f"Complete {phase} test output: `{path}`\n\n" for phase, path in test_log_paths.items())
             + (f"MCP started at: `{endpoint}`\n\n" if endpoint is not None else "")
             + ("\n".join(getattr(error, "__notes__", ())) + "\n\n" if getattr(error, "__notes__", ()) else "")

@@ -1,0 +1,57 @@
+{
+  "_meta": null,
+  "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": false,
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "title": null
+  },
+  "description": "Run one read-only SQL query on the selected Project and return the first page.",
+  "execution": null,
+  "icons": null,
+  "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+      "cursor_position": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "page_size": {
+        "maximum": 1000,
+        "minimum": 1,
+        "type": "integer"
+      },
+      "result_delivery": {
+        "enum": [
+          "auto",
+          "inline"
+        ],
+        "type": "string"
+      },
+      "result_format": {
+        "enum": [
+          "json_matrix"
+        ],
+        "type": "string"
+      },
+      "save": {
+        "type": "boolean",
+        "default": false
+      },
+      "sql": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "sql"
+    ],
+    "type": "object"
+  },
+  "name": "query_run",
+  "outputSchema": null,
+  "title": null
+}
