@@ -6,7 +6,7 @@ import hashlib
 from dataclasses import dataclass
 from typing import Any
 
-from carrier_aliases import carrier_read_view
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_compat__pub import carrier_read_view
 
 
 Record = dict[str, Any]

@@ -41,9 +41,8 @@ environment remains internal to the subprocess and is not printed. From the
 repository root, using the selected Python 3.14 environment:
 
 ```sh
-UV_PROJECT_ENVIRONMENT="$PWD/.anechoic_runtime/launcher-venv" \
-uv run --project "$PWD" --locked --no-sync --python 3.14 --managed-python --no-env-file \
-  --group rmed-workflow-mcp python \
+UV_PROJECT_ENVIRONMENT="$PWD/LAYER_3_ENGINE_STUDIO_C14/.venv-dev" PYTHONPATH="$PWD/LAYER_3_ENGINE_STUDIO_C14" uv run --project "$PWD/LAYER_3_ENGINE_STUDIO_C14" --locked --no-sync --python 3.14 --managed-python --no-env-file \
+  --group dev python \
   LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/shared_mcp_launcher.py \
   --host-settings "${XDG_CONFIG_HOME:-$HOME/.config}/anechoic/runtime.toml" \
   --image sha256:<admitted-image-digest>

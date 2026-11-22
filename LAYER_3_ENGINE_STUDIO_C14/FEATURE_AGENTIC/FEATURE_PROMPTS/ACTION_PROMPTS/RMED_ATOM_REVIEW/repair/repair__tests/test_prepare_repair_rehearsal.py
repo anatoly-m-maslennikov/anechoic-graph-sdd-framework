@@ -2,19 +2,17 @@
 import hashlib
 import json
 from pathlib import Path
-import sys
 import tempfile
 import unittest
 from unittest.mock import patch
 
 
 HERE = Path(__file__).resolve().parent.parent
-sys.path[:0] = [str(HERE / "repair__tests"), str(HERE.parent)]
-from prepare_repair_rehearsal import (  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair__tests.prepare_repair_rehearsal import (  # noqa: E402
     CASES, FIXTURE_ROOT, REPAIR_AUTHORITY_IDS, REPOSITORY_ROOT, build, rewrite_fixture,
     synthetic_authority,
 )
-from context_builder import markdown, metadata  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import markdown, metadata  # noqa: E402
 
 
 class PrepareRepairRehearsalTests(unittest.TestCase):
@@ -59,7 +57,7 @@ class PrepareRepairRehearsalTests(unittest.TestCase):
             tempfile.TemporaryDirectory(
                 dir=temporary_root, ignore_cleanup_errors=True
             ) as temporary,
-            patch("prepare_repair_rehearsal.baseline_sources", return_value=baseline),
+            patch("FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair__tests.prepare_repair_rehearsal.baseline_sources", return_value=baseline),
         ):
             output = Path(temporary) / "rehearsal"
             build(output)

@@ -28,7 +28,7 @@ class RepairPromptTests(unittest.TestCase):
         for token in ('confirmed report findings', 'caller-granted permission',
                       'Never replay a completed effect', 'fixed_not_rechecked'):
             self.assertIn(token, raw)
-        self.assertNotIn('repair_gate.admit_proposal', raw)
+        self.assertNotIn('repair_gate__shared.admit_proposal', raw)
         self.assertNotIn('propose_repair.prompt.md', raw)
 
     def test_output_assessment_is_after_generation_not_a_circular_input(self):

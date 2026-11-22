@@ -8,7 +8,52 @@ import re
 import subprocess
 import time
 
-from release_assets import LocalReleaseError
+from .release_assets import LocalReleaseError
+
+
+def _wait_healthy(docker, container, root: Path, image: str, labels, port: int) -> str:
+    deadline = time.monotonic() + 420
+    while True:
+        try:
+            row = json.loads(docker("container", "inspect", "--format", "{{json .}}", container))
+            state, config = row["State"], row["Config"]
+            bindings = row["NetworkSettings"]["Ports"]["8092/tcp"]
+            mounts = row["Mounts"]
+            if (row["Id"] != container or row["Image"] != image or
+                    any(config["Labels"].get(key) != value for key, value in labels.items()) or
+                    bindings != [{"HostIp": "127.0.0.1", "HostPort": str(port)}] or
+                    not any(m.get("Type") == "bind" and m.get("Source") == str(root)
+                            and m.get("Destination") == "/project" and m.get("RW") is True for m in mounts)):
+                raise LocalReleaseError("local-release-container-identity-mismatch")
+            if state.get("Running") is not True:
+                raise LocalReleaseError("local-release-container-exited")
+            health = state.get("Health", {}).get("Status")
+            if health == "healthy":
+                return f"http://127.0.0.1:{port}/anechoic/mcp"
+            if health not in ("starting", "unhealthy") or time.monotonic() >= deadline:
+                raise LocalReleaseError("local-release-container-health-failed")
+        except (KeyError, TypeError, ValueError) as error:
+            raise LocalReleaseError("local-release-container-inspect-invalid") from error
+        time.sleep(min(2, max(0, deadline - time.monotonic())))
+
+
+def _container_command(root: Path, selection, image: str, port: int, control: str, labels):
+    command = ["run", "-d", "--pull=never", "--init", "--read-only", "--cap-drop", "ALL",
+               "--security-opt", "no-new-privileges:true", "--tmpfs", "/tmp:size=128m,mode=1777",
+               "--pids-limit", "128", "--memory", "1536m", "--cpus", "1",
+               "--log-driver", "local", "--log-opt", "max-size=10m", "--log-opt", "max-file=3",
+               "--log-opt", "mode=non-blocking", "--log-opt", "max-buffer-size=1m",
+               "-p", f"127.0.0.1:{port}:8092",
+               "--mount", f"type=bind,src={root},dst=/project"]
+    for key, value in labels.items():
+        command.extend(("--label", f"{key}={value}"))
+    for key, value in {"ANECHOIC_RUNTIME_NAMESPACE": "docker", "ANECHOIC_CONTROL_ROOT": control,
+                       "ANECHOIC_PROJECT_INSTANCE_ID": selection.instance_id,
+                       "ANECHOIC_MCP_HTTP_HEALTHCHECK": "1",
+                       "ANECHOIC_HOST_PROJECT_ROOT": str(root)}.items():
+        command.extend(("-e", f"{key}={value}"))
+    command.extend((image, "mcp-http"))
+    return command
 
 
 def start_container(root: Path, selection, image: str, fingerprint: str, port: int, runner=None, *, existing_container: str | None = None) -> str:
@@ -40,21 +85,7 @@ def start_container(root: Path, selection, image: str, fingerprint: str, port: i
         except (OSError, subprocess.SubprocessError) as error:
             raise LocalReleaseError("local-release-container-command-failed") from error
 
-    command = ["run", "-d", "--pull=never", "--init", "--read-only", "--cap-drop", "ALL",
-               "--security-opt", "no-new-privileges:true", "--tmpfs", "/tmp:size=128m,mode=1777",
-               "--pids-limit", "128", "--memory", "1536m", "--cpus", "1",
-               "--log-driver", "local", "--log-opt", "max-size=10m", "--log-opt", "max-file=3",
-               "--log-opt", "mode=non-blocking", "--log-opt", "max-buffer-size=1m",
-               "-p", f"127.0.0.1:{port}:8092",
-               "--mount", f"type=bind,src={root},dst=/project"]
-    for key, value in labels.items():
-        command.extend(("--label", f"{key}={value}"))
-    for key, value in {"ANECHOIC_RUNTIME_NAMESPACE": "docker", "ANECHOIC_CONTROL_ROOT": control,
-                       "ANECHOIC_PROJECT_INSTANCE_ID": selection.instance_id,
-                       "ANECHOIC_MCP_HTTP_HEALTHCHECK": "1",
-                       "ANECHOIC_HOST_PROJECT_ROOT": str(root)}.items():
-        command.extend(("-e", f"{key}={value}"))
-    command.extend((image, "mcp-http"))
+    command = _container_command(root, selection, image, port, control, labels)
     if existing_container is not None and (not isinstance(existing_container, str)
                                            or not re.fullmatch(r"[0-9a-f]{64}", existing_container)):
         raise LocalReleaseError("local-release-container-id-invalid")
@@ -62,29 +93,7 @@ def start_container(root: Path, selection, image: str, fingerprint: str, port: i
     if not re.fullmatch(r"[0-9a-f]{64}", container):
         raise LocalReleaseError("local-release-container-id-invalid")
     try:
-        deadline = time.monotonic() + 420
-        while True:
-            try:
-                row = json.loads(docker("container", "inspect", "--format", "{{json .}}", container))
-                state, config = row["State"], row["Config"]
-                bindings = row["NetworkSettings"]["Ports"]["8092/tcp"]
-                mounts = row["Mounts"]
-                if (row["Id"] != container or row["Image"] != image or
-                        any(config["Labels"].get(key) != value for key, value in labels.items()) or
-                        bindings != [{"HostIp": "127.0.0.1", "HostPort": str(port)}] or
-                        not any(m.get("Type") == "bind" and m.get("Source") == str(root)
-                                and m.get("Destination") == "/project" and m.get("RW") is True for m in mounts)):
-                    raise LocalReleaseError("local-release-container-identity-mismatch")
-                if state.get("Running") is not True:
-                    raise LocalReleaseError("local-release-container-exited")
-                health = state.get("Health", {}).get("Status")
-                if health == "healthy":
-                    return f"http://127.0.0.1:{port}/anechoic/mcp"
-                if health not in ("starting", "unhealthy") or time.monotonic() >= deadline:
-                    raise LocalReleaseError("local-release-container-health-failed")
-            except (KeyError, TypeError, ValueError) as error:
-                raise LocalReleaseError("local-release-container-inspect-invalid") from error
-            time.sleep(min(2, max(0, deadline - time.monotonic())))
+        return _wait_healthy(docker, container, root, image, labels, port)
     except BaseException as failure:
         if existing_container is None:
             try:

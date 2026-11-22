@@ -4,198 +4,53 @@
 from __future__ import annotations
 
 import subprocess
-import io
 import json
-import os
 import shutil
-import stat
-import sys
-import tempfile
-from types import SimpleNamespace
 import unittest
-from unittest.mock import Mock, patch
-from pathlib import Path
+from unittest.mock import patch
 
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-import local_release  # noqa: E402
-from local_release import run_local_release, _launcher_image  # noqa: E402
-from release_inputs import read_release_selection  # noqa: E402
-from release_support import _GENERATED_ASSETS  # noqa: E402
+from RELEASE_VERSION import local_release_package_phases as package_phases  # noqa: E402
+from RELEASE_VERSION.local_release import run_local_release  # noqa: E402
+from RELEASE_VERSION.local_release_runner import _launcher_image  # noqa: E402
+from RELEASE_VERSION.release_inputs import read_release_selection  # noqa: E402
+from RELEASE_VERSION.release_support import _GENERATED_ASSETS  # noqa: E402
 
 
-class SimpleLocalReleaseTests(unittest.TestCase):
-    def setUp(self) -> None:
-        self.temporary = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
-        self.addCleanup(self.temporary.cleanup)
-        self.root = Path(self.temporary.name).resolve()
-        self.control = self.root / ".anechoic_anechoic"
-        self.control.mkdir()
-        ontology = self.control / "LAYER_1_META_ONTOLOGY_C9"
-        ontology.mkdir()
-        self.native_sources = (
-            ontology / "AN-S-10-SPEC--model.md",
-            ontology / "AN-S-11-SPEC--related-spec.md",
-        )
-        for path in self.native_sources:
-            atom_id = path.name.split("-SPEC--")[0]
-            path.write_text(f"---\natom_family: SPEC\natom_id: {atom_id}\nstate:\n  status: active\n  version: 1\n---\n## Claim\nNative source\n", encoding="utf-8")
-        (self.root / ".gitignore").write_text(".anechoic_tmp/\n/.anechoic_runtime/\n", encoding="utf-8")
-        self.product = self.root / "LAYER_1_FRAMEWORK_METHODOLOGY"
-        self.installed = self.control / "000_ANECHOIC_framework"
-        self.runtime = self.root / ".anechoic_runtime"
-        delivery = self.root / "LAYER_5_FRAMEWORK_DELIVERY/PUBLIC_RELEASE"
-        delivery.mkdir(parents=True)
-        (delivery / "public_release.py").write_text("# release source\n", encoding="utf-8")
-        (delivery / "PUBLIC_RELEASE__tests").mkdir()
-        (delivery / "PUBLIC_RELEASE__tests/test_private.py").write_text("# excluded test\n", encoding="utf-8")
-        for destination in (self.product, self.installed, self.runtime):
-            destination.mkdir(parents=True)
-            (destination / "old.txt").write_text("obsolete", encoding="utf-8")
-            (destination / "config.toml").write_text("keep = true\n", encoding="utf-8")
-        skill = self.root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane"
-        skill.mkdir(parents=True)
-        (skill / "SKILL.md").write_text("ane skill", encoding="utf-8")
-        (skill / "references").mkdir()
-        (skill / "references/details.md").write_text("skill reference", encoding="utf-8")
-        (self.root / "pyproject.toml").write_text("[project]\nname = 'fixture'\n", encoding="utf-8")
-        (self.root / "uv.lock").write_text("version = 1\n", encoding="utf-8")
-        (self.root / "version.toml").write_text('[framework]\nversion = "0.4.1"\n', encoding="utf-8")
-        tools = self.root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS"
-        tools.mkdir(parents=True)
-        (tools / "tests").mkdir()
-        (tools / "tests/test_retired.py").write_text("# package-excluded test\n", encoding="utf-8")
-        (tools / "fixtures").mkdir()
-        (tools / "fixtures/input.json").write_text("{}\n", encoding="utf-8")
-        (tools / "README.md").write_text("package-excluded prose\n", encoding="utf-8")
-        (tools / "scope_declaration_test_support.py").write_text("# package-excluded test helper\n", encoding="utf-8")
-        (tools / "scope_declaration_render.py").write_text("# package-excluded test renderer\n", encoding="utf-8")
-        skill = tools / "retained/SKILL.md"
-        skill.parent.mkdir()
-        skill.write_text("retained implementation skill\n", encoding="utf-8")
-        subject_builder = tools / "GENERATE_ENTITY_GRAPH/render_entity_tree.py"
-        subject_builder.parent.mkdir()
-        subject_builder.write_text("# retained subject builder\n", encoding="utf-8")
-        prompt = self.root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/retired.py"
-        prompt.parent.mkdir(parents=True)
-        prompt.write_text("# source-only prompt\n", encoding="utf-8")
-        self.engine_bootstrap = (
-            self.root / "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/"
-            "docker/start_mcp.py"
-        )
-        self.engine_bootstrap.parent.mkdir(parents=True)
-        self.engine_bootstrap.write_bytes(b"#!/usr/bin/env python3\n# package bootstrap fixture\n")
-        self.engine_bootstrap.chmod(0o755)
-        (self.engine_bootstrap.parent / "runtime.py").write_text("# runtime entrypoint fixture\n", encoding="utf-8")
-        mcp = self.engine_bootstrap.parent.parent
-        (mcp / "tool_providers.json").write_text(
-            '{"mcp_blacklist":[],"providers":[]}\n', encoding="utf-8")
-        self.image_id = "sha256:" + "a" * 64
-        self.image = SimpleNamespace(resolve=Mock(return_value=self.image_id),
-                                     identity=Mock(return_value=SimpleNamespace(fingerprint="b" * 64)),
-                                     mark_production_image=Mock())
-        original_launcher_image = local_release._launcher_image
+from RELEASE_VERSION.RELEASE_VERSION__tests._simple_release_fixture import SimpleReleaseFixture  # noqa: E402
 
-        def scoped_launcher_image(selection):
-            observed = original_launcher_image(selection)
-            if observed is not None:
-                return observed
-            package = self.runtime / "simple_local_release/package"
-            return self.image_id if package.is_dir() else None
 
-        launcher = patch("local_release._launcher_image", side_effect=scoped_launcher_image)
-        launcher.start()
-        self.addCleanup(launcher.stop)
-        image_factory = patch("local_release._image_manager", return_value=self.image)
-        self.image_factory = image_factory.start()
-        self.addCleanup(image_factory.stop)
-        self.start_container = self.enterContext(patch(
-            "local_release.start_container", return_value="http://localhost:12345/mcp"
-        ))
-        provenance = patch("local_release.release_image_provenance", return_value={
-            "project_id": "c" * 64, "project_root": str(self.root),
-            "control_root": ".anechoic_anechoic", "project_name": "Fixture",
-            "head_commit": "d" * 40,
-        })
-        self.provenance = provenance.start()
-        self.addCleanup(provenance.stop)
-
-        self._native_project()
-
-    def _runner(self):
-        calls = []
-        staged = False
-
-        def run(argv, cwd):
-            nonlocal staged
-            self.assertEqual(self.root, cwd)
-            calls.append(argv)
-            if argv[:2] == ("git", "add"):
-                staged = True
-            elif argv[:2] == ("git", "commit"):
-                staged = False
-            if argv[:2] == ("git", "rev-parse"):
-                return subprocess.CompletedProcess(argv, 0, "d" * 40 + "\n", "")
-            if argv == ("git", "diff", "--cached", "--quiet"):
-                return subprocess.CompletedProcess(argv, int(staged), "", "")
-            if "--phase" in argv and argv[argv.index("--phase") + 1] == "canary":
-                return subprocess.CompletedProcess(argv, 0, "ANECHOIC_CANARY_ENDPOINT http://127.0.0.1:49152/anechoic/mcp\n", "")
-            return subprocess.CompletedProcess(argv, 0, "", "")
-
-        return run, calls
-
-    def _is_mcp_bootstrap(self, argv: tuple[str, ...]) -> bool:
-        return (
-            len(argv) > 1
-            and argv[0] == sys.executable
-            and argv[1] == str(self.runtime / "start_mcp.py")
-        )
-
-    def _mcp_bootstrap_success(self, argv: tuple[str, ...]) -> subprocess.CompletedProcess[str]:
-        launcher_python = self.runtime / "launcher-venv/bin/python"
-        launcher_python.parent.mkdir(parents=True, exist_ok=True)
-        launcher_python.write_text("#!/usr/bin/env python3\n", encoding="utf-8")
-        launcher_python.chmod(0o755)
-        return subprocess.CompletedProcess(argv, 0, "http://localhost:12345/mcp\n", "")
-
-    def _native_project(self):
-        manifest = self.control / "AN-S-001-PROJECT_MANIFEST--declare.md"
-        manifest.parent.mkdir(exist_ok=True)
-        manifest.write_text(
-            "---\nidentity:\n  atom_id: AN-S-001\ncontext:\n  container:\n    component: C00\n"
-            "  tier: -1\n  template: project_manifest\nstate:\n  status: active\n  version: 1\n---\n"
-            "## Claim\n\n### Formal Claim\n\n```python\n"
-            "from anechoic.formal_claims import declare_entity\n"
-            "from anechoic.model import ProjectManifest\n"
-            "declare_entity(entity_name='Project Manifest', "
-            "instance=ProjectManifest(name='Anechoic', prefix='AN', "
-            "parameters={'project_mcp': {'http_port': 12345}}))\n```\n", encoding="utf-8",
-        )
-
-        for relative in _GENERATED_ASSETS:
-            (self.root / relative).write_text('{"sealed": true}\n', encoding="utf-8")
-
-    def _native_sources(self):
-        return {source.relative_to(self.control): source for source in self.native_sources if source.is_file()}
-
+class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
     def test_native_release_runs_full_gates_and_copies_selected_sources(self):
         runner, calls = self._runner()
-        with patch("local_release._native_release_sources", wraps=local_release._native_release_sources) as select, \
-             patch("local_release._build_predecessor", return_value=None), \
-             patch("local_release._launcher_image", side_effect=[None, self.image_id]):
+        with patch("RELEASE_VERSION.local_release_package_phases._native_release_sources", wraps=package_phases._native_release_sources) as select, \
+             patch("RELEASE_VERSION.local_release_runner._build_predecessor", return_value=None), \
+             patch("RELEASE_VERSION.local_release_runner._launcher_image", side_effect=[None, self.image_id]):
             result = run_local_release(self.root, run_id="native-release", runner=runner)
         self.assertEqual("completed", result["outcome"], result)
         self.image.mark_production_image.assert_called_once_with(self.image_id)
         self.assertGreaterEqual(select.call_count, 2)
         self.assertTrue(all(call.args[0].manifest_ref == "AN-S-001@1" for call in select.call_args_list))
         gates = [call for call in calls if any(arg.endswith("test_suite__pub.py") for arg in call)]
-        self.assertEqual(["unit", "e2e", "canary"], [argv[argv.index("--phase") + 1] for argv in gates])
+        self.assertEqual(["functional", "e2e", "canary"], [argv[argv.index("--phase") + 1] for argv in gates])
+        self.assertNotIn("--candidate-image", gates[0])
         self.assertEqual(self.image_id, gates[1][gates[1].index("--candidate-image") + 1])
+        self.assertEqual(self.image_id, gates[2][gates[2].index("--candidate-image") + 1])
+        selection = read_release_selection(self.root)
+        handoff = json.loads(gates[2][gates[2].index("--canary-selection") + 1])
+        self.assertEqual({
+            "control_root": selection.control_relative.as_posix(),
+            "manifest_path": selection.manifest_path.relative_to(self.root).as_posix(),
+            "manifest_ref": selection.manifest_ref, "manifest_sha256": selection.manifest_sha256,
+            "project_name": selection.project_name, "project_prefix": selection.project_prefix,
+            "query_enabled": "query_run" not in selection.parameters.get("project_mcp", {}).get("tool_blacklist", ()),
+        }, handoff)
         self.assertEqual("refresh", result["image_mode"])
         self.start_container.assert_called_once()
         product_sources = self.product / "SUPERLAYER_1_METHODOLOGY_SOURCES"
         for relative, source in self._native_sources().items():
             self.assertEqual(source.read_bytes(), (product_sources / relative).read_bytes())
+
 
     def test_production_tag_failure_keeps_successful_deployment(self):
         self.image.mark_production_image.side_effect = RuntimeError("tag unavailable")
@@ -206,6 +61,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
                       (self.root / result["receipt_path"]).read_text())
         self.assertNotIn("tag unavailable", (self.root / result["receipt_path"]).read_text())
 
+
     def test_native_manifest_change_stops_before_product_replacement(self):
         runner, _ = self._runner()
 
@@ -215,21 +71,23 @@ class SimpleLocalReleaseTests(unittest.TestCase):
                 path.write_text(path.read_text() + "\nchanged\n", encoding="utf-8")
             return runner(argv, cwd)
 
-        with patch("local_release._build_predecessor", return_value=None), \
-             patch("local_release._launcher_image", return_value=None):
+        with patch("RELEASE_VERSION.local_release_runner._build_predecessor", return_value=None), \
+             patch("RELEASE_VERSION.local_release_runner._launcher_image", return_value=None):
             result = run_local_release(self.root, run_id="native-changed", runner=change_manifest)
         self.assertEqual(("failed", "validate_project_selection"), (result["outcome"], result["failed_step"]))
         self.assertEqual("obsolete", (self.product / "old.txt").read_text())
 
-    def test_native_existing_mode_keeps_the_full_test_gate(self):
+
+    def test_native_existing_mode_keeps_the_functional_test_gate(self):
         runner, calls = self._runner()
-        with patch("local_release._build_predecessor", return_value=None), \
-             patch("local_release._launcher_image", side_effect=[None, self.image_id]):
+        with patch("RELEASE_VERSION.local_release_runner._build_predecessor", return_value=None), \
+             patch("RELEASE_VERSION.local_release_runner._launcher_image", side_effect=[None, self.image_id]):
             result = run_local_release(self.root, run_id="native-existing", runner=runner, image_mode="existing")
         self.assertEqual("completed", result["outcome"], result)
         gates = [call for call in calls if any(arg.endswith("test_suite__pub.py") for arg in call)]
-        self.assertEqual(["unit", "e2e", "canary"], [argv[argv.index("--phase") + 1] for argv in gates])
+        self.assertEqual(["functional", "e2e", "canary"], [argv[argv.index("--phase") + 1] for argv in gates])
         self.assertEqual(self.image_id, gates[1][gates[1].index("--candidate-image") + 1])
+
 
     def test_native_source_change_stops_before_product_replacement(self):
         runner, _ = self._runner()
@@ -242,13 +100,14 @@ class SimpleLocalReleaseTests(unittest.TestCase):
                 changed.write_text("changed", encoding="utf-8")
             return result
 
-        with patch("local_release._build_predecessor", return_value=None), \
-             patch("local_release._launcher_image", return_value=None), \
-             patch("local_release.shutil.copy2", side_effect=mutate_after_copy):
+        with patch("RELEASE_VERSION.local_release_runner._build_predecessor", return_value=None), \
+             patch("RELEASE_VERSION.local_release_runner._launcher_image", return_value=None), \
+             patch("RELEASE_VERSION.local_release_package_phases.shutil.copy2", side_effect=mutate_after_copy):
             result = run_local_release(self.root, run_id="native-source-change", runner=runner)
         self.assertEqual(("failed", "copy_active_sources"), (result["outcome"], result["failed_step"]))
         self.assertEqual("obsolete", (self.product / "old.txt").read_text())
         self.assertIn('version = "0.4.1.1"', (self.root / "version.toml").read_text())
+
 
     def test_existing_image_mode_preserves_checkout_assets_without_a_predecessor(self):
         selection = read_release_selection(self.root)
@@ -264,13 +123,14 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertEqual("completed", result["outcome"], result)
         self.assertEqual("existing", result["image_mode"])
         gates = [argv for argv in calls if any(arg.endswith("test_suite__pub.py") for arg in argv)]
-        self.assertEqual(["unit", "e2e", "canary"], [argv[argv.index("--phase") + 1] for argv in gates])
+        self.assertEqual(["functional", "e2e", "canary"], [argv[argv.index("--phase") + 1] for argv in gates])
         self.assertEqual(self.image_id, gates[1][gates[1].index("--candidate-image") + 1])
         self.assertEqual({"use_packaged_assets": True}, self.image.resolve.call_args_list[0].kwargs)
         runtime_package = self.runtime / "simple_local_release/package"
         for relative, payload in payloads.items():
             self.assertEqual(payload, (self.root / relative).read_bytes())
             self.assertEqual(payload, (runtime_package / relative).read_bytes())
+
 
     def test_image_modes_refuse_missing_assets_before_tests(self):
         (self.root / next(iter(_GENERATED_ASSETS))).unlink()
@@ -283,6 +143,7 @@ class SimpleLocalReleaseTests(unittest.TestCase):
                 self.assertEqual(original_version, (self.root / "version.toml").read_bytes())
                 self.assertFalse(any(any(item.endswith("test_suite__pub.py") for item in argv) for argv in calls))
         self.image_factory.assert_not_called()
+
 
     def test_launcher_image_reads_only_exact_selected_runtime_namespace(self):
         selection = read_release_selection(self.root)
@@ -309,7 +170,8 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         self.assertIsNone(_launcher_image(selection))
         self.assertEqual(retained, legacy.read_bytes())
 
-    def test_focused_request_runs_and_reports_full_suite(self):
+
+    def test_focused_request_runs_and_reports_functional_suite(self):
         modules = (
             "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_one.py",
             "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_two.py",
@@ -323,15 +185,16 @@ class SimpleLocalReleaseTests(unittest.TestCase):
         )
 
         self.assertEqual("completed", result["outcome"])
-        self.assertEqual("full", result["test_scope"])
+        self.assertEqual("functional", result["test_scope"])
         self.assertIsNone(result["test_modules"])
         test_command = next(argv for argv in calls if any(
             item.endswith("test_suite__pub.py") for item in argv
         ))
         self.assertNotIn("--test-module", test_command)
         receipt = (self.root / result["receipt_path"]).read_text(encoding="utf-8")
-        self.assertIn("Test scope: `full`", receipt)
-        self.assertIn("Selected test modules: all discovered modules", receipt)
+        self.assertIn("Test scope: `functional`", receipt)
+        self.assertIn("Selected test modules: configured functional modules", receipt)
+
 
     def test_focused_test_failure_blocks_downstream_release(self):
         modules = ("LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_failing.py",)
@@ -352,585 +215,15 @@ class SimpleLocalReleaseTests(unittest.TestCase):
             test_modules=modules,
         )
 
-        self.assertEqual(("failed", "unit_tests"), (result["outcome"], result["failed_step"]))
-        self.assertEqual("full", result["test_scope"])
+        self.assertEqual(("failed", "functional_tests"), (result["outcome"], result["failed_step"]))
+        self.assertEqual("functional", result["test_scope"])
         self.assertIsNone(result["test_modules"])
         self.start_container.assert_not_called()
         report = (self.root / result["report_path"]).read_text(encoding="utf-8")
-        self.assertIn("Test scope: `full`", report)
-        self.assertIn("Selected test modules: all discovered modules", report)
+        self.assertIn("Test scope: `functional`", report)
+        self.assertIn("Selected test modules: configured functional modules", report)
         self.assertIn("focused test failure", report)
 
-    def _assert_input_refused(self, run_id, failed_step="validate_inputs"):
-        runner, calls = self._runner()
-        result = run_local_release(self.root, run_id=run_id, runner=runner)
-        self.assertEqual("failed", result["outcome"])
-        self.assertEqual(failed_step, result["failed_step"])
-        for target in (self.product, self.installed):
-            self.assertEqual("obsolete", (target / "old.txt").read_text())
-        self.assertFalse(any(any(item.endswith("test_suite__pub.py") for item in argv) for argv in calls))
-        self.start_container.assert_not_called()
-        self.image_factory.assert_not_called()
-
-    def test_unsafe_product_descendant_refuses_before_any_clear(self):
-        (self.product / "linked.txt").symlink_to(self.installed / "old.txt")
-        self._assert_input_refused("unsafe-product")
-
-    def test_invalid_version_refuses_before_tests_or_replacement(self):
-        version = self.root / "version.toml"
-        version.write_text('[framework]\nversion = "invalid"\n')
-        self._assert_input_refused("invalid-version", "bump_candidate_version")
-        self.assertIn('version = "invalid"', version.read_text())
-
-    def test_release_preserves_launcher_and_runtime_config(self):
-        launcher = self.runtime / "start_mcp.py"
-        launcher.write_bytes(b"existing launcher\n")
-        state = self.runtime / "project_mcp_state.json"
-        state.write_text("retain this runtime state\n", encoding="utf-8")
-        runner, _ = self._runner()
-        result = run_local_release(self.root, run_id="launcher-state", runner=runner)
-        self.assertEqual("completed", result["outcome"], result)
-        self.assertEqual(self.engine_bootstrap.read_bytes(), launcher.read_bytes())
-        self.assertEqual(0o755, stat.S_IMODE(launcher.stat().st_mode))
-        self.assertEqual("keep = true\n", (self.runtime / "config.toml").read_text())
-        self.assertEqual("retain this runtime state\n", state.read_text())
-        self.start_container.assert_called_once()
-
-    def test_four_component_local_version_increments_without_rollover(self):
-        (self.root / "version.toml").write_text('[framework]\nversion = "0.4.1.9"\n', encoding="utf-8")
-        runner, _ = self._runner()
-        result = run_local_release(self.root, run_id="version", runner=runner)
-        self.assertEqual("completed", result["outcome"])
-        self.assertIn('version = "0.4.1.10"', (self.root / "version.toml").read_text())
-
-    def test_workbench_node_dependencies_are_not_packaged(self):
-        frontend = self.root / "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND"
-        dependencies = frontend / "node_modules/.bin"
-        dependencies.mkdir(parents=True)
-        (frontend / "package.json").write_text('{"name":"workbench"}')
-        (dependencies / "vite").symlink_to("../vite/bin/vite.js")
-        runner, _ = self._runner()
-        result = run_local_release(self.root, run_id="frontend-dependencies", runner=runner)
-        self.assertEqual("completed", result["outcome"])
-        packaged = self.runtime / "simple_local_release/package" / frontend.relative_to(self.root)
-        self.assertTrue((packaged / "package.json").is_file())
-        self.assertFalse((packaged / "node_modules").exists())
-
-    def test_preserved_ds_store_directories_do_not_block_replacement(self):
-        kept, removed = (path.relative_to(self.control) for path in self.native_sources)
-        self.native_sources[1].unlink()
-        retained = (
-            self.product / "SUPERLAYER_1_METHODOLOGY_SOURCES",
-            self.product / "SUPERLAYER_1_METHODOLOGY_SOURCES" / kept.parent,
-            self.installed / "obsolete",
-            self.runtime / "simple_local_release/package/LAYER_3_ENGINE_STUDIO_C14",
-        )
-        for directory in retained:
-            directory.mkdir(parents=True, exist_ok=True)
-            (directory / ".DS_Store").write_bytes(b"ignored")
-            (directory / "obsolete.txt").write_text("old", encoding="utf-8")
-        runner, _ = self._runner()
-        result = run_local_release(self.root, run_id="ds-store", runner=runner)
-        self.assertEqual("completed", result["outcome"])
-        for directory in retained:
-            self.assertEqual(b"ignored", (directory / ".DS_Store").read_bytes())
-            self.assertFalse((directory / "obsolete.txt").exists())
-        self.assertTrue((self.product / "SUPERLAYER_1_METHODOLOGY_SOURCES" / kept).is_file())
-        for target in (self.product, self.installed):
-            self.assertFalse((target / "SUPERLAYER_1_METHODOLOGY_SOURCES" / removed).exists())
-
-    def test_test_failure_leaves_both_methodology_destinations_untouched(self):
-        calls = []
-        staged = False
-        stdout = "early stdout evidence\n" + "output tail\n" * 500
-        stderr = "early failure traceback\n" + "error tail\n" * 500
-
-        def runner(argv, cwd):
-            nonlocal staged
-            calls.append(argv)
-            if argv[:2] == ("git", "add"):
-                staged = True
-            elif argv[:2] == ("git", "commit"):
-                staged = False
-            if argv[:2] == ("git", "rev-parse"):
-                return subprocess.CompletedProcess(argv, 0, "d" * 40 + "\n", "")
-            if argv == ("git", "diff", "--cached", "--quiet"):
-                return subprocess.CompletedProcess(argv, int(staged), "", "")
-            if any(item.endswith("test_suite__pub.py") for item in argv):
-                self.assertIn("--all-groups", argv)
-                self.assertIn("--managed-python", argv)
-                self.assertIn("3.14", argv)
-                self.assertEqual(str(self.root), argv[argv.index("--project-root") + 1])
-                for target in (self.product, self.installed):
-                    self.assertEqual("obsolete", (target / "old.txt").read_text())
-            failed = any(item.endswith("test_suite__pub.py") for item in argv)
-            return subprocess.CompletedProcess(argv, 2 if failed else 0, stdout if failed else "", stderr if failed else "")
-
-        with (
-            patch("local_release.cleanup_stopped_containers") as stopped_cleanup,
-            patch("local_release.cleanup_obsolete_images") as image_cleanup,
-        ):
-            result = run_local_release(self.root, run_id="tests-failed", runner=runner)
-        self.assertEqual("unit_tests", result["failed_step"])
-        self.assertEqual("failed", result["outcome"])
-        self.image.mark_production_image.assert_not_called()
-        stopped_cleanup.assert_not_called()
-        image_cleanup.assert_not_called()
-        for target in (self.product, self.installed):
-            self.assertEqual("obsolete", (target / "old.txt").read_text())
-        self.assertEqual(1, sum(any(item.endswith("test_suite__pub.py") for item in argv) for argv in calls))
-        self.assertEqual(2, sum(argv[:2] == ("git", "commit") for argv in calls))
-        report = (self.root / result["report_path"]).read_text()
-        logs = list((self.root / ".anechoic_tmp/simple_local_release").glob("tests-failed-tests-*.log"))
-        self.assertEqual(1, len(logs))
-        self.assertIn(f"Complete test output: `{logs[0].relative_to(self.root).as_posix()}`", report)
-        self.assertEqual(f"stdout:\n{stdout}\nstderr:\n{stderr}", logs[0].read_text())
-        self.assertNotIn("early failure traceback", report)
-        with patch("local_release.tempfile.NamedTemporaryFile", side_effect=OSError("unavailable")):
-            unsaved = run_local_release(self.root, run_id="tests-log-unavailable", runner=runner)
-        self.assertEqual(("failed", "unit_tests"), (unsaved["outcome"], unsaved["failed_step"]))
-        self.assertIn("Complete test output could not be saved (OSError)",
-                      (self.root / unsaved["report_path"]).read_text())
-
-    def test_default_tests_log_is_retained_on_interrupt_with_actual_failed_step(self):
-        runner, calls = self._runner()
-
-        def interrupted(argv, cwd, log):
-            self.assertIn("-u", argv)
-            self.assertEqual(self.root, cwd)
-            log.write(b"partial test evidence\n")
-            log.flush()
-            raise KeyboardInterrupt
-
-        output = io.StringIO()
-        with patch("local_release.subprocess.run", side_effect=lambda argv, **kwargs: runner(argv, kwargs["cwd"])), \
-                patch("local_release.run_logged_test_process", side_effect=interrupted), \
-                patch("local_release.sys.stderr", output):
-            result = run_local_release(self.root, run_id="interrupted")
-
-        self.assertEqual(("failed", "unit_tests", "KeyboardInterrupt"),
-                         (result["outcome"], result["failed_step"], result["error_type"]))
-        self.assertEqual("partial test evidence\n", (self.root / result["test_log_path"]).read_text())
-        report = (self.root / result["report_path"]).read_text()
-        self.assertIn("Stopped at: `unit_tests`", report)
-        self.assertIn("Error class: `KeyboardInterrupt`", report)
-        self.assertIn(result["test_log_path"], report)
-        self.assertIn("Local release phase START: unit tests", output.getvalue())
-        self.assertIn(result["test_log_path"], output.getvalue())
-        for target in (self.product, self.installed):
-            self.assertEqual("obsolete", (target / "old.txt").read_text())
-        self.start_container.assert_not_called()
-
-    def test_default_test_log_survives_later_failure_without_whole_output_capture(self):
-        runner, _ = self._runner()
-
-        def passed(argv, cwd, log):
-            log.write(b"complete test evidence\n")
-            return subprocess.CompletedProcess(argv, 0, "bounded tail", "")
-
-        with patch("local_release.subprocess.run", side_effect=lambda argv, **kwargs: runner(argv, kwargs["cwd"])), \
-                patch("local_release.run_logged_test_process", side_effect=passed), \
-                patch("local_release._prepare_package", side_effect=RuntimeError("package failed")):
-            result = run_local_release(self.root, run_id="later-failed")
-
-        self.assertEqual(("failed", "build_package"), (result["outcome"], result["failed_step"]))
-        self.assertEqual("complete test evidence\n", (self.root / result["test_log_path"]).read_text())
-        self.assertIn(result["test_log_path"], (self.root / result["report_path"]).read_text())
-
-    def test_default_runner_streams_one_log_for_each_gate(self):
-        runner, _ = self._runner()
-        phases = []
-
-        def passed(argv, cwd, log):
-            phase = argv[argv.index("--phase") + 1]
-            phases.append(phase)
-            log.write(f"{phase} evidence\n".encode())
-            output = "ANECHOIC_CANARY_ENDPOINT http://127.0.0.1:49152/anechoic/mcp\n" if phase == "canary" else ""
-            return subprocess.CompletedProcess(argv, 0, output, "")
-
-        original_run = subprocess.run
-        def run(argv, **kwargs):
-            if argv[0] == "git":
-                return runner(argv, self.root)
-            return original_run(argv, **kwargs)
-
-        with patch("local_release.subprocess.run", side_effect=run), \
-                patch("local_release.run_logged_test_process", side_effect=passed):
-            result = run_local_release(self.root, run_id="two-logs")
-        self.assertEqual("completed", result["outcome"], result)
-        self.assertEqual(["unit", "e2e", "canary"], phases)
-        for phase in phases:
-            path = self.root / result["test_log_paths"][phase]
-            self.assertEqual(f"{phase} evidence\n", path.read_text())
-        self.assertEqual(result["test_log_paths"]["canary"], result["test_log_path"])
-
-    def test_interrupt_before_tests_reports_actual_git_step_without_claiming_log(self):
-        def interrupted(argv, cwd):
-            raise KeyboardInterrupt
-
-        result = run_local_release(self.root, run_id="git-interrupted", runner=interrupted)
-        self.assertEqual(("failed", "git_before_validate_inputs", "KeyboardInterrupt"),
-                         (result["outcome"], result["failed_step"], result["error_type"]))
-        self.assertIsNone(result["test_log_path"])
-        self.assertIn("git_before_validate_inputs", (self.root / result["report_path"]).read_text())
-
-    def test_git_stages_initial_changes_then_only_release_paths(self):
-        runner, calls = self._runner()
-        result = run_local_release(self.root, run_id="git-order", runner=runner)
-        self.assertEqual("completed", result["outcome"])
-        adds = [argv for argv in calls if argv[:3] == ("git", "add", "-A")]
-        self.assertEqual(".", adds[0][4])
-        self.assertEqual("version.toml", adds[1][4])
-        self.assertEqual(5, len(adds))
-        self.assertTrue(all("." not in argv[4:-2] for argv in adds[1:]))
-        commits = [argv[-1] for argv in calls if argv[:2] == ("git", "commit")]
-        self.assertEqual(["validate inputs", "unit tests", "build package", "install project runtime", "start mcp"],
-                         [message.removeprefix("chore(release): simple local ") for message in commits])
-
-    def test_unit_gate_worktree_drift_is_refused_before_build(self):
-        runner, calls = self._runner()
-        drifted = False
-
-        def changed(argv, cwd):
-            nonlocal drifted
-            result = runner(argv, cwd)
-            if "--phase" in argv and "unit" in argv:
-                drifted = True
-            if drifted and argv[:2] == ("git", "status"):
-                return subprocess.CompletedProcess(argv, 0, "?? unrelated.txt\n", "")
-            return result
-
-        result = run_local_release(self.root, run_id="source-drift", runner=changed)
-        self.assertEqual(("failed", "git_before_copy_active_sources"), (result["outcome"], result["failed_step"]))
-        self.image_factory.assert_not_called()
-        self.assertEqual(2, sum(argv[:3] == ("git", "add", "-A") for argv in calls))
-
-    def test_checkpoints_commit_actual_temporary_git_changes(self):
-        def git(*args):
-            return subprocess.run(("git", *args), cwd=self.root, capture_output=True, text=True, check=True)
-
-        git("init", "--quiet")
-        git("config", "user.name", "Release fixture")
-        git("config", "user.email", "release-fixture@example.invalid")
-
-        def runner(argv, cwd):
-            self.assertEqual(self.root, cwd)
-            if argv[0] == "git":
-                return subprocess.run(argv, cwd=cwd, capture_output=True, text=True, check=False)
-            if argv[0] == "docker":
-                return subprocess.CompletedProcess(argv, 0, "", "")
-            return subprocess.CompletedProcess(argv, 0, "ANECHOIC_CANARY_ENDPOINT http://127.0.0.1:49152/anechoic/mcp\n", "")
-
-        result = run_local_release(self.root, run_id="real-git", runner=runner)
-        self.assertEqual("completed", result["outcome"], (result, git("status", "--porcelain").stdout))
-        self.assertEqual("", git("status", "--porcelain").stdout)
-        self.assertEqual("chore(release): simple local start mcp", git("log", "-1", "--format=%s").stdout.strip())
-        self.assertIn('version = "0.4.1.1"', git("show", "HEAD:version.toml").stdout)
-        for relative in _GENERATED_ASSETS:
-            self.assertEqual((self.root / relative).read_text(), git("show", f"HEAD:{relative}").stdout)
-            self.assertEqual("chore(release): simple local validate inputs",
-                             git("log", "-1", "--format=%s", "--", relative).stdout.strip())
-
-    def test_package_inputs_fail_before_any_installed_replacement(self):
-        runtime_package = self.runtime / "simple_local_release/package"
-        skill = self.root / ".agents/skills/ane"
-        for target in (runtime_package, skill):
-            target.mkdir(parents=True)
-            (target / "old.txt").write_text("prior payload", encoding="utf-8")
-            (target / "old.txt").chmod(0o640)
-        def inventory(target):
-            return {path.relative_to(target).as_posix(): (path.read_bytes(), stat.S_IMODE(path.stat().st_mode))
-                    for path in target.rglob("*") if path.is_file()}
-        before = {target: inventory(target) for target in (self.installed, runtime_package, skill)}
-        for relative in ("uv.lock", "LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane/SKILL.md"):
-            with self.subTest(relative=relative):
-                missing = self.root / relative
-                payload = missing.read_bytes()
-                mode = stat.S_IMODE(missing.stat().st_mode)
-                missing.unlink()
-                runner, calls = self._runner()
-                result = run_local_release(self.root, run_id="missing-input", runner=runner)
-                missing.write_bytes(payload)
-                missing.chmod(mode)
-                self.assertEqual("failed", result["outcome"])
-                self.assertEqual("build_package", result["failed_step"])
-                self.start_container.assert_not_called()
-                for target, snapshot in before.items():
-                    self.assertEqual(snapshot, inventory(target))
-                self.assertEqual([], list((self.root / ".anechoic_tmp/simple_local_release").iterdir()))
-
-    def test_installed_copies_are_checked_for_corruption(self):
-        copy_tree = local_release._copy_tree
-        for destination, step in ((self.installed, "copy_product_to_installed_framework"),
-                                  (self.root / ".agents/skills/ane", "install_project_runtime")):
-            with self.subTest(destination=destination):
-                def corrupt(source, target, **kwargs):
-                    copy_tree(source, target, **kwargs)
-                    if target == destination:
-                        next(path for path in target.rglob("*") if path.is_file() and path.name != "config.toml").write_text("corrupt")
-                runner, _ = self._runner()
-                with patch.object(local_release, "_copy_tree", corrupt):
-                    result = run_local_release(self.root, run_id="corrupt-copy", runner=runner)
-                self.assertEqual("failed", result["outcome"])
-                self.assertEqual(step, result["failed_step"])
-
-    def test_installation_lock_refuses_contention_before_replacement(self):
-        runner, calls = self._runner()
-        version = (self.root / "version.toml").read_bytes()
-        product = {p.relative_to(self.product): p.read_bytes() for p in self.product.rglob("*") if p.is_file()}
-        stderr = io.StringIO()
-        with local_release._installation_lock(self.root, read_release_selection(self.root)), patch("sys.stderr", stderr):
-            result = run_local_release(self.root, run_id="locked-install", runner=runner)
-        self.assertEqual("failed", result["outcome"])
-        self.assertEqual("installation_lock", result["failed_step"])
-        self.assertIn("local-release-installation-lock-busy", stderr.getvalue())
-        self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
-        self.assertEqual(version, (self.root / "version.toml").read_bytes())
-        self.assertEqual(product, {p.relative_to(self.product): p.read_bytes() for p in self.product.rglob("*") if p.is_file()})
-        self.assertFalse(any(argv[0] == "git" for argv in calls))
-        self.start_container.assert_not_called()
-        with local_release._installation_lock(self.root, read_release_selection(self.root)):
-            pass
-
-    def test_installation_lock_and_staging_refuse_symlinked_owners(self):
-        temporary = self.root / ".anechoic_tmp"
-        temporary.mkdir(exist_ok=True)
-        with tempfile.TemporaryDirectory() as other:
-            outside = Path(other)
-            (temporary / "local_release_installation").symlink_to(outside, target_is_directory=True)
-            (temporary / "simple_local_release").symlink_to(outside, target_is_directory=True)
-
-            runner, calls = self._runner()
-            result = run_local_release(self.root, run_id="linked-lock", runner=runner)
-            self.assertEqual(("failed", "installation_lock"), (result["outcome"], result["failed_step"]))
-            self.assertEqual([], calls)
-            with self.assertRaisesRegex(local_release.LocalReleaseError, "temporary-directory-unsafe"):
-                local_release._new_staging_directory(self.root, "linked-stage-")
-            self.assertEqual([], list(outside.iterdir()))
-
-    def test_staging_refuses_an_owner_replaced_during_allocation(self):
-        owner = self.root / ".anechoic_tmp/simple_local_release"
-        owner.mkdir(parents=True)
-        moved = owner.with_name("moved")
-        mkdir = os.mkdir
-
-        def replace_owner(path, *args, **kwargs):
-            mkdir(path, *args, **kwargs)
-            if str(path).startswith("swap-"):
-                owner.rename(moved)
-                owner.symlink_to(moved, target_is_directory=True)
-
-        with patch.object(local_release.os, "mkdir", side_effect=replace_owner):
-            with self.assertRaisesRegex(local_release.LocalReleaseError, "temporary-directory-changed"):
-                local_release._new_staging_directory(self.root, "swap-")
-        self.assertEqual([], list(moved.iterdir()))
-
-    def test_installation_lock_covers_copy_and_mcp_handoff(self):
-        runner, _ = self._runner()
-        copy_tree = local_release._copy_tree
-        checked = []
-        def check_locked():
-            with self.assertRaisesRegex(local_release.LocalReleaseError, "installation-lock-busy"):
-                with local_release._installation_lock(self.root, read_release_selection(self.root)):
-                    pass
-            checked.append(True)
-        def copy(source, target, **kwargs):
-            if target in (self.installed, self.runtime / "simple_local_release/package", self.root / ".agents/skills/ane"):
-                check_locked()
-            return copy_tree(source, target, **kwargs)
-        def start(*args, **kwargs):
-            check_locked()
-            return "http://localhost:12345/mcp"
-        with patch.object(local_release, "_copy_tree", copy), \
-                patch.object(local_release, "start_container", side_effect=start):
-            result = run_local_release(self.root, run_id="lock-coverage", runner=runner)
-        self.assertEqual("completed", result["outcome"])
-        self.assertEqual(4, len(checked))
-
-    def test_package_byte_or_mode_drift_refuses_before_installed_clear(self):
-        import local_release
-        prepare = local_release._prepare_package
-        for field in ("bytes", "mode"):
-            with self.subTest(field=field):
-                def tamper(*args, **kwargs):
-                    expected = prepare(*args, **kwargs)
-                    path = args[2] / "uv.lock"
-                    if field == "bytes":
-                        path.write_bytes(path.read_bytes() + b"drift")
-                    else:
-                        path.chmod(0o600 if stat.S_IMODE(path.stat().st_mode) != 0o600 else 0o644)
-                    return expected
-                runner, _ = self._runner()
-                with patch.object(local_release, "_prepare_package", tamper):
-                    result = run_local_release(self.root, run_id="tampered-package", runner=runner)
-                self.assertEqual("failed", result["outcome"])
-                self.assertEqual("prepare_candidate_image", result["failed_step"])
-                self.image_factory.assert_not_called()
-                self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
-
-    def test_unreadable_package_subtree_refuses_before_replacement(self):
-        blocked = self.root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/blocked"
-        blocked.mkdir()
-        (blocked / "required.py").write_bytes(b"required payload")
-        runtime_package = self.runtime / "simple_local_release/package"
-        skill = self.root / ".agents/skills/ane"
-        for target in (runtime_package, skill):
-            target.mkdir(parents=True)
-            (target / "old.txt").write_bytes(b"previous payload")
-        runner, calls = self._runner()
-        blocked.chmod(0)
-        try:
-            result = run_local_release(self.root, run_id="unreadable-package", runner=runner)
-        finally:
-            blocked.chmod(0o700)
-        self.assertEqual("failed", result["outcome"])
-        self.assertEqual("build_package", result["failed_step"])
-        self.image_factory.assert_not_called()
-        self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
-        for target in (runtime_package, skill):
-            self.assertEqual(b"previous payload", (target / "old.txt").read_bytes())
-        self.start_container.assert_not_called()
-
-    def test_staging_is_run_private_and_verified_before_replacement(self):
-        import local_release
-        prepare = local_release._prepare_package
-        stages = []
-        other_control = self.root / "_anechoic_other"
-        other_control.mkdir()
-        (other_control / "private.txt").write_text("private")
-        def capture(root, product, package, **kwargs):
-            self.assertTrue(package.is_relative_to(root / ".anechoic_tmp/simple_local_release"))
-            self.assertTrue(package.parent.name.startswith("private-"))
-            self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
-            stages.append(package)
-            result = prepare(root, product, package, **kwargs)
-            self.assertFalse((package / "_anechoic_other").exists())
-            return result
-        runner, _ = self._runner()
-        with patch.object(local_release, "_prepare_package", capture):
-            result = run_local_release(self.root, run_id="private", runner=runner)
-        self.assertEqual("completed", result["outcome"])
-        self.assertEqual(1, len(stages))
-        self.assertFalse(stages[0].exists())
-        self.assertFalse((self.root / ".anechoic_install").exists())
-
-    def test_image_is_verified_before_replacement_and_installed_launch_cannot_build(self):
-        events = []
-
-        def resolve(**kwargs):
-            if kwargs == {"use_packaged_assets": True}:
-                events.append("candidate-resolve")
-                self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
-                self.assertFalse((self.runtime / "simple_local_release/package").exists())
-                self.assertFalse((self.root / ".agents/skills/ane").exists())
-            else:
-                events.append("installed-resolve")
-                self.assertEqual({"explicit_id": self.image_id, "build_if_missing": False}, kwargs)
-            return self.image_id
-        self.image.resolve.side_effect = resolve
-        runner, calls = self._runner()
-
-        def record(argv, cwd):
-            result = runner(argv, cwd)
-            if "--phase" in argv:
-                phase = argv[argv.index("--phase") + 1]
-                self.assertIn('version = "0.4.1.1"', (self.root / "version.toml").read_text())
-                if phase == "canary":
-                    self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
-                    self.assertEqual(self.image_id, argv[argv.index("--candidate-image") + 1])
-                    self.assertEqual("image-order", argv[argv.index("--run-id") + 1])
-                events.append(f"{phase}-green")
-            elif argv[:3] == ("docker", "image", "ls"):
-                events.append("post-smoke-image-cleanup")
-            return result
-
-        def start(root, selection, image, fingerprint, port, runner, **kwargs):
-            events.append("launch")
-            self.assertEqual((self.root, self.image_id, "b" * 64, 12345), (root, image, fingerprint, port))
-            return "http://localhost:12345/mcp"
-
-        self.start_container.side_effect = start
-        result = run_local_release(self.root, run_id="image-order", runner=record)
-        self.assertEqual("completed", result["outcome"], result)
-        self.assertEqual(2, self.image_factory.call_count)
-        self.assertEqual([unittest.mock.call(use_packaged_assets=True)] * 3, self.image.identity.call_args_list)
-        source, temporary = self.image_factory.call_args_list[0].args
-        self.assertTrue(source.is_relative_to(self.root / ".anechoic_tmp/simple_local_release"))
-        self.assertEqual(source.parent / "image_builds", temporary)
-        self.assertEqual(self.runtime / "simple_local_release/package", self.image_factory.call_args_list[1].args[0])
-        self.assertLess(events.index("unit-green"), events.index("candidate-resolve"))
-        self.assertLess(events.index("candidate-resolve"), events.index("e2e-green"))
-        self.assertLess(events.index("e2e-green"), events.index("canary-green"))
-        self.assertLess(events.index("canary-green"), events.index("installed-resolve"))
-        self.assertLess(events.index("installed-resolve"), events.index("launch"))
-        self.assertLess(events.index("launch"), events.index("post-smoke-image-cleanup"))
-        self.assertEqual("http://127.0.0.1:49152/anechoic/mcp", result["canary_endpoint"])
-
-    def test_e2e_failure_stops_before_canary_install_and_production_tag(self):
-        runner, calls = self._runner()
-
-        def fail_e2e(argv, cwd):
-            result = runner(argv, cwd)
-            if "--phase" in argv and argv[argv.index("--phase") + 1] == "e2e":
-                self.assertEqual(self.image_id, argv[argv.index("--candidate-image") + 1])
-                return subprocess.CompletedProcess(argv, 1, "", "e2e failed")
-            return result
-
-        result = run_local_release(self.root, run_id="e2e-failed", runner=fail_e2e)
-        self.assertEqual(("failed", "e2e_tests"), (result["outcome"], result["failed_step"]))
-        self.assertFalse(any("canary" in argv for argv in calls))
-        self.image.mark_production_image.assert_not_called()
-        self.start_container.assert_not_called()
-        self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
-
-    def test_failed_candidate_canary_preserves_the_installed_release(self):
-        runner, calls = self._runner()
-        def fail_canary(argv, cwd):
-            result = runner(argv, cwd)
-            if "--phase" in argv and argv[argv.index("--phase") + 1] == "canary":
-                return subprocess.CompletedProcess(argv, 1, "", "canary failed")
-            return result
-        result = run_local_release(self.root, run_id="canary-failed", runner=fail_canary)
-        self.assertEqual("verify_candidate_image", result["failed_step"])
-        self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
-        self.start_container.assert_not_called()
-        self.assertFalse(any(argv[:3] == ("docker", "image", "rm") for argv in calls))
-
-    def test_image_preparation_failure_preserves_previous_installation(self):
-        runtime_package = self.runtime / "simple_local_release/package"
-        skill = self.root / ".agents/skills/ane"
-        for target in (runtime_package, skill):
-            target.mkdir(parents=True)
-            (target / "old.txt").write_bytes(b"previous payload")
-        self.image.resolve.side_effect = RuntimeError("image unavailable")
-        runner, calls = self._runner()
-        with (
-            patch("local_release.cleanup_stopped_containers") as stopped_cleanup,
-            patch("local_release.cleanup_obsolete_images") as image_cleanup,
-        ):
-            result = run_local_release(self.root, run_id="image-failed", runner=runner)
-        self.assertEqual("failed", result["outcome"])
-        self.assertEqual("prepare_candidate_image", result["failed_step"])
-        stopped_cleanup.assert_not_called()
-        image_cleanup.assert_not_called()
-        self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
-        self.assertEqual(b"previous payload", (runtime_package / "old.txt").read_bytes())
-        self.assertEqual(b"previous payload", (skill / "old.txt").read_bytes())
-        self.start_container.assert_not_called()
-
-    def test_packaged_fingerprint_mismatch_preserves_previous_installation(self):
-        runtime_package = self.runtime / "simple_local_release/package"
-        runtime_package.mkdir(parents=True)
-        (runtime_package / "old.txt").write_bytes(b"previous payload")
-        self.image.identity.side_effect = [SimpleNamespace(fingerprint="b" * 64),
-                                           SimpleNamespace(fingerprint="c" * 64)]
-        runner, calls = self._runner()
-        result = run_local_release(self.root, run_id="package-mismatch", runner=runner)
-        self.assertEqual("failed", result["outcome"])
-        self.assertEqual("prepare_candidate_image", result["failed_step"])
-        self.assertEqual("obsolete", (self.installed / "old.txt").read_text())
-        self.assertEqual(b"previous payload", (runtime_package / "old.txt").read_bytes())
-        self.start_container.assert_not_called()
 
 
 if __name__ == "__main__":

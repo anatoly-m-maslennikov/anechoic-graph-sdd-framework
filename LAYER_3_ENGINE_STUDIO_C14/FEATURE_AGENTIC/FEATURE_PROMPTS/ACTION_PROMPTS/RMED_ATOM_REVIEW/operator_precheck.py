@@ -8,7 +8,7 @@ Summary is included. This is a conservative scanner, not a Markdown parser.
 """
 from __future__ import annotations
 import re
-from context_builder import body_section_texts
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import body_section_texts
 
 
 def word_inventory(authority: str) -> list[str]:

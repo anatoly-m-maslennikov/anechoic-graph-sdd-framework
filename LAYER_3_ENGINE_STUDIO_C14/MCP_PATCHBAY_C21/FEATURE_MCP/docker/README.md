@@ -11,14 +11,12 @@ enqueue a Workflow or release anything.
 ## Build and run
 
 ```sh
-UV_PROJECT_ENVIRONMENT="$PWD/.anechoic_runtime/launcher-venv" \
-uv run --project "$PWD" --locked --no-sync --python 3.14 --managed-python --no-env-file \
-  --group rmed-workflow-mcp python \
+UV_PROJECT_ENVIRONMENT="$PWD/LAYER_3_ENGINE_STUDIO_C14/.venv-dev" PYTHONPATH="$PWD/LAYER_3_ENGINE_STUDIO_C14" uv run --project "$PWD/LAYER_3_ENGINE_STUDIO_C14" --locked --no-sync --python 3.14 --managed-python --no-env-file \
+  --group dev python \
   LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/runtime.py build
 
-UV_PROJECT_ENVIRONMENT="$PWD/.anechoic_runtime/launcher-venv" \
-uv run --project "$PWD" --locked --no-sync --python 3.14 --managed-python --no-env-file \
-  --group rmed-workflow-mcp python \
+UV_PROJECT_ENVIRONMENT="$PWD/LAYER_3_ENGINE_STUDIO_C14/.venv-dev" PYTHONPATH="$PWD/LAYER_3_ENGINE_STUDIO_C14" uv run --project "$PWD/LAYER_3_ENGINE_STUDIO_C14" --locked --no-sync --python 3.14 --managed-python --no-env-file \
+  --group dev python \
   LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/runtime.py mcp-http-start
 ```
 

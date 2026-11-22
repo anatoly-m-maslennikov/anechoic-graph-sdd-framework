@@ -3,14 +3,14 @@ atom_family: SPEC
 atom_id: AN-S-3052
 container:
   component: C15
-tier: 0
+tier: 4
 context:
   template: component_manifest
   lens: SPEC
 state:
   status: active
-  version: 3
-  updated_at: '2026-11-21T22:51:12.819403+00:00'
+  version: 5
+  updated_at: '2026-11-22T11:23:40.206159+00:00'
 ---
 
 ## Summary
@@ -36,6 +36,23 @@ declare_entity(
                     'FEATURE_CODEX_HOOK__shared': None,
                     'FEATURE_CODEX_HOOK__shared.main': None,
                 },
+            },
+            'io': {
+                'server': {
+                    'pre_tool_use': {
+                        'transport': 'cli',
+                        'runner': 'uv',
+                        'path': '<codex-home>/anechoic/codex_hook.py',
+                        'arguments': ['run', '--no-project', '--no-env-file', '--managed-python', '--python', '3.14', '<installed-hook>'],
+                        'input': 'Codex PreToolUse event JSON on stdin',
+                        'output': 'Codex hook result JSON on stdout',
+                    },
+                },
+                'client': [],
+            },
+            'state': {
+                'reads': ['Git worktree marker for the event working directory'],
+                'writes': [],
             },
         },
     ),

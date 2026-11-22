@@ -1,9 +1,8 @@
 """Apply Current Declaration ordering to serialized Atom Headers."""
 
-from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_ordering_bindings import bind_ordering_declarations
-from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_property_order import order_properties
-from carrier_aliases import canonical_role_name, matches_named_value
-from header_groups import header_value
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.property_order__pub import bind_ordering_declarations, order_properties
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_compat__pub import canonical_role_name, matches_named_value
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_compat__pub import header_value
 
 
 def compile_header_ordering(rows):

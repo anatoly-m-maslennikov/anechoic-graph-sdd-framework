@@ -2,10 +2,30 @@
 import copy
 import unittest
 
-from test_repair_gate import (
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair__tests.test_repair_gate import (
     RECODING_SOURCE_TEXT, RULE_TEXT, admit_proposal, caller_preflight, contract,
     current_part, gap, refreshed, source,
 )
+
+
+def _add_composition_findings(parts, dependency_definition, findings):
+    for part in parts:
+        part['authority_sources'].append(dependency_definition['binding'])
+        for check in part['checks']:
+            if check['id'] == 'subjects':
+                check['obligation_resolutions'] = [dict(id='main-content-dependency',
+                    state='missing', local_required=True, reason='The dependency is absent locally.',
+                    support=[dict(authority='MOCK-R-003@1',
+                        excerpt='Substantive mentions require direct dependencies.')])]
+                check['subject_inventory']['mentions'].append(dict(
+                    location='Details', excerpt='Main Content', entity='Main Content',
+                    resolution='resolved', resolution_basis='meaning',
+                    rationale='Literal substantive use of the bound Entity definition.',
+                    definitions=[dict(authority='MOCK-R-003@1',
+                        excerpt='Main Content means the body carrying an Atom Claim.')]))
+            if check['id'] in findings:
+                check.update(status='failed', findings=[findings[check['id']]])
+                part['result'] = 'failed'
 
 
 def composition_inputs(*, role='Requirement', old_type=None, source_path=None):
@@ -34,23 +54,7 @@ def composition_inputs(*, role='Requirement', old_type=None, source_path=None):
             reason='The substantive Main Content mention lacks its direct dependency.',
             proposed_fix='Add the missing dependency once.', confidence=1.0),
     }
-    for part in parts:
-        part['authority_sources'].append(dependency_definition['binding'])
-        for check in part['checks']:
-            if check['id'] == 'subjects':
-                check['obligation_resolutions'] = [dict(id='main-content-dependency',
-                    state='missing', local_required=True, reason='The dependency is absent locally.',
-                    support=[dict(authority='MOCK-R-003@1',
-                        excerpt='Substantive mentions require direct dependencies.')])]
-                check['subject_inventory']['mentions'].append(dict(
-                    location='Details', excerpt='Main Content', entity='Main Content',
-                    resolution='resolved', resolution_basis='meaning',
-                    rationale='Literal substantive use of the bound Entity definition.',
-                    definitions=[dict(authority='MOCK-R-003@1',
-                        excerpt='Main Content means the body carrying an Atom Claim.')]))
-            if check['id'] in findings:
-                check.update(status='failed', findings=[findings[check['id']]])
-                part['result'] = 'failed'
+    _add_composition_findings(parts, dependency_definition, findings)
     evaluation = contract.merge_evaluations(parts, context=review_context)
     final = refreshed(original.replace(f'type: {old_type or role}\n', '')).replace(
         '  governs: Atom\n', '  governs: Atom\n  depends_on: ["Main Content"]\n')

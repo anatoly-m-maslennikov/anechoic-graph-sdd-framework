@@ -1,0 +1,24 @@
+"""Validated native Manifest input shared by selection and MCP tests."""
+
+from dataclasses import dataclass, field
+
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_field_validation import validate_model_fields
+
+
+@dataclass
+class ProjectManifest:
+    atom_id: str
+    ref_id: str
+    version: int
+    tier: int = field(metadata={"allowed_values": (-1,)})
+    name: str
+    prefix: str
+    parameters: dict[str, object] = field(default_factory=dict)
+    lens_whitelist: list[str] | None = None
+
+
+def validate_manifest(fields, component_id):
+    if component_id != "C0":
+        raise ValueError("Manifest must be contained by the Project")
+    validate_model_fields(ProjectManifest, fields)
+    return ProjectManifest(**fields)

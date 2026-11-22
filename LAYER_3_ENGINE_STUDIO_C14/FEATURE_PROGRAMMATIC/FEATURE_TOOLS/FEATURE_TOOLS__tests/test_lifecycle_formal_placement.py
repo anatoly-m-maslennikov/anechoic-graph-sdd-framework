@@ -7,9 +7,8 @@ import unittest
 
 TOOLS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS))
-from ATOM_LIFECYCLE.candidate_schema import compile_candidate_schema, load_candidate_schema  # noqa: E402
-from ATOM_LIFECYCLE.placement_model import active_placement  # noqa: E402
-from lint_python_model_claim import lint_python_model_claim  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.legacy_candidate_schema__pub import compile_candidate_schema, load_candidate_schema  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.placement_model import active_placement  # noqa: E402
 
 
 def carrier(atom_id, role, status, body, subject=None):
@@ -100,8 +99,6 @@ class FormalPlacementTests(unittest.TestCase):
         rules = self.compile().placement
         self.assertEqual(('role', 'Backlog'), rules.placement('Plan', 'Backlog'))
         bad = RULES[:-1] + (status_rule('backlog', 'role', '../Backlog', 'plan'),)
-        python = 'placement_rules = ' + repr(bad)
-        self.assertIn('Unsafe placement folder', lint_python_model_claim(python, declared_addresses=[], relation_names=[])[0])
         self.delivery(bad)
         with self.assertRaisesRegex(ValueError, 'Unsafe placement folder'):
             self.compile()

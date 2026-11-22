@@ -7,14 +7,14 @@ from __future__ import annotations
 
 import datetime as dt
 import os
-import re
 import tomllib
 from pathlib import Path
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from project_runtime import atomic_tempfile
-from project_selection import bound_selection
-from settings_carrier import read_settings_carrier
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.project_temporary__pub import atomic_tempfile
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_runtime import repository_root as temporary_project_root
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection import bound_selection
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.settings_carrier__pub import read_settings_carrier
 from collections.abc import Mapping
 
 
@@ -50,17 +50,6 @@ def project_identity(root: Path) -> dict[str, dict[str, object]]:
     if not isinstance(obsolete, (list, tuple)) or any(not isinstance(name, str) or not name for name in obsolete):
         raise ValueError("Project Settings project.obsolete_names must be a list of names")
     return {"project": dict(project, obsolete_names=list(obsolete)), "identity": dict(identity)}
-
-
-def atom_identifier(filename: str, explicit: str | None = None) -> str:
-    """Resolve stable identity without absorbing mutable scope, tier, type, or sequence."""
-    if explicit:
-        return explicit.strip().strip('\"\'')
-    name = Path(filename).name
-    canonical = re.match(r"(?:[0-9]+-)?(CA-[ACDEIMOPR]-[0-9]+)(?:-|\.|@|$)", name)
-    if canonical:
-        return canonical.group(1)
-    return name.removesuffix(".md").split("--", 1)[0]
 
 
 def repository_root(path: Path) -> Path:
@@ -102,19 +91,8 @@ def current_timestamp(root: Path) -> str:
     return _timestamp(configured_timezone(root))
 
 
-def split_frontmatter(text: str, path: Path) -> tuple[str, str, str]:
-    first_line, separator, remainder = text.partition("\n")
-    if not separator or first_line not in {"---", "+++"}:
-        raise RuntimeError(f"{path}: missing supported frontmatter")
-    marker = f"\n{first_line}\n"
-    boundary = remainder.find(marker)
-    if boundary < 0:
-        raise RuntimeError(f"{path}: unterminated frontmatter")
-    return first_line, remainder[:boundary], remainder[boundary + len(marker) :]
-
-
 def atomic_write(path: Path, text: str, *, mode: int | None = None) -> None:
-    descriptor, temporary_name = atomic_tempfile(path, "artifact_metadata")
+    descriptor, temporary_name = atomic_tempfile(temporary_project_root(path), path, "artifact_metadata")
     try:
         with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
             handle.write(text)

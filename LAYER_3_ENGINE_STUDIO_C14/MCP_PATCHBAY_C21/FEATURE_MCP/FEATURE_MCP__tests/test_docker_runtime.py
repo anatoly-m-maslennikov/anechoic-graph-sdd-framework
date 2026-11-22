@@ -2,7 +2,6 @@
 
 
 import json
-import os
 from pathlib import Path
 import subprocess
 import sys
@@ -13,10 +12,8 @@ from unittest.mock import patch
 import yaml
 
 APP = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(APP))
-sys.path.insert(0, str(APP / "docker"))
 
-from runtime import Runtime  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime import Runtime  # noqa: E402
 
 
 class RuntimeTests(unittest.TestCase):
@@ -48,7 +45,7 @@ class RuntimeTests(unittest.TestCase):
         runtime = Runtime(APP.parents[2])
         arguments = ("--profile", "stdio", "config", "--format", "json")
         expected_command = runtime.command(*arguments)
-        with patch("runtime.subprocess.run") as execute:
+        with patch("MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime.subprocess.run") as execute:
             execute.return_value.returncode = 0
             execute.return_value.stdout = ""
             self.assertEqual("", runtime.call(*arguments))

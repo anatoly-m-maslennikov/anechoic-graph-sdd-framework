@@ -16,40 +16,34 @@ from mcp.client.session import ClientSession
 
 MCP = Path(__file__).resolve().parents[1]
 PROGRAMMATIC = MCP.parents[1] / "FEATURE_PROGRAMMATIC"
-sys.path[:0] = [str(PROGRAMMATIC), str(MCP), str(PROGRAMMATIC / "FEATURE_TOOLS")]
 
-from host_runtime_config import load_host_runtime_config  # noqa: E402
-from runtime_request_context import (  # noqa: E402
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.host_runtime_config import load_host_runtime_config  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_request_context import (  # noqa: E402
     RuntimeRequestContext,
     bind_request_context,
     current_request_context,
 )
-from shared_gateway import SharedGateway  # noqa: E402
-import test_shared_gateway as shared_fixture  # noqa: E402
+from .shared_backend_fixture import backend_gateway  # noqa: E402
+from . import test_shared_gateway as shared_fixture  # noqa: E402
 
 
-class _ContextGateway(shared_fixture._Gateway):
+class _ContextGateway(shared_fixture._Session):
     barrier = None
 
-    async def call(self, _context, params):
+    async def call_tool(self, _name, arguments, *, session_id, public_base_url, asserted_project_root):
+        assert asserted_project_root == str(self.root)
         if self.barrier is not None:
             await self.barrier.wait()
         else:
             await asyncio.sleep(0)
-        context = current_request_context()
-        return types.CallToolResult(
-            content=[],
-            structuredContent={
-                "root": str(self.root),
-                "arguments": params.arguments,
-                "context_session": context.session_id if context else None,
-            },
-        )
+        value = {"root": str(self.root), "arguments": arguments, "context_session": session_id}
+        return {"value": value, "text": None}
 
 
 class _CancelledGateway(_ContextGateway):
-    async def call(self, _context, params):
-        assert current_request_context().session_id == "cancelled-session"
+    async def call_tool(self, _name, arguments, *, session_id, public_base_url, asserted_project_root):
+        assert asserted_project_root == str(self.root)
+        assert session_id == "cancelled-session"
         raise asyncio.CancelledError
 
 
@@ -58,10 +52,9 @@ class CallerContextE2ETests(unittest.IsolatedAsyncioTestCase):
     _project = shared_fixture.SharedGatewayTests._project
     _config = shared_fixture.SharedGatewayTests._config
 
-    def _gateway(self):
-        return SharedGateway(
-            load_host_runtime_config(self.config_path), gateway_factory=_ContextGateway
-        )
+    async def _gateway(self, factory=_ContextGateway):
+        config = load_host_runtime_config(self.config_path)
+        return await self.enterAsyncContext(backend_gateway(config, factory))
 
     def _event(self, cwd, session, native_session="native-session"):
         return {
@@ -82,6 +75,16 @@ class CallerContextE2ETests(unittest.IsolatedAsyncioTestCase):
         )
         return json.loads(result.stdout)
 
+    def _hook_inputs(self):
+        inputs = []
+        for index, root in enumerate(self.roots):
+            (root / ".git").mkdir()
+            cwd = root / "nested"
+            cwd.mkdir()
+            hook = self._run_hook(self._event(cwd, f"codex-{index}"))
+            inputs.append(hook["hookSpecificOutput"]["updatedInput"])
+        return inputs
+
     async def test_hook_context_reaches_native_tool_for_two_concurrent_projects(self):
         tool = types.Tool(
             name="echo",
@@ -96,9 +99,7 @@ class CallerContextE2ETests(unittest.IsolatedAsyncioTestCase):
             outputSchema={"type": "object"},
         )
         _ContextGateway.tools_by_root = {str(root): [tool] for root in (*self.roots, self.nested)}
-        gateway = self._gateway()
-        await gateway.initialize()
-        self.addAsyncCleanup(gateway.close)
+        gateway = await self._gateway()
         self.assertEqual({}, self._run_hook({"tool_name": "unrelated"}))
 
         async with InMemoryTransport(gateway.build_server(), raise_exceptions=True) as streams:
@@ -106,13 +107,7 @@ class CallerContextE2ETests(unittest.IsolatedAsyncioTestCase):
                 await client.initialize()
                 listed = (await client.list_tools()).tools[0]
                 self.assertIn("caller_context", listed.input_schema["properties"])
-                inputs = []
-                for index, root in enumerate(self.roots):
-                    (root / ".git").mkdir()
-                    cwd = root / "nested"
-                    cwd.mkdir()
-                    hook = self._run_hook(self._event(cwd, f"codex-{index}"))
-                    inputs.append(hook["hookSpecificOutput"]["updatedInput"])
+                inputs = self._hook_inputs()
                 _ContextGateway.barrier = asyncio.Barrier(2)
                 first, second = await asyncio.wait_for(
                     asyncio.gather(*(client.call_tool("echo", arguments) for arguments in inputs)),
@@ -133,17 +128,23 @@ class CallerContextE2ETests(unittest.IsolatedAsyncioTestCase):
                 )
                 self.assertIsNone(stateless.structured_content["context_session"])
 
+    async def _call_echo(self, gateway, root, context):
+        return await gateway.call(
+            None,
+            types.CallToolRequestParams(
+                name="echo", arguments={"project_root": root, "caller_context": context},
+            ),
+        )
+
     async def test_invalid_or_conflicting_context_does_not_invoke_a_tool(self):
         tool = types.Tool(
             name="echo",
             inputSchema={"type": "object", "properties": {}, "additionalProperties": False},
         )
         _ContextGateway.tools_by_root = {str(root): [tool] for root in (*self.roots, self.nested)}
-        gateway = self._gateway()
-        await gateway.initialize()
-        self.addAsyncCleanup(gateway.close)
+        gateway = await self._gateway()
         root = str(self.roots[0])
-        with patch.object(_ContextGateway, "call", side_effect=AssertionError("must not invoke")):
+        with patch.object(_ContextGateway, "call_tool", side_effect=AssertionError("must not invoke")):
             for invalid in (
                 None,
                 {},
@@ -152,35 +153,12 @@ class CallerContextE2ETests(unittest.IsolatedAsyncioTestCase):
                 {"session_id": 3},
                 {"session_id": "x", "extra": 1},
             ):
-                result = await gateway.call(
-                    None,
-                    types.CallToolRequestParams(
-                        name="echo", arguments={"project_root": root, "caller_context": invalid}
-                    ),
-                )
+                result = await self._call_echo(gateway, root, invalid)
                 self.assertTrue(result.is_error, repr(invalid))
             with bind_request_context(RuntimeRequestContext("already-bound")):
-                result = await gateway.call(
-                    None,
-                    types.CallToolRequestParams(
-                        name="echo",
-                        arguments={
-                            "project_root": root,
-                            "caller_context": {"session_id": "different"},
-                        },
-                    ),
-                )
+                result = await self._call_echo(gateway, root, {"session_id": "different"})
                 self.assertTrue(result.is_error)
-            result = await gateway.call(
-                None,
-                types.CallToolRequestParams(
-                    name="echo",
-                    arguments={
-                        "project_root": str(self.base),
-                        "caller_context": {"session_id": "session"},
-                    },
-                ),
-            )
+            result = await self._call_echo(gateway, str(self.base), {"session_id": "session"})
             self.assertTrue(result.is_error)
         self.assertIsNone(current_request_context())
 
@@ -190,11 +168,7 @@ class CallerContextE2ETests(unittest.IsolatedAsyncioTestCase):
             inputSchema={"type": "object", "properties": {}, "additionalProperties": False},
         )
         _ContextGateway.tools_by_root = {str(root): [tool] for root in (*self.roots, self.nested)}
-        gateway = SharedGateway(
-            load_host_runtime_config(self.config_path), gateway_factory=_CancelledGateway
-        )
-        await gateway.initialize()
-        self.addAsyncCleanup(gateway.close)
+        gateway = await self._gateway(_CancelledGateway)
         params = types.CallToolRequestParams(
             name="echo",
             arguments={

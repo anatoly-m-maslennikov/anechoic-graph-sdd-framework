@@ -3,16 +3,16 @@
 from contextlib import redirect_stderr
 from io import StringIO
 from pathlib import Path
+import subprocess
 import sys
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR import generate_model
-from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR import generate_model
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.scope_declaration_test_support__pub import write_scope_unit_declarations
 
 
 def model_carrier(identifier, subject, claim):
@@ -31,6 +31,11 @@ def entity(name, parent=None):
 
 class GenerateModelTests(unittest.TestCase):
     def test_real_build_errors_report_and_preserve_existing_model(self):
+        repository = Path(__file__).resolve().parents[5]
+        module = (
+            "FEATURE_PROGRAMMATIC.FEATURE_MODEL."
+            "FEATURE_FORMAL_MODEL_GENERATOR.generate_model"
+        )
         relation = ("from anechoic.formal_claims import declare_relation\n"
                     "declare_relation(relation_name='LINKS', "
                     "source_endpoint={'level': 'instances', 'entity_paths': ('Atom',)}, "
@@ -45,35 +50,39 @@ class GenerateModelTests(unittest.TestCase):
         )
         for label, declarations, expected in cases:
             with self.subTest(case=label), TemporaryDirectory() as directory:
-                root = Path(directory).resolve()
-                control = root / ".anechoic_test"
-                control.mkdir()
-                (control / "anechoic_project_settings.toml").write_text(
-                    '[project]\nname="TEST"\n[artifacts.identity]\nproject_prefix="CA"\n'
-                    '[paths]\ncontrol_root=".anechoic_test"\n', encoding="utf-8",
-                )
-                write_scope_unit_declarations(root, control_root=control)
-                requirements = control / "04_requirement"
-                requirements.mkdir(exist_ok=True)
-                valid = requirements / "CA-R-9-DECLARATION--fixture.md"
-                valid.write_text(model_carrier("CA-R-9", "Atom", entity("Atom")), encoding="utf-8")
-                output = root / "model.py"
-                self.assertEqual(generate_model.main(["--project-root", str(root), "--output", str(output)]), 0)
-                self.assertIn("class Atom", output.read_text(encoding="utf-8"))
-                self.assertEqual(output.stat().st_mode & 0o777, 0o644)
-                valid.unlink()
-                for number, (subject, claim) in enumerate(declarations, start=1):
-                    identifier = f"CA-R-{number}"
-                    (requirements / f"{identifier}-DECLARATION--fixture.md").write_text(
-                        model_carrier(identifier, subject, claim), encoding="utf-8",
-                    )
-                output.write_bytes(b"prior Model\n")
-                stderr = StringIO()
-                with redirect_stderr(stderr):
-                    result = generate_model.main(["--project-root", str(root), "--output", str(output)])
-                self.assertEqual(result, 1)
-                self.assertIn(expected.lower(), stderr.getvalue().lower())
-                self.assertEqual(output.read_bytes(), b"prior Model\n")
+                self._assert_real_failure(directory, repository, module, declarations, expected)
+
+    def _assert_real_failure(self, directory, repository, module, declarations, expected):
+        root = Path(directory).resolve()
+        control = root / ".anechoic_test"
+        control.mkdir()
+        (control / "anechoic_project_settings.toml").write_text(
+            '[project]\nname="TEST"\n[artifacts.identity]\nproject_prefix="CA"\n'
+            '[paths]\ncontrol_root=".anechoic_test"\n', encoding="utf-8",
+        )
+        write_scope_unit_declarations(root, control_root=control)
+        requirements = control / "04_requirement"
+        requirements.mkdir(exist_ok=True)
+        valid = requirements / "CA-R-9-DECLARATION--fixture.md"
+        valid.write_text(model_carrier("CA-R-9", "Atom", entity("Atom")), encoding="utf-8")
+        output = root / "model.py"
+        command = [sys.executable, "-B", "-m", module,
+                   "--project-root", str(root), "--output", str(output)]
+        result = subprocess.run(command, cwd=repository, capture_output=True, text=True, timeout=20)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("class Atom", output.read_text(encoding="utf-8"))
+        self.assertEqual(output.stat().st_mode & 0o777, 0o644)
+        valid.unlink()
+        for number, (subject, claim) in enumerate(declarations, start=1):
+            identifier = f"CA-R-{number}"
+            (requirements / f"{identifier}-DECLARATION--fixture.md").write_text(
+                model_carrier(identifier, subject, claim), encoding="utf-8",
+            )
+        output.write_bytes(b"prior Model\n")
+        result = subprocess.run(command, cwd=repository, capture_output=True, text=True, timeout=20)
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertIn(expected.lower(), result.stderr.lower())
+        self.assertEqual(output.read_bytes(), b"prior Model\n")
 
     def test_build_uses_declared_scope_sources(self):
         root = Path("/project")

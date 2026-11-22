@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from golden_fixtures import fingerprint
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.VALIDATE_ATOMS.VALIDATE_ATOMS__tests.golden_fixtures import fingerprint
 
 
 class FixtureFingerprintTests(unittest.TestCase):

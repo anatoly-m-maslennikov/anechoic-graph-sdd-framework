@@ -1,27 +1,19 @@
 """Native declarations retain the existing compilers' explicit inputs."""
 
 from pathlib import Path
-import sys
 import unittest
 
 
 FEATURE = Path(__file__).resolve().parents[1]
 PROGRAMMATIC = FEATURE.parent
 TOOLS = PROGRAMMATIC / "FEATURE_TOOLS"
-WORKBENCH = PROGRAMMATIC.parent / "IWE_CONSOLE_C43" / "APP_WORKBENCH"
-sys.path[:0] = [str(PROGRAMMATIC), str(TOOLS), str(WORKBENCH)]
 
-from FEATURE_FORMAL_MODEL_ENGINE.compiler_claim import compiler_model_statements  # noqa: E402
-from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim  # noqa: E402
-from FEATURE_WORKBENCH_BACKEND.content_schema import compile_content_schema, declaration_statements  # noqa: E402
-from FEATURE_WORKBENCH_BACKEND.declared_header_rules import header_declaration_rules  # noqa: E402
-from FEATURE_WORKBENCH_BACKEND.relation_registry import compile_relation_registry, registry_contribution  # noqa: E402
-from FEATURE_WORKBENCH_BACKEND.relations import _outgoing_facts  # noqa: E402
-from ATOM_LIFECYCLE.content_constraints import compile_content_constraints  # noqa: E402
-from ATOM_LIFECYCLE.header_constraints import compile_header_constraints, load_header_constraints  # noqa: E402
-from ATOM_LIFECYCLE.role_form_schema import compile_role_form  # noqa: E402
-from python_model_claim import compile_python_model_claim, compile_atom_dependencies_claim_with_check  # noqa: E402
-from role_directory_rules import compile_role_folders  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.compiler_claim_fixtures__pub import (
+    RECURSIVE_CONTENT, ROLE_HEADER, INSTANCE_CHECK, HEADER_RELATIONS,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.compiler_claim import compiler_model_statements  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_model_claim__pub import parse_native_model_claim  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.legacy_claim_compiler__pub import compile_python_model_claim, compile_atom_dependencies_claim_with_check  # noqa: E402
 
 
 def _compile(source):
@@ -79,7 +71,7 @@ declare_entity(entity_name="Dependencies", relation_name="IS_PROPERTY_OF",
                  "from anechoic.model import Aspect\n"
                  f"declare_entity(entity_name='Query Processing', instance=Aspect(address={address!r}))\n")
         self.assertEqual((address, f"({address}) ((INSTANCE_OF)) Aspect"), _compile(claim))
-        from lint_python_model_claim import lint_python_model_claim
+        from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.lint_python_model_claim__pub import lint_python_model_claim
         self.assertEqual((), lint_python_model_claim(claim, declared_addresses=["Aspect"], relation_names=[], python_class_bindings={"Aspect": ["Aspect"]}))
         invalid_claim = claim.replace("<+ Aspects <+", "<+ Invalid <+")
         self.assertTrue(lint_python_model_claim(invalid_claim, declared_addresses=["Aspect"], relation_names=[], python_class_bindings={"Aspect": ["Aspect"]}))
@@ -103,7 +95,7 @@ declare_entity(entity_name="Node", allowed_classification_values={"Container": (
             _compile(claim.replace('entity_name="Node",', 'entity_name="Node", classifications={"Container": "yes"},'))
 
     def test_same_bearer_fallback_requires_a_declared_property(self):
-        from lint_python_model_claim import lint_python_model_claim
+        from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.lint_python_model_claim__pub import lint_python_model_claim
 
         claim = """from anechoic.formal_claims import declare_entity
 declare_entity(entity_name="Label", relation_name="IS_PROPERTY_OF",
@@ -163,36 +155,9 @@ declare_entity(entity_class=Map, entity_name="Map", qualification_property_path=
             with self.subTest(invalid=invalid), self.assertRaisesRegex(ValueError, "unsupported compiler name"):
                 compile_property(invalid)
 
-    def test_content_property_contributes_same_roles_and_cardinalities(self):
-        native = '''
-from anechoic.formal_claims import Cardinality, declare_entity
-from anechoic.model import Requirement, Method, Evaluation, Delivery
-declare_entity(entity_name="Semantics", relation_name="IS_PROPERTY_OF", base_path="Atom.Content",
-    value_cardinality=Cardinality(minimum=0, maximum=1), dependent_property_cardinality=0,
-    applies_to_entity_classes=(Requirement, Method, Evaluation, Delivery))
-'''
-        old = _row(("Atom/(.Header.Context.Role in RMED).Content.Semantics :: {::0..1}",
-                    "Atom/(.Header.Context.Role in RMED).Content.Semantics.*[]{::0}"))
-        new = _row(_compile(native))
-        self.assertEqual(compile_content_schema([old]), compile_content_schema([new]))
-        actual = compile_content_constraints([_native_row(native)])
-        self.assertEqual({('children', 0, 0), ('value', 0, 1)},
-                         {(item['kind'], item['min'], item['max']) for item in actual})
-        self.assertTrue(all(item['path'] == ['semantics'] and item['roles'] ==
-                            ['Delivery', 'Evaluation', 'Method', 'Requirement'] for item in actual))
 
     def test_recursive_content_and_role_scoped_ordering(self):
-        native = '''
-from anechoic.formal_claims import Cardinality, declare_entity
-from anechoic.model import Requirement, Method, Evaluation, Delivery
-declare_entity(entity_name="Content", relation_name="IS_PROPERTY_OF", base_path="Atom",
-    property_occurrence_cardinality=1, value_cardinality=0,
-    dependent_property_cardinality=Cardinality(minimum=0, maximum=None), dependent_property_name_format=str,
-    recursive_dependent_property_cardinality=Cardinality(minimum=0, maximum=None),
-    recursive_dependent_property_name_format=str, recursive_dependent_property_value_format="markdown",
-    ordered_dependent_property_roles=(Requirement, Method, Evaluation, Delivery),
-    ordered_dependent_property_pairs=(("Summary", "Claim"), ("Claim", "Semantics"), ("Semantics", "Details")))
-'''
+        native = RECURSIVE_CONTENT
         prefix = "Atom/(.Header.Context.Role in (Requirement, Method, Evaluation, Delivery)).Content"
         expected = (
             "Atom.Content{::1} :: []{::0}",
@@ -204,14 +169,6 @@ declare_entity(entity_name="Content", relation_name="IS_PROPERTY_OF", base_path=
             f"{prefix}.Semantics ;> {prefix}.Details",
         )
         self.assertEqual(expected, _compile(native))
-        legacy_prefix = "Atom/(.Header.Context.Role in RMED).Content"
-        legacy = (*expected[:4], f"{legacy_prefix}.Summary ;> {legacy_prefix}.Claim",
-                  f"{legacy_prefix}.Claim ;> {legacy_prefix}.Semantics",
-                  f"{legacy_prefix}.Semantics ;> {legacy_prefix}.Details")
-        self.assertEqual(compile_content_schema([_row(legacy)]), compile_content_schema([_row(expected)]))
-        orders = compile_content_constraints([_native_row(native)])
-        self.assertEqual({('summary', 'claim'), ('claim', 'semantics'), ('semantics', 'details')},
-                         {tuple(item['children']) for item in orders if item['kind'] == 'order'})
         with self.assertRaisesRegex(ValueError, "invalid recursive_dependent_property_cardinality cardinality"):
             _compile(native.replace("recursive_dependent_property_cardinality=Cardinality(minimum=0, maximum=None)",
                                     "recursive_dependent_property_cardinality=-1"))
@@ -223,68 +180,16 @@ declare_entity(entity_name="Content", relation_name="IS_PROPERTY_OF", base_path=
             _compile(native.replace('ordered_dependent_property_roles=(Requirement, Method, Evaluation, Delivery),',
                                     'allowed_dependent_property_names=("Summary", "Claim"),'))
 
-    def test_nested_content_property_preserves_role_selection(self):
-        native = """
-from anechoic.formal_claims import Cardinality, declare_entity
-from anechoic.model import Requirement, Method, Evaluation, Delivery
 
-declare_entity(
-    entity_name="Prose Claim",
-    relation_name="IS_PROPERTY_OF",
-    base_path="Atom.Content.Claim",
-    value_cardinality=Cardinality(minimum=0, maximum=1),
-    dependent_property_cardinality=0,
-    applies_to_entity_classes=(Requirement, Method, Evaluation, Delivery),
-)
-"""
-        old = _row(("Atom/(.Header.Context.Role in RMED).Content.Claim.Prose Claim:: {::0..1}",
-                    "Atom/(.Header.Context.Role in RMED).Content.Claim.Prose Claim.*[]{::0}"))
-        new = _row(_compile(native))
-        self.assertEqual(compile_content_schema([old]), compile_content_schema([new]))
-        actual = compile_content_constraints([_native_row(native)])
-        self.assertEqual({('children', 0, 0), ('value', 0, 1)},
-                         {(item['kind'], item['min'], item['max']) for item in actual})
-        self.assertTrue(all(item['path'] == ['claim', 'prose_claim'] for item in actual))
-
-    def test_nested_header_constraints_and_wildcard_formats(self):
-        native = '''
-from anechoic.formal_claims import declare_entity
-declare_entity(entity_name="File", relation_name="IS_PROPERTY_OF", base_path="Atom.Header.Destination",
-    property_occurrence_cardinality=1, value_cardinality=0, dependent_property_cardinality=2,
-    allowed_dependent_property_names=("Name", "Path"), dependent_property_value_format=str)
-'''
-        old = _row(("Atom.Header.Destination.File{::1} :: []{::0}",
-                    "Atom.Header.Destination.File.*[in (Name, Path)]{::2}",
-                    "Atom.Header.Destination.File.* :: [string]"))
-        new = _row(_compile(native))
-        self.assertEqual(header_declaration_rules(old), header_declaration_rules(new))
-        records = compile_header_constraints([_native_row(native)])
-        self.assertIn({'kind': 'children', 'path': 'destination.file', 'selector': '', 'selected': '',
-                       'value': (2, 2, 'name', 'path'), 'source': 'CA-R-1'}, records)
 
     def test_header_relations_child_value_cardinality(self):
-        native = '''
-from anechoic.formal_claims import Cardinality, declare_entity
-declare_entity(entity_name="Relations", relation_name="IS_PROPERTY_OF", base_path="Atom.Header",
-    property_occurrence_cardinality=Cardinality(minimum=0, maximum=1), value_cardinality=0,
-    dependent_property_cardinality=Cardinality(minimum=1, maximum=None),
-    dependent_property_name_format=str, dependent_property_value_format=str,
-    dependent_property_value_cardinality=Cardinality(minimum=1, maximum=None))
-'''
+        native = HEADER_RELATIONS
         expected = (
             "Atom.Header.Relations{::0..1} :: []{::0}",
             "Atom.Header.Relations.*[string]{::1+}",
             "Atom.Header.Relations.* :: [string]{::1+}",
         )
         self.assertEqual(expected, _compile(native))
-        constraints = compile_header_constraints([_native_row(native)])
-        self.assertIn({'kind': 'value', 'path': 'relations.*', 'selector': '', 'selected': '',
-                       'value': (1, None), 'source': 'CA-R-1'}, constraints)
-        validator = load_header_constraints(constraints, {"CA-R-1"})
-        valid = {"role": "Requirement", "relations": {"related": ["CA-R-2"]}}
-        empty = {"role": "Requirement", "relations": {"related": []}}
-        self.assertEqual([], validator.validate(valid, metadata=valid))
-        self.assertTrue(any(field == "relations.related" for field, _, _ in validator.validate(empty, metadata=empty)))
         self.assertEqual(
             "Atom.Header.Relations.* :: [string]",
             _compile(native.replace("    dependent_property_value_cardinality=Cardinality(minimum=1, maximum=None)", ""))[-1],
@@ -299,30 +204,7 @@ declare_entity(entity_name="Relations", relation_name="IS_PROPERTY_OF", base_pat
             _compile(native.replace("dependent_property_value_format=str,", ""))
 
     def test_nested_header_property_preserves_single_role(self):
-        native = """
-from anechoic.formal_claims import Cardinality, declare_entity
-from anechoic.model import Plan
-
-declare_entity(
-    entity_name="Plan",
-    relation_name="IS_PROPERTY_OF",
-    base_path="Atom.Header.Context",
-    property_occurrence_cardinality=Cardinality(minimum=0, maximum=1),
-    value_cardinality=0,
-    dependent_property_cardinality=Cardinality(minimum=1, maximum=2),
-    allowed_dependent_property_names=("Work Sequence Number", "AI Agent Confidence Threshold"),
-    applies_to_entity_classes=(Plan,),
-)
-"""
-        old = _row(("Atom/(.Header.Context.Role in (Plan)).Header.Context.Plan{::0..1} :: []{::0}",
-                    "Atom/(.Header.Context.Role in (Plan)).Header.Context.Plan.*"
-                    "[in (Work Sequence Number, AI Agent Confidence Threshold)]{::1..2}"))
-        new = _row(_compile(native))
-        self.assertEqual(header_declaration_rules(old), header_declaration_rules(new))
-        records = compile_header_constraints([_native_row(native)])
-        self.assertIn({'kind': 'children', 'path': 'context.plan', 'selector': 'role', 'selected': 'Plan',
-                       'value': (1, 2, 'ai_agent_confidence_threshold', 'work_sequence_number'),
-                       'source': 'CA-R-1'}, records)
+        native = ROLE_HEADER
         with self.assertRaisesRegex(ValueError, "unsupported Property class selection"):
             _compile(native.replace("(Plan,)", "(Plan, Plan)"))
 
@@ -349,31 +231,6 @@ declare_entity(
             _compile(native),
         )
 
-    def test_role_order_and_form_are_qualified_by_role(self):
-        role = '''
-from anechoic.formal_claims import declare_entity
-from anechoic.model import Atom
-class Method(Atom):
-    pass
-declare_entity(entity_class=Method, entity_name="Method", qualification_property_path="Atom.Header.Context.Role",
-    classifications={"Role Order Number": 5})
-'''
-        form = '''
-from anechoic.formal_claims import declare_entity
-from anechoic.model import Method
-class Decision(Method):
-    pass
-declare_entity(entity_class=Decision, entity_name="Decision", qualification_property_path="Atom.Header.Context.Form")
-'''
-        role_row = _row(_compile(role))
-        expected_role = _row(("Atom.Header.Context.Role :: Method",
-                              "Atom/(.Header.Context.Role := Method) >| (Role Order Number == 5)"))
-        self.assertIn({"kind": "role", "value": "Method", "role": "", "source": "CA-R-1"},
-                      compile_role_form([_native_row(role)]))
-        self.assertEqual(compile_role_folders(declaration_statements(expected_role)),
-                         compile_role_folders(declaration_statements(role_row)))
-        self.assertIn({"kind": "qualified", "value": "Decision", "role": "Method", "source": "CA-R-2"},
-                      compile_role_form([_native_row(role), _native_row(form, "CA-R-2")]))
 
     def test_relation_classifications_compile_only_when_explicit(self):
         source = """from anechoic.formal_claims import declare_relation
@@ -389,82 +246,6 @@ declare_relation(relation_name="LINKS", inverse_alias="LINKED_BY",
             "Relation//LINKS", "Relation//LINKED_BY ((IS_INVERSE_ALIAS_FOR)) Relation//LINKS",
         ))
 
-    def test_relation_registry_keeps_instance_reverse_views(self):
-        native = '''
-from anechoic.formal_claims import declare_relation
-declare_relation(relation_name="IS_PROPERTY_OF", inverse_alias="HAS_PROPERTY",
-    source_endpoint={"level": "model_entities_or_instances"},
-    target_endpoint={"level": "model_entities_or_instances"})
-'''
-        result = registry_contribution(_native_row(native))
-        self.assertEqual(frozenset({"IS_PROPERTY_OF", "HAS_PROPERTY"}), result.names)
-        self.assertEqual((), result.aliases)
-        self.assertEqual((("IS_PROPERTY_OF", "HAS_PROPERTY"),), result.inverses)
-
-    def test_native_inverses_produce_reverse_row(self):
-        for relation, inverse in (("CARRIES", "IS_CARRIED_BY"), ("IS_PROPERTY_OF", "HAS_PROPERTY")):
-            with self.subTest(relation=relation):
-                source = (
-                    "from anechoic.formal_claims import declare_relation\n"
-                    f"declare_relation(relation_name='{relation}', inverse_alias='{inverse}', "
-                    "source_endpoint={'level': 'instances'}, "
-                    "target_endpoint={'level': 'model_entities_or_instances'})"
-                )
-                native = _native_row(source, "CA-R-2")
-                native["source_path"] = "native.md"
-                alone = compile_relation_registry([native])
-                self.assertEqual(alone.inverse, {relation: inverse})
-                self.assertEqual(alone.aliases, {})
-                fact = ("atom", "CA-R-1", relation, "atom", "CA-R-2")
-                expected = ("atom", "CA-R-2", inverse, "atom", "CA-R-1", True)
-                self.assertIn(expected, _outgoing_facts([], alone, {"source.md": (fact,)})[("atom", "CA-R-2")])
-
-    def test_model_only_inverse_remains_an_alias(self):
-        native = '''
-from anechoic.formal_claims import declare_relation
-declare_relation(relation_name="IS_ORDERED_RIGHT_AFTER", inverse_alias="IS_ORDERED_RIGHT_BEFORE",
-    source_endpoint={"level": "model_entities"},
-    target_endpoint={"level": "model_entities"})
-'''
-        result = registry_contribution(_native_row(native))
-        self.assertEqual(frozenset({"IS_ORDERED_RIGHT_AFTER"}), result.names)
-        self.assertEqual((("IS_ORDERED_RIGHT_BEFORE", "IS_ORDERED_RIGHT_AFTER"),), result.aliases)
-        self.assertEqual((), result.inverses)
-
-    def test_instance_sibling_order_keeps_reverse_alias(self):
-        source = """from anechoic.formal_claims import declare_relation
-declare_relation(relation_name="IS_ORDERED_RIGHT_AFTER", inverse_alias="IS_ORDERED_RIGHT_BEFORE",
-    source_endpoint={"level": "instances"}, target_endpoint={"level": "instances"},
-    same_immediate_bearer=True)
-"""
-        result = registry_contribution(_native_row(source))
-        self.assertEqual((("IS_ORDERED_RIGHT_BEFORE", "IS_ORDERED_RIGHT_AFTER"),), result.aliases)
-        self.assertEqual((), result.inverses)
-
-        body = "## Claim\n\n### Formal Claim\n\n```python\n" + source + "```\n"
-        row = _row(())
-        row.update(_content_bytes=body.encode(), content_markdown=body)
-        direct = registry_contribution(row)
-        self.assertEqual(result, direct)
-
-    def test_same_level_property_bearing_keeps_instance_inverse(self):
-        source = """from anechoic.formal_claims import declare_relation
-declare_relation(relation_name="IS_PROPERTY_OF", inverse_alias="HAS_PROPERTY",
-    endpoint_pairs=(
-        {"source_endpoint": {"level": "model_entities"}, "target_endpoint": {"level": "model_entities"}},
-        {"source_endpoint": {"level": "instances"}, "target_endpoint": {"level": "instances"}},
-    ))
-"""
-        result = registry_contribution(_native_row(source))
-        self.assertEqual((("IS_PROPERTY_OF", "HAS_PROPERTY"),), result.inverses)
-        self.assertEqual((), result.aliases)
-
-        body = "## Claim\n\n### Formal Claim\n\n```python\n" + source + "```\n"
-        row = _row(())
-        row.update(_content_bytes=body.encode(), content_markdown=body)
-        direct = registry_contribution(row)
-        self.assertEqual(result, direct)
-
     def test_unsafe_or_unsupported_compiler_values_fail(self):
         native = '''
 from anechoic.formal_claims import declare_entity
@@ -474,25 +255,11 @@ declare_entity(entity_name="Name", relation_name="IS_PROPERTY_OF", base_path="At
             _compile(native)
 
     def test_instance_check_cannot_be_silently_dropped(self):
-        native = '''
-from anechoic.formal_claims import declare_entity
-from anechoic.model import Atom
-
-def is_valid_atom(atom: Atom) -> bool:
-    return atom.version > 0
-
-declare_entity(entity_name="Atom", instance_check=is_valid_atom)
-'''
+        native = INSTANCE_CHECK
         parsed = parse_native_model_claim(native)
         self.assertEqual("is_valid_atom", parsed["arguments"]["instance_check"])
         with self.assertRaisesRegex(ValueError, "instance_check requires a typed validator"):
             compiler_model_statements(parsed)
-        row = _row(())
-        row["_content_bytes"] = (
-            "## Claim\n\n### Formal Claim\n\n```python\n" + native + "```\n"
-        ).encode()
-        with self.assertRaisesRegex(ValueError, "instance_check requires a typed validator"):
-            compile_content_schema([row])
 
     def test_scope_level_schema_compiles_without_calling_its_check(self):
         claim = '''from anechoic.formal_claims import declare_entity

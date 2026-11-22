@@ -8,7 +8,7 @@ import re
 import subprocess
 from tempfile import NamedTemporaryFile
 
-from release_cleanup_identity import (
+from .release_cleanup_identity import (
     Cleanup,
     IMAGE,
     SCHEMA,

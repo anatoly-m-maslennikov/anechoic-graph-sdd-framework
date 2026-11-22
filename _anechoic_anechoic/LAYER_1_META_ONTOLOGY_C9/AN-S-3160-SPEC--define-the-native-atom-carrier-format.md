@@ -7,9 +7,9 @@ tier: 2
 context:
   lens: SPEC
 state:
-  status: active
-  version: 11
-  updated_at: '2026-11-21T22:33:01.947364+00:00'
+  status: "active"
+  version: 14
+  updated_at: '2026-11-22T11:22:00.172069+00:00'
 ---
 
 ## Summary
@@ -48,7 +48,7 @@ revisions require `context.template`.
 The Project is the only Container for Axiom and Applicable Principle.
 For Project-local SPEC, the Axiom Template uses the SPEC Lens and Tier -1.
 The Contract Template uses Tier 0, and the Applicable Principle Template
-uses Tier 2.
+uses Tier 1 or Tier 2.
 
 The citing Atom authors `IS_REFERENCE`. Derive `HAS_REFERENCE` as the
 inverse. Migrate `REFERENCES` with the same targets and direction.
@@ -100,9 +100,10 @@ descendants keep their current Status, Version, history, and containment.
 
 ### Content
 
-The Package Spec declares its Package ID in the Formal Claim. Its Purpose
-and Contract remain authored in their Markdown sections. The Realization
-uses its Spec Binding to identify the exact Spec revision.
+A Component Seed Manifest has three Markdown sections. Formal Manifest
+declares the Component Seed ID and any boundaries. Purpose and Solution
+carry the authored prose. The Realization uses its Spec Binding to identify
+the exact Manifest revision.
 
 ### Materialized Views
 
@@ -130,6 +131,7 @@ SPEC Drafts, Ready Atoms, and Archives use `01_draft/`,
 The Project control root uses `001_TICKETS/` and `002_PROJECT_CONFIG/`.
 The Project Config directory holds configuration files.
 
+A Component Manifest uses Tier 4 and the SPEC Lens at its owning root.
 The SPEC Lens uses the owning root. Prefix each named Lens directory
 with two underscores. For example, Lens `DES/DOM` uses `__DES/__DOM/`.
 The YAML Lens value and the filename Lens token use the Lens name.

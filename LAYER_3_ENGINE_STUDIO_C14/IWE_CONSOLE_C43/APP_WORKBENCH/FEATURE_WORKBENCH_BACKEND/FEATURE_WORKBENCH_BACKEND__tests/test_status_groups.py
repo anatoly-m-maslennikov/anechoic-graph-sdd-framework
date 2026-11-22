@@ -1,22 +1,19 @@
 """Model-declared status groups retain latest Atom identity."""
 import json
 from pathlib import Path
-import sys
 import tempfile
 import unittest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "APP_WORKBENCH__tests"))
 
-import test_source_reader as fixtures
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.content_schema import DeclarationSource, compile_content_schema
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.relation_registry import RelationRegistry
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.relations import _atom_facts
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_reader import SourceReader
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workbench_schema_asset import (
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__tests import test_source_reader as fixtures
+from KERNEL_MIXER_C59.content_schema import DeclarationSource, compile_content_schema
+from KERNEL_MIXER_C59.relation_registry import RelationRegistry
+from KERNEL_MIXER_C59.relations import _atom_facts
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_reader import SourceReader
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workbench_schema_asset import (
     compile_schema, compile_status_groups, load_image_schema, schema_asset,
 )
-from python_model_claim import parse_structured_python_model_claim
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.python_claim__pub import parse_structured_python_model_claim
 
 
 class StatusGroupTests(unittest.TestCase):

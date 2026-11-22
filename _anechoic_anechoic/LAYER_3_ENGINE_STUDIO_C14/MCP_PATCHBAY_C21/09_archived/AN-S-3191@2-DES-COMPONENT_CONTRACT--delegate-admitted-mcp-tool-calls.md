@@ -1,0 +1,32 @@
+---
+atom_family: SPEC
+atom_id: AN-S-3191
+container:
+  component: C21
+tier: 1
+context:
+  template: component_contract
+  lens: DES
+state:
+  status: "archived"
+  version: 2
+  updated_at: "2026-11-22T09:43:04.536111+00:00"
+---
+
+## Summary
+
+Delegate admitted MCP Tool calls
+
+## Guarantee
+
+For an admitted Project, expose the Tools in the Backend JSON catalog.
+Preserve each Tool's name, description, and input schema. Forward the
+Tool name, arguments, and request context to Backend and return its
+result or failure through MCP.
+
+Backend owns Tool eligibility, validation, and dispatch. The MCP bridge
+has zero production cross-Component imports.
+
+## References
+
+AN-S-1381, AN-S-1391, AN-S-3044, and AN-T-2944.

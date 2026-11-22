@@ -3,14 +3,14 @@ atom_family: SPEC
 atom_id: AN-S-3055
 container:
   component: C15
-tier: 0
+tier: 4
 context:
   template: component_manifest
   lens: SPEC
 state:
   status: active
-  version: 3
-  updated_at: '2026-11-21T22:51:12.819403+00:00'
+  version: 10
+  updated_at: '2026-11-22T11:23:40.206159+00:00'
 ---
 
 ## Summary
@@ -31,12 +31,23 @@ declare_entity(
         lens_whitelist=['DES', 'DevOps', 'QA', 'SWD'],
         boundaries={
             'code': {
+                'imports': [
+                    'model_field_validation.validate_model_fields',
+                    'model_host_CS2__pub.reviewed_native_model',
+                    'native_workflow_definition.bind_status_specifications',
+                ],
                 'exports': {
                     'test_suite__pub': 'public',
                     'test_suite__pub.run_full_suite': 'public',
                 },
             },
             'io': {
+                'client': [
+                    {'component': 'C46', 'interface': 'source_function_sizes'},
+                    {'component': 'C63', 'interface': 'test_packaged_image_identity'},
+                    {'component': 'C21', 'interface': 'candidate_test_image_build'},
+                    {'component': 'C21', 'interface': 'candidate_test_image_cleanup'},
+                ],
                 'server': {
                     'test_suite': {
                         'transport': 'cli',

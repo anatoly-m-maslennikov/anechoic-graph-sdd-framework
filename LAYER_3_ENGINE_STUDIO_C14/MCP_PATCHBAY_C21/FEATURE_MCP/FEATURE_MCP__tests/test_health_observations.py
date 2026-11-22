@@ -2,14 +2,12 @@
 import json
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-import sys
 from types import SimpleNamespace
 import unittest
 
 
 APP = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(APP))
-from health_observations import HealthObservations  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.health_observations import HealthObservations  # noqa: E402
 
 
 SAFE_ERROR_CATEGORIES = {"timeout", "connection", "returned-error", "uncertain"}

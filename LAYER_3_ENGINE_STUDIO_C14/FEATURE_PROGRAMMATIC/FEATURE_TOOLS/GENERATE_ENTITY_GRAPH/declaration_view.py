@@ -13,8 +13,8 @@ from collections.abc import Mapping
 
 import yaml
 
-from readable_entity_tree import _fence as _text_fence
-from readable_entity_tree import _projection_frontmatter
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.readable_entity_tree import _fence as _text_fence
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.readable_entity_tree import _projection_frontmatter
 
 
 _METADATA_FIELDS = (
@@ -234,6 +234,19 @@ def _limitations(catalog: dict[str, object], graph_rule_count: int) -> list[obje
     return lines
 
 
+def _sorted_declarations(catalog):
+    relation_types_value = catalog.get("relation_types", []) or []
+    graph_rules_value = catalog.get("graph_rules", []) or []
+    if not isinstance(relation_types_value, list) or not isinstance(graph_rules_value, list):
+        raise ValueError("relation_types and graph_rules must be lists")
+    relation_types = [_record(row, "relation type") for row in relation_types_value]
+    graph_rules = [_record(row, "graph rule") for row in graph_rules_value]
+    relation_types.sort(key=_relation_type_key)
+    graph_rules.sort(key=_graph_rule_key)
+
+    return relation_types, graph_rules
+
+
 def render_declarations(
     catalog: dict[str, object],
     provenance: dict[str, object],
@@ -252,14 +265,7 @@ def render_declarations(
     }
     updated_at = _required_text(updated_at, "updated_at")
     source_selection = _required_text(source_selection, "source selection")
-    relation_types_value = catalog.get("relation_types", []) or []
-    graph_rules_value = catalog.get("graph_rules", []) or []
-    if not isinstance(relation_types_value, list) or not isinstance(graph_rules_value, list):
-        raise ValueError("relation_types and graph_rules must be lists")
-    relation_types = [_record(row, "relation type") for row in relation_types_value]
-    graph_rules = [_record(row, "graph rule") for row in graph_rules_value]
-    relation_types.sort(key=_relation_type_key)
-    graph_rules.sort(key=_graph_rule_key)
+    relation_types, graph_rules = _sorted_declarations(catalog)
 
     frontmatter = yaml.safe_dump(
         _projection_frontmatter(provenance, updated_at, identity, form="Catalog"),
@@ -281,6 +287,13 @@ def render_declarations(
         "## Relation Types",
         "",
     ]
+    _append_declaration_sections(body, relation_types, graph_rules)
+
+    body.extend(_limitations(catalog, len(graph_rules)))
+    return "\n".join(str(item) for item in body)
+
+
+def _append_declaration_sections(body, relation_types, graph_rules):
     if relation_types:
         for index, row in enumerate(relation_types):
             if index:
@@ -302,6 +315,3 @@ def render_declarations(
             body.append("")
     else:
         body.extend(["- Concrete Graph Rule catalogue: empty for the selected source set.", ""])
-
-    body.extend(_limitations(catalog, len(graph_rules)))
-    return "\n".join(str(item) for item in body)

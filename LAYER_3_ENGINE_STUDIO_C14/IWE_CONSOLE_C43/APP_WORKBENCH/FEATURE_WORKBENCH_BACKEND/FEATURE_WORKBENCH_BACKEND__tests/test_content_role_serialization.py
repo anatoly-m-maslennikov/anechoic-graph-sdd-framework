@@ -1,25 +1,22 @@
 """Content declarations apply to admitted Role/Form serializations."""
 
 from pathlib import Path
-import sys
 import tempfile
 import unittest
 from unittest.mock import patch
 
 import yaml
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "APP_WORKBENCH__tests"))
-sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"))
 
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.content_schema import ContentSchema, DeclarationSource, compile_content_schema
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.declared_header_rules import HeaderRule
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.header_columns import HeaderColumn
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.relation_registry import carrier_read_view, registry_contribution
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_reader import SourceReader
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_content_schema import SourceContentSchema
-from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations
-from smalltest_support import source_path, write_atom, write_settings
+from KERNEL_MIXER_C59.content_schema import ContentSchema, DeclarationSource, compile_content_schema
+from KERNEL_MIXER_C59.declared_header_rules import HeaderRule
+from KERNEL_MIXER_C59.header_columns import HeaderColumn
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_compat__pub import carrier_read_view
+from KERNEL_MIXER_C59.relation_registry import registry_contribution
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_reader import SourceReader
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_content_schema import SourceContentSchema
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.scope_declaration_test_support__pub import write_scope_unit_declarations
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.smalltest_support__pub import source_path, write_atom, write_settings
 
 
 def atom(role, form, body):

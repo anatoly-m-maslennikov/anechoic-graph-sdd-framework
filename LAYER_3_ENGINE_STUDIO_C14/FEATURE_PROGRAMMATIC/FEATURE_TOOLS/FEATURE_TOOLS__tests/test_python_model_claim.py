@@ -7,7 +7,7 @@ import unittest
 TOOLS = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(TOOLS), str(TOOLS.parent.parent / "IWE_CONSOLE_C43/APP_WORKBENCH")]
 
-from python_model_claim import (  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.python_claim__pub import (  # noqa: E402
     PythonModelClaimError,
     parse_grouped_python_model_claim,
     parse_python_model_claim,
@@ -32,7 +32,7 @@ subject_path(address="Node/Atom")
 # instances
 relation(source="Atom//", name="CONTAINS", target="Event//", target_count="1+")
 """
-        with patch("python_model_claim._render", side_effect=AssertionError("render called")):
+        with patch('FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.python_claim_legacy._render', side_effect=AssertionError("render called")):
             calls = parse_structured_python_model_claim(source)
         self.assertEqual(calls, (
             {"name": "subject_path", "arguments": {"address": "Node/Atom"}, "scope": "model"},

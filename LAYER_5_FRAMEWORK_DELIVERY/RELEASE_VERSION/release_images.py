@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import hashlib
 import json
 import os
@@ -12,37 +11,19 @@ import re
 import stat
 import subprocess
 import tempfile
-import tomllib
 
-
-ENGINE = "LAYER_3_ENGINE_STUDIO_C14"
-DOCKERFILE = ENGINE + "/MCP_PATCHBAY_C21/FEATURE_MCP/docker/Dockerfile"
-DOCKERIGNORE = DOCKERFILE + ".dockerignore"
-RETIRED_ASSETS = frozenset(
-    ENGINE + "/" + directory + "/" + name
-    for directory, names in (
-        ("IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND", ("canonical_relation_registry.json", "workbench_schema.json")),
-        ("FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_LIFECYCLE", ("status_model.json", "candidate_schema.json")),
-    ) for name in names
+from RELEASE_VERSION.release_image_identity import (
+    ENGINE as ENGINE, DOCKERFILE, DOCKERIGNORE as DOCKERIGNORE, RETIRED_ASSETS as RETIRED_ASSETS, TOOL_REGISTRY as TOOL_REGISTRY,
+    _EXCLUDED as _EXCLUDED, _SECRETS as _SECRETS, _REQUIRED as _REQUIRED, _excluded as _excluded, ImageIdentity, ImageInputIdentity,
 )
-TOOL_REGISTRY = ENGINE + "/MCP_PATCHBAY_C21/FEATURE_MCP/tool_registry.json"
+
+
+
 _IMAGE = re.compile(r"sha256:[0-9a-f]{64}\Z")
 _SHA = re.compile(r"[0-9a-f]{64}\Z")
 _SCHEMA = "org.anechoic.runtime.schema"
 _FINGERPRINT = "org.anechoic.runtime.fingerprint"
 _VERSION = "org.opencontainers.image.version"
-_EXCLUDED = frozenset({".git", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", ".tox", ".nox", ".venv", ".virtualenv", "venv", "virtualenv", "node_modules", "testcache", ".testcache", "tmp", "vault", ".vault", "secrets", ".secrets", "credentials", ".credentials"})
-_SECRETS = frozenset({"auth.json", "credentials.json", "token.txt", "token.json", "secrets.json", "secrets.txt", ".DS_Store"})
-_REQUIRED = ("pyproject.toml", "uv.lock", "version.toml", DOCKERFILE, DOCKERIGNORE, TOOL_REGISTRY)
-
-
-def _excluded(name: str) -> bool:
-    return (name in _EXCLUDED or name in _SECRETS or name.endswith("__tests")
-            or name.startswith((".anechoic_", "_anechoic_"))
-            or name == ".env" or name.startswith(".env.") or name.endswith(".env")
-            or Path(name).suffix in {".pyc", ".pyo", ".pem", ".key"})
-
-
 def _unique(pairs):
     result = {}
     for key, value in pairs:
@@ -91,14 +72,7 @@ def ready_predecessor(selection) -> str | None:
         raise ValueError("invalid launcher receipt") from error
 
 
-@dataclass(frozen=True)
-class ImageIdentity:
-    fingerprint: str
-    version: str
-    manifest: tuple[tuple[str, str, int], ...]
-
-
-class ImageManager:
+class ImageManager(ImageInputIdentity):
     def __init__(self, source_root: Path, *, project_root: Path, build_temp_root: Path | None = None,
                  build_provenance: dict[str, str] | None = None, timeout: float = 600,
                  executor=None):
@@ -131,59 +105,6 @@ class ImageManager:
             self.labels = {"org.anechoic.project": p["project_id"], "org.anechoic.host_project_root": p["project_root"],
                            "org.anechoic.control_root": p["control_root"], "org.anechoic.project.name": p["project_name"],
                            "org.anechoic.source.head_commit": p["head_commit"]}
-
-    def _files(self):
-        root = self.source_root
-        if root.is_symlink() or not root.is_dir() or root.resolve() != root:
-            raise ValueError("image source unavailable")
-        paths = []
-        for relative in _REQUIRED:
-            path = root / relative
-            if any((root / Path(*Path(relative).parts[:i])).is_symlink() for i in range(1, len(Path(relative).parts) + 1)) or not path.is_file():
-                raise ValueError("image input unavailable")
-        engine = root / ENGINE
-        def fail(error):
-            raise error
-        for current, directories, names in os.walk(engine, followlinks=False, onerror=fail):
-            directory = Path(current)
-            directories[:] = sorted(name for name in directories if not _excluded(name))
-            if any(name == ".runtime" or name.startswith(".env") for name in directories):
-                raise ValueError("unsafe image input")
-            for name in directories:
-                path = directory / name
-                if path.is_symlink() or not path.is_dir():
-                    raise ValueError("unsafe image input")
-            for name in sorted(names):
-                if _excluded(name):
-                    continue
-                if name == ".runtime" or name.startswith(".env"):
-                    raise ValueError("unsafe image input")
-                path = directory / name
-                if path.is_symlink() or not path.is_file():
-                    raise ValueError("unsafe image input")
-                if path.relative_to(root).as_posix() not in RETIRED_ASSETS:
-                    paths.append(path)
-        return sorted(set(paths) | {root / relative for relative in _REQUIRED}, key=lambda p: p.relative_to(root).as_posix())
-
-    def identity(self, *, use_packaged_assets: bool = False) -> ImageIdentity:
-        if not isinstance(use_packaged_assets, bool):
-            raise ValueError("invalid image selection")
-        try:
-            version = tomllib.loads((self.source_root / "version.toml").read_text(encoding="utf-8"))["framework"]["version"]
-            if not isinstance(version, str) or re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}", version) is None:
-                raise ValueError("invalid framework version")
-            files = self._files()
-            if not (self.source_root / TOOL_REGISTRY).stat().st_size:
-                raise ValueError("image tool registry is empty")
-            manifest = tuple((path.relative_to(self.source_root).as_posix(), hashlib.sha256(path.read_bytes()).hexdigest(),
-                              0o644 if path.relative_to(self.source_root).as_posix() == TOOL_REGISTRY else path.stat().st_mode & 0o777)
-                             for path in files)
-            payload = {"schema": "1", "platform": self.platform,
-                       "build_arguments": {"RUNTIME_UID": self.uid, "RUNTIME_GID": self.gid}, "files": manifest}
-            fingerprint = hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False).encode("utf-8")).hexdigest()
-            return ImageIdentity(fingerprint, version, manifest)
-        except (OSError, UnicodeError, KeyError, TypeError) as error:
-            raise ValueError("image source unavailable") from error
 
     def _run(self, args, *, cwd=None, buildx=None):
         env = {key: value for key, value in os.environ.items() if key in {"HOME", "PATH", "DOCKER_HOST", "DOCKER_CONTEXT", "DOCKER_CONFIG", "XDG_RUNTIME_DIR", "TMPDIR", "HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "NO_PROXY", "http_proxy", "https_proxy", "all_proxy", "no_proxy"}}
@@ -253,6 +174,9 @@ class ImageManager:
             return explicit_id
         if not build_if_missing or not self.labels:
             raise RuntimeError("image build unavailable")
+        return self._build(identity)
+
+    def _build(self, identity: ImageIdentity) -> str:
         parent = self.build_temp_root
         temporary = self.project_root / ".anechoic_tmp"
         if (parent is None or not parent.is_absolute() or parent.is_symlink() or temporary.is_symlink()

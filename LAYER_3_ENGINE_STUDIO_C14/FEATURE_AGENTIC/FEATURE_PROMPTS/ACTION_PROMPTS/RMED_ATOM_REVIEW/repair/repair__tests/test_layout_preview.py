@@ -2,12 +2,10 @@
 import copy
 import hashlib
 from pathlib import Path
-import sys
 import unittest
 
 HERE = Path(__file__).resolve().parent.parent
-sys.path[:0] = [str(HERE), str(HERE.parent)]
-from layout_preview import admit_layout_preview  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.layout_preview import admit_layout_preview  # noqa: E402
 
 
 SOURCE = ('---\natom_id: MOCK-R-001\nversion: 1\nupdated_at: "2026-09-26T00:00:00Z"\n---\n'

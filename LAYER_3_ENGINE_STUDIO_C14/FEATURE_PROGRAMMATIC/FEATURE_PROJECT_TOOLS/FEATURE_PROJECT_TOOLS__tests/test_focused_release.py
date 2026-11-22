@@ -13,8 +13,7 @@ from unittest.mock import patch
 
 TOOLS = Path(__file__).resolve().parents[1]
 
-sys.path.insert(0, str(TOOLS))
-import run_full_test_suite as full  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import run_full_test_suite as full
 
 
 PASSING = (
@@ -47,47 +46,64 @@ class FocusedReleaseTests(unittest.TestCase):
                 return full.run_full_suite(self.root)
             return full.run_full_suite(self.root, test_modules=modules)
 
-    def test_focused_selection_runs_only_requested_module_and_reports_scope(self) -> None:
-        selected = self.file("LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_selected.py")
-        unselected = self.file("LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_unselected.py")
-        result = (True, 1, 0, "", "", 0.0, None)
-        with patch.object(full, "run_module", return_value=result) as run:
-            self.assertEqual(
-                0,
-                self.run_suite((selected.relative_to(self.root).as_posix(),)),
-            )
-
-        self.assertEqual([selected], [call.args[1] for call in run.call_args_list])
-        report = self.output.getvalue()
-        self.assertIn("focused", report.lower())
-        self.assertIn(selected.relative_to(self.root).as_posix(), report)
-        self.assertNotIn(unselected.name, report)
-
     def test_default_selection_remains_the_complete_discovered_suite(self) -> None:
-        first = self.file("LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_first.py")
-        second = self.file("LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_second.py")
+        markers = (self.root / "first.marker", self.root / "second.marker")
+        paths = ("LAYER_3_ENGINE_STUDIO_C14/test_first.py", "LAYER_3_ENGINE_STUDIO_C14/test_second.py")
+        for relative, marker in zip(paths, markers):
+            self.file(relative, (
+                "import unittest\nclass Test(unittest.TestCase):\n def test_one(self):\n"
+                f"  with open({str(marker)!r}, 'a', encoding='utf-8') as output: output.write('ran\\n')\n"
+            ))
         for name in ("test_suite__pub.py", "test_suite__shared.py"):
-            self.file(f"LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/{name}", "")
-        result = (True, 1, 0, "", "", 0.0, None)
-        with patch.object(full, "run_module", return_value=result) as run:
-            self.assertEqual(0, self.run_suite())
-
-        self.assertEqual({first, second}, {call.args[1] for call in run.call_args_list})
-        self.assertNotIn("focused", self.output.getvalue().lower())
+            self.file(f"LAYER_3_ENGINE_STUDIO_C14/{name}", "raise AssertionError('excluded')\n")
+        result = subprocess.run(
+            (sys.executable, "-B", str(TOOLS / "test_suite__pub.py"), "--project-root", str(self.root)),
+            cwd=self.root, capture_output=True, text=True, check=False, timeout=30,
+        )
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertIn("Test scope: full; selected modules: all discovered modules\n", result.stdout)
+        starts = [line.removeprefix("Test module START: ") for line in result.stdout.splitlines()
+                  if line.startswith("Test module START: ")]
+        self.assertCountEqual(paths, starts)
+        self.assertIn("Modules: 2; tests run: 2; skipped: 0; failed modules: 0", result.stdout)
+        for marker in markers:
+            self.assertEqual("ran\n", marker.read_text(encoding="utf-8"))
+        self.assertNotIn("focused", result.stdout.lower())
+        self.assertNotIn("test_suite__pub.py", result.stdout)
+        self.assertNotIn("test_suite__shared.py", result.stdout)
 
     def test_public_cli_preserves_selection_report_and_exit_status(self) -> None:
-        passing = self.file("LAYER_3_ENGINE_STUDIO_C14/test_passing.py")
-        failing = self.file("LAYER_3_ENGINE_STUDIO_C14/test_failing.py", PASSING.replace("True)", "False)"))
-        for selected, unselected, expected in ((passing, failing, 0), (failing, passing, 1)):
+        passing_marker, failing_marker = self.root / "passing.marker", self.root / "failing.marker"
+        def fixture(marker: Path, success: bool) -> str:
+            return (
+                "import unittest\n"
+                "class Test(unittest.TestCase):\n"
+                " def test_one(self):\n"
+                f"  with open({str(marker)!r}, 'a', encoding='utf-8') as output: output.write('ran\\n')\n"
+                f"  self.assertTrue({success!r})\n"
+            )
+        passing = self.file("LAYER_3_ENGINE_STUDIO_C14/test_passing.py", fixture(passing_marker, True))
+        failing = self.file("LAYER_3_ENGINE_STUDIO_C14/test_failing.py", fixture(failing_marker, False))
+        for selected, unselected, marker, other_marker, expected in (
+            (passing, failing, passing_marker, failing_marker, 0),
+            (failing, passing, failing_marker, passing_marker, 1),
+        ):
             with self.subTest(selected=selected.name):
+                passing_marker.unlink(missing_ok=True)
+                failing_marker.unlink(missing_ok=True)
+                relative = selected.relative_to(self.root).as_posix()
                 result = subprocess.run(
                     (sys.executable, "-B", str(TOOLS / "test_suite__pub.py"),
-                     "--project-root", str(self.root), "--test-module", selected.relative_to(self.root).as_posix()),
+                     "--project-root", str(self.root), "--test-module", relative),
                     cwd=self.root, capture_output=True, text=True, check=False, timeout=30,
                 )
                 self.assertEqual(expected, result.returncode, result.stderr)
-                self.assertIn("Test scope: focused", result.stdout)
-                self.assertIn(selected.name, result.stdout)
+                self.assertIn(f"Test scope: focused; selected modules: {relative}\n", result.stdout)
+                self.assertEqual([f"Test module START: {relative}"],
+                                 [line for line in result.stdout.splitlines() if line.startswith("Test module START:")])
+                self.assertIn(f"Modules: 1; tests run: 1; skipped: 0; failed modules: {expected}", result.stdout)
+                self.assertEqual("ran\n", marker.read_text(encoding="utf-8"))
+                self.assertFalse(other_marker.exists())
                 self.assertNotIn(unselected.name, result.stdout)
 
     def assert_rejected(self, modules: tuple[str, ...]) -> None:

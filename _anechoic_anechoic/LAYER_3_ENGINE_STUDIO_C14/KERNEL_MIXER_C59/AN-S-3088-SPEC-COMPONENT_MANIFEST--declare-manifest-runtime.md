@@ -3,14 +3,14 @@ atom_family: SPEC
 atom_id: AN-S-3088
 container:
   component: C59
-tier: 0
+tier: 4
 context:
   template: component_manifest
   lens: SPEC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-20T10:40:29.349219+00:00'
+  version: 16
+  updated_at: '2026-11-22T11:23:40.206159+00:00'
 ---
 
 ## Summary
@@ -29,6 +29,33 @@ declare_entity(
         component_id='C62',
         name='Manifest Runtime',
         lens_whitelist=['SPEC'],
+        boundaries={
+            'code': {
+                'imports': [
+                    'model_generation__pub.open_admitted_model',
+                    'ORCHESTRATOR_C66__shared.Orchestrator',
+                    'native_carrier_placement__pub.ARCHIVE_DIRECTORY',
+                    'native_carrier_placement__pub.DRAFT_DIRECTORY',
+                    'native_carrier_placement__pub.READY_DIRECTORY',
+                    'project_temporary__pub.owned_temporary_root',
+                    'source_watcher__pub.SourceWatcher',
+                ],
+                'exports': {
+                    'MANIFEST_RUNTIME_C62__shared.run_manifest_runtime': {
+                        'private': ['C59'],
+                    },
+                },
+            },
+            'io': {
+                'client': [
+                    {'component': 'C66', 'interface': 'compiler_worker'},
+                ],
+            },
+            'state': {
+                'reads': ['pinned Project Manifest and compiler output'],
+                'writes': ['admitted Model and Structure generation'],
+            },
+        },
     ),
 )
 ```

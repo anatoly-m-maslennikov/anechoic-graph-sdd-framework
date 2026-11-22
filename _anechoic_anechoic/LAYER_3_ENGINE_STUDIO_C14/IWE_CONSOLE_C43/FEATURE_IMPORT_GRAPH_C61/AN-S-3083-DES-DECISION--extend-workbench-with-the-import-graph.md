@@ -12,9 +12,9 @@ relations:
   - AN-S-3159@2
   - AN-S-3179@2
 state:
-  status: active
-  version: 5
-  updated_at: '2026-11-21T23:04:45.265137+00:00'
+  status: "active"
+  version: 6
+  updated_at: "2026-11-22T09:00:09.215152+00:00"
 ---
 
 ## Summary
@@ -42,7 +42,7 @@ in one DuckDB transaction and write failures to stderr. Extend the existing
 `anechoic` property graph. Workbench and terminal SQL can trace each import
 to its file and line and each test Relation to its directory.
 
-Publish Component and Package Spec `code`, `state`, and `io` declarations in
+Publish Component and Component Seed Manifest `code`, `state`, and `io` declarations in
 `boundary_declarations` with their owner and exact Spec revision. Publish
 `code_access_findings` for denied or unresolved Python imports. Reuse cached
 imports and the accepted Structure, including when its boundary rules change.

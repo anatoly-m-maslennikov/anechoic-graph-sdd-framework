@@ -7,13 +7,31 @@ structure:
 context:
   template: workflow
 state:
-  status: active
-  version: 38
-  updated_at: '2026-11-21T21:51:04.697298+00:00'
+  status: "active"
+  version: 39
+  updated_at: "2026-11-21T23:56:50.338570+00:00"
 ---
 ## Summary
 
 Release a selected Framework Version
+
+## Claim
+
+### Formal Claim
+
+```python
+release_command(
+    operation="local",
+    entrypoint="LAYER_5_FRAMEWORK_DELIVERY/release.py",
+)
+```
+
+### Semantics
+
+When the Project Manifest enables release Workflows, MCP reads this Active
+Project Config Claim and returns the host `uv` command for the selected
+Project and run ID. The Operator runs it on the host. MCP performs no
+release effects.
 
 ## Operation
 

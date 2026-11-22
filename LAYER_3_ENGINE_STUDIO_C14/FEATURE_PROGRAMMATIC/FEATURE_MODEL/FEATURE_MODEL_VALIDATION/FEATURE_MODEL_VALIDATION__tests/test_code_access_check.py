@@ -1,8 +1,9 @@
 import unittest
+from collections import namedtuple
 
-from LAYER_3_ENGINE_STUDIO_C14.FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.code_access_check import check_code_access
-from LAYER_3_ENGINE_STUDIO_C14.FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.code_access_ownership import CodeAccessOwnership
-from LAYER_3_ENGINE_STUDIO_C14.FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.code_access_occurrences import CodeAccessOccurrence
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.code_access_check import check_code_access
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.realization_ownership__pub import CodeAccessOwnership
+CodeAccessOccurrence = namedtuple('CodeAccessOccurrence', 'source_path target_path target_kind unit written line column status')
 
 
 class CheckTests(unittest.TestCase):

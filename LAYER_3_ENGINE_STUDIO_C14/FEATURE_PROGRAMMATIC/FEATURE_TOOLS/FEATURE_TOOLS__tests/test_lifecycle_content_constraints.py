@@ -6,7 +6,7 @@ from unittest.mock import patch
 TOOLS = Path(__file__).resolve().parents[1]
 WORKBENCH = TOOLS.parent.parent / 'IWE_CONSOLE_C43/APP_WORKBENCH'
 sys.path[:0] = [str(TOOLS), str(WORKBENCH)]
-from ATOM_LIFECYCLE.content_constraints import compile_content_constraints, load_content_constraints  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.content_constraints import compile_content_constraints, load_content_constraints  # noqa: E402
 
 
 def declaration(ref, code):
@@ -40,7 +40,7 @@ class ContentConstraintsTests(unittest.TestCase):
             "base_path='Atom/(.Header.Context.Role := Operations)/(.Header.Context.Form := Step).Content.Claim', "
             "property_occurrence_cardinality=Cardinality(minimum=0, maximum=1), "
             "value_format='markdown', value_cardinality=1, dependent_property_cardinality=0)")
-        with patch('python_model_claim.compile_python_model_claim', side_effect=AssertionError('translated')):
+        with patch('FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.legacy_claim_compiler__pub.compile_python_model_claim', side_effect=AssertionError('translated')):
             records = compile_content_constraints([row])
         self.assertEqual({'heading', 'heading_value', 'children'}, {item['kind'] for item in records})
         self.assertTrue(all(item['roles'] == ['Operations'] and item['forms'] == ['Step'] for item in records))
@@ -51,7 +51,7 @@ class ContentConstraintsTests(unittest.TestCase):
             declaration('CA-R-2', "declare_entity(entity_name='Mermaid Scheme', relation_name='IS_PROPERTY_OF', base_path='Workflow.Content.Claim', property_occurrence_cardinality=1, value_cardinality=1, value_format='markdown', dependent_property_cardinality=0)"),
             declaration('CA-R-3', "from anechoic.model import Plan\nclass WorkReport(Plan):\n    pass\ndeclare_entity(entity_name='Work Report', entity_class=WorkReport, qualification_property_path='Atom.Header.Context.Form', form_roles=('Plan',), form_content={'required_value': 'Details', 'no_children': 'Details', 'after': 'Summary'})"),
         ]
-        with patch('python_model_claim.compile_python_model_claim', side_effect=AssertionError('translated')):
+        with patch('FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.legacy_claim_compiler__pub.compile_python_model_claim', side_effect=AssertionError('translated')):
             records = compile_content_constraints(rows)
         workflow = [r for r in records if r['source'] == 'CA-R-2']
         self.assertEqual({'heading', 'heading_value', 'children'}, {r['kind'] for r in workflow})

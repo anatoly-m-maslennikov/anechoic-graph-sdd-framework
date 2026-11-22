@@ -2,8 +2,6 @@
 """Prepublication reference lookup for parsed carriers."""
 from __future__ import annotations
 
-from pathlib import Path
-
 from .source_rows import _path_rank, _reference
 
 

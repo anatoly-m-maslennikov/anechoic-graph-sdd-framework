@@ -8,8 +8,11 @@ context:
   lens: SWD
 state:
   status: active
-  version: 30
-  updated_at: 2026-11-11 14:15:11 +0400
+  version: 31
+  updated_at: '2026-11-22T11:00:54.983176+00:00'
+relations:
+  CONTRIBUTES_TO:
+  - AN-S-1501
 ---
 ## Summary
 Prepare verification before refactoring

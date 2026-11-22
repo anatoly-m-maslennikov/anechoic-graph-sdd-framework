@@ -5,7 +5,7 @@ from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from .content_schema import DeclarationSource
+    from KERNEL_MIXER_C59.content_schema import DeclarationSource
 
 
 _ROLE_PATH = "Header.Context.Role"
@@ -45,7 +45,7 @@ def _status_bindings(declaration):
 def compile_role_folders(
     declarations: Iterable[tuple[dict[str, Any], "DeclarationSource"]],
 ) -> dict[str, tuple[str, "DeclarationSource"]]:
-    from role_directory_rules import role_folders_from_orders
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_layout__pub import role_folders_from_orders
 
     orders = []
     for declaration, source in declarations:
@@ -64,7 +64,7 @@ def compile_role_folders(
 
 
 def _classification_address(address: str) -> tuple[list[tuple[str, str]], str] | None:
-    import subject_notation as notation
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import subject_notation__pub as notation
 
     try:
         path = notation.parse_subject_expression(address).expression

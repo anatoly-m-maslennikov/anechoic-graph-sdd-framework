@@ -1,7 +1,10 @@
 import unittest
-from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim
-from FEATURE_FORMAL_MODEL_ENGINE.compiler_claim import compiler_model_statements
-from test_native_status_qualifiers import PLAN, ANALYSIS
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_model_claim__pub import parse_native_model_claim
+from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.compiler_claim import compiler_model_statements
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.compiler_claim_fixtures__pub import (
+    ANALYSIS,
+    STATUS_PLAN as PLAN,
+)
 
 class JointClaims(unittest.TestCase):
     def test_typed_reference_and_status_qualifiers_and_classifications(self):

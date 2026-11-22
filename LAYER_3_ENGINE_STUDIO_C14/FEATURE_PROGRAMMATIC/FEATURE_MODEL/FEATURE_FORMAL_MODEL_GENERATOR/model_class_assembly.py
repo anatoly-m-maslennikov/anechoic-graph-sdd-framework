@@ -11,7 +11,7 @@ from graphlib import TopologicalSorter
 from types import ModuleType
 from uuid import uuid4
 
-from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_model_claim__pub import parse_native_model_claim
 from .atom_header_groups import atom_header_group_sources
 from .manifest_property_fields import assemble_manifest_fields
 
@@ -164,7 +164,7 @@ def model_module_name(class_name: str) -> str:
     return re.sub(r"(?<!^)(?=[A-Z])", "_", class_name).lower()
 
 
-def assemble_model_modules(claims: Iterable[str]) -> dict[str, str]:
+def assemble_model_modules(claims: Iterable[str], *, dependency_order: bool = False) -> dict[str, str]:
     """Return one importable package module per selected Model class."""
     claims = tuple(claims)
     assemble_model_classes(claims)
@@ -174,11 +174,13 @@ def assemble_model_modules(claims: Iterable[str]) -> dict[str, str]:
         raise ValueError("Model class module filenames collide")
     modules = {}
     dependencies = {}
-    for name, node in classes.items():
+    names = sorted(classes, key=filenames.get)
+    for name in names:
+        node = classes[name]
         used = {item.id for item in ast.walk(node) if isinstance(item, ast.Name) and isinstance(item.ctx, ast.Load)}
         dependencies[name] = sorted((used & classes.keys()) - {name})
-    tuple(TopologicalSorter(dependencies).static_order())
-    for name in sorted(classes, key=filenames.get):
+    order = tuple(TopologicalSorter(dependencies).static_order())
+    for name in order if dependency_order else names:
         node = classes[name]
         used = {item.id for item in ast.walk(node) if isinstance(item, ast.Name) and isinstance(item.ctx, ast.Load)}
         if not node.decorator_list:

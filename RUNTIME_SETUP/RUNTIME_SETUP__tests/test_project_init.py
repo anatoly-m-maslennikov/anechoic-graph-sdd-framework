@@ -3,16 +3,13 @@
 import ast
 import os
 from pathlib import Path
-import sys
 import tempfile
 import unittest
 from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT))
-
-from RUNTIME_SETUP.project_init import initialize_project  # noqa: E402
+from project_init import initialize_project
 
 
 class ProjectInitTests(unittest.TestCase):
@@ -44,6 +41,14 @@ class ProjectInitTests(unittest.TestCase):
         self.assertEqual("MP", fields["prefix"])
         self.assertEqual({"workbench": {"storage": "memory"}, "journal": {"storage": "duckdb"}},
                          fields["parameters"]["runtime"])
+        [manifest] = control.iterdir()
+        self.assertIn(
+            "        parameters={\n"
+            "            'runtime': {\n"
+            "                'workbench': {'storage': 'memory'},\n"
+            "                'journal': {'storage': 'duckdb'},\n",
+            manifest.read_text(encoding="utf-8"),
+        )
         self.assertEqual("keep", (self.root / "existing.txt").read_text(encoding="utf-8"))
 
     def test_existing_candidate_and_symlink_are_preserved(self):
@@ -66,7 +71,7 @@ class ProjectInitTests(unittest.TestCase):
                          self.manifest_fields(control)["parameters"]["runtime"])
 
     def test_fsync_failure_cleans_owned_temporary_and_empty_directory(self):
-        with patch("RUNTIME_SETUP.project_init.os.fsync", side_effect=OSError("disk error")):
+        with patch("project_init.os.fsync", side_effect=OSError("disk error")):
             with self.assertRaisesRegex(OSError, "disk error"):
                 self.initialize()
         self.assertEqual(["existing.txt"], [entry.name for entry in self.root.iterdir()])
@@ -81,7 +86,7 @@ class ProjectInitTests(unittest.TestCase):
             return real_link(source, destination, src_dir_fd=src_dir_fd, dst_dir_fd=dst_dir_fd,
                              follow_symlinks=follow_symlinks)
 
-        with patch("RUNTIME_SETUP.project_init.os.link", side_effect=collide):
+        with patch("project_init.os.link", side_effect=collide):
             with self.assertRaises(FileExistsError):
                 self.initialize()
         control = self.root / ".anechoic_my project"

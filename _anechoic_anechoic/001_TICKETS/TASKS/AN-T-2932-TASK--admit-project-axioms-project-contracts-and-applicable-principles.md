@@ -7,9 +7,9 @@ priority: 2
 context:
   template: task
 state:
-  status: "in_queue"
-  version: 2
-  updated_at: "2026-11-21T20:52:24.872271+00:00"
+  status: in_queue
+  version: 3
+  updated_at: '2026-11-22T11:02:07.551942+00:00'
 ---
 ## Summary
 
@@ -24,21 +24,32 @@ Project root.
 | --- | ---: | --- |
 | Project Axiom | -1 | State a premise the Project accepts. |
 | Project Contract | 0 | State what a user supplies and what the Project provides in return. |
-| Project Applicable Principle | 2 | State a rule that guides decisions when its applicability conditions hold. |
+| Project Applicable Principle | 1 or 2 | State a rule that guides decisions when its applicability conditions hold. |
+| Main Project Solution, Policy, or Standard | 3 | State a main Project solution or governing rule. |
 
 Each Project has exactly one Current Project Manifest at Tier -1. It
 declares the Project and its configuration. The Project Goal also stays
 at Tier -1.
 
 Create three Tier 0 Project Contract Atoms. Use the existing Contract base
-and the Project as their Container. Applicable Principles can stand
-independently of Contracts.
+and the Project as their Container.
 
 Admit the Project Axiom, Project Contract, and Project Applicable Principle
 templates. Move the existing Project Axioms to Tier -1 and classify the
-existing Applicable Principles at Tier 2. Preserve authored content, stable
-IDs, exact revision references, and source history. Keep the legacy release
-inputs intact.
+existing Applicable Principles at Tiers 1 and 2. Move main Project Solutions,
+Policies, and Standards to Tier 3. Preserve authored content, stable IDs,
+exact revision references, and source history. Keep legacy release inputs intact.
+
+Connect the Project Atoms in two chains.
+
+- Axioms and the Project Goal lead to Tier 1 Principles. Tier 2 Principles
+  refine or contribute to Tier 1. Tier 3 contributes to Tier 2. Tier 4
+  Solutions refine Tier 3 Solutions.
+- The Project Goal leads to Tier 0 Contracts. Tier 3 Solutions address
+  the guarantees in those Contracts.
+
+Author relations from the more specific Atom to its target. Derive the
+inverse direction for navigation.
 
 ### Shared repository input and guarantees
 
@@ -96,7 +107,7 @@ rendering before adding that guarantee.
 
 ## Verification
 
-- Verify each of the three Project Atom templates at its assigned Tier.
+- Verify each of the three Project Atom templates at its admitted Tiers.
   Reject other Tiers for these templates. Verify exactly one Current
   Tier -1 Project Manifest per Project. Preserve the Project Goal and
   existing Component Contract rules.

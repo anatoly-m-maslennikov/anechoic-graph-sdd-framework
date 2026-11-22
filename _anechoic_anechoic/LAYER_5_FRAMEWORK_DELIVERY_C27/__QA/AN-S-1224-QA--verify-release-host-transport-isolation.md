@@ -7,9 +7,9 @@ tier: 6
 context:
   lens: QA
 state:
-  status: active
-  version: 19
-  updated_at: '2026-11-21T21:49:04.407565+00:00'
+  status: "active"
+  version: 20
+  updated_at: "2026-11-22T06:18:53.884288+00:00"
 ---
 
 ## Summary
@@ -33,4 +33,4 @@ the direct host invocation boundary for Local and Public Release.
 - verify the direct host implementation places Local Release runtime/report artifacts below `.anechoic_runtime/simple_local_release/` and transient artifacts below `.anechoic_tmp/simple_local_release/`, without making either authoring authority.
 - verify the entrypoint does not create or call a Workflow Orchestrator Queue, worker, private IPC health exchange or DBOS Workflow.
 - verify release execution imports no ANECHOIC runtime Components and calls no Journal.
-- verify Local Release invokes C19 Test Suite for unit, end-to-end and canary checks, and Public Release prepares drafts without running a suite.
+- verify Local Release invokes C19 Test Suite for functional, end-to-end and canary checks, and Public Release prepares drafts without running a suite.

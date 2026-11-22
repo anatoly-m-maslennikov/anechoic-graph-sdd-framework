@@ -5,23 +5,26 @@ Resources are explicit caller-selected paths; no recursive filesystem discovery.
 """
 from __future__ import annotations
 
+if __package__ in (None, ""):
+    import sys as _sys
+    from pathlib import Path as _Path
+    _sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if p.name == "LAYER_3_ENGINE_STUDIO_C14")))
+
 import argparse
 from copy import deepcopy
 import hashlib
 import json
 from pathlib import Path
 import re
-import sys
 import tomllib
 from typing import Any
 
 CHECKER = Path(__file__).resolve().parents[4] / 'FEATURE_PROGRAMMATIC/FEATURE_TOOLS/VALIDATE_ATOMS'
-sys.path.insert(0, str(CHECKER))
 
 
 def metadata(raw: str) -> dict[str, Any]:
     """Reuse the safe, duplicate-key-rejecting, bounded production YAML parser."""
-    from validate_atoms_workers.parsing import CarrierError, parse_carrier  # type: ignore[import-not-found]
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import CarrierError, parse_carrier  # type: ignore[import-not-found]
     try:
         return dict(parse_carrier(raw.encode(), Path('context.md')).metadata)
     except CarrierError:
@@ -229,20 +232,7 @@ def _resource(root: Path, path: str, role: str) -> tuple[dict[str, Any] | None, 
             'data': json.loads(json.dumps(data, default=str))}, {'state': 'available', 'reason': f'Bound full content from {path}.'}
 
 
-def prepare_context(packet: dict[str, Any], *, root: Path | None = None,
-                    resources: dict[str, str] | None = None) -> dict[str, Any]:
-    """Return a fresh packet. Authority admission remains explicit caller input.
-
-    `principle_admissions` entries need an exact source binding, applicable_to
-    candidate paths, and a reason/provenance for that selection. This function
-    never sets Active Status or derives identity/tier from a filename.
-    """
-    output = deepcopy(packet)
-    output['entity_index'] = []
-    output['relation_index'] = []
-    output['applicable_principles'] = []
-    output['preflight'] = {}
-    output['resources'] = {}
+def _index_context_sources(output):
     admissions = validated_principle_admissions(output)
     authority_bindings = output.get('authority_bindings')
     for record in output.get('sources', []):
@@ -264,6 +254,23 @@ def prepare_context(packet: dict[str, Any], *, root: Path | None = None,
                 output['applicable_principles'].append({'binding': binding, 'text': raw,
                     'applicable_to': admission['applicable_to'], 'reason': admission['reason'],
                     'provenance': admission['provenance'], 'reference': authority_reference(binding)})
+
+
+def prepare_context(packet: dict[str, Any], *, root: Path | None = None,
+                    resources: dict[str, str] | None = None) -> dict[str, Any]:
+    """Return a fresh packet. Authority admission remains explicit caller input.
+
+    `principle_admissions` entries need an exact source binding, applicable_to
+    candidate paths, and a reason/provenance for that selection. This function
+    never sets Active Status or derives identity/tier from a filename.
+    """
+    output = deepcopy(packet)
+    output['entity_index'] = []
+    output['relation_index'] = []
+    output['applicable_principles'] = []
+    output['preflight'] = {}
+    output['resources'] = {}
+    _index_context_sources(output)
     validate_baseline_sources(output)
     output['preflight']['principles'] = {
         'state': 'available' if output['applicable_principles'] else 'missing',

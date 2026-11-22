@@ -3,12 +3,12 @@ import copy
 import hashlib
 import unittest
 
-from test_composed_revision import composition_inputs
-from test_layout_repair_gate import digest
-from evaluation_contract import merge_evaluations
-from review_evidence import ReviewContext
-from layout_repair_gate import authority_digest
-from subject_repair_gate import admit_subject_recoding
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair__tests.test_composed_revision import composition_inputs
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair__tests.test_layout_repair_gate import digest
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.evaluation_contract import merge_evaluations
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_evidence__shared import ReviewContext
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.layout_repair_gate import authority_digest
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.subject_repair_gate import admit_subject_recoding
 
 
 def fixture():

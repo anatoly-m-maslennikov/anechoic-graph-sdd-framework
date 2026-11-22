@@ -9,9 +9,9 @@ from pathlib import Path
 import sys
 from typing import Any
 
-from operation_error_boundary import FailureRecord, operation_error_boundary
-from project_selection import bound_selection
-from runtime_failure_diagnostics import diagnostic_sequence, report_failure
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.operation_error_boundary import FailureRecord, operation_error_boundary
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection import bound_selection
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.runtime_failure_diagnostics import diagnostic_sequence, report_failure
 
 
 _COMPONENT = "TOOL_PROCESS"

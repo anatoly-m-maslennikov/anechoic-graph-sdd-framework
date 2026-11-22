@@ -13,13 +13,13 @@ import hashlib
 import json
 from typing import Any
 
-from context_builder import authority_reference, markdown, metadata
-from evaluation_contract import summarize_evaluations
-from layout_preview import _frontmatter, admit_layout_preview
-from repair_gate import (_identity, _local_repair_boundary, _output_binding,
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import authority_reference, markdown, metadata
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.evaluation_contract import summarize_evaluations
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.layout_preview import _frontmatter, admit_layout_preview
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair_gate__shared import (_identity, _local_repair_boundary, _output_binding,
                          _outputs, _path, _resolutions, _summary)
-from review_evidence import ReviewContext, probability, text, validate_quotes
-from semantic_boundaries import unavailable_sections
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_evidence__shared import ReviewContext, probability, text, validate_quotes
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.semantic_boundaries import unavailable_sections
 
 
 def _digest(value: Any) -> str:
@@ -174,16 +174,7 @@ def _assessed_preflight(preflight: Any, proposal: dict[str, Any], binding: dict[
     validate_quotes(scope.get('support'), authorities)
 
 
-def admit_layout_recoding(evaluation: dict[str, Any], proposal: dict[str, Any], *,
-                          context: dict[str, Any], final_evaluation: dict[str, Any],
-                          final_context: dict[str, Any], section_mapping: dict[str, Any],
-                          permission: dict[str, Any], preflight: dict[str, Any]) -> dict[str, Any]:
-    """Admit an exact legacy H1/layout recoding after complete final evaluation.
-
-    The original report remains failed/blocked evidence. Only physical layout
-    gaps can be discharged against passed checks on the exact final candidate.
-    All other gates, findings, semantic judgments and writer obligations remain.
-    """
+def _check_review_evidence(evaluation, proposal, context, final_evaluation, final_context):
     original_context, output_context = ReviewContext(context), ReviewContext(final_context)
     if (original_context.report_contract not in (5, 6, 7)
             or output_context.report_contract != original_context.report_contract):
@@ -208,6 +199,21 @@ def admit_layout_recoding(evaluation: dict[str, Any], proposal: dict[str, Any], 
             or output_context.confidence_threshold < .99
             or not probability(proposal.get('confidence')) or proposal['confidence'] < threshold):
         raise ValueError('layout repair confidence or final review threshold is insufficient')
+    return original_context, output_context, original, threshold
+
+
+def admit_layout_recoding(evaluation: dict[str, Any], proposal: dict[str, Any], *,
+                          context: dict[str, Any], final_evaluation: dict[str, Any],
+                          final_context: dict[str, Any], section_mapping: dict[str, Any],
+                          permission: dict[str, Any], preflight: dict[str, Any]) -> dict[str, Any]:
+    """Admit an exact legacy H1/layout recoding after complete final evaluation.
+
+    The original report remains failed/blocked evidence. Only physical layout
+    gaps can be discharged against passed checks on the exact final candidate.
+    All other gates, findings, semantic judgments and writer obligations remain.
+    """
+    original_context, output_context, original, threshold = _check_review_evidence(
+        evaluation, proposal, context, final_evaluation, final_context)
     allowed = _permission(proposal, permission)
     if 'deferred_findings' in proposal:
         raise ValueError('layout repair cannot defer original findings')

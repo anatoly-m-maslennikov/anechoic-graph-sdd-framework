@@ -11,8 +11,9 @@ import time
 from types import MappingProxyType
 from typing import Any
 
-from .audit_tables import TABLES, collect_issues
-from .source_placement_audit import carrier_read_view, expected_carrier
+from KERNEL_MIXER_C59.audit_tables import TABLES, collect_issues
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_compat__pub import carrier_read_view
+from .source_placement_audit import expected_carrier
 
 
 @dataclass(frozen=True)
@@ -186,37 +187,7 @@ class AuditWorker:
                     self._pending_snapshot = None
                     self._pending_paths = _EMPTY
                     self._active_paths = paths
-                started = time.monotonic()
-                read_seconds = compute_seconds = 0.0
-                selected = (sorted(path.relative_to(snapshot.root).as_posix() for path in snapshot.source_paths)
-                            if paths is None else sorted(paths))
-                issues = {table: [] for table in TABLES}
-                for offset in range(0, len(selected), 500):
-                    if not self._current(generation, full=paths is None):
-                        break
-                    batch = set(selected[offset:offset + 500])
-                    phase = time.monotonic()
-                    rows = self._store.audit_content_rows(batch)
-                    read_seconds += time.monotonic() - phase
-                    phase = time.monotonic()
-                    for table, records in snapshot.collect(rows, batch).items():
-                        issues[table].extend(records)
-                    compute_seconds += time.monotonic() - phase
-                if self._current(generation, full=paths is None):
-                    phase = time.monotonic()
-                    published = self._store.publish_audit(
-                        issues, paths, self._publication(generation, full=paths is None)
-                    )
-                    publish_seconds = time.monotonic() - phase
-                    if published:
-                        elapsed_ms = (time.monotonic() - started) * 1000
-                        with self._condition:
-                            self._last_audit_ms = elapsed_ms
-                        print(f"Workbench INFO atom_audit paths={len(selected)} "
-                              f"mode={'full' if paths is None else 'delta'} "
-                              f"read_ms={read_seconds * 1000:.1f} compute_ms={compute_seconds * 1000:.1f} "
-                              f"publish_wait_and_commit_ms={publish_seconds * 1000:.1f} "
-                              f"elapsed_ms={elapsed_ms:.1f}", flush=True)
+                self._audit(snapshot, paths, generation)
                 with self._condition:
                     self._active_paths = _EMPTY
                     self._condition.notify_all()
@@ -229,6 +200,39 @@ class AuditWorker:
                 self._awaiting_submit = False
                 self._condition.notify_all()
             print(f"Workbench ERROR atom_audit {type(error).__name__}: {error}", file=sys.stderr, flush=True)
+
+    def _audit(self, snapshot, paths, generation):
+        started = time.monotonic()
+        read_seconds = compute_seconds = 0.0
+        selected = (sorted(path.relative_to(snapshot.root).as_posix() for path in snapshot.source_paths)
+                    if paths is None else sorted(paths))
+        issues = {table: [] for table in TABLES}
+        for offset in range(0, len(selected), 500):
+            if not self._current(generation, full=paths is None):
+                break
+            batch = set(selected[offset:offset + 500])
+            phase = time.monotonic()
+            rows = self._store.audit_content_rows(batch)
+            read_seconds += time.monotonic() - phase
+            phase = time.monotonic()
+            for table, records in snapshot.collect(rows, batch).items():
+                issues[table].extend(records)
+            compute_seconds += time.monotonic() - phase
+        if self._current(generation, full=paths is None):
+            phase = time.monotonic()
+            published = self._store.publish_audit(
+                issues, paths, self._publication(generation, full=paths is None)
+            )
+            publish_seconds = time.monotonic() - phase
+            if published:
+                elapsed_ms = (time.monotonic() - started) * 1000
+                with self._condition:
+                    self._last_audit_ms = elapsed_ms
+                print(f"Workbench INFO atom_audit paths={len(selected)} "
+                      f"mode={'full' if paths is None else 'delta'} "
+                      f"read_ms={read_seconds * 1000:.1f} compute_ms={compute_seconds * 1000:.1f} "
+                      f"publish_wait_and_commit_ms={publish_seconds * 1000:.1f} "
+                      f"elapsed_ms={elapsed_ms:.1f}", flush=True)
 
     def wait(self, timeout: float | None = None) -> bool:
         with self._condition:

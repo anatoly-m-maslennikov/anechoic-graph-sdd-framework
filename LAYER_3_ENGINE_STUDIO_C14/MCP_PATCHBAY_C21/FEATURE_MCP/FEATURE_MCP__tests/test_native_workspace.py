@@ -3,9 +3,9 @@ import unittest
 from dataclasses import replace
 from types import SimpleNamespace
 
-import test_native_query_stdio as fixture
-from native_project_selection import resolve_native_project
-from native_query import NativeQueryOwner
+from . import test_native_query_stdio as fixture
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__pub import resolve_native_project
+from .native_query_test_support import NativeQueryOwner
 
 
 class NativeWorkspaceTests(unittest.TestCase):
@@ -42,6 +42,9 @@ class NativeWorkspaceTests(unittest.TestCase):
         call("workspace_open", {"session_id": "other"})
         with self.assertRaisesRegex(ValueError, "unknown view_id"):
             call("view_fetch", identity | {"workspace_id": "other"})
+        self._check_saved_and_reopened(owner, call, identity, sql, result, opened, selection, inputs, legacy, legacy_saved, legacy_id, before)
+
+    def _check_saved_and_reopened(self, owner, call, identity, sql, result, opened, selection, inputs, legacy, legacy_saved, legacy_id, before):
         saved_view = call("view_save", identity)
         self.assertEqual("view", saved_view["kind"])
         self.assertEqual(sql, owner.load(saved_view["saved_query_id"])["sql"])

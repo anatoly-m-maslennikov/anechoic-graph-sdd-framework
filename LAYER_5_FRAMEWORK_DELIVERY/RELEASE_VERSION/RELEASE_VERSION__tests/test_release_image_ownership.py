@@ -8,9 +8,9 @@ from pathlib import Path
 import subprocess
 import unittest
 
-import test_release_cleanup as fixtures
-from release_cleanup import Cleanup, cleanup_obsolete_images
-from release_cleanup_identity import owner_labels
+from RELEASE_VERSION.RELEASE_VERSION__tests import test_release_cleanup as fixtures
+from RELEASE_VERSION.release_cleanup import Cleanup, cleanup_obsolete_images
+from RELEASE_VERSION.release_cleanup_identity import owner_labels
 
 
 class OwnedDocker(fixtures.DockerFixture):

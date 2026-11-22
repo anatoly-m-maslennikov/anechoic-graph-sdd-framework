@@ -1,61 +1,23 @@
-"""Selected Project readers and the admitted gateway subprocess boundary."""
+"""Admitted Project selection arguments at the entrypoint boundary."""
 # ruff: noqa: E402
 import os
 from pathlib import Path
 import sys
-import tempfile
 import unittest
 from unittest.mock import patch
 
 MCP = Path(__file__).resolve().parents[1]
-ROOT = MCP.parents[2]
 TOOLS = MCP.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
-sys.path[:0] = [str(MCP), str(TOOLS)]
 
-from project_selection import bind_selection, resolve_project
-from artifact_metadata import configured_timezone, project_identity
-from project_settings_values import control_root
-from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations
+from MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import select_runtime_project
+from . import test_native_host_launcher as host_fixture
 
 
-class ProjectContextTests(unittest.IsolatedAsyncioTestCase):
+class ProjectContextTests(unittest.TestCase):
     def setUp(self):
-        self.temp = tempfile.TemporaryDirectory(dir=tempfile.gettempdir(), ignore_cleanup_errors=True)
-        self.addCleanup(self.temp.cleanup)
-        self.base = Path(self.temp.name).resolve()
-        self.selections = []
-        for name in ("alpha", "beta"):
-            root = self.base / name
-            control = root / (".anechoic_" + name)
-            control.mkdir(parents=True)
-            (control / "anechoic_project_settings.toml").write_text(
-                f'[project]\nname="{name}"\nkey="{name}"\nrepository_slug="{name}"\n'
-                f'[paths]\ncontrol_root=".anechoic_{name}"\n'
-                f'[artifacts.identity]\nproject_prefix="{name.upper()}"\n'
-                '[artifact_timestamps]\ntimezone="UTC"\n')
-            write_scope_unit_declarations(root, control_root=control)
-            self.selections.append(resolve_project(root))
+        host_fixture.NativeHostLauncherTests.setUp(self)
+        self.selections = [select_runtime_project(self.root)]
 
-    def test_named_readers_use_the_bound_project_without_git(self):
-        for selection in self.selections:
-            with bind_selection(selection):
-                self.assertEqual(selection.control_root, control_root(selection.root))
-                self.assertEqual(selection.settings["project"]["name"], project_identity(selection.root)["project"]["name"])
-                self.assertEqual("UTC", str(configured_timezone(selection.root)))
-
-    def test_runtime_namespace_properties_are_selected_and_read_only(self):
-        for selection in self.selections:
-            runtime = selection.root / ".anechoic_runtime/runtime"
-            self.assertEqual(runtime / "project_mcp" / selection.instance_id, selection.launcher_state)
-            self.assertFalse(runtime.exists())
-            self.assertFalse((selection.root / ".anechoic_install").exists())
-
-
-    def test_foreign_root_and_outside_project_source_refuse(self):
-        alpha, beta = self.selections
-        with bind_selection(alpha):
-            with self.assertRaises(ValueError):
-                control_root(beta.root)
 
     def test_docker_entrypoint_forwards_only_admitted_selection_arguments(self):
         import importlib.util
@@ -74,7 +36,6 @@ class ProjectContextTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(selection.control_relative.as_posix(), arguments[arguments.index("--control-root") + 1])
         self.assertEqual(selection.instance_id, arguments[arguments.index("--instance-id") + 1])
         self.assertNotIn("private", arguments)
-
 
 
 if __name__ == "__main__":

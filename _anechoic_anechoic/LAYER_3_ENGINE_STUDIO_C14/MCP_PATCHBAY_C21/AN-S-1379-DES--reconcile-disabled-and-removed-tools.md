@@ -7,11 +7,10 @@ tier: 1
 context:
   lens: DES
 state:
-  status: active
-  version: 22
-  updated_at: 2026-11-10 20:47:54 +0400
+  status: "active"
+  version: 23
+  updated_at: "2026-11-22T09:27:00.867855+00:00"
 ---
-
 ## Summary
 
 Reconcile disabled and removed Tools
@@ -20,8 +19,8 @@ Reconcile disabled and removed Tools
 
 ### Prose Claim
 
-MCP regeneration **must** add **every** newly active valid Tool, exclude **every** explicitly disabled Tool, **and** remove **every** projection whose source Tool is no longer active **or** present. MCP **must not** maintain a second independent allowlist **or** lifecycle registry that can disagree with current project authority **and** Configuration.
+Backend must publish every newly active valid Tool in its enabled catalog, exclude every explicitly disabled Tool, and remove every Tool whose registration is no longer active or present. MCP must map the current Backend catalog and must not maintain an independent allowlist or lifecycle registry that can disagree with Backend, Project authority, or Configuration.
 
 ## Details
 
-Load the generated registration asset and configured exclusions; publish its complete enabled entry set, remove disabled or removed configured entries, exclude unlisted helpers, and stop on malformed or unresolved registration configuration. Do not scan native Atoms, Scope Unit graphs, or Tool folders for exposure.
+Backend loads its generated registration asset and configured exclusions, excludes unlisted helpers, and stops on malformed or unresolved registration configuration. MCP reports a missing or invalid catalog explicitly. Neither exposure path scans native Atoms, Scope Unit graphs, or Tool folders for registration.

@@ -2,27 +2,12 @@
 """Select and pin staged declarations for the image build."""
 from __future__ import annotations
 
-import contextlib
 import hashlib
-import json
 from pathlib import Path
 import re
-import sys
 
-_PACKAGED = Path('/workspace/LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC')
-_TOOLS = (_PACKAGED / 'FEATURE_TOOLS' if _PACKAGED.is_dir()
-          else Path(__file__).resolve().parents[1])
-def _apps_directory(tools: Path) -> Path:
-    current = tools.parent.parent / 'IWE_CONSOLE_C43'
-    return current if current.is_dir() or tools.parent != _PACKAGED else tools.parent / 'FEATURE_APPS'
-
-
-_APPS = _apps_directory(_TOOLS)
-for _directory in (_TOOLS, _APPS, _APPS / 'APP_WORKBENCH'):
-    sys.path.insert(0, str(_directory))
-
-from carrier_aliases import carrier_read_view, carrier_status_folder, matches_named_value  # noqa: E402
-from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_compat__pub import carrier_read_view, carrier_status_folder, matches_named_value
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import parse_carrier
 
 PLACEMENT_SUBJECT = re.compile(
     r'^ANECHOIC_MODEL\s*<\+\s*(?:Carrier|Atom\.Header\.Context\.Role|'
@@ -149,63 +134,3 @@ def read_selected(root: Path, selected: object, *, role: str = 'Delivery',
 
 def bootstrap_rows(records: list[dict]) -> list[dict]:
     return validate_selection(records, [pin(row) for row in records if eligible(row)])
-
-
-def query_pins(root: Path, store_factory=None, *, role: str = "Delivery",
-               subject_pattern=PLACEMENT_SUBJECT) -> list[dict]:
-    """Query the staged inventory through the previous image's Workbench backend."""
-    from FEATURE_WORKBENCH_BACKEND.content_schema import compile_content_schema
-    from FEATURE_WORKBENCH_BACKEND.header_columns import HeaderColumn, HeaderSchema
-    from FEATURE_WORKBENCH_BACKEND.query_store import QueryStore
-    from FEATURE_WORKBENCH_BACKEND.source_rows import atom
-
-    selected_record = declaration_predicate(role, subject_pattern)
-    records = inventory(root, 'D' if role == 'Delivery' else 'R')
-
-    rows = []
-    for record in records:
-        projection = {key: record[key] if isinstance(record[key], str) else None
-                      for key in ('role', 'status', 'subject')}
-        row = atom(Path(root) / record['source_path'], Path(root), projection,
-                   {'atom_id': record['id'], 'version': record['version']}, b'', 'Current')
-        row['ref'] = record['source_path']
-        rows.append(row)
-    header = HeaderSchema(tuple(HeaderColumn((key,), 'header.' + key, 'VARCHAR', True)
-                                for key in ('role', 'status', 'subject')))
-    store = (store_factory or QueryStore)()
-    try:
-        store.replace(rows, [], relation_types=set(), header_schema=header,
-                      content_schema=compile_content_schema([]))
-        pattern = subject_pattern.pattern.replace("'", "''")
-        sql = ("SELECT relative_path, filename FROM atoms WHERE "
-               "\"header.status\" IN ('Active', 'active') AND "
-               f"\"header.role\" IN ('{role}', '{role.lower()}') AND "
-               f"regexp_full_match(trim(\"header.subject\"), '{pattern}') "
-               'ORDER BY relative_path, filename')
-        result = store.run(sql, page_size=1000)
-        paths = []
-        while True:
-            paths.extend((Path(row[0]) / row[1]).as_posix() for row in result['rows'])
-            if not result['has_more']:
-                break
-            result = store.page(result['query_id'], len(paths), page_size=1000)
-        by_path = {row['source_path']: row for row in records}
-        selected = [pin(by_path[path]) for path in paths]
-        return [pin(row) for row in validate_selection(records, selected, predicate=selected_record)]
-    finally:
-        store.close()
-
-
-def main() -> None:
-    if len(sys.argv) != 2:
-        raise SystemExit('usage: selector.py MODEL_ROOT')
-    try:
-        with contextlib.redirect_stdout(sys.stderr):
-            selected = query_pins(Path(sys.argv[1]))
-        print(json.dumps(selected, ensure_ascii=False, sort_keys=True, separators=(',', ':')))
-    except (OSError, ValueError) as error:
-        raise SystemExit(f'placement selection failed: {error}') from error
-
-
-if __name__ == '__main__':
-    main()

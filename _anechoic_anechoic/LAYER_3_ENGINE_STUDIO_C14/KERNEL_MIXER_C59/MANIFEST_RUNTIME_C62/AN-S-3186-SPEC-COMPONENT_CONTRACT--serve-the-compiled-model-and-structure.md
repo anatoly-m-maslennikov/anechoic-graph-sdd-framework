@@ -8,9 +8,9 @@ context:
   template: component_contract
   lens: SPEC
 state:
-  status: active
-  version: 1
-  updated_at: '2026-11-21T16:29:52.230403+00:00'
+  status: "active"
+  version: 3
+  updated_at: "2026-11-22T07:51:44.973439+00:00"
 ---
 
 ## Summary
@@ -19,13 +19,15 @@ Serve the compiled Model and Structure
 
 ## Guarantee
 
-Given a selected native Project, provide the compiled Model directory
-and the current Structure snapshot path for the lifetime of the Manifest
-Runtime. Provide the paths after both hosts accept the initial generation.
+For a selected native Project, host the admitted Model and validated
+Structure in the Kernel process. Provide the compiled Model directory,
+bound Model, and Structure snapshot path after verifying that the Model
+and initial Structure share one Model source fingerprint.
 
-Publish a replacement Structure snapshot at the same path when a relevant
-Manifest change compiles successfully and the Structure host accepts it.
-Keep the last accepted snapshot available if a rebuild fails.
+Run the Manifest Builder in a bounded separate process. On relevant
+Manifest changes, validate each replacement Structure against the admitted
+Model and publish it atomically. Keep the last accepted Structure if a
+rebuild fails. Admit a changed Model on restart.
 
 ## References
 

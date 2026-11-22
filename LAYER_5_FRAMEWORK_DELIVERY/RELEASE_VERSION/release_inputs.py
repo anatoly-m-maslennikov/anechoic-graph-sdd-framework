@@ -216,15 +216,79 @@ def _manifest(metadata: dict, body: str, name: str, relative: Path, digest: str,
                             root / relative / name, f"{identity}@{version}", digest, parameters)
 
 
+def _scan_control(root_fd: int, control: str, root: Path, total_bytes: int):
+    selection = None
+    fd = os.open(control, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=root_fd)
+    try:
+        control_identity = (os.fstat(fd).st_dev, os.fstat(fd).st_ino)
+        names = _names(fd, controls=False)
+        records = []
+        candidates = []
+        has_manifest = False
+        for name in names:
+            raw, version = _read(fd, name)
+            total_bytes += len(raw)
+            if total_bytes > 1024 * 1024 * 1024:
+                raise ValueError("Project inventory exceeds the read ceiling")
+            digest = sha256(raw).hexdigest()
+            records.append((name, version, digest))
+            try:
+                metadata, body = read_atom_header(raw.decode("utf-8"))
+            except (ValueError, UnicodeError, yaml.YAMLError, RecursionError):
+                if re.match(r"[A-Z]+-S-", name):
+                    raise
+                continue
+            context = metadata.get("context")
+            if isinstance(context, dict) and context.get("template") == "project_manifest":
+                has_manifest = True
+                if isinstance(metadata.get("state"), dict) and metadata["state"].get("status") == "active":
+                    candidates.append(_manifest(metadata, body, name, Path(control), digest, root))
+            elif "atom_family" not in metadata and "PROJECT_MANIFEST" in name:
+                has_manifest = True
+        if has_manifest:
+            if len(candidates) != 1:
+                raise ValueError("Expected one Active Project Manifest")
+            selection = candidates[0]
+        snapshot = (control, control_identity, names, records)
+    finally:
+        os.close(fd)
+    return selection, snapshot, total_bytes
+
+
+def _verify_snapshots(root_fd: int, snapshots, total_bytes: int) -> None:
+    for control, identity, names, records in snapshots:
+        fd = os.open(control, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=root_fd)
+        try:
+            info = os.fstat(fd)
+            if (info.st_dev, info.st_ino) != identity or _names(fd, controls=False) != names:
+                raise ValueError("Project control changed during selection")
+            for name, version, digest in records:
+                raw, current = _read(fd, name)
+                total_bytes += len(raw)
+                if total_bytes > 1024 * 1024 * 1024:
+                    raise ValueError("Project inventory exceeds the read ceiling")
+                if current != version or sha256(raw).hexdigest() != digest:
+                    raise ValueError("Project carriers changed during selection")
+            if _names(fd, controls=False) != names:
+                raise ValueError("Project control changed during selection")
+        finally:
+            os.close(fd)
+
+
+def _canonical_root(project_root: str | Path) -> Path:
+    raw_root = Path(project_root).expanduser()
+    if ".." in raw_root.parts or _protected(raw_root):
+        raise ValueError("Project root is unsafe")
+    root = Path(os.path.abspath(raw_root))
+    if root == Path(root.anchor) or root.resolve(strict=True) != root:
+        raise ValueError("Project root must be a non-symlink directory")
+    return root
+
+
 def read_release_selection(project_root: str | Path, control_relative: str | Path | None = None) -> ReleaseSelection:
     """Select one active native Project Manifest and pin the inputs read during selection."""
     try:
-        raw_root = Path(project_root).expanduser()
-        if ".." in raw_root.parts or _protected(raw_root):
-            raise ValueError("Project root is unsafe")
-        root = Path(os.path.abspath(raw_root))
-        if root == Path(root.anchor) or root.resolve(strict=True) != root:
-            raise ValueError("Project root must be a non-symlink directory")
+        root = _canonical_root(project_root)
         root_fd = _directory(root)
         try:
             root_identity = (os.fstat(root_fd).st_dev, os.fstat(root_fd).st_ino)
@@ -241,61 +305,15 @@ def read_release_selection(project_root: str | Path, control_relative: str | Pat
             snapshots = []
             total_bytes = 0
             for control in controls:
-                fd = os.open(control, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=root_fd)
-                try:
-                    control_identity = (os.fstat(fd).st_dev, os.fstat(fd).st_ino)
-                    names = _names(fd, controls=False)
-                    records = []
-                    candidates = []
-                    has_manifest = False
-                    for name in names:
-                        raw, version = _read(fd, name)
-                        total_bytes += len(raw)
-                        if total_bytes > 1024 * 1024 * 1024:
-                            raise ValueError("Project inventory exceeds the read ceiling")
-                        digest = sha256(raw).hexdigest()
-                        records.append((name, version, digest))
-                        try:
-                            metadata, body = read_atom_header(raw.decode("utf-8"))
-                        except (ValueError, UnicodeError, yaml.YAMLError, RecursionError):
-                            if re.match(r"[A-Z]+-S-", name):
-                                raise
-                            continue
-                        context = metadata.get("context")
-                        if isinstance(context, dict) and context.get("template") == "project_manifest":
-                            has_manifest = True
-                            if isinstance(metadata.get("state"), dict) and metadata["state"].get("status") == "active":
-                                candidates.append(_manifest(metadata, body, name, Path(control), digest, root))
-                        elif "atom_family" not in metadata and "PROJECT_MANIFEST" in name:
-                            has_manifest = True
-                    if has_manifest:
-                        if len(candidates) != 1:
-                            raise ValueError("Expected one Active Project Manifest")
-                        selections.append(candidates[0])
-                    snapshots.append((control, control_identity, names, records))
-                finally:
-                    os.close(fd)
+                selection, snapshot, total_bytes = _scan_control(root_fd, control, root, total_bytes)
+                if selection is not None:
+                    selections.append(selection)
+                snapshots.append(snapshot)
             if len(selections) != 1:
                 raise ValueError("A unique native Project Manifest is required")
             if control_relative is None and _names(root_fd, controls=True) != controls:
                 raise ValueError("Project control candidates changed during selection")
-            for control, identity, names, records in snapshots:
-                fd = os.open(control, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=root_fd)
-                try:
-                    info = os.fstat(fd)
-                    if (info.st_dev, info.st_ino) != identity or _names(fd, controls=False) != names:
-                        raise ValueError("Project control changed during selection")
-                    for name, version, digest in records:
-                        raw, current = _read(fd, name)
-                        total_bytes += len(raw)
-                        if total_bytes > 1024 * 1024 * 1024:
-                            raise ValueError("Project inventory exceeds the read ceiling")
-                        if current != version or sha256(raw).hexdigest() != digest:
-                            raise ValueError("Project carriers changed during selection")
-                    if _names(fd, controls=False) != names:
-                        raise ValueError("Project control changed during selection")
-                finally:
-                    os.close(fd)
+            _verify_snapshots(root_fd, snapshots, total_bytes)
             if control_relative is None and _names(root_fd, controls=True) != controls:
                 raise ValueError("Project control candidates changed during selection")
             current_root = _directory(root)

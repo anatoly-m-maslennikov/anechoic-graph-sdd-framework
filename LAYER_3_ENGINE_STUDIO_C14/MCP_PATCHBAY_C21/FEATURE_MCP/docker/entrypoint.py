@@ -1,6 +1,7 @@
 """Foreground services with immutable code and explicit runtime-only state."""
 
 
+from concurrent.futures import CancelledError
 import json
 import os
 from pathlib import Path
@@ -8,48 +9,35 @@ import sys
 
 MCP = Path(__file__).resolve().parents[1]
 PROJECT_ROOT = Path("/project")
-TOOLS = MCP.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
-sys.path.insert(0, str(MCP))
-sys.path.insert(0, str(TOOLS))
+ENGINE = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(ENGINE))
 
-from operation_error_boundary import (  # noqa: E402
-    ExplicitBlockingRuntimeFailure,
-    FailureRecord,
-    operation_error_boundary,
-)
-from runtime_failure_diagnostics import report_failure  # noqa: E402
-
+from MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary import ExplicitStartupFailure  # noqa: E402
 
 RUNTIME_MODES = frozenset({"mcp", "mcp-http", "shared-mcp"})
 
 
 def _process_failure(mode, error):
     if mode not in RUNTIME_MODES:
-        error = FailureRecord("WARNING", "invalid_runtime_mode", "runtime mode is unsupported")
-    root = (
-        None if mode == "shared-mcp" or mode not in RUNTIME_MODES
-        else PROJECT_ROOT
-    )
-    operation = f"docker.entrypoint.{mode}" if mode in RUNTIME_MODES else "docker.entrypoint"
-    failure, secondary = report_failure(
-        root, error, component="DOCKER_ENTRYPOINT", operation=operation
-    )
-    payload = {"error": failure.code, "severity": failure.severity}
-    if secondary:
-        payload["diagnostic_error"] = secondary
-    print(json.dumps(payload, separators=(",", ":")), file=sys.stderr)
+        code, severity = "invalid_runtime_mode", "WARNING"
+    elif isinstance(error, ExplicitStartupFailure):
+        code, severity = error.code, "ERROR"
+    else:
+        code, severity = "internal_failure", "WARNING"
+    try:
+        print(json.dumps({"error": code, "severity": severity}, separators=(",", ":")), file=sys.stderr)
+    except Exception:
+        pass
     return 1
 
 
 def _shared_mcp_command():
     settings = os.environ.get("ANECHOIC_HOST_SETTINGS")
     if not settings:
-        raise ExplicitBlockingRuntimeFailure(
-            "shared_host_settings_unavailable", "shared host settings are unavailable"
-        )
+        raise ExplicitStartupFailure("shared_host_settings_unavailable")
     return [
         sys.executable,
-        str(MCP / "shared_http_server.py"),
+        "-B", "-P", "-m", "MCP_PATCHBAY_C21.FEATURE_MCP.shared_http_server",
         "--host-settings",
         settings,
     ]
@@ -65,7 +53,7 @@ def _exec_service(mode):
         }
         if mode not in paths:
             raise ValueError("unsupported runtime mode")
-        command = [sys.executable, str(paths[mode]), "--project-root", str(PROJECT_ROOT)]
+        command = [sys.executable, "-B", "-P", "-m", "MCP_PATCHBAY_C21.FEATURE_MCP.server", "--project-root", str(PROJECT_ROOT)]
         if mode == "mcp-http":
             command += ["--transport", "streamable-http"]
         if mode in {"mcp", "mcp-http"}:
@@ -77,11 +65,9 @@ def _exec_service(mode):
                 if key in os.environ:
                     command += [flag, os.environ[key]]
     try:
-        os.execv(sys.executable, command)
+        os.execve(sys.executable, command, {**{k: v for k, v in os.environ.items() if k != "PYTHONHOME"}, "PYTHONPATH": str(ENGINE)})
     except OSError as error:
-        raise ExplicitBlockingRuntimeFailure(
-            "service_start_failed", "runtime service could not start"
-        ) from error
+        raise ExplicitStartupFailure("service_start_failed") from error
 
 
 def _dispatch(mode):
@@ -91,12 +77,13 @@ def _dispatch(mode):
 def main():
     mode = sys.argv[1] if len(sys.argv) > 1 else ""
 
-    @operation_error_boundary(on_error=lambda error: _process_failure(mode, error))
-    def dispatch():
+    try:
         _dispatch(mode)
-
-    result = dispatch()
-    return 0 if result is None else result
+    except CancelledError:
+        raise
+    except Exception as error:
+        return _process_failure(mode, error)
+    return 0
 
 
 if __name__ == "__main__":

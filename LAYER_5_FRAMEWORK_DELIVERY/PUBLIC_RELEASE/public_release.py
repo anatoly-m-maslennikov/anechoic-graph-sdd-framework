@@ -63,33 +63,7 @@ def _draft(draft: Mapping[str, object], base: str, head: str, version: str) -> t
     return description, history
 
 
-def run_public_release(
-    root: Path | str, *, run_id: str, base_ref: str = "origin/main", head_ref: str = "amm/dev",
-    content_draft: Mapping[str, object] | None = None,
-) -> dict[str, object]:
-    """Return evidence for review, or render drafts from a pinned reviewed mapping."""
-    if not isinstance(run_id, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:-]*", run_id):
-        raise PublicReleaseError("invalid run_id")
-    try:
-        root = Path(root).resolve(strict=True)
-        if not root.is_dir():
-            raise ValueError
-    except (OSError, TypeError, ValueError) as error:
-        raise PublicReleaseError("invalid project root") from error
-    if _git(root, "rev-parse", "--show-toplevel").rstrip("\n") != str(root):
-        raise PublicReleaseError("project root must be the Git checkout root")
-    base, head = _commit(root, base_ref), _commit(root, head_ref)
-    merge_base = _git(root, "merge-base", base, head).strip()
-    try:
-        version = tomllib.loads(_git(root, "show", f"{head}:version.toml"))["framework"]["version"]
-        if not isinstance(version, str) or re.fullmatch(r"[0-9]+(?:\.[0-9]+){2,3}", version) is None:
-            raise ValueError
-    except (KeyError, TypeError, ValueError, tomllib.TOMLDecodeError) as error:
-        raise PublicReleaseError("head version.toml must declare a framework version") from error
-    result: dict[str, object] = {"run_id": run_id, "base_commit": base, "head_commit": head, "merge_base": merge_base, "version": version}
-    if content_draft is not None:
-        description, history = _draft(content_draft, base, head, version)
-        return {**result, "outcome": "completed", "pr_description": description, "version_history_entry": history}
+def _ticket_candidates(root: Path, merge_base: str, head: str):
     raw = _git(root, "diff", "--raw", "--no-abbrev", "--no-renames", "-z", "--diff-filter=AM", merge_base, head, "--",
                ":(glob)[._]anechoic_*/001_TICKETS/TASKS/**/*-TASK--*.md",
                ":(glob)[._]anechoic_*/001_TICKETS/TASKS/**/*-EPIC--*.md").split("\0")
@@ -101,6 +75,10 @@ def run_public_release(
         if (len(fields) == 5 and fields[1] in ("100644", "100755") and name
                 and not any(re.fullmatch(r"(?:[0-9]+_)?(?:archive|archived|snapshot|snapshots)", part, re.I) for part in parts)):
             candidates.append((path, fields[3], name.group(1), name.group(2).lower()))
+    return candidates
+
+
+def _ticket_evidence(root: Path, candidates):
     tickets = []
     if candidates:
         try:
@@ -141,6 +119,38 @@ def run_public_release(
                 raise PublicReleaseError(f"duplicate completed ticket ID: {ticket_id}")
             seen.add(ticket_id)
             tickets.append({"path": path, "content": text})
+    return tickets
+
+
+def run_public_release(
+    root: Path | str, *, run_id: str, base_ref: str = "origin/main", head_ref: str = "amm/dev",
+    content_draft: Mapping[str, object] | None = None,
+) -> dict[str, object]:
+    """Return evidence for review, or render drafts from a pinned reviewed mapping."""
+    if not isinstance(run_id, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:-]*", run_id):
+        raise PublicReleaseError("invalid run_id")
+    try:
+        root = Path(root).resolve(strict=True)
+        if not root.is_dir():
+            raise ValueError
+    except (OSError, TypeError, ValueError) as error:
+        raise PublicReleaseError("invalid project root") from error
+    if _git(root, "rev-parse", "--show-toplevel").rstrip("\n") != str(root):
+        raise PublicReleaseError("project root must be the Git checkout root")
+    base, head = _commit(root, base_ref), _commit(root, head_ref)
+    merge_base = _git(root, "merge-base", base, head).strip()
+    try:
+        version = tomllib.loads(_git(root, "show", f"{head}:version.toml"))["framework"]["version"]
+        if not isinstance(version, str) or re.fullmatch(r"[0-9]+(?:\.[0-9]+){2,3}", version) is None:
+            raise ValueError
+    except (KeyError, TypeError, ValueError, tomllib.TOMLDecodeError) as error:
+        raise PublicReleaseError("head version.toml must declare a framework version") from error
+    result: dict[str, object] = {"run_id": run_id, "base_commit": base, "head_commit": head, "merge_base": merge_base, "version": version}
+    if content_draft is not None:
+        description, history = _draft(content_draft, base, head, version)
+        return {**result, "outcome": "completed", "pr_description": description, "version_history_entry": history}
+    candidates = _ticket_candidates(root, merge_base, head)
+    tickets = _ticket_evidence(root, candidates)
     diff_argv = ["git", "diff", "--find-renames", merge_base, head, "--"]
     return {**result, "outcome": "input_required", "completed_tickets": tickets, "diff_argv": diff_argv,
             "instructions": "Delegate a Luna review of the pinned Git diff against completed Task and Epic evidence. Start with the pinned --stat and --name-status commands, then inspect path-scoped patches to narrow the diff. Include missed changes. Return one UTF-8 JSON object matching content_draft_schema; use full commit pins.",

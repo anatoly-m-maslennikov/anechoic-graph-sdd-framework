@@ -4,9 +4,9 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.scope_declaration_test_support__pub import write_scope_unit_declarations  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-import methodology_layout  # noqa: E402
+import FEATURE_PROGRAMMATIC.FEATURE_TOOLS.RELEASE_VERSION.methodology_layout as methodology_layout  # noqa: E402
 
 
 class LayoutTests(unittest.TestCase):

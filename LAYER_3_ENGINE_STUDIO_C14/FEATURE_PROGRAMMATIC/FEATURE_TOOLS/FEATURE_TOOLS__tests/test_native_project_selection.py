@@ -1,6 +1,6 @@
 """Explicit native binding uses the authored Manifest and preserves legacy discovery."""
 
-from dataclasses import dataclass, field
+import ast
 from datetime import date, datetime
 from hashlib import sha256
 from pathlib import Path
@@ -15,30 +15,23 @@ import yaml
 TOOLS = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(TOOLS), str(TOOLS.parent)]
 
-from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_field_validation import validate_model_fields  # noqa: E402
-from legacy_settings_to_manifest import legacy_settings_to_manifest  # noqa: E402
-from native_project_selection import resolve_native_project  # noqa: E402
-from project_selection import ProjectSelectionError, resolve_project  # noqa: E402
-from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.native_manifest_test_support__pub import validate_manifest  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.legacy_settings_to_manifest import legacy_settings_to_manifest  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_project_selection import resolve_native_project  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection import ProjectSelectionError, resolve_project  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.scope_declaration_test_support__pub import write_scope_unit_declarations  # noqa: E402
 
 
-@dataclass
-class ProjectManifest:
-    atom_id: str
-    ref_id: str
-    version: int
-    tier: int = field(metadata={"allowed_values": (-1,)})
-    name: str
-    prefix: str
-    parameters: dict[str, object] = field(default_factory=dict)
-    lens_whitelist: list[str] | None = None
-
-
-def validate_manifest(fields, component_id):
-    if component_id != "C0":
-        raise ValueError("Manifest must be contained by the Project")
-    validate_model_fields(ProjectManifest, fields)
-    return ProjectManifest(**fields)
+class ManifestReaderBoundaryTests(unittest.TestCase):
+    def test_reader_imports_only_standard_library_and_c30(self):
+        path = TOOLS / "ADAPTERS_C30" / "project_manifest__pub.py"
+        imports = [node for node in ast.walk(ast.parse(path.read_text()))
+                   if isinstance(node, (ast.Import, ast.ImportFrom))]
+        for node in imports:
+            if isinstance(node, ast.ImportFrom):
+                self.assertTrue(node.level == 1 or node.module in {"datetime", "pathlib"})
+            else:
+                self.assertEqual([alias.name for alias in node.names], ["re"])
 
 
 class NativeProjectSelectionTests(unittest.TestCase):
@@ -153,7 +146,7 @@ class NativeProjectSelectionTests(unittest.TestCase):
         self.carrier()
         (self.native / "one").touch()
         (self.native / "two").touch()
-        from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__pub import CEILINGS
         with patch.dict(CEILINGS, {"max_candidates": 2}), self.assertRaises(ProjectSelectionError):
             self.select()
 

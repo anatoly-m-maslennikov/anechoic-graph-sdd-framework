@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 import argparse
+import asyncio
 import json
 from pathlib import Path
 import subprocess
@@ -10,15 +11,34 @@ import time
 from typing import Any, Callable
 from urllib.request import urlopen
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "FEATURE_PROGRAMMATIC/FEATURE_TOOLS"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from shared_mcp_launch_support import (  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.mcp_paths import MCP_PATH  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.shared_mcp_launch_support import (  # noqa: E402
     SharedLaunchError,
     bounded,
     health_ready,
     inspect_runtime,
     prepare_config,
 )
+
+
+async def _probe(port, project_root):
+    from httpx2 import AsyncClient
+    from mcp.client.session import ClientSession
+    from mcp.client.streamable_http import streamable_http_client
+
+    endpoint = f"http://127.0.0.1:{port}{MCP_PATH}"
+    async with AsyncClient(trust_env=False, follow_redirects=False, timeout=420) as client:
+        async with streamable_http_client(endpoint, http_client=client) as streams:
+            async with ClientSession(*streams) as session:
+                await session.initialize()
+                if project_root is not None:
+                    result = await session.call_tool(
+                        "query_schema", {"project_root": str(project_root)}, read_timeout_seconds=400,
+                    )
+                    if getattr(result, "is_error", True):
+                        raise ValueError("The runtime could not open the selected Project")
 
 
 class SharedMcpLauncher:
@@ -60,6 +80,7 @@ class SharedMcpLauncher:
         compose_file=None,
         timeout=420,
         readiness_timeout=420,
+        verify_mcp=False,
     ):
         prepared = self.prepare(settings_path, image, compose_file=compose_file, timeout=timeout)
         readiness_budget = bounded(readiness_timeout, "readiness_timeout", 420)
@@ -74,6 +95,17 @@ class SharedMcpLauncher:
                 "condition": "docker_start_failed",
                 "docker_returncode": getattr(started, "returncode", None),
             }
+        result = self._await_readiness(prepared, readiness_budget)
+        if verify_mcp and result["ready"]:
+            config = prepared["config"]
+            project_root = config.projects_root if config.single_project else None
+            try:
+                asyncio.run(asyncio.wait_for(_probe(config.http_port, project_root), timeout=420))
+            except Exception:
+                return result | {"outcome": "failed", "ready": False, "condition": "mcp_verification_failed"}
+        return result
+
+    def _await_readiness(self, prepared, readiness_budget):
         deadline = self.clock() + readiness_budget
         while self.clock() < deadline:
             observed = inspect_runtime(self._docker, prepared, deadline, self.clock)
@@ -140,7 +172,10 @@ def main(argv=None):
     parser.add_argument("--startup-timeout", type=int, default=420)
     parser.add_argument("--readiness-timeout", type=int, default=420)
     parser.add_argument("--apply", action="store_true")
+    parser.add_argument("--verify-mcp", action="store_true")
     args = parser.parse_args(argv)
+    if args.verify_mcp and not args.apply:
+        parser.error("--verify-mcp requires --apply")
     try:
         launcher = SharedMcpLauncher()
         result = (launcher.apply if args.apply else launcher.prepare)(
@@ -148,7 +183,7 @@ def main(argv=None):
             args.image,
             compose_file=args.compose_file,
             timeout=args.startup_timeout,
-            **({"readiness_timeout": args.readiness_timeout} if args.apply else {}),
+            **({"readiness_timeout": args.readiness_timeout, "verify_mcp": args.verify_mcp} if args.apply else {}),
         )
     except SharedLaunchError as error:
         result = {"outcome": "refused", "ready": False, "condition": str(error)}

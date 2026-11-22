@@ -1,7 +1,7 @@
 """Incomplete-review regressions, not semantic Entity inference tests."""
 import unittest
 
-from audit_literal_coverage import audit
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__tests.audit_literal_coverage import audit
 
 
 SOURCE = '''---

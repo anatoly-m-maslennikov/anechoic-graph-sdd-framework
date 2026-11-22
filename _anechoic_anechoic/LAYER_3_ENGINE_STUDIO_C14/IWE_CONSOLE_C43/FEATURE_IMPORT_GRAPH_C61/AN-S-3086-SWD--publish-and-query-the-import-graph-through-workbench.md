@@ -12,9 +12,9 @@ relations:
   - AN-S-3083
   - AN-T-2928@1-draft
 state:
-  status: active
-  version: 6
-  updated_at: '2026-11-20T23:12:09.705525+00:00'
+  status: "active"
+  version: 9
+  updated_at: "2026-11-22T10:36:42.735857+00:00"
 ---
 
 ## Summary
@@ -28,6 +28,10 @@ Publish and query the Import Graph through Workbench
 - Deliver this projection on the native Workbench query owner.
 - Enable it by default. Set `runtime.workbench.import_graph` to `false` in the selected Project Manifest to disable it.
 - Its optional `python_roots` is an ordered list of Project-relative roots.
+- Its optional `python_image_imports` declares exact module names per
+  Project-relative Python source file. Use it for execution in a previous
+  runtime image. When a declared module has no local target, retain its
+  occurrence and record it as a declared previous-image dependency.
 - Its `include` is a list of Project-relative source files.
 - Reconcile the retained import snapshot with the current Project at startup.
 - Build from source when no compatible snapshot exists.
@@ -90,13 +94,13 @@ Publish and query the Import Graph through Workbench
 
 Publish `package_audit` with one row for each local Package node, including Test Packages and Packages without a Spec.
 
-- Report direct `__internal` and `__public` executable filename markers independently.
+- Report direct `__shared` and `__pub` executable filename markers independently.
 - Report `missing_visibility_marker` on a tested Package with neither marker.
 - Report `missing_test_target` on a Test Package whose parent qualifies as neither Package nor Component.
 - Report canonical `__spec_bind.yaml` presence and whether the binding is missing, invalid, empty, or valid. Use the full Package folder name for the sidecar.
 - Check every `implements` and `applies` pin against the exact active Spec revision. Resolve legacy pins only through an unambiguous exact alias.
 - Report each failed pin and its reason. Distinguish archived, missing, ambiguous, and non-Spec references. Leave the active-pin result unknown if there are no valid pins.
-- For a Specified Package, report its active Package Spec reference and whether `implements` pins that exact revision. Leave Contract coverage unknown when the Package Spec or ownership cannot be established.
-- Report an invalid Package Spec or unreadable ownership to stderr. Keep the other Package audit facts available.
-- Contract coverage records a trace to the Package Spec that contains the Contract. Evidence from implementation and tests establishes Contract satisfaction.
+- For a Component Seed, report its active Component Seed Manifest reference and whether `implements` pins that exact revision. Leave Contract coverage unknown when the Component Seed Manifest or ownership cannot be established.
+- Report an invalid Component Seed Manifest or unreadable ownership to stderr. Keep the other Package audit facts available.
+- Contract coverage records a trace to the Component Seed Manifest. Evidence from implementation and tests establishes Contract satisfaction.
 - Refresh on admitted source, sidecar, and Spec changes. Publish in the same DuckDB transaction as the changed projection and rebuild with its dependencies.

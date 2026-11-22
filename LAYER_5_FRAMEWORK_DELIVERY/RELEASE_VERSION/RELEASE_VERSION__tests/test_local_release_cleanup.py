@@ -6,11 +6,11 @@ from pathlib import Path
 import unittest
 from unittest.mock import patch
 
-import test_release_cleanup as docker_tests
-import test_simple_local_release as local_tests
-from local_release import run_local_release
-from release_inputs import read_release_selection
-from release_assets import LocalReleaseError
+from RELEASE_VERSION.RELEASE_VERSION__tests import test_release_cleanup as docker_tests
+from RELEASE_VERSION.RELEASE_VERSION__tests import test_simple_local_release as local_tests
+from RELEASE_VERSION.local_release import run_local_release
+from RELEASE_VERSION.release_inputs import read_release_selection
+from RELEASE_VERSION.release_assets import LocalReleaseError
 
 
 class LocalReleaseCleanupTests(unittest.TestCase):
@@ -26,16 +26,16 @@ class LocalReleaseCleanupTests(unittest.TestCase):
         fixture = local_tests.SimpleLocalReleaseTests("runTest")
         fixture.setUp()
         self.addCleanup(fixture.doCleanups)
-        startup = patch("local_release.start_container", return_value="http://127.0.0.1:18092/anechoic/mcp")
+        startup = patch("RELEASE_VERSION.local_release_runner.start_container", return_value="http://127.0.0.1:18092/anechoic/mcp")
         fixture.startup = startup.start()
         self.addCleanup(startup.stop)
         project_id = read_release_selection(fixture.root).instance_id
         return fixture, docker_tests.DockerFixture(fixture.root, project_id)
 
     def _launcher_image(self, fixture, before: str | None, after: str | None):
-        import local_release
+        from RELEASE_VERSION import local_release_runner
 
-        original = local_release._launcher_image
+        original = local_release_runner._launcher_image
         runtime_package = fixture.runtime / "simple_local_release/package"
 
         def read(selection):
@@ -82,7 +82,7 @@ class LocalReleaseCleanupTests(unittest.TestCase):
 
         fixture.startup.side_effect = launch
         with (
-            patch("local_release._launcher_image", side_effect=self._launcher_image(fixture, None, fixture.image_id)),
+            patch("RELEASE_VERSION.local_release_runner._launcher_image", side_effect=self._launcher_image(fixture, None, fixture.image_id)),
         ):
             result = run_local_release(fixture.root, run_id="cleanup", runner=runner)
         self.assertEqual(result["outcome"], "completed", result)
@@ -110,7 +110,7 @@ class LocalReleaseCleanupTests(unittest.TestCase):
 
         fixture.startup.side_effect = LocalReleaseError("start failed")
         with (
-            patch("local_release._launcher_image", return_value=None),
+            patch("RELEASE_VERSION.local_release_runner._launcher_image", return_value=None),
         ):
             result = run_local_release(fixture.root, run_id="first-install", runner=runner)
         self.assertEqual(("failed", "start_mcp"), (result["outcome"], result["failed_step"]))
@@ -130,7 +130,7 @@ class LocalReleaseCleanupTests(unittest.TestCase):
             return self._successful_host_command(argv)
 
         with (
-            patch("local_release._launcher_image", return_value=fixture.image_id),
+            patch("RELEASE_VERSION.local_release_runner._launcher_image", return_value=fixture.image_id),
         ):
             result = run_local_release(fixture.root, run_id="reuse", runner=runner)
         self.assertEqual(result["outcome"], "completed", (result, docker.calls))
@@ -167,7 +167,7 @@ class LocalReleaseCleanupTests(unittest.TestCase):
         fixture.startup.side_effect = launch
         with (
             patch(
-                "local_release._launcher_image",
+                "RELEASE_VERSION.local_release_runner._launcher_image",
                 side_effect=self._launcher_image(fixture, prior_image, fixture.image_id),
             ),
         ):
@@ -206,7 +206,7 @@ class LocalReleaseCleanupTests(unittest.TestCase):
             return self._successful_host_command(argv)
 
         with (
-            patch("local_release._launcher_image", side_effect=self._launcher_image(fixture, image, fixture.image_id)),
+            patch("RELEASE_VERSION.local_release_runner._launcher_image", side_effect=self._launcher_image(fixture, image, fixture.image_id)),
         ):
             result = run_local_release(fixture.root, run_id="no-retry", runner=runner)
         self.assertEqual(result["outcome"], "completed_with_cleanup_pending")
@@ -224,7 +224,7 @@ class LocalReleaseCleanupTests(unittest.TestCase):
             return self._successful_host_command(argv)
 
         fixture.startup.side_effect = LocalReleaseError("start failed")
-        with patch("local_release._launcher_image", return_value=image):
+        with patch("RELEASE_VERSION.local_release_runner._launcher_image", return_value=image):
             result = run_local_release(fixture.root, run_id="prior-failed", runner=runner)
         self.assertEqual(result["outcome"], "failed")
         report = (fixture.root / str(result["report_path"])).read_text()
@@ -245,7 +245,7 @@ class LocalReleaseCleanupTests(unittest.TestCase):
             return self._successful_host_command(argv)
 
         with (
-            patch("local_release._launcher_image", side_effect=self._launcher_image(fixture, image, fixture.image_id)),
+            patch("RELEASE_VERSION.local_release_runner._launcher_image", side_effect=self._launcher_image(fixture, image, fixture.image_id)),
         ):
             result = run_local_release(fixture.root, run_id="prior-no-retry", runner=runner)
         self.assertEqual(result["outcome"], "completed_with_cleanup_pending")

@@ -6,7 +6,7 @@ from functools import wraps
 import sys
 import time
 
-from technical_diagnostics import make_technical_logger
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.technical_diagnostics import make_technical_logger
 
 
 _context = ContextVar('lifecycle_timing', default=(None, None))

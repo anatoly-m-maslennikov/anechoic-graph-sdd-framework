@@ -13,10 +13,10 @@ from typing import Any
 
 import yaml
 
-from carrier_aliases import carrier_read_view
-from header_groups import GROUP_ORDER, GROUP_FIELDS, ROLE_FIELDS, equal_values, header_field_paths, header_path, header_value, path_value
-from project_root_container import effective_root_container_header
-from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_compat__pub import carrier_read_view
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_compat__pub import GROUP_ORDER, GROUP_FIELDS, ROLE_FIELDS, equal_values, header_field_paths, header_path, header_value, path_value
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_root_container import effective_root_container_header
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import parse_carrier
 
 
 def _set(metadata: dict[str, Any], path: tuple[str, ...], value: Any) -> None:
@@ -120,13 +120,8 @@ def same_authored_carrier(left_raw, right_raw, model):
     return equal_values(left[0], right[0]) and equal_values(left[1], right[1]) and left[2] == right[2]
 
 
-def render_carrier(raw: bytes | None, fields: dict[str, Any], *, body: str | None = None, model=None) -> bytes:  # noqa: C901
-    """Apply supplied logical fields; an omitted body keeps the original bytes.
 
-    Field keys use Header names or dotted paths. Existing equivalent aliases are
-    updated together; absent aliases are never added. New Carriers use grouped
-    Header paths. Header YAML is reserialized when fields are supplied.
-    """
+def _render_fields(fields, body, model):
     if not isinstance(fields, dict) or any(not isinstance(k, str) or not k or any(not p for p in k.split('.')) for k in fields):
         raise ValueError("Header fields must have nonempty string paths.")
     if body is not None and not isinstance(body, str):
@@ -135,6 +130,16 @@ def render_carrier(raw: bytes | None, fields: dict[str, Any], *, body: str | Non
     if schema is not None:
         fields = {field: schema.role_form.encode(field, value) if field in {'role', 'form'} else value
                   for field, value in fields.items()}
+    return schema, fields
+
+def render_carrier(raw: bytes | None, fields: dict[str, Any], *, body: str | None = None, model=None) -> bytes:  # noqa: C901
+    """Apply supplied logical fields; an omitted body keeps the original bytes.
+
+    Field keys use Header names or dotted paths. Existing equivalent aliases are
+    updated together; absent aliases are never added. New Carriers use grouped
+    Header paths. Header YAML is reserialized when fields are supplied.
+    """
+    schema, fields = _render_fields(fields, body, model)
     if raw is None:
         metadata: dict[str, Any] = {"identity": {}}
         newline = "\n"

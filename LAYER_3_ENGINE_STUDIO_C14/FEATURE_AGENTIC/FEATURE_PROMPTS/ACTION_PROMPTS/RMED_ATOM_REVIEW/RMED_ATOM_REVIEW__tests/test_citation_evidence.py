@@ -2,15 +2,13 @@
 from __future__ import annotations
 
 from pathlib import Path
-import sys
 import unittest
 
 HERE = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(HERE))
 
-from context_builder import body_sections, markdown  # noqa: E402
-from review_evidence import validate_subject_inventory  # noqa: E402
-from test_split_evaluation import context, source, RULE_TEXT  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import body_sections, markdown  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_evidence__shared import validate_subject_inventory  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__tests.test_split_evaluation import context, source, RULE_TEXT  # noqa: E402
 
 
 ATOM_ID = 'CA-R-200'
@@ -58,6 +56,40 @@ def section(raw: str, title: str) -> str:
     return next(address for address in body_sections(raw) if address.endswith(title))
 
 
+def _mentions(raw, claim, label_in_candidate, authority_ref, citation_atom_id, filename, span_section, start, span_text):
+    return [
+        {
+            'location': section(raw, '# Summary'),
+            'excerpt': 'Atom',
+            'entity': 'Atom',
+            'resolution': 'resolved',
+            'resolution_basis': 'meaning',
+            'rationale': 'The candidate directly names the bound governed Entity.',
+            'definitions': [{'authority': f'{ATOM_ID}@1',
+                             'excerpt': 'Atom means the selected governed statement.'}],
+        },
+        {
+            'location': claim,
+            'excerpt': f'See {label_in_candidate}.',
+            'entity': None,
+            'resolution': 'general',
+            'rationale': 'The reviewer classifies this readable source label as citation-only.',
+            'definitions': [],
+            'citation_evidence': {
+                'authority': authority_ref,
+                'atom_id': citation_atom_id,
+                'filename': filename,
+                'spans': [{
+                    'section': span_section or claim,
+                    'start': start,
+                    'end': start + len(span_text),
+                    'text': span_text,
+                }],
+            },
+        },
+    ]
+
+
 def row(raw: str, *, span_text: str = LABEL, filename: str = LABEL,
         authority_ref: str = f'{ATOM_ID}@1', citation_atom_id: str = ATOM_ID,
         span_section: str | None = None, offset_delta: int = 0,
@@ -71,37 +103,8 @@ def row(raw: str, *, span_text: str = LABEL, filename: str = LABEL,
         'subject_inventory': {
             'complete': True,
             'sections_reviewed': body_sections(raw),
-            'mentions': [
-                {
-                    'location': section(raw, '# Summary'),
-                    'excerpt': 'Atom',
-                    'entity': 'Atom',
-                    'resolution': 'resolved',
-                    'resolution_basis': 'meaning',
-                    'rationale': 'The candidate directly names the bound governed Entity.',
-                    'definitions': [{'authority': f'{ATOM_ID}@1',
-                                     'excerpt': 'Atom means the selected governed statement.'}],
-                },
-                {
-                    'location': claim,
-                    'excerpt': f'See {label_in_candidate}.',
-                    'entity': None,
-                    'resolution': 'general',
-                    'rationale': 'The reviewer classifies this readable source label as citation-only.',
-                    'definitions': [],
-                    'citation_evidence': {
-                        'authority': authority_ref,
-                        'atom_id': citation_atom_id,
-                        'filename': filename,
-                        'spans': [{
-                            'section': span_section or claim,
-                            'start': start,
-                            'end': start + len(span_text),
-                            'text': span_text,
-                        }],
-                    },
-                },
-            ],
+            'mentions': _mentions(raw, claim, label_in_candidate, authority_ref, citation_atom_id,
+                                  filename, span_section, start, span_text),
         },
     }
 

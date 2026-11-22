@@ -6,8 +6,8 @@ import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from carrier_aliases import carrier_read_view
-from header_yaml import header_scalar, parse_header
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_compat__pub import carrier_read_view
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.header_yaml import header_scalar, parse_header
 
 
 class HeaderSafetyTests(unittest.TestCase):
@@ -26,14 +26,14 @@ class HeaderSafetyTests(unittest.TestCase):
     def test_excessive_depth_stops_before_compose(self):
         for depth in (65, 10_000):
             source = "extra: " + "[" * depth + "0" + "]" * depth
-            with self.subTest(depth=depth), patch("header_yaml.yaml.compose") as compose:
+            with self.subTest(depth=depth), patch('FEATURE_PROGRAMMATIC.FEATURE_TOOLS.header_yaml.yaml.compose') as compose:
                 with self.assertRaisesRegex(ValueError, "safety ceiling"):
                     header_scalar(source, "version")
                 compose.assert_not_called()
 
     def test_excessive_events_stop_before_compose(self):
         source = "extra: [" + "0," * 100_001 + "]"
-        with patch("header_yaml.yaml.compose") as compose:
+        with patch('FEATURE_PROGRAMMATIC.FEATURE_TOOLS.header_yaml.yaml.compose') as compose:
             with self.assertRaisesRegex(ValueError, "safety ceiling"):
                 parse_header(source)
             compose.assert_not_called()

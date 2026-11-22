@@ -9,7 +9,7 @@ import unittest
 import yaml
 
 sys.path[:0] = [str(Path(__file__).resolve().parents[1]), str(Path(__file__).resolve().parents[2])]
-import readable_entity_tree as readable  # noqa: E402
+import FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.readable_entity_tree as readable  # noqa: E402
 
 
 STAMP = "2026-10-15 19:00:00 +0400"
@@ -159,7 +159,7 @@ class ReadableEntityTreeTests(unittest.TestCase):
         self.assertEqual(["Primary entities", "Workflow//Daily", "Workflow/Child"], sections)
 
     def test_containment_classification_and_value_constraints_are_visible(self):
-        from current_subject_graph import compose_current_graph
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.current_subject_graph import compose_current_graph
         graph, provenance = compose_current_graph([{
             "source": {"atom_id": "CA-R-9999", "version": 1, "path": "fixture.md"},
             "subjects": {"governs": "Part {1+}+>{2} Whole",

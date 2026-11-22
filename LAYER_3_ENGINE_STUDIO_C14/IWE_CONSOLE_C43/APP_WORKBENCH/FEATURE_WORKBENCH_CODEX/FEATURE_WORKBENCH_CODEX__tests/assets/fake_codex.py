@@ -88,6 +88,83 @@ def complete_turn(turn_id: str, status: str) -> None:
     emit("turn/completed", {"threadId": THREAD_ID, "turn": turn})
 
 
+def _turn_approval(turn_id):
+    request_id = "native-approval-request"
+    emit("item/commandExecution/requestApproval", {
+        "threadId": THREAD_ID,
+        "turnId": turn_id,
+        "itemId": "command-approval-item",
+        "reason": "fixture approval",
+    }, request_id)
+    response = wait_for_native_request(request_id)
+    if response and response.get("interrupted"):
+        complete_turn(turn_id, "interrupted")
+    else:
+        emit("item/commandExecution/requestApproval/accepted", {
+            "threadId": THREAD_ID,
+            "turnId": turn_id,
+            "itemId": "command-approval-item",
+            "result": response.get("result") if response else None,
+        })
+        complete_turn(turn_id, "completed")
+
+
+def _turn_user_input(turn_id):
+    request_id = "native-user-input-request"
+    emit("item/tool/requestUserInput", {
+        "threadId": THREAD_ID,
+        "turnId": turn_id,
+        "itemId": "user-input-item",
+        "questions": [{
+            "id": "answer",
+            "header": "Answer",
+            "question": "fixture question",
+            "options": [{"label": "Yes", "description": "accept fixture input"}],
+        }],
+    }, request_id)
+    response = wait_for_native_request(request_id)
+    if response and response.get("interrupted"):
+        complete_turn(turn_id, "interrupted")
+    else:
+        emit("item/tool/requestUserInput/accepted", {
+            "threadId": THREAD_ID,
+            "turnId": turn_id,
+            "itemId": "user-input-item",
+            "result": response.get("result") if response else None,
+        })
+        complete_turn(turn_id, "completed")
+
+
+def _turn_elicitation(turn_id):
+    request_id = "native-elicitation-request"
+    emit("mcpServer/elicitation/request", {
+        "threadId": THREAD_ID,
+        "turnId": turn_id,
+        "serverName": "fixture-mcp",
+        "message": "fixture elicitation",
+        "requestedSchema": {
+            "type": "object",
+            "properties": {"value": {"type": "string"}},
+            "required": ["value"],
+        },
+    }, request_id)
+    response = wait_for_native_request(request_id)
+    if response and response.get("interrupted"):
+        complete_turn(turn_id, "interrupted")
+    else:
+        emit("mcpServer/elicitation/accepted", {
+            "threadId": THREAD_ID,
+            "turnId": turn_id,
+            "result": response.get("result") if response else None,
+        })
+        complete_turn(turn_id, "completed")
+
+
+def _turn_interrupt(turn_id):
+    packet = wait_for_native_request("never-issued")
+    complete_turn(turn_id, "interrupted" if packet and packet.get("interrupted") else "completed")
+
+
 def start_turn(identifier: int | str, params: dict[str, Any]) -> None:
     global turn_number
     turn_number += 1
@@ -99,75 +176,15 @@ def start_turn(identifier: int | str, params: dict[str, Any]) -> None:
     text = ""
     if isinstance(items, list) and items and isinstance(items[0], dict):
         text = str(items[0].get("text", ""))
-    if text == "approval":
-        request_id = "native-approval-request"
-        emit("item/commandExecution/requestApproval", {
-            "threadId": THREAD_ID,
-            "turnId": turn_id,
-            "itemId": "command-approval-item",
-            "reason": "fixture approval",
-        }, request_id)
-        response = wait_for_native_request(request_id)
-        if response and response.get("interrupted"):
-            complete_turn(turn_id, "interrupted")
-        else:
-            emit("item/commandExecution/requestApproval/accepted", {
-                "threadId": THREAD_ID,
-                "turnId": turn_id,
-                "itemId": "command-approval-item",
-                "result": response.get("result") if response else None,
-            })
-            complete_turn(turn_id, "completed")
-    elif text == "user-input":
-        request_id = "native-user-input-request"
-        emit("item/tool/requestUserInput", {
-            "threadId": THREAD_ID,
-            "turnId": turn_id,
-            "itemId": "user-input-item",
-            "questions": [{
-                "id": "answer",
-                "header": "Answer",
-                "question": "fixture question",
-                "options": [{"label": "Yes", "description": "accept fixture input"}],
-            }],
-        }, request_id)
-        response = wait_for_native_request(request_id)
-        if response and response.get("interrupted"):
-            complete_turn(turn_id, "interrupted")
-        else:
-            emit("item/tool/requestUserInput/accepted", {
-                "threadId": THREAD_ID,
-                "turnId": turn_id,
-                "itemId": "user-input-item",
-                "result": response.get("result") if response else None,
-            })
-            complete_turn(turn_id, "completed")
-    elif text == "elicitation":
-        request_id = "native-elicitation-request"
-        emit("mcpServer/elicitation/request", {
-            "threadId": THREAD_ID,
-            "turnId": turn_id,
-            "serverName": "fixture-mcp",
-            "message": "fixture elicitation",
-            "requestedSchema": {
-                "type": "object",
-                "properties": {"value": {"type": "string"}},
-                "required": ["value"],
-            },
-        }, request_id)
-        response = wait_for_native_request(request_id)
-        if response and response.get("interrupted"):
-            complete_turn(turn_id, "interrupted")
-        else:
-            emit("mcpServer/elicitation/accepted", {
-                "threadId": THREAD_ID,
-                "turnId": turn_id,
-                "result": response.get("result") if response else None,
-            })
-            complete_turn(turn_id, "completed")
-    elif text == "interrupt":
-        packet = wait_for_native_request("never-issued")
-        complete_turn(turn_id, "interrupted" if packet and packet.get("interrupted") else "completed")
+    handlers = {
+        'approval': _turn_approval,
+        'user-input': _turn_user_input,
+        'elicitation': _turn_elicitation,
+        'interrupt': _turn_interrupt,
+    }
+    handler = handlers.get(text)
+    if handler is not None:
+        handler(turn_id)
     else:
         emit("item/agentMessage", {"turn_id": turn_id, "text": "fixture response"})
         complete_turn(turn_id, "completed")

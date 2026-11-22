@@ -8,8 +8,8 @@ import yaml
 TOOLS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS))
 
-from ATOM_LIFECYCLE.carrier import render_carrier  # noqa: E402
-from ATOM_LIFECYCLE.header_ordering import load_header_ordering, validate_header_order  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.carrier import render_carrier  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.header_ordering import load_header_ordering, validate_header_order  # noqa: E402
 
 
 class IdentityCodec:

@@ -19,14 +19,14 @@ Use the supplied framework checkout as the working directory. Inspect existing c
 - Docker installed and running.
 - The Codex CLI, if you select Codex integration.
 
-The command below uses `uv` to provide managed Python 3.14 and an isolated environment in the checkout. Run it from the root of the framework checkout.
+Run the command below from the Framework checkout root. It uses managed Python 3.14 and a standard-library-only Setup environment. Setup provisions the locked Release and Engine environments as needed.
 
 ## Install for one Project
 
 Replace the path with the absolute path to the Project repository:
 
 ```sh
-UV_PROJECT_ENVIRONMENT="$PWD/.anechoic_runtime/setup-venv" uv run --project "$PWD" --locked --python 3.14 --managed-python --no-env-file --group rmed-workflow-mcp python -B RUNTIME_SETUP/setup.py install --project "/absolute/repo" --port 8092
+UV_PROJECT_ENVIRONMENT=.venv-setup uv run --project "$PWD/RUNTIME_SETUP" --locked --python 3.14 --managed-python --no-env-file python -B -E "$PWD/RUNTIME_SETUP/setup.py" install --project "/absolute/repo" --port 8092
 ```
 
 For a new Project, add `--init-project --name NAME --prefix PREFIX` with the user's chosen name and prefix. Use these flags only for an explicit new single Project. Existing Projects retain their settings.
@@ -43,7 +43,7 @@ For example, add `--agent codex` to the install command if the user selected Cod
 
 ## Verify and repeat
 
-The installer builds an immutable image and initializes an MCP session. In single-Project mode it also verifies access to that Project. Check for `"outcome": "completed"` in the JSON result. Report the selected folder and MCP endpoint.
+The installer builds an immutable image. The Engine launcher opens an MCP session from the host through the published port. In single-Project mode it also verifies access to that Project. Check for `"outcome": "completed"` in the JSON result. Report the selected folder and MCP endpoint.
 
 After the user trusts the hook, start a new Codex session inside a mounted Project repository. The hook sends the nearest Git worktree root, including when Codex starts in a subdirectory. With `--projects-root`, the same hook serves every configured Project under that folder.
 

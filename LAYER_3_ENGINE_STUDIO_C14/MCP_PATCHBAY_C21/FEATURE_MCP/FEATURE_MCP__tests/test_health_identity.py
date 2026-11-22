@@ -1,11 +1,8 @@
 """Project attribution in bounded native Tool observations."""
 
-from pathlib import Path
-import sys
 import unittest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from health_observations import HealthObservations  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.health_observations import HealthObservations  # noqa: E402
 
 
 class HealthIdentityTests(unittest.TestCase):

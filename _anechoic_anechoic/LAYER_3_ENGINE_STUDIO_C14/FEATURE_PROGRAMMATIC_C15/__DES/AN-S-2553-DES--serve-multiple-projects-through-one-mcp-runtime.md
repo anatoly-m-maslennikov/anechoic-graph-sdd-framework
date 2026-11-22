@@ -7,9 +7,9 @@ tier: 4
 context:
   lens: DES
 state:
-  status: active
-  version: 17
-  updated_at: 2026-11-10 20:47:54 +0400
+  status: "active"
+  version: 19
+  updated_at: "2026-11-22T09:10:11.563457+00:00"
 ---
 
 ## Summary
@@ -139,17 +139,10 @@ records, bounded pool state and attributable operational diagnostics.
   revision through Tool calls, nested/asynchronous work, results, receipts and
   diagnostics. The native request, input/output schemas, `$defs` and Tool
   meaning remain unchanged.
-- Deliver the host-side read/write `My_Repos` bind and the shared MCP package
-  carriers at their canonical implementation places:
-  `201_TOOLS/host_runtime_config.py`,
-  `204_MCP/shared_gateway.py`,
-  `204_MCP/shared_project_catalog.py`,
-  `204_MCP/shared_project_pool.py`,
-  `204_MCP/shared_http_server.py`,
-  `docker/shared-mcp.compose.yaml`,
-  `docker/shared_mcp_launcher.py`, and the canonical Agentic
-  `205_SKILLS/ca` Project-local Skill path. These are delivery boundaries, not
-  new source authority or a claim of activation.
+- Runtime Setup (C65) owns the machine-local host settings. Backend (C45)
+  validates them and owns the shared Project catalog, routing, and pool.
+  MCP (C21) owns HTTP transport and the launcher. Use the configured
+  repository mount and include the Project-local Skill in delivery.
 - Include bounded union-frontier publication, per-Project disabled/inactive
   refusal and conflict diagnostics. New Tool names are published only after
   explicit shared restart/client reconnect; compatible advertised names may

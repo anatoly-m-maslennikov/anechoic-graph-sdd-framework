@@ -1,16 +1,17 @@
 """Exercise the Runtime Setup CLI orchestration and its stored settings."""
 
+from contextlib import redirect_stdout
+from io import StringIO
+import json
 from pathlib import Path
 import subprocess
-import sys
 import tempfile
 import tomllib
 import unittest
 from unittest.mock import patch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from settings import select_settings, write_settings
-from setup import LAUNCHER, RELEASE, _arguments, install
+from RUNTIME_SETUP__shared import select_settings, write_settings
+from setup import LAUNCHER, RELEASE, _arguments, _run_json, install, main
 
 
 class RuntimeSetupTests(unittest.TestCase):
@@ -23,6 +24,22 @@ class RuntimeSetupTests(unittest.TestCase):
 
     def arguments(self, *values):
         return _arguments(["install", "--settings", str(self.settings), *values])
+
+    def test_child_commands_select_their_own_project_and_environment(self):
+        source = Path("/framework")
+        for script, environment in ((RELEASE, ".venv-release"), (LAUNCHER, ".venv-prod")):
+            with self.subTest(script=script), patch("setup.subprocess.run") as run:
+                run.return_value.stdout = '{"outcome": "completed"}'
+                run.return_value.returncode = 0
+                _run_json(source, script, (), action="test", timeout=1)
+                command = run.call_args.args[0]
+                self.assertEqual(str(source / script.parts[0]), command[command.index("--project") + 1])
+                self.assertIn("--locked", command)
+                self.assertIn("--no-env-file", command)
+                self.assertIn("-P", command)
+                self.assertEqual(script == LAUNCHER, "--no-default-groups" in command)
+                self.assertEqual(environment, run.call_args.kwargs["env"]["UV_PROJECT_ENVIRONMENT"])
+                self.assertEqual(str(source / script.parts[0]), run.call_args.kwargs["env"]["PYTHONPATH"])
 
     def test_settings_create_and_reuse_selected_mode_and_defaults(self):
         original, fresh = select_settings(self.arguments(
@@ -60,7 +77,6 @@ class RuntimeSetupTests(unittest.TestCase):
                 {"outcome": "completed", "image_id": self.image},
                 {"ready": True, "http_port": 18092, "image": self.image},
             ]) as command,
-            patch("setup._verify") as verify,
             patch("codex_install.install_codex", return_value={"approval": "review"}) as codex,
         ):
             result = install(arguments, source=self.base)
@@ -69,9 +85,11 @@ class RuntimeSetupTests(unittest.TestCase):
         preflight.assert_called_once_with(True)
         self.assertEqual(RELEASE, command.call_args_list[0].args[1])
         self.assertEqual(LAUNCHER, command.call_args_list[1].args[1])
-        self.assertIn(self.image, command.call_args_list[1].args[2])
+        launch_args = command.call_args_list[1].args[2]
+        self.assertIn(self.image, launch_args)
+        self.assertIn("--verify-mcp", launch_args)
+        self.assertEqual(1320, command.call_args_list[1].kwargs["timeout"])
         endpoint = "http://127.0.0.1:18092/anechoic/mcp"
-        self.assertEqual(endpoint, verify.call_args.args[0])
         codex.assert_called_once_with(self.base, endpoint)
 
     def test_nonverified_image_stops_before_any_codex_install(self):
@@ -82,34 +100,54 @@ class RuntimeSetupTests(unittest.TestCase):
                 {"outcome": "completed", "image_id": self.image},
                 {"ready": True, "http_port": 8092, "image": "sha256:" + "b" * 64},
             ]),
-            patch("setup._verify") as verify,
             patch("codex_install.install_codex") as codex,
             self.assertRaisesRegex(ValueError, "Docker did not confirm"),
         ):
             install(arguments, source=self.base)
-        verify.assert_not_called()
+        codex.assert_not_called()
+
+    def test_mcp_verification_failure_stops_before_any_codex_install(self):
+        arguments = self.arguments("--projects-root", str(self.project), "--agent", "codex")
+        with (
+            patch("setup._preflight"),
+            patch("setup._run_json", side_effect=[
+                {"outcome": "completed", "image_id": self.image},
+                ValueError("start Docker failed (MCP verification failed)"),
+            ]),
+            patch("codex_install.install_codex") as codex,
+            self.assertRaisesRegex(ValueError, "MCP verification failed"),
+        ):
+            install(arguments, source=self.base)
         codex.assert_not_called()
 
     def test_single_initialization_carries_the_storage_defaults(self):
         subprocess.run(("git", "init", "-q", str(self.project)), check=True)
-        arguments = self.arguments(
-            "--project", str(self.project), "--init-project", "--name", "Example",
-            "--prefix", "EX", "--workbench-storage", "memory", "--journal-storage", "duckdb",
-        )
+        argv = [
+            "install", "--settings", str(self.settings), "--project", str(self.project),
+            "--init-project", "--name", "Example", "--prefix", "EX",
+            "--workbench-storage", "memory", "--journal-storage", "duckdb",
+        ]
+        output = StringIO()
         with (
             patch("setup._preflight"),
             patch("setup._run_json", side_effect=[
                 {"outcome": "completed", "image_id": self.image},
                 {"ready": True, "image": self.image, "http_port": 8092},
             ]),
-            patch("setup._verify"),
-            patch("project_init.initialize_project") as initialize,
+            redirect_stdout(output),
         ):
-            result = install(arguments, source=self.base)
+            self.assertEqual(main(argv), 0)
+        result = json.loads(output.getvalue())
         self.assertIs(result["project_initialized"], True)
-        initialize.assert_called_once_with(
-            self.base, self.project, "Example", "EX", workbench_storage="memory", journal_storage="duckdb",
+        self.assertEqual(
+            {"workbench_storage": "memory", "journal_storage": "duckdb"},
+            tomllib.loads(self.settings.read_text())["project_defaults"],
         )
+        manifest = self.project / ".anechoic_example" / "EX-S-1-SPEC-PROJECT_MANIFEST--declare-project.md"
+        claim = manifest.read_text()
+        self.assertIn("name='Example'", claim)
+        self.assertIn("'workbench': {'storage': 'memory'}", claim)
+        self.assertIn("'journal': {'storage': 'duckdb'}", claim)
 
 
 if __name__ == "__main__":

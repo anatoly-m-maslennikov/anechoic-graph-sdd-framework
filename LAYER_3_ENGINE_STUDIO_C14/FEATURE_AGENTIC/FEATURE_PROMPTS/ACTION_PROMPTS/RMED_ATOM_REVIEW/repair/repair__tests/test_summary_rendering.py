@@ -1,9 +1,9 @@
 """Lossless Summary rendering does not replace its identity-bearing value."""
 import unittest
 
-from test_repair_gate import caller_preflight
-from test_local_repair import local_inputs
-from repair_gate import _same_summary_value, admit_proposal
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair__tests.test_repair_gate import caller_preflight
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair__tests.test_local_repair import local_inputs
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair_gate__shared import _same_summary_value, admit_proposal
 
 
 class SummaryRendering(unittest.TestCase):

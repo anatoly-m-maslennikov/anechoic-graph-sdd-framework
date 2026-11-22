@@ -6,11 +6,11 @@ import hashlib
 from pathlib import Path
 import unittest
 
-from golden_fixtures import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.VALIDATE_ATOMS.VALIDATE_ATOMS__tests.golden_fixtures import (
     fixture_path,
     read_json,
 )
-from golden_support import assert_report_contract
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.VALIDATE_ATOMS.VALIDATE_ATOMS__tests.golden_support import assert_report_contract
 
 HERE = Path(__file__).resolve().parent
 MANIFEST = read_json(HERE / "assets" / "cases.json")

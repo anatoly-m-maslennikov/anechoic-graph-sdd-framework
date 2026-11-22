@@ -1,12 +1,10 @@
 """Typed Aspect hierarchy preserves independently authored facts."""
 from pathlib import Path
-import sys
 import unittest
 
 PROGRAMMATIC = Path(__file__).resolve().parents[2]
-sys.path[:0] = [str(PROGRAMMATIC), str(PROGRAMMATIC / 'FEATURE_TOOLS')]
-from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim
-from FEATURE_FORMAL_MODEL_ENGINE.compiler_claim import compiler_model_statements
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_model_claim__pub import parse_native_model_claim
+from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.compiler_claim import compiler_model_statements
 
 
 class AspectHierarchyTests(unittest.TestCase):

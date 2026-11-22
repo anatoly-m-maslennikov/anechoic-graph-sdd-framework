@@ -97,6 +97,49 @@ async function state(workspaceUrl: URL, workspaceId: string) {
   return await call(workspaceUrl, 'workspace_get', { workspace_id: workspaceId }) as WorkspaceState;
 }
 
+async function verifySavedReuse(
+  page: Page, fixture: Awaited<ReturnType<typeof disposableWorkspace>>,
+  sourceId: string, firstId: string, secondHref: string, secondId: string,
+  draft: string, operations: string[], retainedQueryId: string | null | undefined,
+) {
+  const countBefore = await viewTabs(page).getByRole('tab').count();
+  const beforeUrl = page.url();
+  await page.locator('.saved-reference a').click();
+  expect(page.url()).toBe(beforeUrl);
+  await expect(editor(page)).toContainText(draft);
+  await expect(page.getByRole('grid')).toBeVisible();
+  let current = await state(fixture.workspaceUrl, fixture.workspace);
+  expect(current.views).toHaveLength(countBefore);
+  expect(current.active_view_id).toBe(sourceId);
+  expect(current.views.find((view) => view.id === sourceId)!.result?.query_id).toBe(retainedQueryId);
+
+  await tab(page, 'View 2').click();
+  operations.length = 0;
+  await openSaved(page, firstId);
+  current = await state(fixture.workspaceUrl, fixture.workspace);
+  expect(current.active_view_id).toBe(sourceId);
+  expect(current.views).toHaveLength(2);
+  expect(operations).not.toContain('view_create');
+  await expect(editor(page)).toContainText(draft);
+
+  await tab(page, /View 2(?: \*)?/).click();
+  operations.length = 0;
+  await openSaved(page, new URL(secondHref, page.url()).toString());
+  current = await state(fixture.workspaceUrl, fixture.workspace);
+  expect(current.active_view_id).toBe(secondId);
+  expect(current.views).toHaveLength(2);
+  expect(operations).not.toContain('view_create');
+
+  await openSaved(page, firstId);
+  await expect(page.locator('.saved-reference a')).toHaveText(firstId);
+  await expect(editor(page)).toContainText(draft);
+  await page.evaluate(() => window.dispatchEvent(new Event('pagehide')));
+  await page.reload();
+  await expect(tab(page, /View 1(?: \*)?/)).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('.saved-reference a')).toHaveText(firstId);
+  await expect(editor(page)).toContainText(draft);
+}
+
 test('reuses exact saved View identity without navigation or equal-SQL merging', async ({ page }) => {
   const fixture = await disposableWorkspace('saved-actions');
   const sourceId = fixture.opened.views[0].id;
@@ -126,53 +169,10 @@ test('reuses exact saved View identity without navigation or equal-SQL merging',
   await replaceSql(page, draft); await flushDraft(page, draft);
   await expect(page.getByRole('grid')).toContainText('retained_value');
 
-  const countBefore = await viewTabs(page).getByRole('tab').count();
-  const beforeUrl = page.url();
-  await page.locator('.saved-reference a').click();
-  expect(page.url()).toBe(beforeUrl);
-  await expect(editor(page)).toContainText(draft);
-  await expect(page.getByRole('grid')).toBeVisible();
-  let current = await state(fixture.workspaceUrl, fixture.workspace);
-  expect(current.views).toHaveLength(countBefore);
-  expect(current.active_view_id).toBe(sourceId);
-  expect(current.views.find((view) => view.id === sourceId)!.result?.query_id).toBe(retainedQueryId);
-
-  await tab(page, 'View 2').click();
-  operations.length = 0;
-  await openSaved(page, first.id);
-  current = await state(fixture.workspaceUrl, fixture.workspace);
-  expect(current.active_view_id).toBe(sourceId);
-  expect(current.views).toHaveLength(2);
-  expect(operations).not.toContain('view_create');
-  await expect(editor(page)).toContainText(draft);
-
-  await tab(page, /View 2(?: \*)?/).click();
-  operations.length = 0;
-  await openSaved(page, new URL(second.href, page.url()).toString());
-  current = await state(fixture.workspaceUrl, fixture.workspace);
-  expect(current.active_view_id).toBe(secondId);
-  expect(current.views).toHaveLength(2);
-  expect(operations).not.toContain('view_create');
-
-  await openSaved(page, first.id);
-  await expect(page.locator('.saved-reference a')).toHaveText(first.id);
-  await expect(editor(page)).toContainText(draft);
-  await page.evaluate(() => window.dispatchEvent(new Event('pagehide')));
-  await page.reload();
-  await expect(tab(page, /View 1(?: \*)?/)).toHaveAttribute('aria-selected', 'true');
-  await expect(page.locator('.saved-reference a')).toHaveText(first.id);
-  await expect(editor(page)).toContainText(draft);
+  await verifySavedReuse(page, fixture, sourceId, first.id, second.href, secondId, draft, operations, retainedQueryId);
 });
 
-test('renames and duplicates Views from context and palette without copying results or saved identity', async ({ page }) => {
-  const fixture = await disposableWorkspace('duplicate-actions');
-  const sourceId = fixture.opened.views[0].id;
-  const operations = observedOperations(page);
-
-  await page.goto(fixture.workspaceUrl.toString());
-  await replaceSql(page, 'SELECT 21 AS source_value');
-  await saveCurrentView(page, 'Source saved');
-
+async function renameViews(page: Page) {
   await paletteAction(page, 'Rename View');
   const rename = page.getByRole('dialog', { name: 'View name' });
   const renameInput = rename.getByRole('textbox');
@@ -191,38 +191,15 @@ test('renames and duplicates Views from context and palette without copying resu
   await expect(tab(page, 'Context Renamed')).toBeVisible();
   await tab(page, 'Report').click();
 
-  const editedSql = 'SELECT 22 AS copied_value';
-  await replaceSql(page, editedSql); await flushDraft(page, editedSql);
-  const source = (await state(fixture.workspaceUrl, fixture.workspace)).views.find((view) => view.id === sourceId)!;
-  expect(source.result?.query_id).toBeTruthy();
-  expect(source.cursor_position).toBeGreaterThan(0);
-  const sourceQueryId = source.result!.query_id;
-  operations.length = 0;
-  await contextAction(page, /^Report(?: \*)?$/, 'Duplicate');
-  await expect(tab(page, /^Report\(1\)(?: \*)?$/)).toHaveAttribute('aria-selected', 'true');
-  let current = await state(fixture.workspaceUrl, fixture.workspace);
-  const firstCopy = current.views.find((view) => view.name === 'Report(1)')!;
-  const currentSource = current.views.find((view) => view.id === sourceId)!;
-  expect(firstCopy.id).not.toBe(sourceId);
-  expect(firstCopy.revision).toBe(0);
-  expect(firstCopy.sql).toBe(currentSource.sql);
-  expect(firstCopy.cursor_position).toBe(currentSource.cursor_position);
-  expect(firstCopy.result).toBeUndefined();
-  expect(currentSource.sql).toBe(editedSql);
-  expect(currentSource.result?.query_id).toBe(sourceQueryId);
-  expect(current.active_view_id).toBe(firstCopy.id);
-  expect(current.views[current.views.findIndex((view) => view.id === sourceId) + 1].id).toBe(firstCopy.id);
-  expect(operations).toContain('view_duplicate');
-  expect(operations.filter((operation) => executionOperations.has(operation))).toEqual([]);
-  await expect(page.getByRole('grid')).toHaveCount(0);
-  await expect(page.locator('.saved-reference a')).toHaveCount(0);
+}
 
+async function verifyPaletteDuplicate(page: Page, fixture: Awaited<ReturnType<typeof disposableWorkspace>>, sourceId: string, sourceQueryId: string | null | undefined, firstCopy: WorkspaceView, currentSource: WorkspaceView, operations: string[], editedSql: string) {
   await tab(page, /^Report(?: \*)?$/).click();
   await expect(page.getByRole('grid')).toBeVisible();
   operations.length = 0;
   await paletteAction(page, 'Duplicate View');
   await expect(tab(page, /^Report\(2\)(?: \*)?$/)).toHaveAttribute('aria-selected', 'true');
-  current = await state(fixture.workspaceUrl, fixture.workspace);
+  let current = await state(fixture.workspaceUrl, fixture.workspace);
   const secondCopy = current.views.find((view) => view.name === 'Report(2)')!;
   expect(secondCopy.id).not.toBe(sourceId);
   expect(secondCopy.id).not.toBe(firstCopy.id);
@@ -251,4 +228,44 @@ test('renames and duplicates Views from context and palette without copying resu
   await expect(editor(page)).toContainText(editedSql);
   await expect(page.locator('.saved-reference a')).toBeVisible();
   await expect(page.getByRole('grid')).toBeVisible();
+}
+
+test('renames and duplicates Views from context and palette without copying results or saved identity', async ({ page }) => {
+  const fixture = await disposableWorkspace('duplicate-actions');
+  const sourceId = fixture.opened.views[0].id;
+  const operations = observedOperations(page);
+
+  await page.goto(fixture.workspaceUrl.toString());
+  await replaceSql(page, 'SELECT 21 AS source_value');
+  await saveCurrentView(page, 'Source saved');
+
+  await renameViews(page);
+
+  const editedSql = 'SELECT 22 AS copied_value';
+  await replaceSql(page, editedSql); await flushDraft(page, editedSql);
+  const source = (await state(fixture.workspaceUrl, fixture.workspace)).views.find((view) => view.id === sourceId)!;
+  expect(source.result?.query_id).toBeTruthy();
+  expect(source.cursor_position).toBeGreaterThan(0);
+  const sourceQueryId = source.result!.query_id;
+  operations.length = 0;
+  await contextAction(page, /^Report(?: \*)?$/, 'Duplicate');
+  await expect(tab(page, /^Report\(1\)(?: \*)?$/)).toHaveAttribute('aria-selected', 'true');
+  let current = await state(fixture.workspaceUrl, fixture.workspace);
+  const firstCopy = current.views.find((view) => view.name === 'Report(1)')!;
+  const currentSource = current.views.find((view) => view.id === sourceId)!;
+  expect(firstCopy.id).not.toBe(sourceId);
+  expect(firstCopy.revision).toBe(0);
+  expect(firstCopy.sql).toBe(currentSource.sql);
+  expect(firstCopy.cursor_position).toBe(currentSource.cursor_position);
+  expect(firstCopy.result).toBeUndefined();
+  expect(currentSource.sql).toBe(editedSql);
+  expect(currentSource.result?.query_id).toBe(sourceQueryId);
+  expect(current.active_view_id).toBe(firstCopy.id);
+  expect(current.views[current.views.findIndex((view) => view.id === sourceId) + 1].id).toBe(firstCopy.id);
+  expect(operations).toContain('view_duplicate');
+  expect(operations.filter((operation) => executionOperations.has(operation))).toEqual([]);
+  await expect(page.getByRole('grid')).toHaveCount(0);
+  await expect(page.locator('.saved-reference a')).toHaveCount(0);
+
+  await verifyPaletteDuplicate(page, fixture, sourceId, sourceQueryId, firstCopy, currentSource, operations, editedSql);
 });

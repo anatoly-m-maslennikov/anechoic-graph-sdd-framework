@@ -1,16 +1,14 @@
 """Golden mock runs: evidence recording, not simulated semantic evaluation."""
 import json
 from pathlib import Path
-import sys
 import tempfile
 import unittest
 from unittest.mock import patch
 
 HERE = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(HERE))
-from workflow_evidence import RunEvidence, render_report  # noqa: E402
-from work_journal import append_sealed_events  # noqa: E402
-from workflow_progress import CHECKS  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.workflow_evidence import RunEvidence, render_report  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.work_journal__pub import append_sealed_events  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.workflow_progress import CHECKS  # noqa: E402
 
 
 def checked(source, criteria):
@@ -124,12 +122,12 @@ class RunEvidenceTests(unittest.TestCase):
     def test_recording_failure_retains_results_without_retrying_journal(self):
         state = self.start()
         row = checked(state['selection'][0]['source'], state['criteria_sha256'])
-        with patch('workflow_evidence.append_sealed_events', side_effect=OSError('mock offline')):
+        with patch('FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.workflow_evidence.append_sealed_events', side_effect=OSError('mock offline')):
             state = self.store.record('mock-run', 0, row, stage='check')
         self.assertEqual(state['reports'][0], row)
         self.assertTrue(state['recording_blockers'])
         self.assertIsNone(state['events'][-1]['receipt'])
-        with patch('workflow_evidence.append_sealed_events') as append:
+        with patch('FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.workflow_evidence.append_sealed_events') as append:
             state = self.store.sync('mock-run')
             append.assert_not_called()
         self.assertTrue(state['recording_blockers'])
@@ -200,10 +198,10 @@ class RunEvidenceTests(unittest.TestCase):
             append_sealed_events(*args, **kwargs)
             raise OSError('lost acknowledgement after append')
 
-        with patch('workflow_evidence.append_sealed_events', side_effect=append_then_lose_ack):
+        with patch('FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.workflow_evidence.append_sealed_events', side_effect=append_then_lose_ack):
             self.store.record('mock-run', 0, row, stage='check')
         before = sum(len(p.read_text().splitlines()) for p in self.root.rglob('*.ndjson'))
-        with patch('workflow_evidence.append_sealed_events') as append:
+        with patch('FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.workflow_evidence.append_sealed_events') as append:
             state = self.store.sync('mock-run')
             append.assert_not_called()
         after = sum(len(p.read_text().splitlines()) for p in self.root.rglob('*.ndjson'))

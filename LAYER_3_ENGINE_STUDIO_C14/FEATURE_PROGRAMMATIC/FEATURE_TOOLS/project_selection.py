@@ -9,35 +9,29 @@ variables never select a Project or replace its identity here.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
-from contextvars import ContextVar
 from dataclasses import dataclass, field, replace
-import hashlib
 import os
 from pathlib import Path
 import re
-import stat
-import tomllib
-from settings_carrier import parse_settings_carrier, read_settings_carrier
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.settings_carrier__pub import read_settings_carrier
 from types import MappingProxyType
 from typing import Any
 
-from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext, open_regular, protected
-from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
-from scope_unit_declarations import ScopeDeclarationError, ScopeUnitDeclarations, read_scope_unit_declarations
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__pub import CEILINGS, ReadContext, open_regular, protected
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.project_manifest__pub import ProjectSelectionError
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.scope_carrier__pub import ScopeDeclarationError
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.settings_context__pub import bind_settings_selection, bound_selection
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.scope_unit_declarations__pub import ScopeUnitDeclarations, read_scope_unit_declarations
 
 
-SETTINGS_FILENAME = "anechoic_project_settings.toml"
-_CONTROL_PREFIX = ".anechoic_"
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection_boundary import _DeclarationBoundaryProof, _declaration_boundary_proof
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection_paths import (
+    SETTINGS_FILENAME, _control_candidates, _control_relative, _instance_id, _project_root,
+)
+
 _IDENTITY = re.compile(r"[0-9a-f]{64}\Z")
-
-
-class ProjectSelectionError(ValueError):
-    """An attributable refusal, without substituting another Project."""
-
-    code = "PROJECT_SELECTION_REFUSED"
-    condition = code
 
 
 def _freeze(value: Any) -> Any:
@@ -91,60 +85,6 @@ class ProjectSelection:
     def launcher_state(self) -> Path:
         return self.root / ".anechoic_runtime" / "runtime" / "project_mcp" / self.instance_id
 
-_SELECTION: ContextVar[ProjectSelection | None] = ContextVar("anechoic_project_selection", default=None)
-
-
-def _project_root(value: str | Path) -> Path:
-    try:
-        raw = Path(value).expanduser()
-        if ".." in raw.parts or protected(raw):
-            raise ProjectSelectionError("Project root is unsafe")
-        path = Path(os.path.abspath(raw))
-        if path.resolve(strict=True) != path:
-            raise ProjectSelectionError("Project root must not contain a symlink")
-        descriptor = open_regular(path, directory=True)
-        try:
-            if not stat.S_ISDIR(os.fstat(descriptor).st_mode):
-                raise ProjectSelectionError("Project root is not a directory")
-        finally:
-            os.close(descriptor)
-        return path
-    except ProjectSelectionError:
-        raise
-    except (OSError, RuntimeError, TypeError, ValueError) as error:
-        raise ProjectSelectionError("Project root is unavailable or unsafe") from error
-
-
-def _control_relative(value: str | Path) -> Path:
-    if not isinstance(value, (str, Path)) or not str(value):
-        raise ProjectSelectionError("Control root must name one direct Project child")
-    path = Path(value)
-    if (path.is_absolute() or len(path.parts) != 1 or ".." in path.parts
-            or not path.name.startswith(_CONTROL_PREFIX) or path.name == _CONTROL_PREFIX
-            or str(value) != path.as_posix() or protected(path)):
-        raise ProjectSelectionError("Control root must name one normalized direct Project child")
-    return path
-
-
-def _control_candidates(root: Path) -> list[Path]:
-    descriptor = open_regular(root, directory=True)
-    try:
-        with os.scandir(descriptor) as entries:
-            candidates = []
-            for entry in entries:
-                if not entry.name.startswith(_CONTROL_PREFIX):
-                    continue
-                if entry.is_symlink():
-                    raise ProjectSelectionError("Project control candidates must not be symlinks")
-                if not entry.is_dir(follow_symlinks=False):
-                    continue
-                control = root / entry.name
-                if os.path.lexists(control / SETTINGS_FILENAME):
-                    candidates.append(_control_relative(entry.name))
-            return sorted(candidates)
-    finally:
-        os.close(descriptor)
-
 
 def _read_toml(reader: ReadContext, path: Path) -> dict[str, Any]:
     try:
@@ -153,112 +93,44 @@ def _read_toml(reader: ReadContext, path: Path) -> dict[str, Any]:
         raise ProjectSelectionError(f"Required Project carrier is unavailable or invalid: {path.name}") from error
 
 
-def _instance_id(root: Path, relative: Path) -> str:
-    return hashlib.sha256(f"{root}\0{relative.as_posix()}".encode("utf-8")).hexdigest()
+def _validate_settings(settings: dict[str, Any], relative: Path) -> str:
+    paths = settings.get("paths")
+    if not isinstance(paths, dict):
+        raise ProjectSelectionError("Project Settings must contain a paths table")
+    declared = paths.get("control_root")
+    if not isinstance(declared, str) or _control_relative(declared) != relative:
+        raise ProjectSelectionError("Project Settings control_root contradicts the selection")
+    project = settings.get("project")
+    if not isinstance(project, dict) or not isinstance(project.get("name"), str) or not project["name"].strip():
+        raise ProjectSelectionError("Project Settings must contain a non-empty Project name")
+    return project["name"]
 
 
-@dataclass(frozen=True)
-class _DeclarationBoundaryProof:
-    root: Path
-    marker_pins: Mapping[str, str | None]
-    _reader: ReadContext = field(repr=False, compare=False)
-
-    def __post_init__(self) -> None:
-        object.__setattr__(self, "marker_pins", MappingProxyType(dict(self.marker_pins)))
-
-    def revalidate(self, *, reader: ReadContext | None = None) -> None:
-        """Reopen the original marker set without replacing any captured pin."""
-        reader = reader if reader is not None else ReadContext(roots=[str(self.root)], limits=dict(CEILINGS))
-        for relative, expected in self.marker_pins.items():
-            try:
-                raw = reader.read(self.root / relative, remember=False)
-            except FileNotFoundError:
-                if expected is None:
-                    continue
-                raise ProjectSelectionError("Declaration boundary Settings disappeared") from None
-            except (OSError, RuntimeError, ValueError) as error:
-                raise ProjectSelectionError("Declaration boundary evidence is unavailable or unsafe") from error
-            if expected is None or hashlib.sha256(raw).hexdigest() != expected:
-                raise ProjectSelectionError("Declaration boundary evidence changed")
+def _selected_declarations(root: Path, relative: Path, control: Path, reader: ReadContext,
+                           indexed_declarations: ScopeUnitDeclarations | None, project_name: str) -> ScopeUnitDeclarations:
+    declarations = indexed_declarations
+    if declarations is None:
+        declarations = read_scope_unit_declarations(root, relative, reader=reader)
+    elif (not isinstance(declarations, ScopeUnitDeclarations) or not declarations.paths
+          or any(not path.is_absolute() or not path.is_relative_to(control) for path in declarations.paths)):
+        raise ProjectSelectionError("Indexed declarations belong to another Project")
+    if declarations.root.name != project_name:
+        raise ProjectSelectionError("Project root declaration contradicts Project Settings name")
+    return declarations
 
 
-def _declaration_boundary_proof(
-    project_root: str | Path, control_root: str | Path,
-    declarations: Iterable[Mapping[str, Any]], *, reader: ReadContext | None = None,
-) -> _DeclarationBoundaryProof:
-    """Pin Settings-defined boundaries along only the supplied declaration paths.
-
-    This private refusal check neither resolves logical Settings Revisions nor
-    selects another Project.  Callers retain its proof through their final check.
-    """
-    root = _project_root(project_root)
-    control = root / _control_relative(control_root)
-    reader = reader if reader is not None else ReadContext(roots=[str(root)], limits=dict(CEILINGS))
-    pins: dict[str, str | None] = {}
-
-    def marker(directory: Path) -> dict[str, Any] | None:
-        path = directory / SETTINGS_FILENAME
-        key = path.relative_to(root).as_posix()
-        try:
-            raw = reader.read(path)
-        except FileNotFoundError:
-            if str(path) in reader.fingerprints:
-                raise ProjectSelectionError("Declaration boundary evidence changed") from None
-            pins[key] = None
-            return None
-        except (OSError, RuntimeError, ValueError) as error:
-            raise ProjectSelectionError("Declaration boundary Settings are unavailable or unsafe") from error
-        digest = hashlib.sha256(raw).hexdigest()
-        if reader.fingerprints[str(path)] != digest:
-            raise ProjectSelectionError("Declaration boundary evidence changed")
-        pins[key] = digest
-        try:
-            settings = parse_settings_carrier(raw)
-            project, paths = settings.get("project"), settings.get("paths")
-            name = project.get("name") if isinstance(project, dict) else None
-            declared = paths.get("control_root") if isinstance(paths, dict) else None
-            if not isinstance(name, str) or not name.strip() or name != name.strip():
-                raise ProjectSelectionError("Declaration boundary Settings lack exact Project identity")
-            if not isinstance(declared, str) or _control_relative(declared) != Path(directory.name):
-                raise ProjectSelectionError("Declaration boundary Settings contradict their control root")
-        except (UnicodeError, ValueError) as error:
-            raise ProjectSelectionError("Declaration boundary Settings are invalid or contradictory") from error
-        return settings
-
-    if marker(control) is None:
-        raise ProjectSelectionError("Owning Project Settings are unavailable")
-    directories = {control}
-    try:
-        for row in declarations:
-            if not isinstance(row, Mapping):
-                raise ProjectSelectionError("Scope Unit Declaration is invalid")
-            for field_name in ("authority_path", "delivery_path"):
-                value = row.get(field_name)
-                if not isinstance(value, str) or not value or "\\" in value or "\x00" in value:
-                    raise ProjectSelectionError(f"Scope Unit Declaration {field_name} is unsafe")
-                if field_name == "delivery_path" and value == ".":
-                    continue
-                relative = Path(value.rstrip("/"))
-                if relative.is_absolute() or not relative.parts or ".." in relative.parts or relative.as_posix() != value.rstrip("/"):
-                    raise ProjectSelectionError(f"Scope Unit Declaration {field_name} is unsafe")
-                directory = reader.allowed(root / relative)
-                while directory != root:
-                    directories.add(directory)
-                    directory = directory.parent
-        for directory in sorted(directories):
-            if directory == control:
-                continue
-            settings = marker(directory)
-            if settings is not None:
-                if _instance_id(directory.parent, Path(directory.name)) != _instance_id(root, control.relative_to(root)):
-                    raise ProjectSelectionError("Scope Unit Declaration path crosses another Project control root")
-        proof = _DeclarationBoundaryProof(root, pins, reader)
-        proof.revalidate(reader=reader)
-        return proof
-    except ProjectSelectionError:
-        raise
-    except (OSError, RuntimeError, TypeError, ValueError) as error:
-        raise ProjectSelectionError("Project declaration boundary evidence is unavailable or unsafe") from error
+def _selection_provenance(root: Path, settings_path: Path, settings: dict[str, Any],
+                          reader: ReadContext, declarations: ScopeUnitDeclarations) -> dict[str, Any]:
+    provenance = {
+        path.relative_to(root).as_posix(): {
+            "sha256": reader.fingerprints[str(path)],
+            "size": reader.sizes[str(path)],
+            "schema_version": document.get("schema_version"),
+        }
+        for path, document in ((settings_path, settings),)
+    }
+    provenance.update({path: dict(pin) for path, pin in declarations.source_pins.items()})
+    return provenance
 
 
 def resolve_project(project_root: str | Path, control_root: str | Path | None = None, *,
@@ -279,36 +151,13 @@ def resolve_project(project_root: str | Path, control_root: str | Path | None = 
         reader = ReadContext(roots=[str(root)], limits=dict(CEILINGS))
         settings_path = control / SETTINGS_FILENAME
         settings = _read_toml(reader, settings_path)
-        paths = settings.get("paths")
-        if not isinstance(paths, dict):
-            raise ProjectSelectionError("Project Settings must contain a paths table")
-        declared = paths.get("control_root")
-        if not isinstance(declared, str) or _control_relative(declared) != relative:
-            raise ProjectSelectionError("Project Settings control_root contradicts the selection")
-        project = settings.get("project")
-        if not isinstance(project, dict) or not isinstance(project.get("name"), str) or not project["name"].strip():
-            raise ProjectSelectionError("Project Settings must contain a non-empty Project name")
-        declarations = indexed_declarations
-        if declarations is None:
-            declarations = read_scope_unit_declarations(root, relative, reader=reader)
-        elif (not isinstance(declarations, ScopeUnitDeclarations) or not declarations.paths
-              or any(not path.is_absolute() or not path.is_relative_to(control) for path in declarations.paths)):
-            raise ProjectSelectionError("Indexed declarations belong to another Project")
-        if declarations.root.name != project["name"]:
-            raise ProjectSelectionError("Project root declaration contradicts Project Settings name")
+        project_name = _validate_settings(settings, relative)
+        declarations = _selected_declarations(root, relative, control, reader, indexed_declarations, project_name)
         structure = declarations.as_structure()
         boundary_proof = _declaration_boundary_proof(root, relative, structure["scope_units"], reader=reader)
         if reader.currentness()["state"] != "unchanged":
             raise ProjectSelectionError("Project carriers changed during selection")
-        provenance = {
-            path.relative_to(root).as_posix(): {
-                "sha256": reader.fingerprints[str(path)],
-                "size": reader.sizes[str(path)],
-                "schema_version": document.get("schema_version"),
-            }
-            for path, document in ((settings_path, settings),)
-        }
-        provenance.update({path: dict(pin) for path, pin in declarations.source_pins.items()})
+        provenance = _selection_provenance(root, settings_path, settings, reader, declarations)
         return ProjectSelection(
             root=root, control_root=control, control_relative=relative,
             instance_id=_instance_id(root, relative), settings=settings, structure=structure,
@@ -330,21 +179,13 @@ def bind_selection(selection: ProjectSelection) -> Iterator[ProjectSelection]:
     """Bind an already selected context for this startup/task and restore it."""
     if not isinstance(selection, ProjectSelection):
         raise ProjectSelectionError("Only a validated ProjectSelection can be bound")
-    token = _SELECTION.set(selection)
-    try:
+    with bind_settings_selection(selection, _validate_bound_root):
         yield selection
-    finally:
-        _SELECTION.reset(token)
 
 
-def bound_selection(root: str | Path | None = None) -> ProjectSelection | None:
-    """Return only explicit startup context, validating its root when supplied."""
-    selection = _SELECTION.get()
-    if selection is None:
-        return None
-    if root is not None and selection.root != _project_root(root):
+def _validate_bound_root(selection: ProjectSelection, root: str | Path) -> None:
+    if selection.root != _project_root(root):
         raise ProjectSelectionError("Active Project selection belongs to another root")
-    return selection
 
 
 def active_selection(root: str | Path) -> ProjectSelection:

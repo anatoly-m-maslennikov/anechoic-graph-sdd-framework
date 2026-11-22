@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import contextmanager
-from hashlib import sha256
+from hashlib import file_digest, sha256
 import json
 import os
 import shutil
@@ -63,11 +63,11 @@ def _workspace(root: Path, package: Path, run_id: str) -> Path:
 _HTTP = build_opener(ProxyHandler({}))
 
 
-def _mcp_ready(port: int, timeout: float) -> bool:
+def _mcp_ready(port: int, timeout: float, *, query_enabled: bool = True) -> bool:
     if timeout <= 0:
         return False
 
-    async def initialize() -> None:
+    async def query() -> bool:
         from httpx2 import AsyncClient
         from mcp.client.session import ClientSession
         from mcp.client.streamable_http import streamable_http_client
@@ -77,12 +77,21 @@ def _mcp_ready(port: int, timeout: float) -> bool:
             async with streamable_http_client(url, http_client=client) as streams:
                 async with ClientSession(*streams) as session:
                     await session.initialize()
+                    if not query_enabled:
+                        await session.send_ping()
+                        return True
+                    result = await session.call_tool("query_run", {
+                        "sql": "SELECT 1 AS ready",
+                        "result_delivery": "inline",
+                        "result_format": "json_matrix",
+                    })
+                    data = result.structured_content
+                    return not result.is_error and isinstance(data, dict) and data.get("rows") == [[1]]
 
     try:
-        asyncio.run(asyncio.wait_for(initialize(), timeout))
+        return asyncio.run(asyncio.wait_for(query(), timeout))
     except Exception:
         return False
-    return True
 
 
 @contextmanager
@@ -109,19 +118,44 @@ def _candidate_tag(root: Path, staging: Path, image: str, run_id: str):
             failure.add_note(f"Candidate tag {tag} cleanup failed.")
 
 
-def verify_candidate_image(root: Path, package: Path, image: str, *, run_id: str) -> str:
-    """Start the immutable image on a Docker-assigned port and verify MCP readiness."""
+def _selection(value: object) -> dict:
+    fields = {"control_root", "manifest_path", "manifest_ref", "manifest_sha256",
+              "project_name", "project_prefix", "query_enabled"}
+    if not isinstance(value, dict) or set(value) != fields:
+        raise CanaryError("local-release-canary-selection-invalid")
+    control, manifest = value["control_root"], value["manifest_path"]
+    name, prefix, ref, digest = (value[key] for key in
+                                 ("project_name", "project_prefix", "manifest_ref", "manifest_sha256"))
+    if (not all(isinstance(item, str) for item in (control, manifest, name, prefix, ref, digest))
+            or not name.strip() or re.fullmatch(r"[A-Z]+", prefix) is None
+            or re.fullmatch(re.escape(prefix) + r"-S-[0-9]+@[1-9][0-9]*", ref) is None
+            or re.fullmatch(r"[0-9a-f]{64}", digest) is None
+            or type(value["query_enabled"]) is not bool
+            or control not in {f".anechoic_{name.casefold()}", f"_anechoic_{name.casefold()}"}
+            or len(Path(control).parts) != 1 or Path(control).as_posix() != control
+            or len(Path(manifest).parts) != 2 or Path(manifest).as_posix() != manifest
+            or Path(manifest).parts[0] != control
+            or not Path(manifest).name.startswith(ref.split("@")[0] + "-")):
+        raise CanaryError("local-release-canary-selection-invalid")
+    return value
+
+
+def _verify_manifest(root: Path, selection: dict) -> None:
+    manifest = root / selection["manifest_path"]
+    if manifest.parent.is_symlink() or manifest.is_symlink() or not manifest.is_file():
+        raise CanaryError("local-release-canary-manifest-changed")
+    with manifest.open("rb") as stream:
+        if file_digest(stream, "sha256").hexdigest() != selection["manifest_sha256"]:
+            raise CanaryError("local-release-canary-manifest-changed")
+
+
+def verify_candidate_image(root: Path, package: Path, image: str, *, run_id: str, selection: dict) -> str:
+    """Start the immutable image and verify that MCP serves a real query."""
     if not re.fullmatch(r"sha256:[0-9a-f]{64}", image):
         raise CanaryError("local-release-canary-image-invalid")
     staging = _workspace(root, package, run_id)
-    source = Path(__file__).resolve().parents[3]
-    engine = source / "LAYER_3_ENGINE_STUDIO_C14"
-    sys.path[:0] = [
-        str(source), str(engine / "FEATURE_PROGRAMMATIC"),
-        str(engine / "FEATURE_PROGRAMMATIC/FEATURE_TOOLS"), str(engine / "IWE_CONSOLE_C43"),
-    ]
-    from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import select_runtime_project
-    selection = select_runtime_project(root)
+    selection = _selection(selection)
+    _verify_manifest(root, selection)
     with _candidate_tag(root, staging, image, run_id):
         return _verify_candidate_image(root, selection, package, staging, image)
 
@@ -132,24 +166,7 @@ def _verify_candidate_image(root: Path, selection, package: Path, staging: Path,
     if "," in str(project):
         raise CanaryError("local-release-canary-path-invalid")
     try:
-        _copy_tree(package, project)
-        control = project / selection.control_relative
-        _copy_tree(root / selection.control_relative, control)
-        subprocess.run(["git", "init", "--quiet", str(project)], cwd=root, check=True,
-                       capture_output=True, text=True, timeout=30)
-        from LAYER_3_ENGINE_STUDIO_C14.MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import select_runtime_project
-
-        copied = select_runtime_project(project, selection.control_relative)
-        command = ["docker", "run", "-d", "--pull=never", "--cidfile", str(cidfile), "--init", "--read-only",
-                   "--cap-drop", "ALL", "--security-opt", "no-new-privileges:true",
-                   "--tmpfs", "/tmp:size=128m,mode=1777", "--pids-limit", "128",
-                   "--memory", "1536m", "--cpus", "1", "-p", "127.0.0.1::8092",
-                   "--mount", f"type=bind,src={project},dst=/project",
-                   "-e", "ANECHOIC_RUNTIME_NAMESPACE=docker",
-                   "-e", f"ANECHOIC_CONTROL_ROOT={copied.control_relative.as_posix()}",
-                   "-e", f"ANECHOIC_PROJECT_INSTANCE_ID={copied.instance_id}",
-                   "-e", f"ANECHOIC_HOST_PROJECT_ROOT={project}", image, "mcp-http"]
-        subprocess.run(command, cwd=root, check=True, capture_output=True, text=True, timeout=30)
+        _start_canary_container(root, selection, package, project, cidfile, image)
         container = cidfile.read_text().strip()
         if not re.fullmatch(r"[0-9a-f]{64}", container):
             raise CanaryError("local-release-canary-container-invalid")
@@ -158,38 +175,64 @@ def _verify_candidate_image(root: Path, selection, package: Path, staging: Path,
         binding = re.fullmatch(r"127\.0\.0\.1:([1-9][0-9]{0,4})", publisher)
         if binding is None or int(binding[1]) > 65535:
             raise CanaryError("local-release-canary-port-invalid")
-        port = int(binding[1])
-        base = f"http://127.0.0.1:{port}"
-        deadline = time.monotonic() + 420
-        while time.monotonic() < deadline:
-            try:
-                with _HTTP.open(base + "/anechoic/health", timeout=min(3, deadline - time.monotonic())) as response:
-                    if json.load(response).get("ready") is True:
-                        break
-            except (OSError, ValueError):
-                pass
-            running = subprocess.run(["docker", "container", "inspect", "--format", "{{.State.Running}}", container],
-                                     cwd=root, check=True, capture_output=True, text=True,
-                                     timeout=max(0.01, min(30, deadline - time.monotonic()))).stdout.strip()
-            if running != "true":
-                raise CanaryError("local-release-canary-container-exited")
-            time.sleep(min(2, max(0, deadline - time.monotonic())))
-        else:
-            raise CanaryError("local-release-canary-health-timeout")
-        if not _mcp_ready(port, deadline - time.monotonic()):
-            raise CanaryError("local-release-canary-mcp-failed")
-        return base + "/anechoic/mcp"
+        return _await_canary(root, container, int(binding[1]), query_enabled=selection["query_enabled"])
     except subprocess.SubprocessError as error:
         raise CanaryError("local-release-canary-command-failed") from error
     finally:
-        failure = sys.exception()
-        if cidfile.is_file():
-            container = cidfile.read_text().strip()
-            if re.fullmatch(r"[0-9a-f]{64}", container):
-                try:
-                    subprocess.run(["docker", "rm", "-f", container], cwd=root, check=True,
-                                   capture_output=True, text=True, timeout=30)
-                except (OSError, subprocess.SubprocessError) as error:
-                    if failure is None:
-                        raise CanaryError("local-release-canary-cleanup-failed") from error
-                    failure.add_note(f"Canary container {container} cleanup failed.")
+        _remove_canary_container(root, cidfile, failure=sys.exception())
+
+
+def _start_canary_container(
+    root: Path, selection: dict, package: Path, project: Path, cidfile: Path, image: str,
+) -> None:
+    _copy_tree(package, project)
+    control = project / selection["control_root"]
+    _copy_tree(root / selection["control_root"], control)
+    _verify_manifest(project, selection)
+    subprocess.run(["git", "init", "--quiet", str(project)], cwd=root, check=True,
+                   capture_output=True, text=True, timeout=30)
+    instance_id = sha256(f"{project.resolve(strict=True)}\0{selection['control_root']}".encode("utf-8")).hexdigest()
+    command = ["docker", "run", "-d", "--pull=never", "--cidfile", str(cidfile), "--init", "--read-only",
+               "--cap-drop", "ALL", "--security-opt", "no-new-privileges:true",
+               "--tmpfs", "/tmp:size=128m,mode=1777", "--pids-limit", "128",
+               "--memory", "1536m", "--cpus", "1", "-p", "127.0.0.1::8092",
+               "--mount", f"type=bind,src={project},dst=/project",
+               "-e", "ANECHOIC_RUNTIME_NAMESPACE=docker",
+               "-e", f"ANECHOIC_CONTROL_ROOT={selection['control_root']}",
+               "-e", f"ANECHOIC_PROJECT_INSTANCE_ID={instance_id}",
+               "-e", f"ANECHOIC_HOST_PROJECT_ROOT={project}", image, "mcp-http"]
+    subprocess.run(command, cwd=root, check=True, capture_output=True, text=True, timeout=30)
+
+def _await_canary(root: Path, container: str, port: int, *, query_enabled: bool) -> str:
+    base = f"http://127.0.0.1:{port}"
+    deadline = time.monotonic() + 420
+    while time.monotonic() < deadline:
+        try:
+            with _HTTP.open(base + "/anechoic/health", timeout=min(3, deadline - time.monotonic())) as response:
+                if json.load(response).get("ready") is True:
+                    break
+        except (OSError, ValueError):
+            pass
+        running = subprocess.run(["docker", "container", "inspect", "--format", "{{.State.Running}}", container],
+                                 cwd=root, check=True, capture_output=True, text=True,
+                                 timeout=max(0.01, min(30, deadline - time.monotonic()))).stdout.strip()
+        if running != "true":
+            raise CanaryError("local-release-canary-container-exited")
+        time.sleep(min(2, max(0, deadline - time.monotonic())))
+    else:
+        raise CanaryError("local-release-canary-health-timeout")
+    if not _mcp_ready(port, deadline - time.monotonic(), query_enabled=query_enabled):
+        raise CanaryError("local-release-canary-mcp-failed")
+    return base + "/anechoic/mcp"
+
+def _remove_canary_container(root: Path, cidfile: Path, *, failure: BaseException | None) -> None:
+    if cidfile.is_file():
+        container = cidfile.read_text().strip()
+        if re.fullmatch(r"[0-9a-f]{64}", container):
+            try:
+                subprocess.run(["docker", "rm", "-f", container], cwd=root, check=True,
+                               capture_output=True, text=True, timeout=30)
+            except (OSError, subprocess.SubprocessError) as error:
+                if failure is None:
+                    raise CanaryError("local-release-canary-cleanup-failed") from error
+                failure.add_note(f"Canary container {container} cleanup failed.")

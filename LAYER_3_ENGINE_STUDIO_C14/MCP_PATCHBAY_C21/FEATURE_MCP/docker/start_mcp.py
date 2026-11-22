@@ -56,6 +56,47 @@ def _installed_source_root(project_root: Path) -> Path:
         raise ValueError("installed Framework package launcher is unavailable") from None
 
 
+def _command(args, source, project, launcher):
+    command = [
+        "uv", "run", "--project", str(source / "LAYER_3_ENGINE_STUDIO_C14"), "--locked", "--python", "3.14",
+        "--managed-python", "--no-env-file", "--no-default-groups", "--group", "runtime",
+        str(launcher), "--project-root", str(project),
+               "--source-root", str(source), "--output", "url"]
+    if args.control_root:
+        command.extend(["--control-root", args.control_root])
+    if args.port is not None:
+        command.extend(["--port", str(args.port)])
+    if args.image is not None:
+        command.extend(["--image", args.image])
+    if args.no_build:
+        command.append("--no-build")
+    command.append("project-mcp")
+    return command
+
+
+def _run(command, project):
+    environment = dict(os.environ)
+    for name in ("PYTHONHOME", "PYTHONPATH", "VIRTUAL_ENV", "CONDA_PREFIX",
+                 "ANECHOIC_MCP_HTTP_SECRET_TOKEN"):
+        environment.pop(name, None)
+    environment["UV_PROJECT_ENVIRONMENT"] = str(
+        (Path(command[3]) / ".venv-prod" if Path(command[3]).parent == project
+         else project / ".anechoic_runtime" / "launcher-venv"))
+    environment["UV_CACHE_DIR"] = str(project / ".anechoic_tmp" / "cache" / "uv")
+    environment["PYTHONNOUSERSITE"] = "1"
+    try:
+        return subprocess.run(command, check=False, env=environment, timeout=1800).returncode
+    except subprocess.TimeoutExpired:
+        print("Project MCP launcher timed out; inspect its state before retrying.", file=os.sys.stderr)
+        return 2
+    except FileNotFoundError:
+        print("uv is required to run the Project MCP launcher.", file=os.sys.stderr)
+        return 2
+    except OSError:
+        print("Could not run the uv Project MCP launcher.", file=os.sys.stderr)
+        return 2
+
+
 def main(argv=None):
     script_path = Path(__file__).resolve()
     script_source = None if script_path.parent.name == ".anechoic_runtime" else _source_root(script_path)
@@ -87,39 +128,8 @@ def main(argv=None):
     launcher = source / LAUNCHER_PATH
     if not launcher.is_file():
         parser.error("Framework launcher not found; pass --source-root with the Framework checkout")
-    command = [
-        "uv", "run", "--project", str(source), "--locked", "--python", "3.14",
-        "--managed-python", "--no-env-file", "--group", "rmed-workflow-mcp",
-        str(launcher), "--project-root", str(project),
-               "--source-root", str(source), "--output", "url"]
-    if args.control_root:
-        command.extend(["--control-root", args.control_root])
-    if args.port is not None:
-        command.extend(["--port", str(args.port)])
-    if args.image is not None:
-        command.extend(["--image", args.image])
-    if args.no_build:
-        command.append("--no-build")
-    command.append("project-mcp")
-    environment = dict(os.environ)
-    for name in ("PYTHONHOME", "PYTHONPATH", "VIRTUAL_ENV", "CONDA_PREFIX",
-                 "ANECHOIC_MCP_HTTP_SECRET_TOKEN"):
-        environment.pop(name, None)
-    environment["UV_PROJECT_ENVIRONMENT"] = str(
-        project / ".anechoic_runtime" / "launcher-venv")
-    environment["UV_CACHE_DIR"] = str(project / ".anechoic_tmp" / "cache" / "uv")
-    environment["PYTHONNOUSERSITE"] = "1"
-    try:
-        return subprocess.run(command, check=False, env=environment, timeout=1800).returncode
-    except subprocess.TimeoutExpired:
-        print("Project MCP launcher timed out; inspect its state before retrying.", file=os.sys.stderr)
-        return 2
-    except FileNotFoundError:
-        print("uv is required to run the Project MCP launcher.", file=os.sys.stderr)
-        return 2
-    except OSError:
-        print("Could not run the uv Project MCP launcher.", file=os.sys.stderr)
-        return 2
+    command = _command(args, source, project, launcher)
+    return _run(command, project)
 
 
 if __name__ == "__main__":

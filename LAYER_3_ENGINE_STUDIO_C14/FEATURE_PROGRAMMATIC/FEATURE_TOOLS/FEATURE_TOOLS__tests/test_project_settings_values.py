@@ -6,13 +6,13 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
-from unittest.mock import patch
 
 
 TOOLS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS))
 
-from project_settings_values import (  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection import ProjectSelection, ProjectSelectionError, bind_selection, bound_selection  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.settings_context__pub import (  # noqa: E402
     ProjectSettingsValueError,
     control_root,
     project_identity_prefix,
@@ -50,14 +50,29 @@ class ProjectSettingsValuesTests(unittest.TestCase):
         self.assertEqual("project-settings-invalid", prefix_error.exception.code)
 
     def test_bound_selection_is_used_without_opening_settings(self) -> None:
-        selection = type("Selection", (), {
-            "control_root": self.control.resolve(),
-            "settings": {"artifacts": {"identity": {"project_prefix": "BOUND"}}},
-        })()
-        with patch("project_settings_values.bound_selection", return_value=selection):
-            self.settings.unlink()
+        def selection(prefix):
+            return ProjectSelection(
+                root=self.root.resolve(), control_root=self.control.resolve(),
+                control_relative=Path(".anechoic_anechoic"), instance_id="a" * 64,
+                settings={"artifacts": {"identity": {"project_prefix": prefix}}},
+                structure={}, declaration_paths=(), declaration_source_pins={}, declaration_digest="",
+            )
+
+        outer, inner = selection("OUTER"), selection("INNER")
+        self.settings.unlink()
+        with bind_selection(outer):
             self.assertEqual(self.control.resolve(), control_root(self.root))
-            self.assertEqual("BOUND", project_identity_prefix(self.root))
+            self.assertEqual("OUTER", project_identity_prefix(self.root))
+            with bind_selection(inner):
+                self.assertEqual("INNER", project_identity_prefix(self.root))
+            self.assertEqual("OUTER", project_identity_prefix(self.root))
+            with self.assertRaisesRegex(ProjectSelectionError, "Active Project selection belongs to another root"):
+                control_root(self.root.parent)
+        self.assertIsNone(bound_selection())
+        with self.assertRaisesRegex(ProjectSelectionError, "Only a validated ProjectSelection can be bound"):
+            with bind_selection(object()):
+                pass
+
 
 
 if __name__ == "__main__":

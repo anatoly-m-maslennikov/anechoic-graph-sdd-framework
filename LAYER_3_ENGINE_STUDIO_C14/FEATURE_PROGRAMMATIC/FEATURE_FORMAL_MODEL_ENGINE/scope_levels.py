@@ -2,30 +2,12 @@
 
 from dataclasses import dataclass
 from functools import cache
-from typing import TYPE_CHECKING
-
-from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.reviewed_instance_check import bind_reviewed_instance_check
-
-if TYPE_CHECKING:
-    from scope_declaration_parse import ScopeUnitDeclarations
 
 
 @dataclass(frozen=True)
 class ScopeUnit:
     structural_level: int | None
     container: "ScopeUnit | None"
-
-
-def check_scope_levels(
-    declarations: "ScopeUnitDeclarations", claim: str, *, reference: str, reviewed_claim_sha256: str,
-) -> dict[str, str]:
-    """Return issues by Scope Unit name for a validated Scope declaration tree."""
-    validate = bind_reviewed_instance_check(
-        claim, reference=reference, reviewed_claim_sha256=reviewed_claim_sha256,
-        model_types={"ScopeUnit": ScopeUnit},
-    )
-
-    return _evaluate_scope_levels(declarations, validate)
 
 
 def _evaluate_scope_levels(declarations, validate):

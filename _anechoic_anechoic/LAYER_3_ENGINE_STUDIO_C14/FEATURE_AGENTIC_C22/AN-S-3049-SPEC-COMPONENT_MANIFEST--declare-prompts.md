@@ -3,14 +3,14 @@ atom_family: SPEC
 atom_id: AN-S-3049
 container:
   component: C22
-tier: 0
+tier: 4
 context:
   template: component_manifest
   lens: SPEC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-19T00:00:00Z'
+  version: 5
+  updated_at: '2026-11-22T11:23:40.206159+00:00'
 ---
 
 ## Summary
@@ -29,6 +29,29 @@ declare_entity(
         component_id='C24',
         name='PROMPTS',
         lens_whitelist=['DES', 'DevOps', 'QA', 'SPEC', 'SWD'],
+        boundaries={
+            'code': {'imports': [
+                'project_temporary__pub.atomic_tempfile',
+                'carrier_read__pub.CarrierError',
+                'carrier_read__pub.parse_carrier',
+                'journal_settings__pub.configured_journal_root',
+                'work_journal__pub.append_sealed_events',
+            ]},
+            'io': {
+                'server': {
+                    'query_frozen_review_context': {
+                        'transport': 'cli',
+                        'runner': 'managed_python',
+                        'path': 'LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/context_builder.py',
+                        'arguments': ['--context', '<frozen-index-json>', '--query', '<text>'],
+                    },
+                },
+            },
+            'state': {
+                'reads': ['admitted review inputs', 'frozen Entity context', 'configured Project Journal location'],
+                'writes': ['review Run recovery cache and locks', 'Run evidence reports', 'confirmed Run events in the Project Journal'],
+            },
+        },
     ),
 )
 ```

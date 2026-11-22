@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from RUNTIME_SETUP.codex_install import HOOK_SOURCE, MATCHER, install_codex
+from codex_install import HOOK_SOURCE, MATCHER, install_codex
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -32,7 +32,7 @@ class CodexInstallTests(unittest.TestCase):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name)
-        self.uv_patch = patch("RUNTIME_SETUP.codex_install.shutil.which", return_value="/mock/uv")
+        self.uv_patch = patch("codex_install.shutil.which", return_value="/mock/uv")
         self.uv_patch.start()
         self.addCleanup(self.uv_patch.stop)
 

@@ -3,13 +3,11 @@
 import json
 from pathlib import Path
 import subprocess
-import sys
 from types import SimpleNamespace
 import unittest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from release_container import start_container
-from release_assets import LocalReleaseError
+from RELEASE_VERSION.release_container import start_container
+from RELEASE_VERSION.release_assets import LocalReleaseError
 
 
 class ContainerTests(unittest.TestCase):

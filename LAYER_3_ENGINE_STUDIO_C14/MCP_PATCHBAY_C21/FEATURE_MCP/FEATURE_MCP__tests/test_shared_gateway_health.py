@@ -5,23 +5,20 @@ from __future__ import annotations
 import asyncio
 from concurrent.futures import CancelledError as FutureCancelledError
 from pathlib import Path
-import sys
 import tempfile
 import unittest
 from unittest.mock import patch
 
 MCP = Path(__file__).resolve().parents[1]
 TOOLS = MCP.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
-sys.path[:0] = [str(MCP), str(TOOLS), str(TOOLS / "VALIDATE_ATOMS")]
 
-from health_page import render_health_page  # noqa: E402
-from health_observations import MAX_OBSERVATIONS  # noqa: E402
-from host_runtime_config import load_host_runtime_config  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.health_page import render_health_page  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.health_observations import MAX_OBSERVATIONS  # noqa: E402
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.host_runtime_config import load_host_runtime_config  # noqa: E402
 from mcp import types  # noqa: E402
-from operation_error_boundary import FailureRecord  # noqa: E402
-from test_native_startup import RuntimeSelectionTests  # noqa: E402
-from shared_gateway import SharedGateway  # noqa: E402
-from shared_gateway_support import refusal  # noqa: E402
+from .test_native_startup import RuntimeSelectionTests  # noqa: E402
+from .shared_backend_fixture import backend_gateway  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.shared_gateway_support import refusal  # noqa: E402
 
 
 def _tool():
@@ -30,11 +27,12 @@ def _tool():
 
 class _Gateway:
     hold = None
+    started = None
 
     def __init__(self, _root, *, selection):
         self.selection = selection
         self.ready = True
-        self.tools = [_tool()]
+        self.tools = [_tool().model_dump(mode="json", by_alias=True)]
         self.tool_blacklist = frozenset()
 
     async def initialize(self):
@@ -43,15 +41,15 @@ class _Gateway:
     async def close(self):
         return None
 
-    async def call(self, _context, _params):
+    async def ensure_current(self):
+        return None
+
+    async def call_tool(self, _name, _arguments, *, session_id, public_base_url, asserted_project_root):
+        if self.started is not None:
+            self.started.set()
         if self.hold is not None:
             await self.hold.wait()
-        return types.CallToolResult(
-            content=[],
-            structuredContent={
-                "outcome": "completed",
-            },
-        )
+        return {"value": {"outcome": "completed"}, "text": None}
 
 
 class SharedGatewayHealthTests(unittest.IsolatedAsyncioTestCase):
@@ -72,20 +70,18 @@ class SharedGatewayHealthTests(unittest.IsolatedAsyncioTestCase):
         return root
 
     def _config(self, max_loaded=2):
-        self.config_path = self.base / "runtime.toml"
+        self.config_path = self.base / "MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime.toml"
         self.config_path.write_text(
             "schema_version=1\n[shared_mcp]\n"
             f'projects_root="{self.projects}"\nhttp_port=8092\nmax_loaded_projects={max_loaded}\n'
         )
         _Gateway.hold = None
+        _Gateway.started = None
 
     async def _gateway(self):
-        gateway = SharedGateway(
-            load_host_runtime_config(self.config_path), gateway_factory=_Gateway
+        return await self.enterAsyncContext(
+            backend_gateway(load_host_runtime_config(self.config_path), _Gateway)
         )
-        await gateway.initialize()
-        self.addAsyncCleanup(gateway.close)
-        return gateway
 
     def _params(self, root=None):
         return types.CallToolRequestParams(
@@ -96,7 +92,7 @@ class SharedGatewayHealthTests(unittest.IsolatedAsyncioTestCase):
         self._config()
         gateway = await self._gateway()
         await gateway.call(None, self._params())
-        status = gateway.status()
+        status = await gateway.status()
         self.assertEqual(1, len(status["calls"]))
         self.assertNotIn("workflows", status)
         self.assertEqual("ALPHA", status["calls"][0]["project_prefix"])
@@ -115,38 +111,29 @@ class SharedGatewayHealthTests(unittest.IsolatedAsyncioTestCase):
         self._config()
         gateway = await self._gateway()
         gateway.health_observations = BrokenObserver()
-        with patch(
-            "shared_gateway_support.report_failure",
-            return_value=(
-                FailureRecord("WARNING", "health_observation_failed", "safe"),
-                None,
-            ),
-        ) as reported:
+        with patch("MCP_PATCHBAY_C21.FEATURE_MCP.shared_gateway_support.warning") as reported:
             response = await gateway.call(None, self._params())
         self.assertFalse(response.is_error)
-        self.assertEqual("health_observation_failed", reported.call_args.args[1].code)
+        reported.assert_called_once_with("health_observation_failed")
 
     async def test_async_and_future_cancellation_are_not_adapted_to_success(self):
         self._config()
         gateway = await self._gateway()
         wait = asyncio.Event()
         _Gateway.hold = wait
+        _Gateway.started = asyncio.Event()
         pending = asyncio.create_task(gateway.call(None, self._params()))
-        while not gateway.pool.status()["loaded_projects"]:
-            await asyncio.sleep(0)
+        await asyncio.wait_for(_Gateway.started.wait(), 10)
         pending.cancel()
         with self.assertRaises(asyncio.CancelledError):
             await pending
-        with patch(
-            "shared_gateway_support.report_failure",
-            return_value=(FailureRecord("WARNING", "missing_project_root", "safe"), "SECRET_SINK"),
-        ):
+        with patch("MCP_PATCHBAY_C21.FEATURE_MCP.shared_gateway_support.warning", return_value="technical diagnostic emission failed"):
             refusal_result = refusal("missing_project_root")
         self.assertEqual(
             ["missing_project_root", "technical_diagnostics_unavailable"],
             refusal_result.structured_content["diagnostics"],
         )
-        with patch("shared_gateway_support.report_failure", side_effect=FutureCancelledError()):
+        with patch("MCP_PATCHBAY_C21.FEATURE_MCP.shared_gateway_support.warning", side_effect=FutureCancelledError()):
             with self.assertRaises(FutureCancelledError):
                 refusal("missing_project_root")
 
@@ -165,9 +152,9 @@ class SharedGatewayHealthTests(unittest.IsolatedAsyncioTestCase):
         self._config(max_loaded=1)
         gateway = await self._gateway()
         _Gateway.hold = asyncio.Event()
+        _Gateway.started = asyncio.Event()
         first = asyncio.create_task(gateway.call(None, self._params()))
-        while not gateway.pool.status()["loaded_projects"]:
-            await asyncio.sleep(0)
+        await asyncio.wait_for(_Gateway.started.wait(), 10)
         refused = await gateway.call(
             None,
             types.CallToolRequestParams(name="echo", arguments={"project_root": str(self.other)}),
@@ -185,7 +172,7 @@ class SharedGatewayHealthTests(unittest.IsolatedAsyncioTestCase):
         gateway = await self._gateway()
         for root in roots:
             await gateway.call(None, self._params(root))
-        contexts = gateway.status()["known_project_contexts"]
+        contexts = (await gateway.status())["known_project_contexts"]
         self.assertEqual(MAX_OBSERVATIONS, len(contexts))
         self.assertNotIn("ALPHA", [context["prefix"] for context in contexts])
 

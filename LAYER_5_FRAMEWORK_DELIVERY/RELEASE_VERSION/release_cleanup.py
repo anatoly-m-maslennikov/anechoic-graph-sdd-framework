@@ -5,7 +5,7 @@ from pathlib import Path
 import re
 import subprocess
 
-from release_cleanup_identity import (
+from .release_cleanup_identity import (
     IMAGE,
     IDENTIFIER,
     Container,
@@ -15,7 +15,7 @@ from release_cleanup_identity import (
     owner_labels,
     run_docker,
 )
-from release_cleanup_images import cleanup_obsolete_images as cleanup_obsolete_images
+from .release_cleanup_images import cleanup_obsolete_images as cleanup_obsolete_images
 
 
 def _identifiers(output: str, pattern: re.Pattern[str]) -> set[str]:

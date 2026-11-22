@@ -8,7 +8,7 @@ This operational document defines how the repository moves changes from `amm/dev
 - [`main` ruleset](https://github.com/anatoly-m-maslennikov/anechoic-graph-sdd-framework/rules/18897046): `main` has no bypass actors; every update requires a pull request, `PR policy`, and the merge-commit method.
 - [Policy workflow](workflows/dev-to-main-policy.yml): `PR policy` passes only for a same-repository `dev → main` or `amm/dev → main` pull request authored by the repository owner. A passing non-draft PR is merged automatically.
 - Repository tests and validators are temporarily disabled; no successful PR check currently represents test, evaluation, lint, type-check, cross-platform, or framework-validation evidence.
-- [WSL proof workflow](workflows/wsl-proof.yml): an explicit manual workflow targets a labeled self-hosted Windows/WSL runner. It is a proof hook, not evidence until a run on the tested commit succeeds.
+- [WSL proof workflow](workflows/wsl-proof.yml) runs Engine Studio functional QA on a labeled self-hosted Windows/WSL runner. Dispatch it manually and use a successful run on the tested commit as evidence.
 - [Release publisher](workflows/publish-release.yml): a protected `main` push that changes the coordinated version contract is checked against the committed release declaration, then creates only a missing immutable tag or GitHub Release at the exact merge SHA. Existing collisions stop; the workflow never writes repository content after merge.
 
 Merge commits are deliberate: development branches are long-lived, so preserving their commits as parents of `main` prevents the history divergence caused by repeated squash or rebase merges.
@@ -25,7 +25,7 @@ Merge commits are deliberate: development branches are long-lived, so preserving
 
 Pull requests to `main` from any branch other than `dev` or `amm/dev`, or from any other repository or author, are expected to fail `PR policy` and cannot merge.
 
-Release preparation is separately explicit: `dset release plan` and `dset release check` are read-only, while `dset release prepare --execute` atomically synchronizes the declared product and Python-package version surfaces. Preparation never publishes, pushes, tags, or creates a GitHub Release.
+The operator runs Public Release separately to prepare pull request and Version History drafts from pinned Git evidence. See the [release commands](../LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/README.md#host-commands).
 
 ## Temporary validation suspension
 
@@ -33,4 +33,25 @@ Repository validation was explicitly suspended on 2026-08-10 so the current ANEC
 
 A green pull request during this suspension proves only that the owner-only development-to-main delivery policy passed. It must not be cited as evaluation evidence for repository correctness, test success, validation success, portability, or release readiness.
 
-Restore automated validation by reintroducing a workflow that checks out the exact head, installs the locked environment, and runs `uv run dset verify .` across Linux, macOS, and native Windows, then add its stable context back to the `main` ruleset.
+To restore automated validation, check out the exact head and run the locked [Engine Studio test suite](../LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/README.md#engine-studio-qa) across Linux, macOS, and native Windows. Add the workflow's stable status check to the `main` ruleset.
+
+## Local source line length check
+
+The check is off by default. To enable it, set
+`enforce_source_line_length = true` under `[tool.anechoic.test_suite]` in
+`pyproject.toml`.
+
+Run from the repository root. The check reports new or edited lines over 79
+characters in source files and workflows. It includes staged, unstaged, and
+untracked source. The default base is `HEAD`. To include commits on a branch,
+pass their base commit with `--base`.
+
+```sh
+uv tool install editorconfig-checker==3.11.1
+UV_PROJECT_ENVIRONMENT=.venv-dev PYTHONPATH="$PWD/LAYER_3_ENGINE_STUDIO_C14" \
+  uv run --project "$PWD/LAYER_3_ENGINE_STUDIO_C14" --locked --no-env-file \
+    python -B -P -m FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.source_line_length \
+    --project-root "$PWD"
+```
+
+The check rejects `editorconfig-checker-disable-next-line` directives.

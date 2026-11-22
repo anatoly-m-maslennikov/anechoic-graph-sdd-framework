@@ -2,7 +2,7 @@
 from copy import deepcopy
 import unittest
 
-from test_split_evaluation import SOURCE_TEXT, RULE_TEXT, contract, part, source
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__tests.test_split_evaluation import SOURCE_TEXT, RULE_TEXT, contract, part, source
 
 
 def context5():

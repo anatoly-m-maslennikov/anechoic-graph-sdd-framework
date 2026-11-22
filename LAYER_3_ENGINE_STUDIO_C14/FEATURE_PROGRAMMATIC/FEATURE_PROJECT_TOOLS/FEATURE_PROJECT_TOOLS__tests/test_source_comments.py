@@ -2,9 +2,11 @@
 
 import unittest
 
-from LAYER_3_ENGINE_STUDIO_C14.FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import (
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import (
     source_comments as lint,
 )
+
+NEXT_LINE_DIRECTIVE = "editorconfig-checker-disable-" "next-line"
 
 
 class SourceCommentsTests(unittest.TestCase):
@@ -17,6 +19,8 @@ class SourceCommentsTests(unittest.TestCase):
         source = (
             "#!/usr/bin/env python3\r\n# coding: utf-8\r\n"
             "# prose\r\nvalue = 'literal # text'  # inline prose\r\n"
+            "# editorconfig-checker-disable-line\r\n"
+            f"# {NEXT_LINE_DIRECTIVE}\r\n"
             "from other import value  # noqa: F401\r\n"
         )
         edits = lint.remove_line_comments(source, lint.python_comments(source))
@@ -24,26 +28,65 @@ class SourceCommentsTests(unittest.TestCase):
             source = source[:start] + replacement + source[end:]
         self.assertEqual(
             "#!/usr/bin/env python3\r\n# coding: utf-8\r\n"
-            "value = 'literal # text'\r\nfrom other import value  # noqa: F401\r\n",
+            "value = 'literal # text'\r\n"
+            "# editorconfig-checker-disable-line\r\n"
+            "from other import value  # noqa: F401\r\n",
             source,
+        )
+
+    def test_docker_purge_keeps_editorconfig_directives(self):
+        source = (
+            "# editorconfig-checker-disable-line\n"
+            f"# {NEXT_LINE_DIRECTIVE}\n"
+            "# ordinary comment\n"
+            "FROM python:3.12\n"
+        )
+        removed = lint.docker_comments(lint.Path("Dockerfile"), source)
+        self.assertEqual(
+            [f"# {NEXT_LINE_DIRECTIVE}", "# ordinary comment"],
+            [source[start:end] for start, end in removed],
         )
 
     def test_web_purge_keeps_syntax_and_directives(self):
         source = (
-            '<script>\n// @ts-nocheck\nlet url = "🙂 https://example.org"; // prose\n'
+            '<script>\n// @ts-nocheck\n'
+            '// editorconfig-checker-disable-line\n'
+            f'// {NEXT_LINE_DIRECTIVE}\n'
+            'let url = "🙂 https://example.org"; // prose\n'
             'let slash = /https?:\\/\\//;\n</script>\n'
-            '<p>{url}<!-- prose -->{slash}</p>\n<style>/* prose */ p { color: red; }</style>\n'
+            '<p>{url}<!-- editorconfig-checker-disable-line -->{slash}</p>\n'
+            f'<style>/* {NEXT_LINE_DIRECTIVE} */\n'
+            '/* prose */ p { color: red; }</style>\n'
         )
-        edits, css_edits = lint.web_edits(lint.ROOT, [
+        edits, css_edits, ts_edits = lint.web_edits(lint.ROOT, [
             {"path": "Fixture.svelte", "source": source},
             {"path": "fixture.css", "source": "a { color: red/* separate */blue; }"},
+            {
+                "path": "fixture.ts",
+                "source": "// editorconfig-checker-disable-line\n"
+                "const value = 1; // prose\n",
+            },
         ])
         self.assertEqual([(14, 28, None)], css_edits)
-        self.assertEqual(3, len(edits))
+        self.assertEqual(4, len(edits))
+        self.assertEqual(1, len(ts_edits))
         for start, end, replacement in sorted(edits, reverse=True):
             source = source[:start] + replacement + source[end:]
+        ts_source = (
+            "// editorconfig-checker-disable-line\nconst value = 1; // prose\n"
+        )
+        for start, end, replacement in reversed(ts_edits):
+            ts_source = ts_source[:start] + replacement + ts_source[end:]
         self.assertNotIn("prose", source)
         self.assertIn("// @ts-nocheck", source)
+        self.assertIn("// editorconfig-checker-disable-line", source)
+        self.assertNotIn(NEXT_LINE_DIRECTIVE, source)
+        self.assertIn("<!-- editorconfig-checker-disable-line -->", source)
         self.assertIn('"🙂 https://example.org"', source)
         self.assertIn('/https?:\\/\\//', source)
-        self.assertIn("<p>{url}{slash}</p>", source)
+        self.assertIn(
+            "<p>{url}<!-- editorconfig-checker-disable-line -->{slash}</p>",
+            source,
+        )
+        self.assertIn("// editorconfig-checker-disable-line", ts_source)
+        self.assertNotIn("prose", ts_source)

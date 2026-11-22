@@ -1,18 +1,15 @@
 """Release image admission uses sealed inputs and immutable Docker identities."""
 
 import json
-import os
 from pathlib import Path
 import shutil
 import subprocess
-import sys
 import tempfile
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-import release_images as images
+from RELEASE_VERSION import release_images as images
 
 
 class ReleaseImagesTests(unittest.TestCase):
@@ -63,8 +60,54 @@ class ReleaseImagesTests(unittest.TestCase):
                                            build_provenance=self.provenance if provenance else None)
         return self.manager
 
+    def test_registry_identity_uses_backend_asset(self):
+        expected = ("LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/"
+                    "FEATURE_WORKBENCH_BACKEND/tool_registry.json")
+        self.assertEqual(expected, images.TOOL_REGISTRY)
+        manager = self.make_manager()
+        before = manager.identity(use_packaged_assets=True)
+        self.assertEqual([expected], [path for path, _, _ in before.manifest if path.endswith("tool_registry.json")])
+        (self.package / expected).write_text("changed")
+        self.assertNotEqual(before.fingerprint, manager.identity(use_packaged_assets=True).fingerprint)
+
+    def test_current_stack_excludes_beta_components_and_fingerprints_selector(self):
+        manager = self.make_manager()
+        baseline = manager.identity()
+        beta = self.package / images.ENGINE / "COMPONENT_beta_C123" / "nested" / "source.py"
+        beta.parent.mkdir(parents=True)
+        beta.write_text("beta")
+        self.assertEqual(baseline, manager.identity())
+        selector = self.package / "project.toml"
+        selector.write_text('stack = "current"\n')
+        selected = manager.identity()
+        self.assertNotEqual(baseline.fingerprint, selected.fingerprint)
+        self.assertIn("project.toml", [path for path, _, _ in selected.manifest])
+        beta.write_text("changed")
+        self.assertEqual(selected, manager.identity())
+        manager.resolve()
+        self.assertFalse(any("COMPONENT_beta_C123" in path for path in self.captured))
+
+    def test_selector_and_beta_fail_before_docker(self):
+        manager = self.make_manager()
+        selector = self.package / "project.toml"
+        for contents, message in ((b'stack = "beta"\n', "beta stack unavailable"),
+                                  (b'stack = "other"\n', "invalid project.toml"),
+                                  (b'stack = "current"\nextra = 1\n', "invalid project.toml"),
+                                  (b'stack = ["current"]\n', "invalid project.toml"),
+                                  (b'\xff', "invalid project.toml"),
+                                  (b' ' * 65537, "invalid project.toml")):
+            with self.subTest(contents=contents[:40]):
+                selector.write_bytes(contents)
+                with self.assertRaisesRegex(ValueError, message):
+                    manager.resolve()
+        selector.unlink()
+        selector.symlink_to(self.package / "version.toml")
+        with self.assertRaisesRegex(ValueError, "invalid project.toml"):
+            manager.resolve()
+        self.assertEqual({}, self.labels)
+
     def test_build_only_uses_checkout_and_cleans_staging(self):
-        import local_release
+        from RELEASE_VERSION import local_release
 
         provenance = {**self.provenance, "project_root": str(self.package)}
         def manager(source, temporary, *, project_root, build_provenance):
@@ -84,7 +127,7 @@ class ReleaseImagesTests(unittest.TestCase):
         self.assertEqual(self.tags, {"anechoic-runtime:test-" + self.image[7:]})
 
     def test_build_only_cleans_staging_after_failure(self):
-        import local_release
+        from RELEASE_VERSION import local_release
 
         provenance = {**self.provenance, "project_root": str(self.package)}
         with (patch.object(local_release, "read_release_selection", return_value=object()),
@@ -104,13 +147,13 @@ class ReleaseImagesTests(unittest.TestCase):
         shutil.copytree(self.package, installed)
         manager = self.make_manager(installed, provenance=False)
         self.assertEqual(self.image, manager.resolve(explicit_id=self.image, build_if_missing=False))
-        (installed / "uv.lock").write_text("changed")
+        (installed / images.ENGINE / "uv.lock").write_text("changed")
         with self.assertRaises(RuntimeError):
             manager.resolve(explicit_id=self.image, build_if_missing=False)
 
     def test_secrets_runtime_and_test_folders_never_enter_context(self):
         directory = self.package / images.ENGINE
-        for relative in (".env", "credentials.json", ".git/config", "area__tests/data", "secrets/data"):
+        for relative in (".env", "credentials.json", ".git/config", "area__tests/data", "secrets/data", ".venv-dev/data", ".venv-prod/data"):
             path = directory / relative
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text("private")
@@ -140,7 +183,7 @@ class ReleaseImagesTests(unittest.TestCase):
         def mutate(argv, **kwargs):
             result = self.docker(argv, **kwargs)
             if argv[:2] == ["docker", "build"]:
-                (Path(argv[-1]) / "uv.lock").write_text("tampered")
+                (Path(argv[-1]) / images.ENGINE / "uv.lock").write_text("tampered")
             return result
         manager.executor = mutate
         with self.assertRaises(RuntimeError):

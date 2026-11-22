@@ -1,39 +1,14 @@
 """Project-local state and endpoint-only mount declaration, without Docker."""
 import json
 from pathlib import Path
-import sys
-import tempfile
 import unittest
 
 import yaml
 
 APP = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(APP.parents[1] / 'FEATURE_PROGRAMMATIC' / 'FEATURE_TOOLS'))
-from project_selection import resolve_project
-from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations
 
 
 class ProjectStateTests(unittest.TestCase):
-    def test_two_nested_projects_have_distinct_mcp_runtime_namespaces(self):
-        parent = Path(tempfile.mkdtemp(dir=APP.parents[2] / '.anechoic_tmp'))
-        selections = []
-        for name in ('alpha', 'beta'):
-            root = parent / 'repository' / 'projects' / name
-            control = root / f'.anechoic_{name}'
-            control.mkdir(parents=True)
-            (control / 'anechoic_project_settings.toml').write_text(
-                f'[paths]\ncontrol_root=".anechoic_{name}"\n[project]\nname="{name}"\n'
-                f'[project_mcp]\nhttp_port={56317 if name == "alpha" else 56318}\n')
-            write_scope_unit_declarations(root, control_root=control)
-            selections.append(resolve_project(root))
-        left, right = selections
-        for field in ('instance_id', 'compose_project', 'launcher_state'):
-            self.assertNotEqual(getattr(left, field), getattr(right, field))
-        for selection in selections:
-            self.assertTrue(selection.launcher_state.is_relative_to(selection.root))
-        left.launcher_state.mkdir(parents=True)
-        (left.launcher_state / 'same-id.json').write_text('left')
-        self.assertFalse((right.launcher_state / 'same-id.json').exists())
 
     def test_compose_mount_and_resource_boundary_is_mcp_only(self):
         spec = yaml.safe_load((APP / 'docker/project-mcp.compose.yaml').read_text())

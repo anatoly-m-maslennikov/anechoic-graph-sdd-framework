@@ -7,9 +7,9 @@ import unittest
 from dataclasses import dataclass
 from unittest.mock import patch
 
-from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR import native_manifest_model
-from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.model_class_assembly import assemble_model_classes, assemble_model_modules
-from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.native_manifest_model import load_native_model
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR import native_manifest_model
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.model_class_assembly import assemble_model_classes, assemble_model_modules
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.native_manifest_model import load_native_model
 
 
 class NativeManifestModelTests(unittest.TestCase):
@@ -48,6 +48,30 @@ class NativeManifestModelTests(unittest.TestCase):
         self.assertEqual(manifest.boundaries, boundaries)
         with self.assertRaisesRegex(ValueError, "boundaries:"):
             self.model.validate_component_manifest(fields | {"boundaries": ["C02"]}, "C00")
+
+    def test_active_component_manifest_tier_is_used(self):
+        records, _, _ = native_manifest_model.reviewed_model_records()
+        active = []
+        for path, subject, claim in records:
+            if subject.endswith('//Component Manifest'):
+                claim = claim.replace('allowed_values\": (0,)', 'allowed_values\": (4,)')
+            active.append((path, subject, claim))
+        model = native_manifest_model._NativeModel(records=active)
+        fields = {"atom_id": "AN-S-124", "ref_id": "AN-S-124@1", "version": 1,
+                  "tier": 4, "component_id": "C01", "name": "Engine"}
+        self.assertEqual(model.validate_component_manifest(fields, "C00").tier, 4)
+        with self.assertRaises(ValueError):
+            model.validate_component_manifest(fields | {"tier": 0}, "C00")
+
+    def test_component_seed_manifest_checks_identity_and_solution(self):
+        fields = {"atom_id": "AN-S-125", "ref_id": "AN-S-125@1", "version": 1,
+                  "tier": 2, "component_seed_id": "CS123", "purpose": "Purpose", "solution": "Solution"}
+        self.assertEqual(self.model.validate_component_seed_manifest(fields, "C01").component_seed_id, "CS123")
+        for seed_id in ("CS", "CS１２", "pkg1", "CS1x"):
+            with self.subTest(seed_id=seed_id), self.assertRaisesRegex(ValueError, "check_component_seed_manifest"):
+                self.model.validate_component_seed_manifest(fields | {"component_seed_id": seed_id}, "C01")
+        with self.assertRaisesRegex(ValueError, "check_component_seed_manifest"):
+            self.model.validate_component_seed_manifest(fields | {"solution": " "}, "C01")
 
     def test_release_workflow_setting_is_an_optional_exact_boolean(self):
         self.model.validate_manifest(self.fields | {"parameters": {"project_mcp": {}}}, "C00")
@@ -215,7 +239,7 @@ class NativeManifestModelTests(unittest.TestCase):
             self.assertEqual(model.validate_component_manifest(fields, parent).name, "Engine")
         with patch.object(model, "_validate", wraps=model._validate) as validate:
             with self.assertRaises(ValueError):
-                model.validate_package_spec({}, "C01")
+                model.validate_component_seed_manifest({}, "C01")
             self.assertEqual(next(iter(validate.call_args_list[1].args[2])), "IS_CHILD_OF")
 
     def test_relation_classifications_use_admitted_values_per_direction(self):

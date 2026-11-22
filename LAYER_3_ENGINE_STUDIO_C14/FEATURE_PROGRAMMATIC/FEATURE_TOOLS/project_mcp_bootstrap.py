@@ -6,7 +6,9 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import stat
-from project_runtime import TemporaryBoundaryError, atomic_tempfile
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__pub import TemporaryBoundaryError
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.project_temporary__pub import atomic_tempfile
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_runtime import repository_root
 
 
 BOOTSTRAP_RELATIVE = Path(
@@ -37,6 +39,21 @@ def _regular(path: Path) -> None:
         raise ProjectMcpBootstrapError("project-mcp-bootstrap-source-unsafe")
 
 
+
+def _validate_bootstrap_source(package, source):
+    cursor = package
+    for component in BOOTSTRAP_RELATIVE.parts[:-1]:
+        cursor /= component
+        try:
+            mode = cursor.lstat().st_mode
+        except OSError as error:
+            raise ProjectMcpBootstrapError("project-mcp-bootstrap-source-unavailable") from error
+        if cursor.is_symlink() or not stat.S_ISDIR(mode):
+            raise ProjectMcpBootstrapError("project-mcp-bootstrap-source-unsafe")
+    _regular(source)
+    if not source.stat().st_mode & 0o111:
+        raise ProjectMcpBootstrapError("project-mcp-bootstrap-source-unsafe")
+
 def deploy_project_mcp_bootstrap(project_root: Path | str, package_root: Path | str) -> Path:
     """Refresh only the target bootstrap from one already-installed package.
 
@@ -58,18 +75,7 @@ def deploy_project_mcp_bootstrap(project_root: Path | str, package_root: Path | 
         cursor /= component
         _directory(cursor)
     source = package / BOOTSTRAP_RELATIVE
-    cursor = package
-    for component in BOOTSTRAP_RELATIVE.parts[:-1]:
-        cursor /= component
-        try:
-            mode = cursor.lstat().st_mode
-        except OSError as error:
-            raise ProjectMcpBootstrapError("project-mcp-bootstrap-source-unavailable") from error
-        if cursor.is_symlink() or not stat.S_ISDIR(mode):
-            raise ProjectMcpBootstrapError("project-mcp-bootstrap-source-unsafe")
-    _regular(source)
-    if not source.stat().st_mode & 0o111:
-        raise ProjectMcpBootstrapError("project-mcp-bootstrap-source-unsafe")
+    _validate_bootstrap_source(package, source)
     runtime = root / TARGET_RELATIVE.parent
     if runtime.exists() or runtime.is_symlink():
         _directory(runtime)
@@ -79,7 +85,7 @@ def deploy_project_mcp_bootstrap(project_root: Path | str, package_root: Path | 
     try:
         payload = source.read_bytes()
         source_mode = stat.S_IMODE(source.stat().st_mode)
-        descriptor, temporary_name = atomic_tempfile(target, "project_mcp_bootstrap", repository=root)
+        descriptor, temporary_name = atomic_tempfile(repository_root(root), target, "project_mcp_bootstrap")
         temporary = Path(temporary_name)
         with os.fdopen(descriptor, "wb") as stream:
             stream.write(payload)

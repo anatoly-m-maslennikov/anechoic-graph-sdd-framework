@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from .native_query_test_support import local_gateway
+
 import json
-import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -12,12 +13,9 @@ from types import SimpleNamespace
 from starlette.testclient import TestClient
 
 MCP_ROOT = Path(__file__).resolve().parents[1]
-if str(MCP_ROOT) not in sys.path:
-    sys.path.insert(0, str(MCP_ROOT))
 
-from direct_gateway import DirectGateway  # noqa: E402
-from http_server import MAX_REQUEST_BODY_SIZE, create_app  # noqa: E402
-from http_paths import MCP_PATH  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.http_server import MAX_REQUEST_BODY_SIZE, create_app  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import MCP_PATH  # noqa: E402
 
 
 CURRENT_RELEASE_ENVELOPE_BYTES = 7_266_044
@@ -30,7 +28,7 @@ class HttpRequestBodyLimitTests(unittest.TestCase):
         self.root = Path(self.temporary.name).resolve()
         owner = SimpleNamespace(selection=SimpleNamespace(root=self.root, parameters={}),
                                 start=lambda: None, close=lambda: None)
-        gateway = DirectGateway(self.root, native_query=owner)
+        gateway = local_gateway(self.root, native_query=owner)
         self.client = TestClient(create_app(self.root, runtime_gateway=gateway), base_url="http://127.0.0.1:8092")
         self.client.__enter__()
         self.addCleanup(self.client.__exit__, None, None, None)

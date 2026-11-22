@@ -8,8 +8,11 @@ context:
   lens: SWD
 state:
   status: active
-  version: 22
-  updated_at: 2026-11-11 04:44:46 +0400
+  version: 23
+  updated_at: '2026-11-22T11:00:54.983176+00:00'
+relations:
+  CONTRIBUTES_TO:
+  - AN-S-1478
 ---
 ## Summary
 

@@ -10,9 +10,8 @@ import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from project_selection import ProjectSelectionError, _declaration_boundary_proof
-from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext
-from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection import ProjectSelectionError, _declaration_boundary_proof
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__pub import CEILINGS, ReadContext
 
 
 class DeclarationBoundaryAuthorTests(unittest.TestCase):

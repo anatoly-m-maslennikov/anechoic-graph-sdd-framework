@@ -1,12 +1,9 @@
 """Functional gateway-call and bounded-retention checks for MCP health."""
 import asyncio
 import json
-from pathlib import Path
-import sys
 from mcp import types
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from health_fixture import HealthHTTPFixture, PROVIDER_DIAGNOSTIC, SECRET
+from .health_fixture import HealthHTTPFixture, PROVIDER_DIAGNOSTIC, SECRET
 
 
 SAFE_ERROR_CATEGORIES = {"timeout", "connection", "returned-error", "uncertain"}

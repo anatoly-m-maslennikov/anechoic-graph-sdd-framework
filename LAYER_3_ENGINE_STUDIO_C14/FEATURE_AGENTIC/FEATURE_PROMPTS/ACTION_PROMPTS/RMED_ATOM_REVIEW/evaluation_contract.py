@@ -4,10 +4,10 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
-from review_evidence import (ReviewContext, probability, strings, text,
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_evidence__shared import (ReviewContext, probability, strings, text,
                             validate_obligations, validate_subject_inventory)
-from report_quality import validate_report_quality
-from semantic_boundaries import validate_boundaries
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.report_quality import validate_report_quality
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.semantic_boundaries import validate_boundaries
 
 GROUPS = {
     "cce": ("cce",),
@@ -159,7 +159,7 @@ def validate_part(part: dict[str, Any], *, context: ReviewContext,
     _validate_gaps(part, checks, context)
     validate_report_quality(part, source_text, authorities=authorities)
     if context.operator_precheck is not None:
-        from operator_precheck import validate_operator_coverage
+        from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.operator_precheck import validate_operator_coverage
         for check in part['checks']:
             if check['id'] == 'cce':
                 validate_operator_coverage(check, source_text, context.operator_precheck)

@@ -1,17 +1,15 @@
 """Batch admission may aggregate only raw, current contract evaluations."""
 from pathlib import Path
 import hashlib
-import sys
 import unittest
 
 HERE = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(HERE))
 
-import batch_admission  # noqa: E402
-from test_split_evaluation import (GROUPS, SOURCE_TEXT, context, part, source)  # noqa: E402
-from test_subject_accounting import response as subject_response  # noqa: E402
-from test_positive_observations import context5, response as contract5_part  # noqa: E402
-from test_local_review import context6, part6, packet6, contract  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW import batch_admission  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__tests.test_split_evaluation import (GROUPS, SOURCE_TEXT, context, part, source)  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__tests.test_subject_accounting import response as subject_response  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__tests.test_positive_observations import context5, response as contract5_part  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__tests.test_local_review import context6, part6, packet6, contract  # noqa: E402
 
 
 def candidate():

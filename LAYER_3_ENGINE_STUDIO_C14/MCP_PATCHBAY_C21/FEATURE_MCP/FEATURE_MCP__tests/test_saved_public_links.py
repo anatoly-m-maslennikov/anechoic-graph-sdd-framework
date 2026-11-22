@@ -1,7 +1,6 @@
 """Saved query links across HTTP and stdio transports."""
 from dataclasses import replace
 from pathlib import Path
-import sys
 import tempfile
 from types import SimpleNamespace
 import unittest
@@ -9,10 +8,9 @@ from urllib.parse import urlencode
 
 MCP = Path(__file__).resolve().parents[1]
 programmatic = MCP.parents[1] / "FEATURE_PROGRAMMATIC"
-sys.path[:0] = [str(MCP), str(programmatic), str(programmatic / "FEATURE_TOOLS")]
-from native_project_selection import NativeProjectSelection  # noqa: E402
-from registry_workbench_provider import WorkbenchProvider  # noqa: E402
-from workbench_links import public_saved  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import ProjectBinding  # noqa: E402
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.registry_workbench_provider import WorkbenchProvider  # noqa: E402
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workbench_links import public_saved  # noqa: E402
 
 
 class SavedPublicLinksTests(unittest.TestCase):
@@ -35,7 +33,7 @@ class SavedPublicLinksTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             control = Path(".anechoic_anechoic")
-            selection = NativeProjectSelection(root, root / control, control, "test", "Anechoic", "AN",
+            selection = ProjectBinding(root, root / control, control, "test", "Anechoic", "AN",
                                                root / control / "manifest.md", "AN-S-1@1", "test")
             legacy = root / ".anechoic_runtime" / "anechoic_runtime_settings.toml"
             legacy.parent.mkdir()

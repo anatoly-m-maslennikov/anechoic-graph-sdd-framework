@@ -7,9 +7,9 @@ tier: 2
 context:
   lens: SPEC
 state:
-  status: active
-  version: 4
-  updated_at: '2026-11-21T17:08:38.459263+00:00'
+  status: "active"
+  version: 6
+  updated_at: "2026-11-22T10:58:11.254480+00:00"
 ---
 
 ## Summary
@@ -39,68 +39,26 @@ declare_entity(
 
 ### Parameters
 
-Paths below are relative to `ProjectManifest.parameters`. A group holds the settings in its rows. Retained settings describe the migrated configuration and its provenance. They have an effect only where a consumer implements that setting.
+Paths below are relative to `ProjectManifest.parameters`. The Project Manifest carries Project identity and the Project-owned options below. Runtime paths are derived from the selected Project and its control root; they are not separately configured here.
+
+Component and Component Seed Manifests own Structure. The Meta-Ontology and Project Config Custom Model own Atom types, properties and relations. Project Config owns release Workflows; the Project Manifest gate controls their MCP exposure. See AN-T-2978.
 
 | Parameter | Meaning |
 | --- | --- |
-| `schema_version` | Version of the settings representation. |
-| `project.key` | Stable key used to identify the Project in configuration. |
-| `project.obsolete_names` | Former Project names retained for legacy lookup. |
-| `project.repository_slug` | Repository identifier associated with the Project. |
-| `project.root.prefix` | `dot` selects `.anechoic_<project_name>`. `underscore` selects `_anechoic_<project_name>`. Both forms use the case-folded Manifest name. |
-| `paths.control_root` | Locator retained for existing Project Manifests. When present, it must match the selected tree. |
-| `paths.framework_root` | Project-relative directory for the installed Framework. |
-| `paths.journal_root` | Project-relative directory for the Project Journal. |
-| `paths.legacy_migration_roots` | Project-relative legacy roots retained for migration. |
-| `paths.projection_root` | Project-relative directory for generated Project views. |
-| `paths.runtime_root` | Project-relative directory for runtime state. |
-| `paths.temporary_root` | Project-relative directory for temporary operation data. |
-| `artifact_timestamps.timezone` | Time zone used when an Artifact timestamp needs local interpretation. |
-| `artifacts.creation_strictness` | Admission policy for creating Artifacts. |
-| `artifacts.enabled_types` | Artifact types enabled for Project authoring. |
-| `artifacts.default_types.analysis` | Default type for analysis Artifacts. |
-| `artifacts.default_types.evaluation` | Default type for evaluation Artifacts. |
-| `artifacts.default_types.requirement` | Default type for requirement Artifacts. |
-| `artifacts.identity.automatic_number_ceiling` | Highest number that automatic Artifact ID allocation can assign. |
-| `artifacts.routing.enabled_governance_loci` | Governance loci eligible for Artifact routing. |
-| `authority.tiers.ordered` | Declared order of the authority tiers. |
-| `authority.tiers.default` | Tier used when no tier is selected. |
-| `authority_modes.default` | Authority mode for areas without a specific mode. |
-| `authority_modes.governance` | Authority mode for governance. |
-| `authority_modes.metamodel` | Authority mode for the metamodel. |
-| `authority_modes.project` | Authority mode for Project declarations. |
-| `authority_modes.semantics` | Authority mode for semantic declarations. |
-| `git.required` | Whether a Git repository is required. |
-| `git.initialize_if_missing` | Whether tooling may initialize a missing Git repository. |
-| `git.commit_each_atom_edit` | Whether tooling commits each Atom edit. |
-| `governance_surfaces.architecture_view` | Enable the architecture view. |
-| `governance_surfaces.project_overview` | Enable the Project overview. |
-| `governance_surfaces.relation_map` | Enable the relation map. |
-| `governance_surfaces.requirement_catalog` | Enable the requirement catalog. |
-| `governance_surfaces.scope_hub` | Enable the scope hub. |
-| `project_mcp.http_port` | Loopback TCP port for Project MCP. An integer from 1 to 65535. |
-| `project_mcp.tool_blacklist` | Exact Tool names to hide and reject for this Project. It can further restrict release workflows. |
-| `project_mcp.release_workflows_enabled` | Boolean. `True` exposes MCP Tools that return host uv commands for Local Release and Public Release. `False` or omission hides both Tools and rejects direct calls. |
-| `runtime.journal.storage` | Journal storage. `files` (default) uses append-only NDJSON; `duckdb` uses a durable standalone Journal table in the Project DuckDB file. |
-| `runtime.project_mcp.build_if_missing` | Permit the launcher to build an absent compatible runtime image. |
-| `runtime.project_mcp.build_timeout_seconds` | Maximum seconds the launcher allows for an image build. |
-| `runtime.project_mcp.startup_timeout_seconds` | Maximum seconds the launcher allows for startup and readiness. |
-| `runtime.workbench.import_graph` | Import Graph options. A mapping or omission enables it. `False` disables it. |
-| `runtime.workbench.import_graph.include` | Named Project-relative authored files to include despite Git ignore rules. |
-| `runtime.workbench.import_graph.python_roots` | Ordered Project-relative roots for resolving Python imports. |
-| `runtime.workbench.public_url` | Workbench page URL used for saved query links when no request URL is available. |
-| `runtime.workbench.result_ttl_seconds` | Retention time in seconds for query results that an open View does not pin. |
-| `runtime.workbench.schema_mode` | Header column selection. `1` uses declared paths. `2` uses observed paths. |
-| `runtime.workbench.storage` | Workbench table storage. `disk` (default) uses the Project DuckDB file; `memory` makes other Workbench tables ephemeral. Independent of Journal storage. |
-| `projection.bindings.<parameter path>` | Source bindings for the named parameter in the generated configuration. |
-| `projection.configuration` | Configuration identity used to generate the projection. |
-| `projection.configuration_artifact` | Reference to the configuration Artifact. |
-| `projection.configuration_sha256` | SHA-256 digest of the projected configuration. |
-| `projection.generator` | Identifier of the generator that produced the projection. |
-| `projection.generator_sha256` | SHA-256 digest of that generator. |
-| `projection.generator_version` | Version of the generator used. |
-| `projection.source_frontier` | Source revisions used by the generator. |
-| `projection.source_frontier_sha256` | SHA-256 digest of the source frontier. |
-| `projection.source_map` | Identifier or path of the generated source map. |
-| `projection.source_map_sha256` | SHA-256 digest of the source map. |
-| `projection.updated_at` | Time when the projection was generated. |
+| `project.root.prefix` | `dot` selects `.anechoic_<project_name>`; `underscore` selects `_anechoic_<project_name>`. Both use the case-folded Manifest name. |
+| `project_mcp.http_port` | Required for MCP launch: loopback TCP port as an integer from 1 to 65535. No default. |
+| `project_mcp.tool_blacklist` | Exact Tool names to hide and reject for this Project. |
+| `project_mcp.release_workflows_enabled` | Boolean exposure gate for the Local and Public Release MCP Tools. Default `False`; direct calls are rejected when disabled. |
+| `runtime.journal.storage` | `files` (default) uses append-only NDJSON; `duckdb` uses a durable Journal table in the Project DuckDB file. |
+| `runtime.project_mcp.build_if_missing` | Permit a missing compatible runtime image to be built. Default `True`. |
+| `runtime.project_mcp.build_timeout_seconds` | Maximum image build time. Default 600 seconds. |
+| `runtime.project_mcp.startup_timeout_seconds` | Maximum startup and readiness time. Default 420 seconds. |
+| `runtime.workbench.import_graph` | Import Graph options. A mapping or omission enables it; `False` disables it. |
+| `runtime.workbench.import_graph.include` | Named Project-relative authored files included despite Git ignore rules. Default empty list. |
+| `runtime.workbench.import_graph.python_roots` | Optional ordered Project-relative roots for Python import resolution. If omitted, infer one root from each direct child directory with a uv Project and lock. Resolve each child against its own root. Use `.` when there are no such children. |
+| `runtime.workbench.import_graph.python_image_imports` | Map of Project-relative Python source files to lists of dotted Python module names. Default empty mapping. |
+| `runtime.workbench.inline_result_limit_kib` | Inline query result size limit in KiB. Default 4. |
+| `runtime.workbench.public_url` | Workbench page URL for saved query links when no request URL is available. |
+| `runtime.workbench.result_ttl_seconds` | Retention in seconds for query results not pinned by an open View. Default 3600. |
+| `runtime.workbench.schema_mode` | Header selection: `1` uses declared paths; `2` (default) uses observed paths. |
+| `runtime.workbench.storage` | `disk` (default) uses the Project DuckDB file; `memory` makes other Workbench tables ephemeral. Independent of Journal storage. |

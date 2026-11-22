@@ -10,9 +10,9 @@ import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from .check_support import Check
-from .parsing import CarrierError, UniqueSafeLoader, check_yaml_resources
-from .settings import CEILINGS
-from subject_notation import SubjectNotationError, parse_subject_expression
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_syntax__pub import CarrierError, UniqueSafeLoader, check_yaml_resources
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__pub import CEILINGS
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.subject_notation__pub import SubjectNotationError, parse_subject_expression
 
 
 _RULE_TYPES = {
@@ -119,19 +119,7 @@ def _support_sections_valid(body: str, closing: int, check: Check) -> bool:
     return True
 
 
-def _carrier_parts(body: str, check: Check) -> tuple[str, str, str] | None:
-    lines = body.splitlines(keepends=True)
-    starts: list[int] = []
-    offset = 0
-    for line in lines:
-        starts.append(offset)
-        offset += len(line)
-    summary_heading = next(
-        (i for i, line in enumerate(lines) if _line_content(line).strip()), None
-    )
-    if summary_heading is None or _line_content(lines[summary_heading]) != "# Summary":
-        check.fail("GRAPH_RULE_BODY", "body", "Graph Rule body must start with literal # Summary.")
-        return None
+def _operative_fence(lines: list[str], summary_heading: int, check: Check) -> tuple[int, int] | None:
     fence_pattern = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
     opening = next(
         (
@@ -166,6 +154,26 @@ def _carrier_parts(body: str, check: Check) -> tuple[str, str, str] | None:
     if closing is None:
         check.fail("GRAPH_RULE_BODY", "body", "Graph Rule yaml block must use one matching fence.")
         return None
+    return opening, closing
+
+
+def _carrier_parts(body: str, check: Check) -> tuple[str, str, str] | None:
+    lines = body.splitlines(keepends=True)
+    starts: list[int] = []
+    offset = 0
+    for line in lines:
+        starts.append(offset)
+        offset += len(line)
+    summary_heading = next(
+        (i for i, line in enumerate(lines) if _line_content(line).strip()), None
+    )
+    if summary_heading is None or _line_content(lines[summary_heading]) != "# Summary":
+        check.fail("GRAPH_RULE_BODY", "body", "Graph Rule body must start with literal # Summary.")
+        return None
+    fence = _operative_fence(lines, summary_heading, check)
+    if fence is None:
+        return None
+    opening, closing = fence
     summary = body[starts[summary_heading] + len(lines[summary_heading]) : starts[opening]]
     if not any(line.strip() for line in summary.splitlines()) or any(
         re.match(r"^ {0,3}#{1,6}[ \t]+", line) for line in summary.splitlines()

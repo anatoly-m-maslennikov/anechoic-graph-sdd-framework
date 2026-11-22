@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import duckdb
 
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND import package_audit
+from KERNEL_MIXER_C59 import package_audit
 
 
 class PackageComponentContractsTests(unittest.TestCase):

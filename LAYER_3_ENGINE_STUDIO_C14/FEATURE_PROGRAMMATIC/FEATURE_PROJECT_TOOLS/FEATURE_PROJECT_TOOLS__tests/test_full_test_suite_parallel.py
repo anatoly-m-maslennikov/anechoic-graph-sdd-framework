@@ -9,10 +9,7 @@ import time
 import unittest
 from unittest.mock import patch
 
-try:
-    from . import test_full_test_suite as fixtures
-except ImportError:
-    import test_full_test_suite as fixtures
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests import test_full_test_suite as fixtures
 
 full = fixtures.full
 
@@ -22,6 +19,27 @@ class FullTestSuiteParallelTests(unittest.TestCase):
         self.case = fixtures.FullTestSuiteTests(methodName="runTest")
         self.case.setUp()
         self.addCleanup(self.case.doCleanups)
+
+    def _ordinary_modules(self, count: int) -> list[Path]:
+        return [
+            self.case.file(f"LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_unit_{number}.py") for number in range(count)
+        ]
+
+    def _docker_modules(self, count: int) -> list[Path]:
+        return [
+            self.case.file(str(full.APP / f"FEATURE_MCP__tests/test_{number}_docker_e2e.py"))
+            for number in range(count)
+        ]
+
+    def _long_host_modules(self) -> list[Path]:
+        return [
+            self.case.file(str(full.MCP_TESTS / name))
+            for name in (
+                "test_selected_subject_apply.py",
+                "test_subject_publication_confirmation.py",
+                "test_subject_publication_gateway.py",
+            )
+        ]
 
     def test_browser_suite_finishes_before_other_workers_start(self):
         browser = self.case.file(str(full.MCP_TESTS / "test_native_import_graph_docker_e2e.py"))
@@ -36,39 +54,30 @@ class FullTestSuiteParallelTests(unittest.TestCase):
             self.assertEqual(0, full._run_modules(self.case.root, [ordinary, browser], {}))
         self.assertEqual([browser, ordinary], observed)
 
-    def test_parallel_worker_bounds_keep_one_image(self) -> None:
-        modules = [
-            self.case.file(f"LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_unit_{number}.py") for number in range(5)
-        ]
-        long_host = [
-            self.case.file(str(path))
-            for path in (
-                full.APP / "FEATURE_MCP__tests/test_selected_subject_apply.py",
-                full.APP / "FEATURE_MCP__tests/test_subject_publication_confirmation.py",
-                full.APP / "FEATURE_MCP__tests/test_subject_publication_gateway.py",
+    def _assert_success_output(self, modules: list[Path]) -> None:
+        for module in modules:
+            relative = module.relative_to(self.case.root)
+            self.assertIn(
+                f"Test module FINISH: {relative}\noutput:{module.name}\nModule time: {relative}: 0.250s\n",
+                self.case.output.getvalue(),
             )
-        ]
-        modules += long_host
-        modules += [
-            self.case.file(str(full.APP / f"FEATURE_MCP__tests/test_{number}_docker_e2e.py"))
-            for number in range(3)
-        ]
+            self.assertIn(f"errors:{module.name}\n", self.case.errors.getvalue())
+        self.assertIn(
+            "Modules: 12; tests run: 12; skipped: 0; failed modules: 0", self.case.output.getvalue()
+        )
+
+    def test_parallel_worker_bounds_keep_one_image(self) -> None:
+        modules = self._ordinary_modules(5) + self._long_host_modules() + self._docker_modules(3)
         selected = self.case.file(str(full.APP / "FEATURE_MCP__tests/test_selected_workflows_docker_e2e.py"))
         modules.append(selected)
         active = {"ordinary": 0, "docker": 0}
         peak = dict(active)
-        docker_starts: list[Path] = []
-        ordinary_starts: list[Path] = []
         lock, ready, release = threading.Lock(), threading.Event(), threading.Event()
 
         def execute(root, module, environment):
             lane = "docker" if full._docker_module(root, module) else "ordinary"
             print(f"Test module START: {module.relative_to(root)}", flush=True)
             with lock:
-                if lane == "docker":
-                    docker_starts.append(module)
-                else:
-                    ordinary_starts.append(module)
                 active[lane] += 1
                 peak[lane] = max(peak[lane], active[lane])
                 if sum(active.values()) == 4:
@@ -96,16 +105,7 @@ class FullTestSuiteParallelTests(unittest.TestCase):
                 release.set()
             self.assertEqual(0, future.result(timeout=5))
         image.assert_called_once_with(self.case.root, use_packaged_assets=True)
-        for module in modules:
-            relative = module.relative_to(self.case.root)
-            self.assertIn(
-                f"Test module FINISH: {relative}\noutput:{module.name}\nModule time: {relative}: 0.250s\n",
-                self.case.output.getvalue(),
-            )
-            self.assertIn(f"errors:{module.name}\n", self.case.errors.getvalue())
-        self.assertIn(
-            "Modules: 12; tests run: 12; skipped: 0; failed modules: 0", self.case.output.getvalue()
-        )
+        self._assert_success_output(modules)
 
     def test_critical_failure_still_runs_later_modules_and_counts_failure(self):
         critical = self.case.file(str(full.APP / "FEATURE_MCP__tests/test_selected_subject_apply.py"))
@@ -147,14 +147,39 @@ class FullTestSuiteParallelTests(unittest.TestCase):
             "Modules: 3; tests run: 3; skipped: 0; failed modules: 1", self.case.output.getvalue()
         )
 
+    def _interrupt_when_queued(self, pending, ready, release, canceled, watchers):
+        self.assertTrue(ready.wait(5))
+        queued = [future for future in pending if not future.running()]
+        queued_modules = [pending[future] for future in queued]
+        self.assertEqual(6, len(queued))
+        self.assertEqual(
+            4,
+            sum(not full._docker_module(self.case.root, module) for module in queued_modules),
+        )
+        self.assertEqual(
+            2,
+            sum(full._docker_module(self.case.root, module) for module in queued_modules),
+        )
+
+        def release_after_cancellation():
+            deadline = time.monotonic() + 3
+            while (
+                not all(future.cancelled() for future in queued) and time.monotonic() < deadline
+            ):
+                time.sleep(0.01)
+            if all(future.cancelled() for future in queued):
+                canceled.set()
+            release.set()
+
+        watcher = threading.Thread(target=release_after_cancellation)
+        watchers.append(watcher)
+        watcher.start()
+        raise KeyboardInterrupt
+
+
     def test_interrupt_cancels_queued_modules_in_both_worker_lanes(self):
-        modules = [
-            self.case.file(f"LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_unit_{number}.py") for number in range(6)
-        ]
-        modules += [
-            self.case.file(str(full.APP / f"FEATURE_MCP__tests/test_{number}_docker_e2e.py"))
-            for number in range(4)
-        ]
+        self._ordinary_modules(6)
+        self._docker_modules(4)
         started, watchers = [], []
         lock = threading.Lock()
         ready, release, canceled = threading.Event(), threading.Event(), threading.Event()
@@ -168,33 +193,7 @@ class FullTestSuiteParallelTests(unittest.TestCase):
             return True, 1, 0, "", "", 0.0, None
 
         def interrupted(pending):
-            self.assertTrue(ready.wait(5))
-            queued = [future for future in pending if not future.running()]
-            queued_modules = [pending[future] for future in queued]
-            self.assertEqual(6, len(queued))
-            self.assertEqual(
-                4,
-                sum(not full._docker_module(self.case.root, module) for module in queued_modules),
-            )
-            self.assertEqual(
-                2,
-                sum(full._docker_module(self.case.root, module) for module in queued_modules),
-            )
-
-            def release_after_cancellation():
-                deadline = time.monotonic() + 3
-                while (
-                    not all(future.cancelled() for future in queued) and time.monotonic() < deadline
-                ):
-                    time.sleep(0.01)
-                if all(future.cancelled() for future in queued):
-                    canceled.set()
-                release.set()
-
-            watcher = threading.Thread(target=release_after_cancellation)
-            watchers.append(watcher)
-            watcher.start()
-            raise KeyboardInterrupt
+            self._interrupt_when_queued(pending, ready, release, canceled, watchers)
 
         try:
             with (

@@ -1,18 +1,15 @@
 """Image selection is pure configuration; Docker is not invoked here."""
 
 from pathlib import Path
-import sys
 import tempfile
 import unittest
 from unittest.mock import patch
 
 
 APP = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(APP))
-sys.path.insert(0, str(APP / "docker"))
 
-import runtime  # noqa: E402
-from image_reference import IMAGE  # noqa: E402
+import MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime as runtime  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_reference import IMAGE  # noqa: E402
 
 
 IMMUTABLE_IMAGE = "sha256:" + "a" * 64

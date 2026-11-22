@@ -9,8 +9,8 @@ context:
   lens: DES
 state:
   status: "active"
-  version: 3
-  updated_at: '2026-11-21T22:24:03.911363+00:00'
+  version: 4
+  updated_at: "2026-11-22T06:18:53.519380+00:00"
 ---
 
 ## Summary
@@ -25,15 +25,15 @@ The `build-image --project-root <path> --run-id <id>` subcommand uses the same i
 
 It defaults to the Framework checkout and refresh mode. The compatibility option `--test-module` does not narrow the Local Release gate.
 
-C63 imports no Project code outside the Release subtree. Its only subsystem calls are to the C19 Test Suite command interface, for `unit`, `e2e`, and `canary` phases. It uses the host Git and Docker operating-system interfaces directly.
+C63 imports no Project code outside the Release subtree. Its only subsystem calls are to the C19 Test Suite command interface, for `functional`, `e2e`, and `canary` phases. It uses the host Git and Docker operating-system interfaces directly.
 
-C63 reads Project Manifest literals and the checked-in registry, copies active sources, builds the exact candidate image, and installs the verified package. It starts and checks the production container directly through Docker.
+C63 reads Project Manifest literals and the checked-in registry. The functional phase checks source and required behavior before package preparation and image build. C63 installs the verified package after end-to-end and canary checks of that exact image. It starts and checks the production container directly through Docker.
 
 It writes its own release receipts and does not call Journal.
 
 A completed request delivers the verified Framework, runtime, and project-local Skill and returns a ready Project MCP endpoint. A candidate that fails verification leaves the running production container in place.
 
-A failure reports the failed step and available evidence. Git checkpoints and a candidate Version can already exist when a later step fails.
+A failure reports the failed step and available evidence. The pre-build gate reports the functional scope and uses `functional_tests` as its failure step. Git checkpoints and a candidate Version can already exist when a later step fails.
 
 The command writes one JSON result to stdout and sends progress to stderr. Exit 0 means completed. Exit 1 means another reported outcome, including a failed request or cleanup pending. Exit 2 means invalid CLI usage. Exit 130 means interruption.
 

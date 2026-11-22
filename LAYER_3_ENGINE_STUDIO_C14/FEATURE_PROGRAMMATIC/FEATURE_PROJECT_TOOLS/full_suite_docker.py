@@ -4,63 +4,39 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-import json
+import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import tempfile
 import uuid
 
 APP = Path("LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP")
-sys.path.insert(0, str(Path(__file__).resolve().parents[3] / APP / "docker"))
-from runtime_images import ImageManager, _bounded_run  # noqa: E402
-
-ATTEMPT_LABEL = "org.anechoic.full-test-suite.attempt"
+CODE_ROOT = Path(__file__).resolve().parents[2]
+IMAGE_CLI = ".".join((*APP.parts[1:], "docker", "candidate_image_cli"))
 
 
-def _executor(attempt: str):
-    def execute(argv, **kwargs):
-        build = argv[:2] == ["docker", "build"]
-        if build:
-            argv = [*argv[:2], "--label", f"{ATTEMPT_LABEL}={attempt}", *argv[2:]]
-        return _bounded_run(
-            argv,
-            cwd=kwargs["cwd"],
-            timeout=kwargs["timeout"],
-            capture_stdout=not build,
-            buildx_config=kwargs.get("env", {}).get("BUILDX_CONFIG"),
-        )
-
-    return execute
+def _image_command(root: Path, operation: str, attempt: str, *arguments: str) -> str:
+    argv = (
+        "uv", "run", "--project", str(CODE_ROOT), "--locked", "--python", "3.14",
+        "--managed-python", "--no-env-file", "python", "-B", "-P", "-m", IMAGE_CLI,
+        operation, "--project-root", str(root), "--attempt", attempt, *arguments,
+    )
+    environment = {**os.environ, "UV_PROJECT_ENVIRONMENT": ".venv-dev", "PYTHONPATH": str(CODE_ROOT)}
+    environment.pop("PYTHONHOME", None)
+    environment.pop("VIRTUAL_ENV", None)
+    result = subprocess.run(
+        argv, cwd=CODE_ROOT, env=environment, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+        text=True, timeout=900 if operation == "build" else 120, check=True,
+    )
+    return result.stdout.strip()
 
 
 def _remove_owned_image(root: Path, image: str, attempt: str) -> None:
-    """An in-use image is retained; no container is removed by this owner."""
     try:
-        observed = _bounded_run(["docker", "image", "inspect", image], cwd=root, timeout=30)
-        if observed.returncode != 0:
-            raise OSError("test image inspection failed")
-        labels = json.loads(observed.stdout)[0]["Config"]["Labels"]
-        if not isinstance(labels, dict) or labels.get(ATTEMPT_LABEL) != attempt:
-            raise OSError("test image attribution differs")
-        containers = _bounded_run(
-            ["docker", "container", "ls", "--all", "--filter", f"ancestor={image}", "--quiet"],
-            cwd=root,
-            timeout=30,
-        )
-        if containers.returncode != 0 or containers.stdout.strip():
-            raise OSError("test image may still be in use; retained")
-        removed = _bounded_run(["docker", "image", "rm", image], cwd=root, timeout=30)
-        if removed.returncode != 0:
-            raise OSError("non-force test image removal failed; retained")
-    except (
-        OSError,
-        ValueError,
-        KeyError,
-        IndexError,
-        TypeError,
-        subprocess.TimeoutExpired,
-    ) as error:
+        _image_command(root, "cleanup", attempt, "--image", image)
+    except (OSError, subprocess.SubprocessError) as error:
         print(f"Test image cleanup: {image}: {error}", file=sys.stderr)
 
 
@@ -99,9 +75,10 @@ def current_code_test_image(root: Path, *, use_packaged_assets: bool = False):
     print("Test image START: preparing current source", flush=True)
     with _test_scratch(root) as scratch:
         attempt = uuid.uuid4().hex
-        manager = ImageManager(root, executor=_executor(attempt), build_temp_root=scratch, project_root=root)
-        identity = manager.identity(use_packaged_assets=use_packaged_assets)
-        image = manager._build(identity, use_packaged_assets=use_packaged_assets)
+        assets = ("--packaged-assets",) if use_packaged_assets else ()
+        image = _image_command(root, "build", attempt, "--scratch", str(scratch), *assets)
+        if re.fullmatch(r"sha256:[0-9a-f]{64}", image) is None:
+            raise ValueError("Test image build did not return an immutable Docker image ID")
         print(f"Test image FINISH: {image}", flush=True)
         try:
             yield _image_environment(image, scratch)

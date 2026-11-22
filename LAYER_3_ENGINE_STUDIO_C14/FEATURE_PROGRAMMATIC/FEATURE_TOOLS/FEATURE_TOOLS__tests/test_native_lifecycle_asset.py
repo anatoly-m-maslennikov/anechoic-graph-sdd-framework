@@ -5,10 +5,10 @@ import unittest
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import test_native_lifecycle_draft as draft_tests
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import capture_native
-from ATOM_LIFECYCLE.common import InputError, SourceChanged
-from ATOM_LIFECYCLE.native_asset import create_asset
+import FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.test_native_lifecycle_draft as draft_tests
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_source_rows__pub import capture_native
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.common import InputError, SourceChanged
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_asset import create_asset
 
 
 class NativeAssetTests(unittest.TestCase):

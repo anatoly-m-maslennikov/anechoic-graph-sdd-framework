@@ -2,13 +2,11 @@
 import copy
 import hashlib
 import importlib
-import sys
 import unittest
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(HERE))
-contract = importlib.import_module("evaluation_contract")
+contract = importlib.import_module("FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.evaluation_contract")
 GROUPS = contract.GROUPS
 SOURCE_TEXT = ('---\nsubjects:\n  governs: Atom\n  depends_on: []\n---\n'
     '# Summary\nAtom rule\n## Scope\nAtoms\n## Claim\nAtom must comply.\n## Details\n')
@@ -48,7 +46,7 @@ def part(group):
         "coverage_gaps": [], "mechanical_evidence": [], "result": "passed",
     }
     if group == "coherence":
-        from context_builder import body_sections
+        from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import body_sections
         result["checks"][0]["subject_inventory"] = {"complete": True, "sections_reviewed": body_sections(SOURCE_TEXT), "mentions": [{
             "location": "Claim", "excerpt": "Atom", "entity": "Atom", "resolution": "resolved", "resolution_basis": "meaning",
             "rationale": "Literal use of the bound Entity definition.",

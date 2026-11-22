@@ -8,8 +8,8 @@ try:
     from .image_metadata import OCI_VERSION_LABEL, display_image_tag
     from .image_reference import IMMUTABLE_IMAGE
 except ImportError:
-    from image_metadata import OCI_VERSION_LABEL, display_image_tag
-    from image_reference import IMMUTABLE_IMAGE
+    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_metadata import OCI_VERSION_LABEL, display_image_tag
+    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_reference import IMMUTABLE_IMAGE
 
 
 def _unique_object(pairs):

@@ -8,8 +8,8 @@ from pathlib import Path
 import threading
 from typing import Any
 
-from app_server import AppServer
-from state import runtime_directory
+from .app_server import AppServer
+from .state import runtime_directory
 
 
 class CodexBridge:

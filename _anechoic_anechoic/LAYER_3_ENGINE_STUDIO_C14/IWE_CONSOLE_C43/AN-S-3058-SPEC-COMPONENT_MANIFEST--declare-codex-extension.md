@@ -3,14 +3,14 @@ atom_family: SPEC
 atom_id: AN-S-3058
 container:
   component: C43
-tier: 0
+tier: 4
 context:
   template: component_manifest
   lens: SPEC
 state:
   status: active
-  version: 3
-  updated_at: '2026-11-21T22:51:12.819403+00:00'
+  version: 5
+  updated_at: '2026-11-22T11:23:40.206159+00:00'
 ---
 
 ## Summary
@@ -39,6 +39,10 @@ declare_entity(
                     'FEATURE_CODEX_EXTENSION__shared.read_resource': None,
                     'FEATURE_CODEX_EXTENSION__shared.tools': None,
                 },
+            },
+            'state': {
+                'reads': ['bundled compatibility probe HTML', 'bundled Workbench MCP App HTML'],
+                'writes': [],
             },
         },
     ),

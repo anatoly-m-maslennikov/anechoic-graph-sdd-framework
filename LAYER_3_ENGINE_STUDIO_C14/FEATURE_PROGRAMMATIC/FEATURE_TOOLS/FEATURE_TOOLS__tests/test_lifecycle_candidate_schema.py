@@ -1,5 +1,4 @@
 import json
-from hashlib import sha256
 from pathlib import Path
 import subprocess
 import sys
@@ -8,8 +7,8 @@ import unittest
 
 TOOLS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS))
-from ATOM_LIFECYCLE.candidate_schema import compile_candidate_schema, load_candidate_schema  # noqa: E402
-from ATOM_LIFECYCLE.role_form_schema import RoleFormSchema  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.legacy_candidate_schema__pub import compile_candidate_schema, load_candidate_schema  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.role_form_schema import RoleFormSchema  # noqa: E402
 
 CORE = Path(__file__).parent / 'assets/lifecycle_schema_declarations'
 
@@ -24,6 +23,56 @@ version: 1
 ---
 {body}
 '''
+
+
+
+def _formal_fixture_source():
+    encoded = source('CA-R-1', status='active', body='''## Claim
+### Formal Claim
+```CFEL
+# a comment is not a gate
+Atom.Header.Role :: Plan;
+Atom.Header.Role :: Method;
+Atom.Header.Form :: Decision;
+# Atom.Header.Role :: Phantom;
+Atom/(.Header.Role in (Plan)).Header.Form :: Plan;
+FOR EACH $a[<Atom>, (.Header.Form = Decision)]:
+(
+    $a.Header.Role:: [in (Method)]{::1}
+);
+Atom.Header.ID:: [atom id]{::1};
+Atom.Content.Summary:: {::1}; # inline comment
+# Atom.Content.Secret:: {::1};
+```
+## Other
+```CFEL
+Atom.Content.Hidden:: {::1};
+```
+''')
+    return encoded
+
+
+def _native_claim_fixtures():
+    native_claims = {
+        'CA-R-4': '''from anechoic.model import Atom
+class Plan(Atom):
+    pass
+declare_entity(entity_name="Plan", entity_class=Plan,
+       qualification_property_path="Atom.Header.Context.Role")''',
+        'CA-R-5': '''from anechoic.model import Atom
+class Method(Atom):
+    pass
+declare_entity(entity_name="Method", entity_class=Method,
+       qualification_property_path="Atom.Header.Context.Role")''',
+        'CA-R-6': '''from anechoic.model import Plan
+class PlanForm(Plan):
+    pass
+declare_entity(entity_name="Plan", entity_class=PlanForm,
+       qualification_property_path="Atom.Header.Context.Form")''',
+        'CA-R-7': '''declare_entity(entity_name="Form", relation_name="IS_PROPERTY_OF",
+       base_path="Atom.Header.Context", allowed_values=("Decision",), form_roles=("Method",))''',
+    }
+    return native_claims
 
 
 class CandidateSchemaTests(unittest.TestCase):
@@ -74,49 +123,10 @@ declare_entity(entity_name="Requirement", entity_class=Requirement,
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory) / 'model'
             root.mkdir()
-            encoded = source('CA-R-1', status='active', body='''## Claim
-### Formal Claim
-```CFEL
-# a comment is not a gate
-Atom.Header.Role :: Plan;
-Atom.Header.Role :: Method;
-Atom.Header.Form :: Decision;
-# Atom.Header.Role :: Phantom;
-Atom/(.Header.Role in (Plan)).Header.Form :: Plan;
-FOR EACH $a[<Atom>, (.Header.Form = Decision)]:
-(
-    $a.Header.Role:: [in (Method)]{::1}
-);
-Atom.Header.ID:: [atom id]{::1};
-Atom.Content.Summary:: {::1}; # inline comment
-# Atom.Content.Secret:: {::1};
-```
-## Other
-```CFEL
-Atom.Content.Hidden:: {::1};
-```
-''')
+            encoded = _formal_fixture_source()
             (root / 'CA-R-1.md').write_text(encoded.replace('role: Requirement', 'role: requirement')
                                            .replace('form: Declaration', 'form: declaration'))
-            native_claims = {
-                'CA-R-4': '''from anechoic.model import Atom
-class Plan(Atom):
-    pass
-declare_entity(entity_name="Plan", entity_class=Plan,
-               qualification_property_path="Atom.Header.Context.Role")''',
-                'CA-R-5': '''from anechoic.model import Atom
-class Method(Atom):
-    pass
-declare_entity(entity_name="Method", entity_class=Method,
-               qualification_property_path="Atom.Header.Context.Role")''',
-                'CA-R-6': '''from anechoic.model import Plan
-class PlanForm(Plan):
-    pass
-declare_entity(entity_name="Plan", entity_class=PlanForm,
-               qualification_property_path="Atom.Header.Context.Form")''',
-                'CA-R-7': '''declare_entity(entity_name="Form", relation_name="IS_PROPERTY_OF",
-               base_path="Atom.Header.Context", allowed_values=("Decision",), form_roles=("Method",))''',
-            }
+            native_claims = _native_claim_fixtures()
             for atom_id, claim in native_claims.items():
                 (root / f'{atom_id}.md').write_text(source(atom_id, body=(
                     '## Claim\n### Formal Claim\n```python\nfrom anechoic.formal_claims import declare_entity\n'
@@ -126,7 +136,7 @@ declare_entity(entity_name="Plan", entity_class=PlanForm,
             (root / 'archive').mkdir()
             (root / 'archive/CA-R-3.md').write_text('invalid')
             output = Path(directory) / 'output/schema.json'
-            subprocess.run([sys.executable, str(TOOLS / 'ATOM_LIFECYCLE/candidate_schema.py'),
+            subprocess.run([sys.executable, str(Path(__file__).with_name('legacy_candidate_schema__pub.py')),
                             '--model-root', str(root), '--output', str(output)], check=True)
             asset = json.loads(output.read_text())
             self.assertEqual([(atom_id, 1, f'{atom_id}.md') for atom_id in ('CA-R-1', *native_claims)],

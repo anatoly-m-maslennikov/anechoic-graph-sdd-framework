@@ -17,7 +17,62 @@ dependency_exception_evaluation_root = ".anechoic_framework/00_APPLICABLE_METHOD
 exception_recording_rule = "Record each admitted third-party dependency or non-Python carrier in an active Delivery Atom under the delivery root, with its acceptance evidence in an active Evaluation Atom under the evaluation root."
 
 [tool.anechoic.test_suite]
-enforce_source_size = false
+enforce_source_size = true
+enforce_source_line_length = false
+functional_test_modules = [
+    "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_full_test_suite.py",
+    "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_focused_release.py",
+    "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_full_suite_docker.py",
+    "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_full_test_suite_parallel.py",
+    "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_release_canary.py",
+    "LAYER_5_FRAMEWORK_DELIVERY/LAYER_5_FRAMEWORK_DELIVERY__tests/test_release_cli.py",
+    "LAYER_5_FRAMEWORK_DELIVERY/PUBLIC_RELEASE/PUBLIC_RELEASE__tests/test_public_release.py",
+    "LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/RELEASE_VERSION__tests/test_release_inputs.py",
+    "LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/RELEASE_VERSION__tests/test_release_images.py",
+    "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_release_image_compatibility.py",
+    "LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/RELEASE_VERSION__tests/test_release_container.py",
+    "LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/RELEASE_VERSION__tests/test_local_release_cleanup.py",
+    "LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/RELEASE_VERSION__tests/test_local_release_git_preflight.py",
+    "LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/RELEASE_VERSION__tests/test_local_release_test_process.py",
+    "LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/RELEASE_VERSION__tests/test_release_image_provenance.py",
+    "LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/RELEASE_VERSION__tests/test_simple_local_release.py",
+    "LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/RELEASE_VERSION__tests/test_simple_local_release_2.py",
+    "LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/RELEASE_VERSION__tests/test_simple_local_release_3.py",
+    "LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/RELEASE_VERSION__tests/test_simple_local_release_4.py",
+    "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_FORMAL_MODEL_GENERATOR/FEATURE_FORMAL_MODEL_GENERATOR__tests/test_generate_model.py",
+    "LAYER_3_ENGINE_STUDIO_C14/KERNEL_MIXER_C59/MANIFEST_RUNTIME_C62/MANIFEST_RUNTIME_C62__tests/test_manifest_runtime.py",
+    "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests/test_api_backend_process.py",
+    "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests/test_backend_tool_api.py",
+    "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests/test_native_production_startup.py",
+    "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests/test_native_lifecycle_structure_pinning.py",
+    "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests/test_lifecycle_route_matrix.py",
+    "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests/test_native_lifecycle_tree_failures.py",
+    "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests/test_native_startup.py",
+    "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests/test_native_host_launcher.py",
+    "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests/test_project_mcp_launcher_startup.py",
+    "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests/test_project_mcp_launcher_startup_failures.py",
+    "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests/test_shared_native_routing.py",
+    "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests/test_caller_context_e2e.py",
+    "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests/test_tool_registry_cases_3.py",
+    "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests/test_native_query_stdio.py",
+    "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests/test_native_workbench_http.py",
+    "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests/test_native_import_graph.py",
+    "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_CODEX/FEATURE_WORKBENCH_CODEX__tests/test_bridge_http_protocol.py",
+    "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests/test_header_sql_columns.py",
+    "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests/test_source_discovery.py",
+    "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests/test_graph_delta.py",
+    "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests/test_native_projection.py",
+    "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests/test_query_store.py",
+    "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests/test_query_store_part_2.py",
+    "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests/test_result_files.py",
+    "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests/test_result_grid.py",
+    "RUNTIME_SETUP/RUNTIME_SETUP__tests/test_setup.py",
+    "RUNTIME_SETUP/RUNTIME_SETUP__tests/test_project_init.py",
+    "LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/RELEASE_VERSION__tests/test_native_release_sources.py",
+    "LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/RELEASE_VERSION__tests/test_relation_registry_release.py",
+    "LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/RELEASE_VERSION__tests/test_release_cleanup.py",
+    "LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/RELEASE_VERSION__tests/test_release_image_ownership.py",
+]
 
 [tool.pytest.ini_options]
 # Keep pytest's disposable cache and atomic staging inside project temporary state.
@@ -40,7 +95,7 @@ workbench = [
 
 [tool.ruff]
 target-version = "py314"
-line-length = 100
+line-length = 79
 cache-dir = ".anechoic_tmp/cache/ruff"
 
 [tool.ruff.lint]

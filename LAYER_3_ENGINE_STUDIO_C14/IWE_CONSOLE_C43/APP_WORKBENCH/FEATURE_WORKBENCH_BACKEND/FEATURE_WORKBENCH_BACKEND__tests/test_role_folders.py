@@ -1,20 +1,17 @@
 """Declared Role folders drive Workbench filename audits."""
 from pathlib import Path
-import sys
 import tempfile
 import unittest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
-sys.path.insert(0, str(Path(__file__).resolve().parents[4] / 'FEATURE_PROGRAMMATIC' / 'FEATURE_TOOLS'))
 
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.audit_tables import _declared_filename_issue
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.content_schema import DeclarationSource, compile_content_schema
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_inventory import filename_role_matches
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workbench_schema_asset import (
+from KERNEL_MIXER_C59.audit_tables import _declared_filename_issue
+from KERNEL_MIXER_C59.content_schema import DeclarationSource, compile_content_schema
+from KERNEL_MIXER_C59.source_inventory import filename_role_matches
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workbench_schema_asset import (
     compile_role_folders, compile_schema, load_image_schema, schema_asset,
 )
-from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim
-from python_model_claim import parse_structured_python_model_claim
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_model_claim__pub import parse_native_model_claim
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.python_claim__pub import parse_structured_python_model_claim
 
 
 class RoleFolderTests(unittest.TestCase):

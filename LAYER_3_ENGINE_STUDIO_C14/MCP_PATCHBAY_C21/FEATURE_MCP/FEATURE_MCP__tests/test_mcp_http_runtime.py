@@ -2,15 +2,13 @@
 import os
 from pathlib import Path
 import re
-import sys
 import tempfile
 import unittest
 from unittest.mock import patch
 
 APP = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(APP / "docker"))
-from runtime import Runtime  # noqa: E402
-from mcp_paths import HEALTH_PATH, MCP_PATH  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime import Runtime  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.mcp_paths import HEALTH_PATH, MCP_PATH  # noqa: E402
 
 IMAGE = "sha256:" + "a" * 64
 

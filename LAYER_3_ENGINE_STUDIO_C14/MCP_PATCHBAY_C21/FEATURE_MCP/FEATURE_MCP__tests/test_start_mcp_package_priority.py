@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-import test_start_mcp_script as fixture
+from . import test_start_mcp_script as fixture
 
 
 class StartMcpPackagePriorityTests(unittest.TestCase):

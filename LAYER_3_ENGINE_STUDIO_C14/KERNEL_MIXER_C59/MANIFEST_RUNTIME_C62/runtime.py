@@ -1,83 +1,40 @@
-"""Own the two Manifest Runtime processes for one native Project."""
+"""Host one Project's Model and Structure in the calling process."""
 
 from contextlib import contextmanager
 import json
 import os
 from pathlib import Path
 import re
-from select import select
 import subprocess
 import sys
 from tempfile import TemporaryDirectory
 from threading import Event, Thread
 
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_watcher import SourceWatcher
-from native_carrier_placement import ARCHIVE_DIRECTORY, DRAFT_DIRECTORY, READY_DIRECTORY
-from project_runtime import bind_native_runtime, owned_temporary_root
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.source_watcher__pub import SourceWatcher
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_placement__pub import ARCHIVE_DIRECTORY, DRAFT_DIRECTORY, READY_DIRECTORY
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.project_temporary__pub import owned_temporary_root
+
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_generation__pub import open_admitted_model
+from ..ORCHESTRATOR_C66.ORCHESTRATOR_C66__shared import Orchestrator
+from .process import _BUILDER_PACKAGE, _CODE_ROOT, _command, _environment
+from .structure_host_CS3.structure_host_CS3__shared import publish_structure
 
 _TIMEOUT = 15
 _COMPONENT_PATH = re.compile(r"(?!__).+_C[0-9]+$")
-_CODE_ROOT = Path(__file__).resolve().parents[3]
-_ENGINE = _CODE_ROOT / "LAYER_3_ENGINE_STUDIO_C14"
-_PROGRAMMATIC = _ENGINE / "FEATURE_PROGRAMMATIC"
 
 
-def _command(module):
-    return (sys.executable, "-B", "-P", "-m", f"{__package__}.{module}")
-
-
-def _environment():
-    search = os.pathsep.join(map(str, (_CODE_ROOT, _PROGRAMMATIC, _PROGRAMMATIC / "FEATURE_TOOLS",
-                                     _ENGINE / "IWE_CONSOLE_C43")))
-    return {**os.environ, "PYTHONPATH": search}
-
-
-@contextmanager
-def _host(module, *arguments):
-    process = subprocess.Popen(
-        (*_command(module), *map(str, arguments)), cwd=_CODE_ROOT, env=_environment(),
-        stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-    )
-    try:
-        yield process
-    finally:
-        try:
-            process.stdin.close()
-            process.wait(timeout=_TIMEOUT)
-        except (BrokenPipeError, subprocess.TimeoutExpired):
-            process.kill()
-            process.wait()
-        finally:
-            process.stdout.close()
-
-
-def _ready(process):
-    readable, _, _ = select([process.stdout], [], [], _TIMEOUT)
-    if not readable:
-        process.kill()
-        raise RuntimeError("Manifest Runtime host did not respond")
-    if process.stdout.readline() != b"ready\n":
-        raise RuntimeError("Manifest Runtime host rejected its generation")
-
-
-def _compile(selection, generation, *options):
-    result = subprocess.run(
-        (*_command("manifest_compiler_pkg1.compiler"), str(selection.root),
+def _compile(selection, generation, *options, orchestrator):
+    kind = "model_build" if "--build-model" in options else "structure_refresh"
+    result = orchestrator.run_worker(
+        kind,
+        (*_command(f"{_BUILDER_PACKAGE}.compiler"), str(selection.root),
          selection.control_relative.as_posix(), selection.manifest_sha256, str(generation), *options),
-        cwd=_CODE_ROOT, env=_environment(), stdin=subprocess.DEVNULL,
-        capture_output=True, timeout=_TIMEOUT, check=False,
+        cwd=_CODE_ROOT, env=_environment(), timeout=_TIMEOUT,
     )
     if result.returncode:
         detail = result.stderr.decode(errors="replace").strip().splitlines()
         raise RuntimeError(detail[-1] if detail else "Manifest Compiler failed")
     return result.stdout
-
-
-def _publish(host, active, snapshot):
-    active.with_suffix(".pending").write_bytes(snapshot)
-    host.stdin.write(b"publish\n")
-    host.stdin.flush()
-    _ready(host)
 
 
 def _relevant(relative, control, manifest):
@@ -89,13 +46,13 @@ def _relevant(relative, control, manifest):
             not {DRAFT_DIRECTORY, READY_DIRECTORY, ARCHIVE_DIRECTORY, "000_draft", "099_archived"}.intersection(path.parts)
             and ("-COMPONENT_MANIFEST--" in path.name
                  or "-PROJECT_MANIFEST--" in path.name
-                 or "-PKG--" in path.name
+                 or "-COMPONENT_SEED_MANIFEST--" in path.name
                  or _COMPONENT_PATH.fullmatch(path.name))
         )
     )
 
 
-def _watch(stop, watcher, selection, active, host):
+def _watch(stop, watcher, selection, active, model_sha256, descriptor_sha256, orchestrator):
     manifest = selection.manifest_path.relative_to(selection.root)
     while not stop.is_set():
         changes = watcher.changes(timeout=0.2)
@@ -105,16 +62,18 @@ def _watch(stop, watcher, selection, active, host):
         ):
             continue
         try:
-            _publish(host, active, _compile(selection, active.parent))
-        except (OSError, RuntimeError, subprocess.SubprocessError) as error:
+            snapshot = _compile(selection, active.parent, "--model-descriptor-sha256", descriptor_sha256,
+                                orchestrator=orchestrator)
+            publish_structure(active, model_sha256, snapshot)
+        except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
             print(f"Manifest Runtime rebuild failed. {error}", file=sys.stderr, flush=True)
 
 
 @contextmanager
-def run_manifest_runtime(selection):
-    """Yield the compiled Model directory and current Structure path."""
-    with bind_native_runtime(selection):
-        parent = owned_temporary_root(selection.root, "manifest_runtime")
+def run_manifest_runtime(selection, *, orchestrator=None):
+    """Yield the compiled Model directory, Structure path, and bound Model."""
+    orchestrator = Orchestrator() if orchestrator is None else orchestrator
+    parent = owned_temporary_root(selection.root, "manifest_runtime")
     with TemporaryDirectory(dir=parent, prefix="generation-") as directory:
         generation = Path(directory)
         active = generation / "structure.json"
@@ -124,19 +83,24 @@ def run_manifest_runtime(selection):
         )
         watcher.start()
         try:
-            snapshot = _compile(selection, generation, "--build-model")
-            fingerprint = json.loads(snapshot)["model_sha256"]
-            with _host("model_host_pkg2.host", generation, fingerprint) as model_host:
-                _ready(model_host)
-                with _host("structure_host_pkg3.host", active, fingerprint) as structure_host:
-                    _publish(structure_host, active, snapshot)
-                    stop = Event()
-                    reload_thread = Thread(target=_watch, args=(stop, watcher, selection, active, structure_host))
-                    reload_thread.start()
-                    try:
-                        yield generation, active
-                    finally:
-                        stop.set()
-                        reload_thread.join()
+            compiled = json.loads(_compile(selection, generation, "--build-model", "--attest-model",
+                                           orchestrator=orchestrator))
+            descriptor_sha256 = compiled["model_descriptor_sha256"]
+            structure = compiled["structure"]
+            snapshot = json.dumps(structure, separators=(",", ":"), sort_keys=True).encode()
+            fingerprint = structure["model_sha256"]
+            with open_admitted_model(generation, fingerprint, descriptor_sha256) as model:
+                publish_structure(active, model.fingerprint, snapshot)
+                stop = Event()
+                reload_thread = Thread(target=_watch,
+                                       args=(stop, watcher, selection, active, model.fingerprint,
+                                             descriptor_sha256, orchestrator))
+                reload_thread.start()
+                try:
+                    yield generation, active, model
+                finally:
+                    stop.set()
+                    orchestrator.stop()
+                    reload_thread.join()
         finally:
             watcher.close()

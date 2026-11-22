@@ -6,6 +6,7 @@ from contextlib import redirect_stderr
 import io
 import os
 from pathlib import Path
+import select
 import signal
 import subprocess
 import sys
@@ -19,8 +20,7 @@ if os.name == "posix":
     import fcntl
 
 REPOSITORY = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(REPOSITORY))
-from LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.local_release_test_process import run_logged_test_process  # noqa: E402
+from RELEASE_VERSION.local_release_test_process import run_logged_test_process  # noqa: E402
 
 
 def _wait_for(path: Path, *, timeout: float = 10.0) -> None:
@@ -29,6 +29,64 @@ def _wait_for(path: Path, *, timeout: float = 10.0) -> None:
         if time.monotonic() >= deadline:
             raise AssertionError(f"Child fixture did not create {path.name}")
         time.sleep(0.02)
+
+
+OUTPUT_CHILD = """
+import pathlib, sys, time
+gate = pathlib.Path(sys.argv[1])
+print('early stdout', flush=True)
+print('early stderr', file=sys.stderr, flush=True)
+deadline = time.monotonic() + 10
+while not gate.exists() and time.monotonic() < deadline:
+    time.sleep(.02)
+print('x' * 100_000)
+print('final evidence')
+"""
+
+
+INTERRUPT_DESCENDANT = """
+import fcntl, pathlib, signal, sys, time
+root = pathlib.Path(sys.argv[1])
+lock = (root / 'descendant.lock').open('w')
+fcntl.flock(lock, fcntl.LOCK_EX)
+signal.signal(signal.SIGINT, signal.SIG_IGN)
+(root / 'descendant.ready').touch()
+time.sleep(60)
+"""
+
+
+INTERRUPT_CHILD = """
+import fcntl, os, pathlib, signal, subprocess, sys, time
+root = pathlib.Path(sys.argv[1])
+lock = (root / 'leader.lock').open('w')
+fcntl.flock(lock, fcntl.LOCK_EX)
+(root / 'leader.pid').write_text(str(os.getpid()))
+def stop(*_):
+    print('leader interrupted', flush=True)
+    raise SystemExit(0)
+signal.signal(signal.SIGINT, stop)
+subprocess.Popen((sys.executable, '-B', '-u', '-c', sys.argv[2], str(root)))
+while not (root / 'descendant.ready').exists():
+    time.sleep(.02)
+print('sleeping fixture ready', flush=True)
+(root / 'leader.ready').touch()
+time.sleep(60)
+"""
+
+
+INTERRUPT_DRIVER = """
+from pathlib import Path
+import sys
+sys.path.insert(0, str(Path(sys.argv[1]) / "LAYER_5_FRAMEWORK_DELIVERY"))
+from RELEASE_VERSION.local_release_test_process import run_logged_test_process
+root = Path(sys.argv[2])
+with (root / 'tests.log').open('w+b') as log:
+    try:
+        run_logged_test_process((sys.executable, '-B', '-u', '-c', sys.argv[3], str(root), sys.argv[4]), root, log)
+    except KeyboardInterrupt:
+        print('interrupted')
+        raise SystemExit(130)
+"""
 
 
 class LocalReleaseTestProcessTests(unittest.TestCase):
@@ -47,17 +105,7 @@ class LocalReleaseTestProcessTests(unittest.TestCase):
                     ready.set()
                 return result
 
-        child = """
-import pathlib, sys, time
-gate = pathlib.Path(sys.argv[1])
-print('early stdout', flush=True)
-print('early stderr', file=sys.stderr, flush=True)
-deadline = time.monotonic() + 10
-while not gate.exists() and time.monotonic() < deadline:
-    time.sleep(.02)
-print('x' * 100_000)
-print('final evidence')
-"""
+        child = OUTPUT_CHILD
         results, errors = [], []
         log_path = self.root / "tests.log"
         gate = self.root / "continue"
@@ -91,64 +139,31 @@ print('final evidence')
 
     @unittest.skipUnless(os.name == "posix", "The owned process-group boundary is POSIX")
     def test_interrupt_stops_descendant_even_after_group_leader_exits(self) -> None:
-        descendant = """
-import fcntl, pathlib, signal, sys, time
-root = pathlib.Path(sys.argv[1])
-lock = (root / 'descendant.lock').open('w')
-fcntl.flock(lock, fcntl.LOCK_EX)
-signal.signal(signal.SIGINT, signal.SIG_IGN)
-(root / 'descendant.ready').touch()
-time.sleep(60)
-"""
-        child = """
-import fcntl, os, pathlib, signal, subprocess, sys, time
-root = pathlib.Path(sys.argv[1])
-lock = (root / 'leader.lock').open('w')
-fcntl.flock(lock, fcntl.LOCK_EX)
-(root / 'leader.pid').write_text(str(os.getpid()))
-def stop(*_):
-    print('leader interrupted', flush=True)
-    raise SystemExit(0)
-signal.signal(signal.SIGINT, stop)
-subprocess.Popen((sys.executable, '-B', '-u', '-c', sys.argv[2], str(root)))
-while not (root / 'descendant.ready').exists():
-    time.sleep(.02)
-print('sleeping fixture ready', flush=True)
-(root / 'leader.ready').touch()
-time.sleep(60)
-"""
-        driver = """
-from pathlib import Path
-import sys
-sys.path.insert(0, sys.argv[1])
-from LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.local_release_test_process import run_logged_test_process
-root = Path(sys.argv[2])
-with (root / 'tests.log').open('w+b') as log:
-    try:
-        run_logged_test_process((sys.executable, '-B', '-u', '-c', sys.argv[3], str(root), sys.argv[4]), root, log)
-    except KeyboardInterrupt:
-        print('interrupted')
-        raise SystemExit(130)
-"""
+        descendant = INTERRUPT_DESCENDANT
+        child = INTERRUPT_CHILD
+        driver = INTERRUPT_DRIVER
         process = subprocess.Popen(
             (sys.executable, "-B", "-u", "-c", driver, str(REPOSITORY), str(self.root), child, descendant),
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, start_new_session=True,
         )
+        stopped = False
         try:
             _wait_for(self.root / "leader.ready")
             _wait_for(self.root / "descendant.ready")
+            self.assertTrue(select.select([process.stderr], [], [], 10)[0], "Driver did not forward readiness")
+            self.assertEqual("sleeping fixture ready\n", process.stderr.readline())
             process.send_signal(signal.SIGINT)
             stdout, stderr = process.communicate(timeout=10)
             self.assertEqual(130, process.returncode, stderr)
             self.assertEqual("interrupted\n", stdout)
-            self.assertIn("sleeping fixture ready", stderr)
             self.assertIn("leader interrupted", (self.root / "tests.log").read_text())
             for name in ("leader", "descendant"):
                 with (self.root / f"{name}.lock").open() as held:
                     fcntl.flock(held, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            stopped = True
         finally:
             identity = self.root / "leader.pid"
-            if identity.exists():
+            if not stopped and identity.exists():
                 try:
                     os.killpg(int(identity.read_text()), signal.SIGKILL)
                 except ProcessLookupError:
@@ -190,9 +205,9 @@ time.sleep(60)
         log_path = self.root / "tests.log"
         with log_path.open("w+b") as log:
             log.write(b"partial evidence\n")
-            with patch("LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.local_release_test_process.subprocess.Popen", return_value=process), \
-                    patch("LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.local_release_test_process._signal_owned"), \
-                    patch("LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.local_release_test_process._owned_group_exists", return_value=False), \
+            with patch("RELEASE_VERSION.local_release_test_process.subprocess.Popen", return_value=process), \
+                    patch("RELEASE_VERSION.local_release_test_process._signal_owned"), \
+                    patch("RELEASE_VERSION.local_release_test_process._owned_group_exists", return_value=False), \
                     redirect_stderr(io.StringIO()):
                 with self.assertRaises(KeyboardInterrupt) as interrupted:
                     run_logged_test_process(("fixture",), self.root, log)

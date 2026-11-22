@@ -4,9 +4,10 @@ import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from contract_graph import compose_contract_graph, render_contract_graph
-from cfel_claim_constraints import extract_claim_constraints
-from subject_projection_data import _relation_declarations, _relation_records
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.contract_graph import compose_contract_graph
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.contract_graph_render import render_contract_graph
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.cfel_claim_constraints import extract_claim_constraints
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.subject_projection_relations import _relation_declarations, _relation_records
 
 def carrier(name, subject, code, label='CFEL', form='Declaration'):
     return {'source':{'atom_id':name,'version':1,'path':name+'.md'},'subjects':{'active':subject,'passive':[]},'read_view':{'content_role':'Requirement','type':form},'body':f'## Claim\n\n### Formal Claim\n\n```{label}\n{code}\n```\n\n## Semantics\n\nA relation.\n'}
@@ -21,7 +22,7 @@ class Workspace:
 declare_entity(entity_name="Workspace", entity_class=Workspace, incoming_model_relations=({"source": "View", "relation": "IS_CONTAINED_BY", "source_cardinality": 1, "target_cardinality": Cardinality(minimum=1, maximum=None)},))'''
         classification = '''from anechoic.formal_claims import declare_entity
 declare_entity(entity_name="Node", allowed_classification_values={"Container": ("yes", "no")})'''
-        with patch('FEATURE_FORMAL_MODEL_ENGINE.compiler_claim.compiler_model_statements', side_effect=AssertionError('legacy compiler')):
+        with patch('FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.compiler_claim.compiler_model_statements', side_effect=AssertionError('legacy compiler')):
             fields, errors = extract_claim_constraints(carrier('CA-R-1', 'Workspace', code, 'python'))
             allowed, more_errors = extract_claim_constraints(carrier('CA-R-2', 'Node', classification, 'python'))
         self.assertEqual(errors + more_errors, [])

@@ -3,7 +3,7 @@ from pathlib import Path
 import sys, unittest
 TOOL = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(TOOL.parent.parent), str(TOOL.parent), str(TOOL)]
-from cfel_claim_constraints import extract_claim_constraints
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.cfel_claim_constraints import extract_claim_constraints
 
 class RelationCardinalityTests(unittest.TestCase):
     def test_preserves_endpoints_and_bounds(self):

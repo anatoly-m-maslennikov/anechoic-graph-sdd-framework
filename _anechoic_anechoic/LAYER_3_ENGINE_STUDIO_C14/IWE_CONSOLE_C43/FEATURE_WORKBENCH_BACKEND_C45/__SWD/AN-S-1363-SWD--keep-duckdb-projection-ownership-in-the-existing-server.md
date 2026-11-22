@@ -10,9 +10,9 @@ relations:
   IS_REFERENCE:
   - AN-S-3116@1
 state:
-  status: active
-  version: 11
-  updated_at: '2026-11-20T16:34:57.901983+00:00'
+  status: "active"
+  version: 13
+  updated_at: "2026-11-22T07:35:21.711074+00:00"
 ---
 ## Summary
 
@@ -26,16 +26,15 @@ The derived DuckDB Projection and query results for one Project.
 
 ### Prose Claim
 
-- Use one serialized Workbench owner and the delivered database and spill paths.
+- Give one Kernel process ownership of the Project database and spill paths.
 - A second writer process exits with an explicit lock error.
-- Serialize refresh, Run, Page, and Check in the existing owner.
-- Add no database server, queue, planner, scheduler, or worker.
+- Serialize refresh, Run, Page, and Check inside the Kernel.
 - Keep parsed-source rows and signatures for incremental refresh.
 - Remove cached parse data for deleted, excluded, or invalid sources.
 - Treat later source changes as new input.
 - Add no configuration staging, second cache, or discarded-state restoration.
 
-- Materialize each Run once in a disk-backed result table.
+- Materialize each Run once in a result table in the configured Workbench database.
 - Page reads the snapshot, including after an ordinary source refresh.
 - Keep execution and delivery failures separate.
 - Measure the startup TTL with a monotonic clock.

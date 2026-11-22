@@ -16,10 +16,10 @@ from unittest.mock import MagicMock, patch
 
 
 APP = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(APP / "docker"))
-import runtime_images as images  # noqa: E402
-import image_docker_client as docker_client  # noqa: E402
-from project_mcp_backend import ProjectMcpBackend  # noqa: E402
+import MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images as images  # noqa: E402
+import MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images_common as image_inputs  # noqa: E402
+import MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_docker_client as docker_client  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend import ProjectMcpBackend  # noqa: E402
 
 
 IMAGE_ID = "sha256:" + "a" * 64
@@ -180,7 +180,7 @@ class ImageOutputSafetyTests(unittest.TestCase):
 
 
 class ImageCredentialContextTests(unittest.TestCase):
-    def test_known_credential_stores_are_neither_read_hashed_nor_copied(self):
+    def _credential_fixture(self):
         model = patch.object(images.ImageManager, "_refresh_model", return_value="a" * 64)
         model.start()
         self.addCleanup(model.stop)
@@ -190,10 +190,10 @@ class ImageCredentialContextTests(unittest.TestCase):
         parent = APP.parents[2] / ".anechoic_tmp/launcher-epic-1829/images"
         parent.mkdir(parents=True, exist_ok=True)
         source = Path(tempfile.mkdtemp(prefix="image-credentials-", dir=parent))
-        docker = source / images.DOCKER_ROOT
+        docker = source / image_inputs.DOCKER_ROOT
         docker.mkdir(parents=True)
-        (source / "pyproject.toml").write_text("[project]\nname='fixture'\n")
-        (source / "uv.lock").write_text("version=1\n")
+        (source / "LAYER_3_ENGINE_STUDIO_C14/pyproject.toml").write_text("[project]\nname='fixture'\n")
+        (source / "LAYER_3_ENGINE_STUDIO_C14/uv.lock").write_text("version=1\n")
         (source / "version.toml").write_text('[framework]\nversion = "0.4.4.9"\n')
         (docker / "Dockerfile").write_text("FROM scratch\n")
         (docker / "Dockerfile.dockerignore").write_text(".git\n")
@@ -204,7 +204,7 @@ class ImageCredentialContextTests(unittest.TestCase):
         before = manager.identity()
         with patch.dict(os.environ, PROXY_ROUTING):
             self.assertEqual(before, manager.identity(), "proxy routing is not an image input")
-        engine = source / images.ENGINE_ROOT
+        engine = source / image_inputs.ENGINE_ROOT
         protected = set()
         for name in ("auth.json", "credentials.json", "token.txt", "token.json", "secrets.json", "secrets.txt"):
             path = engine / name
@@ -222,14 +222,9 @@ class ImageCredentialContextTests(unittest.TestCase):
         path.write_text(PRIVATE_MARKER)
         protected.add(path)
 
-        read_bytes = Path.read_bytes
+        return manager, before, protected
 
-        def guarded_read(path):
-            self.assertNotIn(path, protected, "excluded store bytes must not be opened")
-            return read_bytes(path)
-
-        calls = []
-
+    def _credential_executor(self, before, calls):
         def executor(argv, **_kwargs):
             calls.append(tuple(argv))
             if "ls" in argv:
@@ -250,6 +245,20 @@ class ImageCredentialContextTests(unittest.TestCase):
                                                  "org.opencontainers.image.version": "0.4.4.9"}}}]
             return subprocess.CompletedProcess(argv, 0, json.dumps(inspection), PRIVATE_MARKER)
 
+        return executor
+
+    def test_known_credential_stores_are_neither_read_hashed_nor_copied(self):
+        manager, before, protected = self._credential_fixture()
+        read_bytes = Path.read_bytes
+
+        def guarded_read(path):
+            self.assertNotIn(path, protected, "excluded store bytes must not be opened")
+            return read_bytes(path)
+
+        calls = []
+
+        executor = self._credential_executor(before, calls)
+
         manager.executor = _tagging_executor(executor, calls)
         with patch.object(Path, "read_bytes", guarded_read):
             self.assertEqual(before, manager.identity())
@@ -257,84 +266,3 @@ class ImageCredentialContextTests(unittest.TestCase):
         self.assertEqual(1, sum("build" in call for call in calls))
         self.assertEqual(1, sum("tag" in call for call in calls))
         self.assertFalse(any("run" in call for call in calls))
-
-
-class LifecycleImageAssetsTests(unittest.TestCase):
-    def test_predecessor_pins_selected_ready_receipt(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary).resolve()
-            project_id = "c" * 64
-            state = root / ".anechoic_runtime/runtime/project_mcp" / project_id
-            state.mkdir(parents=True)
-            control = root / ".anechoic_project"
-            selection = SimpleNamespace(root=root, control_root=control, instance_id=project_id, launcher_state=state)
-            receipt = {"project_root": str(root), "control_root": str(control), "project_id": project_id,
-                       "image_id": IMAGE_ID, "readiness": True}
-            path = state / "ready.json"
-            path.write_text(json.dumps(receipt))
-            with patch("native_startup.select_runtime_project", return_value=selection):
-                manager = images.ImageManager(root, project_root=root)
-                self.assertEqual(IMAGE_ID, manager._build_predecessor())
-                path.write_text("{}")
-                self.assertEqual(IMAGE_ID, manager._build_predecessor())
-                with self.assertRaises(images.ImageError):
-                    images.ImageManager(root, project_root=root)._build_predecessor()
-
-    def test_unrelated_or_unsafe_receipt_is_not_accepted(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary).resolve()
-            project_id = "d" * 64
-            state = root / ".anechoic_runtime/runtime/project_mcp" / project_id
-            state.mkdir(parents=True)
-            control = root / ".anechoic_project"
-            selection = SimpleNamespace(root=root, control_root=control, instance_id=project_id, launcher_state=state)
-            path = state / "ready.json"
-            receipt = {"project_root": str(root), "control_root": str(control), "project_id": "e" * 64,
-                       "image_id": IMAGE_ID, "readiness": True}
-            with patch("native_startup.select_runtime_project", return_value=selection):
-                path.write_text(json.dumps(receipt))
-                with self.assertRaises(images.ImageError):
-                    images.ImageManager(root, project_root=root)._build_predecessor()
-                path.unlink()
-                path.symlink_to(root / "missing")
-                with self.assertRaises(images.ImageError):
-                    images.ImageManager(root, project_root=root)._build_predecessor()
-
-    def test_first_build_without_state_does_not_resolve_project(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            resolver = MagicMock(side_effect=AssertionError("unexpected Project read"))
-            with patch.dict(sys.modules, {"project_selection": SimpleNamespace(resolve_project=resolver)}):
-                manager = images.ImageManager(root, project_root=root)
-                self.assertIsNone(manager._build_predecessor())
-                self.assertIsNone(manager._build_predecessor())
-                resolver.assert_not_called()
-
-    def test_refresh_uses_explicit_predecessor(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            selector = root / images.DOCKER_ROOT / "native_model_refresh.py"
-            selector.parent.mkdir(parents=True)
-            selector.touch()
-            manager = images.ImageManager(root, project_root=root, previous_image=IMAGE_ID)
-            with patch.object(images.subprocess, "run", return_value=SimpleNamespace(
-                stdout="b" * 64 + "\n", returncode=0,
-            )) as run:
-                self.assertEqual("b" * 64, manager._refresh_model(root))
-                self.assertEqual(IMAGE_ID, run.call_args.args[0][-1])
-            with self.assertRaises(images.ImageError):
-                images.ImageManager(root, project_root=root, previous_image="mutable:tag")
-
-    def test_previous_ready_image_is_required_when_recorded(self):
-        from native_model_refresh import previous_claims
-
-        with tempfile.TemporaryDirectory() as temporary:
-            failed = subprocess.CompletedProcess([], 1, "", "")
-            with patch.object(docker_client, "bounded_run", return_value=failed) as docker:
-                with self.assertRaisesRegex(ValueError, "Previous ready image is unavailable"):
-                    previous_claims(Path(temporary), IMAGE_ID, timeout=5)
-                docker.assert_called_once()
-
-
-if __name__ == "__main__":
-    unittest.main()

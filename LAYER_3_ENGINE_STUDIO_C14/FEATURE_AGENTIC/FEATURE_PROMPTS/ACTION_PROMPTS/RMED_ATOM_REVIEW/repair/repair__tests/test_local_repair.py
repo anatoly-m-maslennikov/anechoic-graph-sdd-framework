@@ -2,10 +2,10 @@
 from copy import deepcopy
 import unittest
 
-from test_repair_gate import (
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair__tests.test_repair_gate import (
     inputs, caller_preflight, contract, source, SOURCE_TEXT, RULE_TEXT, admit_proposal,
 )
-from repair_gate import _local_repair_boundary
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair_gate__shared import _local_repair_boundary
 
 
 def local_inputs(version=6):

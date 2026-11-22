@@ -1,0 +1,10 @@
+root = true
+
+[{LAYER_3_ENGINE_STUDIO_C14,LAYER_5_FRAMEWORK_DELIVERY,RUNTIME_SETUP}/**.{py,pyi,js,mjs,cjs,jsx,ts,mts,cts,tsx,svelte,html,css,lean,sh,bash,zsh,fish,ps1,bat,cmd,sql}]
+max_line_length = 79
+
+[{LAYER_3_ENGINE_STUDIO_C14,LAYER_5_FRAMEWORK_DELIVERY,RUNTIME_SETUP}/**/Dockerfile]
+max_line_length = 79
+
+[.github/workflows/**.{yml,yaml}]
+max_line_length = 79

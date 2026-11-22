@@ -8,19 +8,12 @@ Workbench business service is mocked here.
 
 from __future__ import annotations
 
-import http.client
 import json
-import os
 from pathlib import Path
-import shutil
-import subprocess
-import sys
-import tempfile
 import threading
 import time
 import unittest
 from typing import Any
-from urllib.parse import urlsplit
 
 
 CODEX_ROOT = Path(__file__).resolve().parents[1]
@@ -45,8 +38,8 @@ FORBIDDEN_OVERRIDE_KEYS = {
     "credentials",
 }
 
-sys.path.insert(0, str(CODEX_ROOT))
-from bridge import CodexBridge
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_CODEX.bridge import CodexBridge
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_CODEX.FEATURE_WORKBENCH_CODEX__tests.bridge_http_support import BridgeHTTPFixture
 
 
 class BridgeEventDrainTests(unittest.TestCase):
@@ -67,197 +60,7 @@ class BridgeEventDrainTests(unittest.TestCase):
         self.assertEqual([message, completed], list(stream))
 
 
-def _bridge_server() -> Path | None:
-    configured = os.environ.get("ANECHOIC_CODEX_BRIDGE_SERVER")
-    path = Path(configured) if configured else CODEX_ROOT / "bridge_server.py"
-    return path if path.is_file() else None
-
-
-def _write_codex_path_fixture(directory: Path) -> None:
-    """Install a real executable named ``codex`` in the test PATH."""
-    executable = directory / "codex"
-    executable.write_text(
-        "#!/bin/sh\n"
-        f"exec {shutil.which('python3') or sys.executable} {FIXTURE} \"$@\"\n",
-        encoding="utf-8",
-    )
-    executable.chmod(0o755)
-
-
-class BridgeHTTPTests(unittest.TestCase):
-    """Exercise the public bridge wire, not its private Python classes."""
-
-    @classmethod
-    def setUpClass(cls) -> None:
-        bridge = _bridge_server()
-        if bridge is None:
-            raise unittest.SkipTest("bridge_server.py is not available yet")
-        temp_parent = REPOSITORY / ".anechoic_tmp/workbench-codex-http"
-        temp_parent.mkdir(parents=True, exist_ok=True)
-        cls.temp = tempfile.TemporaryDirectory(dir=temp_parent)
-        cls.root = Path(cls.temp.name) / "project"
-        (cls.root / ".anechoic_anechoic").mkdir(parents=True)
-        fake_bin = Path(cls.temp.name) / "bin"
-        fake_bin.mkdir()
-        _write_codex_path_fixture(fake_bin)
-        cls.audit = Path(cls.temp.name) / "fake-codex.jsonl"
-        environment = os.environ.copy()
-        environment["PATH"] = f"{fake_bin}{os.pathsep}{environment.get('PATH', '')}"
-        environment["FAKE_CODEX_AUDIT"] = str(cls.audit)
-        cls.process = subprocess.Popen(
-            [
-                sys.executable,
-                str(bridge),
-                "--project-root",
-                str(cls.root),
-                "--mcp-url",
-                MCP_URL,
-            ],
-            cwd=REPOSITORY,
-            env=environment,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-        cls.addClassCleanup(cls._stop_server)
-        cls.base_url = cls._wait_for_bridge()
-
-    @classmethod
-    def _wait_for_bridge(cls) -> str:
-        state = cls.root / ".anechoic_runtime/workbench/codex/bridge.json"
-        deadline = time.monotonic() + 15
-        while time.monotonic() < deadline:
-            if cls.process.poll() is not None:
-                stdout = cls.process.stdout.read() if cls.process.stdout else ""
-                stderr = cls.process.stderr.read() if cls.process.stderr else ""
-                raise AssertionError(f"Codex bridge exited\nstdout:\n{stdout}\nstderr:\n{stderr}")
-            try:
-                value = json.loads(state.read_text(encoding="utf-8"))
-                if value.get("ready") is True and isinstance(value.get("url"), str):
-                    return value["url"].rstrip("/")
-            except (OSError, ValueError):
-                pass
-            time.sleep(0.05)
-        raise AssertionError("Codex bridge did not publish ready bridge.json")
-
-    @classmethod
-    def _stop_server(cls) -> None:
-        process = getattr(cls, "process", None)
-        if process is None:
-            return
-        if process.poll() is None:
-            process.terminate()
-            try:
-                process.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                process.kill()
-                process.wait(timeout=5)
-        cls.temp.cleanup()
-
-    @staticmethod
-    def _endpoint(base_url: str, path: str) -> tuple[str, int, str]:
-        parsed = urlsplit(base_url)
-        return parsed.hostname or "127.0.0.1", parsed.port or 80, path
-
-    def request(
-        self,
-        method: str,
-        path: str,
-        payload: dict[str, Any] | None = None,
-        *,
-        origin: str | None = ALLOWED_ORIGIN,
-    ) -> tuple[int, dict[str, str], bytes]:
-        host, port, request_path = self._endpoint(self.base_url, path)
-        connection = http.client.HTTPConnection(host, port, timeout=10)
-        body = json.dumps(payload).encode("utf-8") if payload is not None else None
-        headers = {"Accept": "application/json"}
-        if body is not None:
-            headers["Content-Type"] = "application/json"
-        if origin is not None:
-            headers["Origin"] = origin
-        connection.request(method, request_path, body=body, headers=headers)
-        response = connection.getresponse()
-        result = (response.status, dict(response.getheaders()), response.read())
-        connection.close()
-        return result
-
-    def json_request(
-        self,
-        method: str,
-        path: str,
-        payload: dict[str, Any] | None = None,
-        *,
-        origin: str | None = ALLOWED_ORIGIN,
-    ) -> tuple[int, dict[str, Any]]:
-        status, _, body = self.request(method, path, payload, origin=origin)
-        return status, json.loads(body or b"{}")
-
-    def open_turn(self, message: str) -> tuple[http.client.HTTPConnection, http.client.HTTPResponse]:
-        host, port, path = self._endpoint(self.base_url, "/turn")
-        connection = http.client.HTTPConnection(host, port, timeout=20)
-        connection.request(
-            "POST",
-            path,
-            body=json.dumps({"message": message}).encode("utf-8"),
-            headers={
-                "Accept": "text/event-stream",
-                "Content-Type": "application/json",
-                "Origin": ALLOWED_ORIGIN,
-            },
-        )
-        response = connection.getresponse()
-        self.assertEqual(200, response.status)
-        return connection, response
-
-    @staticmethod
-    def read_sse(response: http.client.HTTPResponse) -> list[dict[str, Any]]:
-        events: list[dict[str, Any]] = []
-        data: list[str] = []
-        while True:
-            raw = response.readline()
-            if not raw:
-                break
-            line = raw.decode("utf-8").rstrip("\r\n")
-            if line.startswith("data:"):
-                data.append(line[5:].lstrip())
-            elif not line and data:
-                events.append(json.loads("\n".join(data)))
-                data.clear()
-        if data:
-            events.append(json.loads("\n".join(data)))
-        return events
-
-    def wait_for_pending(self, request_id: str) -> dict[str, Any]:
-        deadline = time.monotonic() + 5
-        while time.monotonic() < deadline:
-            status, value = self.json_request("GET", "/conversation")
-            self.assertEqual(200, status)
-            pending = value.get("pending_requests", [])
-            if any(
-                item == request_id
-                or (isinstance(item, dict) and item.get("id") == request_id)
-                for item in pending
-            ):
-                return value
-            time.sleep(0.05)
-        self.fail(f"native request {request_id!r} did not reach the bridge")
-
-    def collect_turn(
-        self,
-        connection: http.client.HTTPConnection,
-        response: http.client.HTTPResponse,
-        output: dict[str, list[dict[str, Any]]],
-    ) -> threading.Thread:
-        def collect() -> None:
-            try:
-                output["events"] = self.read_sse(response)
-            finally:
-                connection.close()
-
-        thread = threading.Thread(target=collect, daemon=True)
-        thread.start()
-        return thread
-
+class BridgeHTTPTests(BridgeHTTPFixture):
     def test_persistent_thread_streams_native_ids_and_interactions(self) -> None:
         status, first = self.json_request("GET", "/conversation")
         self.assertEqual(200, status)
@@ -269,6 +72,14 @@ class BridgeHTTPTests(unittest.TestCase):
         self.assertEqual(200, status)
         self.assertEqual(first["thread_id"], resumed["thread_id"])
 
+        self._assert_message_turn()
+        self._assert_approval_turn()
+        self._assert_user_input_turn()
+        self._assert_elicitation_turn()
+        self._assert_interrupted_turn()
+        self._assert_final_conversation()
+
+    def _assert_message_turn(self) -> None:
         connection, response = self.open_turn("hello")
         output: dict[str, list[dict[str, Any]]] = {"events": []}
         reader = self.collect_turn(connection, response, output)
@@ -291,6 +102,7 @@ class BridgeHTTPTests(unittest.TestCase):
         self.assertEqual("native-thread-1", completed_native["params"]["threadId"])
         self.assertEqual("completed", finished["status"])
 
+    def _assert_approval_turn(self) -> None:
         connection, response = self.open_turn("approval")
         approval_output: dict[str, list[dict[str, Any]]] = {"events": []}
         approval_reader = self.collect_turn(connection, response, approval_output)
@@ -319,6 +131,7 @@ class BridgeHTTPTests(unittest.TestCase):
             next(item for item in approval_output["events"] if item.get("type") == "finished")["status"],
         )
 
+    def _assert_user_input_turn(self) -> None:
         connection, response = self.open_turn("user-input")
         input_output: dict[str, list[dict[str, Any]]] = {"events": []}
         input_reader = self.collect_turn(connection, response, input_output)
@@ -353,6 +166,7 @@ class BridgeHTTPTests(unittest.TestCase):
             next(item for item in input_output["events"] if item.get("type") == "finished")["status"],
         )
 
+    def _assert_elicitation_turn(self) -> None:
         connection, response = self.open_turn("elicitation")
         elicitation_output: dict[str, list[dict[str, Any]]] = {"events": []}
         elicitation_reader = self.collect_turn(connection, response, elicitation_output)
@@ -379,6 +193,7 @@ class BridgeHTTPTests(unittest.TestCase):
             next(item for item in elicitation_output["events"] if item.get("type") == "finished")["status"],
         )
 
+    def _assert_interrupted_turn(self) -> None:
         connection, response = self.open_turn("interrupt")
         interrupt_output: dict[str, list[dict[str, Any]]] = {"events": []}
         interrupt_reader = self.collect_turn(connection, response, interrupt_output)
@@ -401,6 +216,7 @@ class BridgeHTTPTests(unittest.TestCase):
             next(item for item in interrupt_output["events"] if item.get("type") == "finished")["status"],
         )
 
+    def _assert_final_conversation(self) -> None:
         status, final = self.json_request("GET", "/conversation")
         self.assertEqual(200, status)
         self.assertEqual("native-thread-1", final["thread_id"])

@@ -11,9 +11,9 @@ relations:
   - AN-S-3083
   - AN-T-2928@1-draft
 state:
-  status: active
-  version: 5
-  updated_at: '2026-11-20T23:12:09.705525+00:00'
+  status: "active"
+  version: 6
+  updated_at: "2026-11-22T09:00:09.219113+00:00"
 ---
 
 ## Summary
@@ -71,5 +71,5 @@ Verify the Import Graph through public Workbench queries
 - Report missing visibility for a tested Package and a missing target for an orphan Test Package.
 - Check valid, missing, empty, malformed, and legacy-only bindings. Distinguish archived and missing exact pins.
 - Compare the Package Contract's current exact `implements` pin with an `applies` pin or an older revision. Verify Packages without a Spec have unknown Contract coverage.
-- Remove a Contract from the Package Spec and verify the audit remains queryable with unknown coverage and a stderr diagnostic.
+- Remove the Solution section from a Component Seed Manifest and verify the audit remains queryable with unknown coverage and a stderr diagnostic.
 - Change a visibility marker, Spec Binding, and Spec version. Verify the SQL rows refresh and a targeted rebuild preserves the results.

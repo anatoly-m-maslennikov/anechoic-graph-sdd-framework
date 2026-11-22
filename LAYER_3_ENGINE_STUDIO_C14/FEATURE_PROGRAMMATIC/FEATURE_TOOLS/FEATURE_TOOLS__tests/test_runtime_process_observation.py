@@ -17,11 +17,11 @@ for path in (TESTS, TOOLS):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-import runtime_failure_diagnostics as facade  # noqa: E402
-import runtime_process_boundary as boundary  # noqa: E402
-from operation_error_boundary import FailureRecord  # noqa: E402
-from technical_diagnostics import TechnicalDiagnosticLogger  # noqa: E402
-from test_runtime_process_boundary import _record_report  # noqa: E402
+import FEATURE_PROGRAMMATIC.FEATURE_TOOLS.runtime_failure_diagnostics as facade  # noqa: E402
+import FEATURE_PROGRAMMATIC.FEATURE_TOOLS.runtime_process_boundary as boundary  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.operation_error_boundary import FailureRecord  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.technical_diagnostics import TechnicalDiagnosticLogger  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.test_runtime_process_boundary import _record_report  # noqa: E402
 
 
 class RuntimeProcessObservationTests(unittest.TestCase):
@@ -41,11 +41,15 @@ class RuntimeProcessObservationTests(unittest.TestCase):
             self.assertEqual(
                 2,
                 boundary.run_process(
-                    lambda: (_ for _ in ()).throw(RuntimeError("secret")), operation="sink"
+                    lambda: (_ for _ in ()).throw(RuntimeError("secret")),
+                    operation="sink", root=Path("/project"),
                 ),
             )
-        self.assertIn("technical diagnostics unavailable", stderr.getvalue())
+        self.assertEqual(1, stderr.getvalue().count("technical diagnostics unavailable"))
         self.assertNotIn("secret", stderr.getvalue())
+        self.assertEqual(1, len(self.calls))
+        self.assertEqual(Path("/project"), self.calls[0][0])
+        self.assertEqual("sink", self.calls[0][2]["operation"])
 
     def test_inner_successful_diagnostic_suppresses_duplicate_nonzero_exit(self) -> None:
         stream = io.StringIO()

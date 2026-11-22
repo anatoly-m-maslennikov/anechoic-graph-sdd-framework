@@ -6,8 +6,8 @@ import hashlib
 import json
 from pathlib import Path
 
-from .relation_registry import RelationRegistry
-from .relations import canonical
+from KERNEL_MIXER_C59.relation_registry import RelationRegistry
+from KERNEL_MIXER_C59.relations import canonical
 
 
 def _pairs(items, key, value):

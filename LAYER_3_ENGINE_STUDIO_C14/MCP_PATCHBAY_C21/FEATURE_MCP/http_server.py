@@ -10,13 +10,11 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
-from direct_gateway import native_project_gateway, native_runtime_gateway, startup_selection
-from http_paths import HEALTH_PATH, MCP_PATH
+from MCP_PATCHBAY_C21.FEATURE_MCP.direct_gateway import native_project_gateway, native_runtime_gateway, startup_selection
+from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import HEALTH_PATH, MCP_PATH
 from mcp.server.transport_security import TransportSecuritySettings
-from operation_error_boundary import FailureRecord
-from runtime_failure_diagnostics import report_failure
-from runtime_process_boundary import run_process
-from workbench_web import routes as workbench_routes
+from MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary import run_startup, warning
+from MCP_PATCHBAY_C21.FEATURE_MCP.workbench_web import routes as workbench_routes
 
 PATH = MCP_PATH
 PORT = 8092
@@ -54,12 +52,7 @@ class LoopbackGuard:
         await self.app(scope, receive, send)
 
     def _warning(self, code, operation):
-        gateway = getattr(self, 'gateway', None)
-        root = getattr(gateway, '_diagnostic_root', getattr(gateway, 'root', None))
-        report_failure(
-            root, FailureRecord('WARNING', code, 'request refused'),
-            component='MCP_HTTP', operation=operation,
-        )
+        warning(code)
 
 
 def _accepts_html(value):
@@ -108,21 +101,19 @@ async def health(gateway):
             observer.snapshot()
         except FutureCancelledError:
             raise
-        except Exception as error:
-            report_failure(None, error, component="MCP_HTTP", operation="health_observations")
+        except Exception:
+            warning("health_observations_unavailable")
             payload["health_warning"] = "health observations unavailable"
     return JSONResponse(payload, status_code=200 if ready else 503)
 
 
-def create_app(root, *, selection=None, native_inputs=None, control_root=None, runtime_gateway=None):
+def create_app(root, *, selection=None, gateway_factory=None, control_root=None, runtime_gateway=None):
     if runtime_gateway is not None:
         gateway = runtime_gateway
-    elif native_inputs is not None:
+    elif gateway_factory is not None:
         if selection is not None or not control_root:
-            raise ValueError("Native inputs require an explicit control root")
-        from native_query import create_native_gateway
-
-        gateway = create_native_gateway(root, control_root, native_inputs)
+            raise ValueError("Injected gateway requires an explicit control root")
+        gateway = gateway_factory(root, control_root)
     else:
         selected = selection if selection is not None else startup_selection(root, control_root)
         gateway = native_project_gateway(root, selection=selected)
@@ -157,14 +148,14 @@ def create_app(root, *, selection=None, native_inputs=None, control_root=None, r
     return guarded
 
 
-def _serve(args, *, native_inputs=None):
+def _serve(args, *, gateway_factory=None):
     if args.host != "0.0.0.0" or args.port != PORT:
         raise ValueError("HTTP MCP requires the container bind 0.0.0.0:8092")
     import uvicorn
 
     with ExitStack() as stack:
-        if native_inputs is not None:
-            app = create_app(args.project_root, native_inputs=native_inputs, control_root=args.control_root)
+        if gateway_factory is not None:
+            app = create_app(args.project_root, gateway_factory=gateway_factory, control_root=args.control_root)
         else:
             selection = startup_selection(args.project_root, args.control_root, args.instance_id, args.host_project_root)
             gateway = stack.enter_context(native_runtime_gateway(selection))
@@ -172,7 +163,7 @@ def _serve(args, *, native_inputs=None):
         uvicorn.run(app, host=args.host, port=args.port, log_level="warning")
 
 
-def main(argv=None, *, native_inputs=None):
+def main(argv=None, *, gateway_factory=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project-root", required=True, type=Path)
     parser.add_argument("--control-root")
@@ -181,12 +172,12 @@ def main(argv=None, *, native_inputs=None):
     parser.add_argument("--host", default="0.0.0.0")
     parser.add_argument("--port", default=PORT, type=int)
     args = parser.parse_args(argv)
-    if native_inputs is not None and (
+    if gateway_factory is not None and (
         not args.control_root or args.instance_id is not None or args.host_project_root is not None
     ):
         parser.error("Native selection requires --control-root and derives its own instance identity")
-    return run_process(
-        lambda: _serve(args, native_inputs=native_inputs), operation='mcp.http_startup', root=args.project_root,
+    return run_startup(
+        lambda: _serve(args, gateway_factory=gateway_factory), operation='mcp_http_startup',
     )
 
 

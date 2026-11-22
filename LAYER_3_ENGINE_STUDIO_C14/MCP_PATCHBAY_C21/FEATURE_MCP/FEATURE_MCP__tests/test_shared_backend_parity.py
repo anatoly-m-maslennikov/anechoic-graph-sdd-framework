@@ -5,19 +5,19 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
-import sys
 import tempfile
 import unittest
 
 MCP = Path(__file__).resolve().parents[1]
 TOOLS = MCP.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
-sys.path[:0] = [str(MCP), str(TOOLS), str(TOOLS / "VALIDATE_ATOMS")]
 
-from host_runtime_config import load_host_runtime_config  # noqa: E402
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.host_runtime_config import load_host_runtime_config  # noqa: E402
 from mcp import types  # noqa: E402
-from operation_error_boundary import ExplicitBlockingRuntimeFailure  # noqa: E402
-from test_native_startup import RuntimeSelectionTests  # noqa: E402
-from shared_gateway import SharedGateway, SharedGatewayRefusal  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.backend_client import ToolProtocolError  # noqa: E402
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.project_tool_session import ToolProtocolError as BackendToolProtocolError  # noqa: E402
+from .test_native_startup import RuntimeSelectionTests  # noqa: E402
+from .shared_backend_fixture import backend_gateway  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.shared_backend import SharedGatewayRefusal  # noqa: E402
 
 
 class _Workbench:
@@ -34,22 +34,22 @@ class _Workbench:
         if self.hold is not None:
             await self.hold.wait()
         if arguments.get("sql") == "bad":
-            raise ExplicitBlockingRuntimeFailure("query_error", "bad query")
+            raise BackendToolProtocolError("query_error", "bad query")
         return {"outcome": "completed", "name": name, "arguments": arguments}
 
 
 class _Gateway:
     blacklists: dict[str, frozenset[str]] = {}
     workbenches: list[_Workbench] = []
-    mcp_calls = 0
+    tool_calls = 0
 
     def __init__(self, root: Path, *, selection: object) -> None:
         self.root = Path(root)
         self.selection = selection
         self.tool_blacklist = self.blacklists.get(str(root), frozenset())
         self.ready = True
-        from workbench_tools import native_tools
-        self.tools = native_tools()
+        from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workbench_tools import native_tools
+        self.tools = [tool.model_dump(mode="json", by_alias=True) for tool in native_tools()]
         self.workbench = _Workbench()
         self.workbenches.append(self.workbench)
 
@@ -59,12 +59,12 @@ class _Gateway:
     async def close(self) -> None:
         return None
 
-    async def call(self, _context: object, params: types.CallToolRequestParams) -> types.CallToolResult:
-        type(self).mcp_calls += 1
-        return types.CallToolResult(
-            content=[],
-            structured_content=await self.workbench.call(params.name, params.arguments),
-        )
+    async def ensure_current(self) -> None:
+        return None
+
+    async def call_tool(self, name, arguments, *, session_id, public_base_url, asserted_project_root):
+        type(self).tool_calls += 1
+        return {"value": await self.workbench.call(name, arguments), "text": None}
 
 
 class SharedBackendParityTests(unittest.IsolatedAsyncioTestCase):
@@ -74,10 +74,10 @@ class SharedBackendParityTests(unittest.IsolatedAsyncioTestCase):
         self.base = Path(self.temporary.name).resolve()
         self.projects = self.base / "My_Repos"
         self.roots = [self._project(name) for name in ("alpha", "beta")]
-        self.config_path = self.base / "runtime.toml"
+        self.config_path = self.base / "MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime.toml"
         _Gateway.blacklists = {}
         _Gateway.workbenches = []
-        _Gateway.mcp_calls = 0
+        _Gateway.tool_calls = 0
         _Workbench.hold = None
         _Workbench.started = None
 
@@ -89,17 +89,14 @@ class SharedBackendParityTests(unittest.IsolatedAsyncioTestCase):
         )
         return root
 
-    async def _gateway(self, max_loaded: int = 2) -> SharedGateway:
+    async def _gateway(self, max_loaded: int = 2):
         self.config_path.write_text(
             "schema_version=1\n[shared_mcp]\n"
             f'projects_root="{self.projects}"\nhttp_port=8092\nmax_loaded_projects={max_loaded}\n'
         )
-        gateway = SharedGateway(
-            load_host_runtime_config(self.config_path), gateway_factory=_Gateway
+        return await self.enterAsyncContext(
+            backend_gateway(load_host_runtime_config(self.config_path), _Gateway)
         )
-        await gateway.initialize()
-        self.addAsyncCleanup(gateway.close)
-        return gateway
 
     async def test_mcp_and_native_workbench_return_the_same_result(self) -> None:
         gateway = await self._gateway()
@@ -111,9 +108,9 @@ class SharedBackendParityTests(unittest.IsolatedAsyncioTestCase):
         )
 
         self.assertEqual(native, mcp.structured_content)
-        self.assertEqual(1, _Gateway.mcp_calls)
+        self.assertEqual(2, _Gateway.tool_calls)
         self.assertEqual({"sql": "SELECT 1"}, native["arguments"])
-        rows = gateway.status()["calls"]
+        rows = (await gateway.status())["calls"]
         self.assertEqual(["completed", "completed"], [row["outcome"] for row in rows])
 
     async def test_cancellation_releases_the_shared_project_lease(self) -> None:
@@ -123,7 +120,7 @@ class SharedBackendParityTests(unittest.IsolatedAsyncioTestCase):
         pending = asyncio.create_task(gateway.workbench_call(
             "query_run", {"project_root": str(self.roots[0]), "sql": "SELECT 1"}
         ))
-        await _Workbench.started.wait()
+        await asyncio.wait_for(_Workbench.started.wait(), 10)
         pending.cancel()
         with self.assertRaises(asyncio.CancelledError):
             await pending
@@ -137,12 +134,12 @@ class SharedBackendParityTests(unittest.IsolatedAsyncioTestCase):
     async def test_native_query_error_keeps_a_returned_error_observation(self) -> None:
         gateway = await self._gateway()
 
-        with self.assertRaisesRegex(ExplicitBlockingRuntimeFailure, "bad query"):
+        with self.assertRaisesRegex(ToolProtocolError, "bad query"):
             await gateway.workbench_call(
                 "query_run", {"project_root": str(self.roots[0]), "sql": "bad"}
             )
 
-        row = gateway.status()["calls"][-1]
+        row = (await gateway.status())["calls"][-1]
         self.assertEqual("failed", row["outcome"])
         self.assertEqual("returned-error", row["error_category"])
 

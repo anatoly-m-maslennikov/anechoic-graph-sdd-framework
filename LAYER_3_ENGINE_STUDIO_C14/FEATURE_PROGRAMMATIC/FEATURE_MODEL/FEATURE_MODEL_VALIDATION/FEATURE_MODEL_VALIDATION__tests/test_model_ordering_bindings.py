@@ -1,17 +1,15 @@
 """Bind actual native Property Declarations to scoped sibling order."""
 
 from pathlib import Path
-import sys
 import unittest
 
 PROGRAMMATIC = Path(__file__).resolve().parents[3]
-sys.path[:0] = [str(PROGRAMMATIC), str(PROGRAMMATIC / "FEATURE_TOOLS")]
 
-from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim
-from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_ordering_bindings import (
-    bind_ordering_declarations, derive_declared_sibling_links, validate_declared_sibling_order,
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_model_claim__pub import parse_native_model_claim
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_ordering_bindings import (
+    derive_declared_sibling_links, validate_declared_sibling_order,
 )
-from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_property_order import order_properties
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.property_order__pub import bind_ordering_declarations, order_properties
 
 
 def declaration(base, name, pairs, *, imports="", scopes=""):

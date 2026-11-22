@@ -16,8 +16,8 @@ TOOLS = Path(__file__).resolve().parents[1]
 if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
-import runtime_process_boundary as boundary  # noqa: E402
-from operation_error_boundary import (  # noqa: E402
+import FEATURE_PROGRAMMATIC.FEATURE_TOOLS.runtime_process_boundary as boundary  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.operation_error_boundary import (  # noqa: E402
     ExplicitBlockingRuntimeFailure,
     FailureRecord,
     classify_failure,

@@ -4,371 +4,22 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Mapping
-from dataclasses import replace
-import re
 from typing import Any
 
-import subject_notation as notation
-from carrier_aliases import carrier_read_view, matches_named_value
-from contract_graph import _conditional_target, _has_selection, _target as _contract_target
-from current_subject_graph import _model_target, _target_kind, namespace_local_expression
-from subject_projection_data import build_subject_projection_data
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import subject_notation__pub as notation
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_compat__pub import matches_named_value
 
-
-Record = dict[str, Any]
-_ACTIVE = ("active", "governs")
-_PASSIVE = ("passive", "depends_on")
-_MODEL_DESCRIPTORS = {"Relation", "Operator", "Format", "Term"}
-
-
-def _scope_subject(value: str) -> str:
-    """Classify explicit MODEL Subjects without treating concrete instances as kinds."""
-    try:
-        expression = notation.parse_subject_expression(value, subject_profile="approved").expression
-    except notation.SubjectNotationError:
-        if re.match(r"^\s*(?:ANECHOIC_STRUCTURE|ANECHOIC\s*<\+\s*STRUCTURE)\s*<\+", value):
-            return "structure"
-        return "model" if re.match(r"^\s*(?:ANECHOIC_MODEL|ANECHOIC\s*<\+\s*MODEL)\s*<\+", value) else "unresolved"
-
-    def root(expr: notation.Path | notation.RelationChain) -> str | None:
-        if isinstance(expr, notation.RelationChain):
-            first = expr.endpoints[0]
-            if isinstance(first.head, notation.Name) and first.head.value in {"ANECHOIC_MODEL", "ANECHOIC_STRUCTURE"}:
-                return first.head.value if notation.namespace_local_expression(expr) is not None else None
-            if (isinstance(first.head, notation.Name) and first.head.value == "ANECHOIC"
-                    and len(expr.endpoints) > 1 and isinstance(expr.endpoints[1].head, notation.Name)
-                    and notation.namespace_local_expression(expr) is not None):
-                return "ANECHOIC_" + expr.endpoints[1].head.value
-            return None
-        return root(expr.head) if isinstance(expr.head, (notation.Path, notation.RelationChain)) else None
-
-    namespace = root(expression)
-    if namespace == "ANECHOIC_STRUCTURE":
-        return "structure"
-    if namespace != "ANECHOIC_MODEL":
-        if isinstance(expression, notation.Path) and isinstance(expression.head, notation.Name):
-            if expression.head.value == "ANECHOIC_MODEL" and expression.steps:
-                target = _contract_target(expression)
-                if target is not None and target[0] == "relation":
-                    return "model"
-            if expression.steps:
-                return "unresolved"
-            if expression.head.value == "ANECHOIC_MODEL":
-                return "model"
-            if expression.head.value == "ANECHOIC_STRUCTURE":
-                return "structure"
-        return "unresolved"
-
-    def has_concrete_instance(expr: object) -> bool:
-        if isinstance(expr, notation.SelectionGroup):
-            return any(has_concrete_instance(member) for member in expr.members)
-        if isinstance(expr, notation.Qualification):
-            return has_concrete_instance(expr.relative_path)
-        if isinstance(expr, notation.RelationChain):
-            return any(has_concrete_instance(endpoint) for endpoint in expr.endpoints)
-        if not isinstance(expr, notation.Path):
-            return False
-        if has_concrete_instance(expr.head):
-            return True
-        prior = expr.head.value if isinstance(expr.head, notation.Name) else None
-        for step in expr.steps:
-            if step.operator == "//" and prior not in _MODEL_DESCRIPTORS:
-                return True
-            if has_concrete_instance(step.operand):
-                return True
-            if isinstance(step.operand, notation.Name):
-                prior = step.operand.value
-        return False
-
-    return "instance" if has_concrete_instance(expression) else "model"
-
-
-def select_model_subjects(carriers: list[Record]) -> tuple[list[Record], list[Record]]:
-    """Filter one projection's Subject occurrences while retaining source records."""
-    selected, unresolved = [], []
-    for carrier in carriers:
-        subjects = _authored_subjects(carrier)
-        if subjects is None:
-            selected.append(carrier)
-            continue
-        kept = {}
-        for role, keys in (("active", _ACTIVE), ("passive", _PASSIVE)):
-            for key in keys:
-                if key not in subjects:
-                    continue
-                original = subjects[key]
-                values = original if isinstance(original, list) else [original]
-                values_kept = []
-                for value in values:
-                    scope = _scope_subject(value) if isinstance(value, str) and value.strip() else "unresolved"
-                    if scope == "model":
-                        values_kept.append(value)
-                    elif scope == "unresolved":
-                        source = _source(carrier)
-                        unresolved.append({"source": source, "pin": _pin(source), "role": role, "source_key": key,
-                                           "raw_value": value if isinstance(value, str) else str(value),
-                                           "message": "Subject lacks an explicit parseable MODEL namespace; review required."})
-                if values_kept:
-                    kept[key] = values_kept if isinstance(original, list) else values_kept[0]
-        copy = dict(carrier)
-        copy["subjects"] = kept
-        if isinstance(carrier.get("metadata"), Mapping):
-            copy["metadata"] = {**carrier["metadata"], "subjects": kept}
-        selected.append(copy)
-    return selected, unresolved
-
-
-def _source(carrier: Mapping[str, Any]) -> Record:
-    return dict(carrier.get("source", {}))
-
-
-def _pin(source: Mapping[str, Any]) -> str:
-    return f"{source.get('atom_id', 'unknown')}@{source.get('version', 'unknown')}"
-
-
-def _view(carrier: Mapping[str, Any]) -> Mapping[str, Any]:
-    value = carrier.get("read_view")
-    if isinstance(value, Mapping):
-        return value
-    metadata = carrier.get("metadata")
-    return carrier_read_view(dict(metadata)) if isinstance(metadata, Mapping) else {}
-
-
-def _authored_subjects(carrier: Mapping[str, Any]) -> Mapping[str, Any] | None:
-    """Read source keys before compatibility aliases add duplicate spellings."""
-
-    metadata = carrier.get("metadata")
-    if isinstance(metadata, Mapping) and isinstance(metadata.get("subjects"), Mapping):
-        return metadata["subjects"]
-    subjects = carrier.get("subjects")
-    return subjects if isinstance(subjects, Mapping) else None
-
-
-def _canonical(value: str) -> tuple[str | None, str | None]:
-    """Render approved syntax, retaining names and qualification values exactly."""
-
-    try:
-        expression = notation.parse_subject_expression(value, subject_profile="approved").expression
-    except notation.SubjectNotationError as error:
-        return None, str(error)
-    return notation.render_subject(expression), None
-
-
-def _occurrences(carriers: list[Record]) -> tuple[list[Record], list[Record]]:
-    rows, diagnostics = [], []
-    for carrier in carriers:
-        source = _source(carrier)
-        subjects = _authored_subjects(carrier)
-        if subjects is None:
-            continue
-        for role, keys in (("active", _ACTIVE), ("passive", _PASSIVE)):
-            for key in keys:
-                if key not in subjects:
-                    continue
-                values = subjects[key] if isinstance(subjects[key], list) else [subjects[key]]
-                for value in values:
-                    if not isinstance(value, str) or not value.strip():
-                        diagnostics.append({"source": source, "pin": _pin(source), "role": role, "source_key": key,
-                                            "raw_value": value, "message": "Subject must be non-empty text."})
-                        continue
-                    canonical, error = _canonical(value)
-                    row = {"role": role, "source": source, "pin": _pin(source),
-                           "source_key": key, "raw_value": value,
-                           "subject": canonical}
-                    if error is not None:
-                        row["parse_error"] = error
-                        diagnostics.append({**row, "message": f"Unsupported Subject: {error}"})
-                    rows.append(row)
-    return rows, diagnostics
-
-
-def _local_target(subject: str) -> tuple[str, str] | None:
-    """Return an existing declaration-shaped target; never expand selectors."""
-
-    expression = notation.parse_subject_expression(subject, subject_profile="approved").expression
-    expression = namespace_local_expression(expression) or expression
-    if _has_selection(expression):
-        return None
-    if (isinstance(expression, notation.Path) and isinstance(expression.head, notation.Name)
-            and expression.head.value in {"ANECHOIC_MODEL", "ANECHOIC_STRUCTURE"} and not expression.steps):
-        return None
-    target = _contract_target(expression)
-    if target is not None:
-        return target
-    if not isinstance(expression, notation.Path):
-        return None
-    if isinstance(expression.head, notation.Name) and expression.head.value in {"CFEL", "Carrier", "Term"}:
-        return "component", _model_target(expression)
-    kind = _target_kind(expression)
-    if kind in {"primary_node", "property", "instance", "relation"}:
-        return kind, _model_target(expression)
-    return None
-
-
-def _entity_target(subject: str) -> tuple[str, str] | None:
-    """Keep a direct entity target or the last path in a plain context chain."""
-
-    expression = notation.parse_subject_expression(subject, subject_profile="approved").expression
-    if isinstance(expression, notation.RelationChain):
-        if not expression.links or any(link.operator != "<+" or link.relation_type is not None for link in expression.links):
-            return None
-        expression = expression.endpoints[-1]
-    if not isinstance(expression, notation.Path):
-        return None
-    if any(step.operator in {":", ":="} or isinstance(step.operand, notation.Qualification) for step in expression.steps):
-        return None
-    rendered = notation.render_subject(expression)
-    return _local_target(rendered)
-
-
-def _property_parts(target: str) -> tuple[str, str] | None:
-    expression = notation.parse_subject_expression(target, subject_profile="approved").expression
-    if not isinstance(expression, notation.Path):
-        return None
-    for index, step in enumerate(expression.steps):
-        if step.operator == ".":
-            origin = replace(expression, steps=expression.steps[:index], value_format=None, value_cardinality=None)
-            suffix = replace(expression, head=step.operand, steps=expression.steps[index + 1:],
-                             value_format=None, value_cardinality=None)
-            return notation.render_subject(origin), notation.render_subject(suffix)
-    return None
-
-
-def _entity_definitions(carriers: list[Record]) -> dict[str, list[Record]]:
-    rows: dict[str, list[Record]] = defaultdict(list)
-    for carrier in carriers:
-        view = _view(carrier)
-        if not matches_named_value(view.get("content_role"), "Requirement") or not matches_named_value(view.get("type"), "Entity Definition"):
-            continue
-        subjects = _authored_subjects(carrier)
-        if subjects is None:
-            continue
-        values = subjects.get("active", subjects.get("governs"))
-        values = values if isinstance(values, list) else [values]
-        if len(values) != 1 or not isinstance(values[0], str):
-            continue
-        canonical, error = _canonical(values[0])
-        if canonical is not None and error is None:
-            rows[canonical].append(_source(carrier))
-    return rows
-
-
-def _term_identity(subject: str) -> str | None:
-    expression = notation.parse_subject_expression(subject, subject_profile="approved").expression
-    expression = namespace_local_expression(expression) or expression
-    if (not isinstance(expression, notation.Path) or not isinstance(expression.head, notation.Name)
-            or expression.head.value != "Term" or len(expression.steps) != 1
-            or expression.steps[0].operator != "//" or not isinstance(expression.steps[0].operand, notation.Name)
-            or expression.value_format is not None or expression.value_cardinality is not None):
-        return None
-    return notation.render_subject(expression)
-
-
-def _term_definitions(carriers: list[Record]) -> dict[str, list[Record]]:
-    rows: dict[str, list[Record]] = defaultdict(list)
-    for carrier in carriers:
-        view = _view(carrier)
-        if (not matches_named_value(view.get("content_role"), "Method") or not matches_named_value(view.get("type"), "Term Definition")
-                or not str(_source(carrier).get("atom_id", "")).startswith("CA-M-")):
-            continue
-        subjects = _authored_subjects(carrier)
-        if subjects is None:
-            continue
-        values = subjects.get("active", subjects.get("governs"))
-        values = values if isinstance(values, list) else [values]
-        if len(values) != 1 or not isinstance(values[0], str):
-            continue
-        try:
-            identity = _term_identity(values[0])
-        except notation.SubjectNotationError:
-            continue
-        if identity is not None:
-            rows[identity].append(_source(carrier))
-    return rows
-
-
-def _declaration_catalog(data: Mapping[str, Any]) -> dict[tuple[str, str], list[Record]]:
-    declarations = data["declarations"]
-    catalog = {("primary_node", identity): rows for identity, rows in declarations.get("primary_nodes", {}).items()}
-    for kind_name, key in (("property", "properties"), ("instance", "instances"),
-                           ("relation", "relations"), ("component", "components")):
-        catalog.update({(kind_name, identity): rows for identity, rows in declarations.get(key, {}).items()})
-    return catalog
-
-
-def _conditional_coverage(subject: str, catalog: Mapping[tuple[str, str], list[Record]]) -> Record | None:
-    expression = notation.parse_subject_expression(subject, subject_profile="approved").expression
-    expression = namespace_local_expression(expression) or expression
-    conditional = _conditional_target(expression, catalog)
-    if conditional is None:
-        return None
-    bound, binding, _ = conditional
-    return {"status": "covered", "base_target": bound[1], "binding": binding,
-            "declaration_refs": [_pin(row["source"]) for row in catalog[bound]]}
-
-
-def _inherited_property_coverage(identity: str, data: Mapping[str, Any]) -> Record | None:
-    parts = _property_parts(identity)
-    if parts is None:
-        return None
-    origin, relative = parts
-    entity = next((row for row in data["entities"] if row["identity"] == origin), None)
-    if entity is None:
-        return None
-    inherited = [row for row in entity["inherited_properties"] if row["relative_name"] == relative]
-    if not inherited:
-        return None
-    return {"status": "covered", "target": identity, "inherited": True,
-            "declaration_refs": sorted({ref for row in inherited for ref in row["declaration_refs"]})}
-
-
-def _coverage(subject: str, data: Mapping[str, Any], definitions: Mapping[str, list[Record]],
-              term_definitions: Mapping[str, list[Record]]) -> Record:
-    declarations = data["declarations"]
-    known = _declaration_catalog(data)
-    target = _local_target(subject)
-    if target is None:
-        conditional = _conditional_coverage(subject, known)
-        return ({**conditional, "target": conditional["base_target"]} if conditional is not None else
-                {"status": "unresolved", "message": "Subject is not one direct known target; review required."})
-    kind, identity = target
-    catalog = {"primary_node": "primary_nodes", "property": "properties", "instance": "instances",
-               "relation": "relations", "component": "components"}.get(kind)
-    keys = [identity, identity.removeprefix("Relation//")] if kind == "relation" else [identity]
-    direct = next((declarations.get(catalog, {}).get(key) for key in keys if declarations.get(catalog, {}).get(key)), None)
-    if direct:
-        return {"status": "covered", "target": identity, "declaration_refs": [
-            _pin(row["source"]) for row in direct
-        ]}
-    if kind == "property":
-        inherited = _inherited_property_coverage(identity, data)
-        if inherited is not None:
-            return inherited
-    if kind == "instance":
-        expression = notation.parse_subject_expression(identity, subject_profile="approved").expression
-        assert isinstance(expression, notation.Path)
-        index = next((i for i, step in enumerate(expression.steps) if step.operator == "//"), None)
-        if index is not None:
-            base = notation.render_subject(replace(expression, steps=expression.steps[:index], value_format=None, value_cardinality=None))
-            declared = declarations["primary_nodes"].get(base)
-            if declared:
-                return {"status": "covered", "target": identity, "base_target": base,
-                        "declaration_refs": [_pin(row["source"]) for row in declared]}
-    conditional = _conditional_coverage(subject, known)
-    if conditional is not None:
-        return {**conditional, "target": identity}
-    term_identity = _term_identity(subject)
-    if term_identity is not None and term_identity in term_definitions:
-        return {"status": "outside_required_scope", "target": identity,
-                "message": "Term has a Method / Term Definition; outside Requirement Declaration scope",
-                "term_definition_refs": [_pin(source) for source in term_definitions[term_identity]]}
-    definition_refs = definitions.get(subject, [])
-    if kind == "component" and definition_refs:
-        return {"status": "outside_required_scope", "target": identity,
-                "message": "no Requirement Declaration; existing Entity Definition; outside R2469 required scope",
-                "entity_definition_refs": [_pin(source) for source in definition_refs]}
-    return {"status": "missing", "target": identity,
-            "message": "No effective Requirement / Declaration coverage in the selected sources."}
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.declaration_evidence import Record, _view
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.subject_audit_coverage import (
+    _coverage,
+    _entity_definitions,
+    _entity_target,
+    _property_parts,
+    _term_definitions,
+    _term_identity,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.subject_audit_occurrences import _occurrences, _pin, _source
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.subject_projection_data import build_subject_projection_data
 
 
 def _provenance(rows: list[Record]) -> Record:
@@ -438,11 +89,10 @@ def _entity_summary(carriers: list[Record], occurrences: list[Record], data: Map
                 row["missing_definition"] or row["missing_active"] for row in entities)}}
 
 
-def build_subject_audits(carriers: list[Record], data: Record | None = None, *, scope_diagnostics: list[Record] | None = None) -> Record:
-    """Build both selected-frontier Subject audits without admitting new Nodes."""
-
-    data = build_subject_projection_data(carriers) if data is None else data
-    occurrences, diagnostics = _occurrences(carriers)
+def _passive_only_subjects(
+    occurrences: list[Record], diagnostics: list[Record],
+    unresolved_subjects: int, unresolved_occurrences: int,
+) -> Record:
     active = {row["subject"] for row in occurrences if row["role"] == "active" and row["subject"] is not None}
     active_raw = {row["raw_value"].strip() for row in occurrences if row["role"] == "active"}
     passive: dict[str, list[Record]] = defaultdict(list)
@@ -457,6 +107,26 @@ def build_subject_audits(carriers: list[Record], data: Record | None = None, *, 
         for subject, rows in passive.items()
         if (subject not in active if rows[0]["subject"] is not None else rows[0]["raw_value"].strip() not in active_raw)
     ]
+    return {
+        "kind": "passive_only_subjects",
+        "subjects": sorted(passive_rows, key=lambda row: row["subject"]),
+        "diagnostics": diagnostics,
+        "coverage": {
+            "subject_occurrences": len(occurrences),
+            "parsed_subjects": len({row["subject"] for row in occurrences if row["subject"] is not None}),
+            "unresolved_subjects": unresolved_subjects,
+            "unresolved_occurrences": unresolved_occurrences,
+            "active_subjects": len(active),
+            "passive_only_subjects": len(passive_rows),
+        },
+    }
+
+
+def build_subject_audits(carriers: list[Record], data: Record | None = None, *, scope_diagnostics: list[Record] | None = None) -> Record:
+    """Build both selected-frontier Subject audits without admitting new Nodes."""
+
+    data = build_subject_projection_data(carriers) if data is None else data
+    occurrences, diagnostics = _occurrences(carriers)
     definitions = _entity_definitions(carriers)
     term_definitions = _term_definitions(carriers)
     coverage_rows, unresolved = [], []
@@ -479,13 +149,11 @@ def build_subject_audits(carriers: list[Record], data: Record | None = None, *, 
         row = {"subject": subject, **result, **_provenance([row for row in occurrences if row["subject"] == subject])}
         (unresolved if result["status"] == "unresolved" else coverage_rows).append(row)
     return {
-        "passive_only_subjects": {"kind": "passive_only_subjects", "subjects": sorted(passive_rows, key=lambda row: row["subject"]),
-                                  "diagnostics": diagnostics,
-                                  "coverage": {"subject_occurrences": len(occurrences),
-                                               "parsed_subjects": len({row["subject"] for row in occurrences if row["subject"] is not None}),
-                                               "unresolved_subjects": len(unresolved_rows) + len(scope_groups),
-                                               "unresolved_occurrences": sum(row["subject"] is None for row in occurrences) + len(scope_diagnostics or []),
-                                               "active_subjects": len(active), "passive_only_subjects": len(passive_rows)}},
+        "passive_only_subjects": _passive_only_subjects(
+            occurrences, diagnostics,
+            len(unresolved_rows) + len(scope_groups),
+            sum(row["subject"] is None for row in occurrences) + len(scope_diagnostics or []),
+        ),
         "subjects_without_declaration_coverage": {
             "kind": "subjects_without_declaration_coverage",
             "subjects": [row for row in coverage_rows if row["status"] == "missing"],

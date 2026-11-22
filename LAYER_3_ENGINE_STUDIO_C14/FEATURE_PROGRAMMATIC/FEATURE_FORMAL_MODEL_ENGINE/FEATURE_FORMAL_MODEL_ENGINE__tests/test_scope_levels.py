@@ -1,27 +1,17 @@
 """The reviewed check uses stored levels from Scope declarations."""
 
-from hashlib import sha256
 from pathlib import Path
 from types import SimpleNamespace
-import sys
 import unittest
 
 PROGRAMMATIC = Path(__file__).resolve().parents[2]
-sys.path[:0] = [str(PROGRAMMATIC), str(PROGRAMMATIC / "FEATURE_TOOLS")]
 
-from FEATURE_FORMAL_MODEL_ENGINE.scope_levels import check_scope_levels
-from scope_declaration_parse import ScopeUnitDeclaration
+from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.scope_levels import check_scope_levels_with_packaged_check
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.scope_declaration_parse__pub import ScopeUnitDeclaration
 
 
-CLAIM = """from anechoic.formal_claims import declare_entity
-from anechoic.model import ScopeUnit
-
-def check_structural_level(unit: ScopeUnit) -> bool:
+def check_structural_level(unit):
     return unit.structural_level == (0 if unit.container is None else unit.container.structural_level + 1)
-
-declare_entity(entity_name="structural_level", relation_name="IS_PROPERTY_OF",
-               base_path="Scope Unit", instance_check=check_structural_level)
-"""
 
 
 class ScopeLevelsTests(unittest.TestCase):
@@ -40,5 +30,4 @@ class ScopeLevelsTests(unittest.TestCase):
             "wrong": "Structural level violates the reviewed Claim",
             "legacy": "Missing structural_level",
             "missing_container_level": "Container is missing structural_level",
-        }, check_scope_levels(declarations, CLAIM, reference="CA-R-2554",
-                              reviewed_claim_sha256=sha256(CLAIM.encode()).hexdigest()))
+        }, check_scope_levels_with_packaged_check(declarations, instance_check=check_structural_level))

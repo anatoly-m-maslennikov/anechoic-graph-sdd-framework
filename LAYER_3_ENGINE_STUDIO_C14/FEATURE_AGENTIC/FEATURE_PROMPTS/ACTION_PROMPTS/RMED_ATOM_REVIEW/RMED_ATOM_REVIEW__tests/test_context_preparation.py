@@ -4,8 +4,8 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from test_split_evaluation import context, contract, part, source, RULE_TEXT, SOURCE_TEXT
-from context_builder import prepare_context, lookup, prose, rebuild_baseline
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__tests.test_split_evaluation import context, contract, part, source, RULE_TEXT, SOURCE_TEXT
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import prepare_context, lookup, prose, rebuild_baseline
 
 
 TMPDIR = Path(__file__).resolve().parents[6] / '.anechoic_tmp/epic-resume-prompts'
@@ -107,8 +107,8 @@ class ContextPreparation(unittest.TestCase):
 
 class SemanticAdmission(unittest.TestCase):
     def test_duplicate_governs_keeps_its_real_mention(self):
-        from context_builder import body_sections
-        from review_evidence import validate_subject_inventory
+        from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import body_sections
+        from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_evidence__shared import validate_subject_inventory
         raw = '---\nsubjects:\n  governs: Atom\n  depends_on: [Atom]\n---\n' + SOURCE_TEXT
         row = part('coherence')['checks'][0]
         row['subject_inventory']['sections_reviewed'] = body_sections(raw)
@@ -117,8 +117,8 @@ class SemanticAdmission(unittest.TestCase):
         self.assertEqual('Atom', row['subject_inventory']['mentions'][0]['entity'])
 
     def test_summary_literal_prevents_false_extra_finding(self):
-        from context_builder import body_sections
-        from review_evidence import validate_subject_inventory
+        from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import body_sections
+        from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_evidence__shared import validate_subject_inventory
         raw = '---\nsubjects:\n  governs: Atom\n  depends_on: [Operator]\n---\n' + SOURCE_TEXT.replace('Atom rule', 'Atom rule for Operator')
         row = part('coherence')['checks'][0]
         row['subject_inventory']['sections_reviewed'] = body_sections(raw)
@@ -127,12 +127,12 @@ class SemanticAdmission(unittest.TestCase):
             validate_subject_inventory(row, raw, {'MOCK-R-002@1': RULE_TEXT}, {'MOCK-R-002@1': 'Atom'})
 
     def test_qualified_path_prefix_is_not_standalone_bearer(self):
-        from review_evidence import literal_occurs
+        from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_evidence__shared import literal_occurs
         self.assertFalse(literal_occurs('Widget', 'Widget/Color: Blue'))
         self.assertTrue(literal_occurs('Widget', 'public Widget displays'))
 
     def test_extra_subject_does_not_need_an_invented_body_mention(self):
-        from review_evidence import _validate_subject_findings
+        from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_evidence__shared import _validate_subject_findings
         row = {'subject_inventory': {'complete': True}, 'findings': [{
             'kind': 'violation', 'subject_issue': 'extra', 'entity': 'Operator'}]}
         _validate_subject_findings(row, {'Atom'}, ['Atom', 'Operator'])
@@ -141,7 +141,7 @@ class SemanticAdmission(unittest.TestCase):
             _validate_subject_findings(row, {'Atom'}, ['Atom', 'Operator'])
 
     def test_extra_subject_cannot_be_mentioned_or_undeclared(self):
-        from review_evidence import _validate_subject_findings
+        from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_evidence__shared import _validate_subject_findings
         row = {'subject_inventory': {'complete': True}, 'findings': [{
             'kind': 'violation', 'subject_issue': 'extra', 'entity': 'Operator'}]}
         for resolved, declared in (({'Operator'}, ['Operator']), ({'Atom'}, ['Atom'])):
@@ -149,7 +149,7 @@ class SemanticAdmission(unittest.TestCase):
                 _validate_subject_findings(row, resolved, declared)
 
     def test_missing_subject_cannot_bypass_omission_resolution(self):
-        from review_evidence import _validate_subject_findings
+        from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_evidence__shared import _validate_subject_findings
         row = {'subject_inventory': {'complete': True}, 'findings': [{
             'kind': 'violation', 'entity': 'Operator'}]}
         with self.assertRaisesRegex(ValueError, 'omission resolution'):
@@ -174,9 +174,9 @@ class SemanticAdmission(unittest.TestCase):
             contract.validate_part(response, context=context())
 
     def test_already_declared_entity_is_not_missing(self):
-        from review_evidence import validate_subject_inventory
+        from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_evidence__shared import validate_subject_inventory
         raw = '---\nsubjects:\n  governs: Other\n  depends_on: [Atom]\n---\n# Claim\nAtom\n'
-        from context_builder import body_sections
+        from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import body_sections
         row = part('coherence')['checks'][0]
         row['subject_inventory']['sections_reviewed'] = body_sections(raw)
         row['findings'] = [{'kind': 'omission', 'entity': 'Atom'}]

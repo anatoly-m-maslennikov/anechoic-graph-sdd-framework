@@ -1,14 +1,11 @@
 import os
 from pathlib import Path
-import sys
 import tempfile
 import time
 import unittest
 from unittest.mock import patch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
-import prune_private_tmp as cleanup
+from .. import prune_private_tmp as cleanup
 
 
 class PrivateScratchCleanupTests(unittest.TestCase):

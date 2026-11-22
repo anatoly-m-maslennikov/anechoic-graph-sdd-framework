@@ -5,45 +5,24 @@ from __future__ import annotations
 from .timing import trace
 
 from dataclasses import dataclass
-from contextlib import contextmanager
-from contextvars import ContextVar
 import hashlib
 import os
 from pathlib import Path
 import re
 from typing import Any
 
-from carrier_aliases import carrier_read_view
-from project_selection import ProjectSelection
-from scope_unit_declarations import read_scope_unit_declarations
-from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier
-from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext, open_regular
-from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_compat__pub import carrier_read_view
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection import ProjectSelection
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.scope_unit_declarations__pub import read_scope_unit_declarations
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import parse_carrier
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__pub import CEILINGS, ReadContext, open_regular
 from .placement_model import active_placement
-
-
-class SourceSelectionError(ValueError):
-    """A logical Atom source cannot be bound unambiguously and safely."""
-
-
-class ArchiveNotLoadedError(SourceSelectionError):
-    """The requested historical carrier has not been loaded into Workbench."""
-
-
-_QUERY_READER = ContextVar('lifecycle_query_reader', default=None)
-
-
-@contextmanager
-def bind_query_reader(reader):
-    token = _QUERY_READER.set(reader)
-    try:
-        yield
-    finally:
-        _QUERY_READER.reset(token)
-
-
-def query_reader():
-    return _QUERY_READER.get()
+from .source_binding import (
+    ArchiveNotLoadedError as ArchiveNotLoadedError,
+    SourceSelectionError,
+    bind_query_reader as bind_query_reader,
+    query_reader,
+)
 
 
 def query_candidates(selection, **filters):

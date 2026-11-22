@@ -7,7 +7,7 @@ import os
 import stat
 from pathlib import Path
 
-from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__pub import CEILINGS
 
 from . import effects
 

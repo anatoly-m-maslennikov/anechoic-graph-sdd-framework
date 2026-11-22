@@ -46,7 +46,7 @@ Block missing permission, unresolved local coverage, low confidence, no progress
 
 ### 8) Final Validation Checklist (silent)
 
-Read the full candidate against the original. One scoped Claim, faithful Summary, explanatory Details, intact local Properties, writing, unchanged graph targets and preserved information. Caller runs repair_gate.admit_proposal before independent local evaluation. Its source_mutation_permitted remains false; freshness, authorization, history and independent saved-output verification remain required.
+Read the full candidate against the original. One scoped Claim, faithful Summary, explanatory Details, intact local Properties, writing, unchanged graph targets and preserved information. Caller runs repair_gate__shared.admit_proposal before independent local evaluation. Its source_mutation_permitted remains false; freshness, authorization, history and independent saved-output verification remain required.
 
 ### 9) Answer Template (the assistant will follow for final outputs)
 

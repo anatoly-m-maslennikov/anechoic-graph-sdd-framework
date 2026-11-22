@@ -56,8 +56,20 @@ def _stop_owned(process: subprocess.Popen[bytes]) -> None:
         process.wait(timeout=_CANCELLATION_GRACE_SECONDS)
 
 
+def _cancel_and_forward(process, error: BaseException, forward) -> None:
+    if process is not None:
+        try:
+            _stop_owned(process)
+        except (OSError, KeyboardInterrupt, subprocess.TimeoutExpired) as cleanup_error:
+            error.add_note(f"Test-process cancellation failed: {cleanup_error!r}")
+        try:
+            forward(final=True)
+        except (OSError, ValueError) as output_error:
+            error.add_note(f"Final test-output forwarding failed: {output_error!r}")
+
+
 def run_logged_test_process(
-    argv: tuple[str, ...], cwd: Path, log: BinaryIO,
+    argv: tuple[str, ...], cwd: Path, log: BinaryIO, *, env: dict[str, str] | None = None,
 ) -> subprocess.CompletedProcess[str]:
     """Keep complete output on disk, forwarding chunks and retaining only a tail.
 
@@ -84,7 +96,7 @@ def run_logged_test_process(
 
         try:
             process = subprocess.Popen(
-                argv, cwd=cwd, stdout=log, stderr=subprocess.STDOUT,
+                argv, cwd=cwd, stdout=log, stderr=subprocess.STDOUT, env=env,
                 start_new_session=os.name == "posix",
             )
             while True:
@@ -94,14 +106,6 @@ def run_logged_test_process(
                 time.sleep(0.05)
             forward(final=True)
         except BaseException as error:
-            if process is not None:
-                try:
-                    _stop_owned(process)
-                except (OSError, KeyboardInterrupt, subprocess.TimeoutExpired) as cleanup_error:
-                    error.add_note(f"Test-process cancellation failed: {cleanup_error!r}")
-                try:
-                    forward(final=True)
-                except (OSError, ValueError) as output_error:
-                    error.add_note(f"Final test-output forwarding failed: {output_error!r}")
+            _cancel_and_forward(process, error, forward)
             raise
     return subprocess.CompletedProcess(argv, process.returncode, tail, "")

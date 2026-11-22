@@ -95,6 +95,21 @@ def install_codex(source_root: Path, endpoint: str, *, codex_home: Path | None =
     if server is not None and (server.get("url") != endpoint or server.get("enabled") is False or
                                any(key in server for key in ("command", "bearer_token_env_var", "http_headers", "env_http_headers"))):
         raise ValueError("Conflicting Codex anechoic MCP configuration")
+    hooks_data, added_group = _hook_registration(hooks_path, hook_path, uv)
+    home.mkdir(parents=True, exist_ok=True)
+    hook_dir.mkdir(exist_ok=True)
+    registered = False
+    if server is None:
+        _register_server(home, endpoint, config_path, hook_path, executor)
+        registered = True
+    hook_changed = _atomic_write(hook_path, hook_data)
+    hooks_changed = _atomic_write(hooks_path, hooks_data) if added_group else False
+    return {"hook_path": str(hook_path), "hooks_path": str(hooks_path), "endpoint": endpoint,
+            "mcp_registered": registered, "hook_changed": hook_changed,
+            "hooks_changed": hooks_changed, "approval": "Review and trust the hook in Codex /hooks."}
+
+
+def _hook_registration(hooks_path: Path, hook_path: Path, uv: str) -> tuple[bytes, bool]:
     document = json.loads(hooks_path.read_text(encoding="utf-8")) if hooks_path.exists() else {}
     if not isinstance(document, dict) or not isinstance(document.setdefault("hooks", {}), dict):
         raise ValueError("Invalid Codex hooks configuration")
@@ -123,20 +138,14 @@ def install_codex(source_root: Path, endpoint: str, *, codex_home: Path | None =
     if added_group:
         groups.append(group)
     hooks_data = (json.dumps(document, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
-    home.mkdir(parents=True, exist_ok=True)
-    hook_dir.mkdir(exist_ok=True)
-    registered = False
-    if server is None:
-        env = os.environ.copy()
-        env["CODEX_HOME"] = str(home)
-        executor(["codex", "mcp", "add", "anechoic", "--url", endpoint],
-                 cwd=home, env=env, check=True, capture_output=True, text=True, timeout=30)
-        registered_server = _configured_server(config_path, hook_path)
-        if registered_server is None or registered_server.get("url") != endpoint:
-            raise RuntimeError("Codex did not register the requested MCP endpoint")
-        registered = True
-    hook_changed = _atomic_write(hook_path, hook_data)
-    hooks_changed = _atomic_write(hooks_path, hooks_data) if added_group else False
-    return {"hook_path": str(hook_path), "hooks_path": str(hooks_path), "endpoint": endpoint,
-            "mcp_registered": registered, "hook_changed": hook_changed,
-            "hooks_changed": hooks_changed, "approval": "Review and trust the hook in Codex /hooks."}
+    return hooks_data, added_group
+
+
+def _register_server(home: Path, endpoint: str, config_path: Path, hook_path: Path, executor) -> None:
+    env = os.environ.copy()
+    env["CODEX_HOME"] = str(home)
+    executor(["codex", "mcp", "add", "anechoic", "--url", endpoint],
+             cwd=home, env=env, check=True, capture_output=True, text=True, timeout=30)
+    registered_server = _configured_server(config_path, hook_path)
+    if registered_server is None or registered_server.get("url") != endpoint:
+        raise RuntimeError("Codex did not register the requested MCP endpoint")

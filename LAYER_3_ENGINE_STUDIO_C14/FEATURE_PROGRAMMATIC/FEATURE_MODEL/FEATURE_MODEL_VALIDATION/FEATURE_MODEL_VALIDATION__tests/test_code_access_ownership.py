@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 from types import SimpleNamespace
 
-from LAYER_3_ENGINE_STUDIO_C14.FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.code_access_ownership import build_code_access_ownership
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.realization_ownership__pub import build_code_access_ownership
 
 
 def component(parent, source):
@@ -53,11 +53,11 @@ class OwnershipTests(unittest.TestCase):
 
     def test_ambiguous_and_missing_declared_paths_fail(self):
         (self.root / 'ENGINE_C1/FEATURE/other_pkg1').mkdir()
-        with self.assertRaisesRegex(ValueError, 'Package path'):
+        with self.assertRaisesRegex(ValueError, 'Component Seed realization path'):
             self.build()
         (self.root / 'ENGINE_C1/FEATURE/other_pkg1').rmdir()
         (self.root / 'ENGINE_C1/FEATURE/pkg_pkg1').rename(self.root / 'ENGINE_C1/FEATURE/ordinary')
-        with self.assertRaisesRegex(ValueError, 'Package path'):
+        with self.assertRaisesRegex(ValueError, 'Component Seed realization path'):
             self.build()
 
     def test_duplicate_component_id_paths_fail(self):

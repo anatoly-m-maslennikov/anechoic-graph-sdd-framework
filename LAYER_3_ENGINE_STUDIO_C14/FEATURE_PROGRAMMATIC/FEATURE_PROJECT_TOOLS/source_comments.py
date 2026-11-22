@@ -20,11 +20,16 @@ FRONTEND = (
 )
 WEB_SUFFIXES = {".js", ".mjs", ".ts", ".svelte", ".css", ".html"}
 DOCKER_FILES = {"Dockerfile", "Dockerfile.dockerignore", ".dockerignore"}
+EDITORCONFIG_DIRECTIVE = r"editorconfig-checker-disable-line\b"
 PYTHON_DIRECTIVE = re.compile(
-    r"#\s*(?:noqa\b|(?:type|ruff|flake8|pylint|pyright|mypy|fmt|isort|pragma):)"
+    rf"#\s*(?:noqa\b|{EDITORCONFIG_DIRECTIVE}|"
+    r"(?:type|ruff|flake8|pylint|pyright|mypy|fmt|isort|pragma):)"
 )
 ENCODING_COOKIE = re.compile(r"#.*?coding[:=]\s*[-\w.]+")
-DOCKER_DIRECTIVE = re.compile(r"#\s*(?:syntax|escape|check)\s*=", re.IGNORECASE)
+DOCKER_DIRECTIVE = re.compile(
+    rf"#\s*(?:(?:syntax|escape|check)\s*=|{EDITORCONFIG_DIRECTIVE})",
+    re.IGNORECASE,
+)
 
 
 def python_comments(source: str) -> list[tuple[int, int]]:

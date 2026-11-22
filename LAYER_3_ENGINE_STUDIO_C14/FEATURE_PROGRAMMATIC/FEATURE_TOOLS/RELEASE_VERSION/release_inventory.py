@@ -65,6 +65,28 @@ def _is_ephemeral_file(name: str) -> bool:
     return name in _EPHEMERAL_FILE_NAMES or Path(name).suffix in _BYTECODE_SUFFIXES
 
 
+def _retain_directories(root: Path, current_path: Path, directories: list[str]) -> None:
+    retained_directories: list[str] = []
+    for name in sorted(directories):
+        path = current_path / name
+        relative = path.relative_to(root)
+        refuse_secret_path(relative)
+        if _is_ephemeral_directory(name):
+            continue
+        if path.is_symlink():
+            raise ReleaseInventoryError(
+                "release-inventory-symlink",
+                f"symlink is not admitted: {relative.as_posix()}",
+            )
+        if not path.is_dir():
+            raise ReleaseInventoryError(
+                "release-inventory-invalid",
+                f"inventory directory is not a regular directory: {relative.as_posix()}",
+            )
+        retained_directories.append(name)
+    directories[:] = retained_directories
+
+
 def persistent_regular_files(root: Path, directory: Path) -> list[Path]:
     """Return ordered persisted files below ``directory`` without reading bytes.
 
@@ -81,25 +103,7 @@ def persistent_regular_files(root: Path, directory: Path) -> list[Path]:
     files: list[Path] = []
     for current, directories, names in os.walk(directory, topdown=True, followlinks=False):
         current_path = Path(current)
-        retained_directories: list[str] = []
-        for name in sorted(directories):
-            path = current_path / name
-            relative = path.relative_to(root)
-            refuse_secret_path(relative)
-            if _is_ephemeral_directory(name):
-                continue
-            if path.is_symlink():
-                raise ReleaseInventoryError(
-                    "release-inventory-symlink",
-                    f"symlink is not admitted: {relative.as_posix()}",
-                )
-            if not path.is_dir():
-                raise ReleaseInventoryError(
-                    "release-inventory-invalid",
-                    f"inventory directory is not a regular directory: {relative.as_posix()}",
-                )
-            retained_directories.append(name)
-        directories[:] = retained_directories
+        _retain_directories(root, current_path, directories)
         for name in sorted(names):
             path = current_path / name
             relative = path.relative_to(root)

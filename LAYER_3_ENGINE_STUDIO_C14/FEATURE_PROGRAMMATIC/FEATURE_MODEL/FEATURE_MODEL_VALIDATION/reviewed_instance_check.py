@@ -3,7 +3,7 @@
 from collections.abc import Callable, Mapping
 from hashlib import sha256
 
-from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_model_claim__pub import parse_native_model_claim
 
 
 def bind_reviewed_instance_check(

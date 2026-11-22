@@ -14,12 +14,10 @@ import subprocess
 import sys
 import time
 
-if __package__:
-    from .full_suite_docker import APP, candidate_test_image, current_code_test_image
-else:
-    from full_suite_docker import APP, candidate_test_image, current_code_test_image
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import python_boundaries, source_sizes
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.functional_suite import _select_test_modules, functional_modules
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.full_suite_docker import APP, candidate_test_image, current_code_test_image
 
-PROGRAMMATIC = Path("LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC")
 WORKBENCH = Path("LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH")
 WORKBENCH_TESTS = WORKBENCH / (WORKBENCH.name + "__tests")
 MCP_TESTS = APP / (APP.name + "__tests")
@@ -27,15 +25,16 @@ CODE_ROOTS = ("LAYER_3_ENGINE_STUDIO_C14", "LAYER_5_FRAMEWORK_DELIVERY", "RUNTIM
 MODULE_TIMEOUT_SECONDS = 3600
 RESULT_MARKER = "ANECHOIC_TEST_COUNTS "
 CHILD = """
-import json, sys, unittest
-sys.path.insert(0, sys.argv[1])
-suite = unittest.defaultTestLoader.loadTestsFromName(sys.argv[2])
+import json, os, sys, unittest
+sys.path.extend(os.environ.pop("ANECHOIC_TEST_IMPORT_DIRS").split(os.pathsep))
+suite = unittest.defaultTestLoader.loadTestsFromName(sys.argv[1])
 count = suite.countTestCases()
 result = unittest.TextTestRunner(verbosity=2).run(suite)
 required_skips = [(test.id(), reason) for test, reason in result.skipped
-                  if "_e2e" in sys.argv[2] or "_e2e." in test.id()]
+                  if len(sys.argv) > 2 or "_e2e" in sys.argv[1] or "_e2e." in test.id()]
 if required_skips:
-    print("Required integration tests skipped: " + repr(required_skips), file=sys.stderr)
+    label = "functional" if len(sys.argv) > 2 else "integration"
+    print("Required " + label + " tests skipped: " + repr(required_skips), file=sys.stderr)
 print("ANECHOIC_TEST_COUNTS " + json.dumps({"tests": result.testsRun, "skipped": len(result.skipped)}))
 if not count:
     print("No test cases loaded", file=sys.stderr)
@@ -85,22 +84,27 @@ def discover_test_modules(root: Path) -> list[Path]:
     return sorted(modules)
 
 
-def _select_test_modules(
-    root: Path, discovered: list[Path], selected: tuple[str, ...]
-) -> list[Path]:
-    if not isinstance(selected, tuple):
-        raise ValueError("test-module selection must be a tuple")
-    if not selected:
-        raise ValueError("test-module selection is empty")
-    if any(not isinstance(module, str) or not module for module in selected):
-        raise ValueError("test-module selection contains an invalid path")
-    if len(set(selected)) != len(selected):
-        raise ValueError("test-module selection contains duplicates")
-    available = {module.relative_to(root).as_posix(): module for module in discovered}
-    missing = [module for module in selected if module not in available]
-    if missing:
-        raise ValueError("test-module selection is not discovered: " + ", ".join(missing))
-    return [available[module] for module in selected]
+def _module_environment(child, environment):
+    environment = {
+        **(os.environ if environment is None else environment),
+        "ANECHOIC_DOCKER_E2E": "1",
+        "ANECHOIC_DOCKER_QUERY_E2E": "1",
+        "PYTHONPATH": str(child),
+    }
+    environment.pop("PYTHONHOME", None)
+    return environment
+
+
+def _module_command(child, module, environment, required):
+    name = ".".join(module.relative_to(child).with_suffix("").parts)
+    command = (sys.executable,)
+    if child.name != CODE_ROOTS[0]:
+        environment.pop("VIRTUAL_ENV", None)
+        environment["UV_PROJECT_ENVIRONMENT"] = (
+            ".venv-release" if child.name == CODE_ROOTS[1] else ".venv-setup"
+        )
+        command = ("uv", "run", "--project", str(child), "--locked", "--no-env-file", "python")
+    return (*command, "-B", "-P", "-c", CHILD, name, *(("required",) if required else ()))
 
 
 def run_module(
@@ -108,22 +112,16 @@ def run_module(
 ) -> tuple[bool, int, int, str, str, float, str | None]:
     """Return one isolated module's result and output for coherent reporting."""
     started = time.monotonic()
-    environment = {
-        **(os.environ if environment is None else environment),
-        "ANECHOIC_DOCKER_E2E": "1",
-        "ANECHOIC_DOCKER_QUERY_E2E": "1",
-    }
-    programmatic = root / PROGRAMMATIC
-    apps = root / WORKBENCH.parent
-    existing_pythonpath = environment.get("PYTHONPATH")
-    environment["PYTHONPATH"] = os.pathsep.join(
-        path for path in (str(programmatic / "FEATURE_TOOLS"), str(programmatic), str(apps),
-                          str(apps / "APP_WORKBENCH"), str(root / APP.parent), existing_pythonpath) if path
-    )
+    child = root / module.relative_to(root).parts[0]
+    environment = _module_environment(child, environment)
+    environment["ANECHOIC_TEST_IMPORT_DIRS"] = os.pathsep.join((
+        str(module.parent), str(root / WORKBENCH / "FEATURE_WORKBENCH_BACKEND"),
+    ))
+    required = environment.pop("ANECHOIC_FUNCTIONAL_REQUIRED", None) == "1"
     print(f"Test module START: {module.relative_to(root)}", flush=True)
     try:
         result = subprocess.run(
-            (sys.executable, "-B", "-c", CHILD, str(module.parent), module.stem),
+            _module_command(child, module, environment, required),
             cwd=root,
             capture_output=True,
             text=True,
@@ -158,19 +156,42 @@ def _docker_module(root: Path, module: Path) -> bool:
     )
 
 
+def _run_static_checks(root: Path) -> int:
+    print("Static check: unused Python imports", flush=True)
+    try:
+        status = subprocess.run(
+            (sys.executable, "-m", "ruff", "check", "--select", "F401", "--no-fix", *CODE_ROOTS),
+            cwd=root, check=False, timeout=60,
+        ).returncode
+    except (OSError, subprocess.TimeoutExpired) as error:
+        print(f"Static check failed: {error}", file=sys.stderr)
+        return 1
+
+    return status or source_sizes.check(root) or int(bool(python_boundaries.check(root)))
+
 def run_full_suite(root: Path, test_modules: tuple[str, ...] | None = None, *,
                    image_mode: str = "existing", phase: str = "full",
                    candidate_image: str | None = None) -> int:
     """Attempt the complete discovered suite and fail on test or import errors."""
-    if (phase not in ("full", "unit", "e2e") or
+    if (phase not in ("full", "static", "unit", "functional", "e2e") or
             (phase == "e2e") != (candidate_image is not None) or
             (candidate_image is not None and (not isinstance(candidate_image, str)
              or not re.fullmatch(r"sha256:[0-9a-f]{64}", candidate_image))) or
             (phase != "full" and test_modules is not None)):
         print("Invalid test phase or candidate image selection", file=sys.stderr)
         return 1
+    if phase == "static" or (phase in ("full", "unit", "functional") and test_modules is None):
+        status = _run_static_checks(root)
+        if status or phase == "static":
+            return status
     modules = discover_test_modules(root)
-    if phase != "full":
+    if phase == "functional":
+        try:
+            modules = functional_modules(root, modules, _docker_module)
+        except ValueError as error:
+            print(f"Invalid functional test selection: {error}", file=sys.stderr)
+            return 1
+    elif phase != "full":
         modules = [module for module in modules if _docker_module(root, module) == (phase == "e2e")]
     scope = phase if test_modules is None else "focused"
     if test_modules is None:
@@ -186,6 +207,10 @@ def run_full_suite(root: Path, test_modules: tuple[str, ...] | None = None, *,
     if not modules:
         print("No source test modules found", file=sys.stderr)
         return 1
+    return _run_selected_modules(root, modules, candidate_image, image_mode, required=phase == "functional")
+
+
+def _run_selected_modules(root, modules, candidate_image, image_mode, *, required=False):
     integration = any(_docker_module(root, module) for module in modules)
     context = (candidate_test_image(root, candidate_image) if candidate_image is not None else
                current_code_test_image(root, use_packaged_assets=image_mode == "existing")
@@ -193,6 +218,10 @@ def run_full_suite(root: Path, test_modules: tuple[str, ...] | None = None, *,
     try:
         with context as additions:
             environment = {**os.environ, **additions}
+            if required:
+                environment["ANECHOIC_FUNCTIONAL_REQUIRED"] = "1"
+            else:
+                environment.pop("ANECHOIC_FUNCTIONAL_REQUIRED", None)
             if integration:
                 environment.pop("ANECHOIC_RELEASE_E2E_CONTEXT", None)
                 environment.pop("ANECHOIC_CANDIDATE_IMAGE_DIGEST", None)
@@ -209,8 +238,6 @@ def _output_text(output: str | bytes | None) -> str:
 def _record_modules(root: Path, pending: dict) -> tuple[list[str], int, int]:
     failed = []
     tests = skipped = 0
-    if not pending:
-        return failed, tests, skipped
     for future in as_completed(pending):
         module = pending.pop(future)
         successful, count, skips, stdout, stderr, elapsed, diagnostic = future.result()
@@ -264,33 +291,30 @@ def main() -> int:
     parser.add_argument("--project-root", type=Path, default=Path.cwd())
     parser.add_argument("--test-module", action="append", dest="test_modules", metavar="PATH")
     parser.add_argument("--image-mode", choices=("refresh", "existing"), default="existing")
-    parser.add_argument("--phase", choices=("full", "unit", "e2e", "canary"), default="full")
+    parser.add_argument("--phase", choices=("full", "static", "unit", "functional", "e2e", "canary"), default="full")
     parser.add_argument("--candidate-image")
     parser.add_argument("--canary-package", type=Path)
+    parser.add_argument("--canary-selection")
     parser.add_argument("--run-id")
     arguments = parser.parse_args()
     root = arguments.project_root.resolve(strict=True)
     if arguments.phase == "canary":
         if (arguments.test_modules is not None or arguments.image_mode != "existing" or
-                arguments.candidate_image is None or arguments.canary_package is None or not arguments.run_id):
+                arguments.candidate_image is None or arguments.canary_package is None or not arguments.run_id
+                or arguments.canary_selection is None):
             print("Invalid canary selection", file=sys.stderr)
             return 1
         try:
-            sys.path.insert(0, str(root))
-            sys.path.insert(0, str(root / PROGRAMMATIC))
-            sys.path.insert(0, str(root / PROGRAMMATIC / "FEATURE_TOOLS"))
-            if __package__:
-                from ._release_canary import verify_candidate_image
-            else:
-                from _release_canary import verify_candidate_image
+            from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS._release_canary import verify_candidate_image
             endpoint = verify_candidate_image(root, arguments.canary_package, arguments.candidate_image,
-                                              run_id=arguments.run_id)
+                                              run_id=arguments.run_id,
+                                              selection=json.loads(arguments.canary_selection))
         except Exception as error:
             print(f"Canary failed: {error}", file=sys.stderr)
             return 1
         print(f"ANECHOIC_CANARY_ENDPOINT {endpoint}")
         return 0
-    if arguments.canary_package is not None or arguments.run_id is not None:
+    if arguments.canary_package is not None or arguments.canary_selection is not None or arguments.run_id is not None:
         print("Canary arguments require the canary phase", file=sys.stderr)
         return 1
     return run_full_suite(

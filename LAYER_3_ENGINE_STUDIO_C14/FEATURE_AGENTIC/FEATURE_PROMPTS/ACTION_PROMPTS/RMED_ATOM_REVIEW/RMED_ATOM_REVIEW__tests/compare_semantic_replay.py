@@ -5,16 +5,19 @@ adjudicate them. An absent/invalid report is incomplete, never a passing case.
 """
 from __future__ import annotations
 
+if __package__ in (None, ""):
+    import sys as _sys
+    from pathlib import Path as _Path
+    _sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if p.name == "LAYER_3_ENGINE_STUDIO_C14")))
+
 import argparse
 from collections import Counter
 import json
 from pathlib import Path
-import sys
 
 HERE = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(HERE))
-from evaluation_contract import GROUPS, validate_part  # noqa: E402
-from review_evidence import ReviewContext  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.evaluation_contract import GROUPS, validate_part  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_evidence__shared import ReviewContext  # noqa: E402
 
 
 def compare(run: Path) -> dict:

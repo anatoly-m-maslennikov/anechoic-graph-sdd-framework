@@ -1,6 +1,6 @@
 import unittest
 
-from native_carrier_placement import native_carrier_path, native_ticket_label
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_placement__pub import native_carrier_path, native_ticket_label
 
 
 def header(family='SPEC', template=None, lens='SPEC', status='active', container=None):
@@ -44,6 +44,13 @@ class NativeCarrierPlacementTests(unittest.TestCase):
         self.assertEqual(path(h), '/project/AN-S-1-DOM--a-useful-summary.md')
         h['structure']['tier'] = 3
         self.assertEqual(path(h), '/project/unit/__DES/__DOM/AN-S-1-DOM--a-useful-summary.md')
+
+    def test_tier_four_component_manifest_uses_owner_root(self):
+        h = header(template='component_manifest')
+        h['structure']['tier'] = 4
+        self.assertEqual(path(h), '/project/unit/AN-S-1-SPEC-COMPONENT_MANIFEST--a-useful-summary.md')
+        h['state']['status'] = 'archived'
+        self.assertEqual(path(h), '/project/unit/09_archived/AN-S-1@2-SPEC-COMPONENT_MANIFEST--a-useful-summary.md')
 
     def test_pmeta_and_ticket_branches(self):
         self.assertEqual(path(header('PMETA', 'action', status='draft')), path(header('PROJECT_CONFIG', 'action', status='draft')))

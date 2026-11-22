@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 
-from subject_notation import get_profile
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.subject_notation__pub import get_profile
 
 
 GRAPH_RULE_SOURCES = (

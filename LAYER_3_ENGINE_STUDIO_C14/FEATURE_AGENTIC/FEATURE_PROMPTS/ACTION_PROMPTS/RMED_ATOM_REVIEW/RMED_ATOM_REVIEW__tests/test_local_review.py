@@ -2,8 +2,8 @@
 from copy import deepcopy
 import unittest
 
-from test_split_evaluation import contract, part as legacy_part, source, SOURCE_TEXT, RULE_TEXT
-from operator_precheck import word_inventory
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__tests.test_split_evaluation import contract, part as legacy_part, source, SOURCE_TEXT, RULE_TEXT
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.operator_precheck import word_inventory
 
 REGISTRY = '''1. statement form: **to**, **means**
 2. modality: **must**, **must not**, **may**

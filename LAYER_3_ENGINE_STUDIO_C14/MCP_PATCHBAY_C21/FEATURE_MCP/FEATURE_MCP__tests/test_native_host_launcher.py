@@ -2,7 +2,7 @@
 
 from pathlib import Path
 from dataclasses import replace
-import sys
+import shutil
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -11,15 +11,12 @@ import yaml
 
 MCP = Path(__file__).resolve().parents[1]
 PROGRAMMATIC = MCP.parents[1] / "FEATURE_PROGRAMMATIC"
-sys.path[:0] = [str(MCP / 'docker'), str(MCP), str(PROGRAMMATIC / 'FEATURE_TOOLS'), str(PROGRAMMATIC)]
 
-from native_project_selection import rebind_native_selection
-from native_startup import select_runtime_project
-from project_mcp_backend import ProjectMcpBackend
-from project_mcp_launcher import Launcher
-from project_selection import ProjectSelectionError, _instance_id
-from project_tool_context import native_arguments
-from test_project_mcp_launcher_startup import Backend, healthy_row
+from MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import ProjectAdmissionError, select_runtime_project
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend import ProjectMcpBackend
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_launcher import Launcher
+from MCP_PATCHBAY_C21.FEATURE_MCP.project_tool_context import native_arguments
+from .launcher_startup_test_support import Backend, healthy_row
 
 
 class NativeHostLauncherTests(unittest.TestCase):
@@ -67,28 +64,27 @@ class NativeHostLauncherTests(unittest.TestCase):
             with self.subTest(port=port):
                 backend = Backend()
                 invalid = replace(selection, parameters={'project_mcp': {'http_port': port}})
-                with patch('project_mcp_launcher.resolve_project', return_value=invalid):
+                with patch('MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_launcher.resolve_project', return_value=invalid):
                     result = Launcher(backend=backend).launch(self.root, source_root=PROGRAMMATIC)
                 self.assertEqual('PROJECT_SELECTION_REFUSED', result['condition'])
                 self.assertEqual((0, 0), (backend.resolve_image_calls, backend.start_calls))
 
     def test_transport_checks_identity_and_accepts_only_bound_roots(self):
-        selected = select_runtime_project(self.root)
-        host = self.root.parent / 'unmounted-native-project'
-        identity = _instance_id(host, selected.control_relative)
-        transported = rebind_native_selection(selected, identity, host_root=host)
+        host = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve() / 'host-project'
+        shutil.copytree(self.control, host / self.control.name)
+        identity = select_runtime_project(host).instance_id
+        host.rename(host.with_name('detached-project'))
+        transported = select_runtime_project(self.root, instance_id=identity, host_root=host)
         for root in (self.root, host):
             self.assertEqual({'sql': 'select 1'}, native_arguments(
                 {'project_root': str(root), 'sql': 'select 1'}, transported, self.root))
         with self.assertRaises(ValueError):
             native_arguments({'project_root': str(host.parent)}, transported, self.root)
-        with self.assertRaises(ProjectSelectionError):
-            rebind_native_selection(selected, 'a' * 64, host_root=host)
-        alias = self.root.parent / (self.root.name + '-alias')
-        alias.symlink_to(self.root, target_is_directory=True)
-        self.addCleanup(alias.unlink)
-        with self.assertRaises(ProjectSelectionError):
-            rebind_native_selection(selected, _instance_id(alias, selected.control_relative), host_root=alias)
+        with self.assertRaises(ProjectAdmissionError):
+            select_runtime_project(self.root, instance_id='a' * 64, host_root=host)
+        host.symlink_to(self.root, target_is_directory=True)
+        with self.assertRaises(ProjectAdmissionError):
+            select_runtime_project(self.root, instance_id=identity, host_root=host)
 
 
 if __name__ == '__main__':

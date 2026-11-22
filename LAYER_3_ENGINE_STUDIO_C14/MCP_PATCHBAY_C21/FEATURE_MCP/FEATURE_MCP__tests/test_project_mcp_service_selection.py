@@ -2,7 +2,6 @@
 
 import json
 from pathlib import Path
-import sys
 import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -10,9 +9,8 @@ from unittest.mock import patch
 
 APP = Path(__file__).resolve().parents[1]
 
-sys.path.insert(0, str(APP / "docker"))
-from mcp_paths import MCP_PATH  # noqa: E402
-from project_mcp_backend import BackendError, ProjectMcpBackend  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.mcp_paths import MCP_PATH  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend import BackendError, ProjectMcpBackend  # noqa: E402
 
 
 _WORKER_ID = "1" * 64
@@ -73,7 +71,7 @@ class ProjectMcpServiceSelectionTests(unittest.TestCase):
     def test_inspect_selects_mcp_service_from_shared_project_roster(self) -> None:
         selection = self._selection(APP)
         with patch(
-            "project_mcp_backend._bounded_run",
+            "MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend._bounded_run",
             side_effect=self._docker_roster(selection, [_MCP_ID]),
         ):
             rows = ProjectMcpBackend().inspect(selection)
@@ -82,7 +80,7 @@ class ProjectMcpServiceSelectionTests(unittest.TestCase):
     def test_inspect_ignores_worker_only_project_roster(self) -> None:
         selection = self._selection(APP)
         with patch(
-            "project_mcp_backend._bounded_run", side_effect=self._docker_roster(selection, [])
+            "MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend._bounded_run", side_effect=self._docker_roster(selection, [])
         ):
             rows = ProjectMcpBackend().inspect(selection)
         self.assertEqual([], rows)
@@ -90,7 +88,7 @@ class ProjectMcpServiceSelectionTests(unittest.TestCase):
     def test_inspect_refuses_duplicate_mcp_services(self) -> None:
         selection = self._selection(APP)
         with patch(
-            "project_mcp_backend._bounded_run",
+            "MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend._bounded_run",
             side_effect=self._docker_roster(selection, [_MCP_ID, _SECOND_MCP_ID]),
         ):
             with self.assertRaises(BackendError) as raised:
@@ -100,7 +98,7 @@ class ProjectMcpServiceSelectionTests(unittest.TestCase):
     def test_inspect_refuses_foreign_project_row(self) -> None:
         selection = self._selection(APP)
         with patch(
-            "project_mcp_backend._bounded_run",
+            "MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend._bounded_run",
             side_effect=self._docker_roster(
                 selection,
                 [_MCP_ID],

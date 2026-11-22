@@ -3,14 +3,14 @@ atom_family: SPEC
 atom_id: AN-S-3081
 container:
   component: C31
-tier: 0
+tier: 4
 context:
   template: component_manifest
   lens: SPEC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-19T00:00:00Z'
+  version: 2
+  updated_at: '2026-11-22T11:23:40.206159+00:00'
 ---
 
 ## Summary

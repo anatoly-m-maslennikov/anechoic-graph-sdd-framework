@@ -8,35 +8,36 @@ from pathlib import Path
 import sys
 
 if __package__:
-    from .content_schema import _is_declaration, _source, content_schema_from_statements, declaration_statements
+    from KERNEL_MIXER_C59.content_schema import _source, content_schema_from_statements, declaration_statements
     from .declared_classifications import compile_status_groups
-    from .declared_header_rules import header_rules_from_statements
-    from .header_columns import declared_header_schema
-    from .markdown_content import formal_claim_fences, source_markdown
+    from KERNEL_MIXER_C59.declared_header_rules import header_rules_from_statements
+    from KERNEL_MIXER_C59.header_columns import declared_header_schema
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import formal_claim_fences, source_markdown
     from .source_reader import SourceReader
-    from .source_selection import first_reference_rows
+    from KERNEL_MIXER_C59.source_selection import first_reference_rows
     from .workbench_schema_asset import compile_schema, schema_asset
 else:  # pragma: no cover - direct image-build invocation
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from FEATURE_WORKBENCH_BACKEND.content_schema import _is_declaration, _source, content_schema_from_statements, declaration_statements
-    from FEATURE_WORKBENCH_BACKEND.declared_classifications import compile_status_groups
-    from FEATURE_WORKBENCH_BACKEND.declared_header_rules import header_rules_from_statements
-    from FEATURE_WORKBENCH_BACKEND.header_columns import declared_header_schema
-    from FEATURE_WORKBENCH_BACKEND.markdown_content import formal_claim_fences, source_markdown
-    from FEATURE_WORKBENCH_BACKEND.source_reader import SourceReader
-    from FEATURE_WORKBENCH_BACKEND.source_selection import first_reference_rows
-    from FEATURE_WORKBENCH_BACKEND.workbench_schema_asset import compile_schema, schema_asset
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+    from KERNEL_MIXER_C59.content_schema import _source, content_schema_from_statements, declaration_statements
+    from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.declared_classifications import compile_status_groups
+    from KERNEL_MIXER_C59.declared_header_rules import header_rules_from_statements
+    from KERNEL_MIXER_C59.header_columns import declared_header_schema
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import formal_claim_fences, source_markdown
+    from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_reader import SourceReader
+    from KERNEL_MIXER_C59.source_selection import first_reference_rows
+    from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workbench_schema_asset import compile_schema, schema_asset
 
-from role_directory_rules import compile_role_folders
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_compat__pub import is_current_requirement_declaration
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_layout__pub import compile_role_folders
 
 
 def compile_project_schema(project_root: Path, *, model_class_bindings=None) -> bytes:
     """Capture one Project and compile both admitted Workbench schema modes."""
     reader = SourceReader(Path(project_root), include_archived=False, include_installed_framework=True)
     atoms, _scopes = reader.capture()
-    selected = list(first_reference_rows(reader.model_rows(atoms, _is_declaration)))
+    selected = list(first_reference_rows(reader.model_rows(atoms, is_current_requirement_declaration)))
     if model_class_bindings is None:
-        from FEATURE_FORMAL_MODEL_ENGINE.model_catalog import bindings_from_workbench_rows
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_catalog__pub import bindings_from_workbench_rows
         model_class_bindings = bindings_from_workbench_rows(selected)
     pins = {}
     statements = []
@@ -55,11 +56,11 @@ def compile_project_schema(project_root: Path, *, model_class_bindings=None) -> 
 
 
 def _python_declarations(rows):
-    from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim
-    from python_model_claim import parse_structured_python_model_claim
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_model_claim__pub import parse_native_model_claim
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.python_claim__pub import parse_structured_python_model_claim
 
     for row in rows:
-        if not _is_declaration(row):
+        if not is_current_requirement_declaration(row):
             continue
         body = source_markdown(row)
         if body is None:

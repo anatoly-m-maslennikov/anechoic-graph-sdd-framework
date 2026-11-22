@@ -8,14 +8,14 @@ from unittest.mock import patch
 
 TOOLS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS))
-import ATOM_LIFECYCLE.source as source_module  # noqa: E402
-from ATOM_LIFECYCLE.source import select_source, SourceSelectionError  # noqa: E402
-from project_selection import resolve_project  # noqa: E402
-from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
-from lifecycle_placement_test_support import bind_placement, fixture_rules  # noqa: E402
-from ATOM_LIFECYCLE.placement import _predecessor_status, _role_root  # noqa: E402
-from scope_unit_declarations import read_scope_unit_declarations  # noqa: E402
-from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier  # noqa: E402
+import FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.source as source_module  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.source import select_source, SourceSelectionError  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection import resolve_project  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.scope_declaration_test_support__pub import write_scope_unit_declarations  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.lifecycle_placement_test_support import bind_placement, fixture_rules  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.placement import _predecessor_status, _role_root  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.scope_unit_declarations__pub import read_scope_unit_declarations  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import parse_carrier  # noqa: E402
 
 
 class IndexedReader:

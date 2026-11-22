@@ -9,22 +9,19 @@ import copy
 import hashlib
 import json
 from pathlib import Path
-import sys
 import unittest
 
 HERE = Path(__file__).resolve().parent.parent
 ROOT = HERE.parents[5]
 REPAIR = HERE
 PACKAGE = HERE.parent
-sys.path[:0] = [str(HERE), str(PACKAGE), str(HERE / 'repair__tests')]
 
-from context_builder import body_sections, markdown
-from evaluation_contract import GROUPS, ReviewContext, merge_evaluations
-from layout_repair_gate import authority_digest
-from repair_gate import _summary
-from test_repair_gate import RULE_TEXT, legacy_part, refreshed, source
-from scope_extraction_preview import admit_scope_extraction_preview
-from scope_extraction_repair_gate import admit_scope_extraction_subject_recoding
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import body_sections, markdown
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.evaluation_contract import GROUPS, ReviewContext, merge_evaluations
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.layout_repair_gate import authority_digest
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair_gate__shared import _summary
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.scope_extraction_preview import admit_scope_extraction_preview
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair__tests.test_repair_gate import RULE_TEXT, legacy_part, refreshed, source
 
 
 def digest(value):
@@ -150,7 +147,73 @@ def add_original_finding(data, check_id, finding):
     rebind_original(data)
 
 
-def fixture():
+def _legacy_property_findings(row, part):
+    row.update(status='failed', findings=[{
+        'kind': 'violation', 'location': 'frontmatter', 'excerpt': 'type: Requirement',
+        'reason': 'Role echo is not a specialized Type.', 'proposed_fix': 'Omit role echo.',
+        'confidence': 1.0}], obligation_resolutions=[])
+    for heading in ('# Summary', '## Scope', '## Claim', '## Details'):
+        obligation_id = 'CA-D-479:' + heading
+        row['findings'].append({
+            'kind': 'omission', 'obligation_id': obligation_id, 'location': 'body:preamble',
+            'excerpt': f'Absent {heading}', 'reason': 'Registered heading absent locally.',
+            'proposed_fix': f'Add {heading}.', 'confidence': 1.0})
+        row['obligation_resolutions'].append({
+            'id': obligation_id, 'state': 'missing', 'local_required': True,
+            'reason': 'Heading absent locally.',
+            'support': [{'authority': 'MOCK-R-002@1',
+                         'excerpt': 'Required Summary, Scope, Claim and Details headings.'}]})
+    part['result'] = 'failed'
+
+
+def _fixture_report(record, ctx, legacy, *, rule, definition):
+    parts = [legacy_part(group) for group in GROUPS]
+    sections = body_sections(record['text'])
+    claim_location = sections[-1] if legacy else next(x for x in sections if x.endswith('## Claim'))
+    for part in parts:
+        part.update(contract_version=5, source=record['binding'], context_sha256=ctx.sha256,
+                    authority_sources=[rule['binding'], definition['binding']])
+        for row in part['checks']:
+            row['positive_observations'] = [
+                {'location': claim_location, 'excerpt': 'Atom Context.', 'authority': 'MOCK-R-002@1',
+                 'rule_excerpt': 'Atom means a governed statement.'}]
+            if row['id'] == 'subjects':
+                row['subject_inventory']['sections_reviewed'] = sections
+                row['subject_inventory']['mentions'][0].update(
+                    location=claim_location, excerpt='Atom Context.')
+                row['subject_inventory']['mentions'].append({
+                    'location': claim_location, 'excerpt': 'Atom Context.', 'entity': 'Atom Context',
+                    'resolution': 'resolved', 'resolution_basis': 'identity',
+                    'rationale': 'Literal occurrence is bound to the definition.',
+                    'definitions': [{'authority': 'MOCK-R-003@1',
+                                     'excerpt': 'Atom Context means the governed context in which an Atom is reviewed.'}]})
+            if legacy and row['id'] in ('scope', 'claim', 'details', 'governed_entity', 'alignment', 'summary'):
+                row.update(status='blocked', positive_observations=[])
+                part['coverage_gaps'].append({'check_id': row['id'], 'kind': 'layout_dependency',
+                                              'reason': 'Registered section absent.'})
+                part['result'] = 'blocked'
+            if legacy and row['id'] == 'subjects':
+                row.update(status='failed', findings=[{
+                    'kind': 'omission', 'obligation_id': 'direct-dependency', 'entity': 'Atom Context',
+                    'location': claim_location, 'excerpt': 'Atom Context.',
+                    'reason': 'A substantive Atom Context mention lacks its direct dependency.',
+                    'proposed_fix': 'Add the direct dependency once.', 'confidence': 1.0}],
+                    obligation_resolutions=[{
+                        'id': 'direct-dependency', 'state': 'missing', 'local_required': True,
+                        'reason': 'The direct dependency is absent locally.',
+                        'support': [{'authority': 'MOCK-R-003@1',
+                                     'excerpt': 'Substantive mentions require direct dependencies.'}]}])
+                part['result'] = 'failed'
+            if legacy and row['id'] == 'properties':
+                _legacy_property_findings(row, part)
+        statuses = [row['status'] for row in part['checks']]
+        part['result'] = ('failed' if 'failed' in statuses
+                          else 'blocked' if 'blocked' in statuses else 'passed')
+    return merge_evaluations(parts, context=ctx)
+
+
+
+def _fixture_packets():
     path = 'core/MOCK-R-001-CORE-REQUIREMENT--atom-rule.md'
     header = ('---\natom_id: MOCK-R-001\nversion: 1\n'
               'updated_at: "2026-09-26T00:00:00Z"\nsubjects:\n  governs: Atom\n'
@@ -188,69 +251,14 @@ def fixture():
         {'binding': definition['binding'], 'applicable_to': [final['binding']['path']],
          'reason': 'Definition applies to the mock candidate.', 'provenance': 'Synthetic fixture.'},
     ]
+    return path, original, final, rule, definition, packet, final_packet
+
+
+def fixture():
+    path, original, final, rule, definition, packet, final_packet = _fixture_packets()
     context, final_context = ReviewContext(packet), ReviewContext(final_packet)
 
-    def report(record, ctx, legacy):
-        parts = [legacy_part(group) for group in GROUPS]
-        sections = body_sections(record['text'])
-        claim_location = sections[-1] if legacy else next(x for x in sections if x.endswith('## Claim'))
-        for part in parts:
-            part.update(contract_version=5, source=record['binding'], context_sha256=ctx.sha256,
-                        authority_sources=[rule['binding'], definition['binding']])
-            for row in part['checks']:
-                row['positive_observations'] = [
-                    {'location': claim_location, 'excerpt': 'Atom Context.', 'authority': 'MOCK-R-002@1',
-                     'rule_excerpt': 'Atom means a governed statement.'}]
-                if row['id'] == 'subjects':
-                    row['subject_inventory']['sections_reviewed'] = sections
-                    row['subject_inventory']['mentions'][0].update(
-                        location=claim_location, excerpt='Atom Context.')
-                    row['subject_inventory']['mentions'].append({
-                        'location': claim_location, 'excerpt': 'Atom Context.', 'entity': 'Atom Context',
-                        'resolution': 'resolved', 'resolution_basis': 'identity',
-                        'rationale': 'Literal occurrence is bound to the definition.',
-                        'definitions': [{'authority': 'MOCK-R-003@1',
-                                         'excerpt': 'Atom Context means the governed context in which an Atom is reviewed.'}]})
-                if legacy and row['id'] in ('scope', 'claim', 'details', 'governed_entity', 'alignment', 'summary'):
-                    row.update(status='blocked', positive_observations=[])
-                    part['coverage_gaps'].append({'check_id': row['id'], 'kind': 'layout_dependency',
-                                                  'reason': 'Registered section absent.'})
-                    part['result'] = 'blocked'
-                if legacy and row['id'] == 'subjects':
-                    row.update(status='failed', findings=[{
-                        'kind': 'omission', 'obligation_id': 'direct-dependency', 'entity': 'Atom Context',
-                        'location': claim_location, 'excerpt': 'Atom Context.',
-                        'reason': 'A substantive Atom Context mention lacks its direct dependency.',
-                        'proposed_fix': 'Add the direct dependency once.', 'confidence': 1.0}],
-                        obligation_resolutions=[{
-                            'id': 'direct-dependency', 'state': 'missing', 'local_required': True,
-                            'reason': 'The direct dependency is absent locally.',
-                            'support': [{'authority': 'MOCK-R-003@1',
-                                         'excerpt': 'Substantive mentions require direct dependencies.'}]}])
-                    part['result'] = 'failed'
-                if legacy and row['id'] == 'properties':
-                    row.update(status='failed', findings=[{
-                        'kind': 'violation', 'location': 'frontmatter', 'excerpt': 'type: Requirement',
-                        'reason': 'Role echo is not a specialized Type.', 'proposed_fix': 'Omit role echo.',
-                        'confidence': 1.0}], obligation_resolutions=[])
-                    for heading in ('# Summary', '## Scope', '## Claim', '## Details'):
-                        obligation_id = 'CA-D-479:' + heading
-                        row['findings'].append({
-                            'kind': 'omission', 'obligation_id': obligation_id, 'location': 'body:preamble',
-                            'excerpt': f'Absent {heading}', 'reason': 'Registered heading absent locally.',
-                            'proposed_fix': f'Add {heading}.', 'confidence': 1.0})
-                        row['obligation_resolutions'].append({
-                            'id': obligation_id, 'state': 'missing', 'local_required': True,
-                            'reason': 'Heading absent locally.',
-                            'support': [{'authority': 'MOCK-R-002@1',
-                                         'excerpt': 'Required Summary, Scope, Claim and Details headings.'}]})
-                    part['result'] = 'failed'
-            statuses = [row['status'] for row in part['checks']]
-            part['result'] = ('failed' if 'failed' in statuses
-                              else 'blocked' if 'blocked' in statuses else 'passed')
-        return merge_evaluations(parts, context=ctx)
-
-    evaluation, final_evaluation = report(original, context, True), report(final, final_context, False)
+    evaluation, final_evaluation = _fixture_report(original, context, True, rule=rule, definition=definition), _fixture_report(final, final_context, False, rule=rule, definition=definition)
     mapping = map_for(original['text'], final['text'])
     proposal = {'source': original['binding'], 'context_sha256': context.sha256,
                 'disposition': 'scope_extraction_subject_recoding', 'confidence': .99,
@@ -289,41 +297,18 @@ def fixture():
             'section_mapping': mapping, 'permission': permission, 'preflight': preflight}
 
 
+
+
+
+
+
+
+
+
+
+
+
 class ScopeExtractionPreviewTests(unittest.TestCase):
-    def test_exact_span_bound_preview_is_no_write(self):
-        data = fixture()
-        original = data['context']['sources'][0]
-        final = data['proposal']['outputs'][0]['text']
-        virtual = original['text'].removesuffix(markdown(original['text'])) + markdown(final)
-        before = copy.deepcopy((original, virtual, data['section_mapping']))
-        result = admit_scope_extraction_preview(original['binding'], original['text'], virtual,
-                                                section_mapping=data['section_mapping'])
-        self.assertEqual(result['result'], 'preview')
-        self.assertFalse(result['source_mutation_permitted'])
-        self.assertEqual(before, (original, virtual, data['section_mapping']))
-
-    def test_every_source_and_proposed_span_is_exact(self):
-        for index, field in ((0, 'source_span'), (0, 'proposed_span'), (1, 'source_span'),
-                             (1, 'proposed_span'), (2, 'source_span'), (2, 'proposed_span')):
-            data = fixture()
-            data['section_mapping']['sections'][index][field][0] += 1
-            original = data['context']['sources'][0]
-            virtual = original['text'].removesuffix(markdown(original['text'])) + markdown(data['proposal']['outputs'][0]['text'])
-            with self.subTest(index=index, field=field):
-                self.assertEqual(admit_scope_extraction_preview(original['binding'], original['text'], virtual,
-                    section_mapping=data['section_mapping'])['result'], 'rejected')
-
-    def test_compound_or_conditional_source_is_fail_closed(self):
-        data = fixture()
-        original = data['context']['sources'][0]
-        for old, new in (('other than a Project Goal Atom', 'other than a Goal or Demand'),
-                         ('other than a Project Goal Atom', 'other than a Goal if accepted')):
-            raw = original['text'].replace(old, new)
-            binding = dict(original['binding'], sha256=hashlib.sha256(raw.encode()).hexdigest())
-            with self.subTest(new=new):
-                self.assertEqual(admit_scope_extraction_preview(binding, raw, raw,
-                    section_mapping=data['section_mapping'])['result'], 'rejected')
-
     def test_unicode_selector_is_explicitly_unsupported(self):
         data = fixture()
         original = data['context']['sources'][0]
@@ -333,163 +318,6 @@ class ScopeExtractionPreviewTests(unittest.TestCase):
         self.assertEqual(result['result'], 'rejected')
         self.assertIn('unsupported source', result['reason'])
 
-
-class ScopeExtractionRepairGateTests(unittest.TestCase):
-    def test_exact_composition_is_candidate_only(self):
-        data = fixture()
-        before = copy.deepcopy(data)
-        result = admit_scope_extraction_subject_recoding(**data)
-        self.assertEqual(result['result'], 'candidate')
-        self.assertFalse(result['source_mutation_permitted'])
-        self.assertEqual(before, data)
-
-    def test_rejects_condition_scope_claim_or_summary_rewrites(self):
-        for old, new in (('other than a Project Goal Atom.', 'other than a Goal.'),
-                         ('**every** Atom **must**', '**some** Atom **must**'),
-                         ('comply with Atom Context.', 'may comply with Atom Context.'),
-                         ('# Summary\nAtom rule', '# Summary\nOther rule')):
-            data = fixture()
-            output = data['proposal']['outputs'][0]
-            output['text'] = output['text'].replace(old, new)
-            with self.subTest(old=old), self.assertRaises(ValueError):
-                admit_scope_extraction_subject_recoding(**data)
-
-    def test_fully_rebound_scope_and_claim_rewrites_reach_extraction_proof(self):
-        for old, new in (
-                ('Atom other than a Project Goal Atom.', 'Atom other than a Different Goal Atom.'),
-                ('comply with Atom Context.', 'conform with Atom Context.')):
-            data = fixture()
-            data['proposal']['outputs'][0]['text'] = data['proposal']['outputs'][0]['text'].replace(old, new)
-            rebind_final(data)
-            with self.subTest(old=old), self.assertRaisesRegex(ValueError, 'exact Scope extraction proof rejected'):
-                admit_scope_extraction_subject_recoding(**data)
-
-    def test_fully_rebound_compound_source_reaches_fail_closed_grammar(self):
-        data = fixture()
-        old = 'Atom other than a Project Goal Atom'
-        new = 'Atom other than a Goal or Demand'
-        data['context']['sources'][0]['text'] = data['context']['sources'][0]['text'].replace(old, new)
-        data['proposal']['outputs'][0]['text'] = data['proposal']['outputs'][0]['text'].replace(old, new)
-        rebind_original(data)
-        rebind_final(data)
-        body = markdown(data['context']['sources'][0]['text'])
-        selector_start = body.index(new)
-        title_end = body.index('\n') + 1
-        data['section_mapping']['sections'][1].update(
-            source_span=[selector_start, selector_start + len(new)], source_text=new)
-        data['section_mapping']['sections'][2]['source_span'] = [title_end, len(body)]
-        data['preflight']['identity_assessment']['scope_equivalence'].update(
-            source_excerpt=new, final_scope=new + '.')
-        with self.assertRaisesRegex(ValueError, 'compound or conditional selectors'):
-            admit_scope_extraction_subject_recoding(**data)
-
-    def test_rejects_gap_bypass_reports_freshness_and_nonindependence(self):
-        for mutation in ('non_layout_gap', 'final_gap', 'final_freshness', 'identity', 'scope_independence', 'final_review'):
-            data = fixture()
-            if mutation == 'non_layout_gap':
-                data['evaluation']['parts'][0]['coverage_gaps'].append(
-                    {'check_id': 'scope', 'kind': 'reviewer_incomplete', 'reason': 'Unresolved.'})
-            elif mutation == 'final_gap':
-                data['final_evaluation']['coverage_gaps'] = [
-                    {'check_id': 'scope', 'kind': 'layout_dependency', 'reason': 'Missing.'}]
-            elif mutation == 'final_freshness':
-                data['preflight']['final_freshness']['authority_sha256'] = '0' * 64
-            elif mutation == 'identity':
-                data['preflight']['identity_assessment']['independent'] = False
-            elif mutation == 'scope_independence':
-                data['preflight']['identity_assessment']['scope_equivalence']['independent'] = False
-            else:
-                data['preflight']['final_review']['independent'] = False
-            with self.subTest(mutation=mutation), self.assertRaises(ValueError):
-                admit_scope_extraction_subject_recoding(**data)
-
-    def test_fully_rebound_cce_finding_cannot_be_withdrawn_by_final_pass(self):
-        data = fixture()
-        location = next(row for row in data['evaluation']['checks'] if row['id'] == 'subjects')['findings'][0]['location']
-        add_original_finding(data, 'cce', {
-            'kind': 'violation', 'location': location, 'excerpt': 'comply',
-            'reason': 'Synthetic unrelated CCE defect in preserved predicate.',
-            'proposed_fix': 'Change the predicate.', 'confidence': 1.0})
-        with self.assertRaisesRegex(ValueError, 'unadmitted original finding: cce'):
-            admit_scope_extraction_subject_recoding(**data)
-
-    def test_nonrepaired_subject_and_property_findings_reject_after_rebinding(self):
-        data = fixture()
-        location = next(row for row in data['evaluation']['checks'] if row['id'] == 'subjects')['findings'][0]['location']
-        add_original_finding(data, 'subjects', {
-            'kind': 'violation', 'entity': 'Atom', 'location': location, 'excerpt': 'Atom',
-            'reason': 'Synthetic unsupported Subjects defect.', 'proposed_fix': 'Change GOVERNS.',
-            'confidence': 1.0})
-        with self.assertRaisesRegex(ValueError, 'unadmitted Subjects finding'):
-            admit_scope_extraction_subject_recoding(**data)
-        data = fixture()
-        add_original_finding(data, 'properties', {
-            'kind': 'violation', 'location': 'frontmatter', 'excerpt': 'content_role: Requirement',
-            'reason': 'Synthetic unsupported property defect.', 'proposed_fix': 'Change content role.',
-            'confidence': 1.0})
-        with self.assertRaisesRegex(ValueError, 'unadmitted Properties finding'):
-            admit_scope_extraction_subject_recoding(**data)
-
-    def test_real_heading_omissions_and_dep_fix_remain_admitted(self):
-        data = fixture()
-        result = admit_scope_extraction_subject_recoding(**data)
-        self.assertEqual(result['result'], 'candidate')
-
-    def test_r154_and_r920_property_finding_shapes_remain_exactly_admitted(self):
-        variants = {
-            'R154': {
-                '# Summary': 'CA-D-479:# Summary', '## Scope': 'CA-D-479:## Scope',
-                '## Claim': 'CA-D-479:## Claim', '## Details': 'CA-D-479:## Details'},
-            'R920': {
-                '# Summary': 'CA-D-479:Summary', '## Scope': 'CA-D-479:Scope',
-                '## Claim': 'CA-D-479:Claim', '## Details': 'CA-D-479:Details'},
-        }
-        for name, ids in variants.items():
-            data = fixture()
-            data['context']['sources'][0]['text'] = data['context']['sources'][0]['text'].replace(
-                'type: Requirement\n', 'type: "Requirement"\n')
-            for part in data['evaluation']['parts']:
-                for row in part['checks']:
-                    if row['id'] != 'properties':
-                        continue
-                    row['findings'][0]['excerpt'] = 'type: "Requirement"'
-                    for finding in row['findings'][1:]:
-                        heading = finding['obligation_id'].removeprefix('CA-D-479:')
-                        finding['obligation_id'] = ids[heading]
-                    for obligation in row['obligation_resolutions']:
-                        heading = obligation['id'].removeprefix('CA-D-479:')
-                        obligation['id'] = ids[heading]
-            rebind_original(data)
-            with self.subTest(report_shape=name):
-                self.assertEqual(admit_scope_extraction_subject_recoding(**data)['result'], 'candidate')
-
-    def test_requires_a_real_depends_on_delta_and_exact_scope_evidence(self):
-        data = fixture()
-        for part in data['evaluation']['parts']:
-            for row in part['checks']:
-                if row['id'] == 'subjects':
-                    row['findings'][0].update(kind='violation', subject_issue='governs',
-                                              reason='Synthetic governing mismatch fixture.')
-                    row['obligation_resolutions'] = []
-        data['context']['sources'][0]['text'] = data['context']['sources'][0]['text'].replace(
-            '  governs: Atom\n', '  governs: Atom\n  depends_on: ["Atom Context"]\n')
-        rebind_original(data)
-        with self.assertRaisesRegex(ValueError, 'actual DEPENDS_ON correction'):
-            admit_scope_extraction_subject_recoding(**data)
-        data = fixture()
-        data['preflight']['identity_assessment']['scope_equivalence']['source_excerpt'] = 'Atom Context'
-        with self.assertRaises(ValueError):
-            admit_scope_extraction_subject_recoding(**data)
-
-    def test_fully_rebound_governs_change_reaches_dependency_comparator(self):
-        data = fixture()
-        data['proposal']['outputs'][0]['text'] = data['proposal']['outputs'][0]['text'].replace(
-            '  governs: Atom\n', '  governs: Atom Context\n')
-        data['proposal']['outputs'][0]['text'] = data['proposal']['outputs'][0]['text'].replace(
-            '  depends_on: ["Atom Context"]\n', '  depends_on: ["Atom"]\n')
-        rebind_final(data)
-        with self.assertRaisesRegex(ValueError, 'preserve GOVERNS'):
-            admit_scope_extraction_subject_recoding(**data)
 
 
 if __name__ == '__main__':

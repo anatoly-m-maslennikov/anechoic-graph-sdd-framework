@@ -1,14 +1,12 @@
 """The SQL carrier lookup keeps the standalone selection semantics."""
 from pathlib import Path
-import sys
 import threading
 import unittest
 
 import duckdb
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.reference_catalog import ReferenceCatalog
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_rows import ReferenceIndex
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.reference_catalog import ReferenceCatalog
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_rows import ReferenceIndex
 
 
 class ReferenceCatalogTests(unittest.TestCase):

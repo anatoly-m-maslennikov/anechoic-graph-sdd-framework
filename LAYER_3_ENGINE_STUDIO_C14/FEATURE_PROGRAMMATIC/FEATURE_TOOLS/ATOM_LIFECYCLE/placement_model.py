@@ -7,9 +7,9 @@ from pathlib import PurePosixPath
 from types import MappingProxyType
 import re
 
-from carrier_aliases import canonical_role_name, named_value_token
-from ATOM_LIFECYCLE.placement_claim import parse_placement_claim
-from role_directory_rules import role_folders_from_orders
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_compat__pub import canonical_role_name, named_value_token
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.placement_claim__pub import parse_placement_claim
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_layout__pub import role_folders_from_orders
 
 
 def _name(value):
@@ -64,12 +64,8 @@ class PlacementRules:
         return (folder, *self._archive_aliases.get(_name(role), ()))
 
 
-def load_placement(payload):  # noqa: C901
-    if not isinstance(payload, dict) or set(payload) != {'sources', 'role_folders', 'placements', 'archive_aliases'}:
-        raise ValueError('Invalid placement asset')
-    sources = payload['sources']
-    if not isinstance(sources, list) or not sources:
-        raise ValueError('Placement requires pinned sources')
+
+def _load_pins(sources):
     ids = set()
     pins = []
     for pin in sources:
@@ -83,8 +79,11 @@ def load_placement(payload):  # noqa: C901
             raise ValueError('Duplicate placement source pin')
         ids.add(pin['atom_id'])
         pins.append(MappingProxyType(dict(pin)))
+    return ids, pins
+
+
+def _load_folders(entries, ids):
     folders = {}
-    entries = payload['role_folders']
     if not isinstance(entries, list) or not entries:
         raise ValueError('Placement requires Role folders')
     for entry in entries:
@@ -95,8 +94,11 @@ def load_placement(payload):  # noqa: C901
         if '/' in folder or role in folders or folder in folders.values():
             raise ValueError('Duplicate or invalid Role folder binding')
         folders[role] = folder
+    return folders
+
+
+def _load_status_placements(records, ids, folders):
     placements = {}
-    records = payload['placements']
     if not isinstance(records, list) or not records:
         raise ValueError('Placement requires Status bindings')
     for record in records:
@@ -118,6 +120,17 @@ def load_placement(payload):  # noqa: C901
     for role in folders:
         if any((role, status) not in placements for status in ('draft', 'archived', 'active')):
             raise ValueError('Incomplete Role placement bindings')
+    return placements
+
+def load_placement(payload):  # noqa: C901
+    if not isinstance(payload, dict) or set(payload) != {'sources', 'role_folders', 'placements', 'archive_aliases'}:
+        raise ValueError('Invalid placement asset')
+    sources = payload['sources']
+    if not isinstance(sources, list) or not sources:
+        raise ValueError('Placement requires pinned sources')
+    ids, pins = _load_pins(sources)
+    folders = _load_folders(payload['role_folders'], ids)
+    placements = _load_status_placements(payload['placements'], ids, folders)
     aliases = {}
     records = payload['archive_aliases']
     if not isinstance(records, list):
@@ -139,13 +152,13 @@ def load_placement(payload):  # noqa: C901
 
 
 def _declared_orders(requirement_rows):
-    from FEATURE_FORMAL_MODEL_ENGINE.model_catalog import _native_block
-    from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.formal_claim__pub import iter_formal_claims
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_model_claim__pub import parse_native_model_claim
 
     role_orders, status_folders, status_numbers = [], {}, set()
     for row in requirement_rows:
         source = row['id']
-        for code in _native_block(row['_content_bytes'].decode('utf-8')):
+        for code in iter_formal_claims(row['_content_bytes'].decode('utf-8')):
             claim = parse_native_model_claim(code)
             if not claim or claim['kind'] != 'entity':
                 continue
@@ -162,6 +175,36 @@ def _declared_orders(requirement_rows):
                 status_numbers.add(order)
     return role_folders_from_orders(role_orders), status_folders
 
+
+
+def _compile_placement_records(folders, rules, sources, requirement_rows, required_statuses, status_folders):
+    records = []
+    by_id = {row['id']: row for row in requirement_rows}
+    for role, entry in folders.items():
+        statuses = {status for selected_role, status in rules if selected_role in (None, role)}
+        expected = {_name(status) for status in required_statuses.get(role, ())} if required_statuses is not None else set()
+        if (None, '*') in rules and rules[(None, '*')][1] == '<status folder>':
+            if not expected:
+                raise ValueError(f"{entry['role']}: Current Status domain is missing")
+            statuses.remove('*')
+            statuses.update(expected - {'draft', 'archived'})
+        if required_statuses is not None and '*' not in statuses:
+            if not expected or not expected.issubset(statuses):
+                raise ValueError(f"{entry['role']}: incomplete Status placement declarations")
+        for status in sorted(statuses):
+            binding = rules.get((role, status), rules.get((None, status)))
+            if binding is None and status not in {'draft', 'archived'}:
+                binding = rules.get((None, '*'))
+            if binding is None:
+                raise ValueError(f"{entry['role']}: Status placement is missing")
+            base, folder, source = binding
+            if folder == '<status folder>':
+                if status not in status_folders:
+                    raise ValueError(f"{entry['role']}: Status order is missing for {status}")
+                folder, order_source = status_folders[status]
+                sources[order_source] = by_id[order_source]
+            records.append({'role': entry['role'], 'status': status, 'base': base, 'folder': folder, 'source': source})
+    return records
 
 def compile_placement(rows, requirement_rows=(), declared_roles=None, required_statuses=None):  # noqa: C901
     """Compile native Delivery and model placement Declarations."""
@@ -198,32 +241,8 @@ def compile_placement(rows, requirement_rows=(), declared_roles=None, required_s
         return None
     if not folders:
         raise ValueError('Placement Role folder declarations are missing')
-    records = []
-    by_id = {row['id']: row for row in requirement_rows}
-    for role, entry in folders.items():
-        statuses = {status for selected_role, status in rules if selected_role in (None, role)}
-        expected = {_name(status) for status in required_statuses.get(role, ())} if required_statuses is not None else set()
-        if (None, '*') in rules and rules[(None, '*')][1] == '<status folder>':
-            if not expected:
-                raise ValueError(f"{entry['role']}: Current Status domain is missing")
-            statuses.remove('*')
-            statuses.update(expected - {'draft', 'archived'})
-        if required_statuses is not None and '*' not in statuses:
-            if not expected or not expected.issubset(statuses):
-                raise ValueError(f"{entry['role']}: incomplete Status placement declarations")
-        for status in sorted(statuses):
-            binding = rules.get((role, status), rules.get((None, status)))
-            if binding is None and status not in {'draft', 'archived'}:
-                binding = rules.get((None, '*'))
-            if binding is None:
-                raise ValueError(f"{entry['role']}: Status placement is missing")
-            base, folder, source = binding
-            if folder == '<status folder>':
-                if status not in status_folders:
-                    raise ValueError(f"{entry['role']}: Status order is missing for {status}")
-                folder, order_source = status_folders[status]
-                sources[order_source] = by_id[order_source]
-            records.append({'role': entry['role'], 'status': status, 'base': base, 'folder': folder, 'source': source})
+    records = _compile_placement_records(folders, rules, sources, requirement_rows,
+                                         required_statuses, status_folders)
     payload = {'sources': [{'atom_id': row['id'], 'version': row['version'], 'sha256': row['_sha256'],
                             'source_path': row['source_path']} for row in sources.values()],
                'role_folders': list(folders.values()), 'placements': records, 'archive_aliases': []}

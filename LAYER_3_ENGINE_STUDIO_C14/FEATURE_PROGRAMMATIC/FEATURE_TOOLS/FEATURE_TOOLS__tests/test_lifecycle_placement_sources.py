@@ -1,7 +1,6 @@
-"""The build selector uses Workbench and the compiler verifies its pins."""
+"""The candidate compiler verifies the staged placement pins."""
 from pathlib import Path
 import json
-import os
 import re
 import sys
 import tempfile
@@ -10,12 +9,9 @@ from unittest.mock import patch
 
 TOOLS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS))
-from ATOM_LIFECYCLE.candidate_schema import compile_candidate_schema  # noqa: E402
-from ATOM_LIFECYCLE.placement_sources import _apps_directory, bootstrap_rows, inventory, pin, query_pins, read_selected, validate_selection  # noqa: E402
-from test_lifecycle_formal_placement import RULES, carrier, native_body, role_source  # noqa: E402
-from FEATURE_WORKBENCH_BACKEND.query_store import QueryStore  # noqa: E402
-
-ROOT = Path(__file__).resolve().parents[4]
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.legacy_candidate_schema__pub import compile_candidate_schema  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.placement_sources import bootstrap_rows, inventory, pin, read_selected, validate_selection  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.test_lifecycle_formal_placement import RULES, carrier, native_body, role_source  # noqa: E402
 
 
 class PlacementSourcesTests(unittest.TestCase):
@@ -39,50 +35,18 @@ class PlacementSourcesTests(unittest.TestCase):
         self.manifest = self.root.parent / (self.root.name + '-selection.json')
         self.addCleanup(self.manifest.unlink, missing_ok=True)
 
-    def test_selector_resolves_current_and_previous_image_workbench(self):
-        tools = self.root / 'FEATURE_PROGRAMMATIC/FEATURE_TOOLS'
-        previous = tools.parent / 'FEATURE_APPS'
-        current = tools.parent.parent / 'IWE_CONSOLE_C43'
-        previous.mkdir(parents=True)
-        with patch('ATOM_LIFECYCLE.placement_sources._PACKAGED', tools.parent):
-            self.assertEqual(previous, _apps_directory(tools))
-            current.mkdir()
-            self.assertEqual(current, _apps_directory(tools))
-
-    def test_real_workbench_query_selects_and_compiles(self):
-        extension = Path(os.environ.get('ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY', ROOT / '.anechoic_tmp/workbench/extensions'))
-        queries = []
-
-        class TracedStore(QueryStore):
-            def __init__(self):
-                super().__init__(extension_directory=extension)
-
-            def run(self, sql, *args, **kwargs):
-                queries.append(sql)
-                return super().run(sql, *args, **kwargs)
-
-        selected = query_pins(self.root, TracedStore)
-        self.assertEqual([pin(row) for row in bootstrap_rows(inventory(self.root))], selected)
-        self.assertEqual(1, len(queries))
-        self.assertIn('FROM atoms', queries[0])
+    def test_selected_placement_compiles_like_bootstrap_inventory(self):
+        selected = [pin(row) for row in bootstrap_rows(inventory(self.root))]
         self.manifest.write_text(json.dumps(selected))
         self.assertEqual(compile_candidate_schema(self.root),
                          compile_candidate_schema(self.root, self.manifest))
 
-    def test_requirement_query_selects_role_and_subject_pins(self):
+    def test_requirement_pins_check_role_subject_and_digest(self):
         (self.root / 'CA-R-1.md').write_text(carrier(
             'CA-R-1', 'Requirement', 'Active', 'body', 'Atom.Header.Status'))
         (self.root / 'CA-R-2.md').write_text(carrier(
             'CA-R-2', 'Requirement', 'Active', 'body', 'Atom.Content.Other'))
-        extension = Path(os.environ.get('ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY', ROOT / '.anechoic_tmp/workbench/extensions'))
-
-        class LocalStore(QueryStore):
-            def __init__(self):
-                super().__init__(extension_directory=extension)
-
-        selected = query_pins(self.root, LocalStore, role='Requirement',
-                              subject_pattern=re.compile(r'Atom\.Header\..*'))
-        self.assertEqual([pin(inventory(self.root, 'R')[0])], selected)
+        selected = [pin(inventory(self.root, 'R')[0])]
         self.assertEqual('CA-R-1.md', selected[0]['source_path'])
         self.assertEqual(64, len(selected[0]['sha256']))
         pattern = re.compile(r'Atom\.Header\..*')

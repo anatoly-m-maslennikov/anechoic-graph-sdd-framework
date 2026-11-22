@@ -4,9 +4,9 @@ import re
 
 import yaml
 
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import capture_native
-from native_carrier_header import canonical_native_header
-from native_carrier_placement import native_carrier_path, native_ticket_asset
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_source_rows__pub import capture_native
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_header__pub import canonical_native_header
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_placement__pub import native_carrier_path, native_ticket_asset
 
 from . import common
 from .effects import _project_write_lock
@@ -14,7 +14,8 @@ from .native_draft import _check_owner, _summary
 from .source import bind_query_reader
 
 
-def create_asset(selection, params, *, current_rows):
+
+def _asset_input(selection, params):
     if not isinstance(params, dict) or set(params) != {'newAtom'} or not isinstance(params['newAtom'], dict):
         raise common.InputError('newAtom', 'Supply a Ticket Asset template and Markdown body.')
     values = params['newAtom']
@@ -33,6 +34,10 @@ def create_asset(selection, params, *, current_rows):
         body_bytes = body.encode('utf-8')
     except UnicodeError as error:
         raise common.InputError('body', 'Supply a UTF-8 Markdown body.') from error
+    return values, container, summary, body_bytes
+
+def create_asset(selection, params, *, current_rows):
+    values, container, summary, body_bytes = _asset_input(selection, params)
     with _project_write_lock(selection.root):
         try:
             capture = capture_native(selection)

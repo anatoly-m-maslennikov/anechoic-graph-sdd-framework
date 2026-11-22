@@ -28,7 +28,7 @@ EXCLUDED_DIRS = {"archive", "archived", "drafts", "resolved"}
 sys.path.insert(0, str(VALIDATE_ATOMS))
 sys.path.insert(0, str(SNAPSHOT_SUPPORT))
 
-from validate_atoms_workers.parsing import CarrierError, ParsedCarrier, parse_carrier  # noqa: E402
+from ADAPTERS_C30.carrier_read__pub import CarrierError, ParsedCarrier, parse_carrier  # noqa: E402
 import snapshot_sources  # noqa: E402
 
 

@@ -5,7 +5,7 @@ import re
 from collections import Counter
 
 import yaml
-from readable_entity_tree_data import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.readable_entity_tree_data import (
     Children,
     Nodes,
     Record,
@@ -254,6 +254,11 @@ def render_model(
         "Classifications", rows(model.get("classifications")),
         lambda row: classification_text(row) + _occurrences(row),
     ))
+    _append_model_constraints(body, model, graph)
+    return "\n".join(body)
+
+
+def _append_model_constraints(body, model, graph):
     body.extend(_model_rows(
         "Allowed literals", rows(model.get("allowed_literals")),
         lambda row: "`" + text(row.get("property"), "literal Property") + ": "
@@ -277,4 +282,3 @@ def render_model(
         + (" — " + text(record(row.get("source")).get("atom_id"), "CFEL source Atom")
            if row.get("source") else ""),
     ))
-    return "\n".join(body)

@@ -2,7 +2,7 @@
 import copy
 import unittest
 
-from test_repair_gate import (
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair__tests.test_repair_gate import (
     admit_proposal, caller_preflight, context, inputs, recoding_inputs,
 )
 

@@ -4,27 +4,30 @@ import re
 
 import yaml
 
-from native_carrier_header import canonical_native_header, native_header_view
-from native_carrier_placement import native_carrier_path, spec_lens_directories
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.native_source_rows import capture_native
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_header__pub import canonical_native_header, native_header_view
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_placement__pub import native_carrier_path, spec_lens_directories
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_source_rows__pub import capture_native
 
 from . import common
 from .source import bind_query_reader
 
-PROJECT_SPEC_TIERS = {'axiom': -1, 'applicable_principle': 2}
+PROJECT_SPEC_TIERS = {'project_contract': (0,), 'axiom': (-1,), 'applicable_principle': (1, 2)}
 
 
-def validate_project_spec(header, validate):
+def validate_project_spec(header, validate, body=None):
     view = native_header_view(header)
     context = view['context']
     template = context.get('template')
-    tier = PROJECT_SPEC_TIERS.get(template)
+    tiers = PROJECT_SPEC_TIERS.get(template)
     container = context.get('container')
-    if (tier is None or container != {'component': 'C00'} or
-            type(context.get('tier')) is not int or context['tier'] != tier):
+    if (tiers is None or container != {'component': 'C00'} or
+            type(context.get('tier')) is not int or context['tier'] not in tiers):
         raise common.InputError('newAtom', 'Project SPEC requires its declared Tier and Project C00 container.')
     try:
-        validate(template, header, 'C00')
+        if template == 'project_contract':
+            validate(template, header, 'C00', body)
+        else:
+            validate(template, header, 'C00')
     except (ValueError, TypeError, KeyError) as error:
         raise common.InputError('newAtom', f'Project SPEC does not satisfy the compiled Model: {error}') from error
 
@@ -35,8 +38,9 @@ def create_project_spec(selection, values, validate):
             or values.get('template') not in PROJECT_SPEC_TIERS or values.get('container') != {'component': 'C00'}
             or not isinstance(values.get('body'), str) or not isinstance(values.get('lens'), str)):
         raise common.InputError('newAtom', 'Supply a Project SPEC template, Project C00, Lens, and Markdown body.')
-    tier = PROJECT_SPEC_TIERS[values['template']]
-    if 'tier' in values and (type(values['tier']) is not int or values['tier'] != tier):
+    tiers = PROJECT_SPEC_TIERS[values['template']]
+    tier = values.get('tier', tiers[-1])
+    if type(tier) is not int or tier not in tiers:
         raise common.InputError('tier', 'Tier must match the selected Project SPEC template.')
     if values['template'] == 'axiom' and values['lens'] != 'SPEC':
         raise common.InputError('lens', 'Axiom requires the SPEC Lens.')
@@ -44,7 +48,7 @@ def create_project_spec(selection, values, validate):
         spec_lens_directories(values['lens'])
     except ValueError as error:
         raise common.InputError('lens', 'Supply a valid Lens.') from error
-    _summary(values['body'])
+    summary = _summary(values['body'])
     if (not selection.root.is_absolute() or not selection.control_root.is_relative_to(selection.root)
             or not selection.manifest_path.is_relative_to(selection.control_root)):
         raise common.SourceChanged('Selected Project path is invalid.')
@@ -63,10 +67,9 @@ def create_project_spec(selection, values, validate):
             'context': {'container': {'component': 'C00'}, 'tier': tier,
                         'template': values['template'], 'lens': values['lens']},
             'state': {'status': 'draft', 'version': 1, 'updated_at': datetime.now(timezone.utc).isoformat()}})
-        validate_project_spec(header, validate)
+        validate_project_spec(header, validate, values['body'])
         try:
-            path = native_carrier_path(header, _summary(values['body']), project_root=selection.control_root,
-                                       owner_directory=selection.control_root)
+            path = native_carrier_path(header, summary, project_root=selection.control_root, owner_directory=selection.control_root)
             raw = b'---\n' + yaml.safe_dump(header, sort_keys=False).encode() + b'---\n' + values['body'].encode('utf-8')
         except (ValueError, UnicodeError) as error:
             raise common.InputError('summary', 'Summary cannot be used in a Project SPEC filename.') from error

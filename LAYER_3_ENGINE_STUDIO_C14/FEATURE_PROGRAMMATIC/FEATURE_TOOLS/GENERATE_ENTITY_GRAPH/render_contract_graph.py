@@ -8,12 +8,11 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
-import sys
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from contract_graph import compose_contract_graph, render_contract_graph
-from current_entity_sources import read_current_carriers
-from subject_projection_audits import select_model_subjects
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.contract_graph import compose_contract_graph
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.contract_graph_render import render_contract_graph
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.current_carriers__pub import read_current_carriers
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.subject_audit_occurrences import select_model_subjects
 
 
 def main(argv: list[str] | None = None) -> int:

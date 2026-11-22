@@ -10,14 +10,13 @@ from importlib.util import module_from_spec, spec_from_file_location
 from unittest.mock import patch
 
 PROGRAMMATIC = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(PROGRAMMATIC))
 
-from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.model_class_assembly import assemble_model_classes, assemble_model_modules, build_model_class_source
-from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.model_declaration_sources import select_model_declarations
-from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_declaration_bindings import bind_model_declarations
-from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_field_validation import validate_model_fields
-from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.validate_model_instance import validate_model_instance
-from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.model_class_assembly import assemble_model_classes, assemble_model_modules, build_model_class_source
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.model_declaration_sources import select_model_declarations
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import bind_model_declarations
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_field_validation import validate_model_fields
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__pub import validate_model_instance
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_model_claim__pub import parse_native_model_claim
 
 
 def declaration(name, parent=None):
@@ -30,19 +29,6 @@ def declaration(name, parent=None):
 
 
 class ModelClassAssemblyTests(unittest.TestCase):
-    def test_generated_atom_composes_header_context_and_content(self):
-        from FEATURE_MODEL.FEATURE_GENERATED_MODEL import Atom, AtomHeader, AtomContext, AtomContent, AtomTier, Plan
-
-        self.assertEqual(set(Atom.__dataclass_fields__), {"header", "content"})
-        self.assertEqual(set(AtomHeader.__dataclass_fields__), {"identity", "context", "relations", "state", "destination"})
-        self.assertEqual(set(AtomContext.__dataclass_fields__),
-                         {"container", "role", "form", "label", "topics", "tier", "plan", "concern"})
-        self.assertEqual(set(AtomContent.__dataclass_fields__), {"summary", "properties"})
-        self.assertEqual(set(AtomTier.__dataclass_fields__), {"value", "label"})
-        relation = AtomHeader.__dataclass_fields__["relations"].metadata
-        self.assertEqual(relation["dependent_property_value_cardinality"], {"minimum": 1, "maximum": None})
-        self.assertTrue(issubclass(Plan, Atom))
-
     def test_atom_state_fields_and_bound_come_from_property_declarations(self):
         imports = "from anechoic.formal_claims import declare_entity\n"
         group = imports + (

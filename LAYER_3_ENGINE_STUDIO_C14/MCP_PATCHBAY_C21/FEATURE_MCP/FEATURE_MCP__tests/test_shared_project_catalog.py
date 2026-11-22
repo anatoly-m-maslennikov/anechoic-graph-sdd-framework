@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from dataclasses import replace
 from pathlib import Path
-import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -14,12 +13,11 @@ from mcp import types
 
 MCP = Path(__file__).resolve().parents[1]
 TOOLS = MCP.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
-sys.path[:0] = [str(MCP), str(TOOLS), str(TOOLS / "VALIDATE_ATOMS")]
 
-from host_runtime_config import load_host_runtime_config  # noqa: E402
-from test_native_startup import RuntimeSelectionTests  # noqa: E402
-import shared_project_catalog as catalog  # noqa: E402
-from shared_project_catalog import (  # noqa: E402
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.host_runtime_config import load_host_runtime_config  # noqa: E402
+from .test_native_startup import RuntimeSelectionTests  # noqa: E402
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND import shared_project_catalog as catalog  # noqa: E402
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.shared_project_catalog import (  # noqa: E402
     SharedToolFrontier,
     _candidate_paths,
     discover_frontier,
@@ -28,17 +26,17 @@ from shared_project_catalog import (  # noqa: E402
 
 
 def _tool(name="echo", schema=None):
-    return types.Tool(
-        name=name,
-        inputSchema=schema
+    return {
+        "name": name,
+        "inputSchema": schema
         or {
             "type": "object",
             "properties": {"request": {"type": "string"}},
             "required": ["request"],
             "additionalProperties": False,
         },
-        outputSchema={"type": "object"},
-    )
+        "outputSchema": {"type": "object"},
+    }
 
 
 class _Gateway:
@@ -76,7 +74,7 @@ class SharedProjectCatalogTests(unittest.IsolatedAsyncioTestCase):
         self.projects = self.base / "My_Repos"
         self.projects.mkdir()
         self.roots = [self._project(name) for name in ("alpha", "beta")]
-        self.config_path = self.base / "runtime.toml"
+        self.config_path = self.base / "MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime.toml"
         self.config_path.write_text(
             "schema_version = 1\n[shared_mcp]\n"
             f'projects_root = "{self.projects}"\nhttp_port = 8092\n',
@@ -110,7 +108,7 @@ class SharedProjectCatalogTests(unittest.IsolatedAsyncioTestCase):
                 },
             },
         )
-        public = public_tool(native)
+        public = types.Tool.model_validate(public_tool(native))
         Draft202012Validator.check_schema(public.input_schema)
         Draft202012Validator(public.input_schema).validate(
             {"payload": {"value": "ok"}, "project_root": str(self.roots[0])}
@@ -140,6 +138,25 @@ class SharedProjectCatalogTests(unittest.IsolatedAsyncioTestCase):
             2 * len(self.roots),
             sum(row["code"] == "PROJECT_TOOL_CONTRACT_INVALID" for row in frontier.warnings),
         )
+
+    async def test_discovery_publishes_adapted_tool_and_quarantines_conflicting_contracts(self):
+        expected = _tool()
+        frontier = await discover_frontier(self.config, _Gateway)
+        self.assertEqual(public_tool(expected), frontier.tools["echo"].tool)
+        self.assertNotIn("project_root", expected["inputSchema"].get("properties", {}))
+        self.assertEqual(2, len(frontier.project_contracts))
+        self.assertTrue(all(instance.closed for instance in _Gateway.instances))
+
+        class ConflictingGateway(_Gateway):
+            def __init__(self, root, *, selection):
+                super().__init__(root, selection=selection)
+                if root.name == "beta":
+                    self.tools = [_tool(schema={"type": "object", "properties": {"other": {"type": "string"}}})]
+
+        frontier = await discover_frontier(self.config, ConflictingGateway)
+        self.assertIn("echo", frontier.quarantined)
+        self.assertNotIn("echo", frontier.tools)
+        self.assertIn("PROJECT_TOOL_CONTRACT_CONFLICT", [row["code"] for row in frontier.warnings])
 
     async def test_initialize_failure_closes_gateway_and_cancellation_rethrows(self):
         _Gateway.behavior = "error"

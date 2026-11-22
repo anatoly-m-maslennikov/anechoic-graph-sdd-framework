@@ -59,9 +59,9 @@ class DockerLoggingTests(unittest.TestCase):
     def test_image_carries_framework_version_into_workspace(self):
         dockerfile = (DOCKER / "Dockerfile").read_text(encoding="utf-8")
         self.assertIn("COPY version.toml ./", dockerfile)
-        self.assertIn("COPY pyproject.toml uv.lock ./", dockerfile)
-        self.assertIn("--mount=type=cache,id=anechoic-uv,target=/tmp/uv-cache uv sync --locked", dockerfile)
-        self.assertGreater(dockerfile.index("COPY version.toml ./"), dockerfile.index(" uv sync --locked"))
+        self.assertIn("COPY LAYER_3_ENGINE_STUDIO_C14/pyproject.toml LAYER_3_ENGINE_STUDIO_C14/uv.lock ./LAYER_3_ENGINE_STUDIO_C14/", dockerfile)
+        self.assertIn("--mount=type=cache,id=anechoic-uv,target=/tmp/uv-cache uv sync --project LAYER_3_ENGINE_STUDIO_C14 --locked", dockerfile)
+        self.assertGreater(dockerfile.index("COPY version.toml ./"), dockerfile.index(" uv sync --project LAYER_3_ENGINE_STUDIO_C14 --locked"))
 
 
 if __name__ == "__main__":

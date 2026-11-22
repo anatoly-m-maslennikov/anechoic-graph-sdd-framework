@@ -1,13 +1,9 @@
 """Atom-ID ordering is presentation, never graph semantics."""
 import unittest
-import sys
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
-from relation_ordering import atom_id_key, ordered_atom_ids, validate_ordering_policy
-from review_evidence import ReviewContext
-from test_split_evaluation import source, RULE_TEXT
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.relation_ordering import atom_id_key, ordered_atom_ids, validate_ordering_policy
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_evidence__shared import ReviewContext
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__tests.test_split_evaluation import source, RULE_TEXT
 
 
 class RelationOrderingTests(unittest.TestCase):

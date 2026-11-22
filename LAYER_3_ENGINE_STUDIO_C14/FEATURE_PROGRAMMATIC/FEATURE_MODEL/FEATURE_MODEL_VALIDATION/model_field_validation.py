@@ -6,21 +6,11 @@ from typing import get_type_hints
 
 from pydantic import TypeAdapter, ValidationError
 
-
-def _bounds(value):
-    if type(value) is int and value >= 0:
-        return value, value
-    if isinstance(value, Mapping) and set(value) == {"minimum", "maximum"}:
-        minimum, maximum = value["minimum"], value["maximum"]
-        if type(minimum) is int and minimum >= 0 and (
-            maximum is None or (type(maximum) is int and maximum >= minimum)
-        ):
-            return minimum, maximum
-    raise ValueError("Invalid cardinality")
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.cardinality__pub import cardinality_bounds
 
 
 def _check_count(name, label, count, cardinality):
-    minimum, maximum = _bounds(cardinality)
+    minimum, maximum = cardinality_bounds(cardinality)
     if count < minimum or (maximum is not None and count > maximum):
         raise ValueError(f"{name}: {label} count {count} violates {minimum}..{maximum}")
 
@@ -69,12 +59,12 @@ def _validate_fields(model_class, values, ancestors):
         occurrence = field.metadata.get("property_occurrence_cardinality")
         cardinality = field.metadata.get("value_cardinality")
         if "property_occurrence_cardinality" not in field.metadata:
-            required = (_bounds(cardinality)[0] > 0 if cardinality is not None
+            required = (cardinality_bounds(cardinality)[0] > 0 if cardinality is not None
                         else field.default is MISSING and field.default_factory is MISSING)
             occurrence = 1 if required else {"minimum": 0, "maximum": 1}
         _check_count(name, "occurrence", int(present), occurrence)
         if "value_cardinality" in field.metadata:
-            _bounds(cardinality)
+            cardinality_bounds(cardinality)
         if not present:
             continue
         _validate_present_field(field, types[name], values[name], ancestors)
@@ -103,7 +93,7 @@ def _validate_present_field(field, field_type, value, ancestors):
 
 
 def _validate_group(field_type, value, ancestors, metadata):
-    mixed = _bounds(metadata["value_cardinality"])[1] != 0
+    mixed = cardinality_bounds(metadata["value_cardinality"])[1] != 0
     if isinstance(value, field_type):
         values = dict(getattr(value, "__dict__", {}))
         for child in fields(value):

@@ -1,11 +1,7 @@
 """Resolved Subject evidence needs one exact anchor, with bound supplements."""
 import json
-from pathlib import Path
-import sys
 import unittest
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from review_evidence import _validate_resolved_mention  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_evidence__shared import _validate_resolved_mention  # noqa: E402
 
 
 def authority(target, body):

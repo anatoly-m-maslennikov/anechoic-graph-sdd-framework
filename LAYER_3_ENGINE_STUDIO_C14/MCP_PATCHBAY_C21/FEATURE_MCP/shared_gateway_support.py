@@ -1,4 +1,4 @@
-"""Safe transport adapters for the shared Project gateway."""
+"""Map wire results and fixed transport failures to MCP responses."""
 
 from __future__ import annotations
 
@@ -9,27 +9,35 @@ from typing import Any
 
 from mcp import types
 
-from operation_error_boundary import FailureRecord
-from runtime_failure_diagnostics import report_failure
+from MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary import warning
 
 
-def refusal(code: str, root: Any = None) -> types.CallToolResult:
-    """Encode a fixed, safe refusal without exposing diagnostic internals."""
-    failure, secondary = report_failure(
-        root,
-        FailureRecord("WARNING", code, "shared MCP request refused"),
-        component="SHARED_MCP_GATEWAY",
-        operation="shared_dispatch",
-    )
-    diagnostics = [failure.code]
-    if secondary is not None:
-        diagnostics.append("technical_diagnostics_unavailable")
-    value = {"outcome": "rejected", "diagnostics": diagnostics}
+def result(value, error=False, *, text=None):
     return types.CallToolResult(
-        content=[types.TextContent(type="text", text=json.dumps(value))],
+        content=[types.TextContent(type="text", text=json.dumps(value) if text is None else text)],
         structured_content=value,
-        is_error=True,
+        is_error=error,
     )
+
+
+def refusal(code: str) -> types.CallToolResult:
+    diagnostics = [code]
+    if warning(code) is not None:
+        diagnostics.append("technical_diagnostics_unavailable")
+    return result({"outcome": "rejected", "diagnostics": diagnostics}, True)
+
+
+def unexpected_failure(code="internal_failure", message="operation failure"):
+    diagnostics = [f"{code}: {message}"]
+    if warning(code) is not None:
+        diagnostics.append("technical diagnostic unavailable")
+    return result({"outcome": "failed", "diagnostics": diagnostics}, True)
+
+
+def tool_failure(error):
+    if error.tool_result is None:
+        return unexpected_failure("tool_runtime_failure", "Backend unavailable")
+    return result(error.tool_result, True)
 
 
 def record_observation(
@@ -39,9 +47,8 @@ def record_observation(
     response: Any,
     error: BaseException | None,
     *,
-    root: Any,
-    project_prefix: str | None,
-    project_instance_id: str | None,
+    project_prefix: str | None = None,
+    project_instance_id: str | None = None,
 ) -> None:
     """Keep a successful native result when bounded health recording fails."""
     try:
@@ -56,14 +63,4 @@ def record_observation(
     except asyncio.CancelledError, FutureCancelledError:
         raise
     except Exception:
-        report_failure(
-            root,
-            FailureRecord(
-                "WARNING", "health_observation_failed", "health observations unavailable"
-            ),
-            component="SHARED_MCP_GATEWAY",
-            operation="health_observations",
-        )
-
-
-__all__ = ["record_observation", "refusal"]
+        warning("health_observation_failed")

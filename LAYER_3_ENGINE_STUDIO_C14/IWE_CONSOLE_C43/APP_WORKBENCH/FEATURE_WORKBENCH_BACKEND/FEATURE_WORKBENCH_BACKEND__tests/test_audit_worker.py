@@ -1,14 +1,11 @@
 """The background audit never publishes a stale source snapshot."""
 from pathlib import Path
-import sys
 import threading
 import time
 from types import SimpleNamespace
 import unittest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.audit_worker import AuditSnapshot, AuditWorker
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.audit_tables import TABLES
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.audit_worker import AuditSnapshot, AuditWorker
 
 
 class Store:

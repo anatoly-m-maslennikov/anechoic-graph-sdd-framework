@@ -1,12 +1,9 @@
 """Functional HTTP checks for the same-listener MCP health view."""
-from pathlib import Path
-import sys
 from types import SimpleNamespace
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from health_fixture import HealthHTTPFixture
-from health_page import render_health_page
-from http_paths import HEALTH_PATH
+from .health_fixture import HealthHTTPFixture
+from MCP_PATCHBAY_C21.FEATURE_MCP.health_page import render_health_page
+from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import HEALTH_PATH
 
 
 class HTTPHealthPageTests(HealthHTTPFixture):

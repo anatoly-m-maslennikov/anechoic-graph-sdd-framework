@@ -53,20 +53,7 @@ def _integer(value, *, minimum: int = 0) -> bool:
     return type(value) is int and value >= minimum
 
 
-def _validate(checkpoint: Mapping) -> dict[int, Mapping]:
-    if checkpoint.get("schema_version") != 1 or not checkpoint.get("request_id"):
-        raise ValueError("schema_version 1 and request_id are required")
-    selection, items = checkpoint.get("selection"), checkpoint.get("items")
-    if not isinstance(selection, list) or not isinstance(items, list):
-        raise ValueError("original selection and every work item are required")
-    ordinals = []
-    for row in selection:
-        if not isinstance(row, Mapping) or not _integer(row.get("ordinal"), minimum=1):
-            raise ValueError("selection needs positive integer ordinals")
-        ordinals.append(row["ordinal"])
-        _source(row.get("source"))
-    if len(ordinals) != len(set(ordinals)):
-        raise ValueError("duplicate original selection ordinal")
+def _validate_items(items):
     by_ordinal = {}
     for item in items:
         if not isinstance(item, Mapping) or not _integer(item.get("ordinal"), minimum=1):
@@ -96,6 +83,24 @@ def _validate(checkpoint: Mapping) -> dict[int, Mapping]:
             _pins(effect.get("evidence"))
         if item["stage"] == "apply_repair" and not item.get("pending_effect_id"):
             raise ValueError("apply_repair needs a stable pending_effect_id")
+    return by_ordinal
+
+
+def _validate(checkpoint: Mapping) -> dict[int, Mapping]:
+    if checkpoint.get("schema_version") != 1 or not checkpoint.get("request_id"):
+        raise ValueError("schema_version 1 and request_id are required")
+    selection, items = checkpoint.get("selection"), checkpoint.get("items")
+    if not isinstance(selection, list) or not isinstance(items, list):
+        raise ValueError("original selection and every work item are required")
+    ordinals = []
+    for row in selection:
+        if not isinstance(row, Mapping) or not _integer(row.get("ordinal"), minimum=1):
+            raise ValueError("selection needs positive integer ordinals")
+        ordinals.append(row["ordinal"])
+        _source(row.get("source"))
+    if len(ordinals) != len(set(ordinals)):
+        raise ValueError("duplicate original selection ordinal")
+    by_ordinal = _validate_items(items)
     if set(by_ordinal) != set(ordinals):
         raise ValueError("items must cover the entire original selection exactly")
     resume = checkpoint.get("resume_ordinal")
@@ -131,6 +136,52 @@ def progress_sha256(item: Mapping) -> str:
                               ("stage", "source", "evidence", "completed_effects")})
 
 
+def _reconcile_item(state, item, ordinal, stage):
+    if item and not state.get("blocker"):
+        matching = 0
+        progress = progress_sha256(item)
+        for entry in reversed(state["handoffs"]):
+            if entry["ordinal"] != ordinal:
+                continue
+            if entry["progress_sha256"] != progress:
+                break
+            matching += 1
+        if matching >= state["max_handoffs_without_progress"]:
+            state["blocker"] = {"kind": "no_progress", "reason":
+                f"ordinal {ordinal} reached its handoff bound without durable progress"}
+        if stage == "apply_repair":
+            effect = next((e for e in item["completed_effects"]
+                           if e["effect_id"] == item["pending_effect_id"]), None)
+            if effect:
+                if effect["after_source"] != item["source"]:
+                    state["blocker"] = {"kind": "effect_reconciliation", "reason":
+                        "completed effect differs from saved source; reconcile before dispatch"}
+                else:
+                    stage = "verify_saved"
+    return stage
+
+
+def _route_ready(state, pending, ordinal, item, stage, active_ordinals, available_slots, digest, base):
+    if state.get("blocker"):
+        if (state["blocker"]["kind"] in {"host_spawn_denied", "host_spawn_refused"}
+                and active_ordinals):
+            return dict(base, action="wait_for_slot", reason=state["blocker"],
+                        pending_ordinals=pending, checkpoint_sha256=digest)
+        return dict(base, action="blocked", reason=state["blocker"], checkpoint_sha256=digest)
+    if not pending and not active_ordinals:
+        return dict(base, action="validate_completion", ordinals=[r["ordinal"] for r in state["selection"]],
+                    checkpoint_sha256=digest)
+    if ordinal is None or available_slots == 0:
+        return dict(base, action="wait_for_slot", pending_ordinals=pending,
+                    checkpoint_sha256=digest)
+    return dict(base, action="spawn_subagent", ordinal=ordinal,
+                stage="review" if stage == "queued" else stage,
+                model="gpt-5.6-terra", reasoning_effort="high", fresh_context=True,
+                independent=stage in {"verify_proposal", "verify_saved"},
+                checkpoint_sha256=digest, dispatch_id=f"{digest}:{ordinal}",
+                progress_sha256=progress_sha256(item))
+
+
 def next_action(checkpoint: Mapping, *, durable_sha256: str | None = None,
                 available_slots: int, active_ordinals: tuple[int, ...] = ()) -> dict:
     """Route explicitly trusted caller state, returning no execution side effects.
@@ -160,48 +211,11 @@ def next_action(checkpoint: Mapping, *, durable_sha256: str | None = None,
             ordinal = next((o for o in pending if o not in active_ordinals), None)
         item = items.get(ordinal)
         stage = item["stage"] if item else None
-        if item and not state.get("blocker"):
-            matching = 0
-            progress = progress_sha256(item)
-            for entry in reversed(state["handoffs"]):
-                if entry["ordinal"] != ordinal:
-                    continue
-                if entry["progress_sha256"] != progress:
-                    break
-                matching += 1
-            if matching >= state["max_handoffs_without_progress"]:
-                state["blocker"] = {"kind": "no_progress", "reason":
-                    f"ordinal {ordinal} reached its handoff bound without durable progress"}
-            if stage == "apply_repair":
-                effect = next((e for e in item["completed_effects"]
-                               if e["effect_id"] == item["pending_effect_id"]), None)
-                if effect:
-                    if effect["after_source"] != item["source"]:
-                        state["blocker"] = {"kind": "effect_reconciliation", "reason":
-                            "completed effect differs from saved source; reconcile before dispatch"}
-                    else:
-                        stage = "verify_saved"
+        stage = _reconcile_item(state, item, ordinal, stage)
         digest = checkpoint_sha256(state)
         if durable_sha256 != digest:
             return dict(base, action="checkpoint_required", checkpoint=state,
                         checkpoint_sha256=digest)
-        if state.get("blocker"):
-            if (state["blocker"]["kind"] in {"host_spawn_denied", "host_spawn_refused"}
-                    and active_ordinals):
-                return dict(base, action="wait_for_slot", reason=state["blocker"],
-                            pending_ordinals=pending, checkpoint_sha256=digest)
-            return dict(base, action="blocked", reason=state["blocker"], checkpoint_sha256=digest)
-        if not pending and not active_ordinals:
-            return dict(base, action="validate_completion", ordinals=[r["ordinal"] for r in state["selection"]],
-                        checkpoint_sha256=digest)
-        if ordinal is None or available_slots == 0:
-            return dict(base, action="wait_for_slot", pending_ordinals=pending,
-                        checkpoint_sha256=digest)
-        return dict(base, action="spawn_subagent", ordinal=ordinal,
-                    stage="review" if stage == "queued" else stage,
-                    model="gpt-5.6-terra", reasoning_effort="high", fresh_context=True,
-                    independent=stage in {"verify_proposal", "verify_saved"},
-                    checkpoint_sha256=digest, dispatch_id=f"{digest}:{ordinal}",
-                    progress_sha256=progress_sha256(item))
+        return _route_ready(state, pending, ordinal, item, stage, active_ordinals, available_slots, digest, base)
     except (AttributeError, KeyError, TypeError, ValueError) as error:
         return dict(base, action="blocked", reason={"kind": "invalid_state", "reason": str(error)})

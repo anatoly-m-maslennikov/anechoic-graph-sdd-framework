@@ -7,9 +7,9 @@ tier: 3
 context:
   lens: SWD
 state:
-  status: active
-  version: 2
-  updated_at: '2026-11-21T22:53:41.251242+00:00'
+  status: "active"
+  version: 3
+  updated_at: "2026-11-22T09:00:09.213400+00:00"
 ---
 
 ## Summary
@@ -27,8 +27,7 @@ separately. A folder with only child Packages does not need an entry Module for
 their code.
 
 A Component Package is the Realization Package of a Component. An ordinary
-Package belongs to a Component and can have its own Package Spec. A Component
-Seed is the proposed name for that specified ordinary Package.
+Package becomes a Component Seed when it gets a Component Seed Manifest.
 
 Declare Module or symbol exports in `boundaries.code.exports`. Unlisted entries
 are private to the owning Package. When the export map is absent, use the Module

@@ -4,17 +4,15 @@ from __future__ import annotations
 import copy
 import hashlib
 from pathlib import Path
-import sys
 import unittest
 
 HERE = Path(__file__).resolve().parent.parent
-sys.path[:0] = [str(HERE), str(HERE.parent), str(HERE.parent / 'RMED_ATOM_REVIEW__tests')]
 
-from evaluation_contract import ReviewContext, merge_evaluations
-from layout_repair_gate import authority_digest
-from layout_subject_repair_gate import admit_layout_subject_recoding
-from test_layout_repair_gate import fixture as layout_fixture, rebind
-from test_repair_gate import source
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.evaluation_contract import ReviewContext, merge_evaluations
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.layout_repair_gate import authority_digest
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.layout_subject_repair_gate import admit_layout_subject_recoding
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair__tests.test_layout_repair_gate import fixture as layout_fixture, rebind
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair__tests.test_repair_gate import source
 
 
 def _subject_finding():
@@ -22,6 +20,47 @@ def _subject_finding():
                 location='body:preamble', excerpt='Atom context',
                 reason='A substantive Atom Context mention lacks its direct dependency.',
                 proposed_fix='Add the direct dependency once.', confidence=1.0)
+
+
+def _bind_combined_evidence(data):
+    for packet_name, report_name in (('context', 'evaluation'), ('final_context', 'final_evaluation')):
+        packet = data[packet_name]
+        review_context = ReviewContext(packet)
+        for part in data[report_name]['parts']:
+            part.update(source=packet['sources'][0]['binding'], context_sha256=review_context.sha256,
+                        authority_sources=[record['binding'] for record in packet['sources'][1:]])
+        data[report_name] = merge_evaluations(data[report_name]['parts'], context=review_context)
+    original_context, final_context = ReviewContext(data['context']), ReviewContext(data['final_context'])
+    expected = dict(source=data['evaluation']['source'], context_sha256=original_context.sha256,
+                    final_context_sha256=final_context.sha256, outputs=[data['final_evaluation']['source']])
+    data['proposal'].update(source=expected['source'], context_sha256=original_context.sha256)
+    data['preflight'].update(expected)
+    data['preflight']['identity_assessment'].update(expected)
+    data['preflight']['final_review'].update(source=expected['outputs'][0], context_sha256=final_context.sha256)
+    from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.layout_repair_gate import _digest
+    data['preflight']['final_review']['evaluation_sha256'] = _digest(data['final_evaluation'])
+    data['preflight']['freshness'].update(source=expected['source'], authority_sha256=authority_digest(data['context']))
+    data['proposal']['disposition'] = 'layout_subject_recoding'
+    data['permission']['dispositions'] = ['layout_subject_recoding']
+    data['proposal']['resolutions'] = [
+        dict(check_id=row['id'], finding_index=index,
+             reason='Resolved by the exact final layout and dependency correction.')
+        for row in data['evaluation']['checks']
+        for index, _ in enumerate(row['findings'])
+    ]
+
+
+def _add_dependency_mentions(data, original_location, final_location):
+    for report_name, location in (('evaluation', original_location), ('final_evaluation', final_location)):
+        for part in data[report_name]['parts']:
+            for check in part['checks']:
+                if check['id'] == 'subjects':
+                    check['subject_inventory']['mentions'].append(dict(
+                        location=location, excerpt='Atom must comply. Atom Context.', entity='Atom Context',
+                        resolution='resolved', resolution_basis='identity',
+                        rationale='Literal occurrence is anchored by the bound Entity definition.',
+                        definitions=[dict(authority='MOCK-R-003@1',
+                            excerpt='Atom Context means the governed context in which an Atom is reviewed.')]))
 
 
 def combined_fixture(*, role='Requirement'):
@@ -33,7 +72,7 @@ def combined_fixture(*, role='Requirement'):
     output = data['proposal']['outputs'][0]
     output['text'] = output['text'].replace('Atom must comply.\n',
                                             'Atom must comply. Atom Context.\n')
-    from context_builder import body_sections, markdown
+    from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import body_sections, markdown
     original_body = markdown(original_record['text'])
     data['section_mapping']['source_body_sha256'] = hashlib.sha256(original_body.encode()).hexdigest()
     data['section_mapping']['sections'][2]['source_span'][1] = len(original_body)
@@ -56,16 +95,7 @@ def combined_fixture(*, role='Requirement'):
     original_location = list(body_sections(original_record['text']))[-1]
     final_location = next(address for address in body_sections(output['text'])
                           if address.endswith('## Claim'))
-    for report_name, location in (('evaluation', original_location), ('final_evaluation', final_location)):
-        for part in data[report_name]['parts']:
-            for check in part['checks']:
-                if check['id'] == 'subjects':
-                    check['subject_inventory']['mentions'].append(dict(
-                        location=location, excerpt='Atom must comply. Atom Context.', entity='Atom Context',
-                        resolution='resolved', resolution_basis='identity',
-                        rationale='Literal occurrence is anchored by the bound Entity definition.',
-                        definitions=[dict(authority='MOCK-R-003@1',
-                            excerpt='Atom Context means the governed context in which an Atom is reviewed.')]))
+    _add_dependency_mentions(data, original_location, final_location)
     for part in data['evaluation']['parts']:
         for check in part['checks']:
             if check['id'] == 'subjects':
@@ -76,31 +106,7 @@ def combined_fixture(*, role='Requirement'):
                     support=[dict(authority='MOCK-R-003@1',
                         excerpt='Substantive mentions require direct dependencies.')])]
                 part['result'] = 'failed'
-    for packet_name, report_name in (('context', 'evaluation'), ('final_context', 'final_evaluation')):
-        packet = data[packet_name]
-        review_context = ReviewContext(packet)
-        for part in data[report_name]['parts']:
-            part.update(source=packet['sources'][0]['binding'], context_sha256=review_context.sha256,
-                        authority_sources=[record['binding'] for record in packet['sources'][1:]])
-        data[report_name] = merge_evaluations(data[report_name]['parts'], context=review_context)
-    original_context, final_context = ReviewContext(data['context']), ReviewContext(data['final_context'])
-    expected = dict(source=data['evaluation']['source'], context_sha256=original_context.sha256,
-                    final_context_sha256=final_context.sha256, outputs=[data['final_evaluation']['source']])
-    data['proposal'].update(source=expected['source'], context_sha256=original_context.sha256)
-    data['preflight'].update(expected)
-    data['preflight']['identity_assessment'].update(expected)
-    data['preflight']['final_review'].update(source=expected['outputs'][0], context_sha256=final_context.sha256)
-    from layout_repair_gate import _digest
-    data['preflight']['final_review']['evaluation_sha256'] = _digest(data['final_evaluation'])
-    data['preflight']['freshness'].update(source=expected['source'], authority_sha256=authority_digest(data['context']))
-    data['proposal']['disposition'] = 'layout_subject_recoding'
-    data['permission']['dispositions'] = ['layout_subject_recoding']
-    data['proposal']['resolutions'] = [
-        dict(check_id=row['id'], finding_index=index,
-             reason='Resolved by the exact final layout and dependency correction.')
-        for row in data['evaluation']['checks']
-        for index, _ in enumerate(row['findings'])
-    ]
+    _bind_combined_evidence(data)
     return data
 
 
@@ -126,7 +132,7 @@ def rebind_final(data):
     data['preflight'].update(expected)
     data['preflight']['identity_assessment'].update(expected)
     data['preflight']['final_review'].update(source=binding, context_sha256=final_context.sha256)
-    from layout_repair_gate import _digest
+    from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.layout_repair_gate import _digest
     data['preflight']['final_review']['evaluation_sha256'] = _digest(data['final_evaluation'])
     data['preflight']['freshness'].update(source=expected['source'],
                                           authority_sha256=authority_digest(data['context']))

@@ -5,12 +5,8 @@ from __future__ import annotations
 
 from pathlib import Path
 import tomllib
-import sys
 
-TOOLS = Path(__file__).resolve().parents[3] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
-if str(TOOLS) not in sys.path:
-    sys.path.insert(0, str(TOOLS))
-from settings_carrier import read_settings_carrier
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.settings_carrier__pub import read_settings_carrier
 
 
 DEFAULT_RESULT_TTL_SECONDS = 3600

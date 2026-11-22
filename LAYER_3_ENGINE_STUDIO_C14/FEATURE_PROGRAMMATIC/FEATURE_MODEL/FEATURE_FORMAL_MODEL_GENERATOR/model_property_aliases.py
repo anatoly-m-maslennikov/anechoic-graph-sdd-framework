@@ -1,7 +1,7 @@
 """Resolve unique declared and inherited Model class Property addresses."""
 
-from lint_python_model_claim import _canonical_address
-from model_class_subject import model_class_target
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_class_subject__pub import canonical_model_address
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_class_subject__pub import model_class_target
 
 
 def _class_roots(parsed):
@@ -13,7 +13,7 @@ def _class_roots(parsed):
         root = model_class_target(subject, args["entity_name"])
         if root:
             name = args["entity_class"]
-            roots.setdefault(name, []).append(_canonical_address(root))
+            roots.setdefault(name, []).append(canonical_model_address(root))
             for item in declaration["classes"]:
                 if item["name"] == name:
                     bases[name] = item["bases"]
@@ -34,7 +34,7 @@ def _ancestors(name, roots, bases):
 
 
 def class_property_aliases(parsed):
-    canonical = {_canonical_address(subject) for _, subject, _ in parsed}
+    canonical = {canonical_model_address(subject) for _, subject, _ in parsed}
     roots, bases = _class_roots(parsed)
     properties = {name: {address[len(root):]: address for address in canonical
                          if address.startswith(root + ".")}

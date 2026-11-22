@@ -5,17 +5,20 @@ packets. This tests semantic behavior, not full real-Project carrier compliance.
 """
 from __future__ import annotations
 
+if __package__ in (None, ""):
+    import sys as _sys
+    from pathlib import Path as _Path
+    _sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if p.name == "LAYER_3_ENGINE_STUDIO_C14")))
+
 import argparse
 import hashlib
 import json
 from pathlib import Path
 import random
-import sys
 
 HERE = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(HERE))
-from context_builder import body_sections, prepare_context  # noqa: E402
-from review_evidence import ReviewContext  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import body_sections, prepare_context  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_evidence__shared import ReviewContext  # noqa: E402
 
 
 DEFINITIONS = {
@@ -69,7 +72,7 @@ def build(output: Path) -> None:
     candidates = []
     for index, case in enumerate(cases, 1):
         raw = (HERE / 'RMED_ATOM_REVIEW__tests/assets/fixtures' / case['file']).read_text()
-        from context_builder import metadata
+        from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import metadata
         props = metadata(raw)
         candidates.append(bound(f'synthetic/case-{index:04}.md', props['atom_id'], props['version'], raw))
     authority = baseline + definitions + [principle]

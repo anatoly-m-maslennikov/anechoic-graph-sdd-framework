@@ -1,12 +1,9 @@
 """Closure checks use live bytes; semantic judgments remain reviewer work."""
 import hashlib
 from pathlib import Path
-import sys
 import tempfile
 import unittest
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from closure_freshness import audit_bindings, close_batch
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.closure_freshness import audit_bindings, close_batch
 
 
 class ClosureFreshnessTests(unittest.TestCase):

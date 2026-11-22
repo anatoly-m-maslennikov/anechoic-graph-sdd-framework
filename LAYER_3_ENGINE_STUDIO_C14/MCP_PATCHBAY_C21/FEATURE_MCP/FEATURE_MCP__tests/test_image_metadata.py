@@ -12,11 +12,8 @@ from unittest.mock import patch
 
 APP = Path(__file__).resolve().parents[1]
 DOCKER = APP / "docker"
-sys.path.insert(0, str(DOCKER))
 
-from runtime_images import (  # noqa: E402
-    DOCKERFILE,
-    DOCKERIGNORE,
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images import (  # noqa: E402
     FINGERPRINT_LABEL,
     ImageError,
     ImageManager,
@@ -24,8 +21,9 @@ from runtime_images import (  # noqa: E402
     SCHEMA_LABEL,
     TOOL_REGISTRY,
 )
-import runtime_images  # noqa: E402
-import runtime  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images_common import DOCKERFILE, DOCKERIGNORE  # noqa: E402
+import MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images as runtime_images  # noqa: E402
+import MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime as runtime  # noqa: E402
 
 IMAGE, OTHER_IMAGE = "sha256:" + "a" * 64, "sha256:" + "b" * 64
 VERSION, CREATED = "0.4.4.9", "2026-10-21T14:15:16.987654321Z"
@@ -112,8 +110,9 @@ class ImageMetadataTests(unittest.TestCase):
         self._write_fixture(VERSION)
 
     def _write_fixture(self, version: str) -> None:
-        (self.root / "pyproject.toml").write_text("[project]\nname='fixture'\n", encoding="utf-8")
-        (self.root / "uv.lock").write_text("version = 1\n", encoding="utf-8")
+        (self.root / "LAYER_3_ENGINE_STUDIO_C14").mkdir(exist_ok=True)
+        (self.root / "LAYER_3_ENGINE_STUDIO_C14/pyproject.toml").write_text("[project]\nname='fixture'\n", encoding="utf-8")
+        (self.root / "LAYER_3_ENGINE_STUDIO_C14/uv.lock").write_text("version = 1\n", encoding="utf-8")
         (self.root / "version.toml").write_text(f'[framework]\nversion = "{version}"\n', encoding="utf-8")
         for relative, content in (
             (DOCKERFILE, "FROM scratch\n"),

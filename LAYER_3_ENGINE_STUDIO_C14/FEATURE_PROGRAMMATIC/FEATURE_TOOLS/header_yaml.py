@@ -8,8 +8,8 @@ import yaml
 from yaml.events import AliasEvent, MappingEndEvent, MappingStartEvent, SequenceEndEvent, SequenceStartEvent
 from yaml.nodes import MappingNode, Node, ScalarNode, SequenceNode
 
-from carrier_aliases import carrier_read_view
-from header_groups import header_path
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_compat__pub import carrier_read_view
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_compat__pub import header_path
 
 
 _STRING = "tag:yaml.org,2002:str"

@@ -1,7 +1,7 @@
 """Literal identity recognition must neither need nor pretend to prove meaning."""
 import unittest
 
-from test_split_evaluation import part, context, contract, source, SOURCE_TEXT
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__tests.test_split_evaluation import part, context, contract, source, SOURCE_TEXT
 
 
 class IdentityRecognition(unittest.TestCase):

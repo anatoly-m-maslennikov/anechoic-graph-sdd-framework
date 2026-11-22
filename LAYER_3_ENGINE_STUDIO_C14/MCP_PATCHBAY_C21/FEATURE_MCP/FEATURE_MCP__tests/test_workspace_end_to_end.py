@@ -4,12 +4,8 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-import asyncio
-import datetime as dt
 from pathlib import Path
-import sys
 import tempfile
-import threading
 import unittest
 from unittest.mock import patch
 
@@ -23,25 +19,18 @@ REPOSITORY = Path(__file__).resolve().parents[4]
 PROGRAMMATIC = REPOSITORY / "LAYER_3_ENGINE_STUDIO_C14" / "FEATURE_PROGRAMMATIC"
 MCP = REPOSITORY / "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP"
 APP = REPOSITORY / "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH"
-for location in (MCP, PROGRAMMATIC / "FEATURE_TOOLS", APP.parent, APP / "APP_WORKBENCH__tests"):
-    if str(location) not in sys.path:
-        sys.path.insert(0, str(location))
 
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_reader import SourceReader  # noqa: E402
-from http_paths import MCP_PATH, WORKBENCH_PATH  # noqa: E402
-from http_server import create_app  # noqa: E402
-from direct_gateway import startup_selection  # noqa: E402
-from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
-from smalltest_support import built_assets, extension_directory, source_path, write_atom, write_settings  # noqa: E402
-from workbench_tools import WorkbenchTools  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import MCP_PATH, WORKBENCH_PATH  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.http_server import create_app  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.smalltest_support__pub import extension_directory  # noqa: E402
 
 
-from test_native_startup import RuntimeSelectionTests, native_fixture_gateway  # noqa: E402
+from .test_native_startup import RuntimeSelectionTests, native_fixture_gateway  # noqa: E402
 
 
 class WorkspaceEndToEndTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self) -> None:
-        observer = patch("APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_watcher.NativeObserver", PollingObserver)
+        observer = patch("FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.source_watcher__pub.NativeObserver", PollingObserver)
         observer.start()
         self.addCleanup(observer.stop)
         self.temporary = tempfile.TemporaryDirectory()
@@ -129,9 +118,12 @@ class WorkspaceEndToEndTests(unittest.IsolatedAsyncioTestCase):
             self.assertNotEqual(self.root.name, state["project_name"])
             self.assertEqual(first, state["active_view_id"])
             self.assertEqual({item["id"] for item in created["views"]}, {item["id"] for item in state["views"]})
-            workspace_files = list((self.root / ".anechoic_runtime" / "workbench" / "workspaces").glob("*.json"))
-            self.assertEqual(1, len(workspace_files))
-            self.assertNotIn("project_name", workspace_files[0].read_text(encoding="utf-8"))
+            self._check_workspace_persistence()
+
+    def _check_workspace_persistence(self):
+        workspace_files = list((self.root / ".anechoic_runtime" / "workbench" / "workspaces").glob("*.json"))
+        self.assertEqual(1, len(workspace_files))
+        self.assertNotIn("project_name", workspace_files[0].read_text(encoding="utf-8"))
 
     async def test_view_duplicate_has_strict_mcp_http_parity_without_execution(self) -> None:
         async with self.session() as (session, client):
@@ -171,33 +163,36 @@ class WorkspaceEndToEndTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual("Report(2)", duplicate_view["name"])
             self.assertEqual(logs_before, await self.tool(session, "query_log_list", {"limit": 1000}))
 
-            http_duplicate = await self.interface_call(client, "view_duplicate", {
-                "workspace_id": workspace_id, "view_id": source_id,
-            })
-            self.assertEqual(200, http_duplicate.status_code, http_duplicate.text)
-            http_state_response = await self.interface_call(client, "workspace_get", {
-                "workspace_id": workspace_id,
-            })
-            self.assertEqual(200, http_state_response.status_code, http_state_response.text)
-            http_state = http_state_response.json()
-            self.assertEqual(http_duplicate.json()["view_id"], http_state["active_view_id"])
-            self.assertEqual(
-                http_state,
-                await self.tool(session, "workspace_get", {"workspace_id": workspace_id}),
-            )
+            await self._check_duplicate_http_parity(session, client, workspace_id, source_id)
 
-            invalid_mcp = await session.call_tool("view_duplicate", {
-                "workspace_id": workspace_id, "view_id": source_id, "unexpected": True,
-            })
-            self.assertTrue(invalid_mcp.is_error)
-            invalid_http = await self.interface_call(client, "view_duplicate", {
-                "workspace_id": workspace_id, "view_id": source_id, "unexpected": True,
-            })
-            self.assertEqual(400, invalid_http.status_code)
-            self.assertEqual(
-                http_state,
-                await self.tool(session, "workspace_get", {"workspace_id": workspace_id}),
-            )
+    async def _check_duplicate_http_parity(self, session, client, workspace_id, source_id):
+        http_duplicate = await self.interface_call(client, "view_duplicate", {
+            "workspace_id": workspace_id, "view_id": source_id,
+        })
+        self.assertEqual(200, http_duplicate.status_code, http_duplicate.text)
+        http_state_response = await self.interface_call(client, "workspace_get", {
+            "workspace_id": workspace_id,
+        })
+        self.assertEqual(200, http_state_response.status_code, http_state_response.text)
+        http_state = http_state_response.json()
+        self.assertEqual(http_duplicate.json()["view_id"], http_state["active_view_id"])
+        self.assertEqual(
+            http_state,
+            await self.tool(session, "workspace_get", {"workspace_id": workspace_id}),
+        )
+
+        invalid_mcp = await session.call_tool("view_duplicate", {
+            "workspace_id": workspace_id, "view_id": source_id, "unexpected": True,
+        })
+        self.assertTrue(invalid_mcp.is_error)
+        invalid_http = await self.interface_call(client, "view_duplicate", {
+            "workspace_id": workspace_id, "view_id": source_id, "unexpected": True,
+        })
+        self.assertEqual(400, invalid_http.status_code)
+        self.assertEqual(
+            http_state,
+            await self.tool(session, "workspace_get", {"workspace_id": workspace_id}),
+        )
 
     async def test_workspaces_are_isolated_and_guarded_by_ids_and_revisions(self) -> None:
         async with self.session() as (session, client):
@@ -256,7 +251,7 @@ class WorkspaceEndToEndTests(unittest.IsolatedAsyncioTestCase):
 
 
     async def test_view_run_preserves_workbench_unavailable_boundary(self) -> None:
-        from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.errors import WorkbenchUnavailableError
+        from KERNEL_MIXER_C59.errors import WorkbenchUnavailableError
 
         async with self.session() as (session, client):
             opened = await self.tool(session, "workspace_open", {"session_id": "invalid-settings"})

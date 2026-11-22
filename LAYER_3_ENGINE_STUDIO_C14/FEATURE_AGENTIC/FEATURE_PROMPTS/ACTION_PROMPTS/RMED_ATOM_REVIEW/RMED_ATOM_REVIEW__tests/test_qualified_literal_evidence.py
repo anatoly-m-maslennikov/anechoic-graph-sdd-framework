@@ -2,14 +2,12 @@
 from __future__ import annotations
 
 from pathlib import Path
-import sys
 import unittest
 
 HERE = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(HERE))
 
-from context_builder import body_sections, markdown  # noqa: E402
-from review_evidence import validate_subject_inventory  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import body_sections, markdown  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_evidence__shared import validate_subject_inventory  # noqa: E402
 
 
 AUTHORITY = 'MOCK-R-QUALIFIED@1'

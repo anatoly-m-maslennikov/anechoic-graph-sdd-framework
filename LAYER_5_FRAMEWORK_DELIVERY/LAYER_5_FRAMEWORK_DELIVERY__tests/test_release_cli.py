@@ -15,11 +15,10 @@ import unittest
 from unittest.mock import patch
 
 REPOSITORY = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(REPOSITORY))
-from LAYER_5_FRAMEWORK_DELIVERY import release  # noqa: E402
+import release  # noqa: E402
 
-LOCAL_ENTRY = "LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.RELEASE_VERSION__shared.run_local_release"
-PUBLIC_MODULE = "LAYER_5_FRAMEWORK_DELIVERY.PUBLIC_RELEASE.PUBLIC_RELEASE__shared"
+LOCAL_ENTRY = "RELEASE_VERSION.RELEASE_VERSION__shared.run_local_release"
+PUBLIC_MODULE = "PUBLIC_RELEASE.PUBLIC_RELEASE__shared"
 PUBLIC_ENTRY = PUBLIC_MODULE + ".run_public_release"
 
 
@@ -41,7 +40,7 @@ class ReleaseCliTests(unittest.TestCase):
 
     def test_build_image_dispatch(self) -> None:
         result = {"outcome": "completed", "image_id": "sha256:" + "a" * 64}
-        entry = "LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.RELEASE_VERSION__shared.build_image"
+        entry = "RELEASE_VERSION.RELEASE_VERSION__shared.build_image"
         with patch(entry, return_value=result) as build:
             self.assertEqual(self.invoke(["build-image", "--run-id", "build-1"]), (0, result))
         build.assert_called_once_with(REPOSITORY, run_id="build-1")
@@ -55,8 +54,8 @@ class ReleaseCliTests(unittest.TestCase):
     def test_local_cli_can_run_without_public_component(self) -> None:
         result = {"outcome": "completed"}
         with (
-            patch(LOCAL_ENTRY, return_value=result),
-            patch.dict(sys.modules, {PUBLIC_MODULE: None}),
+            patch("RELEASE_VERSION.RELEASE_VERSION__shared.run_local_release", return_value=result),
+            patch.dict(sys.modules, {"PUBLIC_RELEASE.PUBLIC_RELEASE__shared": None}),
             redirect_stdout(io.StringIO()) as output,
         ):
             command = runpy.run_path(str(REPOSITORY / "LAYER_5_FRAMEWORK_DELIVERY/release.py"))

@@ -13,8 +13,11 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
-from bridge import CodexBridge
-from state import runtime_directory
+if not __package__:  # Direct launcher invocation.
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_CODEX.bridge import CodexBridge
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_CODEX.state import runtime_directory
 
 
 def _origin(url: str) -> str:
@@ -24,112 +27,113 @@ def _origin(url: str) -> str:
     return f"{value.scheme}://{value.netloc}"
 
 
-def _handler(bridge: CodexBridge, origin: str) -> type[BaseHTTPRequestHandler]:  # noqa: C901
-    class Handler(BaseHTTPRequestHandler):
-        def _allowed(self) -> bool:
-            if self.headers.get("Origin") == origin:
-                return True
-            self.send_error(403, "Unexpected Origin")
-            return False
+class _BridgeHandler(BaseHTTPRequestHandler):
+    def _allowed(self) -> bool:
+        if self.headers.get("Origin") == self.origin:
+            return True
+        self.send_error(403, "Unexpected Origin")
+        return False
 
-        def _body(self) -> dict[str, Any]:
-            value = json.loads(self.rfile.read(int(self.headers.get("Content-Length", "0"))))
-            if not isinstance(value, dict):
-                raise ValueError("JSON object required")
-            return value
+    def _body(self) -> dict[str, Any]:
+        value = json.loads(self.rfile.read(int(self.headers.get("Content-Length", "0"))))
+        if not isinstance(value, dict):
+            raise ValueError("JSON object required")
+        return value
 
-        def _json(self, value: Any, status: int = 200) -> None:
-            self.send_response(status)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Access-Control-Allow-Origin", origin)
+    def _json(self, value: Any, status: int = 200) -> None:
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Access-Control-Allow-Origin", self.origin)
+        self.end_headers()
+        self.wfile.write(json.dumps(value).encode())
+
+    def do_OPTIONS(self) -> None:  # noqa: N802
+        if not self._allowed():
+            return
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Origin", self.origin)
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.end_headers()
+
+    def do_GET(self) -> None:  # noqa: N802
+        if self.path == "/health":
+            self.send_response(200 if self.bridge.ready else 503)
             self.end_headers()
-            self.wfile.write(json.dumps(value).encode())
+            self.wfile.write(b'{"ready":true}')
+            return
+        if not self._allowed():
+            return
+        try:
+            if self.path != "/conversation":
+                raise ValueError("Unknown endpoint")
+            self._json(self.bridge.conversation())
+        except Exception as error:
+            self._json({"error": str(error)}, 400)
 
-        def do_OPTIONS(self) -> None:  # noqa: N802
-            if not self._allowed():
-                return
-            self.send_response(204)
-            self.send_header("Access-Control-Allow-Origin", origin)
-            self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-            self.send_header("Access-Control-Allow-Headers", "Content-Type")
-            self.end_headers()
+    def do_POST(self) -> None:  # noqa: N802
+        if not self._allowed():
+            return
+        try:
+            body = self._body()
+            if self.path == "/turn":
+                self._turn(body)
+            elif self.path == "/respond":
+                self._respond(body)
+            elif self.path == "/interrupt":
+                self._interrupt(body)
+            else:
+                raise ValueError("Unknown endpoint")
+        except Exception as error:
+            self._json({"error": str(error)}, 400)
 
-        def do_GET(self) -> None:  # noqa: N802
-            if self.path == "/health":
-                self.send_response(200 if bridge.ready else 503)
-                self.end_headers()
-                self.wfile.write(b'{"ready":true}')
-                return
-            if not self._allowed():
-                return
-            try:
-                if self.path != "/conversation":
-                    raise ValueError("Unknown endpoint")
-                self._json(bridge.conversation())
-            except Exception as error:
-                self._json({"error": str(error)}, 400)
+    def _respond(self, body: dict[str, Any]) -> None:
+        if set(body) != {"id", "result"} or not isinstance(body["id"], (int, str)):
+            raise ValueError("Expected id and result")
+        self.bridge.respond(body["id"], body["result"])
+        self._json({"ok": True})
 
-        def do_POST(self) -> None:  # noqa: N802
-            if not self._allowed():
-                return
-            try:
-                body = self._body()
-                if self.path == "/turn":
-                    self._turn(body)
-                elif self.path == "/respond":
-                    self._respond(body)
-                elif self.path == "/interrupt":
-                    self._interrupt(body)
-                else:
-                    raise ValueError("Unknown endpoint")
-            except Exception as error:
-                self._json({"error": str(error)}, 400)
+    def _interrupt(self, body: dict[str, Any]) -> None:
+        if set(body) != {"turn_id"} or not isinstance(body["turn_id"], str):
+            raise ValueError("Expected turn_id")
+        self.bridge.interrupt(body["turn_id"])
+        self._json({"ok": True})
 
-        def _respond(self, body: dict[str, Any]) -> None:
-            if set(body) != {"id", "result"} or not isinstance(body["id"], (int, str)):
-                raise ValueError("Expected id and result")
-            bridge.respond(body["id"], body["result"])
-            self._json({"ok": True})
+    def _turn(self, body: dict[str, Any]) -> None:
+        if set(body) != {"message"} or not isinstance(body["message"], str):
+            raise ValueError("Expected message")
+        turn_id, initial = self.bridge.start_turn(body["message"])
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Access-Control-Allow-Origin", self.origin)
+        self.end_headers()
+        self._event({"type": "started", "thread_id": self.bridge.thread_id, "turn_id": turn_id})
+        status = "completed"
+        for packet in chain(initial, self.bridge.events()):
+            self._event({"type": "event", "thread_id": self.bridge.thread_id, "turn_id": turn_id, "event": packet})
+            status = self._status(packet, status)
+        self._event({"type": "finished", "thread_id": self.bridge.thread_id, "turn_id": turn_id, "status": status})
 
-        def _interrupt(self, body: dict[str, Any]) -> None:
-            if set(body) != {"turn_id"} or not isinstance(body["turn_id"], str):
-                raise ValueError("Expected turn_id")
-            bridge.interrupt(body["turn_id"])
-            self._json({"ok": True})
+    @staticmethod
+    def _status(packet: dict[str, Any], default: str) -> str:
+        if packet.get("method") == "bridge/failed":
+            return "failed"
+        if packet.get("method") != "turn/completed" or not isinstance(packet.get("params"), dict):
+            return default
+        turn = packet["params"].get("turn")
+        return turn.get("status", default) if isinstance(turn, dict) else default
 
-        def _turn(self, body: dict[str, Any]) -> None:
-            if set(body) != {"message"} or not isinstance(body["message"], str):
-                raise ValueError("Expected message")
-            turn_id, initial = bridge.start_turn(body["message"])
-            self.send_response(200)
-            self.send_header("Content-Type", "text/event-stream")
-            self.send_header("Cache-Control", "no-cache")
-            self.send_header("Access-Control-Allow-Origin", origin)
-            self.end_headers()
-            self._event({"type": "started", "thread_id": bridge.thread_id, "turn_id": turn_id})
-            status = "completed"
-            for packet in chain(initial, bridge.events()):
-                self._event({"type": "event", "thread_id": bridge.thread_id, "turn_id": turn_id, "event": packet})
-                status = self._status(packet, status)
-            self._event({"type": "finished", "thread_id": bridge.thread_id, "turn_id": turn_id, "status": status})
+    def _event(self, value: dict[str, Any]) -> None:
+        self.wfile.write(b"data: " + json.dumps(value).encode() + b"\n\n")
+        self.wfile.flush()
 
-        @staticmethod
-        def _status(packet: dict[str, Any], default: str) -> str:
-            if packet.get("method") == "bridge/failed":
-                return "failed"
-            if packet.get("method") != "turn/completed" or not isinstance(packet.get("params"), dict):
-                return default
-            turn = packet["params"].get("turn")
-            return turn.get("status", default) if isinstance(turn, dict) else default
+    def log_message(self, _format: str, *_args: Any) -> None:
+        pass
 
-        def _event(self, value: dict[str, Any]) -> None:
-            self.wfile.write(b"data: " + json.dumps(value).encode() + b"\n\n")
-            self.wfile.flush()
+def _handler(bridge: CodexBridge, origin: str) -> type[BaseHTTPRequestHandler]:
+    return type("Handler", (_BridgeHandler,), {"bridge": bridge, "origin": origin})
 
-        def log_message(self, _format: str, *_args: Any) -> None:
-            pass
-
-    return Handler
 
 
 def serve(project_root: Path, mcp_url: str) -> ThreadingHTTPServer:

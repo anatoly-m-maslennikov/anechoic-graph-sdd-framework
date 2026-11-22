@@ -1,12 +1,9 @@
 """Exercise the shared validation path with inherited Model contracts."""
 
 from dataclasses import dataclass
-from pathlib import Path
-import sys
 import unittest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
-from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.validate_model_instance import validate_model_instance
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.validate_model_instance import validate_model_instance
 
 
 @dataclass

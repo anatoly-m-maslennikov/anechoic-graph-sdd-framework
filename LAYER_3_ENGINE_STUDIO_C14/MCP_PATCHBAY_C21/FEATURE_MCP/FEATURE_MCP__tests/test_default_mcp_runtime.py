@@ -1,34 +1,32 @@
-"""Workbench MCP starts and closes without a provider process or generation."""
+"""Check default startup and the injected Workbench fixture path."""
+from .native_query_test_support import local_gateway
 
-from contextlib import nullcontext, redirect_stdout
-from io import StringIO
+
+from contextlib import nullcontext
 from pathlib import Path
-import sys
 import tempfile
 import unittest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 MCP = Path(__file__).resolve().parents[1]
-sys.path[:0] = [str(MCP), str(MCP.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS")]
-from direct_gateway import DirectGateway  # noqa: E402
-from project_selection import ProjectSelectionError  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import ProjectAdmissionError  # noqa: E402
 from types import SimpleNamespace
-from http_server import create_app  # noqa: E402
-import server as mcp_server  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.http_server import create_app  # noqa: E402
+import MCP_PATCHBAY_C21.FEATURE_MCP.server as mcp_server  # noqa: E402
 
 
 class DefaultMCPRuntimeTests(unittest.IsolatedAsyncioTestCase):
-    async def test_gateway_lifecycle_needs_no_child_process(self):
+    async def test_injected_gateway_owner_needs_no_child_process(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory).resolve()
             owner = SimpleNamespace(selection=SimpleNamespace(root=root, parameters={}),
                                     start=lambda: None, close=lambda: None)
-            gateway = DirectGateway(root, native_query=owner)
+            gateway = local_gateway(root, native_query=owner)
             with patch("asyncio.create_subprocess_exec", side_effect=AssertionError("unexpected child")):
                 self.assertFalse(gateway.ready)
                 await gateway.initialize()
                 self.assertTrue(gateway.ready)
-                from registry_lifecycle_provider import LIFECYCLE_TOOL_NAMES
+                from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.registry_lifecycle_provider import LIFECYCLE_TOOL_NAMES
 
                 names = {tool.name for tool in gateway.tools}
                 self.assertIn("query_run", names)
@@ -38,7 +36,7 @@ class DefaultMCPRuntimeTests(unittest.IsolatedAsyncioTestCase):
 
     def test_http_app_requires_native_manifest(self):
         with tempfile.TemporaryDirectory() as directory:
-            with self.assertRaises(ProjectSelectionError):
+            with self.assertRaises(ProjectAdmissionError):
                 create_app(Path(directory))
 
     def test_stdio_uses_native_gateway(self):

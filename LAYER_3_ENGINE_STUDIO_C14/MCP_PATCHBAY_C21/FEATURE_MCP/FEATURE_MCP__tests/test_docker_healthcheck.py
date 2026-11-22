@@ -1,4 +1,4 @@
-"""Verify the image's opt-in MCP initialization health check."""
+"""Verify the image's opt-in MCP session health check."""
 import importlib.util
 import os
 from pathlib import Path
@@ -9,11 +9,12 @@ from unittest.mock import patch
 from types import SimpleNamespace
 
 import httpx2
+from mcp.client.session import ClientSession
 from starlette.applications import Starlette
 from starlette.responses import Response
 from starlette.routing import Route
 
-import test_shared_http_server as shared
+from . import test_shared_http_server as shared
 
 SCRIPT = Path(__file__).resolve().parents[1] / "docker" / "healthcheck.py"
 spec = importlib.util.spec_from_file_location("docker_healthcheck", SCRIPT)
@@ -35,9 +36,25 @@ class DockerHealthcheckTests(unittest.IsolatedAsyncioTestCase):
         with patch.object(httpx2, "AsyncClient", side_effect=client):
             await healthcheck.check()
 
-    async def test_initializes_actual_mcp_session(self):
+    async def test_initializes_and_pings_actual_mcp_session(self):
+        ping = ClientSession.send_ping
+        calls = []
+
+        async def record_ping(session):
+            calls.append(session)
+            return await ping(session)
+
         async with self.app.starlette_app.router.lifespan_context(self.app.starlette_app):
-            await self.probe(self.app)
+            with patch.object(ClientSession, "send_ping", record_ping):
+                await self.probe(self.app)
+        self.assertEqual(1, len(calls))
+
+    async def test_rejects_failed_ping(self):
+        async with self.app.starlette_app.router.lifespan_context(self.app.starlette_app):
+            with patch.object(ClientSession, "send_ping", side_effect=RuntimeError("ping failed")):
+                with self.assertRaises(ExceptionGroup) as failure:
+                    await self.probe(self.app)
+        self.assertIsNotNone(failure.exception.subgroup(RuntimeError))
 
     async def test_rejects_non_mcp_response(self):
         async def unavailable(request):

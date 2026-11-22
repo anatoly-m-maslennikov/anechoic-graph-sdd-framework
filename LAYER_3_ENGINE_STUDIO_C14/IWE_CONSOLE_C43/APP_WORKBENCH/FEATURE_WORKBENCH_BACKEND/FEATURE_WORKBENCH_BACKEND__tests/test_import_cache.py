@@ -1,17 +1,43 @@
 """The private import cache survives reopening and rejects old versions."""
 from pathlib import Path
-import sys
 import tempfile
 import unittest
 
 import duckdb
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
-from APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.source import ImportSite, Source
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.import_cache import clear_import_sources, read_import_sources, replace_import_sources
+from KERNEL_MIXER_C59.import_cache import (
+    ImportSite, Source, clear_import_sources, read_import_sources, replace_import_sources,
+)
+from KERNEL_MIXER_C59.import_tables import _create_external_imports_view
 
 
 class ImportCacheTests(unittest.TestCase):
+    def test_external_imports_view_counts_occurrences_and_excludes_stdlib(self):
+        connection = duckdb.connect()
+        self.addCleanup(connection.close)
+        connection.execute("CREATE TABLE import_nodes (node_key VARCHAR, kind VARCHAR, language VARCHAR, "
+                           "relative_path VARCHAR, package_key VARCHAR)")
+        connection.execute("CREATE TABLE module_imports (source_key VARCHAR, target_key VARCHAR, "
+                           "resolution_status VARCHAR, type_only BOOLEAN)")
+        connection.executemany("INSERT INTO import_nodes VALUES (?, ?, ?, ?, ?)", [
+            ("package:local:app", "package", "python", "app", None),
+            ("module:app/a.py", "module", "python", "app/a.py", "package:local:app"),
+            ("package:external:requests", "package", "python", None, None),
+            ("package:external:json", "package", "python", None, None),
+        ])
+        connection.executemany("INSERT INTO module_imports VALUES (?, ?, ?, ?)", [
+            ("module:app/a.py", "package:external:requests", "external", False),
+            ("module:app/a.py", "package:external:requests", "external", True),
+            ("module:app/a.py", "package:external:json", "external", False),
+        ])
+        _create_external_imports_view(connection)
+        self.assertEqual([("app", "python", "requests", 2, 1)], connection.execute(
+            "SELECT * FROM package_external_imports").fetchall())
+        connection.execute("DELETE FROM module_imports WHERE type_only")
+        _create_external_imports_view(connection)
+        self.assertEqual([("app", "python", "requests", 1, 0)], connection.execute(
+            "SELECT * FROM package_external_imports").fetchall())
+
     def test_reopen_replace_and_invalidate(self):
         with tempfile.TemporaryDirectory() as directory:
             path = str(Path(directory) / "cache.duckdb")

@@ -4,19 +4,13 @@ import argparse
 from pathlib import Path
 import sys
 
-if not __package__:
-    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-
 PROGRAMMATIC = Path(__file__).resolve().parents[2]
-sys.path[:0] = [
-    str(PROGRAMMATIC / "FEATURE_TOOLS"),
-    str(PROGRAMMATIC / "FEATURE_TOOLS" / "GENERATE_ENTITY_GRAPH"),
-]
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from artifact_metadata import atomic_write  # noqa: E402
-from current_entity_sources import read_current_model_carriers  # noqa: E402
-from project_selection import resolve_project  # noqa: E402
-from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.model_class_assembly import (  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.artifact_metadata import atomic_write  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.current_carriers__pub import read_current_model_carriers  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection import resolve_project  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.model_class_assembly import (  # noqa: E402
     build_model_class_source,
 )
 

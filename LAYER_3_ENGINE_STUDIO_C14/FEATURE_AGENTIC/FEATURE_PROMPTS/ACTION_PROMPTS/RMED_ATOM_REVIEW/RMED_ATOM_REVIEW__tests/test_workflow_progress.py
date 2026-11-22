@@ -1,11 +1,8 @@
 """Bookkeeping regressions; no simulated semantic evaluation or recheck."""
 from copy import deepcopy
 from pathlib import Path
-import sys
 import unittest
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from workflow_progress import CHECKS, report_progress, summarize_progress
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.workflow_progress import CHECKS, report_progress, summarize_progress
 
 
 def report():

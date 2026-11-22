@@ -11,18 +11,18 @@ import sys
 from typing import Any
 
 if __package__:
-    from .relation_registry import RegistryCompilation, compile_registry, is_registry_declaration
-    from .relations import canonical
+    from KERNEL_MIXER_C59.relation_registry import RegistryCompilation, compile_registry, is_registry_declaration
+    from KERNEL_MIXER_C59.relations import canonical
     from .source_reader import SourceReader
 else:  # pragma: no cover - direct build-hook invocation
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from FEATURE_WORKBENCH_BACKEND.relation_registry import (
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+    from KERNEL_MIXER_C59.relation_registry import (
         RegistryCompilation,
         compile_registry,
         is_registry_declaration,
     )
-    from FEATURE_WORKBENCH_BACKEND.relations import canonical
-    from FEATURE_WORKBENCH_BACKEND.source_reader import SourceReader
+    from KERNEL_MIXER_C59.relations import canonical
+    from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_reader import SourceReader
 
 
 DEFAULT_REGISTRY_PATH = Path(__file__).with_name("canonical_relation_registry.json")

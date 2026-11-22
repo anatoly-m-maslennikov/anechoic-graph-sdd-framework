@@ -3,14 +3,14 @@ atom_family: SPEC
 atom_id: AN-S-3290
 container:
   component: C27
-tier: 0
+tier: 4
 context:
   template: component_manifest
   lens: SPEC
 state:
   status: active
-  version: 4
-  updated_at: '2026-11-21T22:51:12.819403+00:00'
+  version: 7
+  updated_at: '2026-11-22T11:23:40.206159+00:00'
 ---
 
 ## Summary
@@ -40,6 +40,12 @@ declare_entity(
             },
             'io': {
                 'server': {
+                    'test_packaged_image_identity': {
+                        'transport': 'cli',
+                        'runner': 'uv',
+                        'module': 'LAYER_5_FRAMEWORK_DELIVERY.RELEASE_VERSION.RELEASE_VERSION__tests.packaged_image_fixture',
+                        'arguments': ['<fixture-root>'],
+                    },
                     'local_release': {
                         'transport': 'cli',
                         'runner': 'uv',

@@ -6,15 +6,15 @@ import json
 import os
 from pathlib import Path
 import re
+import subprocess
+import sys
+from types import SimpleNamespace
 from typing import Any, Callable, Mapping
 
-from mcp_paths import HEALTH_PATH
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.mcp_paths import HEALTH_PATH
 
 
 ROOT = Path(__file__).resolve().parents[3]
-TOOLS = ROOT / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS"
-if str(TOOLS) not in os.sys.path:
-    os.sys.path.insert(0, str(TOOLS))
 
 COMPOSE = Path(__file__).with_name("shared-mcp.compose.yaml")
 DOCKER_ENV = (
@@ -29,11 +29,30 @@ class SharedLaunchError(ValueError):
 
 
 def _config(path):
-    from host_runtime_config import load_host_runtime_config
-
+    engine = ROOT
+    root = engine.parent
+    command = [sys.executable, "-B", "-P", "-m",
+               "IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.host_runtime_config"]
+    if path is not None:
+        command += ["--host-settings", str(path)]
     try:
-        return load_host_runtime_config(path)
-    except Exception as error:
+        result = subprocess.run(
+            command, cwd=root, env={**{k: v for k, v in os.environ.items() if k != "PYTHONHOME"}, "PYTHONPATH": str(engine)},
+            capture_output=True, text=True, timeout=10, check=True,
+        )
+        value = json.loads(result.stdout)
+        expected = {"source_path", "projects_root", "http_port", "max_loaded_projects",
+                    "shared_runtime_id", "single_project", "workbench_storage", "journal_storage"}
+        if (not isinstance(value, dict) or set(value) != expected
+                or any(not isinstance(value[key], str) for key in (
+                    "source_path", "projects_root", "shared_runtime_id", "workbench_storage", "journal_storage"))
+                or any(type(value[key]) is not int for key in ("http_port", "max_loaded_projects"))
+                or type(value["single_project"]) is not bool):
+            raise ValueError("Invalid backend settings response")
+        value["source_path"] = Path(value["source_path"])
+        value["projects_root"] = Path(value["projects_root"])
+        return SimpleNamespace(**value)
+    except (OSError, subprocess.SubprocessError, ValueError, TypeError) as error:
         raise SharedLaunchError("invalid_host_settings") from error
 
 

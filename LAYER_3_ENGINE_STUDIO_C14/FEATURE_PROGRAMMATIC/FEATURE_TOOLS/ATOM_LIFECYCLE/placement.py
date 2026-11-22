@@ -15,19 +15,16 @@ from dataclasses import dataclass
 from pathlib import Path
 import re
 
-from carrier_aliases import carrier_read_view
-from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier
-from project_selection import ProjectSelection
-from scope_unit_declarations import read_scope_unit_declarations
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_compat__pub import carrier_read_view
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_layout__pub import PlacementError, admitted_parent, derive_filename
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import parse_carrier
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection import ProjectSelection
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.scope_unit_declarations__pub import read_scope_unit_declarations
 
 from .common import InputError, logical_container
 from .carrier import logical_view
 from .placement_model import active_placement
 from .source import query_reader, select_context, select_source
-
-
-class PlacementError(ValueError):
-    """Placement is unsafe, ambiguous, or not covered by the selected rules."""
 
 
 @dataclass(frozen=True)
@@ -37,21 +34,6 @@ class ContainerCarrier:
 
     def __fspath__(self):
         return str(self.path)
-
-
-def _token(value: str) -> str:
-    if not isinstance(value, str) or not re.fullmatch(r"[A-Za-z0-9]+(?:[ _-][A-Za-z0-9]+)*", value):
-        raise PlacementError("Unsupported structured filename token")
-    return re.sub(r"[ _-]+", "_", value).upper()
-
-
-def _slug(summary: str) -> str:
-    if not isinstance(summary, str) or not summary.isascii() or not summary.isprintable():
-        raise PlacementError("Unsupported Summary serialization")
-    slug = re.sub(r"[^A-Za-z0-9]+", "-", summary).strip("-").lower()
-    if not slug:
-        raise PlacementError("Unsupported Summary serialization")
-    return slug
 
 
 def _inside(path: Path, root: Path) -> Path:
@@ -75,7 +57,7 @@ def resolve_container(selection, view, atom_id, seen=frozenset(), *, model=None)
     parent = select_context(selection, ref) if query_reader() is not None else select_source(selection, ref)
     parent_view = logical_view(parent.metadata, model)
     role, form = view.get('role'), view.get('form')
-    if not _admitted_parent(role, form, parent_view, parent.status):
+    if not admitted_parent(role, form, parent_view, parent.status):
         raise InputError('container', 'Containing Atom Role or Form is unsupported.')
     scope, grandparent = resolve_container(selection, parent_view, parent.atom_id, seen | {atom_id}, model=model)
     expected = expected_status_directory(selection, role, parent.status, scope, grandparent)
@@ -87,15 +69,6 @@ def resolve_container(selection, view, atom_id, seen=frozenset(), *, model=None)
             or (not directory.is_dir() and not (shared_backlog and not directory.exists()))):
         raise InputError('container', 'Containing Atom directory is missing or unsafe.')
     return scope, ContainerCarrier(directory, parent.status) if role == 'Plan' else directory
-
-
-def _admitted_parent(role, form, parent, status):
-    if parent.get('role') != role or status.casefold() in {'draft', 'archived'}:
-        return False
-    if role == 'Plan':
-        return True
-    parent_form = {'Step': 'Workflow', 'Substep': 'Step', 'Sub-step': 'Step'}.get(form)
-    return role == 'Operations' and parent_form is not None and parent.get('form') == parent_form
 
 
 @trace('placement.scope_authority')
@@ -202,49 +175,6 @@ def _archive_destination(root, role_root, parent, role, atom_id, version, source
     if archive_base != 'role':
         raise PlacementError('Archived placement is not Role-owned')
     return _inside(role_root / archive_folder / (stem + ".md"), root)
-
-
-def _plan_placement(marker, effective_label, target_scope, work_sequence):
-    if work_sequence is not None and (type(work_sequence) is not int or work_sequence < 1):
-        raise PlacementError("Invalid Work Sequence Number")
-    stem = (f"{work_sequence}-" if work_sequence is not None else "") + marker
-    if effective_label:
-        stem += "-" + _token(effective_label)
-    if target_scope is not None:
-        raise PlacementError("Plan target token is unsupported")
-    return stem
-
-
-def _ordinary_placement(marker, effective_label, target_scope, work_sequence, row, tier):
-    if work_sequence is not None:
-        raise PlacementError("Work Sequence Number applies only to Plan")
-    stem = marker
-    if row["parent"] != "PROJECT":
-        stem += "-" + _token(row["scope_unit_name"])
-    if tier == 0:
-        stem += "-SCOPE_CONTRACT"
-    if effective_label:
-        stem += "-" + _token(effective_label)
-    if target_scope:
-        stem += "-" + _token(target_scope)
-    return stem
-
-
-def derive_filename(*, atom_id, version, status, role, summary, row, form=None,
-                    label=None, tier=None, target_scope=None, work_sequence=None):
-    """Serialize the supported Current/Draft filename grammar without I/O."""
-    if type(version) is not int or version < 1 or not isinstance(atom_id, str):
-        raise PlacementError("Invalid Atom identity or Version")
-    if tier is not None and (type(tier) is not int or tier < 0):
-        raise PlacementError("Invalid Tier")
-    state = status.casefold() if isinstance(status, str) else None
-    marker = atom_id + (f"@{version}-draft" if state == "draft" else "")
-    effective_label = form if label is None or label == "" else label
-    if role == "Plan":
-        stem = _plan_placement(marker, effective_label, target_scope, work_sequence)
-    else:
-        stem = _ordinary_placement(marker, effective_label, target_scope, work_sequence, row, tier)
-    return stem + "--" + _slug(summary) + ".md"
 
 
 @trace('placement.derive_destination')

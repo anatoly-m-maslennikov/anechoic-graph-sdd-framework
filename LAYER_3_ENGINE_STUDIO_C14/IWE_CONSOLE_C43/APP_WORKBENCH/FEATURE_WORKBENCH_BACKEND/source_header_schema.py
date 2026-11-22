@@ -7,9 +7,9 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
-from .content_schema import FormalStatement
-from .declared_header_rules import header_rules_from_statements
-from .header_columns import HeaderSchema, declared_header_schema
+from KERNEL_MIXER_C59.content_schema import FormalStatement
+from KERNEL_MIXER_C59.declared_header_rules import header_rules_from_statements
+from KERNEL_MIXER_C59.header_columns import HeaderSchema, declared_header_schema
 from .source_content_schema import declaration_contributions, updated_declarations
 
 

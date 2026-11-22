@@ -1,6 +1,5 @@
 """A watcher must see the final inode after the staging link is removed."""
 from pathlib import Path
-from contextlib import contextmanager
 import os
 import sys
 import tempfile
@@ -11,7 +10,7 @@ from unittest.mock import patch
 TOOLS = Path(__file__).resolve().parents[1]
 ROOT = TOOLS.parents[2]
 sys.path.insert(0, str(TOOLS))
-from ATOM_LIFECYCLE import effects, source  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE import effects  # noqa: E402
 
 
 class PublicationTest(unittest.TestCase):

@@ -10,7 +10,7 @@ from functools import wraps
 import inspect
 from typing import Any, Literal, ParamSpec, TypeVar, cast
 
-from technical_diagnostics import TechnicalDiagnosticLogger
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.technical_diagnostics import TechnicalDiagnosticLogger
 
 
 P = ParamSpec("P")

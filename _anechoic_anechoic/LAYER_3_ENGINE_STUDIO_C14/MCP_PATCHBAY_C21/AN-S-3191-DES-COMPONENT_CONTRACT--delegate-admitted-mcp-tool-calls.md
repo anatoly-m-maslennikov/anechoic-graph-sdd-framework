@@ -8,9 +8,9 @@ context:
   template: component_contract
   lens: DES
 state:
-  status: active
-  version: 1
-  updated_at: '2026-11-21T17:36:24.701358+00:00'
+  status: "active"
+  version: 3
+  updated_at: "2026-11-22T09:43:04.537050+00:00"
 ---
 
 ## Summary
@@ -19,14 +19,16 @@ Delegate admitted MCP Tool calls
 
 ## Guarantee
 
-For the selected Project, admit exposed Tool requests against the active
-registry and the Tool's input schema. Delegate each admitted request to the
-canonical provider registered for the Tool. Transport the validated result
-or a failure through MCP.
+For an admitted Project, expose the Tools in the Backend JSON catalog.
+Preserve each Tool's name, description, and input schema. Forward the
+Tool name, arguments, and request context to Backend and return its
+result or failure through MCP.
 
-Reject a request before dispatch when the Tool is unavailable for the Project
-or the input fails validation.
+Backend owns Tool eligibility, validation, and dispatch. MCP can read the
+Project Manifest and runtime settings through declared interfaces for
+Project binding and startup. The MCP bridge has zero production
+cross-Component imports.
 
 ## References
 
-AN-S-1381, AN-S-3044, and AN-T-2947.
+AN-S-1381, AN-S-1391, AN-S-3044, and AN-T-2944.

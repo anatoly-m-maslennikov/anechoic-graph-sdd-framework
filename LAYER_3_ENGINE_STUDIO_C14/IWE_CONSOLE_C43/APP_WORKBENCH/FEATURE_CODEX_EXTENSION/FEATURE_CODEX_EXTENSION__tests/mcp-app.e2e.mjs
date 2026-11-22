@@ -51,6 +51,32 @@ test('MCP App receives the initial result and calls a separate read-only tool', 
   }
 });
 
+async function connectPresentationHost(page, outcome) {
+  await page.setContent('<iframe title="probe"></iframe>');
+  await page.evaluate(({ html, outcome }) => {
+    const frame = document.querySelector('iframe');
+    window.displayRequests = [];
+    window.addEventListener('message', event => {
+      if (event.source !== frame.contentWindow || event.data?.jsonrpc !== '2.0') return;
+      const { id, method, params } = event.data;
+      const send = message => frame.contentWindow.postMessage({ jsonrpc: '2.0', ...message }, '*');
+      if (method === 'ui/initialize') {
+        window.appModes = params.appCapabilities.availableDisplayModes;
+        send({ id, result: { hostContext: {
+          displayMode: 'inline',
+          availableDisplayModes: outcome === 'unsupported' ? ['inline'] : ['inline', 'fullscreen'],
+        } } });
+      } else if (method === 'ui/request-display-mode') {
+        window.displayRequests.push(params);
+        send(outcome === 'error'
+          ? { id, error: { code: -32601, message: 'Expansion not supported' } }
+          : { id, result: { mode: outcome === 'inline' ? 'inline' : 'fullscreen' } });
+      }
+    });
+    frame.srcdoc = html;
+  }, { html: fs.readFileSync(resolve(extension, 'mcp_app_probe.html'), 'utf8'), outcome });
+}
+
 test('presentation uses offered modes and reports the actual host response', async () => {
   const browser = await chromium.launch({ headless: true });
   try {
@@ -58,29 +84,7 @@ test('presentation uses offered modes and reports the actual host response', asy
       const page = await browser.newPage();
       const errors = [];
       page.on('pageerror', error => errors.push(error.message));
-      await page.setContent('<iframe title="probe"></iframe>');
-      await page.evaluate(({ html, outcome }) => {
-        const frame = document.querySelector('iframe');
-        window.displayRequests = [];
-        window.addEventListener('message', event => {
-          if (event.source !== frame.contentWindow || event.data?.jsonrpc !== '2.0') return;
-          const { id, method, params } = event.data;
-          const send = message => frame.contentWindow.postMessage({ jsonrpc: '2.0', ...message }, '*');
-          if (method === 'ui/initialize') {
-            window.appModes = params.appCapabilities.availableDisplayModes;
-            send({ id, result: { hostContext: {
-              displayMode: 'inline',
-              availableDisplayModes: outcome === 'unsupported' ? ['inline'] : ['inline', 'fullscreen'],
-            } } });
-          } else if (method === 'ui/request-display-mode') {
-            window.displayRequests.push(params);
-            send(outcome === 'error'
-              ? { id, error: { code: -32601, message: 'Expansion not supported' } }
-              : { id, result: { mode: outcome === 'inline' ? 'inline' : 'fullscreen' } });
-          }
-        });
-        frame.srcdoc = html;
-      }, { html: fs.readFileSync(resolve(extension, 'mcp_app_probe.html'), 'utf8'), outcome });
+      await connectPresentationHost(page, outcome);
       const frame = page.frameLocator('iframe');
       await frame.getByText('Host bridge connected', { exact: true }).waitFor();
       assert.deepEqual(await page.evaluate(() => window.appModes), ['inline', 'fullscreen']);

@@ -12,7 +12,7 @@ import yaml
 SCRIPT_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPT_DIR))
 
-import declaration_view  # noqa: E402
+import FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.declaration_view as declaration_view  # noqa: E402
 
 
 FENCE = chr(96) * 3
@@ -76,51 +76,56 @@ def render(
     )
 
 
+def good_view_document():
+    raw_yaml = (
+        FENCE
+        + "yaml\n"
+        + "graph_rule_type: whitelist\n"
+        + "applies_to:\n"
+        + "  relation_type: IS_CONTAINED_BY\n"
+        + "condition:\n"
+        + "  source: [Child]\n"
+        + "  target: [Parent]\n"
+        + FENCE
+    )
+    document = render(
+        {
+            "relation_types": [
+                relation_type(
+                    "Entities Graph",
+                    "IS_CONTAINED_BY",
+                    evidence=[
+                        {
+                            "source": source("CA-R-1368", 14),
+                            "subject": "Entity/Plan",
+                            "body": "The source Claim establishes the direct containment direction.",
+                        }
+                    ],
+                )
+            ],
+            "graph_rules": [
+                {
+                    "source": source("CA-R-200", 4),
+                    "subject": "Entity/Plan",
+                    "summary": "Plan containment rule.",
+                    "yaml_block": raw_yaml,
+                }
+            ],
+            "limitations": ["Project selection is not included."],
+            "unresolved": [],
+        },
+        owners=[
+            {"source": source("CA-R-200", 4)},
+            {"source": source("CA-R-100", 2)},
+            {"source": source("CA-R-100", 2)},
+        ],
+    )
+    return document, raw_yaml
+
+
 class DeclarationViewTests(unittest.TestCase):
     def test_good_view_has_identity_sections_and_no_atom_relation_map(self) -> None:
-        raw_yaml = (
-            FENCE
-            + "yaml\n"
-            + "graph_rule_type: whitelist\n"
-            + "applies_to:\n"
-            + "  relation_type: IS_CONTAINED_BY\n"
-            + "condition:\n"
-            + "  source: [Child]\n"
-            + "  target: [Parent]\n"
-            + FENCE
-        )
-        document = render(
-            {
-                "relation_types": [
-                    relation_type(
-                        "Entities Graph",
-                        "IS_CONTAINED_BY",
-                        evidence=[
-                            {
-                                "source": source("CA-R-1368", 14),
-                                "subject": "Entity/Plan",
-                                "body": "The source Claim establishes the direct containment direction.",
-                            }
-                        ],
-                    )
-                ],
-                "graph_rules": [
-                    {
-                        "source": source("CA-R-200", 4),
-                        "subject": "Entity/Plan",
-                        "summary": "Plan containment rule.",
-                        "yaml_block": raw_yaml,
-                    }
-                ],
-                "limitations": ["Project selection is not included."],
-                "unresolved": [],
-            },
-            owners=[
-                {"source": source("CA-R-200", 4)},
-                {"source": source("CA-R-100", 2)},
-                {"source": source("CA-R-100", 2)},
-            ],
-        )
+        document, raw_yaml = good_view_document()
 
         frontmatter = yaml.safe_load(document.split("---\n", 2)[1])
         self.assertEqual("Projection", frontmatter["artifact_form"])

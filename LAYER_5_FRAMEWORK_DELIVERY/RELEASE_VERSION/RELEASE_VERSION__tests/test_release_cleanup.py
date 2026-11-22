@@ -6,19 +6,17 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import subprocess
-import sys
 import tempfile
 import unittest
 from unittest.mock import patch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from release_cleanup import (  # noqa: E402
+from RELEASE_VERSION.release_cleanup import (  # noqa: E402
     Cleanup,
     cleanup_obsolete_images,
     cleanup_stopped_containers,
 )
-from release_cleanup_identity import FINGERPRINT, SCHEMA  # noqa: E402
-from release_cleanup_images import record_ready_images  # noqa: E402
+from RELEASE_VERSION.release_cleanup_identity import FINGERPRINT, SCHEMA  # noqa: E402
+from RELEASE_VERSION.release_cleanup_images import record_ready_images  # noqa: E402
 
 ROOT = Path("/project")
 CURRENT = "sha256:" + "a" * 64
@@ -211,7 +209,7 @@ class ReleaseCleanupTests(unittest.TestCase):
 
     def test_default_docker_invocation_has_timeout_and_no_force(self) -> None:
         with patch(
-            "release_cleanup.subprocess.run",
+            "RELEASE_VERSION.release_cleanup.subprocess.run",
             return_value=subprocess.CompletedProcess([], 0, "", ""),
         ) as run:
             cleanup = cleanup_stopped_containers(

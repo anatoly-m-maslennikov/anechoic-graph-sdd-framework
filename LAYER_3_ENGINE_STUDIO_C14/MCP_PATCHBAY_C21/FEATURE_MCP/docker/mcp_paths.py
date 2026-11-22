@@ -3,15 +3,10 @@
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
 
 
 def _canonical_paths() -> tuple[str, str]:
-    feature_mcp = Path(__file__).resolve().parents[1]
-    if str(feature_mcp) not in sys.path:
-        sys.path.insert(0, str(feature_mcp))
-    from http_paths import HEALTH_PATH, MCP_PATH
+    from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import HEALTH_PATH, MCP_PATH
 
     return MCP_PATH, HEALTH_PATH
 

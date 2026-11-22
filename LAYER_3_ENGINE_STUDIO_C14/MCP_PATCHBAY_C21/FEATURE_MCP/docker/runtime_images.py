@@ -8,18 +8,13 @@ are started, replaced or retired here.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from collections.abc import Callable
 import hashlib
 import json
 import os
 from pathlib import Path
 import platform as host_platform
-import re
-import stat
 import subprocess
-import sys
-import tempfile
 
 try:
     from .image_reference import IMMUTABLE_IMAGE
@@ -27,150 +22,42 @@ try:
         OCI_VERSION_LABEL, display_image_tag, docker_created_utc, read_framework_version,
     )
     from .image_display_tags import ensure_display_tag, set_display_role
-    from .image_provenance import ImageBuildProvenance, label_arguments
+    from .image_provenance import ImageBuildProvenance
     from .image_tool_registry import TOOL_REGISTRY
     from .image_tool_registry import compile_tool_registry as _compile_tool_registry
     from .image_docker_client import MAX_OUTPUT as _MAX_OUTPUT
     from .image_docker_client import bounded_run as _bounded_run
     from .image_docker_client import docker_client_environment as _docker_client_environment
 except ImportError:
-    from image_reference import IMMUTABLE_IMAGE
-    from image_metadata import OCI_VERSION_LABEL, display_image_tag, docker_created_utc, read_framework_version
-    from image_display_tags import ensure_display_tag, set_display_role
-    from image_provenance import ImageBuildProvenance, label_arguments
-    from image_tool_registry import TOOL_REGISTRY
-    from image_tool_registry import compile_tool_registry as _compile_tool_registry
-    from image_docker_client import MAX_OUTPUT as _MAX_OUTPUT
-    from image_docker_client import bounded_run as _bounded_run
-    from image_docker_client import docker_client_environment as _docker_client_environment
+    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_reference import IMMUTABLE_IMAGE
+    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_metadata import OCI_VERSION_LABEL, display_image_tag, docker_created_utc, read_framework_version
+    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_display_tags import ensure_display_tag, set_display_role
+    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_provenance import ImageBuildProvenance
+    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_tool_registry import TOOL_REGISTRY
+    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_tool_registry import compile_tool_registry as _compile_tool_registry
+    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_docker_client import MAX_OUTPUT as _MAX_OUTPUT
+    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_docker_client import bounded_run as _bounded_run
+    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_docker_client import docker_client_environment as _docker_client_environment
 
 
-ENGINE_ROOT = "LAYER_3_ENGINE_STUDIO_C14"
-DOCKER_ROOT = ENGINE_ROOT + "/MCP_PATCHBAY_C21/FEATURE_MCP/docker"
-DOCKERFILE = DOCKER_ROOT + "/Dockerfile"
-DOCKERIGNORE = DOCKER_ROOT + "/Dockerfile.dockerignore"
-RETIRED_ASSETS = frozenset(
-    ENGINE_ROOT + "/" + directory + "/" + name
-    for directory, names in (
-        ("IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND",
-         ("canonical_relation_registry.json", "workbench_schema.json")),
-        ("FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ATOM_LIFECYCLE",
-         ("status_model.json", "candidate_schema.json")),
+try:
+    from .runtime_images_common import (
+        SCHEMA, SCHEMA_LABEL, FINGERPRINT_LABEL, ImageError, BuildInput,
+        ImageIdentity, _PLATFORM, _canonical, _unique_object,
     )
-    for name in names
-)
-_GENERATED_ASSETS = frozenset({TOOL_REGISTRY})
-SCHEMA_LABEL = "org.anechoic.runtime.schema"
-FINGERPRINT_LABEL = "org.anechoic.runtime.fingerprint"
-SCHEMA = "1"
-_REQUIRED = ("pyproject.toml", "uv.lock", "version.toml", DOCKERFILE, DOCKERIGNORE)
-_TRANSIENT_DIRECTORIES = frozenset({
-    ".git", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache",
-    ".tox", ".nox", ".venv", ".virtualenv", "venv", "virtualenv",
-    "node_modules", "testcache", ".testcache", "tmp",
-})
-_SECRET_FILES = frozenset({
-    "auth.json", "credentials.json", "token.txt", "token.json", "secrets.json", "secrets.txt",
-})
-_CREDENTIAL_DIRECTORIES = frozenset({
-    "vault", ".vault", "secrets", ".secrets", "credentials", ".credentials",
-})
-_PLATFORM = re.compile(r"linux/(?:amd64|arm64|arm|386|ppc64le|s390x|riscv64)(?:/v[0-9]+)?")
+    from .runtime_images_source import ImageSource
+    from .runtime_images_build import ImageBuild
+except ImportError:
+    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images_common import (
+        SCHEMA, SCHEMA_LABEL, FINGERPRINT_LABEL, ImageError, BuildInput,
+        ImageIdentity, _PLATFORM, _canonical, _unique_object,
+    )
+    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images_source import ImageSource
+    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images_build import ImageBuild
+
 _DEFAULT_EXECUTOR = subprocess.run
 
-
-class ImageError(RuntimeError):
-    """One safe launcher condition, without captured Docker diagnostics."""
-
-    def __init__(self, code: str, message: str | None = None):
-        self.code = code
-        defaults = {
-            "IMAGE_INPUT_UNAVAILABLE": "Supply a readable --source-root Framework build closure",
-            "IMAGE_REFUSED": "A matching immutable runtime image could not be admitted",
-            "BUILD_FAILED": "Runtime image build did not produce an admitted immutable image",
-        }
-        super().__init__(message or defaults.get(code, "Runtime image operation failed"))
-
-
-@dataclass(frozen=True)
-class BuildInput:
-    path: str
-    sha256: str
-    mode: int
-
-
-@dataclass(frozen=True)
-class ImageIdentity:
-    fingerprint: str
-    tag: str
-    version: str
-    platform: str
-    manifest: tuple[BuildInput, ...]
-    uid: int
-    gid: int
-    tool_registry: bytes
-    model_sha256: str | None
-
-
-def _canonical(value: object) -> bytes:
-    return json.dumps(value, sort_keys=True, separators=(",", ":"),
-                      ensure_ascii=False, allow_nan=False).encode("utf-8")
-
-
-def _excluded_directory(name: str) -> bool:
-    return (name in _TRANSIENT_DIRECTORIES or name in _CREDENTIAL_DIRECTORIES
-            or name.startswith((".anechoic_", "_anechoic_")) or name.endswith("__tests"))
-
-
-def _excluded_file(name: str) -> bool:
-    return (_excluded_directory(name)
-            or name == ".env" or name.startswith(".env.") or name.endswith(".env")
-            or name in _SECRET_FILES or name == ".DS_Store"
-            or Path(name).suffix in {".pyc", ".pyo", ".pem", ".key"})
-
-
-def _unique_object(pairs):
-    value = {}
-    for key, item in pairs:
-        if key in value:
-            raise ValueError("duplicate image inspection member")
-        value[key] = item
-    return value
-
-
-def _receipt_image(path: Path, selection: object) -> str:
-    from VALIDATE_ATOMS.validate_atoms_workers.read_io import open_regular
-
-    descriptor = open_regular(path)
-    try:
-        info = os.fstat(descriptor)
-        if not stat.S_ISREG(info.st_mode) or info.st_size > 65536:
-            raise ValueError("invalid launcher receipt")
-        with os.fdopen(descriptor, "rb") as stream:
-            descriptor = -1
-            raw = stream.read(65537)
-            if len(raw) > 65536:
-                raise ValueError("invalid launcher receipt")
-            payload = json.loads(raw, object_pairs_hook=_unique_object)
-    finally:
-        if descriptor != -1:
-            os.close(descriptor)
-    image = payload.get("image_id")
-    if (payload.get("project_root") != str(selection.root)
-            or payload.get("control_root") != str(selection.control_root)
-            or payload.get("project_id") != selection.instance_id
-            or payload.get("readiness") is not True
-            or not isinstance(image, str) or IMMUTABLE_IMAGE.fullmatch(image) is None):
-        raise ValueError("launcher receipt does not match selected Project")
-    return image
-
-
-def ready_predecessor(selection) -> str | None:
-    path = selection.launcher_state / "ready.json"
-    return _receipt_image(path, selection) if os.path.lexists(path) else None
-
-
-class ImageManager:
+class ImageManager(ImageSource, ImageBuild):
     def __init__(self, source_root: Path | str, executor: Callable[..., subprocess.CompletedProcess[str]] = _DEFAULT_EXECUTOR,
                  timeout: float = 600, *, uid: int | None = None, gid: int | None = None,
                  platform: str | None = None, build_temp_root: Path | str | None = None,
@@ -204,141 +91,12 @@ class ImageManager:
         if not isinstance(self.platform, str) or _PLATFORM.fullmatch(self.platform) is None:
             raise ImageError("IMAGE_INPUT_UNAVAILABLE", "Supply a supported explicit Linux image platform")
 
-    @staticmethod
-    def _input_error():
-        return ImageError("IMAGE_INPUT_UNAVAILABLE",
-                          "Framework image inputs are unavailable or changed; supply a readable --source-root build closure")
-
-    def _root(self) -> Path:
-        try:
-            if self.source_root.is_symlink() or not self.source_root.is_dir():
-                raise self._input_error()
-            return self.source_root.resolve(strict=True)
-        except (OSError, ValueError) as error:
-            raise self._input_error() from error
-
-    def _project_root(self) -> Path:
-        try:
-            if self.project_root.is_symlink() or not self.project_root.is_dir():
-                raise self._input_error()
-            return self.project_root.resolve(strict=True)
-        except (OSError, ValueError) as error:
-            raise self._input_error() from error
-
-    def _build_predecessor(self) -> str | None:
-        """Pin the selected Project's last ready image for this manager."""
-        if self._previous_image_resolved:
-            return self.previous_image
-        root = self._project_root()
-        state = root
-        for part in (".anechoic_runtime", "runtime", "project_mcp"):
-            state = state / part
-            if not os.path.lexists(state):
-                self._previous_image_resolved = True
-                return None
-            if state.is_symlink() or not state.is_dir():
-                raise self._input_error()
-        tools = Path(__file__).resolve().parents[3] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
-        for directory in (tools, tools.parent, tools.parents[1] / "IWE_CONSOLE_C43",
-                          Path(__file__).resolve().parents[1]):
-            if str(directory) not in sys.path:
-                sys.path.insert(0, str(directory))
-        try:
-            from native_startup import select_runtime_project
-            selection = select_runtime_project(root)
-            if (selection.root != root or not selection.control_root.is_relative_to(root)
-                    or selection.launcher_state != state / selection.instance_id):
-                raise ValueError("invalid Project launcher state")
-            if os.path.lexists(selection.launcher_state) and (
-                selection.launcher_state.is_symlink() or not selection.launcher_state.is_dir()
-            ):
-                raise ValueError("invalid Project launcher state")
-            image = ready_predecessor(selection)
-            self.previous_image = image
-            self._previous_image_resolved = True
-            return image
-        except Exception as error:
-            raise self._input_error() from error
-
-    def _refresh_model(self, root: Path) -> str:
-        previous = self._build_predecessor()
-        command = [sys.executable, "-B", str(self._file(root, DOCKER_ROOT + "/native_model_refresh.py")),
-                   str(self._project_root()), str(self.timeout)]
-        if previous is not None:
-            command.append(previous)
-        result = subprocess.run(command, cwd=root, stdin=subprocess.DEVNULL,
-                                stdout=subprocess.PIPE, text=True, timeout=self.timeout, check=False)
-        fingerprint = result.stdout.strip()
-        if result.returncode or re.fullmatch(r"[0-9a-f]{64}", fingerprint) is None:
-            raise ImageError("IMAGE_INPUT_UNAVAILABLE", "Native Model refresh failed")
-        return fingerprint
-
-    def _build_parent(self) -> Path:
-        temporary = self._project_root() / ".anechoic_tmp"
-        parent = self.build_temp_root or temporary
-        try:
-            if (temporary.is_symlink() or not temporary.is_dir()
-                    or parent.is_symlink() or not parent.is_dir()):
-                raise OSError("unsafe private image temporary root")
-            expected = temporary.resolve(strict=True)
-            resolved = parent.resolve(strict=True)
-            if (not parent.is_absolute() or ".." in parent.parts or resolved != parent
-                    or not resolved.is_relative_to(expected)):
-                raise OSError("unsafe private image temporary root")
-            return resolved
-        except (OSError, ValueError) as error:
-            raise ImageError("BUILD_FAILED", "Private image build context is unavailable") from error
-
-    def _file(self, root: Path, relative: str) -> Path:
-        path = root
-        for part in Path(relative).parts:
-            path /= part
-            if path.is_symlink():
-                raise self._input_error()
-        if not path.is_file():
-            raise self._input_error()
-        return path
-
-    def _files(self, root: Path) -> tuple[Path, ...]:
-        required = tuple(self._file(root, relative) for relative in _REQUIRED)
-        engine = root / ENGINE_ROOT
-        if engine.is_symlink() or not engine.is_dir():
-            raise self._input_error()
-        selected = set(required)
-
-        def unavailable(_error):
-            raise self._input_error()
-
-        for current, directories, names in os.walk(engine, followlinks=False, onerror=unavailable):
-            folder = Path(current)
-            retained = []
-            for name in sorted(directories):
-                if _excluded_directory(name) or _excluded_file(name):
-                    continue
-                path = folder / name
-                if path.is_symlink() or not path.is_dir():
-                    raise self._input_error()
-                retained.append(name)
-            directories[:] = retained
-            for name in sorted(names):
-                if _excluded_file(name):
-                    continue
-                path = folder / name
-                relative = path.relative_to(root).as_posix()
-                if relative in _GENERATED_ASSETS | RETIRED_ASSETS:
-                    if path.is_symlink() or not path.is_file():
-                        raise self._input_error()
-                    continue
-                if path.is_symlink() or not path.is_file():
-                    raise self._input_error()
-                selected.add(path)
-        return tuple(sorted(selected, key=lambda path: path.relative_to(root).as_posix()))
-
     def identity(self, *, use_packaged_assets: bool = False) -> ImageIdentity:
         """Fingerprint the source closure with fresh or packaged generated assets."""
         root = self._root()
         try:
             version = read_framework_version(self._file(root, "version.toml"))
+            files = self._files(root)
             model_sha256 = None
             if use_packaged_assets:
                 tools = self._file(root, TOOL_REGISTRY).read_bytes()
@@ -350,7 +108,7 @@ class ImageManager:
             rows = [BuildInput(path.relative_to(root).as_posix(),
                                hashlib.sha256(path.read_bytes()).hexdigest(),
                                path.stat().st_mode & 0o777)
-                    for path in self._files(root)]
+                    for path in files]
             rows.append(BuildInput(TOOL_REGISTRY, hashlib.sha256(tools).hexdigest(), 0o644))
             rows = tuple(sorted(rows, key=lambda row: row.path))
         except (OSError, ValueError, UnicodeError, subprocess.SubprocessError) as error:
@@ -476,109 +234,3 @@ class ImageManager:
             raise ImageError("IMAGE_REFUSED", "Display tag metadata is invalid") from error
         self.ensure_display_tag(image, identity.version, created, role="prod" if production else "test")
         return image
-
-    def _build(self, identity: ImageIdentity, *, use_packaged_assets: bool) -> str:
-        """Build one image, then add its inspect-derived display tag if safe."""
-        self._current(identity, use_packaged_assets=use_packaged_assets)
-        try:
-            parent = self._build_parent()
-            attempt = Path(tempfile.mkdtemp(prefix="anechoic-runtime-image-", dir=parent))
-            attempt.chmod(0o700)
-            context = attempt / "context"
-            context.mkdir()
-            buildx = attempt / "buildx"
-            buildx.mkdir(mode=0o700)
-            buildx.chmod(0o700)
-        except OSError as error:
-            raise ImageError("BUILD_FAILED", "Private image build context is unavailable") from error
-        self._assemble(context, identity)
-        iidfile = attempt / "image.id"
-        self._current(identity, use_packaged_assets=use_packaged_assets)
-        self._verify_context(context, identity)
-        command = ("docker", "build", "--iidfile", str(iidfile),
-                   "--label", f"{SCHEMA_LABEL}={SCHEMA}",
-                   "--label", f"{FINGERPRINT_LABEL}={identity.fingerprint}",
-                   "--label", f"{OCI_VERSION_LABEL}={identity.version}",
-                   *label_arguments(self.build_provenance),
-                   "--platform", identity.platform,
-                   "--build-arg", f"RUNTIME_UID={identity.uid}",
-                   "--build-arg", f"RUNTIME_GID={identity.gid}",
-                   "--file", str(context / DOCKERFILE), str(context))
-        self._run(command, code="BUILD_FAILED", cwd=context, buildx_config=buildx)
-        self._current(identity, use_packaged_assets=use_packaged_assets)
-        self._verify_context(context, identity)
-        try:
-            if iidfile.is_symlink() or not iidfile.is_file() or iidfile.stat().st_size > 1024:
-                raise ValueError("immutable builder identity is absent")
-            image = iidfile.read_text(encoding="ascii").strip()
-            if IMMUTABLE_IMAGE.fullmatch(image) is None:
-                raise ValueError("immutable builder identity is invalid")
-        except (OSError, ValueError, UnicodeError) as error:
-            raise ImageError("BUILD_FAILED", "Builder did not capture one immutable sha256 image ID") from error
-        created, _ = self._inspect_details(image, identity, code="BUILD_FAILED", built=True)
-        self.ensure_display_tag(image, identity.version, created)
-        self._current(identity, use_packaged_assets=use_packaged_assets)
-        self._verify_context(context, identity)
-        return image
-
-    def _assemble(self, context: Path, identity: ImageIdentity):
-        root = self._root()
-        try:
-            for row in identity.manifest:
-                if row.path == TOOL_REGISTRY:
-                    payload = identity.tool_registry
-                else:
-                    source = self._file(root, row.path)
-                    payload = source.read_bytes()
-                if hashlib.sha256(payload).hexdigest() != row.sha256:
-                    raise self._input_error()
-                destination = context / row.path
-                destination.parent.mkdir(parents=True, exist_ok=True)
-                with destination.open("xb") as stream:
-                    stream.write(payload)
-                destination.chmod(row.mode)
-                if row.path not in _GENERATED_ASSETS and source.stat().st_mode & 0o777 != row.mode:
-                    raise self._input_error()
-        except OSError as error:
-            raise ImageError("BUILD_FAILED", "Private image context could not be assembled") from error
-        self._verify_context(context, identity)
-
-    def _verify_context(self, context: Path, identity: ImageIdentity):
-        expected = {row.path: row for row in identity.manifest}
-        expected_directories = {parent.as_posix() for row in identity.manifest
-                                for parent in Path(row.path).parents if parent != Path(".")}
-        observed = set()
-        observed_directories = set()
-        if context.is_symlink() or not context.is_dir():
-            raise self._input_error()
-
-        def unavailable(_error):
-            raise self._input_error()
-
-        try:
-            ignore_finder = self._file(context, DOCKERIGNORE).read_bytes().rstrip().endswith(b"\n**/.DS_Store")
-            for current, directories, names in os.walk(context, followlinks=False, onerror=unavailable):
-                folder = Path(current)
-                for name in directories:
-                    path = folder / name
-                    relative = path.relative_to(context).as_posix()
-                    if (relative not in expected_directories
-                            or path.is_symlink() or not path.is_dir()):
-                        raise self._input_error()
-                    observed_directories.add(relative)
-                for name in names:
-                    path = folder / name
-                    relative = path.relative_to(context).as_posix()
-                    if ignore_finder and name == ".DS_Store" and not path.is_symlink() and path.is_file():
-                        continue
-                    if relative not in expected or path.is_symlink() or not path.is_file():
-                        raise self._input_error()
-                    row = expected[relative]
-                    if (hashlib.sha256(path.read_bytes()).hexdigest() != row.sha256
-                            or path.stat().st_mode & 0o777 != row.mode):
-                        raise self._input_error()
-                    observed.add(relative)
-        except OSError as error:
-            raise self._input_error() from error
-        if observed != expected.keys() or observed_directories != expected_directories:
-            raise self._input_error()

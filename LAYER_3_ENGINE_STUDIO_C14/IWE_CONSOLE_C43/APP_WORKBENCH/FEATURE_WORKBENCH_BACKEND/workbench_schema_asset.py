@@ -9,11 +9,11 @@ import json
 from pathlib import Path
 from typing import Any
 
-from .content_schema import ContentRule, ContentSchema, DeclarationSource, _schema_from_rules
+from KERNEL_MIXER_C59.content_schema import ContentRule, ContentSchema, DeclarationSource, _schema_from_rules
 from .declared_classifications import compile_role_folders, compile_status_groups  # noqa: F401
-from .declared_header_rules import HeaderRule, compile_header_rules
-from .header_columns import HeaderColumn, HeaderSchema, declared_header_schema, infer_header_schema
-from .relations import canonical
+from KERNEL_MIXER_C59.declared_header_rules import HeaderRule, compile_header_rules
+from KERNEL_MIXER_C59.header_columns import HeaderColumn, HeaderSchema, declared_header_schema, infer_header_schema
+from KERNEL_MIXER_C59.relations import canonical
 
 
 DEFAULT_SCHEMA_PATH = Path(__file__).with_name("workbench_schema.json")

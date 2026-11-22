@@ -8,61 +8,21 @@ from contextlib import contextmanager
 from copy import deepcopy
 from datetime import datetime
 import fcntl
-import hashlib
 import json
 import os
 from pathlib import Path
 import re
-import sys
-import uuid
 from zoneinfo import ZoneInfo
 
 TOOLS = Path(__file__).resolve().parents[5] / 'LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS'
-sys.path.insert(0, str(TOOLS))
-from project_runtime import atomic_tempfile  # noqa: E402 - repository path bootstrap
-from work_journal import append_sealed_events, configured_journal_root  # noqa: E402
-from workflow_progress import CHECKS, LEGACY_CHECKS, report_progress, summarize_progress  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.project_temporary__pub import atomic_tempfile  # noqa: E402 - repository path bootstrap
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.journal_settings__pub import configured_journal_root  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.work_journal__pub import append_sealed_events  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.workflow_progress import CHECKS, LEGACY_CHECKS, report_progress, summarize_progress  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.workflow_evidence_journal import WORKFLOW, record_event  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.workflow_evidence_report import digest, encoded, render_report  # noqa: E402
 
-WORKFLOW = 'RMED Atoms Base Revise'
 RUN_ID = re.compile(r'[A-Za-z0-9][A-Za-z0-9_-]{0,127}\Z')
-
-
-def digest(data):
-    return hashlib.sha256(data).hexdigest()
-
-
-def encoded(value):
-    return json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False).encode()
-
-
-def block(value):
-    text = encoded(value).decode()
-    fence = '`' * max(3, max((len(x) + 1 for x in re.findall(r'`+', text)), default=3))
-    return f'{fence}json\n{text}\n{fence}\n'
-
-
-def render_report(state):
-    """Full evidence, including pending records; never truncate or invent verdicts."""
-    lines = ['# Run\n', block({key: state[key] for key in (
-        'workflow_name', 'workflow_run_id', 'definition', 'started_at', 'updated_at',
-        'outcome', 'recording_blockers')}), '## Selection\n',
-        block({key: state[key] for key in ('request', 'selection', 'gathered', 'exclusions')}),
-        '## Rules\n', block(state['criteria']), '## Results\n', block(state['progress']),
-        '## Coverage Gates\n', block(state.get('coverage_gates', {})),
-        '## Atom Reports\n']
-    if not state['selection']:
-        lines.append('No Atoms selected.\n' if state['gathered'] else 'Selection pending.\n')
-    for i, atom in enumerate(state['selection']):
-        lines += [f'### {i + 1}: {atom["atom_id"]}\n', block({
-            'source': atom['source'], 'report': state['reports'][i] or {'result': 'pending'},
-            'after': state['after'][i], 'history': state['history'][i]})]
-    lines += ['## Remaining Work\n', block({
-        'pending': [i for i, row in enumerate(state['reports']) if not report_progress(row, check_key=state.get('check_key', 'cce'))['complete']],
-        'gather_blockers': state['gather_blockers'], 'handoffs': state['handoffs'],
-        'reason': state.get('reason'), 'recording_blockers': state['recording_blockers']}),
-        '## Journal\n', block({'path': state['journal'], 'workflow_run_id': state['workflow_run_id'],
-            'events': state['events']})]
-    return '\n'.join(lines)
 
 
 class RunEvidence:
@@ -114,7 +74,7 @@ class RunEvidence:
     def _atomic(self, path, raw):
         self.path(str(path.relative_to(self.root)))
         self.path('.anechoic_tmp/rmed-base-revise/atomic')
-        descriptor, name = atomic_tempfile(path, 'rmed-base-revise', repository=self.root)
+        descriptor, name = atomic_tempfile(self.root, path, 'rmed-base-revise')
         try:
             with os.fdopen(descriptor, 'wb') as handle:
                 handle.write(raw)
@@ -156,23 +116,8 @@ class RunEvidence:
             return self._sync(self.load(run_id))
 
     def _event(self, state, event, step, outcome, details):
-        now = datetime.now(ZoneInfo(state['timezone'])).isoformat()
-        value = {'schema_version': 4, 'kind': 'workflow_execution',
-            'event_id': str(uuid.uuid4()), 'action_id': state['workflow_run_id'],
-            'event': event, 'author': state['author'], 'occurred_at': now,
-            'llm_session': state['session'], 'structural_scope': state['scope'],
-            'workflow_run_id': state['workflow_run_id'], 'workflow_name': WORKFLOW,
-            'step': step, 'outcome': outcome, 'report_path': state['report_path'], 'details': details}
-        entry = {'event': value, 'receipt': None}
-        state['events'].append(entry)
-        state['updated_at'] = now
-        self._save(state)
-        try:
-            entry['receipt'] = append_sealed_events(self.root, [value],
-                author=state['author'], local_date=now[:10], timezone=state['timezone'])[0]
-        except (OSError, RuntimeError, ValueError) as error:
-            state['recording_blockers'].append({'stage': 'journal',
-                'event_id': value['event_id'], 'error': str(error)})
+        record_event(self.root, state, event, step, outcome, details,
+                     save=self._save, append_events=append_sealed_events)
 
     def start(self, run_id, request, *, author, session, scope, timezone='UTC', definition=None):
         with self._lock(run_id):

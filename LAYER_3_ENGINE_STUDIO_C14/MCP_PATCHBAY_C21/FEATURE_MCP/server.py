@@ -5,27 +5,20 @@ from __future__ import annotations
 import argparse
 import asyncio
 from pathlib import Path
-from typing import TYPE_CHECKING
 
-from direct_gateway import native_runtime_gateway, startup_selection
-from runtime_process_boundary import run_process
+from MCP_PATCHBAY_C21.FEATURE_MCP.direct_gateway import native_runtime_gateway, startup_selection
+from MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary import run_startup
 
-if TYPE_CHECKING:
-    from native_query import NativeQueryInputs
-
-
-def _serve_stdio(args, *, native_inputs: NativeQueryInputs | None = None):
-    if native_inputs is not None:
-        from native_query import create_native_gateway
-
-        asyncio.run(create_native_gateway(args.project_root, args.control_root, native_inputs).serve())
+def _serve_stdio(args, *, gateway_factory=None):
+    if gateway_factory is not None:
+        asyncio.run(gateway_factory(args.project_root, args.control_root).serve())
         return
     selection = startup_selection(args.project_root, args.control_root, args.instance_id, args.host_project_root)
     with native_runtime_gateway(selection) as gateway:
         asyncio.run(gateway.serve())
 
 
-def main(argv=None, *, native_inputs: NativeQueryInputs | None = None):
+def main(argv=None, *, gateway_factory=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--project-root', required=True, type=Path)
     parser.add_argument('--control-root')
@@ -33,25 +26,24 @@ def main(argv=None, *, native_inputs: NativeQueryInputs | None = None):
     parser.add_argument('--host-project-root')
     parser.add_argument('--transport', choices=('stdio', 'streamable-http'), default='stdio')
     args = parser.parse_args(argv)
-    if native_inputs is not None and (
+    if gateway_factory is not None and (
         not args.control_root
         or args.instance_id is not None or args.host_project_root is not None
     ):
         parser.error('Native selection requires --control-root and derives its own instance identity')
     if args.transport == 'stdio':
-        return run_process(
-            lambda: _serve_stdio(args, native_inputs=native_inputs), operation='mcp.stdio_startup',
-            root=args.project_root,
+        return run_startup(
+            lambda: _serve_stdio(args, gateway_factory=gateway_factory), operation='mcp_stdio_startup',
         )
     else:
-        from http_server import main as serve_http
+        from MCP_PATCHBAY_C21.FEATURE_MCP.http_server import main as serve_http
         http_argv = ['--project-root', str(args.project_root)]
         for flag, value in (('--control-root', args.control_root), ('--instance-id', args.instance_id),
                             ('--host-project-root', args.host_project_root)):
             if value is not None:
                 http_argv += [flag, value]
-        if native_inputs is not None:
-            return serve_http(http_argv, native_inputs=native_inputs)
+        if gateway_factory is not None:
+            return serve_http(http_argv, gateway_factory=gateway_factory)
         return serve_http(http_argv)
 
 

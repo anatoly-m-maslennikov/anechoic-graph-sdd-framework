@@ -11,12 +11,12 @@ import tempfile
 
 
 TOOL_REGISTRY_COMPILER = (
-    "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/generate_tool_registry.py"
+    "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/generate_tool_registry.py"
 )
 TOOL_PROVIDERS = (
-    "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/tool_providers.json"
+    "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/tool_providers.json"
 )
-TOOL_REGISTRY = "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/tool_registry.json"
+TOOL_REGISTRY = "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/tool_registry.json"
 
 
 def compile_tool_registry(source_root: Path, *, timeout: float, max_output: int) -> bytes:
@@ -36,7 +36,7 @@ def compile_tool_registry(source_root: Path, *, timeout: float, max_output: int)
         result = subprocess.run(
             [sys.executable, "-B", str(staged_compiler), "--package-root", str(package)],
             cwd=package,
-            env={},
+            env={"PYTHONPATH": str(package / "LAYER_3_ENGINE_STUDIO_C14")},
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             timeout=timeout,

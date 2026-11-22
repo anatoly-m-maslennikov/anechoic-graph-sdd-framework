@@ -8,27 +8,18 @@ import json
 import os
 from pathlib import Path
 import re
-import selectors
-import subprocess
-import sys
 import time
 from typing import Any, Mapping
 from urllib.parse import urlsplit
 
-_MCP = Path(__file__).resolve().parents[1]
-_PROGRAMMATIC = _MCP.parents[1] / "FEATURE_PROGRAMMATIC"
-for _path in (_PROGRAMMATIC, _MCP, _PROGRAMMATIC / "FEATURE_TOOLS", _MCP.parents[1] / "IWE_CONSOLE_C43"):
-    if str(_path) not in sys.path:
-        sys.path.insert(0, str(_path))
-
-from mcp_paths import MCP_PATH
-from runtime_images import ImageError, ImageManager
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.mcp_paths import MCP_PATH
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images import ImageError, ImageManager
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_docker_command import BackendError, _bounded_run
 
 
 _DIRECTORY = Path(__file__).resolve().parent
 _COMPOSE = _DIRECTORY / "project-mcp.compose.yaml"
 _CONTAINER_ID = re.compile(r"[0-9a-f]{12,64}\Z")
-_MAX_STDOUT = 64 * 1024
 _DOCKER_CLIENT_ENV = (
     "HOME", "DOCKER_HOST", "DOCKER_CONTEXT", "DOCKER_CONFIG", "XDG_RUNTIME_DIR", "TMPDIR",
     "HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "NO_PROXY",
@@ -46,14 +37,6 @@ _INSPECT_FORMAT = (
 )
 
 
-class BackendError(RuntimeError):
-    """Safe lifecycle failure; command diagnostics are deliberately discarded."""
-
-    def __init__(self, code: str = "DOCKER_START_FAILED") -> None:
-        self.code = code
-        super().__init__(code)
-
-
 def _unique_object(pairs):
     value = {}
     for key, item in pairs:
@@ -61,50 +44,6 @@ def _unique_object(pairs):
             raise ValueError("duplicate Docker inspect member")
         value[key] = item
     return value
-
-
-def _bounded_run(argv: list[str], *, timeout: float, env: Mapping[str, str] | None = None) -> str:
-    """Run one finite Docker command with bounded stdout and discarded stderr."""
-    process = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
-                               stderr=subprocess.DEVNULL, env=dict(env) if env else None,
-                               shell=False)
-    selector = selectors.DefaultSelector()
-    output = bytearray()
-    deadline = time.monotonic() + timeout
-    try:
-        if process.stdout is None:
-            raise BackendError()
-        selector.register(process.stdout, selectors.EVENT_READ)
-        while selector.get_map():
-            remaining = deadline - time.monotonic()
-            if remaining <= 0:
-                raise BackendError()
-            for key, _ in selector.select(remaining):
-                chunk = os.read(key.fileobj.fileno(), min(65536, _MAX_STDOUT + 1 - len(output)))
-                if not chunk:
-                    selector.unregister(key.fileobj)
-                    continue
-                output.extend(chunk)
-                if len(output) > _MAX_STDOUT:
-                    raise BackendError()
-        remaining = deadline - time.monotonic()
-        if remaining <= 0 or process.wait(timeout=remaining) != 0:
-            raise BackendError()
-        return output.decode("utf-8")
-    except (OSError, UnicodeError, subprocess.TimeoutExpired, ValueError) as error:
-        if isinstance(error, BackendError):
-            raise
-        raise BackendError() from None
-    finally:
-        selector.close()
-        if process.stdout is not None:
-            process.stdout.close()
-        if process.poll() is None:
-            try:
-                process.kill()
-                process.wait(timeout=1)
-            except (OSError, subprocess.TimeoutExpired):
-                pass
 
 
 class ProjectMcpBackend:
@@ -116,8 +55,8 @@ class ProjectMcpBackend:
 
     @staticmethod
     def _native_package(source_root, project_root, control_root=None):
-        from native_startup import select_runtime_project
-        from start_mcp import _installed_source_root
+        from MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import select_runtime_project
+        from MCP_PATCHBAY_C21.FEATURE_MCP.docker.start_mcp import _installed_source_root
         try:
             selection = select_runtime_project(project_root, control_root)
             if Path(source_root) != _installed_source_root(selection.root):
@@ -134,9 +73,9 @@ class ProjectMcpBackend:
 
     def resolve_image(self, source_root, explicit_id, *, project_root, selection=None):
         self._image_evidence = None
-        from native_project_selection import NativeProjectSelection
+        from MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import ProjectBinding
 
-        if selection is not None and not isinstance(selection, NativeProjectSelection):
+        if selection is not None and not isinstance(selection, ProjectBinding):
             raise ImageError("IMAGE_INPUT_UNAVAILABLE")
         control = selection.control_relative if selection is not None else None
         self._native_selection = self._native_package(source_root, project_root, control)

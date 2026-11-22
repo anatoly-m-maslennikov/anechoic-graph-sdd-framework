@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import argparse
-import asyncio
 import json
+import os
 from pathlib import Path
 import re
 import shutil
@@ -12,7 +12,7 @@ import subprocess
 import sys
 import uuid
 
-from settings import Settings, select_settings, write_settings
+from RUNTIME_SETUP__shared import Settings, select_settings, write_settings
 
 
 SOURCE = Path(__file__).resolve().parents[1]
@@ -68,16 +68,23 @@ def _preflight(use_codex: bool) -> None:
 
 
 def _uv(source: Path, script: Path) -> tuple[str, ...]:
+    project = source / script.parts[0]
+    groups = ("--no-default-groups", "--group", "runtime") if script == LAUNCHER else ()
     return (
-        "uv", "run", "--project", str(source), "--locked", "--no-sync", "--python", "3.14",
-        "--managed-python", "--no-env-file", "--group", "rmed-workflow-mcp", "python", "-B", str(source / script),
+        "uv", "run", "--project", str(project), "--locked", "--python", "3.14",
+        "--managed-python", "--no-env-file", *groups, "python", "-B", "-P", str(source / script),
     )
 
 
 def _run_json(source: Path, script: Path, arguments: tuple[str, ...], *, action: str, timeout: int) -> dict:
     command = (*_uv(source, script), *arguments)
     print(f"Runtime Setup: {action}", file=sys.stderr, flush=True)
-    result = subprocess.run(command, cwd=source, stdout=subprocess.PIPE, text=True, check=False, timeout=timeout)
+    env = os.environ.copy()
+    env.pop("PYTHONHOME", None)
+    env.pop("VIRTUAL_ENV", None)
+    env["PYTHONPATH"] = str(source / script.parts[0])
+    env["UV_PROJECT_ENVIRONMENT"] = ".venv-release" if script == RELEASE else ".venv-prod"
+    result = subprocess.run(command, cwd=source, env=env, stdout=subprocess.PIPE, text=True, check=False, timeout=timeout)
     try:
         payload = json.loads(result.stdout)
     except (TypeError, ValueError) as error:
@@ -115,31 +122,6 @@ def _initialize(source: Path, values: Settings, arguments: argparse.Namespace) -
     return True
 
 
-async def _probe(endpoint: str, values: Settings) -> None:
-    from httpx2 import AsyncClient
-    from mcp.client.session import ClientSession
-    from mcp.client.streamable_http import streamable_http_client
-
-    async with AsyncClient(trust_env=False, follow_redirects=False, timeout=420) as client:
-        async with streamable_http_client(endpoint, http_client=client) as streams:
-            async with ClientSession(*streams) as session:
-                await session.initialize()
-                if values.single_project:
-                    result = await session.call_tool(
-                        "query_schema", {"project_root": str(values.folder)}, read_timeout_seconds=400,
-                    )
-                    if getattr(result, "is_error", True):
-                        raise ValueError("The runtime could not open the selected Project")
-
-
-def _verify(endpoint: str, values: Settings) -> None:
-    print("Runtime Setup: verify MCP", file=sys.stderr, flush=True)
-    try:
-        asyncio.run(asyncio.wait_for(_probe(endpoint, values), timeout=420))
-    except Exception as error:
-        raise ValueError("MCP verification failed for the selected runtime") from error
-
-
 def install(arguments: argparse.Namespace, *, source: Path = SOURCE) -> dict:
     values, create_settings = select_settings(arguments)
     _preflight(arguments.agent == "codex")
@@ -154,15 +136,14 @@ def install(arguments: argparse.Namespace, *, source: Path = SOURCE) -> dict:
     if build.get("outcome") != "completed" or not isinstance(image, str) or not IMAGE.fullmatch(image):
         raise ValueError("The image build did not return an immutable image ID")
     launch = _run_json(
-        source, LAUNCHER, ("--host-settings", str(values.path), "--image", image, "--apply",
+        source, LAUNCHER, ("--host-settings", str(values.path), "--image", image, "--apply", "--verify-mcp",
                            "--startup-timeout", "420", "--readiness-timeout", "420"),
-        action="start Docker", timeout=900,
+        action="start Docker", timeout=1320,
     )
     if launch.get("ready") is not True or launch.get("image") != image or launch.get("http_port") != values.port:
         raise ValueError("Docker did not confirm the requested image and HTTP port")
     base = f"http://127.0.0.1:{values.port}"
     endpoint = base + "/anechoic/mcp"
-    _verify(endpoint, values)
     result = {
         "outcome": "completed", "image_id": image, "settings": str(values.path),
         "mount": str(values.folder), "mode": "project" if values.single_project else "projects",

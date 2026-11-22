@@ -1,0 +1,237 @@
+from hashlib import sha256
+from pathlib import Path
+import sys
+import unittest
+
+import yaml
+
+TOOLS = Path(__file__).resolve().parents[1]
+ENGINE = TOOLS.parents[1]
+sys.path[:0] = [str(TOOLS), str(ENGINE / 'IWE_CONSOLE_C43')]
+
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_source_rows__pub import capture_native
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.common import InputError, SourceChanged
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_draft import create_draft, promote_draft
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_header__pub import canonical_native_header
+
+
+
+import FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.test_native_lifecycle_draft as fixtures
+
+
+class NativeRevisionCarrierTests(fixtures.NativeRevisionCarrierTests, unittest.TestCase):
+    def test_revision_archives_existing_epic_spec_and_pmeta(self):
+        cases = [
+            ('001_TICKETS/TASKS/AN-T-4-EPIC--example.md', 'AN-T-4', 'epic', '001_TICKETS/TASKS'),
+            ('UNIT_C9/__DES/__DOM/AN-S-4-DOM--example.md', 'AN-S-4', 'spec', 'UNIT_C9'),
+            ('_PMETA/AN-P-4-ACTION--example.md', 'AN-P-4', 'action', '_PMETA'),
+            ('UNIT_C9/AN-S-5-SPEC--example.md', 'AN-S-5', 'root_spec', 'UNIT_C9'),
+        ]
+        for name, atom_id, kind, owner in cases:
+            with self.subTest(kind=kind):
+                if kind in {'spec', 'root_spec'}:
+                    path = self.spec(name, atom_id, 'DES/DOM' if kind == 'spec' else 'SPEC')
+                else:
+                    path = self.write(name, atom_id, template=kind)
+                old = path.read_bytes().split(b'---\n', 2)[2]
+                rows = capture_native(self.selection).atoms
+                output = create_draft(self.selection, {'sourceCurrent': {'ref_id': atom_id, 'version': 1},
+                    'changes': {'body': old.decode().replace('Old', 'New')}}, current_rows=rows)
+                draft = self.root / output['savedDraft']['path']
+                self.assertEqual(self.control / owner / '01_draft', draft.parent)
+                ref = output['savedDraft']['ref_id']
+                result = promote_draft(self.selection, {'target': {'ref_id': ref, 'version': 2},
+                    'targetStatus': 'ready' if atom_id.startswith('AN-S-') else 'active'}, current_rows=capture_native(self.selection).atoms)
+                self.assertEqual('completed', result['outcome'])
+                rows = capture_native(self.selection)
+                self.assertFalse(rows.errors)
+                archived = next(row for row in rows.atoms if row['_exact_ref'] == atom_id + '@1')
+                self.assertEqual(old, archived['_content_bytes'])
+                self.assertIn(b'New', (self.root / result['artifact']['path']).read_bytes())
+                self.assertFalse(draft.exists())
+
+
+    def test_legacy_pmeta_revision_serializes_project_config(self):
+        path = self.write('002_PROJECT_CONFIG/AN-P-4-ACTION--example.md', 'AN-P-4', template='action')
+        _, text, body = path.read_text().split('---', 2)
+        header = canonical_native_header(yaml.safe_load(text))
+        header['atom_family'] = 'PMETA'
+        header['relations'] = {'REFERENCES': ['AN-S-1@1']}
+        path.write_text('---\n' + yaml.safe_dump(header, sort_keys=False) + '---' + body)
+        original = path.read_bytes()
+        rows = lambda: capture_native(self.selection).atoms
+        output = create_draft(self.selection, {'sourceCurrent': {'ref_id': 'AN-P-4', 'version': 1}}, current_rows=rows())
+        draft = self.root / output['savedDraft']['path']
+        _, draft_text, draft_body = draft.read_text().split('---', 2)
+        self.assertEqual('PROJECT_CONFIG', yaml.safe_load(draft_text)['atom_family'])
+        self.assertEqual(body, draft_body)
+        self.assertEqual(original, path.read_bytes())
+        result = promote_draft(self.selection, {'target': {'ref_id': 'AN-P-4@2-draft', 'version': 2},
+                                                'targetStatus': 'active'}, current_rows=rows())
+        for saved in (self.root / result['artifact']['path'],
+                      self.control / '002_PROJECT_CONFIG/09_archived/AN-P-4@1-ACTION--example.md'):
+            _, saved_text, saved_body = saved.read_text().split('---', 2)
+            saved_header = yaml.safe_load(saved_text)
+            self.assertEqual('PROJECT_CONFIG', saved_header['atom_family'])
+            self.assertEqual(header['relations'], saved_header['relations'])
+            self.assertEqual(body, saved_body)
+
+
+    def test_task_promotion_rejects_status_change_with_flat_child(self):
+        child = self.write('001_TICKETS/TASKS/AN-T-2-TASK--child.md', 'AN-T-2')
+        _, header, body = child.read_text().split('---', 2)
+        metadata = yaml.safe_load(header)
+        metadata['context']['container'] = {'atom': 'AN-T-1'}
+        child.write_text('---\n' + yaml.safe_dump(metadata) + '---' + body)
+        result = create_draft(self.selection, self.params, current_rows=capture_native(self.selection).atoms)
+        draft = self.root / result['savedDraft']['path']
+        before = self.path.read_bytes(), child.read_bytes(), draft.read_bytes()
+        with self.assertRaisesRegex(InputError, 'container'):
+            promote_draft(self.selection,
+                {'target': {'ref_id': result['savedDraft']['ref_id'], 'version': 2}, 'targetStatus': 'done'},
+                current_rows=capture_native(self.selection).atoms)
+        self.assertEqual(before, (self.path.read_bytes(), child.read_bytes(), draft.read_bytes()))
+
+
+    def test_epic_body_revision_preserves_child_carrier(self):
+        epic = self.write('001_TICKETS/TASKS/AN-T-4-EPIC--example.md', 'AN-T-4', template='epic')
+        child = self.write('001_TICKETS/TASKS/AN-T-4-EPIC--example/done/AN-T-5-TASK--example.md', 'AN-T-5', status='done')
+        _, header, body = child.read_text().split('---', 2)
+        metadata = yaml.safe_load(header)
+        metadata['context']['container'] = {'atom': 'AN-T-4'}
+        child.write_text('---\n' + yaml.safe_dump(metadata) + '---' + body)
+        before = child.read_bytes()
+        result = create_draft(self.selection,
+            {'sourceCurrent': {'ref_id': 'AN-T-4', 'version': 1},
+             'changes': {'body': epic.read_text().split('---', 2)[2].replace('Old', 'New')}},
+            current_rows=capture_native(self.selection).atoms)
+        result = promote_draft(self.selection,
+            {'target': {'ref_id': result['savedDraft']['ref_id'], 'version': 2}, 'targetStatus': 'active'},
+            current_rows=capture_native(self.selection).atoms)
+        self.assertEqual('completed', result['outcome'])
+        self.assertEqual(before, child.read_bytes())
+
+
+    def test_existing_component_lens_can_override_project_whitelist(self):
+        manifest = self.selection.manifest_path
+        manifest.write_text(manifest.read_text().replace("['DES', 'SPEC']", "['SPEC']"))
+        self.selection.manifest_sha256 = sha256(manifest.read_bytes()).hexdigest()
+        component = self.spec('AN-S-7-SPEC-COMPONENT_MANIFEST--unit.md', 'AN-S-7', 'SPEC', 'C0')
+        header, body = component.read_text().split('---\n', 2)[1:]
+        component_header = yaml.safe_load(header)
+        component_header['context']['template'] = 'component_manifest'
+        component.write_text('---\n' + yaml.safe_dump(component_header) + '---\n' + body
+                             + '\n### Component ID\n\nC9\n\n### Lens Whitelist\n\n["DevOps/RunTime"]\n')
+        path = self.spec('UNIT_C9/__DEVOPS/__RUNTIME/AN-S-6-RUNTIME--example.md', 'AN-S-6', 'DevOps/RunTime')
+        previous_header = next(row for row in capture_native(self.selection).atoms if row['id'] == 'AN-S-6')['header_json']
+        output = create_draft(self.selection, {'sourceCurrent': {'ref_id': 'AN-S-6', 'version': 1},
+            'changes': {'body': path.read_text().split('---\n', 2)[2].replace('Old', 'New')}},
+            current_rows=capture_native(self.selection).atoms)
+        ref = output['savedDraft']['ref_id']
+        result = promote_draft(self.selection, {'target': {'ref_id': ref, 'version': 2}, 'targetStatus': 'ready'},
+                               current_rows=capture_native(self.selection).atoms)
+        self.assertEqual('completed', result['outcome'])
+        current = next(row for row in capture_native(self.selection).atoms if row['_exact_ref'] == 'AN-S-6@2')
+        self.assertEqual(previous_header['context'], current['header_json']['context'])
+        self.assertIn(b'New', current['_content_bytes'])
+
+
+    def test_rejects_manifest_and_nested_paths(self):
+        cases = [
+            (self.selection.manifest_path, 'AN-S-1'),
+            (self.spec('UNIT_C9/__DES/nested/AN-S-9-DES--example.md', 'AN-S-9'), 'AN-S-9'),
+            (self.spec('UNIT_C9/DES/AN-S-10-DES--example.md', 'AN-S-10'), 'AN-S-10'),
+            (self.write('_PMETA/nested/AN-P-9-ACTION--example.md', 'AN-P-9'), 'AN-P-9'),
+        ]
+        for path, atom_id in cases:
+            with self.subTest(atom_id=atom_id):
+                with self.assertRaises(InputError):
+                    create_draft(self.selection, {'sourceCurrent': {'ref_id': atom_id, 'version': 1}},
+                                 current_rows=capture_native(self.selection).atoms)
+
+
+    def test_first_unpinned_spec_publishes_its_version_and_cleans_up(self):
+        for atom_id, lens, version in [('AN-S-8', 'SWD', 1), ('AN-S-9', 'SPEC', 3)]:
+            suffix = lens + '--example.md'
+            ref = f'{atom_id}@{version}-draft'
+            draft = self.spec(f'UNIT_C9/01_draft/{ref}-{suffix}', atom_id, lens)
+            header, body = draft.read_text().split('---\n', 2)[1:]
+            data = yaml.safe_load(header)
+            data['state'].update(status='draft', version=version)
+            data['context']['tier'] = 3
+            draft.write_text('---\n' + yaml.safe_dump(canonical_native_header(data), sort_keys=False) + '---\n' + body)
+            params = {'target': {'ref_id': ref, 'version': version}, 'targetStatus': 'ready'}
+            result = promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms)
+            self.assertEqual('completed', result['outcome'], result)
+            current = self.control / 'UNIT_C9' / '02_ready' / f'{atom_id}-{suffix}'
+            self.assertEqual((current, version), (self.root / result['artifact']['path'], result['artifact']['version']))
+            self.assertFalse(draft.exists())
+            self.assertEqual(['create', 'remove'], [e['operation'] for e in result['effects'] if e.get('evidence') != 'directory'])
+            self.assertFalse(capture_native(self.selection).errors)
+
+
+    def test_first_spec_cleanup_failure_can_retry_without_rewriting(self):
+        from unittest.mock import patch
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE import effects
+        draft = self.spec('UNIT_C9/01_draft/AN-S-8@1-draft-DES--example.md', 'AN-S-8')
+        draft.write_text(draft.read_text().replace('status: active', 'status: draft'))
+        params = {'target': {'ref_id': 'AN-S-8@1-draft', 'version': 1}, 'targetStatus': 'ready'}
+        with patch('FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_draft_promotion.effects.remove', return_value=effects.Result(errors=[{'code': 'injected'}])):
+            result = promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms)
+        self.assertEqual('failed', result['outcome'])
+        self.assertNotIn('artifact', result)
+        self.assertTrue(draft.exists())
+        result = promote_draft(self.selection, params, current_rows=capture_native(self.selection).atoms)
+        self.assertEqual('completed', result['outcome'])
+        self.assertEqual(['remove'], [e['operation'] for e in result['effects']])
+        self.assertFalse(draft.exists())
+
+
+    def test_first_spec_preserves_other_drafts(self):
+        old = self.spec('UNIT_C9/01_draft/AN-S-8@1-draft-DES--example.md', 'AN-S-8')
+        old.write_text(old.read_text().replace('status: active', 'status: draft'))
+        draft = self.spec('UNIT_C9/01_draft/AN-S-8@2-draft-DES--example.md', 'AN-S-8')
+        draft.write_text(draft.read_text().replace('status: active', 'status: draft').replace('version: 1', 'version: 2'))
+        original = old.read_bytes()
+        result = promote_draft(self.selection,
+            {'target': {'ref_id': 'AN-S-8@2-draft', 'version': 2}, 'targetStatus': 'ready'},
+            current_rows=capture_native(self.selection).atoms)
+        self.assertEqual('completed', result['outcome'])
+        self.assertEqual(2, result['artifact']['version'])
+        self.assertEqual(original, old.read_bytes())
+        self.assertFalse(draft.exists())
+
+
+    def test_first_spec_rejects_unsafe_or_stale_inputs(self):
+        for case in ('owner', 'lens', 'template', 'manifest_name', 'filename', 'history', 'stale', 'status'):
+            with self.subTest(case=case):
+                name = ('SPEC-PROJECT_MANIFEST--example.md' if case == 'manifest_name' else
+                        'SWD--example.md' if case == 'filename' else 'DES--example.md')
+                draft = self.spec(f'UNIT_C9/01_draft/AN-S-8@1-draft-{name}', 'AN-S-8',
+                                  'invalid/lens!' if case == 'lens' else 'DES', 'C8' if case == 'owner' else 'C9')
+                header, body = draft.read_text().split('---\n', 2)[1:]
+                data = yaml.safe_load(header)
+                data['state']['status'] = 'draft'
+                if case == 'filename':
+                    data['context']['tier'] = 3
+                if case == 'template':
+                    data['context']['template'] = 'component_manifest'
+                draft.write_text('---\n' + yaml.safe_dump(canonical_native_header(data) if case == 'filename' else data) + '---\n' + body)
+                history = None
+                if case == 'history':
+                    history = self.spec('UNIT_C9/09_archived/AN-S-8@2-DES--example.md', 'AN-S-8')
+                    history.write_text(history.read_text().replace('status: active', 'status: archived').replace('version: 1', 'version: 2'))
+                rows = capture_native(self.selection).atoms
+                if case == 'stale':
+                    draft.write_bytes(draft.read_bytes() + b'changed')
+                before = {p.relative_to(self.control): p.read_bytes() for p in self.control.rglob('*.md')}
+                params = {'target': {'ref_id': 'AN-S-8@1-draft', 'version': 1},
+                          'targetStatus': 'done' if case == 'status' else 'ready'}
+                with self.assertRaises((InputError, SourceChanged)):
+                    promote_draft(self.selection, params, current_rows=rows)
+                self.assertEqual(before, {p.relative_to(self.control): p.read_bytes() for p in self.control.rglob('*.md')})
+                draft.unlink()
+                if history:
+                    history.unlink()
+
+

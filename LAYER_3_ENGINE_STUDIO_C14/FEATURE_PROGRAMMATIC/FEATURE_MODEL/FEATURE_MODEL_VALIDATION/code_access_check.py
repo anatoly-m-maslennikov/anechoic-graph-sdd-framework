@@ -3,7 +3,9 @@
 from dataclasses import dataclass
 from pathlib import PurePosixPath
 
-from .code_access import allows_import, module_visibility, parse_code_access
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.code_access_rules__pub import module_visibility, parse_code_access
+
+from .code_access import allows_import
 
 
 @dataclass(frozen=True)
@@ -34,6 +36,38 @@ def _ordered_layers(ownership, caller, provider):
     return None
 
 
+def _denied_reason(site, caller, provider, ownership, rules):
+    path = PurePosixPath(site.target_path)
+    if site.target_kind == 'module':
+        path = path.with_suffix('')
+        if path.name == '__init__':
+            path = path.parent
+    parts = path.parts + ((site.unit,) if site.unit else ())
+    depth = min(len(path.parts) - 1, len(PurePosixPath(provider['path']).parts))
+    names = {'.'.join(parts[index:]) for index in range(depth + 1)}
+    imports = []
+    ancestor = caller
+    while ancestor is not None:
+        if ancestor is caller or ancestor['kind'] == 'component':
+            imports.append(rules[ancestor['id']][0])
+        ancestor = ownership.entries.get(ancestor['parent'])
+    exports = rules[provider['id']][1]
+    entry = next((name for name in sorted(names, key=len, reverse=True)
+                  if exports is not None and name in exports), None)
+    if entry is None:
+        entry = '.'.join(parts)
+    imports = [(closed, selectors | {entry} if selectors.intersection(names) else selectors)
+               if rule is not None else None
+               for rule in imports for closed, selectors in [rule or (False, set())]]
+    marker = None
+    if site.target_kind == 'module' and path.parent.as_posix() == provider['path']:
+        marker = module_visibility(path.name)
+    layers = _ordered_layers(ownership, caller, provider)
+    if not allows_import(entry, caller, provider, exports, inherited_imports=imports,
+                         ordered_layers=layers, marker=marker):
+        return 'sibling layer order' if layers is not None and layers[1] >= layers[0] else 'code access rule'
+    return None
+
 def check_code_access(ownership, sources, occurrences):  # noqa: C901
     """Return denied and uncertain import sites without capturing source again."""
     problems = []
@@ -60,35 +94,7 @@ def check_code_access(ownership, sources, occurrences):  # noqa: C901
             report('uncertain', 'wildcard import')
             continue
 
-        path = PurePosixPath(site.target_path)
-        if site.target_kind == 'module':
-            path = path.with_suffix('')
-            if path.name == '__init__':
-                path = path.parent
-        parts = path.parts + ((site.unit,) if site.unit else ())
-        depth = min(len(path.parts) - 1, len(PurePosixPath(provider['path']).parts))
-        names = {'.'.join(parts[index:]) for index in range(depth + 1)}
-        imports = []
-        ancestor = caller
-        while ancestor is not None:
-            if ancestor is caller or ancestor['kind'] == 'component':
-                imports.append(rules[ancestor['id']][0])
-            ancestor = ownership.entries.get(ancestor['parent'])
-        exports = rules[provider['id']][1]
-        entry = next((name for name in sorted(names, key=len, reverse=True)
-                      if exports is not None and name in exports), None)
-        if entry is None:
-            entry = '.'.join(parts)
-        imports = [(closed, selectors | {entry} if selectors.intersection(names) else selectors)
-                   if rule is not None else None
-                   for rule in imports for closed, selectors in [rule or (False, set())]]
-        marker = None
-        if site.target_kind == 'module' and path.parent.as_posix() == provider['path']:
-            marker = module_visibility(path.name)
-        layers = _ordered_layers(ownership, caller, provider)
-        if not allows_import(entry, caller, provider, exports, inherited_imports=imports,
-                             ordered_layers=layers,
-                             marker=marker):
-            reason = 'sibling layer order' if layers is not None and layers[1] >= layers[0] else 'code access rule'
+        reason = _denied_reason(site, caller, provider, ownership, rules)
+        if reason is not None:
             report('denied', reason)
     return tuple(problems)

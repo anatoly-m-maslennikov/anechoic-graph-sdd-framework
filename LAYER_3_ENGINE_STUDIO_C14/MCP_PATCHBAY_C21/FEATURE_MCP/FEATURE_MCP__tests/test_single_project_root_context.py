@@ -5,7 +5,6 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 from pathlib import Path
-import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -20,20 +19,14 @@ PROGRAMMATIC = REPOSITORY / "LAYER_3_ENGINE_STUDIO_C14" / "FEATURE_PROGRAMMATIC"
 MCP = REPOSITORY / "LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP"
 TOOLS = PROGRAMMATIC / "FEATURE_TOOLS"
 APP = REPOSITORY / "LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH"
-for location in (MCP, TOOLS, APP.parent, APP, APP / "APP_WORKBENCH__tests"):
-    if str(location) not in sys.path:
-        sys.path.insert(0, str(location))
 
-from http_paths import MCP_PATH  # noqa: E402
-from http_server import create_app  # noqa: E402
-from direct_gateway import startup_selection  # noqa: E402
-from project_selection import resolve_project  # noqa: E402
-from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations  # noqa: E402
-from smalltest_support import extension_directory, polling_source_watcher  # noqa: E402
-from workbench_tools import WorkbenchTools  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import MCP_PATH  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.http_server import create_app  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.direct_gateway import startup_selection  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.smalltest_support__pub import extension_directory, polling_source_watcher  # noqa: E402
 
 
-from test_native_startup import RuntimeSelectionTests, native_fixture_gateway  # noqa: E402
+from .test_native_startup import RuntimeSelectionTests, native_fixture_gateway  # noqa: E402
 
 
 class SingleProjectRootContextTests(unittest.IsolatedAsyncioTestCase):

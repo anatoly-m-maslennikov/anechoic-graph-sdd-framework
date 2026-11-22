@@ -1,15 +1,13 @@
 """Bind actual parsed Declarations to generated Model classes."""
 
 from pathlib import Path
-import sys
 import unittest
 
 PROGRAMMATIC = Path(__file__).resolve().parents[3]
-sys.path[:0] = [str(PROGRAMMATIC), str(PROGRAMMATIC / "FEATURE_TOOLS")]
 
-from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim
-from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_declaration_bindings import bind_model_declarations
-from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_relation_validation import validate_model_relations
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_model_claim__pub import parse_native_model_claim
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_declaration_bindings import bind_model_declarations
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_relation_validation import validate_model_relations
 
 
 class Node:

@@ -8,8 +8,8 @@ import unittest
 TOOLS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS))
 
-from project_selection import ProjectSelectionError, resolve_project
-from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection import ProjectSelectionError, resolve_project
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.scope_declaration_test_support__pub import write_scope_unit_declarations
 
 
 class DeclarationBoundaryRetentionTests(unittest.TestCase):

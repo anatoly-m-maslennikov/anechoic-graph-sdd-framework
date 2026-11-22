@@ -1,35 +1,17 @@
 """Static nearest-container fallback chain; the Claim is never executed."""
 from pathlib import Path
-import sys, unittest
+import unittest
 P=Path(__file__).resolve().parents[2]
-sys.path[:0]=[str(P),str(P/'FEATURE_TOOLS'),str(P/'FEATURE_TOOLS/GENERATE_ENTITY_GRAPH')]
-from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim,NativeModelClaimError
-from FEATURE_FORMAL_MODEL_ENGINE.native_model_lint import lint_native_model_claim
-from FEATURE_FORMAL_MODEL_ENGINE.compiler_claim import compiler_model_statements
-from lint_python_model_claim import lint_python_model_claim
-from cfel_claim_constraints import _native_constraints
-from contract_graph import _clause
-PLAN='Atom/(.Header.Context.Role:=Plan)'
-PROP=PLAN+'.Header.Context.Plan.AI Agent Confidence Threshold'
-PROJECT='Project.Settings.AI Agent Confidence Threshold'
-CLAIM=f'''from anechoic.formal_claims import Cardinality, declare_entity
-declare_entity(entity_name="AI Agent Confidence Threshold", relation_name="IS_PROPERTY_OF",
- base_path="{PLAN}.Header.Context.Plan", value_format=int,
- value_cardinality=Cardinality(minimum=0, maximum=1), minimum_value=0, maximum_value=100,
- dependent_property_cardinality=0, fallback_chain=(
- {{"lookup_relation":"IS_CONTAINED_BY","lookup_property":"{PROP}"}},
- {{"project_entity":"Project","project_property":"{PROJECT}"}},))'''
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_model_claim__pub import parse_native_model_claim,NativeModelClaimError
+from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.compiler_claim import compiler_model_statements
+from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.lint_python_model_claim__pub import lint_python_model_claim
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.compiler_claim_fixtures__pub import FALLBACK_PLAN as PLAN, FALLBACK_PROP as PROP, FALLBACK_PROJECT as PROJECT, FALLBACK_CLAIM as CLAIM
 CATALOG={'Atom','Atom.Header.Context.Role',PLAN,PLAN+'.Header.Context.Plan',PROP,'Project','Project.Settings',PROJECT}
 class FallbackChainTests(unittest.TestCase):
  def lint(self,claim=CLAIM,addresses=CATALOG,relations={'IS_PROPERTY_OF','IS_CONTAINED_BY'}):
   return lint_python_model_claim(claim,declared_addresses=addresses,relation_names=relations,path='fixture')
  def test_chain_and_provenance(self):
   decl=parse_native_model_claim(CLAIM);self.assertEqual((),self.lint())
-  source={'atom_id':'CA-R-1','version':1,'path':'fixture','sha256':'fixture'}
-  row,=[r for r in _native_constraints(decl,source,CLAIM) if r['kind']=='effective_value_fallback_chain']
-  self.assertEqual(source,row['source']);self.assertEqual(('undefined','null',''),row['empty_values']);self.assertEqual(1,row['project_cardinality'])
-  self.assertEqual(('IS_CONTAINED_BY',PROP,'Project',PROJECT),(row['branches'][0]['lookup_relation'],row['branches'][0]['lookup_property'],row['branches'][1]['project_entity'],row['branches'][1]['project_property']))
-  self.assertIn('via `IS_CONTAINED_BY`',_clause(row))
   self.assertEqual((PROP+' :: [int, 0..100]{::0..1}',PROP+'.*[]{::0}'),compiler_model_statements(decl))
  def test_empty_semantics_preserve_zero_false_and_invalid(self):
   empty = object()

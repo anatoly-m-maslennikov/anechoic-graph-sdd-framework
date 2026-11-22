@@ -18,13 +18,14 @@ from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from project_runtime import atomic_tempfile, owned_temporary_root
-from VALIDATE_ATOMS.validate_atoms_workers.read_io import open_regular
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.project_temporary__pub import atomic_tempfile, owned_temporary_root
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_runtime import repository_root
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__pub import open_regular
 
 
 @contextmanager
 def _project_write_lock(root):
-    temporary = owned_temporary_root(root, "atom_lifecycle")
+    temporary = owned_temporary_root(repository_root(root), "atom_lifecycle")
     directory = open_regular(temporary, directory=True)
     try:
         flags = os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_NONBLOCK
@@ -96,7 +97,7 @@ def _pinned(parent: int, name: str, digest: str) -> bytes:
 
 
 def _reader(path: Path):
-    from project_selection import bound_selection
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection import bound_selection
     from . import source
     get_reader = getattr(source, "query_reader", None)
     reader = get_reader() if get_reader is not None else None
@@ -199,6 +200,14 @@ def _cleanup_temp(root: Path, temp: str | None, result: Result) -> None:
         _error(result, "backend_failure", f"temporary carrier retained at {retained}")
 
 
+
+def _write_error(result, operation, target, committed, exc):
+    if committed:
+        _effect(result, operation, target, "unknown", "publication occurred but synchronization or readback failed")
+        _error(result, "effect_uncertain", _message(exc))
+    else:
+        _error(result, "stale_state" if isinstance(exc, (ValueError, FileExistsError)) else "backend_failure", _message(exc))
+
 def _write(root: Path, path: Path, data: bytes, expected: str | None, result: Result) -> None:
     temp = None
     parent = None
@@ -213,7 +222,7 @@ def _write(root: Path, path: Path, data: bytes, expected: str | None, result: Re
             old = _read_pinned(reader, root, destination, parent, name, expected)
             if old == data:
                 return
-        fd, temp = atomic_tempfile(destination, "atom_lifecycle", repository=root)
+        fd, temp = atomic_tempfile(repository_root(root), destination, "atom_lifecycle")
         with os.fdopen(fd, "wb") as stream:
             stream.write(data)
             stream.flush()
@@ -236,11 +245,7 @@ def _write(root: Path, path: Path, data: bytes, expected: str | None, result: Re
             raise OSError("readback differs")
         _effect(result, operation, target, "known", hashlib.sha256(data).hexdigest())
     except (OSError, ValueError, RuntimeError) as exc:
-        if committed:
-            _effect(result, operation, target, "unknown", "publication occurred but synchronization or readback failed")
-            _error(result, "effect_uncertain", _message(exc))
-        else:
-            _error(result, "stale_state" if isinstance(exc, (ValueError, FileExistsError)) else "backend_failure", _message(exc))
+        _write_error(result, operation, target, committed, exc)
     finally:
         if parent is not None:
             os.close(parent)

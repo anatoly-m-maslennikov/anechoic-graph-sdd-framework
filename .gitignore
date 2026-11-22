@@ -6,6 +6,10 @@ __pycache__/
 
 # Python environments and uv cache
 /.venv/
+/.venv-*/
+/LAYER_3_ENGINE_STUDIO_C14/.venv-*/
+/LAYER_5_FRAMEWORK_DELIVERY/.venv-release/
+/RUNTIME_SETUP/.venv-setup/
 /.uv-cache/
 
 # Setuptools build artifacts

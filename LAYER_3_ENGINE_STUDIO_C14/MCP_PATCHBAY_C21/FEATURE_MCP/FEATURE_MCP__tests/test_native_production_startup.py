@@ -2,8 +2,8 @@
 
 import hashlib
 import json
+import os
 from pathlib import Path
-import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -15,30 +15,27 @@ import yaml
 
 MCP = Path(__file__).resolve().parents[1]
 PROGRAMMATIC = MCP.parents[1] / "FEATURE_PROGRAMMATIC"
-APP_TESTS = MCP.parents[1] / 'IWE_CONSOLE_C43' / 'APP_WORKBENCH' / 'APP_WORKBENCH__tests'
-sys.path[:0] = [str(MCP), str(PROGRAMMATIC), str(PROGRAMMATIC / 'FEATURE_TOOLS'), str(APP_TESTS.parent.parent), str(APP_TESTS)]
 
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND import query_store  # noqa: E402
-from direct_gateway import startup_selection  # noqa: E402
-from http_paths import MCP_PATH  # noqa: E402
-from http_server import create_app  # noqa: E402
-from native_project_selection import NativeProjectSelection  # noqa: E402
-from smalltest_support import extension_directory, polling_source_watcher  # noqa: E402
-import test_native_startup as fixture  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.direct_gateway import startup_selection  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import MCP_PATH  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.http_server import create_app  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import ProjectBinding  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.smalltest_support__pub import extension_directory  # noqa: E402
+from . import test_native_startup as fixture  # noqa: E402
 
 
 class NativeProductionStartupTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
-        self.enterContext(polling_source_watcher())
         self.root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
         legacy = fixture.RuntimeSelectionTests.legacy(self, '.anechoic_legacy', declared='.anechoic_anechoic')
         fixture.RuntimeSelectionTests.manifest(self, self.root / '.anechoic_anechoic', component='C00')
-        asset = self.root / '.anechoic_anechoic/__TKT/ASSETS/AN-T-009-ANALYSIS_REPORT--verify.md'
-        asset.parent.mkdir(parents=True)
+        self.asset = self.root / '.anechoic_anechoic/__TKT/ASSETS/AN-T-009-ANALYSIS_REPORT--verify.md'
+        self.asset.parent.mkdir(parents=True)
         header = {'identity': {'atom_id': 'AN-T-009'},
                   'context': {'container': {'component': 'C00'}, 'template': 'ANALYSIS_REPORT', 'tier': 0},
                   'state': {'version': 2, 'status': 'active', 'updated_at': '2026-11-19T00:00:00Z'}}
-        asset.write_text(f'---\n{yaml.safe_dump(header)}---\n\n## Summary\n\nFixture.\n', encoding='utf-8')
+        self.asset.write_text(f'---\n{yaml.safe_dump(header)}---\n\n## Summary\n\nFixture.\n', encoding='utf-8')
+        self._add_untyped_asset()
         self.old_path = '.anechoic_legacy/02_analysis_and_advisory/CA-P-9--old-asset.md'
         old = self.root / self.old_path
         old.parent.mkdir(parents=True)
@@ -49,6 +46,13 @@ class NativeProductionStartupTests(unittest.IsolatedAsyncioTestCase):
         (self.root / 'native-aliases.json').write_text(self.alias_path.read_text(encoding='utf-8'), encoding='utf-8')
         self.legacy = legacy
 
+    def _add_untyped_asset(self):
+        self.untyped_asset = self.root / '.anechoic_anechoic/001_TICKETS/ASSETS/AN-T-010-ASSET--legacy.md'
+        self.untyped_asset.parent.mkdir(parents=True)
+        header = {'identity': {'atom_id': 'AN-T-010'}, 'context': {'container': {'component': 'C00'}},
+                  'state': {'version': 1, 'status': 'active', 'updated_at': '2026-11-19T00:00:00Z'}}
+        self.untyped_asset.write_text(f'---\n{yaml.safe_dump(header)}---\n\n## Summary\n\nFixture.\n', encoding='utf-8')
+
     def legacy_digests(self):
         return {p.relative_to(self.legacy): hashlib.sha256(p.read_bytes()).hexdigest()
                 for p in self.legacy.rglob('*') if p.is_file()}
@@ -57,18 +61,14 @@ class NativeProductionStartupTests(unittest.IsolatedAsyncioTestCase):
         self.alias_path.unlink()
         before = self.legacy_digests()
         selection = startup_selection(self.root)
-        self.assertIsInstance(selection, NativeProjectSelection)
+        self.assertIsInstance(selection, ProjectBinding)
         self.assertEqual(('AN-S-001@1', self.root / '.anechoic_anechoic'),
                          (selection.manifest_ref, selection.control_root))
-        app = create_app(self.root, selection=selection)
-        connect = query_store._connect
         cache = extension_directory(MCP.parents[2])
 
-        def connect_with_cache(directory, database, journal_path, journal_disk):
-            self.assertIsNone(directory)
-            return connect(cache, database, journal_path, journal_disk)
-
-        with patch.object(query_store, '_connect', side_effect=connect_with_cache):
+        with patch.dict(os.environ, {'ANECHOIC_RUNTIME_NAMESPACE': 'docker',
+                                     'ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY': str(cache)}):
+            app = create_app(self.root, selection=selection)
             async with app.starlette_app.router.lifespan_context(app.starlette_app):
                 async with httpx2.AsyncClient(transport=httpx2.ASGITransport(app=app),
                                                base_url='http://127.0.0.1:18093') as http:
@@ -84,6 +84,7 @@ class NativeProductionStartupTests(unittest.IsolatedAsyncioTestCase):
                             'target': {'ref_id': 'AN-T-009', 'version': 2},
                             'changes': {'body': '## Summary\n\nFixture.\n\n## Work\n\nUpdated through MCP.\n'},
                         })
+                        await self._update_untyped_asset(client)
                         self.assertFalse(updated.is_error, updated.structured_content)
                         self.assertEqual({'status': 'completed'}, updated.structured_content)
                         visible = await client.call_tool('query_run', {
@@ -92,24 +93,33 @@ class NativeProductionStartupTests(unittest.IsolatedAsyncioTestCase):
                         })
                         self.assertFalse(visible.is_error, visible.structured_content)
                         self.assertEqual([['AN-T-009@2']], visible.structured_content['rows'])
-                        capture = app.gateway._native_query._capture
-                        ticket, = [row for row in capture.atoms if row['id'] == 'AN-T-009']
-                        self.assertIn(b'Updated through MCP.', ticket['_content_bytes'])
+                        self.assertIn('Updated through MCP.', self.asset.read_text(encoding='utf-8'))
         self.assertEqual(before, self.legacy_digests())
+
+    async def _update_untyped_asset(self, client):
+        before = self.untyped_asset.read_bytes().split(b'---\n', 2)[1]
+        updated = await client.call_tool('atom_lifecycle_direct_update', {
+            'target': {'ref_id': 'AN-T-010', 'version': 1},
+            'changes': {'body': '## Summary\n\nFixture.\n\n## Work\n\nUpdated through MCP.\n'},
+        })
+        self.assertFalse(updated.is_error, updated.structured_content)
+        self.assertEqual({'status': 'completed'}, updated.structured_content)
+        self.assertEqual(before, self.untyped_asset.read_bytes().split(b'---\n', 2)[1])
+        self.assertIn(b'Updated through MCP.', self.untyped_asset.read_bytes())
 
     def test_bad_migration_map_is_outside_startup_inputs(self):
         self.alias_path.write_text('{')
         before = self.legacy_digests()
         selection = startup_selection(self.root)
-        self.assertIsInstance(create_app(self.root, selection=selection).gateway.selection, NativeProjectSelection)
+        self.assertIsInstance(create_app(self.root, selection=selection).gateway.selection, ProjectBinding)
         self.assertEqual(before, self.legacy_digests())
 
     def test_http_entrypoint_uses_production_selection(self):
-        from http_server import main
+        from MCP_PATCHBAY_C21.FEATURE_MCP.http_server import main
 
         with patch('uvicorn.run') as run:
             self.assertIsNone(main(['--project-root', str(self.root)]))
-        self.assertIsInstance(run.call_args.args[0].gateway.selection, NativeProjectSelection)
+        self.assertIsInstance(run.call_args.args[0].gateway.selection, ProjectBinding)
 
 
 if __name__ == '__main__':

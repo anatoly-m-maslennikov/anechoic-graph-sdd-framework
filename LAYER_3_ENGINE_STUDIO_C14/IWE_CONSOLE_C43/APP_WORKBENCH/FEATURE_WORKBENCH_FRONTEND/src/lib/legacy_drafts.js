@@ -83,6 +83,76 @@ function pristine(view) {
   return !view.name && typeof view.sql === 'string' && !view.sql.trim() && view.cursor_position === 0 && !view.result;
 }
 
+function validateReceipt(tabs, state, receipt) {
+  const sourceIds = new Set(tabs.map((tab) => tab.id));
+  const targetIds = new Set(state.views.map((view) => view.id));
+  const acknowledgedTargets = new Set();
+  for (const [sourceId, entry] of Object.entries(receipt)) {
+    if (!sourceIds.has(sourceId)) invalid('receipt acknowledges unknown source Draft ' + sourceId);
+    if (!targetIds.has(entry.targetId)) invalid('receipt points to missing target View ' + entry.targetId);
+    if (acknowledgedTargets.has(entry.targetId)) invalid('receipt maps multiple source Drafts to View ' + entry.targetId);
+    acknowledgedTargets.add(entry.targetId);
+  }
+
+}
+
+async function importTab(source, nextState, starter, receipt, api, storage, progressKey) {
+  let target = receipt[source.id]
+    ? nextState.views.find((view) => view.id === receipt[source.id].targetId)
+    : starter;
+  if (receipt[source.id] && !target) invalid('pending receipt target is missing from the current Workspace state');
+  if (!target) {
+    const created = await api.create('last', source.name || undefined);
+    if (!record(created) || !Array.isArray(created.views) || typeof created.view_id !== 'string') invalid('view_create returned an invalid Workspace state');
+    nextState = cloneState(created);
+    target = nextState.views.find((view) => view.id === created.view_id);
+    if (!target) invalid('view_create returned no created View');
+    assertView(target, 'view_create');
+    receipt[source.id] = { targetId: target.id, updated: false };
+    writeReceipt(storage, progressKey, receipt);
+  }
+  assertView(target, 'view_create');
+
+  const sourceName = source.name || '';
+  const targetName = target.name || '';
+  if (targetName && targetName !== sourceName) invalid('pending target View has unrelated name changes');
+  const blankTarget = typeof target.sql === 'string' && !target.sql.trim() && !target.result;
+  if (!blankTarget && target.sql !== source.sql) invalid('pending target View has unrelated query changes');
+
+  if (source.name && target.name !== source.name) {
+    target = await api.rename(target.id, source.name);
+    assertView(target, 'view_rename');
+    nextState = replaceView(nextState, target);
+  }
+
+  if (target.sql !== source.sql || target.cursor_position !== source.cursor) {
+    target = await api.update(target.id, source.sql, target.revision, source.cursor);
+    assertView(target, 'view_update');
+    nextState = replaceView(nextState, target);
+  }
+
+  receipt[source.id] = { targetId: target.id, updated: true };
+  writeReceipt(storage, progressKey, receipt);
+  return nextState;
+}
+
+async function importTabs(tabs, state, receipt, api, storage, progressKey) {
+  let nextState = cloneState(state);
+  let starter = nextState.views.length === 1 && pristine(nextState.views[0]) ? nextState.views[0] : undefined;
+  if (starter && Object.values(receipt).some((entry) => entry.targetId === starter.id)) starter = undefined;
+  let importedCount = 0;
+
+  for (const source of tabs) {
+    if (receipt[source.id]?.updated === true) continue;
+
+    nextState = await importTab(source, nextState, starter, receipt, api, storage, progressKey);
+    starter = undefined;
+    importedCount += 1;
+  }
+
+  return { nextState, importedCount };
+}
+
 /**
  * Import a parsed legacy standalone draft into a bound Workspace exactly once.
  *
@@ -110,16 +180,8 @@ export async function migrateLegacyDraft({ draft, state, api, storage, doneKey, 
   if (typeof doneKey !== 'string' || !doneKey || typeof progressKey !== 'string' || !progressKey) invalid('migration keys are missing');
 
   const tabs = draftTabs(draft);
-  const sourceIds = new Set(tabs.map((tab) => tab.id));
   const receipt = readReceipt(storage, progressKey);
-  const targetIds = new Set(state.views.map((view) => view.id));
-  const acknowledgedTargets = new Set();
-  for (const [sourceId, entry] of Object.entries(receipt)) {
-    if (!sourceIds.has(sourceId)) invalid('receipt acknowledges unknown source Draft ' + sourceId);
-    if (!targetIds.has(entry.targetId)) invalid('receipt points to missing target View ' + entry.targetId);
-    if (acknowledgedTargets.has(entry.targetId)) invalid('receipt maps multiple source Drafts to View ' + entry.targetId);
-    acknowledgedTargets.add(entry.targetId);
-  }
+  validateReceipt(tabs, state, receipt);
 
   const marker = storage.getItem(doneKey);
   if (marker !== null && marker !== 'done') invalid('migration marker ' + doneKey + ' is malformed');
@@ -130,53 +192,7 @@ export async function migrateLegacyDraft({ draft, state, api, storage, doneKey, 
   }
   if (!tabs.length) return { state, sourceToTarget: mapping(receipt), completed: false, imported: false };
 
-  let nextState = cloneState(state);
-  let starter = nextState.views.length === 1 && pristine(nextState.views[0]) ? nextState.views[0] : undefined;
-  if (starter && Object.values(receipt).some((entry) => entry.targetId === starter.id)) starter = undefined;
-  let importedCount = 0;
-
-  for (const source of tabs) {
-    if (receipt[source.id]?.updated === true) continue;
-
-    let target = receipt[source.id]
-      ? nextState.views.find((view) => view.id === receipt[source.id].targetId)
-      : starter;
-    if (receipt[source.id] && !target) invalid('pending receipt target is missing from the current Workspace state');
-    if (!target) {
-      const created = await api.create('last', source.name || undefined);
-      if (!record(created) || !Array.isArray(created.views) || typeof created.view_id !== 'string') invalid('view_create returned an invalid Workspace state');
-      nextState = cloneState(created);
-      target = nextState.views.find((view) => view.id === created.view_id);
-      if (!target) invalid('view_create returned no created View');
-      assertView(target, 'view_create');
-      receipt[source.id] = { targetId: target.id, updated: false };
-      writeReceipt(storage, progressKey, receipt);
-    }
-    starter = undefined;
-    assertView(target, 'view_create');
-
-    const sourceName = source.name || '';
-    const targetName = target.name || '';
-    if (targetName && targetName !== sourceName) invalid('pending target View has unrelated name changes');
-    const blankTarget = typeof target.sql === 'string' && !target.sql.trim() && !target.result;
-    if (!blankTarget && target.sql !== source.sql) invalid('pending target View has unrelated query changes');
-
-    if (source.name && target.name !== source.name) {
-      target = await api.rename(target.id, source.name);
-      assertView(target, 'view_rename');
-      nextState = replaceView(nextState, target);
-    }
-
-    if (target.sql !== source.sql || target.cursor_position !== source.cursor) {
-      target = await api.update(target.id, source.sql, target.revision, source.cursor);
-      assertView(target, 'view_update');
-      nextState = replaceView(nextState, target);
-    }
-
-    receipt[source.id] = { targetId: target.id, updated: true };
-    writeReceipt(storage, progressKey, receipt);
-    importedCount += 1;
-  }
+  let { nextState, importedCount } = await importTabs(tabs, state, receipt, api, storage, progressKey);
 
   const sourceToTarget = mapping(receipt);
   const activeTarget = draft.activeId ? sourceToTarget[draft.activeId] : undefined;

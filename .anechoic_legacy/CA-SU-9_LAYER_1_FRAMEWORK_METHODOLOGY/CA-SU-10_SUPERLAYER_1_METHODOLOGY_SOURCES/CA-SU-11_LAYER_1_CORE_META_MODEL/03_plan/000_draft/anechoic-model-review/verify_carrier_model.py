@@ -13,7 +13,7 @@ from structure_cases import validate_component_tree, validate_manifest
 from FEATURE_APPS.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.markdown_content import (
     formal_claim_fences, parse_content,
 )
-from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier
+from ADAPTERS_C30.carrier_read__pub import parse_carrier
 
 
 PROJECT = "C0"

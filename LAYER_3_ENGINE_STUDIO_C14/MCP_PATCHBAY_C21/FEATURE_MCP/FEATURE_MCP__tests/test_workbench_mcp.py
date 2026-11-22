@@ -3,22 +3,18 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
-import sys
 import unittest
 from unittest.mock import Mock
 
 MCP_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(MCP_ROOT))
 
-from workbench_tools import (  # noqa: E402
-    CHECK, LOAD, NATIVE_TOOLS, PAGE, QUERY_LOG_LIST, RUN, SAVED_LIST, SAVE_VIEW, SCHEMA, SYNC_STATUS,
-    VIEW_CREATE, VIEW_DUPLICATE, WORKSPACE_OPEN,
-    WorkbenchTools, native_tools,
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workbench_tools import (  # noqa: E402
+    CHECK, LOAD, NATIVE_TOOLS, PAGE, QUERY_LOG_LIST, RUN, SAVED_LIST, SAVE_VIEW, SCHEMA, VIEW_CREATE, VIEW_DUPLICATE, WORKSPACE_OPEN,
+    native_tools,
 )
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.errors import (  # noqa: E402
-    QueryExecutionError, WorkbenchUnavailableError,
-)
-from operation_error_boundary import ExplicitBlockingRuntimeFailure  # noqa: E402
+from .native_query_test_support import WorkbenchTools
+from KERNEL_MIXER_C59.errors import QueryExecutionError, WorkbenchUnavailableError
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__pub import ExplicitBlockingRuntimeFailure  # noqa: E402
 
 
 class FakeService:
@@ -74,6 +70,34 @@ class FakeService:
 
 
 class WorkbenchToolsTests(unittest.TestCase):
+    async def _exercise_calls(self, owner):
+        run = await owner.call(RUN, {"sql": "SELECT 1"})
+        self.assertEqual("q-1", run["query_id"])
+        self.assertEqual(1, run["row_count"])
+        page = await owner.call(PAGE, {"query_id": run["query_id"], "offset": 0, "page_size": 1})
+        self.assertEqual(0, page["offset"])
+        self.assertTrue((await owner.call(CHECK, {"sql": "SELECT 1"}))["valid"])
+        saved = await owner.call(RUN, {
+            "sql": "SELECT 2", "cursor_position": 2, "save": True, "name": "saved",
+        })
+        self.assertEqual("q_1", saved["saved_query_id"])
+        self.assertEqual("w_1", (await owner.call(SAVE_VIEW, {"sql": "SELECT 3", "name": "view"}))["saved_query_id"])
+        await owner.call(RUN, {"sql": "SELECT 4", "save": True, "name": "   "})
+        self.assertEqual("q_2", (await owner.call(LOAD, {"reference": "q_2"}))["saved_query_id"])
+        self.assertEqual({"atoms": []}, await owner.call(SCHEMA, {}))
+        self.assertEqual({"items": []}, await owner.call(SAVED_LIST, {"limit": 3}))
+        self.assertEqual("session-1", (await owner.call(WORKSPACE_OPEN, {"session_id": "session-1"}))["session_id"])
+        self.assertEqual("view_create", (await owner.call(VIEW_CREATE, {"workspace_id": "session-1"}))["operation"])
+        self.assertEqual(
+            "view_duplicate",
+            (await owner.call(VIEW_DUPLICATE, {
+                "workspace_id": "session-1", "view_id": "source-view",
+            }))['operation'],
+        )
+        self.assertEqual("query_log_list", (await owner.call(QUERY_LOG_LIST, {}))["operation"])
+        await owner.close()
+
+
     def test_native_descriptors_and_one_owner_handle_all_calls_and_close(self):
         self.assertEqual(list(NATIVE_TOOLS), [tool.name for tool in native_tools()])
         tools = {tool.name: tool for tool in native_tools()}
@@ -99,34 +123,7 @@ class WorkbenchToolsTests(unittest.TestCase):
         fake = FakeService()
         owner = WorkbenchTools(query_owner=fake)
 
-        async def exercise():
-            run = await owner.call(RUN, {"sql": "SELECT 1"})
-            self.assertEqual("q-1", run["query_id"])
-            self.assertEqual(1, run["row_count"])
-            page = await owner.call(PAGE, {"query_id": run["query_id"], "offset": 0, "page_size": 1})
-            self.assertEqual(0, page["offset"])
-            self.assertTrue((await owner.call(CHECK, {"sql": "SELECT 1"}))["valid"])
-            saved = await owner.call(RUN, {
-                "sql": "SELECT 2", "cursor_position": 2, "save": True, "name": "saved",
-            })
-            self.assertEqual("q_1", saved["saved_query_id"])
-            self.assertEqual("w_1", (await owner.call(SAVE_VIEW, {"sql": "SELECT 3", "name": "view"}))["saved_query_id"])
-            await owner.call(RUN, {"sql": "SELECT 4", "save": True, "name": "   "})
-            self.assertEqual("q_2", (await owner.call(LOAD, {"reference": "q_2"}))["saved_query_id"])
-            self.assertEqual({"atoms": []}, await owner.call(SCHEMA, {}))
-            self.assertEqual({"items": []}, await owner.call(SAVED_LIST, {"limit": 3}))
-            self.assertEqual("session-1", (await owner.call(WORKSPACE_OPEN, {"session_id": "session-1"}))["session_id"])
-            self.assertEqual("view_create", (await owner.call(VIEW_CREATE, {"workspace_id": "session-1"}))["operation"])
-            self.assertEqual(
-                "view_duplicate",
-                (await owner.call(VIEW_DUPLICATE, {
-                    "workspace_id": "session-1", "view_id": "source-view",
-                }))['operation'],
-            )
-            self.assertEqual("query_log_list", (await owner.call(QUERY_LOG_LIST, {}))["operation"])
-            await owner.close()
-
-        asyncio.run(exercise())
+        asyncio.run(self._exercise_calls(owner))
         self.assertEqual(
             [(RUN, "SELECT 1", 100, None, False, None, None, "file", "json_matrix"), (PAGE, "q-1", 0, 1, None, "file", "json_matrix"), (CHECK, "SELECT 1", None),
              (RUN, "SELECT 2", 100, 2, True, None, "saved", "file", "json_matrix"), (SAVE_VIEW, "SELECT 3", "view"),

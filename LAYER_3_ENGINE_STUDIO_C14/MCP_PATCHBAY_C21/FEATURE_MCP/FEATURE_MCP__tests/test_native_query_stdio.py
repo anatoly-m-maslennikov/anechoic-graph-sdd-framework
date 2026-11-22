@@ -2,12 +2,11 @@
 
 import asyncio
 import hashlib
-import json
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
-from types import ModuleType, SimpleNamespace
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -20,10 +19,12 @@ import yaml
 
 MCP = Path(__file__).resolve().parents[1]
 PROGRAMMATIC = MCP.parents[1] / "FEATURE_PROGRAMMATIC"
-APP_TESTS = MCP.parents[1] / "IWE_CONSOLE_C43" / "APP_WORKBENCH" / "APP_WORKBENCH__tests"
-sys.path[:0] = [str(MCP), str(PROGRAMMATIC), str(PROGRAMMATIC / "FEATURE_TOOLS"), str(APP_TESTS)]
 
-from smalltest_support import extension_directory, polling_source_watcher  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.native_manifest_test_support__pub import validate_manifest  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.smalltest_support__pub import extension_directory, polling_source_watcher  # noqa: E402
+
+from .native_query_behavior_cases import NativeQueryBehaviorCases
+from .native_query_test_support import create_native_gateway
 
 
 CONTROL = ".anechoic_anechoic"
@@ -34,33 +35,7 @@ STAGING_COPY_PATH = "migration-evidence/03_plan/old-task-copy.md"
 
 
 def _native_inputs():
-    from native_query import NativeQueryInputs
-    from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.model_class_assembly import assemble_model_classes
-    from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_field_validation import validate_model_fields
-
-    model = ModuleType("compiled_mcp_fixture")
-    sys.modules[model.__name__] = model
-    source = assemble_model_classes(["""
-from anechoic.formal_claims import declare_entity
-from dataclasses import field
-
-class ProjectManifest:
-    atom_id: str
-    ref_id: str
-    version: int
-    tier: int = field(metadata={"allowed_values": (-1,)})
-    name: str
-    prefix: str
-
-declare_entity(entity_name="Project Manifest", entity_class=ProjectManifest)
-"""])
-    exec(source, vars(model))
-
-    def validate_manifest(fields, owner):
-        if owner != "C0":
-            raise ValueError("Manifest must be contained by the Project")
-        validate_model_fields(model.ProjectManifest, fields)
-        return model.ProjectManifest(**fields)
+    from .native_query_test_support import NativeQueryInputs
 
     return NativeQueryInputs(
         validate_manifest=validate_manifest,
@@ -72,14 +47,14 @@ declare_entity(entity_name="Project Manifest", entity_class=ProjectManifest)
 
 
 def _launch_server():
-    from server import main
+    from MCP_PATCHBAY_C21.FEATURE_MCP.server import main
     with polling_source_watcher():
-        return main(sys.argv[1:], native_inputs=_native_inputs())
+        return main(sys.argv[1:], gateway_factory=lambda root, control: create_native_gateway(root, control, _native_inputs()))
 
 
 class NativeJournalOwnershipTests(unittest.TestCase):
     def test_rejects_journal_outside_selected_control(self):
-        from native_query import NativeQueryOwner
+        from .native_query_test_support import NativeQueryOwner
 
         with tempfile.TemporaryDirectory() as root:
             for journal in ("_anechoic_other/_journal", ".anechoic_other/_journal"):
@@ -88,12 +63,13 @@ class NativeJournalOwnershipTests(unittest.TestCase):
                 with self.subTest(journal=journal), self.assertRaisesRegex(ValueError, "another records tree"):
                     NativeQueryOwner(selection, None)
             selection.parameters["paths"]["journal_root"] = "elsewhere/journal"
-            with patch("native_query.SavedQueryStore") as saved, patch("native_query.WorkspaceStore"), \
-                    patch("native_query.QueryLog"):
+            with patch("KERNEL_MIXER_C59.native_query_runtime.SavedQueryStore") as saved, \
+                    patch("KERNEL_MIXER_C59.native_query_runtime.WorkspaceStore"), \
+                    patch("KERNEL_MIXER_C59.native_query_runtime.QueryLog"):
                 NativeQueryOwner(selection, None)
                 self.assertEqual("elsewhere/journal", saved.call_args.kwargs["journal_root"])
 
-class NativeQueryStdioTests(unittest.IsolatedAsyncioTestCase):
+class NativeQueryStdioTests(NativeQueryBehaviorCases, unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.enterContext(polling_source_watcher())
         self.root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
@@ -112,10 +88,10 @@ from anechoic.model import ProjectManifest
 declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="Anechoic", prefix="AN"))
 ```
 """)
-        self._write("__TKT/TASKS/AN-T-009-TASK--verify-runtime.md", "AN-T-009", "active", 2,
+        self._write("001_TICKETS/TASKS/AN-T-009-TASK--verify-runtime.md", "AN-T-009", "active", 2,
                     body="## Summary\n\nVerify the operator's runtime.\n")
-        self._write("__TKT/TASKS/archived/AN-T-009@1-TASK--verify-runtime.md", "AN-T-009", "archived", 1)
-        self._write("__TKT/TASKS/draft/AN-T-009@3-draft-TASK--verify-runtime.md", "AN-T-009", "draft", 3)
+        self._write("001_TICKETS/TASKS/archived/AN-T-009@1-TASK--verify-runtime.md", "AN-T-009", "archived", 1)
+        self._write("001_TICKETS/TASKS/draft/AN-T-009@3-draft-TASK--verify-runtime.md", "AN-T-009", "draft", 3)
         self._write("_PMETA/AN-P-001-WORKFLOW--fixture.md", "AN-P-001", "active", 1)
         legacy = self.root / OLD_PATH
         legacy.parent.mkdir(parents=True)
@@ -126,7 +102,7 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
         (self.root / ".anechoic_legacy" / "anechoic_project_settings.toml").write_text(
             '[project_mcp]\nhttp_port = 18000\ntool_blacklist = ["query_run"]\n', encoding="utf-8",
         )
-        self.args = [str(Path(__file__).resolve()), "--project-root", str(self.root), "--control-root", CONTROL]
+        self.args = ["-B", "-P", "-m", "MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__tests.test_native_query_stdio", "--project-root", str(self.root), "--control-root", CONTROL]
 
     def _write(self, relative, atom_id, status, version, *, template="task", body="## Summary\n\nFixture.\n",
                container=None, tier=None, lens=None, structure_tier=None, label=None):
@@ -143,7 +119,7 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
         if lens:
             metadata["context"]["lens"] = lens
         if structure_tier is not None:
-            from native_carrier_header import canonical_native_header
+            from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_header__pub import canonical_native_header
 
             metadata["context"]["tier"] = structure_tier
             metadata["context"].setdefault("lens", "DES")
@@ -173,7 +149,7 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
         }
         async with (
             asyncio.timeout(25),
-            stdio_client(StdioServerParameters(command=sys.executable, args=self.args)) as streams,
+            stdio_client(StdioServerParameters(command=sys.executable, args=self.args, env={"PYTHONPATH": str(MCP.parents[1])})) as streams,
             ClientSession(*streams) as client,
         ):
             await client.initialize()
@@ -196,194 +172,17 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
                     })
                     self.assertFalse(response.is_error, response.structured_content)
 
-    async def test_ticket_label_queries_and_legacy_epic_kind(self):
-        self._write("__TKT/TASKS/AN-T-011-EPIC--canonical.md", "AN-T-011", "active", 1, label="Epic")
-        self._write("__TKT/TASKS/AN-T-012-SUB_EPIC--canonical.md", "AN-T-012", "active", 1, label="Sub-epic")
-        self._write("__TKT/TASKS/AN-T-013-EPIC--legacy.md", "AN-T-013", "active", 1, template="epic")
-        self._write("__TKT/TASKS/AN-T-014-TASK--custom.md", "AN-T-014", "active", 1, label="Custom Group")
-        async with (
-            asyncio.timeout(25),
-            stdio_client(StdioServerParameters(
-                command=sys.executable, args=self.args,
-                env={"ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY": str(extension_directory(MCP.parents[2]))},
-            )) as streams,
-            ClientSession(*streams) as client,
-        ):
-            await client.initialize()
 
-            async def query(**arguments):
-                response = await client.call_tool("query_template", {
-                    "template": "list_tickets", "result_format": "json_matrix", **arguments,
-                })
-                self.assertFalse(response.is_error, response.structured_content)
-                return response.structured_content
 
-            epics = await query(kind="epic")
-            self.assertEqual(["ref", "summary", "kind", "status", "path", "label"],
-                             [column["name"] for column in epics["columns"]])
-            self.assertEqual({("AN-T-011", "task", "Epic"), ("AN-T-012", "task", "Sub-epic"),
-                              ("AN-T-013", "epic", None)},
-                             {(row[0], row[2], row[5]) for row in epics["rows"]})
-            self.assertEqual(["AN-T-012"], [row[0] for row in (await query(label="sub epic"))["rows"]])
-            self.assertEqual(["AN-T-014"], [row[0] for row in (await query(label="CUSTOM-GROUP"))["rows"]])
 
-            async def create(label, container, summary):
-                response = await client.call_tool("atom_lifecycle_create_draft", {"newAtom": {
-                    "template": "task", "label": label, "container": container,
-                    "body": f"## Summary\n\n{summary}\n",
-                }})
-                result = response.structured_content
-                self.assertEqual("completed", result["status"], result)
-                return result["savedDraft"]
 
-            parent = await create("Version", {"component": "C00"}, "Parent version")
-            child = await create("Epic", {"atom": parent["atom_id"]}, "Child epic")
-            promoted = await client.call_tool("atom_lifecycle_promote_draft", {
-                "target": {"ref_id": parent["ref_id"], "version": parent["version"]},
-                "targetStatus": "backlog",
-            })
-            self.assertEqual("completed", promoted.structured_content["status"], promoted.structured_content)
-            children = (await query(parent=parent["atom_id"], statuses=["backlog"]))["rows"]
-            self.assertEqual([(child["atom_id"], "task", "Epic")],
-                             [(row[0], row[2], row[5]) for row in children])
 
-    async def test_queries_the_native_tree_and_keeps_legacy_inputs_unchanged(self):
-        self._write("__TKT/TASKS/AN-T-010-TASK--child.md", "AN-T-010", "done", 1,
-                    container={"atom": "AN-T-009"})
-        self._write("002_PROJECT_CONFIG/CUSTOM_MODEL/AN-C-001--definition.md", "AN-C-001", "active", 1,
-                    container={"atom": "AN-P-001"})
-        before = self._carrier_digests()
-        async with (
-            asyncio.timeout(25),
-            stdio_client(StdioServerParameters(
-                command=sys.executable, args=self.args,
-                env={"ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY": str(extension_directory(MCP.parents[2]))},
-            )) as streams,
-            ClientSession(*streams) as client,
-        ):
-            initialized = await client.initialize()
-            self.assertIsNone(initialized.capabilities.resources)
-            tools = {tool.name: tool for tool in (await client.list_tools()).tools}
-            self.assertTrue({"query_run", "query_page", "query_check", "query_schema", "query_template", "workspace_open"} <= set(tools))
-            schema = await client.call_tool("query_schema", {})
-            self.assertFalse(schema.is_error, schema.structured_content)
-            tables = schema.structured_content["tables"]
-            self.assertEqual({
-                "atoms", "relations", "native_references", "components",
-                "import_nodes", "module_imports", "import_edges", "package_imports", "test_edges",
-                "tested_by_edges", "import_read_issues", "implementation_rmedo", "component_metrics", "package_audit",
-                "change_log", "query_log", "live_runs", "runtime_diagnostics", "atom_parse_issues",
-                "atom_schema_issues", "atom_declared_carrier_issues", "atom_physical_carrier_issues",
-                "atom_duplicate_revision_issues", "boundary_declarations", "code_access_findings",
-            }, set(tables))
-            small = await client.call_tool("query_run", {"sql": "SELECT 0 AS n FROM range(120)"})
-            self.assertFalse(small.is_error, small.structured_content)
-            self.assertEqual([[0]] * 120, small.structured_content["rows"])
-            self.assertLessEqual(len(small.content[0].text.encode("utf-8")), 4096)
-            large = await client.call_tool("query_run", {"sql": "SELECT repeat('a', 4096) AS payload"})
-            self.assertFalse(large.is_error, large.structured_content)
-            file = large.structured_content["result_file"]
-            self.assertEqual("json_matrix", file["format"])
-            self.assertEqual([["a" * 4096]], json.loads((self.root / file["path"]).read_text())["rows"])
-            csv = await client.call_tool("query_run", {"sql": "SELECT 1 AS n", "result_format": "csv"})
-            self.assertFalse(csv.is_error, csv.structured_content)
-            self.assertEqual('"n"\r\n"1"\r\n', csv.content[0].text)
 
-            async def query(sql, **options):
-                response = await client.call_tool("query_run", {
-                    "sql": sql, "result_delivery": "inline", "project_root": str(self.root), **options,
-                })
-                self.assertFalse(response.is_error, response.structured_content)
-                return response.structured_content
 
-            async def template(name, **arguments):
-                response = await client.call_tool("query_template", {
-                    "template": name, "result_format": "json_matrix", **arguments,
-                })
-                self.assertFalse(response.is_error, response.structured_content)
-                return response.structured_content
 
-            current = await template("get_atom", reference="AN-T-009")
-            self.assertEqual(["exact_ref", "summary", "status", "path"], [column["name"] for column in current["columns"]])
-            self.assertEqual([[
-                "AN-T-009@2", "Verify the operator's runtime.", "active",
-                f"{CONTROL}/__TKT/TASKS/AN-T-009-TASK--verify-runtime.md",
-            ]], current["rows"])
-            exact = await template("get_atom", reference="AN-T-009@1")
-            self.assertEqual("AN-T-009@1", exact["rows"][0][0])
-            state = await template("get_atom_state", reference="AN-T-009")
-            self.assertEqual(["status", "version"], [column["name"] for column in state["columns"]])
-            self.assertEqual([["active", 2]], state["rows"])
-            state_csv = await client.call_tool("query_template", {
-                "template": "get_atom_state", "reference": "AN-T-009",
-            })
-            self.assertFalse(state_csv.is_error, state_csv.structured_content)
-            self.assertEqual('"status","version"\r\n"active","2"\r\n', state_csv.content[0].text)
-            self.assertEqual(state_csv.content[0].text, state_csv.structured_content["csv"])
-            self.assertNotIn("rows", state_csv.structured_content)
-            self.assertNotIn("result_file", state_csv.structured_content)
-            csv_file = await template("list_versions", reference="AN-T-009", result_format="csv", page_size=1)
-            self.assertEqual("csv", csv_file["result_file"]["format"])
-            self.assertEqual(3, csv_file["result_file"]["row_count"])
-            versions = await template("list_versions", reference="AN-T-009")
-            self.assertEqual(["AN-T-009@3-draft", "AN-T-009@2", "AN-T-009@1"],
-                             [item[0] for item in versions["rows"]])
-            found = await template("find_atoms", text="OPERATOR'S")
-            self.assertEqual([["AN-T-009", "Verify the operator's runtime.",
-                               f"{CONTROL}/__TKT/TASKS/AN-T-009-TASK--verify-runtime.md"]], found["rows"])
-            self.assertEqual(found["rows"], (await template("find_atoms", text="TASK--verify-runtime"))["rows"])
-            tickets = await template("list_tickets", kind="task")
-            self.assertEqual({"AN-T-009", "AN-T-009@3-draft", "AN-T-010"}, {item[0] for item in tickets["rows"]})
-            children = await template("list_tickets", parent="AN-T-009", statuses=["done"])
-            self.assertEqual([["AN-T-010", "Fixture.", "task", "done",
-                               f"{CONTROL}/__TKT/TASKS/AN-T-010-TASK--child.md", None]], children["rows"])
-            listed = await template("list_atoms", family="project_config", statuses=["active"])
-            self.assertEqual({"AN-P-001", "AN-C-001"}, {row[0] for row in listed["rows"]})
-            self.assertEqual({"AN-P-001"}, {row[0] for row in (await template("list_atoms", family="pmeta", statuses=["active"]))["rows"]})
-            self.assertEqual([["active", 1]], (await template("get_atom_state", reference="AN-C-001@1"))["rows"])
-            self.assertEqual([["CONTAINED_BY", "AN-P-001", False]],
-                             (await template("list_relations", reference="AN-C-001@1"))["rows"])
-            counted = await template("count_atoms", family="tkt", kind="task", statuses=["archived"])
-            self.assertEqual(["count"], [column["name"] for column in counted["columns"]])
-            self.assertEqual([[1]], counted["rows"])
-            grouped = await template("count_atoms", family="tkt", group_by="status")
-            self.assertEqual([["active", 1], ["archived", 1], ["done", 1], ["draft", 1]], grouped["rows"])
-            edges = await template("list_relations", reference="AN-T-010@1")
-            self.assertEqual([["CONTAINED_BY", "AN-T-009", False]], edges["rows"])
-            incoming = await template("list_relations", reference="AN-T-010", direction="incoming")
-            self.assertEqual([["CONTAINS", "AN-T-009", True]], incoming["rows"])
-            edge_counts = await template("count_relations_by_type")
-            self.assertEqual([["CONTAINED_BY", False, 7], ["CONTAINS", True, 7]], edge_counts["rows"])
-            sql = ("SELECT stable_ref, exact_ref FROM native_references "
-                   "WHERE exact_ref LIKE 'AN-T-009@%' ORDER BY exact_ref")
-            checked = await client.call_tool("query_check", {"sql": sql})
-            self.assertTrue(checked.structured_content["valid"])
-            first = await query(sql, page_size=1)
-            self.assertEqual([[None, "AN-T-009@1"]], first["rows"])
-            page = await client.call_tool("query_page", {
-                "query_id": first["query_id"], "offset": 1, "result_delivery": "inline",
-            })
-            self.assertEqual([["AN-T-009", "AN-T-009@2"], [None, "AN-T-009@3-draft"]],
-                             page.structured_content["rows"])
-            inverse = await query(
-                "SELECT relation_type, derived FROM relations "
-                "WHERE (source_ref = 'C0' AND target_ref = 'AN-T-009') "
-                "OR (source_ref = 'AN-T-009' AND target_ref = 'C0') ORDER BY derived"
-            )
-            self.assertEqual([["CONTAINED_BY", False], ["CONTAINS", True]], inverse["rows"])
-            for name, arguments in (
-                ("query_run", {"sql": "SELECT 1", "project_root": str(self.root.parent)}),
-                ("query_run", {"sql": "SELECT 1", "save": "yes"}),
-                ("query_run", {"sql": "DELETE FROM atoms"}),
-                ("query_template", {"template": "list_versions", "reference": "AN-T-009@2"}),
-                ("query_template", {"template": "get_atom", "reference": "AN-T-009", "text": "wrong input"}),
-                ("workspace_get", {"workspace_id": "unavailable"}),
-            ):
-                with self.subTest(name=name, arguments=arguments):
-                    refused = await client.call_tool(name, arguments)
-                    self.assertTrue(refused.is_error)
-            self.assertEqual(7, (await query("SELECT count(*) AS atoms FROM atoms"))["rows"][0][0])
-        self.assertEqual(before, self._carrier_digests())
+
+
+
 
     async def test_ticket_asset_and_spec_draft_archive_tools(self):
         for number in (11, 12):
@@ -392,7 +191,7 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
                         container={"component": "C0"}, structure_tier=1)
         async with (
             asyncio.timeout(25),
-            stdio_client(StdioServerParameters(command=sys.executable, args=self.args)) as streams,
+            stdio_client(StdioServerParameters(command=sys.executable, args=self.args, env={"PYTHONPATH": str(MCP.parents[1])})) as streams,
             ClientSession(*streams) as client,
         ):
             await client.initialize()
@@ -415,68 +214,7 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
             self.assertEqual(["AN-S-011@1", "AN-S-012@1"],
                              [row["artifact"]["ref_id"] for row in archived.structured_content["results"]])
 
-    async def test_component_queries_use_declared_id_and_owned_spec_tiers(self):
-        self._write("AN-S-011-manifest.md", "AN-S-011", "active", 1, template="component_manifest", lens="SPEC",
-                    body="""## Summary
 
-Tools.
-
-## Purpose
-
-Provide project tools.
-
-## Formal manifest
-
-```python
-from anechoic.formal_claims import declare_entity
-from anechoic.model import ComponentManifest
-declare_entity(
-    entity_name="Component Manifest",
-    instance=ComponentManifest(component_id="C1", name="Tools", layer=3, lens_whitelist=["SPEC"]),
-)
-```
-""")
-        self._write("AN-S-012-child-manifest.md", "AN-S-012", "active", 1, template="component_manifest",
-                    lens="SPEC", container={"component": "C1"},
-                    body="## Claim\n\n### Component ID\n\nC2\n\n### Name\n\nChild\n")
-        self._write("AN-S-013-contract.md", "AN-S-013", "active", 1, container={"component": "C1"})
-        self._write("AN-S-014-solution.md", "AN-S-014", "active", 1, container={"component": "C1"}, tier=1)
-        self._write("AN-S-016@1-draft-contract.md", "AN-S-016", "draft", 1, container={"component": "C1"})
-        self._write("AN-S-017-contract.md", "AN-S-017", "active", 1, template="component_contract",
-                    container={"component": "C1"}, structure_tier=1, body="## Guarantee\n\nA guarantee.\n")
-        self._write("AN-S-018@1-draft-contract.md", "AN-S-018", "draft", 1, template="component_contract",
-                    container={"component": "C1"}, structure_tier=1)
-        self._write("AN-S-019-child-contract.md", "AN-S-019", "active", 1, template="component_contract",
-                    container={"component": "C2"}, structure_tier=1)
-        self._write("AN-S-020-wrong-tier-contract.md", "AN-S-020", "active", 1, template="component_contract",
-                    container={"component": "C1"}, structure_tier=0)
-        async with (
-            asyncio.timeout(25),
-            stdio_client(StdioServerParameters(command=sys.executable, args=self.args)) as streams,
-            ClientSession(*streams) as client,
-        ):
-            await client.initialize()
-            for template, selector, expected in (
-                ("fetch_contracts", "tools", ["AN-S-012@1", "AN-S-013@1", "AN-S-020@1"]),
-                ("fetch_solutions", "c1", ["AN-S-014@1", "AN-S-017@1"]),
-                ("get_component_manifest", "C1", ["AN-S-011@1"]),
-                ("get_component_purpose", " Tools ", ["AN-S-011@1"]),
-                ("get_component_purpose", "Child", []),
-            ):
-                with self.subTest(template=template, selector=selector):
-                    result = await client.call_tool("query_template", {
-                        "template": template, "component": selector, "result_format": "json_matrix",
-                    })
-                    self.assertFalse(result.is_error, result.structured_content)
-                    self.assertEqual(expected, [row[0] for row in result.structured_content["rows"]])
-            result = await client.call_tool("query_run", {
-                "sql": "SELECT component_id, name, parent_component_id, layer, lens_whitelist, "
-                       "manifest_ref, purpose_refs FROM components WHERE component_id = 'C1'",
-                "result_delivery": "inline",
-            })
-            self.assertFalse(result.is_error, result.structured_content)
-            self.assertEqual([["C1", "Tools", "C0", 3, ["SPEC"], "AN-S-011@1", ["AN-S-011@1"]]],
-                             result.structured_content["rows"])
 
     async def test_project_queries_include_all_current_atoms_at_selected_tier(self):
         self._write("AN-S-1428-axiom.md", "AN-S-1428", "active", 1, template="axiom", tier=-1)
@@ -486,7 +224,7 @@ declare_entity(
         self._write("AN-S-021-tier-one.md", "AN-S-021", "active", 1, template=None, tier=1)
         async with (
             asyncio.timeout(25),
-            stdio_client(StdioServerParameters(command=sys.executable, args=self.args)) as streams,
+            stdio_client(StdioServerParameters(command=sys.executable, args=self.args, env={"PYTHONPATH": str(MCP.parents[1])})) as streams,
             ClientSession(*streams) as client,
         ):
             await client.initialize()
@@ -501,11 +239,11 @@ declare_entity(
                 self.assertEqual(expected, [row[0] for row in result.structured_content["rows"]])
 
     async def test_http_queries_native_projection_without_legacy_routes(self):
-        from http_paths import HEALTH_PATH, MCP_PATH, WORKBENCH_PATH
-        from http_server import create_app
+        from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import HEALTH_PATH, MCP_PATH, WORKBENCH_PATH
+        from MCP_PATCHBAY_C21.FEATURE_MCP.http_server import create_app
 
         before = self._carrier_digests()
-        app = create_app(self.root, native_inputs=_native_inputs(), control_root=CONTROL)
+        app = create_app(self.root, gateway_factory=lambda root, control: create_native_gateway(root, control, _native_inputs()), control_root=CONTROL)
         async with app.starlette_app.router.lifespan_context(app.starlette_app):
             async with httpx2.AsyncClient(
                 transport=httpx2.ASGITransport(app=app), base_url="http://127.0.0.1:18093",
@@ -544,24 +282,26 @@ declare_entity(
         self.assertEqual(before, self._carrier_digests())
 
     def test_http_entrypoint_uses_native_selection(self):
-        import server
-        from http_server import main as http_main
+        import MCP_PATCHBAY_C21.FEATURE_MCP.server as server
+        from MCP_PATCHBAY_C21.FEATURE_MCP.http_server import main as http_main
 
         inputs = _native_inputs()
+        factory = lambda root, control: create_native_gateway(root, control, inputs)
         args = ["--project-root", str(self.root), "--control-root", CONTROL]
-        with patch("http_server.startup_selection", side_effect=AssertionError("legacy selection")), \
+        with patch("MCP_PATCHBAY_C21.FEATURE_MCP.http_server.startup_selection", side_effect=AssertionError("legacy selection")), \
                 patch("uvicorn.run") as run:
-            self.assertIsNone(server.main(args + ["--transport", "streamable-http"], native_inputs=inputs))
+            self.assertIsNone(server.main(args + ["--transport", "streamable-http"], gateway_factory=factory))
             app = run.call_args.args[0]
             self.assertEqual(self.root, app.gateway.selection.root)
             self.assertIsNotNone(app.gateway._native_query)
         for main, extra in ((server.main, ["--transport", "streamable-http"]), (http_main, [])):
-            with self.subTest(main=main), self.assertRaises(SystemExit):
-                main(args + extra + ["--instance-id", "legacy"], native_inputs=inputs)
+            for selector in (["--instance-id", "legacy"], ["--host-project-root", str(self.root)]):
+                with self.subTest(main=main, selector=selector), self.assertRaises(SystemExit):
+                    main(args + extra + selector, gateway_factory=factory)
+            with self.subTest(main=main, selector="missing control"), self.assertRaises(SystemExit):
+                main(["--project-root", str(self.root), *extra], gateway_factory=factory)
 
     def test_second_native_process_reports_project_lock_to_stderr(self):
-        from native_query import create_native_gateway
-
         owner = create_native_gateway(self.root, CONTROL, _native_inputs())._native_query
         self.addCleanup(owner.close)
         owner.start()
@@ -579,9 +319,8 @@ declare_entity(
                                 capture_output=True, timeout=15, check=False)
         self.assertEqual(2, result.returncode, result.stderr)
         self.assertEqual("", result.stdout)
-        diagnostic = json.loads(result.stderr.splitlines()[0])
-        self.assertEqual("mcp.stdio_startup", diagnostic["operation"])
-        self.assertEqual("ProjectSelectionError", diagnostic["exception_class"])
+        self.assertIn("mcp_stdio_startup_failed", result.stderr)
+        self.assertIn("anechoic: operation failed", result.stderr)
 
 
 if __name__ == "__main__":

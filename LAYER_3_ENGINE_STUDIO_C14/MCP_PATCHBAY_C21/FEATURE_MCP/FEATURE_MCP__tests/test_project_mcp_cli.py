@@ -8,16 +8,13 @@ import unittest
 from unittest.mock import patch
 
 APP = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(APP / 'docker'))
-import runtime
-
-
+import MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime as runtime
 class ProjectMcpCommandTests(unittest.TestCase):
     def invoke(self, result, *options):
         output = io.StringIO()
         with patch.object(sys, 'argv', ['runtime.py', '--project-root', '/project',
                                       'project-mcp', *options]), \
-             patch('project_mcp_launcher.Launcher.launch', return_value=result) as launch, \
+             patch('MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_launcher.Launcher.launch', return_value=result) as launch, \
              patch.object(runtime, 'Runtime', side_effect=AssertionError('legacy worker must not start')), \
              patch.dict(runtime.os.environ, {}, clear=True), \
              redirect_stdout(output):
@@ -70,7 +67,7 @@ class ProjectMcpCommandTests(unittest.TestCase):
             with self.subTest(value=value), \
                  patch.object(sys, 'argv', ['runtime.py', '--project-root', '/project',
                                             'project-mcp', '--port', value]), \
-                 patch('project_mcp_launcher.Launcher.launch') as launch, \
+                 patch('MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_launcher.Launcher.launch') as launch, \
                  patch.dict(runtime.os.environ, {}, clear=True), \
                  redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()) as errors:
                 with self.assertRaises(SystemExit) as exit_code:

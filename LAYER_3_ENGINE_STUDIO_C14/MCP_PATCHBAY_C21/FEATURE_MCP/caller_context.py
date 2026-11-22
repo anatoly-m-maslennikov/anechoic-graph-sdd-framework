@@ -4,7 +4,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
-from runtime_request_context import RuntimeRequestContext, current_request_context
+from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_request_context import RuntimeRequestContext, current_request_context
 
 
 class CallerContextError(ValueError):

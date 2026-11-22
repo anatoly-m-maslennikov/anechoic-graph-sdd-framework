@@ -1,13 +1,9 @@
 """Check declared sibling ordering with optional Properties."""
 
-from pathlib import Path
-import sys
 import unittest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
-from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_property_order import (
-    order_properties, validate_property_order,
-)
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_property_order import validate_property_order
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.property_order__pub import order_properties
 
 
 class PropertyOrderTests(unittest.TestCase):

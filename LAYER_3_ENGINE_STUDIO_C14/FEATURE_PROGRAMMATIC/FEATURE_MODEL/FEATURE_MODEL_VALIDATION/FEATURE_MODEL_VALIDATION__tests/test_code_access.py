@@ -1,13 +1,12 @@
 """Check resolved Code Access decisions."""
 
 from pathlib import Path
-import sys
 import unittest
 
 PROGRAMMATIC = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(PROGRAMMATIC))
 
-from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.code_access import allows_import, parse_code_access
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.code_access_rules__pub import parse_code_access
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.code_access import allows_import
 
 
 class CodeAccessTests(unittest.TestCase):
@@ -43,7 +42,7 @@ class CodeAccessTests(unittest.TestCase):
         self.assertTrue(allows_import(self.entry, self.provider, self.provider, {}, ordered_layers=(1, 1)))
 
     def test_markers(self):
-        from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.code_access import module_visibility
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.code_access_rules__pub import module_visibility
         for name in ('x__shared', 'x__family_pub', 'x__internal'):
             self.assertEqual(module_visibility(name), 'shared')
         for name in ('x__public', 'x__pub'):

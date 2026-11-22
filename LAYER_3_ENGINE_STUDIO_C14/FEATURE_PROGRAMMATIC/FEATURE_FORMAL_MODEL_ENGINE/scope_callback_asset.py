@@ -10,29 +10,12 @@ import py_compile
 import json
 from pathlib import Path
 
-from FEATURE_FORMAL_MODEL_ENGINE.compiler_claim import compile_scope_level_with_check
-from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim
-from FEATURE_FORMAL_MODEL_ENGINE.scope_levels import ScopeUnit
-from carrier_aliases import carrier_read_view, matches_named_value
-from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier
+from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.compiler_claim import compile_scope_level_with_check
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_model_claim__pub import parse_native_model_claim
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_compat__pub import carrier_read_view, matches_named_value
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import parse_carrier
 
-from markdown_it import MarkdownIt
-
-
-def formal_claim(body):
-    headings, found = [], []
-    tokens = MarkdownIt("commonmark").parse(body)
-    for index, token in enumerate(tokens):
-        if token.type == "heading_open":
-            level = int(token.tag[1:])
-            headings = [item for item in headings if item[0] < level]
-            headings.append((level, tokens[index + 1].content.strip().casefold()))
-        elif (token.type == "fence" and token.info.strip().casefold() == "python"
-              and tuple(name for _, name in headings) == ("claim", "formal claim")):
-            found.append(token.content)
-    if len(found) != 1:
-        raise ValueError("Expected one Python Formal Claim")
-    return found[0]
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.formal_claim__pub import formal_claim
 
 
 def generated_assets(raw, *, pin, release_sources):
@@ -73,7 +56,7 @@ def generated_assets(raw, *, pin, release_sources):
         f"SOURCE_REFERENCE = {reference!r}\n"
         f"SOURCE_SHA256 = {pin['carrier_sha256']!r}\n"
         f"CLAIM_SHA256 = {pin['claim_sha256']!r}\n"
-        "from FEATURE_FORMAL_MODEL_ENGINE.scope_levels import ScopeUnit\n\n"
+        "from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.scope_levels import ScopeUnit\n\n"
     )
     source = (prefix + check["source"] + "\n").encode()
     snapshot = (json.dumps({reference: base64.b64encode(raw).decode("ascii")},

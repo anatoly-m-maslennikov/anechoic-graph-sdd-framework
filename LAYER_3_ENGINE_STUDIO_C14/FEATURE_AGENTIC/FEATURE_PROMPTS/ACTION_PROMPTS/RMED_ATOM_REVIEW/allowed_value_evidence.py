@@ -12,7 +12,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from context_builder import body_section_texts, metadata, prose
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import body_section_texts, metadata, prose
 
 
 _RMEDO_ROLES = frozenset({"Requirement", "Method", "Evaluation", "Delivery", "Operations"})

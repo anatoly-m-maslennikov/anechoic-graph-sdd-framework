@@ -1,11 +1,11 @@
 """The existing Workbench HTTP contract uses the native Project store."""
 
 import asyncio
+import json
+import sys
 from dataclasses import replace
-from itertools import product
 from pathlib import Path
 import shlex
-import shutil
 import unittest
 from unittest.mock import patch
 
@@ -13,255 +13,188 @@ import httpx2
 from mcp import types
 from starlette.applications import Starlette
 
-import test_native_query_stdio as fixture
-from native_query import NativeQueryOwner, create_native_gateway
-from direct_gateway import startup_selection
-from native_project_selection import resolve_native_project
-from work_journal import PROJECT_DATABASE, append_sealed_events, journal_inbox
-from workbench_web import routes
+from . import test_native_query_stdio as fixture
+from .native_workbench_http_cases import NativeWorkbenchStateCases
+from .native_query_test_support import create_native_gateway
+from MCP_PATCHBAY_C21.FEATURE_MCP.direct_gateway import startup_selection
+from MCP_PATCHBAY_C21.FEATURE_MCP.workbench_web import routes
 
 
-class NativeWorkbenchHttpTests(unittest.IsolatedAsyncioTestCase):
+class NativeWorkbenchHttpTests(NativeWorkbenchStateCases, unittest.IsolatedAsyncioTestCase):
     setUp = fixture.NativeQueryStdioTests.setUp
     _write = fixture.NativeQueryStdioTests._write
 
-    def test_independent_storage_modes_keep_journal_across_rebuild_and_restart(self):
-        inputs = fixture._native_inputs()
-        for journal, workbench in product(("files", "duckdb"), ("disk", "memory")):
-            with self.subTest(journal=journal, workbench=workbench):
-                root = self.root / f"{journal}-{workbench}"
-                shutil.copytree(self.root / fixture.CONTROL, root / fixture.CONTROL)
-                selected = resolve_native_project(root, fixture.CONTROL, validate_manifest=inputs.validate_manifest)
-                selected = replace(selected, parameters={"runtime": {
-                    "journal": {"storage": journal},
-                    "workbench": {"storage": workbench, "import_graph": False},
-                }})
-                owner = NativeQueryOwner(selected, inputs)
-                try:
-                    owner.start()
-                    append_sealed_events(root, [{"event": "test"}], author="test",
-                                         local_date="2026-11-21", timezone="UTC",
-                                         journal_root=(selected.control_relative / "_journal").as_posix(),
-                                         storage=journal)
-                    saved = owner.save_view("SELECT 1")["saved_query_id"]
-                    if journal == "duckdb":
-                        self.assertEqual([[2]], owner.run("SELECT count(*) FROM work_journal",
-                                                          result_delivery="inline")["rows"])
-                    owner.rebuild("all")
-                    self.assertEqual("SELECT 1", owner.load(saved)["sql"])
-                    self.assertEqual(workbench == "disk" or journal == "duckdb", (root / PROJECT_DATABASE).is_file())
-                    self.assertEqual(journal == "files", (root / fixture.CONTROL / "_journal").is_dir())
-                finally:
-                    owner.close()
-                owner = NativeQueryOwner(selected, inputs)
-                try:
-                    owner.start()
-                    self.assertEqual("SELECT 1", owner.load(saved)["sql"])
-                    if journal == "duckdb":
-                        self.assertEqual([[2]], owner.run("SELECT count(*) FROM work_journal",
-                                                          result_delivery="inline")["rows"])
-                finally:
-                    owner.close()
-                if (journal, workbench) == ("duckdb", "disk"):
-                    database = root / PROJECT_DATABASE
-                    before = database.read_bytes()
-                    switched = replace(selected, parameters={"runtime": {
-                        "workbench": {"storage": "memory", "import_graph": False},
-                    }})
-                    owner = NativeQueryOwner(switched, inputs)
-                    try:
-                        owner.start()
-                        self.assertEqual("SELECT 1", owner.load(saved)["sql"])
-                        self.assertEqual([[2]], owner.run("SELECT count(*) FROM work_journal",
-                                                          result_delivery="inline")["rows"])
-                        owner.save_view("SELECT 2")
-                        self.assertTrue((root / fixture.CONTROL / "_journal").is_dir())
-                    finally:
-                        owner.close()
-                    self.assertEqual(before, database.read_bytes())
-                    append_sealed_events(root, [{"event": "pending"}], author="test",
-                                         local_date="2026-11-21", timezone="UTC",
-                                         journal_root=(selected.control_relative / "_journal").as_posix(),
-                                         storage=journal)
-                    self.assertTrue(list(journal_inbox(root).glob("*.json")))
-                    owner = NativeQueryOwner(switched, inputs)
-                    try:
-                        owner.start()
-                        self.assertEqual([[3]], owner.run("SELECT count(*) FROM work_journal",
-                                                          result_delivery="inline")["rows"])
-                        self.assertFalse(list(journal_inbox(root).glob("*.json")))
-                    finally:
-                        owner.close()
+
 
     async def test_startup_rebinds_native_identity(self):
-        gateway = create_native_gateway(self.root, fixture.CONTROL, fixture._native_inputs())
-        selection = gateway.selection
-        with patch('native_startup.select_runtime_project', return_value=selection):
-            self.assertEqual(selection, startup_selection(self.root))
-            rebound = startup_selection(self.root, instance_id=selection.instance_id, host_root=self.root)
-            self.assertEqual(self.root, rebound.host_root)
-            with self.assertRaises(ValueError):
-                startup_selection(self.root, host_root=self.root)
-            with self.assertRaises(ValueError):
-                startup_selection(self.root, instance_id='0' * 64, host_root=self.root)
-        await gateway.close()
+        manifest = self.root / fixture.CONTROL / fixture.MANIFEST
+        manifest.write_text(manifest.read_text().replace("component: C0\n", "component: C00\n", 1))
+        selection = await asyncio.to_thread(startup_selection, self.root)
+        rebound = await asyncio.to_thread(startup_selection, self.root, instance_id=selection.instance_id,
+                                          host_root=self.root)
+        self.assertEqual(replace(selection, host_root=self.root), rebound)
+        with self.assertRaises(ValueError):
+            await asyncio.to_thread(startup_selection, self.root, host_root=self.root)
+        with self.assertRaises(ValueError):
+            await asyncio.to_thread(startup_selection, self.root, instance_id="0" * 64, host_root=self.root)
 
-    async def test_workspace_view_and_bound_root(self):
-        source = self.root / fixture.CONTROL
-        before = {p.relative_to(source): p.read_bytes() for p in source.rglob('*') if p.is_file()}
+
+
+
+
+
+
+    async def test_manifest_change_blocks_lifecycle_until_gateway_restarts(self):
         gateway = create_native_gateway(self.root, fixture.CONTROL, fixture._native_inputs())
         await gateway.initialize()
         self.addAsyncCleanup(gateway.close)
-        self.assertIn('module_imports', gateway._native_query.schema()['tables'])
-        self.assertTrue({'workspace_open', 'view_run', 'view_fetch'} <= {tool.name for tool in gateway.tools})
-        self.assertIn('workbench_status', {tool.name for tool in gateway.tools})
-        status = await gateway.call(None, types.CallToolRequestParams(name='workbench_status', arguments={}))
-        self.assertFalse(status.is_error, status.structured_content)
-        self.assertEqual({'mode': 'live_index'}, status.structured_content)
-        mcp_open = await gateway.call(None, types.CallToolRequestParams(
-            name='workspace_open', arguments={'session_id': 'mcp-session'},
-        ))
-        self.assertFalse(mcp_open.is_error, mcp_open.structured_content)
-        refused = await gateway.call(None, types.CallToolRequestParams(
-            name='workspace_open', arguments={'session_id': 'mcp-session', 'project_root': '/wrong/project'},
-        ))
-        self.assertTrue(refused.is_error)
-        app = Starlette(routes=routes(gateway))
-        async with httpx2.AsyncClient(transport=httpx2.ASGITransport(app=app),
-                                     base_url='http://127.0.0.1:18093') as client:
-            path = '/anechoic/Anechoic/api'
-            status = await client.post(f'{path}/status', json={})
-            self.assertEqual(200, status.status_code, status.text)
-            self.assertEqual({'mode': 'live_index'}, status.json())
-            wrong_status_root = await client.post(f'{path}/status', json={'project_root': '/wrong/project'})
-            self.assertEqual(400, wrong_status_root.status_code)
-
-            async def call(operation, arguments, **envelope):
-                return await client.post(f'{path}/interface', json={
-                    'operation': operation, 'arguments': arguments, **envelope,
-                })
-
-            opened = await call('workspace_open', {'session_id': 'http-session'})
-            self.assertEqual(200, opened.status_code, opened.text)
-            workspace = opened.json()
-            self.assertEqual('Anechoic', workspace['project_name'])
-            self.assertIn('/anechoic/workbench/Anechoic?workspace=http-session', workspace['workspace_url'])
-            identity = {'workspace_id': workspace['workspace_id'], 'view_id': workspace['active_view_id']}
-            sql = "SELECT exact_ref FROM native_references WHERE exact_ref = 'AN-T-009@2'"
-            updated = await call('view_update', identity | {'sql': sql, 'expected_revision': 0})
-            self.assertEqual(200, updated.status_code, updated.text)
-            checked = await call('view_check', identity)
-            self.assertTrue(checked.json()['valid'], checked.text)
-            result = await call('view_run', identity)
-            self.assertEqual('success', result.json()['status'], result.text)
-            fetched = await call('view_fetch', identity | {'result_delivery': 'inline'})
-            self.assertEqual([['AN-T-009@2']], fetched.json()['rows'])
-            saved = await call('view_save', identity)
-            self.assertEqual(200, saved.status_code, saved.text)
-            saved_url = saved.json()['saved_query_url']
-            self.assertIn('/anechoic/workbench/Anechoic?query=', saved_url)
-            loaded = await client.post(f'{path}/load', json={'reference': saved_url})
-            self.assertEqual(sql, loaded.json()['sql'], loaded.text)
-            listed = await client.post(f'{path}/saved-list', json={})
-            self.assertEqual(saved.json()['saved_query_id'], listed.json()['items'][0]['saved_query_id'])
-            wrong_root = await call('workspace_get', {'workspace_id': workspace['workspace_id']},
-                                    project_root='/wrong/project')
-            self.assertEqual(400, wrong_root.status_code)
-            wrong_query = await client.post(f'{path}/schema', json={'project_root': '/wrong/project'})
-            self.assertEqual(400, wrong_query.status_code)
-            wrong_page = await client.get('/anechoic/workbench/Anechoic?project_root=/wrong/project')
-            self.assertEqual(400, wrong_page.status_code)
-            wrong_name = await client.post('/anechoic/wrong/api/interface', json={
-                'operation': 'workspace_open', 'arguments': {'session_id': 'wrong'},
-            })
-            self.assertEqual(404, wrong_name.status_code)
-            unsupported = await client.post(f'{path}/archive-load', json={'scopes': []})
-            self.assertEqual(404, unsupported.status_code)
-        self.assertEqual(before, {path: (source / path).read_bytes() for path in before})
-
-    async def test_external_atom_changes_are_indexed_without_rebuild(self):
-        gateway = create_native_gateway(self.root, fixture.CONTROL, fixture._native_inputs())
-        gateway.selection = gateway._native_query.selection = replace(
-            gateway.selection, parameters={'runtime': {'workbench': {'import_graph': False}}},
-        )
-        with patch.dict('os.environ', {'ANECHOIC_RUNTIME_NAMESPACE': 'docker'}):
-            await gateway.initialize()
-        self.addAsyncCleanup(gateway.close)
-        replace_projection = self.enterContext(patch.object(
-            gateway._native_query._store, "replace", side_effect=AssertionError("Unexpected full rebuild"),
-        ))
-
-        async def wait_for(predicate):
-            async with asyncio.timeout(15):
-                while True:
-                    result = await gateway.call(None, types.CallToolRequestParams(
-                        name='query_run', arguments={
-                            'sql': "SELECT relative_path, filename, exact_ref FROM native_references "
-                                   "WHERE stable_ref = 'AN-T-010'",
-                            'result_delivery': 'inline',
-                        },
-                    ))
-                    self.assertFalse(result.is_error, result.structured_content)
-                    rows = result.structured_content['rows']
-                    if predicate(rows):
-                        return rows
-                    await asyncio.sleep(0.1)
-
-        original = '__TKT/TASKS/new/nested/AN-T-010-TASK--watch.md'
-        moved = '__TKT/TASKS/moved/AN-T-010-TASK--renamed.md'
-        self._write(original, 'AN-T-010', 'active', 1, body='## Summary\n\nFirst content.\n')
-        first = await wait_for(lambda rows: len(rows) == 1 and rows[0][2] == 'AN-T-010@1')
-        self.assertTrue(first[0][0].endswith('__TKT/TASKS/new/nested'))
-
-        self._write(original, 'AN-T-010', 'active', 1, body='## Summary\n\nChanged content.\n')
-        await wait_for(lambda _: any(
-            atom['id'] == 'AN-T-010' and b'Changed content.' in atom['_content_bytes']
-            for atom in gateway._native_query._capture.atoms
-        ))
-        self._write(original, 'AN-T-010', 'active', 2, body='## Summary\n\nChanged content.\n')
-        await wait_for(lambda rows: len(rows) == 1 and rows[0][2] == 'AN-T-010@2')
-
-        source = self.root / fixture.CONTROL / original
-        destination = self.root / fixture.CONTROL / moved
-        destination.parent.mkdir(parents=True)
-        source.rename(destination)
-        await wait_for(lambda rows: len(rows) == 1 and rows[0][0].endswith('__TKT/TASKS/moved')
-                       and rows[0][1] == destination.name and rows[0][2] == 'AN-T-010@2')
-        destination.unlink()
-        await wait_for(lambda rows: not rows)
-
         manifest = gateway.selection.manifest_path
         renamed = manifest.with_name(manifest.name.replace("--declare-", "--define-"))
         renamed.write_text(manifest.read_text().replace("version: 1", "version: 2", 1))
         manifest.unlink()
-        self._write(original, 'AN-T-010', 'active', 1)
-        await wait_for(lambda rows: bool(rows) and any(
-            row['_exact_ref'] == 'AN-S-001@2' for row in gateway._native_query._capture.atoms
+
+        async with asyncio.timeout(15):
+            while True:
+                query = await gateway.call(None, types.CallToolRequestParams(
+                    name='query_run', arguments={'sql': 'SELECT 1', 'result_delivery': 'inline'},
+                ))
+                self.assertFalse(query.is_error, query.structured_content)
+                if gateway._native_query._projection_selection.manifest_ref == 'AN-S-001@2':
+                    break
+                await asyncio.sleep(0.1)
+
+        arguments = {'newAtom': {
+            'template': 'task', 'label': 'Task', 'container': {'component': 'C00'},
+            'body': '## Summary\n\nManifest reload regression.\n',
+        }}
+        source = self.root / fixture.CONTROL
+        before = {p.relative_to(source): p.read_bytes() for p in source.rglob('*') if p.is_file()}
+        result = await gateway.call(None, types.CallToolRequestParams(
+            name='atom_lifecycle_create_draft', arguments=arguments,
         ))
-        self.assertEqual('AN-S-001@1', gateway.selection.manifest_ref)
-        self.assertEqual('AN-S-001@2', gateway._native_query._projection_selection.manifest_ref)
-        replace_projection.assert_not_called()
+        self.assertEqual('blocked', result.structured_content['status'], result.structured_content)
+        self.assertEqual('project_manifest_reload_required', result.structured_content['errors'][0]['code'])
+        self.assertIn('restart', result.structured_content['errors'][0]['message'].lower())
+        self.assertEqual(before, {p.relative_to(source): p.read_bytes() for p in source.rglob('*') if p.is_file()})
+
+        await gateway.close()
+        fresh = create_native_gateway(self.root, fixture.CONTROL, fixture._native_inputs())
+        await fresh.initialize()
+        self.addAsyncCleanup(fresh.close)
+        self.assertEqual('AN-S-001@2', fresh.selection.manifest_ref)
+        result = await fresh.call(None, types.CallToolRequestParams(
+            name='atom_lifecycle_create_draft', arguments=arguments,
+        ))
+        self.assertEqual('completed', result.structured_content['status'], result.structured_content)
+        self.assertTrue(result.structured_content['savedDraft'])
+
+    async def test_lifecycle_catalog_and_saved_references(self):
+        gateway = create_native_gateway(self.root, fixture.CONTROL, fixture._native_inputs())
+        await gateway.initialize()
+        self.addAsyncCleanup(gateway.close)
+        tools = {tool.name: tool for tool in gateway.tools}
+        lifecycle = {name for name in tools if name.startswith('atom_lifecycle_')}
+        self.assertEqual({
+            'atom_lifecycle_archive', 'atom_lifecycle_change_status', 'atom_lifecycle_create_asset',
+            'atom_lifecycle_create_draft', 'atom_lifecycle_direct_update',
+            'atom_lifecycle_promote_draft', 'atom_lifecycle_update',
+        }, lifecycle)
+        self.assertEqual({'sourceCurrent', 'changes', 'newAtom'},
+                         set(tools['atom_lifecycle_create_draft'].input_schema['properties']))
+
+        async def call(name, arguments, status, field):
+            response = await gateway.call(None, types.CallToolRequestParams(name=name, arguments=arguments))
+            self.assertFalse(response.is_error, response.structured_content)
+            value = response.structured_content
+            self.assertEqual(status, value['status'], value)
+            saved = value[field]
+            self.assertTrue((self.root / saved['path']).is_file(), saved)
+            self.assertTrue(Path(saved['path']).name.startswith(saved['ref_id'] + '-'), saved)
+            return saved
+
+        await call('atom_lifecycle_create_asset', {'newAtom': {
+            'template': 'spec_proposal', 'body': '## Summary\n\nExample proposal.\n',
+        }}, 'completed', 'artifact')
+        draft = await call('atom_lifecycle_create_draft', {'newAtom': {
+            'template': 'task', 'label': 'Task', 'container': {'component': 'C00'},
+            'body': '## Summary\n\nLifecycle catalog check.\n',
+        }}, 'completed', 'savedDraft')
+        current = await call('atom_lifecycle_promote_draft', {
+            'target': {'ref_id': draft['ref_id'], 'version': draft['version']}, 'targetStatus': 'backlog',
+        }, 'completed', 'artifact')
+        self.assertEqual(draft['atom_id'], current['ref_id'])
+        revision = await call('atom_lifecycle_update', {
+            'sourceCurrent': {'ref_id': current['ref_id'], 'version': current['version']},
+            'changes': {'body': '## Summary\n\nLifecycle catalog check.\n\nRevised.\n'},
+        }, 'draft_created', 'savedDraft')
+        self.assertEqual(draft['atom_id'], revision['atom_id'])
+        self.assertEqual(current['version'] + 1, revision['version'])
+        self.assertEqual(f"{revision['atom_id']}@{revision['version']}-draft", revision['ref_id'])
+
+    async def test_generated_lifecycle_catalog_is_public(self):
+        mcp = Path(__file__).resolve().parents[1]
+        sys.path.insert(0, str(mcp / 'docker'))
+        self.addCleanup(sys.path.remove, str(mcp / 'docker'))
+        from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_tool_registry import compile_tool_registry
+
+        registry = json.loads(await asyncio.to_thread(
+            compile_tool_registry, mcp.parents[2], timeout=60, max_output=2_000_000,
+        ))
+        provider = next(item for item in registry['providers'] if item['provider_id'] == 'lifecycle')
+        self.assertEqual('tool_descriptors', provider['descriptor_factory'])
+        expected = {
+            'atom_lifecycle_archive', 'atom_lifecycle_change_status', 'atom_lifecycle_create_asset',
+            'atom_lifecycle_create_draft', 'atom_lifecycle_direct_update',
+            'atom_lifecycle_promote_draft', 'atom_lifecycle_update',
+        }
+        self.assertEqual(expected, {tool['name'] for tool in provider['tools']})
+        self.assertTrue(expected <= set(registry['public_tools']))
+        self.assertFalse(expected & set(registry['mcp_blacklist']))
+        create = next(tool for tool in provider['tools'] if tool['name'] == 'atom_lifecycle_create_draft')
+        self.assertEqual({'sourceCurrent', 'changes', 'newAtom'}, set(create['inputSchema']['properties']))
 
     async def test_rebuild_contract_over_mcp_and_http(self):
         gateway = create_native_gateway(self.root, fixture.CONTROL, fixture._native_inputs())
         await gateway.initialize()
         self.addAsyncCleanup(gateway.close)
-        response = {'status': 'ready', 'target': 'all', 'result_ids': {'old': 'new'}}
-        with patch.object(gateway._native_query, 'rebuild', return_value=response, create=True) as rebuild:
-            result = await gateway.call(None, types.CallToolRequestParams(name='query_rebuild', arguments={'target': 'all'}))
-            self.assertFalse(result.is_error, result.structured_content)
-            self.assertEqual(response, result.structured_content)
-            app = Starlette(routes=routes(gateway))
-            async with httpx2.AsyncClient(transport=httpx2.ASGITransport(app=app), base_url='http://127.0.0.1') as client:
-                http = await client.post('/anechoic/Anechoic/api/rebuild', json={'target': 'all'})
-                self.assertEqual(200, http.status_code, http.text)
-                self.assertEqual(response, http.json())
-                invalid = await client.post('/anechoic/Anechoic/api/rebuild', json={'target': ''})
-                self.assertEqual(400, invalid.status_code)
-            self.assertEqual(2, rebuild.call_count)
+        query = await gateway.call(None, types.CallToolRequestParams(
+            name='query_run', arguments={'sql': 'SELECT reference FROM atoms ORDER BY reference',
+                                         'result_delivery': 'inline'},
+        ))
+        self.assertFalse(query.is_error, query.structured_content)
+        first = query.structured_content['query_id']
+        result = await gateway.call(None, types.CallToolRequestParams(name='query_rebuild', arguments={'target': 'all'}))
+        self.assertFalse(result.is_error, result.structured_content)
+        self.assertEqual(('ready', 'all'), (result.structured_content['status'], result.structured_content['target']))
+        second = result.structured_content['result_ids'][first]
+        self.assertNotEqual(first, second)
+        app = Starlette(routes=routes(gateway))
+        async with httpx2.AsyncClient(transport=httpx2.ASGITransport(app=app), base_url='http://127.0.0.1') as client:
+            http = await client.post('/anechoic/Anechoic/api/rebuild', json={'target': 'all'})
+            self.assertEqual(200, http.status_code, http.text)
+            response = http.json()
+            self.assertEqual(('ready', 'all'), (response['status'], response['target']))
+            self.assertNotEqual(second, response['result_ids'][second])
+            invalid = await client.post('/anechoic/Anechoic/api/rebuild', json={'target': ''})
+            self.assertEqual(400, invalid.status_code)
+
+    def _release_claim(self, operation, *, status='active', entrypoint=None, atom_id=None, body=None):
+        atom_id = atom_id or ('AN-P-058' if operation == 'local' else 'AN-P-049')
+        entrypoint = entrypoint or f'release scripts/{operation}.py'
+        if body is None:
+            body = (f'## Claim\n\n### Formal Claim\n\n```python\n'
+                    f'release_command(operation={operation!r}, entrypoint={entrypoint!r})\n```\n')
+        self._write(f'002_PROJECT_CONFIG/{atom_id}-WORKFLOW--{operation}.md', atom_id, status, 1,
+                    template='workflow', body=body)
+        script = self.root / entrypoint
+        script.parent.mkdir(parents=True, exist_ok=True)
+        script.write_text('# fixture\n', encoding='utf-8')
+        return self.root / fixture.CONTROL / f'002_PROJECT_CONFIG/{atom_id}-WORKFLOW--{operation}.md'
 
     async def test_manifest_gates_release_commands(self):
         names = {'local_release_command', 'public_release_command'}
+        for operation in ('local', 'public'):
+            self._release_claim(operation)
         for flag in ({}, {'release_workflows_enabled': False}, {'release_workflows_enabled': True}):
             with self.subTest(flag=flag):
                 gateway = create_native_gateway(self.root, fixture.CONTROL, fixture._native_inputs())
@@ -279,17 +212,52 @@ class NativeWorkbenchHttpTests(unittest.IsolatedAsyncioTestCase):
                     for name, operation in (('local_release_command', 'local'),
                                             ('public_release_command', 'public')):
                         response = await gateway.call(None, types.CallToolRequestParams(
-                            name=name, arguments={'run_id': 'release-check-1'},
+                            name=name, arguments={'run_id': 'release-check-1', **(
+                                {'content_draft': '/host/review draft.json'} if operation == 'public' else {})},
                         ))
                         self.assertEqual(not enabled, response.is_error, response.structured_content)
                         if enabled:
                             args = shlex.split(response.structured_content['command'])
                             self.assertEqual(['uv', 'run'], args[1:3])
-                            self.assertEqual([operation, '--project-root', str(host_root), '--run-id',
-                                              'release-check-1'], args[-5:])
+                            script = str(host_root / f'release scripts/{operation}.py')
+                            self.assertIn(script, args)
+                            expected = [operation, '--project-root', str(host_root), '--run-id', 'release-check-1']
+                            if operation == 'public':
+                                expected += ['--content-draft', '/host/review draft.json']
+                            self.assertEqual(expected, args[args.index(script) + 1:])
+                            self.assertEqual(response.structured_content['command'], response.content[0].text)
                             self.assertEqual(str(host_root), response.structured_content['working_directory'])
                 finally:
                     await gateway.close()
+
+    async def test_release_claim_errors_and_recovery(self):
+        gateway = create_native_gateway(self.root, fixture.CONTROL, fixture._native_inputs())
+        gateway.selection = gateway._native_query.selection = replace(
+            gateway.selection, parameters={'project_mcp': {'release_workflows_enabled': True}},
+        )
+        await gateway.initialize()
+        self.addAsyncCleanup(gateway.close)
+
+        async def call():
+            return await gateway.call(None, types.CallToolRequestParams(
+                name='local_release_command', arguments={'run_id': 'release-check-1'},
+            ))
+
+        self.assertTrue((await call()).is_error)
+        path = self._release_claim('local', status='draft')
+        self.assertTrue((await call()).is_error)
+        self._release_claim('local')
+        self.assertFalse((await call()).is_error)
+        duplicate = self._release_claim('local', atom_id='AN-P-059')
+        self.assertTrue((await call()).is_error)
+        duplicate.unlink()
+        self._release_claim('local', body='## Claim\n\n### Formal Claim\n\n```python\n'
+                            'release_command(operation="local", entrypoint="../escape.py")\n```\n')
+        self.assertTrue((await call()).is_error)
+        self._release_claim('local')
+        self.assertFalse((await call()).is_error)
+        path.unlink()
+        self.assertTrue((await call()).is_error)
 
     async def test_manifest_blacklist_applies_to_mcp_and_http(self):
         gateway = create_native_gateway(self.root, fixture.CONTROL, fixture._native_inputs())
@@ -312,6 +280,7 @@ class NativeWorkbenchHttpTests(unittest.IsolatedAsyncioTestCase):
             response = await client.post('/anechoic/Anechoic/api/status', json={})
             self.assertEqual(400, response.status_code)
 
+        await gateway.close()
         invalid = create_native_gateway(self.root, fixture.CONTROL, fixture._native_inputs())
         invalid.selection = invalid._native_query.selection = replace(
             invalid.selection, parameters={'project_mcp': {'tool_blacklist': 'query_schema'}},

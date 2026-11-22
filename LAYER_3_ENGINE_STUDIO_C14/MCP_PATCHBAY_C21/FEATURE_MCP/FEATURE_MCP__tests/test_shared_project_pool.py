@@ -7,17 +7,15 @@ from concurrent.futures import CancelledError as FutureCancelledError
 from importlib import import_module
 import io
 from pathlib import Path
-import sys
 import unittest
 from unittest.mock import patch
 
 MCP = Path(__file__).resolve().parents[1]
 TOOLS = MCP.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 FIXTURES = Path(__file__).resolve().parent
-sys.path[:0] = [str(MCP), str(TOOLS), str(TOOLS / "VALIDATE_ATOMS"), str(FIXTURES)]
 
-shared_project_pool = import_module("shared_project_pool")
-shared_pool_fixtures = import_module("shared_pool_fixtures")
+shared_project_pool = import_module("IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.shared_project_pool")
+shared_pool_fixtures = import_module(".shared_pool_fixtures", __package__)
 ProjectCapacityError = shared_project_pool.ProjectCapacityError
 SharedProjectPool = shared_project_pool.SharedProjectPool
 _Factory = shared_pool_fixtures._Factory
@@ -99,7 +97,7 @@ class SharedProjectPoolTests(unittest.IsolatedAsyncioTestCase):
         error = RuntimeError("init failed")
         factory = _Factory({"/projects/alpha": {"initialize_error": error}})
         pool = SharedProjectPool(1, factory)
-        with patch("shared_project_pool.report_failure", return_value=(None, None)) as report:
+        with patch.object(shared_project_pool, "report_failure", return_value=(None, None)) as report:
             with self.assertRaisesRegex(RuntimeError, "init failed"):
                 await pool.acquire(_selection("alpha"))
         self.assertEqual(1, factory.gates["/projects/alpha"].closed)
@@ -115,8 +113,8 @@ class SharedProjectPoolTests(unittest.IsolatedAsyncioTestCase):
         )
         pool = SharedProjectPool(1, factory)
         stream = io.StringIO()
-        with patch("shared_project_pool.report_failure", return_value=(None, "sink failed")):
-            with patch("shared_project_pool.sys.stderr", stream):
+        with patch.object(shared_project_pool, "report_failure", return_value=(None, "sink failed")):
+            with patch.object(shared_project_pool.sys, "stderr", stream):
                 with self.assertRaisesRegex(RuntimeError, "private detail"):
                     await pool.acquire(_selection("alpha"))
         self.assertEqual("anechoic: technical diagnostics unavailable\n", stream.getvalue())
@@ -130,7 +128,7 @@ class SharedProjectPoolTests(unittest.IsolatedAsyncioTestCase):
         pool = SharedProjectPool(1, factory)
         first = await pool.acquire(_selection("alpha"))
         await pool.release(first)
-        with patch("shared_project_pool.report_failure", return_value=(None, None)) as report:
+        with patch.object(shared_project_pool, "report_failure", return_value=(None, None)) as report:
             second = await pool.acquire(_selection("beta"))
         self.assertEqual(1, factory.gates["/projects/alpha"].closed)
         self.assertIsNone(report.call_args.args[0])
@@ -154,7 +152,7 @@ class SharedProjectPoolTests(unittest.IsolatedAsyncioTestCase):
         factory = _Factory({"/projects/alpha": {"close_error": RuntimeError("close failed")}})
         pool = SharedProjectPool(1, factory)
         entry = await pool.acquire(_selection("alpha"))
-        with patch("shared_project_pool.report_failure", return_value=(None, None)) as report:
+        with patch.object(shared_project_pool, "report_failure", return_value=(None, None)) as report:
             await pool.close()
         await pool.release(entry)
         self.assertEqual(0, pool.status()["loaded_projects"])

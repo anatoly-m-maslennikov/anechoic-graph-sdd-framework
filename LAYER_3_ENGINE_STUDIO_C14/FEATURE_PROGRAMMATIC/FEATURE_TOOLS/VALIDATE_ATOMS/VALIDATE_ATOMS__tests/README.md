@@ -11,8 +11,7 @@ of the copied authority fixtures. The fingerprint utility is also checked.
 The `/__fixture__` prefix in historical requests is a transport placeholder.
 The fixture authority copies are test inputs, not active governing Project Atoms.
 
-The retained helper checks cover safe input handling and Graph Rule bodies. Run
-all checks in this directory from the repository root:
+Run the historical corpus checks from the repository root:
 
 ```sh
 PYTHONPATH="$PWD/LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS" \

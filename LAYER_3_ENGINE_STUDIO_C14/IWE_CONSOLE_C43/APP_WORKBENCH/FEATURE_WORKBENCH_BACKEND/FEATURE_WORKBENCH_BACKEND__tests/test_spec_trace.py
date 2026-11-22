@@ -7,13 +7,30 @@ import unittest
 
 import duckdb
 
-from FEATURE_WORKBENCH_BACKEND.spec_trace import (
+from KERNEL_MIXER_C59.spec_trace import (
     PILOT, SpecTraceStore, is_trace_path, native_trace_rows, remove_native_traces,
     replace_native_traces,
 )
 
 
 class SpecTraceTests(unittest.TestCase):
+    def test_trace_projection_from_relocated_workbench(self):
+        checkout = Path(__file__).resolve().parents[5]
+        self.assertEqual(Path(__file__).resolve().parents[2], checkout / PILOT)
+        directory = self.enterContext(TemporaryDirectory())
+        root = Path(directory)
+        module = root / PILOT / 'example.py'
+        module.parent.mkdir(parents=True)
+        module.write_text('pass\n')
+        module.with_name('example.py.spec_trace.md').write_text('## Implements\n\n- AN-S-501@1\n')
+        connection = duckdb.connect(':memory:')
+        self.addCleanup(connection.close)
+        store = SpecTraceStore(connection, root)
+        store.initialize()
+        store.refresh()
+        self.assertEqual(connection.execute('SELECT atom_id, version FROM implementation_rmedo').fetchall(),
+                         [('AN-S-501', 1)])
+
     def test_native_rows_use_inventoried_owners_and_publish(self):
         root = Path(self.enterContext(TemporaryDirectory())).resolve()
         subprocess.run(['git', 'init', '--quiet', str(root)], check=True)

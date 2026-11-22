@@ -1,11 +1,11 @@
+import json
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from public_release import PublicReleaseError, run_public_release
+from PUBLIC_RELEASE.public_release import PublicReleaseError, run_public_release
 
 
 class PublicReleaseTest(unittest.TestCase):
@@ -35,18 +35,45 @@ class PublicReleaseTest(unittest.TestCase):
     def run_release(self, **kwargs):
         return run_public_release(self.root, run_id='test', base_ref=self.base, head_ref=self.head, **kwargs)
 
+    def run_cli(self, *arguments):
+        release = Path(__file__).resolve().parents[2] / 'release.py'
+        result = subprocess.run(
+            [sys.executable, '-B', str(release), 'public', '--project-root', str(self.root),
+             '--run-id', 'test', '--base', self.base, '--head', self.head, *arguments],
+            cwd=self.root, capture_output=True, text=True, timeout=30, check=False,
+        )
+        self.assertEqual(1, len(result.stdout.splitlines()), result.stdout)
+        return result.returncode, json.loads(result.stdout)
+
     def test_comparison_and_rendering_are_read_only(self):
         before = self.git('status', '--porcelain')
-        result = self.run_release()
+        code, result = self.run_cli()
+        self.assertEqual(code, 1)
         self.assertEqual(result['outcome'], 'input_required')
+        self.assertEqual((result['base_commit'], result['head_commit']), (self.base, self.head))
         self.assertEqual(result['version'], '1.2.4')
         self.assertEqual(result['merge_base'], self.base)
+        self.assertIn('Luna', result['instructions'])
+        self.assertEqual((result['content_draft_schema']['base_commit'], result['content_draft_schema']['head_commit']), (self.base, self.head))
         self.assertEqual(result['diff_argv'], ['git', 'diff', '--find-renames', self.base, self.head, '--'])
         self.assertEqual([ticket['path'] for ticket in result['completed_tickets']], ['_anechoic_anechoic/001_TICKETS/TASKS/AN-T-1-TASK--done.md'])
         draft = {'base_commit': self.base, 'head_commit': self.head, 'changes': [{'title': 'Add feature', 'details': 'Adds a feature.', 'evidence': ['AN-T-1'], 'highlight': True}]}
-        rendered = self.run_release(content_draft=draft)
-        self.assertIn('Adds a feature.', rendered['pr_description'])
-        self.assertEqual(rendered['version_history_entry'], '## 1.2.4\n\n- Add feature\n')
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'draft.json'
+            payload = json.dumps(draft).encode('utf-8')
+            path.write_bytes(payload)
+            code, rendered = self.run_cli('--content-draft', str(path))
+            self.assertEqual(code, 0)
+            self.assertEqual(rendered['outcome'], 'completed')
+            self.assertIn('Adds a feature.', rendered['pr_description'])
+            self.assertEqual(rendered['version_history_entry'], '## 1.2.4\n\n- Add feature\n')
+            self.assertEqual(path.read_bytes(), payload)
+            draft['head_commit'] = 'bad'
+            path.write_text(json.dumps(draft), encoding='utf-8')
+            code, rejected = self.run_cli('--content-draft', str(path))
+            self.assertEqual(code, 1)
+            self.assertEqual((rejected['outcome'], rejected['failed_step']), ('failed', 'changelog'))
+            self.assertIn('commit pins', rejected['error'])
         self.assertEqual(self.git('status', '--porcelain'), before)
 
     def test_rejects_stale_pins_and_invalid_entries(self):

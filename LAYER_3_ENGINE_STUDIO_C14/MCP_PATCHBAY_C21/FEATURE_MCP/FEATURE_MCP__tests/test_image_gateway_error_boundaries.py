@@ -1,9 +1,10 @@
 """Focused MCP image/process/gateway failure-boundary checks."""
+from .native_query_test_support import local_gateway
+
 
 from contextlib import redirect_stderr
 import io
 import json
-import sys
 from pathlib import Path
 from types import SimpleNamespace
 import unittest
@@ -13,24 +14,18 @@ from mcp import types
 
 MCP = Path(__file__).resolve().parents[1]
 TOOLS = MCP.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
-for directory in (MCP, TOOLS):
-    if str(directory) not in sys.path:
-        sys.path.insert(0, str(directory))
 
-import direct_gateway  # noqa: E402
-import http_server  # noqa: E402
-import server  # noqa: E402
-from operation_error_boundary import FailureRecord  # noqa: E402
-import runtime_process_boundary  # noqa: E402
+import MCP_PATCHBAY_C21.FEATURE_MCP.direct_gateway as direct_gateway  # noqa: E402
+import MCP_PATCHBAY_C21.FEATURE_MCP.http_server as http_server  # noqa: E402
+import MCP_PATCHBAY_C21.FEATURE_MCP.server as server  # noqa: E402
 
-WARNING = FailureRecord("WARNING", "internal_failure", "operation failure")
 
 
 class GatewayErrorBoundaryTests(unittest.IsolatedAsyncioTestCase):
     def _gateway(self):
         root = Path(self.tempdir.name).resolve()
         owner = SimpleNamespace(selection=SimpleNamespace(root=root, parameters={}))
-        gateway = direct_gateway.DirectGateway(root, native_query=owner)
+        gateway = local_gateway(root, native_query=owner)
         gateway.registry = SimpleNamespace(permits=lambda name: name == 'query_check')
         return gateway
 
@@ -38,8 +33,8 @@ class GatewayErrorBoundaryTests(unittest.IsolatedAsyncioTestCase):
         gateway = self._gateway()
         params = types.CallToolRequestParams(name="query_check", arguments={})
         with (
-            patch.object(gateway, "_call", new=AsyncMock(side_effect=ValueError("secret=private"))),
-            patch.object(direct_gateway, "report_failure", return_value=(WARNING, None)) as reported,
+            patch.object(gateway, "_invoke_bound", new=AsyncMock(side_effect=ValueError("secret=private"))),
+            patch("MCP_PATCHBAY_C21.FEATURE_MCP.shared_gateway_support.warning", return_value=None) as reported,
         ):
             response = await gateway.call(None, params)
         self.assertTrue(response.is_error)
@@ -50,14 +45,12 @@ class GatewayErrorBoundaryTests(unittest.IsolatedAsyncioTestCase):
     async def test_health_observer_record_failure_warns_without_replacing_result(self):
         gateway = self._gateway()
         response = direct_gateway.result({"outcome": "success"})
-        with patch.object(gateway, "_call", new=AsyncMock(return_value=response)), patch.object(
-            gateway.health_observations, "record", side_effect=ValueError("private")), patch.object(
-            direct_gateway, "report_failure", return_value=(WARNING, None)) as reported:
+        with patch.object(gateway, "_invoke_bound", new=AsyncMock(return_value=response)), patch.object(
+            gateway.health_observations, "record", side_effect=ValueError("private")), patch(
+            "MCP_PATCHBAY_C21.FEATURE_MCP.shared_gateway_support.warning", return_value=None) as reported:
             actual = await gateway.call(None, types.CallToolRequestParams(name="query_check", arguments={}))
         self.assertIs(response, actual)
-        reported.assert_called_once()
-        self.assertEqual(("WARNING", "health_observation_failed"),
-                         (reported.call_args.args[1].severity, reported.call_args.args[1].code))
+        reported.assert_called_once_with("health_observation_failed")
 
     async def asyncSetUp(self):
         self.tempdir = __import__("tempfile").TemporaryDirectory()
@@ -81,7 +74,7 @@ class HTTPBoundaryTests(unittest.IsolatedAsyncioTestCase):
         async def send(message):
             messages.append(message)
 
-        with patch.object(http_server, "report_failure", return_value=(WARNING, None)) as reported:
+        with patch.object(http_server, "warning") as reported:
             await guard(scope, lambda: None, send)
         return messages, reported
 
@@ -103,7 +96,7 @@ class HTTPBoundaryTests(unittest.IsolatedAsyncioTestCase):
             ready=True,
             health_observations=BrokenObserver(),
         )
-        with patch.object(http_server, "report_failure", return_value=(WARNING, None)) as reported:
+        with patch.object(http_server, "warning") as reported:
             response = await http_server.health(gateway)
         payload = json.loads(response.body)
         self.assertEqual(200, response.status_code)
@@ -119,24 +112,37 @@ class HTTPBoundaryTests(unittest.IsolatedAsyncioTestCase):
 
 class ProcessBoundaryTests(unittest.TestCase):
     def test_process_boundary_emits_one_sanitized_fallback(self):
-        root = Path(self.tempdir.name)
         with (
-            patch.object(runtime_process_boundary, "report_failure",
-                         return_value=(WARNING, "logger unavailable")) as reported,
+            patch.object(server, "_serve_stdio", side_effect=ValueError("token=private")),
             redirect_stderr(io.StringIO()) as stderr,
         ):
-            code = runtime_process_boundary.run_process(
-                lambda: (_ for _ in ()).throw(ValueError("token=private")),
-                root=root, operation="mcp.startup",
-            )
+            code = server.main(["--project-root", self.tempdir.name])
         self.assertEqual(2, code)
         self.assertNotIn("private", stderr.getvalue())
-        reported.assert_called_once()
+        self.assertEqual(1, stderr.getvalue().count("anechoic: operation failed\n"))
+        self.assertIn("mcp_stdio_startup_failed", stderr.getvalue())
+
+    def test_explicit_startup_failure_stays_distinct_and_sanitized(self):
+        from MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary import ExplicitStartupFailure
+        with (
+            patch.object(server, "_serve_stdio", side_effect=ExplicitStartupFailure("blocked")),
+            redirect_stderr(io.StringIO()) as stderr,
+        ):
+            code = server.main(["--project-root", self.tempdir.name])
+        self.assertEqual(2, code)
+        self.assertIn("mcp_stdio_startup_blocked", stderr.getvalue())
+        self.assertIn("anechoic: runtime failure", stderr.getvalue())
+
+    def test_startup_cancellation_is_not_converted(self):
+        from concurrent.futures import CancelledError
+        with patch.object(server, "_serve_stdio", side_effect=CancelledError()):
+            with self.assertRaises(CancelledError):
+                server.main(["--project-root", self.tempdir.name])
 
     def test_http_delegation_has_one_process_owner(self):
         with (
-            patch.object(server, "run_process", side_effect=AssertionError("duplicate boundary")),
-            patch("http_server.main", return_value=0) as delegated,
+            patch.object(server, "run_startup", side_effect=AssertionError("duplicate boundary")),
+            patch("MCP_PATCHBAY_C21.FEATURE_MCP.http_server.main", return_value=0) as delegated,
         ):
             result = server.main(["--project-root", self.tempdir.name, "--transport", "streamable-http"])
         self.assertEqual(0, result)

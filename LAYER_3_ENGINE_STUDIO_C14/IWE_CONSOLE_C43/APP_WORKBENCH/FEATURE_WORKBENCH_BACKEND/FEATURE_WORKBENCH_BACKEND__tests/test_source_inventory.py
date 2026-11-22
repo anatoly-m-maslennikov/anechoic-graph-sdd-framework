@@ -2,13 +2,11 @@
 
 import os
 from pathlib import Path
-import sys
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_inventory import markdown_paths
+from KERNEL_MIXER_C59.source_inventory import markdown_paths
 
 
 class SourceInventoryTest(unittest.TestCase):

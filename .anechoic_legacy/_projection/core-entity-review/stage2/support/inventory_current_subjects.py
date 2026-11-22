@@ -23,7 +23,7 @@ PIN_RELATIVE_PATHS = (
     Path(".anechoic_anechoic/_projection/core-entity-review/baseline.inventory.json"),
 )
 sys.path.insert(0, str(ROOT / "102_FRAMEWORK_ENGINE/201_PROGRAMMATIC/201_TOOLS/VALIDATE_ATOMS"))
-from validate_atoms_workers.parsing import CarrierError, parse_carrier
+from ADAPTERS_C30.carrier_read__pub import CarrierError, parse_carrier
 
 
 ROLES = {

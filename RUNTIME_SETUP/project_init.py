@@ -14,7 +14,7 @@ def initialize_project(source_checkout: Path, project: Path, name: str, prefix: 
                        workbench_storage: str, journal_storage: str) -> Path:
     """Create a Project control root; refuse existing Projects and unsafe paths."""
     source = Path(source_checkout)
-    model = source / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_GENERATED_MODEL"
+    model = source / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_GENERATED_MODEL_C52"
     if not all((model / filename).is_file() for filename in
                ("native-graph-claims.json", "native-spec-template-claims.json")):
         raise ValueError("Source checkout does not contain the reviewed native Model")
@@ -36,19 +36,32 @@ def initialize_project(source_checkout: Path, project: Path, name: str, prefix: 
     control = root / (".anechoic_" + name.casefold())
     atom_id = f"{prefix}-S-1"
     manifest = control / f"{atom_id}-SPEC-PROJECT_MANIFEST--declare-project.md"
+    body = _manifest_body(atom_id, name, prefix, workbench_storage, journal_storage)
+    _write_manifest(root, control.name, manifest.name, body)
+    return control
+
+
+def _manifest_body(atom_id: str, name: str, prefix: str, workbench_storage: str, journal_storage: str) -> str:
     updated = datetime.now(timezone.utc).isoformat()
-    parameters = {"runtime": {"workbench": {"storage": workbench_storage},
-                              "journal": {"storage": journal_storage}}}
-    body = (f"---\natom_family: SPEC\natom_id: {atom_id}\ncontainer:\n  component: C00\n"
+    return (f"---\natom_family: SPEC\natom_id: {atom_id}\ncontainer:\n  component: C00\n"
             f"tier: -1\ncontext:\n  template: project_manifest\n  lens: SPEC\n"
             f"state:\n  status: active\n  version: 1\n  updated_at: '{updated}'\n---\n\n"
             "## Claim\n\n### Formal Claim\n\n```python\n"
             "from anechoic.formal_claims import declare_entity\n"
             "from anechoic.model import ProjectManifest\n\n"
-            f"declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name={name!r}, "
-            f"prefix={prefix!r}, parameters={parameters!r}))\n```\n")
-    _write_manifest(root, control.name, manifest.name, body)
-    return control
+            "declare_entity(\n"
+            "    entity_name='Project Manifest',\n"
+            "    instance=ProjectManifest(\n"
+            f"        name={name!r},\n"
+            f"        prefix={prefix!r},\n"
+            "        parameters={\n"
+            "            'runtime': {\n"
+            f"                'workbench': {{'storage': {workbench_storage!r}}},\n"
+            f"                'journal': {{'storage': {journal_storage!r}}},\n"
+            "            },\n"
+            "        },\n"
+            "    ),\n"
+            ")\n```\n")
 
 
 def _write_manifest(root: Path, control: str, manifest: str, body: str) -> None:
@@ -68,24 +81,7 @@ def _write_manifest(root: Path, control: str, manifest: str, body: str) -> None:
         try:
             control_fd = os.open(control, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=root_fd)
             try:
-                temporary = ".project-manifest-" + secrets.token_hex(16) + ".tmp"
-                fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
-                             0o666, dir_fd=control_fd)
-                owned = os.fstat(fd)
-                try:
-                    with os.fdopen(fd, "w", encoding="utf-8") as stream:
-                        stream.write(body)
-                        stream.flush()
-                        os.fsync(stream.fileno())
-                    os.link(temporary, manifest, src_dir_fd=control_fd, dst_dir_fd=control_fd,
-                            follow_symlinks=False)
-                finally:
-                    try:
-                        current = os.stat(temporary, dir_fd=control_fd, follow_symlinks=False)
-                        if (current.st_dev, current.st_ino) == (owned.st_dev, owned.st_ino):
-                            os.unlink(temporary, dir_fd=control_fd)
-                    except FileNotFoundError:
-                        pass
+                _publish_manifest(control_fd, manifest, body)
             finally:
                 os.close(control_fd)
         except BaseException:
@@ -98,3 +94,24 @@ def _write_manifest(root: Path, control: str, manifest: str, body: str) -> None:
             raise
     finally:
         os.close(root_fd)
+
+
+def _publish_manifest(control_fd: int, manifest: str, body: str) -> None:
+    temporary = ".project-manifest-" + secrets.token_hex(16) + ".tmp"
+    fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                 0o666, dir_fd=control_fd)
+    owned = os.fstat(fd)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as stream:
+            stream.write(body)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.link(temporary, manifest, src_dir_fd=control_fd, dst_dir_fd=control_fd,
+                follow_symlinks=False)
+    finally:
+        try:
+            current = os.stat(temporary, dir_fd=control_fd, follow_symlinks=False)
+            if (current.st_dev, current.st_ino) == (owned.st_dev, owned.st_ino):
+                os.unlink(temporary, dir_fd=control_fd)
+        except FileNotFoundError:
+            pass

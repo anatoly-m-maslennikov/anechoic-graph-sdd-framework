@@ -1,7 +1,7 @@
 """Synthetic placement policy for disposable lifecycle tests, not production authority."""
 from functools import wraps
 
-from ATOM_LIFECYCLE.placement_model import bind_placement, load_placement
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.placement_model import bind_placement, load_placement
 
 
 def fixture_rules(*, operations_folder='09_operations', resolved_folder='resolved'):

@@ -7,9 +7,9 @@ tier: 2
 context:
   lens: DES
 state:
-  status: active
-  version: 3
-  updated_at: '2026-11-20T23:12:09.705525+00:00'
+  status: "active"
+  version: 4
+  updated_at: "2026-11-22T01:02:41.627072+00:00"
 ---
 
 ## Summary
@@ -34,6 +34,8 @@ Keep distinct Module identities for files in different locations. Package discov
 | Package → Package | The source Module belongs to the source Package, and the import resolves to the target Package or to a Module in it. |
 
 Emit each applicable pair once per occurrence. Mark edges based on Module ownership as derived. Keep intra-Package imports and cycles visible. A Module with unknown Package ownership stays queryable at Module level. Keep repeated imports on separate source locations. Every edge references an occurrence with its importing Module, Project-relative file, line, column, and written specifier.
+
+The `package_external_imports` view groups direct third-party imports by the source Module's immediate Package. Exclude Project-local imports, language built-ins, and the standard library. Keep unresolved imports visible in `module_imports`. The Workbench view currently covers Python.
 
 ## References
 

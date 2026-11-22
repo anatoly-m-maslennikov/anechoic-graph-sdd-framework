@@ -8,9 +8,9 @@ package. Shared compiler, installer and test-gate helpers remain in the Engine.
 - **Local release:** first commit all tracked changes and untracked nonignored
   files, then verify a clean worktree and index. A clean repository needs no
   empty commit; a failed commit or remaining changes stop before tests, builds
-  or Docker work. Validate inputs and run the complete suite before replacing
-  delivered or installed files. Copy active Methodology sources, compile the
-  product, and build the Engine package and candidate image. Test the candidate
+  or Docker work. Run the functional phase before preparing the package and
+  image. Copy active Methodology sources, compile the product, and build the
+  Engine package and candidate image. Run end-to-end checks and test the candidate
   against a disposable Project copy on a Docker-assigned loopback port. After
   it passes, install the Methodology and Project runtime and verify MCP. Preserve configuration and
   remove eligible stopped obsolete Project-owned containers before MCP startup,
@@ -19,11 +19,10 @@ package. Shared compiler, installer and test-gate helpers remain in the Engine.
   first and fill any remaining slots from the newest Project-owned images. Preserve every container
   reference, other Projects' images, other running containers and unproven
   targets; report unfinished cleanup. Never force removal or prune globally.
-- **Public release:** one prompt produces the full PR description and concise
-  Version History bullets. Discover at most one matching open PR, prepare the
-  version and documentation, and run the complete suite before public effects.
-  Push `amm/dev`, create/update its Draft `main` PR, then insert its actual URL
-  when newly known. That URL-only follow-up does not repeat the suite. Never merge.
+- **Public release:** read completed Task and Epic evidence at pinned Git commits.
+  Use the evidence and pinned diff to review changes. Submit the reviewed changes
+  to get Markdown drafts for a pull request description and Version History entry.
+  The Operator handles publication.
 
 Local checkpoints keep existing ignored-file and environment-file exclusions.
 Excluded nonignored changes stop release rather than being committed or waived.
@@ -47,100 +46,65 @@ Legacy unlabelled or otherwise unproven images remain retained and reported,
 even if a Project container formerly referenced them. Image cleanup is skipped
 unless the replacement launcher has verified the exact candidate image.
 
-The implementation cores are `RELEASE_VERSION/local_release.py` and
-`PUBLIC_RELEASE/public_release.py`. Run them through `release.py` on the host,
-with an Operator-selected `--run-id`. No selected Session, sealed proposal or
-Journal receipt gates the release. The host command records linked start and
-completed/failed Journal events; a recording failure appears as `recording_error`
-without changing the release outcome. Missing content or invalid CLI/draft inputs
-record no events.
+The Release Project owns `RELEASE_VERSION/local_release.py` and
+`PUBLIC_RELEASE/public_release.py`. Run them through `release.py` on the host
+with an Operator-selected `--run-id`. Local Release writes its own receipts.
 
 The host commands below are the release entry point for this Project. Release
 operations are not exposed through the retained Workbench MCP surface.
 
 ## Host commands
 
-From the repository root, use the project-local locked uv environment:
+Run these commands from the repository root in the locked `release` environment.
 
 ```sh
-UV_PROJECT_ENVIRONMENT="$PWD/.anechoic_runtime/launcher-venv" \
-uv run --project "$PWD" --locked --no-sync --python 3.14 --managed-python --no-env-file \
-  --all-groups python -B LAYER_5_FRAMEWORK_DELIVERY/release.py local --run-id local-001
-UV_PROJECT_ENVIRONMENT="$PWD/.anechoic_runtime/launcher-venv" \
-uv run --project "$PWD" --locked --no-sync --python 3.14 --managed-python --no-env-file \
-  --all-groups python -B LAYER_5_FRAMEWORK_DELIVERY/release.py public --run-id public-001 --content-draft /absolute/path/release-draft.json
+UV_PROJECT_ENVIRONMENT=.venv-release \
+  uv run --project "$PWD/LAYER_5_FRAMEWORK_DELIVERY" --locked --no-env-file \
+    python -B LAYER_5_FRAMEWORK_DELIVERY/release.py local --run-id local-001
+UV_PROJECT_ENVIRONMENT=.venv-release \
+  uv run --project "$PWD/LAYER_5_FRAMEWORK_DELIVERY" --locked --no-env-file \
+    python -B LAYER_5_FRAMEWORK_DELIVERY/release.py public --run-id public-001
 ```
 
-Omit `--test-module` to keep the complete discovered suite as the local-release
-default. For an explicit opt-in focused run, repeat it with repository-relative
-discovered module paths:
-
-```sh
-UV_PROJECT_ENVIRONMENT="$PWD/.anechoic_runtime/launcher-venv" \
-uv run --project "$PWD" --locked --no-sync --python 3.14 --managed-python --no-env-file \
-  --all-groups python -B LAYER_5_FRAMEWORK_DELIVERY/release.py local --run-id local-focused \
-  --test-module LAYER_5_FRAMEWORK_DELIVERY/LAYER_5_FRAMEWORK_DELIVERY__tests/test_release_cli.py \
-  --test-module LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_focused_release.py
-```
-
-Focused selection rejects empty, duplicate, malformed, foreign, and symlink
-paths before running tests. The report names the focused scope and exact module
-list. Focused runs are useful for iteration but can miss regressions outside
-the selected modules; they are not evidence that the complete release suite is
-green.
-
-Local Release defaults to `--image-mode refresh`. It generates the MCP Tool
-registry and verifies the native Model and lifecycle Specs. Test images use
-the checkout registry. To reuse a known-good registry, restore it with its code
-and run Local Release with `--image-mode existing`.
-
-Standalone `build --image-mode refresh` also checks the native Model against the
-previous ready image's Workbench selection. The first refresh compiles staged
-native Claims directly.
+Local Release defaults to `--image-mode refresh` and uses the checked-in
+registry. Use the Engine Studio test suite directly for focused runs. The
+Local Release compatibility option `--test-module` leaves its gate unchanged.
 
 For a release that predates these Git snapshots, recover its generated files
 from the known-good image with `docker create` and `docker cp`. The files are
 under `/workspace` at their checkout-relative paths. The temporary container
 can stay stopped.
 
-To build an image without deploying it, use the same locked Python environment:
+Use `build-image` to get the immutable image ID without deploying it or changing
+the Version.
 
 ```sh
-python -B LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/runtime.py \
-  build --image-mode existing
+UV_PROJECT_ENVIRONMENT=.venv-release \
+  uv run --project "$PWD/LAYER_5_FRAMEWORK_DELIVERY" --locked --no-env-file \
+    python -B LAYER_5_FRAMEWORK_DELIVERY/release.py build-image --run-id image-001
 ```
 
 `--project-root PATH` is optional; the default is this repository's root, derived
 from the script location. Choose a new run ID for each new release; simple IDs
 such as `local-001` and `public-001` work for both commands.
 
-The Public draft is a UTF-8 JSON file with exactly `description` and `summary`:
+Public Release defaults to `--base origin/main` and `--head amm/dev`. The first
+run returns `input_required` with the commit pins, the evidence, and the schema
+for the reviewed changes. Rerun with `--content-draft /absolute/path/draft.json`.
+The file must be regular UTF-8 JSON, at most 1 MiB, and contain `base_commit`,
+`head_commit`, and `changes`. Use the same commit pins and mark one to five of
+the changes as highlights for the Version History.
 
-```json
-{"description":"## New\n- Describe the additions.\n\n## Fixed\n- Describe the fixes.\n","summary":["Concise Version History bullet."]}
-```
-
-The full Markdown description needs nonempty `## New` and `## Fixed` bullet
-sections. Summary entries must be nonempty single-line strings of at most 240
-characters. The draft must be a regular file, not a symlink, and at most 1 MiB.
-Without `--content-draft`, Public returns `input_required` with the content prompt
-and schema, without release effects. Supply the draft and rerun with the same
-run ID. Results are JSON on stdout; exit status is zero only for `completed`.
+The commands return JSON on stdout. Exit status is zero for `completed`.
 
 Local release reports phase and test-module progress on stderr. Its full test
 output is streamed to a log under `.anechoic_tmp/simple_local_release`, with
 the location printed before testing starts. Interruption during release execution
-retains that log and a failure report, attempts the terminal Journal event, and exits 130.
-It stops the owned test processes without retrying effects or rolling back
-earlier release changes. Interrupted Journal recording does not replace an
-already observed release outcome.
+retains that log and a failure report and exits 130. It stops the owned test
+processes. Earlier release changes remain available for manual handling.
 
-Release effects run on the host, with its Git, GitHub and Docker tools; the
-ordinary MCP container has none of those host privileges. Both commands start
-only on Operator instruction and checkpoint safe, nonignored changes. Public
-release binds matching fetch/push `origin` identities to the configured repository
-slug, requires `amm/dev`, and refuses source drift during its prepared-materials
-suite. Focused tests do not establish an actual release or runtime installation.
+Release effects run on the host with Git and Docker. Local Release checkpoints
+safe, nonignored changes. Public Release reads Git and returns the drafts in JSON.
 
 ## Kept small
 
@@ -148,15 +112,20 @@ These repository commands are separate from MCP.
 Automatic recovery/resume and legacy-layout compatibility are deferred.
 Failures stop and report the actual failed step for manual handling.
 
-## Focused tests
+## Engine Studio QA
+
+Run the functional gate from the repository root in the locked `dev` environment.
+Use `--phase static` to run the static checks alone.
 
 ```sh
-UV_PROJECT_ENVIRONMENT=.anechoic_runtime/launcher-venv uv run --locked --no-sync --no-env-file --group rmed-workflow-mcp python -B -m unittest discover -s LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests
+UV_PROJECT_ENVIRONMENT=.venv-dev PYTHONPATH="$PWD/LAYER_3_ENGINE_STUDIO_C14" \
+  uv run --project "$PWD/LAYER_3_ENGINE_STUDIO_C14" --locked --no-env-file \
+    python -B -P -m FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__pub \
+    --project-root "$PWD" --phase functional
 ```
 
-These tests use temporary fixtures, real scoped Git checkpoints and mocked
-external integrations. They are not a real release gate and do not publish,
-install or start the current Project.
+For a focused Engine Studio run, use `--phase full --test-module PATH`. Use
+repository-relative test paths and repeat `--test-module` to select more modules.
 
 ## Source comments
 
@@ -171,9 +140,10 @@ the Workbench frontend dependencies installed. Add `--fix` to remove reported
 comments.
 
 ```sh
-UV_PROJECT_ENVIRONMENT=.anechoic_runtime/launcher-venv \
-uv run --locked --no-sync --no-env-file --all-groups python -B \
-  LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/source_comments.py
+UV_PROJECT_ENVIRONMENT=.venv-dev PYTHONPATH="$PWD/LAYER_3_ENGINE_STUDIO_C14" \
+  uv run --project "$PWD/LAYER_3_ENGINE_STUDIO_C14" --locked --no-env-file \
+    python -B -P -m FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.source_comments \
+    --project-root "$PWD"
 ```
 
 ## macOS temporary files
@@ -184,8 +154,10 @@ for the daily BB cleanup. Set `completed_run_dir` to its absolute path and run
 this from the Project checkout.
 
 ```sh
-python3 LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/prune_private_tmp.py \
-  --mark "$completed_run_dir"
+UV_PROJECT_ENVIRONMENT=.venv-dev PYTHONPATH="$PWD/LAYER_3_ENGINE_STUDIO_C14" \
+  uv run --project "$PWD/LAYER_3_ENGINE_STUDIO_C14" --locked --no-env-file \
+    python -B -P -m FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.prune_private_tmp \
+    --mark "$completed_run_dir"
 ```
 
 Cleanup removes marked directories after three days. Registered worktrees,

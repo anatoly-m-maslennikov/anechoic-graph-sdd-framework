@@ -6,67 +6,10 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-import re
 from typing import Any
 
-from .markdown_content import parse_content
-from .relations import canonical
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.source_row__pub import canonical_row
 
-
-_NUMBERED_DRAFT_REFERENCE = re.compile(r"@\d+-draft$")
-
-
-def atom(
-    path: Path, root: Path, header: dict[str, Any], view: dict[str, Any],
-    body: str | bytes, group: str,
-) -> dict[str, Any]:
-    cached_body = body.encode("utf-8") if isinstance(body, str) else body
-    if not isinstance(cached_body, bytes):
-        raise TypeError("Markdown body must be UTF-8 text or bytes")
-    markdown = cached_body.decode("utf-8")
-    atom_id, version = view.get("atom_id"), view.get("version")
-    if group in {"Current", "Backlog"} and isinstance(atom_id, str):
-        ref = atom_id
-    elif group == "Draft" and isinstance(atom_id, str) and type(version) is int:
-        if _NUMBERED_DRAFT_REFERENCE.search(atom_id):
-            ref = atom_id
-        elif atom_id.endswith(("-draft", "@draft")):
-            ref = f"{atom_id}:{path.relative_to(root).as_posix()}"
-        else:
-            ref = f"{atom_id}@{version}-draft"
-    elif group == "Archived" and isinstance(atom_id, str):
-        explicit = view.get("ref_id")
-        if isinstance(explicit, str) and re.search(r"@[1-9][0-9]*$", explicit):
-            ref = explicit
-        elif re.search(r"@[1-9][0-9]*$", atom_id):
-            ref = atom_id
-        elif type(version) is int and version > 0:
-            ref = f"{atom_id}@{version}"
-        else:
-            ref = atom_id
-    else:
-        ref = None
-    return {
-        "source_path": path.relative_to(root).as_posix(),
-        "status_group": group,
-        "id": atom_id if isinstance(atom_id, str) else None,
-        "ref": ref,
-        "version": bigint(version),
-        "status": string(view.get("status")),
-        "current_scope_unit": string(header.get("current_scope_unit")),
-        "claim_target_scope_unit": string(header.get("claim_target_scope_unit")),
-        "role": string(view.get("content_role")),
-        "form": string(view.get("type")),
-        "tier": bigint(view.get("tier")),
-        "updated_at": view.get("updated_at"),
-        "header_json": header,
-        "_content_bytes": cached_body,
-        "content_properties_json": parse_content(
-            markdown, tolerate_duplicate_siblings=True, compact=True,
-        ),
-        "relation_edges_json": [],
-        "hash": None,
-    }
 
 
 def scope(item: Any, root: Path) -> dict[str, Any]:
@@ -82,14 +25,6 @@ def scope(item: Any, root: Path) -> dict[str, Any]:
         "relation_edges_json": [],
         "hash": None,
     }
-
-
-def string(value: Any) -> str | None:
-    return value if isinstance(value, str) else None
-
-
-def bigint(value: Any) -> int | None:
-    return value if type(value) is int and -(2**63) <= value < 2**63 else None
 
 
 def _same_types(before: Any, after: Any) -> bool:
@@ -115,16 +50,6 @@ def same_row(
         and before[1].get("_content_bytes") == after[1].get("_content_bytes")
         and canonical_row(before[1]) == canonical_row(after[1])
     )
-
-
-def canonical_row(row: Mapping[str, Any]) -> str:
-    """Validate a source row without decoding its private cached body."""
-    payload = dict(row)
-    if "_content_bytes" in payload:
-        body = payload.pop("_content_bytes")
-        if not isinstance(body, bytes):
-            raise TypeError("cached Markdown body must be UTF-8 bytes")
-    return canonical(payload)
 
 
 @dataclass
@@ -199,21 +124,3 @@ def file_signature(path: Path) -> tuple[int, ...] | None:
         return item.st_mode, item.st_ino, item.st_size, item.st_mtime_ns, item.st_ctime_ns
     except OSError:
         return None
-
-
-def frontmatter_bounds(raw: bytes) -> tuple[int, int, int] | None:
-    if raw.startswith(b"---\n"):
-        opening_end = len(b"---\n")
-    elif raw.startswith(b"---\r\n"):
-        opening_end = len(b"---\r\n")
-    else:
-        return None
-    closing = re.search(rb"\r?\n---\r?\n", raw, opening_end - 1)
-    return None if closing is None else (opening_end, closing.start(), closing.end())
-
-
-def source_body(raw: bytes, path: Path) -> bytes:
-    bounds = frontmatter_bounds(raw)
-    if bounds is None:
-        raise ValueError(f"{path}: unsupported frontmatter delimiter")
-    return raw[bounds[2]:]

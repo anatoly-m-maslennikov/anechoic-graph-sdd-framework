@@ -15,7 +15,33 @@ import hashlib
 import re
 from typing import Any
 
-from layout_preview import _binding_reason, _frontmatter, _reject, _source_layout, _span, _text
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.layout_preview import _binding_reason, _frontmatter, _reject, _source_layout, _span, _text
+
+
+def _mapping_sections(sections, expected, source_body, proposed_body):
+    for index, (heading, source_span, proposed_span, state, source_text, proposed_text) in enumerate(expected):
+        record = sections[index]
+        keys = {'heading', 'source_span', 'proposed_span', 'state', 'provenance'}
+        if index == 1:
+            keys |= {'source_text', 'proposed_text'}
+        if set(record) != keys or record.get('heading') != heading or record.get('state') != state:
+            return False
+        if not _text(record.get('provenance')):
+            return False
+        if source_span is None:
+            if record.get('source_span') is not None:
+                return False
+        elif _span(record.get('source_span'), source_body) != tuple(source_span):
+            return False
+        if proposed_span is None:
+            if record.get('proposed_span') is not None:
+                return False
+        elif _span(record.get('proposed_span'), proposed_body) != tuple(proposed_span):
+            return False
+        if index == 1 and (record.get('source_text') != source_text
+                           or record.get('proposed_text') != proposed_text):
+            return False
+    return True
 
 
 def _mapping(mapping: Any, source_body: str, proposed_body: str, *, title_end: int,
@@ -41,29 +67,8 @@ def _mapping(mapping: Any, source_body: str, proposed_body: str, *, title_end: i
          'selector_reduced_to_bearer', None, None),
         ('## Details', None, None, 'unassessed_absent', None, None),
     )
-    for index, (heading, source_span, proposed_span, state, source_text, proposed_text) in enumerate(expected):
-        record = sections[index]
-        keys = {'heading', 'source_span', 'proposed_span', 'state', 'provenance'}
-        if index == 1:
-            keys |= {'source_text', 'proposed_text'}
-        if set(record) != keys or record.get('heading') != heading or record.get('state') != state:
-            return False
-        if not _text(record.get('provenance')):
-            return False
-        if source_span is None:
-            if record.get('source_span') is not None:
-                return False
-        elif _span(record.get('source_span'), source_body) != tuple(source_span):
-            return False
-        if proposed_span is None:
-            if record.get('proposed_span') is not None:
-                return False
-        elif _span(record.get('proposed_span'), proposed_body) != tuple(proposed_span):
-            return False
-        if index == 1 and (record.get('source_text') != source_text
-                           or record.get('proposed_text') != proposed_text):
-            return False
-    return proposed_body == expected_body
+    return (_mapping_sections(sections, expected, source_body, proposed_body)
+            and proposed_body == expected_body)
 
 
 def admit_scope_extraction_preview(source_binding: dict[str, Any], source_text: str,

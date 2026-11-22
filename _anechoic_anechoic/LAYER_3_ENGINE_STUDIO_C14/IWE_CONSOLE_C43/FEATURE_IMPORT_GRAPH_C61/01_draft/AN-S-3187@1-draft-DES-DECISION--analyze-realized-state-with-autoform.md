@@ -30,10 +30,10 @@ Extend the Realization Graph with a State Analyzer. Use Autoform to translate
 selected Modules into a shared Lean model. Reuse graph identities and the
 existing source watcher. Keep source locations on observations.
 
-Evaluate reads and writes against the authored state boundary. Store findings
-with their source locations in the existing DuckDB projection. Workbench,
-Console, MCP, and lint use the same findings.
+Evaluate reads and writes against the authored state boundary. A reachable
+action with zero writes and zero observable outputs is a dead end unless
+declared as a no-op. Publish findings through the existing DuckDB projection.
 
-Pilot Python and JavaScript. Compare each language's observed post-state with
-its runtime before using its findings to block lint. Report incomplete
-analysis as unresolved.
+Pilot Python and JavaScript. Compare the ordered effects, outcome, and
+post-state with the runtime. Block lint only with confirmed evidence.
+Report incomplete analysis as unresolved.

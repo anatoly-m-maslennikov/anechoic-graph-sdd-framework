@@ -12,7 +12,7 @@ import unittest
 TOOLS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS))
 
-from project_mcp_bootstrap import (  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_mcp_bootstrap import (  # noqa: E402
     ProjectMcpBootstrapError,
     deploy_project_mcp_bootstrap,
 )
@@ -74,7 +74,7 @@ class ProjectMcpBootstrapTests(unittest.TestCase):
 
     def test_stages_below_project_temporary_root(self) -> None:
         from unittest.mock import patch
-        import project_mcp_bootstrap
+        import FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_mcp_bootstrap as project_mcp_bootstrap
 
         replace = os.replace
         with patch.object(project_mcp_bootstrap.os, "replace", wraps=replace) as operation:
@@ -83,11 +83,11 @@ class ProjectMcpBootstrapTests(unittest.TestCase):
 
     def test_failed_atomic_precondition_preserves_target(self) -> None:
         from unittest.mock import patch
-        from project_runtime import TemporaryBoundaryError
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__pub import TemporaryBoundaryError
 
         target = self.runtime / "start_mcp.py"
         target.write_bytes(b"previous")
-        with patch("project_mcp_bootstrap.atomic_tempfile", side_effect=TemporaryBoundaryError("different filesystems")):
+        with patch('FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_mcp_bootstrap.atomic_tempfile', side_effect=TemporaryBoundaryError("different filesystems")):
             with self.assertRaisesRegex(ProjectMcpBootstrapError, "copy-failed"):
                 deploy_project_mcp_bootstrap(self.target_root, self.package)
         self.assertEqual(target.read_bytes(), b"previous")

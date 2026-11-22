@@ -2,13 +2,12 @@
 import copy
 import json
 import re
-import sys
 import unittest
 from pathlib import Path
 
 import yaml
 
-from test_split_evaluation import context, contract, gap, merge_evaluations, part
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__tests.test_split_evaluation import context, contract, gap, merge_evaluations, part
 
 HERE = Path(__file__).resolve().parents[1]
 ROOT = Path(__file__).resolve().parents[6]
@@ -70,8 +69,7 @@ class PromptContracts(unittest.TestCase):
                 self.assertNotRegex(prompt, r"\b(?:TODO|TBD)\b")
 
     def test_evaluation_prompts_cover_runtime_checklist(self):
-        sys.path.insert(0, str(HERE))
-        from evaluation_contract import LOCAL_GROUPS as GROUPS
+        from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.evaluation_contract import LOCAL_GROUPS as GROUPS
         prompt_checks = {check for checks in GROUPS.values() for check in checks}
         self.assertEqual(prompt_checks, CHECKS)
         for group, checks in GROUPS.items():
@@ -137,9 +135,8 @@ class PromptContracts(unittest.TestCase):
     def test_current_rmed_claim_reaches_declared_body_checker(self):
         programmatic = ROOT / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC"
         tools = programmatic / "FEATURE_TOOLS"
-        sys.path[:0] = [str(tools), str(programmatic.parent / "IWE_CONSOLE_C43/APP_WORKBENCH")]
-        from ATOM_LIFECYCLE.candidate_schema import load_candidate_schema
-        schema = load_candidate_schema(tools / "ATOM_LIFECYCLE/candidate_schema.json")
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.legacy_candidate_schema__pub import load_candidate_schema
+        schema = load_candidate_schema(tools / "FEATURE_TOOLS__tests/assets/legacy_candidate_schema.json")
         body = "## Summary\nA summary.\n## Claim\n### Prose Claim\nA claim.\n"
         for role in ("Requirement", "Method", "Evaluation", "Delivery"):
             with self.subTest(role=role):

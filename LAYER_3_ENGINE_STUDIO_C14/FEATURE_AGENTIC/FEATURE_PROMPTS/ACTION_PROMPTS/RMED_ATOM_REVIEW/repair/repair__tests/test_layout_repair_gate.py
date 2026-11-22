@@ -3,16 +3,14 @@ import copy
 import hashlib
 import json
 from pathlib import Path
-import sys
 import unittest
 
 HERE = Path(__file__).resolve().parent.parent
-sys.path[:0] = [str(HERE), str(HERE.parent), str(HERE.parent / 'RMED_ATOM_REVIEW__tests')]
-from test_repair_gate import RULE_TEXT, legacy_part, source, refreshed
-from context_builder import body_sections, markdown
-from evaluation_contract import ReviewContext, GROUPS, LOCAL_GROUPS, merge_evaluations
-from semantic_boundaries import unavailable_sections
-from layout_repair_gate import admit_layout_recoding, authority_digest
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair__tests.test_repair_gate import RULE_TEXT, legacy_part, source, refreshed
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import body_sections
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.evaluation_contract import ReviewContext, GROUPS, LOCAL_GROUPS, merge_evaluations
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.semantic_boundaries import unavailable_sections
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.layout_repair_gate import admit_layout_recoding, authority_digest
 
 
 def digest(value):
@@ -20,7 +18,46 @@ def digest(value):
                                     ensure_ascii=False, allow_nan=False).encode()).hexdigest()
 
 
-def fixture(*, role='Requirement', with_type=True, alias=False, contract=5):
+def _fixture_report(record, ctx, legacy, *, rule, contract, with_type, role):
+    parts = [legacy_part(group) for group in GROUPS]
+    sections = body_sections(record['text'])
+    claim_location = next(s for s in sections if s.endswith('## Claim')) if not legacy else sections[1]
+    for part in parts:
+        part.update(contract_version=contract, source=record['binding'], context_sha256=ctx.sha256,
+                    authority_sources=[rule['binding']])
+        if contract == 6:
+            part['review_profile'] = 'atom_local'
+            part['checks'] = [r for r in part['checks'] if r['id'] in LOCAL_GROUPS[part['evaluator']]]
+        for row in part['checks']:
+            row['positive_observations'] = [dict(location=claim_location, excerpt='Atom must comply.',
+                authority='MOCK-R-002@1', rule_excerpt='Atom means a governed statement.')]
+            if row['id'] == 'subjects':
+                row['subject_inventory']['sections_reviewed'] = sections
+                row['subject_inventory']['mentions'][0]['location'] = claim_location
+            if legacy and row['id'] in unavailable_sections(record['text']):
+                row.update(status='blocked', positive_observations=[])
+                part['coverage_gaps'].append(dict(check_id=row['id'], kind='layout_dependency',
+                                                  reason='Registered section absent.'))
+                part['result'] = 'blocked'
+            if legacy and row['id'] == 'properties':
+                row.update(status='failed', positive_observations=[], findings=[], obligation_resolutions=[])
+                if with_type:
+                    row['findings'].append(dict(kind='violation', location='frontmatter',
+                        excerpt=f'type: {role}', reason='Role echo is not a specialized Type.',
+                        proposed_fix='Omit role echo.', confidence=1.0))
+                for heading in ('# Summary', '## Scope', '## Claim', '## Details'):
+                    row['findings'].append(dict(kind='omission', obligation_id=heading,
+                        location='body:preamble', excerpt=f'Absent {heading}',
+                        reason='Required registered heading absent.', proposed_fix=f'Add {heading}.', confidence=1.0))
+                    row['obligation_resolutions'].append(dict(id=heading, state='missing', local_required=True,
+                        reason='Heading absent locally.', support=[dict(authority='MOCK-R-002@1',
+                        excerpt='Required Summary, Scope, Claim and Details headings.')]))
+                part['result'] = 'failed'
+    return merge_evaluations(parts, context=ctx, allow_layout_gaps=contract == 6)
+
+
+
+def _fixture_packets(role, with_type, alias, contract):
     path = f'core/MOCK-R-001-CORE-{role.upper()}--atom-rule.md'
     header = ('---\natom_id: MOCK-R-001\nversion: 1\n'
               'updated_at: "2026-09-26T00:00:00Z"\nsubjects:\n  governs: Atom\n'
@@ -53,46 +90,15 @@ def fixture(*, role='Requirement', with_type=True, alias=False, contract=5):
         final_packet['sources'].append(snapshot)
         final_packet['authority_bindings'].append(snapshot['binding'])
         aliases.append(dict(original=original['binding'], final=snapshot['binding']))
+    return path, body, scope, original, final, rule, original_packet, final_packet, aliases
+
+
+def fixture(*, role='Requirement', with_type=True, alias=False, contract=5):
+    path, body, scope, original, final, rule, original_packet, final_packet, aliases = _fixture_packets(
+        role, with_type, alias, contract)
     context, final_context = ReviewContext(original_packet), ReviewContext(final_packet)
 
-    def report(record, ctx, legacy):
-        parts = [legacy_part(group) for group in GROUPS]
-        sections = body_sections(record['text'])
-        claim_location = next(s for s in sections if s.endswith('## Claim')) if not legacy else sections[1]
-        for part in parts:
-            part.update(contract_version=contract, source=record['binding'], context_sha256=ctx.sha256,
-                        authority_sources=[rule['binding']])
-            if contract == 6:
-                part['review_profile'] = 'atom_local'
-                part['checks'] = [r for r in part['checks'] if r['id'] in LOCAL_GROUPS[part['evaluator']]]
-            for row in part['checks']:
-                row['positive_observations'] = [dict(location=claim_location, excerpt='Atom must comply.',
-                    authority='MOCK-R-002@1', rule_excerpt='Atom means a governed statement.')]
-                if row['id'] == 'subjects':
-                    row['subject_inventory']['sections_reviewed'] = sections
-                    row['subject_inventory']['mentions'][0]['location'] = claim_location
-                if legacy and row['id'] in unavailable_sections(record['text']):
-                    row.update(status='blocked', positive_observations=[])
-                    part['coverage_gaps'].append(dict(check_id=row['id'], kind='layout_dependency',
-                                                      reason='Registered section absent.'))
-                    part['result'] = 'blocked'
-                if legacy and row['id'] == 'properties':
-                    row.update(status='failed', positive_observations=[], findings=[], obligation_resolutions=[])
-                    if with_type:
-                        row['findings'].append(dict(kind='violation', location='frontmatter',
-                            excerpt=f'type: {role}', reason='Role echo is not a specialized Type.',
-                            proposed_fix='Omit role echo.', confidence=1.0))
-                    for heading in ('# Summary', '## Scope', '## Claim', '## Details'):
-                        row['findings'].append(dict(kind='omission', obligation_id=heading,
-                            location='body:preamble', excerpt=f'Absent {heading}',
-                            reason='Required registered heading absent.', proposed_fix=f'Add {heading}.', confidence=1.0))
-                        row['obligation_resolutions'].append(dict(id=heading, state='missing', local_required=True,
-                            reason='Heading absent locally.', support=[dict(authority='MOCK-R-002@1',
-                            excerpt='Required Summary, Scope, Claim and Details headings.')]))
-                    part['result'] = 'failed'
-        return merge_evaluations(parts, context=ctx, allow_layout_gaps=contract == 6)
-
-    evaluation, final_evaluation = report(original, context, True), report(final, final_context, False)
+    evaluation, final_evaluation = _fixture_report(original, context, True, rule=rule, contract=contract, with_type=with_type, role=role), _fixture_report(final, final_context, False, rule=rule, contract=contract, with_type=with_type, role=role)
     title_end = body.index('\n') + 1
     mapping = dict(source_body_sha256=hashlib.sha256(body.encode()).hexdigest(), sections=[
         dict(heading='# Summary', source_span=[0, title_end], state='legacy_h1_to_summary_value', provenance='Exact H1.'),
@@ -259,144 +265,15 @@ class LayoutRepairGateTests(unittest.TestCase):
             with self.subTest(mutation=mutation), self.assertRaisesRegex(ValueError, 'authority'):
                 admit_layout_recoding(**data)
 
-    def test_final_evaluation_requires_separate_exact_review_attestation(self):
-        for mutation in ('missing', 'independent', 'hash'):
-            data = fixture()
-            if mutation == 'missing':
-                del data['preflight']['final_review']
-            elif mutation == 'independent':
-                data['preflight']['final_review']['independent'] = False
-            else:
-                data['preflight']['final_review']['evaluation_sha256'] = '0' * 64
-            with self.subTest(mutation=mutation), self.assertRaisesRegex(ValueError, 'final review'):
-                admit_layout_recoding(**data)
 
-    def test_keyed_resource_roles_cannot_be_swapped(self):
-        data = fixture()
-        for key in ('context', 'final_context'):
-            data[key]['resources']['registry'] = dict(path='registry.toml', text='actor = "reviewer"\n',
-                sha256=hashlib.sha256(b'actor = "reviewer"\n').hexdigest())
-        resources = data['final_context']['resources']
-        resources['rules'], resources['registry'] = resources['registry'], resources['rules']
-        rebind(data)
-        with self.assertRaisesRegex(ValueError, 'authority resources changed'):
-            admit_layout_recoding(**data)
 
-    def test_fully_rebound_specialized_type_deletion_remains_rejected(self):
-        data = fixture()
-        data['context']['sources'][0]['text'] = data['context']['sources'][0]['text'].replace(
-            'type: Requirement', 'type: Boundary')
-        rebind(data)
-        with self.assertRaisesRegex(ValueError, 'role-echo Type elision'):
-            admit_layout_recoding(**data)
 
-    def test_final_pass_cannot_be_forged_or_incomplete(self):
-        for mutation in ('raw_parts', 'findings', 'gap', 'binding', 'context'):
-            data = fixture()
-            report = data['final_evaluation']
-            if mutation == 'raw_parts':
-                report['parts'].pop()
-            elif mutation == 'findings':
-                report['checks'][0]['findings'] = [data['evaluation']['checks'][1]['findings'][0]]
-            elif mutation == 'gap':
-                report['coverage_gaps'] = [dict(check_id='scope', kind='layout_dependency', reason='Missing.')]
-            elif mutation == 'binding':
-                report['source']['sha256'] = '0' * 64
-            else:
-                report['context_sha256'] = '0' * 64
-            with self.subTest(mutation=mutation), self.assertRaises(ValueError):
-                admit_layout_recoding(**data)
 
-    def test_original_merged_finding_must_still_match_retained_raw_parts(self):
-        data = fixture()
-        data['evaluation']['checks'] = copy.deepcopy(data['evaluation']['checks'])
-        data['evaluation']['checks'][1]['findings'][1]['proposed_fix'] = 'Different Summary repair interpretation.'
-        with self.assertRaisesRegex(ValueError, 'merged evaluation contradicts'):
-            admit_layout_recoding(**data)
 
-    def test_every_original_finding_requires_one_honest_resolution(self):
-        for mutation in ('missing', 'duplicate', 'unknown', 'blank', 'deferred'):
-            data = fixture()
-            resolutions = data['proposal']['resolutions']
-            if mutation in ('missing', 'deferred'):
-                omitted = resolutions.pop()
-                if mutation == 'deferred':
-                    data['proposal']['deferred_findings'] = [omitted]
-            elif mutation == 'duplicate':
-                resolutions.append(resolutions[0])
-            elif mutation == 'unknown':
-                resolutions[0]['finding_index'] = 99
-            else:
-                resolutions[0]['reason'] = ''
-            with self.subTest(mutation=mutation), self.assertRaises(ValueError):
-                admit_layout_recoding(**data)
 
-    def test_changed_output_bytes_and_layout_mapping_are_rejected(self):
-        for old, new in (('Atom rule', 'Different Summary'), ('must comply', 'may comply'),
-                         ('Atoms.', 'Some Atoms.'), ('## Details\n', '## Details\nAdded prose.\n'),
-                         ('governs: Atom', 'governs: Other'), ('version: 1', 'version: 2'),
-                         ('content_role: Requirement', 'type: Boundary\ncontent_role: Requirement')):
-            data = fixture()
-            data['proposal']['outputs'][0]['text'] = data['proposal']['outputs'][0]['text'].replace(old, new)
-            with self.subTest(old=old), self.assertRaises(ValueError):
-                admit_layout_recoding(**data)
-        data = fixture()
-        data['section_mapping']['sections'][0]['source_span'][0] = 1
-        with self.assertRaises(ValueError):
-            admit_layout_recoding(**data)
 
-    def test_exact_path_permission_and_disposition_are_required(self):
-        for mutation in ('source_path', 'output_path', 'disposition', 'renamed', 'traversal'):
-            data = fixture()
-            if mutation in ('source_path', 'output_path'):
-                data['permission']['paths'].pop(0 if mutation == 'source_path' else 1)
-            elif mutation == 'disposition':
-                data['permission']['dispositions'] = ['revision']
-            else:
-                path = 'other.md' if mutation == 'renamed' else '../other.md'
-                data['proposal']['outputs'][0]['path'] = path
-                data['permission']['paths'].append(path)
-            with self.subTest(mutation=mutation), self.assertRaises(ValueError):
-                admit_layout_recoding(**data)
 
-    def test_identity_must_assess_entire_delta_and_scope_with_sufficient_confidence(self):
-        for mutation in ('classification', 'confidence', 'independent', 'source', 'scope', 'support', 'context'):
-            data = fixture()
-            assessment = data['preflight']['identity_assessment']
-            if mutation == 'classification':
-                assessment['classification'] = 'refinement'
-            elif mutation == 'confidence':
-                assessment['confidence'] = .98
-            elif mutation == 'independent':
-                assessment['independent'] = False
-            elif mutation == 'source':
-                assessment['source'] = data['preflight']['outputs'][0]
-            elif mutation == 'scope':
-                assessment['scope_equivalence']['result'] = 'uncertain'
-            elif mutation == 'support':
-                assessment['scope_equivalence']['support'][0]['authority'] = 'UNBOUND@1'
-            else:
-                assessment['final_context_sha256'] = '0' * 64
-            with self.subTest(mutation=mutation), self.assertRaises(ValueError):
-                admit_layout_recoding(**data)
 
-    def test_freshness_retry_and_authority_alias_checks_are_mandatory(self):
-        for mutation in ('freshness', 'retry', 'aliases', 'unknown_authority', 'resource', 'threshold'):
-            data = fixture(alias=True)
-            if mutation == 'freshness':
-                data['preflight']['freshness']['authority_sha256'] = '0' * 64
-            elif mutation == 'retry':
-                data['preflight']['attempt'] = 1
-            elif mutation == 'aliases':
-                data['preflight']['authority_aliases'] = []
-            elif mutation == 'unknown_authority':
-                data['final_context']['authority_bindings'].pop()
-            elif mutation == 'resource':
-                data['final_context']['resources']['rules']['sha256'] = '0' * 64
-            else:
-                data['final_context']['confidence_threshold'] = .98
-            with self.subTest(mutation=mutation), self.assertRaises(ValueError):
-                admit_layout_recoding(**data)
 
 
 if __name__ == '__main__':

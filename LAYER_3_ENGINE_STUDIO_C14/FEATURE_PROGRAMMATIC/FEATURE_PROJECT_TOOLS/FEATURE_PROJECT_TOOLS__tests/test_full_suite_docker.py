@@ -3,17 +3,14 @@
 
 from contextlib import redirect_stderr, redirect_stdout
 import io
-import json
 from pathlib import Path
 import subprocess
-import sys
 import tempfile
 import unittest
 from unittest.mock import MagicMock, patch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-import full_suite_docker as docker  # noqa: E402
-import run_full_test_suite as full  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import full_suite_docker as docker
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import run_full_test_suite as full
 
 IMAGE = "sha256:" + "a" * 64
 
@@ -32,126 +29,89 @@ class FullSuiteDockerTests(unittest.TestCase):
         self.assertTrue(full._docker_module(self.root, self.root / full.MCP_TESTS / "test_native_import_graph_docker_e2e.py"))
         self.assertFalse(full._docker_module(self.root, workbench / "test_query_store.py"))
 
-    def test_builds_current_source_once_without_cached_resolution(self):
-        with (
-            patch.object(docker, "ImageManager", autospec=True) as factory,
-            patch.object(docker, "_remove_owned_image") as cleanup,
-            redirect_stdout(self.output),
-        ):
-            manager = factory.return_value
-
-            def build(_identity, *, use_packaged_assets):
-                self.assertFalse(use_packaged_assets)
-                self.assertIn("Test image START:", self.output.getvalue())
-                self.assertNotIn("Test image FINISH:", self.output.getvalue())
-                return IMAGE
-
-            manager._build.side_effect = build
-            with docker.current_code_test_image(self.root) as environment:
-                self.assertIn(f"Test image FINISH: {IMAGE}", self.output.getvalue())
-                self.assertEqual(IMAGE, environment["ANECHOIC_FIRST_CUT_HTTP_IMAGE"])
+    def test_build_calls_the_candidate_cli_once_and_cleans_up_the_same_attempt(self):
+        with (patch.dict(docker.os.environ, {"PYTHONPATH": "foreign", "PYTHONHOME": "foreign",
+                                           "VIRTUAL_ENV": "foreign"}),
+              patch.object(docker.subprocess, "run", side_effect=(
+            subprocess.CompletedProcess([], 0, IMAGE + "\n"),
+            subprocess.CompletedProcess([], 0, ""),
+        )) as run, redirect_stdout(self.output)):
+            with docker.current_code_test_image(self.root, use_packaged_assets=True) as environment:
+                self.assertEqual(IMAGE, environment["ANECHOIC_IMAGE"])
                 self.assertEqual(IMAGE, environment["ANECHOIC_DOCKER_QUERY_IMAGE"])
-                scratch = Path(environment["ANECHOIC_FIRST_CUT_HTTP_SCRATCH"])
-                self.assertEqual(str(scratch), environment["TMPDIR"])
+                self.assertIn(f"Test image FINISH: {IMAGE}", self.output.getvalue())
+                scratch = Path(environment["TMPDIR"])
+                self.assertEqual(str(scratch), environment["ANECHOIC_FIRST_CUT_HTTP_SCRATCH"])
                 self.assertTrue(scratch.is_relative_to(self.root / ".anechoic_tmp"))
                 self.assertTrue(scratch.is_dir())
-                (scratch / "fixture.txt").write_text("run output")
                 sibling = scratch.parent / "attempt-peer"
                 sibling.mkdir()
+                build, = run.call_args_list
+                argv = build.args[0]
+                self.assertEqual(("uv", "run", "--project", str(docker.CODE_ROOT), "--locked",
+                                  "--python", "3.14", "--managed-python", "--no-env-file",
+                                  "python", "-B", "-P"), argv[:12])
+                self.assertEqual(str(docker.CODE_ROOT), build.kwargs["env"]["PYTHONPATH"])
+                self.assertEqual(".venv-dev", build.kwargs["env"]["UV_PROJECT_ENVIRONMENT"])
+                self.assertNotIn("PYTHONHOME", build.kwargs["env"])
+                self.assertNotIn("VIRTUAL_ENV", build.kwargs["env"])
+                self.assertTrue(build.kwargs["check"])
+                self.assertEqual(docker.CODE_ROOT, build.kwargs["cwd"])
+                attempt = argv[argv.index("--attempt") + 1]
+                self.assertRegex(attempt, r"^[0-9a-f]{32}$")
+                boundary = ("-m", docker.IMAGE_CLI)
+                self.assertEqual(
+                    (*boundary, "build", "--project-root", str(self.root), "--attempt", attempt,
+                     "--scratch", str(scratch), "--packaged-assets"),
+                    argv[argv.index("-m"):],
+                )
             self.assertFalse(scratch.exists())
             self.assertTrue(sibling.is_dir())
-            manager._build.assert_called_once_with(manager.identity.return_value, use_packaged_assets=False)
-            manager.resolve.assert_not_called()
-            self.assertEqual(self.root, factory.call_args.args[0])
-            self.assertEqual(self.root, factory.call_args.kwargs["project_root"])
-            self.assertEqual(IMAGE, cleanup.call_args.args[1])
+            self.assertEqual(2, run.call_count)
+            self.assertEqual(
+                (*boundary, "cleanup", "--project-root", str(self.root), "--attempt", attempt,
+                 "--image", IMAGE),
+                run.call_args.args[0][argv.index("-m"):],
+            )
 
     def test_owned_cleanup_runs_even_when_tests_raise(self):
-        with (
-            patch.object(docker, "ImageManager", autospec=True) as factory,
-            patch.object(docker, "_remove_owned_image") as cleanup,
-        ):
-            factory.return_value._build.return_value = IMAGE
+        with patch.object(docker, "_image_command", side_effect=(IMAGE, "")) as command:
             with self.assertRaisesRegex(RuntimeError, "test failure"):
                 with docker.current_code_test_image(self.root) as environment:
                     scratch = Path(environment["TMPDIR"])
                     (scratch / "fixture.txt").write_text("failure output")
                     raise RuntimeError("test failure")
-            cleanup.assert_called_once()
-            self.assertFalse(scratch.exists())
+        build, cleanup = [call.args for call in command.call_args_list]
+        self.assertEqual((self.root, "build", build[2], "--scratch", str(scratch)), build)
+        self.assertEqual((self.root, "cleanup", build[2], "--image", IMAGE), cleanup)
+        self.assertFalse(scratch.exists())
 
-    def test_failed_image_build_removes_attempt_files(self):
-        with (
-            patch.object(docker, "ImageManager", autospec=True) as factory,
-            patch.object(docker, "_remove_owned_image") as cleanup,
-        ):
-            def fail_build(*args, **kwargs):
-                scratch = factory.call_args.kwargs["build_temp_root"]
-                (scratch / "build.log").write_text("partial build")
-                raise RuntimeError("build failure")
+    def test_failed_or_invalid_image_build_removes_attempt_files(self):
+        for result in (OSError("build failure"), "latest"):
+            with self.subTest(result=result):
+                def build(_root, _operation, _attempt, _flag, directory):
+                    (Path(directory) / "build.log").write_text("partial build")
+                    if isinstance(result, Exception):
+                        raise result
+                    return result
 
-            factory.return_value._build.side_effect = fail_build
-            with self.assertRaisesRegex(RuntimeError, "build failure"):
+                with patch.object(docker, "_image_command", side_effect=build) as command:
+                    with self.assertRaisesRegex((OSError, ValueError), "build failure|immutable Docker image"):
+                        with docker.current_code_test_image(self.root):
+                            self.fail("failed image setup yielded a test environment")
+                command.assert_called_once()
+                self.assertFalse(Path(command.call_args.args[-1]).exists())
+
+    def test_symlink_scratch_parent_is_rejected_before_build(self):
+        outside = self.root / "outside"
+        outside.mkdir()
+        (self.root / ".anechoic_tmp").symlink_to(outside, target_is_directory=True)
+        with patch.object(docker, "_image_command") as command:
+            with self.assertRaises(OSError):
                 with docker.current_code_test_image(self.root):
-                    self.fail("failed image setup yielded a test environment")
-            self.assertFalse(factory.call_args.kwargs["build_temp_root"].exists())
-            cleanup.assert_not_called()
-
-    def test_build_executor_adds_only_unique_test_label_and_preserves_bounded_runner(self):
-        with patch.object(docker, "_bounded_run") as execute:
-            docker._executor("unique-attempt")(
-                ["docker", "build", "--file", "Dockerfile", "context"],
-                cwd=self.root,
-                timeout=600,
-                env={"BUILDX_CONFIG": "private-buildx"},
-            )
-            self.assertEqual(
-                [
-                    "docker",
-                    "build",
-                    "--label",
-                    f"{docker.ATTEMPT_LABEL}=unique-attempt",
-                    "--file",
-                    "Dockerfile",
-                    "context",
-                ],
-                execute.call_args.args[0],
-            )
-            self.assertFalse(execute.call_args.kwargs["capture_stdout"])
-            self.assertEqual("private-buildx", execute.call_args.kwargs["buildx_config"])
-
-    def test_cleanup_is_attributed_non_force_and_does_not_touch_containers(self):
-        inspection = json.dumps([{"Config": {"Labels": {docker.ATTEMPT_LABEL: "ours"}}}])
-        results = [
-            subprocess.CompletedProcess([], 0, inspection),
-            subprocess.CompletedProcess([], 0, ""),
-            subprocess.CompletedProcess([], 0, ""),
-        ]
-        with patch.object(docker, "_bounded_run", side_effect=results) as execute:
-            docker._remove_owned_image(self.root, IMAGE, "ours")
-            commands = [call.args[0] for call in execute.call_args_list]
-            self.assertEqual(["docker", "image", "rm", IMAGE], commands[-1])
-            self.assertFalse(any("--force" in command or "down" in command for command in commands))
-
-    def test_in_use_or_unattributed_image_is_retained_and_reported(self):
-        for label, containers in (("other", ""), ("ours", "existing-container")):
-            inspection = json.dumps([{"Config": {"Labels": {docker.ATTEMPT_LABEL: label}}}])
-            results = [
-                subprocess.CompletedProcess([], 0, inspection),
-                subprocess.CompletedProcess([], 0, containers),
-            ]
-            with (
-                patch.object(docker, "_bounded_run", side_effect=results) as execute,
-                redirect_stderr(self.errors),
-            ):
-                docker._remove_owned_image(self.root, IMAGE, "ours")
-                self.assertFalse(
-                    any(
-                        call.args[0][:3] == ["docker", "image", "rm"]
-                        for call in execute.call_args_list
-                    )
-                )
-        self.assertIn("Test image cleanup", self.errors.getvalue())
+                    self.fail("unsafe scratch admitted")
+            command.assert_not_called()
+        self.assertEqual([], list(outside.iterdir()))
 
     def test_full_suite_uses_image_environment_without_retired_launcher_gate(self):
         module = self.root / docker.APP / "FEATURE_MCP__tests/test_docker_e2e.py"
@@ -166,6 +126,7 @@ class FullSuiteDockerTests(unittest.TestCase):
                 },
             ),
             patch.object(full, "discover_test_modules", return_value=[module]),
+            patch.object(full, "_run_static_checks", return_value=0),
             patch.object(full, "current_code_test_image", return_value=lifecycle) as build,
             patch.object(full, "run_module", return_value=(True, 2, 0, "", "", 0.0, None)) as run,
             redirect_stdout(self.output),
@@ -184,6 +145,7 @@ class FullSuiteDockerTests(unittest.TestCase):
         ordinary = self.root / docker.APP / "FEATURE_MCP__tests/test_unit.py"
         with (
             patch.object(full, "discover_test_modules", return_value=[ordinary, integration]),
+            patch.object(full, "_run_static_checks", return_value=0) as lint,
             patch.object(full, "current_code_test_image") as build,
             patch.object(full, "_run_modules", return_value=0) as run,
             patch.dict(full.os.environ, {"ANECHOIC_RELEASE_E2E_CONTEXT": "stale"}),
@@ -199,6 +161,7 @@ class FullSuiteDockerTests(unittest.TestCase):
             self.assertNotIn("ANECHOIC_RELEASE_E2E_CONTEXT", environment)
             self.assertFalse(Path(environment["TMPDIR"]).exists())
             build.assert_not_called()
+            lint.assert_called_once_with(self.root)
 
     def test_release_phase_rejects_invalid_candidate_and_focused_selection(self):
         with patch.object(full, "discover_test_modules") as discover, redirect_stderr(self.errors):
@@ -214,6 +177,7 @@ class FullSuiteDockerTests(unittest.TestCase):
         lifecycle.__enter__.side_effect = OSError("Docker socket denied")
         with (
             patch.object(full, "discover_test_modules", return_value=[module]),
+            patch.object(full, "_run_static_checks", return_value=0),
             patch.object(full, "current_code_test_image", return_value=lifecycle),
             patch.object(full, "run_module") as run,
             redirect_stderr(self.errors),

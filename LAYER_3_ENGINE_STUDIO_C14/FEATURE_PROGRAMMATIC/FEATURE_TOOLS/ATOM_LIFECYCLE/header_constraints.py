@@ -6,11 +6,11 @@ Compile explicit property, direct-value and child cardinality and literal value 
 from dataclasses import dataclass
 import re
 
-from FEATURE_FORMAL_MODEL_ENGINE.model_catalog import _native_block
-from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim
-from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_field_validation import _bounds
-from carrier_aliases import matches_named_value
-from header_groups import GROUP_FIELDS, ROLE_FIELDS, header_value, path_value
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.formal_claim__pub import iter_formal_claims
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_model_claim__pub import parse_native_model_claim
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.cardinality__pub import cardinality_bounds
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_compat__pub import matches_named_value
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_compat__pub import GROUP_FIELDS, ROLE_FIELDS, header_value, path_value
 
 _PATH = r'[A-Za-z][A-Za-z0-9_ ]*(?:\.[A-Za-z][A-Za-z0-9_ ]*)*'
 _SELECTED = r'(?:"[^"\r\n]+"|[A-Za-z][A-Za-z0-9 &_-]*)'
@@ -100,14 +100,14 @@ def _native_header_records(code, source):
     if (occurrence := args.get('property_occurrence_cardinality')) in (0, 1):
         records.add(('property', path, selector, selected, str(occurrence), source))
     if (cardinality := args.get('value_cardinality')) is not None:
-        records.add(('value', path, selector, selected, _bounds(cardinality), source))
+        records.add(('value', path, selector, selected, cardinality_bounds(cardinality), source))
     if (children := args.get('allowed_dependent_property_names')):
-        low, high = _bounds(args['dependent_property_cardinality'])
+        low, high = cardinality_bounds(args['dependent_property_cardinality'])
         if high is not None:
             names = tuple(sorted(_path(child) for child in children))
             records.add(('children', path, selector, selected, (low, high, *names), source))
     if (cardinality := args.get('dependent_property_value_cardinality')) is not None:
-        records.add(('value', path + '.*', selector, selected, _bounds(cardinality), source))
+        records.add(('value', path + '.*', selector, selected, cardinality_bounds(cardinality), source))
     if path not in {'role', 'form', 'status'}:
         for value in args.get('allowed_values', ()):
             records.add(('domain', path, selector, selected, value, source))
@@ -117,7 +117,7 @@ def _native_header_records(code, source):
 def compile_header_constraints(rows):
     records = set()
     for row in rows:
-        for block in _native_block(row['_content_bytes'].decode('utf-8')):
+        for block in iter_formal_claims(row['_content_bytes'].decode('utf-8')):
             records.update(_native_header_records(block, row['id']))
     keys = ('kind', 'path', 'selector', 'selected', 'value', 'source')
     return [dict(zip(keys, item)) for item in sorted(records, key=repr)]

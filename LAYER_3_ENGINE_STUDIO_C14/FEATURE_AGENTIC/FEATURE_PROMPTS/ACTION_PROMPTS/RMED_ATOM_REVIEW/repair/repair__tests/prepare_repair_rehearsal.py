@@ -6,12 +6,16 @@ evaluation, expected verdict, repair proposal, or source mutation.
 """
 from __future__ import annotations
 
+if __package__ in (None, ""):
+    import sys as _sys
+    from pathlib import Path as _Path
+    _sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if p.name == "LAYER_3_ENGINE_STUDIO_C14")))
+
 import argparse
 import hashlib
 import json
 from pathlib import Path
 import re
-import sys
 from typing import Any
 
 HERE = Path(__file__).resolve().parent
@@ -19,11 +23,10 @@ REVIEW_ROOT = HERE.parents[1]
 REPOSITORY_ROOT = REVIEW_ROOT.parents[4]
 FIXTURE_ROOT = REVIEW_ROOT / "RMED_ATOM_REVIEW__tests" / "assets" / "fixtures"
 CASE_FILE = HERE / "assets" / "fixtures" / "rehearsal-cases.json"
-sys.path.insert(0, str(REVIEW_ROOT))
 
-from context_builder import body_sections, metadata, prepare_context  # noqa: E402
-from evaluation_contract import GROUPS  # noqa: E402
-from review_evidence import ReviewContext  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import body_sections, metadata, prepare_context  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.evaluation_contract import GROUPS  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_evidence__shared import ReviewContext  # noqa: E402
 
 
 REPAIR_AUTHORITY_IDS = (
@@ -150,6 +153,10 @@ def baseline_sources() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     return rows, repair
 
 
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair__tests.repair_rehearsal_resources import (PROJECT_STRUCTURE, PROJECT_SETTINGS, OPERATOR_REGISTRY,
+                                        FRAMEWORK_SETTINGS, DEFAULT_SETTINGS)
+
+
 def write_resources(output: Path) -> dict[str, str]:
     control_root = output / ".anechoic_synthetic_project"
     framework_root = control_root / "000_ANECHOIC_framework"
@@ -163,107 +170,11 @@ def write_resources(output: Path) -> dict[str, str]:
     ):
         path.mkdir(parents=True, exist_ok=True)
     values = {
-        control_root / "project_structure.toml": """schema_version = 1
-
-[[scope_units]]
-scope_unit_name = "SYNTHETIC_ROOT"
-parent = "PROJECT"
-scope_unit_type = "Unordered"
-scope_unit_label = "Synthetic rehearsal root"
-structural_level = 1
-navigational_order_number = 1
-authority_path = ".anechoic_synthetic_project/000_ANECHOIC_framework/01_SYNTHETIC_ROOT"
-delivery_path = "synthetic/repair-rehearsal"
-authority_mode = "strict"
-
-[[scope_units]]
-scope_unit_name = "SYNTHETIC_MIDDLE"
-parent = "SYNTHETIC_ROOT"
-scope_unit_type = "Ordered"
-scope_unit_label = "Synthetic rehearsal middle"
-structural_level = 2
-local_order = 1
-navigational_order_number = 2
-authority_path = ".anechoic_synthetic_project/000_ANECHOIC_framework/02_SYNTHETIC_MIDDLE"
-delivery_path = "synthetic/repair-rehearsal"
-authority_mode = "strict"
-
-[[scope_units]]
-scope_unit_name = "SYNTHETIC"
-parent = "SYNTHETIC_MIDDLE"
-scope_unit_type = "Ordered"
-scope_unit_label = "Synthetic rehearsal candidate scope"
-structural_level = 3
-local_order = 1
-navigational_order_number = 3
-authority_path = ".anechoic_synthetic_project/000_ANECHOIC_framework/03_SYNTHETIC"
-delivery_path = "synthetic/repair-rehearsal"
-authority_mode = "strict"
-""",
-        control_root / "anechoic_synthetic_project_settings.toml": """[project]
-name = "synthetic_project"
-
-[artifacts.identity]
-project_prefix = "SYN"
-""",
-        control_root / "operators_registry.toml": """[[operators]]
-name = "Synthetic Fixture Operator"
-role = "fixture reviewer"
-""",
-        framework_root / "anechoic_framework_settings.toml": """[confidence]
-necessary_information_threshold_percent = 99
-semantic_resolution_threshold_percent = 99
-
-[authority_modes]
-default = "strict"
-
-[interaction]
-reporting_mode = "silent"
-
-[artifacts]
-creation_strictness = "medium"
-
-[implementation]
-retry_limit = 0
-
-[atom_validation]
-max_candidates = 4
-max_file_bytes = 1048576
-max_total_read_bytes = 4194304
-timeout_seconds = 60
-max_findings = 100
-
-[rmed_review]
-max_atoms = 4
-target_minutes = 10
-""",
-        default_root / "anechoic_framework_default_settings.toml": """[confidence]
-necessary_information_threshold_percent = 99
-semantic_resolution_threshold_percent = 99
-
-[authority_modes]
-default = "strict"
-
-[interaction]
-reporting_mode = "silent"
-
-[artifacts]
-creation_strictness = "medium"
-
-[implementation]
-retry_limit = 0
-
-[atom_validation]
-max_candidates = 4
-max_file_bytes = 1048576
-max_total_read_bytes = 4194304
-timeout_seconds = 60
-max_findings = 100
-
-[rmed_review]
-max_atoms = 4
-target_minutes = 10
-""",
+        control_root / "project_structure.toml": PROJECT_STRUCTURE,
+        control_root / "anechoic_synthetic_project_settings.toml": PROJECT_SETTINGS,
+        control_root / "operators_registry.toml": OPERATOR_REGISTRY,
+        framework_root / "anechoic_framework_settings.toml": FRAMEWORK_SETTINGS,
+        default_root / "anechoic_framework_default_settings.toml": DEFAULT_SETTINGS,
     }
     for path, text in values.items():
         path.write_text(text)
@@ -276,11 +187,7 @@ target_minutes = 10
     }
 
 
-def build(output: Path) -> None:
-    if output.exists():
-        raise FileExistsError(f"output must be absent: {output}")
-    output.mkdir(parents=True)
-    resources = write_resources(output)
+def _write_candidates(output):
     candidates = []
     for spec in CASES:
         original, raw = rewrite_fixture(spec)
@@ -294,6 +201,10 @@ def build(output: Path) -> None:
         carrier.parent.mkdir(parents=True, exist_ok=True)
         carrier.write_text(raw)
         candidates.append((spec, original, bound(candidate_path, props["atom_id"], props["version"], raw)))
+    return candidates
+
+
+def _synthetic_authorities():
     definitions = [
         synthetic_authority("SYN-DEF-001", "Widget", "a Widget **means** one synthetic display component."),
         synthetic_authority("SYN-DEF-002", "Widget/Color", "Widget/Color **means** the explicit display Color of one Widget."),
@@ -315,6 +226,10 @@ def build(output: Path) -> None:
         "the Project Configuration selects SYNTHETIC as the filename token for the Scope Unit named SYNTHETIC.",
         role="Delivery",
     )
+    return definitions, principle, token_mapping
+
+
+def _rehearsal_context(output, resources, candidates, definitions, principle, token_mapping):
     baseline, repair_bindings = baseline_sources()
     candidate_rows = [row for _, _, row in candidates]
     authority = baseline + definitions + [principle, token_mapping]
@@ -344,9 +259,10 @@ def build(output: Path) -> None:
                     "properties": (REVIEW_ROOT / "evaluate_properties.prompt.md").read_text(),
                     "coherence": (REVIEW_ROOT / "evaluate_coherence.prompt.md").read_text()},
     }, root=output, resources=resources)
-    context_sha = ReviewContext(context).sha256
-    (output / "context.json").write_text(json.dumps(context, indent=2) + "\n")
-    (output / "packets").mkdir()
+    return context, repair_bindings
+
+
+def _write_packets(output, candidates, context_sha, repair_bindings):
     input_cases = []
     for ordinal, (spec, original, candidate) in enumerate(candidates, 1):
         packet = {"ordinal": ordinal, "case_id": spec["id"], "fixture_origin": {
@@ -369,6 +285,22 @@ def build(output: Path) -> None:
         "purpose": "Complete inputs for rehearsal only; not evaluations, proposals, or source-mutation authority.",
         "context_sha256": context_sha, "repair_authority_bindings": repair_bindings, "cases": input_cases,
     }, indent=2) + "\n")
+    return input_cases
+
+
+def build(output: Path) -> None:
+    if output.exists():
+        raise FileExistsError(f"output must be absent: {output}")
+    output.mkdir(parents=True)
+    resources = write_resources(output)
+    candidates = _write_candidates(output)
+    definitions, principle, token_mapping = _synthetic_authorities()
+    context, repair_bindings = _rehearsal_context(
+        output, resources, candidates, definitions, principle, token_mapping)
+    context_sha = ReviewContext(context).sha256
+    (output / "context.json").write_text(json.dumps(context, indent=2) + "\n")
+    (output / "packets").mkdir()
+    input_cases = _write_packets(output, candidates, context_sha, repair_bindings)
     (output / "README.md").write_text(
         "# Synthetic repair rehearsal\n\nThis output has real bound baseline prompts and evaluator authorities, "
         "the active repair authorities, explicit mock resources, an admitted mock Principle, permissions, and "

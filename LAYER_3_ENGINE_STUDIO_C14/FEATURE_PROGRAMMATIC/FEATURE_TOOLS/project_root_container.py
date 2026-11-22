@@ -1,15 +1,10 @@
 
 """Resolve the effective Container of the selected root Project Declaration."""
-from collections.abc import Mapping
 from hashlib import sha256
 
-from header_groups import header_path, header_value
-from scope_declaration_parse import ScopeDeclarationError, ScopeUnitDeclaration, parse_scope_unit_declaration
-
-
-def is_logical_container(value):
-    return (isinstance(value, Mapping) and set(value) in ({'scope_unit'}, {'atom'})
-            and all(isinstance(ref, str) and ref.strip() for ref in value.values()))
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_compat__pub import header_value, project_root_container_view
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.scope_carrier__pub import ScopeDeclarationError
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.scope_declaration_parse__pub import ScopeUnitDeclaration, parse_scope_unit_declaration
 
 
 def effective_root_container_header(
@@ -29,7 +24,4 @@ def effective_root_container_header(
             or declaration.version != root_declaration_pin['version']):
         return metadata
 
-    container = {'scope_unit': 'CA-SU--1'}
-    if header_path('container', metadata) == ('context', 'container'):
-        return {**metadata, 'context': {**metadata.get('context', {}), 'container': container}}
-    return {**metadata, 'container': container}
+    return project_root_container_view(metadata)

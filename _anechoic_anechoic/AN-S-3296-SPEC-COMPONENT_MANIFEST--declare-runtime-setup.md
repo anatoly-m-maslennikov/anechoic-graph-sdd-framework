@@ -3,14 +3,14 @@ atom_family: SPEC
 atom_id: AN-S-3296
 container:
   component: C00
-tier: 0
+tier: 4
 context:
   template: component_manifest
   lens: SPEC
 state:
   status: active
-  version: 2
-  updated_at: '2026-11-21T22:51:12.819403+00:00'
+  version: 5
+  updated_at: '2026-11-22T11:23:40.206159+00:00'
 ---
 
 ## Summary
@@ -35,7 +35,14 @@ declare_entity(
         layer=6,
         lens_whitelist=['DES', 'DevOps', 'QA', 'SWD'],
         boundaries={
-            'code': {'imports': {'only': []}},
+            'code': {
+                'imports': {'only': []},
+                'exports': {
+                    'RUNTIME_SETUP__shared.Settings': 'shared',
+                    'RUNTIME_SETUP__shared.select_settings': 'shared',
+                    'RUNTIME_SETUP__shared.write_settings': 'shared',
+                },
+            },
             'io': {
                 'server': {
                     'runtime_setup': {
@@ -48,7 +55,6 @@ declare_entity(
                 'client': [
                     {'component': 'C27', 'interface': 'release'},
                     {'component': 'C21', 'interface': 'shared_mcp_launcher'},
-                    {'component': 'C21', 'interface': 'shared_runtime_mcp'},
                 ],
             },
             'state': {

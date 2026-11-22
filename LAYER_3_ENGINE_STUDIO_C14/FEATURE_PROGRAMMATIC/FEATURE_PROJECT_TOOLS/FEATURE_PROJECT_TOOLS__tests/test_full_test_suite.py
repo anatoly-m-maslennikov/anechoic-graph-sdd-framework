@@ -6,7 +6,6 @@ from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import redirect_stderr, redirect_stdout
 import io
-import os
 from pathlib import Path
 import subprocess
 import sys
@@ -16,8 +15,7 @@ import unittest
 from unittest.mock import patch
 
 TOOLS = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(TOOLS))
-import run_full_test_suite as full  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import run_full_test_suite as full
 
 PASSING = (
     "import unittest\nclass Test(unittest.TestCase):\n def test_one(self): self.assertTrue(True)\n"
@@ -79,17 +77,45 @@ class FullTestSuiteTests(unittest.TestCase):
         self.assertEqual(0, self.run_suite(), self.errors.getvalue())
         self.assertIn("tests run: 2; skipped: 0; failed modules: 0", self.output.getvalue())
 
+    def test_backend_provider_is_importable_by_its_registry_name(self) -> None:
+        self.file(str(full.WORKBENCH / "FEATURE_WORKBENCH_BACKEND/fixture_provider.py"), "VALUE = 42\n")
+        self.file(
+            "LAYER_3_ENGINE_STUDIO_C14/component/component__tests/test_provider.py",
+            "import unittest\nfrom fixture_provider import VALUE\n"
+            "class Test(unittest.TestCase):\n def test_provider(self): self.assertEqual(42, VALUE)\n",
+        )
+        self.assertEqual(0, self.run_suite(), self.errors.getvalue())
+
     def test_test_and_import_errors_fail_but_later_modules_still_run(self) -> None:
         self.file(
             "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_a_failure.py",
             PASSING.replace("assertTrue(True)", "assertTrue(False)"),
         )
-        self.file("LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_b_import.py", "import missing_fixture_dependency\n")
+        self.file("LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_b_import.py",
+                  "from missing_fixture_dependency import VALUE\nprint(VALUE)\n")
         self.file("LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_c_good.py")
         self.assertEqual(1, self.run_suite())
         self.assertIn("test_c_good.py", self.output.getvalue())
         self.assertIn("failed modules: 2", self.output.getvalue())
         self.assertIn("missing_fixture_dependency", self.errors.getvalue())
+
+    def test_unused_import_fails_static_and_stops_unit_before_execution(self) -> None:
+        dirty = self.file("LAYER_3_ENGINE_STUDIO_C14/test_unused.py", "import os\n" + PASSING)
+        self.file(".anechoic_legacy/old.py", "import sys\n")
+        original = dirty.read_bytes()
+        command = (sys.executable, "-B", str(TOOLS / "test_suite__pub.py"),
+                   "--project-root", str(self.root), "--phase")
+        for phase in ("static", "unit"):
+            with self.subTest(phase=phase):
+                result = subprocess.run((*command, phase), capture_output=True, text=True, timeout=30)
+                self.assertEqual(1, result.returncode, result.stderr)
+                self.assertIn("F401", result.stdout)
+                self.assertNotIn("Test module START:", result.stdout)
+                self.assertEqual(original, dirty.read_bytes())
+        dirty.write_text(PASSING, encoding="utf-8")
+        result = subprocess.run((*command, "static"), capture_output=True, text=True, timeout=30)
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertNotIn("Test module START:", result.stdout)
 
     def test_module_start_is_visible_before_the_real_module_finishes(self) -> None:
         ready, release = self.root / "child-ready", self.root / "release-child"
@@ -161,15 +187,28 @@ class FullTestSuiteTests(unittest.TestCase):
             self.assertEqual("1", environment["ANECHOIC_DOCKER_E2E"])
             self.assertEqual("1", environment["ANECHOIC_DOCKER_QUERY_E2E"])
             self.assertEqual("actual-image", environment["ANECHOIC_DOCKER_QUERY_IMAGE"])
-            programmatic = self.root / "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC"
-            apps = self.root / full.WORKBENCH.parent
-            self.assertEqual(
-                os.pathsep.join((str(programmatic / "FEATURE_TOOLS"), str(programmatic), str(apps),
-                                 str(apps / "APP_WORKBENCH"), str(self.root / full.APP.parent), "existing-pythonpath")),
-                environment["PYTHONPATH"],
-            )
+            self.assertEqual(str(self.root / full.CODE_ROOTS[0]), environment["PYTHONPATH"])
 
-    def test_child_gets_canonical_tools_and_keeps_test_directory_first(self) -> None:
+    def test_sibling_modules_use_their_own_locked_environment(self) -> None:
+        result = subprocess.CompletedProcess([], 0, PASSED_COUNT, "")
+        for child, environment_name in ((full.CODE_ROOTS[1], ".venv-release"),
+                                        (full.CODE_ROOTS[2], ".venv-setup")):
+            with self.subTest(child=child):
+                module = self.file(f"{child}/package/test_example.py")
+                with patch.object(full.subprocess, "run", return_value=result) as command:
+                    self.assertTrue(full.run_module(self.root, module, {
+                        "PYTHONPATH": "inherited", "VIRTUAL_ENV": "/wrong/env",
+                    })[0])
+                args = command.call_args.args[0]
+                env = command.call_args.kwargs["env"]
+                self.assertEqual(("uv", "run", "--project", str(self.root / child),
+                                  "--locked", "--no-env-file", "python"), args[:7])
+                self.assertEqual("package.test_example", args[-1])
+                self.assertEqual(str(self.root / child), env["PYTHONPATH"])
+                self.assertEqual(environment_name, env["UV_PROJECT_ENVIRONMENT"])
+                self.assertNotIn("VIRTUAL_ENV", env)
+
+    def test_child_imports_canonical_tools_and_test_package(self) -> None:
         self.file(
             "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/canonical_import.py",
             "VALUE = 'canonical'\n",
@@ -182,8 +221,8 @@ class FullTestSuiteTests(unittest.TestCase):
         module = self.file(
             "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_import_path.py",
             "import unittest\n"
-            "from canonical_import import VALUE as canonical\n"
-            "from shared_name import VALUE as local\n"
+            "from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.canonical_import import VALUE as canonical\n"
+            "from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.shared_name import VALUE as local\n"
             "class ImportPathTest(unittest.TestCase):\n"
             " def test_paths(self):\n"
             "  self.assertEqual('canonical', canonical)\n"
@@ -198,14 +237,13 @@ class FullTestSuiteTests(unittest.TestCase):
         self.file(
             "LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_component_imports.py",
             "import unittest\n"
-            "import FEATURE_MCP\n"
-            "import APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND as app_backend\n"
-            "import FEATURE_WORKBENCH_BACKEND as backend\n"
+            "from MCP_PATCHBAY_C21 import FEATURE_MCP\n"
+            "from IWE_CONSOLE_C43.APP_WORKBENCH import FEATURE_WORKBENCH_BACKEND as app_backend\n"
             "class Test(unittest.TestCase):\n"
             " def test_imports(self):\n"
             "  self.assertEqual('mcp', FEATURE_MCP.VALUE)\n"
             "  self.assertEqual('workbench', app_backend.VALUE)\n"
-            "  self.assertEqual('workbench', backend.VALUE)\n",
+            ,
         )
         self.assertEqual(0, self.run_suite(), self.errors.getvalue())
 
@@ -232,12 +270,13 @@ class FullTestSuiteTests(unittest.TestCase):
             self.output, self.errors = io.StringIO(), io.StringIO()
 
             def execute(argv, **_options):
-                if argv[-1] == "test_one":
+                if argv[-1].endswith(".test_one"):
                     raise error
                 return passing
 
             with (
                 self.subTest(error=error),
+                patch.object(full, "_run_static_checks", return_value=0),
                 patch.object(full.subprocess, "run", side_effect=execute) as command,
             ):
                 self.assertEqual(1, self.run_suite())

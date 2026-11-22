@@ -1,13 +1,9 @@
 """Adversarial admission tests for explicit dependent-Subject evidence."""
 import json
 import hashlib
-from pathlib import Path
-import sys
 import unittest
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from declared_subject_evidence import validate_declared_subject_evidence  # noqa: E402
-from review_evidence import ReviewContext, _validate_resolved_mention  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.declared_subject_evidence import validate_declared_subject_evidence  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_evidence__shared import ReviewContext, _validate_resolved_mention  # noqa: E402
 
 
 LEGACY_P032_BYTES = b'''---

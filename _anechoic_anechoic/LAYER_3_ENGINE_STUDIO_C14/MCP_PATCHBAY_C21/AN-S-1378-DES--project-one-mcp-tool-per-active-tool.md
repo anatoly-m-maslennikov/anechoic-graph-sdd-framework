@@ -7,11 +7,10 @@ tier: 1
 context:
   lens: DES
 state:
-  status: active
-  version: 23
-  updated_at: 2026-11-10 20:47:54 +0400
+  status: "active"
+  version: 24
+  updated_at: "2026-11-22T09:27:00.770047+00:00"
 ---
-
 ## Summary
 
 Project one MCP tool per active Tool
@@ -20,8 +19,6 @@ Project one MCP tool per active Tool
 
 ### Prose Claim
 
-MCP must expose exactly one callable endpoint for each enabled public Tool name in the installed registration configuration, backed by its canonical code handler and request/result contract. Source-only providers have no public endpoint. Reject duplicate public identities and preserve canonical operation meaning. No current Atom declaration is required merely to register or list an implemented, configured Tool.
+MCP must expose exactly one callable endpoint for each enabled public Tool name in Backend's JSON catalog. It must preserve the catalog's name, description, input schema, and canonical operation meaning. Backend owns registration, the canonical handler, and the request and result contract. Source-only providers have no public endpoint. Duplicate public identities or missing configured entries must be rejected before publication.
 
-## Details
-
-Expose one stable callable MCP identity for each enabled code-owned provider or selected-route entry in the generated registration asset. Preserve its validated contract without splitting, aliasing, or aggregating it, and reject duplicate public identities or missing configured entries before publication.
+No current Atom declaration is required merely to register or list an implemented, configured Tool.

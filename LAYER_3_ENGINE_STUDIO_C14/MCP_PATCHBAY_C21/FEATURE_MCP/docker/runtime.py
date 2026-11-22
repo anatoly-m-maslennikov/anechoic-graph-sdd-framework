@@ -8,13 +8,17 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import sys
+
+# This file is also the bootstrap entry point in an installed package.
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 try:
     from .image_reference import IMMUTABLE_IMAGE, image_reference
     from .mcp_paths import MCP_PATH
 except ImportError:
-    from image_reference import IMMUTABLE_IMAGE, image_reference
-    from mcp_paths import MCP_PATH
+    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_reference import IMMUTABLE_IMAGE, image_reference
+    from MCP_PATCHBAY_C21.FEATURE_MCP.docker.mcp_paths import MCP_PATH
 
 DIRECTORY = Path(__file__).resolve().parent
 SOURCE_ROOT = DIRECTORY.parents[3]
@@ -95,7 +99,7 @@ class Runtime:
         try:
             from .runtime_images import ImageManager
         except ImportError:
-            from runtime_images import ImageManager
+            from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images import ImageManager
         return ImageManager(SOURCE_ROOT, project_root=self.root, timeout=timeout,
                             build_temp_root=self._project_temp_root(create=create_temp))
 
@@ -200,7 +204,7 @@ def _project_mcp_port(value):
     return port
 
 
-def main():
+def _parser():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project-root", type=Path, default=SOURCE_ROOT)
     parser.add_argument("--image", help=argparse.SUPPRESS)
@@ -218,11 +222,16 @@ def main():
         "operation", choices=["build", "status", "logs", "mcp",
                               "mcp-http-start", "mcp-http-stop", "mcp-http-status", "project-mcp"]
     )
+    return parser
+
+
+def main():
+    parser = _parser()
     args = parser.parse_args()
     if args.image_mode is not None and args.operation != "build":
         parser.error("--image-mode applies to build only")
     if args.operation == "project-mcp":
-        from project_mcp_launcher import Launcher
+        from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_launcher import Launcher
         result = Launcher().launch(args.project_root, None, control_root=args.control_root,
             image=args.image, source_root=args.source_root, timeout=args.startup_timeout,
             port=args.port, build_if_missing=not args.no_build, build_timeout=args.build_timeout)

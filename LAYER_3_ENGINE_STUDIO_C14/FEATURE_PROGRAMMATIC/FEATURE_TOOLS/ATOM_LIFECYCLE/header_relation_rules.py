@@ -1,38 +1,37 @@
 """Check authored Header Relation entries against the selected Model."""
 
-from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_field_validation import _bounds
-from carrier_aliases import canonical_role_name, matches_named_value
-from header_groups import header_value
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.cardinality__pub import cardinality_bounds
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_compat__pub import header_value
 
 
 def _claim_rows(rows):
-    from FEATURE_FORMAL_MODEL_ENGINE.model_catalog import _native_block
-    from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim
-    from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.model_declaration_sources import _model_subject
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.formal_claim__pub import iter_formal_claims
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_model_claim__pub import parse_native_model_claim
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_class_subject__pub import model_declaration_subject
 
     for row in rows:
         _, subject = header_value(row["header_json"], "topics.main_subject")
         if not isinstance(subject, str) or not subject.startswith("ANECHOIC_MODEL"):
             continue
         source = row["source_path"]
-        subject = _model_subject(subject, source)
+        subject = model_declaration_subject(subject, source)
         if subject is None:
             continue
-        for code in _native_block(row["_content_bytes"].decode("utf-8")):
+        for code in iter_formal_claims(row["_content_bytes"].decode("utf-8")):
             claim = parse_native_model_claim(code)
             if claim is not None:
                 yield source, subject, claim
 
 
 def compile_header_relation_rules(rows):
-    from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.model_declaration_sources import _relation_registry
-    from lint_python_model_claim import _canonical_address
-    from model_class_subject import model_class_target
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.relation_declaration_catalog__pub import build_relation_declaration_catalog
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_class_subject__pub import canonical_model_address
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_class_subject__pub import model_class_target
 
     records, contracts, kinds, entity_rules, subjects = [], [], {}, {}, {}
     for source, subject, claim in _claim_rows(rows):
         arguments = claim["arguments"]
-        address = _canonical_address(subject)
+        address = canonical_model_address(subject)
         if claim["kind"] == "relation":
             records.append((source, subject, claim))
             subjects[address] = "Relation"
@@ -52,7 +51,7 @@ def compile_header_relation_rules(rows):
         return None
     if len(contracts) != 1:
         raise ValueError("Expected one Atom Header Relations Declaration")
-    registry = _relation_registry(records)
+    registry = build_relation_declaration_catalog(records)
     names = sorted(name for name, (args, inverse) in registry.items()
                    if not inverse and "derived_from" not in args)
     group = contracts[0]
@@ -80,8 +79,8 @@ def load_header_relation_rules(contract):
     if (not isinstance(names, list) or not names or any(not isinstance(name, str) or not name for name in names)
             or len(names) != len({name.casefold() for name in names})):
         raise ValueError("Invalid or ambiguous Header Relation names")
-    _bounds(contract["entries"])
-    _bounds(contract["targets"])
+    cardinality_bounds(contract["entries"])
+    cardinality_bounds(contract["targets"])
     if "endpoints" in contract and (not isinstance(contract["endpoints"], dict)
                                     or set(contract["endpoints"]) != set(names)
                                     or not isinstance(contract["kinds"], dict)):
@@ -94,65 +93,3 @@ def load_header_relation_rules(contract):
                                    or any(not isinstance(value, str) for value in contract["subjects"].values())):
         raise ValueError("Invalid Model Subject bindings")
     return contract
-
-
-def model_endpoint_context(rules, source_view):
-    from FEATURE_MODEL import FEATURE_GENERATED_MODEL as generated
-    from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_relation_validation import effective_relation_constraints
-
-    model_types = {path: getattr(generated, name) for path, name in rules["kinds"].items()}
-    source_kind = _atom_kind(source_view, model_types, generated.Atom)
-    constraints = {}
-    if "entity_rules" in rules:
-        if any(kind.__name__ not in rules["entity_rules"] for kind in source_kind.__mro__[:-1]):
-            raise ValueError("Missing Entity Relation constraints")
-        declarations = {kind: rules["entity_rules"][kind.__name__] for kind in source_kind.__mro__[:-1]}
-        constraints = effective_relation_constraints(source_kind, declarations)
-    return model_types, source_kind, constraints
-
-
-def validate_resolved_relation(rules, context, name, targets):
-    from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_relation_endpoints import validate_relation_endpoint_levels
-    from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_relation_validation import validate_relation_targets
-    from lint_python_model_claim import _canonical_address
-
-    model_types, source_kind, constraints = context
-    declaration = {"kind": "relation", "arguments": _canonical_endpoints(rules["endpoints"][name])}
-    for kind, level in targets:
-        validate_relation_endpoint_levels(declaration, name, "instances", level,
-                                          source_kind=source_kind, target_kind=kind, model_types=model_types)
-    constraint = dict(constraints.get(name, {}))
-    if paths := constraint.get("target_entity_paths"):
-        constraint["target_entity_paths"] = tuple(map(_canonical_address, paths))
-    validate_relation_targets(name, [kind for kind, _ in targets], constraint, model_types, allow_model_targets=True)
-
-
-def _canonical_endpoints(args):
-    from lint_python_model_claim import _canonical_address
-
-    def pair(record):
-        result = dict(record)
-        for key in ("source_endpoint", "target_endpoint"):
-            endpoint = record[key]
-            if "entity_paths" in endpoint:
-                result[key] = {**endpoint, "entity_paths": tuple(map(_canonical_address, endpoint["entity_paths"]))}
-        return result
-
-    if "endpoint_pairs" in args:
-        return {**args, "endpoint_pairs": tuple(map(pair, args["endpoint_pairs"]))}
-    return pair(args)
-
-
-def _atom_kind(view, model_types, atom_class):
-    role, form = canonical_role_name(view.get("role")), view.get("form")
-    role_prefix = "Atom/(.Header.Context.Role:="
-    for path, kind in sorted(model_types.items(), key=lambda item: -len(item[1].__mro__)):
-        if not issubclass(kind, atom_class) or not path.startswith(role_prefix):
-            continue
-        qualifier, _, suffix = path[len(role_prefix):].partition(")")
-        if not matches_named_value(role, qualifier):
-            continue
-        expected = suffix.removeprefix("/(.Header.Context.Form:=").removesuffix(")") if suffix else None
-        if expected is None or matches_named_value(form, expected.removeprefix("/")):
-            return kind
-    return atom_class

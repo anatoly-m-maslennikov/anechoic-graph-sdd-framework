@@ -9,6 +9,9 @@ function removable(text) {
   if (/^\/\*!/.test(text)) return false;
   if (/^\/\*\*/.test(text) && /@[a-z][\w-]*/i.test(text)) return false;
   const body = text.replace(/^(?:\/\/|\/\*+|<!--)\s*/, '');
+  if (/^editorconfig-checker-disable-line\b/.test(body)) {
+    return false;
+  }
   return !/^(?:@ts-(?:check|nocheck|ignore|expect-error)\b|(?:eslint|prettier|biome|istanbul|c8|v8|webpack|vite|rollup|svelte|stylelint|noinspection)(?:[-:\s]|$)|[#@]\s*(?:sourceMappingURL|sourceURL|__PURE__|__NO_SIDE_EFFECTS__)\b|\[if\b|<!\[endif\]|#include\b)/i.test(body);
 }
 

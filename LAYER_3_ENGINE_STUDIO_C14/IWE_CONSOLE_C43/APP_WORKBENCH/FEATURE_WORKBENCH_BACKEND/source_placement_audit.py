@@ -1,15 +1,11 @@
 """Pure, best-effort carrier placement expectations from cached source rows."""
 from pathlib import Path, PurePosixPath
-import sys
 
-from .markdown_content import content_lines, direct_markdown, source_markdown
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import content_lines, direct_markdown, source_markdown
 
-TOOLS = Path(__file__).resolve().parents[3] / 'FEATURE_PROGRAMMATIC' / 'FEATURE_TOOLS'
-if str(TOOLS) not in sys.path:
-    sys.path.insert(0, str(TOOLS))
 
-from carrier_aliases import carrier_read_view  # noqa: E402
-from ATOM_LIFECYCLE.placement import derive_filename, PlacementError, _admitted_parent  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_compat__pub import carrier_read_view  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_layout__pub import admitted_parent, derive_filename  # noqa: E402
 
 
 def expected_carrier(row, scopes, get_current, placement):
@@ -52,7 +48,7 @@ def _parent_context(container, role, form, scopes, parents, placement, seen):
     view = carrier_read_view(parent['header_json'])
     view['role'] = parent.get('role') or view.get('role')
     view['form'] = parent.get('form') or view.get('form')
-    if not _admitted_parent(role, form, view, parent.get('status', '')):
+    if not admitted_parent(role, form, view, parent.get('status', '')):
         return None, None, None
     name, path = _expected(parent, scopes, parents, placement, seen | {ref})
     if name is None or path is None:
@@ -80,7 +76,7 @@ def _expected_name(row, view, scope, status, role, form):
             tier=row.get('tier'), target_scope=row.get('claim_target_scope_unit'),
             work_sequence=view.get('work_sequence_number'),
         )
-    except (KeyError, TypeError, ValueError, PlacementError):
+    except (KeyError, TypeError, ValueError):
         return None
 
 
@@ -108,7 +104,7 @@ def _expected(row, scopes, parents, placement, seen):
                 and parent_dir is not None and str(parent.get('status', '')).casefold() == 'backlog'):
             directory = parent_dir
         return _expected_name(row, view, scope, status, role, form), directory.as_posix()
-    except (KeyError, TypeError, ValueError, PlacementError):
+    except (KeyError, TypeError, ValueError):
         return None, None
 
 

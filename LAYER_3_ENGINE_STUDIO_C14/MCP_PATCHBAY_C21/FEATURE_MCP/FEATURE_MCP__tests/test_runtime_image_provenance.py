@@ -6,14 +6,12 @@ import json
 from dataclasses import replace
 from pathlib import Path
 import subprocess
-import sys
 import unittest
 
-import test_project_mcp_launcher_images as fixtures
+from . import launcher_images_test_support as fixtures
 
-sys.path.insert(0, str(fixtures.DOCKER))
-from image_provenance import ImageBuildProvenance  # noqa: E402
-from runtime_images import FINGERPRINT_LABEL, SCHEMA_LABEL, ImageError, ImageManager  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_provenance import ImageBuildProvenance  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images import FINGERPRINT_LABEL, SCHEMA_LABEL, ImageError, ImageManager  # noqa: E402
 
 
 def _display_tag_executor(executor):
@@ -42,12 +40,11 @@ def _display_tag_executor(executor):
     return execute
 
 
-class ImageProvenanceTests(unittest.TestCase):
+class ImageProvenanceTests(fixtures.ImageFixture, unittest.TestCase):
     def setUp(self) -> None:
-        fixture = fixtures.ImageGoldenTests("runTest")
-        fixture.setUp()
-        self.source = fixture.source_fixture()
-        self.temporary = fixture.fixture_root
+        fixtures.ImageFixture.setUp(self)
+        self.source = self.source_fixture()
+        self.temporary = self.fixture_root
         self.owner = ImageBuildProvenance(
             "c" * 64,
             "/owning-repository",

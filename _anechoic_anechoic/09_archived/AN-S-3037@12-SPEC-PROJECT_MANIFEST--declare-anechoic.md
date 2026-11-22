@@ -1,0 +1,310 @@
+---
+atom_family: SPEC
+atom_id: AN-S-3037
+container:
+  component: C00
+tier: -1
+context:
+  template: project_manifest
+  lens: SPEC
+state:
+  status: "archived"
+  version: 12
+  updated_at: "2026-11-22T04:53:18.381992+00:00"
+---
+
+## Summary
+
+Declare Anechoic
+
+## Claim
+
+### Formal Claim
+
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ProjectManifest
+
+declare_entity(
+    entity_name='Project Manifest',
+    instance=ProjectManifest(
+        name='Anechoic',
+        lens_whitelist=['DES', 'DevOps', 'QA', 'SPEC', 'SWD'],
+        prefix='AN',
+        parameters={
+            'project': {
+                'root': {
+                    'prefix': 'underscore',
+                },
+                'key': 'anechoic',
+                'repository_slug': 'anechoic-graph-sdd-framework',
+            },
+            'schema_version': '2.0',
+            'projection': {
+                'updated_at': '2026-08-20 05:09:33',
+                'generator': '02_FR_ENGN/TOOLS/generate_project_settings.py',
+                'generator_version': 2,
+                'generator_sha256': 'a25ad0ef1865a65c721ac38e913a8986db9a469ace6d8412c9d8ef86bd57f98f',
+                'source_map': '.anechoic/08_implementation/ANECHOIC-MAPS-001--project-settings-source-map.yaml',
+                'source_map_sha256': 'e18640ba3abc357d2e33846db87877c7ce6bf8ec96d40b8b9a0aa8905394728d',
+                'configuration': 'anechoic_framework_settings.toml',
+                'configuration_artifact': 'ANECHOIC-FRAMEWORK-SETTINGS@2,2026-08-18 20:28:32',
+                'configuration_sha256': 'be3b0aef23e402d09ad4ab56a00b8f5f9141b370ec7cd02743c70a9e39d1fca8',
+                'source_frontier_sha256': '46ff0fe1a14d0bfb28cb457f62b546f886a6a1401f099f5c3af39a55bb0b9405',
+                'source_frontier': [
+                    'ANECHOIC-GOV-REQU-294--interaction-reporting-mode-setting@2,2026-08-18 20:19:17',
+                    'ANECHOIC-GOV-REQU-302--atomic-admission-and-promotion-gate@3,2026-08-18 20:19:17',
+                    'ANECHOIC-GOV-REQU-305--optional-governance-surface-activation@2,2026-08-18 20:19:17',
+                    'ANECHOIC-GOV-REQU-313--govern-catalog-map-and-hub-projections@5,2026-08-20 02:38:43',
+                    'ANECHOIC-GOV-REQU-322--register-implementation-record-projection@2,2026-08-18 20:19:17',
+                    'ANECHOIC-GOV-REQU-338--register-the-project-work-journal@4,2026-08-20 04:03:30',
+                    'ANECHOIC-GOV-REQU-344--all-governed-artifacts-live-under-anechoic@3,2026-08-19 16:45:00',
+                    'ANECHOIC-GOV-REQU-347--mirror-every-atom-edit-in-git@2,2026-08-18 20:19:17',
+                    'ANECHOIC-GOV-REQU-362--configure-artifact-timestamp-timezone@3,2026-08-18 20:19:17',
+                    'ANECHOIC-GOV-REQU-383--register-obsolete-project-names@3,2026-08-18 20:19:17',
+                    'ANECHOIC-GOV-REQU-626--encode-project-settings-as-a-generated-toml-projection@2,2026-08-18 20:19:17',
+                    'ANECHOIC-GOV-REQU-735--default-internal-analysis-to-analysis-report@2,2026-08-19 04:55:53',
+                    'ANECHOIC-GOV-REQU-747--register-external-and-relational-atom-types@1,2026-08-19 04:55:53',
+                    'ANECHOIC-GOV-REQU-748--register-evaluation-atom-types@1,2026-08-19 04:55:53',
+                    'ANECHOIC-GOV-REQU-749--register-concern-atom-types@1,2026-08-19 04:55:53',
+                    'ANECHOIC-GOV-REQU-750--register-rationale-analysis-type@1,2026-08-19 04:55:53',
+                    'ANECHOIC-GOV-REQU-751--register-delivery-types@1,2026-08-19 04:55:53',
+                    'ANECHOIC-GOV-REQU-752--register-ops-types@1,2026-08-19 04:55:53',
+                    'ANECHOIC-GOV-REQU-753--register-plan-types@1,2026-08-19 04:55:53',
+                    'ANECHOIC-GOV-REQU-754--register-implementation-method-type@1,2026-08-19 04:55:53',
+                    'ANECHOIC-GOV-REQU-755--register-implementation-decision-type@1,2026-08-19 04:55:53',
+                    'ANECHOIC-GOV-REQU-765--register-the-default-internal-requirement-type@1,2026-08-19 04:55:53',
+                    'ANECHOIC-GOV-REQU-781--register-goal-requirement-type@1,2026-08-20 02:38:43',
+                    'ANECHOIC-GOV-REQU-783--register-project-definition-projection-type@1,2026-08-20 02:38:43',
+                    'ANECHOIC-META-REQU-127--define-three-governance-loci@2,2026-08-18 20:19:17',
+                    'ANECHOIC-META-REQU-155--classify-rmed-atoms-by-applicability-tier@7,2026-08-18 20:19:17',
+                    'ANECHOIC-R-792-REQUIREMENT-BSEED_GOVERNANCE--register-default-evaluation-type@1,2026-08-20 03:40:53',
+                    'ANECHOIC-R-793-REQUIREMENT-BSEED_GOVERNANCE--register-evaluation-approach-type@1,2026-08-20 03:40:53',
+                    'ANECHOIC-R-798-REQUIREMENT-BSEED_GOVERNANCE--register-principle-types-across-rmedo@1,2026-08-20 05:09:11',
+                    'ANECHOIC-R-799-REQUIREMENT-BSEED_GOVERNANCE--encode-rmedo-applicability-tiers@1,2026-08-20 05:09:11',
+                    'ANECHOIC-REQU-051--use-anechoic-as-the-canonical-project-name@2,2026-08-18 20:19:17',
+                    'ANECHOIC-REQU-710--use-strict-authority-for-metalevels-and-project@1,2026-08-19 01:02:10',
+                    'ANECHOIC-REQU-711--use-casual-authority-below-project@1,2026-08-19 01:02:10',
+                ],
+                'bindings': {
+                    'artifact_timestamps.timezone': [
+                        'ANECHOIC-GOV-REQU-362--configure-artifact-timestamp-timezone@3,2026-08-18 20:19:17'
+                    ],
+                    'artifacts.creation_strictness': [
+                        'ANECHOIC-GOV-REQU-302--atomic-admission-and-promotion-gate@3,2026-08-18 20:19:17'
+                    ],
+                    'artifacts.default_types.analysis': [
+                        'ANECHOIC-GOV-REQU-735--default-internal-analysis-to-analysis-report@2,2026-08-19 04:55:53'
+                    ],
+                    'artifacts.default_types.evaluation': [
+                        'ANECHOIC-R-792-REQUIREMENT-BSEED_GOVERNANCE--register-default-evaluation-type@1,2026-08-20 03:40:53'
+                    ],
+                    'artifacts.default_types.requirement': [
+                        'ANECHOIC-GOV-REQU-765--register-the-default-internal-requirement-type@1,2026-08-19 04:55:53'
+                    ],
+                    'artifacts.enabled_types': [
+                        'ANECHOIC-GOV-REQU-313--govern-catalog-map-and-hub-projections@5,2026-08-20 02:38:43',
+                        'ANECHOIC-GOV-REQU-322--register-implementation-record-projection@2,2026-08-18 20:19:17',
+                        'ANECHOIC-GOV-REQU-338--register-the-project-work-journal@4,2026-08-20 04:03:30',
+                        'ANECHOIC-GOV-REQU-735--default-internal-analysis-to-analysis-report@2,2026-08-19 04:55:53',
+                        'ANECHOIC-GOV-REQU-747--register-external-and-relational-atom-types@1,2026-08-19 04:55:53',
+                        'ANECHOIC-GOV-REQU-748--register-evaluation-atom-types@1,2026-08-19 04:55:53',
+                        'ANECHOIC-GOV-REQU-749--register-concern-atom-types@1,2026-08-19 04:55:53',
+                        'ANECHOIC-GOV-REQU-750--register-rationale-analysis-type@1,2026-08-19 04:55:53',
+                        'ANECHOIC-GOV-REQU-751--register-delivery-types@1,2026-08-19 04:55:53',
+                        'ANECHOIC-GOV-REQU-752--register-ops-types@1,2026-08-19 04:55:53',
+                        'ANECHOIC-GOV-REQU-753--register-plan-types@1,2026-08-19 04:55:53',
+                        'ANECHOIC-GOV-REQU-754--register-implementation-method-type@1,2026-08-19 04:55:53',
+                        'ANECHOIC-GOV-REQU-755--register-implementation-decision-type@1,2026-08-19 04:55:53',
+                        'ANECHOIC-GOV-REQU-765--register-the-default-internal-requirement-type@1,2026-08-19 04:55:53',
+                        'ANECHOIC-GOV-REQU-781--register-goal-requirement-type@1,2026-08-20 02:38:43',
+                        'ANECHOIC-GOV-REQU-783--register-project-definition-projection-type@1,2026-08-20 02:38:43',
+                        'ANECHOIC-R-792-REQUIREMENT-BSEED_GOVERNANCE--register-default-evaluation-type@1,2026-08-20 03:40:53',
+                        'ANECHOIC-R-793-REQUIREMENT-BSEED_GOVERNANCE--register-evaluation-approach-type@1,2026-08-20 03:40:53',
+                        'ANECHOIC-R-798-REQUIREMENT-BSEED_GOVERNANCE--register-principle-types-across-rmedo@1,2026-08-20 05:09:11',
+                    ],
+                    'artifacts.routing.enabled_governance_loci': [
+                        'ANECHOIC-META-REQU-127--define-three-governance-loci@2,2026-08-18 20:19:17'
+                    ],
+                    'authority.tiers.default': [
+                        'ANECHOIC-R-799-REQUIREMENT-BSEED_GOVERNANCE--encode-rmedo-applicability-tiers@1,2026-08-20 05:09:11'
+                    ],
+                    'authority.tiers.ordered': [
+                        'ANECHOIC-META-REQU-155--classify-rmed-atoms-by-applicability-tier@7,2026-08-18 20:19:17'
+                    ],
+                    'authority_modes.default': [
+                        'ANECHOIC-REQU-711--use-casual-authority-below-project@1,2026-08-19 01:02:10'
+                    ],
+                    'authority_modes.governance': [
+                        'ANECHOIC-REQU-710--use-strict-authority-for-metalevels-and-project@1,2026-08-19 01:02:10'
+                    ],
+                    'authority_modes.metamodel': [
+                        'ANECHOIC-REQU-710--use-strict-authority-for-metalevels-and-project@1,2026-08-19 01:02:10'
+                    ],
+                    'authority_modes.project': [
+                        'ANECHOIC-REQU-710--use-strict-authority-for-metalevels-and-project@1,2026-08-19 01:02:10'
+                    ],
+                    'authority_modes.semantics': [
+                        'ANECHOIC-REQU-710--use-strict-authority-for-metalevels-and-project@1,2026-08-19 01:02:10'
+                    ],
+                    'git.commit_each_atom_edit': [
+                        'ANECHOIC-GOV-REQU-347--mirror-every-atom-edit-in-git@2,2026-08-18 20:19:17'
+                    ],
+                    'git.initialize_if_missing': [
+                        'ANECHOIC-GOV-REQU-347--mirror-every-atom-edit-in-git@2,2026-08-18 20:19:17'
+                    ],
+                    'git.required': [
+                        'ANECHOIC-GOV-REQU-347--mirror-every-atom-edit-in-git@2,2026-08-18 20:19:17'
+                    ],
+                    'governance_surfaces.architecture_view': [
+                        'ANECHOIC-GOV-REQU-305--optional-governance-surface-activation@2,2026-08-18 20:19:17'
+                    ],
+                    'governance_surfaces.project_overview': [
+                        'ANECHOIC-GOV-REQU-305--optional-governance-surface-activation@2,2026-08-18 20:19:17'
+                    ],
+                    'governance_surfaces.relation_map': [
+                        'ANECHOIC-GOV-REQU-305--optional-governance-surface-activation@2,2026-08-18 20:19:17'
+                    ],
+                    'governance_surfaces.requirement_catalog': [
+                        'ANECHOIC-GOV-REQU-305--optional-governance-surface-activation@2,2026-08-18 20:19:17'
+                    ],
+                    'governance_surfaces.scope_hub': [
+                        'ANECHOIC-GOV-REQU-305--optional-governance-surface-activation@2,2026-08-18 20:19:17'
+                    ],
+                    'paths.control_root': [
+                        'ANECHOIC-GOV-REQU-344--all-governed-artifacts-live-under-anechoic@3,2026-08-19 16:45:00'
+                    ],
+                    'paths.journal_root': [
+                        'ANECHOIC-GOV-REQU-338--register-the-project-work-journal@4,2026-08-20 04:03:30'
+                    ],
+                    'paths.runtime_root': [
+                        'ANECHOIC-GOV-REQU-344--all-governed-artifacts-live-under-anechoic@3,2026-08-19 16:45:00'
+                    ],
+                    'schema_version': [
+                        'ANECHOIC-GOV-REQU-626--encode-project-settings-as-a-generated-toml-projection@2,2026-08-18 20:19:17'
+                    ],
+                },
+            },
+            'artifact_timestamps': {'timezone': 'local'},
+            'artifacts': {
+                'creation_strictness': 'medium',
+                'enabled_types': [
+                    'catalog',
+                    'map',
+                    'hub',
+                    'implementation_record',
+                    'work_journal',
+                    'analysis:analysis_report',
+                    'concern:external_problem',
+                    'concern:conflict',
+                    'analysis:external_analysis_report',
+                    'analysis:conflict_analysis_report',
+                    'requirement:constraint',
+                    'requirement:contract',
+                    'method:external_implementation_method',
+                    'method:method_binding',
+                    'evaluation:external_evaluation_standard',
+                    'evaluation:review_protocol',
+                    'implementation:external_git_commit',
+                    'implementation:pull_request',
+                    'operations:external_evidence_record',
+                    'operations:verification_record',
+                    'evaluation:qa_case',
+                    'evaluation:evaluation_control',
+                    'concern:question',
+                    'concern:problem',
+                    'concern:risk',
+                    'concern:opportunity',
+                    'analysis:rationale',
+                    'delivery:release_definition',
+                    'delivery:environment_definition',
+                    'operations:release_record',
+                    'operations:deployment_record',
+                    'operations:environment_state',
+                    'operations:health_record',
+                    'operations:incident_record',
+                    'plan:development_backlog',
+                    'plan:version_plan',
+                    'plan:change_plan',
+                    'plan:refactoring_plan',
+                    'method:implementation_method',
+                    'method:implementation_decision',
+                    'requirement:requirement',
+                    'requirement:goal',
+                    'project_definition',
+                    'evaluation:evaluation',
+                    'evaluation:evaluation_approach',
+                    'requirement:principle',
+                    'method:principle',
+                    'evaluation:principle',
+                    'delivery:principle',
+                    'operations:principle',
+                ],
+                'default_types': {
+                    'analysis': 'analysis_report',
+                    'evaluation': 'evaluation',
+                    'requirement': 'requirement',
+                },
+                'identity': {'automatic_number_ceiling': 999999},
+                'routing': {'enabled_governance_loci': ['internal', 'external', 'relation']},
+            },
+            'authority': {
+                'tiers': {'default': 'standard', 'ordered': ['principle', 'core', 'standard']}
+            },
+            'authority_modes': {
+                'default': 'casual',
+                'governance': 'strict',
+                'metamodel': 'strict',
+                'project': 'strict',
+                'semantics': 'strict',
+            },
+            'git': {'commit_each_atom_edit': True, 'initialize_if_missing': True, 'required': True},
+            'governance_surfaces': {
+                'architecture_view': False,
+                'project_overview': False,
+                'relation_map': False,
+                'requirement_catalog': False,
+                'scope_hub': False,
+            },
+            'paths': {
+                'framework_root': '.anechoic_framework',
+                'journal_root': '_anechoic_anechoic/_journal',
+                'projection_root': '_anechoic_anechoic/_projection',
+                'runtime_root': '.anechoic_runtime',
+                'temporary_root': '.anechoic_tmp',
+                'legacy_migration_roots': ['.anechoic'],
+            },
+            'project_mcp': {
+                'release_workflows_enabled': True,
+                'http_port': 56317,
+                'tool_blacklist': ['release_version', 'public.release'],
+            },
+            'runtime': {
+                'journal': {'storage': 'duckdb'},
+                'workbench': {
+                    'storage': 'disk',
+                    'schema_mode': 2,
+                    'result_ttl_seconds': 3600,
+                    'inline_result_limit_kib': 4,
+                    'import_graph': {
+                        'python_roots': [
+                            'LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS',
+                            'LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP',
+                            'LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC',
+                            'LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43',
+                            'LAYER_3_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH',
+                            'LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION',
+                            'LAYER_3_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW',
+                            '.',
+                        ]
+                    },
+                },
+            },
+        },
+    ),
+)
+```
+
+### Prose Claim
+
+At Workbench startup, `parameters.runtime.workbench.inline_result_limit_kib` is a whole positive KiB value. Workbench automatically sends complete query results up to this limit inline and larger results to files.

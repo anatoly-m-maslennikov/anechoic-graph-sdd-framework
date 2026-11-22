@@ -4,7 +4,20 @@ import builtins
 from collections import defaultdict
 from collections.abc import Mapping
 
-from model_class_subject import model_class_target
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_class_subject__pub import model_class_target
+
+
+def _validate_bound_constraints(property_populations, model_types, populations, relations):
+    for address, rules in property_populations:
+        if address not in model_types:
+            raise ValueError(f"Unresolved or ambiguous population kind: {address}")
+        owner = model_types[address]
+        populations[owner] = (*populations[owner], *rules)
+    for rules in relations.values():
+        for name, constraint in rules.items():
+            for endpoint in constraint.get("target_entity_paths", ()):
+                if endpoint not in model_types:
+                    raise ValueError(f"{name}: unresolved or ambiguous target kind: {endpoint}")
 
 
 def bind_model_declarations(declarations, model_classes):
@@ -47,14 +60,5 @@ def bind_model_declarations(declarations, model_classes):
         for address in (subject, target, args["entity_name"]):
             addresses[address].add(model_class)
     model_types = {address: next(iter(kinds)) for address, kinds in addresses.items() if len(kinds) == 1}
-    for address, rules in property_populations:
-        if address not in model_types:
-            raise ValueError(f"Unresolved or ambiguous population kind: {address}")
-        owner = model_types[address]
-        populations[owner] = (*populations[owner], *rules)
-    for rules in relations.values():
-        for name, constraint in rules.items():
-            for endpoint in constraint.get("target_entity_paths", ()):
-                if endpoint not in model_types:
-                    raise ValueError(f"{name}: unresolved or ambiguous target kind: {endpoint}")
+    _validate_bound_constraints(property_populations, model_types, populations, relations)
     return relations, model_types, populations

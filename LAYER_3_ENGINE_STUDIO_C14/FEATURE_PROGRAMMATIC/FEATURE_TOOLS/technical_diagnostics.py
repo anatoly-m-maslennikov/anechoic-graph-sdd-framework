@@ -14,7 +14,7 @@ import sys
 import tomllib
 from typing import TextIO
 
-from project_settings_schema import _string
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_settings_schema import _string
 
 
 _FIELD_LIMIT = 512

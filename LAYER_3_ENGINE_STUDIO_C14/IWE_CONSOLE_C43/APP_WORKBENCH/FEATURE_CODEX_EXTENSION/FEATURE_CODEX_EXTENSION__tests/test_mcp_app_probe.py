@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
-import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -15,10 +14,9 @@ from mcp import MCPError, types
 
 EXTENSION = Path(__file__).resolve().parents[1]
 APPS = EXTENSION.parents[1]
-if str(APPS) not in sys.path:
-    sys.path.insert(0, str(APPS))
 
-from APP_WORKBENCH.FEATURE_CODEX_EXTENSION import mcp_app_probe  # noqa: E402
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_CODEX_EXTENSION import mcp_app_probe  # noqa: E402
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_CODEX_EXTENSION import FEATURE_CODEX_EXTENSION__shared as shared  # noqa: E402
 
 
 class MCPAppProbeTests(unittest.TestCase):
@@ -56,6 +54,17 @@ class MCPAppProbeTests(unittest.TestCase):
         self.assertEqual({"message": "ANECHOIC MCP App resource loaded"},
                          mcp_app_probe.call("workbench_ui_probe"))
         self.assertEqual({"message": "Tool bridge passed"}, mcp_app_probe.call("workbench_ui_ping"))
+
+    def test_shared_interface_refuses_unknown_resource_and_tool(self) -> None:
+        with self.assertRaises(MCPError) as raised:
+            asyncio.run(shared.read_resource(
+                None, types.ReadResourceRequestParams(uri="ui://anechoic/unknown.html"),
+            ))
+        self.assertEqual(-32002, raised.exception.error.code)
+        self.assertEqual("Unknown UI resource", raised.exception.error.message)
+
+        with self.assertRaisesRegex(ValueError, "Unknown UI probe tool"):
+            shared.call("unknown_tool")
 
 
 if __name__ == "__main__":

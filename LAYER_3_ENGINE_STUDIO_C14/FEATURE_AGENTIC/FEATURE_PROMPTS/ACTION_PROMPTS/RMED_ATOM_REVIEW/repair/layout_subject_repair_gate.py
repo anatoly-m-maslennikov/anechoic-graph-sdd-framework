@@ -10,14 +10,14 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
-from context_builder import markdown, metadata
-from evaluation_contract import summarize_evaluations
-from layout_preview import _frontmatter, admit_layout_preview
-from layout_repair_gate import _assessed_preflight, _digest, _permission
-from review_evidence import ReviewContext, probability
-from semantic_boundaries import unavailable_sections
-from subject_repair_gate import _dependency_change
-from repair_gate import _identity, _output_binding, _outputs, _resolutions, _summary
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import markdown, metadata
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.evaluation_contract import summarize_evaluations
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.layout_preview import _frontmatter, admit_layout_preview
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.layout_repair_gate import _assessed_preflight, _digest, _permission
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_evidence__shared import ReviewContext, probability
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.semantic_boundaries import unavailable_sections
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.subject_repair_gate import _dependency_change
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair_gate__shared import _identity, _output_binding, _outputs, _resolutions, _summary
 
 
 def _final_passes(evaluation: dict[str, Any]) -> bool:
@@ -40,21 +40,7 @@ def _confirmed_subjects_finding(evaluation: dict[str, Any]) -> None:
         raise ValueError('layout_subject recoding requires a confirmed Subjects finding')
 
 
-def admit_layout_subject_recoding(
-        evaluation: dict[str, Any], proposal: dict[str, Any], *, context: dict[str, Any],
-        final_evaluation: dict[str, Any], final_context: dict[str, Any],
-        section_mapping: dict[str, Any], permission: dict[str, Any],
-        preflight: dict[str, Any]) -> dict[str, Any]:
-    """Return the one fully assessed composed candidate, never write a source.
-
-    Proof is deliberately staged: first ``admit_layout_preview`` establishes
-    that the original Claim/Summary prose reaches the virtual canonical layout;
-    then ``_dependency_change`` plus the strict existing identity helpers prove
-    that virtual-layout-to-final changes only DEPENDS_ON, optional ordinary
-    R/M/D Type elision, matching filename recoding, and ``updated_at``.
-    Independent identity/provenance evidence still binds the real original and
-    final carriers, never that virtual intermediate.
-    """
+def _check_review_evidence(evaluation, proposal, context, final_evaluation, final_context):
     original_context, output_context = ReviewContext(context), ReviewContext(final_context)
     if original_context.report_contract != 5 or output_context.report_contract != 5:
         raise ValueError('layout_subject repair admission requires report contract 5')
@@ -76,19 +62,10 @@ def admit_layout_subject_recoding(
             or not probability(proposal.get('confidence'))
             or proposal['confidence'] < threshold):
         raise ValueError('layout_subject confidence or final review threshold is insufficient')
-    allowed = _permission(proposal, permission, 'layout_subject_recoding')
-    if 'deferred_findings' in proposal:
-        raise ValueError('layout_subject repair cannot defer original findings')
-    _resolutions(evaluation, proposal)
-    outputs = _outputs(proposal, allowed)
-    if len(outputs) != 1:
-        raise ValueError('layout_subject recoding requires exactly one final output')
-    output = outputs[0]
-    binding = _output_binding(output)
-    if (final_evaluation['source'] != binding
-            or output_context.candidate_text(binding) != output['text']):
-        raise ValueError('final evaluation does not bind the exact proposed output')
+    return original_context, output_context, original, threshold
 
+
+def _check_candidate_shape(proposal, output, original, section_mapping):
     parts = _frontmatter(original)
     if parts is None or metadata(original).get('content_role') not in ('Requirement', 'Method', 'Delivery'):
         raise ValueError('layout_subject recoding requires an R/M/D Carrier with complete frontmatter')
@@ -106,6 +83,40 @@ def admit_layout_subject_recoding(
     removes_type = 'type' in metadata(layout_text) and 'type' not in metadata(output['text'])
     _identity(stripped_output, proposal['source'], stripped_old,
               'recoding' if removes_type else 'formatting', 'carrier_only')
+    return layout_text
+
+
+def admit_layout_subject_recoding(
+        evaluation: dict[str, Any], proposal: dict[str, Any], *, context: dict[str, Any],
+        final_evaluation: dict[str, Any], final_context: dict[str, Any],
+        section_mapping: dict[str, Any], permission: dict[str, Any],
+        preflight: dict[str, Any]) -> dict[str, Any]:
+    """Return the one fully assessed composed candidate, never write a source.
+
+    Proof is deliberately staged: first ``admit_layout_preview`` establishes
+    that the original Claim/Summary prose reaches the virtual canonical layout;
+    then ``_dependency_change`` plus the strict existing identity helpers prove
+    that virtual-layout-to-final changes only DEPENDS_ON, optional ordinary
+    R/M/D Type elision, matching filename recoding, and ``updated_at``.
+    Independent identity/provenance evidence still binds the real original and
+    final carriers, never that virtual intermediate.
+    """
+    original_context, output_context, original, threshold = _check_review_evidence(
+        evaluation, proposal, context, final_evaluation, final_context)
+    allowed = _permission(proposal, permission, 'layout_subject_recoding')
+    if 'deferred_findings' in proposal:
+        raise ValueError('layout_subject repair cannot defer original findings')
+    _resolutions(evaluation, proposal)
+    outputs = _outputs(proposal, allowed)
+    if len(outputs) != 1:
+        raise ValueError('layout_subject recoding requires exactly one final output')
+    output = outputs[0]
+    binding = _output_binding(output)
+    if (final_evaluation['source'] != binding
+            or output_context.candidate_text(binding) != output['text']):
+        raise ValueError('final evaluation does not bind the exact proposed output')
+
+    _check_candidate_shape(proposal, output, original, section_mapping)
     _assessed_preflight(preflight, proposal, binding, original_context, output_context,
                         context, final_context, section_mapping, original, threshold,
                         final_evaluation)

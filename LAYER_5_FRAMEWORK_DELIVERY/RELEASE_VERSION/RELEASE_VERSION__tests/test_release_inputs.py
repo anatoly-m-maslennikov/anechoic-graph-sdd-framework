@@ -2,13 +2,11 @@
 
 from hashlib import sha256
 from pathlib import Path
-import sys
 import tempfile
 import unittest
 from unittest.mock import patch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-import release_inputs
+from RELEASE_VERSION import release_inputs
 
 
 class ReleaseInputsTests(unittest.TestCase):

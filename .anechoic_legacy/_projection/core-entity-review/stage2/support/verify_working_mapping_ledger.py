@@ -48,7 +48,7 @@ VALIDATOR_ROOT = ROOT / "102_FRAMEWORK_ENGINE/201_PROGRAMMATIC/201_TOOLS/VALIDAT
 if str(VALIDATOR_ROOT) not in sys.path:
     sys.path.insert(0, str(VALIDATOR_ROOT))
 
-from validate_atoms_workers.parsing import CarrierError, parse_carrier  # noqa: E402
+from ADAPTERS_C30.carrier_read__pub import CarrierError, parse_carrier  # noqa: E402
 
 
 ROLES = {"Requirement", "Method", "Evaluation", "Delivery", "Operations"}

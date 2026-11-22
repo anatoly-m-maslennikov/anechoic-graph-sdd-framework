@@ -11,12 +11,12 @@ from copy import deepcopy
 import re
 from typing import Any
 
-from context_builder import markdown, metadata
-from evaluation_contract import summarize_evaluations
-from layout_preview import _frontmatter
-from layout_repair_gate import _assessed_original_to_final, _digest, _permission
-from repair_gate import _candidate_bindings, _identity, _outputs, _resolutions
-from review_evidence import ReviewContext, probability, text
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import markdown, metadata
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.evaluation_contract import summarize_evaluations
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.layout_preview import _frontmatter
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.layout_repair_gate import _assessed_original_to_final, _digest, _permission
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair_gate__shared import _candidate_bindings, _identity, _outputs, _resolutions
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_evidence__shared import ReviewContext, probability, text
 
 
 def _without_dependencies(raw: str) -> str:
@@ -73,11 +73,7 @@ def _dependency_change(original: str, candidate: str) -> tuple[str, str]:
     return _without_dependencies(original), _without_dependencies(candidate)
 
 
-def admit_subject_recoding(evaluation: dict[str, Any], proposal: dict[str, Any], *,
-                           context: dict[str, Any], final_evaluation: dict[str, Any],
-                           final_context: dict[str, Any], permission: dict[str, Any],
-                           preflight: dict[str, Any]) -> dict[str, Any]:
-    """Return a no-write candidate after exact full-delta evidence admission."""
+def _check_review_evidence(evaluation, proposal, context, final_evaluation, final_context):
     original_context, output_context = ReviewContext(context), ReviewContext(final_context)
     if original_context.report_contract != 5 or output_context.report_contract != 5:
         raise ValueError('subject repair admission requires report contract 5')
@@ -98,6 +94,16 @@ def admit_subject_recoding(evaluation: dict[str, Any], proposal: dict[str, Any],
             or output_context.confidence_threshold < .99
             or not probability(proposal.get('confidence')) or proposal['confidence'] < threshold):
         raise ValueError('subject repair confidence or final review threshold is insufficient')
+    return original_context, output_context, threshold
+
+
+def admit_subject_recoding(evaluation: dict[str, Any], proposal: dict[str, Any], *,
+                           context: dict[str, Any], final_evaluation: dict[str, Any],
+                           final_context: dict[str, Any], permission: dict[str, Any],
+                           preflight: dict[str, Any]) -> dict[str, Any]:
+    """Return a no-write candidate after exact full-delta evidence admission."""
+    original_context, output_context, threshold = _check_review_evidence(
+        evaluation, proposal, context, final_evaluation, final_context)
     allowed = _permission(proposal, permission, 'subject_recoding')
     if 'deferred_findings' in proposal:
         raise ValueError('subject repair cannot defer original findings')

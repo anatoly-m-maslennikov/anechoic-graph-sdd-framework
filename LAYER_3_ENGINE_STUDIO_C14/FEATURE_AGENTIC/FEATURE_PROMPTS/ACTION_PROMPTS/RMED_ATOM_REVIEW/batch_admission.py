@@ -11,7 +11,7 @@ from copy import deepcopy
 import hashlib
 from typing import Any, Mapping, Sequence
 
-from evaluation_contract import groups_for, ReviewContext, merge_evaluations, summarize_evaluations
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.evaluation_contract import groups_for, ReviewContext, merge_evaluations, summarize_evaluations
 
 
 def _rejected(reason: str) -> dict[str, Any]:
@@ -131,6 +131,36 @@ def _combine_summaries(summaries: Sequence[dict[str, Any]]) -> dict[str, Any]:
     return combined
 
 
+def _merge_batch_candidates(candidates, raw_parts_by_candidate, contexts):
+    merged_records: list[tuple[ReviewContext, dict[str, Any]]] = []
+    for binding in candidates:
+        path = binding["path"]
+        context = _context_for(contexts, path)
+        context.candidate_text(binding)
+        parts = raw_parts_by_candidate[path]
+        if not isinstance(parts, Sequence) or isinstance(parts, (str, bytes)):
+            raise ValueError("candidate raw parts must be an ordered sequence")
+        merged = merge_evaluations(list(parts), context=context)
+        if merged["source"] != binding:
+            raise ValueError("raw report bundle source does not match its selected candidate")
+        merged_records.append((context, merged))
+
+    return merged_records
+
+
+def _validate_batch_paths(candidates, raw_parts_by_candidate):
+    paths = _candidate_paths(candidates)
+    if not isinstance(raw_parts_by_candidate, Mapping):
+        raise ValueError("raw parts must map every candidate path to raw evaluator reports")
+    actual_paths = set(raw_parts_by_candidate)
+    expected_paths = set(paths)
+    missing, extra = expected_paths - actual_paths, actual_paths - expected_paths
+    if missing:
+        raise ValueError("missing candidates in raw parts: " + ", ".join(sorted(missing)))
+    if extra:
+        raise ValueError("extra candidates in raw parts: " + ", ".join(sorted(extra)))
+
+
 def admit_batch(candidates: Sequence[dict[str, Any]],
                 raw_parts_by_candidate: Mapping[str, Sequence[dict[str, Any]]],
                 contexts: ReviewContext | Mapping[str, ReviewContext], *,
@@ -147,33 +177,12 @@ def admit_batch(candidates: Sequence[dict[str, Any]],
     from valid complete evidence that reports ``failed`` or ``blocked``.
     """
     try:
-        paths = _candidate_paths(candidates)
-        if not isinstance(raw_parts_by_candidate, Mapping):
-            raise ValueError("raw parts must map every candidate path to raw evaluator reports")
-        actual_paths = set(raw_parts_by_candidate)
-        expected_paths = set(paths)
-        missing, extra = expected_paths - actual_paths, actual_paths - expected_paths
-        if missing:
-            raise ValueError("missing candidates in raw parts: " + ", ".join(sorted(missing)))
-        if extra:
-            raise ValueError("extra candidates in raw parts: " + ", ".join(sorted(extra)))
+        _validate_batch_paths(candidates, raw_parts_by_candidate)
         _validate_current_sources(candidates, contexts, current_source_texts)
         _validate_prompt_bindings(raw_parts_by_candidate, contexts, prompt_bindings=prompt_bindings,
                                   prompt_texts=prompt_texts)
 
-        merged_records: list[tuple[ReviewContext, dict[str, Any]]] = []
-        for binding in candidates:
-            path = binding["path"]
-            context = _context_for(contexts, path)
-            context.candidate_text(binding)
-            parts = raw_parts_by_candidate[path]
-            if not isinstance(parts, Sequence) or isinstance(parts, (str, bytes)):
-                raise ValueError("candidate raw parts must be an ordered sequence")
-            merged = merge_evaluations(list(parts), context=context)
-            if merged["source"] != binding:
-                raise ValueError("raw report bundle source does not match its selected candidate")
-            merged_records.append((context, merged))
-
+        merged_records = _merge_batch_candidates(candidates, raw_parts_by_candidate, contexts)
         grouped: dict[int, tuple[ReviewContext, list[dict[str, Any]]]] = {}
         for context, merged in merged_records:
             key = id(context)

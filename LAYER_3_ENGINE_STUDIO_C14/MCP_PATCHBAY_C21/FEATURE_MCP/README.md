@@ -6,8 +6,10 @@ control. Subject and Topic projection builders remain local tools; they do not
 need MCP registration. Local and Public release run through `uv` on the host.
 Set `project_mcp.release_workflows_enabled` to `True` in the native Project
 Manifest to expose `local_release_command` and `public_release_command`.
-The tools return shell commands for the selected Project. `False` or omission
-blocks discovery and calls. See [Project release tools](../../FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/README.md).
+The tools read the Active release Workflow Formal Claims in `002_PROJECT_CONFIG`.
+Each call returns one shell-quoted command for the Operator to run on the host.
+`False` or omission blocks discovery and calls.
+See [Project release tools](../../FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/README.md).
 
 Legacy Artifact search, specialized RMED revision, selected Workflow execution,
 orchestration, capability discovery, Atom mutation, Revert, and graph Workflow
@@ -16,36 +18,25 @@ including RMED contracts, have not yet been reconciled with this code retirement
 
 ## Registration
 
-`tool_providers.json` is the editable installed Provider inventory. It has
-`schema_version`, `mcp_blacklist`, and `providers`; each Provider declares its
-`provider_id`, Python `module`, `factory`, and `descriptor_factory`. Generate
-the required checked-in `tool_registry.json` with:
+Backend owns the Tool provider inventory, generated registration asset, schema
+validation, and Tool dispatch. MCP reads Backend's enabled JSON catalog and
+maps each Tool's name, description, and input schema to MCP. It forwards the
+Tool name, arguments, and request context to Backend and returns its result or
+failure. A missing or invalid catalog fails explicitly.
+
+The Backend's `tool_providers.json` is the editable installed Provider
+inventory. Generate its checked-in `tool_registry.json` with:
 
 ```sh
-uv run --project . --locked --no-sync --all-groups python -B \
-  LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/generate_tool_registry.py \
+UV_PROJECT_ENVIRONMENT="$PWD/LAYER_3_ENGINE_STUDIO_C14/.venv-dev" PYTHONPATH="$PWD/LAYER_3_ENGINE_STUDIO_C14" uv run --project LAYER_3_ENGINE_STUDIO_C14 --locked --no-sync --group dev python -B -P -m \
+  IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.generate_tool_registry \
   --package-root .
 ```
 
-The generated registry pins the inventory digest and descriptor models. MCP
-refuses startup when either asset is missing, malformed, stale, or does not
-match installed Provider code. Adding a Provider or Tool requires an installed
-implementation, one inventory entry, and regeneration; gateway routing stays
-generic.
-
-`factory(project_root, gateway)` is invoked lazily to create a Provider with
-`call(name, arguments)` and `close()` methods. `descriptor_factory()` returns the corresponding
-`mcp.types.Tool` models. The generated registry records `inventory_sha256`,
-`mcp_blacklist`, Provider fields and descriptors, and `public_tools`.
-The runtime validates each registered input schema before calling its Provider
-and its output schema before returning the Provider result. A Provider may
-optionally implement `prepare_arguments(name, arguments, context)` and
-`present_result(name, value, context)` for its own transport shaping; the
-gateway never applies Workbench-specific URL behavior to other Providers.
-
-`mcp_blacklist` denies exact public Tool names globally. Project
-`project_mcp.tool_blacklist` is unioned with it, so a Project cannot re-enable
-a global denial. Both lists affect advertisement and direct invocation.
+Backend verifies the inventory and registry against installed Provider code.
+Its global `mcp_blacklist` and Project `project_mcp.tool_blacklist` exclusions
+apply to both discovery and invocation. A Project cannot re-enable a global
+denial. Backend reports invalid or stale registration explicitly.
 
 ## Project context
 
@@ -111,10 +102,9 @@ Current Contract in `package_audit.component_contracts`.
 Use the project-local environment from the source checkout:
 
 ```sh
-UV_PROJECT_ENVIRONMENT="$PWD/.anechoic_runtime/launcher-venv" \
-uv run --project "$PWD" --locked --no-sync --python 3.14 --managed-python --no-env-file \
-  --group rmed-workflow-mcp python \
-  LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/server.py --project-root "$PWD"
+UV_PROJECT_ENVIRONMENT="$PWD/LAYER_3_ENGINE_STUDIO_C14/.venv-dev" PYTHONPATH="$PWD/LAYER_3_ENGINE_STUDIO_C14" uv run --project "$PWD/LAYER_3_ENGINE_STUDIO_C14" --locked --no-sync --python 3.14 --managed-python --no-env-file \
+  --group dev python -B -P -m \
+  MCP_PATCHBAY_C21.FEATURE_MCP.server --project-root "$PWD"
 ```
 
 The default transport is local stdio, and the host owns its process lifetime.

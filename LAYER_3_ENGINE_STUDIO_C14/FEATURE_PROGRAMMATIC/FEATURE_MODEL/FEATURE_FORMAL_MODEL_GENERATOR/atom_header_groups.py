@@ -2,7 +2,7 @@
 
 from keyword import iskeyword
 
-from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_field_validation import _bounds
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.cardinality__pub import cardinality_bounds
 
 _GROUPS = {
     "Atom.Header.Identity": "AtomIdentity",
@@ -59,6 +59,24 @@ def atom_header_group_sources(property_declarations):
     return result
 
 
+def _atom_header_lines(selected, groups):
+    header = selected["Atom.Header"]
+    header_lines = ["class AtomHeader:"]
+    for name in header["allowed_dependent_property_names"]:
+        declaration = selected["Atom.Header.Relations"] if name == "Relations" else groups["Atom.Header." + name]
+        metadata = {key: declaration[key] for key in _FIELD_KEYS if key in declaration}
+        metadata["dependent_property_cardinality"] = declaration["dependent_property_cardinality"]
+        if name == "Relations":
+            for key in ("dependent_property_name_format", "dependent_property_value_format",
+                        "dependent_property_value_cardinality"):
+                metadata[key] = declaration[key]
+        kind = {"Identity": "AtomIdentity", "Context": "AtomContext", "Relations": "dict[str, list[str]]",
+                "State": "AtomState", "Destination": "AtomDestination"}[name]
+        default = "default=None, kw_only=True, " if name == "Relations" else ""
+        header_lines.append(f"    {name.lower()}: {kind} = field({default}metadata={metadata!r})")
+    return header_lines
+
+
 def _complete_atom_groups(groups, children, scalars, selected):
     needed = {"Atom.Header", "Atom.Content", "Atom.Content.Summary", "Atom.Header.Relations"}
     if not needed <= selected.keys() or not set(_GROUPS) <= groups.keys() or not scalars:
@@ -84,20 +102,7 @@ def _complete_atom_groups(groups, children, scalars, selected):
         else:
             line, _ = _field_source("Atom.Header.Context." + name, name.lower(), context, parts[name])
             lines.append(line)
-    header = selected["Atom.Header"]
-    header_lines = ["class AtomHeader:"]
-    for name in header["allowed_dependent_property_names"]:
-        declaration = selected["Atom.Header.Relations"] if name == "Relations" else groups["Atom.Header." + name]
-        metadata = {key: declaration[key] for key in _FIELD_KEYS if key in declaration}
-        metadata["dependent_property_cardinality"] = declaration["dependent_property_cardinality"]
-        if name == "Relations":
-            for key in ("dependent_property_name_format", "dependent_property_value_format",
-                        "dependent_property_value_cardinality"):
-                metadata[key] = declaration[key]
-        kind = {"Identity": "AtomIdentity", "Context": "AtomContext", "Relations": "dict[str, list[str]]",
-                "State": "AtomState", "Destination": "AtomDestination"}[name]
-        default = "default=None, kw_only=True, " if name == "Relations" else ""
-        header_lines.append(f"    {name.lower()}: {kind} = field({default}metadata={metadata!r})")
+    header_lines = _atom_header_lines(selected, groups)
     summary = selected["Atom.Content.Summary"]
     summary_line, _ = _field_source("Atom.Content.Summary", "summary", {"dependent_property_value_format": "str"}, summary)
     content = "\n".join(("class AtomContent:", summary_line,
@@ -142,7 +147,7 @@ def _group_fields(path, group, children):
 
 def _field_source(path, name, owner, args):
     count = args["value_cardinality"]
-    occurrence = args.get("property_occurrence_cardinality", 1 if _bounds(count)[0] else 0)
+    occurrence = args.get("property_occurrence_cardinality", 1 if cardinality_bounds(count)[0] else 0)
     metadata = {key: args[key] for key in _FIELD_KEYS if key in args}
     if path in _GROUPS and count == 0 and occurrence == 1:
         metadata["dependent_property_cardinality"] = args["dependent_property_cardinality"]
@@ -151,10 +156,10 @@ def _field_source(path, name, owner, args):
     if format_name not in _FORMATS:
         raise ValueError(f"{path}: expected a declared value format")
     annotation = _FORMATS[format_name]
-    if _bounds(count)[1] != 1:
+    if cardinality_bounds(count)[1] != 1:
         annotation = f"list[{annotation}]"
     if "allowed_values" in args and path != "Atom.Header.State.Status":
         metadata["allowed_values"] = args["allowed_values"]
-    default = "default=None, kw_only=True, " if not _bounds(occurrence)[0] else ""
+    default = "default=None, kw_only=True, " if not cardinality_bounds(occurrence)[0] else ""
     return f"    {name}: {annotation} = field({default}metadata={metadata!r})", (
         {"datetime": "datetime"} if format_name == "datetime" else {})

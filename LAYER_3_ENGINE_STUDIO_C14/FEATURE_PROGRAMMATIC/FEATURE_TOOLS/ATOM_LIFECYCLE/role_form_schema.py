@@ -3,15 +3,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from carrier_aliases import canonical_role_name, matches_named_value, named_value_token
-from FEATURE_FORMAL_MODEL_ENGINE.model_catalog import _native_block
-from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_compat__pub import canonical_role_name, matches_named_value, named_value_token
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.formal_claim__pub import iter_formal_claims
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_model_claim__pub import parse_native_model_claim
 
 
 def compile_role_form(rows):
     declarations = []
     for row in rows:
-        for block in _native_block(row['_content_bytes'].decode('utf-8')):
+        for block in iter_formal_claims(row['_content_bytes'].decode('utf-8')):
             declaration = parse_native_model_claim(block)
             if declaration is not None and declaration['kind'] == 'entity':
                 declarations.append((row['id'], declaration))

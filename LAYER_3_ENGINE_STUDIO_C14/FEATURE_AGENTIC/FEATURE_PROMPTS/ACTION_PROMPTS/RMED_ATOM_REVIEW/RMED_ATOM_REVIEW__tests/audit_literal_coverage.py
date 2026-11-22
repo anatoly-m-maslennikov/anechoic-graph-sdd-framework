@@ -6,13 +6,9 @@ Subjects or decides that a declaration is correct. Paraphrases still need QA.
 """
 from __future__ import annotations
 
-import sys
-from pathlib import Path
 from typing import Any
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from context_builder import body_section_texts, metadata  # noqa: E402
-from review_evidence import literal_occurs  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import body_section_texts, metadata  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_evidence__shared import literal_occurs  # noqa: E402
 
 
 def audit(source: str, coherence: dict[str, Any]) -> list[dict[str, str]]:

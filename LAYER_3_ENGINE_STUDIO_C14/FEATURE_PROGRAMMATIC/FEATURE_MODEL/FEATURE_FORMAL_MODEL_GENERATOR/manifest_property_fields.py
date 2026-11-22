@@ -5,7 +5,7 @@ from inspect import getsource
 import keyword
 import re
 
-from FEATURE_TOOLS.native_atom_reference import derive_atom_ref
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.atom_reference__pub import derive_atom_ref
 
 
 _FIELD_METADATA = ("property_occurrence_cardinality", "value_cardinality",
@@ -142,6 +142,16 @@ def _override_target(scopes, name, owner, names, classes):
     return target
 
 
+def _check_property_fields(fields, groups, children, classes):
+    for (owner, name) in fields:
+        if any(name == other_name and _subclass(owner, other_owner, classes)
+               for other_owner, other_name in fields):
+            raise ValueError(f"Duplicate inherited Property field: {owner}.{name}")
+    for path, expected in groups.items():
+        if children[path] != expected:
+            raise ValueError(f"{path}: expected declared children {sorted(expected)}")
+
+
 def _property_fields(properties, names, classes, atom_paths):
     groups = _property_groups(properties)
     children = {path: set() for path in groups}
@@ -183,13 +193,7 @@ def _property_fields(properties, names, classes, atom_paths):
         if key in fields:
             raise ValueError(f"Duplicate Property field: {owner}.{name}")
         fields[key] = (args, property_imports)
-    for (owner, name) in fields:
-        if any(name == other_name and _subclass(owner, other_owner, classes)
-               for other_owner, other_name in fields):
-            raise ValueError(f"Duplicate inherited Property field: {owner}.{name}")
-    for path, expected in groups.items():
-        if children[path] != expected:
-            raise ValueError(f"{path}: expected declared children {sorted(expected)}")
+    _check_property_fields(fields, groups, children, classes)
     return fields, overrides
 
 

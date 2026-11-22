@@ -16,16 +16,15 @@ from pathlib import Path
 import re
 import sys
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from artifact_metadata import SETTINGS_PATH, atomic_write, current_timestamp, repository_root  # noqa: E402
-from carrier_aliases import carrier_read_view  # noqa: E402
-from current_entity_sources import read_current_carriers, read_current_model_carriers  # noqa: E402
-from current_subject_graph import compose_current_graph, compose_enhanced_current_graph  # noqa: E402
-from declaration_sources import compose_declaration_catalog  # noqa: E402
-from declaration_view import render_declarations  # noqa: E402
-from readable_entity_tree import named_selection_reference, render_inherency, render_model  # noqa: E402
-from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier  # noqa: E402
-from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.artifact_metadata import SETTINGS_PATH, atomic_write, current_timestamp, repository_root  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_compat__pub import carrier_read_view  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.current_carriers__pub import read_current_carriers, read_current_model_carriers  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.current_subject_graph import compose_current_graph, compose_enhanced_current_graph  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.declaration_sources import compose_declaration_catalog  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.declaration_view import render_declarations  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.readable_entity_tree import named_selection_reference, render_inherency, render_model  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import parse_carrier  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__pub import CEILINGS  # noqa: E402
 
 
 def output_path(path: Path, root: Path) -> Path:
@@ -90,7 +89,7 @@ def _check_existing(destination: Path, identity: dict, view: str) -> None:
         raise ValueError("Existing Projection identity or source selection differs")
 
 
-def main(argv: list[str] | None = None) -> int:
+def _parse_args(argv):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("source_folder", type=Path)
     output = parser.add_mutually_exclusive_group()
@@ -100,7 +99,18 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--named-selection", required=True)
     parser.add_argument("--scope-name", required=True)
     parser.add_argument("--view", choices=("inherency", "declarations", "model"), default="inherency")
-    args = parser.parse_args(argv)
+    return parser.parse_args(argv)
+
+
+def _emit_result(destination, result):
+    if destination is None:
+        sys.stdout.write(result)
+    else:
+        atomic_write(destination, result)
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = _parse_args(argv)
     try:
         source_folder = args.source_folder.absolute()
         root = repository_root(source_folder)
@@ -138,10 +148,7 @@ def main(argv: list[str] | None = None) -> int:
             "draft and archived folders excluded. Subjects and Versions read from the Atom files.",
             projection_identity=identity,
         )
-        if destination is None:
-            sys.stdout.write(result)
-        else:
-            atomic_write(destination, result)
+        _emit_result(destination, result)
     except (OSError, ValueError, RuntimeError, KeyError, TypeError) as error:
         print(f"Cannot render Entities Graph: {error}", file=sys.stderr)
         return 1
@@ -155,8 +162,5 @@ def _image_main():
 if __name__ == "__main__":
     import sys
     from pathlib import Path
-    _TOOLS_ROOT = next(p for p in Path(__file__).resolve().parents if p.name in {"FEATURE_TOOLS", "TOOLS"})
-    if str(_TOOLS_ROOT) not in sys.path:
-        sys.path.insert(0, str(_TOOLS_ROOT))
-    from runtime_process_boundary import run_process
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.runtime_process_boundary import run_process
     raise SystemExit(run_process(_image_main, operation="GENERATE_ENTITY_GRAPH/render_entity_tree"))

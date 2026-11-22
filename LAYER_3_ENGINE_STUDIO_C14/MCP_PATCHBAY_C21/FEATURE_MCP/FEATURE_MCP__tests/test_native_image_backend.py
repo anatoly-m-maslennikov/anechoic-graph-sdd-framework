@@ -1,16 +1,15 @@
 """Native launches use only the selected installed package's image assets."""
 
 from dataclasses import replace
-from pathlib import Path
 import unittest
 from unittest.mock import patch
 
-import test_native_host_launcher as host_fixture
-import test_native_startup as startup_fixture
-from native_startup import select_runtime_project
-from project_mcp_backend import BackendError, ProjectMcpBackend
-from project_selection import resolve_project
-from runtime_images import ImageError, ImageManager, TOOL_REGISTRY
+from . import test_native_host_launcher as host_fixture
+from . import test_native_startup as startup_fixture
+from MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import select_runtime_project
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend import BackendError, ProjectMcpBackend
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.legacy_selection_test_support__pub import select_legacy_project
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images import ImageError, ImageManager, TOOL_REGISTRY
 
 IMAGE = 'sha256:' + 'a' * 64
 
@@ -21,20 +20,21 @@ class NativeImageBackendTests(unittest.TestCase):
         self.package = self.root / '.anechoic_runtime/simple_local_release/package'
         docker = self.package / 'LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker'
         docker.mkdir(parents=True)
-        for name, contents in (('pyproject.toml', '[project]\nname="fixture"\n'),
-                               ('uv.lock', 'version=1\n'),
+        for name, contents in (('LAYER_3_ENGINE_STUDIO_C14/pyproject.toml', '[project]\nname="fixture"\n'),
+                               ('LAYER_3_ENGINE_STUDIO_C14/uv.lock', 'version=1\n'),
                                ('version.toml', '[framework]\nversion="1.2.3"\n')):
             (self.package / name).write_text(contents)
         for name in ('Dockerfile', 'Dockerfile.dockerignore', 'runtime.py'):
             (docker / name).write_text('fixture\n')
         registry = self.package / TOOL_REGISTRY
+        registry.parent.mkdir(parents=True, exist_ok=True)
         registry.write_text('{"asset":true}\n')
 
     def test_installed_assets_are_pinned_for_build_and_rechecked_before_start(self):
         selection = select_runtime_project(self.root)
         manager = ImageManager(self.package, project_root=self.root)
         backend = ProjectMcpBackend()
-        with patch('project_mcp_backend.ImageManager', return_value=manager), \
+        with patch('MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend.ImageManager', return_value=manager), \
              patch.object(manager, 'resolve', return_value=IMAGE) as resolve, \
              patch.object(manager, '_inspect'), \
              patch.object(manager, '_refresh_model', side_effect=AssertionError('unexpected refresh')):
@@ -52,7 +52,7 @@ class NativeImageBackendTests(unittest.TestCase):
 
     def test_native_rejects_other_source_or_broken_installed_package(self):
         backend = ProjectMcpBackend()
-        with patch('project_mcp_backend.ImageManager') as factory:
+        with patch('MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend.ImageManager') as factory:
             with self.assertRaises(ImageError):
                 backend.resolve_image(host_fixture.PROGRAMMATIC, None, project_root=self.root)
             (self.package / 'LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/runtime.py').unlink()
@@ -66,15 +66,15 @@ class NativeImageBackendTests(unittest.TestCase):
         backend._native_selection = selection
         backend._native_source = self.package
         selection.manifest_path.write_text('invalid')
-        with patch('project_mcp_backend._bounded_run') as docker:
+        with patch('MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend._bounded_run') as docker:
             with self.assertRaises((ImageError, BackendError)):
                 backend.inspect(selection)
             docker.assert_not_called()
 
     def test_explicit_legacy_selection_is_refused_before_image_resolution(self):
         startup_fixture.RuntimeSelectionTests.legacy(self, name=".anechoic_legacy")
-        legacy = resolve_project(self.root, ".anechoic_legacy")
-        with patch("project_mcp_backend.ImageManager") as factory:
+        legacy = select_legacy_project(self.root, ".anechoic_legacy")
+        with patch("MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend.ImageManager") as factory:
             with self.assertRaises(ImageError):
                 ProjectMcpBackend().resolve_image(self.package, None, project_root=self.root, selection=legacy)
             factory.assert_not_called()

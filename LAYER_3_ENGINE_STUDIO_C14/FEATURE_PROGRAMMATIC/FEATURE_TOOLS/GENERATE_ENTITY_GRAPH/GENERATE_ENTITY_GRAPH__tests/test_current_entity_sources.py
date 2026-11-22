@@ -10,10 +10,11 @@ from unittest.mock import patch
 
 TOOL = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(TOOL.parent), str(TOOL)]
-import current_entity_sources  # noqa: E402
-from current_entity_sources import build_current_graph, read_current_carriers, read_current_model_carriers  # noqa: E402
-from current_subject_graph import compose_current_graph  # noqa: E402
-from VALIDATE_ATOMS.validate_atoms_workers.parsing import CarrierError  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__pub import CEILINGS  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.current_entity_sources import build_current_graph  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.current_carriers__pub import read_current_carriers, read_current_model_carriers  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.current_subject_graph import compose_current_graph  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import CarrierError  # noqa: E402
 
 TEST_TEMP_ROOT = Path.cwd() / ".anechoic_tmp/tests/test_current_entity_sources"
 
@@ -182,7 +183,7 @@ class CurrentEntitySourcesTests(unittest.TestCase):
     def test_reader_checks_existing_file_size_ceiling_before_parsing(self):
         self.write("CA-R-9001", "Too Large")
 
-        with patch.dict(current_entity_sources.CEILINGS, {"max_file_bytes": 8}):
+        with patch.dict(CEILINGS, {"max_file_bytes": 8}):
             with self.assertRaisesRegex(ValueError, "max_file_bytes ceiling"):
                 read_current_carriers(self.selected, self.repository)
 

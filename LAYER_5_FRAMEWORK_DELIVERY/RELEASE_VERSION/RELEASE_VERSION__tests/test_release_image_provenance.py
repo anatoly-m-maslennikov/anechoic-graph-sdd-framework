@@ -6,9 +6,9 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock
 
-import test_simple_local_release as fixtures
-from local_release import run_local_release
-from release_image_provenance import release_image_provenance
+from RELEASE_VERSION.RELEASE_VERSION__tests import test_simple_local_release as fixtures
+from RELEASE_VERSION.local_release import run_local_release
+from RELEASE_VERSION.release_image_provenance import release_image_provenance
 
 
 class ReleaseImageProvenanceTests(unittest.TestCase):

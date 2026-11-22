@@ -1,94 +1,141 @@
-"""Select a validated native Project for runtime startup."""
+"""Call the Backend's Project admission service over a private pipe."""
 
-from __future__ import annotations
-
+from contextlib import contextmanager
+from dataclasses import dataclass, field
+import json
 import os
 from pathlib import Path
+import socket
+import subprocess
+import sys
+import threading
 
-from native_carrier_header import native_header_view
-from native_project_selection import is_native_control_name, manifest_sources, resolve_native_project
-from project_selection import ProjectSelectionError, _project_root
-from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext, open_regular
-from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
+from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_stack import runtime_stack
 
-
-_RESERVED = {".anechoic_new", ".anechoic_legacy", ".anechoic_legacy_archive",
-             ".anechoic_runtime", ".anechoic_tmp"}
-_RESERVED |= {"_" + name[1:] for name in _RESERVED}
+class ProjectAdmissionError(ValueError):
+    """The Backend refused a Project binding."""
 
 
-def _has_manifest(reader: ReadContext, control: Path) -> bool:
-    for path, carrier in manifest_sources(reader, control):
-        context = native_header_view(carrier.metadata).get("context")
-        if (isinstance(context, dict) and context.get("template") == "project_manifest"):
-            return True
-        if "atom_family" not in carrier.metadata and "PROJECT_MANIFEST" in path.name:
-            return True
-    return False
+@dataclass(frozen=True)
+class ProjectBinding:
+    root: Path
+    control_root: Path
+    control_relative: Path
+    instance_id: str
+    project_name: str
+    project_prefix: str
+    manifest_path: Path
+    manifest_ref: str
+    manifest_sha256: str
+    parameters: dict[str, object] = field(default_factory=dict)
+    host_root: Path | None = None
+    tool_blacklist: tuple[str, ...] = ()
+    release_workflows_enabled: bool = False
+
+    @property
+    def launcher_state(self) -> Path:
+        return self.root / ".anechoic_runtime/runtime/project_mcp" / self.instance_id
+
+    @property
+    def compose_project(self) -> str:
+        return "anechoic-mcp-" + self.instance_id[:24]
+
+_MODULE = "IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.project_admission"
+_PATH_FIELDS = ("root", "control_root", "control_relative", "manifest_path")
+_TEXT_FIELDS = ("instance_id", "project_name", "project_prefix", "manifest_ref", "manifest_sha256")
 
 
-def select_runtime_project(project_root, control_root=None, *, validate_manifest=None):
-    """Return one native Project with an active Project Manifest."""
-    root = _project_root(project_root)
-    reader = ReadContext(roots=[str(root)], limits=dict(CEILINGS))
+def _selection(value):
+    keys = set(_PATH_FIELDS + _TEXT_FIELDS + ("host_root", "parameters", "tool_blacklist", "release_workflows_enabled"))
+    if (not isinstance(value, dict) or set(value) != keys
+            or any(not isinstance(value[key], str) for key in _PATH_FIELDS + _TEXT_FIELDS)
+            or not isinstance(value["parameters"], dict)
+            or not isinstance(value["tool_blacklist"], list)
+            or any(not isinstance(item, str) for item in value["tool_blacklist"])
+            or type(value["release_workflows_enabled"]) is not bool
+            or (value["host_root"] is not None and not isinstance(value["host_root"], str))):
+        raise RuntimeError("Invalid Project admission response")
+    data = dict(value)
+    for key in _PATH_FIELDS:
+        data[key] = Path(data[key])
+    if data["host_root"] is not None:
+        data["host_root"] = Path(data["host_root"])
+    data["tool_blacklist"] = tuple(data["tool_blacklist"])
+    return ProjectBinding(**data)
 
-    def native(relative):
-        nonlocal validate_manifest
-        if validate_manifest is None:
-            from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.native_manifest_model import load_native_model
-            validate_manifest = load_native_model().validate_manifest
-        return resolve_native_project(root, relative, validate_manifest=validate_manifest)
 
-    def finish(selection):
-        if reader.currentness()["state"] != "unchanged":
-            raise ProjectSelectionError("Project carriers changed during selection")
-        return selection
+class _AdmissionClient:
+    def __init__(self, connection, responses):
+        self._connection = connection
+        self._responses = responses
+        self._lock = threading.Lock()
 
-    try:
-        if control_root is not None:
-            return finish(native(control_root))
+    def interrupt(self):
+        try:
+            self._connection.shutdown(socket.SHUT_RDWR)
+        except OSError:
+            pass
 
-        def control_roots():
-            descriptor = open_regular(root, directory=True)
+    def __call__(self, project_root, control_root=None, *, instance_id=None, host_root=None):
+        request = {"project_root": str(project_root), "control_root": str(control_root) if control_root is not None else None,
+                   "instance_id": instance_id, "host_root": str(host_root) if host_root is not None else None}
+        with self._lock:
             try:
-                with os.scandir(descriptor) as entries:
-                    controls = []
-                    for entry in entries:
-                        reader.checkpoint()
-                        if is_native_control_name(entry.name) and entry.name not in _RESERVED:
-                            if entry.is_symlink():
-                                raise ProjectSelectionError("Project control candidates must not be symlinks")
-                            if entry.is_dir(follow_symlinks=False):
-                                controls.append(Path(entry.name))
-                                if len(controls) > 64:
-                                    raise ProjectSelectionError("Project control candidates exceed the host ceiling")
-                return sorted(controls)
-            finally:
-                os.close(descriptor)
+                self._connection.sendall(json.dumps(request).encode("utf-8") + b"\n")
+                response = json.loads(self._responses.readline())
+            except (OSError, UnicodeError, json.JSONDecodeError) as error:
+                self._responses.close()
+                self._connection.close()
+                raise RuntimeError("Project admission service unavailable") from error
+        if isinstance(response, dict) and set(response) == {"result"}:
+            return _selection(response["result"])
+        if isinstance(response, dict) and set(response) == {"error"}:
+            error = response["error"]
+            if (isinstance(error, dict) and set(error) == {"code", "message"}
+                    and error["code"] == "project_selection_error" and isinstance(error["message"], str)):
+                raise ProjectAdmissionError(error["message"])
+        raise RuntimeError("Invalid Project admission response")
 
-        controls = control_roots()
-        natives = [native(relative) for relative in controls if _has_manifest(reader, root / relative)]
-        if len(natives) != 1:
-            raise ProjectSelectionError("A unique native Project Manifest is required")
-        selected = finish(natives[0])
-        if control_roots() != controls:
-            raise ProjectSelectionError("Project control candidates changed during selection")
-        return selected
-    except ProjectSelectionError:
-        raise
-    except (OSError, RuntimeError, TypeError, ValueError, AttributeError) as error:
-        raise ProjectSelectionError("Project discovery is unavailable, invalid, or unsafe") from error
+def _start(connection):
+    engine = Path(__file__).resolve().parents[2]
+    root = engine.parent
+    environment = {**{k: v for k, v in os.environ.items() if k != "PYTHONHOME"}, "PYTHONPATH": str(engine)}
+    module = "WORKBENCH_BACKEND_beta_C70.project_admission__pub" if runtime_stack() == "beta" else _MODULE
+    return subprocess.Popen([sys.executable, "-B", "-P", "-m", module], cwd=root, env=environment,
+                            stdin=connection, stdout=connection)
 
 
-def load_native_inputs(selection, *, model=None):
-    """Bind the reviewed native Model."""
-    from FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.native_manifest_model import load_native_model
-    from native_query import NativeQueryInputs
+def _close(process):
+    try:
+        process.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        process.terminate()
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait()
 
-    if model is None:
-        model = load_native_model()
-    return NativeQueryInputs(model.validate_manifest, model.relation_types, model.inverses,
-                             require_atom_state=model.requires_atom_state,
-                             require_atom_header=model.requires_atom_header,
-                             ticket_labels=model.ticket_labels,
-                             validate_project_spec=model.validate_project_spec)
+
+@contextmanager
+def project_admission():
+    parent, child = socket.socketpair()
+    try:
+        parent.settimeout(90)
+        process = _start(child)
+        child.close()
+        try:
+            with parent.makefile("rb") as responses:
+                yield _AdmissionClient(parent, responses)
+        finally:
+            parent.close()
+            _close(process)
+    finally:
+        parent.close()
+        child.close()
+
+
+def select_runtime_project(project_root, control_root=None, *, instance_id=None, host_root=None):
+    """Return one native Project with an active Project Manifest."""
+    with project_admission() as select:
+        return select(project_root, control_root, instance_id=instance_id, host_root=host_root)

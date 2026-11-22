@@ -2,12 +2,10 @@
 
 from dataclasses import dataclass, field
 from pathlib import Path
-import sys
 import unittest
 
 PROGRAMMATIC = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(PROGRAMMATIC))
-from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_field_validation import validate_model_fields  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_field_validation import validate_model_fields  # noqa: E402
 
 
 @dataclass
@@ -107,7 +105,7 @@ class ModelFieldValidationTests(unittest.TestCase):
             validate_model_fields(Document, {"header": header})
 
     def test_generated_destination_checks_children_separately_from_direct_values(self):
-        from FEATURE_MODEL.FEATURE_GENERATED_MODEL import AtomDestination, AtomDestinationFile
+        from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_GENERATED_MODEL_C52 import AtomDestination, AtomDestinationFile
 
         validate_model_fields(AtomDestination, {"file": AtomDestinationFile("atom.md", ".")})
         with self.assertRaisesRegex(ValueError, "file.path"):

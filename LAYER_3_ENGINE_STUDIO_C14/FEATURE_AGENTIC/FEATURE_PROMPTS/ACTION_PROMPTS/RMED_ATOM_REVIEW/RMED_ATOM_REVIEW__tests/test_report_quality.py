@@ -1,12 +1,8 @@
 """Actual report defects from the same-20 review, reduced to bounded cases."""
 from copy import deepcopy
-from pathlib import Path
-import sys
 import unittest
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from test_split_evaluation import context, contract, part as contract_part  # noqa: E402
-from report_quality import validate_report_quality  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__tests.test_split_evaluation import context, contract, part as contract_part  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.report_quality import validate_report_quality  # noqa: E402
 
 
 RAW = '# Summary\nValue\n\n## Scope\nobjects and participants\n\n## Claim\na Claim\n\n## Details\n'

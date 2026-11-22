@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 import re
 
-from VALIDATE_ATOMS.validate_atoms_workers.read_io import open_regular
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__pub import open_regular
 
 from . import effects
 

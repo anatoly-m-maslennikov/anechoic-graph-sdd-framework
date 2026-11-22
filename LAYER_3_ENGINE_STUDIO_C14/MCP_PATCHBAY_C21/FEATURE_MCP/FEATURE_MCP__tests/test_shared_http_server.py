@@ -6,10 +6,9 @@ from __future__ import annotations
 import json
 from concurrent.futures import CancelledError as FutureCancelledError
 from pathlib import Path
-import sys
 from types import SimpleNamespace
 import unittest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import httpx2
 from mcp import types
@@ -19,10 +18,9 @@ from mcp.server.lowlevel import Server
 
 MCP_ROOT = Path(__file__).resolve().parents[1]
 TOOLS_ROOT = MCP_ROOT.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
-sys.path[:0] = [str(MCP_ROOT), str(TOOLS_ROOT)]
 
-from shared_http_server import create_app  # noqa: E402
-from http_paths import HEALTH_PATH, MCP_PATH  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.shared_http_server import create_app  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import HEALTH_PATH, MCP_PATH  # noqa: E402
 
 
 class FakeGateway:
@@ -70,7 +68,7 @@ class FakeGateway:
         self.initialized = False
         self.snapshot.update(initialized=False, advertised_tools=[])
 
-    def status(self):
+    async def status(self):
         self.status_calls += 1
         if self.status_error is not None:
             raise self.status_error
@@ -114,14 +112,12 @@ class SharedHTTPTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_health_snapshot_failure_is_safe_and_reported_unbound(self):
         self.gateway.status_error = RuntimeError("secret status detail")
-        with patch("shared_http_server.report_failure", return_value=(None, None)) as report:
+        with patch("MCP_PATCHBAY_C21.FEATURE_MCP.shared_http_server.warning") as report:
             response = await self.request()
         self.assertEqual(503, response.status_code)
         self.assertEqual({"ready": False}, response.json())
         report.assert_called_once()
-        self.assertIsNone(report.call_args.args[0])
-        failure = report.call_args.args[1]
-        self.assertEqual("shared_health_snapshot_unavailable", failure.code)
+        report.assert_called_once_with("shared_health_snapshot_unavailable")
         self.assertNotIn("secret status detail", response.text)
 
     async def test_health_snapshot_cancellation_is_not_converted_to_503(self):

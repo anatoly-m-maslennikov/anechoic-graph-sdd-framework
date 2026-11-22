@@ -1,62 +1,21 @@
 from __future__ import annotations
 
-from copy import deepcopy
+import subprocess
 import sys
-import tempfile
 import unittest
 from pathlib import Path
 
-import yaml
+
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.scope_carrier__pub import ScopeDeclarationError
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.scope_declaration_parse__pub import parse_scope_unit_declaration
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.scope_declaration_render__pub import PROJECT
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.scope_unit_declarations__pub import read_scope_unit_declarations
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.scope_unit_declaration_test_support import ScopeUnitFixture
 
 TOOLS = Path(__file__).resolve().parents[1]
-if str(TOOLS) not in sys.path:
-    sys.path.insert(0, str(TOOLS))
-
-from project_selection import resolve_project
-from scope_declaration_parse import ScopeDeclarationError, parse_scope_unit_declaration
-from scope_declaration_render import PROJECT, render_scope_declaration
-from scope_unit_declarations import _selects_structural_form, read_scope_unit_declarations
-from VALIDATE_ATOMS.validate_atoms_workers.read_io import ReadContext
-from VALIDATE_ATOMS.validate_atoms_workers.settings import CEILINGS
 
 
-class ScopeUnitDeclarationReaderTests(unittest.TestCase):
-    def setUp(self) -> None:
-        self.temporary = tempfile.TemporaryDirectory()
-        self.addCleanup(self.temporary.cleanup)
-        self.root = Path(self.temporary.name).resolve()
-        self.control = self.root / ".anechoic_demo"
-        self.control.mkdir()
-        (self.control / "anechoic_project_settings.toml").write_text(
-            '[project]\nname = "demo"\n[paths]\ncontrol_root = ".anechoic_demo"\n[artifacts.identity]\nproject_prefix = "ca"\n', encoding="utf-8",
-        )
-
-    def declaration(
-        self, name: str, atom_id: str, *, source: Path | None = None, scope_id: str | None = None,
-        label: str | None = None, ordered: bool = False, order_number: int | None = None,
-        parent: str | None = None, project: bool = False, project_name: str = "demo",
-    ) -> Path:
-        source = source or self.control / "04_requirement" / f"{atom_id}-{name}.md"
-        source.parent.mkdir(parents=True, exist_ok=True)
-        source.write_text(render_scope_declaration(
-            name=name, project_name=project_name, atom_id=atom_id, updated_at="2026-11-02 00:00:00 +0000",
-            scope_id=scope_id, label=label, ordered=ordered, order_number=order_number,
-            parent=parent, project=project,
-        ), encoding="utf-8")
-        return source
-
-    def complete_tree(self) -> tuple[Path, Path, Path]:
-        root = self.declaration("demo", "CA-R-1", source=self.control / "CA-R-1-demo.md", project=True)
-        parent = self.declaration(
-            "PARENT", "CA-R-2", scope_id="CA-SU-1", label="LAYER", ordered=True,
-            order_number=1, parent=PROJECT,
-        )
-        child = self.declaration(
-            "CHILD", "CA-R-3", source=self.control / "CA-SU-1_LAYER_1_PARENT" / "04_requirement" / "child.md",
-            scope_id="CA-SU-2", label="FEATURE", parent="PARENT",
-        )
-        return root, parent, child
-
+class ScopeUnitDeclarationReaderTests(ScopeUnitFixture, unittest.TestCase):
     def test_formal_claim_layout_and_ambiguous_fences(self) -> None:
         source = self.declaration("demo", "CA-R-1", project=True)
         current = source.read_text(encoding="utf-8")
@@ -120,11 +79,21 @@ class ScopeUnitDeclarationReaderTests(unittest.TestCase):
                 parse_scope_unit_declaration(convert(parent, claim).encode(), parent)
         with self.assertRaises(ScopeDeclarationError):
             parse_scope_unit_declaration(convert(root, root_claim.replace("CA-SU-00", "CA-SU-01")).encode(), root)
-        from lint_python_model_claim import lint_python_model_claim
-        self.assertEqual((), lint_python_model_claim(parent_claim, declared_addresses=["Scope Unit"], relation_names=[]))
-        self.assertEqual((), lint_python_model_claim(root_claim, declared_addresses=["Project"], relation_names=[]))
         root.write_text(convert(root, root_claim))
         parent.write_text(native)
+        self._assert_native_lint_and_discovery(root, parent)
+
+    def _assert_native_lint_and_discovery(self, root: Path, parent: Path) -> None:
+        addresses, relations = self.root / "addresses.json", self.root / "relations.json"
+        addresses.write_text('["Scope Unit", "Project"]')
+        relations.write_text("[]")
+        linter = TOOLS.parent / "FEATURE_FORMAL_MODEL_ENGINE/lint_python_model_claim__pub.py"
+        lint = subprocess.run(
+            [sys.executable, str(linter), str(parent), str(root),
+             "--addresses", str(addresses), "--relations", str(relations)],
+            capture_output=True, text=True, timeout=15,
+        )
+        self.assertEqual(0, lint.returncode, lint.stderr)
         result = read_scope_unit_declarations(self.root, self.control.name)
         self.assertEqual({"demo", "PARENT", "CHILD"}, set(result.by_name))
 
@@ -271,313 +240,6 @@ class ScopeUnitDeclarationReaderTests(unittest.TestCase):
         self.assertEqual("UNIT", parse_scope_unit_declaration(carrier, source).name)
         with self.assertRaisesRegex(ScopeDeclarationError, "namespace branch"):
             parse_scope_unit_declaration(carrier.replace(b"PROJECT STRUCTURE//", b"MODEL//"), source)
-
-    def test_prefixed_active_subject_invalid_namespace_chain_refuses(self) -> None:
-        source = self.declaration(
-            "UNIT", "CA-R-2", scope_id="CA-SU-2", parent=PROJECT, project_name="anechoic",
-        )
-        source.write_text(source.read_text(encoding="utf-8").replace(
-            "ANECHOIC_STRUCTURE <+ Scope Unit//UNIT",
-            "ANECHOIC_STRUCTURE {1}<+ Scope Unit//UNIT",
-        ), encoding="utf-8")
-
-        with self.assertRaisesRegex(ScopeDeclarationError, "namespace chain"):
-            parse_scope_unit_declaration(source.read_bytes(), source)
-
-    def test_project_selection_exposes_derived_structure_and_declaration_provenance(self) -> None:
-        self.complete_tree()
-        selection = resolve_project(self.root)
-
-        self.assertIn("scope_units", selection.structure)
-        self.assertFalse(hasattr(selection, "structure_path"))
-        self.assertEqual(len(selection.declaration_paths), 3)
-        self.assertEqual(len(selection.declaration_digest), 64)
-        self.assertEqual(len(selection.declaration_source_pins), 3)
-
-    def test_deepcopy_retains_one_immutable_declaration_aggregate(self) -> None:
-        self.complete_tree()
-        declarations = read_scope_unit_declarations(self.root, self.control.name)
-
-        copied = deepcopy({"scope_unit_declarations": declarations})
-
-        self.assertIs(copied["scope_unit_declarations"], declarations)
-
-    def test_draft_archived_generated_and_unrelated_legacy_carriers_are_not_sources(self) -> None:
-        self.complete_tree()
-        self.declaration(
-            "DRAFT", "CA-R-4", source=self.control / "04_requirement" / "draft" / "draft.md",
-            scope_id="CA-SU-4", parent=PROJECT,
-        )
-        self.declaration(
-            "ARCHIVED", "CA-R-5", source=self.control / "04_requirement" / "archive" / "archive.md",
-            scope_id="CA-SU-5", parent=PROJECT,
-        )
-        (self.control / "01_concern").mkdir()
-        (self.control / "01_concern" / "broken.md").write_text("not an Atom", encoding="utf-8")
-
-        result = read_scope_unit_declarations(self.root, self.control.name)
-        self.assertNotIn("DRAFT", result.by_name)
-        self.assertNotIn("ARCHIVED", result.by_name)
-
-    def test_ordinary_current_requirement_does_not_conflict_with_declaration_frontier(self) -> None:
-        self.complete_tree()
-        ordinary = self.control / "04_requirement" / "CA-R-99-ordinary.md"
-        ordinary.write_text(
-            "---\natom_id: CA-R-99\nrole: Requirement\nform: Policy\nstatus: Active\nversion: 1\n---\n"
-            "## Summary\n\nOrdinary Requirement\n",
-            encoding="utf-8",
-        )
-        (self.control / "README.md").write_text("unrelated Markdown", encoding="utf-8")
-
-        result = read_scope_unit_declarations(self.root, self.control.name)
-        self.assertEqual(len(result.paths), 3)
-        self.assertNotIn(ordinary, result.paths)
-
-    def test_vanished_ordinary_requirement_does_not_block_declaration_discovery(self) -> None:
-        self.complete_tree()
-        ordinary = self.control / "04_requirement" / "CA-R-99-ordinary.md"
-        ordinary.write_text("ordinary", encoding="utf-8")
-        reader = ReadContext(roots=[str(self.root)], limits=dict(CEILINGS))
-        original_read = reader.read
-
-        def vanish(path: Path, **kwargs) -> bytes:
-            if path == ordinary:
-                ordinary.unlink()
-            return original_read(path, **kwargs)
-
-        reader.read = vanish  # type: ignore[method-assign]
-
-        result = read_scope_unit_declarations(self.root, self.control.name, reader=reader)
-
-        self.assertEqual({"demo", "PARENT", "CHILD"}, set(result.by_name))
-
-    def test_malformed_ordinary_requirement_is_outside_declaration_parser_boundary(self) -> None:
-        self.complete_tree()
-        ordinary = self.control / "04_requirement" / "CA-R-99-malformed-ordinary.md"
-        ordinary.write_text(
-            "---\natom_id: CA-R-99\natom_id: CA-R-99\nrole: Requirement\nform: Policy\n---\n",
-            encoding="utf-8",
-        )
-
-        self.assertEqual(len(read_scope_unit_declarations(self.root, self.control.name).paths), 3)
-
-    def test_malformed_selected_declaration_refuses(self) -> None:
-        self.complete_tree()
-        malformed = self.control / "04_requirement" / "CA-R-99-malformed-declaration.md"
-        malformed.write_text(
-            "---\natom_id: CA-R-99\natom_id: CA-R-99\nrole: Requirement\n"
-            "form: 'Scope Unit Declaration'\nstatus: Active\nversion: 1\n---\n",
-            encoding="utf-8",
-        )
-
-        with self.assertRaisesRegex(ScopeDeclarationError, "unique strings"):
-            read_scope_unit_declarations(self.root, self.control.name)
-
-    def test_projection_marked_copy_outside_projection_folder_is_not_authority(self) -> None:
-        _, _, source = self.complete_tree()
-        projected = self.control / "legacyapplied000" / "04_requirement" / "copied-declaration.md"
-        projected.parent.mkdir(parents=True)
-        projected.write_text(source.read_text(encoding="utf-8").replace(
-            "relations: {}",
-            "projection:\n  source_carrier_path: ../../CA-SU-1_LAYER_1_PARENT/04_requirement/child.md\nrelations: {}",
-        ), encoding="utf-8")
-
-        reader = ReadContext(roots=[str(self.root)], limits=dict(CEILINGS))
-        original_read, read_paths = reader.read, []
-
-        def record(path: Path, **kwargs) -> bytes:
-            read_paths.append(path)
-            return original_read(path, **kwargs)
-
-        reader.read = record  # type: ignore[method-assign]
-        result = read_scope_unit_declarations(self.root, self.control.name, reader=reader)
-        self.assertEqual(len(result.paths), 3)
-        self.assertNotIn(projected, result.paths)
-        self.assertNotIn(projected, read_paths)
-
-    def test_root_declaration_is_admitted_only_from_control_top_level(self) -> None:
-        root_source, _, _ = self.complete_tree()
-        result = read_scope_unit_declarations(self.root, self.control.name)
-
-        self.assertEqual(result.root.source, root_source)
-        self.assertEqual(root_source.parent, self.control)
-
-    def test_project_root_declaration_in_requirement_folder_refuses(self) -> None:
-        self.declaration("demo", "CA-R-1", project=True)
-
-        with self.assertRaisesRegex(ScopeDeclarationError, "no current Scope Unit Declarations"):
-            read_scope_unit_declarations(self.root, self.control.name)
-
-
-
-
-
-
-    def test_non_requirement_delegations_use_matching_role_and_parent(self) -> None:
-        _, _, child = self.complete_tree()
-        raw = child.read_text(encoding="utf-8").replace("form: Scope Unit Declaration", "form: Scope Delegation")
-        start = raw.index("### Formal Claim")
-        raw = (raw[:start] + "### Prose Claim\n\nDelegated responsibility.\n").replace(
-            "---\n", "---\ncontainer:\n  scope_unit: CA-SU-1\n", 1)
-        for directory, role, letter in (("05_method", "Method", "M"), ("06_evaluation", "Evaluation", "E"),
-                                        ("07_delivery", "Delivery", "D"), ("09_operations", "Operations", "O")):
-            with self.subTest(role=role):
-                path = child.parent.parent / directory / f"CA-{letter}-4.md"
-                path.parent.mkdir()
-                carrier = raw.replace("CA-R-3", f"CA-{letter}-4").replace("role: Requirement", f"role: {role}")
-                path.write_text(carrier, encoding="utf-8")
-                result = read_scope_unit_declarations(self.root, self.control.name)
-                self.assertEqual(role, result.by_name["CHILD"].delegations[0].role)
-                self.assertIn(path.relative_to(self.root).as_posix(), result.source_pins)
-                for invalid in (carrier.replace(f"CA-{letter}-4", "CA-R-4"),
-                                carrier.replace("scope_unit: CA-SU-1", "scope_unit: CA-SU-9"),
-                                carrier.replace(f"role: {role}", "role: Requirement")):
-                    path.write_text(invalid, encoding="utf-8")
-                    with self.assertRaises(ScopeDeclarationError):
-                        read_scope_unit_declarations(self.root, self.control.name)
-                structural = child.read_text(encoding="utf-8").replace("CA-R-3", f"CA-{letter}-4").replace(
-                    "role: Requirement", f"role: {role}")
-                path.write_text(structural, encoding="utf-8")
-                with self.assertRaises(ScopeDeclarationError):
-                    read_scope_unit_declarations(self.root, self.control.name)
-                path.write_text(structural.replace("form: Scope Unit Declaration", "form: Scope Delegation"), encoding="utf-8")
-                with self.assertRaises(ScopeDeclarationError):
-                    read_scope_unit_declarations(self.root, self.control.name)
-                path.unlink()
-
-    def test_prose_only_delegation_has_no_inferred_pairs(self) -> None:
-        _, source, _ = self.complete_tree()
-        raw = source.read_text(encoding="utf-8").replace("form: Scope Unit Declaration", "form: Scope Delegation")
-        start = raw.index("### Formal Claim")
-        raw = (raw[:start] + "### Prose Claim\n\nRequirement / Rule is described here.\n").replace(
-            "---\n", "---\ncontainer:\n  scope_unit: CA-SU-00\n", 1)
-        delegation = source.parent / "prose.md"
-        delegation.write_text(raw.replace("CA-R-2", "CA-R-8"), encoding="utf-8")
-        result = read_scope_unit_declarations(self.root, self.control.name)
-        self.assertEqual((), result.by_name["PARENT"].delegations[0].admitted_role_forms)
-        delegation.write_text(delegation.read_text().replace("CA-SU-00", "CA-SU-99"), encoding="utf-8")
-        with self.assertRaises(ScopeDeclarationError):
-            read_scope_unit_declarations(self.root, self.control.name)
-
-    def test_split_delegations_keep_sources_and_require_direct_parent(self) -> None:
-        _, _, child = self.complete_tree()
-        raw = child.read_text().replace("form: Scope Unit Declaration", "form: Scope Delegation")
-        raw = raw[:raw.index("### Formal Claim")] + "### Prose Claim\n\nDelegated responsibility.\n"
-        raw = raw.replace("---\n", "---\ncontainer:\n  scope_unit: CA-SU-1\n", 1)
-        paths = [child.parent / "delegation1.md", child.parent / "delegation2.md"]
-        for number, path in enumerate(paths, start=4):
-            path.write_text(raw.replace("CA-R-3", f"CA-R-{number}"))
-        result = read_scope_unit_declarations(self.root, self.control.name)
-        self.assertEqual(set(paths), {item.source for item in result.by_name["CHILD"].delegations})
-        digest = result.digest
-        paths[1].write_text(paths[1].read_text().replace("responsibility", "work"))
-        self.assertNotEqual(digest, read_scope_unit_declarations(self.root, self.control.name).digest)
-        paths[0].write_text(paths[0].read_text().replace("CA-SU-1", "CA-SU-9"))
-        with self.assertRaisesRegex(ScopeDeclarationError, "declared parent"):
-            read_scope_unit_declarations(self.root, self.control.name)
-
-
-
-    def test_structural_form_reader_accepts_valid_header_indentation_and_flow_style(self) -> None:
-        for serializer in (
-            lambda value: yaml.safe_dump(value, sort_keys=False, indent=4),
-            lambda value: yaml.safe_dump(value, sort_keys=False, default_flow_style=True),
-        ):
-            with self.subTest(serializer=serializer):
-                _, parent_source, _ = self.complete_tree()
-                _, frontmatter, body = parent_source.read_text(encoding="utf-8").split("---", 2)
-                header = yaml.safe_load(frontmatter)
-                header.setdefault("context", {})["form"] = "Scope Unit Declaration"
-                header.pop("form", None)
-                parent_source.write_text("---\n" + serializer(header) + "---" + body, encoding="utf-8")
-
-                declarations = read_scope_unit_declarations(self.root, self.control.name)
-
-                self.assertEqual("Scope Unit Declaration", declarations.by_name["PARENT"].form)
-
-    def test_nested_non_header_form_is_not_a_structural_candidate(self) -> None:
-        raw = b"""---
-context:
-  role: Requirement
-  form: Policy
-parameters:
-  form: Scope Delegation
----
-"""
-
-        self.assertFalse(_selects_structural_form(raw))
-
-    def test_structural_prefilter_accepts_folded_and_escaped_yaml_values(self) -> None:
-        for value in ('>-\n  Scope Unit\n  Declaration', r'"\x53cope Delegation"'):
-            with self.subTest(value=value):
-                self.assertTrue(_selects_structural_form(f"---\nform: {value}\n---\n".encode()))
-
-    def test_malformed_canonical_flow_form_fails_closed(self) -> None:
-        for context in (
-            "context: {form: Scope Delegation, role: Requirement",
-            "context: {role: Requirement, form: Scope Delegation",
-        ):
-            with self.subTest(context=context):
-                raw = f"---\n{context}\n---\n".encode()
-                self.assertTrue(_selects_structural_form(raw))
-
-        unrelated = b"---\nparameters: {form: Scope Delegation\n---\n"
-        self.assertFalse(_selects_structural_form(unrelated))
-
-
-    def test_project_root_scope_delegation_refuses(self) -> None:
-        source = self.declaration("demo", "CA-R-1", source=self.control / "CA-R-1-demo.md", project=True)
-        source.write_text(source.read_text(encoding="utf-8").replace(
-            "form: Scope Unit Declaration", "form: Scope Delegation",
-        ), encoding="utf-8")
-
-        with self.assertRaises(ScopeDeclarationError):
-            parse_scope_unit_declaration(source.read_bytes(), source)
-        with self.assertRaises(ScopeDeclarationError):
-            read_scope_unit_declarations(self.root, self.control.name)
-
-    def test_parser_rejects_order_number_for_unordered_scope_unit(self) -> None:
-        source = self.declaration("UNIT", "CA-R-2", scope_id="CA-SU-2", parent=PROJECT)
-        source.write_text(source.read_text(encoding="utf-8").replace(
-            "ordered=False", "ordered=False, order_number=1",
-        ), encoding="utf-8")
-
-        with self.assertRaisesRegex(ScopeDeclarationError, "required only"):
-            parse_scope_unit_declaration(source.read_bytes(), source)
-
-    def test_duplicate_scope_unit_name_refuses(self) -> None:
-        self.declaration("demo", "CA-R-1", source=self.control / "CA-R-1-demo.md", project=True)
-        self.declaration("UNIT", "CA-R-2", scope_id="CA-SU-2", parent=PROJECT)
-        self.declaration(
-            "UNIT", "CA-R-3", source=self.control / "04_requirement" / "duplicate.md",
-            scope_id="CA-SU-3", parent=PROJECT,
-        )
-
-        with self.assertRaisesRegex(ScopeDeclarationError, "names and IDs"):
-            read_scope_unit_declarations(self.root, self.control.name)
-
-    def test_duplicate_scope_unit_id_refuses(self) -> None:
-        self.declaration("demo", "CA-R-1", source=self.control / "CA-R-1-demo.md", project=True)
-        self.declaration("FIRST", "CA-R-2", scope_id="TEST-SU-1", parent=PROJECT)
-        self.declaration("SECOND", "CA-R-3", scope_id="TEST-SU-1", parent=PROJECT)
-
-        with self.assertRaisesRegex(ScopeDeclarationError, "names and IDs"):
-            read_scope_unit_declarations(self.root, self.control.name)
-
-    def test_unsafe_control_root_refuses(self) -> None:
-        with self.assertRaisesRegex(ScopeDeclarationError, "direct Project control"):
-            read_scope_unit_declarations(self.root, "../.anechoic_demo")
-
-    def test_non_ca_scope_id_and_spaced_project_name_remain_declaration_data(self) -> None:
-        (self.control / "anechoic_project_settings.toml").write_text(
-            '[project]\nname = "Friendly Demo"\n[paths]\ncontrol_root = ".anechoic_demo"\n', encoding="utf-8",
-        )
-        self.declaration("Friendly Demo", "CA-R-1", source=self.control / "CA-R-1-demo.md", project=True)
-        self.declaration("UNIT", "CA-R-2", scope_id="TEST-SU-1", parent="Friendly Demo")
-
-        result = read_scope_unit_declarations(self.root, self.control.name)
-        self.assertEqual(result.root.name, "Friendly Demo")
-        self.assertEqual(result.by_name["UNIT"].scope_unit_id, "TEST-SU-1")
 
 
 if __name__ == "__main__":

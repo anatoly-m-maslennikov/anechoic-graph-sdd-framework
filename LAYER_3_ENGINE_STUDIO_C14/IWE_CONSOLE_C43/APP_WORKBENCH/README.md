@@ -238,8 +238,8 @@ Split source files above 300 lines where practical; splitting above 500 is manda
 The Docker build installs DuckPGQ. Native tests need the host extension too:
 
 ```sh
-uv sync --group rmed-workflow-mcp
-.venv/bin/python -c "import duckdb; c=duckdb.connect(config={'extension_directory':'.anechoic_tmp/workbench/extensions'}); c.execute('INSTALL duckpgq FROM community'); c.close()"
+UV_PROJECT_ENVIRONMENT=.venv-dev uv sync --project LAYER_3_ENGINE_STUDIO_C14 --group runtime
+UV_PROJECT_ENVIRONMENT=.venv-dev uv run --project LAYER_3_ENGINE_STUDIO_C14 --locked --no-sync python -c "import duckdb; c=duckdb.connect(config={'extension_directory':'.anechoic_tmp/workbench/extensions'}); c.execute('INSTALL duckpgq FROM community'); c.close()"
 ```
 
 Run the repository's full test suite to build one disposable image and run the

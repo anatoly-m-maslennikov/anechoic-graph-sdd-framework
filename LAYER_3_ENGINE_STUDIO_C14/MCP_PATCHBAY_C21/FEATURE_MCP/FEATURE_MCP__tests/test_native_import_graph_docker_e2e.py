@@ -1,25 +1,22 @@
 """Check the native Import Graph through a disposable Docker Workbench."""
 
-import asyncio
 import os
 from pathlib import Path
 import re
 import subprocess
-import sys
 import tempfile
 from time import monotonic, sleep
 import unittest
 from uuid import uuid4
 
-from mcp.client.session import ClientSession
-from mcp.client.streamable_http import streamable_http_client
 
-import test_native_startup as fixture
-from http_paths import HEALTH_PATH, MCP_PATH, WORKBENCH_PATH
-from work_journal import PROJECT_DATABASE, append_sealed_events
+from . import test_native_startup as fixture
+from .native_import_graph_docker_cases import DockerBrowserAndMcpCases
+from .native_shared_candidate_cases import SharedCandidateCases
+from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import HEALTH_PATH, WORKBENCH_PATH
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.work_journal__pub import PROJECT_DATABASE, append_sealed_events
 
-sys.path.insert(0, str(fixture.MCP.parents[1] / "IWE_CONSOLE_C43/APP_WORKBENCH/APP_WORKBENCH__tests"))
-from workbench_docker_support import request
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__tests.workbench_docker_support import request
 
 
 GRAPH_COUNTS = """
@@ -29,7 +26,16 @@ GRAPH_COUNTS = """
 """
 
 
-class NativeImportGraphDockerE2E(unittest.TestCase):
+def _watcher_contents(version, container):
+    return ("---\nidentity: {atom_id: AN-T-9901}\n"
+            f"context: {{container: {{{container}}}}}\n"
+            f"state: {{status: active, version: {version}}}\n"
+            "---\n\n## Summary\n\nWatcher canary.\n")
+
+
+
+
+class NativeImportGraphDockerE2E(SharedCandidateCases, DockerBrowserAndMcpCases, unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         image = os.environ.get("ANECHOIC_IMAGE", "")
@@ -85,20 +91,6 @@ class NativeImportGraphDockerE2E(unittest.TestCase):
                               capture_output=True, text=True, check=True, timeout=10)
         raise RuntimeError(f"Canary Workbench failed to become ready\n{logs.stdout}{logs.stderr}")
 
-    def test_workbench_browser_flows(self):
-        repository = fixture.MCP.parents[2]
-        frontend = fixture.MCP.parents[1] / "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND"
-        environment = os.environ | {
-            "WORKBENCH_E2E_URL": f"{self.url}{WORKBENCH_PATH}/Anechoic",
-            "PLAYWRIGHT_BROWSERS_PATH": str(repository / ".anechoic_tmp/workbench/playwright-browsers"),
-        }
-        with tempfile.TemporaryDirectory(prefix="workbench-browser-") as output:
-            result = subprocess.run(
-                ["npm", "run", "test:e2e", "--", "--output", output, "--global-timeout", "115000", "--retries", "1"],
-                cwd=frontend, env=environment,
-                capture_output=True, text=True, timeout=120,
-            )
-        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
 
     @classmethod
     def _write(cls, relative, contents):
@@ -183,43 +175,7 @@ class NativeImportGraphDockerE2E(unittest.TestCase):
                                            "arguments": view | {"result_delivery": "inline"}})
         self.assertEqual((second, expected), (fetched["query_id"], fetched["rows"]))
 
-    def test_promotion_immediately_refreshes_workbench(self):
-        async def exercise():
-            async with streamable_http_client(self.url + MCP_PATH) as streams, ClientSession(*streams) as client:
-                await client.initialize()
 
-                async def call(name, arguments, status="completed"):
-                    result = await client.call_tool(name, arguments)
-                    self.assertFalse(result.is_error, result.structured_content)
-                    self.assertEqual(status, result.structured_content["status"], result.structured_content)
-                    return result.structured_content
-
-                created = await call("atom_lifecycle_create_draft", {"newAtom": {
-                    "template": "task", "container": {"component": "C00"},
-                    "body": "## Summary\n\nPromotion canary.\n",
-                }})
-                draft = created["savedDraft"]
-                await call("atom_lifecycle_promote_draft", {
-                    "target": {"ref_id": draft["ref_id"], "version": draft["version"]},
-                    "targetStatus": "backlog",
-                })
-                revised = await call("atom_lifecycle_update", {
-                    "sourceCurrent": {"ref_id": draft["atom_id"], "version": 1},
-                    "changes": {"body": "## Summary\n\nPromotion canary.\n\nRevised.\n"},
-                }, status="draft_created")
-                revision = revised["savedDraft"]
-                await call("atom_lifecycle_promote_draft", {
-                    "target": {"ref_id": revision["ref_id"], "version": revision["version"]},
-                    "targetStatus": "backlog",
-                })
-                atom = draft["atom_id"]
-                self.assertEqual([[atom + "@1", 1, "archived"], [atom, 2, "backlog"]], self._rows(
-                    'SELECT reference, "header.state.version", "header.state.status" FROM atoms '
-                    f"WHERE reference IN ('{atom}', '{atom}@1', '{revision['ref_id']}') "
-                    'ORDER BY "header.state.version"'
-                ))
-
-        asyncio.run(exercise())
 
     def test_watcher_adds_renames_and_removes_targets(self):
         self._write("consumer.py", "import moving.target\n")
@@ -248,6 +204,28 @@ class NativeImportGraphDockerE2E(unittest.TestCase):
         self._wait_rows(sql, [["external"]])
         manifest.unlink()
         self._wait_rows(sql, [["unresolved"]])
+
+    def test_package_external_import_inventory(self):
+        source = self._write(
+            "external_fixture/imports.py",
+            "import json\nimport sys\nimport dep.helper\nimport yaml\n"
+            "from yaml import safe_load\nimport unavailable_fixture_module\n",
+        )
+        sql = (
+            "SELECT language, import_name, occurrence_count FROM package_external_imports "
+            "WHERE package_path = 'external_fixture'"
+        )
+        try:
+            self._wait_rows(sql, [["python", "yaml", 2]])
+            self.assertEqual([["unavailable_fixture_module"]], self._rows("""
+                SELECT written_specifier FROM module_imports
+                WHERE source_key = 'module:external_fixture/imports.py'
+                AND resolution_status = 'unresolved'
+            """))
+        finally:
+            source.unlink()
+            source.parent.rmdir()
+        self._wait_rows(sql, [])
 
     def test_disk_journal_and_projection_survive_warm_restart(self):
         receipt, = append_sealed_events(
@@ -301,17 +279,11 @@ class NativeImportGraphDockerE2E(unittest.TestCase):
             self.assertLessEqual(elapsed, limit, label)
             self.assertEqual([expected[0][-2:]] if expected else [], self._rows(graph), label)
 
-        def contents(version, container):
-            return ("---\nidentity: {atom_id: AN-T-9901}\n"
-                    f"context: {{container: {{{container}}}}}\n"
-                    f"state: {{status: active, version: {version}}}\n"
-                    "---\n\n## Summary\n\nWatcher canary.\n")
-
         started = monotonic()
-        path = self._write(relative, contents(1, "component: C00"))
+        path = self._write(relative, _watcher_contents(1, "component: C00"))
         check("create", started, [[path.name, "AN-T-9901", "AN-T-9901@1", "Component", "C00"]])
         started = monotonic()
-        path.write_text(contents(2, "atom: AN-S-001"), encoding="utf-8")
+        path.write_text(_watcher_contents(2, "atom: AN-S-001"), encoding="utf-8")
         check("edit", started, [[path.name, "AN-T-9901", "AN-T-9901@2", "Atom", "AN-S-001"]])
         started = monotonic()
         path = path.rename(path.with_name("AN-T-9901--renamed.md"))

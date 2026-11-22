@@ -16,18 +16,21 @@ compiler = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = compiler
 SPEC.loader.exec_module(compiler)
 
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.artifact_metadata import SETTINGS_PATH
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.COMPILE_APPLICABLE_METHODOLOGY.methodology_paths__shared import DEFAULT_SETTINGS_NAME, INSTANCE_SETTINGS_RELATIVE
+
 
 class FrameworkSettingsCarrierTest(unittest.TestCase):
     def setUp(self) -> None:
-        from FEATURE_TOOLS__tests.scope_declaration_test_support import write_scope_unit_declarations
+        from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.scope_declaration_test_support__pub import write_scope_unit_declarations
 
         temporary = Path.cwd() / ".anechoic_tmp/framework-settings-carrier-tests"
         temporary.mkdir(parents=True, exist_ok=True)
         self.root = Path(tempfile.mkdtemp(prefix="case-", dir=temporary))
         self.addCleanup(shutil.rmtree, self.root, True)
         self.control = Path(".anechoic_anechoic")
-        (self.root / compiler.SETTINGS_PATH).parent.mkdir(parents=True, exist_ok=True)
-        (self.root / compiler.SETTINGS_PATH).write_text(
+        (self.root / SETTINGS_PATH).parent.mkdir(parents=True, exist_ok=True)
+        (self.root / SETTINGS_PATH).write_text(
             "[project]\nname = \"anechoic\"\n[paths]\ncontrol_root = \".anechoic_anechoic\"\n", encoding="utf-8"
         )
         self.declarations = write_scope_unit_declarations(
@@ -58,11 +61,11 @@ class FrameworkSettingsCarrierTest(unittest.TestCase):
 
     def test_nondefault_control_root_uses_canonical_instance_and_merges_default(self) -> None:
         self.write(
-            self.layers["CORE_META_MODEL"] / compiler.DEFAULT_SETTINGS_NAME,
+            self.layers["CORE_META_MODEL"] / DEFAULT_SETTINGS_NAME,
             "[defaults]\ncolour = \"blue\"\n[extensions.default]\nenabled = true\nrevision = \"v1\"\n",
         )
         canonical = self.write(
-            self.control / compiler.INSTANCE_SETTINGS_RELATIVE,
+            self.control / INSTANCE_SETTINGS_RELATIVE,
             "[instance]\nlabel = \"custom-control\"\n[extensions.default]\nenabled = true\nrevision = \"v2\"\n",
         )
         legacy = self.write(
@@ -81,7 +84,7 @@ class FrameworkSettingsCarrierTest(unittest.TestCase):
     def test_canonical_instance_addition_mutation_and_removal_change_source_snapshot(self) -> None:
         places = self.paths()
         absent = compiler.source_state_snapshot(self.root, places)
-        canonical = self.write(self.control / compiler.INSTANCE_SETTINGS_RELATIVE, "[instance]\nvalue = 1\n")
+        canonical = self.write(self.control / INSTANCE_SETTINGS_RELATIVE, "[instance]\nvalue = 1\n")
         added = compiler.source_state_snapshot(self.root, places)
         self.assertNotEqual(absent, added)
         self.assertIn(canonical.relative_to(self.root).as_posix(), added)
@@ -94,7 +97,7 @@ class FrameworkSettingsCarrierTest(unittest.TestCase):
         self.assertEqual(absent, compiler.source_state_snapshot(self.root, places))
 
     def test_symlinked_canonical_carrier_or_ancestor_is_refused(self) -> None:
-        canonical = self.root / self.control / compiler.INSTANCE_SETTINGS_RELATIVE
+        canonical = self.root / self.control / INSTANCE_SETTINGS_RELATIVE
         canonical.parent.mkdir(parents=True, exist_ok=True)
         target = self.root / "settings-target.toml"
         target.write_text("[instance]\nvalue = 1\n", encoding="utf-8")

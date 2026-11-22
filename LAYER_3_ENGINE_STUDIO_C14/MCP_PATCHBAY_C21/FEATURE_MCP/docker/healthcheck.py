@@ -1,4 +1,4 @@
-"""Check that the opt-in HTTP MCP service accepts initialization."""
+"""Check that the opt-in HTTP MCP service accepts a session and ping."""
 import asyncio
 import os
 import signal
@@ -15,6 +15,7 @@ async def check():
         ) as streams:
             async with ClientSession(*streams) as session:
                 await session.initialize()
+                await session.send_ping()
 
 
 if __name__ == "__main__" and os.getenv("ANECHOIC_MCP_HTTP_HEALTHCHECK") == "1":

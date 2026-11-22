@@ -9,7 +9,7 @@ from unittest.mock import patch
 TOOLS = Path(__file__).resolve().parents[1]
 ROOT = TOOLS.parents[2]
 sys.path.insert(0, str(TOOLS))
-from ATOM_LIFECYCLE import directory_effect, effects  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE import directory_effect, effects  # noqa: E402
 
 
 class DirectoryEffectTest(unittest.TestCase):

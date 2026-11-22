@@ -1,13 +1,12 @@
-"""Functional shared-host proof with real in-process Workbench gateways."""
+"""Functional shared-host proof with per-Project Backend processes."""
 
 from __future__ import annotations
 
 import asyncio
 from contextlib import asynccontextmanager
-from dataclasses import replace
 from types import SimpleNamespace
 from pathlib import Path
-import sys
+import os
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -15,28 +14,21 @@ from unittest.mock import patch
 import httpx2
 from mcp.client.session import ClientSession
 from mcp.client.streamable_http import streamable_http_client
-from watchdog.observers.polling import PollingObserver
 
 APP = Path(__file__).resolve().parents[1]
 ROOT = APP.parents[2]
 TOOLS = APP.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
-sys.path[:0] = [str(APP), str(TOOLS), str(TOOLS / "VALIDATE_ATOMS")]
 
-from host_runtime_config import load_host_runtime_config  # noqa: E402
-from APP_WORKBENCH.APP_WORKBENCH__tests.smalltest_support import extension_directory  # noqa: E402
-from http_paths import MCP_PATH  # noqa: E402
-from shared_http_server import create_app  # noqa: E402
-from native_startup import load_native_inputs  # noqa: E402
-import test_native_startup as fixtures  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.smalltest_support__pub import extension_directory  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import MCP_PATH  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.shared_http_server import create_app  # noqa: E402
+from . import test_native_startup as fixtures  # noqa: E402
 
 
 class SharedNativeRoutingTests(unittest.IsolatedAsyncioTestCase):
     """Exercise isolated native Workbench owners through one HTTP facade."""
 
     def setUp(self) -> None:
-        observer = patch("APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_watcher.NativeObserver", PollingObserver)
-        observer.start()
-        self.addCleanup(observer.stop)
         test_dir = ROOT / ".anechoic_tmp/tests/shared-native-routing"
         test_dir.mkdir(parents=True, exist_ok=True)
         self.temporary = tempfile.TemporaryDirectory(dir=test_dir)
@@ -54,25 +46,26 @@ class SharedNativeRoutingTests(unittest.IsolatedAsyncioTestCase):
             "[shared_mcp]\n"
             f"projects_root={str(self.projects)!r}\n"
             "http_port=18092\n"
-            "max_loaded_projects=2\n",
+            "max_loaded_projects=2\n"
+            "[project_defaults]\nworkbench_storage=\"memory\"\njournal_storage=\"files\"\n",
             encoding="utf-8",
         )
-        self.config = load_host_runtime_config(self.config_path)
 
     def _project(self, name: str) -> Path:
         root = self.projects / name
         control = root / f".anechoic_{name}"
-        fixtures.RuntimeSelectionTests.manifest(self, control, name=name, prefix=name.upper(), component="C00")
+        parameters = {"runtime": {"workbench": {"storage": "disk"}}} if name == "beta" else None
+        fixtures.RuntimeSelectionTests.manifest(self, control, name=name, prefix=name.upper(),
+                                                component="C00", parameters=parameters)
         return root.resolve()
 
     @asynccontextmanager
     async def _session(self):
-        cache = extension_directory(ROOT)
-        def inputs(selection):
-            return replace(load_native_inputs(selection), extension_directory=cache)
-
-        app = create_app(self.config)
-        self.enterContext(patch("native_startup.load_native_inputs", side_effect=inputs))
+        environment = {"ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY": str(extension_directory(ROOT)),
+                       "ANECHOIC_RUNTIME_NAMESPACE": "docker"}
+        self.enterContext(patch.dict(os.environ, environment))
+        app = create_app(self.config_path)
+        self.app = app
         async with app.starlette_app.router.lifespan_context(app.starlette_app):
             async with httpx2.AsyncClient(
                 transport=httpx2.ASGITransport(app=app),
@@ -107,6 +100,9 @@ class SharedNativeRoutingTests(unittest.IsolatedAsyncioTestCase):
                 for root in self.projects_by_name.values()
             ))
             self.assertTrue(all(not response.is_error for response in schemas), schemas)
+            coordinator, owners = await self._assert_distinct_backends()
+            self.assertFalse((self.projects_by_name["alpha"] / ".anechoic_runtime/workbench/projection.duckdb").exists())
+            self.assertTrue((self.projects_by_name["beta"] / ".anechoic_runtime/workbench/projection.duckdb").is_file())
             responses = await asyncio.gather(*(
                 session.call_tool("workspace_open", {
                     "session_id": "same-id", "project_root": str(self.projects_by_name[name]),
@@ -126,6 +122,81 @@ class SharedNativeRoutingTests(unittest.IsolatedAsyncioTestCase):
                 }) for name in ("alpha", "beta")
             ))
             self.assertEqual([2, 1], [len(r.structured_content["views"]) for r in states])
+        for pid in [coordinator, *owners.values()]:
+            await self._assert_exited(pid)
+
+    async def _backend_children(self, coordinator):
+        status = await self.app.gateway.status()
+        self.assertEqual(coordinator, status["pid"])
+        by_instance = {item["instance_id"]: item["pid"]
+                       for item in status["loaded_project_processes"]}
+        children = {}
+        for root in self._expected_roots:
+            selection = await self.app.gateway.select_project(str(root))
+            pid = by_instance.get(selection["instance_id"])
+            if pid is not None:
+                children[str(root)] = pid
+        return children
+
+    async def _assert_distinct_backends(self):
+        coordinator = (await self.app.gateway.status())["pid"]
+        self.assertNotEqual(os.getpid(), coordinator)
+        self._expected_roots = tuple(self.projects_by_name.values())
+        children = await self._backend_children(coordinator)
+        self.assertEqual({str(root) for root in self._expected_roots}, set(children))
+        self.assertEqual(2, len(set(children.values())))
+        return coordinator, children
+
+    async def _assert_exited(self, pid):
+        for _ in range(100):
+            try:
+                os.kill(pid, 0)
+            except ProcessLookupError:
+                return
+            await asyncio.sleep(0.05)
+        self.fail(f"process {pid} did not exit")
+
+    async def test_idle_eviction_closes_only_the_evicted_backend(self):
+        self.config_path.write_text(
+            self.config_path.read_text(encoding="utf-8").replace(
+                "max_loaded_projects=2", "max_loaded_projects=1"), encoding="utf-8")
+        async with self._session() as session:
+            alpha, beta = (self.projects_by_name[name] for name in ("alpha", "beta"))
+            first = await session.call_tool("query_schema", {"project_root": str(alpha)})
+            self.assertFalse(first.is_error, first.structured_content)
+            coordinator = (await self.app.gateway.status())["pid"]
+            self._expected_roots = (alpha, beta)
+            old = (await self._backend_children(coordinator))[str(alpha)]
+            second = await session.call_tool("query_schema", {"project_root": str(beta)})
+            self.assertFalse(second.is_error, second.structured_content)
+            await self._assert_exited(old)
+            children = await self._backend_children(coordinator)
+            self.assertEqual({str(beta)}, set(children))
+            current = children[str(beta)]
+            self.assertNotEqual(old, current)
+        await self._assert_exited(current)
+        await self._assert_exited(coordinator)
+
+    async def test_cached_backend_refuses_lifecycle_after_manifest_drift(self):
+        root = self.projects_by_name["alpha"]
+        async with self._session() as session:
+            ready = await session.call_tool("query_schema", {"project_root": str(root)})
+            self.assertFalse(ready.is_error, ready.structured_content)
+            coordinator = (await self.app.gateway.status())["pid"]
+            self._expected_roots = (root,)
+            owner = (await self._backend_children(coordinator))[str(root)]
+            manifest = root / ".anechoic_alpha/ALPHA-S-001-PROJECT_MANIFEST--declare.md"
+            manifest.write_text(manifest.read_text(encoding="utf-8") + "\n", encoding="utf-8")
+            before = {path: path.read_bytes() for path in manifest.parent.rglob("*") if path.is_file()}
+            reply = await session.call_tool("atom_lifecycle_create_draft", {
+                "project_root": str(root), "newAtom": {
+                    "template": "task", "label": "Task", "container": {"component": "C00"},
+                    "body": "## Summary\n\nMust not be written.\n",
+                },
+            })
+            self.assertEqual("project_manifest_reload_required", reply.structured_content["errors"][0]["code"])
+            self.assertEqual(before, {path: path.read_bytes() for path in manifest.parent.rglob("*") if path.is_file()})
+            self.assertEqual(owner, (await self._backend_children(coordinator))[str(root)])
 
     async def test_single_project_mcp_and_workbench_schema(self):
         root = self.projects_by_name["alpha"]
@@ -133,7 +204,6 @@ class SharedNativeRoutingTests(unittest.IsolatedAsyncioTestCase):
             f'schema_version=1\n[shared_mcp]\nproject_root={str(root)!r}\nhttp_port=18092\n'
             '[project_defaults]\nworkbench_storage="memory"\njournal_storage="files"\n'
         )
-        self.config = load_host_runtime_config(self.config_path)
         async with self._session() as session:
             tools = {tool.name for tool in (await session.list_tools()).tools}
             self.assertIn("query_schema", tools)

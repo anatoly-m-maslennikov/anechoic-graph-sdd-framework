@@ -298,36 +298,34 @@ for entry points, shared dependencies and verification limits. This code-first
 retirement does not claim that the corresponding methodology Atoms have already
 been reconciled or that an installed runtime has been replaced.
 
-Two Project-owned release commands run directly from the repository on the host:
+The Release uv Project provides three host commands in the `release` environment.
 
-- **Local release (`LAYER_5_FRAMEWORK_DELIVERY/release.py local`):** first commit all tracked
-  and untracked nonignored changes and verify a clean worktree; run the complete suite; copy active
-  Methodology Sources into `LAYER_1_FRAMEWORK_METHODOLOGY`; compile Applicable
-  Methodology; build the Engine package and test its immutable image on a
-  Docker-assigned loopback port; install the tested package and project-local
-  `ane`; start and verify production MCP. After verification, keep the current
-  image and two previous Project images. Remove older eligible unused images
-  and preserve unrelated or unproven targets.
-- **Public release (`LAYER_5_FRAMEWORK_DELIVERY/release.py public`):** run the complete suite; use one content
-  prompt for the full PR description and its concise Version History bullets;
-  update the version and README; push `amm/dev`; create or update the PR to
-  `main` as a Draft; insert its actual link into Version History. It does not merge the PR.
+- **Local Release** checkpoints eligible changes, runs functional QA, and builds
+  the Engine package. It verifies the immutable image with end-to-end and canary
+  checks before it installs the package and project-local `ane` and starts and
+  verifies production MCP.
+- **Public Release** reads completed Task and Epic evidence at pinned Git commits.
+  A second run with the reviewed JSON changes returns drafts for the pull request
+  description and Version History entry. The Operator handles publication.
+- **Build image** returns the immutable image ID for the checked-out source without
+  deploying it or changing the Version.
 
-Both start only on an Operator command. They commit all safe, nonignored changes
-before each step and at the end. Failures stop for manual handling: no automatic
-rollback, retry, recovery or legacy compatibility path is part of this cut.
+Use an Operator command to start a release. After production verification,
+Local Release keeps the current image and two previous Project images. It removes
+only eligible unused images.
+
 Local release skips an empty initial commit; commit failure or remaining changes
 stop it before tests, builds or Docker work. Existing environment-file exclusions
 remain; excluded nonignored changes must be resolved before release.
 
 The installed Project package is in `.anechoic_runtime/simple_local_release/package`.
 Configuration and existing Project records remain outside the replacement
-boundary. Python runs through locked `uv` environments, not system libraries.
+boundary. Engine Studio uses `dev` for QA and `prod` in the runtime image from the
+same uv lock. Setup has its own lock and `setup` environment.
 
 Use the locked host commands in [Project release tools](LAYER_3_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/README.md),
-with an Operator-selected run ID and a JSON content draft for Public release.
-They use the host's Git, GitHub and Docker tools independently of MCP. Legacy
-release MCP bindings are retired; the two host commands remain. Regular
+with an Operator-selected run ID. The host commands use Git and Docker
+independently of MCP. Regular
 Project MCP runs in Docker on localhost without a password; the
 [launcher documentation](LAYER_3_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/README.md)
 describes Project selection and endpoint startup.

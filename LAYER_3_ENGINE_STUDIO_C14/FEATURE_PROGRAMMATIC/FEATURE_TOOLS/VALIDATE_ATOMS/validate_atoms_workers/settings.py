@@ -4,16 +4,8 @@ import hashlib
 from pathlib import Path
 from typing import Any
 
-from settings_carrier import parse_settings_carrier
-from .read_io import ReadContext
-
-CEILINGS = dict(
-    max_candidates=1_000_000,
-    max_file_bytes=64 * 1024 * 1024,
-    max_total_read_bytes=1024 * 1024 * 1024,
-    timeout_seconds=300,
-    max_findings=100_000,
-)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.settings_carrier__pub import parse_settings_carrier
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__pub import CEILINGS, ReadContext
 
 
 def bound_file(reader: ReadContext, binding: dict[str, Any]) -> bytes:

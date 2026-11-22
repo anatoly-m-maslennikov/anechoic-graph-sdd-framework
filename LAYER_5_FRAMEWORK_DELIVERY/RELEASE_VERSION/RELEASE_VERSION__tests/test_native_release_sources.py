@@ -2,13 +2,11 @@
 
 from hashlib import sha256
 from pathlib import Path
-import sys
 import tempfile
 from types import SimpleNamespace
 import unittest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from release_support import LocalReleaseError, _native_release_sources
+from RELEASE_VERSION.release_support import LocalReleaseError, _native_release_sources
 
 
 class NativeReleaseSourcesTests(unittest.TestCase):

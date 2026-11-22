@@ -6,15 +6,15 @@ from copy import deepcopy
 import re
 from typing import Any
 
-from context_builder import body_sections, markdown, metadata
-from evaluation_contract import summarize_evaluations
-from layout_preview import _frontmatter
-from layout_repair_gate import (_assessed_preflight, _digest, _permission, authority_digest)
-from layout_subject_repair_gate import _confirmed_subjects_finding, _final_passes, _original_layout_gaps
-from repair_gate import _identity, _output_binding, _outputs, _resolutions, _summary
-from review_evidence import ReviewContext, probability, text
-from scope_extraction_preview import admit_scope_extraction_preview
-from subject_repair_gate import _dependency_change
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import body_sections, markdown, metadata
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.evaluation_contract import summarize_evaluations
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.layout_preview import _frontmatter
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.layout_repair_gate import (_assessed_preflight, _digest, _permission, authority_digest)
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.layout_subject_repair_gate import _confirmed_subjects_finding, _final_passes, _original_layout_gaps
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair_gate__shared import _identity, _output_binding, _outputs, _resolutions, _summary
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_evidence__shared import ReviewContext, probability, text
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.scope_extraction_preview import admit_scope_extraction_preview
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.subject_repair_gate import _dependency_change
 
 
 DISPOSITION = 'scope_extraction_subject_recoding'
@@ -120,17 +120,7 @@ def _admitted_original_findings(evaluation: dict[str, Any], original: str, final
                 raise ValueError('unadmitted original finding: ' + row['id'])
 
 
-def admit_scope_extraction_subject_recoding(
-        evaluation: dict[str, Any], proposal: dict[str, Any], *, context: dict[str, Any],
-        final_evaluation: dict[str, Any], final_context: dict[str, Any],
-        section_mapping: dict[str, Any], permission: dict[str, Any],
-        preflight: dict[str, Any]) -> dict[str, Any]:
-    """Return one fully assessed staged candidate, never write a source.
-
-    The virtual original-to-layout candidate is evidence only.  The real final
-    output may additionally make the one constrained ``subjects.depends_on``
-    correction accepted by ``subject_repair_gate._dependency_change``.
-    """
+def _check_review_evidence(evaluation, proposal, context, final_evaluation, final_context):
     original_context, output_context = ReviewContext(context), ReviewContext(final_context)
     if original_context.report_contract != 5 or output_context.report_contract != 5:
         raise ValueError('Scope extraction admission requires report contract 5')
@@ -149,18 +139,10 @@ def admit_scope_extraction_subject_recoding(
             or output_context.confidence_threshold < .99
             or not probability(proposal.get('confidence')) or proposal['confidence'] < threshold):
         raise ValueError('Scope extraction confidence or final review threshold is insufficient')
-    allowed = _permission(proposal, permission, DISPOSITION)
-    if 'deferred_findings' in proposal:
-        raise ValueError('Scope extraction cannot defer original findings')
-    _resolutions(evaluation, proposal)
-    outputs = _outputs(proposal, allowed)
-    if len(outputs) != 1:
-        raise ValueError('Scope extraction requires exactly one final output')
-    output = outputs[0]
-    binding = _output_binding(output)
-    if (final_evaluation['source'] != binding
-            or output_context.candidate_text(binding) != output['text']):
-        raise ValueError('final evaluation does not bind the exact proposed output')
+    return original_context, output_context, original, threshold
+
+
+def _check_candidate_shape(proposal, output, original, section_mapping):
     parts = _frontmatter(original)
     if parts is None or metadata(original).get('content_role') not in ('Requirement', 'Method', 'Delivery'):
         raise ValueError('Scope extraction requires an R/M/D Carrier with complete frontmatter')
@@ -177,6 +159,35 @@ def admit_scope_extraction_subject_recoding(
     removes_type = 'type' in metadata(virtual) and 'type' not in metadata(output['text'])
     _identity(stripped_output, proposal['source'], stripped_virtual,
               'recoding' if removes_type else 'formatting', 'carrier_only')
+    return virtual
+
+
+def admit_scope_extraction_subject_recoding(
+        evaluation: dict[str, Any], proposal: dict[str, Any], *, context: dict[str, Any],
+        final_evaluation: dict[str, Any], final_context: dict[str, Any],
+        section_mapping: dict[str, Any], permission: dict[str, Any],
+        preflight: dict[str, Any]) -> dict[str, Any]:
+    """Return one fully assessed staged candidate, never write a source.
+
+    The virtual original-to-layout candidate is evidence only.  The real final
+    output may additionally make the one constrained ``subjects.depends_on``
+    correction accepted by ``subject_repair_gate._dependency_change``.
+    """
+    original_context, output_context, original, threshold = _check_review_evidence(
+        evaluation, proposal, context, final_evaluation, final_context)
+    allowed = _permission(proposal, permission, DISPOSITION)
+    if 'deferred_findings' in proposal:
+        raise ValueError('Scope extraction cannot defer original findings')
+    _resolutions(evaluation, proposal)
+    outputs = _outputs(proposal, allowed)
+    if len(outputs) != 1:
+        raise ValueError('Scope extraction requires exactly one final output')
+    output = outputs[0]
+    binding = _output_binding(output)
+    if (final_evaluation['source'] != binding
+            or output_context.candidate_text(binding) != output['text']):
+        raise ValueError('final evaluation does not bind the exact proposed output')
+    virtual = _check_candidate_shape(proposal, output, original, section_mapping)
     _admitted_original_findings(evaluation, original, output['text'])
     _assessed_preflight(preflight, proposal, binding, original_context, output_context,
                         context, final_context, section_mapping, original, threshold, final_evaluation)

@@ -15,7 +15,7 @@ replacing the Atom. It does not normalize links, code, HTML, escaped characters,
 or unsupported emphasis. Actual Summary-value changes still require replacement,
 and every admitted proposal still needs an independent change assessment.
 
-`repair_gate.admit_proposal` accepts contract 6 without broadening its permission
+`repair_gate__shared.admit_proposal` accepts contract 6 without broadening its permission
 boundary. Subject and relation targets must remain unchanged; unambiguous
 encoding normalization can preserve the same target values. Replacements,
 splits and path changes are rejected for a separate authorized run. `candidate`
@@ -44,7 +44,7 @@ texts together with the current evaluation authority and caller permissions.
    successor identities to `propose_repair.prompt.md`. Its disposition is provisional.
 2. After generation, independently assess the exact output under CA-O-067.
    Have the caller bind that assessment and its own preflight evidence, then validate the candidate
-   using `repair_gate.admit_proposal(evaluation, proposal,
+   using `repair_gate__shared.admit_proposal(evaluation, proposal,
    context=review_context, permission=caller_permission,
    preflight=caller_preflight)`.
 

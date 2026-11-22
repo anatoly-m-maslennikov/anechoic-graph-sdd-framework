@@ -1,7 +1,15 @@
 
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 const url = process.env.WORKBENCH_E2E_URL!;
+
+async function restoreComfortableDensity(page: Page) {
+  await page.getByRole('tab', { name: 'Settings' }).click();
+  await page.getByLabel('Density', { exact: true }).selectOption('comfortable');
+  await page.getByRole('tab', { name: /^View 1/ }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-density', 'comfortable');
+  await expect(page.locator('.editor-content .cm-scroller')).toHaveCSS('max-height', 'none');
+}
 
 test('keeps the compact editor scrollable and controls usable across settings', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -50,9 +58,5 @@ test('keeps the compact editor scrollable and controls usable across settings', 
   });
   expect(layout.actionsTop).toBeGreaterThanOrEqual(layout.editorBottom - 1);
 
-  await settings.click();
-  await page.getByLabel('Density', { exact: true }).selectOption('comfortable');
-  await tab.click();
-  await expect(page.locator('html')).toHaveAttribute('data-density', 'comfortable');
-  await expect(scroller).toHaveCSS('max-height', 'none');
+  await restoreComfortableDensity(page);
 });

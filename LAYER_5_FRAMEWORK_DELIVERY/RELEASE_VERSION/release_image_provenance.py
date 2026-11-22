@@ -7,7 +7,7 @@ import re
 import subprocess
 from typing import Protocol
 
-from release_cleanup_identity import Runner
+from .release_cleanup_identity import Runner
 
 
 class SelectedProject(Protocol):

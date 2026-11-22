@@ -2,9 +2,9 @@
 
 import unittest
 
-import test_simple_local_release as release_fixture
-import local_release
-from release_support import _GENERATED_ASSETS
+from RELEASE_VERSION.RELEASE_VERSION__tests import test_simple_local_release as release_fixture
+from RELEASE_VERSION import local_release
+from RELEASE_VERSION.release_support import _GENERATED_ASSETS
 
 
 class RelationRegistryReleaseTests(unittest.TestCase):

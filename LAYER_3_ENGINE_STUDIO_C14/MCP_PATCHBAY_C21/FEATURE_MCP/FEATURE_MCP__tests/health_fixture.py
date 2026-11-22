@@ -1,7 +1,8 @@
 """Native Workbench ASGI fixture with controlled backend outcomes."""
+from .native_query_test_support import local_gateway
+
 import asyncio
 from pathlib import Path
-import sys
 import tempfile
 from types import SimpleNamespace
 import unittest
@@ -12,10 +13,8 @@ from mcp.client.streamable_http import streamable_http_client
 
 
 APP = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(APP))
-from direct_gateway import DirectGateway  # noqa: E402
-from http_server import create_app  # noqa: E402
-from http_paths import MCP_PATH  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.http_server import create_app  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import MCP_PATH  # noqa: E402
 
 
 SECRET = "HEALTH_FIXTURE_SECRET"
@@ -60,7 +59,7 @@ class HealthHTTPFixture(unittest.IsolatedAsyncioTestCase):
             start=lambda: None,
             close=lambda: None,
         )
-        app = create_app(self.root, runtime_gateway=DirectGateway(self.root, native_query=owner))
+        app = create_app(self.root, runtime_gateway=local_gateway(self.root, native_query=owner))
         app.gateway.workbench.call = self.backend_call
         return app
 

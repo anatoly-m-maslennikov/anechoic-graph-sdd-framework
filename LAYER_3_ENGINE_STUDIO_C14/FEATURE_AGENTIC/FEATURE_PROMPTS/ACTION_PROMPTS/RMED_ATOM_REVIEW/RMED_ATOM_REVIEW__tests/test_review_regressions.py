@@ -4,7 +4,7 @@ import json
 import unittest
 from pathlib import Path
 
-from test_split_evaluation import context, contract, gap, merge_evaluations, part
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__tests.test_split_evaluation import context, contract, gap, merge_evaluations, part
 
 HERE = Path(__file__).resolve().parents[1]
 

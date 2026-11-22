@@ -8,8 +8,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 3
-  updated_at: '2026-11-21T19:15:01.888027+00:00'
+  version: 4
+  updated_at: '2026-11-22T11:22:00.172069+00:00'
 ---
 
 ## Summary
@@ -34,7 +34,7 @@ declare_entity(
     base_path='Node//Artifact//Atom//Spec Atom.Header',
     value_format=int,
     field_options={'kw_only': True},
-    allowed_values=(0,),
+    allowed_values=(4,),
     value_cardinality=1,
     property_occurrence_cardinality=1,
     applies_to_entity_classes=('Node//Artifact//Atom//Spec Atom//Manifest//Component Manifest',),

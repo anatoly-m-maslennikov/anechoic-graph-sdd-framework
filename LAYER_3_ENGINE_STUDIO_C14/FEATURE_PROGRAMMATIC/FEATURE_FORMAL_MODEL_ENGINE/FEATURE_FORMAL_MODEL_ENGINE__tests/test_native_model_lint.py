@@ -10,8 +10,7 @@ import unittest
 from unittest.mock import patch
 
 PROGRAMMATIC = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(PROGRAMMATIC / "FEATURE_TOOLS"))
-from lint_python_model_claim import lint_python_model_claim
+from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.lint_python_model_claim__pub import lint_python_model_claim
 
 
 class NativeModelLintTests(unittest.TestCase):
@@ -26,7 +25,7 @@ class NativeModelLintTests(unittest.TestCase):
                   "@dataclass\nclass Example:\n"
                   "    id: int = field(metadata={'property_occurrence_cardinality': 1, 'value_cardinality': 1})\n"
                   "declare_entity(entity_name='Example', entity_class=Example)\n")
-        with patch('FEATURE_FORMAL_MODEL_ENGINE.compiler_claim.compiler_model_statements', side_effect=AssertionError('translated')):
+        with patch('FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.compiler_claim.compiler_model_statements', side_effect=AssertionError('translated')):
             self.assertEqual((), self.lint(source))
             for modified, message in (
                 (source.replace('    id: int', '    extra: str\n    id: int'), 'unsupported dataclass field contract'),
@@ -38,7 +37,7 @@ class NativeModelLintTests(unittest.TestCase):
                     self.assertIn(message, self.lint(modified)[0])
 
     def test_current_workspace_and_view_field_contracts(self):
-        from FEATURE_FORMAL_MODEL_ENGINE.model_catalog import _native_block
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.formal_claim__pub import iter_formal_claims as _native_block
         root = Path(__file__).parent / 'assets'
         for number in (2792, 2793):
             path = next(root.glob(f'CA-R-{number}-*.md'))
@@ -168,8 +167,8 @@ class NativeModelLintTests(unittest.TestCase):
             relations.write_text(json.dumps(["IS_PROPERTY_OF"]))
             env = os.environ.copy()
             env.pop("PYTHONPATH", None)
-            result = subprocess.run([sys.executable, str(PROGRAMMATIC / "FEATURE_TOOLS" /
-                                                       "lint_python_model_claim.py"), str(claim),
+            result = subprocess.run([sys.executable, str(PROGRAMMATIC / "FEATURE_FORMAL_MODEL_ENGINE" /
+                                                       "lint_python_model_claim__pub.py"), str(claim),
                                      "--addresses", str(addresses), "--relations", str(relations)],
                                     capture_output=True, text=True, env=env)
             self.assertEqual(result.returncode, 0, result.stderr)
@@ -185,8 +184,8 @@ class NativeModelLintTests(unittest.TestCase):
             role = "Atom/(.Header.Context.Role:=Requirement)"
             addresses.write_text(json.dumps({"addresses": [role], "python_classes": {"Requirement": [role]}}))
             relations.write_text("[]")
-            result = subprocess.run([sys.executable, str(PROGRAMMATIC / "FEATURE_TOOLS" /
-                                                       "lint_python_model_claim.py"), str(claim),
+            result = subprocess.run([sys.executable, str(PROGRAMMATIC / "FEATURE_FORMAL_MODEL_ENGINE" /
+                                                       "lint_python_model_claim__pub.py"), str(claim),
                                      "--addresses", str(addresses), "--relations", str(relations)],
                                     capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)

@@ -7,15 +7,13 @@ from datetime import date
 from decimal import Decimal
 import json
 from pathlib import Path
-import sys
 import tempfile
 import unittest
 from unittest.mock import patch
 
 import toon_format
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.result_files import write_result_file  # noqa: E402
+from KERNEL_MIXER_C59.result_files import write_result_file  # noqa: E402
 
 
 class ResultFileTests(unittest.TestCase):
@@ -49,6 +47,8 @@ class ResultFileTests(unittest.TestCase):
             ],
             ["null", "NULL", 2**53, True, "second\nline", [], Decimal("2"), date(2026, 1, 1), b""],
         ]
+        self._set_expected()
+    def _set_expected(self):
         self.expected = {
             "columns": self.columns,
             "rows": [
@@ -76,6 +76,7 @@ class ResultFileTests(unittest.TestCase):
                 ],
             ],
         }
+
 
     def read(self, descriptor: dict, result_format: str) -> object:
         path = self.root / descriptor["path"]
@@ -184,7 +185,7 @@ class ResultFileTests(unittest.TestCase):
         outside.write_text("keep", encoding="utf-8")
         (directory / "test-identifier.json").symlink_to(outside)
         with patch(
-            "APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.result_files.uuid.uuid7",
+            "KERNEL_MIXER_C59.result_files.uuid.uuid7",
             return_value="test-identifier",
         ):
             with self.assertRaises(FileExistsError):

@@ -3,21 +3,22 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import subject_notation as notation
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import subject_notation__pub as notation
 
-from carrier_aliases import matches_named_value
-from FEATURE_WORKBENCH_BACKEND.content_schema import _is_declaration, _records_by_path, _value_excluding_declared_children
-from FEATURE_FORMAL_MODEL_ENGINE.model_catalog import _native_block
-from FEATURE_WORKBENCH_BACKEND.markdown_content import content_key, content_lines, parse_content, source_markdown
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_compat__pub import matches_named_value
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_compat__pub import is_current_requirement_declaration
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.content_records__pub import records_by_path, value_excluding_declared_children
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.formal_claim__pub import iter_formal_claims
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import content_key, content_lines, parse_content, source_markdown
 
 def _native_declaration(row):
     """Parse one native Declaration using the shared Claim parser."""
-    if not _is_declaration(row) or not isinstance(body := source_markdown(row), str):
+    if not is_current_requirement_declaration(row) or not isinstance(body := source_markdown(row), str):
         return None
-    fences = tuple(_native_block(body))
+    fences = tuple(iter_formal_claims(body))
     if len(fences) != 1:
         return None
-    from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_model_claim__pub import parse_native_model_claim
     declaration = parse_native_model_claim(fences[0])
     if not declaration or declaration['kind'] != 'entity':
         return None
@@ -169,7 +170,7 @@ class ContentConstraints:
         for kind, path, _, _, _, _, children, _ in applicable:
             if kind in {'children', 'order'}:
                 declared.update((*path, child) for child in children)
-        by_path = _records_by_path(parsed)
+        by_path = records_by_path(parsed)
         lines = content_lines(body) if isinstance(body, str) else None
         ordering = {}
         for kind, path, roles, forms, low, high, children, source in applicable:
@@ -187,12 +188,12 @@ class ContentConstraints:
                 if path not in paths:
                     continue
                 declared_children = frozenset(child for child in declared if child[:-1] == path)
-                count = sum(bool(_value_excluding_declared_children(item, by_path, declared_children, lines)[1])
+                count = sum(bool(value_excluding_declared_children(item, by_path, declared_children, lines)[1])
                             for item in by_path.get(path, ()))
                 if not low <= count <= high:
                     raise ValueError(f'Content {".".join(path)} requires {low}..{high} direct Markdown values ({source})')
 
-        from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_property_order import order_properties
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.property_order__pub import order_properties
         for (path, source), pairs in ordering.items():
             actual = [item[-1] for item in paths if item[:-1] == path]
             ordered_names = {name for pair in pairs for name in pair}

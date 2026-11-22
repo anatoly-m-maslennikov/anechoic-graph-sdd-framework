@@ -3,50 +3,24 @@
 from __future__ import annotations
 
 import json
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 from collections.abc import Iterable
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from carrier_aliases import canonical_role_name, carrier_read_view, carrier_status_folder, matches_named_value, named_value_token
-from VALIDATE_ATOMS.validate_atoms_workers.parsing import parse_carrier
-
-
-class StatusModelError(ValueError):
-    """A source or compiled Status model is invalid or unsupported."""
-
-
-def encode_status(value: str) -> str:
-    token = named_value_token(value)
-    if token is None:
-        raise StatusModelError('Unsupported Status name encoding')
-    return token
-
-
-def canonical_status(model, role, form, carried):
-    allowed = model.allowed(role, form)
-    encoded = {}
-    for value in allowed:
-        key = encode_status(value)
-        if key in encoded and encoded[key] != value:
-            raise StatusModelError('Ambiguous Status encoding')
-        encoded[key] = value
-    matches = {value for value in allowed if matches_named_value(carried, value)}
-    if len(matches) != 1:
-        raise StatusModelError('Status is not admitted by the applicable model')
-    return matches.pop()
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_compat__pub import (
+    StatusModelError, canonical_role_name, carrier_read_view, carrier_status_folder, matches_named_value,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import parse_carrier
 
 
 def status_memberships(body):
     """Read Status values from native Property Declarations without translating them."""
-    from FEATURE_FORMAL_MODEL_ENGINE.model_catalog import _native_block
-    from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import parse_native_model_claim
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.formal_claim__pub import iter_formal_claims
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_model_claim__pub import parse_native_model_claim
 
     result = []
-    for code in _native_block(body):
+    for code in iter_formal_claims(body):
         declaration = parse_native_model_claim(code)
         if declaration is None or declaration['kind'] != 'entity':
             continue

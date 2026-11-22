@@ -4,13 +4,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-import sys
 
-_TOOLS = Path(__file__).resolve().parents[1]
-if str(_TOOLS) not in sys.path:
-    sys.path.insert(0, str(_TOOLS))
 
-from project_selection import active_selection
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection import active_selection
 
 
 @dataclass(frozen=True)

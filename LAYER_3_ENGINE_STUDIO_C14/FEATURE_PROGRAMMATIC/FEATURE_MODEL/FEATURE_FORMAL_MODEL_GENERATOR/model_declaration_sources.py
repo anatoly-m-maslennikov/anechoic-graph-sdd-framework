@@ -6,50 +6,21 @@ from typing import Any
 
 from markdown_it import MarkdownIt
 
-import subject_notation as notation
-from carrier_aliases import matches_named_value
-from lint_python_model_claim import _canonical_address, _resolve, _simple_address
-from model_class_subject import model_class_target
-from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.markdown_content import parse_content
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import subject_notation__pub as notation
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_compat__pub import matches_named_value
+from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.lint_python_model_claim__pub import resolve_model_claim_reference
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_class_subject__pub import (
+    canonical_model_address, model_class_target, model_declaration_subject, simple_model_address,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import parse_content
 
-from FEATURE_FORMAL_MODEL_ENGINE.native_model_claim import NativeModelClaimError, parse_native_model_claim
-from FEATURE_FORMAL_MODEL_ENGINE.native_model_lint import _validate_field_contracts, lint_native_model_claim
-from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_property_order import order_properties
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_model_claim__pub import NativeModelClaimError, parse_native_model_claim
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.dataclass_field_contract__pub import validate_field_contracts
+from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.native_model_lint__pub import lint_native_model_claim
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.property_order__pub import order_properties
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.relation_declaration_catalog__pub import build_relation_declaration_catalog
 from .model_property_aliases import class_property_aliases as _class_property_aliases
-
-
-def _is_claim_language_reference(expression: notation.Path | notation.RelationChain) -> bool:
-    local = notation.namespace_local_expression(expression)
-    if isinstance(local, notation.Path):
-        return isinstance(local.head, notation.Name) and local.head.value == "CFEL" and not local.steps
-    if not isinstance(local, notation.RelationChain) or len(local.endpoints) != 2:
-        return False
-    left, right = local.endpoints
-    link, = local.links
-    return (isinstance(left.head, notation.Name) and left.head.value == "CFEL" and not left.steps
-            and link.operator == "<+" and link.relation_type is None
-            and isinstance(right.head, notation.Name) and right.head.value == "Operator")
-
-
-def _model_subject(subject: object, source: str) -> str | None:
-    if not isinstance(subject, str) or not subject.strip():
-        raise ValueError(f"{source}: Declaration needs one Main Subject")
-    try:
-        expression = notation.parse_subject_expression(subject, subject_profile="approved").expression
-    except notation.SubjectNotationError as error:
-        raise ValueError(f"{source}: invalid Main Subject: {error}") from error
-    if isinstance(expression, notation.RelationChain):
-        first = expression.endpoints[0]
-        if not (isinstance(first.head, notation.Name) and first.head.value == "ANECHOIC_MODEL"
-                and not first.steps and expression.links[0].operator == "<+"
-                and expression.links[0].relation_type is None):
-            return None
-    elif not (isinstance(expression.head, notation.Name)
-              and expression.head.value == "ANECHOIC_MODEL" and not expression.steps):
-        return None
-    if _is_claim_language_reference(expression):
-        return None
-    return notation.render_subject(expression)
+from .model_constraint_claims import _merge_constraint_claims
 
 
 def _native_claim(body: object, source: str, subject: str) -> str:
@@ -119,8 +90,8 @@ def _endpoint_compatibility(endpoint: dict, level: str, name: str, kinds: dict, 
     paths = endpoint.get("entity_paths")
     if not paths:
         return True
-    actual = kinds.get(_canonical_address(name))
-    results = [_class_compatibility(actual, kinds.get(_canonical_address(path)), classes) for path in paths]
+    actual = kinds.get(canonical_model_address(name))
+    results = [_class_compatibility(actual, kinds.get(canonical_model_address(path)), classes) for path in paths]
     return True if True in results else None if None in results else False
 
 
@@ -149,8 +120,8 @@ def _check_constraint_endpoints(parsed: list, relations: dict) -> None:
         if declaration["kind"] == "entity" and "entity_class" in args:
             candidates.setdefault(args["entity_name"], []).append(args["entity_class"])
             target = model_class_target(subject, args["entity_name"])
-            if target and _canonical_address(target) != args["entity_name"]:
-                candidates.setdefault(_canonical_address(target), []).append(args["entity_class"])
+            if target and canonical_model_address(target) != args["entity_name"]:
+                candidates.setdefault(canonical_model_address(target), []).append(args["entity_class"])
             for item in declaration["classes"]:
                 classes[item["name"]] = item["bases"]
                 class_counts[item["name"]] = class_counts.get(item["name"], 0) + 1
@@ -174,39 +145,6 @@ def _check_constraint_endpoints(parsed: list, relations: dict) -> None:
                     raise ValueError(f"{source}: {field} {name} is incompatible with Relation endpoints")
 
 
-def _relation_registry(records: list) -> dict:
-    """Assemble canonical Relations and their inverse aliases before Entity checks."""
-    relations = {}
-    for source, subject, declaration in records:
-        if declaration["kind"] != "relation":
-            continue
-        args = declaration["arguments"]
-        local = notation.namespace_local_expression(notation.parse_subject_expression(subject).expression)
-        endpoint = local.endpoints[-1] if isinstance(local, notation.RelationChain) else local
-        if not (isinstance(endpoint, notation.Path) and isinstance(endpoint.head, notation.Name)
-                and endpoint.head.value == "Relation" and len(endpoint.steps) == 1
-                and endpoint.steps[0].operator == "//"
-                and isinstance(endpoint.steps[0].operand, notation.Name)
-                and endpoint.steps[0].operand.value == args["relation_name"]):
-            raise ValueError(f"{source}: declared Relation does not match its Main Subject")
-        for name, reverse in ((args["relation_name"], False), (args.get("inverse_alias"), True)):
-            if name is None:
-                continue
-            if name in relations:
-                raise ValueError(f"{source}: duplicate Relation name: {name}")
-            relations[name] = (args, reverse)
-    for source, _, declaration in records:
-        if declaration["kind"] != "relation" or "derived_from" not in declaration["arguments"]:
-            continue
-        args = declaration["arguments"]
-        derived = args["derived_from"]
-        if not isinstance(derived, str) or derived not in relations:
-            raise ValueError(f"{source}: unknown derived_from Relation: {derived}")
-        if relations[derived][0] is args:
-            raise ValueError(f"{source}: Relation cannot derive from itself: {derived}")
-    return relations
-
-
 def _check_relation_classifications(records: list, relations: dict) -> None:
     allowed = {
         axis: values
@@ -219,60 +157,6 @@ def _check_relation_classifications(records: list, relations: dict) -> None:
         for axis, value in args.get(key, {}).items():
             if value not in allowed.get(axis, ()):
                 raise ValueError(f"{name}: unadmitted Relation classification {axis}={value}")
-
-
-def _merge_constraint_claims(parsed: list) -> list:
-    """Attach separate constraint declarations to their canonical class owner."""
-    owners = {}
-    for source, subject, declaration in parsed:
-        args = declaration["arguments"]
-        if declaration["kind"] != "entity" or "entity_class" not in args:
-            continue
-        target = model_class_target(subject, args["entity_name"])
-        if target in owners:
-            raise ValueError(f"{source}: duplicate Model class target: {target}")
-        owners[target] = (source, declaration)
-        if args.get("entity_kind") == "Primary":
-            allowed = {"entity_name", "entity_class", "entity_kind", "identity_properties"}
-            if args.keys() - allowed or declaration.get("instance_check"):
-                raise ValueError(f"{source}: Primary class Declaration contains constraints")
-    merged, seen = [], set()
-    for source, subject, declaration in parsed:
-        args = declaration["arguments"]
-        if "constraints_for" not in args:
-            merged.append((source, subject, {**declaration, "arguments": dict(args)}))
-            continue
-        target = args["constraints_for"]
-        if target not in owners:
-            raise ValueError(f"{source}: unknown constraint owner: {target}")
-        if target in seen:
-            raise ValueError(f"{source}: duplicate constraint owner: {target}")
-        seen.add(target)
-        owner = owners[target][1]
-        allowed = {"entity_name", "constraints_for", "instance_relation_constraints",
-                   "population_unique_constraints", "instance_check"}
-        if (declaration["kind"] != "entity" or args.keys() - allowed
-                or args.get("entity_name") != owner["arguments"]["entity_name"] + " Constraints"):
-            raise ValueError(f"{source}: invalid constraint Declaration")
-    for source, subject, declaration in merged:
-        args = declaration["arguments"]
-        if "entity_class" not in args:
-            continue
-        target = model_class_target(subject, args["entity_name"])
-        if target not in seen:
-            continue
-        constraint = next(item for _, _, item in parsed
-                          if item["arguments"].get("constraints_for") == target)
-        for key in ("instance_relation_constraints", "population_unique_constraints"):
-            if key in constraint["arguments"]:
-                if key in args:
-                    raise ValueError(f"{source}: duplicate {key} for {target}")
-                args[key] = constraint["arguments"][key]
-        if constraint.get("instance_check"):
-            if declaration.get("instance_check"):
-                raise ValueError(f"{source}: duplicate instance check for {target}")
-            declaration["instance_check"] = constraint["instance_check"]
-    return merged
 
 
 def _check_manifest_property_bearers(parsed):
@@ -292,9 +176,25 @@ def _check_manifest_property_bearers(parsed):
         suffix = bearer[len(bearer.split(".", 1)[0]):]
         expected = tuple(f"{owner}{suffix if scoped else ''}.{args['entity_name']}"
                          for owner in (scoped or (bearer,)))
-        actual = _canonical_address(subject)
+        actual = canonical_model_address(subject)
         if actual not in expected:
             raise ValueError(f"{source}: Property scope mismatch: expected {expected}, actual {actual}")
+
+
+def _add_unambiguous_addresses(addresses: set, parsed: list) -> None:
+    short_names = {}
+    for source, subject, declaration in parsed:
+        local = notation.namespace_local_expression(notation.parse_subject_expression(subject).expression)
+        if declaration["kind"] == "entity" and isinstance(local, notation.RelationChain):
+            target = model_class_target(subject, declaration["arguments"]["entity_name"])
+            if target and simple_model_address(target):
+                short_names.setdefault(target, set()).add(subject)
+        if isinstance(local, notation.Path) and isinstance(local.head, notation.Name):
+            if not local.steps:
+                short_names.setdefault(local.head.value, set()).add(subject)
+            elif all(step.operator == "/" and isinstance(step.operand, notation.Name) for step in local.steps):
+                short_names.setdefault(local.steps[-1].operand.value, set()).add(subject)
+    addresses.update(name for name, subjects in short_names.items() if len(subjects) == 1)
 
 
 def _check_relation_references(records: list[tuple[str, str, str]]) -> None:
@@ -303,26 +203,14 @@ def _check_relation_references(records: list[tuple[str, str, str]]) -> None:
         [(source, subject, parse_native_model_claim(claim)) for source, subject, claim in records]
     )
     _check_manifest_property_bearers(parsed)
-    relations = _relation_registry(parsed)
+    relations = build_relation_declaration_catalog(parsed)
     _check_relation_classifications(parsed, relations)
     addresses = {subject for _, subject, _ in records}
     addresses.update(_class_property_aliases(parsed))
-    short_names = {}
+    _add_unambiguous_addresses(addresses, parsed)
     declarations = [(source, declaration) for source, _, declaration in parsed]
-    for source, subject, declaration in parsed:
-        local = notation.namespace_local_expression(notation.parse_subject_expression(subject).expression)
-        if declaration["kind"] == "entity" and isinstance(local, notation.RelationChain):
-            target = model_class_target(subject, declaration["arguments"]["entity_name"])
-            if target and _simple_address(target):
-                short_names.setdefault(target, set()).add(subject)
-        if isinstance(local, notation.Path) and isinstance(local.head, notation.Name):
-            if not local.steps:
-                short_names.setdefault(local.head.value, set()).add(subject)
-            elif all(step.operator == "/" and isinstance(step.operand, notation.Name) for step in local.steps):
-                short_names.setdefault(local.steps[-1].operand.value, set()).add(subject)
-    addresses.update(name for name, subjects in short_names.items() if len(subjects) == 1)
-    simple_address = cache(_simple_address)
-    canonical_address = cache(_canonical_address)
+    simple_address = cache(simple_model_address)
+    canonical_address = cache(canonical_model_address)
     keys = {
         "source_endpoint", "target_endpoint", "endpoint_pairs", "relation_name",
         "incoming_model_relations", "model_relation_constraints", "instance_relation_constraints",
@@ -330,7 +218,7 @@ def _check_relation_references(records: list[tuple[str, str, str]]) -> None:
     }
     for source, declaration in sorted(declarations, key=lambda item: item[1]["kind"] != "relation"):
         try:
-            _validate_field_contracts(declaration)
+            validate_field_contracts(declaration)
         except ValueError as error:
             raise ValueError(f"{source}:{declaration['line']}:1: {error}") from error
         arguments = {key: value for key, value in declaration["arguments"].items() if key in keys}
@@ -340,7 +228,7 @@ def _check_relation_references(records: list[tuple[str, str, str]]) -> None:
         check.pop("instance_check", None)
         errors = lint_native_model_claim(
             check, declared_addresses=addresses, relation_names=set(relations), path=source,
-            first_line=1, resolve_address=_resolve, simple_address=simple_address,
+            first_line=1, resolve_address=resolve_model_claim_reference, simple_address=simple_address,
             canonical_address=canonical_address,
         )
         if errors:
@@ -373,7 +261,7 @@ def select_model_declarations(carriers: Iterable[Mapping[str, Any]]) -> tuple[tu
         values = carrier.get("subjects")
         if not isinstance(values, Mapping):
             raise ValueError(f"{path}: Declaration Main Subject is missing")
-        subject = _model_subject(values.get("active", values.get("governs")), path)
+        subject = model_declaration_subject(values.get("active", values.get("governs")), path)
         if subject is None:
             continue
         identifier = source.get("atom_id")

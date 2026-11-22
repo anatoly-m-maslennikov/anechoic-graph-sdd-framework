@@ -1,14 +1,12 @@
 from pathlib import Path
-import os
 import subprocess
-import sys
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
-from APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.resolution import resolve_realization
-from APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.source import Source, capture, relevant_change
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import (
+    capture, relevant_change, resolve_realization,
+)
 
 
 class RealizationTests(unittest.TestCase):
@@ -16,6 +14,59 @@ class RealizationTests(unittest.TestCase):
         tmp_path = Path(self.enterContext(TemporaryDirectory())).resolve()
         subprocess.run(["git", "init", "--quiet", str(tmp_path)], check=True)
         return tmp_path
+
+    def test_relative_imports_use_enclosing_root_for_namespace_packages(self):
+        root = self._temporary_project()
+        for name, content in {
+            "namespace/release/images.py": "from .identity import VALUE\n",
+            "namespace/release/identity.py": "VALUE = 1\n",
+            "namespace/release/tests/fixture.py": (
+                "from ..images import VALUE\nfrom ....outside import VALUE\n"),
+            "outside.py": "VALUE = 1\n",
+        }.items():
+            path = root / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content)
+        _, occurrences, _, _, _ = resolve_realization(
+            root, capture(root, None), ("namespace/release", "."))
+        found = {(row[1], row[3]): (row[2], row[6]) for row in occurrences}
+        assert found[("module:namespace/release/images.py", ".identity")] == (
+            "module:namespace/release/identity.py", "internal")
+        assert found[("module:namespace/release/tests/fixture.py", "..images")] == (
+            "module:namespace/release/images.py", "internal")
+        assert found[("module:namespace/release/tests/fixture.py", "....outside")] == (
+            None, "unresolved")
+
+    def test_test_package_flat_imports_prefer_local_directory(self):
+        root = self._temporary_project()
+        for name, content in {
+            "helper.py": "",
+            "pkg/pkg__tests/test_one.py": "import helper\nfrom helper import nested\nimport local_only\nfrom . import relative\nimport ambiguous\n",
+            "pkg/pkg__tests/helper.py": "import local_only\n",
+            "helper/nested.py": "",
+            "pkg/pkg__tests/local_only.py": "",
+            "pkg/pkg__tests/ambiguous.py": "",
+            "pkg/pkg__tests/ambiguous/nested.py": "",
+            "pkg/pkg__tests/relative.py": "",
+            "pkg/other__tests/test_two.py": "import local_only\n",
+            "pkg/other__tests/local_only.py": "",
+            "pkg/production.py": "import local_only\nimport helper\n",
+        }.items():
+            path = root / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content)
+        _, occurrences, _, _, _ = resolve_realization(root, capture(root, None))
+        found = {(row[1], row[3]): (row[2], row[6]) for row in occurrences}
+        assert found[("module:pkg/pkg__tests/test_one.py", "helper")] == (
+            "module:pkg/pkg__tests/helper.py", "internal")
+        assert found[("module:pkg/pkg__tests/test_one.py", "ambiguous")] == (None, "ambiguous")
+        assert found[("module:pkg/pkg__tests/helper.py", "local_only")] == (
+            "module:pkg/pkg__tests/local_only.py", "internal")
+        assert found[("module:pkg/pkg__tests/test_one.py", ".")] == (
+            "module:pkg/pkg__tests/relative.py", "internal")
+        assert found[("module:pkg/other__tests/test_two.py", "local_only")] == (None, "unresolved")
+        assert found[("module:pkg/production.py", "local_only")] == (None, "unresolved")
+        assert found[("module:pkg/production.py", "helper")] == (None, "ambiguous")
 
     def test_direct_test_packages_follow_source_inventory(self):
         tmp_path = self._temporary_project()
@@ -33,42 +84,26 @@ class RealizationTests(unittest.TestCase):
         assert not occurrences and not edges
         assert relevant_change(tmp_path, [{"new_path": "pkg/pkg__tests", "old_path": None}], {})
 
-    def test_graph_relations_and_transaction_rollback(self):
-        from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.graph_store import build_graph
-        from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.import_tables import remove_imports, replace_imports
-        from APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.query_store import _connect
-
-        extension = Path(os.environ.get("ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY",
-                                        Path(__file__).resolve().parents[5] / ".anechoic_tmp/workbench/extensions"))
-        connection = _connect(extension, None)
-        graph = build_graph(connection, [], [])
-        parent = "package:local:pkg"
-        test = "package:local:pkg/pkg__tests"
-        nodes = [(parent, "package", "python", "pkg", None, None),
-                 (test, "package", "python", "pkg/pkg__tests", None, parent)]
-        connection.execute("BEGIN")
-        replace_imports(connection, graph, nodes, [], [], [(test, parent)],
-                        {"pkg/a.py": Source("python", "read_error", "stat:a", error_message="denied")})
-        connection.execute("COMMIT")
-        assert connection.execute("SELECT * FROM import_read_issues").fetchall() == [("pkg/a.py", "denied")]
-        connection.execute("BEGIN")
-        replace_imports(connection, graph, nodes, [], [], [(test, parent)], {})
-        assert connection.execute("SELECT * FROM import_read_issues").fetchall() == []
-        connection.execute("ROLLBACK")
-        assert connection.execute("SELECT * FROM import_read_issues").fetchall() == [("pkg/a.py", "denied")]
-        replace_imports(connection, graph, nodes, [], [], [(test, parent)], {})
-        assert connection.execute("SELECT * FROM import_read_issues").fetchall() == []
-        for label, expected in (("TESTS", (test, parent)), ("IS_TESTED_BY", (parent, test))):
-            rows = connection.execute(
-                f"FROM GRAPH_TABLE (anechoic MATCH (s:ImportNode)-[e:{label}]->(d:ImportNode) "
-                "COLUMNS (s.node_key, d.node_key))"
-            ).fetchall()
-            assert rows == [expected]
-        connection.execute("BEGIN")
-        remove_imports(connection, graph)
-        connection.execute("ROLLBACK")
-        assert connection.execute("SELECT count(*) FROM test_edges").fetchone()[0] == 1
-        connection.close()
+    def test_installed_import_names_use_metadata_and_local_precedence(self):
+        root = self._temporary_project()
+        (root / "pyproject.toml").write_text('[project]\nname = "my-project"\n')
+        (root / "local_name.py").write_text("")
+        (root / "main.py").write_text(
+            "import yaml\nimport PIL\nimport pil\nimport local_name\n"
+            "import own_alias\nimport unknown_alias\nimport json\n")
+        installed = {"yaml": ["PyYAML"], "PIL": ["Pillow"],
+                     "local_name": ["other"], "own_alias": ["my_project", "other"]}
+        with patch("IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.resolution.metadata.packages_distributions",
+                   return_value=installed):
+            _, occurrences, _, _, _ = resolve_realization(root, capture(root, None))
+        found = {row[3]: (row[2], row[6]) for row in occurrences}
+        assert found["yaml"] == ("package:external:yaml", "external")
+        assert found["PIL"] == ("package:external:PIL", "external")
+        assert found["pil"] == (None, "unresolved")
+        assert found["local_name"] == ("module:local_name.py", "internal")
+        assert found["own_alias"] == (None, "unresolved")
+        assert found["unknown_alias"] == (None, "unresolved")
+        assert found["json"][1] == "external"
 
     def test_mixed_package_and_import_pairs(self):
         root = self._temporary_project()

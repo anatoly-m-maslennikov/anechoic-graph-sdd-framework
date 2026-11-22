@@ -1,12 +1,9 @@
 """Check project-wide uniqueness for nested Model Properties."""
 
 from dataclasses import dataclass
-from pathlib import Path
-import sys
 import unittest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
-from FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_population_validation import validate_population_uniqueness
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_population_validation import validate_population_uniqueness
 
 
 @dataclass
