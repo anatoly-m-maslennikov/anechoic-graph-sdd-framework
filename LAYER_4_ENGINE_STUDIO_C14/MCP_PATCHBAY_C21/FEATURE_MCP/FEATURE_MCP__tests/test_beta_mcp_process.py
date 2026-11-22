@@ -90,7 +90,10 @@ class BetaMcpTest(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual([["EX-S-1", "Declare Example"]], first["rows"])
                 self.assertEqual(2, first["row_count"])
                 self.assertTrue(first["has_more"])
-                page = await client.call_tool("query_page", {"query_id": first["query_id"], "offset": 1, "page_size": 1})
+                page = await client.call_tool("query_page", {
+                    "query_id": first["query_id"], "offset": 1, "page_size": 1, "result_delivery": "inline",
+                })
+                self.assertFalse(page.is_error, page.structured_content)
                 self.assertEqual([["EX-T-1", "Example task"]], page.structured_content["rows"])
                 self.assertFalse(page.structured_content["has_more"])
                 await self.assert_history(client, query["sql"])
@@ -119,7 +122,7 @@ class BetaMcpTest(unittest.IsolatedAsyncioTestCase):
     async def assert_grid_and_journal(self, client, query_id):
         status = await client.call_tool("workbench_status", {})
         self.assertEqual("live_index", status.structured_content["mode"])
-        page = await client.call_tool("query_page", {"query_id": query_id, "grid": {
+        page = await client.call_tool("query_page", {"query_id": query_id, "result_delivery": "inline", "grid": {
             "filters": [{"column": 1, "operator": "contains", "value": "task"}]}})
         self.assertFalse(page.is_error, page.structured_content)
         self.assertEqual((1, 2), (page.structured_content["row_count"], page.structured_content["source_row_count"]))

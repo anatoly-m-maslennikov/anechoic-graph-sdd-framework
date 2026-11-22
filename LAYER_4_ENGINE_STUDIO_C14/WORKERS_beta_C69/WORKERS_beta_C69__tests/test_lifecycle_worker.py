@@ -135,6 +135,13 @@ class LifecycleWorkerTests(unittest.TestCase):
             self.assertNotIn("\nrelations:", data)
             path.write_text(data.replace("\n---\n", "\nrelations:\n  IS_REPLACEMENT_FOR: [" +
                                          original["atom_id"] + "]\n---\n", 1))
+            original_path = Path(binding["root"]) / original["path"]
+            container = original_path.with_suffix("")
+            container.mkdir()
+            refused = run("atom_lifecycle_archive", {"target": target})
+            self.assertEqual("needs_input", refused["outcome"], refused)
+            self.assertEqual([], refused["effects"])
+            container.rmdir()
             archived = run("atom_lifecycle_archive", {"target": target})
             self.assertEqual("completed", archived["outcome"], archived)
             self.assertEqual("archived", archived["artifact"]["status"])

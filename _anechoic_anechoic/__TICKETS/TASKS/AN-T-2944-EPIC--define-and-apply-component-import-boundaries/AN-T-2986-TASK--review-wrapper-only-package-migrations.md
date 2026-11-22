@@ -8,9 +8,9 @@ context:
   template: task
   label: Task
 state:
-  status: "backlog"
+  status: "in_queue"
   version: 1
-  updated_at: "2026-11-22T16:48:46.912742+00:00"
+  updated_at: "2026-11-22T17:15:05.105799+00:00"
 ---
 ## Summary
 

@@ -15,6 +15,8 @@ TOOLS = {tool["name"]: tool for tool in (
           {"target": _FIELDS}, targetStatus={"type": "string"}),
     _tool("atom_lifecycle_change_status", "Change a Current Task or Epic Status.",
           {"target": _FIELDS}, targetStatus={"type": "string"}),
+    _tool("atom_lifecycle_archive", "Archive an exact Task or Epic revision with an admitted replacement.",
+          {"target": _FIELDS}),
 )}
 _UNKNOWN = {
     "code": "write_outcome_unknown",

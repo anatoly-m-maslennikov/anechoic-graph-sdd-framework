@@ -197,7 +197,7 @@ class SharedBetaTests(unittest.IsolatedAsyncioTestCase):
                     "view_focus", "view_rename", "view_remove", "view_run", "view_check", "view_fetch",
                     "query_rebuild", "workbench_status", "query_log_list", "query_log_get",
                     "atom_lifecycle_create_draft", "atom_lifecycle_update", "atom_lifecycle_promote_draft",
-                    "atom_lifecycle_change_status", "query_load", "query_saved_list",
+                    "atom_lifecycle_change_status", "atom_lifecycle_archive", "query_load", "query_saved_list",
                 }, {tool["name"] for tool in catalog})
                 self.assertIn("project_root", catalog[0]["inputSchema"]["required"])
                 cold = await _invoke(http, alpha, "workbench_status", {})
