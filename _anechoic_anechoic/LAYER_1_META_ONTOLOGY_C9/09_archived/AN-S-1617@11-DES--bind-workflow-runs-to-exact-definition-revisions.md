@@ -1,0 +1,38 @@
+---
+atom_family: SPEC
+atom_id: AN-S-1617
+container:
+  component: C9
+tier: 2
+context:
+  lens: DES
+state:
+  status: archived
+  version: 11
+  updated_at: 2026-10-19 15:53:20 +0400
+---
+## Summary
+
+Bind Workflow Runs to exact definition Revisions
+
+# Summary
+
+Bind Workflow Runs to exact definition Revisions
+
+## Scope
+
+Workflow Runs **and** their exact definition Revisions admitted for execution.
+
+## Claim
+
+**every** Workflow Run **must** retain the exact Workflow graph Revision, referenced Step Atom Revisions, **and** referenced Action definition Revisions admitted for its execution.
+
+## Details
+
+- record references **to** those source Revisions **and** the actual binding used by **every** Step Run as actual observations **in** the Project Journal, without prior-record, chain, validation, receipt, deduplication, retry or recovery prerequisites. do **not** create independently maintained copies of the definitions as another authority.
+- **before** dispatch **and** on recovery, check whether a bound definition has changed, been withdrawn, **or** become unavailable. a detected change pauses further dispatch for revalidation; the executor **must not** silently substitute the newest Revision **or** assume the old binding remains authorized.
+- revalidation **must** identify the exact definitions admitted for the remaining work, check their compatibility with completed effects **and** remaining inputs, **and** satisfy the applicable approval conditions. resume **only** **after** that decision is actually made and retained in the Run's admitted execution evidence; unresolved compatibility **or** authority keeps execution blocked. Journal recording is an observation, not proof or a resume gate.
+- completed Step Runs retain their original definition bindings **and** outcomes. revalidation **must not** rewrite history, reset retry allowances, **or** automatically replay completed effects.
+- an Action already running follows its admitted interruption policy; a definition change alone does **not** authorize forced termination **or** blind replay. retain its actual result under the binding used **and** revalidate **before** further dispatch.
+- definition binding does **not** freeze permissions **or** mutable target state. current authorization, required Operator decisions, **and** input freshness still apply **before** effects.
+- a successor Workflow Run obtains its own admitted definition bindings rather than silently inheriting the predecessor's bindings for another Workflow.

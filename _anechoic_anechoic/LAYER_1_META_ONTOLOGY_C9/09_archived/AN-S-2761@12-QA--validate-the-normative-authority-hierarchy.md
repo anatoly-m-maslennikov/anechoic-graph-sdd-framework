@@ -1,0 +1,35 @@
+---
+atom_family: SPEC
+atom_id: AN-S-2761
+container:
+  component: C9
+tier: 2
+context:
+  lens: QA
+state:
+  status: archived
+  version: 12
+  updated_at: 2026-10-23 03:06:32 +0400
+---
+## Summary
+
+Validate the normative-authority hierarchy
+
+# Summary
+
+Validate the normative-authority hierarchy
+
+## Scope
+
+the active normative-authority subgraph.
+
+## Claim
+
+the Evaluation of the active normative-authority subgraph **must** fail **when** **any** declared authority-bearing direct edge lacks its registered typing **or** the directed subgraph **contains** a cycle under CA-R-833.
+
+## Details
+
+- the evaluated input is the active normative-authority subgraph selected under its registered direct Relation types. unresolved selection **or** typing **must not** be reported as a conforming hierarchy.
+- retain the distinction between declared direct authority edges **and** inverse-derived views under CA-R-808 **and** CA-R-879. an inverse view **must not** become another independently declared edge **in** the cycle check.
+
+this representation-independent criterion does **not** select a graph-construction implementation **or** a concrete test specimen.
