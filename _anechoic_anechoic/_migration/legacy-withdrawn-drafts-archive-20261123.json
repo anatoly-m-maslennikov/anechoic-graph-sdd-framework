@@ -1,0 +1,1903 @@
+{
+  "records": [
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-21_FEATURE_MCP/04_requirement/archive/withdrawn_drafts/CA-R-1107@24-draft-MCP-RULE--require-complete-tool-invocation-contracts.md",
+      "source_sha256": "2947bb4269e28b0843e629c8a743c504ca119c81784dd22008d713fc6cc86ad9",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-1107@24-draft",
+      "native_ref": "AN-S-4402@24",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/09_archived/AN-S-4402@24-DES--require-complete-tool-invocation-contracts.md",
+      "destination_sha256": "f5df0935e67426bead7d4c1098fbc0d97e4e03282ab2dccee9f5e5f734e0c68c",
+      "body_sha256": "ebb2a4caad310b0dec77e48a72497fe3d7598bbf5f8a477566e6ba6f0f7149a0",
+      "body_prefix_bytes": 182,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1930",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C21"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "rule",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "Subject/Engineering/MCP",
+        "dependencies": [
+          "Subject/Engineering/MCP.Tool Invocation Contract",
+          "Subject/Engineering/Tool",
+          "Subject/Engineering/MCP",
+          "Subject/Domain/Node/Continuant/Actor/Type: Operator"
+        ]
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/09_archived/AN-S-1377@31-DES--require-complete-tool-invocation-contracts.md",
+      "anchor_sha256": "3126f79fd09787949d8fbdf3ae403723d86675461fff0d16d74b7ddeed6b01e6",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-21_FEATURE_MCP/04_requirement/CA-R-1107-MCP-RULE--require-complete-tool-invocation-contracts.md",
+      "evidence_sha256": "cfb23c678de0d02e9c475f77108891834ee363665ffabf619fe6f5e0a88b8573",
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-21_FEATURE_MCP/07_delivery/archive/withdrawn_drafts/CA-D-578@12-draft-MCP-ENG_DECISION--carry-the-localhost-http-gateway-and-configuration.md",
+      "source_sha256": "ab95fffa0dea7b85b3136798a2678cab4bb6e934260c958c8ac5c22409263856",
+      "source_aliases": [],
+      "legacy_ref": "CA-D-578@12-draft",
+      "native_ref": "AN-S-4403@12",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/09_archived/AN-S-4403@12-DEVOPS--carry-the-localhost-http-gateway-and-configuration.md",
+      "destination_sha256": "aabc5804e5be8c3a60197f57ca575c09744ab233f32ab6a9f8a84551aaf3bb98",
+      "body_sha256": "cb66d967181713f195f073dca99f77e5e969ad2f2e2921a387569530a0746915",
+      "body_prefix_bytes": 185,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "delivery_for",
+          "target": "CA-R-1884",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "delivery_for",
+          "target": "CA-R-1885",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "delivery_for",
+          "target": "CA-M-341",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "delivery_for",
+          "target": "CA-M-357",
+          "position": 3
+        }
+      ],
+      "native_owner": {
+        "component": "C21"
+      },
+      "original_role_form_label": [
+        "delivery",
+        "eng_decision",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Architecture <+ Communication",
+        "dependencies": [
+          "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Architecture <+ Component Structure",
+          "Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication/API",
+          "Subject/ANECHOIC/Graph/Node/Project Model/Runtime/Session",
+          "Subject/ANECHOIC/Graph/Node/Project Model/Runtime/Container Run"
+        ]
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/05_method/archive/withdrawn_drafts/CA-M-196@22-draft-APPS-ENG_DECISION--register-the-apps-scope-unit-topology.md",
+      "source_sha256": "4c18f2a9c42e0e893b870515a6ee806c2bc02d9a3e13b1dc976244911e85c2a7",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-196@22-draft",
+      "native_ref": "AN-S-4404@22",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_APPS_C20/09_archived/AN-S-4404@22-SWD--register-the-apps-scope-unit-topology.md",
+      "destination_sha256": "b431b8b9b95d2a31a8db50b0788419a3055ec69d5971e3705e5cb81926ce4680",
+      "body_sha256": "d71066a78b7b9113090e3f6c016d3037772ed4bb25bbe1ce981580941992bd12",
+      "body_prefix_bytes": 182,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "method_for",
+          "target": "CA-R-1100",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "derived_from",
+          "target": "CA-A-058",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C20"
+      },
+      "original_role_form_label": [
+        "method",
+        "eng_decision",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ Scope Unit"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/05_method/archive/withdrawn_drafts/CA-M-242@16-draft-APPS-ENG_DECISION--register-the-agent-host-plugins-unit.md",
+      "source_sha256": "d1e53c0d5ff2b51787ec12aee3417cee5dacf58d49f124549726cebfd8e38389",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-242@16-draft",
+      "native_ref": "AN-S-4405@16",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_APPS_C20/09_archived/AN-S-4405@16-SWD--register-the-agent-host-plugins-unit.md",
+      "destination_sha256": "16590c91f8b9e16766cf399fa73386e7c9b0d036b1b2b422e47156f016b2d288",
+      "body_sha256": "9f3ad8663d9ae03963a9e165974d03fa8e520e3964fb7bcc81fb7ab53bd99ca1",
+      "body_prefix_bytes": 182,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "method_for",
+          "target": "CA-R-1101",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "derived_from",
+          "target": "CA-A-058",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C20"
+      },
+      "original_role_form_label": [
+        "method",
+        "eng_decision",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ Scope Unit"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/06_evaluation/archive/withdrawn_drafts/CA-E-314@20-draft-APPS-EVAL_CASE--verify-the-apps-scope-unit-topology.md",
+      "source_sha256": "ded93f92af9eba275208209f758992626deabdaf7a33718ffe0c5b11f5564702",
+      "source_aliases": [],
+      "legacy_ref": "CA-E-314@20-draft",
+      "native_ref": "AN-S-4406@20",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_APPS_C20/09_archived/AN-S-4406@20-QA--verify-the-apps-scope-unit-topology.md",
+      "destination_sha256": "26c8f198b1cc431e7e2d27365424f305f21715399b09b614be1356177f595883",
+      "body_sha256": "51aeb8f1fbcde22977fac9d0f8c05e037d69dab8de84a06b54bae2ab7683eab9",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "evaluation_for",
+          "target": "CA-M-196",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C20"
+      },
+      "original_role_form_label": [
+        "evaluation",
+        "eval_case",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ Scope Unit"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/06_evaluation/archive/withdrawn_drafts/CA-E-408@14-draft-APPS-EVAL_CASE--verify-register-the-agent-host-plugins-unit.md",
+      "source_sha256": "19d2c170bca611fc238cb06346881848d4b5a797acf17848e853b3e7a222b6f0",
+      "source_aliases": [],
+      "legacy_ref": "CA-E-408@14-draft",
+      "native_ref": "AN-S-4407@14",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_APPS_C20/09_archived/AN-S-4407@14-QA--verify-register-the-agent-host-plugins-unit.md",
+      "destination_sha256": "454445c66543a4ad9d04cfbe68ce9f4a7a877c2c1de3463cf53a8bc2bf5e4765",
+      "body_sha256": "74935dfa36db3897aa6cc40abcafdd08c937320250287d857e6a302227ceb712",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "evaluation_for",
+          "target": "CA-M-242",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C20"
+      },
+      "original_role_form_label": [
+        "evaluation",
+        "eval_case",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ Scope Unit"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-44_APP_GRAPH_UI/07_delivery/archive/withdrawn_drafts/CA-D-005@20-draft-GRAPH_UI-SOLUTION--deliver-the-requirement-projection-browser-locally.md",
+      "source_sha256": "7b65201d96197c905615dbb5830d4eb1e2dbd25c603ebc367ad6f7811b86c6b3",
+      "source_aliases": [],
+      "legacy_ref": "CA-D-005@20-draft",
+      "native_ref": "AN-S-4408@20",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_APPS_C20/09_archived/AN-S-4408@20-DEVOPS--deliver-the-requirement-projection-browser-locally.md",
+      "destination_sha256": "d100258cf905705c7d4402f64500140e0eeae9193d3d311443241d0971f8a436",
+      "body_sha256": "fd73ac43864d8524e8332e024b21ddf3821bfbf68a6f4c7270942b3be649c7e6",
+      "body_prefix_bytes": 185,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "delivery_for",
+          "target": "CA-R-1076",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "delivery_for",
+          "target": "CA-M-153",
+          "position": 1
+        }
+      ],
+      "native_owner": {
+        "component": "C20"
+      },
+      "original_role_form_label": [
+        "delivery",
+        "solution",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "Subject/ANECHOIC/Graph/Node/Aspect/UX/Discovery and Navigation",
+        "dependencies": [
+          "ANECHOIC_MODEL <+ Projection"
+        ]
+      },
+      "historical_owner_evidence": {
+        "historical_scope": "CA-SU-44_APP_GRAPH_UI",
+        "method": "approved Graph UI retired Component route to Apps"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-44_APP_GRAPH_UI/07_delivery/archive/withdrawn_drafts/CA-D-489@11-draft-ENG_DECISION--bind-graph-ui-delivery-place.md",
+      "source_sha256": "72bf9ea3926d92af0a0c3deb179ed28a2cfc988922069104ae5b7b43c2d21d4e",
+      "source_aliases": [],
+      "legacy_ref": "CA-D-489@11-draft",
+      "native_ref": "AN-S-4409@11",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_APPS_C20/09_archived/AN-S-4409@11-DEVOPS--bind-graph-ui-delivery-place.md",
+      "destination_sha256": "ad84cb0b996130a63fa3517cc6b1ac93d9a1c642a5b7ade0874e077c0fc199a1",
+      "body_sha256": "49a594b4a0827495743c9b4345ab0b77d82ecc947e044d1a9460fb7cca6dd182",
+      "body_prefix_bytes": 185,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C20"
+      },
+      "original_role_form_label": [
+        "delivery",
+        "eng_decision",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ Scope Unit"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/04_requirement/archive/withdrawn_drafts/CA-R-2683@5-draft-APPS-SCOPE_DELEGATION--declare-graph-ui.md",
+      "source_sha256": "63eddaf1cd99371609045057a1ede92ff083c494ae9bb4e4bfb02727202a9503",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-2683@5-draft",
+      "native_ref": "AN-S-4410@5",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_APPS_C20/09_archived/AN-S-4410@5-DES--declare-graph-ui.md",
+      "destination_sha256": "bcb0cc721f58eaf69bc5ae7b602ca32e6f68874dc92030105a1d9aa8aa41db64",
+      "body_sha256": "ba89d1ba80309a04310f28f1886ea9695412e316c959e85adfc8a4f56a4d90d7",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C20"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "scope_delegation",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_STRUCTURE <+ Scope Unit//GRAPH_UI"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/04_requirement/archive/withdrawn_drafts/CA-R-1076@31-draft-APPS-RULE--render-interconnected-html-graph-views.md",
+      "source_sha256": "803b06544478f8bff771266f68837434d075f10a72d6c2230257a15207589d27",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-1076@31-draft",
+      "native_ref": "AN-S-4411@31",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_APPS_C20/09_archived/AN-S-4411@31-DES--render-interconnected-html-graph-views.md",
+      "destination_sha256": "a00bea0a40dbdbf9f33de0e1f3a7c45e7c34aac60a17fae4e39a430f7073b12e",
+      "body_sha256": "eb28c55dabb0898bbc55488bb8bab345db1c76569c679a685a55578be5adf4d6",
+      "body_prefix_bytes": 182,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C20"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "rule",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "Subject/ANECHOIC/Graph/Node/Aspect/UX/Discovery and Navigation"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-44_APP_GRAPH_UI/05_method/archive/withdrawn_drafts/CA-M-153@29-draft-GRAPH_UI-SOLUTION--render-and-navigate-active-graph-html.md",
+      "source_sha256": "397e1eb491ecd24f2fe0d6ee7ae430504a61a7135db043f0588f30cf9c1feec0",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-153@29-draft",
+      "native_ref": "AN-S-4412@29",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_APPS_C20/09_archived/AN-S-4412@29-SWD--render-and-navigate-active-graph-html.md",
+      "destination_sha256": "388c0cb4653d91170dffb56b1f3ce092228776a4570cfae0f4e1216df2526321",
+      "body_sha256": "bcb86373eb4ab87430ba673a0c67c9b0d06cffdc650b92017f2d5b260a09f0c4",
+      "body_prefix_bytes": 182,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "method_for",
+          "target": "CA-R-1076",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "SPECIALIZES",
+          "target": "CA-M-222",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "DERIVED_FROM",
+          "target": "CA-A-057",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C20"
+      },
+      "original_role_form_label": [
+        "method",
+        "solution",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "Subject/ANECHOIC/Graph/Node/Aspect/UX/Discovery and Navigation"
+      },
+      "historical_owner_evidence": {
+        "historical_scope": "CA-SU-44_APP_GRAPH_UI",
+        "method": "approved Graph UI retired Component route to Apps"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-44_APP_GRAPH_UI/06_evaluation/archive/withdrawn_drafts/CA-E-067@30-draft-GRAPH_UI-EVAL_CASE--interactive-html-graph-view-behavior.md",
+      "source_sha256": "d92f7e3b75f143be4fc1d9b3703ef08872882e83a4205554bcac76ba0b60fdf4",
+      "source_aliases": [],
+      "legacy_ref": "CA-E-067@30-draft",
+      "native_ref": "AN-S-4413@30",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_APPS_C20/09_archived/AN-S-4413@30-QA--interactive-html-graph-view-behavior.md",
+      "destination_sha256": "4ad884f0930318df6e6d03d09ace8d8ccac1990106f95ccd25fc850c190622ba",
+      "body_sha256": "c9bb80022fd9e73b11f91b732ea71077fa2df4cbf3c0c6cd5b0428dd8c49ffe4",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "evaluation_for",
+          "target": "CA-R-1076",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "evaluation_for",
+          "target": "CA-M-153",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "DERIVED_FROM",
+          "target": "CA-A-057",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C20"
+      },
+      "original_role_form_label": [
+        "evaluation",
+        "eval_case",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "Subject/ANECHOIC/Graph/Node/Aspect/UX/Discovery and Navigation"
+      },
+      "historical_owner_evidence": {
+        "historical_scope": "CA-SU-44_APP_GRAPH_UI",
+        "method": "approved Graph UI retired Component route to Apps"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-22_FEATURE_AGENTIC/CA-SU-24_FEATURE_PROMPTS/05_method/archive/withdrawn_drafts/CA-M-520@1-draft-SOLUTION--retain-truthful-implementation-prompt-outcomes.md",
+      "source_sha256": "cc0a34242bdcb72024667d5ac470c9f33bb8300d86f4b8e7823304499b06bc4e",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-520@1-draft",
+      "native_ref": "AN-S-4414@1",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC_C22/FEATURE_PROMPTS_C24/09_archived/AN-S-4414@1-SWD--retain-truthful-implementation-prompt-outcomes.md",
+      "destination_sha256": "863a7952c4cf0d8437a81221cad990689091dec47bc8c15a0be03e9044504e9c",
+      "body_sha256": "a7659742006e8dc331ed09222bc98f9e1da5dfbcb50724635a93ed6e632eb13e",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "IS_REPLACEMENT_FOR",
+          "target": "CA-R-1846",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C24"
+      },
+      "original_role_form_label": [
+        "method",
+        "solution",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Execution Control",
+        "dependencies": [
+          "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Execution Control <+ Failure Handling",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role := Evaluation)",
+          "ANECHOIC_MODEL <+ Entity/Object/Occurrent/Execution/Workflow Run",
+          "Subject/ANECHOIC/Graph/Node/Project Model/History"
+        ]
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-22_FEATURE_AGENTIC/CA-SU-24_FEATURE_PROMPTS/05_method/archive/withdrawn_drafts/CA-M-521@1-draft-SOLUTION--keep-review-completion-separate-from-applied-edits.md",
+      "source_sha256": "71cc3981532c770045b078c8e291e5abc82a699661d1c3acb7c7c821a54e0a47",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-521@1-draft",
+      "native_ref": "AN-S-4415@1",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC_C22/FEATURE_PROMPTS_C24/09_archived/AN-S-4415@1-SWD--keep-review-completion-separate-from-applied-edits.md",
+      "destination_sha256": "1532f467e0090af46bcd55277a2628e1dd7b6cb27f975c7b2cfe1a6da3909bbe",
+      "body_sha256": "7c261c9771c8b33abc16008c40ed22439b0ca986c5b0af719d342e808254dc48",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "IS_REPLACEMENT_FOR",
+          "target": "CA-R-1802",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C24"
+      },
+      "original_role_form_label": [
+        "method",
+        "solution",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Traceability",
+        "dependencies": [
+          "ANECHOIC_MODEL <+ Atom",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role := Evaluation)",
+          "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Verification <+ Coverage",
+          "ANECHOIC_MODEL <+ Term//Property"
+        ]
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-22_FEATURE_AGENTIC/CA-SU-24_FEATURE_PROMPTS/05_method/archive/withdrawn_drafts/CA-M-522@1-draft-SOLUTION--bind-implementation-prompts-to-current-workflow-sources.md",
+      "source_sha256": "47f369b50a8a94364ed7e4cfc9640a9a93f4d7b941b2e59520e2fd01be172931",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-522@1-draft",
+      "native_ref": "AN-S-4416@1",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC_C22/FEATURE_PROMPTS_C24/09_archived/AN-S-4416@1-SWD--bind-implementation-prompts-to-current-workflow-sources.md",
+      "destination_sha256": "75df3cefe7255bd9a9b30672237f7e94c6e7b35398e8b5754ed5a25abcd34d98",
+      "body_sha256": "fdddef65458220beb4a2f6b12db5bb2b9fd1756d583fbce406590d8ff6ddfd40",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "IS_REPLACEMENT_FOR",
+          "target": "CA-R-1843",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C24"
+      },
+      "original_role_form_label": [
+        "method",
+        "solution",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Prompt Authoring",
+        "dependencies": [
+          "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Source Retrieval",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role := Operations)/Workflow",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role := Operations)/Step",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role := Operations)/Action"
+        ]
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-22_FEATURE_AGENTIC/CA-SU-24_FEATURE_PROMPTS/05_method/archive/withdrawn_drafts/CA-M-523@1-draft-SOLUTION--separate-implementation-prompt-input-authority.md",
+      "source_sha256": "17808e3e9170c1a699d9a4e7d7d416ba18f19f32ef36671ab3dbd1f11530803a",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-523@1-draft",
+      "native_ref": "AN-S-4417@1",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC_C22/FEATURE_PROMPTS_C24/09_archived/AN-S-4417@1-SWD--separate-implementation-prompt-input-authority.md",
+      "destination_sha256": "42863fe7221ca2bb2ad027ba5d68b59bf318be4b8e57ed9185a6b3644b4e6255",
+      "body_sha256": "b8eead1781246f629077f7e93225fc3517f7503d11bbc46042846e8f400e6839",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "IS_REPLACEMENT_FOR",
+          "target": "CA-R-1844",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C24"
+      },
+      "original_role_form_label": [
+        "method",
+        "solution",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Authoring <+ Prompt Authoring",
+        "dependencies": [
+          "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Execution Control <+ Effect Authorization",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role := Requirement)",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role := Delivery)",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role := Method)",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role := Evaluation)"
+        ]
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-22_FEATURE_AGENTIC/CA-SU-24_FEATURE_PROMPTS/05_method/archive/withdrawn_drafts/CA-M-524@1-draft-SOLUTION--preserve-agentic-context-and-bounded-handoffs.md",
+      "source_sha256": "b45043f813624372392a7314645b3e0cc949bac4d912fe6bf2d0a7bef962bd3d",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-524@1-draft",
+      "native_ref": "AN-S-4418@1",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC_C22/FEATURE_PROMPTS_C24/09_archived/AN-S-4418@1-SWD--preserve-agentic-context-and-bounded-handoffs.md",
+      "destination_sha256": "4f555f348bea16d29c057b75cfd7bd9f1c6eda42a3c1fca56e90308d90f580e4",
+      "body_sha256": "173abcca4f709c51794e56a69b95cfeda5bec8ed91258575b4f2d381d3046979",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "IS_REPLACEMENT_FOR",
+          "target": "CA-R-1845",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C24"
+      },
+      "original_role_form_label": [
+        "method",
+        "solution",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "Subject/ANECHOIC/Graph/Node/Project Model/Execution/Step Run.Agentic Step Execution Context",
+        "dependencies": [
+          "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Execution Control <+ Effect Authorization",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role := Operations)/Step",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role := Operations)/Action",
+          "ANECHOIC_MODEL <+ Entity/Object/Continuant/Actor/AI Agent"
+        ]
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-22_FEATURE_AGENTIC/CA-SU-23_FEATURE_SKILLS/05_method/archive/withdrawn_drafts/CA-M-532@1-draft-SKILLS-DECISION--load-durable-authority-only-from-anechoic.md",
+      "source_sha256": "eb0aa9227e54648f098edd8a1b8d0697d8654eb2559fdc111814a18c6e313d56",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-532@1-draft",
+      "native_ref": "AN-S-4419@1",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC_C22/FEATURE_SKILLS_C23/09_archived/AN-S-4419@1-SWD--load-durable-authority-only-from-anechoic.md",
+      "destination_sha256": "7153435100417c695628f12b275fe26c68a1826dc2f0dea7cd2b3a4d72b3a7ef",
+      "body_sha256": "d6ed838d482f1c015e09c9f84ba8536a8cb991b8efc33d179ed856c2db3e1285",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "child_of",
+          "target": "CA-R-564",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "IS_REPLACEMENT_FOR",
+          "target": "CA-R-565",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C23"
+      },
+      "original_role_form_label": [
+        "method",
+        "decision",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Source Retrieval"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-44_APP_GRAPH_UI/04_requirement/archive/withdrawn_drafts/CA-R-3020@1-draft-GRAPH_UI-RULE--GRAPH_UI-REQUIREMENT--make-primary-interface-workflows-keyboard-operable.md",
+      "source_sha256": "c8f7b26c64481eebae594e2bb0f3daa35a0d581f714a8975f021c879777f31ab",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-3020@1-draft",
+      "native_ref": "AN-S-4420@1",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_APPS_C20/09_archived/AN-S-4420@1-DES--make-primary-interface-workflows-keyboard-operable.md",
+      "destination_sha256": "06cb3444bd197a7829776db1b1f01e5026621947adab25687f013fa39e20cddf",
+      "body_sha256": "19cab53890b86c81b1a312769c2ddc2d481fe4803c72c35e0a30b0fa52f73cc3",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "child_of",
+          "target": "CA-R-1076",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C20"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "rule",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "Subject/ANECHOIC/Graph/Node/Aspect/UX/Interaction/Accessibility",
+        "dependencies": [
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role := Evaluation)",
+          "ANECHOIC_MODEL <+ Entity/Object/Continuant/Actor/Operator",
+          "Workflow"
+        ]
+      },
+      "historical_owner_evidence": {
+        "historical_scope": "CA-SU-44_APP_GRAPH_UI",
+        "method": "approved Graph UI retired Component route to Apps"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-44_APP_GRAPH_UI/04_requirement/archive/withdrawn_drafts/CA-R-3021@1-draft-GRAPH_UI-RULE--GRAPH_UI-REQUIREMENT--render-untrusted-project-content-only-as-data.md",
+      "source_sha256": "034d55825e5684a64c712f16ca3979720ad3f8d7eea8a90cadda0fa04b29191c",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-3021@1-draft",
+      "native_ref": "AN-S-4421@1",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_APPS_C20/09_archived/AN-S-4421@1-DES--render-untrusted-project-content-only-as-data.md",
+      "destination_sha256": "218e57a297deb0396ac0a4a5b22a97e7f3de761701d3ff2109683d8782079f49",
+      "body_sha256": "1da842e98c1a1e1b2381cac9e539872ce0b4f15b52b04e889fd052c29995bdd9",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "child_of",
+          "target": "CA-R-1076",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C20"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "rule",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Output Publication",
+        "dependencies": [
+          "ANECHOIC_MODEL <+ Entity/Object/Continuant/Actor/Operator",
+          "Project"
+        ]
+      },
+      "historical_owner_evidence": {
+        "historical_scope": "CA-SU-44_APP_GRAPH_UI",
+        "method": "approved Graph UI retired Component route to Apps"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-44_APP_GRAPH_UI/07_delivery/archive/withdrawn_drafts/CA-D-712@1-draft-GRAPH_UI-DECISION--GRAPH_UI-DELIVERY--separate-interface-state-from-governed-sources.md",
+      "source_sha256": "502d7acac5d2a61125bb69ca6dba15e0443b767b9c278326d570044b50731ab0",
+      "source_aliases": [],
+      "legacy_ref": "CA-D-712@1-draft",
+      "native_ref": "AN-S-4422@1",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_APPS_C20/09_archived/AN-S-4422@1-DEVOPS--separate-interface-state-from-governed-sources.md",
+      "destination_sha256": "19acd468c34f7d8429fc1967843409bac1f0c332dd000297987d1b058fa3c9ff",
+      "body_sha256": "cfd515a4e3eba935d3c3c214cb7b0339e7fd9dab1e875ca7a1147ed14c50d937",
+      "body_prefix_bytes": 184,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "delivery_for",
+          "target": "CA-R-1076",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-D-437",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-M-153",
+          "position": 1
+        }
+      ],
+      "native_owner": {
+        "component": "C20"
+      },
+      "original_role_form_label": [
+        "delivery",
+        "decision",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Storage",
+        "dependencies": [
+          "ANECHOIC_MODEL <+ Atom",
+          "ANECHOIC_MODEL <+ Carrier",
+          "ANECHOIC_MODEL <+ Journal",
+          "ANECHOIC_MODEL <+ Projection",
+          "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Storage <+ Temporary State"
+        ]
+      },
+      "historical_owner_evidence": {
+        "historical_scope": "CA-SU-44_APP_GRAPH_UI",
+        "method": "approved Graph UI retired Component route to Apps"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-22_FEATURE_AGENTIC/CA-SU-23_FEATURE_SKILLS/05_method/archive/withdrawn_drafts/CA-M-529@1-draft-SKILLS-DECISION--route-generated-data-pipeline-work.md",
+      "source_sha256": "413d054518b43b53f566d3071b7c864e3fc2d1c16bb02e4dc11da3b1d4403cc4",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-529@1-draft",
+      "native_ref": "AN-S-4423@1",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC_C22/FEATURE_SKILLS_C23/09_archived/AN-S-4423@1-SWD--route-generated-data-pipeline-work.md",
+      "destination_sha256": "35425d0b9e05a2cd130a9141d3a7059c57bc2604269c9816e3d559ff8a0e46ab",
+      "body_sha256": "d21c5d4f30f07bc56f6f608bb6239b34466b15e816b1d7ac13b3a7d5b5684339",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "child_of",
+          "target": "CA-R-1059",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "child_of",
+          "target": "CA-R-1060",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "IS_REPLACEMENT_FOR",
+          "target": "CA-R-561",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C23"
+      },
+      "original_role_form_label": [
+        "method",
+        "decision",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Execution Control"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-21_FEATURE_MCP/05_method/archive/withdrawn_drafts/CA-M-519@1-draft-SOLUTION--admit-atom-mutations-through-initiative-bound-mcp-operations.md",
+      "source_sha256": "c2b94b508bc2ab52c24d8d4bb69da230dfd2a600821caef7f5d75a5c63d251e1",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-519@1-draft",
+      "native_ref": "AN-S-4424@1",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/09_archived/AN-S-4424@1-SWD--admit-atom-mutations-through-initiative-bound-mcp-operations.md",
+      "destination_sha256": "4e66a2e8412f53906987cbc9d4a96457935781d5a471b6c9bd429b89b237e336",
+      "body_sha256": "fc5c0c7f541f63108804042910758cd0d92da313459308ddf8dc1c1afedaa97e",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "IS_REPLACEMENT_FOR",
+          "target": "CA-R-1105",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C21"
+      },
+      "original_role_form_label": [
+        "method",
+        "solution",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Architecture <+ Communication"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/04_requirement/archive/withdrawn_drafts/CA-R-2994@2-draft-PROGRAMMATIC-GENERAL-REQUIREMENT--trace-rmed-claims-to-canonical-module-owners.md",
+      "source_sha256": "2334388e1d3f82ae9605de0b4f0a6ce1185faeb9437fb82bc680ed8158ab5118",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-2994@2-draft",
+      "native_ref": "AN-S-4425@2",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/09_archived/AN-S-4425@2-DES--trace-rmed-claims-to-canonical-module-owners.md",
+      "destination_sha256": "8a06c7dacc13e76008aee88d9cf7142232e2d6fcefcb3c2637e5e32dc8d90eae",
+      "body_sha256": "6d7fd18350e94eecc6a1f0b411096c9613eec2cc2ec4d03e5121acc433cab0bd",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-2117",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-M-431",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-653",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-M-411",
+          "position": 3
+        }
+      ],
+      "native_owner": {
+        "component": "C15"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "requirement",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "Subject/Engineering/Source Unit Responsibility",
+        "dependencies": [
+          "Subject/Engineering/Implementation Cohesion",
+          "Subject/Engineering/Behavior Ownership",
+          "Subject/Engineering/Outcome Evidence"
+        ]
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/05_method/archive/withdrawn_drafts/CA-M-499@2-draft-PROGRAMMATIC-STANDARD-ENG_DECISION--write-rmed-owner-citations-only-at-module-start.md",
+      "source_sha256": "661cba5231ac81bf15c9e9290ed50d28d48b885a1f23d273dc7117b1f0054c4d",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-499@2-draft",
+      "native_ref": "AN-S-4426@2",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/09_archived/AN-S-4426@2-SWD--write-rmed-owner-citations-only-at-module-start.md",
+      "destination_sha256": "86a3306ed1cb1c12dd6ce47bf45c6d4895ccec14200ed0d23c9d2ad48cabb0e2",
+      "body_sha256": "fdcca07aaf00cf8fd95da5b68d919b29e00f29fa7cbd25a38e474a8596ecb390",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-2117",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-M-431",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-653",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-M-411",
+          "position": 3
+        }
+      ],
+      "native_owner": {
+        "component": "C15"
+      },
+      "original_role_form_label": [
+        "method",
+        "eng_decision",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Traceability"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/02_analysis_and_advisory/archive/withdrawn_drafts/engine-refinement-20261108/CA-I-6@1-draft-PROGRAMMATIC-CODE_SYNOPSIS--the-declared-installer-has-no-implementation.md",
+      "source_sha256": "7f97374a26ee01b42289ccdba243ce9f3cac6d653d0689c6d3b1f03ea7a42e72",
+      "source_aliases": [],
+      "legacy_ref": "CA-I-6@1-draft",
+      "native_ref": "AN-T-3459@1",
+      "destination": "_anechoic_anechoic/__TICKETS/ISSUES/09_archived/AN-T-3459@1-CODE_SPEC_MISMATCH--the-declared-installer-has-no-implementation.md",
+      "destination_sha256": "9be724262f2ad530b777585fb99282220ae31008f05a4a18c3b2ec857554b4cd",
+      "body_sha256": "ec67d75015eeb4a269c4286d2f8f39f2a84e4d0ad5d40bedede3e49fad4035bb",
+      "body_prefix_bytes": 203,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "DEPENDS_ON",
+          "target": {
+            "atom": [
+              "CA-R-2008",
+              "CA-D-640"
+            ]
+          },
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C15"
+      },
+      "original_role_form_label": [
+        "implementation",
+        "code_synopsis",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ Scope Unit//PROGRAMMATIC"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/02_analysis_and_advisory/archive/withdrawn_drafts/engine-refinement-20261108/CA-I-4@1-draft-WORKBENCH_BACKEND-CODE_SYNOPSIS--relation-metadata-is-compiled-at-runtime-not-during-image-build.md",
+      "source_sha256": "b70340779355a0984b3afbb206f97f33b4283f7c4f1d049b4032b84a2be6031d",
+      "source_aliases": [],
+      "legacy_ref": "CA-I-4@1-draft",
+      "native_ref": "AN-T-3460@1",
+      "destination": "_anechoic_anechoic/__TICKETS/ISSUES/09_archived/AN-T-3460@1-CODE_SPEC_MISMATCH--relation-metadata-is-compiled-at-runtime-not-during-image-build.md",
+      "destination_sha256": "62b0a1801dc45f06fdebd541d2416e85c961f90034d331e8acb70555c17cee03",
+      "body_sha256": "2f46885a00cea2fa036404a606cb875671719db03b82434ffa8a6aa7b508eaa1",
+      "body_prefix_bytes": 203,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C45"
+      },
+      "original_role_form_label": [
+        "implementation",
+        "code_synopsis",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ CFEL <+ Relation"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/02_analysis_and_advisory/archive/withdrawn_drafts/engine-refinement-20261108/CA-I-5@1-draft-WORKBENCH_BACKEND-CODE_SYNOPSIS--workbench-has-observed-header-schemas-with-underscore-names.md",
+      "source_sha256": "249e895e9ab094b3de7623a6b69f60e7622301dacfe97fc3b6a3ca1821fbde20",
+      "source_aliases": [],
+      "legacy_ref": "CA-I-5@1-draft",
+      "native_ref": "AN-T-3461@1",
+      "destination": "_anechoic_anechoic/__TICKETS/ISSUES/09_archived/AN-T-3461@1-CODE_SPEC_MISMATCH--workbench-has-observed-header-schemas-with-underscore-names.md",
+      "destination_sha256": "ce3d1abd30a93e4c6778f404040870c7280859c223bf374033889ee2eb21f15d",
+      "body_sha256": "abe8255eaf3680388348ec3214d50e7489e8ca10b4c2633a6d4eb002b1acc79c",
+      "body_prefix_bytes": 203,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C45"
+      },
+      "original_role_form_label": [
+        "implementation",
+        "code_synopsis",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ Atom.Header"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-21_FEATURE_MCP/02_analysis_and_advisory/archive/withdrawn_drafts/CA-I-9@2-draft-CODE_SYNOPSIS--mcp-uses-shared-project-binding-and-code-owned-registration.md",
+      "source_sha256": "f8aded46f6defe36649ce4f83f69518750a00ce50ad13d0c1521c18be85b24bb",
+      "source_aliases": [],
+      "legacy_ref": "CA-I-9@2-draft",
+      "native_ref": "AN-T-3462@2",
+      "destination": "_anechoic_anechoic/__TICKETS/ISSUES/09_archived/AN-T-3462@2-CODE_SPEC_MISMATCH--mcp-uses-shared-project-binding-and-code-owned-registration.md",
+      "destination_sha256": "facae8d63e1272d79c6184489f668544168bc01d979555d84dea370e52c55532",
+      "body_sha256": "0c90534de7e180a4e0a4ff7b19f6dc16326928f11059469fd419cf73036c1561",
+      "body_prefix_bytes": 203,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C21"
+      },
+      "original_role_form_label": [
+        "implementation",
+        "code_synopsis",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Development/Architecture/Communication"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/06_evaluation/archive/withdrawn_drafts/CA-E-793@2-draft-PROGRAMMATIC-STANDARD-EVAL_CASE--verify-owner-only-module-citations-and-derived-call-site-traces.md",
+      "source_sha256": "42de3826d775e6dbc8d599791951c172c9367b5092b449705be8523c574247df",
+      "source_aliases": [],
+      "legacy_ref": "CA-E-793@2-draft",
+      "native_ref": "AN-S-4427@2",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/09_archived/AN-S-4427@2-QA--verify-owner-only-module-citations-and-derived-call-site-traces.md",
+      "destination_sha256": "70cf7077628f728a6d4c1c421bda7a9885eb45269d84ae7d715867701bcad3e9",
+      "body_sha256": "856fa9401a60fb34275c0c50a2a83e4508df30a3a9febdca5f7932c7e540f05b",
+      "body_prefix_bytes": 180,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-653",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-2117",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-M-431",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-M-411",
+          "position": 3
+        }
+      ],
+      "native_owner": {
+        "component": "C15"
+      },
+      "original_role_form_label": [
+        "evaluation",
+        "eval_case",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Traceability"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/05_method/archive/withdrawn_drafts/CA-M-518@1-draft-DIRECT_POLICY--preserve-git-and-journal-as-independent-provenance-systems.md",
+      "source_sha256": "68ba3fca2fd306de8694e165a1ce9aa04a70cb220a0b99f1ab3fe5b88b759614",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-518@1-draft",
+      "native_ref": "AN-S-4428@1",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/09_archived/AN-S-4428@1-SWD--preserve-git-and-journal-as-independent-provenance-systems.md",
+      "destination_sha256": "bed269aac80e787c934cdbb8f1c1858ba6e260af8af258267f3bce1585bf834b",
+      "body_sha256": "5145ca3714866951cda907fb083cef78b2e42c505f01e83ac685c08b8f281468",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "IS_REPLACEMENT_FOR",
+          "target": "CA-R-1095",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C15"
+      },
+      "original_role_form_label": [
+        "method",
+        "direct_policy",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Quality <+ Traceability"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/05_method/archive/withdrawn_drafts/CA-M-527@1-draft-PROGRAMMATIC-SOLUTION--provide-a-deterministic-routing-engine.md",
+      "source_sha256": "d31d556669d9820302f3a7794bbaadb613e97ea88d3eaaaa620b6019f050b078",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-527@1-draft",
+      "native_ref": "AN-S-4429@1",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/09_archived/AN-S-4429@1-SWD--provide-a-deterministic-routing-engine.md",
+      "destination_sha256": "0791e9e79edcbdc1db02992c1a6f957128501f182e7a34b511da61492abeb353",
+      "body_sha256": "2dd2ba4b9bc492f9a32c86e7faba97471b4fa79de5cf5c4c63ad65302737a039",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "child_of",
+          "target": "CA-R-1640",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "IS_REPLACEMENT_FOR",
+          "target": "CA-R-517",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C15"
+      },
+      "original_role_form_label": [
+        "method",
+        "solution",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Source Selection"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/05_method/archive/withdrawn_drafts/CA-M-528@1-draft-PROGRAMMATIC-SOLUTION--persist-bounded-session-engine-state.md",
+      "source_sha256": "b29f91f9110c781ba5851bd769fbba14713c50903908b1e782a3bb1ceeb80c05",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-528@1-draft",
+      "native_ref": "AN-S-4430@1",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/09_archived/AN-S-4430@1-SWD--persist-bounded-session-engine-state.md",
+      "destination_sha256": "278653615063135cd5cb8cdc50e109068bc0a252b1cf1cb32183f350dde263e7",
+      "body_sha256": "c3855f321008964794d9e7028b9af284858440bee1c9406a3258a37252e76693",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "IS_REPLACEMENT_FOR",
+          "target": "CA-R-519",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C15"
+      },
+      "original_role_form_label": [
+        "method",
+        "solution",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Storage"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/05_method/archive/withdrawn_drafts/CA-M-530@1-draft-PROGRAMMATIC-SOLUTION--record-governed-action-lifecycles.md",
+      "source_sha256": "e0a028f646a499e38e9a8f07d5da20ff07bbb9c7d030a3cc0dae1209fed2a5b1",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-530@1-draft",
+      "native_ref": "AN-S-4431@1",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/09_archived/AN-S-4431@1-SWD--record-governed-action-lifecycles.md",
+      "destination_sha256": "9b2a64e7b1e6776310f488529ac113715fa42c588736d94df76faa12e140b05f",
+      "body_sha256": "64f59473f27a4e6d02e0af35810e0d41cc49b9956922f5796f1ac1688a7dfe7e",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "child_of",
+          "target": "CA-R-1643",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "child_of",
+          "target": "CA-R-1644",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "child_of",
+          "target": "CA-R-1126",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "child_of",
+          "target": "CA-R-1127",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "IS_REPLACEMENT_FOR",
+          "target": "CA-R-562",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C15"
+      },
+      "original_role_form_label": [
+        "method",
+        "solution",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Execution Control"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/05_method/archive/withdrawn_drafts/CA-M-533@1-draft-PROGRAMMATIC-SOLUTION--initialize-the-session-engine-at-host-context-boundaries.md",
+      "source_sha256": "d8d287e25e8f371117416e8961303c3c0c4a6a81a0eafe4768adc28adcb75c4b",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-533@1-draft",
+      "native_ref": "AN-S-4432@1",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/09_archived/AN-S-4432@1-SWD--initialize-the-session-engine-at-host-context-boundaries.md",
+      "destination_sha256": "caa53fdfda6df22e85593948834769d076fe3adb6cd75f71fa5e0e53b2da17bd",
+      "body_sha256": "33e80d03d44a74ca37ff7977e141108089a272d6c074aa7ec2de1d8b0f746b3b",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "IS_REPLACEMENT_FOR",
+          "target": "CA-R-578",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C15"
+      },
+      "original_role_form_label": [
+        "method",
+        "solution",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Execution Control"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/04_requirement/archive/withdrawn_drafts/CA-R-3017@1-draft-DECLARATION--declare-frontend-engineering-topics.md",
+      "source_sha256": "7fb62760ae52006ab0af1a83336a4170f60e2f585b454a0768e1be62f8643105",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-3017@1-draft",
+      "native_ref": "AN-S-4433@1",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/09_archived/AN-S-4433@1-DES--declare-frontend-engineering-topics.md",
+      "destination_sha256": "90debaf5eb0deaa8174753c9c92963ef6396e23ab19b8c79b4eab246cb378b52",
+      "body_sha256": "58558460240947ef8f5bae2ed66781f65ef19ce15c426bf1c2e3a52dde224c7b",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C14"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "declaration",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Engineering <+ Development <+ Frontend Engineering"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-21_FEATURE_MCP/04_requirement/archive/withdrawn_drafts/CA-R-1894@14-draft-MCP-RULE--refresh-only-accepted-selected-source-pins.md",
+      "source_sha256": "e93294108261ed86d8c33cf879cb0bebefa192997a0c3e7fe916d4819ade06cc",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-1894@14-draft",
+      "native_ref": "AN-S-4434@14",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/09_archived/AN-S-4434@14-DES--refresh-only-accepted-selected-source-pins.md",
+      "destination_sha256": "48d08528a0c4a9a85e0567ae03fcdfed84660af50c19fde2ea332c990859bff8",
+      "body_sha256": "654f48c95e4733b4eb5cf73017511340e519d8208f456d18ba1ebe15a341a6d2",
+      "body_prefix_bytes": 182,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C21"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "rule",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Output Publication",
+        "dependencies": [
+          "PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Source Selection",
+          "MODEL//ANECHOIC <+ Projection",
+          "MODEL//ANECHOIC <+ Atom/(.Header.Role := Operations)/Workflow",
+          "MODEL//ANECHOIC <+ Atom/(.Header.Role := Operations)/Action",
+          "MODEL//ANECHOIC <+ Actor/Operator",
+          "MODEL//ANECHOIC <+ Journal",
+          "MODEL//ANECHOIC <+ Atom",
+          "MODEL//ANECHOIC <+ Carrier/File"
+        ]
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-21_FEATURE_MCP/05_method/archive/withdrawn_drafts/CA-M-350@14-draft-MCP-DECISION--derive-the-registered-selected-pin-refresh.md",
+      "source_sha256": "5ad1ae7c16c00816933af92d0f69f359dbde617277368edb2ced2ab0c766d62b",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-350@14-draft",
+      "native_ref": "AN-S-4435@14",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/09_archived/AN-S-4435@14-SWD--derive-the-registered-selected-pin-refresh.md",
+      "destination_sha256": "ba4efdb1993b1a88cafce449c08d6481ade417a19de86c3b3eaa331786fab9e4",
+      "body_sha256": "7b1fb85b4e2436919055ded3b73f36a52a6e92cfb3a4eece1fd676e00d2ca25b",
+      "body_prefix_bytes": 182,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C21"
+      },
+      "original_role_form_label": [
+        "method",
+        "decision",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Output Publication",
+        "dependencies": [
+          "PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Source Selection",
+          "MODEL//ANECHOIC <+ Projection",
+          "MODEL//ANECHOIC <+ Atom/(.Header.Role := Operations)/Workflow",
+          "MODEL//ANECHOIC <+ Atom/(.Header.Role := Operations)/Action",
+          "MODEL//ANECHOIC <+ Actor/Operator",
+          "MODEL//ANECHOIC <+ Journal",
+          "MODEL//ANECHOIC <+ Atom",
+          "MODEL//ANECHOIC <+ Carrier/File"
+        ]
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/04_requirement/archive/withdrawn_drafts/CA-R-2657@3-draft-PROGRAMMATIC-SCOPE_DELEGATION--declare-tool-workflows.md",
+      "source_sha256": "101b2a3fb493f133fdb3bafc90a8133e5cf7a287faacd6a1ea3f67f1f2cfb934",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-2657@3-draft",
+      "native_ref": "AN-S-4436@3",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/09_archived/AN-S-4436@3-DES--declare-tool-workflows.md",
+      "destination_sha256": "927ff112f80a78c4efbbf0e54ae84162f551deb6bc80fdfc724b5ae70360942a",
+      "body_sha256": "02eca548c0ad320602b0b7fb55176dc6b660ea2be006fb6ddba3fa21fa0bd585",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C15"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "scope_delegation",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "PROJECT STRUCTURE//ANECHOIC <+ Scope Unit//TOOL_WORKFLOWS"
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/_DES/AN-S-2617-DES--declare-tool-workflows.md",
+      "anchor_sha256": "f526e6e2940e40d39c2fcec53eb9cf52d263491155e8e489c4b277ff266728f2",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/04_requirement/CA-R-2657-PROGRAMMATIC-SCOPE_DELEGATION--declare-tool-workflows.md",
+      "evidence_sha256": "f053718cdd925adab7453b7a7fd0273221ab8ece5822c0254df8e68cf8ca1abc",
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/04_requirement/archive/withdrawn_drafts/CA-R-2658@5-draft-PROGRAMMATIC-SCOPE_DELEGATION--declare-project-tools.md",
+      "source_sha256": "8065125bd856e049c57d4fbfd75b8f77b906e8e8da44a59cf7e2a33de5873f9f",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-2658@5-draft",
+      "native_ref": "AN-S-4437@5",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/09_archived/AN-S-4437@5-DES--declare-project-tools.md",
+      "destination_sha256": "97c38f17cfc1b2b5a655d7054131c288f2ba39192a56d219321183d27bd9005f",
+      "body_sha256": "0d67ed29585a04d3362c00281c40df58c39bb5bb49ca0abf3d92b59d0638d231",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C15"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "scope_delegation",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "PROJECT STRUCTURE//ANECHOIC <+ Scope Unit//PROJECT_TOOLS"
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/_DES/AN-S-2618-DES--declare-project-tools.md",
+      "anchor_sha256": "631d66d52f427d12ad76a706c687aeb5d488f2499cb742eab9553877adb3b551",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/04_requirement/CA-R-2658-PROGRAMMATIC-SCOPE_DELEGATION--declare-project-tools.md",
+      "evidence_sha256": "f324dd7515492c034ac14f945e0f2b695c8074c423ebdabb62a080420acf408f",
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/04_requirement/archive/withdrawn_drafts/CA-R-2655@3-draft-PROGRAMMATIC-SCOPE_DELEGATION--declare-tools.md",
+      "source_sha256": "5a76178868de4a31719675500ee5e994cc6a7b244bad834004f7d24700a4f78a",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-2655@3-draft",
+      "native_ref": "AN-S-4438@3",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/09_archived/AN-S-4438@3-DES--declare-tools.md",
+      "destination_sha256": "ff10da3d66405db2a17d39f54620d2c72d7937232414e095022ca224afc62b91",
+      "body_sha256": "feba9e2a7729c2580d13d3cbd77a1e0103ae8c2505bba96156cb8514f397d6a7",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C15"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "scope_delegation",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "PROJECT STRUCTURE//ANECHOIC <+ Scope Unit//TOOLS"
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/_DES/AN-S-2615-DES--declare-tools.md",
+      "anchor_sha256": "9cdcbe60a185aa6fceeb3b6c3be19ef015f81e01d2ddb68749264c016b8f167c",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/04_requirement/CA-R-2655-PROGRAMMATIC-SCOPE_DELEGATION--declare-tools.md",
+      "evidence_sha256": "0fb658c85b5be0dccd96c145ec1d1be590902357fa12d9a245a00bc5e4510833",
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/archive/withdrawn_drafts/CA-R-2487@14-draft-CORE_META_MODEL-ENTITY_DEFINITION--define-cfel.md",
+      "source_sha256": "608c37069e66d0488ac8ccb211f472cbc4876d880d96b3c6555fd927ed79871e",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-2487@14-draft",
+      "native_ref": "AN-S-4439@14",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4439@14-DES--define-cfel.md",
+      "destination_sha256": "34ae95e1497914f90524d67d3f3a7ed266e53f313a1445098e026a38bc844878",
+      "body_sha256": "5d8f5ca3a700add442588ad97e1e5ada7cbcd2e8d17644cb758fa0587a858833",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "declaration",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ CFEL"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/archive/withdrawn_drafts/CA-R-3010@8-draft-CORE_META_MODEL-DECLARATION--declare-code-synopsis-form.md",
+      "source_sha256": "9802e4e2182d8105d932b5b8bb95bdec84cdb13b99f63048360f55be3b6e297a",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-3010@8-draft",
+      "native_ref": "AN-S-4440@8",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4440@8-DES--declare-code-synopsis-form.md",
+      "destination_sha256": "a6e089ede04603b440bfe69f7f0bcbf9c5fd8c3cbfa0d37d7a1b09eb54736ac5",
+      "body_sha256": "92a82016d966dfd4efc68a4743844062db23bd60fa95824407f9d6a0e848b2d8",
+      "body_prefix_bytes": 189,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "declaration",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ Atom/(.Header.Context.Form := Code Synopsis)"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/archive/withdrawn_drafts/CA-R-2487@15-draft-CORE_META_MODEL-DECLARATION--define-cfel.md",
+      "source_sha256": "5e441da2af7ff9a7905add1e6db779346e4809df631e9eaff22c653e4de7a4a7",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-2487@15-draft",
+      "native_ref": "AN-S-4441@15",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4441@15-DES--define-cfel.md",
+      "destination_sha256": "5db6f5b38c21a437ddcf13b33ee8e6f65cc4e6849f883db01e092fc0153a5e98",
+      "body_sha256": "eb9ebe57e1a97d78151baf4794aa14c1590afddd52c98c5c2e94115a31601f41",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "declaration",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ CFEL"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/archive/withdrawn_drafts/CA-R-2781@1-draft-CORE_META_MODEL-DECLARATION--declare-cfel-containment-operator.md",
+      "source_sha256": "4a686f6848466eba02c4b3ba6f24e846caec266e1a6645d5a17f49b9d0f5f639",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-2781@1-draft",
+      "native_ref": "AN-S-4442@1",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4442@1-DES--declare-cfel-containment-operator.md",
+      "destination_sha256": "9a132ec790db113ea166d31f57d8e0472500774bf894484a43bd35df9b9b59ff",
+      "body_sha256": "c47935ab66ef3348fac61c97215319ff07f078b91fdf4f4da41c04f16b5b9669",
+      "body_prefix_bytes": 180,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "declaration",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ CFEL <+ Operator//Containment"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/archive/withdrawn_drafts/CA-R-2475@6-draft-CORE_META_MODEL-DECLARATION--define-narrower-than.md",
+      "source_sha256": "b40da7490aeb967fbab8f3dac57fe427c19532ee6d480cc0f03db542dc102256",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-2475@6-draft",
+      "native_ref": "AN-S-4443@6",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4443@6-DES--define-narrower-than.md",
+      "destination_sha256": "eaeab4e8f4dc4292738adb4b8b5550eff15041ab1d204fd29e2c19e73d979216",
+      "body_sha256": "d4ac2e7f373c5d98ef6bb2fe801d5ac3535088a24a67b3973941fc4035d623ae",
+      "body_prefix_bytes": 180,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "declaration",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ Relation//NARROWER_THAN"
+      },
+      "anchor": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/01_draft/AN-S-2712@7-draft-DES--define-narrower-than.md",
+      "anchor_sha256": "36320ecc4dc30258566f125dd04da81946ac362e61cb39495cdaf8caa9492aec",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/000_draft/CA-R-2475@7-draft-CORE_META_MODEL-DECLARATION--define-narrower-than.md",
+      "evidence_sha256": "1210f866710f9abe212082c4935c2cc920560079e6d76fd9c43f78be3c2af093",
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/archive/withdrawn_drafts/CA-R-2617@3-draft-CORE_META_MODEL-DECLARATION--declare-contains.md",
+      "source_sha256": "8df97cea2ad2e4d89981d8c1ffee890843598942becb42ab112aa07acf67dd5c",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-2617@3-draft",
+      "native_ref": "AN-S-4444@3",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4444@3-DES--declare-contains.md",
+      "destination_sha256": "fc4dd835df9384b3ae654816765c7c259a286ac1b488d2e67f9ed3e8649af773",
+      "body_sha256": "aa256032ccea896e89e4c838f7fd7618c16cecdd961edf865e4f5f3abf041142",
+      "body_prefix_bytes": 180,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "declaration",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ Relation//CONTAINS"
+      },
+      "anchor": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/01_draft/AN-S-2987@4-draft-DES--declare-contains.md",
+      "anchor_sha256": "cf30fd619d8ea796fe9bcafa0227db1c7e73bea404271aca7bdc7d325d9d4364",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/000_draft/CA-R-2617@4-draft-CORE_META_MODEL-DECLARATION--declare-contains.md",
+      "evidence_sha256": "9275cbb2fad4838ab18f9342eb7d71e0f12333af51a48e02884d7c9684c2ae91",
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/archive/withdrawn_drafts/CA-R-2826@1-draft-CORE_META_MODEL-DECLARATION--declare-has-allowed-value.md",
+      "source_sha256": "3795eb83cfeeac501b1169bc105f48060d18bc5c4608f33765cd8003929a0957",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-2826@1-draft",
+      "native_ref": "AN-S-4445@1",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4445@1-DES--declare-has-allowed-value.md",
+      "destination_sha256": "d95543b2852a8b4aac5c72a36e043200ab4e941c576a1d8ee24dacbcd96695ca",
+      "body_sha256": "45297068a9f26958719f0aaceeb0d3042cf906dec9138058c02e027979e775c6",
+      "body_prefix_bytes": 180,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "declaration",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ Relation//HAS_ALLOWED_VALUE"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/archive/withdrawn_drafts/CA-R-2827@1-draft-CORE_META_MODEL-DECLARATION--declare-is-allowed-value-of.md",
+      "source_sha256": "5f75faa8916672f59b0b7fc6c175fcebed68e452201117b9df72b3d8804ef71f",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-2827@1-draft",
+      "native_ref": "AN-S-4446@1",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4446@1-DES--declare-is-allowed-value-of.md",
+      "destination_sha256": "18f7a3583a94124a0933751f5d7e204c9fabac32bbab5a76d821d2b4f0826454",
+      "body_sha256": "09bbee98b5c9bee5597275d2c0bb5f6741952e89524758f5843cd106aad1323f",
+      "body_prefix_bytes": 180,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "declaration",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ Relation//IS_ALLOWED_VALUE_OF"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/archive/withdrawn_drafts/CA-R-2828@1-draft-CORE_META_MODEL-DECLARATION--declare-has-value-constraint.md",
+      "source_sha256": "29c514910f3dcae8b750fa558128c952c5a919a72b7bde2675fc5faeca802df9",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-2828@1-draft",
+      "native_ref": "AN-S-4447@1",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4447@1-DES--declare-has-value-constraint.md",
+      "destination_sha256": "f017407f9b74b7b6481bba5c46c2481640ea0a2b23954b48d45e3fff8183ba44",
+      "body_sha256": "91ee39fbe9150d7f4613bae6c9834c51f02026aed2beb6251bd16867ff5cdb7c",
+      "body_prefix_bytes": 180,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "declaration",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ Relation//HAS_VALUE_CONSTRAINT"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/archive/withdrawn_drafts/CA-R-2829@1-draft-CORE_META_MODEL-DECLARATION--declare-is-value-constraint-of.md",
+      "source_sha256": "7585eb72d766916e0b5a2dcaeedd097aa3a94ea18ebf661b956d60571f604325",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-2829@1-draft",
+      "native_ref": "AN-S-4448@1",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4448@1-DES--declare-is-value-constraint-of.md",
+      "destination_sha256": "7579d586ddfe4b309254e11bb680fc442ae9050464b9ba73dfd98c02fd4d2f2c",
+      "body_sha256": "66f60dec400722f1bab73721642c48449e6ffa6aed9b707f90d252c4729e75dc",
+      "body_prefix_bytes": 180,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "declaration",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ Relation//IS_VALUE_CONSTRAINT_OF"
+      },
+      "legacy_status": "draft",
+      "disposition": "withdrawn draft retained under its own Archived Atom ID"
+    }
+  ],
+  "assigned_ids": {},
+  "split_draft_ids": {
+    "CA-R-1107@24-draft": "AN-S-4402",
+    "CA-D-578@12-draft": "AN-S-4403",
+    "CA-M-196@22-draft": "AN-S-4404",
+    "CA-M-242@16-draft": "AN-S-4405",
+    "CA-E-314@20-draft": "AN-S-4406",
+    "CA-E-408@14-draft": "AN-S-4407",
+    "CA-D-005@20-draft": "AN-S-4408",
+    "CA-D-489@11-draft": "AN-S-4409",
+    "CA-R-2683@5-draft": "AN-S-4410",
+    "CA-R-1076@31-draft": "AN-S-4411",
+    "CA-M-153@29-draft": "AN-S-4412",
+    "CA-E-067@30-draft": "AN-S-4413",
+    "CA-M-520@1-draft": "AN-S-4414",
+    "CA-M-521@1-draft": "AN-S-4415",
+    "CA-M-522@1-draft": "AN-S-4416",
+    "CA-M-523@1-draft": "AN-S-4417",
+    "CA-M-524@1-draft": "AN-S-4418",
+    "CA-M-532@1-draft": "AN-S-4419",
+    "CA-R-3020@1-draft": "AN-S-4420",
+    "CA-R-3021@1-draft": "AN-S-4421",
+    "CA-D-712@1-draft": "AN-S-4422",
+    "CA-M-529@1-draft": "AN-S-4423",
+    "CA-M-519@1-draft": "AN-S-4424",
+    "CA-R-2994@2-draft": "AN-S-4425",
+    "CA-M-499@2-draft": "AN-S-4426",
+    "CA-I-6@1-draft": "AN-T-3459",
+    "CA-I-4@1-draft": "AN-T-3460",
+    "CA-I-5@1-draft": "AN-T-3461",
+    "CA-I-9@2-draft": "AN-T-3462",
+    "CA-E-793@2-draft": "AN-S-4427",
+    "CA-M-518@1-draft": "AN-S-4428",
+    "CA-M-527@1-draft": "AN-S-4429",
+    "CA-M-528@1-draft": "AN-S-4430",
+    "CA-M-530@1-draft": "AN-S-4431",
+    "CA-M-533@1-draft": "AN-S-4432",
+    "CA-R-3017@1-draft": "AN-S-4433",
+    "CA-R-1894@14-draft": "AN-S-4434",
+    "CA-M-350@14-draft": "AN-S-4435",
+    "CA-R-2657@3-draft": "AN-S-4436",
+    "CA-R-2658@5-draft": "AN-S-4437",
+    "CA-R-2655@3-draft": "AN-S-4438",
+    "CA-R-2487@14-draft": "AN-S-4439",
+    "CA-R-3010@8-draft": "AN-S-4440",
+    "CA-R-2487@15-draft": "AN-S-4441",
+    "CA-R-2781@1-draft": "AN-S-4442",
+    "CA-R-2475@6-draft": "AN-S-4443",
+    "CA-R-2617@3-draft": "AN-S-4444",
+    "CA-R-2826@1-draft": "AN-S-4445",
+    "CA-R-2827@1-draft": "AN-S-4446",
+    "CA-R-2828@1-draft": "AN-S-4447",
+    "CA-R-2829@1-draft": "AN-S-4448"
+  },
+  "previous_id_map_sha256": "928a9e0205ae7a860edc7b75db477a5bf293149bedc4c14ee3851e313ff2f873",
+  "previous_alias_map_sha256": "5556760430b0882282289d819cadb4d26ee85e5bb83e6be61dae614f0859253b"
+}
