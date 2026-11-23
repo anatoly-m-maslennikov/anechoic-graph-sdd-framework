@@ -1,0 +1,4536 @@
+{
+  "records": [
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-087@10-PROJECT_CONFIGURATION-ACTION--check-atoms.md",
+      "source_sha256": "375f9e88d2ea1d82d52e61aaff540d4fc052427025c1d9ea5e6c7f22d24667f4",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-087@10",
+      "native_ref": "AN-S-4622@10",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4622@10-DEVOPS-ACTION--check-atoms.md",
+      "destination_sha256": "14982bb676e5e0cad01e6cf5ee0107107eaa5b76d69e5b9933583ecbfb295e87",
+      "body_sha256": "f16cbd6a7d7a21a791d24bfc2c8f3af59bfd3c3fb8d3fbff540872a1b1b18389",
+      "body_prefix_bytes": 228,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1598",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-942",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1447",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-305",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-478",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-479",
+          "position": 5
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-480",
+          "position": 6
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-481",
+          "position": 7
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-482",
+          "position": 8
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-483",
+          "position": 9
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-379",
+          "position": 10
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-506",
+          "position": 11
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Check Atoms",
+        "depends_on": [
+          "Entity/Node/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Entity/Node/Continuant/Atom",
+          "Entity/Node/Continuant/Atom.Property",
+          "Markdown Atom Carrier.YAML Frontmatter",
+          "Entity/Node/Continuant/Atom.Substance",
+          "Entity/Node/Continuant/Atom.Summary",
+          "Entity/Node/Continuant/History/Revision/Type: Atom",
+          "Owned Atoms",
+          "Subtree-owned Atoms",
+          "Entity/Node/Continuant/Scope Unit",
+          "Entity/Node/Continuant/Project.Structure",
+          "Global Tier",
+          "Local Tier",
+          "Entity/Node/Continuant/Projection/Type: Applicable Methodology",
+          "Entity/Node/Continuant/Projection",
+          "Entity/Relation",
+          "Entity/Node/Continuant/Atom/Content Role: Evaluation",
+          "Entity/Node/Continuant/Actor/Type: Operator",
+          "Entity/Node/Continuant/History/Journal"
+        ]
+      },
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-080@17-PROJECT_CONFIGURATION-WORKFLOW--validate-atom-carriers/archive/CA-O-088@15-PROJECT_CONFIGURATION-STEP--check-selected-atoms.md",
+        "sha256": "7ce10b71e6d7a3efd894f8807dc56d920013517093b73a0f1d463db390dd7469",
+        "legacy_step": "CA-O-088@15",
+        "native_step": "AN-S-4601@15",
+        "legacy_workflow": "CA-O-080",
+        "native_workflow": "AN-S-4500",
+        "basis": "Explicit Action invocation from a verified SPEC Step"
+      },
+      "historical_tier": {
+        "local": "Standard",
+        "global": 11
+      },
+      "tier_evidence": [
+        {
+          "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-087@13-PROJECT_CONFIGURATION-ACTION--check-atoms.md",
+          "sha256": "f15a943e11058bf7a27799db659cbc8f5e7e62f6e5c806d4e275d23f039a22a9"
+        },
+        {
+          "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-087@14-PROJECT_CONFIGURATION-ACTION--check-atoms.md",
+          "sha256": "9eaf3625ed8cdcc160cfc574394155ca0c98af5610bf3b7769c10bf67ed70874"
+        }
+      ],
+      "fresh_legacy_id": "CA-O-087"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-087@11-PROJECT_CONFIGURATION-ACTION--check-atoms.md",
+      "source_sha256": "7089c5ccb3825eebd04be6aeac77382a5e313cbc7a7e26ee6da4ec8136fc8d2d",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-087@11",
+      "native_ref": "AN-S-4622@11",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4622@11-DEVOPS-ACTION--check-atoms.md",
+      "destination_sha256": "e49a4bf1084317bc5828db2e1f4e4dd4e93c31d8fd5f8424aa44fcb6e9401087",
+      "body_sha256": "f16cbd6a7d7a21a791d24bfc2c8f3af59bfd3c3fb8d3fbff540872a1b1b18389",
+      "body_prefix_bytes": 228,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1598",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-942",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1447",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-305",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-478",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-479",
+          "position": 5
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-480",
+          "position": 6
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-481",
+          "position": 7
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-482",
+          "position": 8
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-483",
+          "position": 9
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-379",
+          "position": 10
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-506",
+          "position": 11
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Check Atoms",
+        "depends_on": [
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Subject/Domain/Node/Continuant/Atom",
+          "Entity/Node/Continuant/Atom.Property",
+          "Markdown Atom Carrier.YAML Frontmatter",
+          "Entity/Node/Continuant/Atom.Substance",
+          "Entity/Node/Continuant/Atom.Summary",
+          "Entity/Node/Continuant/History/Revision/Type: Atom",
+          "Owned Atoms",
+          "Subtree-owned Atoms",
+          "Entity/Node/Continuant/Scope Unit",
+          "Entity/Node/Continuant/Project.Structure",
+          "Global Tier",
+          "Local Tier",
+          "Subject/Domain/Node/Continuant/Projection/Type: Applicable Methodology",
+          "Entity/Node/Continuant/Projection",
+          "Subject/Graph/Relation",
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Evaluation",
+          "Entity/Node/Continuant/Actor/Type: Operator",
+          "Entity/Node/Continuant/History/Journal"
+        ]
+      },
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-080@17-PROJECT_CONFIGURATION-WORKFLOW--validate-atom-carriers/archive/CA-O-088@15-PROJECT_CONFIGURATION-STEP--check-selected-atoms.md",
+        "sha256": "7ce10b71e6d7a3efd894f8807dc56d920013517093b73a0f1d463db390dd7469",
+        "legacy_step": "CA-O-088@15",
+        "native_step": "AN-S-4601@15",
+        "legacy_workflow": "CA-O-080",
+        "native_workflow": "AN-S-4500",
+        "basis": "Explicit Action invocation from a verified SPEC Step"
+      },
+      "historical_tier": {
+        "local": "Standard",
+        "global": 11
+      },
+      "tier_evidence": [
+        {
+          "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-087@13-PROJECT_CONFIGURATION-ACTION--check-atoms.md",
+          "sha256": "f15a943e11058bf7a27799db659cbc8f5e7e62f6e5c806d4e275d23f039a22a9"
+        },
+        {
+          "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-087@14-PROJECT_CONFIGURATION-ACTION--check-atoms.md",
+          "sha256": "9eaf3625ed8cdcc160cfc574394155ca0c98af5610bf3b7769c10bf67ed70874"
+        }
+      ],
+      "fresh_legacy_id": "CA-O-087"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-087@12-PROJECT_CONFIGURATION-ACTION--check-atoms.md",
+      "source_sha256": "8da2a5c57bf2f86176e7730ca2d4dea5f9885c0bbd00191200270e48394ac9c2",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-087@12",
+      "native_ref": "AN-S-4622@12",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4622@12-DEVOPS-ACTION--check-atoms.md",
+      "destination_sha256": "cb3ed22cd2f764f102c56072c028c538789b20ca9d9ef87669721e8354167e78",
+      "body_sha256": "f16cbd6a7d7a21a791d24bfc2c8f3af59bfd3c3fb8d3fbff540872a1b1b18389",
+      "body_prefix_bytes": 228,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1598",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-942",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1447",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-305",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-478",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-479",
+          "position": 5
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-480",
+          "position": 6
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-481",
+          "position": 7
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-482",
+          "position": 8
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-483",
+          "position": 9
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-379",
+          "position": 10
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-506",
+          "position": 11
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Check Atoms",
+        "depends_on": [
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Subject/Domain/Node/Continuant/Atom",
+          "Entity/Node/Continuant/Atom.Property",
+          "Markdown Atom Carrier.YAML Frontmatter",
+          "Entity/Node/Continuant/Atom.Substance",
+          "Entity/Node/Continuant/Atom.Summary",
+          "Entity/Node/Continuant/History/Revision/Type: Atom",
+          "Owned Atoms",
+          "Subtree-owned Atoms",
+          "Subject/Domain/Node/Continuant/Scope Unit",
+          "Subject/Domain/Node/Continuant/Project.Structure",
+          "Global Tier",
+          "Local Tier",
+          "Subject/Domain/Node/Continuant/Projection/Type: Applicable Methodology",
+          "Subject/Domain/Node/Continuant/Projection",
+          "Subject/Graph/Relation",
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Evaluation",
+          "Subject/Domain/Node/Continuant/Actor/Type: Operator",
+          "Subject/Domain/Node/Continuant/History/Journal"
+        ]
+      },
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-080@17-PROJECT_CONFIGURATION-WORKFLOW--validate-atom-carriers/archive/CA-O-088@15-PROJECT_CONFIGURATION-STEP--check-selected-atoms.md",
+        "sha256": "7ce10b71e6d7a3efd894f8807dc56d920013517093b73a0f1d463db390dd7469",
+        "legacy_step": "CA-O-088@15",
+        "native_step": "AN-S-4601@15",
+        "legacy_workflow": "CA-O-080",
+        "native_workflow": "AN-S-4500",
+        "basis": "Explicit Action invocation from a verified SPEC Step"
+      },
+      "historical_tier": {
+        "local": "Standard",
+        "global": 11
+      },
+      "tier_evidence": [
+        {
+          "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-087@13-PROJECT_CONFIGURATION-ACTION--check-atoms.md",
+          "sha256": "f15a943e11058bf7a27799db659cbc8f5e7e62f6e5c806d4e275d23f039a22a9"
+        },
+        {
+          "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-087@14-PROJECT_CONFIGURATION-ACTION--check-atoms.md",
+          "sha256": "9eaf3625ed8cdcc160cfc574394155ca0c98af5610bf3b7769c10bf67ed70874"
+        }
+      ],
+      "fresh_legacy_id": "CA-O-087"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-087@13-PROJECT_CONFIGURATION-ACTION--check-atoms.md",
+      "source_sha256": "f15a943e11058bf7a27799db659cbc8f5e7e62f6e5c806d4e275d23f039a22a9",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-087@13",
+      "native_ref": "AN-S-4622@13",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4622@13-DEVOPS-ACTION--check-atoms.md",
+      "destination_sha256": "3ce76ea566d0d100997bb2ceea3ac96adf280e406e244852a3ceb4c40ca4b390",
+      "body_sha256": "f16cbd6a7d7a21a791d24bfc2c8f3af59bfd3c3fb8d3fbff540872a1b1b18389",
+      "body_prefix_bytes": 228,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1598",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-942",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1447",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-305",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-478",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-479",
+          "position": 5
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-480",
+          "position": 6
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-481",
+          "position": 7
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-482",
+          "position": 8
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-483",
+          "position": 9
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-379",
+          "position": 10
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-506",
+          "position": 11
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Check Atoms",
+        "depends_on": [
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Subject/Domain/Node/Continuant/Atom",
+          "Entity/Node/Continuant/Atom.Property",
+          "Markdown Atom Carrier.YAML Frontmatter",
+          "Subject/Domain/Node/Continuant/Atom.Substance",
+          "Entity/Node/Continuant/Atom.Summary",
+          "Entity/Node/Continuant/History/Revision/Type: Atom",
+          "Owned Atoms",
+          "Subtree-owned Atoms",
+          "Subject/Domain/Node/Continuant/Scope Unit",
+          "Subject/Domain/Node/Continuant/Project.Structure",
+          "Global Tier",
+          "Local Tier",
+          "Subject/Domain/Node/Continuant/Projection/Type: Applicable Methodology",
+          "Subject/Domain/Node/Continuant/Projection",
+          "Subject/Graph/Relation",
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Evaluation",
+          "Subject/Domain/Node/Continuant/Actor/Type: Operator",
+          "Subject/Domain/Node/Continuant/History/Journal"
+        ]
+      },
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-080@17-PROJECT_CONFIGURATION-WORKFLOW--validate-atom-carriers/archive/CA-O-088@15-PROJECT_CONFIGURATION-STEP--check-selected-atoms.md",
+        "sha256": "7ce10b71e6d7a3efd894f8807dc56d920013517093b73a0f1d463db390dd7469",
+        "legacy_step": "CA-O-088@15",
+        "native_step": "AN-S-4601@15",
+        "legacy_workflow": "CA-O-080",
+        "native_workflow": "AN-S-4500",
+        "basis": "Explicit Action invocation from a verified SPEC Step"
+      },
+      "historical_tier": {
+        "local": "Standard",
+        "global": 11
+      },
+      "tier_evidence": [
+        {
+          "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-087@13-PROJECT_CONFIGURATION-ACTION--check-atoms.md",
+          "sha256": "f15a943e11058bf7a27799db659cbc8f5e7e62f6e5c806d4e275d23f039a22a9"
+        },
+        {
+          "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-087@14-PROJECT_CONFIGURATION-ACTION--check-atoms.md",
+          "sha256": "9eaf3625ed8cdcc160cfc574394155ca0c98af5610bf3b7769c10bf67ed70874"
+        }
+      ],
+      "fresh_legacy_id": "CA-O-087"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-087@14-PROJECT_CONFIGURATION-ACTION--check-atoms.md",
+      "source_sha256": "9eaf3625ed8cdcc160cfc574394155ca0c98af5610bf3b7769c10bf67ed70874",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-087@14",
+      "native_ref": "AN-S-4622@14",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4622@14-DEVOPS-ACTION--check-atoms.md",
+      "destination_sha256": "8828c4839d8405c409413f8e79f6aedd2b3950ab3267fdc6ed9cf7019af9a3e8",
+      "body_sha256": "f16cbd6a7d7a21a791d24bfc2c8f3af59bfd3c3fb8d3fbff540872a1b1b18389",
+      "body_prefix_bytes": 228,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1598",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-942",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1447",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-305",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-478",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-479",
+          "position": 5
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-480",
+          "position": 6
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-481",
+          "position": 7
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-482",
+          "position": 8
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-483",
+          "position": 9
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-379",
+          "position": 10
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-506",
+          "position": 11
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Check Atoms",
+        "depends_on": [
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Subject/Domain/Node/Continuant/Atom",
+          "Entity/Node/Continuant/Atom.Property",
+          "Markdown Atom Carrier.YAML Frontmatter",
+          "Subject/Domain/Node/Continuant/Atom.Substance",
+          "Entity/Node/Continuant/Atom.Summary",
+          "Entity/Node/Continuant/History/Revision/Type: Atom",
+          "Owned Atoms",
+          "Subtree-owned Atoms",
+          "Subject/Domain/Node/Continuant/Scope Unit",
+          "Subject/Domain/Node/Continuant/Project.Structure",
+          "Global Tier",
+          "Local Tier",
+          "Subject/Domain/Node/Continuant/Projection/Type: Applicable Methodology",
+          "Subject/Domain/Node/Continuant/Projection",
+          "Subject/Graph/Relation",
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Evaluation",
+          "Subject/Domain/Node/Continuant/Actor/Type: Operator",
+          "Subject/Domain/Node/Continuant/History/Journal"
+        ]
+      },
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-080@17-PROJECT_CONFIGURATION-WORKFLOW--validate-atom-carriers/archive/CA-O-088@15-PROJECT_CONFIGURATION-STEP--check-selected-atoms.md",
+        "sha256": "7ce10b71e6d7a3efd894f8807dc56d920013517093b73a0f1d463db390dd7469",
+        "legacy_step": "CA-O-088@15",
+        "native_step": "AN-S-4601@15",
+        "legacy_workflow": "CA-O-080",
+        "native_workflow": "AN-S-4500",
+        "basis": "Explicit Action invocation from a verified SPEC Step"
+      },
+      "fresh_legacy_id": "CA-O-087"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-087@15-PROJECT_CONFIGURATION-ACTION--check-atoms.md",
+      "source_sha256": "280f866003c0fbbcdd5f3ec1af5479b932b6d20f693353236ea89bc67932ee46",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-087@15",
+      "native_ref": "AN-S-4622@15",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4622@15-DEVOPS-ACTION--check-atoms.md",
+      "destination_sha256": "bb5ea051985fe838f48557d64a49bc9ad982169cadd46a6f36b649a989c6ed71",
+      "body_sha256": "f16cbd6a7d7a21a791d24bfc2c8f3af59bfd3c3fb8d3fbff540872a1b1b18389",
+      "body_prefix_bytes": 228,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1598",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-942",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1447",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-305",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-478",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-479",
+          "position": 5
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-480",
+          "position": 6
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-481",
+          "position": 7
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-482",
+          "position": 8
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-483",
+          "position": 9
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-379",
+          "position": 10
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-506",
+          "position": 11
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Check Atoms",
+        "depends_on": [
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Subject/Domain/Node/Continuant/Atom",
+          "Subject/Domain/Node/Continuant/Atom.Property",
+          "Subject/Engineering/Carrier/File Carrier.YAML Frontmatter",
+          "Subject/Domain/Node/Continuant/Atom.Substance",
+          "Subject/Domain/Node/Continuant/Atom.Summary",
+          "Subject/Domain/Node/Continuant/Atom.Version Number",
+          "Owned Atoms",
+          "Subtree-owned Atoms",
+          "Subject/Domain/Node/Continuant/Scope Unit",
+          "Subject/Domain/Node/Continuant/Project.Structure",
+          "Global Tier",
+          "Subject/Domain/Node/Continuant/Atom.Tier",
+          "Subject/Domain/Node/Continuant/Projection/Type: Applicable Methodology",
+          "Subject/Domain/Node/Continuant/Projection",
+          "Subject/Graph/Relation",
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Evaluation",
+          "Subject/Domain/Node/Continuant/Actor/Type: Operator",
+          "Subject/Domain/Node/Continuant/History/Journal"
+        ]
+      },
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-080@17-PROJECT_CONFIGURATION-WORKFLOW--validate-atom-carriers/archive/CA-O-088@15-PROJECT_CONFIGURATION-STEP--check-selected-atoms.md",
+        "sha256": "7ce10b71e6d7a3efd894f8807dc56d920013517093b73a0f1d463db390dd7469",
+        "legacy_step": "CA-O-088@15",
+        "native_step": "AN-S-4601@15",
+        "legacy_workflow": "CA-O-080",
+        "native_workflow": "AN-S-4500",
+        "basis": "Explicit Action invocation from a verified SPEC Step"
+      },
+      "fresh_legacy_id": "CA-O-087"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-087@16-PROJECT_CONFIGURATION-ACTION--check-atoms.md",
+      "source_sha256": "485d00784a231cb0a03f7e90a1ec462eb620bf1c17716b90091abd8adaa007a9",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-087@16",
+      "native_ref": "AN-S-4622@16",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4622@16-DEVOPS-ACTION--check-atoms.md",
+      "destination_sha256": "45f0b2a0be476afb3ad4e878641ea61270605e3f35965b27a883e1373b5a77e1",
+      "body_sha256": "f16cbd6a7d7a21a791d24bfc2c8f3af59bfd3c3fb8d3fbff540872a1b1b18389",
+      "body_prefix_bytes": 228,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1598",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-942",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1447",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-305",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-478",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-479",
+          "position": 5
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-480",
+          "position": 6
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-481",
+          "position": 7
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-482",
+          "position": 8
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-483",
+          "position": 9
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-379",
+          "position": 10
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-506",
+          "position": 11
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Action//Check Atoms",
+        "depends_on": [
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Subject/Domain/Node/Continuant/Atom",
+          "Subject/Domain/Node/Continuant/Atom.Property",
+          "Subject/Engineering/Carrier/File Carrier.YAML Frontmatter",
+          "Subject/Domain/Node/Continuant/Atom.Substance",
+          "Subject/Domain/Node/Continuant/Atom.Summary",
+          "Subject/Domain/Node/Continuant/Atom.Version Number",
+          "Owned Atoms",
+          "Subtree-owned Atoms",
+          "Subject/Domain/Node/Continuant/Scope Unit",
+          "Subject/Domain/Node/Continuant/Project.Structure",
+          "Global Tier",
+          "Subject/Domain/Node/Continuant/Atom.Tier",
+          "Subject/Domain/Node/Continuant/Projection/Type: Applicable Methodology",
+          "Subject/Domain/Node/Continuant/Projection",
+          "Subject/Graph/Relation",
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Evaluation",
+          "Subject/Domain/Node/Continuant/Actor/Type: Operator",
+          "Subject/Domain/Node/Continuant/History/Journal"
+        ]
+      },
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-080@17-PROJECT_CONFIGURATION-WORKFLOW--validate-atom-carriers/archive/CA-O-088@15-PROJECT_CONFIGURATION-STEP--check-selected-atoms.md",
+        "sha256": "7ce10b71e6d7a3efd894f8807dc56d920013517093b73a0f1d463db390dd7469",
+        "legacy_step": "CA-O-088@15",
+        "native_step": "AN-S-4601@15",
+        "legacy_workflow": "CA-O-080",
+        "native_workflow": "AN-S-4500",
+        "basis": "Explicit Action invocation from a verified SPEC Step"
+      },
+      "fresh_legacy_id": "CA-O-087"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-087@17-PROJECT_CONFIGURATION-ACTION--check-atoms.md",
+      "source_sha256": "86c5f851873a007ef30fca876fd1e2eef4dcc815225f4baff8af9563b7860037",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-087@17",
+      "native_ref": "AN-S-4622@17",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4622@17-DEVOPS-ACTION--check-atoms.md",
+      "destination_sha256": "1962e0bc28b5763d5686e69ba447e3da971198bde722758368f75fb78e0e0652",
+      "body_sha256": "f16cbd6a7d7a21a791d24bfc2c8f3af59bfd3c3fb8d3fbff540872a1b1b18389",
+      "body_prefix_bytes": 228,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1598",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-942",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1447",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-305",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-478",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-479",
+          "position": 5
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-480",
+          "position": 6
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-481",
+          "position": 7
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-482",
+          "position": 8
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-483",
+          "position": 9
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-379",
+          "position": 10
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-506",
+          "position": 11
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Action//Check Atoms",
+        "depends_on": [
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Subject/Domain/Node/Continuant/Atom",
+          "Subject/Domain/Node/Continuant/Atom.Property",
+          "Subject/Engineering/Carrier/File Carrier.YAML Frontmatter",
+          "Subject/Domain/Node/Continuant/Atom.Content",
+          "Subject/Domain/Node/Continuant/Atom.Summary",
+          "Subject/Domain/Node/Continuant/Atom.Version Number",
+          "Owned Atoms",
+          "Subtree-owned Atoms",
+          "Subject/Domain/Node/Continuant/Scope Unit",
+          "Subject/Domain/Node/Continuant/Project.Structure",
+          "Global Tier",
+          "Subject/Domain/Node/Continuant/Atom.Tier",
+          "Subject/Domain/Node/Continuant/Projection/Type: Applicable Methodology",
+          "Subject/Domain/Node/Continuant/Projection",
+          "Subject/Graph/Relation",
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Evaluation",
+          "Subject/Domain/Node/Continuant/Actor/Type: Operator",
+          "Subject/Domain/Node/Continuant/History/Journal"
+        ]
+      },
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-080@17-PROJECT_CONFIGURATION-WORKFLOW--validate-atom-carriers/archive/CA-O-088@15-PROJECT_CONFIGURATION-STEP--check-selected-atoms.md",
+        "sha256": "7ce10b71e6d7a3efd894f8807dc56d920013517093b73a0f1d463db390dd7469",
+        "legacy_step": "CA-O-088@15",
+        "native_step": "AN-S-4601@15",
+        "legacy_workflow": "CA-O-080",
+        "native_workflow": "AN-S-4500",
+        "basis": "Explicit Action invocation from a verified SPEC Step"
+      },
+      "fresh_legacy_id": "CA-O-087"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-087@18-PROJECT_CONFIGURATION-ACTION--check-atoms.md",
+      "source_sha256": "867ef6e62f337c4f74f6f6c543ce9f215a1b7f99235e43b1944945733df2bde8",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-087@18",
+      "native_ref": "AN-S-4622@18",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4622@18-DEVOPS-ACTION--check-atoms.md",
+      "destination_sha256": "c66dcb6b9764d1f3a2a5df305e71b05d74027e0502da14bd565069f85a8a5c2c",
+      "body_sha256": "f16cbd6a7d7a21a791d24bfc2c8f3af59bfd3c3fb8d3fbff540872a1b1b18389",
+      "body_prefix_bytes": 228,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1598",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-942",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1447",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-305",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-478",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-479",
+          "position": 5
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-480",
+          "position": 6
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-481",
+          "position": 7
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-482",
+          "position": 8
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-483",
+          "position": 9
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-379",
+          "position": 10
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-506",
+          "position": 11
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Action//Check Atoms",
+        "depends_on": [
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Subject/Domain/Node/Continuant/Atom",
+          "Subject/Domain/Node/Continuant/Atom.Property",
+          "Subject/Engineering/Carrier/File Carrier.YAML Frontmatter",
+          "Subject/Domain/Node/Continuant/Atom.Content",
+          "Subject/Domain/Node/Continuant/Atom.Summary",
+          "Subject/Domain/Node/Continuant/Atom.Version Number",
+          "Subject/Domain/Node/Continuant/Scope Unit",
+          "Subject/Domain/Node/Continuant/Project.Structure",
+          "Global Tier",
+          "Subject/Domain/Node/Continuant/Atom.Tier",
+          "Subject/Domain/Node/Continuant/Projection/Type: Applicable Methodology",
+          "Subject/Domain/Node/Continuant/Projection",
+          "Subject/Graph/Relation",
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Evaluation",
+          "Subject/Domain/Node/Continuant/Actor/Type: Operator",
+          "Subject/Domain/Node/Continuant/History/Journal"
+        ]
+      },
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-080@17-PROJECT_CONFIGURATION-WORKFLOW--validate-atom-carriers/archive/CA-O-088@15-PROJECT_CONFIGURATION-STEP--check-selected-atoms.md",
+        "sha256": "7ce10b71e6d7a3efd894f8807dc56d920013517093b73a0f1d463db390dd7469",
+        "legacy_step": "CA-O-088@15",
+        "native_step": "AN-S-4601@15",
+        "legacy_workflow": "CA-O-080",
+        "native_workflow": "AN-S-4500",
+        "basis": "Explicit Action invocation from a verified SPEC Step"
+      },
+      "fresh_legacy_id": "CA-O-087"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-087@19-PROJECT_CONFIGURATION-ACTION--check-atoms.md",
+      "source_sha256": "3409730434ef26e0d61fea194c85ec4d1f243fbee26ac0c526c23697e447fd3f",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-087@19",
+      "native_ref": "AN-S-4622@19",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4622@19-DEVOPS-ACTION--check-atoms.md",
+      "destination_sha256": "25fd28984a0b0c8cb6d7f1134a4b5f447d9aeebb8a6edb645ec911b9d5e62ed3",
+      "body_sha256": "f16cbd6a7d7a21a791d24bfc2c8f3af59bfd3c3fb8d3fbff540872a1b1b18389",
+      "body_prefix_bytes": 228,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1598",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-942",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1447",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-305",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-478",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-479",
+          "position": 5
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-480",
+          "position": 6
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-481",
+          "position": 7
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-482",
+          "position": 8
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-483",
+          "position": 9
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-379",
+          "position": 10
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-506",
+          "position": 11
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Action//Check Atoms",
+        "depends_on": [
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Subject/Domain/Node/Continuant/Atom",
+          "Subject/Domain/Node/Continuant/Atom.Property",
+          "Subject/Engineering/Carrier/File Carrier.YAML Frontmatter",
+          "Subject/Domain/Node/Continuant/Atom.Content",
+          "Subject/Domain/Node/Continuant/Atom.Summary",
+          "Subject/Domain/Node/Continuant/Atom.Version Number",
+          "Subject/Domain/Node/Continuant/Scope Unit",
+          "Subject/Domain/Node/Continuant/Project.Structure",
+          "Global Tier",
+          "Subject/Domain/Node/Continuant/Atom.Tier",
+          "Subject/Domain/Node/Continuant/Projection/Type: Applicable Methodology",
+          "Subject/Domain/Node/Continuant/Projection",
+          "Subject/Graph/Relation",
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Evaluation",
+          "Subject/Domain/Node/Continuant/Actor/Type: Operator",
+          "Subject/Domain/Node/Continuant/History/Journal",
+          "Subject/Domain/Node/Continuant/Selection"
+        ]
+      },
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-080@17-PROJECT_CONFIGURATION-WORKFLOW--validate-atom-carriers/archive/CA-O-088@15-PROJECT_CONFIGURATION-STEP--check-selected-atoms.md",
+        "sha256": "7ce10b71e6d7a3efd894f8807dc56d920013517093b73a0f1d463db390dd7469",
+        "legacy_step": "CA-O-088@15",
+        "native_step": "AN-S-4601@15",
+        "legacy_workflow": "CA-O-080",
+        "native_workflow": "AN-S-4500",
+        "basis": "Explicit Action invocation from a verified SPEC Step"
+      },
+      "fresh_legacy_id": "CA-O-087"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-087@20-PROJECT_CONFIGURATION-ACTION--check-atoms.md",
+      "source_sha256": "c0bd19cdd1347cbb22322b79cf96d9aea11e2a7393cbe6315a4f0ffd066e4e57",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-087@20",
+      "native_ref": "AN-S-4622@20",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4622@20-DEVOPS-ACTION--check-atoms.md",
+      "destination_sha256": "2b8b85784dbace514e83ba16f376a4b5ee2126f088f08a218de2aafe05c2e7ad",
+      "body_sha256": "f16cbd6a7d7a21a791d24bfc2c8f3af59bfd3c3fb8d3fbff540872a1b1b18389",
+      "body_prefix_bytes": 228,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1598",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-942",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1447",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-305",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-478",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-479",
+          "position": 5
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-480",
+          "position": 6
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-481",
+          "position": 7
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-482",
+          "position": 8
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-483",
+          "position": 9
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-379",
+          "position": 10
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-506",
+          "position": 11
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Action//Check Atoms",
+        "depends_on": [
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Subject/Domain/Node/Continuant/Atom",
+          "Subject/Domain/Node/Continuant/Atom.Property",
+          "Subject/Engineering/Carrier/File Carrier.YAML Frontmatter",
+          "Subject/Domain/Node/Continuant/Atom.Content",
+          "Subject/Domain/Node/Continuant/Atom.Summary",
+          "Subject/Domain/Node/Continuant/Atom.Version Number",
+          "Subject/Domain/Node/Continuant/Scope Unit",
+          "Subject/Domain/Node/Continuant/Project.Structure",
+          "Subject/Domain/Node/Continuant/Atom.Tier",
+          "Subject/Domain/Node/Continuant/Projection/Type: Applicable Methodology",
+          "Subject/Domain/Node/Continuant/Projection",
+          "Subject/Graph/Relation",
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Evaluation",
+          "Subject/Domain/Node/Continuant/Actor/Type: Operator",
+          "Subject/Domain/Node/Continuant/History/Journal",
+          "Subject/Domain/Node/Continuant/Selection"
+        ]
+      },
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-080@17-PROJECT_CONFIGURATION-WORKFLOW--validate-atom-carriers/archive/CA-O-088@15-PROJECT_CONFIGURATION-STEP--check-selected-atoms.md",
+        "sha256": "7ce10b71e6d7a3efd894f8807dc56d920013517093b73a0f1d463db390dd7469",
+        "legacy_step": "CA-O-088@15",
+        "native_step": "AN-S-4601@15",
+        "legacy_workflow": "CA-O-080",
+        "native_workflow": "AN-S-4500",
+        "basis": "Explicit Action invocation from a verified SPEC Step"
+      },
+      "fresh_legacy_id": "CA-O-087"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-087@22-PROJECT_CONFIGURATION-ACTION--check-atoms.md",
+      "source_sha256": "efd759285b505764a9212ce699d3da3603edc64e5de3fe85cb8901897dac72d0",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-087@22",
+      "native_ref": "AN-S-4622@22",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4622@22-DEVOPS-ACTION--check-atoms.md",
+      "destination_sha256": "7bbb4d6a569eed52884ff1008361eedc373a5607c33d8632963a259697054fca",
+      "body_sha256": "f16cbd6a7d7a21a791d24bfc2c8f3af59bfd3c3fb8d3fbff540872a1b1b18389",
+      "body_prefix_bytes": 228,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1598",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-942",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1447",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-305",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-478",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-479",
+          "position": 5
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-480",
+          "position": 6
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-481",
+          "position": 7
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-482",
+          "position": 8
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-483",
+          "position": 9
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-379",
+          "position": 10
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-506",
+          "position": 11
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Graph Node/Domain/Continuant/Atom/Content Role: Operations/Type: Action//Check Atoms",
+        "depends_on": [
+          "Subject/Graph Node/Domain/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Subject/Graph Node/Domain/Continuant/Atom",
+          "Subject/Graph Node/Engineering/Continuant/Carrier/File Carrier.YAML Frontmatter",
+          "Subject/Graph Node/Domain/Continuant/Atom.Content",
+          "Subject/Graph Node/Domain/Continuant/Atom.Summary",
+          "Subject/Graph Node/Domain/Continuant/Atom.Version Number",
+          "Subject/Graph Node/Domain/Continuant/Scope Unit",
+          "Subject/Graph Node/Domain/Continuant/Project.Structure",
+          "Subject/Graph Node/Domain/Continuant/Atom.Tier",
+          "Subject/Graph Node/Domain/Continuant/Projection/Type: Applicable Methodology",
+          "Subject/Graph Node/Domain/Continuant/Projection",
+          "Subject/Graph Relation",
+          "Subject/Graph Node/Domain/Continuant/Atom/Content Role: Evaluation",
+          "Subject/Graph Node/Domain/Continuant/Actor/Type: Operator",
+          "Subject/Graph Node/Domain/Continuant/History/Journal",
+          "Subject/Graph Node/Domain/Continuant/Selection"
+        ]
+      },
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-080@17-PROJECT_CONFIGURATION-WORKFLOW--validate-atom-carriers/archive/CA-O-088@15-PROJECT_CONFIGURATION-STEP--check-selected-atoms.md",
+        "sha256": "7ce10b71e6d7a3efd894f8807dc56d920013517093b73a0f1d463db390dd7469",
+        "legacy_step": "CA-O-088@15",
+        "native_step": "AN-S-4601@15",
+        "legacy_workflow": "CA-O-080",
+        "native_workflow": "AN-S-4500",
+        "basis": "Explicit Action invocation from a verified SPEC Step"
+      },
+      "fresh_legacy_id": "CA-O-087"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-087@23-PROJECT_CONFIGURATION-ACTION--check-atoms.md",
+      "source_sha256": "79bb0560eacc38432021f354f2a2a83aa4958c1a52568b3fbbb0ffa8ac0d78fa",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-087@23",
+      "native_ref": "AN-S-4622@23",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4622@23-DEVOPS-ACTION--check-atoms.md",
+      "destination_sha256": "1c2ce9db90cbff0c5dcab950557f8c55bbfd798d30ea3732c85d69f84c7d6c0d",
+      "body_sha256": "f16cbd6a7d7a21a791d24bfc2c8f3af59bfd3c3fb8d3fbff540872a1b1b18389",
+      "body_prefix_bytes": 228,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-D-305",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-E-379",
+          "position": 1
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Graph Node/Domain/Continuant/Atom/Content Role: Operations/Type: Action//Check Atoms",
+        "depends_on": [
+          "Subject/Graph Node/Domain/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Subject/Graph Node/Domain/Continuant/Atom",
+          "Subject/Graph Node/Engineering/Continuant/Carrier/File Carrier.YAML Frontmatter",
+          "Subject/Graph Node/Domain/Continuant/Atom.Content",
+          "Subject/Graph Node/Domain/Continuant/Atom.Summary",
+          "Subject/Graph Node/Domain/Continuant/Atom.Version Number",
+          "Subject/Graph Node/Domain/Continuant/Scope Unit",
+          "Subject/Graph Node/Domain/Continuant/Project.Structure",
+          "Subject/Graph Node/Domain/Continuant/Atom.Tier",
+          "Subject/Graph Node/Domain/Continuant/Projection/Type: Applicable Methodology",
+          "Subject/Graph Node/Domain/Continuant/Projection",
+          "Subject/Graph Relation",
+          "Subject/Graph Node/Domain/Continuant/Atom/Content Role: Evaluation",
+          "Subject/Graph Node/Domain/Continuant/Actor/Type: Operator",
+          "Subject/Graph Node/Domain/Continuant/History/Journal",
+          "Subject/Graph Node/Domain/Continuant/Selection"
+        ]
+      },
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-080@17-PROJECT_CONFIGURATION-WORKFLOW--validate-atom-carriers/archive/CA-O-088@15-PROJECT_CONFIGURATION-STEP--check-selected-atoms.md",
+        "sha256": "7ce10b71e6d7a3efd894f8807dc56d920013517093b73a0f1d463db390dd7469",
+        "legacy_step": "CA-O-088@15",
+        "native_step": "AN-S-4601@15",
+        "legacy_workflow": "CA-O-080",
+        "native_workflow": "AN-S-4500",
+        "basis": "Explicit Action invocation from a verified SPEC Step"
+      },
+      "fresh_legacy_id": "CA-O-087"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-087@24-PROJECT_CONFIGURATION-ACTION--check-atoms.md",
+      "source_sha256": "3a7af6f4c81bcd2a8f6d42ba4c2968601a7e5b7a80f1276a43c587a0e20febad",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-087@24",
+      "native_ref": "AN-S-4622@24",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4622@24-DEVOPS-ACTION--check-atoms.md",
+      "destination_sha256": "b493cc70c0ce0676640c5960df8c4ee3d258612b83e59fdff697c21c4484135c",
+      "body_sha256": "f16cbd6a7d7a21a791d24bfc2c8f3af59bfd3c3fb8d3fbff540872a1b1b18389",
+      "body_prefix_bytes": 228,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-D-305",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-E-379",
+          "position": 1
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Graph Node/Domain/Continuant/Atom/Content Role: Operations/Type: Action//Check Atoms",
+        "depends_on": [
+          "Subject/Graph Node/Domain/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Subject/Graph Node/Domain/Continuant/Atom",
+          "Subject/Graph Node/Carrier/File.YAML Frontmatter",
+          "Subject/Graph Node/Domain/Continuant/Atom.Content",
+          "Subject/Graph Node/Domain/Continuant/Atom.Summary",
+          "Subject/Graph Node/Domain/Continuant/Atom.Version Number",
+          "Subject/Graph Node/Domain/Continuant/Scope Unit",
+          "Subject/Graph Node/Domain/Continuant/Project.Structure",
+          "Subject/Graph Node/Domain/Continuant/Atom.Tier",
+          "Subject/Graph Node/Domain/Continuant/Projection/Type: Applicable Methodology",
+          "Subject/Graph Node/Domain/Continuant/Projection",
+          "Subject/Graph Relation",
+          "Subject/Graph Node/Domain/Continuant/Atom/Content Role: Evaluation",
+          "Subject/Graph Node/Domain/Continuant/Actor/Type: Operator",
+          "Subject/Graph Node/Domain/Continuant/History/Journal",
+          "Subject/Graph Node/Domain/Continuant/Selection"
+        ]
+      },
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-080@17-PROJECT_CONFIGURATION-WORKFLOW--validate-atom-carriers/archive/CA-O-088@15-PROJECT_CONFIGURATION-STEP--check-selected-atoms.md",
+        "sha256": "7ce10b71e6d7a3efd894f8807dc56d920013517093b73a0f1d463db390dd7469",
+        "legacy_step": "CA-O-088@15",
+        "native_step": "AN-S-4601@15",
+        "legacy_workflow": "CA-O-080",
+        "native_workflow": "AN-S-4500",
+        "basis": "Explicit Action invocation from a verified SPEC Step"
+      },
+      "fresh_legacy_id": "CA-O-087"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-087@25-PROJECT_CONFIGURATION-ACTION--check-atoms.md",
+      "source_sha256": "00491e48e1cec2fd6a07e5766defdaa1c2017bf92e845f8988f5376394eb6650",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-087@25",
+      "native_ref": "AN-S-4622@25",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4622@25-DEVOPS-ACTION--check-atoms.md",
+      "destination_sha256": "7736b1871801fd069f7d9937ddfca8279d9ac2a4fd586c6cbbe6c772a13e1d8b",
+      "body_sha256": "f16cbd6a7d7a21a791d24bfc2c8f3af59bfd3c3fb8d3fbff540872a1b1b18389",
+      "body_prefix_bytes": 228,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-D-305",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-E-379",
+          "position": 1
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/anechoic/Action//Check Atoms",
+        "depends_on": [
+          "Subject/ANECHOIC/Graph/Node/Project Model/Atom/Content Role: Operations/Type: Action",
+          "Subject/ANECHOIC/Graph/Node/Project Model/Atom",
+          "Subject/ANECHOIC/Carrier/File.YAML Frontmatter",
+          "Subject/ANECHOIC/Graph/Node/Project Model/Atom.Content",
+          "Subject/ANECHOIC/Graph/Node/Project Model/Atom.Summary",
+          "Subject/ANECHOIC/Graph/Node/Project Model/Atom.Version Number",
+          "Subject/ANECHOIC/Graph/Node/Project Model/Scope Unit",
+          "Subject/ANECHOIC/Graph/Node/Project Model/Project.Structure",
+          "Subject/ANECHOIC/Graph/Node/Project Model/Atom.Tier",
+          "Subject/ANECHOIC/Graph/Node/Project Model/Projection/Type: Applicable Methodology",
+          "Subject/ANECHOIC/Graph/Node/Project Model/Projection",
+          "Subject/ANECHOIC/Graph/Relation",
+          "Subject/ANECHOIC/Graph/Node/Project Model/Atom/Content Role: Evaluation",
+          "Subject/ANECHOIC/Graph/Node/Project Model/Actor/Type: Operator",
+          "Subject/ANECHOIC/Graph/Node/Project Model/History/Journal",
+          "Subject/ANECHOIC/Graph/Node/Project Model/Selection"
+        ]
+      },
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-080@17-PROJECT_CONFIGURATION-WORKFLOW--validate-atom-carriers/archive/CA-O-088@15-PROJECT_CONFIGURATION-STEP--check-selected-atoms.md",
+        "sha256": "7ce10b71e6d7a3efd894f8807dc56d920013517093b73a0f1d463db390dd7469",
+        "legacy_step": "CA-O-088@15",
+        "native_step": "AN-S-4601@15",
+        "legacy_workflow": "CA-O-080",
+        "native_workflow": "AN-S-4500",
+        "basis": "Explicit Action invocation from a verified SPEC Step"
+      },
+      "fresh_legacy_id": "CA-O-087"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-087@26-PROJECT_CONFIGURATION-ACTION--check-atoms.md",
+      "source_sha256": "bb31f285318c592d849fd8dd9796087d5a3d93ce3a60d4e39b933de215563530",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-087@26",
+      "native_ref": "AN-S-4622@26",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4622@26-DEVOPS-ACTION--check-atoms.md",
+      "destination_sha256": "852549cf9f7a6436f5c2041f57ab142f90df932f80682ea733ad5c50e7edcea7",
+      "body_sha256": "f16cbd6a7d7a21a791d24bfc2c8f3af59bfd3c3fb8d3fbff540872a1b1b18389",
+      "body_prefix_bytes": 228,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-D-305",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-E-379",
+          "position": 1
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/anechoic/Action//Check Atoms",
+        "depends_on": [
+          "Subject/ANECHOIC/Graph/Node/Project Model/Atom/Content Role: Operations/Type: Action",
+          "Subject/ANECHOIC/Graph/Node/Project Model/Atom",
+          "Subject/ANECHOIC/Carrier/File.YAML Frontmatter",
+          "Subject/ANECHOIC/Graph/Node/Project Model/Atom.Content",
+          "Subject/ANECHOIC/Graph/Node/Project Model/Atom.Summary",
+          "Subject/ANECHOIC/Graph/Node/Project Model/Atom.Version Number",
+          "Subject/ANECHOIC/Graph/Node/Project Model/Scope Unit",
+          "Scope Unit",
+          "Subject/ANECHOIC/Graph/Node/Project Model/Atom.Tier",
+          "Subject/ANECHOIC/Graph/Node/Project Model/Projection/Type: Applicable Methodology",
+          "Subject/ANECHOIC/Graph/Node/Project Model/Projection",
+          "Subject/ANECHOIC/Graph/Relation",
+          "Subject/ANECHOIC/Graph/Node/Project Model/Atom/Content Role: Evaluation",
+          "Subject/ANECHOIC/Graph/Node/Project Model/Actor/Type: Operator",
+          "Subject/ANECHOIC/Graph/Node/Project Model/History/Journal",
+          "Subject/ANECHOIC/Graph/Node/Project Model/Selection"
+        ]
+      },
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-080@17-PROJECT_CONFIGURATION-WORKFLOW--validate-atom-carriers/archive/CA-O-088@15-PROJECT_CONFIGURATION-STEP--check-selected-atoms.md",
+        "sha256": "7ce10b71e6d7a3efd894f8807dc56d920013517093b73a0f1d463db390dd7469",
+        "legacy_step": "CA-O-088@15",
+        "native_step": "AN-S-4601@15",
+        "legacy_workflow": "CA-O-080",
+        "native_workflow": "AN-S-4500",
+        "basis": "Explicit Action invocation from a verified SPEC Step"
+      },
+      "fresh_legacy_id": "CA-O-087"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-162@10-PROJECT_CONFIGURATION-ACTION--query-journal-events.md",
+      "source_sha256": "d289808fed5f4de350679a19187f6473d90f67c5953744563abb21699f34aee0",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-162@10",
+      "native_ref": "AN-S-4623@10",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4623@10-DEVOPS-ACTION--query-journal-events.md",
+      "destination_sha256": "3265cf0b81a0bb12853b71b09f2bf5bcfb86dc486d03b1c3ebb147506a60328d",
+      "body_sha256": "9fe8dfce05a1ddd691d7c6fcd738d0a1753d4875bb5649c8527ce3b206ccd00b",
+      "body_prefix_bytes": 237,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-O-161",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-O-163",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1850",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1861",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1862",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1863",
+          "position": 5
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1864",
+          "position": 6
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1865",
+          "position": 7
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1866",
+          "position": 8
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1867",
+          "position": 9
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1868",
+          "position": 10
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1869",
+          "position": 11
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1871",
+          "position": 12
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1872",
+          "position": 13
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-M-334",
+          "position": 14
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-M-335",
+          "position": 15
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-M-336",
+          "position": 16
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-M-337",
+          "position": 17
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-575",
+          "position": 18
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-576",
+          "position": 19
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-577",
+          "position": 20
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-578",
+          "position": 21
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-579",
+          "position": 22
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-580",
+          "position": 23
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-555",
+          "position": 24
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-556",
+          "position": 25
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-557",
+          "position": 26
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-558",
+          "position": 27
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Domain/Node/Continuant/History/Journal.Record",
+        "depends_on": [
+          "Subject/Domain/Node/Continuant/History/Journal",
+          "Subject/Domain/Node/Occurrent/Event",
+          "Subject/Engineering/Carrier/Canonical Events Journal Snapshot Query",
+          "Subject/Domain/Node/Occurrent/Execution"
+        ]
+      },
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-161@13-PROJECT_CONFIGURATION-WORKFLOW--find-and-fetch-journal-events/archive/CA-O-163@14-PROJECT_CONFIGURATION-STEP--query-the-stable-journal-event-snapshot.md",
+        "sha256": "d3920622840e1c68054d01862c25a0825e481633b51097fa87ea8e0977bb9c21",
+        "legacy_step": "CA-O-163@14",
+        "native_step": "AN-S-4616@14",
+        "legacy_workflow": "CA-O-161",
+        "native_workflow": "AN-S-4508",
+        "basis": "Explicit Action invocation from a verified SPEC Step"
+      },
+      "fresh_legacy_id": "CA-O-162"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-162@11-PROJECT_CONFIGURATION-ACTION--query-journal-events.md",
+      "source_sha256": "9686e8b5bea7e76cd9e2dcd25e7042345fa6d62e785f347dd23b49e0c8471a67",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-162@11",
+      "native_ref": "AN-S-4623@11",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4623@11-DEVOPS-ACTION--query-journal-events.md",
+      "destination_sha256": "ccd060661d753d71565379294731fd99bca0083c3a593e89bfab4efd2855e30c",
+      "body_sha256": "9fe8dfce05a1ddd691d7c6fcd738d0a1753d4875bb5649c8527ce3b206ccd00b",
+      "body_prefix_bytes": 237,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-O-161",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-O-163",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1850",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1861",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1862",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1863",
+          "position": 5
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1864",
+          "position": 6
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1865",
+          "position": 7
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1866",
+          "position": 8
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1867",
+          "position": 9
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1868",
+          "position": 10
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1869",
+          "position": 11
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1871",
+          "position": 12
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1872",
+          "position": 13
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-M-334",
+          "position": 14
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-M-335",
+          "position": 15
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-M-336",
+          "position": 16
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-M-337",
+          "position": 17
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-575",
+          "position": 18
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-576",
+          "position": 19
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-577",
+          "position": 20
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-578",
+          "position": 21
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-579",
+          "position": 22
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-580",
+          "position": 23
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-555",
+          "position": 24
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-556",
+          "position": 25
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-557",
+          "position": 26
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-558",
+          "position": 27
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Graph Node/Domain/Continuant/History/Journal.Record",
+        "depends_on": [
+          "Subject/Graph Node/Domain/Continuant/History/Journal",
+          "Subject/Graph Node/Domain/Occurrent/Event",
+          "Subject/Graph Node/Engineering/Continuant/Carrier/Canonical Events Journal Snapshot Query",
+          "Subject/Graph Node/Domain/Occurrent/Execution"
+        ]
+      },
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-161@13-PROJECT_CONFIGURATION-WORKFLOW--find-and-fetch-journal-events/archive/CA-O-163@14-PROJECT_CONFIGURATION-STEP--query-the-stable-journal-event-snapshot.md",
+        "sha256": "d3920622840e1c68054d01862c25a0825e481633b51097fa87ea8e0977bb9c21",
+        "legacy_step": "CA-O-163@14",
+        "native_step": "AN-S-4616@14",
+        "legacy_workflow": "CA-O-161",
+        "native_workflow": "AN-S-4508",
+        "basis": "Explicit Action invocation from a verified SPEC Step"
+      },
+      "fresh_legacy_id": "CA-O-162"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-162@12-PROJECT_CONFIGURATION-ACTION--query-journal-events.md",
+      "source_sha256": "d036a4a42866b1371c5a12e8ac3bfd362f25f91ff7e52cac816e2b0e51b41d40",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-162@12",
+      "native_ref": "AN-S-4623@12",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4623@12-DEVOPS-ACTION--query-journal-events.md",
+      "destination_sha256": "10e91bbf10965875eefb828eb4bd51a53e0fcbf2a5f321302ddc8534723b84bf",
+      "body_sha256": "9fe8dfce05a1ddd691d7c6fcd738d0a1753d4875bb5649c8527ce3b206ccd00b",
+      "body_prefix_bytes": 237,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-1850",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Graph Node/Domain/Continuant/History/Journal.Record",
+        "depends_on": [
+          "Subject/Graph Node/Domain/Continuant/History/Journal",
+          "Subject/Graph Node/Domain/Occurrent/Event",
+          "Subject/Graph Node/Engineering/Continuant/Carrier/Canonical Events Journal Snapshot Query",
+          "Subject/Graph Node/Domain/Occurrent/Execution"
+        ]
+      },
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-161@13-PROJECT_CONFIGURATION-WORKFLOW--find-and-fetch-journal-events/archive/CA-O-163@14-PROJECT_CONFIGURATION-STEP--query-the-stable-journal-event-snapshot.md",
+        "sha256": "d3920622840e1c68054d01862c25a0825e481633b51097fa87ea8e0977bb9c21",
+        "legacy_step": "CA-O-163@14",
+        "native_step": "AN-S-4616@14",
+        "legacy_workflow": "CA-O-161",
+        "native_workflow": "AN-S-4508",
+        "basis": "Explicit Action invocation from a verified SPEC Step"
+      },
+      "fresh_legacy_id": "CA-O-162"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-162@13-PROJECT_CONFIGURATION-ACTION--query-journal-events.md",
+      "source_sha256": "5be58c78cee5a7a1284d405bfa22192b0aebffc2f60e64352eaf304bcf131b04",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-162@13",
+      "native_ref": "AN-S-4623@13",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4623@13-DEVOPS-ACTION--query-journal-events.md",
+      "destination_sha256": "c5ad56c25fdeb6f7eec0475b3550aad3396e18ab1db375dc1e9462e32d8b3786",
+      "body_sha256": "9fe8dfce05a1ddd691d7c6fcd738d0a1753d4875bb5649c8527ce3b206ccd00b",
+      "body_prefix_bytes": 237,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-1850",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Graph Node/Domain/Continuant/History/Journal.Record",
+        "depends_on": [
+          "Subject/Graph Node/Domain/Continuant/History/Journal",
+          "Subject/Graph Node/Domain/Occurrent/Event",
+          "Subject/Graph Node/Engineering/Data Handling/Source Retrieval",
+          "Subject/Graph Node/Domain/Occurrent/Execution"
+        ]
+      },
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-161@13-PROJECT_CONFIGURATION-WORKFLOW--find-and-fetch-journal-events/archive/CA-O-163@14-PROJECT_CONFIGURATION-STEP--query-the-stable-journal-event-snapshot.md",
+        "sha256": "d3920622840e1c68054d01862c25a0825e481633b51097fa87ea8e0977bb9c21",
+        "legacy_step": "CA-O-163@14",
+        "native_step": "AN-S-4616@14",
+        "legacy_workflow": "CA-O-161",
+        "native_workflow": "AN-S-4508",
+        "basis": "Explicit Action invocation from a verified SPEC Step"
+      },
+      "fresh_legacy_id": "CA-O-162"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-162@14-PROJECT_CONFIGURATION-ACTION--query-journal-events.md",
+      "source_sha256": "7a97ae5c3c77b5a46e3b17a06b842ffd2cdd7f692a80995e11b5393568ef9e87",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-162@14",
+      "native_ref": "AN-S-4623@14",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4623@14-DEVOPS-ACTION--query-journal-events.md",
+      "destination_sha256": "749deb3e1a7dcf17477db455ec5636b1b5cfa9aa8ea2c12c2f9a2caecde9a975",
+      "body_sha256": "9fe8dfce05a1ddd691d7c6fcd738d0a1753d4875bb5649c8527ce3b206ccd00b",
+      "body_prefix_bytes": 237,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-1850",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/ANECHOIC/Graph/Node/Project Model/History/Journal.Record",
+        "depends_on": [
+          "Subject/ANECHOIC/Graph/Node/Project Model/History/Journal",
+          "Subject/ANECHOIC/Graph/Node/Project Model/Event",
+          "Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Data Handling/Source Retrieval",
+          "Subject/ANECHOIC/Graph/Node/Project Model/Execution"
+        ]
+      },
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-161@13-PROJECT_CONFIGURATION-WORKFLOW--find-and-fetch-journal-events/archive/CA-O-163@14-PROJECT_CONFIGURATION-STEP--query-the-stable-journal-event-snapshot.md",
+        "sha256": "d3920622840e1c68054d01862c25a0825e481633b51097fa87ea8e0977bb9c21",
+        "legacy_step": "CA-O-163@14",
+        "native_step": "AN-S-4616@14",
+        "legacy_workflow": "CA-O-161",
+        "native_workflow": "AN-S-4508",
+        "basis": "Explicit Action invocation from a verified SPEC Step"
+      },
+      "fresh_legacy_id": "CA-O-162"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-162@6-PROJECT_CONFIGURATION-ACTION--query-journal-events.md",
+      "source_sha256": "4bdc05e408a3caa35b3ec85ffb140216dc4841e098cb1c5ecac4dd4faa08df73",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-162@6",
+      "native_ref": "AN-S-4623@6",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4623@6-DEVOPS-ACTION--query-journal-events.md",
+      "destination_sha256": "e24ec7060e65c3ff1fa9469cc76bef727c33dc242b204b0e0c26b4cb500f739c",
+      "body_sha256": "9fe8dfce05a1ddd691d7c6fcd738d0a1753d4875bb5649c8527ce3b206ccd00b",
+      "body_prefix_bytes": 236,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-O-161",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-O-163",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1850",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1861",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1862",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1863",
+          "position": 5
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1864",
+          "position": 6
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1865",
+          "position": 7
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1866",
+          "position": 8
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1867",
+          "position": 9
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1868",
+          "position": 10
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1869",
+          "position": 11
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1870",
+          "position": 12
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1871",
+          "position": 13
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1872",
+          "position": 14
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-M-334",
+          "position": 15
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-M-335",
+          "position": 16
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-M-336",
+          "position": 17
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-M-337",
+          "position": 18
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-575",
+          "position": 19
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-576",
+          "position": 20
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-577",
+          "position": 21
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-578",
+          "position": 22
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-579",
+          "position": 23
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-580",
+          "position": 24
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-555",
+          "position": 25
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-556",
+          "position": 26
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-557",
+          "position": 27
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-558",
+          "position": 28
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Journal Event query",
+        "depends_on": [
+          "Entity/Node/Continuant/History/Journal",
+          "Entity/Node/Occurrent/Event",
+          "Tool",
+          "Entity/Node/Occurrent/Execution/Action Run"
+        ]
+      },
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-161@13-PROJECT_CONFIGURATION-WORKFLOW--find-and-fetch-journal-events/archive/CA-O-163@14-PROJECT_CONFIGURATION-STEP--query-the-stable-journal-event-snapshot.md",
+        "sha256": "d3920622840e1c68054d01862c25a0825e481633b51097fa87ea8e0977bb9c21",
+        "legacy_step": "CA-O-163@14",
+        "native_step": "AN-S-4616@14",
+        "legacy_workflow": "CA-O-161",
+        "native_workflow": "AN-S-4508",
+        "basis": "Explicit Action invocation from a verified SPEC Step"
+      },
+      "historical_tier": {
+        "local": "Standard",
+        "global": 11
+      },
+      "tier_evidence": [
+        {
+          "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-162@8-PROJECT_CONFIGURATION-ACTION--query-journal-events.md",
+          "sha256": "119aa6f051307444cd56c9228c8be32b0b9c794f55c596ff3cf22d51eb473394"
+        },
+        {
+          "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-162@9-PROJECT_CONFIGURATION-ACTION--query-journal-events.md",
+          "sha256": "a2853d9e66c5222c0e15392288fe15a97d99c0bb8f1de18cebd4dae7414a6a6f"
+        }
+      ],
+      "fresh_legacy_id": "CA-O-162"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-162@7-PROJECT_CONFIGURATION-ACTION--query-journal-events.md",
+      "source_sha256": "99f9977dbd7aaf7622276a4762dba513ce986d1b01738e5f0cb3c9e30545d2dc",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-162@7",
+      "native_ref": "AN-S-4623@7",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4623@7-DEVOPS-ACTION--query-journal-events.md",
+      "destination_sha256": "5e1576ad249bbb46680b9873654a1a4c25bb2530be784bf0e58eae6f944a0803",
+      "body_sha256": "9fe8dfce05a1ddd691d7c6fcd738d0a1753d4875bb5649c8527ce3b206ccd00b",
+      "body_prefix_bytes": 236,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-O-161",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-O-163",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1850",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1861",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1862",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1863",
+          "position": 5
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1864",
+          "position": 6
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1865",
+          "position": 7
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1866",
+          "position": 8
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1867",
+          "position": 9
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1868",
+          "position": 10
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1869",
+          "position": 11
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1871",
+          "position": 12
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1872",
+          "position": 13
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-M-334",
+          "position": 14
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-M-335",
+          "position": 15
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-M-336",
+          "position": 16
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-M-337",
+          "position": 17
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-575",
+          "position": 18
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-576",
+          "position": 19
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-577",
+          "position": 20
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-578",
+          "position": 21
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-579",
+          "position": 22
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-580",
+          "position": 23
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-555",
+          "position": 24
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-556",
+          "position": 25
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-557",
+          "position": 26
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-558",
+          "position": 27
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Domain/Node/Continuant/History/Journal.Record",
+        "depends_on": [
+          "Entity/Node/Continuant/History/Journal",
+          "Entity/Node/Occurrent/Event",
+          "Subject/Engineering/Carrier/Canonical Events Journal Snapshot Query",
+          "Entity/Node/Occurrent/Execution/Action Run"
+        ]
+      },
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-161@13-PROJECT_CONFIGURATION-WORKFLOW--find-and-fetch-journal-events/archive/CA-O-163@14-PROJECT_CONFIGURATION-STEP--query-the-stable-journal-event-snapshot.md",
+        "sha256": "d3920622840e1c68054d01862c25a0825e481633b51097fa87ea8e0977bb9c21",
+        "legacy_step": "CA-O-163@14",
+        "native_step": "AN-S-4616@14",
+        "legacy_workflow": "CA-O-161",
+        "native_workflow": "AN-S-4508",
+        "basis": "Explicit Action invocation from a verified SPEC Step"
+      },
+      "historical_tier": {
+        "local": "Standard",
+        "global": 11
+      },
+      "tier_evidence": [
+        {
+          "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-162@8-PROJECT_CONFIGURATION-ACTION--query-journal-events.md",
+          "sha256": "119aa6f051307444cd56c9228c8be32b0b9c794f55c596ff3cf22d51eb473394"
+        },
+        {
+          "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-162@9-PROJECT_CONFIGURATION-ACTION--query-journal-events.md",
+          "sha256": "a2853d9e66c5222c0e15392288fe15a97d99c0bb8f1de18cebd4dae7414a6a6f"
+        }
+      ],
+      "fresh_legacy_id": "CA-O-162"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-162@8-PROJECT_CONFIGURATION-ACTION--query-journal-events.md",
+      "source_sha256": "119aa6f051307444cd56c9228c8be32b0b9c794f55c596ff3cf22d51eb473394",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-162@8",
+      "native_ref": "AN-S-4623@8",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4623@8-DEVOPS-ACTION--query-journal-events.md",
+      "destination_sha256": "b2ff8ee44758a87f8af7ca9c186f643e07148d7e4409643a1672e01db1193ff8",
+      "body_sha256": "9fe8dfce05a1ddd691d7c6fcd738d0a1753d4875bb5649c8527ce3b206ccd00b",
+      "body_prefix_bytes": 236,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-O-161",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-O-163",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1850",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1861",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1862",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1863",
+          "position": 5
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1864",
+          "position": 6
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1865",
+          "position": 7
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1866",
+          "position": 8
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1867",
+          "position": 9
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1868",
+          "position": 10
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1869",
+          "position": 11
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1871",
+          "position": 12
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1872",
+          "position": 13
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-M-334",
+          "position": 14
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-M-335",
+          "position": 15
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-M-336",
+          "position": 16
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-M-337",
+          "position": 17
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-575",
+          "position": 18
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-576",
+          "position": 19
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-577",
+          "position": 20
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-578",
+          "position": 21
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-579",
+          "position": 22
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-580",
+          "position": 23
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-555",
+          "position": 24
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-556",
+          "position": 25
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-557",
+          "position": 26
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-558",
+          "position": 27
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Domain/Node/Continuant/History/Journal.Record",
+        "depends_on": [
+          "Subject/Domain/Node/Continuant/History/Journal",
+          "Entity/Node/Occurrent/Event",
+          "Subject/Engineering/Carrier/Canonical Events Journal Snapshot Query",
+          "Subject/Domain/Node/Occurrent/Execution"
+        ]
+      },
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-161@13-PROJECT_CONFIGURATION-WORKFLOW--find-and-fetch-journal-events/archive/CA-O-163@14-PROJECT_CONFIGURATION-STEP--query-the-stable-journal-event-snapshot.md",
+        "sha256": "d3920622840e1c68054d01862c25a0825e481633b51097fa87ea8e0977bb9c21",
+        "legacy_step": "CA-O-163@14",
+        "native_step": "AN-S-4616@14",
+        "legacy_workflow": "CA-O-161",
+        "native_workflow": "AN-S-4508",
+        "basis": "Explicit Action invocation from a verified SPEC Step"
+      },
+      "historical_tier": {
+        "local": "Standard",
+        "global": 11
+      },
+      "tier_evidence": [
+        {
+          "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-162@8-PROJECT_CONFIGURATION-ACTION--query-journal-events.md",
+          "sha256": "119aa6f051307444cd56c9228c8be32b0b9c794f55c596ff3cf22d51eb473394"
+        },
+        {
+          "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-162@9-PROJECT_CONFIGURATION-ACTION--query-journal-events.md",
+          "sha256": "a2853d9e66c5222c0e15392288fe15a97d99c0bb8f1de18cebd4dae7414a6a6f"
+        }
+      ],
+      "fresh_legacy_id": "CA-O-162"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-162@9-PROJECT_CONFIGURATION-ACTION--query-journal-events.md",
+      "source_sha256": "a2853d9e66c5222c0e15392288fe15a97d99c0bb8f1de18cebd4dae7414a6a6f",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-162@9",
+      "native_ref": "AN-S-4623@9",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4623@9-DEVOPS-ACTION--query-journal-events.md",
+      "destination_sha256": "18038a61b8a62451717325b5e3828a531c7bfdb9a6896124e723240733401975",
+      "body_sha256": "9fe8dfce05a1ddd691d7c6fcd738d0a1753d4875bb5649c8527ce3b206ccd00b",
+      "body_prefix_bytes": 236,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-O-161",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-O-163",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1850",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1861",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1862",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1863",
+          "position": 5
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1864",
+          "position": 6
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1865",
+          "position": 7
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1866",
+          "position": 8
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1867",
+          "position": 9
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1868",
+          "position": 10
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1869",
+          "position": 11
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1871",
+          "position": 12
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1872",
+          "position": 13
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-M-334",
+          "position": 14
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-M-335",
+          "position": 15
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-M-336",
+          "position": 16
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-M-337",
+          "position": 17
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-575",
+          "position": 18
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-576",
+          "position": 19
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-577",
+          "position": 20
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-578",
+          "position": 21
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-579",
+          "position": 22
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-E-580",
+          "position": 23
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-555",
+          "position": 24
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-556",
+          "position": 25
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-557",
+          "position": 26
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-D-558",
+          "position": 27
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Domain/Node/Continuant/History/Journal.Record",
+        "depends_on": [
+          "Subject/Domain/Node/Continuant/History/Journal",
+          "Entity/Node/Occurrent/Event",
+          "Subject/Engineering/Carrier/Canonical Events Journal Snapshot Query",
+          "Subject/Domain/Node/Occurrent/Execution"
+        ]
+      },
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-161@13-PROJECT_CONFIGURATION-WORKFLOW--find-and-fetch-journal-events/archive/CA-O-163@14-PROJECT_CONFIGURATION-STEP--query-the-stable-journal-event-snapshot.md",
+        "sha256": "d3920622840e1c68054d01862c25a0825e481633b51097fa87ea8e0977bb9c21",
+        "legacy_step": "CA-O-163@14",
+        "native_step": "AN-S-4616@14",
+        "legacy_workflow": "CA-O-161",
+        "native_workflow": "AN-S-4508",
+        "basis": "Explicit Action invocation from a verified SPEC Step"
+      },
+      "fresh_legacy_id": "CA-O-162"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-18_FEATURE_TOOL_WORKFLOWS/09_operations/archive/CA-O-030@25-TOOL_WORKFLOWS-STANDARD-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "source_sha256": "78c014e1aa7b9ad4a978388df2dd495fce7486f4dae3102e87d664b6fa90913f",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-030@25",
+      "native_ref": "AN-S-1547@25",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_TOOL_WORKFLOWS_C18/09_archived/AN-S-1547@25-DOM-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "destination_sha256": "bbae7096c717a81899491994c8ee01477584eaca623286b8483c7cfc9edcd78e",
+      "body_sha256": "721ad35856be560a353ab9f9a16bd26740cc90e3e7011d7acafbc79a8639366e",
+      "body_prefix_bytes": 255,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C18"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Update Sealed Atom Carriers",
+        "depends_on": [
+          "Action",
+          "Tool/ATOM_UPDATE",
+          "Atom",
+          "Atom/Revision",
+          "Atom/Summary",
+          "Atom/Revision/Updated At",
+          "Artifact/Carrier",
+          "Journal/Record"
+        ]
+      },
+      "historical_tier": {
+        "local": "Standard",
+        "global": 11
+      },
+      "tier_evidence": [
+        {
+          "path": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-18_FEATURE_TOOL_WORKFLOWS/09_operations/archive/CA-O-030@27-TOOL_WORKFLOWS-STANDARD-ACTION--update-sealed-anechoic-atom-carriers.md",
+          "sha256": "94280927de882f0caf404b5f0e553313bec0c2592443b0e7e2d237249cb018cf"
+        },
+        {
+          "path": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-18_FEATURE_TOOL_WORKFLOWS/09_operations/archive/CA-O-030@28-TOOL_WORKFLOWS-STANDARD-ACTION--update-sealed-anechoic-atom-carriers.md",
+          "sha256": "8945a1bdf2da63d287d97573f73ad2127e2982dc0da90793f70a57ffe47b8f06"
+        }
+      ],
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_TOOL_WORKFLOWS_C18/_DES/DOM/AN-S-1547-DOM-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "anchor_sha256": "21868f48ddcfe882be65a131b4fd3e6e753d84ff33ce48c7d669b7c4219f2164",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-18_FEATURE_TOOL_WORKFLOWS/09_operations/CA-O-030-TOOL_WORKFLOWS-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "evidence_sha256": "40df0ff0759f65b8d6a70790a318d084d927692e434cac82ed4c9613afa9268d"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-18_FEATURE_TOOL_WORKFLOWS/09_operations/archive/CA-O-030@26-TOOL_WORKFLOWS-STANDARD-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "source_sha256": "71621888920ba4c86ed22738125aa87b2ee9c85ccbff93bb1f5466e46e441a7f",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-030@26",
+      "native_ref": "AN-S-1547@26",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_TOOL_WORKFLOWS_C18/09_archived/AN-S-1547@26-DOM-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "destination_sha256": "687ad6a993df318be3266e06c472853d998249f1b3b6602e398f288652399185",
+      "body_sha256": "721ad35856be560a353ab9f9a16bd26740cc90e3e7011d7acafbc79a8639366e",
+      "body_prefix_bytes": 255,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C18"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Update Sealed Atom Carriers",
+        "depends_on": [
+          "Action",
+          "Tool/ATOM_UPDATE",
+          "Subject/Domain/Node/Continuant/Atom",
+          "Atom/Revision",
+          "Atom/Summary",
+          "Atom/Revision/Updated At",
+          "Artifact/Carrier",
+          "Journal/Record"
+        ]
+      },
+      "historical_tier": {
+        "local": "Standard",
+        "global": 11
+      },
+      "tier_evidence": [
+        {
+          "path": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-18_FEATURE_TOOL_WORKFLOWS/09_operations/archive/CA-O-030@27-TOOL_WORKFLOWS-STANDARD-ACTION--update-sealed-anechoic-atom-carriers.md",
+          "sha256": "94280927de882f0caf404b5f0e553313bec0c2592443b0e7e2d237249cb018cf"
+        },
+        {
+          "path": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-18_FEATURE_TOOL_WORKFLOWS/09_operations/archive/CA-O-030@28-TOOL_WORKFLOWS-STANDARD-ACTION--update-sealed-anechoic-atom-carriers.md",
+          "sha256": "8945a1bdf2da63d287d97573f73ad2127e2982dc0da90793f70a57ffe47b8f06"
+        }
+      ],
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_TOOL_WORKFLOWS_C18/_DES/DOM/AN-S-1547-DOM-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "anchor_sha256": "21868f48ddcfe882be65a131b4fd3e6e753d84ff33ce48c7d669b7c4219f2164",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-18_FEATURE_TOOL_WORKFLOWS/09_operations/CA-O-030-TOOL_WORKFLOWS-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "evidence_sha256": "40df0ff0759f65b8d6a70790a318d084d927692e434cac82ed4c9613afa9268d"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-18_FEATURE_TOOL_WORKFLOWS/09_operations/archive/CA-O-030@27-TOOL_WORKFLOWS-STANDARD-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "source_sha256": "94280927de882f0caf404b5f0e553313bec0c2592443b0e7e2d237249cb018cf",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-030@27",
+      "native_ref": "AN-S-1547@27",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_TOOL_WORKFLOWS_C18/09_archived/AN-S-1547@27-DOM-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "destination_sha256": "ca97915fb87a2a1ce7f168d0232e3f75cae5a427b9271d067a719f9ba7d2c332",
+      "body_sha256": "721ad35856be560a353ab9f9a16bd26740cc90e3e7011d7acafbc79a8639366e",
+      "body_prefix_bytes": 255,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C18"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Update Sealed Atom Carriers",
+        "depends_on": [
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Tool/ATOM_UPDATE",
+          "Subject/Domain/Node/Continuant/Atom",
+          "Atom/Revision",
+          "Atom/Summary",
+          "Atom/Revision/Updated At",
+          "Subject/Engineering/Carrier",
+          "Subject/Domain/Node/Continuant/History/Journal.Record"
+        ]
+      },
+      "historical_tier": {
+        "local": "Standard",
+        "global": 11
+      },
+      "tier_evidence": [
+        {
+          "path": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-18_FEATURE_TOOL_WORKFLOWS/09_operations/archive/CA-O-030@27-TOOL_WORKFLOWS-STANDARD-ACTION--update-sealed-anechoic-atom-carriers.md",
+          "sha256": "94280927de882f0caf404b5f0e553313bec0c2592443b0e7e2d237249cb018cf"
+        },
+        {
+          "path": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-18_FEATURE_TOOL_WORKFLOWS/09_operations/archive/CA-O-030@28-TOOL_WORKFLOWS-STANDARD-ACTION--update-sealed-anechoic-atom-carriers.md",
+          "sha256": "8945a1bdf2da63d287d97573f73ad2127e2982dc0da90793f70a57ffe47b8f06"
+        }
+      ],
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_TOOL_WORKFLOWS_C18/_DES/DOM/AN-S-1547-DOM-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "anchor_sha256": "21868f48ddcfe882be65a131b4fd3e6e753d84ff33ce48c7d669b7c4219f2164",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-18_FEATURE_TOOL_WORKFLOWS/09_operations/CA-O-030-TOOL_WORKFLOWS-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "evidence_sha256": "40df0ff0759f65b8d6a70790a318d084d927692e434cac82ed4c9613afa9268d"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-18_FEATURE_TOOL_WORKFLOWS/09_operations/archive/CA-O-030@28-TOOL_WORKFLOWS-STANDARD-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "source_sha256": "8945a1bdf2da63d287d97573f73ad2127e2982dc0da90793f70a57ffe47b8f06",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-030@28",
+      "native_ref": "AN-S-1547@28",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_TOOL_WORKFLOWS_C18/09_archived/AN-S-1547@28-DOM-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "destination_sha256": "8d02fa8ae9cd95a17daf7dd89bbcd068e86c7b29cba5da72abcb248879398c62",
+      "body_sha256": "721ad35856be560a353ab9f9a16bd26740cc90e3e7011d7acafbc79a8639366e",
+      "body_prefix_bytes": 255,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C18"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Update Sealed Atom Carriers",
+        "depends_on": [
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Tool/ATOM_UPDATE",
+          "Subject/Domain/Node/Continuant/Atom",
+          "Atom/Revision",
+          "Atom/Summary",
+          "Atom/Revision/Updated At",
+          "Subject/Engineering/Carrier",
+          "Subject/Domain/Node/Continuant/History/Journal.Record"
+        ]
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_TOOL_WORKFLOWS_C18/_DES/DOM/AN-S-1547-DOM-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "anchor_sha256": "21868f48ddcfe882be65a131b4fd3e6e753d84ff33ce48c7d669b7c4219f2164",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-18_FEATURE_TOOL_WORKFLOWS/09_operations/CA-O-030-TOOL_WORKFLOWS-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "evidence_sha256": "40df0ff0759f65b8d6a70790a318d084d927692e434cac82ed4c9613afa9268d"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-18_FEATURE_TOOL_WORKFLOWS/09_operations/archive/CA-O-030@29-TOOL_WORKFLOWS-STANDARD-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "source_sha256": "a8716ab846dabfd20c732e66fdb9a55f31b65b55a15c1ffdf3d4bf780a190286",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-030@29",
+      "native_ref": "AN-S-1547@29",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_TOOL_WORKFLOWS_C18/09_archived/AN-S-1547@29-DOM-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "destination_sha256": "eece3f4ffb2b6acfcdbf65579a0301f787d997f3c3a6f069f65dc4fa35054973",
+      "body_sha256": "721ad35856be560a353ab9f9a16bd26740cc90e3e7011d7acafbc79a8639366e",
+      "body_prefix_bytes": 255,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C18"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Engineering/Carrier",
+        "depends_on": [
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Subject/Engineering/Tool//ATOM_UPDATE",
+          "Subject/Domain/Node/Continuant/Atom",
+          "Subject/Domain/Node/Continuant/History/Journal.Record",
+          "Subject/Domain/Node/Continuant/Atom.Summary",
+          "Atom/Revision/Updated At",
+          "Subject/Engineering/Carrier"
+        ]
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_TOOL_WORKFLOWS_C18/_DES/DOM/AN-S-1547-DOM-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "anchor_sha256": "21868f48ddcfe882be65a131b4fd3e6e753d84ff33ce48c7d669b7c4219f2164",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-18_FEATURE_TOOL_WORKFLOWS/09_operations/CA-O-030-TOOL_WORKFLOWS-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "evidence_sha256": "40df0ff0759f65b8d6a70790a318d084d927692e434cac82ed4c9613afa9268d"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-18_FEATURE_TOOL_WORKFLOWS/09_operations/archive/CA-O-030@30-TOOL_WORKFLOWS-STANDARD-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "source_sha256": "d67093db4d54704aada12ba777a29957a686687772f7ef0c2ec44710b447dacf",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-030@30",
+      "native_ref": "AN-S-1547@30",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_TOOL_WORKFLOWS_C18/09_archived/AN-S-1547@30-DOM-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "destination_sha256": "ccf1d72e1382da27982ea4bd1b362beec0b2ae5ca00794759f0d1a8e5e4e7ba8",
+      "body_sha256": "721ad35856be560a353ab9f9a16bd26740cc90e3e7011d7acafbc79a8639366e",
+      "body_prefix_bytes": 255,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C18"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Engineering/Carrier",
+        "depends_on": [
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Subject/Engineering/Tool//ATOM_UPDATE",
+          "Subject/Domain/Node/Continuant/Atom",
+          "Subject/Domain/Node/Continuant/History/Journal.Record",
+          "Subject/Domain/Node/Continuant/Atom.Summary",
+          "Subject/Domain/Node/Continuant/Atom.Updated At",
+          "Subject/Engineering/Carrier"
+        ]
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_TOOL_WORKFLOWS_C18/_DES/DOM/AN-S-1547-DOM-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "anchor_sha256": "21868f48ddcfe882be65a131b4fd3e6e753d84ff33ce48c7d669b7c4219f2164",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-18_FEATURE_TOOL_WORKFLOWS/09_operations/CA-O-030-TOOL_WORKFLOWS-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "evidence_sha256": "40df0ff0759f65b8d6a70790a318d084d927692e434cac82ed4c9613afa9268d"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-18_FEATURE_TOOL_WORKFLOWS/09_operations/archive/CA-O-030@31-TOOL_WORKFLOWS-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "source_sha256": "3a386de94d5d39f5d8467ddd5b3e296c3cefe4fe1035843220f588e007db3f88",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-030@31",
+      "native_ref": "AN-S-1547@31",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_TOOL_WORKFLOWS_C18/09_archived/AN-S-1547@31-DOM-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "destination_sha256": "48c521a6c8f575ad251e38af983bed67d587b4678e2c77411da2529a6b3ae9de",
+      "body_sha256": "721ad35856be560a353ab9f9a16bd26740cc90e3e7011d7acafbc79a8639366e",
+      "body_prefix_bytes": 255,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C18"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Engineering/Carrier",
+        "depends_on": [
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Subject/Engineering/Tool//ATOM_UPDATE",
+          "Subject/Domain/Node/Continuant/Atom",
+          "Subject/Domain/Node/Continuant/History/Journal.Record",
+          "Subject/Domain/Node/Continuant/Atom.Summary",
+          "Subject/Domain/Node/Continuant/Atom.Updated At",
+          "Subject/Engineering/Carrier"
+        ]
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_TOOL_WORKFLOWS_C18/_DES/DOM/AN-S-1547-DOM-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "anchor_sha256": "21868f48ddcfe882be65a131b4fd3e6e753d84ff33ce48c7d669b7c4219f2164",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-18_FEATURE_TOOL_WORKFLOWS/09_operations/CA-O-030-TOOL_WORKFLOWS-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "evidence_sha256": "40df0ff0759f65b8d6a70790a318d084d927692e434cac82ed4c9613afa9268d"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-18_FEATURE_TOOL_WORKFLOWS/09_operations/archive/CA-O-030@32-TOOL_WORKFLOWS-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "source_sha256": "dc4fed78bf23cafc8d49c863f82853fd5867cf894c28181ab266376c8cda6e29",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-030@32",
+      "native_ref": "AN-S-1547@32",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_TOOL_WORKFLOWS_C18/09_archived/AN-S-1547@32-DOM-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "destination_sha256": "939f32e7a83ae78e0af12100d5e96f0e74abdbcd6a264964310fa060acdf0d50",
+      "body_sha256": "721ad35856be560a353ab9f9a16bd26740cc90e3e7011d7acafbc79a8639366e",
+      "body_prefix_bytes": 255,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C18"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Graph Node/Engineering/Continuant/Carrier",
+        "depends_on": [
+          "Subject/Graph Node/Domain/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Subject/Graph Node/Engineering/Continuant/Tool//ATOM_UPDATE",
+          "Subject/Graph Node/Domain/Continuant/Atom",
+          "Subject/Graph Node/Domain/Continuant/History/Journal.Record",
+          "Subject/Graph Node/Domain/Continuant/Atom.Summary",
+          "Subject/Graph Node/Domain/Continuant/Atom.Updated At",
+          "Subject/Graph Node/Engineering/Continuant/Carrier"
+        ]
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_TOOL_WORKFLOWS_C18/_DES/DOM/AN-S-1547-DOM-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "anchor_sha256": "21868f48ddcfe882be65a131b4fd3e6e753d84ff33ce48c7d669b7c4219f2164",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-18_FEATURE_TOOL_WORKFLOWS/09_operations/CA-O-030-TOOL_WORKFLOWS-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "evidence_sha256": "40df0ff0759f65b8d6a70790a318d084d927692e434cac82ed4c9613afa9268d"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-18_FEATURE_TOOL_WORKFLOWS/09_operations/archive/CA-O-030@33-TOOL_WORKFLOWS-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "source_sha256": "6abd0a428400ce5d09f0ed8c6a205520001e8efc0d5f894c9d5967224742ba45",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-030@33",
+      "native_ref": "AN-S-1547@33",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_TOOL_WORKFLOWS_C18/09_archived/AN-S-1547@33-DOM-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "destination_sha256": "0b34d759141489a2e3b0d4c23222ed042abc853f6c584ad449db94a690d8a45d",
+      "body_sha256": "721ad35856be560a353ab9f9a16bd26740cc90e3e7011d7acafbc79a8639366e",
+      "body_prefix_bytes": 255,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C18"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Graph Node/Domain/Continuant/Atom",
+        "depends_on": [
+          "Subject/Graph Node/Domain/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Subject/Graph Node/Engineering/Continuant/Tool//ATOM_UPDATE",
+          "Subject/Graph Node/Domain/Continuant/Atom",
+          "Subject/Graph Node/Domain/Continuant/History/Journal.Record",
+          "Subject/Graph Node/Domain/Continuant/Atom.Summary",
+          "Subject/Graph Node/Domain/Continuant/Atom.Updated At",
+          "Subject/Graph Node/Engineering/Continuant/Carrier"
+        ]
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_TOOL_WORKFLOWS_C18/_DES/DOM/AN-S-1547-DOM-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "anchor_sha256": "21868f48ddcfe882be65a131b4fd3e6e753d84ff33ce48c7d669b7c4219f2164",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-18_FEATURE_TOOL_WORKFLOWS/09_operations/CA-O-030-TOOL_WORKFLOWS-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "evidence_sha256": "40df0ff0759f65b8d6a70790a318d084d927692e434cac82ed4c9613afa9268d"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-18_FEATURE_TOOL_WORKFLOWS/09_operations/archive/CA-O-030@34-TOOL_WORKFLOWS-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "source_sha256": "c96c82ef1ba6c6d3835975ab7f2ec734f9b07d623c3168868a68ec702a876b11",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-030@34",
+      "native_ref": "AN-S-1547@34",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_TOOL_WORKFLOWS_C18/09_archived/AN-S-1547@34-DOM-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "destination_sha256": "ebaf07530a52a422525ae1f0081ea37b908b7c866690ff809627584638958a65",
+      "body_sha256": "721ad35856be560a353ab9f9a16bd26740cc90e3e7011d7acafbc79a8639366e",
+      "body_prefix_bytes": 255,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C18"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Graph Node/Domain/Continuant/Atom",
+        "depends_on": [
+          "Subject/Graph Node/Domain/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Subject/Graph Node/Implementation/Code/Tool//ATOM_UPDATE",
+          "Subject/Graph Node/Domain/Continuant/Atom",
+          "Subject/Graph Node/Domain/Continuant/History/Journal.Record",
+          "Subject/Graph Node/Domain/Continuant/Atom.Summary",
+          "Subject/Graph Node/Domain/Continuant/Atom.Updated At",
+          "Subject/Graph Node/Carrier"
+        ]
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_TOOL_WORKFLOWS_C18/_DES/DOM/AN-S-1547-DOM-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "anchor_sha256": "21868f48ddcfe882be65a131b4fd3e6e753d84ff33ce48c7d669b7c4219f2164",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-18_FEATURE_TOOL_WORKFLOWS/09_operations/CA-O-030-TOOL_WORKFLOWS-ACTION--update-sealed-anechoic-atom-carriers.md",
+      "evidence_sha256": "40df0ff0759f65b8d6a70790a318d084d927692e434cac82ed4c9613afa9268d"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-16_FEATURE_TOOLS/09_operations/archive/CA-O-037@10-TOOLS-ACTION--enforce-one-commit-automation-autonomy-envelope.md",
+      "source_sha256": "b24a0243d1d94a01f613dfbfb26b5a6e8bcf887df93fdc736ee2e187c9d305aa",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-037@10",
+      "native_ref": "AN-P-18@10",
+      "destination": "_anechoic_anechoic/__PROJECT_CONFIG/09_archived/AN-P-18@10-ACTION--enforce-one-commit-automation-autonomy-envelope.md",
+      "destination_sha256": "7ae4a92bf7f4375c84f280b1659056835c76108145ccd2747825ba9f7da54e6f",
+      "body_sha256": "f0be5eaebf2d317e4e14b84fda2c496320b541eb0dc79a8a2639e4d005c62ef6",
+      "body_prefix_bytes": 265,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C16"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Action//Enforce Commit Automation Envelope",
+        "depends_on": [
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Commit Automation/Autonomy Envelope",
+          "Subject/Domain/Node/Continuant/Actor/Type: Operator",
+          "Subject/Domain/Node/Continuant/Actor",
+          "Subject/Domain/Node/Continuant/History/Journal.Record"
+        ]
+      },
+      "anchor": "_anechoic_anechoic/__PROJECT_CONFIG/AN-P-18-ACTION--enforce-one-commit-automation-autonomy-envelope.md",
+      "anchor_sha256": "13537bd21d1f47f5e4667c6733db82ad98aa8904a9030ba5023d936719b23515",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-16_FEATURE_TOOLS/09_operations/CA-O-037-TOOLS-ACTION--enforce-one-commit-automation-autonomy-envelope.md",
+      "evidence_sha256": "40fae5a5dd518e9c800f9e2d7c24d17e1b8157c9cb0cafb77739687ce422c76c"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-16_FEATURE_TOOLS/09_operations/archive/CA-O-037@11-TOOLS-ACTION--enforce-one-commit-automation-autonomy-envelope.md",
+      "source_sha256": "12f4c530efdccf9d744b2a3dd6d733cf036ee360d507843882b7d90658880cff",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-037@11",
+      "native_ref": "AN-P-18@11",
+      "destination": "_anechoic_anechoic/__PROJECT_CONFIG/09_archived/AN-P-18@11-ACTION--enforce-one-commit-automation-autonomy-envelope.md",
+      "destination_sha256": "a9c4f6f513b6a1cc928636f9afdfdf84179eecca0f585e92bb4c55f6e9eb0d86",
+      "body_sha256": "f0be5eaebf2d317e4e14b84fda2c496320b541eb0dc79a8a2639e4d005c62ef6",
+      "body_prefix_bytes": 265,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C16"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Graph Node/Domain/Continuant/Atom/Content Role: Operations/Type: Action//Enforce Commit Automation Envelope",
+        "depends_on": [
+          "Subject/Graph Node/Domain/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Commit Automation/Autonomy Envelope",
+          "Subject/Graph Node/Domain/Continuant/Actor/Type: Operator",
+          "Subject/Graph Node/Domain/Continuant/Actor",
+          "Subject/Graph Node/Domain/Continuant/History/Journal.Record"
+        ]
+      },
+      "anchor": "_anechoic_anechoic/__PROJECT_CONFIG/AN-P-18-ACTION--enforce-one-commit-automation-autonomy-envelope.md",
+      "anchor_sha256": "13537bd21d1f47f5e4667c6733db82ad98aa8904a9030ba5023d936719b23515",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-16_FEATURE_TOOLS/09_operations/CA-O-037-TOOLS-ACTION--enforce-one-commit-automation-autonomy-envelope.md",
+      "evidence_sha256": "40fae5a5dd518e9c800f9e2d7c24d17e1b8157c9cb0cafb77739687ce422c76c"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-16_FEATURE_TOOLS/09_operations/archive/CA-O-037@12-TOOLS-ACTION--enforce-one-commit-automation-autonomy-envelope.md",
+      "source_sha256": "67fe71140cc44847c89b65c0d57976cce52d708b0170116188005f51c02bb3a0",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-037@12",
+      "native_ref": "AN-P-18@12",
+      "destination": "_anechoic_anechoic/__PROJECT_CONFIG/09_archived/AN-P-18@12-ACTION--enforce-one-commit-automation-autonomy-envelope.md",
+      "destination_sha256": "27d5daaaf62ff18c044ceb8d613ae89d8b5d95d17196a9b98fa5440532623110",
+      "body_sha256": "f0be5eaebf2d317e4e14b84fda2c496320b541eb0dc79a8a2639e4d005c62ef6",
+      "body_prefix_bytes": 265,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C16"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Graph Node/Engineering/Aspect/Execution Control",
+        "depends_on": [
+          "Subject/Graph Node/Domain/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Commit Automation/Autonomy Envelope",
+          "Subject/Graph Node/Domain/Continuant/Actor/Type: Operator",
+          "Subject/Graph Node/Domain/Continuant/Actor",
+          "Subject/Graph Node/Domain/Continuant/History/Journal.Record"
+        ]
+      },
+      "anchor": "_anechoic_anechoic/__PROJECT_CONFIG/AN-P-18-ACTION--enforce-one-commit-automation-autonomy-envelope.md",
+      "anchor_sha256": "13537bd21d1f47f5e4667c6733db82ad98aa8904a9030ba5023d936719b23515",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-16_FEATURE_TOOLS/09_operations/CA-O-037-TOOLS-ACTION--enforce-one-commit-automation-autonomy-envelope.md",
+      "evidence_sha256": "40fae5a5dd518e9c800f9e2d7c24d17e1b8157c9cb0cafb77739687ce422c76c"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-16_FEATURE_TOOLS/09_operations/archive/CA-O-037@13-TOOLS-ACTION--enforce-one-commit-automation-autonomy-envelope.md",
+      "source_sha256": "3995862ede377a688bb576b76bb0cc0828143a5f847a2330b95aa2b8575b875f",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-037@13",
+      "native_ref": "AN-P-18@13",
+      "destination": "_anechoic_anechoic/__PROJECT_CONFIG/09_archived/AN-P-18@13-ACTION--enforce-one-commit-automation-autonomy-envelope.md",
+      "destination_sha256": "bcba0677499ae49f3233087c1147d09a59db1474cf9f5ba4e2b85303ca8d69ec",
+      "body_sha256": "f0be5eaebf2d317e4e14b84fda2c496320b541eb0dc79a8a2639e4d005c62ef6",
+      "body_prefix_bytes": 265,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C16"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Graph Node/Engineering/Aspect/Execution Control",
+        "depends_on": [
+          "Subject/Graph Node/Domain/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Subject/Graph Node/Engineering/Aspect/Execution Control",
+          "Subject/Graph Node/Domain/Continuant/Actor/Type: Operator",
+          "Subject/Graph Node/Domain/Continuant/Actor",
+          "Subject/Graph Node/Domain/Continuant/History/Journal.Record"
+        ]
+      },
+      "anchor": "_anechoic_anechoic/__PROJECT_CONFIG/AN-P-18-ACTION--enforce-one-commit-automation-autonomy-envelope.md",
+      "anchor_sha256": "13537bd21d1f47f5e4667c6733db82ad98aa8904a9030ba5023d936719b23515",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-16_FEATURE_TOOLS/09_operations/CA-O-037-TOOLS-ACTION--enforce-one-commit-automation-autonomy-envelope.md",
+      "evidence_sha256": "40fae5a5dd518e9c800f9e2d7c24d17e1b8157c9cb0cafb77739687ce422c76c"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-16_FEATURE_TOOLS/09_operations/archive/CA-O-037@14-TOOLS-ACTION--enforce-one-commit-automation-autonomy-envelope.md",
+      "source_sha256": "d8e09935fd1099431e8973fec0e0b5b03bf53df6f67ce09538875522609e6988",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-037@14",
+      "native_ref": "AN-P-18@14",
+      "destination": "_anechoic_anechoic/__PROJECT_CONFIG/09_archived/AN-P-18@14-ACTION--enforce-one-commit-automation-autonomy-envelope.md",
+      "destination_sha256": "40d1fc69571db5e784bc21c75c7c79815e46ad1c89407b2620d67124a2726ebd",
+      "body_sha256": "f0be5eaebf2d317e4e14b84fda2c496320b541eb0dc79a8a2639e4d005c62ef6",
+      "body_prefix_bytes": 265,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C16"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Graph Node/Engineering/Execution Control",
+        "depends_on": [
+          "Subject/Graph Node/Domain/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Subject/Graph Node/Domain/Continuant/Actor/Type: Operator",
+          "Subject/Graph Node/Domain/Continuant/Actor",
+          "Subject/Graph Node/Domain/Continuant/History/Journal.Record"
+        ]
+      },
+      "anchor": "_anechoic_anechoic/__PROJECT_CONFIG/AN-P-18-ACTION--enforce-one-commit-automation-autonomy-envelope.md",
+      "anchor_sha256": "13537bd21d1f47f5e4667c6733db82ad98aa8904a9030ba5023d936719b23515",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-16_FEATURE_TOOLS/09_operations/CA-O-037-TOOLS-ACTION--enforce-one-commit-automation-autonomy-envelope.md",
+      "evidence_sha256": "40fae5a5dd518e9c800f9e2d7c24d17e1b8157c9cb0cafb77739687ce422c76c"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-16_FEATURE_TOOLS/09_operations/archive/CA-O-037@8-TOOLS-ACTION--enforce-one-commit-automation-autonomy-envelope.md",
+      "source_sha256": "7b67ef4b6cf97a1d19bca813cd25eec88db97141228370221f7f5f818829f3ec",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-037@8",
+      "native_ref": "AN-P-18@8",
+      "destination": "_anechoic_anechoic/__PROJECT_CONFIG/09_archived/AN-P-18@8-ACTION--enforce-one-commit-automation-autonomy-envelope.md",
+      "destination_sha256": "c30c3d967828249f9ea93e1cad5723e54107f8054eef2424e0509d48f9f8a56b",
+      "body_sha256": "f0be5eaebf2d317e4e14b84fda2c496320b541eb0dc79a8a2639e4d005c62ef6",
+      "body_prefix_bytes": 264,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C16"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Enforce Commit Automation Envelope",
+        "depends_on": [
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Commit Automation/Autonomy Envelope",
+          "Subject/Domain/Node/Continuant/Actor/Type: Operator",
+          "Subject/Domain/Node/Continuant/Actor",
+          "Subject/Domain/Node/Continuant/History/Journal.Record"
+        ]
+      },
+      "anchor": "_anechoic_anechoic/__PROJECT_CONFIG/AN-P-18-ACTION--enforce-one-commit-automation-autonomy-envelope.md",
+      "anchor_sha256": "13537bd21d1f47f5e4667c6733db82ad98aa8904a9030ba5023d936719b23515",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-16_FEATURE_TOOLS/09_operations/CA-O-037-TOOLS-ACTION--enforce-one-commit-automation-autonomy-envelope.md",
+      "evidence_sha256": "40fae5a5dd518e9c800f9e2d7c24d17e1b8157c9cb0cafb77739687ce422c76c"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-16_FEATURE_TOOLS/09_operations/archive/CA-O-037@9-TOOLS-ACTION--enforce-one-commit-automation-autonomy-envelope.md",
+      "source_sha256": "fd40a23ca3613709f39005e36167fadc8e79bf322cd7ee8608af5803b40abaf1",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-037@9",
+      "native_ref": "AN-P-18@9",
+      "destination": "_anechoic_anechoic/__PROJECT_CONFIG/09_archived/AN-P-18@9-ACTION--enforce-one-commit-automation-autonomy-envelope.md",
+      "destination_sha256": "9d937cdd59c05736692cfd4d84eccaaa31b2563826e6aab57d6662df597c214d",
+      "body_sha256": "f0be5eaebf2d317e4e14b84fda2c496320b541eb0dc79a8a2639e4d005c62ef6",
+      "body_prefix_bytes": 264,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C16"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Enforce Commit Automation Envelope",
+        "depends_on": [
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Commit Automation/Autonomy Envelope",
+          "Subject/Domain/Node/Continuant/Actor/Type: Operator",
+          "Subject/Domain/Node/Continuant/Actor",
+          "Subject/Domain/Node/Continuant/History/Journal.Record"
+        ]
+      },
+      "anchor": "_anechoic_anechoic/__PROJECT_CONFIG/AN-P-18-ACTION--enforce-one-commit-automation-autonomy-envelope.md",
+      "anchor_sha256": "13537bd21d1f47f5e4667c6733db82ad98aa8904a9030ba5023d936719b23515",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-16_FEATURE_TOOLS/09_operations/CA-O-037-TOOLS-ACTION--enforce-one-commit-automation-autonomy-envelope.md",
+      "evidence_sha256": "40fae5a5dd518e9c800f9e2d7c24d17e1b8157c9cb0cafb77739687ce422c76c"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-051@11-PROJECT_CONFIGURATION-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "source_sha256": "1c9ba5e043fe560ada2047ccccc0c302a87f1cdd21ef9b5ce87f0d34663eebf6",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-051@11",
+      "native_ref": "AN-P-70@11",
+      "destination": "_anechoic_anechoic/__PROJECT_CONFIG/09_archived/AN-P-70@11-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "destination_sha256": "7e8a27dd6cde5952e5c1458f8c983d151de2fcc80445cdf5d655730f0b1c2624",
+      "body_sha256": "5aafc503775403be1aa63366aa84d1b3cad9157470da004987ba5fea349b6575",
+      "body_prefix_bytes": 277,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1432",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-807",
+          "position": 1
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Persist Atom Replacement",
+        "depends_on": [
+          "Entity/Node/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Entity/Node/Continuant/Atom",
+          "Entity/Node/Continuant/History/Revision/Type: Atom",
+          "Atom Carrier",
+          "Entity/Node/Continuant/History/Journal",
+          "Artifact Archive Carrier Basename"
+        ]
+      },
+      "anchor": "_anechoic_anechoic/__PROJECT_CONFIG/AN-P-70-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "anchor_sha256": "191d322ad39c3858d35f19627e7649ae4e3e4074d3b9f9a5fee9636d41eb2d17",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-051-PROJECT_CONFIGURATION-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "evidence_sha256": "14ed79bc85440e4fc94d28b0782640c1219e9527335840dee6ca4676604aab2f"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-051@12-PROJECT_CONFIGURATION-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "source_sha256": "d66baf664f4cfb1638bc02314f5f20e8ac73afcc4d173549c3ec940c5dd5be6a",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-051@12",
+      "native_ref": "AN-P-70@12",
+      "destination": "_anechoic_anechoic/__PROJECT_CONFIG/09_archived/AN-P-70@12-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "destination_sha256": "742009df520cb8c3f7032e14ab2072667ccfdc771f1ab709de086ea52704411c",
+      "body_sha256": "5aafc503775403be1aa63366aa84d1b3cad9157470da004987ba5fea349b6575",
+      "body_prefix_bytes": 277,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1432",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-807",
+          "position": 1
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Persist Atom Replacement",
+        "depends_on": [
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Subject/Domain/Node/Continuant/Atom",
+          "Entity/Node/Continuant/History/Revision/Type: Atom",
+          "Atom Carrier",
+          "Entity/Node/Continuant/History/Journal",
+          "Artifact Archive Carrier Basename"
+        ]
+      },
+      "anchor": "_anechoic_anechoic/__PROJECT_CONFIG/AN-P-70-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "anchor_sha256": "191d322ad39c3858d35f19627e7649ae4e3e4074d3b9f9a5fee9636d41eb2d17",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-051-PROJECT_CONFIGURATION-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "evidence_sha256": "14ed79bc85440e4fc94d28b0782640c1219e9527335840dee6ca4676604aab2f"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-051@13-PROJECT_CONFIGURATION-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "source_sha256": "7f99f0b7d6730bc311d64ff262b1293baca0a9874a063347fe9241eb1981f5f4",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-051@13",
+      "native_ref": "AN-P-70@13",
+      "destination": "_anechoic_anechoic/__PROJECT_CONFIG/09_archived/AN-P-70@13-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "destination_sha256": "68bd77239f9ba6b031726f72537c2bc57e389c5b7c5b90fdf3f29860ee5d3535",
+      "body_sha256": "5aafc503775403be1aa63366aa84d1b3cad9157470da004987ba5fea349b6575",
+      "body_prefix_bytes": 277,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1432",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-807",
+          "position": 1
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Persist Atom Replacement",
+        "depends_on": [
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Subject/Domain/Node/Continuant/Atom",
+          "Entity/Node/Continuant/History/Revision/Type: Atom",
+          "Subject/Engineering/Carrier/File Carrier",
+          "Subject/Domain/Node/Continuant/History/Journal",
+          "Artifact Archive Carrier Basename"
+        ]
+      },
+      "anchor": "_anechoic_anechoic/__PROJECT_CONFIG/AN-P-70-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "anchor_sha256": "191d322ad39c3858d35f19627e7649ae4e3e4074d3b9f9a5fee9636d41eb2d17",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-051-PROJECT_CONFIGURATION-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "evidence_sha256": "14ed79bc85440e4fc94d28b0782640c1219e9527335840dee6ca4676604aab2f"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-051@14-PROJECT_CONFIGURATION-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "source_sha256": "a0e1429d980da6d80e0ef48845313e3f625dc84781578f6ac56e63f65662c6f2",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-051@14",
+      "native_ref": "AN-P-70@14",
+      "destination": "_anechoic_anechoic/__PROJECT_CONFIG/09_archived/AN-P-70@14-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "destination_sha256": "cb1466c83dbb131eba7e262a0891ac2b782555f42fbd746d6d64de42d927920a",
+      "body_sha256": "5aafc503775403be1aa63366aa84d1b3cad9157470da004987ba5fea349b6575",
+      "body_prefix_bytes": 277,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1432",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-807",
+          "position": 1
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Persist Atom Replacement",
+        "depends_on": [
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Subject/Domain/Node/Continuant/Atom",
+          "Entity/Node/Continuant/History/Revision/Type: Atom",
+          "Subject/Engineering/Carrier/File Carrier",
+          "Subject/Domain/Node/Continuant/History/Journal",
+          "Artifact Archive Carrier Basename"
+        ]
+      },
+      "anchor": "_anechoic_anechoic/__PROJECT_CONFIG/AN-P-70-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "anchor_sha256": "191d322ad39c3858d35f19627e7649ae4e3e4074d3b9f9a5fee9636d41eb2d17",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-051-PROJECT_CONFIGURATION-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "evidence_sha256": "14ed79bc85440e4fc94d28b0782640c1219e9527335840dee6ca4676604aab2f"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-051@15-PROJECT_CONFIGURATION-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "source_sha256": "1512f6a0cbefa3905460f32678abb2daadeb0f5a0294de93a1a70218b88c4786",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-051@15",
+      "native_ref": "AN-P-70@15",
+      "destination": "_anechoic_anechoic/__PROJECT_CONFIG/09_archived/AN-P-70@15-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "destination_sha256": "79377eb27b7a9ba39077e0c9b42127547c8fe544b4b7a9a573f9a5c91b3894ee",
+      "body_sha256": "5aafc503775403be1aa63366aa84d1b3cad9157470da004987ba5fea349b6575",
+      "body_prefix_bytes": 277,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1432",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-807",
+          "position": 1
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Persist Atom Replacement",
+        "depends_on": [
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Subject/Domain/Node/Continuant/Atom",
+          "Subject/Domain/Node/Continuant/Atom.Version Number",
+          "Subject/Engineering/Carrier/File Carrier",
+          "Subject/Domain/Node/Continuant/History/Journal",
+          "Subject/Engineering/Carrier/File Carrier.Filename"
+        ]
+      },
+      "anchor": "_anechoic_anechoic/__PROJECT_CONFIG/AN-P-70-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "anchor_sha256": "191d322ad39c3858d35f19627e7649ae4e3e4074d3b9f9a5fee9636d41eb2d17",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-051-PROJECT_CONFIGURATION-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "evidence_sha256": "14ed79bc85440e4fc94d28b0782640c1219e9527335840dee6ca4676604aab2f"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-051@16-PROJECT_CONFIGURATION-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "source_sha256": "6a4b993a0f80c33eba7d5a9bc9d5c4ccf296a28455939237e8761222681ed828",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-051@16",
+      "native_ref": "AN-P-70@16",
+      "destination": "_anechoic_anechoic/__PROJECT_CONFIG/09_archived/AN-P-70@16-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "destination_sha256": "2e4a5fc362cd73e0381a58c1a8d147932c2082e5e62acef7dedc580f60aa0dfe",
+      "body_sha256": "5aafc503775403be1aa63366aa84d1b3cad9157470da004987ba5fea349b6575",
+      "body_prefix_bytes": 277,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1432",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-807",
+          "position": 1
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Action//Persist Atom Replacement",
+        "depends_on": [
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Subject/Domain/Node/Continuant/Atom",
+          "Subject/Domain/Node/Continuant/Atom.Version Number",
+          "Subject/Engineering/Carrier/File Carrier",
+          "Subject/Domain/Node/Continuant/History/Journal",
+          "Subject/Engineering/Carrier/File Carrier.Filename"
+        ]
+      },
+      "anchor": "_anechoic_anechoic/__PROJECT_CONFIG/AN-P-70-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "anchor_sha256": "191d322ad39c3858d35f19627e7649ae4e3e4074d3b9f9a5fee9636d41eb2d17",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-051-PROJECT_CONFIGURATION-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "evidence_sha256": "14ed79bc85440e4fc94d28b0782640c1219e9527335840dee6ca4676604aab2f"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-051@17-PROJECT_CONFIGURATION-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "source_sha256": "361f69383bac1cc2c1541fc6dd931e72b2b2c6608df1f90c52f857ec94e76b1e",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-051@17",
+      "native_ref": "AN-P-70@17",
+      "destination": "_anechoic_anechoic/__PROJECT_CONFIG/09_archived/AN-P-70@17-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "destination_sha256": "ed5f8eff2888e80b0f2ecab9ed43e7b7a9494c13073a49e5829075e5647709a9",
+      "body_sha256": "6a14646d95540781449494534a57b81f9cfd27075f7db5859b619126351a4b30",
+      "body_prefix_bytes": 277,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1432",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-807",
+          "position": 1
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Graph Node/Domain/Continuant/Atom/Content Role: Operations/Type: Action//Persist Atom Replacement",
+        "depends_on": [
+          "Subject/Graph Node/Domain/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Subject/Graph Node/Domain/Continuant/Atom",
+          "Subject/Graph Node/Domain/Continuant/Atom.Version Number",
+          "Subject/Graph Node/Engineering/Continuant/Carrier/File Carrier",
+          "Subject/Graph Node/Domain/Continuant/History/Journal",
+          "Subject/Graph Node/Engineering/Continuant/Carrier/File Carrier.Filename"
+        ]
+      },
+      "anchor": "_anechoic_anechoic/__PROJECT_CONFIG/AN-P-70-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "anchor_sha256": "191d322ad39c3858d35f19627e7649ae4e3e4074d3b9f9a5fee9636d41eb2d17",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-051-PROJECT_CONFIGURATION-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "evidence_sha256": "14ed79bc85440e4fc94d28b0782640c1219e9527335840dee6ca4676604aab2f"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-051@18-PROJECT_CONFIGURATION-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "source_sha256": "5b071ba865af57cd6f415966f10d585b2425871a9319b00370ff2703ec9d090b",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-051@18",
+      "native_ref": "AN-P-70@18",
+      "destination": "_anechoic_anechoic/__PROJECT_CONFIG/09_archived/AN-P-70@18-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "destination_sha256": "a2230cca4963c0d4ad540cd5005317c543c429b6f0bb712803764df79559b538",
+      "body_sha256": "43ea4cb4fb102980ede24ffd4b0b40a9c5cf927fb65a5a0db29d5ba1d0a6c1d1",
+      "body_prefix_bytes": 277,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1432",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-807",
+          "position": 1
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Graph Node/Domain/Continuant/Atom/Content Role: Operations/Type: Action//Persist Atom Replacement",
+        "depends_on": [
+          "Subject/Graph Node/Domain/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Subject/Graph Node/Domain/Continuant/Atom",
+          "Subject/Graph Node/Domain/Continuant/Atom.Version Number",
+          "Subject/Graph Node/Engineering/Continuant/Carrier/File Carrier",
+          "Subject/Graph Node/Domain/Continuant/History/Journal",
+          "Subject/Graph Node/Engineering/Continuant/Carrier/File Carrier.Filename"
+        ]
+      },
+      "anchor": "_anechoic_anechoic/__PROJECT_CONFIG/AN-P-70-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "anchor_sha256": "191d322ad39c3858d35f19627e7649ae4e3e4074d3b9f9a5fee9636d41eb2d17",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-051-PROJECT_CONFIGURATION-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "evidence_sha256": "14ed79bc85440e4fc94d28b0782640c1219e9527335840dee6ca4676604aab2f"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-051@19-PROJECT_CONFIGURATION-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "source_sha256": "f02aa40662664bb5398624c1624a182c81b6725881b95b18a8d70689fc6a74eb",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-051@19",
+      "native_ref": "AN-P-70@19",
+      "destination": "_anechoic_anechoic/__PROJECT_CONFIG/09_archived/AN-P-70@19-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "destination_sha256": "2573174bc0f141e23fcd78e30faa90580c345b1d9aaba779725e46e625eed727",
+      "body_sha256": "43ea4cb4fb102980ede24ffd4b0b40a9c5cf927fb65a5a0db29d5ba1d0a6c1d1",
+      "body_prefix_bytes": 277,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-807",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Graph Node/Domain/Continuant/Atom/Content Role: Operations/Type: Action//Persist Atom Replacement",
+        "depends_on": [
+          "Subject/Graph Node/Domain/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Subject/Graph Node/Domain/Continuant/Atom",
+          "Subject/Graph Node/Domain/Continuant/Atom.Version Number",
+          "Subject/Graph Node/Engineering/Continuant/Carrier/File Carrier",
+          "Subject/Graph Node/Domain/Continuant/History/Journal",
+          "Subject/Graph Node/Engineering/Continuant/Carrier/File Carrier.Filename"
+        ]
+      },
+      "anchor": "_anechoic_anechoic/__PROJECT_CONFIG/AN-P-70-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "anchor_sha256": "191d322ad39c3858d35f19627e7649ae4e3e4074d3b9f9a5fee9636d41eb2d17",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-051-PROJECT_CONFIGURATION-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "evidence_sha256": "14ed79bc85440e4fc94d28b0782640c1219e9527335840dee6ca4676604aab2f"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-051@20-PROJECT_CONFIGURATION-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "source_sha256": "26c43d44ac9013dc2e80bc4f54a3ac080441108f645d79f2788bc0b512b2bda7",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-051@20",
+      "native_ref": "AN-P-70@20",
+      "destination": "_anechoic_anechoic/__PROJECT_CONFIG/09_archived/AN-P-70@20-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "destination_sha256": "477bab4abd99d685b28fc6d9dbd6263f980d41132544bba398d59ef813231931",
+      "body_sha256": "43ea4cb4fb102980ede24ffd4b0b40a9c5cf927fb65a5a0db29d5ba1d0a6c1d1",
+      "body_prefix_bytes": 277,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-807",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Subject/Graph Node/Domain/Continuant/Atom/Content Role: Operations/Type: Action//Persist Atom Replacement",
+        "depends_on": [
+          "Subject/Graph Node/Domain/Continuant/Atom/Content Role: Operations/Type: Action",
+          "Subject/Graph Node/Domain/Continuant/Atom",
+          "Subject/Graph Node/Domain/Continuant/Atom.Version Number",
+          "Subject/Graph Node/Carrier/File",
+          "Subject/Graph Node/Domain/Continuant/History/Journal",
+          "Subject/Graph Node/Carrier/File.Filename"
+        ]
+      },
+      "anchor": "_anechoic_anechoic/__PROJECT_CONFIG/AN-P-70-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "anchor_sha256": "191d322ad39c3858d35f19627e7649ae4e3e4074d3b9f9a5fee9636d41eb2d17",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-051-PROJECT_CONFIGURATION-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "evidence_sha256": "14ed79bc85440e4fc94d28b0782640c1219e9527335840dee6ca4676604aab2f"
+    },
+    {
+      "source": "archives/.anechoic_archive/101_LAYER_1_FRAMEWORK_METHODOLOGY/sources/001_CORE_META_MODEL/09_operations/archive/CA-O-051-CORE_META_MODEL-ACTION--persist-atom-replacement-through-ordered-carrier-transitions@5.md",
+      "source_sha256": "fe867a584fa206f355c908e5b628ae22473cc4e93bc663d4fdba45fde9051b7f",
+      "source_aliases": [
+        "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/09_operations/archive/CA-O-051-CORE_META_MODEL-ACTION--persist-atom-replacement-through-ordered-carrier-transitions@5.md"
+      ],
+      "legacy_ref": "CA-O-051@5",
+      "native_ref": "AN-P-70@5",
+      "destination": "_anechoic_anechoic/__PROJECT_CONFIG/09_archived/AN-P-70@5-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "destination_sha256": "afc656ccb3fa097ebd9fc2ab35cc6d0c4ad7b7778917a307c3766e5dc7a98b04",
+      "body_sha256": "8d6aa88dfd135b4a8d8054bc0f12caf81a6c2f165f05dce2569566e4409d8daf",
+      "body_prefix_bytes": 276,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1432",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-807",
+          "position": 1
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Persist Atom Replacement",
+        "depends_on": [
+          "Action",
+          "Atom",
+          "Artifact/Revision",
+          "Atom/Carrier",
+          "Journal",
+          "Artifact/Revision/Archive Carrier Basename"
+        ]
+      },
+      "anchor": "_anechoic_anechoic/__PROJECT_CONFIG/AN-P-70-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "anchor_sha256": "191d322ad39c3858d35f19627e7649ae4e3e4074d3b9f9a5fee9636d41eb2d17",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/CA-O-051-PROJECT_CONFIGURATION-ACTION--persist-atom-replacement-through-ordered-carrier-transitions.md",
+      "evidence_sha256": "14ed79bc85440e4fc94d28b0782640c1219e9527335840dee6ca4676604aab2f"
+    }
+  ],
+  "assigned_ids": {
+    "CA-O-087": "AN-S-4622",
+    "CA-O-162": "AN-S-4623"
+  },
+  "previous_id_map_sha256": "c32bd19f4fc3cf84e3b376a6b792596afbd24fcaf35a505aba43ab9d4f1ed897",
+  "previous_alias_map_sha256": "b9d748c110e00a88e55c2961949259b5260f08c4060ad6d46c016b75ab8511a0"
+}
