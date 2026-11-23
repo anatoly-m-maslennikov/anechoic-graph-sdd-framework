@@ -1,0 +1,42 @@
+---
+atom_family: SPEC
+atom_id: AN-S-4501
+container:
+  component: C9
+tier: 3
+context:
+  template: workflow
+  lens: DevOps
+state:
+  status: archived
+  version: 13
+  updated_at: 2026-10-26 17:20:40 +0400
+---
+## Summary
+
+Learn Methods from verified implementation issues
+
+# Summary
+
+Learn Methods from verified implementation issues
+
+## Operation
+
+Method Learning Workflow **means** the separately invoked graph that derives **and**, **when** admitted, accepts Method lessons from verified implementation evidence.
+
+- entry: CA-O-101.
+- nodes: CA-O-101, CA-O-098.
+- transitions use the Workflow's declared Step structure; result-based routing belongs to the applicable Conditional Step definition; terminal results are **not** Steps.
+
+| From Step | Result condition | Next Step **or** terminal result |
+|---|---|---|
+| CA-O-101 | drafted | CA-O-098 |
+| CA-O-101 | already_covered | completed |
+| CA-O-101 | blocked | blocked |
+| CA-O-098 | accepted | completed |
+| CA-O-098 | already_covered | completed |
+| CA-O-098 | blocked | blocked |
+
+the input is an explicitly admitted learning request with retained implementation issue, test, diagnosis, **and** fix evidence, **not** an automatic continuation required for implementation completion. a failed invocation, unknown result, stale evidence, **or** unmet confidence/permission gate terminates `blocked` with actual partial results. a blocked learning Run does **not** retroactively fail a verified implementation Run; a separately discovered implementation defect still requires its own disposition.
+
+## Details
