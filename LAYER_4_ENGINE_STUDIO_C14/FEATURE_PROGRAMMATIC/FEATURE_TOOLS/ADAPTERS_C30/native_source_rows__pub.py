@@ -1,13 +1,16 @@
 """Capture native carriers without interpreting legacy Scope Units or folders."""
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import nullcontext
 from dataclasses import dataclass, field
 from hashlib import sha256
 from itertools import groupby
 import os
 from pathlib import Path, PurePosixPath
 import re
-from typing import Any
+from threading import Lock
+from typing import Any, Literal
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.source_row__pub import atom, canonical_row
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_body__pub import source_body
@@ -26,6 +29,7 @@ class NativeCapture:
     containment: list[dict[str, Any]]
     errors: dict[str, str]
     versions: dict[str, tuple[int, ...]] = field(default_factory=dict, compare=False)
+    ingestion_issues: list[dict[str, Any]] = field(default_factory=list, compare=False, kw_only=True)
 
 
 class NativeManifestChanged(ValueError):
@@ -42,10 +46,13 @@ def _carrier_row(path: Path, root: Path, family: str, prefix: str, raw: bytes, *
     carrier = parse_carrier(raw, path)
     header = carrier.metadata
     canonical = "atom_family" in header
-    normalized = native_header_view(header)
+    try:
+        normalized = native_header_view(header)
+    except ValueError as error:
+        raise CarrierError("NATIVE_HEADER_SCHEMA", str(error)) from error
     identity, context, state = (normalized.get(key) for key in ("identity", "context", "state"))
     if not all(isinstance(group, dict) for group in (identity, context, state)):
-        raise ValueError("Native identity, context and state must be mappings")
+        raise CarrierError("NATIVE_HEADER_SCHEMA", "Native identity, context and state must be mappings")
     atom_id = identity.get("atom_id")
     pattern = rf"{re.escape(prefix)}-([STPC])-[0-9]+"
     match = re.fullmatch(pattern, atom_id) if isinstance(atom_id, str) else None
@@ -133,12 +140,17 @@ def _changed_inputs(reader, selection, previous, paths):
 
 
 def _read_captured_carrier(reader, selection, path, tree, manifest, *, version, directory_fd,
-                           include_content_properties):
+                           include_content_properties, parse_lock):
     raw = manifest if path == selection.manifest_path else reader.read(
         path, metadata_guard=True, skip_version=version, directory_fd=directory_fd,
     )
     if raw is None:
         return None
+    with parse_lock or nullcontext():
+        return _parse_captured_carrier(selection, path, tree, raw, include_content_properties)
+
+
+def _parse_captured_carrier(selection, path, tree, raw, include_content_properties):
     family = {"_PMETA": "P", "__TKT": "T", "001_TICKETS": "T", "__TICKETS": "T",
               "002_PROJECT_CONFIG": "PC", "__PROJECT_CONFIG": "PC",
               PROJECT_CONFIG_DIRECTORY: "PC", TICKET_DIRECTORY: "T"}.get(tree, "S")
@@ -170,8 +182,8 @@ def _root_carriers(reader, selection, *, remember=True):
 
 
 def _capture_inputs(reader, selection, input_paths, manifest, incremental, previous,
-                    previous_rows, candidates, errors, versions, missing, directory_fd=None, *,
-                    include_content_properties):
+                    previous_rows, candidates, errors, issues, versions, missing, directory_fd=None, *,
+                    include_content_properties, parse_lock=None):
     root, control = selection.root, selection.control_root
     for path in input_paths:
         tree = path.relative_to(control).parts[0] if path.is_relative_to(control) else None
@@ -185,7 +197,7 @@ def _capture_inputs(reader, selection, input_paths, manifest, incremental, previ
                 continue
             captured = _read_captured_carrier(
                 reader, selection, path, tree, manifest, version=versions.get(str(path)), directory_fd=directory_fd,
-                include_content_properties=include_content_properties,
+                include_content_properties=include_content_properties, parse_lock=parse_lock,
             )
             if captured is None:
                 old = previous_rows.get(relative)
@@ -197,6 +209,10 @@ def _capture_inputs(reader, selection, input_paths, manifest, incremental, previ
             candidates[relative] = captured
         except (OSError, RuntimeError, TypeError, ValueError, CarrierError) as error:
             errors[relative] = str(error)
+            code = ("read_error" if isinstance(error, OSError) else
+                    ("invalid_schema" if error.code in {"YAML_INVALID", "CARRIER_ALIAS_CONFLICT", "NATIVE_HEADER_SCHEMA"}
+                     else "parse_error") if isinstance(error, CarrierError) else "invalid_value")
+            issues.append(_issue(relative, code, str(error)))
 
 
 def _full_carriers(reader, selection):
@@ -218,8 +234,9 @@ def _native_carrier_hashes(selection):
     return hashes
 
 
-def _capture_full_inputs(reader, selection, manifest, candidates, errors, *, include_content_properties):
+def _capture_full_inputs(reader, selection, manifest, candidates, errors, issues, *, include_content_properties):
     paths = _full_carriers(reader, selection)
+    parse_lock = Lock()
     for directory, members in groupby(sorted(paths, key=lambda path: (path.parent, path.name)),
                                       key=lambda path: path.parent):
         try:
@@ -227,9 +244,15 @@ def _capture_full_inputs(reader, selection, manifest, candidates, errors, *, inc
         except OSError:
             descriptor = None
         try:
-            _capture_inputs(reader, selection, members, manifest, False, None,
-                            {}, candidates, errors, {}, [], directory_fd=descriptor,
-                            include_content_properties=include_content_properties)
+            def capture(path, directory_fd=descriptor):
+                _capture_inputs(reader, selection, (path,), manifest, False, None,
+                                {}, candidates, errors, issues, {}, [], directory_fd=directory_fd,
+                                include_content_properties=include_content_properties, parse_lock=parse_lock)
+
+            # Overlap reads on network and container-mounted filesystems.
+            with ThreadPoolExecutor(max_workers=8) as pool:
+                for _ in pool.map(capture, members, buffersize=16):
+                    pass
         finally:
             if descriptor is not None:
                 os.close(descriptor)
@@ -238,7 +261,7 @@ def _capture_full_inputs(reader, selection, manifest, candidates, errors, *, inc
 def capture_native(
     selection: Any, *, previous: NativeCapture | None = None,
     paths: set[PurePosixPath] | None = None, reader: ReadContext | None = None,
-    include_content_properties: bool = True, manifest_admitted: bool = False,
+    include_content_properties: bool | Literal["archive-summary"] = True, manifest_admitted: bool = False,
     defer_currentness: bool = False,
 ) -> NativeCapture:
     """Read one selected native tree. Callers must refuse a capture with errors.
@@ -250,6 +273,8 @@ def capture_native(
             raise ValueError("Deferred currentness requires a supplied reader")
         reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
     incremental = previous is not None and paths is not None
+    if incremental and any(issue["code"].startswith("duplicate_") for issue in previous.ingestion_issues):
+        return capture_native(selection, reader=reader, include_content_properties=include_content_properties)
     if defer_currentness and incremental:
         raise ValueError("Deferred currentness requires a full capture")
     if manifest_admitted and (not incremental or selection.manifest_path.relative_to(selection.root) in paths):
@@ -259,21 +284,24 @@ def capture_native(
     previous_rows = {row["source_path"]: (row, edge)
                      for row, edge in zip(previous.atoms, previous.containment)} if incremental else {}
     missing = []
+    issues = []
     if incremental:
         candidates, errors, input_paths = _changed_inputs(reader, selection, previous, paths)
+        issues = [issue for issue in previous.ingestion_issues
+                  if issue["relative_path"] in errors]
         _capture_inputs(reader, selection, input_paths, manifest, incremental, previous,
-                        previous_rows, candidates, errors, versions, missing,
+                        previous_rows, candidates, errors, issues, versions, missing,
                         include_content_properties=include_content_properties)
     else:
         candidates, errors = {}, {}
-        _capture_full_inputs(reader, selection, manifest, candidates, errors,
+        _capture_full_inputs(reader, selection, manifest, candidates, errors, issues,
                              include_content_properties=include_content_properties)
     if (not defer_currentness and reader.currentness()["state"] != "unchanged") or any(
         path.exists() or path.is_symlink() for path in missing
     ):
         raise ValueError("Native Project carriers changed during capture")
     versions.update(reader.versions)
-    return _unique_revisions(candidates, errors, versions)
+    return _unique_revisions(candidates, errors, versions, issues)
 
 
 def revalidate_native(selection: Any, previous: NativeCapture | None) -> NativeCapture:
@@ -305,11 +333,27 @@ def revalidate_native(selection: Any, previous: NativeCapture | None) -> NativeC
     return capture
 
 
-def _unique_revisions(candidates, errors, versions):
+def _issue(relative_path, code, message, atom_ref=None, related_paths=None):
+    return {"relative_path": relative_path, "code": code, "message": message,
+            "atom_ref": atom_ref, "related_paths": related_paths or []}
+
+
+def _unique_revisions(candidates, errors, versions, issues):
     rows, containment = [], []
-    exact_paths: set[str] = set()
-    current_paths: set[str] = set()
-    for relative, (row, edge) in sorted(candidates.items()):
+    revisions, currents = {}, {}
+    ordered = sorted(candidates.items())
+    for relative, (row, _) in ordered:
+        revisions.setdefault(row["_exact_ref"], []).append(relative)
+        if row["status_group"] == "Current":
+            currents.setdefault(row["id"], []).append(relative)
+    for groups, code in ((revisions, "duplicate_revision"), (currents, "duplicate_current")):
+        for identity, paths in groups.items():
+            if len(paths) < 2:
+                continue
+            for path in paths:
+                issues.append(_issue(path, code, "Duplicate native revision or Current identity", identity, paths))
+    exact_paths, current_paths = set(), set()
+    for relative, (row, edge) in ordered:
         exact, group, atom_id = row["_exact_ref"], row["status_group"], row["id"]
         if exact in exact_paths or (group == "Current" and atom_id in current_paths):
             errors[relative] = "Duplicate native revision or Current identity"
@@ -319,4 +363,5 @@ def _unique_revisions(candidates, errors, versions):
         exact_paths.add(exact)
         if group == "Current":
             current_paths.add(atom_id)
-    return NativeCapture(rows, containment, errors, versions)
+    issues.sort(key=lambda item: (item["relative_path"] or "", item["code"]))
+    return NativeCapture(rows, containment, errors, versions, ingestion_issues=issues)

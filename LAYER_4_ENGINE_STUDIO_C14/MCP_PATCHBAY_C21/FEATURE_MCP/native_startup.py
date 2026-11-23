@@ -122,7 +122,8 @@ def _close(process):
 def project_admission():
     parent, child = socket.socketpair()
     try:
-        parent.settimeout(90)
+        if os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") != "0":
+            parent.settimeout(90)
         process = _start(child)
         child.close()
         try:

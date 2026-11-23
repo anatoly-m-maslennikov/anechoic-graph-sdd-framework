@@ -283,6 +283,7 @@ def main():
 
 def serve(path, app, *, shutdown_timeout=None):
     server = uvicorn.Server(uvicorn.Config(app, log_level="warning", timeout_graceful_shutdown=shutdown_timeout))
+    app.state.shutdown_requested = lambda: server.should_exit
     def watch_parent():
         while os.read(sys.stdin.fileno(), 4096):
             pass

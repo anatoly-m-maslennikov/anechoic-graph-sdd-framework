@@ -38,7 +38,7 @@ class DockerfileUVEntrypointTests(unittest.TestCase):
         dockerfile = (Path(__file__).resolve().parents[1] / "docker/Dockerfile").read_text()
         base, beta = dockerfile.split("FROM runtime_base AS beta")
         beta, current = beta.split("FROM runtime_base AS current")
-        prefix = "/workspace/.anechoic_tmp/cache/python"
+        prefix = "/workspace/.anechoic_tmp/python/bytecode"
         self.assertIn(f"PYTHONPYCACHEPREFIX={prefix}", base)
         for stage in (base, beta, current):
             self.assertIn(f"RUN PYTHONPYCACHEPREFIX={prefix} /opt/venv/bin/python -B -m compileall", stage)

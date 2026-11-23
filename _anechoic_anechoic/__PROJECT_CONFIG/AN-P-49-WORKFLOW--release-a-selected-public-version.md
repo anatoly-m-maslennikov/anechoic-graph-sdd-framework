@@ -8,8 +8,8 @@ context:
   template: workflow
 state:
   status: "active"
-  version: 24
-  updated_at: "2026-11-22T00:02:04.989467+00:00"
+  version: 25
+  updated_at: "2026-11-23T13:45:02.528686+00:00"
 ---
 
 ## Summary
@@ -23,7 +23,7 @@ Prepare public release drafts
 ```python
 release_command(
     operation="public",
-    entrypoint="LAYER_5_FRAMEWORK_DELIVERY/release.py",
+    entrypoint="LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/release.py",
 )
 ```
 

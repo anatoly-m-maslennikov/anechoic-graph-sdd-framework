@@ -224,36 +224,49 @@ async def _serve(path, config, pool, stopped):
             await asyncio.gather(*clients, return_exceptions=True)
 
 
-def _watch_parent(loop, stopped):
+def _watch_parent(stop):
     with suppress(OSError):
         while os.read(sys.stdin.fileno(), 4096):
             pass
-    with suppress(RuntimeError):
-        loop.call_soon_threadsafe(stopped.set)
+    stop()
 
 
 async def _run(path, config):
     loop, stopped = asyncio.get_running_loop(), asyncio.Event()
-    Thread(target=_watch_parent, args=(loop, stopped), daemon=True).start()
-    for sig in (signal.SIGINT, signal.SIGTERM):
-        loop.add_signal_handler(sig, stopped.set)
+    startup_stopped = False
+
+    def stop():
+        nonlocal startup_stopped
+        startup_stopped = True
+        with suppress(RuntimeError):
+            loop.call_soon_threadsafe(stopped.set)
+
+    Thread(target=_watch_parent, args=(stop,), daemon=True).start()
     pool = SharedProjectPool(config.maximum)
     admission = AdmissionClient()
 
     async def revalidate(selection):
         await asyncio.to_thread(_revalidate, config, admission, selection)
 
-    with open_warm_worker() as pool.warm_worker:
-        try:
-            async with asyncio.TaskGroup() as tasks:
-                monitor = tasks.create_task(pool.monitor(revalidate))
-                try:
-                    await _serve(path, config, pool, stopped)
-                finally:
-                    monitor.cancel()
-                    await asyncio.to_thread(admission.close)
-        finally:
-            await pool.close()
+    signals = (signal.SIGINT, signal.SIGTERM)
+    previous = {sig: signal.signal(sig, lambda *_: stop()) for sig in signals}
+    try:
+        with open_warm_worker(stop=lambda: startup_stopped) as pool.warm_worker:
+            if startup_stopped:
+                return
+            try:
+                async with asyncio.TaskGroup() as tasks:
+                    monitor = tasks.create_task(pool.monitor(revalidate))
+                    try:
+                        await _serve(path, config, pool, stopped)
+                    finally:
+                        monitor.cancel()
+                        await asyncio.to_thread(admission.close)
+            finally:
+                await pool.close()
+    finally:
+        for sig, handler in previous.items():
+            signal.signal(sig, handler)
 
 
 def main():

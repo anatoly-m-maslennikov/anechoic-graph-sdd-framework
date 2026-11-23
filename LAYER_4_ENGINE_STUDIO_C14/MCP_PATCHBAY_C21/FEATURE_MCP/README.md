@@ -28,7 +28,7 @@ The Backend's `tool_providers.json` is the editable installed Provider
 inventory. Generate its checked-in `tool_registry.json` with:
 
 ```sh
-UV_PROJECT_ENVIRONMENT="$PWD/LAYER_4_ENGINE_STUDIO_C14/.venv-dev" PYTHONPATH="$PWD/LAYER_4_ENGINE_STUDIO_C14" uv run --no-compile-bytecode --project LAYER_3_ENVIRONMENTS_C72/engine --locked --no-sync --group dev python -B -P -m \
+UV_PROJECT_ENVIRONMENT="$PWD/LAYER_4_ENGINE_STUDIO_C14/.venv-dev" PYTHONPATH="$PWD/LAYER_4_ENGINE_STUDIO_C14" uv run --no-compile-bytecode --project LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine --locked --no-sync --group dev python -B -P -m \
   IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.generate_tool_registry \
   --package-root .
 ```
@@ -102,7 +102,7 @@ Current Contract in `package_audit.component_contracts`.
 Use the project-local environment from the source checkout:
 
 ```sh
-UV_PROJECT_ENVIRONMENT="$PWD/LAYER_4_ENGINE_STUDIO_C14/.venv-dev" PYTHONPATH="$PWD/LAYER_4_ENGINE_STUDIO_C14" uv run --no-compile-bytecode --project "$PWD/LAYER_3_ENVIRONMENTS_C72/engine" --locked --no-sync --python 3.14 --managed-python --no-env-file \
+UV_PROJECT_ENVIRONMENT="$PWD/LAYER_4_ENGINE_STUDIO_C14/.venv-dev" PYTHONPATH="$PWD/LAYER_4_ENGINE_STUDIO_C14" uv run --no-compile-bytecode --project "$PWD/LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine" --locked --no-sync --python 3.14 --managed-python --no-env-file \
   --group dev python -B -P -m \
   MCP_PATCHBAY_C21.FEATURE_MCP.server --project-root "$PWD"
 ```

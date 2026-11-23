@@ -46,8 +46,8 @@ Legacy unlabelled or otherwise unproven images remain retained and reported,
 even if a Project container formerly referenced them. Image cleanup is skipped
 unless the replacement launcher has verified the exact candidate image.
 
-The Release Project owns `RELEASE_VERSION/local_release.py` and
-`PUBLIC_RELEASE/public_release.py`. Run them through `release.py` on the host
+The Release Project owns `LAYER_2_LOCAL_RELEASE_C63/local_release.py` and
+`LAYER_3_PUBLIC_RELEASE_C64/public_release.py`. Run them through `release.py` on the host
 with an Operator-selected `--run-id`. Local Release writes its own receipts.
 
 The host commands below are the release entry point for this Project. Release
@@ -58,12 +58,12 @@ operations are not exposed through the retained Workbench MCP surface.
 Run these commands from the repository root in the locked `release` environment.
 
 ```sh
-UV_PROJECT_ENVIRONMENT="$PWD/LAYER_5_FRAMEWORK_DELIVERY/.venv-release" \
-  uv run --no-compile-bytecode --project "$PWD/LAYER_3_ENVIRONMENTS_C72/release" --locked --no-env-file \
-    python -B LAYER_5_FRAMEWORK_DELIVERY/release.py local --run-id local-001
-UV_PROJECT_ENVIRONMENT="$PWD/LAYER_5_FRAMEWORK_DELIVERY/.venv-release" \
-  uv run --no-compile-bytecode --project "$PWD/LAYER_3_ENVIRONMENTS_C72/release" --locked --no-env-file \
-    python -B LAYER_5_FRAMEWORK_DELIVERY/release.py public --run-id public-001
+UV_PROJECT_ENVIRONMENT="$PWD/LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/.venv-release" \
+  uv run --no-compile-bytecode --project "$PWD/LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/release" --locked --no-env-file \
+    python -B LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/release.py local --run-id local-001
+UV_PROJECT_ENVIRONMENT="$PWD/LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/.venv-release" \
+  uv run --no-compile-bytecode --project "$PWD/LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/release" --locked --no-env-file \
+    python -B LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/release.py public --run-id public-001
 ```
 
 Local Release defaults to `--image-mode refresh` and uses the checked-in
@@ -79,9 +79,9 @@ Use `build-image` to get the immutable image ID without deploying it or changing
 the Version.
 
 ```sh
-UV_PROJECT_ENVIRONMENT="$PWD/LAYER_5_FRAMEWORK_DELIVERY/.venv-release" \
-  uv run --no-compile-bytecode --project "$PWD/LAYER_3_ENVIRONMENTS_C72/release" --locked --no-env-file \
-    python -B LAYER_5_FRAMEWORK_DELIVERY/release.py build-image --run-id image-001
+UV_PROJECT_ENVIRONMENT="$PWD/LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/.venv-release" \
+  uv run --no-compile-bytecode --project "$PWD/LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/release" --locked --no-env-file \
+    python -B LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/release.py build-image --run-id image-001
 ```
 
 `--project-root PATH` is optional; the default is this repository's root, derived
@@ -119,7 +119,7 @@ Use `--phase static` for static checks and static test modules.
 
 ```sh
 UV_PROJECT_ENVIRONMENT="$PWD/LAYER_4_ENGINE_STUDIO_C14/.venv-dev" PYTHONPATH="$PWD/LAYER_4_ENGINE_STUDIO_C14" \
-  uv run --no-compile-bytecode --project "$PWD/LAYER_3_ENVIRONMENTS_C72/engine" --locked --no-env-file \
+  uv run --no-compile-bytecode --project "$PWD/LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine" --locked --no-env-file \
     python -B -P -m FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__pub \
     --project-root "$PWD" --phase unit --required
 ```
@@ -150,7 +150,7 @@ comments.
 
 ```sh
 UV_PROJECT_ENVIRONMENT="$PWD/LAYER_4_ENGINE_STUDIO_C14/.venv-dev" PYTHONPATH="$PWD/LAYER_4_ENGINE_STUDIO_C14" \
-  uv run --no-compile-bytecode --project "$PWD/LAYER_3_ENVIRONMENTS_C72/engine" --locked --no-env-file \
+  uv run --no-compile-bytecode --project "$PWD/LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine" --locked --no-env-file \
     python -B -P -m FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.source_comments \
     --project-root "$PWD"
 ```
@@ -164,7 +164,7 @@ this from the Project checkout.
 
 ```sh
 UV_PROJECT_ENVIRONMENT="$PWD/LAYER_4_ENGINE_STUDIO_C14/.venv-dev" PYTHONPATH="$PWD/LAYER_4_ENGINE_STUDIO_C14" \
-  uv run --no-compile-bytecode --project "$PWD/LAYER_3_ENVIRONMENTS_C72/engine" --locked --no-env-file \
+  uv run --no-compile-bytecode --project "$PWD/LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine" --locked --no-env-file \
     python -B -P -m FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.prune_private_tmp \
     --mark "$completed_run_dir"
 ```

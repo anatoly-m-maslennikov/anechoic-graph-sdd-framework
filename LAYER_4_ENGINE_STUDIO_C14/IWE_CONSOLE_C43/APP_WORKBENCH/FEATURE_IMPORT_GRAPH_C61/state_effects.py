@@ -139,9 +139,10 @@ def _lean_case(path, case, policy, units):
 
 def _check(lean, cases):
     environment = {key: value for key, value in os.environ.items() if key not in {"LEAN_PATH", "LEAN_SRC_PATH"}}
+    timeout = None if os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") == "0" else 60
     result = subprocess.run(
         [lean, "--run", str(_CHECKER)], input=json.dumps(cases, allow_nan=False), text=True,
-        capture_output=True, check=True, timeout=60, cwd=_CHECKER.parent, env=environment,
+        capture_output=True, check=True, timeout=timeout, cwd=_CHECKER.parent, env=environment,
     )
     output = json.loads(result.stdout)
     if not isinstance(output, list) or len(output) != len(cases):

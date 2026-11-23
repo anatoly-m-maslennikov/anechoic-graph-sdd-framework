@@ -51,20 +51,24 @@ def drop(connection):
         connection.execute(f"DROP TABLE IF EXISTS {table}")
 
 
+def _insert_rows(connection, table, rows, types):
+    if rows:
+        columns = ', '.join(f'unnest(?::{kind}[])' for kind in types)
+        connection.execute(f'INSERT INTO {table} SELECT {columns}', [list(column) for column in zip(*rows)])
+
+
 def replace_code(connection, rows):
     """Replace code evidence within the caller's transaction."""
     rows = _validate(rows, 'code')
     connection.execute('DELETE FROM biz_architecture_code_metrics')
-    if rows:
-        connection.executemany('INSERT INTO biz_architecture_code_metrics VALUES (?, ?, ?, ?, ?, ?)', rows)
+    _insert_rows(connection, 'biz_architecture_code_metrics', rows, ('VARCHAR', 'VARCHAR', 'VARCHAR', 'VARCHAR', 'BIGINT', 'BIGINT'))
 
 
 def replace_spec(connection, rows):
     """Replace spec evidence within the caller's transaction."""
     rows = _validate(rows, 'spec')
     connection.execute('DELETE FROM biz_architecture_spec_metrics')
-    if rows:
-        connection.executemany('INSERT INTO biz_architecture_spec_metrics VALUES (?, ?, ?, ?, ?)', rows)
+    _insert_rows(connection, 'biz_architecture_spec_metrics', rows, ('VARCHAR', 'BIGINT', 'BIGINT', 'BIGINT', 'BIGINT'))
 
 
 def apply_spec_delta(connection, old_exact_refs, rows):
@@ -75,16 +79,18 @@ def apply_spec_delta(connection, old_exact_refs, rows):
         raise ValueError('Invalid or duplicate old exact reference')
     if not refs and not rows:
         return
-    existing = {row[0] for row in connection.execute(
-        'SELECT atom_ref FROM biz_architecture_spec_metrics WHERE atom_ref IN (SELECT unnest(?))',
-        [[row[0] for row in rows]],
-    ).fetchall()}
-    if any(row[0] in existing and row[0] not in refs for row in rows):
+    conflict = connection.execute(
+        """SELECT EXISTS (
+            SELECT 1 FROM biz_architecture_spec_metrics
+            WHERE atom_ref IN (SELECT unnest(?::VARCHAR[]))
+              AND atom_ref NOT IN (SELECT unnest(?::VARCHAR[]))
+        )""", [[row[0] for row in rows], refs],
+    ).fetchone()[0]
+    if conflict:
         raise ValueError('Spec delta conflicts with an existing Atom')
     if refs:
-        connection.executemany('DELETE FROM biz_architecture_spec_metrics WHERE atom_ref = ?', [(ref,) for ref in refs])
-    if rows:
-        connection.executemany('INSERT INTO biz_architecture_spec_metrics VALUES (?, ?, ?, ?, ?)', rows)
+        connection.execute('DELETE FROM biz_architecture_spec_metrics WHERE atom_ref IN (SELECT unnest(?::VARCHAR[]))', [refs])
+    _insert_rows(connection, 'biz_architecture_spec_metrics', rows, ('VARCHAR', 'BIGINT', 'BIGINT', 'BIGINT', 'BIGINT'))
 
 
 def replace_bindings(connection, rows):
@@ -100,8 +106,7 @@ def replace_bindings(connection, rows):
         seen.add(pair)
         result.append(pair)
     connection.execute('DELETE FROM mrt_real_graph_package_spec_bindings')
-    if result:
-        connection.executemany('INSERT INTO mrt_real_graph_package_spec_bindings VALUES (?, ?)', result)
+    _insert_rows(connection, 'mrt_real_graph_package_spec_bindings', result, ('VARCHAR', 'VARCHAR'))
 
 
 _RATIOS = """CREATE OR REPLACE VIEW biz_architecture_ratios AS

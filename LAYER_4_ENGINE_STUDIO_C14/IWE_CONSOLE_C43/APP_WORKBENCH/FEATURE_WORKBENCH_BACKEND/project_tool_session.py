@@ -73,8 +73,10 @@ class ProjectToolSession:
             self._process = self._start(socket)
             expected = {"ready": True, "instance_id": self.selection.instance_id,
                         "manifest_sha256": self.selection.manifest_sha256, "pid": self._process.pid}
+            bounded = os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") != "0"
             deadline = monotonic() + 90
-            while self._process.poll() is None and monotonic() < deadline:
+            while (self._process.poll() is None
+                   and (not bounded or monotonic() < deadline)):
                 try:
                     response = await self._http.get("/health", timeout=0.5)
                 except httpx2.TransportError:
@@ -88,7 +90,8 @@ class ProjectToolSession:
                         or any(observed.get(key) != value for key, value in expected.items())
                         or not isinstance(observed.get("kernel_pid"), int)):
                     raise RuntimeError("Workbench Backend reported a different Project binding")
-                async with asyncio.timeout(max(0, deadline - monotonic())):
+                timeout = max(0, deadline - monotonic()) if bounded else None
+                async with asyncio.timeout(timeout):
                     catalog, digest = await self._catalog()
                 self.tools = tuple(catalog["tools"])
                 self.tool_blacklist = frozenset(catalog["blacklist"])

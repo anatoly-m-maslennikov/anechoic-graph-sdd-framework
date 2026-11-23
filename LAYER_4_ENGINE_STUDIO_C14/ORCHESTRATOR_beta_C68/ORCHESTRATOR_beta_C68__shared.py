@@ -17,12 +17,15 @@ from .generation import (
     MAX_WARM_DELTA_PATHS,
     DeltaRequiresReconciliation,
     GenerationBaseChanged,
+    WorkerIngestionFailure,
     admit_generation,
     confirm_reuse,
     parse_worker_result,
     read_reuse,
+    replace_ingestion_issues,
     ticket_delta_paths,
     wait_build,
+    worker_failure,
     worker_request,
 )
 from .jobs import ENGINE, FIELDS, Jobs
@@ -197,10 +200,11 @@ class GenerationJobs(AbortJobs, LifecycleJobs, Jobs):
                 aborted = self.active is not None and self.aborted_run == self.active.get("run_id")
         if aborted:
             raise WorkerAborted("Worker aborted")
-        if process.returncode:
-            raise RuntimeError("Worker failed: " + stderr[-2048:])
         if stderr:
-            sys.stderr.write(stderr[-8192:])
+            print(stderr[-8192:].rstrip(), file=sys.stderr, flush=True)
+        if process.returncode:
+            detail = stderr.rstrip().rsplit("\n", 1)[-1][-2048:] or f"exit status {process.returncode}"
+            raise worker_failure(stdout, detail)
         result = parse_worker_result(stdout, reuse, paths, request.get("structure"))
         self.worker_mode = "cold"
         return result
@@ -236,6 +240,8 @@ class GenerationJobs(AbortJobs, LifecycleJobs, Jobs):
                 self._flow_effect(effect, outcome="succeeded", detail={"reuse_proof_present": witness is not None})
             else:
                 self._flow_effect(effect, outcome="succeeded")
+                for source in ("atom", "build"):
+                    self._record_ingestion_issues(source, [])
             admitted.update(worker_seconds=captured - started, admission_seconds=time.monotonic() - captured)
             if "paths" in result:
                 admitted["delta_path_count"] = len(result["paths"])
@@ -299,6 +305,7 @@ class GenerationJobs(AbortJobs, LifecycleJobs, Jobs):
             outcome = {"state": "aborted", "code": "worker_aborted", "message": "Worker aborted"}
         except (OSError, ValueError, TypeError, KeyError, RuntimeError, http.client.HTTPException) as error:
             outcome["message"] = str(error)[-2048:]
+            self._record_ingestion_failure(error)
         finally:
             with self.lock:
                 self.latest = {**self.active, **outcome, "finished_at": time.time()}
@@ -311,5 +318,22 @@ class GenerationJobs(AbortJobs, LifecycleJobs, Jobs):
             if job is None:
                 flow.finish(outcome)
         return outcome
+
+    def _record_ingestion_failure(self, error):
+        if isinstance(error, WorkerIngestionFailure):
+            self._record_ingestion_issues(error.diagnostic["source"], error.diagnostic["issues"])
+            return
+        message = str(error)[-8192:] or type(error).__name__
+        print(f"Ingestion failed: {message}", file=sys.stderr, flush=True)
+        self._record_ingestion_issues("build", [{
+            "relative_path": None, "code": "generation_failed", "message": message,
+            "atom_ref": None, "related_paths": [],
+        }])
+
+    def _record_ingestion_issues(self, source, issues):
+        try:
+            replace_ingestion_issues(self.database_socket, self.instance_id, source, issues)
+        except (OSError, RuntimeError, http.client.HTTPException) as error:
+            print(f"Recording {source} ingestion issues failed: {error}", file=sys.stderr, flush=True)
 if __name__ == "__main__":
     raise SystemExit(main())

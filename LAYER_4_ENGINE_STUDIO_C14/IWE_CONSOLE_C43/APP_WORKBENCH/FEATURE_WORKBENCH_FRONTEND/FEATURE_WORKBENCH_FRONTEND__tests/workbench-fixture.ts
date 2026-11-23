@@ -1,5 +1,6 @@
 
 import { expect, type Page, type Browser } from '@playwright/test';
+import { browserTimeout } from './browser-deadlines';
 
 const url = process.env.WORKBENCH_E2E_URL!;
 const editor = (page: Page) => page.getByRole('textbox', { name: 'Query editor' });
@@ -66,12 +67,13 @@ async function persistedAdaptiveWorkspace() {
 async function openSharedPages(firstPage: Page, secondPage: Page, workspaceUrl: string) {
   await Promise.all([firstPage.goto(workspaceUrl), secondPage.goto(workspaceUrl)]);
   const external = firstPage.getByRole('tab', { name: 'External View', exact: true });
-  await expect(external).toBeVisible({ timeout: 12_000 });
+  await expect(external).toBeVisible({ timeout: browserTimeout(12_000) });
   await expect(external).toHaveAttribute('aria-selected', 'true');
   await expect(firstPage.getByRole('textbox', { name: 'Query editor' })).toContainText('SELECT 42 AS external_value');
-  await expect(firstPage.getByRole('grid')).toBeVisible({ timeout: 12_000 });
+  await expect(firstPage.getByRole('grid')).toBeVisible({ timeout: browserTimeout(12_000) });
   await expect(firstPage.getByRole('columnheader').first()).toHaveText(/external_value\s*INTEGER/);
-  await expect(secondPage.getByRole('tab', { name: 'External View', exact: true })).toHaveAttribute('aria-selected', 'true', { timeout: 12_000 });
+  await expect(secondPage.getByRole('tab', { name: 'External View', exact: true }))
+    .toHaveAttribute('aria-selected', 'true', { timeout: browserTimeout(12_000) });
 }
 
 async function renameAndRestoreView(page: Page) {

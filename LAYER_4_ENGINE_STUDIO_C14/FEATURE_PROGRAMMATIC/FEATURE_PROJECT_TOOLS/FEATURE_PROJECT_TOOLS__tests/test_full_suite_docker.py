@@ -48,7 +48,7 @@ class FullSuiteDockerTests(unittest.TestCase):
                 sibling.mkdir()
                 build, = run.call_args_list
                 argv = build.args[0]
-                self.assertEqual(("uv", "run", "--project", str(docker.CODE_ROOT.parent / "LAYER_3_ENVIRONMENTS_C72/engine"), "--locked",
+                self.assertEqual(("uv", "run", "--project", str(docker.CODE_ROOT.parent / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine"), "--locked",
                                   "--python", "3.14", "--managed-python", "--no-env-file",
                                   "python", "-B", "-P"), argv[:12])
                 self.assertEqual(str(docker.CODE_ROOT), build.kwargs["env"]["PYTHONPATH"])
@@ -85,6 +85,19 @@ class FullSuiteDockerTests(unittest.TestCase):
         self.assertEqual((self.root, "build", build[2], "--scratch", str(scratch)), build)
         self.assertEqual((self.root, "cleanup", build[2], "--image", IMAGE), cleanup)
         self.assertFalse(scratch.exists())
+
+    def test_image_deadlines_reach_build_cleanup_and_test_environment(self):
+        switch = "ANECHOIC_TEST_IMAGE_DEADLINES"
+        for requested, observed, timeouts in (({}, "0", [None, None]), ({switch: "1"}, "1", [900, 120])):
+            with (
+                self.subTest(requested=requested), patch.dict(docker.os.environ, requested, clear=True),
+                patch.object(docker.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, IMAGE)) as run,
+                redirect_stdout(self.output),
+            ):
+                with docker.current_code_test_image(self.root) as environment:
+                    self.assertEqual(observed, environment[switch])
+                self.assertEqual(timeouts, [call.kwargs["timeout"] for call in run.call_args_list])
+                self.assertEqual([observed, observed], [call.kwargs["env"][switch] for call in run.call_args_list])
 
     def test_failed_or_invalid_image_build_removes_attempt_files(self):
         for result in (OSError("build failure"), "latest"):

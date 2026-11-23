@@ -34,9 +34,10 @@ def _web_code_units(sources, imports):
     links = {path: [[line, written, target] for (line, written), target in sites.items()]
              for path, sites in imports.items() if path in sources}
     env = {key: value for key, value in os.environ.items() if key not in {'NODE_OPTIONS', 'NODE_PATH'}}
+    timeout = None if env.get('ANECHOIC_TEST_IMAGE_DEADLINES') == '0' else 60
     try:
         result = subprocess.run(['node', str(script)], input=json.dumps({'sources': sources, 'imports': links}),
-                                text=True, capture_output=True, timeout=60, env=env)
+                                text=True, capture_output=True, timeout=timeout, env=env)
     except subprocess.TimeoutExpired as error:
         raise ValueError('Code Unit scanner exceeded its 60-second timeout') from error
     if result.returncode:

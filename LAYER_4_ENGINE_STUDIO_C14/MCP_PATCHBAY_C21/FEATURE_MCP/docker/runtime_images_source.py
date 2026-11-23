@@ -89,7 +89,7 @@ class ImageSource:
                 selection.launcher_state.is_symlink() or not selection.launcher_state.is_dir()
             ):
                 raise ValueError("invalid Project launcher state")
-            image = ready_predecessor(selection)
+            image = ready_predecessor(selection, enforce_deadlines=self.timeout is not None)
             self.previous_image = image
             self._previous_image_resolved = True
             return image
@@ -98,8 +98,9 @@ class ImageSource:
 
     def _refresh_model(self, root: Path) -> str:
         previous = self._build_predecessor()
+        timeout = "none" if self.timeout is None else str(self.timeout)
         command = [sys.executable, "-B", str(self._file(root, DOCKER_ROOT + "/native_model_refresh.py")),
-                   str(self._project_root()), str(self.timeout)]
+                   str(self._project_root()), timeout]
         if previous is not None:
             command.append(previous)
         process = subprocess.Popen(command, cwd=root, env={**{k: v for k, v in os.environ.items() if k != "PYTHONHOME"}, "PYTHONPATH": str(root / ENGINE_ROOT)}, stdin=subprocess.DEVNULL,
@@ -145,9 +146,9 @@ class ImageSource:
         return path
 
     def _stack_input(self, root: Path) -> tuple[str, tuple[Path, ...], str | None]:
-        if not os.path.lexists(root / "LAYER_5_FRAMEWORK_DELIVERY/project.toml"):
+        if not os.path.lexists(root / "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml"):
             return "current", (), None
-        path = self._file(root, "LAYER_5_FRAMEWORK_DELIVERY/project.toml")
+        path = self._file(root, "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml")
         try:
             flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
             with os.fdopen(os.open(path, flags), "rb") as stream:

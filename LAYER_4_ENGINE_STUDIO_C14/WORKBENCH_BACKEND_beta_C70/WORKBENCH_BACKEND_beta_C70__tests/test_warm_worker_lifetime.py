@@ -1,10 +1,12 @@
 """C70 owns a single optional worker independently of Project peers."""
 import io
 import json
+import os
 from contextlib import redirect_stderr
+from threading import Event
 from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from WORKBENCH_BACKEND_beta_C70.WORKBENCH_BACKEND_beta_C70__shared import open_warm_worker
 
@@ -35,6 +37,37 @@ class Client:
 
 
 class WarmWorkerLifetimeTests(unittest.TestCase):
+    def test_deadline_free_startup_stops_child_on_cancellation(self):
+        stop = Event()
+        process = SimpleNamespace(pid=1234, poll=Mock(side_effect=[None, None, 1]))
+
+        def cancel(*_):
+            stop.set()
+            return None
+
+        with (patch.dict(os.environ, ANECHOIC_TEST_IMAGE_DEADLINES="0"),
+              patch(WORKER + ".subprocess.Popen", return_value=process),
+              patch(WORKER + ".monotonic", side_effect=[0, 20, 21]),
+              patch(WORKER + "._healthy", side_effect=cancel) as check,
+              patch(WORKER + "._stop") as cleanup):
+            with open_warm_worker(stop=stop.is_set) as worker:
+                self.assertIsNone(worker)
+            check.assert_called_once()
+            self.assertEqual(check.call_args.args[-1], 20.5)
+            cleanup.assert_called_once_with(process)
+
+    def test_deadline_free_startup_rejects_invalid_health_reply(self):
+        process = SimpleNamespace(pid=5678, poll=Mock(side_effect=[None, 1]))
+        with (patch.dict(os.environ, ANECHOIC_TEST_IMAGE_DEADLINES="0"),
+              patch(WORKER + ".subprocess.Popen", return_value=process),
+              patch(WORKER + ".socket.socket", return_value=Client([])),
+              patch(WORKER + "._stop") as cleanup,
+              redirect_stderr(io.StringIO())):
+            with open_warm_worker() as worker:
+                self.assertIsNone(worker)
+            process.poll.assert_called_once()
+            cleanup.assert_called_once_with(process)
+
     def test_ready_worker_is_checked_and_stopped_after_use(self):
         calls = []
         process = SimpleNamespace(pid=1234, poll=lambda: None)

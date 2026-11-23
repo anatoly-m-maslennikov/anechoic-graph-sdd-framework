@@ -8,8 +8,8 @@ context:
   lens: DevOps
 state:
   status: active
-  version: 24
-  updated_at: 2026-11-10 20:47:54 +0400
+  version: 26
+  updated_at: '2026-11-23T14:45:42.893755+00:00'
 ---
 ## Summary
 
@@ -20,18 +20,18 @@ Materialize the Project temporary boundary
 ### Prose Claim
 
 the shared Project Temporary State path boundary **must** be carried **in**
-canonical source under `LAYER_2_FRAMEWORK_ENGINE/FEATURE_PROGRAMMATIC/` **and** the selected
-`.anechoic_runtime/tools/` release.
+canonical source under `LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/` **and** the selected
+Engine Studio runtime delivery.
 
-the root `pyproject.toml` carries the admitted development **and** Evaluation-tool
+the owning Python Project `pyproject.toml` carries the admitted development **and** Evaluation-tool
 cache-path configuration. dependency launch Carriers carry explicit temporary,
 staging, build, **and** cache-path parameters **when** that dependency does **not**
 read `pyproject.toml`. those configured temporary Carriers occupy descendants
 of `.anechoic_tmp/`.
 
-Python bytecode caches use `.anechoic_tmp/cache/python/`; the corresponding
-entrypoint, test-runner, **or** service-launcher Carrier stores that path **or** the
-disabled-bytecode-write setting. the delivered Runtime State root **must not**
+Python tool caches occupy `.anechoic_tmp/python/`; retained Python bytecode occupies
+`.anechoic_tmp/python/bytecode/`. the corresponding entrypoint, test-runner, **or**
+service-launcher Carrier stores the bytecode cache path **or** the disabled-bytecode-write setting. the delivered Runtime State root **must not**
 contain `__pycache__/` Directory Carriers **or** `.pyc` File Carriers.
 
 temporary-path representations carry owner **and** run identity. the boundary

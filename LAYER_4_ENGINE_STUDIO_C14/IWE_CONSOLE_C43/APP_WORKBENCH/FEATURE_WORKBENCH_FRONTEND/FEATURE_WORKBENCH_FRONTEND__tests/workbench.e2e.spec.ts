@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { browserTimeout } from './browser-deadlines';
 import { url, editor, projectName, replaceSql, runSql, sharedWorkspace, persistedAdaptiveWorkspace, openSharedPages, renameAndRestoreView, verifyEmbeddedDensity } from './workbench-fixture';
 
 async function runLatestDraft(secondPage: Page, releaseUpdate: (() => void) | undefined) {
@@ -7,7 +8,7 @@ async function runLatestDraft(secondPage: Page, releaseUpdate: (() => void) | un
   releaseUpdate?.();
   await run;
   await expect(editor(secondPage)).toContainText('SELECT 2 AS latest_draft');
-  await expect(secondPage.getByRole('grid')).toBeVisible({ timeout: 12_000 });
+  await expect(secondPage.getByRole('grid')).toBeVisible({ timeout: browserTimeout(12_000) });
   await expect(secondPage.getByRole('columnheader').first()).toHaveText(/latest_draft\s*INTEGER/);
 }
 
@@ -156,6 +157,6 @@ test('clears a Check verdict when the shared Workspace updates SQL', async ({ pa
     workspace_id: workspaceId, view_id: shared.externalId, sql: 'SELECT 43 AS external_value',
     expected_revision: shared.revision, cursor_position: 0,
   });
-  await expect(editor(page)).toHaveText('SELECT 43 AS external_value', { timeout: 10_000 });
+  await expect(editor(page)).toHaveText('SELECT 43 AS external_value', { timeout: browserTimeout(10_000) });
   await expect(verdict).toHaveText('Not checked');
 });

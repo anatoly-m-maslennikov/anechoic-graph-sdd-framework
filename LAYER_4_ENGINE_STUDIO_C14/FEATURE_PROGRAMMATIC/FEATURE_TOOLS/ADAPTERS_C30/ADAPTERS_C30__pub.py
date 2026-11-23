@@ -1,5 +1,6 @@
 """Bound all reads, reject protected paths, and fingerprint actual inputs."""
 
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 import hashlib
 from itertools import groupby
@@ -7,6 +8,7 @@ import os
 from pathlib import Path
 import stat
 import sys
+from threading import Lock
 import time
 from typing import Any
 
@@ -94,9 +96,11 @@ class ReadContext:
     inventories: dict[str, tuple[str, ...]] = field(default_factory=dict)
     shallow_inventories: dict[str, tuple[str, ...]] = field(default_factory=dict)
     candidates: set[str] = field(default_factory=set)
+    _read_budget: Lock = field(default_factory=Lock, init=False, repr=False, compare=False)
 
     def checkpoint(self) -> None:
-        if time.monotonic() - self.started >= self.limits["timeout_seconds"]:
+        if (time.monotonic() - self.started >= self.limits["timeout_seconds"]
+                and os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") != "0"):
             raise LimitReached("timeout_seconds")
 
     def _allowed_lexical(self, path: Path) -> Path:
@@ -142,9 +146,7 @@ class ReadContext:
                 self.metadata_inputs.add(str(path))
             if skip_version is not None and version == skip_version:
                 return None
-            self.check_size(info.st_size)
-            raw = stream.read(info.st_size)
-            self.bytes_read += len(raw)
+            raw = self._read_bytes(stream, info.st_size)
             self.checkpoint()
             after = os.fstat(stream.fileno())
             if self.version(after) != version:
@@ -153,6 +155,19 @@ class ReadContext:
             self.fingerprints.setdefault(str(path), hashlib.sha256(raw).hexdigest())
             self.sizes[str(path)] = len(raw)
         return raw
+
+    def _read_bytes(self, stream, size: int) -> bytes:
+        with self._read_budget:
+            self.check_size(size)
+            self.bytes_read += size
+        raw = b""
+        try:
+            raw = stream.read(size)
+            return raw
+        finally:
+            if len(raw) != size:
+                with self._read_budget:
+                    self.bytes_read -= size - len(raw)
 
     @staticmethod
     def version(info: os.stat_result) -> tuple[int, ...]:
@@ -169,35 +184,42 @@ class ReadContext:
         root = self.allowed(root)
         pending = [root]
         found: list[Path] = []
-        while pending:
-            path = pending.pop()
+
+        def inspect(path):
             self.checkpoint()
             try:
-                info = path.lstat()
+                return path, path.lstat()
             except OSError:
                 if versions is not None:
                     raise
-                info = None
-            mode = info.st_mode if info is not None else 0
-            if stat.S_ISDIR(mode):
-                self.allowed(path)
-                descriptor = open_regular(path, directory=True)
-                try:
-                    with os.scandir(descriptor) as entries:
-                        for entry in entries:
-                            self.checkpoint()
-                            if entry.name != ".DS_Store":
-                                pending.append(path / entry.name)
-                            if len(pending) > 1_000_000:
-                                raise ReadFailure("Directory traversal exceeds host ceiling.")
-                finally:
-                    os.close(descriptor)
-            elif stat.S_ISLNK(mode) or path.suffix.lower() == ".md" or protected(path):
-                found.append(path)
-                if versions is not None and info is not None:
-                    versions[str(path)] = self.version(info)
-            if len(found) > self.limits["max_candidates"]:
-                raise LimitReached("max_candidates")
+                return path, None
+
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            while pending:
+                batch = pending[-128:]
+                del pending[-128:]
+                inspected = pool.map if len(batch) >= 16 else map
+                for path, info in inspected(inspect, reversed(batch)):
+                    mode = info.st_mode if info is not None else 0
+                    if stat.S_ISDIR(mode):
+                        self.allowed(path)
+                        descriptor = open_regular(path, directory=True)
+                        try:
+                            with os.scandir(descriptor) as entries:
+                                for entry in entries:
+                                    self.checkpoint()
+                                    if entry.name != ".DS_Store":
+                                        pending.append(path / entry.name)
+                                    if len(pending) > 1_000_000:
+                                        raise ReadFailure("Directory traversal exceeds host ceiling.")
+                        finally:
+                            os.close(descriptor)
+                    elif stat.S_ISLNK(mode) or path.suffix.lower() == ".md" or protected(path):
+                        found.append(path)
+                        if versions is not None and info is not None:
+                            versions[str(path)] = self.version(info)
+                    if len(found) > self.limits["max_candidates"]:
+                        raise LimitReached("max_candidates")
         names = tuple(sorted(str(path) for path in found))
         if remember:
             self.inventories[str(root)] = names
@@ -272,11 +294,14 @@ class ReadContext:
     def _directory_versions(self, parent: Path, paths: list[Path]) -> dict[str, tuple[int, ...] | None]:
         descriptor = open_regular(self._allowed_lexical(parent), directory=True)
         try:
-            versions = {}
-            for path in paths:
+            def observe(path):
                 self._allowed_lexical(path)
                 info = os.stat(path.name, dir_fd=descriptor, follow_symlinks=False)
-                versions[str(path)] = self.version(info) if stat.S_ISREG(info.st_mode) else None
+                return str(path), self.version(info) if stat.S_ISREG(info.st_mode) else None
+
+            with ThreadPoolExecutor(max_workers=8) as pool:
+                observed = pool.map(observe, paths, buffersize=16) if len(paths) >= 16 else map(observe, paths)
+                versions = dict(observed)
             check = open_regular(parent, directory=True)
             try:
                 if not os.path.samestat(os.fstat(descriptor), os.fstat(check)):

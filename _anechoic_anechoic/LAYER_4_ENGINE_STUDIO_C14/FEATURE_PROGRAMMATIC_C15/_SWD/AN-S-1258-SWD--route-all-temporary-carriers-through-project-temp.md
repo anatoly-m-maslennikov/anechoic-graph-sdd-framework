@@ -8,8 +8,8 @@ context:
   lens: SWD
 state:
   status: active
-  version: 13
-  updated_at: 2026-11-10 20:47:54 +0400
+  version: 14
+  updated_at: 2026-11-23 18:04:09 +0400
 ---
 
 ## Summary
@@ -29,7 +29,7 @@ temporary-file APIs **and** configure dependency cache, temporary, staging, buil
 cache paths through the root `pyproject.toml`; provide explicit run-specific
 paths through launch Carriers for dependencies that do **not** read that file.
 
-route Python bytecode cache output **to** `.anechoic_tmp/cache/python/` **before**
+route Python bytecode cache output **to** `.anechoic_tmp/python/bytecode/` **before**
 importing Project modules, **or** disable bytecode writes for an isolated process.
 do **not** create `__pycache__/` **or** `.pyc` Carriers below `.anechoic_runtime/`.
 

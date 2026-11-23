@@ -21,9 +21,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
     && useradd -u ${RUNTIME_UID} -g ${RUNTIME_GID} -m -d /home/anechoic anechoic
 RUN python -B -m pip install --no-cache-dir --no-compile uv==0.12.18
 WORKDIR /workspace
-COPY LAYER_3_ENVIRONMENTS_C72/engine/pyproject.toml LAYER_3_ENVIRONMENTS_C72/engine/uv.lock ./LAYER_3_ENVIRONMENTS_C72/engine/
+COPY LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/uv.lock ./LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/
 ENV UV_PROJECT_ENVIRONMENT=/opt/venv UV_CACHE_DIR=/tmp/uv-cache
-RUN --mount=type=cache,id=anechoic-uv,target=/tmp/uv-cache uv sync --project LAYER_3_ENVIRONMENTS_C72/engine --locked --no-compile-bytecode --no-default-groups --group runtime
+RUN --mount=type=cache,id=anechoic-uv,target=/tmp/uv-cache uv sync --project LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine --locked --no-compile-bytecode --no-default-groups --group runtime
 RUN strip --strip-unneeded -o /tmp/cryptography-rust.so /opt/venv/lib/python3.14/site-packages/cryptography/hazmat/bindings/_rust.abi3.so \
     && mv /tmp/cryptography-rust.so /opt/venv/lib/python3.14/site-packages/cryptography/hazmat/bindings/_rust.abi3.so \
     && apt-get purge -y --auto-remove binutils
@@ -61,8 +61,8 @@ RUN mkdir -p /var/lib/anechoic /workspace/.anechoic_install \
     /workspace/LAYER_4_ENGINE_STUDIO_C14 \
     && chown -R ${RUNTIME_UID}:${RUNTIME_GID} /home/anechoic /var/lib/anechoic
 ENV PATH=/opt/venv/bin:/usr/local/bin:/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONPYCACHEPREFIX=/workspace/.anechoic_tmp/cache/python
-RUN PYTHONPYCACHEPREFIX=/workspace/.anechoic_tmp/cache/python /opt/venv/bin/python -B -m compileall -q --invalidation-mode timestamp \
+    PYTHONPYCACHEPREFIX=/workspace/.anechoic_tmp/python/bytecode
+RUN PYTHONPYCACHEPREFIX=/workspace/.anechoic_tmp/python/bytecode /opt/venv/bin/python -B -m compileall -q --invalidation-mode timestamp \
     /usr/local/lib/python3.14 /opt/venv/lib/python3.14/site-packages /workspace/LAYER_4_ENGINE_STUDIO_C14 \
     && chmod -R a+rX "$PYTHONPYCACHEPREFIX"
 HEALTHCHECK --interval=2s --timeout=5s --start-period=420s --retries=25 \
@@ -78,7 +78,7 @@ COPY LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68 ./LAYER_4_ENGINE_STUDIO_C14
 COPY LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69 ./LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69
 COPY LAYER_4_ENGINE_STUDIO_C14/WORKBENCH_BACKEND_beta_C70 ./LAYER_4_ENGINE_STUDIO_C14/WORKBENCH_BACKEND_beta_C70
 ENV ANECHOIC_RUNTIME_STACK=beta
-RUN PYTHONPYCACHEPREFIX=/workspace/.anechoic_tmp/cache/python /opt/venv/bin/python -B -m compileall -q --invalidation-mode timestamp \
+RUN PYTHONPYCACHEPREFIX=/workspace/.anechoic_tmp/python/bytecode /opt/venv/bin/python -B -m compileall -q --invalidation-mode timestamp \
     /workspace/LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67 \
     /workspace/LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68 \
     /workspace/LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69 \
@@ -88,7 +88,7 @@ USER anechoic
 
 FROM runtime_base AS current
 COPY LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59 ./LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59
-RUN PYTHONPYCACHEPREFIX=/workspace/.anechoic_tmp/cache/python /opt/venv/bin/python -B -m compileall -q --invalidation-mode timestamp \
+RUN PYTHONPYCACHEPREFIX=/workspace/.anechoic_tmp/python/bytecode /opt/venv/bin/python -B -m compileall -q --invalidation-mode timestamp \
     /workspace/LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59 \
     && chmod -R a+rX "$PYTHONPYCACHEPREFIX" /workspace/LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59
 USER anechoic

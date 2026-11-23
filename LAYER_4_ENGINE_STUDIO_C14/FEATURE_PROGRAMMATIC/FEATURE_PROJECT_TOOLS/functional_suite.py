@@ -4,6 +4,8 @@ from pathlib import Path
 import re
 import tomllib
 
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.suite_config import load_suite_config
+
 from .full_suite_docker import APP
 
 WORKBENCH = Path("LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH")
@@ -54,8 +56,7 @@ def _select_test_modules(
 
 def _required_unit_modules(root, discovered):
     try:
-        with (root / "pyproject.toml").open("rb") as file:
-            config = tomllib.load(file)
+        config = load_suite_config(root)
         selected = config["tool"]["anechoic"]["test_suite"]["functional_test_modules"]
         if not isinstance(selected, list):
             raise ValueError("functional_test_modules must be a list")

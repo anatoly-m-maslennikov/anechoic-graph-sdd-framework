@@ -280,8 +280,9 @@ and `LAYER_2_META_METHODOLOGY_C58/`. The installed Framework uses the same
 layer folders in
 `_anechoic_anechoic/000_ANECHOIC_framework/`. Project Atoms are authoritative.
 
-`LAYER_3_ENVIRONMENTS_C72/` holds the locked uv projects for Engine Studio,
-Release, and Setup. Their Python code and entry points live in L4, L5, and L6.
+L3 DevOps defines the locked uv environments and owns Release. Runtime Images
+builds and runs images for Local Release and L5 User Setup. L4 Engine Studio
+runs in the Engine environment defined by DevOps.
 
 Store file-based Journals in `_journal/` and general Projections in `_projection/`.
 

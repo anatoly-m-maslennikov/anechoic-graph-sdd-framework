@@ -9,6 +9,7 @@ from pathlib import Path
 import sys
 import subprocess
 import tempfile
+import traceback
 
 from .managed_parent import watch_managed_parent
 from .python_code_units import python_code_units as python_code_units
@@ -19,6 +20,15 @@ from .native_refresh import artifact_inputs, digest, refresh
 sys.dont_write_bytecode = True
 
 
+class _BuildFailure(ValueError):
+    def __init__(self, module, message):
+        super().__init__(message)
+        self.issue_code = {
+            "manifest_build_CS4__shared": "manifest_build_failed",
+            "realization_graph": "realization_scan_failed",
+        }.get(module, "build_failed")
+
+
 def _run_job(module, payload, *arguments):
     engine = Path(__file__).resolve().parents[1]
     env = {key: value for key, value in os.environ.items() if key != "PYTHONHOME"}
@@ -26,7 +36,8 @@ def _run_job(module, payload, *arguments):
     result = subprocess.run([sys.executable, "-B", "-P", "-m", module, *arguments], input=json.dumps(payload),
                             text=True, capture_output=True, cwd=engine, env=env)
     if result.returncode:
-        raise ValueError(f"{module.rsplit('.', 1)[-1]} failed: " + result.stderr[-2048:])
+        job = module.rsplit(".", 1)[-1]
+        raise _BuildFailure(job, f"{job} failed: " + result.stderr[-2048:])
     if result.stderr:
         sys.stderr.write(result.stderr[-8192:])
     return json.loads(result.stdout)
@@ -130,16 +141,34 @@ def _run(request, output):
     native = refresh(binding, request["reuse"], _capture, request.get("paths"), request.get("structure"), _rebuild_graph)
     return native if native is not None else build_generation(binding, output, managed=True)
 
+
+def _ingestion_failure(error):
+    issues = getattr(error, "ingestion_issues", None)
+    if issues is not None:
+        return {"source": "atom", "issues": issues}
+    return {"source": "build", "issues": [{
+        "relative_path": None, "code": getattr(error, "issue_code", "build_failed"),
+        "message": str(error)[-8192:] or type(error).__name__, "atom_ref": None, "related_paths": [],
+    }]}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--generation-dir")
     args = parser.parse_args()
+    request = None
     try:
         watch_managed_parent()
-        result = _run(json.load(sys.stdin), args.generation_dir)
+        request = json.load(sys.stdin)
+        result = _run(request, args.generation_dir)
         print(json.dumps(result, ensure_ascii=False, separators=(",", ":")))
     except (OSError, RuntimeError, TypeError, ValueError, subprocess.TimeoutExpired) as error:
-        print(str(error), file=sys.stderr)
+        if args.generation_dir is None:
+            print(str(error), file=sys.stderr)
+        else:
+            traceback.print_exc()
+            if isinstance(request, dict) and {"binding", "reuse"} <= request.keys():
+                print(json.dumps({"ingestion_failure": _ingestion_failure(error)}, ensure_ascii=False))
         return 1
     return 0
 

@@ -32,10 +32,13 @@ def reviewed_model():
         if _model is None:
             with TemporaryDirectory(prefix="anechoic-beta-reviewed-model-") as directory:
                 generation = Path(directory).resolve()
+                timeout = (None if os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES")
+                           == "0" else 15)
                 result = subprocess.run(
                     [sys.executable, "-B", "-P", "-m", _COMPILER, str(generation), "--attest-model"],
                     cwd=_ROOT, env={**os.environ, "PYTHONPATH": str(_ENGINE)},
-                    stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, timeout=15, check=True,
+                    stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                    timeout=timeout, check=True,
                 )
                 attestation = json.loads(result.stdout)
                 _model = _stack.enter_context(open_admitted_model(

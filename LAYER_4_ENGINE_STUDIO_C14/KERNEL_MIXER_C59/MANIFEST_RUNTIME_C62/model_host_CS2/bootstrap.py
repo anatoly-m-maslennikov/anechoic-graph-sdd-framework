@@ -3,6 +3,7 @@
 import atexit
 from contextlib import ExitStack
 import json
+import os
 from pathlib import Path
 import subprocess
 from tempfile import TemporaryDirectory
@@ -24,10 +25,12 @@ def reviewed_native_model():
         if _model is None:
             with TemporaryDirectory(prefix="anechoic-reviewed-model-") as directory:
                 generation = Path(directory).resolve()
+                timeout = (None if os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES")
+                           == "0" else 15)
                 result = subprocess.run(
                     (*_command(f"{_BUILDER_PACKAGE}.image_model_compile"), str(generation), "--attest-model"),
                     cwd=_CODE_ROOT, env=_environment(), stdin=subprocess.DEVNULL,
-                    stdout=subprocess.PIPE, timeout=15, check=True,
+                    stdout=subprocess.PIPE, timeout=timeout, check=True,
                 )
                 attestation = json.loads(result.stdout)
                 _model = _stack.enter_context(open_admitted_model(

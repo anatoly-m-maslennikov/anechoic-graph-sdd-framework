@@ -83,7 +83,8 @@ class BackendClient:
     def start(self):
         """Finish admission before the frontend advertises readiness."""
         deadline = monotonic() + _STARTUP_SECONDS
-        while not self._closed and monotonic() < deadline:
+        bounded = os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") != "0"
+        while not self._closed and (not bounded or monotonic() < deadline):
             if self._process is not None and self._process.poll() is not None:
                 break
             try:

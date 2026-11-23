@@ -218,21 +218,24 @@ class FullTestSuiteParallelTests(unittest.TestCase):
                 watcher.join(timeout=5)
                 self.assertFalse(watcher.is_alive())
 
-    def test_all_module_deadlines_remain_3600_seconds(self):
+    def test_image_module_deadlines_are_optional_and_host_modules_stay_bounded(self):
+        switch = "ANECHOIC_TEST_IMAGE_DEADLINES"
         result = subprocess.CompletedProcess([], 0, fixtures.PASSED_COUNT, "")
-        for relative in (
-            APP / "FEATURE_MCP__tests/test_selected_workflows_docker_e2e.py",
-            APP / "FEATURE_MCP__tests/test_selected_query_mcp_e2e.py",
-            Path("LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_ordinary.py"),
+        for relative, requested, forwarded, timeout in (
+            (APP / "FEATURE_MCP__tests/test_selected_workflows_docker_e2e.py", {}, "0", None),
+            (APP / "FEATURE_MCP__tests/test_selected_query_mcp_e2e.py", {switch: "1"}, "1", 3600),
+            (Path("LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_ordinary.py"),
+             {switch: "0"}, None, 3600),
         ):
             module = self.case.file(str(relative))
             with (
                 self.subTest(module=relative),
                 patch.object(full.subprocess, "run", return_value=result) as command,
             ):
-                observed = full.run_module(self.case.root, module)
+                observed = full.run_module(self.case.root, module, requested)
                 self.assertEqual((True, 1, 0), observed[:3])
-                self.assertEqual(3600, command.call_args.kwargs["timeout"])
+                self.assertEqual(timeout, command.call_args.kwargs["timeout"])
+                self.assertEqual(forwarded, command.call_args.kwargs["env"].get(switch))
 
 
 if __name__ == "__main__":

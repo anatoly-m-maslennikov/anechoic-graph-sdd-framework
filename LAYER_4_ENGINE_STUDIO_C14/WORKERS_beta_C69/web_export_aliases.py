@@ -28,10 +28,11 @@ def web_export_aliases(texts, occurrences):
                       for (line, written), owners in sites.items()]
              for source, sites in imports.items()}
     env = {key: value for key, value in os.environ.items() if key not in {'NODE_OPTIONS', 'NODE_PATH'}}
+    timeout = None if env.get('ANECHOIC_TEST_IMAGE_DEADLINES') == '0' else 60
     script = Path(__file__).with_suffix('.mjs')
     try:
         result = subprocess.run(['node', str(script)], input=json.dumps({'sources': texts, 'imports': links}),
-                                text=True, capture_output=True, timeout=60, env=env)
+                                text=True, capture_output=True, timeout=timeout, env=env)
     except subprocess.TimeoutExpired as error:
         raise ValueError('Web export alias scanner exceeded its 60-second timeout') from error
     if result.returncode:

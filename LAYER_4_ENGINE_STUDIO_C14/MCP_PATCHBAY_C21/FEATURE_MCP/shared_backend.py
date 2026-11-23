@@ -19,6 +19,11 @@ from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_stack import runtime_stack
 from MCP_PATCHBAY_C21.FEATURE_MCP.shared_gateway_support import call_mcp, make_server, record_observation, refusal, tool_failure, valid_tool_response
 
 
+def _operation_timeout(seconds):
+    return (None if os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") == "0"
+            else seconds)
+
+
 class SharedGatewayRefusal(ValueError):
     def __init__(self, code):
         self.code = code
@@ -60,7 +65,8 @@ class SharedBackendGateway:
                     transport=httpx2.AsyncHTTPTransport(uds=str(socket)),
                     base_url="http://anechoic-backend", trust_env=False, timeout=None,
                 )
-                async with asyncio.timeout(self.startup_timeout):
+                deadline = _operation_timeout(self.startup_timeout)
+                async with asyncio.timeout(deadline):
                     while True:
                         process = self._process
                         if process is not None and process.returncode is not None:
@@ -68,10 +74,18 @@ class SharedBackendGateway:
                         try:
                             health = await self._request("GET", "/health", timeout=0.5)
                             pid = health.get("pid")
-                            if health.get("initialized") is True and type(pid) is int and (process is None or pid == process.pid):
+                            valid_pid = (type(pid) is int
+                                         and (process is None or pid == process.pid))
+                            initialized = health.get("initialized")
+                            if (deadline is None
+                                    and (not valid_pid or type(initialized) is not bool)):
+                                raise RuntimeError("Invalid Shared Backend readiness")
+                            if initialized is True and valid_pid:
                                 break
-                        except ToolProtocolError:
-                            pass
+                        except ToolProtocolError as error:
+                            if (deadline is None and not isinstance(
+                                    error.__cause__, httpx2.TransportError)):
+                                raise
                         await asyncio.sleep(0.05)
                     await self._load_catalog()
             except BaseException:
@@ -97,7 +111,8 @@ class SharedBackendGateway:
         return socket
 
     async def _load_catalog(self):
-        catalog = await self._request("GET", "/tools", timeout=45)
+        catalog = await self._request("GET", "/tools",
+                                      timeout=_operation_timeout(45))
         raw_tools = catalog.get("tools")
         if not isinstance(raw_tools, list):
             raise RuntimeError("Invalid Shared Backend catalog")
@@ -150,11 +165,14 @@ class SharedBackendGateway:
         _raise_fault(envelope)
 
     async def status(self) -> dict[str, Any]:
-        status = await self._request("GET", "/health", timeout=45)
+        status = await self._request("GET", "/health",
+                                     timeout=_operation_timeout(45))
         return {**status, **self.health_observations.snapshot()}
 
     async def select_project(self, value: object) -> dict[str, Any]:
-        return await self._request("POST", "/selection", json={"project_root": value}, timeout=45)
+        return await self._request("POST", "/selection",
+                                  json={"project_root": value},
+                                  timeout=_operation_timeout(45))
 
     async def call_tool(self, name: str, arguments: Any, *, public_base_url: str | None = None) -> dict[str, Any]:
         context = current_request_context()

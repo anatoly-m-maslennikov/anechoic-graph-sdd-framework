@@ -21,9 +21,9 @@ class NativeImageBackendTests(unittest.TestCase):
         self.package = self.root / '.anechoic_runtime/simple_local_release/package'
         docker = self.package / 'LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker'
         docker.mkdir(parents=True)
-        (self.package / "LAYER_3_ENVIRONMENTS_C72/engine").mkdir(parents=True)
-        for name, contents in (('LAYER_3_ENVIRONMENTS_C72/engine/pyproject.toml', '[project]\nname="fixture"\n'),
-                               ('LAYER_3_ENVIRONMENTS_C72/engine/uv.lock', 'version=1\n'),
+        (self.package / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine").mkdir(parents=True)
+        for name, contents in (('LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml', '[project]\nname="fixture"\n'),
+                               ('LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/uv.lock', 'version=1\n'),
                                ('version.toml', '[framework]\nversion="1.2.3"\n')):
             (self.package / name).write_text(contents)
         for name in ('Dockerfile', 'Dockerfile.dockerignore', 'runtime.py'):

@@ -12,8 +12,8 @@ from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__tests.packaged_image_fixture__pub
 ROOT = Path(__file__).resolve().parents[4]
 ENGINE = "LAYER_4_ENGINE_STUDIO_C14"
 TOOL_REGISTRY = ENGINE + "/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/tool_registry.json"
-RELEASE = ROOT / "LAYER_5_FRAMEWORK_DELIVERY"
-RELEASE_FIXTURE = "RELEASE_VERSION.RELEASE_VERSION__tests.packaged_image_fixture"
+RELEASE = ROOT / "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27"
+RELEASE_FIXTURE = "LAYER_2_LOCAL_RELEASE_C63.LAYER_2_LOCAL_RELEASE_C63__tests.packaged_image_fixture"
 LICENSES = ("LICENSE", "LICENSE.TLDR.md", ENGINE + "/MCP_PATCHBAY_C21/FEATURE_MCP/docker/DuckPGQ.LICENSE")
 
 
@@ -26,8 +26,8 @@ class ReleaseImageCompatibilityTests(unittest.TestCase):
             **dict.fromkeys(LICENSES, "fixture license\n"),
             "LAYER_1_META_ONTOLOGY_C9/AN-S-1-SPEC--ontology.md": "ontology fixture",
             "LAYER_2_META_METHODOLOGY_C58/AN-S-2-SPEC--methodology.md": "methodology fixture",
-            "LAYER_3_ENVIRONMENTS_C72/engine/pyproject.toml": "project",
-            "LAYER_3_ENVIRONMENTS_C72/engine/uv.lock": "lock",
+            "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml": "project",
+            "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/uv.lock": "lock",
             "version.toml": '[framework]\nversion = "1.2.3"\n',
             ENGINE + "/MCP_PATCHBAY_C21/FEATURE_MCP/docker/Dockerfile": "Dockerfile",
             ENGINE + "/MCP_PATCHBAY_C21/FEATURE_MCP/docker/Dockerfile.dockerignore": "ignore",
@@ -56,7 +56,7 @@ class ReleaseImageCompatibilityTests(unittest.TestCase):
         environment.pop("VIRTUAL_ENV", None)
         environment.pop("PYTHONHOME", None)
         return subprocess.run(
-            ["uv", "run", "--project", str(RELEASE.parent / "LAYER_3_ENVIRONMENTS_C72/release"), "--locked", "--no-env-file", "python", "-B", "-P", "-m",
+            ["uv", "run", "--project", str(ROOT / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/release"), "--locked", "--no-env-file", "python", "-B", "-P", "-m",
              RELEASE_FIXTURE, str(self.root)],
             cwd=ROOT, env=environment,
             capture_output=True, text=True, timeout=20,

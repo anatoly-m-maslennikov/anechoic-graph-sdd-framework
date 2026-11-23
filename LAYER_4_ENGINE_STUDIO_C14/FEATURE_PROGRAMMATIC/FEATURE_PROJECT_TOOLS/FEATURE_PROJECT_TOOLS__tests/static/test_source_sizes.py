@@ -23,14 +23,14 @@ class SourceSizeTests(unittest.TestCase):
         with TemporaryDirectory() as directory:
             root = Path(directory).resolve()
             subprocess.run(("git", "init", "--quiet", str(root)), check=True)
-            for folder in ("LAYER_4_ENGINE_STUDIO_C14", "LAYER_5_FRAMEWORK_DELIVERY", "LAYER_6_RUNTIME_SETUP"):
-                (root / folder).mkdir()
-            engine_config = root / "LAYER_3_ENVIRONMENTS_C72/engine/pyproject.toml"
+            for folder in ("LAYER_4_ENGINE_STUDIO_C14", "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27", "LAYER_5_USER_SETUP_C65"):
+                (root / folder).mkdir(parents=True, exist_ok=True)
+            engine_config = root / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml"
             engine_config.parent.mkdir(parents=True)
             engine_config.write_text("[tool.ruff]\n")
-            path = root / "LAYER_6_RUNTIME_SETUP/example.py"
+            path = root / "LAYER_5_USER_SETUP_C65/example.py"
             path.write_text("def run():\n" + "    pass\n" * 45 + "value = 1\n" * 255)
-            config = root / "pyproject.toml"
+            config = engine_config
             config.write_text("[tool.anechoic.test_suite]\nenforce_source_size = false\n")
             self.assertEqual(run_full_suite(root, phase="static"), 0)
             config.write_text("[tool.anechoic.test_suite]\nenforce_source_size = true\n")

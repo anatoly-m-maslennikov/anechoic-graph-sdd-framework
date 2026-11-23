@@ -14,7 +14,10 @@ The fixture authority copies are test inputs, not active governing Project Atoms
 Run the historical corpus checks from the repository root:
 
 ```sh
-PYTHONPATH="$PWD/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS" \
-  .venv/bin/python -B -m unittest discover \
+engine="$PWD/LAYER_4_ENGINE_STUDIO_C14"
+environment="$PWD/LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine"
+UV_PROJECT_ENVIRONMENT="$engine/.venv-dev" PYTHONPATH="$engine" \
+  uv run --project "$environment" --locked --no-env-file --no-compile-bytecode --no-default-groups --group dev \
+    python -B -m unittest discover \
   -s LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/VALIDATE_ATOMS/VALIDATE_ATOMS__tests
 ```

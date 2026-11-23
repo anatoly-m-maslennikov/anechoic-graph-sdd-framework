@@ -39,9 +39,9 @@ Keep each package's tests in its `<package name>__tests/` folder. The
 production Docker build excludes those folders.
 
 For interactive Engine QA, run from the repository root and select
-`LAYER_3_ENVIRONMENTS_C72/engine/pyproject.toml` with Ruff's `--config` or
+`LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml` with Ruff's `--config` or
 mypy's `--config-file`. Use `python -B` for ad hoc uv runs, or pass
-`-X "pycache_prefix=$PWD/.anechoic_tmp/cache/python"` to keep bytecode.
+`-X "pycache_prefix=$PWD/.anechoic_tmp/python/bytecode"` to keep bytecode.
 The static phase checks launch commands and reports cache folders outside
 the Project temporary directory.
 
@@ -49,7 +49,7 @@ the Project temporary directory.
 
 The check is off by default. To enable it, set
 `enforce_source_line_length = true` under `[tool.anechoic.test_suite]` in
-`pyproject.toml`.
+`LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml`.
 
 Run from the repository root. The check reports new or edited lines over 79
 characters in source files and workflows. It includes staged, unstaged, and
@@ -60,7 +60,7 @@ pass their base commit with `--base`.
 uv tool install editorconfig-checker==3.11.1
 engine="$PWD/LAYER_4_ENGINE_STUDIO_C14"
 UV_PROJECT_ENVIRONMENT="$engine/.venv-dev" PYTHONPATH="$engine" \
-  uv run --no-compile-bytecode --project "$PWD/LAYER_3_ENVIRONMENTS_C72/engine" --locked --no-env-file \
+  uv run --no-compile-bytecode --project "$PWD/LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine" --locked --no-env-file \
     python -B -P -m FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.source_line_length \
     --project-root "$PWD"
 ```

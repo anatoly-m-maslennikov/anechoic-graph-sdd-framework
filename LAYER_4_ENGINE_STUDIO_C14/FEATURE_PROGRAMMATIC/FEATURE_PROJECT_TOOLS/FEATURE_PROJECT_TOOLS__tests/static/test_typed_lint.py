@@ -14,7 +14,7 @@ class TypedLintTests(unittest.TestCase):
     def test_only_configured_typed_lint_packages_gate_the_static_phase(self):
         root = Path(self.enterContext(TemporaryDirectory()))
         for name in static_checks.CODE_ROOTS:
-            (root / name).mkdir()
+            (root / name).mkdir(parents=True, exist_ok=True)
         package = root / static_checks.CODE_ROOTS[0] / "frontend"
         package.mkdir()
         manifest = package / "package.json"

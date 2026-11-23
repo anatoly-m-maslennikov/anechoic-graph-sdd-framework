@@ -35,8 +35,8 @@ SCHEMA_LABEL = "org.anechoic.runtime.schema"
 FINGERPRINT_LABEL = "org.anechoic.runtime.fingerprint"
 SCHEMA = "1"
 _REQUIRED = (
-    "LAYER_3_ENVIRONMENTS_C72/engine/pyproject.toml",
-    "LAYER_3_ENVIRONMENTS_C72/engine/uv.lock",
+    "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml",
+    "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/uv.lock",
     "version.toml", DOCKERFILE, DOCKERIGNORE, *LICENSE_INPUTS,
 )
 _TRANSIENT_DIRECTORIES = frozenset({
@@ -112,12 +112,12 @@ def _unique_object(pairs):
     return value
 
 
-def _receipt_image(path: Path, selection: object) -> str:
+def _receipt_image(path: Path, selection: object, timeout: float | None) -> str:
     guard = (Path(__file__).resolve().parents[3] / "FEATURE_PROGRAMMATIC/FEATURE_TOOLS"
              / "ADAPTERS_C30/ADAPTERS_C30__pub.py")
     result = subprocess.run([sys.executable, "-B", str(guard), "--read-bounded", str(path)],
                             stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
-                            stderr=subprocess.DEVNULL, timeout=10, check=True)
+                            stderr=subprocess.DEVNULL, timeout=timeout, check=True)
     payload = json.loads(result.stdout, object_pairs_hook=_unique_object)
     image = payload.get("image_id")
     if (payload.get("project_root") != str(selection.root)
@@ -129,7 +129,7 @@ def _receipt_image(path: Path, selection: object) -> str:
     return image
 
 
-def ready_predecessor(selection) -> str | None:
+def ready_predecessor(selection, *, enforce_deadlines: bool = True) -> str | None:
     path = selection.launcher_state / "ready.json"
-    return _receipt_image(path, selection) if os.path.lexists(path) else None
+    return _receipt_image(path, selection, 10 if enforce_deadlines else None) if os.path.lexists(path) else None
 

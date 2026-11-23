@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from hashlib import file_digest, sha256
 import json
 import os
@@ -17,6 +17,8 @@ from pathlib import Path
 from urllib.request import ProxyHandler, build_opener
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import project_goal_filename
+
+from .full_suite_docker import IMAGE_DEADLINES, image_deadline_mode, image_timeout
 
 class CanaryError(Exception):
     pass
@@ -65,8 +67,8 @@ def _workspace(root: Path, package: Path, run_id: str) -> Path:
 _HTTP = build_opener(ProxyHandler({}))
 
 
-def _mcp_ready(port: int, timeout: float, *, query_enabled: bool = True) -> bool:
-    if timeout <= 0:
+def _mcp_ready(port: int, timeout: float | None, *, query_enabled: bool = True) -> bool:
+    if timeout is not None and timeout <= 0:
         return False
 
     async def query() -> bool:
@@ -104,7 +106,7 @@ def _candidate_tag(root: Path, staging: Path, image: str, run_id: str):
     tag = f"anechoic-runtime:candidate-{run_id[:96]}-{attempt}"
     try:
         subprocess.run(["docker", "image", "tag", image, tag], cwd=root, check=True,
-                       capture_output=True, text=True, timeout=30)
+                       capture_output=True, text=True, timeout=image_timeout(30))
     except (OSError, subprocess.SubprocessError) as error:
         raise CanaryError("local-release-canary-image-tag-failed") from error
     try:
@@ -113,7 +115,7 @@ def _candidate_tag(root: Path, staging: Path, image: str, run_id: str):
         failure = sys.exception()
         try:
             subprocess.run(["docker", "image", "rm", tag], cwd=root, check=True,
-                           capture_output=True, text=True, timeout=30)
+                           capture_output=True, text=True, timeout=image_timeout(30))
         except (OSError, subprocess.SubprocessError) as error:
             if failure is None:
                 raise CanaryError("local-release-canary-image-untag-failed") from error
@@ -173,7 +175,7 @@ def _verify_candidate_image(root: Path, selection, package: Path, staging: Path,
         if not re.fullmatch(r"[0-9a-f]{64}", container):
             raise CanaryError("local-release-canary-container-invalid")
         publisher = subprocess.run(["docker", "port", container, "8092/tcp"], cwd=root, check=True,
-                                   capture_output=True, text=True, timeout=30).stdout.strip()
+                                   capture_output=True, text=True, timeout=image_timeout(30)).stdout.strip()
         binding = re.fullmatch(r"127\.0\.0\.1:([1-9][0-9]{0,4})", publisher)
         if binding is None or int(binding[1]) > 65535:
             raise CanaryError("local-release-canary-port-invalid")
@@ -200,7 +202,7 @@ def _start_canary_container(
         shutil.copyfile(source, destination)
     _verify_manifest(project, selection)
     subprocess.run(["git", "init", "--quiet", str(project)], cwd=root, check=True,
-                   capture_output=True, text=True, timeout=30)
+                   capture_output=True, text=True, timeout=image_timeout(30))
     instance_id = sha256(f"{project.resolve(strict=True)}\0{selection['control_root']}".encode("utf-8")).hexdigest()
     command = ["docker", "run", "-d", "--pull=never", "--cidfile", str(cidfile), "--init", "--read-only",
                "--cap-drop", "ALL", "--security-opt", "no-new-privileges:true",
@@ -210,14 +212,16 @@ def _start_canary_container(
                "--mount", "type=volume,dst=/var/lib/anechoic",
                "-e", "ANECHOIC_FRAMEWORK_DB_ROOT=/var/lib/anechoic",
                "-e", "ANECHOIC_RUNTIME_NAMESPACE=docker",
+               "-e", f"{IMAGE_DEADLINES}={image_deadline_mode(os.environ)}",
                "-e", f"ANECHOIC_CONTROL_ROOT={selection['control_root']}",
                "-e", f"ANECHOIC_PROJECT_INSTANCE_ID={instance_id}",
                "-e", f"ANECHOIC_HOST_PROJECT_ROOT={project}", image, "mcp-http"]
-    subprocess.run(command, cwd=root, check=True, capture_output=True, text=True, timeout=30)
+    subprocess.run(command, cwd=root, check=True, capture_output=True, text=True, timeout=image_timeout(30))
 
 def _await_canary(root: Path, container: str, port: int, *, query_enabled: bool) -> str:
     base = f"http://127.0.0.1:{port}"
-    deadline = time.monotonic() + 420
+    startup_timeout = image_timeout(420)
+    deadline = float("inf") if startup_timeout is None else time.monotonic() + startup_timeout
     while time.monotonic() < deadline:
         try:
             with _HTTP.open(base + "/anechoic/health", timeout=min(3, deadline - time.monotonic())) as response:
@@ -225,15 +229,16 @@ def _await_canary(root: Path, container: str, port: int, *, query_enabled: bool)
                     break
         except (OSError, ValueError):
             pass
+        inspect_timeout = None if startup_timeout is None else max(0.01, min(30, deadline - time.monotonic()))
         running = subprocess.run(["docker", "container", "inspect", "--format", "{{.State.Running}}", container],
-                                 cwd=root, check=True, capture_output=True, text=True,
-                                 timeout=max(0.01, min(30, deadline - time.monotonic()))).stdout.strip()
+                                 cwd=root, check=True, capture_output=True, text=True, timeout=inspect_timeout).stdout.strip()
         if running != "true":
             raise CanaryError("local-release-canary-container-exited")
         time.sleep(min(2, max(0, deadline - time.monotonic())))
     else:
         raise CanaryError("local-release-canary-health-timeout")
-    if not _mcp_ready(port, deadline - time.monotonic(), query_enabled=query_enabled):
+    query_timeout = None if startup_timeout is None else deadline - time.monotonic()
+    if not _mcp_ready(port, query_timeout, query_enabled=query_enabled):
         raise CanaryError("local-release-canary-mcp-failed")
     return base + "/anechoic/mcp"
 
@@ -241,10 +246,21 @@ def _remove_canary_container(root: Path, cidfile: Path, *, failure: BaseExceptio
     if cidfile.is_file():
         container = cidfile.read_text().strip()
         if re.fullmatch(r"[0-9a-f]{64}", container):
+            if isinstance(failure, CanaryError):
+                _report_canary_logs(root, container)
             try:
                 subprocess.run(["docker", "rm", "-f", "-v", container], cwd=root, check=True,
-                               capture_output=True, text=True, timeout=30)
+                               capture_output=True, text=True, timeout=image_timeout(30))
             except (OSError, subprocess.SubprocessError) as error:
                 if failure is None:
                     raise CanaryError("local-release-canary-cleanup-failed") from error
                 failure.add_note(f"Canary container {container} cleanup failed.")
+
+
+def _report_canary_logs(root: Path, container: str) -> None:
+    with suppress(OSError, subprocess.SubprocessError, ValueError):
+        logs = subprocess.run(["docker", "logs", "--tail", "60", container], cwd=root, check=True,
+                              capture_output=True, encoding="utf-8", errors="replace", timeout=5)
+        tail = "\n".join(part.rstrip() for part in (logs.stdout, logs.stderr) if part)[-8000:].strip()
+        if tail:
+            print(f"Canary container log tail:\n{tail}", file=sys.stderr, flush=True)

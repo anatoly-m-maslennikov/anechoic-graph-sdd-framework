@@ -213,9 +213,9 @@ class ImageCredentialContextTests(unittest.TestCase):
         source = Path(tempfile.mkdtemp(prefix="image-credentials-", dir=parent))
         docker = source / image_inputs.DOCKER_ROOT
         docker.mkdir(parents=True)
-        (source / "LAYER_3_ENVIRONMENTS_C72/engine").mkdir(parents=True)
-        (source / "LAYER_3_ENVIRONMENTS_C72/engine/pyproject.toml").write_text("[project]\nname='fixture'\n")
-        (source / "LAYER_3_ENVIRONMENTS_C72/engine/uv.lock").write_text("version=1\n")
+        (source / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine").mkdir(parents=True)
+        (source / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml").write_text("[project]\nname='fixture'\n")
+        (source / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/uv.lock").write_text("version=1\n")
         (source / "version.toml").write_text('[framework]\nversion = "0.4.4.9"\n')
         (docker / "Dockerfile").write_text("FROM scratch\n")
         (docker / "Dockerfile.dockerignore").write_text(".git\n")

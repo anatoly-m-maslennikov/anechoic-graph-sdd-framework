@@ -9,7 +9,7 @@ import sys
 from . import python_boundaries, python_bytecode, source_sizes
 
 
-CODE_ROOTS = ("LAYER_4_ENGINE_STUDIO_C14", "LAYER_5_FRAMEWORK_DELIVERY", "LAYER_6_RUNTIME_SETUP")
+CODE_ROOTS = ("LAYER_4_ENGINE_STUDIO_C14", "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27", "LAYER_5_USER_SETUP_C65")
 FRAMEWORK = Path(__file__).resolve().parents[3]
 ESLINT_CONFIGS = ("eslint.config.js", "eslint.config.mjs", "eslint.config.cjs",
                   "eslint.config.ts", "eslint.config.mts", "eslint.config.cts",
@@ -45,7 +45,7 @@ def check(root):
     try:
         status = subprocess.run(
             (sys.executable, "-B", "-m", "ruff", "check", "--config",
-             "LAYER_3_ENVIRONMENTS_C72/engine/pyproject.toml", "--select", "F401,B006", "--no-fix", *CODE_ROOTS),
+             "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml", "--select", "F401,B006", "--no-fix", *CODE_ROOTS),
             cwd=root, check=False, timeout=60,
         ).returncode
         if status or source_sizes.check(root) or python_boundaries.check(root):

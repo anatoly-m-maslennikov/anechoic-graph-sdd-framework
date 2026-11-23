@@ -25,11 +25,13 @@ _COMPONENT_PATH = re.compile(r"(?!__).+_C[0-9]+$")
 
 def _compile(selection, generation, *options, orchestrator):
     kind = "model_build" if "--build-model" in options else "structure_refresh"
+    timeout = (None if os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") == "0"
+               else _TIMEOUT)
     result = orchestrator.run_worker(
         kind,
         (*_command(f"{_BUILDER_PACKAGE}.compiler"), str(selection.root),
          selection.control_relative.as_posix(), selection.manifest_sha256, str(generation), *options),
-        cwd=_CODE_ROOT, env=_environment(), timeout=_TIMEOUT,
+        cwd=_CODE_ROOT, env=_environment(), timeout=timeout,
     )
     if result.returncode:
         detail = result.stderr.decode(errors="replace").strip().splitlines()

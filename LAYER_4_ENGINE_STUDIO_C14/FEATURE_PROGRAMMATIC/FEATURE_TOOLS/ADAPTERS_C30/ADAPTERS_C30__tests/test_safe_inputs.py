@@ -1,10 +1,13 @@
 """Small regression tests for untrusted carriers and read boundaries."""
 
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
+from io import BytesIO
 import os
 from pathlib import Path
 import sys
 import tempfile
+from threading import Event
 import unittest
 from unittest.mock import patch
 
@@ -81,6 +84,44 @@ class ReadTests(unittest.TestCase):
         path.write_bytes(b"x" * 21)
         with self.assertRaises(LimitReached):
             self.reader.read(path)
+
+    def test_test_image_deadline_switch_keeps_file_byte_limit(self) -> None:
+        switch = "ANECHOIC_TEST_IMAGE_DEADLINES"
+        self.reader.started -= self.limits["timeout_seconds"]
+        path = self.root / "input.md"
+        path.write_bytes(b"x" * (self.limits["max_file_bytes"] + 1))
+        with patch.dict(os.environ):
+            os.environ.pop(switch, None)
+            with self.assertRaisesRegex(LimitReached, "timeout_seconds"):
+                self.reader.read(path)
+            os.environ[switch] = "1"
+            with self.assertRaisesRegex(LimitReached, "timeout_seconds"):
+                self.reader.read(path)
+            os.environ[switch] = "0"
+            with self.assertRaisesRegex(LimitReached, "max_file_bytes"):
+                self.reader.read(path)
+
+    def test_parallel_reads_share_total_byte_budget(self) -> None:
+        self.limits["max_total_read_bytes"] = 20
+        started, release = Event(), Event()
+
+        class BlockedRead(BytesIO):
+            def read(self, size):
+                started.set()
+                if not release.wait(5):
+                    raise AssertionError("Test read was not released")
+                return super().read(size)
+
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            first = pool.submit(self.reader._read_bytes, BlockedRead(b"x" * 11), 11)
+            try:
+                self.assertTrue(started.wait(5))
+                with self.assertRaisesRegex(LimitReached, "max_total_read_bytes"):
+                    self.reader._read_bytes(BytesIO(b"y" * 11), 11)
+            finally:
+                release.set()
+            self.assertEqual(first.result(), b"x" * 11)
+        self.assertEqual(self.reader.bytes_read, 11)
 
     def test_inventory_rechecks_entry_type_when_it_visits_the_path(self) -> None:
         entry = self.root / "pending"

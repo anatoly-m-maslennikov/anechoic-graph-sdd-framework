@@ -9,8 +9,8 @@ context:
   lens: DES
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-23T01:48:06.212697+00:00'
+  version: 2
+  updated_at: '2026-11-23T13:45:43.309920+00:00'
 ---
 
 ## Summary
@@ -39,7 +39,7 @@ flowchart LR
 
 Web and MCP use Backend's API with zero cross-Component imports. The Codex Hook returns its Project assertion to the host with zero cross-Component imports or outbound calls. Tools may import across Components only from Adapters. Adapters import no other Component. Declare Code Access, calls, and state in Manifests. Bind exact Contracts to the owning Packages.
 
-Use one `stack` selector in `LAYER_5_FRAMEWORK_DELIVERY/project.toml`. The parallel Components use `<name>_beta_<id>`. Compare the two immutable images with the same fixture and check each discrepancy against its Contract. The verified Beta stack is the production selection.
+Use one `stack` selector in `LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml`. The parallel Components use `<name>_beta_<id>`. Compare the two immutable images with the same fixture and check each discrepancy against its Contract. The verified Beta stack is the production selection.
 
 ## References
 

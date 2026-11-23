@@ -35,6 +35,15 @@ def _bindings(endpoints):
     return names, inverse
 
 
+def row_summary(row):
+    """Use the first Summary for display. Spec checks report duplicate headings."""
+    record = next((item for item in row["content_properties_json"] if item["property_path"] == ["summary"]), None)
+    if record is None:
+        return ""
+    lines = content_lines(row["_content_bytes"].decode("utf-8"))
+    return "".join(lines[record["_body_start_line"]:record["_end_line"]]).strip()
+
+
 def _atoms(rows):
     atoms, references = [], set()
     for row in rows:
@@ -42,17 +51,9 @@ def _atoms(rows):
         if not isinstance(ref, str) or ref in references:
             raise ValueError("Duplicate or missing native references")
         references.add(ref)
-        records = [item for item in row["content_properties_json"] if item["property_path"] == ["summary"]]
-        if len(records) > 1:
-            raise ValueError("Duplicate Summary heading")
-        summary = ""
-        if records:
-            record = records[0]
-            lines = content_lines(row["_content_bytes"].decode("utf-8"))
-            summary = "".join(lines[record["_body_start_line"]:record["_end_line"]]).strip()
         path = PurePosixPath(row["source_path"])
         atoms.append({"reference": ref, "exact_ref": row["_exact_ref"], "status_group": row["status_group"],
-                      "relative_path": path.parent.as_posix(), "filename": path.name, "summary": summary,
+                      "relative_path": path.parent.as_posix(), "filename": path.name, "summary": row_summary(row),
                       "status": row["status"], "version": row["version"]})
     return atoms, references
 

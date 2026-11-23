@@ -15,20 +15,30 @@ import uuid
 APP = Path("LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP")
 CODE_ROOT = Path(__file__).resolve().parents[2]
 IMAGE_CLI = ".".join((*APP.parts[1:], "docker", "candidate_image_cli"))
+IMAGE_DEADLINES = "ANECHOIC_TEST_IMAGE_DEADLINES"
+
+
+def image_deadline_mode(environment) -> str:
+    return "0" if environment.get(IMAGE_DEADLINES, "0") == "0" else "1"
+
+
+def image_timeout(seconds: float, environment=None) -> float | None:
+    return seconds if image_deadline_mode(os.environ if environment is None else environment) == "1" else None
 
 
 def _image_command(root: Path, operation: str, attempt: str, *arguments: str) -> str:
     argv = (
-        "uv", "run", "--project", str(CODE_ROOT.parent / "LAYER_3_ENVIRONMENTS_C72/engine"), "--locked", "--python", "3.14",
+        "uv", "run", "--project", str(CODE_ROOT.parent / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine"), "--locked", "--python", "3.14",
         "--managed-python", "--no-env-file", "python", "-B", "-P", "-m", IMAGE_CLI,
         operation, "--project-root", str(root), "--attempt", attempt, *arguments,
     )
     environment = {**os.environ, "UV_PROJECT_ENVIRONMENT": str(CODE_ROOT / ".venv-dev"), "PYTHONPATH": str(CODE_ROOT)}
     environment.pop("PYTHONHOME", None)
     environment.pop("VIRTUAL_ENV", None)
+    environment[IMAGE_DEADLINES] = image_deadline_mode(environment)
     result = subprocess.run(
         argv, cwd=CODE_ROOT, env=environment, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
-        text=True, timeout=900 if operation == "build" else 120, check=True,
+        text=True, timeout=image_timeout(900 if operation == "build" else 120, environment), check=True,
     )
     return result.stdout.strip()
 
@@ -55,6 +65,7 @@ def _test_scratch(root: Path):
 
 def _image_environment(image: str, scratch: Path) -> dict[str, str]:
     return {
+        IMAGE_DEADLINES: image_deadline_mode(os.environ),
         "ANECHOIC_IMAGE": image,
         "ANECHOIC_FIRST_CUT_HTTP_IMAGE": image,
         "ANECHOIC_FIRST_CUT_HTTP_SCRATCH": str(scratch),

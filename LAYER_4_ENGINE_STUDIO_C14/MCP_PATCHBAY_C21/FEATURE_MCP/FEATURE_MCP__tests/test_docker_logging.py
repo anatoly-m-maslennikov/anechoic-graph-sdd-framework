@@ -46,7 +46,7 @@ class DockerLoggingTests(unittest.TestCase):
     def test_base_runtime_has_no_agent_service_or_credential_volume(self):
         config = _compose("compose.yaml")
         self.assertEqual({"mcp"}, set(config["services"]))
-        self.assertNotIn("volumes", config)
+        self.assertEqual({"framework-db"}, set(config["volumes"]))
 
     def test_entrypoint_uses_built_python_without_retained_uv_supervisor(self):
         line = next(line for line in (DOCKER / "Dockerfile").read_text().splitlines()
@@ -60,9 +60,9 @@ class DockerLoggingTests(unittest.TestCase):
     def test_image_carries_framework_version_into_workspace(self):
         dockerfile = (DOCKER / "Dockerfile").read_text(encoding="utf-8")
         self.assertRegex(dockerfile, r"(?m)^COPY version\.toml(?: [^ \n]+)* \./$")
-        self.assertIn("COPY LAYER_3_ENVIRONMENTS_C72/engine/pyproject.toml LAYER_3_ENVIRONMENTS_C72/engine/uv.lock ./LAYER_3_ENVIRONMENTS_C72/engine/", dockerfile)
-        self.assertIn("--mount=type=cache,id=anechoic-uv,target=/tmp/uv-cache uv sync --project LAYER_3_ENVIRONMENTS_C72/engine --locked", dockerfile)
-        self.assertGreater(dockerfile.index("COPY version.toml "), dockerfile.index(" uv sync --project LAYER_3_ENVIRONMENTS_C72/engine --locked"))
+        self.assertIn("COPY LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/uv.lock ./LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/", dockerfile)
+        self.assertIn("--mount=type=cache,id=anechoic-uv,target=/tmp/uv-cache uv sync --project LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine --locked", dockerfile)
+        self.assertGreater(dockerfile.index("COPY version.toml "), dockerfile.index(" uv sync --project LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine --locked"))
 
 
 if __name__ == "__main__":

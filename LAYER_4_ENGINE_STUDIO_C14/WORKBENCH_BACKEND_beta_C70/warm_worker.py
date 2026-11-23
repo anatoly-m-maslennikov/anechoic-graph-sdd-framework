@@ -30,6 +30,7 @@ def _stop(peer):
 
 
 def _healthy(path, pid, deadline):
+    """Return None when the readiness probe could not complete."""
     try:
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
             client.settimeout(min(0.5, max(0.001, deadline - monotonic())))
@@ -39,7 +40,7 @@ def _healthy(path, pid, deadline):
             while b"\n" not in response and len(response) <= 65536:
                 remaining = deadline - monotonic()
                 if remaining <= 0:
-                    break
+                    return None
                 client.settimeout(min(0.5, remaining))
                 chunk = client.recv(4096)
                 if not chunk:
@@ -47,13 +48,18 @@ def _healthy(path, pid, deadline):
                 response += chunk
         health = json.loads(response.split(b"\n", 1)[0])
         return health.get("ready") is True and health.get("pid") == pid
-    except (OSError, ValueError, TypeError, AttributeError):
+    except OSError:
+        return None
+    except (ValueError, TypeError, AttributeError):
         return False
 
 
 @contextmanager
-def open_warm_worker():
+def open_warm_worker(*, stop=None):
     """Yield (socket, load seconds), or None when the optional worker fails."""
+    if stop is not None and stop():
+        yield None
+        return
     with TemporaryDirectory(prefix="anechoic-beta-worker-", dir="/tmp") as tmp:
         path = Path(tmp).resolve() / "worker.sock"
         environment = {key: value for key, value in os.environ.items() if key != "PYTHONHOME"}
@@ -68,15 +74,22 @@ def open_warm_worker():
                     cwd=ENGINE, env=environment, stdin=subprocess.DEVNULL, stdout=sys.stderr, start_new_session=True,
                 )
                 deadline = started + 15
-                while worker.poll() is None and monotonic() < deadline:
-                    if _healthy(path, worker.pid, deadline):
-                        ready = True
+                bounded = os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") != "0"
+                while worker.poll() is None and (stop is None or not stop()):
+                    now = monotonic()
+                    if bounded and now >= deadline:
+                        break
+                    health = _healthy(path, worker.pid,
+                                      deadline if bounded else now + 0.5)
+                    ready = health is True
+                    if ready or (not bounded and health is False):
                         break
                     sleep(0.05)
             except OSError:
                 pass
             if not ready:
-                print("Beta warm worker unavailable; using cold worker startup", file=sys.stderr)
+                if stop is None or not stop():
+                    print("Beta warm worker unavailable; using cold worker startup", file=sys.stderr)
                 if worker is not None:
                     _stop(worker)
                     worker = None

@@ -2,7 +2,7 @@
 
 import httpx2
 
-from .peer_transport import tool_failure, upstream
+from .peer_transport import operation_timeout, tool_failure, upstream
 from .workspace_tools import _tool
 
 _FIELDS = {"type": "object"}
@@ -68,7 +68,8 @@ async def invoke(name, args, orchestrator, binding, instance_id):
     if binding is None:
         return tool_failure("workbench_unavailable", "Managed Orchestrator binding is unavailable")
     try:
-        reply = await upstream(orchestrator, "POST", "/jobs/lifecycle", timeout=625,
+        reply = await upstream(orchestrator, "POST", "/jobs/lifecycle",
+                               timeout=operation_timeout(625),
                                json={**binding, "instance_id": instance_id, "name": name, "arguments": args})
         if "error" in reply:
             error = reply["error"]

@@ -27,6 +27,34 @@ class DeltaRequiresReconciliation(RuntimeError):
     """The Kernel refused a delta without admitting it."""
 
 
+class WorkerIngestionFailure(RuntimeError):
+    def __init__(self, message, diagnostic):
+        super().__init__(message)
+        self.diagnostic = diagnostic
+
+
+def worker_failure(stdout, detail):
+    try:
+        diagnostic = json.loads(stdout)["ingestion_failure"]
+        if (diagnostic["source"] in ("atom", "build") and isinstance(diagnostic["issues"], list)
+                and diagnostic["issues"]):
+            return WorkerIngestionFailure("Worker failed: " + detail, diagnostic)
+    except (TypeError, ValueError, KeyError):
+        pass
+    return RuntimeError("Worker failed: " + detail)
+
+
+def replace_ingestion_issues(socket_path, instance_id, source, issues):
+    payload = json.dumps({"instance_id": instance_id, "source": source, "issues": issues}, ensure_ascii=False)
+    with closing(UnixConnection(socket_path)) as connection:
+        connection.request("PUT", "/ingestion/issues", payload.encode("utf-8"),
+                           {"Content-Type": "application/json"})
+        response = connection.getresponse()
+        body = response.read()
+        if response.status != 200:
+            raise RuntimeError("Kernel rejected ingestion issues: " + body.decode("utf-8", "replace")[:2048])
+
+
 def ticket_allocation(socket_path, instance_id, base_generation, prefix):
     if re.fullmatch(r"[A-Z][A-Z0-9]*", prefix) is None:
         raise ValueError("Invalid Project prefix")

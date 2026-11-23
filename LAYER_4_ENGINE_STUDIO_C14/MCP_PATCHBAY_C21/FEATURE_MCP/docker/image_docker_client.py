@@ -27,7 +27,16 @@ def docker_client_environment(*, buildx_config=None):
 def bounded_run(argv, *, cwd, timeout, capture_stdout=True, max_output=MAX_OUTPUT,
                 buildx_config=None, report_stderr=False):
     """Read a finite stdout prefix without retaining stderr or build logs."""
-    deadline = time.monotonic() + timeout
+    deadline = None if timeout is None else time.monotonic() + timeout
+
+    def remaining():
+        if deadline is None:
+            return None
+        remaining_seconds = deadline - time.monotonic()
+        if remaining_seconds <= 0:
+            raise subprocess.TimeoutExpired(argv, timeout)
+        return remaining_seconds
+
     environment = docker_client_environment(buildx_config=buildx_config)
     process = subprocess.Popen(argv, cwd=cwd, stdin=subprocess.DEVNULL,
                                stdout=subprocess.PIPE if capture_stdout else subprocess.DEVNULL,
@@ -39,10 +48,7 @@ def bounded_run(argv, *, cwd, timeout, capture_stdout=True, max_output=MAX_OUTPU
             selector = selectors.DefaultSelector()
             selector.register(process.stdout, selectors.EVENT_READ)
             while selector.get_map():
-                remaining = deadline - time.monotonic()
-                if remaining <= 0:
-                    raise subprocess.TimeoutExpired(argv, timeout)
-                for key, _events in selector.select(remaining):
+                for key, _events in selector.select(remaining()):
                     chunk = os.read(key.fileobj.fileno(), min(65536, max_output + 1 - len(output)))
                     if not chunk:
                         selector.unregister(key.fileobj)
@@ -50,10 +56,7 @@ def bounded_run(argv, *, cwd, timeout, capture_stdout=True, max_output=MAX_OUTPU
                     output.extend(chunk)
                     if len(output) > max_output:
                         raise ValueError("Docker image stdout exceeded its bounded read")
-        remaining = deadline - time.monotonic()
-        if remaining <= 0:
-            raise subprocess.TimeoutExpired(argv, timeout)
-        returncode = process.wait(timeout=remaining)
+        returncode = process.wait(timeout=remaining())
         return subprocess.CompletedProcess(argv, returncode, output.decode("utf-8"), "")
     finally:
         if selector is not None:

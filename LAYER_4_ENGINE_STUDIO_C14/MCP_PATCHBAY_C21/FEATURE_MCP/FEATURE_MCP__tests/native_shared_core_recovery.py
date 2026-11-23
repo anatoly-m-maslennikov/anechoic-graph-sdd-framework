@@ -1,12 +1,13 @@
 """Check background recovery of one loaded Project in a shared candidate."""
 
 import asyncio
-import os
 import shlex
 import subprocess
 
 from mcp.client.session import ClientSession
 from mcp.client.streamable_http import streamable_http_client
+
+from .workbench_docker_support import assert_container_running, image_timeout
 
 
 KILL_CHILD = """
@@ -50,8 +51,7 @@ def _pairs(case):
 
 
 async def _wait_for_pair(case, instance, old):
-    cutoff = None if os.environ.get("ANECHOIC_TEST_OBSERVE_NO_DEADLINE") == "1" else 30
-    async with asyncio.timeout(cutoff):
+    async with asyncio.timeout(image_timeout(30)):
         while True:
             current = (await asyncio.to_thread(_pairs, case)).get(instance, {})
             if current.keys() == old.keys() and not set(current.values()) & set(old.values()):
@@ -62,7 +62,7 @@ async def _wait_for_pair(case, instance, old):
 async def _query_after_recovery(case, session, project):
     args = {"project_root": str(project), "sql": "SELECT 42",
             "result_delivery": "inline", "result_format": "json_matrix"}
-    async with asyncio.timeout(45):
+    async with asyncio.timeout(image_timeout(45)):
         while True:
             result = await session.call_tool("query_run", args)
             if not result.is_error:
@@ -70,6 +70,8 @@ async def _query_after_recovery(case, session, project):
                 return
             # A replacement PID can exist before its initial admission succeeds.
             case.assertIn("project_gateway_busy", str(result.structured_content))
+            if image_timeout(45) is None:
+                await asyncio.to_thread(assert_container_running, case._shared_candidate_container)
             await asyncio.sleep(0.15)
 
 
@@ -91,7 +93,7 @@ async def assert_core_recovery(case, endpoint, projects, http, unaffected_query_
         await asyncio.to_thread(
             subprocess.run, ["docker", "exec", case._shared_candidate_container, "python", "-B",
                              "-c", KILL_CHILD, module, instance],
-            timeout=10, check=True, capture_output=True, text=True,
+            timeout=image_timeout(10), check=True, capture_output=True, text=True,
         )
         base[instance] = await _wait_for_pair(case, instance, base[instance])
         case.assertEqual(base[other], (await asyncio.to_thread(_pairs, case))[other])

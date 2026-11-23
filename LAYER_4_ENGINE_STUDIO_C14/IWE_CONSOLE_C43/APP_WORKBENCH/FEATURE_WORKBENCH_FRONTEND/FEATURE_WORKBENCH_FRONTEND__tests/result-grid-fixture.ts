@@ -1,4 +1,5 @@
 import { expect, type Page } from '@playwright/test';
+import { browserTimeout } from './browser-deadlines';
 
 const url = process.env.WORKBENCH_E2E_URL!;
 const editor = (page: Page) => page.getByRole('textbox', { name: 'Query editor' });
@@ -59,7 +60,7 @@ async function run(page: Page, expectedRows = 12) {
   const request = page.waitForRequest((item) => interfaceRequest(item, 'view_run'));
   await page.keyboard.press('Meta+Enter');
   await request;
-  await expect(page.getByRole('grid')).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('grid')).toBeVisible({ timeout: browserTimeout(15_000) });
   await expect(page.locator('.result-summary').first()).toContainText(`${expectedRows} rows`);
 }
 

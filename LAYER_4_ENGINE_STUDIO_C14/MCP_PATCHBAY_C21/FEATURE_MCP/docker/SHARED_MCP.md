@@ -20,7 +20,7 @@ max_loaded_projects = 2
 
 `projects_root` is the host root containing the configured Projects. Use
 `project_root` in its place to mount and serve one repository. See the
-[Runtime Setup example](../../../../LAYER_6_RUNTIME_SETUP/runtime.example.toml) and
+[Runtime Setup example](../../../../LAYER_5_USER_SETUP_C65/runtime.example.toml) and
 [install guide](../../../../INSTALL.md) for Project creation defaults. The
 `max_loaded_projects` value bounds warm in-memory contexts; it does not limit
 which Projects under the configured root may be addressed.
@@ -47,7 +47,7 @@ environment remains internal to the subprocess and is not printed. From the
 repository root, using the selected Python 3.14 environment:
 
 ```sh
-UV_PROJECT_ENVIRONMENT="$PWD/LAYER_4_ENGINE_STUDIO_C14/.venv-dev" PYTHONPATH="$PWD/LAYER_4_ENGINE_STUDIO_C14" uv run --no-compile-bytecode --project "$PWD/LAYER_3_ENVIRONMENTS_C72/engine" --locked --no-sync --python 3.14 --managed-python --no-env-file \
+UV_PROJECT_ENVIRONMENT="$PWD/LAYER_4_ENGINE_STUDIO_C14/.venv-dev" PYTHONPATH="$PWD/LAYER_4_ENGINE_STUDIO_C14" uv run --no-compile-bytecode --project "$PWD/LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine" --locked --no-sync --python 3.14 --managed-python --no-env-file \
   --group dev python -B \
   LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/shared_mcp_launcher.py \
   --host-settings "${XDG_CONFIG_HOME:-$HOME/.config}/anechoic/runtime.toml" \

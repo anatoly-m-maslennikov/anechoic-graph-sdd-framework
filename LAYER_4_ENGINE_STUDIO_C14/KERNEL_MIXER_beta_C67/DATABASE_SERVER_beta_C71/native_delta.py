@@ -11,7 +11,8 @@ from starlette.responses import JSONResponse
 from .analysis_projection import apply_spec_delta, snapshot_sizes
 from .carrier_checkpoint import update_checkpoint
 from .generation import GenerationBaseChanged, _digest, replace_native_generation
-from .native_atoms import validate_native_snapshot
+from .ingestion_issues import clear_issues
+from .native_atoms import stage_atom_rows, validate_native_snapshot, write_staged_atoms
 from .realization_projection import has_table
 
 
@@ -103,14 +104,11 @@ def _validate_delta(connection, data, model, manifest_sha256):
                 or match.group(2) and match.group(1) + match.group(2) != atom["exact_ref"]):
             raise ValueError("Atom does not belong to an addressed native path")
     old = _old_rows(connection, paths)
-    connection.execute("CREATE TEMP TABLE int_delta_atoms AS SELECT *, CAST(NULL AS VARCHAR) AS exact_ref FROM main.mrt_atoms WHERE false")
-    atom_rows = [(a["reference"], a["summary"], a["relative_path"], a["filename"], a["status_group"],
-                  a["version"], a["status"], a["exact_ref"]) for a in snapshot["atoms"]]
-    _stage(connection, "int_delta_atoms", atom_rows, 8)
+    stage_atom_rows(connection, snapshot["atoms"])
     conflict = connection.execute("""SELECT 1 FROM (
-        SELECT relative_path, filename FROM main.mrt_atom_references WHERE reference IN (SELECT reference FROM int_delta_atoms)
+        SELECT relative_path, filename FROM main.mrt_atom_references WHERE reference IN (SELECT reference FROM int_admission_atoms)
         UNION ALL
-        SELECT relative_path, filename FROM main.mrt_atom_references WHERE exact_ref IN (SELECT exact_ref FROM int_delta_atoms)
+        SELECT relative_path, filename FROM main.mrt_atom_references WHERE exact_ref IN (SELECT exact_ref FROM int_admission_atoms)
         ) n WHERE NOT EXISTS (SELECT 1 FROM int_delta_paths p
             WHERE p.relative_path = n.relative_path AND p.filename = n.filename) LIMIT 1""").fetchone()
     if conflict:
@@ -120,24 +118,20 @@ def _validate_delta(connection, data, model, manifest_sha256):
     return snapshot, old, new_edges, inverse
 
 
-def _owned_edges(connection, old, inverse):
+def _stage_owned_edges(connection, old, inverse):
     connection.execute("CREATE TEMP TABLE int_delta_old (reference VARCHAR)")
     _stage(connection, "int_delta_old", [(reference,) for reference, _ in old], 1)
-    rows = connection.execute("""SELECT r.* FROM main.mrt_atom_graph_relations r WHERE
+    connection.execute("""CREATE TEMP TABLE int_delta_owned_edges AS
+        SELECT r.* FROM main.mrt_atom_graph_relations r WHERE
         (NOT r.derived AND r.source_kind = 'Atom' AND r.source_ref IN (SELECT reference FROM int_delta_old)) OR
-        (r.derived AND r.target_kind = 'Atom' AND r.target_ref IN (SELECT reference FROM int_delta_old))""").fetchall()
-    _validate_edges(rows, inverse)
-    return rows
+        (r.derived AND r.target_kind = 'Atom' AND r.target_ref IN (SELECT reference FROM int_delta_old))""")
+    _validate_edges(connection.execute("SELECT * FROM int_delta_owned_edges").fetchall(), inverse)
 
 
 def _write_atoms(connection):
     connection.execute("DELETE FROM main.mrt_atoms WHERE (relative_path, filename) IN (SELECT * FROM int_delta_paths)")
     connection.execute("DELETE FROM main.mrt_atom_references WHERE (relative_path, filename) IN (SELECT * FROM int_delta_paths)")
-    connection.execute("INSERT INTO main.mrt_atoms SELECT * EXCLUDE (exact_ref) FROM int_delta_atoms")
-    connection.execute("""INSERT INTO main.mrt_atom_references
-        SELECT relative_path, filename, status_group, reference,
-               CASE WHEN status_group = 'Current' THEN reference ELSE NULL END, exact_ref
-        FROM int_delta_atoms""")
+    write_staged_atoms(connection)
 
 
 def _write_relations(connection, new_edges):
@@ -149,21 +143,21 @@ def _write_relations(connection, new_edges):
     connection.execute("INSERT INTO main.mrt_atom_graph_relations SELECT * FROM int_delta_new_edges")
 
 
-def _write_graph(connection, before, after, old, atoms, components):
-    labels = {name: ordinal for ordinal, name in connection.execute("SELECT ordinal, name FROM native_graph.int_labels").fetchall()}
-    affected = set(before) | set(after)
-    if any(edge[4] not in labels for edge in affected):
+def _write_graph(connection, components):
+    connection.execute("""CREATE TEMP TABLE int_delta_affected AS
+        SELECT * FROM int_delta_owned_edges UNION SELECT * FROM int_delta_new_edges""")
+    labels = connection.execute("""SELECT DISTINCT a.relation_type, l.ordinal FROM int_delta_affected a
+        LEFT JOIN native_graph.int_labels l ON a.relation_type = l.name""").fetchall()
+    if any(ordinal is None for _, ordinal in labels):
         raise DeltaReconciliationRequired("Native graph labels changed; full reconciliation required")
-    vertices = {(kind, ref) for edge in affected for kind, ref in ((edge[0], edge[1]), (edge[2], edge[3]))}
-    vertices.update(("Atom", ref) for ref, _ in old)
-    vertices.update(("Atom", row["reference"]) for row in atoms)
-    connection.execute("CREATE TEMP TABLE int_delta_affected AS SELECT * FROM main.mrt_atom_graph_relations WHERE false")
-    _stage(connection, "int_delta_affected", list(affected), 6)
-    connection.execute("CREATE TEMP TABLE int_delta_vertices (kind VARCHAR, ref VARCHAR)")
-    _stage(connection, "int_delta_vertices", list(vertices), 2)
+    connection.execute("""CREATE TEMP TABLE int_delta_vertices AS
+        SELECT source_kind AS kind, source_ref AS ref FROM int_delta_affected
+        UNION SELECT target_kind, target_ref FROM int_delta_affected
+        UNION SELECT 'Atom', reference FROM int_delta_old
+        UNION SELECT 'Atom', reference FROM int_admission_atoms""")
     connection.execute("INSERT INTO native_graph.int_reference SELECT * FROM int_delta_vertices ON CONFLICT DO NOTHING")
-    for label in {edge[4] for edge in affected}:
-        table = f'native_graph.int_relation_{int(labels[label])}'
+    for label, ordinal in labels:
+        table = f'native_graph.int_relation_{int(ordinal)}'
         match = "r.source_kind = a.source_kind AND r.source_ref = a.source_ref AND r.target_kind = a.target_kind AND r.target_ref = a.target_ref AND r.derived = a.derived"
         connection.execute(f"DELETE FROM {table} r WHERE EXISTS (SELECT 1 FROM int_delta_affected a WHERE a.relation_type = ? AND {match})", [label])
         connection.execute(f"""INSERT INTO {table} SELECT DISTINCT a.source_kind, a.source_ref, a.target_kind, a.target_ref, a.derived
@@ -199,23 +193,24 @@ def apply_native_delta(connection, data, manifest_sha256):
         base, model, structure = rows[0]
         snapshot, old, new_edges, inverse = _validate_delta(connection, data, model, manifest_sha256)
         update_checkpoint(connection, data, delta=True)
+        clear_issues(connection, "atom", [str(PurePosixPath(parent) / name) for parent, name in data["paths"]])
         if not old and not snapshot["atoms"]:
             connection.execute("DROP TABLE int_delta_paths")
-            connection.execute("DROP TABLE int_delta_atoms")
+            connection.execute("DROP TABLE int_admission_atoms")
             connection.execute("COMMIT")
             return base
-        before = _owned_edges(connection, old, inverse)
+        _stage_owned_edges(connection, old, inverse)
         components = {"C00", *json.loads(structure)["components"]}
         _write_lenses(connection, snapshot)
         _write_atoms(connection)
         _write_relations(connection, new_edges)
         if has_table(connection, "main", "biz_architecture_spec_metrics"):
             apply_spec_delta(connection, [exact for _, exact in old if "-S-" in exact], snapshot_sizes(snapshot))
-        _write_graph(connection, before, new_edges, old, snapshot["atoms"], components)
+        _write_graph(connection, components)
         generation = _digest({"kind": "native_ticket_delta", "base_generation": base,
                               "delta_sha256": data["snapshot_sha256"]})
         connection.execute("UPDATE ops_generation SET id = ?", [generation])
-        for table in ("int_delta_paths", "int_delta_old", "int_delta_atoms",
+        for table in ("int_delta_paths", "int_delta_old", "int_admission_atoms", "int_delta_owned_edges",
                       "int_delta_new_edges", "int_delta_affected", "int_delta_vertices", "int_delta_components"):
             connection.execute(f"DROP TABLE {table}")
         connection.execute("COMMIT")

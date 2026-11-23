@@ -66,9 +66,9 @@ class ImageFixture:
         root = self.fixture_root / "source"
         docker = root / "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker"
         docker.mkdir(parents=True)
-        (root / "LAYER_3_ENVIRONMENTS_C72/engine").mkdir(parents=True)
-        (root / "LAYER_3_ENVIRONMENTS_C72/engine/pyproject.toml").write_text("[project]\nname = 'fixture'\n", encoding="utf-8")
-        (root / "LAYER_3_ENVIRONMENTS_C72/engine/uv.lock").write_text("version = 1\n", encoding="utf-8")
+        (root / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine").mkdir(parents=True)
+        (root / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml").write_text("[project]\nname = 'fixture'\n", encoding="utf-8")
+        (root / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/uv.lock").write_text("version = 1\n", encoding="utf-8")
         (root / "version.toml").write_text(
             f'[framework]\nversion = "{FRAMEWORK_VERSION}"\n', encoding="utf-8"
         )

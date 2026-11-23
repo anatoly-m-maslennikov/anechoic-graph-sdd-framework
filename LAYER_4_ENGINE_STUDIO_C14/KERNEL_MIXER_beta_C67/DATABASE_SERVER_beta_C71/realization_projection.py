@@ -3,7 +3,7 @@
 import json
 import sys
 
-from . import analysis_projection
+from . import analysis_projection, ingestion_issues
 from .dependency_review import prepare_dependency_review
 from .native_graph import native_edges
 
@@ -33,13 +33,14 @@ _GRAPH_TABLES = {
 
 
 def prepare(connection):
+    ingestion_issues.initialize(connection)
+    ingestion_issues.prepare_realization_view(connection)
     for sql in (
         "CREATE TABLE IF NOT EXISTS mrt_real_graph_import_nodes (node_key VARCHAR PRIMARY KEY, kind VARCHAR NOT NULL, language VARCHAR, relative_path VARCHAR, scan_status VARCHAR, package_key VARCHAR, package_type VARCHAR)",
         'CREATE TABLE IF NOT EXISTS mrt_real_graph_import_occurrences (occurrence_key VARCHAR PRIMARY KEY, source_key VARCHAR NOT NULL, target_key VARCHAR, written_specifier VARCHAR NOT NULL, line BIGINT, "column" BIGINT, resolution_status VARCHAR NOT NULL, type_only BOOLEAN NOT NULL)',
         "CREATE TABLE IF NOT EXISTS mrt_real_graph_import_edges (source_key VARCHAR NOT NULL, target_key VARCHAR NOT NULL, occurrence_key VARCHAR NOT NULL, derived BOOLEAN NOT NULL, PRIMARY KEY (source_key, target_key, occurrence_key))",
         "CREATE TABLE IF NOT EXISTS mrt_real_graph_test_edges (source_key VARCHAR NOT NULL, target_key VARCHAR NOT NULL, PRIMARY KEY (source_key, target_key))",
         "CREATE TABLE IF NOT EXISTS mrt_real_graph_tested_by_edges (source_key VARCHAR NOT NULL, target_key VARCHAR NOT NULL, PRIMARY KEY (source_key, target_key))",
-        "CREATE TABLE IF NOT EXISTS mrt_diag_import_read_issues (relative_path VARCHAR PRIMARY KEY, error_message VARCHAR NOT NULL)",
         'CREATE TABLE IF NOT EXISTS mrt_diag_code_access (source_key VARCHAR NOT NULL, relative_path VARCHAR NOT NULL, line BIGINT, "column" BIGINT, written_specifier VARCHAR NOT NULL, status VARCHAR NOT NULL, reason VARCHAR NOT NULL)',
         'CREATE TABLE IF NOT EXISTS mrt_diag_state_effects (source_key VARCHAR NOT NULL, relative_path VARCHAR NOT NULL, language VARCHAR NOT NULL, action VARCHAR NOT NULL, line BIGINT NOT NULL, input JSON, status VARCHAR NOT NULL, dead_end BOOLEAN NOT NULL, events JSON NOT NULL, violations JSON NOT NULL, detail VARCHAR)',
         'CREATE TABLE IF NOT EXISTS mrt_real_graph_code_units (node_key VARCHAR PRIMARY KEY, module_key VARCHAR NOT NULL, kind VARCHAR NOT NULL, qualified_name VARCHAR NOT NULL, line BIGINT NOT NULL, "column" BIGINT NOT NULL)',
@@ -153,6 +154,8 @@ def validate(graph, components):
                     or any(type(value) not in (allowed if isinstance(allowed, tuple) else (allowed,))
                            for value, allowed in zip(row, types))):
                 raise ValueError("Invalid graph row type")
+    if len({row[0] for row in graph["read_issues"]}) != len(graph["read_issues"]):
+        raise ValueError("Duplicate graph read issue path")
     nodes = {row[0]: row for row in graph['nodes']}
     occurrences = {row[0]: row for row in graph['occurrences']}
     if len(nodes) != len(graph['nodes']) or len(occurrences) != len(graph['occurrences']):
@@ -204,13 +207,23 @@ def replace(connection, graph, components):
         connection.execute("DROP VIEW IF EXISTS biz_package_coupling")
         connection.execute("DROP VIEW IF EXISTS mrt_real_graph_package_imports")
         connection.execute("DROP VIEW IF EXISTS mrt_real_graph_package_external_imports")
-        for table in ("mrt_real_graph_tested_by_edges", *(table for table, _ in _TABLES.values())):
+        connection.execute("DROP VIEW IF EXISTS import_read_issues")
+        connection.execute("DROP VIEW IF EXISTS mrt_import_read_issues")
+        connection.execute("DROP VIEW IF EXISTS mrt_diag_import_read_issues")
+        ingestion_issues.clear_issues(connection, "realization")
+        for table in ("mrt_real_graph_tested_by_edges", *(table for key, (table, _) in _TABLES.items() if key != "read_issues")):
             connection.execute(f"DROP TABLE IF EXISTS {table}")
         connection.execute("DROP SCHEMA IF EXISTS realization_internal CASCADE")
         restore_property_graph(connection)
         return
     prepare(connection)
+    ingestion_issues.replace_issues(connection, "realization", [
+        {"relative_path": path, "code": "read_error", "message": message, "atom_ref": None, "related_paths": []}
+        for path, message in graph["read_issues"]
+    ])
     for key, (table, types) in _TABLES.items():
+        if key == "read_issues":
+            continue
         connection.execute(f"DELETE FROM {table}")
         rows = graph[key]
         if rows:

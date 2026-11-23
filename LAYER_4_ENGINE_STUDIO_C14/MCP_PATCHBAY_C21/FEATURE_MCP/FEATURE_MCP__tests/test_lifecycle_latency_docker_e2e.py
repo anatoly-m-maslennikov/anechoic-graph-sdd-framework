@@ -10,10 +10,10 @@ from time import monotonic
 import unittest
 
 from mcp.client.session import ClientSession
-from mcp.client.streamable_http import streamable_http_client
 
 from .FEATURE_MCP__tests__shared import ROOT
 from .native_import_graph_docker_cases import archive_project
+from .workbench_docker_support import image_mcp_transport
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import MCP_PATH
 
 
@@ -60,7 +60,7 @@ class LifecycleLatencyImageTest(unittest.TestCase):
         print("ANECHOIC_TEST_METRICS " + json.dumps({"lifecycle_latency": report}), flush=True)
 
     async def _measure(self, endpoint):
-        async with streamable_http_client(endpoint) as streams, ClientSession(*streams) as client:
+        async with image_mcp_transport(endpoint) as streams, ClientSession(*streams) as client:
             await client.initialize()
             initial_atoms = (await self._sql(client, "SELECT count(*) FROM atoms"))[0][0]
             before = dict(await self._sql(client, GENERATIONS))

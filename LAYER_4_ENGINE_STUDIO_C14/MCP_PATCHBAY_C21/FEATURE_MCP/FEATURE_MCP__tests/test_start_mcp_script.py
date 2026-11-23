@@ -80,7 +80,7 @@ class StartMcpScriptTests(unittest.TestCase):
                 self.assertEqual(0, module.main(["--project-root", str(root)]))
 
         command = run.call_args.args[0]
-        self.assertEqual(str(package.resolve() / "LAYER_3_ENVIRONMENTS_C72/engine"), command[command.index("--project") + 1])
+        self.assertEqual(str(package.resolve() / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine"), command[command.index("--project") + 1])
         self.assertIn(str(launcher), command)
         self.assertEqual(["--source-root", str(package.resolve())],
                          command[command.index("--source-root"):command.index("--source-root") + 2])
@@ -104,7 +104,7 @@ class StartMcpScriptTests(unittest.TestCase):
 
         command = run.call_args.args[0]
         environment = run.call_args.kwargs["env"]
-        self.assertEqual(str(package.resolve() / "LAYER_3_ENVIRONMENTS_C72/engine"), command[command.index("--project") + 1])
+        self.assertEqual(str(package.resolve() / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine"), command[command.index("--project") + 1])
         self.assertIn(str(launcher.resolve()), command)
         self.assertEqual(str(root / ".anechoic_runtime" / "launcher-venv"),
                          environment["UV_PROJECT_ENVIRONMENT"])
@@ -156,7 +156,7 @@ class StartMcpScriptTests(unittest.TestCase):
 
         command = run.call_args.args[0]
         self.assertEqual(str(root.resolve()), command[command.index("--project-root") + 1])
-        self.assertEqual(str(package.resolve() / "LAYER_3_ENVIRONMENTS_C72/engine"), command[command.index("--project") + 1])
+        self.assertEqual(str(package.resolve() / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine"), command[command.index("--project") + 1])
         self.assertIn(str(launcher.resolve()), command)
 
 

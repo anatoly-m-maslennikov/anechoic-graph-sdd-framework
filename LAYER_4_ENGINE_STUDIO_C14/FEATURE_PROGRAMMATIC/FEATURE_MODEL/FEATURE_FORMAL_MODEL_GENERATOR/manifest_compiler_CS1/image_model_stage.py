@@ -42,7 +42,16 @@ def docker_client_environment(*, buildx_config=None):
 def bounded_run(argv, *, cwd, timeout, capture_stdout=True, max_output=MAX_OUTPUT,
                 buildx_config=None, report_stderr=False):
     """Read a finite stdout prefix without retaining stderr or build logs."""
-    deadline = time.monotonic() + timeout
+    deadline = None if timeout is None else time.monotonic() + timeout
+
+    def remaining():
+        if deadline is None:
+            return None
+        remaining_seconds = deadline - time.monotonic()
+        if remaining_seconds <= 0:
+            raise subprocess.TimeoutExpired(argv, timeout)
+        return remaining_seconds
+
     environment = docker_client_environment(buildx_config=buildx_config)
     process = subprocess.Popen(argv, cwd=cwd, stdin=subprocess.DEVNULL,
                                stdout=subprocess.PIPE if capture_stdout else subprocess.DEVNULL,
@@ -54,10 +63,7 @@ def bounded_run(argv, *, cwd, timeout, capture_stdout=True, max_output=MAX_OUTPU
             selector = selectors.DefaultSelector()
             selector.register(process.stdout, selectors.EVENT_READ)
             while selector.get_map():
-                remaining = deadline - time.monotonic()
-                if remaining <= 0:
-                    raise subprocess.TimeoutExpired(argv, timeout)
-                for key, _events in selector.select(remaining):
+                for key, _events in selector.select(remaining()):
                     chunk = os.read(key.fileobj.fileno(), min(65536, max_output + 1 - len(output)))
                     if not chunk:
                         selector.unregister(key.fileobj)
@@ -65,10 +71,7 @@ def bounded_run(argv, *, cwd, timeout, capture_stdout=True, max_output=MAX_OUTPU
                     output.extend(chunk)
                     if len(output) > max_output:
                         raise ValueError("Docker image stdout exceeded its bounded read")
-        remaining = deadline - time.monotonic()
-        if remaining <= 0:
-            raise subprocess.TimeoutExpired(argv, timeout)
-        returncode = process.wait(timeout=remaining)
+        returncode = process.wait(timeout=remaining())
         return subprocess.CompletedProcess(argv, returncode, output.decode("utf-8"), "")
     finally:
         if selector is not None:
@@ -83,10 +86,10 @@ def bounded_run(argv, *, cwd, timeout, capture_stdout=True, max_output=MAX_OUTPU
                 pass
 
 
-def previous_claims(component: Path, image: str, *, timeout: float) -> list[list[str]]:
+def previous_claims(component: Path, image: str, *, timeout: float | None) -> list[list[str]]:
     if re.fullmatch(r"sha256:[0-9a-f]{64}", image) is None:
         raise ValueError("Previous image must be an immutable image ID")
-    deadline = time.monotonic() + timeout
+    deadline = None if timeout is None else time.monotonic() + timeout
     result = bounded_run(["docker", "image", "inspect", image], cwd=ROOT, timeout=_remaining(deadline))
     if result.returncode:
         raise ValueError("Previous ready image is unavailable")
@@ -125,21 +128,23 @@ def previous_claims(component: Path, image: str, *, timeout: float) -> list[list
     return json.loads(result.stdout)
 
 
-def _remaining(deadline: float) -> float:
+def _remaining(deadline: float | None) -> float | None:
+    if deadline is None:
+        return None
     remaining = deadline - time.monotonic()
     if remaining <= 0:
         raise subprocess.TimeoutExpired("native model refresh", 0)
     return remaining
 
 
-def _run(command: list[str], deadline: float) -> str:
+def _run(command: list[str], deadline: float | None) -> str:
     result = subprocess.run(command, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                             text=True, timeout=_remaining(deadline), check=True)
     return result.stdout.strip()
 
 
-def stage_model(project: Path, control: Path, timeout: float, previous: str | None) -> str:
-    deadline = time.monotonic() + timeout
+def stage_model(project: Path, control: Path, timeout: float | None, previous: str | None) -> str:
+    deadline = None if timeout is None else time.monotonic() + timeout
     source = control / ONTOLOGY
     compile_command = [sys.executable, "-B", "-P", "-m", COMPILE]
     if not source.exists() and not source.is_symlink():
@@ -176,5 +181,6 @@ def stage_model(project: Path, control: Path, timeout: float, previous: str | No
 
 
 if __name__ == "__main__":
-    print(stage_model(Path(sys.argv[1]), Path(sys.argv[2]), float(sys.argv[3]),
-                      sys.argv[4] if len(sys.argv) == 5 else None))
+    unbounded = sys.argv[3] == "none" and os.environ.get("ANECHOIC_TEST_IMAGE_DEADLINES") == "0"
+    timeout = None if unbounded else float(sys.argv[3])
+    print(stage_model(Path(sys.argv[1]), Path(sys.argv[2]), timeout, sys.argv[4] if len(sys.argv) == 5 else None))

@@ -1,7 +1,7 @@
 """Docker graph browser and MCP cases shared by the E2E test class."""
 
 import asyncio
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 import json
 import os
 from pathlib import Path
@@ -11,13 +11,15 @@ from time import monotonic, sleep
 from uuid import uuid4
 
 from mcp.client.session import ClientSession
-from mcp.client.streamable_http import streamable_http_client
 
 from . import test_native_startup as fixture
 from .FEATURE_MCP__tests__shared import project as make_project
+from .workbench_docker_support import (
+    IMAGE_DEADLINES, defer_container_cleanup, docker_deadline_env, image_deadline_mode, image_mcp_transport,
+    image_timeout, observing, request, run_browser,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.work_journal__pub import PROJECT_DATABASE, append_sealed_events
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import HEALTH_PATH, MCP_PATH, WORKBENCH_PATH
-from .workbench_docker_support import request
 
 
 _STARTUP_REUSE_RUNS = """
@@ -34,35 +36,38 @@ _STARTUP_REUSE_RUNS = """
 @contextmanager
 def archive_project(case, prepare=make_project):
     """Run lifecycle operations against a disposable Project."""
-    with tempfile.TemporaryDirectory(prefix="ane-archive-image-") as directory:
+    with tempfile.TemporaryDirectory(prefix="ane-archive-image-") as directory, ExitStack() as cleanup:
         root = Path(directory).resolve()
         subprocess.run(["git", "init", "--quiet", str(root)], check=True)
         control = "_anechoic_anechoic"
         prepare(root)
+        name = f"ane-archive-{uuid4().hex}"
+        defer_container_cleanup(cleanup.callback, name)
         container = subprocess.check_output([
-            "docker", "run", "--detach", "--pull=never", "--init", "--name", f"ane-archive-{uuid4().hex}",
+            "docker", "run", "--detach", "--pull=never", "--init", "--name", name,
             "--label", "anechoic.test=import-graph-canary", "--read-only", "--tmpfs", "/tmp:rw,nosuid,nodev,size=256m",
             "--pids-limit", "128", "--cpus", "1", "--publish", "127.0.0.1::8092", "--volume", f"{root}:/project:rw",
             "--env", "ANECHOIC_RUNTIME_NAMESPACE=docker", "--env", f"ANECHOIC_CONTROL_ROOT={control}",
-            os.environ["ANECHOIC_IMAGE"], "mcp-http"], text=True, timeout=60).strip()
-        try:
-            binding = subprocess.check_output(["docker", "port", container, "8092/tcp"], text=True, timeout=10).strip()
-            project = case.__class__("runTest")
-            project.root, project.url = root, f"http://{binding}"
-            project.api = f"{project.url}/anechoic/Anechoic/api"
-            deadline = monotonic() + 90
-            while monotonic() < deadline:
-                try:
-                    if request(project.url + HEALTH_PATH) == (200, {"ready": True}):
-                        yield project
-                        return
-                except OSError:
-                    pass
-                sleep(.2)
+            "--env", docker_deadline_env(), os.environ["ANECHOIC_IMAGE"], "mcp-http",
+        ], text=True, timeout=image_timeout(60)).strip()
+        binding = subprocess.check_output(
+            ["docker", "port", container, "8092/tcp"], text=True, timeout=image_timeout(10),
+        ).strip()
+        project = case.__class__("runTest")
+        project.root, project.url = root, f"http://{binding}"
+        project.api = f"{project.url}/anechoic/Anechoic/api"
+        deadline = monotonic() + 90
+        while observing(container, deadline):
+            try:
+                if request(project.url + HEALTH_PATH) == (200, {"ready": True}):
+                    break
+            except OSError:
+                pass
+            sleep(.2)
+        else:
             logs = subprocess.run(["docker", "logs", "--tail", "12", container], capture_output=True, text=True)
             raise RuntimeError(f"Archive Project failed to start: {logs.stdout}{logs.stderr}")
-        finally:
-            subprocess.run(["docker", "container", "rm", "-f", container], check=True, capture_output=True, timeout=30)
+        yield project
 
 
 class WarmProjectionRestartCase:
@@ -72,7 +77,7 @@ class WarmProjectionRestartCase:
     def _startup_reuse_before_restart(self):
         environment = subprocess.check_output([
             "docker", "image", "inspect", "--format", "{{json .Config.Env}}", os.environ["ANECHOIC_IMAGE"],
-        ], text=True, timeout=10)
+        ], text=True, timeout=image_timeout(10))
         if "ANECHOIC_RUNTIME_STACK=beta" in json.loads(environment):
             return self._startup_reuse_runs().keys()
         return None
@@ -80,12 +85,12 @@ class WarmProjectionRestartCase:
     def _assert_warm_projection_reused(self, previous):
         if previous is None:
             logs = subprocess.run(["docker", "logs", self.container],
-                                  check=True, capture_output=True, text=True, timeout=10)
+                                  check=True, capture_output=True, text=True, timeout=image_timeout(10))
             self.assertIn("database_edit operation=reuse table=projection", logs.stdout + logs.stderr)
             return
         deadline = monotonic() + 10
         observed = self._startup_reuse_runs()
-        while not observed.keys() - previous and self._observing(deadline):
+        while not observed.keys() - previous and observing(self.container, deadline):
             sleep(.1)
             observed = self._startup_reuse_runs()
         self.assertTrue(any(observed[run] for run in observed.keys() - previous),
@@ -106,7 +111,7 @@ class WarmProjectionRestartCase:
         inode = database.stat().st_ino
         previous_reuse = self._startup_reuse_before_restart()
         subprocess.run(["docker", "container", "restart", self.container],
-                       check=True, capture_output=True, timeout=30)
+                       check=True, capture_output=True, timeout=image_timeout(30))
         self._wait_ready()
         self.assertEqual(inode, database.stat().st_ino)
         self.assertEqual([[receipt["record_id"]]], self._rows(sql))
@@ -119,26 +124,43 @@ class DockerBrowserAndMcpCases:
         repository = fixture.MCP.parents[2]
         frontend = fixture.MCP.parents[1] / "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND"
         environment = os.environ | {
+            IMAGE_DEADLINES: image_deadline_mode(os.environ),
             "WORKBENCH_E2E_URL": f"{self.url}{WORKBENCH_PATH}/Anechoic",
             "PLAYWRIGHT_BROWSERS_PATH": str(repository / ".anechoic_tmp/workbench/playwright-browsers"),
         }
+        launch = run_browser(
+            self.container,
+            ["node", "--input-type=module", "-e", 'import { chromium } from "playwright"; '
+             f'const timeout = process.env.{IMAGE_DEADLINES} === "0" ? 0 : undefined; '
+             'const browser = await chromium.launch({channel: "chromium", timeout}); '
+             'console.log(browser.version()); await browser.close();'],
+            cwd=frontend, env=environment, bounded_timeout=None,
+        )
+        self.assertEqual(0, launch.returncode,
+                         f"Pinned Chromium could not launch. Run the image tests in a host context that permits "
+                         f"Chromium processes.\n{launch.stdout}{launch.stderr}")
+        print(f"Pinned Chromium {launch.stdout.strip()}", flush=True)
         reports = repository / ".anechoic_tmp/test_reports"
         reports.mkdir(parents=True, exist_ok=True)
         output = tempfile.mkdtemp(prefix="workbench-browser-", dir=reports)
-        result = subprocess.run(
-            ["npm", "run", "test:e2e", "--", "--output", output, "--global-timeout", "115000",
-             "--retries", "1", "--trace", "retain-on-failure"],
-            cwd=frontend, env=environment, capture_output=True, text=True, timeout=120,
-        )
+        command = ["node", "node_modules/@playwright/test/cli.js", "test", "--output", output,
+                   "--retries", "1", "--trace", "retain-on-failure"]
+        if environment[IMAGE_DEADLINES] == "1":
+            command.extend(("--global-timeout", "115000"))
+        try:
+            result = run_browser(self.container, command, cwd=frontend, env=environment)
+        except Exception as error:
+            error.add_note(f"Browser artifacts: {output}")
+            raise
         self.assertEqual(0, result.returncode, f"{result.stdout}{result.stderr}\nBrowser artifacts: {output}")
 
 
     def test_mcp_queries_work_after_a_previous_session_closes(self):
         async def exercise():
-            async with asyncio.timeout(15):
+            async with asyncio.timeout(image_timeout(15)):
                 for value in (1, 2):
                     async with (
-                        streamable_http_client(self.url + MCP_PATH) as streams,
+                        image_mcp_transport(self.url + MCP_PATH) as streams,
                         ClientSession(*streams) as client,
                     ):
                         await client.initialize()
@@ -154,7 +176,7 @@ class DockerBrowserAndMcpCases:
 
     def test_archive_requires_replacement_and_immediately_refreshes(self):
         async def exercise():
-            async with streamable_http_client(project.url + MCP_PATH) as streams, ClientSession(*streams) as client:
+            async with image_mcp_transport(project.url + MCP_PATH) as streams, ClientSession(*streams) as client:
                 await client.initialize()
 
                 async def call(name, arguments, status="completed"):
@@ -199,7 +221,7 @@ class DockerBrowserAndMcpCases:
     def test_promotion_immediately_refreshes_workbench(self):
         environment = subprocess.check_output([
             "docker", "image", "inspect", "--format", "{{json .Config.Env}}", os.environ["ANECHOIC_IMAGE"],
-        ], text=True, timeout=10)
+        ], text=True, timeout=image_timeout(10))
         beta = "ANECHOIC_RUNTIME_STACK=beta" in json.loads(environment)
         witness = """SELECT count(*) FROM flow_events t JOIN flow_events e USING (run_id)
             WHERE t.component = 'C68' AND t.kind = 'trigger' AND t.name = 'lifecycle_refresh'
@@ -207,7 +229,7 @@ class DockerBrowserAndMcpCases:
               AND json_extract_string(e.detail, '$.kind') = 'native_delta'"""
 
         async def exercise():
-            async with streamable_http_client(self.url + MCP_PATH) as streams, ClientSession(*streams) as client:
+            async with image_mcp_transport(self.url + MCP_PATH) as streams, ClientSession(*streams) as client:
                 await client.initialize()
 
                 async def call(name, arguments, status="completed"):

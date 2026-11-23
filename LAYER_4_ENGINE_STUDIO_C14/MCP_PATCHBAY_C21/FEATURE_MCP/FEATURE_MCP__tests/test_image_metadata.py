@@ -105,9 +105,9 @@ class ImageMetadataTests(unittest.TestCase):
         self._write_fixture(VERSION)
 
     def _write_fixture(self, version: str) -> None:
-        (self.root / "LAYER_3_ENVIRONMENTS_C72/engine").mkdir(parents=True, exist_ok=True)
-        (self.root / "LAYER_3_ENVIRONMENTS_C72/engine/pyproject.toml").write_text("[project]\nname='fixture'\n", encoding="utf-8")
-        (self.root / "LAYER_3_ENVIRONMENTS_C72/engine/uv.lock").write_text("version = 1\n", encoding="utf-8")
+        (self.root / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine").mkdir(parents=True, exist_ok=True)
+        (self.root / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml").write_text("[project]\nname='fixture'\n", encoding="utf-8")
+        (self.root / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/uv.lock").write_text("version = 1\n", encoding="utf-8")
         (self.root / "version.toml").write_text(f'[framework]\nversion = "{version}"\n', encoding="utf-8")
         for relative, content in (
             *((name, "fixture license\n") for name in LICENSE_INPUTS),
@@ -122,8 +122,8 @@ class ImageMetadataTests(unittest.TestCase):
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(content, encoding="utf-8")
     def _select_beta(self) -> None:
-        (self.root / "LAYER_5_FRAMEWORK_DELIVERY").mkdir(exist_ok=True)
-        (self.root / "LAYER_5_FRAMEWORK_DELIVERY/project.toml").write_text('stack = "beta"\n')
+        (self.root / "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27").mkdir(parents=True, exist_ok=True)
+        (self.root / "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml").write_text('stack = "beta"\n')
         engine = self.root / "LAYER_4_ENGINE_STUDIO_C14"
         for relative in BETA_REQUIRED_FIXTURE_FILES:
             path = engine / relative
@@ -171,7 +171,7 @@ class ImageMetadataTests(unittest.TestCase):
         self._select_beta()
         manager = self._manager(DockerProbe())
         identity = manager.identity()
-        (self.root / "LAYER_5_FRAMEWORK_DELIVERY/project.toml").write_text('stack = "current"\n')
+        (self.root / "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml").write_text('stack = "current"\n')
         with self.assertRaises(ImageError):
             manager._identity_role(identity)
 

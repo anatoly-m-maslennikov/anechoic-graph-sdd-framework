@@ -7,7 +7,8 @@ import json
 from pathlib import Path
 from subprocess import CalledProcessError, TimeoutExpired, check_output, run
 import sys
-import tomllib
+
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.suite_config import load_suite_config
 
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.source_comments import CODE_ROOTS, ROOT
 
@@ -113,8 +114,7 @@ def main():
     args = parser.parse_args()
     root = args.project_root.resolve()
     try:
-        with (root / "pyproject.toml").open("rb") as file:
-            config = tomllib.load(file)
+        config = load_suite_config(root)
         settings = config.get("tool", {}).get("anechoic", {})
         enabled = settings.get("test_suite", {}).get(
             "enforce_source_line_length", False,

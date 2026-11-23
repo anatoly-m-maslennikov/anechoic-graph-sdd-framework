@@ -1,9 +1,22 @@
 """Use the private HTTP contracts of the selected Project peers."""
 
+import os
+
 import httpx2
 
 
-async def upstream(socket_path, method, path, *, timeout=10, **kwargs):
+_DEFAULT_TIMEOUT = object()
+
+
+def operation_timeout(seconds):
+    return (httpx2.Timeout(None, connect=10)
+            if os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") == "0" else seconds)
+
+
+async def upstream(socket_path, method, path, *, timeout=_DEFAULT_TIMEOUT,
+                   **kwargs):
+    if timeout is _DEFAULT_TIMEOUT:
+        timeout = operation_timeout(10)
     async with httpx2.AsyncClient(transport=httpx2.AsyncHTTPTransport(uds=socket_path),
                                  base_url="http://private", timeout=timeout, trust_env=False) as client:
         response = await client.request(method, path, **kwargs)

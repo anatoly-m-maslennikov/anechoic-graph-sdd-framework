@@ -9,13 +9,17 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 3
-  updated_at: '2026-11-22T12:00:09.602716+00:00'
+  version: 4
+  updated_at: '2026-11-23T13:46:18.273025+00:00'
 ---
 
 ## Summary
 
 Declare Engine Studio
+
+## Purpose
+
+Consume Environments. DevOps builds Engine Studio.
 
 ## Formal manifest
 

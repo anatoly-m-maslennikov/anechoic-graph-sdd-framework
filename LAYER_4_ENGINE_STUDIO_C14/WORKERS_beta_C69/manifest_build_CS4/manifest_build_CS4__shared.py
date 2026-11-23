@@ -179,7 +179,8 @@ def manifest_input_signature(binding) -> str | None:
     deadline = time.monotonic() + 5
 
     def checkpoint():
-        if time.monotonic() >= deadline:
+        if (time.monotonic() >= deadline
+                and os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") != "0"):
             raise TimeoutError("Manifest input witness timed out")
 
     def sample():

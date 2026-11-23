@@ -19,7 +19,7 @@ TOOL_PROVIDERS = (
 TOOL_REGISTRY = "LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/tool_registry.json"
 
 
-def compile_tool_registry(source_root: Path, *, timeout: float, max_output: int) -> bytes:
+def compile_tool_registry(source_root: Path, *, timeout: float | None, max_output: int) -> bytes:
     """Generate the registry in private staging, never in the source closure."""
     compiler = source_root / TOOL_REGISTRY_COMPILER
     providers = source_root / TOOL_PROVIDERS

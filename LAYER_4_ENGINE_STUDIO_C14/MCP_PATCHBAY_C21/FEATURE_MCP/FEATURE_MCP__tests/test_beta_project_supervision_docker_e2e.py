@@ -18,6 +18,7 @@ from mcp.client.streamable_http import streamable_http_client
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import HEALTH_PATH, MCP_PATH
 from .FEATURE_MCP__tests__shared import CONTROL, project
+from .workbench_docker_support import defer_container_cleanup, docker_deadline_env, image_timeout, observing
 
 
 _ROLES = {
@@ -61,11 +62,12 @@ class PackagedProjectSupervisionTests(unittest.IsolatedAsyncioTestCase):
         environment = self._docker("image", "inspect", "--format", "{{json .Config.Env}}", image)
         beta = "ANECHOIC_RUNTIME_STACK=beta" in json.loads(environment)
         root = Path(self.enterContext(tempfile.TemporaryDirectory(prefix="anechoic-supervision-"))).resolve()
-        subprocess.run(["git", "init", "--quiet", str(root)], check=True, timeout=10)
+        subprocess.run(["git", "init", "--quiet", str(root)], check=True, timeout=image_timeout(10))
         project(root)
         url = self._start(image, root)
         try:
-            async with httpx2.AsyncClient(trust_env=False, timeout=httpx2.Timeout(5, read=30)) as http:
+            timeout = httpx2.Timeout(image_timeout(5), read=image_timeout(30))
+            async with httpx2.AsyncClient(trust_env=False, timeout=timeout) as http:
                 await self._ready(http, url)
                 query_id = await self._first_page(http, url)
                 previous = await asyncio.to_thread(self._processes)
@@ -83,22 +85,23 @@ class PackagedProjectSupervisionTests(unittest.IsolatedAsyncioTestCase):
             raise
 
     def _docker(self, *arguments, timeout=10):
-        result = subprocess.run(["docker", *arguments], capture_output=True, text=True, timeout=timeout)
+        result = subprocess.run(["docker", *arguments], capture_output=True, text=True, timeout=image_timeout(timeout))
         if result.returncode:
             self.fail(f"docker {arguments[0]} failed ({result.returncode}): {result.stdout}{result.stderr}")
         return result.stdout.strip() if arguments[0] != "logs" else result.stdout + result.stderr
 
     def _start(self, image, root):
+        name = f"anechoic-supervision-{uuid4().hex}"
+        defer_container_cleanup(self.addCleanup, name)
         self.container = self._docker(
             "run", "--detach", "--pull=never", "--init", "--read-only",
-            "--name", f"anechoic-supervision-{uuid4().hex}", "--label", "anechoic.test=project-supervision",
+            "--name", name, "--label", "anechoic.test=project-supervision",
             "--cap-drop", "ALL", "--security-opt", "no-new-privileges:true",
             "--tmpfs", "/tmp:rw,nosuid,nodev,size=256m", "--pids-limit", "128", "--cpus", "1",
             "--publish", "127.0.0.1::8092", "--mount", f"type=bind,src={root},dst=/project",
             "--env", "ANECHOIC_RUNTIME_NAMESPACE=docker", "--env", f"ANECHOIC_CONTROL_ROOT={CONTROL}",
-            image, "mcp-http", timeout=45,
+            "--env", docker_deadline_env(), image, "mcp-http", timeout=45,
         )
-        self.addCleanup(self._docker, "container", "rm", "-f", self.container, timeout=30)
         self.assertRegex(self.container, r"\A[0-9a-f]{64}\Z")
         binding = self._docker("port", self.container, "8092/tcp")
         self.assertRegex(binding, r"\A127\.0\.0\.1:[0-9]+\Z")
@@ -110,9 +113,9 @@ class PackagedProjectSupervisionTests(unittest.IsolatedAsyncioTestCase):
 
     async def _ready(self, http, url, *, deadline_seconds=90):
         deadline = monotonic() + deadline_seconds
-        while monotonic() < deadline:
+        while await asyncio.to_thread(observing, self.container, deadline):
             try:
-                response = await http.get(url + HEALTH_PATH, timeout=2)
+                response = await http.get(url + HEALTH_PATH, timeout=image_timeout(2))
                 if response.status_code == 200 and response.json()["ready"] is True:
                     return
             except (httpx2.TransportError, ValueError, KeyError):
@@ -121,7 +124,7 @@ class PackagedProjectSupervisionTests(unittest.IsolatedAsyncioTestCase):
         self.fail(f"Candidate did not become ready at {url + HEALTH_PATH}")
 
     async def _mcp_call(self, http, url, operation, arguments):
-        async with asyncio.timeout(60):
+        async with asyncio.timeout(image_timeout(60)):
             async with streamable_http_client(url + MCP_PATH, http_client=http) as streams, ClientSession(*streams) as session:
                 await session.initialize()
                 reply = await session.call_tool(operation, arguments)
@@ -150,7 +153,7 @@ class PackagedProjectSupervisionTests(unittest.IsolatedAsyncioTestCase):
     async def _replacement(self, role, original_pid):
         await asyncio.to_thread(self._processes, role, str(original_pid))
         deadline = monotonic() + 30
-        while monotonic() < deadline:
+        while await asyncio.to_thread(observing, self.container, deadline):
             current = await asyncio.to_thread(self._processes)
             if len(current[role]) == 1 and current[role] != [original_pid]:
                 return current[role]

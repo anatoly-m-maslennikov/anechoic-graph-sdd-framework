@@ -155,7 +155,7 @@ Run the tests from the repository root using the Engine dev environment.
 ```sh
 engine="$PWD/LAYER_4_ENGINE_STUDIO_C14"
 UV_PROJECT_ENVIRONMENT="$engine/.venv-dev" PYTHONPATH="$engine" \
-  uv run --no-compile-bytecode --project "$PWD/LAYER_3_ENVIRONMENTS_C72/engine" --locked --no-env-file \
+  uv run --no-compile-bytecode --project "$PWD/LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine" --locked --no-env-file \
     python -B -m unittest discover -v -s \
     "$engine/FEATURE_AGENTIC/FEATURE_PROMPTS/ACTION_PROMPTS/RMED_ATOM_REVIEW/repair/repair__tests"
 ```

@@ -31,7 +31,7 @@ class FocusedReleaseTests(unittest.TestCase):
         self.addCleanup(directory.cleanup)
         self.root = Path(directory.name)
         for name in full.CODE_ROOTS:
-            (self.root / name).mkdir()
+            (self.root / name).mkdir(parents=True, exist_ok=True)
         self.output, self.errors = io.StringIO(), io.StringIO()
 
     def file(self, relative: str, content: str = PASSING) -> Path:

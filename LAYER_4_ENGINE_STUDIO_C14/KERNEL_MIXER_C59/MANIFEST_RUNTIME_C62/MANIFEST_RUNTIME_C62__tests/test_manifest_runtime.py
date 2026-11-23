@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import shutil
@@ -10,8 +11,9 @@ import sys
 import tempfile
 from threading import Event
 import time
+from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 ROOT = Path(__file__).resolve().parents[4]
 NATIVE_CONTROL = ROOT.parent / "native-control"
@@ -89,6 +91,25 @@ def _runtime_observers():
 
 
 class ManifestRuntimeTests(unittest.TestCase):
+    def test_test_image_mode_controls_current_startup_compiler_wait(self):
+        switch = "ANECHOIC_TEST_IMAGE_DEADLINES"
+        selection = SimpleNamespace(root=Path("/project"),
+                                    control_relative=Path("_anechoic"),
+                                    manifest_sha256="a" * 64)
+        result = subprocess.CompletedProcess([], 0, stdout=b"{}")
+        orchestrator = SimpleNamespace(run_worker=Mock(return_value=result))
+        with patch.dict(os.environ):
+            os.environ.pop(switch, None)
+            for setting, expected in ((None, 15), ("1", 15), ("0", None)):
+                if setting is not None:
+                    os.environ[switch] = setting
+                with self.subTest(setting=setting):
+                    self.assertEqual(b"{}", runtime._compile(
+                        selection, Path("/stage"), "--build-model",
+                        orchestrator=orchestrator))
+                    call = orchestrator.run_worker.call_args
+                    self.assertEqual(call.kwargs["timeout"], expected)
+
     def test_relevant_named_lens_and_revision_directories(self):
         control = Path(".anechoic_project")
         manifest = control / "AN-S-1-SPEC-PROJECT_MANIFEST--project.md"

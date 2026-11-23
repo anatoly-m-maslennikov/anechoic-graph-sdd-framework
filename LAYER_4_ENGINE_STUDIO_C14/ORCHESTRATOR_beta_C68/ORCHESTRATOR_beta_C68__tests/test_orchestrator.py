@@ -1,5 +1,7 @@
+from contextlib import redirect_stderr
 import http.client
 import importlib
+from io import StringIO
 import json
 import socket
 import subprocess
@@ -29,6 +31,20 @@ class UnixConnection(http.client.HTTPConnection):
 
 
 class OrchestratorTests(unittest.TestCase):
+    def test_generation_worker_logs_traceback_on_failure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            binding = {"root": directory, "control_root": "control", "manifest_path": "manifest.md",
+                       "manifest_sha256": "a" * 64, "project_prefix": "AN"}
+            jobs = module.GenerationJobs("test", binding, directory + "/kernel.sock")
+            stderr = StringIO()
+            with patch.object(module.subprocess, "Popen") as popen, redirect_stderr(stderr):
+                process = popen.return_value
+                process.communicate.return_value = ("", "Traceback in inventory\nLimitReached: timeout_seconds\n")
+                process.returncode = 1
+                with self.assertRaisesRegex(RuntimeError, "^Worker failed: LimitReached: timeout_seconds$"):
+                    jobs._run_worker(directory, None, None)
+            self.assertIn("Traceback in inventory", stderr.getvalue())
+
     def test_http_and_real_worker_failure(self):
         with tempfile.TemporaryDirectory() as directory:
             path = str(Path(directory) / "server.sock")

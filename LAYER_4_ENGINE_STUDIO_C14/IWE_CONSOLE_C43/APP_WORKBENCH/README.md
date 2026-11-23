@@ -238,8 +238,8 @@ Split source files above 300 lines where practical; splitting above 500 is manda
 The Docker build installs DuckPGQ. Native tests need the host extension too:
 
 ```sh
-UV_PROJECT_ENVIRONMENT="$PWD/LAYER_4_ENGINE_STUDIO_C14/.venv-dev" uv sync --no-compile-bytecode --project LAYER_3_ENVIRONMENTS_C72/engine --group runtime
-UV_PROJECT_ENVIRONMENT="$PWD/LAYER_4_ENGINE_STUDIO_C14/.venv-dev" uv run --no-compile-bytecode --project LAYER_3_ENVIRONMENTS_C72/engine --locked --no-sync python -B -c "import duckdb; c=duckdb.connect(config={'extension_directory':'.anechoic_tmp/workbench/extensions'}); c.execute('INSTALL duckpgq FROM community'); c.close()"
+UV_PROJECT_ENVIRONMENT="$PWD/LAYER_4_ENGINE_STUDIO_C14/.venv-dev" uv sync --no-compile-bytecode --project LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine --group runtime
+UV_PROJECT_ENVIRONMENT="$PWD/LAYER_4_ENGINE_STUDIO_C14/.venv-dev" uv run --no-compile-bytecode --project LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine --locked --no-sync python -B -c "import duckdb; c=duckdb.connect(config={'extension_directory':'.anechoic_tmp/workbench/extensions'}); c.execute('INSTALL duckpgq FROM community'); c.close()"
 ```
 
 Run the repository's full test suite to build one disposable image and run the

@@ -2,7 +2,7 @@
 
 from .table_names import ATOM_FAMILY_VIEWS, PUBLIC_NAMES
 
-_MAIN = (*ATOM_FAMILY_VIEWS,
+_MAIN = ("ops_ingestion_issues", *ATOM_FAMILY_VIEWS,
          *(name for old, new in PUBLIC_NAMES.items() if not new.startswith("ops_") for name in (old, new)))
 _TEMP = tuple(name for old, new in PUBLIC_NAMES.items() if new.startswith("ops_") for name in (old, new))
 
@@ -28,13 +28,13 @@ def public_schema(connection):
 
 
 def _status_values(connection, table):
-    field = '"header.state.status"'
-    oversized = connection.execute(
-        f"SELECT EXISTS (SELECT 1 FROM main.{table} WHERE octet_length(encode({field})) > 1024)"
-    ).fetchone()[0]
-    if oversized:
-        return []
     rows = connection.execute(
-        f"SELECT DISTINCT {field} FROM main.{table} WHERE {field} IS NOT NULL ORDER BY 1 LIMIT 257"
+        f'''WITH values_by_status AS (
+                SELECT DISTINCT "header.state.status" AS value FROM main.{table}
+                WHERE "header.state.status" IS NOT NULL
+            ), sized AS (
+                SELECT value, max(octet_length(encode(value))) OVER () AS max_bytes FROM values_by_status
+            )
+            SELECT value FROM sized WHERE max_bytes <= 1024 ORDER BY value LIMIT 257'''
     ).fetchall()
     return [row[0] for row in rows] if len(rows) <= 256 else []

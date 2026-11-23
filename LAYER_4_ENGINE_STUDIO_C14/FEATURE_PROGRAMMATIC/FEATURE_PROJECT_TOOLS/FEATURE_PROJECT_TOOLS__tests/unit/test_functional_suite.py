@@ -15,12 +15,22 @@ MODULE = "LAYER_4_ENGINE_STUDIO_C14/example/test_selected.py"
 class FunctionalSuiteTests(unittest.TestCase):
     def setUp(self):
         self.root = Path(self.enterContext(tempfile.TemporaryDirectory()))
-        for name in ("LAYER_4_ENGINE_STUDIO_C14", "LAYER_5_FRAMEWORK_DELIVERY", "LAYER_6_RUNTIME_SETUP"):
-            (self.root / name).mkdir()
+        for name in ("LAYER_4_ENGINE_STUDIO_C14", "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27", "LAYER_5_USER_SETUP_C65"):
+            (self.root / name).mkdir(parents=True, exist_ok=True)
         self.module = self.root / MODULE
         self.module.parent.mkdir(parents=True)
         self.module.write_text("import unittest\nclass Test(unittest.TestCase):\n def test_ok(self): self.assertTrue(True)\n")
         self.config([MODULE])
+
+    def test_engine_config_takes_precedence(self):
+        engine = self.root / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml"
+        engine.parent.mkdir(parents=True)
+        engine.write_text("[tool.ruff]\n")
+        self.assertEqual(0, self.run_cli().returncode)
+        engine.write_text('[tool.anechoic.test_suite]\nfunctional_test_modules = []\n')
+        self.assertNotEqual(0, self.run_cli().returncode)
+        engine.write_text('[tool.anechoic.test_suite]\nfunctional_test_modules = ' + json.dumps([MODULE]))
+        self.assertEqual(0, self.run_cli().returncode)
 
     def config(self, paths):
         (self.root / "pyproject.toml").write_text(

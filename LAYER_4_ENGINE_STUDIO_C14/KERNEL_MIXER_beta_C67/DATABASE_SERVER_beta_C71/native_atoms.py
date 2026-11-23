@@ -101,6 +101,30 @@ def validate_native_snapshot(snapshot, manifest_sha256):
     return snapshot
 
 
+def stage_atom_rows(connection, atoms):
+    """Stage validated Atom rows once for both public tables."""
+    keys = ("reference", "summary", "relative_path", "filename", "status_group", "version", "status", "exact_ref")
+    rows = [{key: row[key] for key in keys} for row in atoms]
+    connection.execute('''CREATE OR REPLACE TEMP TABLE int_admission_atoms AS
+        SELECT atom.reference AS reference, atom.summary AS "content.summary",
+            atom.relative_path AS relative_path, atom.filename AS filename,
+            atom.status_group AS status_group, atom.version AS "header.state.version",
+            atom.status AS "header.state.status", atom.exact_ref AS exact_ref
+        FROM UNNEST(?::STRUCT(reference VARCHAR, summary VARCHAR, relative_path VARCHAR,
+            filename VARCHAR, status_group VARCHAR, version BIGINT, status VARCHAR, exact_ref VARCHAR)[]) AS t(atom)''', [rows])
+
+
+def write_staged_atoms(connection):
+    """Insert the staged rows into both public Atom tables."""
+    connection.execute('''INSERT INTO main.mrt_atoms
+        SELECT reference, "content.summary", relative_path, filename, status_group,
+            "header.state.version", "header.state.status" FROM int_admission_atoms''')
+    connection.execute('''INSERT INTO main.mrt_atom_references
+        SELECT relative_path, filename, status_group, reference,
+            CASE WHEN status_group = 'Current' THEN reference ELSE NULL END, exact_ref
+        FROM int_admission_atoms''')
+
+
 def replace_native_atoms(connection, snapshot):
     """Replace public tables inside the caller's active transaction."""
     existing = connection.execute("SELECT table_type FROM information_schema.tables WHERE table_catalog = current_database() "
@@ -111,25 +135,21 @@ def replace_native_atoms(connection, snapshot):
         reference VARCHAR PRIMARY KEY, "content.summary" VARCHAR, relative_path VARCHAR,
         filename VARCHAR, status_group VARCHAR, "header.state.version" BIGINT,
         "header.state.status" VARCHAR)''')
-    rows = snapshot["atoms"]
-    if rows:
-        connection.executemany('INSERT INTO main.mrt_atoms VALUES (?, ?, ?, ?, ?, ?, ?)', [
-            (r["reference"], r["summary"], r["relative_path"], r["filename"], r["status_group"], r["version"], r["status"])
-            for r in rows])
     connection.execute('''CREATE OR REPLACE TABLE main.mrt_atom_references (
         relative_path VARCHAR, filename VARCHAR, status_group VARCHAR, reference VARCHAR,
         stable_ref VARCHAR, exact_ref VARCHAR)''')
-    if rows:
-        connection.executemany('INSERT INTO main.mrt_atom_references VALUES (?, ?, ?, ?, ?, ?)', [
-            (r["relative_path"], r["filename"], r["status_group"], r["reference"],
-             r["reference"] if r["status_group"] == "Current" else None, r["exact_ref"]) for r in rows])
+    stage_atom_rows(connection, snapshot["atoms"])
+    write_staged_atoms(connection)
+    connection.execute("DROP TABLE int_admission_atoms")
     connection.execute('''CREATE OR REPLACE TABLE main.mrt_atom_graph_relations (
         source_kind VARCHAR, source_ref VARCHAR, target_kind VARCHAR, target_ref VARCHAR,
         relation_type VARCHAR, derived BOOLEAN)''')
-    if snapshot["relations"]:
-        connection.executemany('INSERT INTO main.mrt_atom_graph_relations VALUES (?, ?, ?, ?, ?, ?)', [
-            tuple(r[key] for key in ("source_kind", "source_ref", "target_kind", "target_ref", "relation_type", "derived"))
-            for r in snapshot["relations"]])
+    relation_keys = ("source_kind", "source_ref", "target_kind", "target_ref", "relation_type", "derived")
+    relations = [{key: row[key] for key in relation_keys} for row in snapshot["relations"]]
+    connection.execute('''INSERT INTO main.mrt_atom_graph_relations
+        SELECT edge.source_kind, edge.source_ref, edge.target_kind, edge.target_ref, edge.relation_type, edge.derived
+        FROM UNNEST(?::STRUCT(source_kind VARCHAR, source_ref VARCHAR, target_kind VARCHAR,
+            target_ref VARCHAR, relation_type VARCHAR, derived BOOLEAN)[]) AS t(edge)''', [relations])
 
     connection.execute("DROP TABLE IF EXISTS main.int_lifecycle_lenses")
     if "lifecycle_lenses" in snapshot:

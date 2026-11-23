@@ -74,7 +74,8 @@ class ImageManager(ImageSource, ImageBuild):
                  timeout: float = 600, *, uid: int | None = None, gid: int | None = None,
                  platform: str | None = None, build_temp_root: Path | str | None = None,
                  build_provenance: ImageBuildProvenance | None = None,
-                 project_root: Path | str, previous_image: str | None = None) -> None:
+                 project_root: Path | str, previous_image: str | None = None,
+                 enforce_deadlines: bool = True) -> None:
         self.source_root = Path(source_root)
         if project_root is None:
             raise ImageError("IMAGE_INPUT_UNAVAILABLE", "An explicit selected Project root is required")
@@ -91,7 +92,7 @@ class ImageManager(ImageSource, ImageBuild):
         self.executor = executor
         if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not 0 < timeout <= 900:
             raise ImageError("IMAGE_INPUT_UNAVAILABLE", "Image timeout must be within (0, 900] seconds")
-        self.timeout = timeout
+        self.timeout = timeout if enforce_deadlines else None
         self.uid = os.getuid() if uid is None else uid
         self.gid = os.getgid() if gid is None else gid
         for value in (self.uid, self.gid):
@@ -125,7 +126,7 @@ class ImageManager(ImageSource, ImageBuild):
                                hashlib.sha256(path.read_bytes()).hexdigest(),
                                path.stat().st_mode & 0o777)
                     for path in files]
-            if next((row.sha256 for row in rows if row.path == "LAYER_5_FRAMEWORK_DELIVERY/project.toml"), None) != selector_sha256:
+            if next((row.sha256 for row in rows if row.path == "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml"), None) != selector_sha256:
                 raise self._input_error()
             if stack == "current":
                 rows.append(BuildInput(TOOL_REGISTRY, hashlib.sha256(tools).hexdigest(), 0o644))
@@ -216,7 +217,7 @@ class ImageManager(ImageSource, ImageBuild):
 
     def _identity_role(self, identity: ImageIdentity) -> str:
         stack, _, digest = self._stack_input(self._root())
-        expected = next((row.sha256 for row in identity.manifest if row.path == "LAYER_5_FRAMEWORK_DELIVERY/project.toml"), None)
+        expected = next((row.sha256 for row in identity.manifest if row.path == "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml"), None)
         if digest != expected:
             raise self._input_error()
         return "beta" if stack == "beta" else "test"

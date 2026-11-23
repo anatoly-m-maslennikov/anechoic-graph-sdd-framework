@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -13,6 +14,11 @@ from .image_docker_client import bounded_run as _bounded_run
 from .docker__shared import ImageManager
 
 ATTEMPT_LABEL = "org.anechoic.full-test-suite.attempt"
+_IMAGE_DEADLINES = "ANECHOIC_TEST_IMAGE_DEADLINES"
+
+
+def _deadlines_enabled() -> bool:
+    return os.environ.get(_IMAGE_DEADLINES) != "0"
 
 
 def _executor(attempt: str):
@@ -28,15 +34,17 @@ def _executor(attempt: str):
 
 
 def _build_image(root: Path, scratch: Path, attempt: str, *, use_packaged_assets: bool) -> str:
-    manager = ImageManager(root, executor=_executor(attempt), build_temp_root=scratch, project_root=root)
+    manager = ImageManager(root, executor=_executor(attempt), build_temp_root=scratch, project_root=root,
+                           enforce_deadlines=_deadlines_enabled())
     identity = manager.identity(use_packaged_assets=use_packaged_assets)
     return manager._build(identity, use_packaged_assets=use_packaged_assets)
 
 
 def _remove_owned_image(root: Path, image: str, attempt: str) -> None:
     """An in-use image is retained; no container is removed by this owner."""
+    timeout = 30 if _deadlines_enabled() else None
     try:
-        observed = _bounded_run(["docker", "image", "inspect", image], cwd=root, timeout=30)
+        observed = _bounded_run(["docker", "image", "inspect", image], cwd=root, timeout=timeout)
         if observed.returncode != 0:
             raise OSError("test image inspection failed")
         labels = json.loads(observed.stdout)[0]["Config"]["Labels"]
@@ -44,11 +52,11 @@ def _remove_owned_image(root: Path, image: str, attempt: str) -> None:
             raise OSError("test image attribution differs")
         containers = _bounded_run(
             ["docker", "container", "ls", "--all", "--filter", f"ancestor={image}", "--quiet"],
-            cwd=root, timeout=30,
+            cwd=root, timeout=timeout,
         )
         if containers.returncode != 0 or containers.stdout.strip():
             raise OSError("test image may still be in use; retained")
-        removed = _bounded_run(["docker", "image", "rm", image], cwd=root, timeout=30)
+        removed = _bounded_run(["docker", "image", "rm", image], cwd=root, timeout=timeout)
         if removed.returncode != 0:
             raise OSError("non-force test image removal failed; retained")
     except (OSError, ValueError, KeyError, IndexError, TypeError, subprocess.TimeoutExpired) as error:

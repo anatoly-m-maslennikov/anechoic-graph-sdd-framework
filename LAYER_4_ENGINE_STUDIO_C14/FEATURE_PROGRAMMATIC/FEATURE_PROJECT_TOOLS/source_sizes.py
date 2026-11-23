@@ -6,7 +6,8 @@ from pathlib import Path
 import subprocess
 import sys
 import tokenize
-import tomllib
+
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.suite_config import load_suite_config
 
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import source_comments as sources
 
@@ -84,8 +85,7 @@ def source_size_findings(root: Path) -> list[str]:
 
 def _enabled(root: Path) -> bool:
     try:
-        with (root / "pyproject.toml").open("rb") as file:
-            config = tomllib.load(file)
+        config = load_suite_config(root)
     except FileNotFoundError:
         return False
     settings = config.get("tool", {}).get("anechoic", {}).get("test_suite", {})

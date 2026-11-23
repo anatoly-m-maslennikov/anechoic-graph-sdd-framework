@@ -26,6 +26,7 @@ from .carrier_checkpoint import reuse_route
 from .database_route import database_route
 from .generation import replace_generation
 from .flows import flow_route, initialize_flows
+from . import ingestion_issues
 from .native_delta import native_generation_route
 from .persistence import open_bound_database
 from .query_engine import connect
@@ -65,6 +66,9 @@ def open_database(database_path=None, manifest_sha256=None, instance_id=None, jo
     else:
         connection = connect(":memory:")
     try:
+        connection.execute("BEGIN TRANSACTION")
+        ingestion_issues.initialize(connection)
+        connection.execute("COMMIT")
         if database_path is None:
             connection.execute('CREATE TABLE mrt_atoms (reference VARCHAR PRIMARY KEY, "content.summary" VARCHAR)')
             connection.execute("CREATE TABLE ops_generation (id VARCHAR, model VARCHAR, structure VARCHAR)")
@@ -189,6 +193,32 @@ def _generation_route(connection, instance_id, manifest_sha256, lock, queries, w
     return admit_generation
 
 
+def _ingestion_route(connection, instance_id, lock):
+    async def issues(request):
+        if request.method == "GET":
+            if list(request.query_params.multi_items()) != [("instance_id", instance_id)]:
+                return _error("foreign_instance", "Instance does not match", 403)
+            with lock:
+                return JSONResponse({"result": {"rows": ingestion_issues.rows(connection)}})
+        try:
+            data = await _read_object(request, 64 * 1024 * 1024, {"instance_id", "source", "issues"})
+            if data["instance_id"] != instance_id:
+                return _error("foreign_instance", "Instance does not match", 403)
+            ingestion_issues.validate(data["source"], data["issues"])
+            with lock:
+                connection.execute("BEGIN TRANSACTION")
+                try:
+                    ingestion_issues.replace_issues(connection, data["source"], data["issues"])
+                    connection.execute("COMMIT")
+                except BaseException:
+                    connection.execute("ROLLBACK")
+                    raise
+            return JSONResponse({"result": {"source": data["source"], "count": len(data["issues"])}})
+        except (ValueError, TypeError, UnicodeError, duckdb.Error) as error:
+            return _error("invalid_ingestion_issues", str(error), 400)
+    return issues
+
+
 def _schema_route(connection, instance_id, lock):
     async def schema(request):
         if list(request.query_params.multi_items()) != [("instance_id", instance_id)]:
@@ -248,6 +278,7 @@ def create_app(connection, instance_id, manifest_sha256, project_root=None, resu
     return Starlette(routes=[
         Route("/health", health),
         Route("/schema", _schema_route(connection, instance_id, lock)),
+        Route("/ingestion/issues", _ingestion_route(connection, instance_id, lock), methods=["GET", "PUT"]),
         Route("/flow/events", flow_route(connection, instance_id, lock, _read_object, _error), methods=["POST"]),
         Route("/database", database_route(connection, instance_id, lock, queries, sync_sources, project_root,
                                          saved_queries, _read_object, _error), methods=["POST"]),

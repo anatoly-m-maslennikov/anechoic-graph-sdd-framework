@@ -6,6 +6,7 @@ import re
 
 from .analysis_projection import replace_spec, snapshot_sizes
 from .carrier_checkpoint import update_checkpoint
+from .ingestion_issues import clear_issues
 from .native_atoms import replace_native_atoms, validate_native_snapshot
 from .native_graph import replace_native_graph
 from .realization_projection import has_table, replace, restore_property_graph, validate
@@ -149,6 +150,8 @@ def replace_generation(connection, data, manifest_sha256, *, stage_refresh=None)
         connection.execute("INSERT INTO ops_generation VALUES (?, ?, ?)", [generation, model, structure])
         _write_reuse(connection, data, model)
         update_checkpoint(connection, data)
+        clear_issues(connection, "atom")
+        clear_issues(connection, "build")
         sync_query_views(connection)
         captured = stage_refresh() if stage_refresh is not None else None
         connection.execute("COMMIT")
@@ -197,6 +200,8 @@ def replace_native_generation(connection, data, manifest_sha256):
         if has_table(connection, "main", "biz_architecture_spec_metrics"):
             replace_spec(connection, snapshot_sizes(snapshot))
         update_checkpoint(connection, data)
+        clear_issues(connection, "atom")
+        clear_issues(connection, "build")
         connection.execute("UPDATE ops_generation SET id = ?", [generation])
         sync_query_views(connection)
         connection.execute("COMMIT")

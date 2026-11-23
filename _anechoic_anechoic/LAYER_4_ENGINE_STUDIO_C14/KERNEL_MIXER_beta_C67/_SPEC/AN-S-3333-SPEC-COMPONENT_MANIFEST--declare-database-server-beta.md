@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: "active"
-  version: 25
-  updated_at: "2026-11-23T00:32:58.404871+00:00"
+  version: 26
+  updated_at: "2026-11-23T11:51:38.834854+00:00"
 ---
 ## Summary
 
@@ -31,7 +31,7 @@ declare_entity(
     instance=ComponentManifest(
         component_id='C71',
         name='Database Server Beta',
-        lens_whitelist=['DES', 'SPEC'],
+        lens_whitelist=['DES', 'SPEC', 'SWD/DBT'],
         boundaries={'code': {'imports': {'only': ['CS5', 'CS6', 'ADAPTERS_C30__shared.attach_framework', 'ADAPTERS_C30__shared.migrate_project_database', 'ADAPTERS_C30__shared.append_sealed_events', 'DATABASE_SERVER_beta_C71__shared.create_app']},
                              'exports': {'DATABASE_SERVER_beta_C71__shared.create_app': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests']}}},
          'io': {'server': {'database_api': {'transport': 'http',
@@ -49,6 +49,8 @@ declare_entity(
                                                                    '--journal-relative', '<admitted-relative-path>'],
                                             'routes': {'health': 'GET /health',
                                                        'schema': 'GET /schema',
+                                                       'ingestion_issues': 'GET /ingestion/issues',
+                                                       'replace_ingestion_issues': 'PUT /ingestion/issues',
                                                        'query': 'POST /database',
                                                        'workspace': 'POST /workspace',
                                                        'rebuild_results': 'POST /results/rebuild',
@@ -60,6 +62,8 @@ declare_entity(
                                                        'model': 'GET /model',
                                                        'structure': 'GET /structure'},
                                             'artifact_read_fields': ['instance_id'],
+                                            'ingestion_issue_read_fields': ['instance_id'],
+                                            'ingestion_issue_replace_fields': ['instance_id', 'source', 'issues'],
                                             'artifact_generation_header': 'x-anechoic-generation',
                                             'query_fields': [['instance_id', 'sql'],
                                                              ['instance_id',

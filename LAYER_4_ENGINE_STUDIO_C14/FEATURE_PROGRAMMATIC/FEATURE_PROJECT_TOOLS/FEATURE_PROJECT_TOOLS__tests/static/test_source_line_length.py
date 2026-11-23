@@ -36,11 +36,13 @@ class SourceLineLengthTests(unittest.TestCase):
                 self.assertEqual(lint.main(), 0)
                 scan.assert_not_called()
 
+                config = Path(directory) / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml"
+                config.parent.mkdir(parents=True)
                 config.write_text(
                     "[tool.anechoic.test_suite]\n"
                     "enforce_source_line_length = true\n",
                 )
-                scan.return_value = [("LAYER_6_RUNTIME_SETUP/new.py", 1, "Too long")]
+                scan.return_value = [("LAYER_5_USER_SETUP_C65/new.py", 1, "Too long")]
                 self.assertEqual(lint.main(), 1)
                 scan.assert_called_once_with(Path(directory).resolve(), "HEAD")
 
@@ -48,11 +50,11 @@ class SourceLineLengthTests(unittest.TestCase):
         with TemporaryDirectory() as directory:
             root = Path(directory)
             lint.git(root, "init", "--quiet")
-            (root / "LAYER_6_RUNTIME_SETUP").mkdir()
-            script = "LAYER_6_RUNTIME_SETUP/start.py"
-            old = "LAYER_6_RUNTIME_SETUP/old.ts"
-            renamed = "LAYER_6_RUNTIME_SETUP/renamed file.ts"
-            new = "LAYER_6_RUNTIME_SETUP/panel.svelte"
+            (root / "LAYER_5_USER_SETUP_C65").mkdir()
+            script = "LAYER_5_USER_SETUP_C65/start.py"
+            old = "LAYER_5_USER_SETUP_C65/old.ts"
+            renamed = "LAYER_5_USER_SETUP_C65/renamed file.ts"
+            new = "LAYER_5_USER_SETUP_C65/panel.svelte"
             (root / script).write_text("legacy\nold\n")
             (root / old).write_text("unchanged\n")
             lint.git(root, "add", "--all")

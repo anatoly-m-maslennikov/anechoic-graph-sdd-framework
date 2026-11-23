@@ -28,7 +28,9 @@ Use these local prefixes, based on dbt terminology, for database objects:
 - `biz_`: derived metrics and rollups.
 - `ops_`: durable runtime records, including journal, query log, checkpoints, and generation hashes.
 
-Use `mrt_real_graph_*` for Realization Graph nodes, edges, and evidence. Use `mrt_diag_*` for findings and source read issues.
+Use `mrt_real_graph_*` for Realization Graph nodes, edges, and evidence. Use `mrt_diag_*` for findings from admitted data.
+
+Keep current failures from Atom capture, code scanning, and generation builds in `ops_ingestion_issues`. Record the source, error code, message, and any known file paths or Atom reference. Preserve published data when ingestion fails. Clear issues when the affected inputs pass recheck.
 
 Publish the complete Atom projection as `mrt_atoms`. Provide filtered views for each native Atom family as `mrt_spec_atoms`, `mrt_ticket_atoms`, and `mrt_project_config_atoms`.
 

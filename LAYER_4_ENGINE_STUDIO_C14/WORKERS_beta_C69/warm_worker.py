@@ -28,13 +28,20 @@ def _admit_lifecycle(request):
         return False
 
 
+def _within_start_window(start_by):
+    if start_by is None:
+        return os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") == "0"
+    return (type(start_by) in (int, float) and math.isfinite(start_by)
+            and start_by > time.monotonic())
+
+
 def _admit(request):
-    if (not isinstance(request, dict) or isinstance(request.get("start_by"), bool)
-            or not isinstance(request.get("start_by"), (int, float)) or not math.isfinite(request["start_by"])
-            or request["start_by"] <= time.monotonic()):
+    if (not isinstance(request, dict)
+            or not _within_start_window(request.get("start_by"))):
         return False
     if request.get("kind") == "indexed_lifecycle":
-        return _admit_lifecycle(request) and request["start_by"] > time.monotonic()
+        return (_admit_lifecycle(request)
+                and _within_start_window(request["start_by"]))
     if (set(request) != {"kind", "start_by", "binding", "reuse", "paths"}
             or request["kind"] != "ticket_delta" or not valid_reuse(request["reuse"])):
         return False
@@ -45,7 +52,7 @@ def _admit(request):
             or not isinstance(paths, list) or not 0 < len(paths) <= 32
             or any(not isinstance(path, str) or not path for path in paths)):
         return False
-    return request["start_by"] > time.monotonic()
+    return _within_start_window(request["start_by"])
 
 
 def _capture(connection, request, read_fd, write_fd, indexed_draft):

@@ -24,6 +24,12 @@ class GridResultsTest(unittest.TestCase):
             self.assertEqual(result["rows"], [["A", 1]])
             self.assertEqual(result["groups"], [{"value": "A", "count": 1}])
             self.assertEqual(page(1).json()["result"]["rows"], [["a", 2]])
+            beyond = page(10).json()["result"]
+            self.assertEqual((beyond["rows"], beyond["row_count"], beyond["groups"]), ([], 2, []))
+            empty_grid = {**grid, "filters": [{"column": 0, "operator": "contains", "value": "missing"}]}
+            empty = client.post("/database", json={**BINDING, "query_id": run["query_id"],
+                                "offset": 0, "page_size": 1, "grid": empty_grid}).json()["result"]
+            self.assertEqual((empty["rows"], empty["row_count"], empty["groups"]), ([], 0, []))
             self.assertEqual(client.post("/database", json={**BINDING, "query_id": run["query_id"],
                              "offset": 0, "page_size": 1, "grid": {"sort": [{"column": 2, "direction": "asc"}]}}).status_code, 400)
             def call(operation, arguments):

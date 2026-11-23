@@ -25,8 +25,9 @@ def scan_web(items):
         return None
     try:
         env = {key: value for key, value in os.environ.items() if key not in {'NODE_OPTIONS', 'NODE_PATH'}}
+        timeout = None if env.get('ANECHOIC_TEST_IMAGE_DEADLINES') == '0' else 60
         result = subprocess.run(['node', str(_SCANNER)], input=json.dumps(items), text=True,
-                                capture_output=True, timeout=60, check=True, env=env)
+                                capture_output=True, timeout=timeout, check=True, env=env)
         rows = json.loads(result.stdout)
         return rows if isinstance(rows, dict) else None
     except (OSError, subprocess.SubprocessError, ValueError):

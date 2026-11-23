@@ -23,8 +23,8 @@ from .source_sizes import (check_functions as check_functions, check_module as c
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.functional_suite import (
     MCP_TESTS as MCP_TESTS, WORKBENCH, _test_phase, select_phase_modules, valid_test_request,
 )
-from .full_suite_docker import (APP as APP, candidate_test_image,
-                                current_code_test_image)
+from .full_suite_docker import (APP as APP, IMAGE_DEADLINES, candidate_test_image,
+                                current_code_test_image, image_deadline_mode)
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.static_checks import CODE_ROOTS, check as _run_static_checks
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.suite_report import record_module, suite_report
 
@@ -90,14 +90,12 @@ def discover_test_modules(root: Path) -> list[Path]:
     return sorted(modules)
 
 
-def _module_environment(child, environment):
-    environment = {
-        **(os.environ if environment is None else environment),
-        "ANECHOIC_DOCKER_E2E": "1",
-        "ANECHOIC_DOCKER_QUERY_E2E": "1",
-        "PYTHONPATH": str(child),
-    }
-    environment.pop("PYTHONHOME", None)
+def _module_environment(child, environment, *, image_module):
+    inherited = os.environ if environment is None else environment
+    environment = {key: value for key, value in inherited.items() if key not in ("PYTHONHOME", IMAGE_DEADLINES)}
+    environment.update(ANECHOIC_DOCKER_E2E="1", ANECHOIC_DOCKER_QUERY_E2E="1", PYTHONPATH=str(child))
+    if image_module:
+        environment[IMAGE_DEADLINES] = image_deadline_mode(inherited)
     return environment
 
 
@@ -107,9 +105,9 @@ def _module_command(child, module, environment, required):
     if child.name != CODE_ROOTS[0]:
         environment.pop("VIRTUAL_ENV", None)
         environment["UV_PROJECT_ENVIRONMENT"] = (
-            str(child / (".venv-release" if child.name == CODE_ROOTS[1] else ".venv-setup"))
+            str(child / (".venv-release" if child.as_posix().endswith(CODE_ROOTS[1]) else ".venv-setup"))
         )
-        command = ("uv", "run", "--project", str(child.parent / "LAYER_3_ENVIRONMENTS_C72" / ("release" if child.name == CODE_ROOTS[1] else "setup")), "--locked", "--no-env-file", "python", "-B")
+        command = ("uv", "run", "--project", str((child.parent.parent if child.as_posix().endswith(CODE_ROOTS[1]) else child.parent) / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72" / ("release" if child.as_posix().endswith(CODE_ROOTS[1]) else "setup")), "--locked", "--no-env-file", "python", "-B")
     return (*command, "-P", "-c", CHILD, name, *(("required",) if required else ()))
 
 
@@ -118,8 +116,8 @@ def run_module(
 ) -> tuple[bool, int, int, str, str, float, str | None]:
     """Return one isolated module's result and output for coherent reporting."""
     started = time.monotonic()
-    child = root / module.relative_to(root).parts[0]
-    environment = _module_environment(child, environment)
+    child = next(root / name for name in CODE_ROOTS if module.is_relative_to(root / name))
+    environment = _module_environment(child, environment, image_module=_docker_module(root, module))
     environment["ANECHOIC_TEST_IMPORT_DIRS"] = os.pathsep.join((
         str(module.parent), str(module.parent.parent), str(root / WORKBENCH / "FEATURE_WORKBENCH_BACKEND"),
     ))
@@ -132,7 +130,7 @@ def run_module(
             capture_output=True,
             text=True,
             check=False,
-            timeout=MODULE_TIMEOUT_SECONDS,
+            timeout=None if environment.get(IMAGE_DEADLINES) == "0" else MODULE_TIMEOUT_SECONDS,
             env=environment,
         )
         counts = [

@@ -1,4 +1,5 @@
 import json
+import os
 import socket
 import subprocess
 import sys
@@ -7,6 +8,9 @@ import time
 import unittest
 from hashlib import sha256
 from pathlib import Path
+from unittest.mock import patch
+
+from WORKERS_beta_C69.warm_worker import _within_start_window
 
 from .WORKERS_beta_C69__tests__shared import generation_fixture
 
@@ -21,6 +25,17 @@ def exchange(address, request):
 
 
 class WarmWorkerTest(unittest.TestCase):
+    def test_missing_deadline_requires_disabled_test_image_deadlines(self):
+        switch = "ANECHOIC_TEST_IMAGE_DEADLINES"
+        with patch.dict(os.environ):
+            os.environ.pop(switch, None)
+            self.assertFalse(_within_start_window(None))
+            os.environ[switch] = "1"
+            self.assertFalse(_within_start_window(None))
+            os.environ[switch] = "0"
+            self.assertTrue(_within_start_window(None))
+            self.assertFalse(_within_start_window(0))
+
     def test_warm_worker(self):
         with tempfile.TemporaryDirectory(dir="/tmp") as tmp:
             self._check_worker(Path(tmp).resolve())

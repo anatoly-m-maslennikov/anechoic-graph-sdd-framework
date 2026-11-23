@@ -16,14 +16,14 @@ from .web_imports import _WEB, lookup_web
 
 _ENVIRONMENTS = {
     "LAYER_4_ENGINE_STUDIO_C14": "engine",
-    "LAYER_5_FRAMEWORK_DELIVERY": "release",
-    "LAYER_6_RUNTIME_SETUP": "setup",
+    "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27": "release",
+    "LAYER_5_USER_SETUP_C65": "setup",
 }
 
 
 def _environment_root(root: Path, base: PurePosixPath) -> Path:
     name = _ENVIRONMENTS.get(base.as_posix())
-    environment = root / "LAYER_3_ENVIRONMENTS_C72" / name if name else root / base.as_posix()
+    environment = root / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72" / name if name else root / base.as_posix()
     if name and not environment.is_symlink() and environment.is_dir():
         return environment
     return root / base.as_posix()
@@ -32,8 +32,9 @@ def _environment_root(root: Path, base: PurePosixPath) -> Path:
 def _roots(root: Path, python_roots: tuple[str, ...] | None) -> list[PurePosixPath]:
     if python_roots is None:
         discovered = []
-        for child in sorted(root.iterdir()):
-            environment = _environment_root(root, PurePosixPath(child.name))
+        for child in sorted({*root.iterdir(), *(root / name for name in _ENVIRONMENTS)}):
+            relative = child.relative_to(root).as_posix()
+            environment = _environment_root(root, PurePosixPath(relative))
             manifest, lock = environment / "pyproject.toml", environment / "uv.lock"
             if child.is_symlink() or not child.is_dir() or manifest.is_symlink() or lock.is_symlink():
                 continue
@@ -41,7 +42,7 @@ def _roots(root: Path, python_roots: tuple[str, ...] | None) -> list[PurePosixPa
                 continue
             with manifest.open("rb") as handle:
                 if isinstance(tomllib.load(handle).get("project"), dict):
-                    discovered.append(child.name)
+                    discovered.append(relative)
         python_roots = tuple(discovered) or (".",)
     roots = []
     for value in python_roots:

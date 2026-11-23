@@ -74,7 +74,7 @@ def _release_command(selection, name, arguments):
         raise ValueError("release-run-id-invalid")
     operation = "public" if public else "local"
     entrypoint = declared_release_entrypoint(selection, operation)
-    args = ["uv", "run", "--project", str(root / "LAYER_3_ENVIRONMENTS_C72/release"), "--locked",
+    args = ["uv", "run", "--project", str(root / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/release"), "--locked",
             "--python", "3.14", "--managed-python", "--no-env-file",
             "python", "-B", "-E", str(root / entrypoint),
             operation, "--project-root", str(root), "--run-id", run_id]
@@ -84,7 +84,7 @@ def _release_command(selection, name, arguments):
             if not isinstance(value, str) or not value or "\0" in value or value.startswith("-"):
                 raise ValueError(f"{key}-invalid")
             args.extend((f"--{key.replace('_', '-')}", value))
-    env = shlex.quote(str(root / "LAYER_5_FRAMEWORK_DELIVERY/.venv-release"))
+    env = shlex.quote(str(root / "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/.venv-release"))
     return {"working_directory": str(root),
             "command": f"UV_PROJECT_ENVIRONMENT={env} {shlex.join(args)}"}
 

@@ -1,8 +1,10 @@
 """Check public schema aliases and rebuild target routing."""
 
 import unittest
+from unittest.mock import AsyncMock, patch
 
-from ..projection_tools import FLOW_HISTORY, TABLE_ALIASES, TABLES, _target
+from .. import projection_tools
+from ..projection_tools import FLOW_HISTORY, TABLE_ALIASES, TABLES, _target, invoke
 from ..schema_tools import _valid_schema
 
 
@@ -42,6 +44,8 @@ class SchemaProjectionNamesTests(unittest.TestCase):
         for name in ("mrt_flow_events", "mrt_package_coupling", "biz_atoms", "mrt_unknown"):
             with self.subTest(name=name), self.assertRaises(ValueError):
                 _target({"target": name})
+        with self.assertRaises(ValueError):
+            _target({"target": "ops_ingestion_issues"})
         result_id = "a" * 32
         self.assertEqual((result_id, f"workbench_results.query_{result_id}"),
                          _target({"target": f"workbench_results.query_{result_id}"}))
@@ -53,6 +57,20 @@ class SchemaProjectionNamesTests(unittest.TestCase):
             with self.subTest(table=table):
                 self.assertTrue(_valid_schema({"tables": {table: columns}}))
         self.assertFalse(_valid_schema({"tables": {"mrt_unknown": []}}))
+        self.assertTrue(_valid_schema({"tables": {"ops_ingestion_issues": [{"name": "code", "type": "VARCHAR"}]}}))
         self.assertFalse(_valid_schema({"tables": {"ops_generation_carrier_hashes": []}}))
         self.assertFalse(_valid_schema({"tables": {"biz_atoms": [status]}}))
         self.assertFalse(_valid_schema({"tables": {"mrt_relations": [status]}}))
+
+
+class IngestionStatusTests(unittest.IsolatedAsyncioTestCase):
+    async def test_status_reads_issues_without_sql(self):
+        rows = [{"source": "atom", "relative_path": "bad.md", "code": "invalid",
+                 "message": "bad Atom", "atom_ref": None, "related_paths": []}]
+        with patch.object(projection_tools, "upstream", new_callable=AsyncMock,
+                          side_effect=[{"result": {"active": None, "latest": None}},
+                                       {"result": {"rows": rows}}]) as upstream:
+            result = await invoke("workbench_status", {}, "kernel", "orchestrator", None, "instance")
+        self.assertEqual(rows, result["result"]["value"]["ingestion_issues"])
+        self.assertEqual("/ingestion/issues", upstream.await_args_list[1].args[2])
+        self.assertEqual({"instance_id": "instance"}, upstream.await_args_list[1].kwargs["params"])

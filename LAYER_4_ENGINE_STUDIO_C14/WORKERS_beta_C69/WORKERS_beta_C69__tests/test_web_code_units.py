@@ -1,14 +1,35 @@
 import json
+import os
 import subprocess
 from pathlib import Path
 import shutil
 import unittest
+from unittest.mock import patch
+
+from WORKERS_beta_C69.realization_graph import _web_code_units
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / "web_code_units.mjs"
 
 
 FRONTEND = SCRIPT.parents[1] / "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND"
+
+
+class ScannerDeadlineTests(unittest.TestCase):
+    def test_image_deadline_switch_controls_subprocess_wait(self):
+        switch = "ANECHOIC_TEST_IMAGE_DEADLINES"
+        result = subprocess.CompletedProcess([], 0, stdout="[[], []]")
+        with patch.dict(os.environ), patch("subprocess.run", return_value=result) as run:
+            os.environ.pop(switch, None)
+            for setting, expected in ((None, 60), ("1", 60), ("0", None)):
+                if setting is not None:
+                    os.environ[switch] = setting
+                with self.subTest(setting=setting):
+                    self.assertEqual([[], []], _web_code_units({}, {}))
+                    self.assertEqual(expected, run.call_args.kwargs["timeout"])
+            run.return_value = subprocess.CompletedProcess([], 2, stderr="bad graph")
+            with self.assertRaisesRegex(ValueError, "bad graph"):
+                _web_code_units({}, {})
 
 
 @unittest.skipUnless(shutil.which("node") and (FRONTEND / "node_modules/typescript").is_dir(),

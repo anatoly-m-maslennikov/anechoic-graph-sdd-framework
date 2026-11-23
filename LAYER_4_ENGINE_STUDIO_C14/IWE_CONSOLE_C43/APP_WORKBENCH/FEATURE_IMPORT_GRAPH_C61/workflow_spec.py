@@ -3,6 +3,7 @@
 import argparse
 import ast
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -205,8 +206,9 @@ def _render_mermaid(config, states):
     return "\n".join(lines)
 
 def _tool(command, payload):
+    timeout = None if os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") == "0" else 60
     result = subprocess.run(command, input=json.dumps(payload, allow_nan=False), text=True,
-                            capture_output=True, timeout=60, check=False)
+                            capture_output=True, timeout=timeout, check=False)
     if result.returncode:
         raise ValueError(result.stderr.strip() or f"{command[0]} exited with status {result.returncode}")
     return json.loads(result.stdout)

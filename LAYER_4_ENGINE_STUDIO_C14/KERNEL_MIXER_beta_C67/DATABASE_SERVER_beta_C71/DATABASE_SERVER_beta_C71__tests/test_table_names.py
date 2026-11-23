@@ -28,9 +28,10 @@ class TableNamesTest(unittest.TestCase):
                                      connection.execute(f"SELECT * FROM {name}").fetchall())
                 kinds = dict(connection.execute(
                     "SELECT table_name, table_type FROM information_schema.tables "
-                    "WHERE table_name IN ('mrt_diag_import_read_issues', 'mrt_import_read_issues')"
+                    "WHERE table_name IN ('mrt_diag_import_read_issues', 'mrt_import_read_issues', 'ops_ingestion_issues')"
                 ).fetchall())
-                self.assertEqual({"mrt_diag_import_read_issues": "BASE TABLE", "mrt_import_read_issues": "VIEW"}, kinds)
+                self.assertEqual({"mrt_diag_import_read_issues": "VIEW", "mrt_import_read_issues": "VIEW",
+                                  "ops_ingestion_issues": "BASE TABLE"}, kinds)
                 self._assert_checkpoint(connection)
 
     def test_open_database_migrates_legacy_rows_and_reopens_idempotently(self):

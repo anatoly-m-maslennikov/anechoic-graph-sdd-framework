@@ -5,6 +5,7 @@ import socket
 import time
 
 from .generation import parse_worker_result
+from .jobs import operation_timeout
 
 MAX_REPLY_BYTES = 16 * 1024 * 1024
 
@@ -28,7 +29,7 @@ class WarmCapture:
         self.socket.shutdown(socket.SHUT_WR)
 
 
-def _line(sock, limit, *, deadline=None):
+def _line(sock, limit, *, deadline=None, single_byte=False):
     data = bytearray()
     while len(data) <= limit:
         if deadline is not None:
@@ -36,7 +37,8 @@ def _line(sock, limit, *, deadline=None):
             if remaining <= 0:
                 raise TimeoutError("Worker start deadline exceeded")
             sock.settimeout(remaining)
-        chunk = sock.recv(1 if deadline is not None else min(65536, limit + 1 - len(data)))
+        chunk_size = 1 if single_byte else min(65536, limit + 1 - len(data))
+        chunk = sock.recv(chunk_size)
         if not chunk:
             raise ValueError("Worker closed the connection")
         data.extend(chunk)
@@ -60,14 +62,17 @@ def _accepted_capture(sock, ack):
 def request(socket_path, load_seconds, binding, reuse, paths, register):
     """Return the worker payload, or None when the broker cannot serve it."""
     try:
-        start_by = time.monotonic() + load_seconds
+        load_seconds = operation_timeout(load_seconds)
+        start_by = (None if load_seconds is None
+                    else time.monotonic() + load_seconds)
         payload = {"kind": "ticket_delta", "start_by": start_by,
                    "binding": binding, "reuse": reuse, "paths": paths}
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
-            sock.settimeout(max(0.0, start_by - time.monotonic()))
+            if start_by is not None:
+                sock.settimeout(max(0.0, start_by - time.monotonic()))
             sock.connect(socket_path)
             sock.sendall(json.dumps(payload, allow_nan=False).encode() + b"\n")
-            ack = _line(sock, 1024, deadline=start_by)
+            ack = _line(sock, 1024, deadline=start_by, single_byte=True)
             sock.settimeout(None)
             if not register(_accepted_capture(sock, ack)):
                 return None
@@ -80,7 +85,9 @@ def request(socket_path, load_seconds, binding, reuse, paths, register):
 
 
 def run_lifecycle(socket_path, load_seconds, request, register, timeout):
-    start_by = time.monotonic() + load_seconds
+    load_seconds = operation_timeout(load_seconds)
+    start_by = (None if load_seconds is None
+                else time.monotonic() + load_seconds)
     payload = {"kind": "indexed_lifecycle", "start_by": start_by, "request": request}
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
         sock.settimeout(load_seconds)
@@ -89,7 +96,7 @@ def run_lifecycle(socket_path, load_seconds, request, register, timeout):
         except OSError as error:
             raise WarmLifecycleUnavailable("Warm lifecycle Worker is unavailable") from error
         sock.sendall(json.dumps(payload, allow_nan=False).encode() + b"\n")
-        ack = _line(sock, 1024, deadline=start_by)
+        ack = _line(sock, 1024, deadline=start_by, single_byte=True)
         if ack == {"accepted": False}:
             raise WarmLifecycleUnavailable("Warm lifecycle Worker refused the request")
         if not register(_accepted_capture(sock, ack)):

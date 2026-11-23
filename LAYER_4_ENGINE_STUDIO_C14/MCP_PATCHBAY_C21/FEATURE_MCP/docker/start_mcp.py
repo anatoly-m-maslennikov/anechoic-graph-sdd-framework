@@ -58,7 +58,7 @@ def _installed_source_root(project_root: Path) -> Path:
 
 def _command(args, source, project, launcher):
     command = [
-        "uv", "run", "--project", str(source / "LAYER_3_ENVIRONMENTS_C72/engine"), "--locked", "--python", "3.14",
+        "uv", "run", "--project", str(source / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine"), "--locked", "--python", "3.14",
         "--managed-python", "--no-env-file", "--no-default-groups", "--group", "runtime",
         str(launcher), "--project-root", str(project),
                "--source-root", str(source), "--output", "url"]
@@ -80,7 +80,7 @@ def _run(command, project):
                  "ANECHOIC_MCP_HTTP_SECRET_TOKEN"):
         environment.pop(name, None)
     environment["UV_PROJECT_ENVIRONMENT"] = str(
-        (project / "LAYER_4_ENGINE_STUDIO_C14/.venv-prod" if Path(command[3]) == project / "LAYER_3_ENVIRONMENTS_C72/engine"
+        (project / "LAYER_4_ENGINE_STUDIO_C14/.venv-prod" if Path(command[3]) == project / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine"
          else project / ".anechoic_runtime" / "launcher-venv"))
     environment["UV_CACHE_DIR"] = str(project / ".anechoic_tmp" / "cache" / "uv")
     environment["PYTHONNOUSERSITE"] = "1"

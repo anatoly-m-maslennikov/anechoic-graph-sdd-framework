@@ -158,7 +158,8 @@ def create_app(config, peer_owner=None):
 
     @asynccontextmanager
     async def lifespan(_app):
-        with (nullcontext() if peer_owner else open_warm_worker()) as worker:
+        stop = getattr(_app.state, "shutdown_requested", None)
+        with (nullcontext() if peer_owner else open_warm_worker(stop=stop)) as worker:
             if not peer_owner:
                 coordinator.pool.warm_worker = worker
             try:

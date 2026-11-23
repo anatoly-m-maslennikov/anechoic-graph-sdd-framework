@@ -1,9 +1,7 @@
 from hashlib import sha256
 from pathlib import Path, PurePosixPath
-from types import SimpleNamespace
 import sys
 import os
-import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -13,30 +11,42 @@ TOOLS = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(TOOLS))
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
-    ReadContext, capture_indexed_lifecycle, capture_native, capture_ticket_delta,
-    native_carrier_hashes, prepare_generation_snapshot, revalidate_native,
+    ReadContext, capture_indexed_lifecycle, capture_native,
+    native_carrier_hashes, revalidate_native,
 )
 
 
-class NativeCaptureTests(unittest.TestCase):
-    def setUp(self):
-        self.root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
-        self.control = self.root / ".anechoic_test"
-        self.control.mkdir()
-        self.manifest = self.write("AN-S-001-PROJECT_MANIFEST--manifest.md", "AN-S-001", "active", 1)
-        self.selection = SimpleNamespace(root=self.root, control_root=self.control,
-                                         manifest_path=self.manifest, project_prefix="AN",
-                                         manifest_sha256=sha256(self.manifest.read_bytes()).hexdigest())
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__tests.ADAPTERS_C30__tests__shared import (
+    NativeCaptureFixture,
+)
 
-    def write(self, relative, atom_id, status, version, container=None):
-        if "-T-" in atom_id and not relative.startswith("__TKT/"):
-            relative = "__TKT/TASKS/" + relative
-        path = self.control / relative
-        path.parent.mkdir(parents=True, exist_ok=True)
-        header = {"identity": {"atom_id": atom_id}, "context": {"container": container or {"component": "C0"}},
-                  "state": {"status": status, "version": version, "updated_at": "2026-11-19T00:00:00Z"}}
-        path.write_text("---\n" + yaml.safe_dump(header) + "---\n\n## Summary\n\nExample\n", encoding="utf-8")
-        return path
+
+class NativeCaptureTests(NativeCaptureFixture, unittest.TestCase):
+    def test_ingestion_issues_report_malformed_and_duplicate_carriers(self):
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_snapshot_cli import _check_capture
+        malformed = self.control / "malformed.md"
+        malformed.write_text("---\ninvalid: [\n---\n")
+        first = self.write("AN-T-8--first.md", "AN-T-8", "active", 1)
+        second = self.write("other/AN-T-8--second.md", "AN-T-8", "active", 1)
+        third = self.write("AN-T-8--third.md", "AN-T-8", "active", 2)
+        result = capture_native(self.selection)
+        self.assertEqual("parse_error", next(i["code"] for i in result.ingestion_issues
+                                             if i["relative_path"] == malformed.relative_to(self.root).as_posix()))
+        for code, paths in (("duplicate_revision", [first, second]),
+                            ("duplicate_current", [first, second, third])):
+            relatives = sorted(p.relative_to(self.root).as_posix() for p in paths)
+            issues = [i for i in result.ingestion_issues if i["code"] == code]
+            self.assertEqual(relatives, sorted(i["relative_path"] for i in issues))
+            self.assertTrue(all(i["related_paths"] == relatives for i in issues))
+        with self.assertRaisesRegex(ValueError, "Native capture failed") as caught:
+            _check_capture(result)
+        self.assertEqual(result.ingestion_issues, caught.exception.ingestion_issues)
+        second.unlink()
+        third.unlink()
+        updated = capture_native(self.selection, previous=result,
+                                 paths={PurePosixPath(second.relative_to(self.root).as_posix()),
+                                        PurePosixPath(third.relative_to(self.root).as_posix())})
+        self.assertFalse(any(i["code"].startswith("duplicate_") for i in updated.ingestion_issues))
 
     def test_indexed_capture_reads_only_addressed_and_detects_drift(self):
         path = self.write("AN-T-8--task.md", "AN-T-8", "active", 1)
@@ -103,54 +113,6 @@ class NativeCaptureTests(unittest.TestCase):
         with patch.object(ReadContext, "read", read_and_change):
             with self.assertRaisesRegex(ValueError, "changed during capture"):
                 native_carrier_hashes(binding)
-
-    def test_snapshot_and_ticket_delta_optional_hashes(self):
-        binding = {"root": str(self.root), "control_root": self.control.name,
-                   "manifest_path": self.manifest.relative_to(self.root).as_posix(),
-                   "manifest_sha256": self.selection.manifest_sha256, "project_prefix": "AN"}
-        path = self.write("AN-T-8--hash.md", "AN-T-8", "active", 1)
-        relative = path.relative_to(self.root).as_posix()
-        endpoints = {"CONTAINED_BY": [{"inverse_alias": "CONTAINS"}, False], "CONTAINS": [{}, True]}
-        with patch("FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_snapshot_cli._graph_config", return_value={}):
-            _, finish = prepare_generation_snapshot(binding, include_hashes=True)
-            snap, hashes = finish(endpoints)
-            self.assertEqual(native_carrier_hashes(binding), hashes)
-            _, default_finish = prepare_generation_snapshot(binding)
-            self.assertIsInstance(default_finish(endpoints), dict)
-        self.assertTrue(snap["atoms"])
-        delta = capture_ticket_delta(binding, [relative], endpoints, include_hashes=True)
-        self.assertEqual({relative: sha256(path.read_bytes()).hexdigest()}, delta["carrier_hashes"])
-        path.unlink()
-        deleted = capture_ticket_delta(binding, [relative], endpoints, include_hashes=True)
-        self.assertEqual({}, deleted["carrier_hashes"])
-        self.assertEqual([[path.parent.relative_to(self.root).as_posix(), path.name]], deleted["paths"])
-
-    def test_generation_defers_only_intermediate_currentness_check(self):
-        binding = {"root": str(self.root), "control_root": self.control.name,
-                   "manifest_path": self.manifest.relative_to(self.root).as_posix(),
-                   "manifest_sha256": self.selection.manifest_sha256, "project_prefix": "AN"}
-        path = self.write("AN-S-2--source.md", "AN-S-2", "active", 1)
-        original = ReadContext.currentness
-        calls = []
-
-        def currentness(reader):
-            calls.append(reader)
-            return original(reader)
-
-        with patch("FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_snapshot_cli._graph_config",
-                   return_value={}), patch.object(ReadContext, "currentness", currentness):
-            _, finish = prepare_generation_snapshot(binding)
-            self.assertEqual([], calls)
-            path.write_text(path.read_text().replace("Example", "Changed"), encoding="utf-8")
-            with self.assertRaisesRegex(ValueError, "changed during generation"):
-                finish({"CONTAINED_BY": [{"inverse_alias": "CONTAINS"}, False],
-                         "CONTAINS": [{}, True]})
-            self.assertEqual(1, len(calls))
-
-        calls.clear()
-        with patch.object(ReadContext, "currentness", currentness):
-            capture_native(self.selection)
-        self.assertEqual(1, len(calls))
 
     def test_current_draft_archived_and_header_containment(self):
         self.write("__TKT/TASKS/AN-T-09--task.md", "AN-T-09", "active", 2)

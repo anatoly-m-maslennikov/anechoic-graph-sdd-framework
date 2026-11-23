@@ -3,6 +3,7 @@
 import json
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 import unittest
 from unittest.mock import MagicMock, patch
@@ -37,9 +38,24 @@ class ImageModelStageTests(unittest.TestCase):
                 self.assertIn("--network=none", argv)
                 return subprocess.CompletedProcess(argv, 0, '[["claim.md", "hash"]]', "")
 
-            with patch.object(stage, "bounded_run", side_effect=run):
-                self.assertEqual(stage.previous_claims(component, IMAGE_ID, timeout=5),
-                                 [["claim.md", "hash"]])
+            for timeout in (5, None):
+                with patch.object(stage, "bounded_run", side_effect=run) as docker:
+                    self.assertEqual(stage.previous_claims(component, IMAGE_ID, timeout=timeout),
+                                     [["claim.md", "hash"]])
+                    self.assertEqual(docker.call_count, 2)
+                    for call in docker.call_args_list:
+                        remaining = call.kwargs["timeout"]
+                        if timeout is None:
+                            self.assertIsNone(remaining)
+                        else:
+                            self.assertTrue(0 < remaining <= timeout)
+
+    def test_unbounded_commands_keep_the_output_limit(self):
+        command = [sys.executable, "-B", "-c", "print('ok')"]
+        result = stage.bounded_run(command, cwd=stage.ROOT, timeout=None)
+        self.assertEqual((result.returncode, result.stdout), (0, "ok\n"))
+        with self.assertRaisesRegex(ValueError, "stdout exceeded"):
+            stage.bounded_run(command, cwd=stage.ROOT, timeout=None, max_output=2)
 
     def test_previous_ready_image_is_required_when_recorded(self):
         with tempfile.TemporaryDirectory() as temporary:

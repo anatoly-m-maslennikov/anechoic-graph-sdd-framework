@@ -138,6 +138,8 @@ class GenerationTests(unittest.TestCase):
                                     input=json.dumps(binding), text=True, capture_output=True, timeout=120)
             self.assertEqual(1, result.returncode)
             self.assertEqual('', result.stdout)
+            self.assertIn('Traceback (most recent call last)', result.stderr)
+            self.assertIn('in build_generation', result.stderr)
             self.assertIn('Generation directory must be an existing empty canonical directory', result.stderr)
             self.assertEqual([existing], list(output.iterdir()))
             self.assertEqual('existing generation', existing.read_text())

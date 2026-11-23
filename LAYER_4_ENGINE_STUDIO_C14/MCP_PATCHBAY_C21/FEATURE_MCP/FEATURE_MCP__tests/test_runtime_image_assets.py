@@ -79,12 +79,12 @@ class LifecycleImageAssetsTests(unittest.TestCase):
             component.mkdir()
             (component / "module.py").write_text("pass\n")
             self.assertEqual(before, manager.identity(use_packaged_assets=True))
-            selector = root / "LAYER_5_FRAMEWORK_DELIVERY/project.toml"
+            selector = root / "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml"
             selector.parent.mkdir(parents=True)
             selector.write_text('stack = "current"\n')
             selected = manager.identity(use_packaged_assets=True)
             self.assertNotEqual(before.fingerprint, selected.fingerprint)
-            self.assertIn("LAYER_5_FRAMEWORK_DELIVERY/project.toml", {entry.path for entry in selected.manifest})
+            self.assertIn("LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/project.toml", {entry.path for entry in selected.manifest})
             selector.write_text('stack = "beta"\n')
             with self.assertRaises(images.ImageError):
                 manager.identity()

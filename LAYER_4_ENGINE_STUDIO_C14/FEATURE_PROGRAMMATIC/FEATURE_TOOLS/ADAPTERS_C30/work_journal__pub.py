@@ -20,13 +20,13 @@ from .project_database__pub import PROJECT_DATABASE
 MODULE_PATH = Path(__file__).resolve()
 for _parent in MODULE_PATH.parents:
     if _parent.name == ".anechoic_runtime":
-        sys.pycache_prefix = str(_parent.parent / ".anechoic_tmp" / "cache" / "python")
+        sys.pycache_prefix = str(_parent.parent / ".anechoic_tmp" / "python" / "bytecode")
         break
     if _parent.name == ".anechoic_install":
-        sys.pycache_prefix = str(_parent.parent / ".anechoic_tmp" / "cache" / "python")
+        sys.pycache_prefix = str(_parent.parent / ".anechoic_tmp" / "python" / "bytecode")
         break
     if _parent.name == ".anechoic":
-        sys.pycache_prefix = str(_parent.parent / ".anechoic_tmp" / "cache" / "python")
+        sys.pycache_prefix = str(_parent.parent / ".anechoic_tmp" / "python" / "bytecode")
         break
 
 

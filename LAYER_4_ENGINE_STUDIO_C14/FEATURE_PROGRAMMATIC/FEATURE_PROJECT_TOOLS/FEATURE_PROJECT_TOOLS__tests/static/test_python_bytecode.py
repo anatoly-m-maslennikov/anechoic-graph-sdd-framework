@@ -51,11 +51,11 @@ class PythonBytecodeTests(unittest.TestCase):
         root = Path(self.enterContext(TemporaryDirectory())).resolve()
         subprocess.run(("git", "init", "--quiet", str(root)), check=True)
         for name in CODE_ROOTS:
-            (root / name).mkdir()
-        config = root / "LAYER_3_ENVIRONMENTS_C72/engine/pyproject.toml"
+            (root / name).mkdir(parents=True, exist_ok=True)
+        config = root / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml"
         config.parent.mkdir(parents=True)
         config.write_text("[tool.ruff]\n", encoding="utf-8")
-        relative = "LAYER_5_FRAMEWORK_DELIVERY/launcher.py"
+        relative = "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/launcher.py"
         launcher = root / relative
         unsafe_source = 'import subprocess\nsubprocess.run(["python", "worker.py"])\n'
         launcher.write_text(unsafe_source, encoding="utf-8")
@@ -67,7 +67,7 @@ class PythonBytecodeTests(unittest.TestCase):
         outside.mkdir()
         with redirect_stdout(StringIO()), redirect_stderr(StringIO()) as errors:
             self.assertEqual(1, run_full_suite(root, phase="static"))
-        self.assertIn("LAYER_5_FRAMEWORK_DELIVERY/__pycache__: bytecode cache outside .anechoic_tmp", errors.getvalue())
+        self.assertIn("LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/__pycache__: bytecode cache outside .anechoic_tmp", errors.getvalue())
         temporary = root / ".anechoic_tmp"
         temporary.mkdir()
         outside.rename(temporary / "__pycache__")

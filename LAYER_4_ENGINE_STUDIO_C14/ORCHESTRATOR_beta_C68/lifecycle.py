@@ -10,7 +10,7 @@ import sys
 import threading
 
 from .generation import admit_generation, read_structure, ticket_allocation
-from .jobs import ENGINE, FIELDS
+from .jobs import ENGINE, FIELDS, operation_timeout
 from .lifecycle_queries import lifecycle_context
 from .warm_worker import WarmLifecycleUnavailable, run_lifecycle
 
@@ -79,7 +79,7 @@ class LifecycleJobs:
             job = self.lifecycle_job = {"event": threading.Event(), "outcome": None,
                                         "name": request["name"], "arguments": request["arguments"]}
             self.watcher.queue.put({})
-        if not job["event"].wait(LIFECYCLE_WAIT_SECONDS):
+        if not job["event"].wait(operation_timeout(LIFECYCLE_WAIT_SECONDS)):
             return 504, {"error": {"code": "write_outcome_unknown", "message": "Lifecycle deadline exceeded; outcome is unknown"}}
         if job["outcome"] is None:
             return 503, {"error": {"code": "write_outcome_unknown", "message": "Orchestrator stopped; outcome is unknown"}}
@@ -91,7 +91,8 @@ class LifecycleJobs:
         if facts and self.worker_socket is not None:
             try:
                 outcome = run_lifecycle(self.worker_socket, self.worker_load_seconds, request,
-                                        self._register_warm_capture, LIFECYCLE_DEADLINE_SECONDS)
+                                        self._register_warm_capture,
+                                        operation_timeout(LIFECYCLE_DEADLINE_SECONDS))
             finally:
                 with self.lock:
                     self.warm_capture = None
@@ -116,7 +117,10 @@ class LifecycleJobs:
                 text=True, cwd=ENGINE, env=env, start_new_session=True)
             self.process = process
         try:
-            stdout, stderr = process.communicate(json.dumps(request), timeout=LIFECYCLE_DEADLINE_SECONDS)
+            stdout, stderr = process.communicate(
+                json.dumps(request),
+                timeout=operation_timeout(LIFECYCLE_DEADLINE_SECONDS),
+            )
         except subprocess.TimeoutExpired:
             try:
                 os.killpg(process.pid, signal.SIGKILL)

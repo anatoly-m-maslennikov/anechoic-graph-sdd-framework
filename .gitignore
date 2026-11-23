@@ -8,8 +8,8 @@ __pycache__/
 /.venv/
 /.venv-*/
 /LAYER_4_ENGINE_STUDIO_C14/.venv-*/
-/LAYER_5_FRAMEWORK_DELIVERY/.venv-release/
-/LAYER_6_RUNTIME_SETUP/.venv-setup/
+/LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/.venv-release/
+/LAYER_5_USER_SETUP_C65/.venv-setup/
 /.uv-cache/
 
 # Setuptools build artifacts

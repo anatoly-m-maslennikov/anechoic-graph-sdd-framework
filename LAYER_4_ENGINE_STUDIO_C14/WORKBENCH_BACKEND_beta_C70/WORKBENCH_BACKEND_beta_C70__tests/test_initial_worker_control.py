@@ -24,6 +24,8 @@ class InitialWorkerTests(unittest.IsolatedAsyncioTestCase):
                     await self.abort_initial(http, project, query)
                 refused = query.result()
                 self.assertEqual("shared_gateway_failure", refused["error"]["code"])
+                status = await _invoke(http, project, "workbench_status", {})
+                self.assertEqual("live_index", status["result"]["value"]["mode"])
                 recovered = await _invoke(http, project)
                 self.assertEqual([["initial"]], recovered["result"]["value"]["rows"])
 

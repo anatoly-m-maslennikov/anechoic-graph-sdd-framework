@@ -19,7 +19,7 @@ from time import sleep
 import httpx2
 
 from .WORKBENCH_BACKEND_beta_C70__shared import create_app, serve, socket_path
-from .peer_transport import upstream
+from .peer_transport import operation_timeout, upstream
 from .warm_worker import ENGINE, _stop, open_warm_worker
 
 ORCHESTRATOR = "ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__shared"
@@ -212,7 +212,8 @@ def _own_project(path, args, binding):
         signal.signal(sig, lambda *_: stop.set())
     Thread(target=_watch_parent, args=(stop,), daemon=True).start()
     try:
-        with open_warm_worker() as worker, _open_bound_peers(path, args, binding, stop, worker) as peers:
+        with (open_warm_worker(stop=stop.is_set) as worker,
+              _open_bound_peers(path, args, binding, stop, worker) as peers):
             asyncio.run(peers.wait_ready(args.instance_id, stop=stop))
             if not stop.is_set():
                 _publish_ready(path.parent / "peers.ready", peers, stop)
@@ -232,8 +233,11 @@ def _private_artifact(path, kind):
 
 
 async def _check_peer_binding(args, database, orchestrator):
-    kernel, jobs = await asyncio.gather(upstream(database, "GET", "/health", timeout=2),
-                                        upstream(orchestrator, "GET", "/health", timeout=2))
+    timeout = operation_timeout(2)
+    kernel, jobs = await asyncio.gather(
+        upstream(database, "GET", "/health", timeout=timeout),
+        upstream(orchestrator, "GET", "/health", timeout=timeout),
+    )
     reports = [reply.get("result") for reply in (kernel, jobs)]
     if any(not isinstance(report, dict) or report.get("instance_id") != args.instance_id
            or type(report.get("pid")) is not int or report["pid"] <= 1 for report in reports):

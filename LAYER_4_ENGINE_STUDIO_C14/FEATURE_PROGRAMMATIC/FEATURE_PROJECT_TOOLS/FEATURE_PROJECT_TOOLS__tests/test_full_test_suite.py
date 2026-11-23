@@ -33,8 +33,8 @@ class FullTestSuiteTests(unittest.TestCase):
         self.addCleanup(directory.cleanup)
         self.root = Path(directory.name)
         for name in full.CODE_ROOTS:
-            (self.root / name).mkdir()
-        self.file("LAYER_3_ENVIRONMENTS_C72/engine/pyproject.toml", "[tool.ruff]\n")
+            (self.root / name).mkdir(parents=True, exist_ok=True)
+        self.file("LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72/engine/pyproject.toml", "[tool.ruff]\n")
         self.output = io.StringIO()
         self.errors = io.StringIO()
 
@@ -55,8 +55,8 @@ class FullTestSuiteTests(unittest.TestCase):
             self.file(str(APP / "FEATURE_MCP__tests/test_mcp.py")),
             self.file(str(full.WORKBENCH / "APP_WORKBENCH__tests/test_workbench.py")),
             self.file("LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/test_project.py"),
-            self.file("LAYER_5_FRAMEWORK_DELIVERY/LAYER_5_FRAMEWORK_DELIVERY__tests/test_release.py"),
-            self.file("LAYER_5_FRAMEWORK_DELIVERY/PUBLIC_RELEASE/PUBLIC_RELEASE__tests/test_public.py"),
+            self.file("LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/LAYER_2_RELEASE_C27__tests/test_release.py"),
+            self.file("LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/LAYER_3_PUBLIC_RELEASE_C64/LAYER_3_PUBLIC_RELEASE_C64__tests/test_public.py"),
         ]
         for relative in (
             "LAYER_4_ENGINE_STUDIO_C14/.anechoic_tmp/test_generated.py",
@@ -207,7 +207,7 @@ class FullTestSuiteTests(unittest.TestCase):
                     })[0])
                 args = command.call_args.args[0]
                 env = command.call_args.kwargs["env"]
-                self.assertEqual(("uv", "run", "--project", str(self.root / "LAYER_3_ENVIRONMENTS_C72" / ("release" if child == full.CODE_ROOTS[1] else "setup")),
+                self.assertEqual(("uv", "run", "--project", str(self.root / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72" / ("release" if child == full.CODE_ROOTS[1] else "setup")),
                                   "--locked", "--no-env-file", "python"), args[:7])
                 self.assertEqual("package.test_example", args[-1])
                 self.assertEqual(str(self.root / child), env["PYTHONPATH"])

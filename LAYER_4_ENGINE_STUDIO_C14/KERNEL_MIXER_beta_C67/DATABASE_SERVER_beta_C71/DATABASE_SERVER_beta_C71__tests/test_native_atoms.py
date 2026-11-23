@@ -149,3 +149,23 @@ class NativeSchemaTest(unittest.TestCase):
         self.assertNotIn("generation", tables)
         status = next(column for column in tables["atoms"] if column["name"] == "header.state.status")
         self.assertEqual(expected, status["values"])
+
+class StagedNativeAtomsTest(unittest.TestCase):
+    def test_stage_mixed_order_empty_and_revisions(self):
+        from ..native_atoms import replace_native_atoms, stage_atom_rows, write_staged_atoms
+
+        current, archived = _native_generation()["snapshot"]["atoms"]
+        draft = archived | {"reference": "AN-T-2@1-draft", "exact_ref": "AN-T-2@1-draft",
+                            "status_group": "Draft", "status": "draft", "filename": "draft.md"}
+        draft = dict(reversed(list(draft.items())))
+        with duckdb.connect() as connection:
+            replace_native_atoms(connection, {"atoms": [], "relations": []})
+            stage_atom_rows(connection, [current, draft, archived])
+            write_staged_atoms(connection)
+            self.assertEqual(3, connection.execute("SELECT count(*) FROM int_admission_atoms").fetchone()[0])
+            self.assertEqual(
+                [("AN-T-1", "AN-T-1@2"), (None, "AN-T-1@1"), (None, "AN-T-2@1-draft")],
+                connection.execute("SELECT stable_ref, exact_ref FROM mrt_atom_references ORDER BY reference").fetchall(),
+            )
+            stage_atom_rows(connection, [])
+            self.assertEqual(0, connection.execute("SELECT count(*) FROM int_admission_atoms").fetchone()[0])

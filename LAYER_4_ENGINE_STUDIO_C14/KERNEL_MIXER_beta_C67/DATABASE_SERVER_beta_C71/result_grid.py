@@ -62,16 +62,18 @@ def grid_page(rows, count, offset, size, grid, columns=None):
     parameters = [value for index, row in enumerate(rows) for value in (index, *row)]
     source = f'WITH source("ordinal", {", ".join(names)}) AS (VALUES {values})'
     predicates = [f'instr(lower(CAST({names[item["column"]]} AS VARCHAR)), lower(?)) > 0' for item in filters]
-    filtered = source + ", filtered AS (SELECT * FROM source" + (" WHERE " + " AND ".join(predicates) if predicates else "") + ")"
+    filtered = source + ", filtered AS MATERIALIZED (SELECT * FROM source" + (" WHERE " + " AND ".join(predicates) if predicates else "") + ")"
     parameters += [item["value"] for item in filters]
     order = [f'{_sort_column(names, columns, item["column"])} {item["direction"].upper()} NULLS LAST'
              for item in ([group] if group else []) + sort]
     order.append('"ordinal" ASC')
     connection = duckdb.connect(":memory:")
     try:
-        total = connection.execute(filtered + " SELECT count(*) FROM filtered", parameters).fetchone()[0]
         selection = "*" if group is None else f'*, count(*) OVER (PARTITION BY {names[group["column"]]}) AS group_count'
-        raw = connection.execute(filtered + f' SELECT {selection} FROM filtered ORDER BY {", ".join(order)} LIMIT ? OFFSET ?', parameters + [size, offset]).fetchall()
+        query = filtered + f', page AS (SELECT {selection} FROM filtered ORDER BY {", ".join(order)} LIMIT ? OFFSET ?)'
+        result = connection.execute(query + f' SELECT total.n, page.* FROM (SELECT count(*) AS n FROM filtered) total LEFT JOIN page ON true ORDER BY {", ".join(order)}', parameters + [size, offset]).fetchall()
+        total = result[0][0]
+        raw = [row[1:] for row in result if row[1] is not None]
     finally:
         connection.close()
     page = [list(row[1:count + 1]) for row in raw]

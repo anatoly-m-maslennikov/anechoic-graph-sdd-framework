@@ -93,19 +93,21 @@ class CodeAccessOccurrenceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             for child, env in (("LAYER_4_ENGINE_STUDIO_C14", "engine"),
-                               ("LAYER_6_RUNTIME_SETUP", "setup")):
-                (root / child).mkdir()
+                               ("LAYER_5_USER_SETUP_C65", "setup"),
+                               ("LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27", "release")):
+                (root / child).mkdir(parents=True, exist_ok=True)
                 (root / child / "client.py").write_text("import engine_alias\n")
-                project = root / "LAYER_3_ENVIRONMENTS_C72" / env
-                project.mkdir(parents=True)
+                project = root / "LAYER_3_DEVOPS_C80/LAYER_1_ENVIRONMENTS_C72" / env
+                project.mkdir(parents=True, exist_ok=True)
                 (project / "pyproject.toml").write_text('[project]\nname = "' + env + '"\n')
                 (project / "uv.lock").write_text('[[package]]\nname = "engine-dist"\n' if env == "engine" else "")
-            sources = capture(root, None, ("LAYER_4_ENGINE_STUDIO_C14/client.py", "LAYER_6_RUNTIME_SETUP/client.py"))
+            sources = capture(root, None, ("LAYER_4_ENGINE_STUDIO_C14/client.py", "LAYER_5_USER_SETUP_C65/client.py",
+                                           "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/client.py"))
             with patch("importlib.metadata.packages_distributions", return_value={"engine_alias": ["engine-dist"]}):
                 _, facts = code_access_occurrences(root, sources, None)
                 _, occurrences, _, _, _ = resolve_realization(root, sources, None)
-            self.assertEqual([fact.status for fact in facts], ["external", "unresolved"])
-            self.assertEqual([row[6] for row in occurrences], ["external", "unresolved"])
+            self.assertEqual(sorted(fact.status for fact in facts), ["external", "unresolved", "unresolved"])
+            self.assertEqual(sorted(row[6] for row in occurrences), ["external", "unresolved", "unresolved"])
 
     def test_inference_without_child_projects_uses_workspace_root(self):
         with tempfile.TemporaryDirectory() as directory:

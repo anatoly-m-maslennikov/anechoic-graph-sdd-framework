@@ -6,13 +6,13 @@ import stat
 import sys
 from hashlib import sha256
 from pathlib import Path, PurePosixPath
+from time import monotonic
 from types import SimpleNamespace
 
 from .ADAPTERS_C30__pub import CEILINGS, ReadContext
 from .carrier_read__pub import parse_carrier
-from .markdown_content__pub import content_lines
 from .native_carrier_placement__pub import TICKET_DIRECTORY, project_goal_filename
-from .native_generation_snapshot import snapshot
+from .native_generation_snapshot import row_summary, snapshot
 from .native_source_rows__pub import (
     NativeCapture,
     _native_carrier_hashes,
@@ -64,9 +64,21 @@ def _selection(binding, *, manifest_admitted=False):
                            manifest_sha256=digest, project_prefix=prefix)
 
 
+class NativeCaptureError(ValueError):
+    def __init__(self, capture):
+        super().__init__("Native capture failed: " + json.dumps(capture.errors, sort_keys=True))
+        self.ingestion_issues = list(capture.ingestion_issues)
+        covered = {issue["relative_path"] for issue in self.ingestion_issues}
+        self.ingestion_issues.extend(
+            {"relative_path": path, "code": "invalid_value", "message": message,
+             "atom_ref": None, "related_paths": []}
+            for path, message in sorted(capture.errors.items()) if path not in covered
+        )
+
+
 def _check_capture(capture):
     if capture.errors:
-        raise ValueError("Native capture failed: " + json.dumps(capture.errors, sort_keys=True))
+        raise NativeCaptureError(capture)
 
 
 def _capture(binding):
@@ -89,11 +101,14 @@ def prepare_generation_snapshot(binding, *, include_hashes=False):
     """Capture carriers once and recheck their versions and membership before use."""
     selection = _selection(binding)
     reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
-    capture = capture_native(selection, reader=reader, defer_currentness=True)
+    capture = capture_native(selection, reader=reader, defer_currentness=True,
+                             include_content_properties="archive-summary")
     _check_capture(capture)
 
     def finish(endpoints):
         result = snapshot(binding, capture, endpoints)
+        # Verify the captured inputs in a separate bounded read phase.
+        reader.started = monotonic()
         if reader.currentness()["state"] != "unchanged":
             raise ValueError("Native Project carriers changed during generation")
         return (result, _carrier_hashes(capture)) if include_hashes else result
@@ -210,15 +225,7 @@ def _snapshot(binding, capture):
     for row in capture.atoms:
         if row["status_group"] != "Current":
             continue
-        records = [item for item in row["content_properties_json"] if item["property_path"] == ["summary"]]
-        if len(records) > 1:
-            raise ValueError("Duplicate Summary heading")
-        summary = ""
-        if records:
-            record = records[0]
-            lines = content_lines(row["_content_bytes"].decode("utf-8"))
-            summary = "".join(lines[record["_body_start_line"]:record["_end_line"]]).strip()
-        atoms.append({"reference": row["ref"], "summary": summary})
+        atoms.append({"reference": row["ref"], "summary": row_summary(row)})
     return {"manifest_sha256": binding["manifest_sha256"], "atoms": sorted(atoms, key=lambda item: item["reference"])}
 
 

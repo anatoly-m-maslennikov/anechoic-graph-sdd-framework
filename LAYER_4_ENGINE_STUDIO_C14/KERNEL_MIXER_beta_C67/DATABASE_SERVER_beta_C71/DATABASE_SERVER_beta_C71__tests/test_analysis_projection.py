@@ -54,6 +54,27 @@ class AnalysisProjectionTest(unittest.TestCase):
         self.assertEqual(db.execute('SELECT count(*) FROM biz_architecture_code_metrics').fetchone()[0], 4)
         self.assertEqual(db.execute('SELECT count(*) FROM mrt_real_graph_package_spec_bindings').fetchone()[0], 3)
 
+    def test_delta_batch_preserves_unaffected_rows_and_rejects_conflicts(self):
+        db = self.db
+        before = db.execute('SELECT * FROM biz_architecture_spec_metrics ORDER BY atom_ref').fetchall()
+        with self.assertRaisesRegex(ValueError, 'conflicts'):
+            projection.apply_spec_delta(db, ('AN-1@1',), [('AN-2@1', 1, 1, 1, 1)])
+        self.assertEqual(db.execute('SELECT * FROM biz_architecture_spec_metrics ORDER BY atom_ref').fetchall(), before)
+        for refs, rows in [(['AN-1@1', 'AN-1@1'], []), ([], [('AN-3@1', 1, 1, 1, 1)] * 2)]:
+            with self.assertRaises(ValueError):
+                projection.apply_spec_delta(db, refs, rows)
+        self.assertEqual(db.execute('SELECT * FROM biz_architecture_spec_metrics ORDER BY atom_ref').fetchall(), before)
+        projection.apply_spec_delta(db, ('AN-1@1', 'missing'), [('AN-1@1', 5, 2, 3, 1), ('AN-3@1', 4, 2, 2, 1)])
+        self.assertEqual(db.execute('SELECT * FROM biz_architecture_spec_metrics ORDER BY atom_ref').fetchall(),
+                         [('AN-1@1', 5, 2, 3, 1), before[1], ('AN-3@1', 4, 2, 2, 1)])
+        projection.apply_spec_delta(db, ('AN-1@1',), ())
+        self.assertEqual(db.execute('SELECT count(*) FROM biz_architecture_spec_metrics').fetchone(), (2,))
+        projection.replace_code(db, ())
+        projection.replace_spec(db, ())
+        projection.replace_bindings(db, ())
+        for table in ('biz_architecture_code_metrics', 'biz_architecture_spec_metrics', 'mrt_real_graph_package_spec_bindings'):
+            self.assertEqual(db.execute(f'SELECT count(*) FROM {table}').fetchone(), (0,))
+
     def test_native_sizes_and_delta_follow_current_containment(self):
         db = self.db
         with self.assertRaisesRegex(ValueError, 'no Spec size evidence'):

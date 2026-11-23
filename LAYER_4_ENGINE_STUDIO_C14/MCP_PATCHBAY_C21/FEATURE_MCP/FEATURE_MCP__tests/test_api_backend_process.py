@@ -51,7 +51,7 @@ def _release_claim(root):
     if not source.is_file():
         source = ROOT / CONTROL / "002_PROJECT_CONFIG" / name
     shutil.copyfile(source, claim)
-    script = root / "LAYER_5_FRAMEWORK_DELIVERY/release.py"
+    script = root / "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/release.py"
     script.parent.mkdir(parents=True, exist_ok=True)
     script.write_text("# fixture; never executed\n", encoding="utf-8")
     return claim, script
@@ -239,7 +239,7 @@ class ApiBackendProcessTests(unittest.IsolatedAsyncioTestCase):
                     self.assertFalse(command.is_error, command.structured_content)
                     self.assertEqual(direct, command.structured_content)
                     args = shlex.split(direct["command"])
-                    self.assertEqual("UV_PROJECT_ENVIRONMENT=" + str(root / "LAYER_5_FRAMEWORK_DELIVERY/.venv-release"), args[0])
+                    self.assertEqual("UV_PROJECT_ENVIRONMENT=" + str(root / "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27/.venv-release"), args[0])
                     self.assertNotIn("--no-sync", args)
                     self.assertIn("-E", args)
                     self.assertEqual(str(root), command.structured_content["working_directory"])

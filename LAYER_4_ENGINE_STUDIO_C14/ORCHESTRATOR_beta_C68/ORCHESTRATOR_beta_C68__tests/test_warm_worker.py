@@ -1,4 +1,5 @@
 import json
+import os
 import socket
 import tempfile
 import threading
@@ -8,6 +9,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from ORCHESTRATOR_beta_C68 import ORCHESTRATOR_beta_C68__shared as module
+from ORCHESTRATOR_beta_C68.warm_worker import request
 
 
 class ColdWorker:
@@ -46,6 +48,18 @@ def broker(socket_path, requests, response):
 
 
 class WarmWorkerTests(unittest.TestCase):
+    def test_deadline_free_acceptance_preserves_next_reply(self):
+        with tempfile.TemporaryDirectory() as directory:
+            socket_path = str(Path(directory) / "broker")
+            requests = []
+            response = b'{"accepted":true,"pid":123}\n{"result":{"ok":true}}\n'
+            thread = broker(socket_path, requests, response)
+            with patch.dict(os.environ, ANECHOIC_TEST_IMAGE_DEADLINES="0"):
+                self.assertEqual({"ok": True}, request(
+                    socket_path, 0, {}, {}, [], lambda _: True))
+            thread.join(1)
+            self.assertIsNone(requests[0]["start_by"])
+
     def test_delta_status_reports_count_and_phase_times(self):
         with tempfile.TemporaryDirectory() as directory:
             binding = {"root": directory, "control_root": "control", "manifest_path": "manifest",

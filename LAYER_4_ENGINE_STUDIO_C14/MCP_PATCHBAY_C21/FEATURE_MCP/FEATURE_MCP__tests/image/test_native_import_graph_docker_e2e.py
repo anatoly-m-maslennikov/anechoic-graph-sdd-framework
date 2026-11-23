@@ -15,7 +15,7 @@ from .. import native_import_graph_docker_cases as docker_cases
 from ..native_shared_candidate_cases import SharedCandidateCases
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import HEALTH_PATH, WORKBENCH_PATH
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__tests.workbench_docker_support import request
+from ..workbench_docker_support import defer_container_cleanup, docker_deadline_env, image_timeout, observing, request
 
 
 GRAPH_COUNTS = """
@@ -54,30 +54,30 @@ class _CanaryProject:
             cls._write(name, contents)
         (cls.root / "app/app__tests").mkdir()
         (cls.root / "app/app__tests/test_app.py").write_text("pass\n", encoding="utf-8")
+        name = f"anechoic-import-graph-canary-{uuid4().hex}"
+        defer_container_cleanup(cls.addClassCleanup, name)
         cls.container = subprocess.check_output([
             "docker", "run", "--detach", "--pull=never", "--init",
-            "--name", f"anechoic-import-graph-canary-{uuid4().hex}",
+            "--name", name,
             "--label", "anechoic.test=import-graph-canary",
             "--read-only", "--tmpfs", "/tmp:rw,nosuid,nodev,size=256m",
             "--pids-limit", "128", "--cpus", "1",
             "--publish", "127.0.0.1::8092", "--volume", f"{cls.root}:/project:rw",
             "--env", "ANECHOIC_RUNTIME_NAMESPACE=docker", "--env", f"ANECHOIC_CONTROL_ROOT={control}",
-            image, "mcp-http",
-        ], text=True, timeout=60).strip()
-        cls.addClassCleanup(subprocess.run, ["docker", "container", "rm", "-f", cls.container],
-                            check=True, capture_output=True, timeout=30)
+            "--env", docker_deadline_env(), image, "mcp-http",
+        ], text=True, timeout=image_timeout(60)).strip()
         cls._wait_ready()
 
     @classmethod
     def _wait_ready(cls):
         binding = subprocess.check_output(["docker", "port", cls.container, "8092/tcp"],
-                                          text=True, timeout=10).strip()
+                                          text=True, timeout=image_timeout(10)).strip()
         if not re.fullmatch(r"127\.0\.0\.1:[0-9]+", binding):
             raise RuntimeError(f"Unexpected canary port binding: {binding!r}")
         cls.url = f"http://{binding}"
         cls.api = f"{cls.url}/anechoic/Anechoic/api"
         deadline = monotonic() + 60
-        while cls._observing(deadline):
+        while observing(cls.container, deadline):
             try:
                 if request(cls.url + HEALTH_PATH) == (200, {"ready": True}):
                     return
@@ -85,19 +85,8 @@ class _CanaryProject:
                 pass
             sleep(.2)
         logs = subprocess.run(["docker", "logs", "--tail", "12", cls.container],
-                              capture_output=True, text=True, check=True, timeout=10)
+                              capture_output=True, text=True, check=True, timeout=image_timeout(10))
         raise RuntimeError(f"Canary Workbench failed to become ready\n{logs.stdout}{logs.stderr}")
-
-
-    @classmethod
-    def _observing(cls, deadline):
-        if os.environ.get("ANECHOIC_TEST_OBSERVE_NO_DEADLINE") != "1":
-            return monotonic() < deadline
-        running = subprocess.check_output(["docker", "inspect", "--format", "{{.State.Running}}", cls.container],
-                                          text=True, timeout=10).strip()
-        if running != "true":
-            raise RuntimeError(f"Canary container exited: {cls.container} ({running})")
-        return True
 
     @classmethod
     def _write(cls, relative, contents):
@@ -117,7 +106,7 @@ class _CanaryProject:
     def _wait_rows(self, sql, expected):
         deadline = monotonic() + 10
         actual = self._rows(sql)
-        while actual != expected and self._observing(deadline):
+        while actual != expected and observing(self.container, deadline):
             sleep(.1)
             actual = self._rows(sql)
         self.assertEqual(expected, actual, sql)
@@ -262,13 +251,13 @@ class NativeImportGraphDockerE2E(
             limit = 20.0
             deadline = started + limit
             actual = self._rows(sql)
-            while actual != expected and self._observing(deadline):
+            while actual != expected and observing(self.container, deadline):
                 sleep(.1)
                 actual = self._rows(sql)
             elapsed = monotonic() - started
             print(f"native Atom watcher {label}: {elapsed:.3f}s", flush=True)
             self.assertEqual(expected, actual, label)
-            if os.environ.get("ANECHOIC_TEST_OBSERVE_NO_DEADLINE") != "1":
+            if image_timeout(limit) is not None:
                 self.assertLessEqual(elapsed, limit, label)
             self.assertEqual([expected[0][-2:]] if expected else [], self._rows(graph), label)
 
@@ -306,7 +295,8 @@ class NativeImportGraphDockerE2E(
         self._write("policy.py", "import\n")
         sql = "SELECT relative_path, scan_status FROM import_nodes WHERE relative_path IN ('policy.py', 'generated/ignored.py')"
         self._wait_rows(sql, [["policy.py", "parse_error"]])
-        logs = subprocess.run(["docker", "logs", self.container], capture_output=True, text=True, check=True, timeout=10)
+        logs = subprocess.run(["docker", "logs", self.container],
+                              capture_output=True, text=True, check=True, timeout=image_timeout(10))
         self.assertIn("import graph: policy.py: parse error:", logs.stderr)
         self._write("policy.py", "import dep\n")
         self._wait_rows(sql, [["policy.py", "parsed"]])

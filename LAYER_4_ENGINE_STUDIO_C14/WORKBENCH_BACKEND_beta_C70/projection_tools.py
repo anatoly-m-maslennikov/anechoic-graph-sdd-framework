@@ -39,7 +39,8 @@ TABLE_ALIASES.update({
     **{f"mrt_{family}_atoms": "atoms" for family in ("spec", "ticket", "project_config")},
 })
 TOOLS = {
-    "workbench_status": _tool("workbench_status", "Read Project source indexing status.", {}, read_only=True),
+    "workbench_status": _tool("workbench_status", "Read Project source indexing status and current ingestion issues.",
+                             {}, read_only=True),
     "workbench_abort": _tool("workbench_abort", "Abort the active Project Worker run.",
                              {"run_id": {"type": "string", "minLength": 1}}),
     "query_rebuild": _tool("query_rebuild", "Rebuild a Project projection or refresh retained query results.",
@@ -47,7 +48,7 @@ TOOLS = {
 }
 
 
-async def _status(socket, instance_id, args):
+async def _status(socket, database, instance_id, args):
     if args:
         return tool_failure("tool_input_invalid", "The status request has no arguments")
     result = await upstream(socket, "GET", "/jobs/worker-runs", params={"instance_id": instance_id})
@@ -56,9 +57,17 @@ async def _status(socket, instance_id, args):
     active = runs.get("active") or {}
     finished = latest.get("finished_at") if latest.get("state") == "succeeded" else None
     synced = datetime.fromtimestamp(finished, UTC).isoformat() if finished is not None else None
-    return {"result": {"value": {"mode": "live_index", "syncing": runs.get("active") is not None,
-                                 "last_synced_at": synced, "run_id": active.get("run_id"),
-                                 "worker_alive": active.get("worker_alive")}, "text": None}}
+    value = {"mode": "live_index", "syncing": runs.get("active") is not None,
+             "last_synced_at": synced, "run_id": active.get("run_id"),
+             "worker_alive": active.get("worker_alive")}
+    try:
+        issues = await upstream(database, "GET", "/ingestion/issues", params={"instance_id": instance_id})
+        rows = issues["result"]["rows"]
+        if isinstance(rows, list) and len(rows) <= 1000 and all(isinstance(row, dict) for row in rows):
+            value["ingestion_issues"] = rows
+    except (httpx2.HTTPError, ValueError, TypeError, KeyError, AttributeError):
+        pass
+    return {"result": {"value": value, "text": None}}
 
 
 async def _abort(socket, instance_id, args):
@@ -108,7 +117,7 @@ async def _rebuild(database, orchestrator, binding, instance_id, args):
 async def invoke(name, args, database, orchestrator, binding, instance_id):
     try:
         if name == "workbench_status":
-            return await _status(orchestrator, instance_id, args)
+            return await _status(orchestrator, database, instance_id, args)
         if name == "workbench_abort":
             return await _abort(orchestrator, instance_id, args)
         return await _rebuild(database, orchestrator, binding, instance_id, args)

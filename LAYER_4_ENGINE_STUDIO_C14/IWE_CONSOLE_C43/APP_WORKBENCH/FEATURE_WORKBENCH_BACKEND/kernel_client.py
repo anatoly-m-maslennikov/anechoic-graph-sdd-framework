@@ -40,7 +40,8 @@ class KernelClient:
         expected = {"ready": True, "instance_id": self.selection.instance_id,
                     "manifest_sha256": self.selection.manifest_sha256, "pid": self._process.pid}
         deadline = monotonic() + _STARTUP_SECONDS
-        while self.available and monotonic() < deadline:
+        bounded = os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") != "0"
+        while self.available and (not bounded or monotonic() < deadline):
             try:
                 response = self._http.get("/health", timeout=0.5)
             except httpx2.TransportError:

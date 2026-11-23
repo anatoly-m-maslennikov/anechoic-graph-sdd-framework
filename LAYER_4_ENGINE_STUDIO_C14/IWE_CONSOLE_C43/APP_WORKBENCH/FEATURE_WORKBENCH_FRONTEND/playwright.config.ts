@@ -1,4 +1,5 @@
 import { defineConfig } from '@playwright/test';
+import { browserTimeout, browserDeadlinesEnabled } from './FEATURE_WORKBENCH_FRONTEND__tests/browser-deadlines';
 
 const baseURL = process.env.WORKBENCH_E2E_URL;
 
@@ -8,8 +9,16 @@ export default defineConfig({
   testDir: './FEATURE_WORKBENCH_FRONTEND__tests',
   testMatch: '**/*.e2e.spec.ts',
   outputDir: '../../../../../.anechoic_tmp/workbench/browser-results',
-  timeout: 120_000,
+  timeout: browserTimeout(120_000),
+  expect: { timeout: browserTimeout(5_000) },
   workers: 1,
   retries: 0,
-  use: { baseURL, browserName: 'chromium', channel: 'chromium' },
+  use: {
+    baseURL,
+    browserName: 'chromium',
+    channel: 'chromium',
+    actionTimeout: 0,
+    navigationTimeout: 0,
+    launchOptions: { timeout: browserDeadlinesEnabled ? undefined : 0 },
+  },
 });

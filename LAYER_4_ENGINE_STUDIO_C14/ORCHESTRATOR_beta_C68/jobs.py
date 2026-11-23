@@ -14,6 +14,11 @@ FIELDS = {"instance_id", "root", "control_root", "manifest_path", "manifest_sha2
 DEADLINE_SECONDS = 120
 
 
+def operation_timeout(seconds):
+    return (None if os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") == "0"
+            else seconds)
+
+
 class Jobs:
     def __init__(self, instance_id):
         self.instance_id = instance_id
@@ -42,7 +47,8 @@ class Jobs:
             process = subprocess.run(
                 [sys.executable, "-B", "-P", "-m", "WORKERS_beta_C69.WORKERS_beta_C69__shared"],
                 input=json.dumps(binding), text=True, capture_output=True,
-                timeout=DEADLINE_SECONDS, cwd=ENGINE, env=env, check=False)
+                timeout=operation_timeout(DEADLINE_SECONDS), cwd=ENGINE,
+                env=env, check=False)
             if process.returncode:
                 raise RuntimeError("Worker failed: " + process.stderr[:2048])
             snapshot = json.loads(process.stdout)
@@ -64,7 +70,7 @@ class Jobs:
 
 class UnixConnection(http.client.HTTPConnection):
     def __init__(self, path):
-        super().__init__("localhost", timeout=30)
+        super().__init__("localhost", timeout=operation_timeout(30))
         self.path = path
 
     def connect(self):

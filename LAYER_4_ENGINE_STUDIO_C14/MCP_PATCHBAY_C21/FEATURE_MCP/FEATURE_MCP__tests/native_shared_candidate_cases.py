@@ -20,6 +20,7 @@ from mcp.client.streamable_http import streamable_http_client
 
 from . import test_native_startup as fixture
 from .native_shared_core_recovery import KILL_CHILD, assert_core_recovery
+from .workbench_docker_support import defer_container_cleanup, docker_deadline_env, image_timeout, observing
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import HEALTH_PATH, MCP_PATH
 
 
@@ -39,7 +40,7 @@ class SharedCandidateCases:
             with suppress(OSError, subprocess.SubprocessError):
                 logs = subprocess.run(
                     ["docker", "logs", "--tail", "60", self._shared_candidate_container],
-                    timeout=10, capture_output=True, text=True, check=True,
+                    timeout=image_timeout(10), capture_output=True, text=True, check=True,
                 )
                 print(logs.stdout + logs.stderr, file=sys.stderr)
             raise
@@ -61,7 +62,8 @@ class SharedCandidateCases:
         image = os.environ.get("ANECHOIC_IMAGE", "")
         self.assertRegex(image, r"\Asha256:[0-9a-f]{64}\Z")
         environment = subprocess.check_output(
-            ["docker", "image", "inspect", "--format", "{{json .Config.Env}}", image], timeout=10, text=True,
+            ["docker", "image", "inspect", "--format", "{{json .Config.Env}}", image],
+            timeout=image_timeout(10), text=True,
         )
         self._shared_candidate_beta = "ANECHOIC_RUNTIME_STACK=beta" in json.loads(environment)
         defaults = '\n[project_defaults]\nworkbench_storage="memory"\n' if self._shared_candidate_beta else ""
@@ -72,20 +74,19 @@ class SharedCandidateCases:
             encoding="utf-8",
         )
         name = "anechoic-shared-candidate-" + uuid4().hex
-        self.addCleanup(subprocess.run, ["docker", "rm", "-f", name],
-                        timeout=30, check=True, capture_output=True)
+        defer_container_cleanup(self.addCleanup, name)
         container = subprocess.check_output([
             "docker", "run", "--detach", "--pull=never", "--init", "--read-only",
             "--name", name, "--label", "anechoic.test=shared-candidate",
             "--cap-drop", "ALL", "--security-opt", "no-new-privileges:true",
             "--tmpfs", "/tmp:size=128m,mode=1777", "--memory", "1536m",
             "--publish", "127.0.0.1::8092", "--mount", f"type=bind,src={host},dst={host}",
-            "-e", f"ANECHOIC_HOST_SETTINGS={settings}", image, "shared-mcp",
-        ], timeout=40, text=True).strip()
+            "-e", f"ANECHOIC_HOST_SETTINGS={settings}", "-e", docker_deadline_env(), image, "shared-mcp",
+        ], timeout=image_timeout(40), text=True).strip()
         self.assertRegex(container, r"\A[a-f0-9]{64}\Z")
         self._shared_candidate_container = container
         binding = subprocess.check_output(
-            ["docker", "port", container, "8092/tcp"], timeout=10, text=True,
+            ["docker", "port", container, "8092/tcp"], timeout=image_timeout(10), text=True,
         ).strip()
         self.assertRegex(binding, r"\A127\.0\.0\.1:[0-9]+\Z")
         base = f"http://{binding}"
@@ -95,9 +96,9 @@ class SharedCandidateCases:
     def _wait_shared_ready(self, base, container):
         opener = build_opener(ProxyHandler({}))
         deadline = time.monotonic() + 55
-        while time.monotonic() < deadline:
+        while observing(container, deadline):
             try:
-                with opener.open(base + HEALTH_PATH, timeout=2) as response:
+                with opener.open(base + HEALTH_PATH, timeout=image_timeout(2)) as response:
                     if json.load(response)["ready"] is True:
                         return
             except HTTPError as error:
@@ -106,12 +107,12 @@ class SharedCandidateCases:
                 pass
             time.sleep(.3)
         logs = subprocess.run(["docker", "logs", "--tail", "20", container],
-                              timeout=10, check=True, capture_output=True, text=True)
+                              timeout=image_timeout(10), check=True, capture_output=True, text=True)
         self.fail(f"Disposable shared runtime did not become ready: {logs.stdout}{logs.stderr}")
 
     async def _check_shared_projects(self, endpoint, projects, host):
-        timeout = httpx2.Timeout(5.0, read=60.0)
-        async with asyncio.timeout(180), httpx2.AsyncClient(trust_env=False, timeout=timeout) as http:
+        timeout = httpx2.Timeout(image_timeout(5.0), read=image_timeout(60.0))
+        async with asyncio.timeout(image_timeout(180)), httpx2.AsyncClient(trust_env=False, timeout=timeout) as http:
             async with streamable_http_client(endpoint, http_client=http) as streams, ClientSession(*streams) as session:
                 await session.initialize()
                 tool = next(tool for tool in (await session.list_tools()).tools if tool.name == "query_run")
@@ -137,7 +138,7 @@ class SharedCandidateCases:
     def _processes(self):
         listing = subprocess.check_output(
             ["docker", "top", self._shared_candidate_container, "-eo", "pid,ppid,args"],
-            timeout=10, text=True,
+            timeout=image_timeout(10), text=True,
         )
         return [line.split(None, 2) for line in listing.splitlines()[1:]], listing
 
@@ -163,9 +164,9 @@ class SharedCandidateCases:
     def _restart_shared_child(self, endpoint, module, old_pid):
         container = self._shared_candidate_container
         subprocess.run(["docker", "exec", container, "python", "-B", "-c", KILL_CHILD, module],
-                       timeout=10, check=True, capture_output=True, text=True)
+                       timeout=image_timeout(10), check=True, capture_output=True, text=True)
         deadline = time.monotonic() + 15
-        while time.monotonic() < deadline:
+        while observing(container, deadline):
             processes, listing = self._processes()
             if any(pid != old_pid and module in command for pid, _, command in processes):
                 self._wait_shared_ready(endpoint.removesuffix(MCP_PATH), container)

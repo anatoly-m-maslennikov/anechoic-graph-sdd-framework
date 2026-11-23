@@ -69,7 +69,8 @@ class AdmissionClient:
     def _start(self):
         parent, child = socket.socketpair()
         try:
-            parent.settimeout(90)
+            if os.getenv("ANECHOIC_TEST_IMAGE_DEADLINES") != "0":
+                parent.settimeout(90)
             env = {**{k: v for k, v in os.environ.items() if k != "PYTHONHOME"}, "PYTHONPATH": str(_ENGINE)}
             process = subprocess.Popen([sys.executable, "-B", "-P", "-m", _MODULE], cwd=_ENGINE.parent, env=env,
                                        stdin=child, stdout=child)

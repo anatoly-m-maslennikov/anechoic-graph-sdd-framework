@@ -10,8 +10,8 @@ import tokenize
 
 PYTHON_CHILD_ROOTS = (
     "LAYER_4_ENGINE_STUDIO_C14",
-    "LAYER_5_FRAMEWORK_DELIVERY",
-    "LAYER_6_RUNTIME_SETUP",
+    "LAYER_3_DEVOPS_C80/LAYER_2_RELEASE_C27",
+    "LAYER_5_USER_SETUP_C65",
 )
 _EXCLUDED = frozenset({
     "archive", "archives", "build", "coverage", "dist", "dist-packages", "env",
@@ -92,7 +92,10 @@ def check(repo_root: Path) -> int:
                     if rest or not target:
                         continue
                 first = target.split(".", 1)[0]
-                sibling = first if first in roots and first != owner else None
+                sibling = next((name for name in roots if name.replace("/", ".") == target
+                                or target.startswith(name.replace("/", ".") + ".")), None)
+                if sibling == owner:
+                    sibling = None
                 if not sibling and not level and first not in roots:
                     depths = {name: _match_depth(target, inventory) for name, inventory in modules.items()}
                     best = max(depths.values())
