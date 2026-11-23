@@ -239,11 +239,19 @@ def capture_native(
     selection: Any, *, previous: NativeCapture | None = None,
     paths: set[PurePosixPath] | None = None, reader: ReadContext | None = None,
     include_content_properties: bool = True, manifest_admitted: bool = False,
+    defer_currentness: bool = False,
 ) -> NativeCapture:
-    """Read one selected native tree. Callers must refuse a capture with errors."""
+    """Read one selected native tree. Callers must refuse a capture with errors.
+
+    When validation is deferred, check the supplied reader before publishing.
+    """
     if reader is None:
+        if defer_currentness:
+            raise ValueError("Deferred currentness requires a supplied reader")
         reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
     incremental = previous is not None and paths is not None
+    if defer_currentness and incremental:
+        raise ValueError("Deferred currentness requires a full capture")
     if manifest_admitted and (not incremental or selection.manifest_path.relative_to(selection.root) in paths):
         raise ValueError("Manifest admission requires addressed non-Manifest paths")
     manifest = None if manifest_admitted else check_native_manifest(reader, selection, previous if incremental else None)
@@ -260,7 +268,9 @@ def capture_native(
         candidates, errors = {}, {}
         _capture_full_inputs(reader, selection, manifest, candidates, errors,
                              include_content_properties=include_content_properties)
-    if reader.currentness()["state"] != "unchanged" or any(path.exists() or path.is_symlink() for path in missing):
+    if (not defer_currentness and reader.currentness()["state"] != "unchanged") or any(
+        path.exists() or path.is_symlink() for path in missing
+    ):
         raise ValueError("Native Project carriers changed during capture")
     versions.update(reader.versions)
     return _unique_revisions(candidates, errors, versions)

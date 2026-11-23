@@ -89,7 +89,7 @@ def prepare_generation_snapshot(binding, *, include_hashes=False):
     """Capture carriers once and recheck their versions and membership before use."""
     selection = _selection(binding)
     reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
-    capture = capture_native(selection, reader=reader)
+    capture = capture_native(selection, reader=reader, defer_currentness=True)
     _check_capture(capture)
 
     def finish(endpoints):

@@ -125,6 +125,33 @@ class NativeCaptureTests(unittest.TestCase):
         self.assertEqual({}, deleted["carrier_hashes"])
         self.assertEqual([[path.parent.relative_to(self.root).as_posix(), path.name]], deleted["paths"])
 
+    def test_generation_defers_only_intermediate_currentness_check(self):
+        binding = {"root": str(self.root), "control_root": self.control.name,
+                   "manifest_path": self.manifest.relative_to(self.root).as_posix(),
+                   "manifest_sha256": self.selection.manifest_sha256, "project_prefix": "AN"}
+        path = self.write("AN-S-2--source.md", "AN-S-2", "active", 1)
+        original = ReadContext.currentness
+        calls = []
+
+        def currentness(reader):
+            calls.append(reader)
+            return original(reader)
+
+        with patch("FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_snapshot_cli._graph_config",
+                   return_value={}), patch.object(ReadContext, "currentness", currentness):
+            _, finish = prepare_generation_snapshot(binding)
+            self.assertEqual([], calls)
+            path.write_text(path.read_text().replace("Example", "Changed"), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "changed during generation"):
+                finish({"CONTAINED_BY": [{"inverse_alias": "CONTAINS"}, False],
+                         "CONTAINS": [{}, True]})
+            self.assertEqual(1, len(calls))
+
+        calls.clear()
+        with patch.object(ReadContext, "currentness", currentness):
+            capture_native(self.selection)
+        self.assertEqual(1, len(calls))
+
     def test_current_draft_archived_and_header_containment(self):
         self.write("__TKT/TASKS/AN-T-09--task.md", "AN-T-09", "active", 2)
         self.write("__TKT/TASKS/draft/AN-T-09@3-draft--task.md", "AN-T-09", "draft", 3)
