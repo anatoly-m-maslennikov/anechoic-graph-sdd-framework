@@ -9,17 +9,17 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 2
-  updated_at: '2026-11-23T09:15:54.889519+00:00'
+  version: 3
+  updated_at: '2026-11-23T12:05:58.801530+00:00'
 ---
 
 ## Summary
 
-Declare Godot Logo
+Declare Logo
 
 ## Purpose
 
-Maintain the editable Godot scene and source assets for the Anechoic logo.
+Maintain the Anechoic logo artwork and its editable source.
 
 ## Formal manifest
 
@@ -31,7 +31,7 @@ declare_entity(
     entity_name='Component Manifest',
     instance=ComponentManifest(
         component_id='C77',
-        name='Godot Logo',
+        name='Logo',
         lens_whitelist=['DES', 'SPEC'],
     ),
 )

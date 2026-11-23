@@ -10,6 +10,8 @@ Import `project.godot` in Godot and open `studio.tscn`. Press F6 to view it.
 
 ## Render the logo
 
+The [day logo](../anechoic_logo_day.png) and [artwork without the frame and text](../anechoic_logo_day_art.png) are in the Logo folder.
+
 Run these commands with a normal windowed Godot build. The logo render hides the keyboard help.
 
 ```sh
