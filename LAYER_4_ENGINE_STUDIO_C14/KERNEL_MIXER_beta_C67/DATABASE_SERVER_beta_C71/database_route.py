@@ -30,7 +30,7 @@ def database_route(connection, instance_id, lock, queries, journal_sync, project
                 return error("foreign_instance", "Instance does not match", 403)
             save = validate_run_save(data)
             with lock:
-                if connection.execute("SELECT id FROM generation").fetchone() is None:
+                if connection.execute("SELECT id FROM ops_generation").fetchone() is None:
                     return error("generation_required", "Generation admission required", 409)
                 if journal_sync is not None and "sql" in data:
                     journal_sync()

@@ -33,7 +33,7 @@ class PersistenceTest(unittest.TestCase):
                 self.assertEqual(400, client.put("/generation", json=bad).status_code)
             self.assertEqual(0, path.stat().st_mode & 0o077)
             raw = duckdb.connect(str(path))
-            raw.execute("DROP TABLE state_effect_findings")
+            raw.execute("DROP TABLE mrt_diag_state_effects")
             raw.close()
             self.assert_rejected(path, "different Project manifest", pin="c" * 64)
             self.assert_rejected(path, "different Project manifest", instance="foreign")

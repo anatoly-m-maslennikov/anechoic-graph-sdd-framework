@@ -9,6 +9,7 @@ from .carrier_checkpoint import update_checkpoint
 from .native_atoms import replace_native_atoms, validate_native_snapshot
 from .native_graph import replace_native_graph
 from .realization_projection import has_table, replace, restore_property_graph, validate
+from .table_names import sync_query_views
 
 _HEX = re.compile(r"[0-9a-f]{64}\Z")
 
@@ -108,10 +109,10 @@ def _write_reuse(connection, data, model):
             raise ValueError("Invalid reuse witness")
     elif "reuse" in data:
         raise ValueError("Invalid reuse witness")
-    connection.execute("CREATE TABLE IF NOT EXISTS generation_reuse (witness VARCHAR)")
-    connection.execute("DELETE FROM generation_reuse")
+    connection.execute("CREATE TABLE IF NOT EXISTS ops_generation_reuse (witness VARCHAR)")
+    connection.execute("DELETE FROM ops_generation_reuse")
     if witness is not None:
-        connection.execute("INSERT INTO generation_reuse VALUES (?)", [json.dumps(witness, ensure_ascii=False)])
+        connection.execute("INSERT INTO ops_generation_reuse VALUES (?)", [json.dumps(witness, ensure_ascii=False)])
 
 
 def _native_graph_payload(data, components, identity):
@@ -129,7 +130,7 @@ def _native_graph_payload(data, components, identity):
 def replace_generation(connection, data, manifest_sha256, *, stage_refresh=None):
     native, snapshot, model, structure, graph, components = _validate_generation(data, manifest_sha256)
     generation = _digest({"receipt": data["receipt"], "snapshot": snapshot})
-    if not native and has_table(connection, "main", "relations"):
+    if not native and has_table(connection, "main", "mrt_atom_graph_relations"):
         raise ValueError("Cannot replace a native generation with the legacy snapshot format")
     connection.execute("BEGIN TRANSACTION")
     try:
@@ -138,16 +139,17 @@ def replace_generation(connection, data, manifest_sha256, *, stage_refresh=None)
             replace_native_atoms(connection, snapshot)
             replace_native_graph(connection, snapshot["relation_types"], components)
         else:
-            connection.execute("DELETE FROM atoms")
+            connection.execute("DELETE FROM mrt_atoms")
             if atoms := snapshot["atoms"]:
-                connection.executemany("INSERT INTO atoms VALUES (?, ?)", [(a["reference"], a["summary"]) for a in atoms])
+                connection.executemany("INSERT INTO mrt_atoms VALUES (?, ?)", [(a["reference"], a["summary"]) for a in atoms])
         replace(connection, graph, components)
-        if native and has_table(connection, "main", "architecture_spec_metrics"):
+        if native and has_table(connection, "main", "biz_architecture_spec_metrics"):
             replace_spec(connection, snapshot_sizes(snapshot))
-        connection.execute("DELETE FROM generation")
-        connection.execute("INSERT INTO generation VALUES (?, ?, ?)", [generation, model, structure])
+        connection.execute("DELETE FROM ops_generation")
+        connection.execute("INSERT INTO ops_generation VALUES (?, ?, ?)", [generation, model, structure])
         _write_reuse(connection, data, model)
         update_checkpoint(connection, data)
+        sync_query_views(connection)
         captured = stage_refresh() if stage_refresh is not None else None
         connection.execute("COMMIT")
     except BaseException:
@@ -166,10 +168,10 @@ def replace_native_generation(connection, data, manifest_sha256):
     connection.execute("BEGIN TRANSACTION")
     graph_dropped = False
     try:
-        rows = connection.execute("SELECT id, model, structure FROM generation").fetchall()
+        rows = connection.execute("SELECT id, model, structure FROM ops_generation").fetchall()
         if (len(rows) != 1 or rows[0][0] != data["base_generation"]
-                or not has_table(connection, "native_graph", "labels")
-                or not has_table(connection, "main", "relations")):
+                or not has_table(connection, "native_graph", "int_labels")
+                or not has_table(connection, "main", "mrt_atom_graph_relations")):
             raise GenerationBaseChanged("Generation base changed or is not native")
         base, model, structure = rows[0]
         snapshot, digest = data["snapshot"], data["snapshot_sha256"]
@@ -192,10 +194,11 @@ def replace_native_generation(connection, data, manifest_sha256):
         else:
             replace(connection, graph, components)
             _write_reuse(connection, data, model)
-        if has_table(connection, "main", "architecture_spec_metrics"):
+        if has_table(connection, "main", "biz_architecture_spec_metrics"):
             replace_spec(connection, snapshot_sizes(snapshot))
         update_checkpoint(connection, data)
-        connection.execute("UPDATE generation SET id = ?", [generation])
+        connection.execute("UPDATE ops_generation SET id = ?", [generation])
+        sync_query_views(connection)
         connection.execute("COMMIT")
     except BaseException:
         connection.execute("ROLLBACK")

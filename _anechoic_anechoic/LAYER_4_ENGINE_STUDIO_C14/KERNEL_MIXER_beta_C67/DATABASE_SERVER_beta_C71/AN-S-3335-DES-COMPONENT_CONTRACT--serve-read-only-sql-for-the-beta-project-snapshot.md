@@ -12,8 +12,8 @@ relations:
   - AN-S-3333
 state:
   status: "active"
-  version: 29
-  updated_at: "2026-11-23T04:35:09.802064+00:00"
+  version: 30
+  updated_at: "2026-11-23T10:26:33.104737+00:00"
 ---
 ## Summary
 
@@ -113,7 +113,7 @@ Refuse a stale generation and retain the prior state on failure.
 
 A native carrier delta names the current generation and up to 1,024 affected paths.
 Publish the changed Atom rows and Model-defined relations together in one
-transaction, including their graph rows.
+transaction, including their graph rows and Current Lens membership.
 Retain the accepted Model, Structure, and Realization Graph. Request
 reconciliation when the delta cannot preserve relation ownership.
 

@@ -5,6 +5,7 @@ import re
 from ARCHITECTURE_ANALYSIS_C73.CODE_AND_SPEC_METRICS_C76.metrics__shared import spec_rows
 
 from .markdown_content__pub import content_lines
+from .native_carrier_header__pub import native_header_view
 
 _HISTORICAL = {"ADVANCES": "SERVES", "IS_ADVANCED_BY": "IS_SERVED_BY",
                "REFINES": "CONTRIBUTES_TO", "IS_REFINED_BY": "RECEIVES_CONTRIBUTION_FROM"}
@@ -122,6 +123,13 @@ def snapshot(binding, capture, endpoints):
             _add_edge(edges, edge, names, inverse, references)
     edges.sort(key=lambda e: (e["source_kind"], e["source_ref"], e["target_kind"], e["target_ref"],
                               e["relation_type"], e["derived"]))
+    lenses = []
+    for row in capture.atoms:
+        if row["status_group"] == "Current":
+            lens = native_header_view(row["header_json"]).get("context", {}).get("lens")
+            if lens is not None:
+                lenses.append([row["ref"], lens])
     return {"schema_version": 2, "manifest_sha256": binding["manifest_sha256"],
             "atoms": sorted(atoms, key=lambda a: a["reference"]), "relations": edges,
-            "relation_types": sorted(names), "spec_sizes": spec_rows(capture.atoms)}
+            "relation_types": sorted(names), "spec_sizes": spec_rows(capture.atoms),
+            "lifecycle_lenses": sorted(lenses)}

@@ -15,16 +15,17 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
 )
 
 from .native_refresh import _ticket_delta, valid_reuse
-from .lifecycle_worker import run as lifecycle_run
+from .lifecycle_worker import _validate_indexed, run as lifecycle_run
 
 
 def _admit_lifecycle(request):
     if set(request) != {"kind", "start_by", "request"}:
         return False
-    job = request["request"]
-    return (isinstance(job, dict)
-            and set(job) == {"binding", "name", "arguments", "base_generation", "structure_sha256", "indexed_task"}
-            and job["name"] == "atom_lifecycle_create_draft" and isinstance(job["indexed_task"], dict))
+    try:
+        _validate_indexed(request["request"])
+        return True
+    except (TypeError, ValueError, KeyError):
+        return False
 
 
 def _admit(request):

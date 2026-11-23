@@ -3,14 +3,14 @@
 import httpx2
 
 from .peer_transport import tool_failure, upstream
-from .projection_tools import FLOW_HISTORY, TABLES
+from .projection_tools import FLOW_HISTORY, TABLE_ALIASES, TABLES
 
 
 def _valid_schema(value):
     if not isinstance(value, dict) or set(value) != {"tables"} or not isinstance(value["tables"], dict):
         return False
     for table, columns in value["tables"].items():
-        if table not in (*TABLES, *FLOW_HISTORY, "work_journal", "query_log") or not isinstance(columns, list):
+        if table not in (*TABLES, *FLOW_HISTORY, "work_journal", "query_log", *TABLE_ALIASES) or not isinstance(columns, list):
             return False
         names = set()
         for column in columns:
@@ -22,7 +22,7 @@ def _valid_schema(value):
             names.add(name)
             if "values" in column:
                 values = column["values"]
-                if (table != "atoms" or name != "header.state.status" or not isinstance(values, list)
+                if (TABLE_ALIASES.get(table, table) != "atoms" or name != "header.state.status" or not isinstance(values, list)
                         or not 1 <= len(values) <= 256 or any(not isinstance(v, str) for v in values)
                         or len(set(values)) != len(values) or any(len(v.encode("utf-8")) > 1024 for v in values)):
                     return False

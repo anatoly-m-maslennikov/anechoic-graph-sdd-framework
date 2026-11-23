@@ -1,6 +1,5 @@
 """Create and validate Project-owned Axiom and Applicable Principle Drafts."""
 from datetime import datetime, timezone
-import re
 
 import yaml
 
@@ -59,10 +58,7 @@ def create_project_spec(selection, values, validate, previous_capture=None):
             raise common.SourceChanged('Native carriers changed during Project SPEC selection.') from error
         if capture.errors:
             raise common.SourceChanged('Native carrier capture is incomplete.')
-        pattern = re.compile(re.escape(selection.project_prefix) + r'-S-([0-9]+)')
-        numbers = [int(match[1]) for row in capture.atoms if isinstance(row.get('id'), str)
-                   and (match := pattern.fullmatch(row['id']))]
-        atom_id = f'{selection.project_prefix}-S-{max(numbers, default=0) + 1}'
+        atom_id = f'{selection.project_prefix}-S-{common.next_native_number(selection, capture, "S")}'
         header = canonical_native_header({'identity': {'atom_id': atom_id},
             'context': {'container': {'component': 'C00'}, 'tier': tier,
                         'template': values['template'], 'lens': values['lens']},

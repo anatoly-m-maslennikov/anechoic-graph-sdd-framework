@@ -2,6 +2,7 @@
 from contextlib import closing
 from hashlib import sha256
 import http.client
+import importlib
 import json
 import os
 from pathlib import Path
@@ -12,6 +13,7 @@ import tempfile
 import time
 import unittest
 
+from ..ORCHESTRATOR_beta_C68__shared import GenerationJobs
 from .ORCHESTRATOR_beta_C68__tests__shared import project
 
 
@@ -27,13 +29,44 @@ class Connection(http.client.HTTPConnection):
 
 
 class LifecycleSocketTests(unittest.TestCase):
+    def test_lifecycle_receipts_cover_delayed_watcher_events(self):
+        root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
+        binding = {"root": str(root), "control_root": "control", "manifest_path": "manifest.md",
+                   "manifest_sha256": "a" * 64, "project_prefix": "AN"}
+        watcher = GenerationJobs("test", binding, "socket").watcher
+        first, second = root / "first.md", root / "second.md"
+        for path in (first, second):
+            path.write_text(path.name)
+            watcher.acknowledge([{"target": path.name, "operation": "create", "state": "known",
+                                  "evidence": sha256(path.read_bytes()).hexdigest()}])
+            watcher.queue.put({"old_path": str(path), "new_path": None, "is_directory": False})
+        self.assertEqual([], watcher.changes(0.1))
+        first.write_text("external edit")
+        event = {"old_path": str(first), "new_path": None, "is_directory": False}
+        watcher.queue.put(event)
+        self.assertEqual([event], watcher.changes(0.1))
+
+    def test_admitted_context_keeps_coordinated_writes_on_the_project_path(self):
+        lifecycle = importlib.import_module("ORCHESTRATOR_beta_C68.lifecycle")
+        control = "_anechoic_test"
+        context = {"has_descendants": True, "carriers": []}
+        task = {"name": "atom_lifecycle_change_status", "arguments": {"target": {"ref_id": "AN-T-1"}}}
+        self.assertTrue(lifecycle._requires_project_capture(task, context, control))
+        self.assertFalse(lifecycle._requires_project_capture(task, context | {"has_descendants": False}, control))
+        spec = {"name": "atom_lifecycle_archive", "arguments": {"target": {"ref_id": "AN-S-2"}}}
+        carrier = {"id": "AN-S-2", "status": "active"}
+        for parent, expected in (("LAYER_1_META_ONTOLOGY_C9/_SPEC", True), ("_SPEC", False)):
+            row = carrier | {"source_path": f"{control}/{parent}/AN-S-2-SPEC--claim.md"}
+            self.assertEqual(expected, lifecycle._requires_project_capture(spec, context | {"carriers": [row]}, control))
+
     def test_real_lifecycle_and_generation_admission(self):
         engine = Path(__file__).resolve().parents[2]
-        env = {**os.environ, "PYTHONPATH": str(engine), "ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY":
-               str(engine.parent / ".anechoic_tmp/workbench/extensions")}
+        env = {**os.environ, "PYTHONPATH": str(engine)}
+        env.setdefault("ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY", str(engine.parent / ".anechoic_tmp/workbench/extensions"))
         with tempfile.TemporaryDirectory(prefix="ane-lifecycle-admit-", dir="/tmp") as directory:
             root = Path(directory).resolve()
             control, manifest = project(root)
+            manifest.write_text(manifest.read_text().replace("prefix='AN'", "prefix='AN', lens_whitelist=['SPEC']"))
             self.write_archived_tickets(control)
             binding = {"root": str(root), "control_root": control.name, "manifest_path": manifest.name,
                        "manifest_sha256": sha256(manifest.read_bytes()).hexdigest(), "project_prefix": "AN"}
@@ -57,6 +90,7 @@ class LifecycleSocketTests(unittest.TestCase):
                 self.assert_lifecycle(jobs, binding, "AN-T-101")
                 self.assert_lifecycle(jobs, binding, "AN-T-102")
                 self.assert_visible(db, ["AN-T-101@1-draft", "AN-T-102@1-draft"])
+                self.assert_indexed_transitions(jobs, db, binding)
             finally:
                 for process in (orchestrator, worker, database):
                     if process is not None:
@@ -82,21 +116,43 @@ class LifecycleSocketTests(unittest.TestCase):
             )
 
     def assert_lifecycle(self, path, binding, atom_id):
-        request = {**binding, "instance_id": "test", "name": "atom_lifecycle_create_draft",
-                   "arguments": {"newAtom": {"template": "task", "container": {"component": "C00"},
-                                              "body": "## Summary\n\nLifecycle admission canary.\n"}}}
-        connection = Connection(path)
-        try:
+        result = self.call_lifecycle(path, binding, "create_draft", {"newAtom": {
+            "template": "task", "container": {"component": "C00"},
+            "body": "## Summary\n\nLifecycle admission canary.\n"}})
+        self.assertEqual(atom_id, result["savedDraft"]["atom_id"])
+
+    def call_lifecycle(self, path, binding, operation, arguments):
+        request = {**binding, "instance_id": "test", "name": "atom_lifecycle_" + operation,
+                   "arguments": arguments}
+        with closing(Connection(path)) as connection:
             connection.request("POST", "/jobs/lifecycle", json.dumps(request))
             response = connection.getresponse()
             result = json.loads(response.read())
-        finally:
-            connection.close()
         self.assertEqual(200, response.status, result)
         self.assertEqual("known", result["result"]["write_state"], result)
         self.assertEqual("completed", result["result"]["lifecycle"]["outcome"], result)
         self.assertEqual("ready", result["result"]["projection"]["state"], result)
-        self.assertEqual(atom_id, result["result"]["lifecycle"]["savedDraft"]["atom_id"])
+        return result["result"]["lifecycle"]
+
+    def assert_indexed_transitions(self, path, database, binding):
+        def call(operation, arguments):
+            return self.call_lifecycle(path, binding, operation, arguments)
+
+        task = {"ref_id": "AN-T-101", "version": 1}
+        call("promote_draft", {"target": task | {"ref_id": "AN-T-101@1-draft"}, "targetStatus": "backlog"})
+        revision = call("update", {"sourceCurrent": task})["savedDraft"]
+        self.assertEqual("AN-T-101@2-draft", revision["ref_id"])
+        asset_body = "## Summary\n\nMeasure indexed Ticket Asset.\n"
+        asset = call("create_asset", {"newAtom": {"template": "work_report", "body": asset_body}})["artifact"]
+        call("direct_update", {"target": {"ref_id": asset["ref_id"], "version": 1},
+                               "changes": {"body": asset_body + "\nUpdated.\n"}})
+        draft = call("create_draft", {"newAtom": {"template": "component_contract", "container": {"component": "C00"},
+                    "lens": "SPEC", "body": "## Summary\n\nAdmitted Contract.\n\n## Guarantee\n\nReturn results.\n"}})["savedDraft"]
+        contract = {"ref_id": draft["atom_id"], "version": 1}
+        call("promote_draft", {"target": contract | {"ref_id": draft["ref_id"]}, "targetStatus": "ready"})
+        call("change_status", {"target": contract, "targetStatus": "active"})
+        call("archive", {"target": contract})
+        self.assert_visible(database, ["AN-T-101@2-draft", "AN-T-102@1-draft"])
 
     def assert_visible(self, path, refs):
         sql = "SELECT reference FROM atoms WHERE status_group = 'Draft' ORDER BY reference"

@@ -171,11 +171,11 @@ def _capture_delta(binding, selection, relatives, endpoints, *, include_hashes, 
     return result
 
 
-def capture_ticket_delta(binding, paths, endpoints, *, include_hashes=False):
+def capture_ticket_delta(binding, paths, endpoints, *, include_hashes=False, manifest_admitted=False):
     """Capture only requested Ticket files and retain absent paths for deletion."""
-    selection = _selection(binding)
+    selection = _selection(binding, manifest_admitted=manifest_admitted)
     return _capture_delta(binding, selection, _ticket_paths(selection, paths), endpoints,
-                          include_hashes=include_hashes, ticket_only=True)
+                          include_hashes=include_hashes, ticket_only=True, manifest_admitted=manifest_admitted)
 
 
 def capture_carrier_delta(binding, paths, endpoints, *, include_hashes=False, manifest_admitted=False):

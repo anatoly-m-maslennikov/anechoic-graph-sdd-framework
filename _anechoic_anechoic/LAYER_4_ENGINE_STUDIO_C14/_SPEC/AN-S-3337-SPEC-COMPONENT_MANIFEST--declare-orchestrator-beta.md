@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 22
-  updated_at: "2026-11-23T09:56:32.676138+00:00"
+  version: 23
+  updated_at: "2026-11-23T10:32:23.335449+00:00"
 ---
 ## Summary
 
@@ -31,8 +31,12 @@ declare_entity(
         boundaries={'code': {'imports': {'only': ['metrics__shared.is_measurement_input',
                                                     'ORCHESTRATOR_beta_C68__shared',
                                                     'ORCHESTRATOR_beta_C68__shared.Flow',
-                                                    'ORCHESTRATOR_beta_C68__shared.GenerationJobs']},
-                              'exports': {'ORCHESTRATOR_beta_C68__shared': {'private': ['LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__tests']},
+                                                    'ORCHESTRATOR_beta_C68__shared.GenerationJobs',
+                                                    'lifecycle_queries.lifecycle_context', 'lifecycle_queries.lifecycle_sql']},
+                              'exports': {
+                                  'lifecycle_queries.lifecycle_context': {'private': ['LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__tests']},
+                                  'lifecycle_queries.lifecycle_sql': {'private': ['LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__tests']},
+                                  'ORCHESTRATOR_beta_C68__shared': {'private': ['LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__tests']},
                                           'ORCHESTRATOR_beta_C68__shared.Flow': {'private': ['LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__tests']},
                                           'ORCHESTRATOR_beta_C68__shared.GenerationJobs': {'private': ['LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__tests']}}},
          'io': {'server': {'jobs': {'transport': 'http',

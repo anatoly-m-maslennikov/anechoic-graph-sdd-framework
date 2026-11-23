@@ -70,7 +70,8 @@ def _change_spec_lifecycle(selection, name, arguments, rows, structure_snapshot,
 
 
 def execute_native_lifecycle(selection, name, arguments, capture, read_structure, *,
-                             previous_capture, ticket_labels, validate_project_spec, indexed_task=None):
+                             previous_capture, ticket_labels, validate_project_spec, indexed_task=None,
+                             admitted_structure=None):
     """Return the native outcome and any file effects for the caller to project."""
     from .ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import InputError, SourceChanged, result
 
@@ -79,7 +80,9 @@ def execute_native_lifecycle(selection, name, arguments, capture, read_structure
     try:
         snapshot_path = getattr(selection, "structure_snapshot", None)
         try:
-            if indexed_task is not None:
+            if admitted_structure is not None:
+                snapshot = admitted_structure
+            elif indexed_task is not None:
                 snapshot = SimpleNamespace(components=indexed_task["component_ids"])
             else:
                 snapshot = read_structure(snapshot_path) if snapshot_path is not None else None

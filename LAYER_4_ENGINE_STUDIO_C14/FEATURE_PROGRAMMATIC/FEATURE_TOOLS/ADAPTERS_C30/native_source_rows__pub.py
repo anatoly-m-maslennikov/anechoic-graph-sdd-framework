@@ -268,6 +268,9 @@ def capture_native(
 
 def revalidate_native(selection: Any, previous: NativeCapture | None) -> NativeCapture:
     """Prove the indexed Atom population against disk before a write."""
+    from .indexed_lifecycle_capture import IndexedLifecycleCapture, revalidate_indexed_lifecycle
+    if isinstance(previous, IndexedLifecycleCapture):
+        return revalidate_indexed_lifecycle(selection, previous)
     if previous is None or previous.errors:
         return capture_native(selection)
     control, root = selection.control_root, selection.root

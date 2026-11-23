@@ -56,6 +56,8 @@ class WorkJournalTest(unittest.TestCase):
         response = _query(client, ROWS)
         self.assertEqual(200, response.status_code, response.text)
         self.assertEqual(expected, response.json()["result"]["rows"])
+        canonical = _query(client, ROWS.replace("FROM work_journal", "FROM ops_work_journal"))
+        self.assertEqual(expected, canonical.json()["result"]["rows"])
 
 
 class FileJournalTest(unittest.TestCase):
@@ -80,6 +82,8 @@ class FileJournalTest(unittest.TestCase):
         result = _query(client, "SELECT author, local_date, event FROM work_journal ORDER BY position")
         self.assertEqual(200, result.status_code, result.text)
         rows = result.json()["result"]["rows"]
+        canonical = _query(client, "SELECT author, local_date, event FROM ops_work_journal ORDER BY position")
+        self.assertEqual(rows, canonical.json()["result"]["rows"])
         self.assertEqual(count, len(rows))
         self.assertEqual(["alice", "2026-11-22"], rows[0][:2])
         self.assertEqual("first", json.loads(rows[0][2])["kind"])

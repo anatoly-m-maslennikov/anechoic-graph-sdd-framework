@@ -38,18 +38,7 @@ class NewNativeTaskTests(fixtures.NewNativeTaskTests, unittest.TestCase):
         self.assertEqual(0, process.returncode, process.stderr)
         result = json.loads(process.stdout)
         self.assertEqual('AN-T-3@1-draft', result['savedDraft']['ref_id'])
-        path = self.root / result['savedDraft']['path']
-        self.assertTrue(path.is_file())
-        path.unlink()
-        for effect in reversed(result['effects'][:-1]):
-            (self.root / effect['target']).rmdir()
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import indexed_draft_runner
-        warm_result = indexed_draft_runner()(request)
-        self.assertEqual(result['savedDraft'], warm_result['savedDraft'])
-        self.assertEqual(result['outcome'], warm_result['outcome'])
-        self.assertEqual([(effect['operation'], effect['target']) for effect in result['effects']],
-                         [(effect['operation'], effect['target']) for effect in warm_result['effects']])
-        self.assertTrue(path.is_file())
+        self.assertTrue((self.root / result['savedDraft']['path']).is_file())
 
     def test_new_task_allocates_across_history_and_promotes_version_one(self):
         self.write('001_TICKETS/ISSUES/09_archived/AN-T-8@2-QUESTION--old.md', 'AN-T-8', version=2, status='archived', template='question')

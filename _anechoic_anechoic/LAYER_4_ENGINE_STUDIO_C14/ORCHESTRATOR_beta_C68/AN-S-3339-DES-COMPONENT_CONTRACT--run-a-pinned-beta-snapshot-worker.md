@@ -12,8 +12,8 @@ relations:
   - AN-S-3337
 state:
   status: "active"
-  version: 23
-  updated_at: "2026-11-23T09:56:32.676138+00:00"
+  version: 24
+  updated_at: "2026-11-23T10:26:33.104737+00:00"
 ---
 ## Summary
 
@@ -38,14 +38,16 @@ Return the recorded write outcome and projection result. Preserve known
 effects on projection failure. If the Worker response is lost, report
 the write outcome as unknown. Never repeat a write automatically.
 
-Allocate IDs for new Task and Epic Drafts under a Component in the
-serialized lifecycle lane. Read the highest Ticket number and rules
-from the same admitted Kernel generation. Pass those facts to the Worker.
-The Adapter reads only the published carrier to capture its delta.
-Use the warm Worker when configured. Run each write in its own child.
-Report a lost reply as an unknown write and never resubmit it.
-Block allocation after an unconfirmed write until Kernel admits a
-complete source snapshot.
+Select single-Atom lifecycle facts from one admitted Kernel generation.
+Use SQL for allocation, revision history, containment, and replacements.
+Give the Worker the admitted Structure and needed Model rules. Run the
+write in an isolated child of the warm Worker when configured. Use the
+coordinated capture path for Ticket tree moves and Model input changes.
+Block writes after an unconfirmed write until Kernel admits a complete
+source snapshot.
+
+Retain recent admitted carrier receipts by path. Ignore delayed watcher
+events only while the file contents or absence match the recorded effect.
 
 Retain the input proof only after Kernel accepts the generation. On a
 watcher event, supply that proof to a short-lived Worker. For a

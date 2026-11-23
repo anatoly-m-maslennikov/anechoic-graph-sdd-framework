@@ -215,14 +215,14 @@ class SourceWatcher(FileSystemEventHandler):
                 self._ticket_inodes.pop(previous[:2])
 
     def acknowledge(self, effects):
-        if not effects:
-            return
-        self._handled_writes = {
-            str(self.root / effect["target"]): None if effect["operation"] == "remove" else effect["evidence"]
-            for effect in effects if effect["state"] == "known"
-            and effect["operation"] in {"create", "modify", "remove"}
-            and Path(effect["target"]).suffix == ".md"
-        }
+        for effect in effects:
+            if (effect["state"] == "known" and effect["operation"] in {"create", "modify", "remove"}
+                    and Path(effect["target"]).suffix == ".md"):
+                path = str(self.root / effect["target"])
+                self._handled_writes.pop(path, None)
+                self._handled_writes[path] = None if effect["operation"] == "remove" else effect["evidence"]
+        while len(self._handled_writes) > MAX_TRACKED_TICKETS:
+            del self._handled_writes[next(iter(self._handled_writes))]
 
     def _handled(self, value):
         if value not in self._handled_writes:

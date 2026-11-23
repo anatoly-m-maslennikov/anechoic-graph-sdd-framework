@@ -52,6 +52,16 @@ def record_module(modules, path, result):
         "path": path, "status": "passed" if successful else "failed",
         "tests_run": count, "skipped": skips, "elapsed_seconds": round(elapsed, 3),
     }
+    marker = "ANECHOIC_TEST_METRICS "
+    for line in stdout.splitlines():
+        if line.startswith(marker):
+            try:
+                metrics = json.loads(line[len(marker):])
+            except json.JSONDecodeError as error:
+                entry["metrics_error"] = str(error)
+                print(f"Invalid test metrics: {path}: {error}", file=sys.stderr, flush=True)
+            else:
+                entry.setdefault("metrics", []).append(metrics)
     if not successful:
         entry.update(stdout=stdout, stderr=stderr, error=diagnostic)
     modules.append(entry)

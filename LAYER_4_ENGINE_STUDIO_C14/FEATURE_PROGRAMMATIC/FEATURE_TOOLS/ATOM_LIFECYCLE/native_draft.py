@@ -155,9 +155,7 @@ def _create_component_contract(selection, values, structure_snapshot, previous_c
             raise common.SourceChanged('Native carriers changed during Contract selection.') from error
         if capture.errors:
             raise common.SourceChanged('Native carrier capture is incomplete.')
-        numbers = [int(match[1]) for row in capture.atoms if isinstance(row.get('id'), str)
-                   and (match := re.fullmatch(re.escape(selection.project_prefix) + r'-S-([0-9]+)', row['id']))]
-        atom_id = f"{selection.project_prefix}-S-{max(numbers, default=0) + 1}"
+        atom_id = f'{selection.project_prefix}-S-{common.next_native_number(selection, capture, "S")}'
         header = canonical_native_header({'identity': {'atom_id': atom_id},
             'context': {'container': values['container'], 'tier': 0, 'template': 'component_contract', 'lens': values['lens']},
             'state': {'status': 'draft', 'version': 1, 'updated_at': datetime.now(timezone.utc).isoformat()}})

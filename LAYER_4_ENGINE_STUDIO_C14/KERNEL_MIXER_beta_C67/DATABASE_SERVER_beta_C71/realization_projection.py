@@ -9,42 +9,42 @@ from .native_graph import native_edges
 
 
 _TABLES = {
-    "nodes": ("import_nodes", (str, str, (str, type(None)), (str, type(None)), (str, type(None)), (str, type(None)), (str, type(None)))),
-    "occurrences": ("module_imports", (str, str, (str, type(None)), str, (int, type(None)), (int, type(None)), str, bool)),
-    "edges": ("import_edges", (str, str, str, bool)),
-    "test_edges": ("test_edges", (str, str)),
-    "read_issues": ("import_read_issues", (str, str)),
-    "antipattern_findings": ("realization_internal.source_antipatterns", (str, int, int, str, str, str)),
-    "code_units": ("code_units", (str, str, str, str, int, int)),
-    "code_unit_calls": ("code_unit_calls", (str, str, int, int)),
-    "code_access_findings": ("code_access_findings", (str, str, (int, type(None)), (int, type(None)), str, str, str)),
-    "state_effect_findings": ("state_effect_findings", (str, str, str, str, int, (str, type(None)), str, bool, str, str, (str, type(None)))),
+    "nodes": ("mrt_real_graph_import_nodes", (str, str, (str, type(None)), (str, type(None)), (str, type(None)), (str, type(None)), (str, type(None)))),
+    "occurrences": ("mrt_real_graph_import_occurrences", (str, str, (str, type(None)), str, (int, type(None)), (int, type(None)), str, bool)),
+    "edges": ("mrt_real_graph_import_edges", (str, str, str, bool)),
+    "test_edges": ("mrt_real_graph_test_edges", (str, str)),
+    "read_issues": ("mrt_diag_import_read_issues", (str, str)),
+    "antipattern_findings": ("realization_internal.int_source_antipatterns", (str, int, int, str, str, str)),
+    "code_units": ("mrt_real_graph_code_units", (str, str, str, str, int, int)),
+    "code_unit_calls": ("mrt_real_graph_code_unit_calls", (str, str, int, int)),
+    "code_access_findings": ("mrt_diag_code_access", (str, str, (int, type(None)), (int, type(None)), str, str, str)),
+    "state_effect_findings": ("mrt_diag_state_effects", (str, str, str, str, int, (str, type(None)), str, bool, str, str, (str, type(None)))),
 }
 
 _ANALYSIS = {"analysis_code", "analysis_bindings"}
 
 _GRAPH_TABLES = {
-    "component_reference": "kind VARCHAR, ref VARCHAR, PRIMARY KEY (kind, ref)",
-    "package_tests": "source_key VARCHAR, target_key VARCHAR",
-    "package_tested_by": "source_key VARCHAR, target_key VARCHAR",
-    "component_tests": "source_key VARCHAR, target_kind VARCHAR, target_key VARCHAR",
-    "component_tested_by": "source_kind VARCHAR, source_key VARCHAR, target_key VARCHAR",
+    "int_component_reference": "kind VARCHAR, ref VARCHAR, PRIMARY KEY (kind, ref)",
+    "int_package_tests": "source_key VARCHAR, target_key VARCHAR",
+    "int_package_tested_by": "source_key VARCHAR, target_key VARCHAR",
+    "int_component_tests": "source_key VARCHAR, target_kind VARCHAR, target_key VARCHAR",
+    "int_component_tested_by": "source_kind VARCHAR, source_key VARCHAR, target_key VARCHAR",
 }
 
 
 def prepare(connection):
     for sql in (
-        "CREATE TABLE IF NOT EXISTS import_nodes (node_key VARCHAR PRIMARY KEY, kind VARCHAR NOT NULL, language VARCHAR, relative_path VARCHAR, scan_status VARCHAR, package_key VARCHAR, package_type VARCHAR)",
-        'CREATE TABLE IF NOT EXISTS module_imports (occurrence_key VARCHAR PRIMARY KEY, source_key VARCHAR NOT NULL, target_key VARCHAR, written_specifier VARCHAR NOT NULL, line BIGINT, "column" BIGINT, resolution_status VARCHAR NOT NULL, type_only BOOLEAN NOT NULL)',
-        "CREATE TABLE IF NOT EXISTS import_edges (source_key VARCHAR NOT NULL, target_key VARCHAR NOT NULL, occurrence_key VARCHAR NOT NULL, derived BOOLEAN NOT NULL, PRIMARY KEY (source_key, target_key, occurrence_key))",
-        "CREATE TABLE IF NOT EXISTS test_edges (source_key VARCHAR NOT NULL, target_key VARCHAR NOT NULL, PRIMARY KEY (source_key, target_key))",
-        "CREATE TABLE IF NOT EXISTS tested_by_edges (source_key VARCHAR NOT NULL, target_key VARCHAR NOT NULL, PRIMARY KEY (source_key, target_key))",
-        "CREATE TABLE IF NOT EXISTS import_read_issues (relative_path VARCHAR PRIMARY KEY, error_message VARCHAR NOT NULL)",
-        'CREATE TABLE IF NOT EXISTS code_access_findings (source_key VARCHAR NOT NULL, relative_path VARCHAR NOT NULL, line BIGINT, "column" BIGINT, written_specifier VARCHAR NOT NULL, status VARCHAR NOT NULL, reason VARCHAR NOT NULL)',
-        'CREATE TABLE IF NOT EXISTS state_effect_findings (source_key VARCHAR NOT NULL, relative_path VARCHAR NOT NULL, language VARCHAR NOT NULL, action VARCHAR NOT NULL, line BIGINT NOT NULL, input JSON, status VARCHAR NOT NULL, dead_end BOOLEAN NOT NULL, events JSON NOT NULL, violations JSON NOT NULL, detail VARCHAR)',
-        'CREATE TABLE IF NOT EXISTS code_units (node_key VARCHAR PRIMARY KEY, module_key VARCHAR NOT NULL, kind VARCHAR NOT NULL, qualified_name VARCHAR NOT NULL, line BIGINT NOT NULL, "column" BIGINT NOT NULL)',
-        'CREATE TABLE IF NOT EXISTS code_unit_calls (source_key VARCHAR NOT NULL, target_key VARCHAR NOT NULL, line BIGINT NOT NULL, "column" BIGINT NOT NULL, PRIMARY KEY (source_key, target_key, line, "column"))',
-        "CREATE VIEW IF NOT EXISTS package_imports AS SELECT e.source_key, e.target_key, count(DISTINCT e.occurrence_key) AS occurrence_count FROM import_edges e JOIN import_nodes s ON e.source_key = s.node_key JOIN import_nodes t ON e.target_key = t.node_key WHERE s.kind = 'package' AND t.kind = 'package' GROUP BY e.source_key, e.target_key",
+        "CREATE TABLE IF NOT EXISTS mrt_real_graph_import_nodes (node_key VARCHAR PRIMARY KEY, kind VARCHAR NOT NULL, language VARCHAR, relative_path VARCHAR, scan_status VARCHAR, package_key VARCHAR, package_type VARCHAR)",
+        'CREATE TABLE IF NOT EXISTS mrt_real_graph_import_occurrences (occurrence_key VARCHAR PRIMARY KEY, source_key VARCHAR NOT NULL, target_key VARCHAR, written_specifier VARCHAR NOT NULL, line BIGINT, "column" BIGINT, resolution_status VARCHAR NOT NULL, type_only BOOLEAN NOT NULL)',
+        "CREATE TABLE IF NOT EXISTS mrt_real_graph_import_edges (source_key VARCHAR NOT NULL, target_key VARCHAR NOT NULL, occurrence_key VARCHAR NOT NULL, derived BOOLEAN NOT NULL, PRIMARY KEY (source_key, target_key, occurrence_key))",
+        "CREATE TABLE IF NOT EXISTS mrt_real_graph_test_edges (source_key VARCHAR NOT NULL, target_key VARCHAR NOT NULL, PRIMARY KEY (source_key, target_key))",
+        "CREATE TABLE IF NOT EXISTS mrt_real_graph_tested_by_edges (source_key VARCHAR NOT NULL, target_key VARCHAR NOT NULL, PRIMARY KEY (source_key, target_key))",
+        "CREATE TABLE IF NOT EXISTS mrt_diag_import_read_issues (relative_path VARCHAR PRIMARY KEY, error_message VARCHAR NOT NULL)",
+        'CREATE TABLE IF NOT EXISTS mrt_diag_code_access (source_key VARCHAR NOT NULL, relative_path VARCHAR NOT NULL, line BIGINT, "column" BIGINT, written_specifier VARCHAR NOT NULL, status VARCHAR NOT NULL, reason VARCHAR NOT NULL)',
+        'CREATE TABLE IF NOT EXISTS mrt_diag_state_effects (source_key VARCHAR NOT NULL, relative_path VARCHAR NOT NULL, language VARCHAR NOT NULL, action VARCHAR NOT NULL, line BIGINT NOT NULL, input JSON, status VARCHAR NOT NULL, dead_end BOOLEAN NOT NULL, events JSON NOT NULL, violations JSON NOT NULL, detail VARCHAR)',
+        'CREATE TABLE IF NOT EXISTS mrt_real_graph_code_units (node_key VARCHAR PRIMARY KEY, module_key VARCHAR NOT NULL, kind VARCHAR NOT NULL, qualified_name VARCHAR NOT NULL, line BIGINT NOT NULL, "column" BIGINT NOT NULL)',
+        'CREATE TABLE IF NOT EXISTS mrt_real_graph_code_unit_calls (source_key VARCHAR NOT NULL, target_key VARCHAR NOT NULL, line BIGINT NOT NULL, "column" BIGINT NOT NULL, PRIMARY KEY (source_key, target_key, line, "column"))',
+        "CREATE VIEW IF NOT EXISTS mrt_real_graph_package_imports AS SELECT e.source_key, e.target_key, count(DISTINCT e.occurrence_key) AS occurrence_count FROM mrt_real_graph_import_edges e JOIN mrt_real_graph_import_nodes s ON e.source_key = s.node_key JOIN mrt_real_graph_import_nodes t ON e.target_key = t.node_key WHERE s.kind = 'package' AND t.kind = 'package' GROUP BY e.source_key, e.target_key",
     ):
         connection.execute(sql)
     prepare_dependency_review(connection)
@@ -53,7 +53,7 @@ def prepare(connection):
 
 def _prepare_package_external_imports(connection):
     stdlib = ", ".join("'" + name.replace("'", "''") + "'" for name in sorted(sys.stdlib_module_names | set(sys.builtin_module_names)))
-    connection.execute("CREATE VIEW IF NOT EXISTS package_external_imports AS SELECT p.relative_path AS package_path, s.language, split_part(t.node_key, ':', 3) AS import_name, count(*) AS occurrence_count, count(*) FILTER (WHERE i.type_only) AS type_only_count FROM module_imports i JOIN import_nodes s ON s.node_key = i.source_key JOIN import_nodes p ON p.node_key = s.package_key JOIN import_nodes t ON t.node_key = i.target_key WHERE s.kind = 'module' AND p.kind = 'package' AND p.relative_path IS NOT NULL AND i.resolution_status = 'external' AND t.node_key LIKE '%:external:%' AND (s.language <> 'python' OR split_part(t.node_key, ':', 3) NOT IN (" + stdlib + ")) GROUP BY p.relative_path, s.language, split_part(t.node_key, ':', 3)")
+    connection.execute("CREATE VIEW IF NOT EXISTS mrt_real_graph_package_external_imports AS SELECT p.relative_path AS package_path, s.language, split_part(t.node_key, ':', 3) AS import_name, count(*) AS occurrence_count, count(*) FILTER (WHERE i.type_only) AS type_only_count FROM mrt_real_graph_import_occurrences i JOIN mrt_real_graph_import_nodes s ON s.node_key = i.source_key JOIN mrt_real_graph_import_nodes p ON p.node_key = s.package_key JOIN mrt_real_graph_import_nodes t ON t.node_key = i.target_key WHERE s.kind = 'module' AND p.kind = 'package' AND p.relative_path IS NOT NULL AND i.resolution_status = 'external' AND t.node_key LIKE '%:external:%' AND (s.language <> 'python' OR split_part(t.node_key, ':', 3) NOT IN (" + stdlib + ")) GROUP BY p.relative_path, s.language, split_part(t.node_key, ':', 3)")
 
 
 def _reject_constant(value):
@@ -181,30 +181,30 @@ def _replace_test_projection(connection, components):
     for table, columns in _GRAPH_TABLES.items():
         connection.execute(f"CREATE TABLE IF NOT EXISTS realization_internal.{table} ({columns})")
         connection.execute(f"DELETE FROM realization_internal.{table}")
-    connection.execute("INSERT INTO realization_internal.component_reference SELECT 'Component', unnest(?)",
+    connection.execute("INSERT INTO realization_internal.int_component_reference SELECT 'Component', unnest(?)",
                        [sorted(components)])
-    connection.execute("INSERT INTO realization_internal.package_tests "
-                       "SELECT e.source_key, e.target_key FROM test_edges e "
-                       "JOIN import_nodes n ON n.node_key = e.target_key AND n.kind = 'package'")
-    connection.execute("INSERT INTO realization_internal.package_tested_by "
-                       "SELECT target_key, source_key FROM realization_internal.package_tests")
-    connection.execute("INSERT INTO realization_internal.component_tests "
-                       "SELECT e.source_key, r.kind, r.ref FROM test_edges e "
-                       "JOIN realization_internal.component_reference r ON r.ref = e.target_key")
-    connection.execute("INSERT INTO realization_internal.component_tested_by "
-                       "SELECT target_kind, target_key, source_key FROM realization_internal.component_tests")
+    connection.execute("INSERT INTO realization_internal.int_package_tests "
+                       "SELECT e.source_key, e.target_key FROM mrt_real_graph_test_edges e "
+                       "JOIN mrt_real_graph_import_nodes n ON n.node_key = e.target_key AND n.kind = 'package'")
+    connection.execute("INSERT INTO realization_internal.int_package_tested_by "
+                       "SELECT target_key, source_key FROM realization_internal.int_package_tests")
+    connection.execute("INSERT INTO realization_internal.int_component_tests "
+                       "SELECT e.source_key, r.kind, r.ref FROM mrt_real_graph_test_edges e "
+                       "JOIN realization_internal.int_component_reference r ON r.ref = e.target_key")
+    connection.execute("INSERT INTO realization_internal.int_component_tested_by "
+                       "SELECT target_kind, target_key, source_key FROM realization_internal.int_component_tests")
 
 
 def replace(connection, graph, components):
     if graph is None or not _ANALYSIS <= graph.keys():
         analysis_projection.drop(connection)
     if graph is None:
-        connection.execute("DROP VIEW IF EXISTS antipattern_findings")
-        connection.execute("DROP VIEW IF EXISTS import_cycles")
-        connection.execute("DROP VIEW IF EXISTS package_coupling")
-        connection.execute("DROP VIEW IF EXISTS package_imports")
-        connection.execute("DROP VIEW IF EXISTS package_external_imports")
-        for table in ("tested_by_edges", *(table for table, _ in _TABLES.values())):
+        connection.execute("DROP VIEW IF EXISTS mrt_diag_antipatterns")
+        connection.execute("DROP VIEW IF EXISTS mrt_diag_import_cycles")
+        connection.execute("DROP VIEW IF EXISTS biz_package_coupling")
+        connection.execute("DROP VIEW IF EXISTS mrt_real_graph_package_imports")
+        connection.execute("DROP VIEW IF EXISTS mrt_real_graph_package_external_imports")
+        for table in ("mrt_real_graph_tested_by_edges", *(table for table, _ in _TABLES.values())):
             connection.execute(f"DROP TABLE IF EXISTS {table}")
         connection.execute("DROP SCHEMA IF EXISTS realization_internal CASCADE")
         restore_property_graph(connection)
@@ -216,8 +216,8 @@ def replace(connection, graph, components):
         if rows:
             connection.execute(f"INSERT INTO {table} SELECT " + ", ".join("unnest(?)" for _ in types),
                                [list(column) for column in zip(*rows)])
-    connection.execute("DELETE FROM tested_by_edges")
-    connection.execute("INSERT INTO tested_by_edges SELECT target_key, source_key FROM test_edges")
+    connection.execute("DELETE FROM mrt_real_graph_tested_by_edges")
+    connection.execute("INSERT INTO mrt_real_graph_tested_by_edges SELECT target_key, source_key FROM mrt_real_graph_test_edges")
     _replace_test_projection(connection, components)
     if _ANALYSIS <= graph.keys():
         analysis_projection.prepare(connection)
@@ -234,16 +234,16 @@ def has_table(connection, schema, name):
 
 
 def _import_edges(reference):
-    edges = [f"{table} SOURCE KEY(source_key) REFERENCES main.import_nodes(node_key) "
-             f"DESTINATION KEY(target_key) REFERENCES main.import_nodes(node_key) LABEL {label}"
-             for table, label in (("main.import_edges", "Imports"), ("realization_internal.package_tests", "TESTS"),
-                                  ("realization_internal.package_tested_by", "IS_TESTED_BY"))]
+    edges = [f"{table} SOURCE KEY(source_key) REFERENCES main.mrt_real_graph_import_nodes(node_key) "
+             f"DESTINATION KEY(target_key) REFERENCES main.mrt_real_graph_import_nodes(node_key) LABEL {label}"
+             for table, label in (("main.mrt_real_graph_import_edges", "Imports"), ("realization_internal.int_package_tests", "TESTS"),
+                                  ("realization_internal.int_package_tested_by", "IS_TESTED_BY"))]
     edges.extend((
-        "realization_internal.component_tests SOURCE KEY(source_key) REFERENCES main.import_nodes(node_key) "
+        "realization_internal.int_component_tests SOURCE KEY(source_key) REFERENCES main.mrt_real_graph_import_nodes(node_key) "
         f"DESTINATION KEY(target_kind, target_key) REFERENCES {reference}(kind, ref) LABEL TESTS_COMPONENT",
-        "realization_internal.component_tested_by SOURCE KEY(source_kind, source_key) "
+        "realization_internal.int_component_tested_by SOURCE KEY(source_kind, source_key) "
         f"REFERENCES {reference}(kind, ref) "
-        "DESTINATION KEY(target_key) REFERENCES main.import_nodes(node_key) LABEL COMPONENT_IS_TESTED_BY",
+        "DESTINATION KEY(target_key) REFERENCES main.mrt_real_graph_import_nodes(node_key) LABEL COMPONENT_IS_TESTED_BY",
     ))
     return edges
 
@@ -251,23 +251,23 @@ def _import_edges(reference):
 def restore_property_graph(connection):
     """Reopen the graph catalog from the admitted tables."""
     connection.execute("DROP PROPERTY GRAPH IF EXISTS anechoic")
-    imports = has_table(connection, "main", "import_nodes")
-    native = has_table(connection, "native_graph", "reference")
+    imports = has_table(connection, "main", "mrt_real_graph_import_nodes")
+    native = has_table(connection, "native_graph", "int_reference")
     if not imports and not native:
         return
-    reference = "native_graph.reference" if native else "realization_internal.component_reference"
+    reference = "native_graph.int_reference" if native else "realization_internal.int_component_reference"
     vertices = [f"{reference} LABEL Reference"]
     edges = native_edges(connection, reference) if native else []
     if imports:
-        vertices.append("main.import_nodes LABEL ImportNode")
+        vertices.append("main.mrt_real_graph_import_nodes LABEL ImportNode")
         edges.extend(_import_edges(reference))
-        if has_table(connection, "main", "code_units") and has_table(connection, "main", "code_unit_calls"):
-            vertices.append("main.code_units LABEL CodeUnit")
+        if has_table(connection, "main", "mrt_real_graph_code_units") and has_table(connection, "main", "mrt_real_graph_code_unit_calls"):
+            vertices.append("main.mrt_real_graph_code_units LABEL CodeUnit")
             edges.extend((
-                "main.code_units SOURCE KEY(module_key) REFERENCES main.import_nodes(node_key) "
-                "DESTINATION KEY(node_key) REFERENCES main.code_units(node_key) LABEL ModuleIncludes",
-                "main.code_unit_calls SOURCE KEY(source_key) REFERENCES main.code_units(node_key) "
-                "DESTINATION KEY(target_key) REFERENCES main.code_units(node_key) LABEL Calls",
+                "main.mrt_real_graph_code_units SOURCE KEY(module_key) REFERENCES main.mrt_real_graph_import_nodes(node_key) "
+                "DESTINATION KEY(node_key) REFERENCES main.mrt_real_graph_code_units(node_key) LABEL ModuleIncludes",
+                "main.mrt_real_graph_code_unit_calls SOURCE KEY(source_key) REFERENCES main.mrt_real_graph_code_units(node_key) "
+                "DESTINATION KEY(target_key) REFERENCES main.mrt_real_graph_code_units(node_key) LABEL Calls",
             ))
     sql = "CREATE PROPERTY GRAPH anechoic VERTEX TABLES (" + ", ".join(vertices) + ")"
     if edges:

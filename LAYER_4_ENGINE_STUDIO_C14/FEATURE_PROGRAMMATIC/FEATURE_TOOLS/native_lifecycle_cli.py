@@ -1,4 +1,5 @@
 """Run an admitted, bounded native Atom lifecycle request."""
+from contextlib import ExitStack
 from dataclasses import replace
 from hashlib import sha256
 import json
@@ -6,8 +7,12 @@ import re
 from pathlib import Path
 import sys
 
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import open_admitted_model
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native, protected, read_structure
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import (
+    open_admitted_model, open_serialized_model,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    capture_indexed_lifecycle, capture_native, parse_structure, protected, read_structure,
+)
 from .native_lifecycle import LIFECYCLE_TOOLS, execute_native_lifecycle
 from .native_project_selection import NativeProjectSelection, is_native_control_name, resolve_native_project
 from .project_selection import _instance_id, _project_root
@@ -69,12 +74,42 @@ def _run_indexed(request):
             previous_capture=None, ticket_labels=indexed["ticket_labels"], validate_project_spec=None, indexed_task=indexed)
 
 
+def _run_context(request):
+    from .ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import result
+
+    context, binding = request["lifecycle_context"], request["binding"]
+    with ExitStack() as stack:
+        try:
+            structure = parse_structure(json.dumps(context["structure"]).encode("utf-8"))
+            if structure.project["sha256"] != binding["manifest_sha256"]:
+                raise ValueError("Admitted Structure disagrees with the Project Manifest")
+            selection = _indexed_selection(binding, {"manifest_ref": structure.project["ref"]})
+            selection = replace(selection, parameters=context["structure"]["project"].get("parameters", {}))
+            capture = capture_indexed_lifecycle(selection, context["carriers"], context["max_numbers"],
+                                                lenses=context["lenses"])
+            descriptor = context["model"]
+            validate = None
+            if descriptor is not None:
+                if descriptor.get("model_sha256") != structure.model_sha256:
+                    raise ValueError("Admitted Model disagrees with the Structure")
+                validate = stack.enter_context(open_serialized_model(descriptor)).validate_project_spec
+        except (OSError, RuntimeError, TypeError, ValueError, KeyError) as error:
+            return result(errors=[{"code": "source_changed", "message": str(error)}])
+        with bind_native_runtime(selection):
+            return execute_native_lifecycle(selection, request["name"], request["arguments"], capture,
+                read_structure, previous_capture=capture, ticket_labels=context["ticket_labels"],
+                validate_project_spec=validate, admitted_structure=structure)
+
+
 def run(request):
-    if (not isinstance(request, dict) or set(request) not in (_FIELDS, {"binding", "name", "arguments", "indexed_task"})
+    if (not isinstance(request, dict) or set(request) not in (_FIELDS, {"binding", "name", "arguments", "indexed_task"},
+            {"binding", "name", "arguments", "lifecycle_context"})
             or request["name"] not in LIFECYCLE_TOOLS or not isinstance(request["arguments"], dict)):
         raise ValueError("Invalid lifecycle request")
     if "indexed_task" in request:
         return _run_indexed(request)
+    if "lifecycle_context" in request:
+        return _run_context(request)
     if not isinstance(request["receipt"], dict):
         raise ValueError("Invalid lifecycle request")
     generation = Path(request["generation"])

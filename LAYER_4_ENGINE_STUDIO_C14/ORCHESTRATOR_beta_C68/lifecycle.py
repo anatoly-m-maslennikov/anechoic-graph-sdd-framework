@@ -3,6 +3,7 @@ import http.client
 from hashlib import sha256
 import json
 import os
+from pathlib import PurePosixPath
 import signal
 import subprocess
 import sys
@@ -10,6 +11,7 @@ import threading
 
 from .generation import admit_generation, read_structure, ticket_allocation
 from .jobs import ENGINE, FIELDS
+from .lifecycle_queries import lifecycle_context
 from .warm_worker import WarmLifecycleUnavailable, run_lifecycle
 
 LIFECYCLE_DEADLINE_SECONDS = 300
@@ -28,6 +30,34 @@ def _new_component_task(job):
         return False
     container = values.get("container")
     return isinstance(container, dict) and set(container) == {"component"}
+
+
+def _requires_project_capture(job, context, control):
+    target = job["arguments"].get("target")
+    ref = target.get("ref_id") if isinstance(target, dict) else None
+    operation = job["name"]
+    if not isinstance(ref, str):
+        return False
+    if "-T-" in ref:
+        return context["has_descendants"] and operation in {
+            "atom_lifecycle_promote_draft", "atom_lifecycle_change_status",
+        }
+    if operation not in {"atom_lifecycle_promote_draft", "atom_lifecycle_change_status", "atom_lifecycle_archive"}:
+        return False
+    atom_id = ref.partition("@")[0]
+    ontology = PurePosixPath(control, "LAYER_1_META_ONTOLOGY_C9")
+    custom = {PurePosixPath(control, directory, "CUSTOM_MODEL")
+              for directory in ("__PROJECT_CONFIG", "002_PROJECT_CONFIG")}
+    model_inputs = {ontology, ontology / "_SPEC", *custom}
+    for carrier in context["carriers"]:
+        if carrier["id"] != atom_id:
+            continue
+        parent = PurePosixPath(carrier["source_path"]).parent
+        if ((carrier["status"] == "active" and parent in model_inputs)
+                or (job["arguments"].get("targetStatus") == "active"
+                    and any(parent.is_relative_to(scope) for scope in {ontology, *custom}))):
+            return True
+    return False
 
 
 class LifecycleJobs:
@@ -55,12 +85,10 @@ class LifecycleJobs:
             return 503, {"error": {"code": "write_outcome_unknown", "message": "Orchestrator stopped; outcome is unknown"}}
         return 200, {"result": job["outcome"]}
 
-    def _run_lifecycle(self, job, base_generation, structure_sha256, indexed_task=None):
+    def _run_lifecycle(self, job, base_generation, structure_sha256, facts):
         request = {"binding": self.binding, "name": job["name"], "base_generation": base_generation,
-                   "structure_sha256": structure_sha256, "arguments": job["arguments"]}
-        if indexed_task is not None:
-            request["indexed_task"] = indexed_task
-        if indexed_task is not None and self.worker_socket is not None:
+                   "structure_sha256": structure_sha256, "arguments": job["arguments"], **facts}
+        if facts and self.worker_socket is not None:
             try:
                 outcome = run_lifecycle(self.worker_socket, self.worker_load_seconds, request,
                                         self._register_warm_capture, LIFECYCLE_DEADLINE_SECONDS)
@@ -103,29 +131,39 @@ class LifecycleJobs:
             raise RuntimeError("Lifecycle worker failed: " + stderr[-2048:])
         return json.loads(stdout)
 
-    def _execute_lifecycle(self, job):
+    def _lifecycle_inputs(self, job):
         reuse = self.generation_reuse
-        structure = read_structure(self.database_socket, self.instance_id, reuse)
-        if structure is None:
-            return {"lifecycle": {"outcome": "failed"}, "write_state": "known",
-                    "projection": self._projection_failure("An admitted generation is required for lifecycle writes")}
+        if reuse is None:
+            raise ValueError("An admitted generation is required for lifecycle writes")
+        if self.unconfirmed_lifecycle_write:
+            raise ValueError("Lifecycle requires admission of the preceding write")
         base = reuse["base_generation"]
-        indexed_task = None
         if _new_component_task(job):
-            try:
-                if self.unconfirmed_lifecycle_write:
-                    raise ValueError("Ticket allocation requires admission of the preceding write")
-                number, labels = ticket_allocation(self.database_socket, self.instance_id, base,
-                                                   self.binding["project_prefix"])
-                indexed_task = {"max_number": number, "component_ids": list(structure["components"]),
-                                "manifest_ref": structure["project"]["ref"], "ticket_labels": labels,
-                                "endpoints": reuse["endpoints"]}
-            except (OSError, ValueError, TypeError, KeyError, http.client.HTTPException) as error:
-                return {"lifecycle": {"outcome": "failed"}, "write_state": "known",
-                        "projection": self._projection_failure(error)}
+            structure = read_structure(self.database_socket, self.instance_id, reuse)
+            if structure is None:
+                raise ValueError("An admitted Structure is required for lifecycle writes")
+            number, labels = ticket_allocation(self.database_socket, self.instance_id, base,
+                                               self.binding["project_prefix"])
+            facts = {"max_number": number, "component_ids": list(structure["components"]),
+                     "manifest_ref": structure["project"]["ref"], "ticket_labels": labels,
+                     "endpoints": reuse["endpoints"]}
+            return base, structure, {"indexed_task": facts}
+        context = lifecycle_context(self.database_socket, self.instance_id, base, self.binding["project_prefix"],
+                                    job["name"], job["arguments"])
+        structure = context["structure"]
+        if _requires_project_capture(job, context, self.binding["control_root"]):
+            return base, structure, {}
+        return base, structure, {"lifecycle_context": {**context, "endpoints": reuse["endpoints"]}}
+
+    def _execute_lifecycle(self, job):
+        try:
+            base, structure, facts = self._lifecycle_inputs(job)
+        except (OSError, ValueError, TypeError, KeyError, http.client.HTTPException) as error:
+            return {"lifecycle": {"outcome": "failed"}, "write_state": "known",
+                    "projection": self._projection_failure(error)}
         try:
             canonical = json.dumps(structure, sort_keys=True, separators=(",", ":")).encode()
-            reply = self._run_lifecycle(job, base, sha256(canonical).hexdigest(), indexed_task)
+            reply = self._run_lifecycle(job, base, sha256(canonical).hexdigest(), facts)
         except WarmLifecycleUnavailable as error:
             return {"lifecycle": {"outcome": "failed"}, "write_state": "known",
                     "projection": self._projection_failure(error)}

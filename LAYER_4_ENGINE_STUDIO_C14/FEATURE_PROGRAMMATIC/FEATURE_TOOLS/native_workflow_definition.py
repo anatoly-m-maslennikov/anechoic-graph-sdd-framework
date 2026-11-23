@@ -40,12 +40,12 @@ def _pin_path(selection: NativeProjectSelection, pin: NativeDefinitionPin) -> Pa
     return selection.root / relative
 
 
-def _pinned_bytes(reader: ReadContext, path: Path, ref_id: str, digest: str) -> bytes:
+def _pinned_bytes(reader: ReadContext, path: Path, ref_id: str, digest: str, *, metadata_guard=False) -> bytes:
     try:
-        raw = reader.read(path)
+        raw = reader.read(path, metadata_guard=metadata_guard)
     except (OSError, RuntimeError, ValueError) as error:
         raise NativeWorkflowDefinitionError(f"Pinned native source {ref_id} is unavailable") from error
-    if reader.fingerprints[str(path)] != digest:
+    if sha256(raw).hexdigest() != digest:
         raise NativeWorkflowDefinitionError(f"Pinned native source {ref_id} changed")
     return raw
 
@@ -107,8 +107,8 @@ def bind_status_specifications(
     rows = tuple(current_rows)
     roots = [str(selection.control_root), str(selection.manifest_path)]
     reader = ReadContext(roots=roots, limits=dict(CEILINGS))
-    _pinned_bytes(reader, selection.manifest_path, selection.manifest_ref, selection.manifest_sha256)
-    pins = []
+    _pinned_bytes(reader, selection.manifest_path, selection.manifest_ref, selection.manifest_sha256, metadata_guard=True)
+    refs = {str(selection.manifest_path): selection.manifest_ref}
     for kind, (ref, expected_body) in STATUS_SPECIFICATIONS.items():
         atom_id = ref.partition("@")[0]
         selected = [row for row in rows if row.get("_exact_ref") == ref and row.get("status_group") == "Current"]
@@ -124,23 +124,20 @@ def bind_status_specifications(
                 or path.suffix != ".md" or not path.name.startswith(atom_id + "-")):
             raise NativeWorkflowDefinitionError(f"Invalid native status specification path {ref}")
         full_path = selection.root / path
-        raw = _pinned_bytes(reader, full_path, ref, digest)
+        raw = _pinned_bytes(reader, full_path, ref, digest, metadata_guard=True)
         _check_header(full_path, raw, kind, ref)
         _, delimiter, body = raw.partition(b"\n---\n")
         if not delimiter or sha256(body).hexdigest() != expected_body:
             raise NativeWorkflowDefinitionError(f"Native status specification body differs for {ref}")
-        pins.append((full_path, ref, digest))
-    if reader.currentness()["state"] != "unchanged":
-        raise NativeWorkflowDefinitionError("Native status Workflow sources changed during verification")
+        refs[str(full_path)] = ref
 
     def check() -> None:
-        current = ReadContext(roots=roots, limits=dict(CEILINGS))
-        _pinned_bytes(current, selection.manifest_path, selection.manifest_ref, selection.manifest_sha256)
-        for path, ref, digest in pins:
-            _pinned_bytes(current, path, ref, digest)
-        if current.currentness()["state"] != "unchanged":
-            raise NativeWorkflowDefinitionError("Native status Workflow sources changed during verification")
+        changed = {item["path"] for item in reader.currentness()["affected_inputs"]}
+        if changed:
+            ref = next(ref for path, ref in refs.items() if path in changed)
+            raise NativeWorkflowDefinitionError(f"Pinned native source {ref} changed")
 
+    check()
     return check
 
 

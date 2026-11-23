@@ -38,7 +38,8 @@ The authored Header defines each Atom. The compiled Model validates its Header a
    Let Adapters read only carriers addressed by the operation. Allocate
    new Atom IDs through the serialized lifecycle lane.
 6. Bring the slowest supported single-Atom operation below 0.5 seconds.
-   Reuse loaded lifecycle code. Apply only the addressed carrier delta.
+   Reuse loaded lifecycle code and admitted Model and Structure rules.
+   Apply only the carrier changes produced by the operation.
 
 ## Lifecycle transition coverage
 
@@ -61,9 +62,14 @@ Verify the exact revision and indexed Status for accepted transitions.
 Report setup separately and attach the source revision and candidate image
 ID. Use elapsed time to compare cases and expose regressions.
 
-Measure each supported single-Atom operation from the MCP request to
-successful SQL readback on a ready runtime. Report the maximum across
-the operations. Record timing for operations that change multiple Atoms separately.
+In the image phase, measure 50 sequential trials per single-Atom timing case,
+from the MCP request to successful SQL readback on a ready runtime. Include
+P10, P50, P90, and P95 in milliseconds per operation in the image test report.
+Use the sample median for P50 and nearest rank for P10, P90, and P95.
+
+Report the maximum across all trials. Count revision and archive carriers
+of the same Atom ID together. Report timing for operations that change
+multiple Atom IDs separately.
 
 ## References
 

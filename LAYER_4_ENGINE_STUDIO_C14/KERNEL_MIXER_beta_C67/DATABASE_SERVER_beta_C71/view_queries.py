@@ -25,7 +25,7 @@ class ViewQueries:
         if operation == "view_save":
             return self._save_view(args)
         if operation in {"view_run", "view_check", "view_fetch"}:
-            if self.connection.execute("SELECT id FROM generation").fetchone() is None:
+            if self.connection.execute("SELECT id FROM ops_generation").fetchone() is None:
                 raise ValueError("Generation admission required")
             return self._query_operation(operation, args)
         result = self.store.invoke(operation, args)

@@ -10,15 +10,6 @@ import duckdb
 from .result_grid import grid_page, parse_grid
 from .result_values import result_value
 
-_PROJECTION_SOURCES = {
-    "antipattern_findings": {"source_antipatterns"},
-    "import_cycles": {"import_nodes", "module_imports"},
-    "package_coupling": {"import_nodes", "module_imports"},
-    "component_flows": {"flow_events"},
-    "flow_overlap_candidates": {"flow_events"},
-    "flow_similar_actions": {"flow_events"},
-}
-
 
 def validate_preview(value):
     if value is not None and (type(value) is not int or value < 0):
@@ -69,12 +60,11 @@ def _capture(connection, sql, *, in_transaction=False, preview=None):
     return result, max(4096, size + len(sql.encode("utf-8")))
 
 
-def _affected(connection, sql, target):
+def _affected(connection, sql, sources):
     try:
         tables = connection.get_table_names(sql)
     except duckdb.Error:
         return True
-    sources = _PROJECTION_SOURCES.get(target, {target})
     return sources <= {table.lower() for table in tables} or "graph_table" in sql.lower()
 
 
@@ -127,7 +117,9 @@ class QueryResults:
                                         [target]).fetchone()
             if not exists:
                 raise ValueError("Projection table is unavailable")
-            selected = {key: item for key, item in self.results.items() if _affected(connection, item[0], target)}
+            quoted = target.replace('"', '""')
+            sources = {name.lower() for name in connection.get_table_names(f'SELECT * FROM "{quoted}"')}
+            selected = {key: item for key, item in self.results.items() if _affected(connection, item[0], sources)}
         return selected
 
     @staticmethod

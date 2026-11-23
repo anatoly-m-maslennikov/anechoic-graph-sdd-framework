@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: "active"
-  version: 26
-  updated_at: "2026-11-23T09:56:32.676138+00:00"
+  version: 27
+  updated_at: "2026-11-23T10:26:33.104737+00:00"
 ---
 ## Summary
 
@@ -79,7 +79,7 @@ declare_entity(
                                                       'module': 'WORKERS_beta_C69.warm_worker',
                                                       'kind': 'indexed_lifecycle',
                                                       'fields': ['kind', 'start_by', 'request'],
-                                                      'request': 'task_lifecycle with indexed_task',
+                                                      'request': 'task_lifecycle with indexed_task or lifecycle_context',
                                                       'accepted_reply': ['accepted', 'pid when accepted'],
                                                       'completion_reply': ['result'],
                                                       'cancel': 'client write-half close'},
@@ -87,7 +87,7 @@ declare_entity(
                                               'module': 'WORKERS_beta_C69.lifecycle_worker',
                                               'managed_parent_env': 'ANECHOIC_BETA_WORKER_PARENT_PID',
                                               'input_fields': ['binding', 'name', 'arguments', 'base_generation', 'structure_sha256'],
-                                              'optional_input': 'indexed_task',
+                                              'optional_inputs': ['indexed_task', 'lifecycle_context'],
                                               'operations': ['atom_lifecycle_create_draft',
                                                              'atom_lifecycle_update',
                                                              'atom_lifecycle_promote_draft',

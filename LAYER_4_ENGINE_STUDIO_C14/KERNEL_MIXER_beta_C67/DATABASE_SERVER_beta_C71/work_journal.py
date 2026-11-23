@@ -101,7 +101,8 @@ def initialize_journal(connection: Any, project_root: Path) -> None:
         "author VARCHAR NOT NULL, local_date VARCHAR NOT NULL, event JSON NOT NULL)"
     )
     validate_journal_schema(connection, "journal_store")
-    connection.execute(f"CREATE TEMP VIEW work_journal AS SELECT * FROM {TABLE}")
+    connection.execute(f"CREATE TEMP VIEW ops_work_journal AS SELECT * FROM {TABLE}")
+    connection.execute("CREATE TEMP VIEW work_journal AS SELECT * FROM ops_work_journal")
 
 
 def _canonical_json_bytes(value):
@@ -228,10 +229,11 @@ def initialize_file_journal(connection: Any, project_root: Path, journal_relativ
     if connection.execute("SELECT 1 FROM information_schema.tables WHERE table_catalog = current_database() "
                           "AND table_schema = 'main' AND table_name = 'work_journal'").fetchone():
         raise ValueError("Database already has a Work Journal object")
-    connection.execute("CREATE TEMP TABLE _work_journal_binding (root VARCHAR, relative VARCHAR)")
-    connection.execute("INSERT INTO _work_journal_binding VALUES (?, ?)", binding)
-    connection.execute("CREATE TEMP TABLE work_journal (record_id VARCHAR PRIMARY KEY, position BIGINT NOT NULL, "
+    connection.execute("CREATE TEMP TABLE ops_work_journal_binding (root VARCHAR, relative VARCHAR)")
+    connection.execute("INSERT INTO ops_work_journal_binding VALUES (?, ?)", binding)
+    connection.execute("CREATE TEMP TABLE ops_work_journal (record_id VARCHAR PRIMARY KEY, position BIGINT NOT NULL, "
                        "author VARCHAR NOT NULL, local_date VARCHAR NOT NULL, event JSON NOT NULL)")
+    connection.execute("CREATE TEMP VIEW work_journal AS SELECT * FROM ops_work_journal")
 
 
 def _file_rows(directory):
@@ -268,7 +270,7 @@ def _file_rows(directory):
 def sync_file_journal(connection: Any, project_root: Path, journal_relative: str) -> None:
     """Replace the connection-local projection after safely reading file carriers."""
     binding = _file_binding(project_root, journal_relative)
-    if connection.execute("SELECT root, relative FROM _work_journal_binding").fetchall() != [binding]:
+    if connection.execute("SELECT root, relative FROM ops_work_journal_binding").fetchall() != [binding]:
         raise ValueError("Work Journal is not bound to this Project")
     try:
         directory = _open_directory(Path(project_root), Path(journal_relative).parts, create=False, same_device=True)
@@ -281,9 +283,9 @@ def sync_file_journal(connection: Any, project_root: Path, journal_relative: str
             os.close(directory)
     connection.execute("BEGIN TRANSACTION")
     try:
-        connection.execute("DELETE FROM work_journal")
+        connection.execute("DELETE FROM ops_work_journal")
         if rows:
-            connection.executemany("INSERT INTO work_journal VALUES (?, ?, ?, ?, ?)", rows)
+            connection.executemany("INSERT INTO ops_work_journal VALUES (?, ?, ?, ?, ?)", rows)
         connection.execute("COMMIT")
     except BaseException:
         connection.execute("ROLLBACK")

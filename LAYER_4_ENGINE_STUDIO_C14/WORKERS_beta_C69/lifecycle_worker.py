@@ -43,16 +43,45 @@ def _delta(binding, endpoints, base_generation, lifecycle, name, *, manifest_adm
     return {"base_generation": base_generation, "snapshot_sha256": digest(result), **result}
 
 
+_FIELDS = {"binding", "name", "arguments", "base_generation", "structure_sha256"}
+
+
+def _validate_indexed(request):
+    if not isinstance(request, dict) or set(request) not in (_FIELDS | {"indexed_task"}, _FIELDS | {"lifecycle_context"}):
+        raise ValueError("Invalid indexed lifecycle request")
+    key = "indexed_task" if "indexed_task" in request else "lifecycle_context"
+    indexed = request[key]
+    binding = request["binding"]
+    if (not isinstance(binding, dict) or set(binding) != {"root", "control_root", "manifest_path", "manifest_sha256", "project_prefix"}
+            or any(not isinstance(value, str) or not value for value in binding.values())
+            or not isinstance(request["name"], str) or not request["name"] or not isinstance(request["arguments"], dict)
+            or any(not isinstance(request[field], str) or not request[field] for field in ("base_generation", "structure_sha256"))
+            or not isinstance(indexed, dict) or not isinstance(indexed.get("endpoints"), dict)):
+        raise ValueError("Invalid indexed lifecycle request")
+    if key == "indexed_task":
+        if (request["name"] != "atom_lifecycle_create_draft"
+                or set(indexed) != {"max_number", "manifest_ref", "component_ids", "ticket_labels", "endpoints"}
+                or any(not isinstance(indexed[field], str) or not indexed[field] for field in ("max_number", "manifest_ref"))
+                or any(not isinstance(indexed[field], list) or any(not isinstance(x, str) for x in indexed[field])
+                       for field in ("component_ids", "ticket_labels"))):
+            raise ValueError("Invalid indexed task request")
+    elif (set(indexed) != {"structure", "ticket_labels", "max_numbers", "carriers", "lenses", "model", "has_descendants", "endpoints"}
+          or not isinstance(indexed["structure"], dict) or not isinstance(indexed["max_numbers"], dict)
+          or any(not isinstance(indexed[field], list) for field in ("ticket_labels", "carriers", "lenses"))
+          or indexed["model"] is not None and not isinstance(indexed["model"], dict)
+          or type(indexed["has_descendants"]) is not bool):
+        raise ValueError("Invalid lifecycle context")
+    return key
+
+
 def run(request, *, indexed_draft=None):
-    if (not isinstance(request, dict) or set(request) not in ({"binding", "name", "arguments", "base_generation", "structure_sha256"},
-                                    {"binding", "name", "arguments", "base_generation", "structure_sha256", "indexed_task"})
-            or ("indexed_task" in request and not isinstance(request["indexed_task"], dict))
+    if (not isinstance(request, dict) or set(request) not in (_FIELDS, _FIELDS | {"indexed_task"}, _FIELDS | {"lifecycle_context"})
             or not isinstance(request["name"], str) or not isinstance(request["arguments"], dict)
             or not isinstance(request["base_generation"], str) or not request["base_generation"]
             or not isinstance(request["structure_sha256"], str) or not request["structure_sha256"]):
         raise ValueError("Invalid lifecycle request")
     binding = request["binding"]
-    if "indexed_task" in request:
+    if set(request) != _FIELDS:
         return _run_indexed(request, indexed_draft=indexed_draft)
     before = manifest_input_signature(binding)
     with tempfile.TemporaryDirectory(prefix="anechoic-lifecycle-") as temporary:
@@ -79,15 +108,10 @@ def run(request, *, indexed_draft=None):
             return {"lifecycle": lifecycle, "delta": None, "projection_error": str(error) or type(error).__name__}
 
 def _run_indexed(request, *, indexed_draft=None):
-    indexed = request["indexed_task"]
-    if (set(indexed) != {"max_number", "manifest_ref", "component_ids", "ticket_labels", "endpoints"}
-            or any(not isinstance(indexed[key], str) or not indexed[key] for key in ("max_number", "manifest_ref"))
-            or any(not isinstance(indexed[key], list) or any(not isinstance(item, str) for item in indexed[key])
-                   for key in ("component_ids", "ticket_labels"))
-            or not isinstance(indexed["endpoints"], dict)):
-        raise ValueError("Invalid indexed task request")
+    key = _validate_indexed(request)
+    indexed = request[key]
     payload = {key: request[key] for key in ("binding", "name", "arguments")}
-    payload["indexed_task"] = {key: value for key, value in indexed.items() if key != "endpoints"}
+    payload[key] = {field: value for field, value in indexed.items() if field != "endpoints"}
     lifecycle = _run_job(_OWNER, payload) if indexed_draft is None else indexed_draft(payload)
     try:
         delta = _delta(request["binding"], indexed["endpoints"], request["base_generation"], lifecycle,

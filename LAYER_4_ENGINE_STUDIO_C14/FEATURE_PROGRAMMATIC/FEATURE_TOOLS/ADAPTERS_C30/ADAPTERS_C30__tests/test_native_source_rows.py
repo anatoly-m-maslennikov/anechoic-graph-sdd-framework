@@ -12,9 +12,9 @@ import yaml
 TOOLS = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(TOOLS))
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native, revalidate_native  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
-    native_carrier_hashes, prepare_generation_snapshot, capture_ticket_delta,
+    ReadContext, capture_indexed_lifecycle, capture_native, capture_ticket_delta,
+    native_carrier_hashes, prepare_generation_snapshot, revalidate_native,
 )
 
 
@@ -37,6 +37,35 @@ class NativeCaptureTests(unittest.TestCase):
                   "state": {"status": status, "version": version, "updated_at": "2026-11-19T00:00:00Z"}}
         path.write_text("---\n" + yaml.safe_dump(header) + "---\n\n## Summary\n\nExample\n", encoding="utf-8")
         return path
+
+    def test_indexed_capture_reads_only_addressed_and_detects_drift(self):
+        path = self.write("AN-T-8--task.md", "AN-T-8", "active", 1)
+        other = self.write("AN-T-9--other.md", "AN-T-9", "active", 1)
+        descriptor = {"id": "AN-T-8", "ref": "AN-T-8", "_exact_ref": "AN-T-8@1",
+                      "source_path": path.relative_to(self.root).as_posix(),
+                      "_source_sha256": sha256(path.read_bytes()).hexdigest(), "version": 1,
+                      "status": "active", "status_group": "Current", "owner_kind": "Component",
+                      "owner_ref": "C0", "read": True}
+        original = ReadContext.read
+        def read(reader, source, **kwargs):
+            self.assertNotEqual(source, other)
+            return original(reader, source, **kwargs)
+        with patch.object(ReadContext, "read", read):
+            capture = capture_indexed_lifecycle(self.selection, [descriptor], {"S": "0", "T": "9"}, lenses=["SPEC"])
+            self.assertEqual({"S": 0, "T": 9}, capture.max_numbers)
+            with patch.object(ReadContext, "read", side_effect=AssertionError("unexpected content read")):
+                self.assertEqual(capture.atoms, revalidate_native(self.selection, capture).atoms)
+            original_stat = path.stat()
+            path.write_text(path.read_text().replace("Example", "Changed"))
+            os.utime(path, ns=(original_stat.st_atime_ns, original_stat.st_mtime_ns))
+            with self.assertRaisesRegex(ValueError, "changed"):
+                revalidate_native(self.selection, capture)
+            path.unlink()
+            with self.assertRaisesRegex(ValueError, "missing"):
+                revalidate_native(self.selection, capture)
+            path.symlink_to(other)
+            with self.assertRaisesRegex(ValueError, "missing or changed"):
+                revalidate_native(self.selection, capture)
 
     def test_hash_inventory_tracks_content_and_deletion(self):
         binding = {"root": str(self.root), "control_root": self.control.name,
@@ -65,7 +94,6 @@ class NativeCaptureTests(unittest.TestCase):
         goal = self.root / "AN-S-02-SPEC-PROJECT_GOAL--goal.md"
         goal.write_bytes(b"not parsed by hashing")
         self.assertEqual(sha256(goal.read_bytes()).hexdigest(), native_carrier_hashes(binding)[goal.name])
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__pub import ReadContext
         original = ReadContext.read
         def read_and_change(reader, path, **kwargs):
             raw = original(reader, path, **kwargs)

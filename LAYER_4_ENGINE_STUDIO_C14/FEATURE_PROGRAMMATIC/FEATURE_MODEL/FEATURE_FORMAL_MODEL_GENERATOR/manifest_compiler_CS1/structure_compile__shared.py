@@ -143,9 +143,11 @@ def compile_structure(selection, model) -> dict:  # noqa: C901
     _walk_structure(reader, pending, inventories, directory_ids, project_fields, model, control, atoms, packages, components)
     if reader.currentness()['state'] != 'unchanged' or any(_directories(reader, root) != names for root, names in inventories.items()):
         raise ValueError('Structure sources changed during compilation')
+    parameters = project_fields.get("parameters", {}).get("project", {})
+    layout = {"project": {"folder_layout": parameters["folder_layout"]}} if "folder_layout" in parameters else {}
     return {
         "model_sha256": model.fingerprint,
-        "project": {"ref": project_fields["ref_id"], "sha256": manifest_sha256},
+        "project": {"ref": project_fields["ref_id"], "sha256": manifest_sha256, "parameters": layout},
         "components": components,
         "packages": packages,
     }

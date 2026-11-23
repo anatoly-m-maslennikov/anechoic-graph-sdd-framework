@@ -13,12 +13,12 @@ class AnalysisProjectionTest(unittest.TestCase):
     def setUp(self):
         self.db = db = duckdb.connect()
         self.addCleanup(db.close)
-        db.execute('CREATE TABLE native_references (reference VARCHAR, exact_ref VARCHAR)')
-        db.execute('CREATE TABLE relations (source_kind VARCHAR, source_ref VARCHAR, target_kind VARCHAR, target_ref VARCHAR, relation_type VARCHAR, derived BOOLEAN)')
-        db.execute("INSERT INTO native_references VALUES ('AN-1', 'AN-1@1'), ('AN-2', 'AN-2@1')")
-        db.execute("INSERT INTO relations VALUES ('Atom','AN-1','Atom','AN-2','CONTAINED_BY',false), ('Atom','AN-2','Component','C1','CONTAINED_BY',false)")
-        db.execute('CREATE TABLE package_imports (source_key VARCHAR, target_key VARCHAR, occurrence_count BIGINT)')
-        db.execute("INSERT INTO package_imports VALUES ('p', 'q', 3)")
+        db.execute('CREATE TABLE mrt_atom_references (reference VARCHAR, exact_ref VARCHAR)')
+        db.execute('CREATE TABLE mrt_atom_graph_relations (source_kind VARCHAR, source_ref VARCHAR, target_kind VARCHAR, target_ref VARCHAR, relation_type VARCHAR, derived BOOLEAN)')
+        db.execute("INSERT INTO mrt_atom_references VALUES ('AN-1', 'AN-1@1'), ('AN-2', 'AN-2@1')")
+        db.execute("INSERT INTO mrt_atom_graph_relations VALUES ('Atom','AN-1','Atom','AN-2','CONTAINED_BY',false), ('Atom','AN-2','Component','C1','CONTAINED_BY',false)")
+        db.execute('CREATE TABLE mrt_real_graph_package_imports (source_key VARCHAR, target_key VARCHAR, occurrence_count BIGINT)')
+        db.execute("INSERT INTO mrt_real_graph_package_imports VALUES ('p', 'q', 3)")
         projection.prepare(db)
         projection.replace_code(db, [
             ('Package', 'p', 'src.py', 'implementation', 100, 10),
@@ -36,39 +36,39 @@ class AnalysisProjectionTest(unittest.TestCase):
         db = self.db
         row = db.execute("""SELECT numerator_bytes, denominator_bytes, bytes_ratio, numerator_lines,
             denominator_lines, partial_spec, test_assets_bytes, test_assets_unknown_lines
-            FROM architecture_ratios WHERE scope_id='p' AND code_population='implementation_and_test_code'
+            FROM biz_architecture_ratios WHERE scope_id='p' AND code_population='implementation_and_test_code'
             AND spec_population='body'""").fetchone()
         self.assertEqual(row, (120, 10, 12.0, 12, 2, True, 50, 1))
         self.assertEqual(db.execute("""SELECT spec_population, numerator_bytes, denominator_bytes,
-            bytes_ratio, numerator_lines, denominator_lines, lines_ratio FROM architecture_ratios
+            bytes_ratio, numerator_lines, denominator_lines, lines_ratio FROM biz_architecture_ratios
             WHERE scope_id='p' AND code_population='test_code' ORDER BY spec_population""").fetchall(),
             [('body', 20, 10, 2.0, 2, 2, 1.0), ('full', 20, 20, 1.0, 2, 4, 0.5)])
-        self.assertEqual(db.execute("SELECT count(*) FROM architecture_ratios WHERE scope_id='p'").fetchone()[0], 6)
-        self.assertEqual(db.execute("SELECT numerator_lines, bytes_ratio FROM architecture_ratios WHERE scope_id='q' AND code_population='implementation' LIMIT 1").fetchone(), (None, None))
-        self.assertEqual(db.execute("SELECT outgoing_packages, outgoing_occurrences FROM package_review_profiles WHERE package_key='p'").fetchone(), (1, 3))
-        self.assertEqual(db.execute("SELECT relative_path FROM package_largest_files WHERE package_key='p' AND size_rank=1").fetchone(), ('src.py',))
+        self.assertEqual(db.execute("SELECT count(*) FROM biz_architecture_ratios WHERE scope_id='p'").fetchone()[0], 6)
+        self.assertEqual(db.execute("SELECT numerator_lines, bytes_ratio FROM biz_architecture_ratios WHERE scope_id='q' AND code_population='implementation' LIMIT 1").fetchone(), (None, None))
+        self.assertEqual(db.execute("SELECT outgoing_packages, outgoing_occurrences FROM biz_package_review_profiles WHERE package_key='p'").fetchone(), (1, 3))
+        self.assertEqual(db.execute("SELECT relative_path FROM biz_package_largest_files WHERE package_key='p' AND size_rank=1").fetchone(), ('src.py',))
         with self.assertRaises(ValueError):
             projection.replace_code(db, [('Package', 'p', 'src.py', 'implementation', 1, 1)] * 2)
         with self.assertRaises(ValueError):
             projection.replace_bindings(db, [('p', 'AN-1')] * 2)
-        self.assertEqual(db.execute('SELECT count(*) FROM architecture_code_metrics').fetchone()[0], 4)
-        self.assertEqual(db.execute('SELECT count(*) FROM architecture_package_bindings').fetchone()[0], 3)
+        self.assertEqual(db.execute('SELECT count(*) FROM biz_architecture_code_metrics').fetchone()[0], 4)
+        self.assertEqual(db.execute('SELECT count(*) FROM mrt_real_graph_package_spec_bindings').fetchone()[0], 3)
 
     def test_native_sizes_and_delta_follow_current_containment(self):
         db = self.db
         with self.assertRaisesRegex(ValueError, 'no Spec size evidence'):
             projection.snapshot_sizes({})
         projection.replace_spec(db, [('AN-1@1', 40, 8, 20, 4)])
-        self.assertEqual(db.execute("SELECT denominator_bytes FROM architecture_ratios WHERE scope_id='p' AND spec_population='full' LIMIT 1").fetchone(), (40,))
-        self.assertEqual(db.execute("SELECT denominator_bytes FROM architecture_ratios WHERE scope_id='C1' AND spec_population='full' LIMIT 1").fetchone(), (40,))
+        self.assertEqual(db.execute("SELECT denominator_bytes FROM biz_architecture_ratios WHERE scope_id='p' AND spec_population='full' LIMIT 1").fetchone(), (40,))
+        self.assertEqual(db.execute("SELECT denominator_bytes FROM biz_architecture_ratios WHERE scope_id='C1' AND spec_population='full' LIMIT 1").fetchone(), (40,))
         projection.apply_spec_delta(db, [], [])
         projection.apply_spec_delta(db, ['AN-1@1'], [('AN-1@2', 60, 12, 30, 6)])
-        db.execute("UPDATE native_references SET exact_ref='AN-1@2' WHERE reference='AN-1'")
-        self.assertEqual(db.execute("SELECT denominator_bytes FROM architecture_ratios WHERE scope_id='C1' AND spec_population='full' LIMIT 1").fetchone(), (60,))
+        db.execute("UPDATE mrt_atom_references SET exact_ref='AN-1@2' WHERE reference='AN-1'")
+        self.assertEqual(db.execute("SELECT denominator_bytes FROM biz_architecture_ratios WHERE scope_id='C1' AND spec_population='full' LIMIT 1").fetchone(), (60,))
         with self.assertRaises(ValueError):
             projection.apply_spec_delta(db, [], [('AN-1@2', 1, 1, 1, 1)])
-        db.execute("UPDATE relations SET target_ref='C2' WHERE source_ref='AN-2'")
-        self.assertEqual(db.execute("SELECT denominator_bytes FROM architecture_ratios WHERE scope_id='C2' AND spec_population='full' LIMIT 1").fetchone(), (60,))
+        db.execute("UPDATE mrt_atom_graph_relations SET target_ref='C2' WHERE source_ref='AN-2'")
+        self.assertEqual(db.execute("SELECT denominator_bytes FROM biz_architecture_ratios WHERE scope_id='C2' AND spec_population='full' LIMIT 1").fetchone(), (60,))
 
 
 if __name__ == '__main__':

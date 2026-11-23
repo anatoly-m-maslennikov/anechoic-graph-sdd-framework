@@ -83,8 +83,12 @@ class NativeAtomTest(unittest.TestCase):
                 self.assertEqual([("legacy",)], connection.execute("SELECT * FROM native_references").fetchall())
 
     def assert_native_rows(self, client):
-        revisions = _query(client, "SELECT stable_ref, exact_ref FROM native_references ORDER BY exact_ref")
-        self.assertEqual([[None, "AN-T-1@1"], ["AN-T-1", "AN-T-1@2"]], revisions.json()["result"]["rows"])
+        for table in ("mrt_atom_references", "mrt_native_references", "native_references"):
+            revisions = _query(client, f"SELECT stable_ref, exact_ref FROM {table} ORDER BY exact_ref")
+            self.assertEqual([[None, "AN-T-1@1"], ["AN-T-1", "AN-T-1@2"]], revisions.json()["result"]["rows"])
+        for table in ("mrt_atom_graph_relations", "mrt_relations", "relations"):
+            edges = _query(client, f"SELECT source_ref, target_ref, relation_type FROM {table}")
+            self.assertEqual([["AN-T-1", "C00", "CONTAINED_BY"]], edges.json()["result"]["rows"])
         graph = _query(client, """
             FROM GRAPH_TABLE (anechoic MATCH (s:Reference)-[e:CONTAINED_BY]->(t:Reference)
                 COLUMNS (s.ref AS source, t.ref AS target))
@@ -94,6 +98,32 @@ class NativeAtomTest(unittest.TestCase):
 
 
 class NativeSchemaTest(unittest.TestCase):
+    def test_atom_family_views_publish_each_family_and_its_statuses(self):
+        native = _native_generation()
+        source = native["snapshot"]["atoms"][0]
+        for reference, status, group in (("AN-S-2", "active", "Current"), ("AN-P-3", "active", "Current"),
+                                         ("AN-C-4@1-draft", "draft", "Draft")):
+            atom_id = reference.split("@")[0]
+            native["snapshot"]["atoms"].append(source | {
+                "reference": reference, "exact_ref": reference if group == "Draft" else f"{atom_id}@1",
+                "version": 1, "status_group": group, "status": status, "filename": f"{atom_id}.md",
+            })
+        native["receipt"]["snapshot_sha256"] = _digest(native["snapshot"])
+        expected = {
+            "mrt_spec_atoms": ([["AN-S-2"]], ["active"]),
+            "mrt_ticket_atoms": ([["AN-T-1"], ["AN-T-1@1"]], ["active", "archived"]),
+            "mrt_project_config_atoms": ([["AN-C-4@1-draft"], ["AN-P-3"]], ["active", "draft"]),
+        }
+        with _server() as client:
+            response = client.put("/generation", json=native)
+            self.assertEqual(200, response.status_code, response.text)
+            tables = client.get("/schema", params={"instance_id": "instance"}).json()["result"]["tables"]
+            for table, (rows, values) in expected.items():
+                with self.subTest(table=table):
+                    self.assertEqual(rows, _query(client, f"SELECT reference FROM {table} ORDER BY 1").json()["result"]["rows"])
+                    status = next(column for column in tables[table] if column["name"] == "header.state.status")
+                    self.assertEqual(values, status["values"])
+
     def test_schema_hints_follow_admitted_generation_without_query_history(self):
         with TemporaryDirectory(dir="/tmp") as directory:
             root = Path(directory).resolve()

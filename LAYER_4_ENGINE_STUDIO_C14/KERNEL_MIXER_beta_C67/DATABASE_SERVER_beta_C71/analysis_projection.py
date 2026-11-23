@@ -1,9 +1,5 @@
 """Store admitted metric evidence and expose SQL analysis views."""
 
-PUBLIC_TABLES = ("architecture_code_metrics", "architecture_spec_metrics", "architecture_ratios",
-                 "package_review_profiles", "package_largest_files", "architecture_package_bindings")
-
-
 def snapshot_sizes(snapshot):
     if "spec_sizes" not in snapshot:
         raise ValueError("Native snapshot has no Spec size evidence")
@@ -40,35 +36,35 @@ def _validate(rows, kind):
 
 
 def prepare(connection):
-    connection.execute('CREATE TABLE IF NOT EXISTS architecture_code_metrics (scope_kind VARCHAR, scope_id VARCHAR, relative_path VARCHAR, population VARCHAR, bytes BIGINT, physical_lines BIGINT, PRIMARY KEY (scope_kind, scope_id, relative_path))')
-    connection.execute('CREATE TABLE IF NOT EXISTS architecture_spec_metrics (atom_ref VARCHAR PRIMARY KEY, full_bytes BIGINT, full_lines BIGINT, body_bytes BIGINT, body_lines BIGINT)')
-    connection.execute('CREATE TABLE IF NOT EXISTS architecture_package_bindings (package_key VARCHAR, atom_ref VARCHAR, PRIMARY KEY (package_key, atom_ref))')
+    connection.execute('CREATE TABLE IF NOT EXISTS biz_architecture_code_metrics (scope_kind VARCHAR, scope_id VARCHAR, relative_path VARCHAR, population VARCHAR, bytes BIGINT, physical_lines BIGINT, PRIMARY KEY (scope_kind, scope_id, relative_path))')
+    connection.execute('CREATE TABLE IF NOT EXISTS biz_architecture_spec_metrics (atom_ref VARCHAR PRIMARY KEY, full_bytes BIGINT, full_lines BIGINT, body_bytes BIGINT, body_lines BIGINT)')
+    connection.execute('CREATE TABLE IF NOT EXISTS mrt_real_graph_package_spec_bindings (package_key VARCHAR, atom_ref VARCHAR, PRIMARY KEY (package_key, atom_ref))')
     connection.execute(_RATIOS)
     connection.execute(_LARGEST)
     connection.execute(_PROFILES)
 
 
 def drop(connection):
-    for view in ("architecture_ratios", "package_review_profiles", "package_largest_files"):
+    for view in ("biz_architecture_ratios", "biz_package_review_profiles", "biz_package_largest_files"):
         connection.execute(f"DROP VIEW IF EXISTS {view}")
-    for table in ("architecture_code_metrics", "architecture_spec_metrics", "architecture_package_bindings"):
+    for table in ("biz_architecture_code_metrics", "biz_architecture_spec_metrics", "mrt_real_graph_package_spec_bindings"):
         connection.execute(f"DROP TABLE IF EXISTS {table}")
 
 
 def replace_code(connection, rows):
     """Replace code evidence within the caller's transaction."""
     rows = _validate(rows, 'code')
-    connection.execute('DELETE FROM architecture_code_metrics')
+    connection.execute('DELETE FROM biz_architecture_code_metrics')
     if rows:
-        connection.executemany('INSERT INTO architecture_code_metrics VALUES (?, ?, ?, ?, ?, ?)', rows)
+        connection.executemany('INSERT INTO biz_architecture_code_metrics VALUES (?, ?, ?, ?, ?, ?)', rows)
 
 
 def replace_spec(connection, rows):
     """Replace spec evidence within the caller's transaction."""
     rows = _validate(rows, 'spec')
-    connection.execute('DELETE FROM architecture_spec_metrics')
+    connection.execute('DELETE FROM biz_architecture_spec_metrics')
     if rows:
-        connection.executemany('INSERT INTO architecture_spec_metrics VALUES (?, ?, ?, ?, ?)', rows)
+        connection.executemany('INSERT INTO biz_architecture_spec_metrics VALUES (?, ?, ?, ?, ?)', rows)
 
 
 def apply_spec_delta(connection, old_exact_refs, rows):
@@ -80,15 +76,15 @@ def apply_spec_delta(connection, old_exact_refs, rows):
     if not refs and not rows:
         return
     existing = {row[0] for row in connection.execute(
-        'SELECT atom_ref FROM architecture_spec_metrics WHERE atom_ref IN (SELECT unnest(?))',
+        'SELECT atom_ref FROM biz_architecture_spec_metrics WHERE atom_ref IN (SELECT unnest(?))',
         [[row[0] for row in rows]],
     ).fetchall()}
     if any(row[0] in existing and row[0] not in refs for row in rows):
         raise ValueError('Spec delta conflicts with an existing Atom')
     if refs:
-        connection.executemany('DELETE FROM architecture_spec_metrics WHERE atom_ref = ?', [(ref,) for ref in refs])
+        connection.executemany('DELETE FROM biz_architecture_spec_metrics WHERE atom_ref = ?', [(ref,) for ref in refs])
     if rows:
-        connection.executemany('INSERT INTO architecture_spec_metrics VALUES (?, ?, ?, ?, ?)', rows)
+        connection.executemany('INSERT INTO biz_architecture_spec_metrics VALUES (?, ?, ?, ?, ?)', rows)
 
 
 def replace_bindings(connection, rows):
@@ -103,23 +99,23 @@ def replace_bindings(connection, rows):
             raise ValueError('Duplicate package binding')
         seen.add(pair)
         result.append(pair)
-    connection.execute('DELETE FROM architecture_package_bindings')
+    connection.execute('DELETE FROM mrt_real_graph_package_spec_bindings')
     if result:
-        connection.executemany('INSERT INTO architecture_package_bindings VALUES (?, ?)', result)
+        connection.executemany('INSERT INTO mrt_real_graph_package_spec_bindings VALUES (?, ?)', result)
 
 
-_RATIOS = """CREATE OR REPLACE VIEW architecture_ratios AS
+_RATIOS = """CREATE OR REPLACE VIEW biz_architecture_ratios AS
 WITH RECURSIVE ancestry AS (
- SELECT n.exact_ref, r.target_kind, r.target_ref FROM main.native_references n JOIN main.relations r
+ SELECT n.exact_ref, r.target_kind, r.target_ref FROM main.mrt_atom_references n JOIN main.mrt_atom_graph_relations r
  ON r.source_kind='Atom' AND r.source_ref=n.reference
  WHERE r.relation_type='CONTAINED_BY' AND NOT r.derived
- UNION SELECT a.exact_ref, r.target_kind, r.target_ref FROM ancestry a JOIN main.relations r
+ UNION SELECT a.exact_ref, r.target_kind, r.target_ref FROM ancestry a JOIN main.mrt_atom_graph_relations r
  ON a.target_kind='Atom' AND r.source_kind='Atom' AND r.source_ref=a.target_ref
  WHERE r.relation_type='CONTAINED_BY' AND NOT r.derived),
 component_atoms AS (SELECT DISTINCT exact_ref, target_ref AS component_id FROM ancestry WHERE target_kind='Component'),
-scopes AS (SELECT scope_kind, scope_id FROM architecture_code_metrics
- UNION SELECT 'Component', component_id FROM component_atoms JOIN architecture_spec_metrics ON exact_ref=atom_ref
- UNION SELECT 'Package', package_key FROM architecture_package_bindings),
+scopes AS (SELECT scope_kind, scope_id FROM biz_architecture_code_metrics
+ UNION SELECT 'Component', component_id FROM component_atoms JOIN biz_architecture_spec_metrics ON exact_ref=atom_ref
+ UNION SELECT 'Package', package_key FROM mrt_real_graph_package_spec_bindings),
 code AS (SELECT scope_kind, scope_id,
  sum(bytes) FILTER (WHERE population='implementation') AS impl_bytes,
  sum(physical_lines) FILTER (WHERE population='implementation') AS impl_lines,
@@ -136,14 +132,14 @@ code AS (SELECT scope_kind, scope_id,
  coalesce(sum(bytes) FILTER (WHERE population='unclassified'),0) AS unclassified_bytes,
  sum(physical_lines) FILTER (WHERE population='unclassified') AS unclassified_lines,
  count(*) FILTER (WHERE population='unclassified' AND physical_lines IS NULL) AS unclassified_unknown_lines
- FROM architecture_code_metrics GROUP BY 1,2),
+ FROM biz_architecture_code_metrics GROUP BY 1,2),
 bound AS (SELECT b.package_key, b.atom_ref, count(*) OVER (PARTITION BY b.atom_ref) > 1 AS shared
- FROM architecture_package_bindings b),
+ FROM mrt_real_graph_package_spec_bindings b),
 spec_rows AS (SELECT 'Component' AS scope_kind, c.component_id AS scope_id, a.atom_ref,
  a.full_bytes, a.full_lines, a.body_bytes, a.body_lines, false AS shared
- FROM component_atoms c JOIN architecture_spec_metrics a ON c.exact_ref=a.atom_ref
+ FROM component_atoms c JOIN biz_architecture_spec_metrics a ON c.exact_ref=a.atom_ref
  UNION ALL SELECT 'Package', b.package_key, b.atom_ref, a.full_bytes, a.full_lines, a.body_bytes, a.body_lines, b.shared
- FROM bound b JOIN architecture_spec_metrics a USING (atom_ref)),
+ FROM bound b JOIN biz_architecture_spec_metrics a USING (atom_ref)),
 spec AS (SELECT scope_kind, scope_id, sum(full_bytes) FILTER (WHERE NOT shared) AS full_bytes,
  sum(full_lines) FILTER (WHERE NOT shared) AS full_lines, sum(body_bytes) FILTER (WHERE NOT shared) AS body_bytes,
  sum(body_lines) FILTER (WHERE NOT shared) AS body_lines, count(*) AS spec_atoms,
@@ -173,18 +169,18 @@ SELECT scope_kind, scope_id, code_population, spec_population, numerator_bytes, 
  coalesce(unclassified_bytes,0) AS unclassified_bytes, unclassified_lines, coalesce(unclassified_unknown_lines,0) AS unclassified_unknown_lines
  FROM measures"""
 
-_LARGEST = """CREATE OR REPLACE VIEW package_largest_files AS
+_LARGEST = """CREATE OR REPLACE VIEW biz_package_largest_files AS
 SELECT scope_id AS package_key, relative_path, bytes, physical_lines,
  row_number() OVER (PARTITION BY scope_id ORDER BY bytes DESC, relative_path) AS size_rank
- FROM architecture_code_metrics WHERE scope_kind='Package' AND population='implementation'"""
+ FROM biz_architecture_code_metrics WHERE scope_kind='Package' AND population='implementation'"""
 
-_PROFILES = """CREATE OR REPLACE VIEW package_review_profiles AS
+_PROFILES = """CREATE OR REPLACE VIEW biz_package_review_profiles AS
 WITH sizes AS (SELECT scope_id AS package_key, sum(bytes) AS implementation_bytes,
  CASE WHEN count(*) FILTER (WHERE physical_lines IS NULL)>0 THEN NULL ELSE sum(physical_lines) END AS implementation_lines,
  count(*) AS implementation_file_count, max(bytes) AS largest_file_bytes
- FROM architecture_code_metrics WHERE scope_kind='Package' AND population='implementation' GROUP BY scope_id),
- imports AS (SELECT source_key AS package_key, count(*) AS outgoing_packages, sum(occurrence_count) AS outgoing_occurrences FROM package_imports GROUP BY source_key),
- incoming AS (SELECT target_key AS package_key, count(*) AS incoming_packages, sum(occurrence_count) AS incoming_occurrences FROM package_imports GROUP BY target_key)
+ FROM biz_architecture_code_metrics WHERE scope_kind='Package' AND population='implementation' GROUP BY scope_id),
+ imports AS (SELECT source_key AS package_key, count(*) AS outgoing_packages, sum(occurrence_count) AS outgoing_occurrences FROM mrt_real_graph_package_imports GROUP BY source_key),
+ incoming AS (SELECT target_key AS package_key, count(*) AS incoming_packages, sum(occurrence_count) AS incoming_occurrences FROM mrt_real_graph_package_imports GROUP BY target_key)
 SELECT s.*, rank() OVER (ORDER BY implementation_bytes DESC) AS size_rank,
  percent_rank() OVER (ORDER BY implementation_bytes) AS size_percent_rank,
  coalesce(i.outgoing_packages,0) AS outgoing_packages, coalesce(i.outgoing_occurrences,0) AS outgoing_occurrences,

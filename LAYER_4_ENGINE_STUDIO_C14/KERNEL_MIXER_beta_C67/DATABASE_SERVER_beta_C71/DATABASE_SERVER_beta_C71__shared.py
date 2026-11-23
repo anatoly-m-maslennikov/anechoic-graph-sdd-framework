@@ -35,6 +35,7 @@ from .query_schema import public_schema
 from .query_settings import result_ttl
 from .realization_projection import has_table, prepare, restore_property_graph
 from .saved_query_journal import SAVED_QUERY_OPERATIONS, SavedQueryJournal
+from .table_names import sync_query_views
 from .workspace_store import WorkspaceStore
 from .view_queries import ViewQueries
 from .work_journal import _file_binding, initialize_file_journal, initialize_journal, sync_file_journal, sync_journal
@@ -65,10 +66,10 @@ def open_database(database_path=None, manifest_sha256=None, instance_id=None, jo
         connection = connect(":memory:")
     try:
         if database_path is None:
-            connection.execute('CREATE TABLE atoms (reference VARCHAR PRIMARY KEY, "content.summary" VARCHAR)')
-            connection.execute("CREATE TABLE generation (id VARCHAR, model VARCHAR, structure VARCHAR)")
+            connection.execute('CREATE TABLE mrt_atoms (reference VARCHAR PRIMARY KEY, "content.summary" VARCHAR)')
+            connection.execute("CREATE TABLE ops_generation (id VARCHAR, model VARCHAR, structure VARCHAR)")
         else:
-            if has_table(connection, "main", "import_nodes"):
+            if has_table(connection, "main", "mrt_real_graph_import_nodes"):
                 connection.execute("BEGIN TRANSACTION")
                 prepare(connection)
                 connection.execute("COMMIT")
@@ -78,6 +79,7 @@ def open_database(database_path=None, manifest_sha256=None, instance_id=None, jo
         elif file_journal is not None:
             initialize_file_journal(connection, *file_journal)
         initialize_flows(connection)
+        sync_query_views(connection)
         attach_framework(connection)
         connection.execute("SET enable_external_access = false")
         connection.execute("SET lock_configuration = true")
@@ -139,7 +141,7 @@ def _rebuild_route(connection, instance_id, lock, queries, workspaces, journal_s
             if data["instance_id"] != instance_id:
                 return _error("foreign_instance", "Instance does not match", 403)
             with lock:
-                if connection.execute("SELECT id FROM generation").fetchone() is None:
+                if connection.execute("SELECT id FROM ops_generation").fetchone() is None:
                     return _error("generation_required", "Generation admission required", 409)
                 if journal_sync is not None:
                     journal_sync()
@@ -192,7 +194,7 @@ def _schema_route(connection, instance_id, lock):
         if list(request.query_params.multi_items()) != [("instance_id", instance_id)]:
             return _error("foreign_instance", "Instance does not match", 403)
         with lock:
-            if connection.execute("SELECT id FROM generation").fetchone() is None:
+            if connection.execute("SELECT id FROM ops_generation").fetchone() is None:
                 return _error("generation_required", "Generation admission required", 409)
             return JSONResponse({"result": public_schema(connection)})
 
@@ -238,7 +240,7 @@ def create_app(connection, instance_id, manifest_sha256, project_root=None, resu
 
     async def health(request):
         with lock:
-            row = connection.execute("SELECT id FROM generation").fetchone()
+            row = connection.execute("SELECT id FROM ops_generation").fetchone()
         return JSONResponse({"result": {"instance_id": instance_id, "pid": os.getpid(),
             "manifest_sha256": manifest_sha256, "ready": row is not None,
             "generation": row[0] if row else None}})

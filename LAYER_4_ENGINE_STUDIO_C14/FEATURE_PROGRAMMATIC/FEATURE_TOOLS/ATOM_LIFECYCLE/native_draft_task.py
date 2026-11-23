@@ -1,6 +1,5 @@
 """Create native Task and Epic Draft carriers."""
 from datetime import datetime, timezone
-import re
 
 import yaml
 
@@ -34,10 +33,10 @@ def _create_task(selection, values, current_rows, structure_snapshot, ticket_lab
         raise common.SourceChanged('Selected Project path is invalid.')
     with _project_write_lock(selection.root):
         try:
-            capture, maximum = _task_allocation(selection, previous_capture, indexed_task)
+            capture, number = _task_allocation(selection, previous_capture, indexed_task)
             owner, label = _task_owner_and_label(
                 selection, values, current_rows, structure_snapshot, ticket_labels, capture)
-            atom_id = f"{selection.project_prefix}-T-{maximum + 1}"
+            atom_id = f"{selection.project_prefix}-T-{number}"
             ref = f'{atom_id}@1-draft'
             context = {'container': values['container'], 'priority': 2, 'template': 'task', 'label': label}
             header = canonical_native_header(
@@ -60,14 +59,11 @@ def _create_task(selection, values, current_rows, structure_snapshot, ticket_lab
 
 def _task_allocation(selection, previous_capture, indexed_task):
     if indexed_task is not None:
-        return None, int(indexed_task['max_number'])
+        return None, int(indexed_task['max_number']) + 1
     capture = revalidate_native(selection, previous_capture)
     if capture.errors:
         raise common.SourceChanged('Native carrier capture is incomplete.')
-    pattern = re.compile(re.escape(selection.project_prefix) + r'-T-([0-9]+)')
-    numbers = [int(match[1]) for row in capture.atoms
-               if isinstance(row.get('id'), str) and (match := pattern.fullmatch(row['id']))]
-    return capture, max(numbers, default=0)
+    return capture, common.next_native_number(selection, capture, 'T')
 
 
 def _task_owner_and_label(selection, values, current_rows, structure_snapshot, ticket_labels, capture):

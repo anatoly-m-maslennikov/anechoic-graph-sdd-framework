@@ -5,6 +5,7 @@ from pathlib import Path
 import stat
 
 from .query_engine import connect
+from .table_names import main_objects, migrate_legacy_names, sync_query_views
 
 
 def database_path(value):
@@ -34,19 +35,25 @@ def open_bound_database(value, manifest_sha256, instance_id):
         os.umask(previous_umask)
     try:
         connection.execute("BEGIN TRANSACTION")
-        tables = connection.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'").fetchall()
-        if tables and ("project_binding",) not in tables:
+        objects = main_objects(connection)
+        legacy = "project_binding" in objects and "ops_project_binding" not in objects
+        binding = "project_binding" if legacy else "ops_project_binding"
+        if objects and objects.get(binding) != "BASE TABLE":
             raise ValueError("Database has no Project binding")
-        connection.execute("CREATE TABLE IF NOT EXISTS project_binding (manifest_sha256 VARCHAR NOT NULL, instance_id VARCHAR NOT NULL)")
-        rows = connection.execute("SELECT manifest_sha256, instance_id FROM project_binding").fetchall()
-        if not rows and tables:
+        if not objects:
+            connection.execute("CREATE TABLE ops_project_binding (manifest_sha256 VARCHAR NOT NULL, instance_id VARCHAR NOT NULL)")
+        rows = connection.execute(f"SELECT manifest_sha256, instance_id FROM main.{binding}").fetchall()
+        if not rows and objects:
             raise ValueError("Database has an empty Project binding")
-        if not rows:
-            connection.execute("INSERT INTO project_binding VALUES (?, ?)", [manifest_sha256, instance_id])
-        elif rows != [(manifest_sha256, instance_id)]:
+        if rows and rows != [(manifest_sha256, instance_id)]:
             raise ValueError("Database belongs to a different Project manifest")
-        connection.execute('CREATE TABLE IF NOT EXISTS atoms (reference VARCHAR PRIMARY KEY, "content.summary" VARCHAR)')
-        connection.execute("CREATE TABLE IF NOT EXISTS generation (id VARCHAR, model VARCHAR, structure VARCHAR)")
+        if not rows:
+            connection.execute("INSERT INTO ops_project_binding VALUES (?, ?)", [manifest_sha256, instance_id])
+        migrated = migrate_legacy_names(connection, objects, legacy=legacy)
+        connection.execute('CREATE TABLE IF NOT EXISTS mrt_atoms (reference VARCHAR PRIMARY KEY, "content.summary" VARCHAR)')
+        connection.execute("CREATE TABLE IF NOT EXISTS ops_generation (id VARCHAR, model VARCHAR, structure VARCHAR)")
+        if migrated:
+            sync_query_views(connection)
         connection.execute("COMMIT")
     except BaseException:
         connection.close()

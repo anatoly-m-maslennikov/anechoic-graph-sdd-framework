@@ -36,6 +36,17 @@ class SourceChanged(ValueError):
     pass
 
 
+def next_native_number(selection, capture, family):
+    maxima = getattr(capture, 'max_numbers', None)
+    if maxima is not None:
+        if family not in maxima:
+            raise SourceChanged('Admitted lifecycle context lacks the Atom number.')
+        return maxima[family] + 1
+    pattern = re.compile(re.escape(selection.project_prefix) + rf'-{family}-([0-9]+)')
+    return max((int(match[1]) for row in capture.atoms if isinstance(row.get('id'), str)
+                and (match := pattern.fullmatch(row['id']))), default=0) + 1
+
+
 _SUMMARY = re.compile(r'(?m)^## Summary[ \t]*\r?\n(?:[ \t]*\r?\n)*([^\r\n]+)[ \t]*(?=\r?$)')
 
 

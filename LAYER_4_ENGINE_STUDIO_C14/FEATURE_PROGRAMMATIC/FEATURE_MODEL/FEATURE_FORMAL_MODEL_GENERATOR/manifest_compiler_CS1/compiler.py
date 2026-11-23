@@ -91,6 +91,11 @@ def main() -> None:
         if args.build_model:
             data = json.loads(descriptor)
             data["ticket_labels"] = model.ticket_labels
+            data["module_sources"] = {name: (args.generation / "anechoic_runtime_model" / name).read_text(encoding="utf-8")
+                                      for name in data["modules"]}
+            if any(sha256(source.encode("utf-8")).hexdigest() != data["modules"][name]
+                   for name, source in data["module_sources"].items()):
+                raise ValueError("Model modules changed during serialization")
             descriptor = json.dumps(data, sort_keys=True).encode("utf-8")
             (args.generation / "model.json").write_bytes(descriptor)
             digest = sha256(descriptor).hexdigest()

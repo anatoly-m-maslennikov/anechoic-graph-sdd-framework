@@ -56,9 +56,19 @@ def _atom_references(atoms):
     return references
 
 
+def _validate_lenses(atoms, lenses):
+    current_specs = {atom["reference"] for atom in atoms if atom["status_group"] == "Current"
+                     and "-S-" in atom["reference"]}
+    if (not isinstance(lenses, list) or any(
+        not isinstance(row, list) or len(row) != 2 or not _string(row[0]) or row[0] not in current_specs
+        or not _string(row[1]) for row in lenses
+    ) or len({row[0] for row in lenses}) != len(lenses)):
+        raise ValueError("Invalid native lifecycle Lens rows")
+
+
 def validate_native_snapshot(snapshot, manifest_sha256):
     """Reject malformed or inconsistent snapshots before any database mutation."""
-    if (not isinstance(snapshot, dict) or set(snapshot) - {"spec_sizes"} != {"schema_version", "manifest_sha256", "atoms", "relations", "relation_types"}
+    if (not isinstance(snapshot, dict) or set(snapshot) - {"spec_sizes", "lifecycle_lenses"} != {"schema_version", "manifest_sha256", "atoms", "relations", "relation_types"}
             or type(snapshot["schema_version"]) is not int or snapshot["schema_version"] != 2
             or not isinstance(manifest_sha256, str) or not re.fullmatch(r"[0-9a-f]{64}", manifest_sha256)
             or snapshot["manifest_sha256"] != manifest_sha256):
@@ -78,6 +88,7 @@ def validate_native_snapshot(snapshot, manifest_sha256):
         or row[3] > row[1] or row[4] > row[2] for row in sizes
     ) or ("spec_sizes" in snapshot and {row[0] for row in sizes} != measured)):
         raise ValueError("Invalid native Spec size rows")
+    _validate_lenses(atoms, snapshot.get("lifecycle_lenses", []))
     for edge in relations:
         if (not isinstance(edge, dict) or set(edge) != _EDGE_FIELDS
                 or any(not _string(edge[key]) for key in _EDGE_FIELDS - {"derived"})
@@ -93,29 +104,35 @@ def validate_native_snapshot(snapshot, manifest_sha256):
 def replace_native_atoms(connection, snapshot):
     """Replace public tables inside the caller's active transaction."""
     existing = connection.execute("SELECT table_type FROM information_schema.tables WHERE table_catalog = current_database() "
-                                  "AND table_schema = 'main' AND table_name = 'native_references'").fetchone()
+                                  "AND table_schema = 'main' AND table_name = 'mrt_atom_references'").fetchone()
     if existing and existing[0] == "VIEW":
-        connection.execute("DROP VIEW main.native_references")
-    connection.execute('''CREATE OR REPLACE TABLE main.atoms (
+        connection.execute("DROP VIEW main.mrt_atom_references")
+    connection.execute('''CREATE OR REPLACE TABLE main.mrt_atoms (
         reference VARCHAR PRIMARY KEY, "content.summary" VARCHAR, relative_path VARCHAR,
         filename VARCHAR, status_group VARCHAR, "header.state.version" BIGINT,
         "header.state.status" VARCHAR)''')
     rows = snapshot["atoms"]
     if rows:
-        connection.executemany('INSERT INTO main.atoms VALUES (?, ?, ?, ?, ?, ?, ?)', [
+        connection.executemany('INSERT INTO main.mrt_atoms VALUES (?, ?, ?, ?, ?, ?, ?)', [
             (r["reference"], r["summary"], r["relative_path"], r["filename"], r["status_group"], r["version"], r["status"])
             for r in rows])
-    connection.execute('''CREATE OR REPLACE TABLE main.native_references (
+    connection.execute('''CREATE OR REPLACE TABLE main.mrt_atom_references (
         relative_path VARCHAR, filename VARCHAR, status_group VARCHAR, reference VARCHAR,
         stable_ref VARCHAR, exact_ref VARCHAR)''')
     if rows:
-        connection.executemany('INSERT INTO main.native_references VALUES (?, ?, ?, ?, ?, ?)', [
+        connection.executemany('INSERT INTO main.mrt_atom_references VALUES (?, ?, ?, ?, ?, ?)', [
             (r["relative_path"], r["filename"], r["status_group"], r["reference"],
              r["reference"] if r["status_group"] == "Current" else None, r["exact_ref"]) for r in rows])
-    connection.execute('''CREATE OR REPLACE TABLE main.relations (
+    connection.execute('''CREATE OR REPLACE TABLE main.mrt_atom_graph_relations (
         source_kind VARCHAR, source_ref VARCHAR, target_kind VARCHAR, target_ref VARCHAR,
         relation_type VARCHAR, derived BOOLEAN)''')
     if snapshot["relations"]:
-        connection.executemany('INSERT INTO main.relations VALUES (?, ?, ?, ?, ?, ?)', [
+        connection.executemany('INSERT INTO main.mrt_atom_graph_relations VALUES (?, ?, ?, ?, ?, ?)', [
             tuple(r[key] for key in ("source_kind", "source_ref", "target_kind", "target_ref", "relation_type", "derived"))
             for r in snapshot["relations"]])
+
+    connection.execute("DROP TABLE IF EXISTS main.int_lifecycle_lenses")
+    if "lifecycle_lenses" in snapshot:
+        connection.execute("CREATE TABLE main.int_lifecycle_lenses (reference VARCHAR PRIMARY KEY, lens VARCHAR NOT NULL)")
+        if snapshot["lifecycle_lenses"]:
+            connection.executemany("INSERT INTO main.int_lifecycle_lenses VALUES (?, ?)", snapshot["lifecycle_lenses"])

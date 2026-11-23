@@ -16,6 +16,28 @@ TABLES = ("atoms", "native_references", "relations", "import_nodes", "module_imp
           "architecture_code_metrics", "architecture_spec_metrics", "architecture_ratios",
           "package_review_profiles", "package_largest_files", "architecture_package_bindings")
 FLOW_HISTORY = ("component_flows", "flow_events", "flow_overlap_candidates", "flow_similar_actions")
+BIZ_TABLES = ("package_coupling", "architecture_code_metrics", "architecture_spec_metrics",
+              "architecture_ratios", "package_review_profiles", "package_largest_files")
+TABLE_ALIASES = {f"{'biz' if name in BIZ_TABLES else 'mrt'}_{name}": name for name in TABLES}
+TABLE_ALIASES.update({f"{'src' if name == 'flow_events' else 'mrt'}_{name}": name for name in FLOW_HISTORY})
+TABLE_ALIASES.update({f"ops_{name}": name for name in ("work_journal", "query_log")})
+TABLE_ALIASES.update({f"mrt_real_graph_{name}": name for name in (
+    "import_edges", "package_imports", "package_external_imports", "code_units", "code_unit_calls",
+    "test_edges", "tested_by_edges")})
+TABLE_ALIASES.update({
+    "mrt_atom_graph_relations": "relations",
+    "mrt_atom_references": "native_references",
+    "mrt_flow_actions": "component_flows",
+    "mrt_real_graph_import_nodes": "import_nodes",
+    "mrt_real_graph_import_occurrences": "module_imports",
+    "mrt_real_graph_package_spec_bindings": "architecture_package_bindings",
+    "mrt_diag_import_read_issues": "import_read_issues",
+    "mrt_diag_import_cycles": "import_cycles",
+    "mrt_diag_antipatterns": "antipattern_findings",
+    "mrt_diag_code_access": "code_access_findings",
+    "mrt_diag_state_effects": "state_effect_findings",
+    **{f"mrt_{family}_atoms": "atoms" for family in ("spec", "ticket", "project_config")},
+})
 TOOLS = {
     "workbench_status": _tool("workbench_status", "Read Project source indexing status.", {}, read_only=True),
     "workbench_abort": _tool("workbench_abort", "Abort the active Project Worker run.",
@@ -55,6 +77,7 @@ def _target(args):
     if set(args) != {"target"} or not isinstance(target, str):
         raise ValueError("Expected a target table or result selector")
     scope = target.removeprefix("main.")
+    scope = TABLE_ALIASES.get(scope, scope)
     if scope in ("all", "workbench_results", *TABLES, *FLOW_HISTORY):
         return scope, target
     match = re.fullmatch(r"(?:workbench_results\.)?(?:query_)?([0-9a-f]{32})", scope)

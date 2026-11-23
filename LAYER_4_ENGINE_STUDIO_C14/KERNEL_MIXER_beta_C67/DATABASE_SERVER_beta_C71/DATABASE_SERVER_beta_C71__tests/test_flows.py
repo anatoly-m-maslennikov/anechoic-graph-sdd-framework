@@ -27,6 +27,8 @@ class FlowsTest(unittest.TestCase):
                 self.assertEqual([['C71', 'serve', None]], old.json()['result']['rows'])
             with _server(path) as client:
                 schema = client.get('/schema', params=BINDING).json()['result']['tables']
+                self.assertTrue({'mrt_flow_actions', 'src_flow_events', 'mrt_flow_overlap_candidates',
+                                 'mrt_flow_similar_actions'} <= set(schema))
                 self.assertTrue({'component_flows', 'flow_events', 'flow_overlap_candidates',
                                  'flow_similar_actions'} <= set(schema))
                 data = self.assert_invalid_snapshots(client)
@@ -49,10 +51,13 @@ class FlowsTest(unittest.TestCase):
                 observed = _query(client, """SELECT component, action, unit_path, unit_name,
                     json_extract_string(inputs, '$[0]'), json_extract_string(triggers, '$.start[0]'),
                     json_extract_string(triggers, '$.resume[0]'), json_extract_string(outputs, '$[0]'),
-                    json_extract_string(effects, '$[0]') FROM component_flows""")
+                    json_extract_string(effects, '$[0]') FROM mrt_flow_actions""")
                 self.assertEqual(200, observed.status_code, observed.text)
                 self.assertEqual([['C71', 'serve', 'server.py', 'serve', 'request', 'request',
                                    'request', 'response', 'write']], observed.json()['result']['rows'])
+                self.assertEqual([['C71', 'serve']], _query(
+                    client, 'SELECT component, action FROM mrt_component_flows'
+                ).json()['result']['rows'])
 
     def assert_invalid_snapshots(self, client):
         data = snapshot()

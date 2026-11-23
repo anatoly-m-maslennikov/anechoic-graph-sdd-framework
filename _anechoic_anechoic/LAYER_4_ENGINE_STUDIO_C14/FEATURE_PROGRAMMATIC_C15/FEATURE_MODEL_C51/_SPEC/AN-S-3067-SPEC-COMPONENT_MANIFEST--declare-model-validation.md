@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: "active"
-  version: 34
-  updated_at: "2026-11-23T00:13:28.170280+00:00"
+  version: 35
+  updated_at: "2026-11-23T10:26:33.104737+00:00"
 ---
 
 ## Summary
@@ -42,6 +42,7 @@ declare_entity(
                     'code_access_rules__pub.module_visibility',
                     'code_access_rules__pub.parse_code_access',
                     'FEATURE_MODEL_VALIDATION__shared.check_code_access',
+                    'FEATURE_MODEL_VALIDATION__shared.open_serialized_model',
                     'ADAPTERS_C30__shared.parse_native_model_claim',
                     'ADAPTERS_C30__shared.model_class_target',
                     'ADAPTERS_C30__shared.native_header_view',
@@ -52,6 +53,8 @@ declare_entity(
                     'FEATURE_TOOLS__shared.rebind_native_selection',
                 ],
                 'exports': {
+                    'FEATURE_MODEL_VALIDATION__shared.open_serialized_model': {'private': [
+                        'C16', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_MODEL_VALIDATION/FEATURE_MODEL_VALIDATION__tests']},
                     'FEATURE_MODEL_VALIDATION__shared.open_admitted_model': {'private': ['C16', 'C62', 'CS1', 'CS2']},
                     'model_declaration_bindings.bind_model_declarations': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
                     'FEATURE_MODEL_VALIDATION__shared.verify_model': {'private': ['CS1', 'CS2']},

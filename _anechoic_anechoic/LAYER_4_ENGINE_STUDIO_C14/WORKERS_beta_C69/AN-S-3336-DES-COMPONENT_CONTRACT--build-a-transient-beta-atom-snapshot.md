@@ -12,8 +12,8 @@ relations:
   - AN-S-3334
 state:
   status: "active"
-  version: 24
-  updated_at: "2026-11-23T09:56:32.676138+00:00"
+  version: 25
+  updated_at: "2026-11-23T10:26:33.104737+00:00"
 ---
 ## Summary
 
@@ -43,8 +43,9 @@ Ticket revision, create a Ticket Asset, or update its Markdown body.
 Apply the admitted lifecycle definition and
 its Ticket tree effects. Require a different Current Atom to declare
 the replacement before archive. Refuse Ticket containers. Bind the operation
-to the pinned Project. Compile Model and Structure when the operation
-requires them.
+to the pinned Project. For a single-Atom write, use the admitted SQL
+facts, Structure, and Model rules. Read exact pinned sources through
+the Adapter. Compile again for coordinated Ticket tree moves and Model input changes.
 Capture the affected native carriers against the admitted base and check
 their hashes against the write receipt. Return the native outcome and delta,
 or an explicit projection error. Do not build a full generation for the write.
@@ -78,9 +79,8 @@ of up to 32 paths before the caller's start deadline. Report the new
 child's PID on acceptance. The child runs without a time limit. On
 client write-half close, stop and reap its process group. Return no
 delta if capture fails or stops. The warm parent can accept another
-capture and retains no Project data. For an indexed Draft write, preload
-the C16 writer in the same broker and run the write and its exact delta
-capture in one isolated child.
+capture and retains no Project data. Preload the C16 writer in the same
+broker. Run a single-Atom write and its exact delta capture in one child.
 
 ## References
 

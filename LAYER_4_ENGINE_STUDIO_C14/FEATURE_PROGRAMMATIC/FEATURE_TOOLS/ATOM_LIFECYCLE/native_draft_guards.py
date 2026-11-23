@@ -115,9 +115,10 @@ def _contract_owner(selection, component, lens, snapshot, capture):
             raise ValueError('Invalid Component directory')
         if allowed is None or lens not in allowed:
             raise common.InputError('lens', 'Lens is disabled for this Component.')
-        known = any(row.get('status_group') == 'Current' and
-                    native_header_view(row['header_json']).get('context', {}).get('lens') == lens
-                    for row in capture.atoms)
+        lenses = getattr(capture, 'lenses', None)
+        known = lens in lenses if lenses is not None else any(
+            row.get('status_group') == 'Current' and native_header_view(row['header_json']).get('context', {}).get('lens') == lens
+            for row in capture.atoms)
         if not known:
             raise common.InputError('lens', 'Supply an existing enabled Lens.')
         if reader.currentness()['state'] != 'unchanged':

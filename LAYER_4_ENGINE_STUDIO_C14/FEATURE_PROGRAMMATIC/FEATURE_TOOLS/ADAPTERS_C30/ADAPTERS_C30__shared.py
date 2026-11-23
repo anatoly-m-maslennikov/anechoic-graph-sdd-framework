@@ -50,7 +50,7 @@ from .model_class_subject__pub import (
 )
 from .native_snapshot_cli import capture_carrier_delta, capture_ticket_delta, native_carrier_hashes, prepare_generation_snapshot
 from .project_database__pub import migrate_project_database
-from .native_source_rows__pub import capture_native
+from .indexed_lifecycle_capture import capture_indexed_lifecycle
 from .project_manifest__pub import (
     ProjectSelectionError, active_manifest_carriers, manifest_inputs,
     manifest_sources, manifest_state_fields, select_manifest_carriers,
@@ -118,7 +118,7 @@ from .journal_settings__pub import configured_journal_root, journal_storage, val
 from .legacy_relation__pub import emits_instance_inverse
 from .native_carrier_header__pub import canonical_native_header, native_header_model_fields, native_header_view
 from .native_source_rows__pub import (
-    CURRENT_STATUSES, NativeCapture, NativeManifestChanged, check_native_manifest, revalidate_native,
+    CURRENT_STATUSES, NativeCapture, NativeManifestChanged, capture_native, check_native_manifest, revalidate_native,
 )
 from .python_claim__pub import (
     PythonModelClaimError, parse_grouped_python_model_claim, parse_python_model_claim,
@@ -180,7 +180,7 @@ __all__ = [
     "read_current_model_carriers",
     "read_scope_carrier",
     "read_scope_unit_declarations",
-    "revalidate_native",
+    "revalidate_native", "capture_indexed_lifecycle",
     "select_manifest_carriers",
     "validated_journal_root",
     "value_excluding_declared_children",

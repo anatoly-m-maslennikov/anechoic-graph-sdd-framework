@@ -32,13 +32,13 @@ _STARTUP_REUSE_RUNS = """
 
 
 @contextmanager
-def archive_project(case):
-    """Run archive against its own Project with the actual Model declarations."""
+def archive_project(case, prepare=make_project):
+    """Run lifecycle operations against a disposable Project."""
     with tempfile.TemporaryDirectory(prefix="ane-archive-image-") as directory:
         root = Path(directory).resolve()
         subprocess.run(["git", "init", "--quiet", str(root)], check=True)
         control = "_anechoic_anechoic"
-        make_project(root)
+        prepare(root)
         container = subprocess.check_output([
             "docker", "run", "--detach", "--pull=never", "--init", "--name", f"ane-archive-{uuid4().hex}",
             "--label", "anechoic.test=import-graph-canary", "--read-only", "--tmpfs", "/tmp:rw,nosuid,nodev,size=256m",

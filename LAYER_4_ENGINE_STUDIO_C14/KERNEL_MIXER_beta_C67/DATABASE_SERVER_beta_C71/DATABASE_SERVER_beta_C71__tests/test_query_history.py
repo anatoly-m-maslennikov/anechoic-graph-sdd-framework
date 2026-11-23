@@ -49,6 +49,8 @@ class QueryHistoryTest(unittest.TestCase):
                 self.assertEqual([newest], self.value(self.call(client, "query_log_list", {"limit": 1}))["items"])
                 sql_rows = self.value(_query(client, 'SELECT sql, outcome, "at" FROM query_log ORDER BY "at" DESC'))["rows"]
                 self.assertEqual([(row["sql"], row["outcome"]) for row in records], [tuple(row[:2]) for row in sql_rows])
+                canonical = self.value(_query(client, 'SELECT sql, outcome, "at" FROM ops_query_log ORDER BY "at" DESC'))["rows"]
+                self.assertEqual(sql_rows, canonical)
                 self.assertTrue(all(datetime.fromisoformat(row[2]).tzinfo for row in sql_rows))
                 foreign = client.post("/workspace", json={"instance_id": "foreign", "operation": "query_log_list", "arguments": {}})
                 self.assertEqual(403, foreign.status_code)

@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: "active"
-  version: 54
-  updated_at: "2026-11-23T09:15:18.525343+00:00"
+  version: 55
+  updated_at: "2026-11-23T10:26:33.104737+00:00"
 ---
 ## Summary
 
@@ -37,6 +37,8 @@ declare_entity(
             'state': 'local',
             'code': {
                 'imports': {'only': ['metrics__shared.spec_rows', 'ADAPTERS_C30__shared.capture_native',
+                                     'ADAPTERS_C30__shared.capture_indexed_lifecycle', 'ADAPTERS_C30__shared.native_carrier_hashes',
+                                     'ADAPTERS_C30__shared.prepare_generation_snapshot',
                                      'ADAPTERS_C30__shared.capture_carrier_delta', 'ADAPTERS_C30__shared.capture_ticket_delta',
                                      'ADAPTERS_C30__shared.ReadContext', 'ADAPTERS_C30__shared.revalidate_native',
                                      'ADAPTERS_C30__shared.atomic_tempfile', 'ADAPTERS_C30__shared.TEMPORARY_DIRECTORY']},
@@ -78,6 +80,8 @@ declare_entity(
                     'ADAPTERS_C30__shared.section_markdown': 'public',
                     'ADAPTERS_C30__shared.source_markdown': 'public',
                     'ADAPTERS_C30__shared.capture_native': 'public',
+                    'ADAPTERS_C30__shared.capture_indexed_lifecycle': {'private': [
+                        'C16', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/ADAPTERS_C30__tests']},
                     'ADAPTERS_C30__shared.attach_framework': {'shared': ['C59', 'C71']},
                     'ADAPTERS_C30__shared.migrate_project_database': {'shared': ['C59', 'C71']},
                     'ADAPTERS_C30__shared.native_carrier_hashes': {'shared': ['C69', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/ADAPTERS_C30__tests']},
@@ -140,7 +144,7 @@ declare_entity(
                     'component_seed_manifest__pub.read_component_seed_manifest': 'public',
                     'realization_ownership__pub.CodeAccessOwnership': 'public',
                     'realization_ownership__pub.build_code_access_ownership': 'public',
-                    'ADAPTERS_C30__shared.parse_structure': {'shared': ['C59', 'C61']},
+                    'ADAPTERS_C30__shared.parse_structure': {'shared': ['C16', 'C59', 'C61']},
                     'ADAPTERS_C30__shared.realization_component_paths': {'shared': ['C59', 'C61']},
                     'ADAPTERS_C30__shared.ScopeUnitDeclaration': 'public',
                     'ADAPTERS_C30__shared.parse_scope_unit_declaration': 'public',

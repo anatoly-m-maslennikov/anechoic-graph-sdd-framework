@@ -1,6 +1,5 @@
 """Create Current native Ticket Assets."""
 from datetime import datetime, timezone
-import re
 
 import yaml
 
@@ -44,10 +43,7 @@ def create_asset(selection, params, *, current_rows, previous_capture=None):
             if capture.errors:
                 raise common.SourceChanged('Native carrier capture is incomplete.')
             owner = _check_owner(selection, container, current_rows, capture)
-            pattern = re.compile(re.escape(selection.project_prefix) + r'-T-([0-9]+)')
-            numbers = [int(match[1]) for row in capture.atoms if isinstance(row.get('id'), str)
-                       and (match := pattern.fullmatch(row['id']))]
-            atom_id = f'{selection.project_prefix}-T-{max(numbers, default=0) + 1}'
+            atom_id = f'{selection.project_prefix}-T-{common.next_native_number(selection, capture, "T")}'
             header = canonical_native_header({
                 'identity': {'atom_id': atom_id},
                 'context': {'container': container, 'template': values['template']},

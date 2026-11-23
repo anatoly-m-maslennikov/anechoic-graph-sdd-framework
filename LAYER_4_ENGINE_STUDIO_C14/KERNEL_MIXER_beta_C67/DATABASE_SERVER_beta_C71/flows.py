@@ -14,21 +14,21 @@ _FIELDS = {"kind", "name", "at", "causes", "target", "outcome", "detail"}
 
 
 def initialize_flows(connection):
-    connection.execute("""CREATE TABLE IF NOT EXISTS flow_events (
+    connection.execute("""CREATE TABLE IF NOT EXISTS src_flow_events (
         run_id VARCHAR NOT NULL, component VARCHAR NOT NULL, action VARCHAR NOT NULL,
         sequence INTEGER NOT NULL, kind VARCHAR NOT NULL, name VARCHAR NOT NULL,
         "at" DOUBLE NOT NULL, causes INTEGER[] NOT NULL, target VARCHAR, outcome VARCHAR,
         detail JSON NOT NULL, PRIMARY KEY (run_id, sequence))""")
-    connection.execute("""CREATE OR REPLACE VIEW flow_overlap_candidates AS
+    connection.execute("""CREATE OR REPLACE VIEW mrt_flow_overlap_candidates AS
         SELECT component, action, list_sort(list(DISTINCT name)) AS trigger_names,
           count(DISTINCT run_id) AS run_count
-        FROM flow_events WHERE kind = 'trigger' GROUP BY component, action
+        FROM src_flow_events WHERE kind = 'trigger' GROUP BY component, action
         HAVING count(DISTINCT name) >= 2""")
-    connection.execute("""CREATE OR REPLACE VIEW flow_similar_actions AS
+    connection.execute("""CREATE OR REPLACE VIEW mrt_flow_similar_actions AS
         WITH traces AS (
             SELECT component, action, run_id,
                 list(struct_pack(kind := kind, name := name, target := target) ORDER BY sequence) AS shape
-            FROM flow_events WHERE kind IN ('output', 'effect') GROUP BY component, action, run_id
+            FROM src_flow_events WHERE kind IN ('output', 'effect') GROUP BY component, action, run_id
             HAVING bool_or(kind = 'output') AND NOT bool_or(
                 json_exists(detail, '$.omitted_events') OR json_exists(detail, '$.unattributed'))
         ), action_shapes AS (
@@ -39,17 +39,17 @@ def initialize_flows(connection):
             list(struct_pack(component := component, action := action, example_run := example_run,
                              run_count := run_count) ORDER BY component, action) AS actions
         FROM action_shapes GROUP BY shape HAVING count(*) > 1""")
-    _initialize_component_flows(connection)
+    _initialize_flow_actions(connection)
 
 
-def _initialize_component_flows(connection):
-    connection.execute("""CREATE OR REPLACE VIEW component_flows AS
+def _initialize_flow_actions(connection):
+    connection.execute("""CREATE OR REPLACE VIEW mrt_flow_actions AS
         WITH by_trigger AS (
             SELECT t.component, t.action, t.name,
                 coalesce(list(DISTINCT i.name ORDER BY i.name)
                          FILTER (WHERE i.name IS NOT NULL), []) AS inputs
-            FROM flow_events t
-            LEFT JOIN flow_events i ON i.run_id = t.run_id AND i.kind = 'input'
+            FROM src_flow_events t
+            LEFT JOIN src_flow_events i ON i.run_id = t.run_id AND i.kind = 'input'
                 AND list_contains(t.causes, i.sequence)
             WHERE t.kind = 'trigger'
             GROUP BY t.component, t.action, t.name
@@ -66,7 +66,7 @@ def _initialize_component_flows(connection):
                     FILTER (WHERE kind = 'output'), [])) AS outputs,
                 to_json(coalesce(list(DISTINCT name ORDER BY name)
                     FILTER (WHERE kind = 'effect'), [])) AS effects
-            FROM flow_events GROUP BY component, action
+            FROM src_flow_events GROUP BY component, action
         )
         SELECT component, action, json_extract_string(unit, '$.path') AS unit_path,
             json_extract_string(unit, '$.name') AS unit_name,
@@ -113,7 +113,7 @@ def flow_route(connection, instance_id, lock, read_object, error):
                 connection.execute('BEGIN TRANSACTION')
                 try:
                     if rows:
-                        connection.executemany('INSERT INTO flow_events VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', rows)
+                        connection.executemany('INSERT INTO src_flow_events VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', rows)
                     connection.execute('COMMIT')
                 except BaseException:
                     connection.execute('ROLLBACK')
