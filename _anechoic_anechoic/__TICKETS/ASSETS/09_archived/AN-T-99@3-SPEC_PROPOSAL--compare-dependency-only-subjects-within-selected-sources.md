@@ -1,0 +1,38 @@
+---
+atom_family: TKT
+atom_id: AN-T-99
+container:
+  component: C00
+priority: 2
+context:
+  template: spec_proposal
+state:
+  status: archived
+  version: 3
+  updated_at: 2026-10-29 21:51:04 +0400
+---
+## Summary
+
+Compare dependency-only Subjects within selected sources
+
+# Summary
+
+Compare dependency-only Subjects within selected sources
+
+## Question
+
+Is zero Governs evaluated inside the selected sources or across the whole project?
+
+## Operator decision
+
+“Within the selected sources (recommended).”
+
+## Rule
+
+Within the selected Current RMEDO source set, compare exact canonical paths in subjects.depends_on against paths in subjects.governs. List each path present only in depends_on once. A Governs reference outside that source selection does not remove it from this view.
+
+For example, an Engine selection may report a Subject whose defining Atom is in Core. This is selection-relative coverage information; it does not establish a missing definition across the project. Keep branch/namespace identity exact and retain referring Atom IDs as provenance.
+
+## Applied check
+
+R2225 records this selection-relative rule. The fixture keeps a dependency visible when its Governs source is outside the selected Scope Units. Actual Current Core plus Relation-branch rendering also passes; unrelated branches are excluded. Production Tools/runtime were not changed.
