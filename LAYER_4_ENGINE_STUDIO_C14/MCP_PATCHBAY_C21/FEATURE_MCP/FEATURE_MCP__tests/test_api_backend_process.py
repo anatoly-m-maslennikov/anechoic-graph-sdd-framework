@@ -295,7 +295,9 @@ class ApiBackendProcessTests(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn(probe["kernel_pid"], {probe["backend_pid"], probe["gateway_pid"]})
         os.kill(probe["backend_pid"], 0)
         self.assertEqual(400, probe["invalid_status"], probe["invalid_body"])
-        self.assertEqual({"error": "name is only valid when save is true"}, probe["invalid_body"])
+        self.assertEqual({"error": "name is only valid when save is true", "code": "value_error",
+                          "tool_result": {"outcome": "failed", "diagnostics": [
+                              "query_error: name is only valid when save is true"]}}, probe["invalid_body"])
         self.assertEqual("value_error", probe["rejected_method"]["error"]["code"])
         self.assertEqual(200, probe["http_status"], probe["http_body"])
         self.assertEqual([[42]], probe["http_body"]["rows"])

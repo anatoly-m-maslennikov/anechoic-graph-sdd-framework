@@ -9,10 +9,9 @@ context:
   lens: SPEC
 state:
   status: "active"
-  version: 51
-  updated_at: "2026-11-23T00:34:06.564618+00:00"
+  version: 54
+  updated_at: "2026-11-23T09:15:18.525343+00:00"
 ---
-
 ## Summary
 
 Declare ADAPTERS
@@ -37,20 +36,23 @@ declare_entity(
         boundaries={
             'state': 'local',
             'code': {
-                'imports': {'only': ['ADAPTERS_C30__shared.capture_native', 'ADAPTERS_C30__shared.revalidate_native', 'ADAPTERS_C30__shared.atomic_tempfile', 'ADAPTERS_C30__shared.TEMPORARY_DIRECTORY']},
+                'imports': {'only': ['metrics__shared.spec_rows', 'ADAPTERS_C30__shared.capture_native',
+                                     'ADAPTERS_C30__shared.capture_carrier_delta', 'ADAPTERS_C30__shared.capture_ticket_delta',
+                                     'ADAPTERS_C30__shared.ReadContext', 'ADAPTERS_C30__shared.revalidate_native',
+                                     'ADAPTERS_C30__shared.atomic_tempfile', 'ADAPTERS_C30__shared.TEMPORARY_DIRECTORY']},
                 'exports': {
                     'ADAPTERS_C30__shared.TEMPORARY_DIRECTORY': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/ADAPTERS_C30__tests']},
                     'ADAPTERS_C30__shared.MAX_DATABASE_EVENT_BYTES': {'private': ['C59']},
                     'ADAPTERS_C30__shared.NativeCapture': 'public',
                     'ADAPTERS_C30__shared.NativeManifestChanged': 'public',
                     'ADAPTERS_C30__shared.SourceWatcher': {'private': ['C59']},
-                    'ADAPTERS_C30__shared.UniqueSafeLoader': {'private': ['C59']},
+                    'ADAPTERS_C30__shared.UniqueSafeLoader': {'private': ['C59', 'C61']},
                     'ADAPTERS_C30__shared.append_sealed_events': {'private': ['C59', 'C71']},
                     'ADAPTERS_C30__shared.atom_identifier': {'private': ['C59']},
                     'ADAPTERS_C30__shared.build_code_access_ownership': {'private': ['C59']},
                     'ADAPTERS_C30__shared.canonical_json_bytes': {'private': ['C59']},
                     'ADAPTERS_C30__shared.check_native_manifest': 'public',
-                    'ADAPTERS_C30__shared.check_yaml_resources': {'private': ['C59']},
+                    'ADAPTERS_C30__shared.check_yaml_resources': {'private': ['C59', 'C61']},
                     'ADAPTERS_C30__shared.configured_journal_root': {'private': ['C59']},
                     'ADAPTERS_C30__shared.content_record_span': {'private': ['C59']},
                     'ADAPTERS_C30__shared.emits_instance_inverse': {'private': ['C59']},
@@ -81,6 +83,7 @@ declare_entity(
                     'ADAPTERS_C30__shared.native_carrier_hashes': {'shared': ['C69', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/ADAPTERS_C30__tests']},
                     'ADAPTERS_C30__shared.prepare_generation_snapshot': {'shared': ['C69', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/ADAPTERS_C30__tests']},
                     'ADAPTERS_C30__shared.capture_ticket_delta': {'shared': ['C69', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/ADAPTERS_C30__tests']},
+                    'ADAPTERS_C30__shared.capture_carrier_delta': {'shared': ['C69', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/ADAPTERS_C30__tests']},
                     'ADAPTERS_C30__shared.read_structure': 'public',
                     'ADAPTERS_C30__shared.StructureSnapshot': 'public',
                     'topic_dependencies__pub.validate_dependencies_claim': 'public',
@@ -270,6 +273,7 @@ declare_entity(
                                       'manifest_sha256',
                                       'project_prefix'],
                      'generation_input_fields': ['binding', 'endpoints'],
+                     'admitted_carrier_delta': 'Read only addressed carriers when the caller supplies the Manifest pin.',
                      'output_fields': ['snapshot', 'stability_sha256', 'graph_config']},
                     'guarded_read': {
                         'transport': 'cli',

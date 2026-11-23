@@ -1,5 +1,4 @@
 import json
-import os
 import socket
 import subprocess
 import sys
@@ -8,6 +7,8 @@ import time
 import unittest
 from hashlib import sha256
 from pathlib import Path
+
+from .WORKERS_beta_C69__tests__shared import generation_fixture
 
 
 def exchange(address, request):
@@ -41,8 +42,7 @@ class WarmWorkerTest(unittest.TestCase):
         runtime = tmp_path / "runtime"
         runtime.mkdir(mode=0o700)
         address = str(runtime / "worker.sock")
-        env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
-        process = subprocess.Popen([sys.executable, "-B", "-m", "WORKERS_beta_C69.warm_worker", "--socket", address], env=env)
+        process = subprocess.Popen([sys.executable, "-B", "-m", "WORKERS_beta_C69.warm_worker", "--socket", address])
 
         try:
             for _ in range(200):
@@ -68,6 +68,32 @@ class WarmWorkerTest(unittest.TestCase):
             ack, reply = exchange(address, {**request, "paths": ["../bad.md"]})
             self.assertTrue(ack["accepted"])
             self.assertEqual({"result": None}, reply)
+            self._check_indexed(tmp_path, address, process.pid)
         finally:
             process.terminate()
             process.wait(timeout=5)
+
+    def _check_indexed(self, tmp_path, address, parent_pid):
+        project = tmp_path / "indexed"
+        project.mkdir()
+        binding, _, manifest = generation_fixture(str(project))
+        manifest.unlink()
+        indexed = {"max_number": "100", "manifest_ref": "AN-S-1@1", "component_ids": ["C00"],
+                   "ticket_labels": ["Task"],
+                   "endpoints": {"CONTAINED_BY": [{"inverse_alias": "CONTAINS"}, False], "CONTAINS": [{}, True]}}
+        job = {"binding": binding, "name": "atom_lifecycle_create_draft", "base_generation": "base",
+               "structure_sha256": "admitted", "indexed_task": indexed,
+               "arguments": {"newAtom": {"template": "task", "container": {"component": "C00"},
+                                         "body": "## Summary\n\nWarm canary.\n"}}}
+        envelope = {"kind": "indexed_lifecycle", "start_by": time.monotonic() + 20, "request": job}
+        ack, reply = exchange(address, envelope)
+        self.assertTrue(ack["accepted"])
+        self.assertNotEqual(parent_pid, ack["pid"])
+        result = reply["result"]
+        self.assertIsNone(result["projection_error"])
+        draft = result["lifecycle"]["savedDraft"]
+        self.assertEqual("AN-T-101@1-draft", draft["ref_id"])
+        path = Path(binding["root"]) / draft["path"]
+        self.assertEqual({draft["path"]: sha256(path.read_bytes()).hexdigest()}, result["delta"]["carrier_hashes"])
+        self.assertEqual({"ready": True, "pid": parent_pid}, exchange(address, {"kind": "health"})[0])
+        self.assertEqual(({"accepted": False}, None), exchange(address, {**envelope, "request": {}}))

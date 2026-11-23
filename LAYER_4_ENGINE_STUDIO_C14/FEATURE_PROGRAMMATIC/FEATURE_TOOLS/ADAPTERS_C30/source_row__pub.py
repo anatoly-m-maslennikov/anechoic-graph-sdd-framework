@@ -53,12 +53,11 @@ def _reference(atom_id: Any, version: Any, explicit: Any, group: str, source_pat
 
 def atom(
     path: Path, root: Path, header: dict[str, Any], view: dict[str, Any],
-    body: str | bytes, group: str,
+    body: str | bytes, group: str, *, include_content_properties: bool = True,
 ) -> dict[str, Any]:
     cached_body = body.encode("utf-8") if isinstance(body, str) else body
     if not isinstance(cached_body, bytes):
         raise TypeError("Markdown body must be UTF-8 text or bytes")
-    markdown = cached_body.decode("utf-8")
     atom_id, version = view.get("atom_id"), view.get("version")
     source_path = path.relative_to(root).as_posix()
     return {
@@ -77,8 +76,8 @@ def atom(
         "header_json": header,
         "_content_bytes": cached_body,
         "content_properties_json": parse_content(
-            markdown, tolerate_duplicate_siblings=True, compact=True,
-        ),
+            cached_body.decode("utf-8"), tolerate_duplicate_siblings=True, compact=True,
+        ) if include_content_properties else [],
         "relation_edges_json": [],
         "hash": None,
     }

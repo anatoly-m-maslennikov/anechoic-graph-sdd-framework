@@ -1,7 +1,7 @@
 
 <script lang="ts">
   import { tick } from 'svelte';
-  import { filterCommands, moveSelection } from './palette_helpers.js';
+  import { filterCommands, moveSelection } from './palette_helpers';
   import type { Command } from './types';
   let { open = false, commands, onclose }: { open?: boolean; commands: Command[]; onclose: () => void } = $props();
   let dialog: HTMLDialogElement; let input: HTMLInputElement; let query = $state(''); let selected = $state(0);

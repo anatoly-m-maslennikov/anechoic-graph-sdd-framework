@@ -17,8 +17,8 @@ ESLINT_CONFIGS = ("eslint.config.js", "eslint.config.mjs", "eslint.config.cjs",
                   ".eslintrc.yaml", ".eslintrc.yml")
 
 
-def typed_lint_projects(root):
-    """Find packages that own an ESLint TypeScript lint command and config."""
+def npm_static_commands(root):
+    """Find package-owned type checks and configured TypeScript lint commands."""
     for name in CODE_ROOTS:
         for folder, dirs, files in os.walk(root / name, followlinks=False):
             dirs[:] = sorted(d for d in dirs if not d.startswith(".")
@@ -28,11 +28,14 @@ def typed_lint_projects(root):
                 continue
             package = Path(folder)
             data = json.loads((package / "package.json").read_text(encoding="utf-8"))
+            scripts = data.get("scripts", {})
+            if scripts.get("check:types"):
+                yield package, "check:types"
             dependencies = {**data.get("dependencies", {}), **data.get("devDependencies", {})}
             typed = "typescript-eslint" in dependencies or "@typescript-eslint/eslint-plugin" in dependencies
             configured = "eslintConfig" in data or any((package / config).is_file() for config in ESLINT_CONFIGS)
-            if typed and "eslint" in dependencies and configured and data.get("scripts", {}).get("lint"):
-                yield package
+            if typed and "eslint" in dependencies and configured and scripts.get("lint"):
+                yield package, "lint"
 
 
 def check(root):
@@ -47,9 +50,9 @@ def check(root):
         ).returncode
         if status or source_sizes.check(root) or python_boundaries.check(root):
             return 1
-        for package in typed_lint_projects(root):
-            print(f"Static check: typed lint in {package.relative_to(root)}", flush=True)
-            if subprocess.run(("npm", "run", "lint"), cwd=package, check=False, timeout=120).returncode:
+        for package, command in npm_static_commands(root):
+            print(f"Static check: npm run {command} in {package.relative_to(root)}", flush=True)
+            if subprocess.run(("npm", "run", command), cwd=package, check=False, timeout=120).returncode:
                 return 1
         print("Static check: import ownership", flush=True)
         ownership = subprocess.run(

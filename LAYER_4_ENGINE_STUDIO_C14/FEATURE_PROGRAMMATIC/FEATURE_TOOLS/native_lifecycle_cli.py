@@ -1,45 +1,19 @@
-"""Run an admitted, bounded native Ticket lifecycle request."""
-import base64
+"""Run an admitted, bounded native Atom lifecycle request."""
 from dataclasses import replace
 from hashlib import sha256
 import json
-from pathlib import Path
 import re
+from pathlib import Path
 import sys
 
 from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import open_admitted_model
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native, read_structure
-from .native_lifecycle import execute_native_lifecycle
-from .native_project_selection import resolve_native_project
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native, protected, read_structure
+from .native_lifecycle import LIFECYCLE_TOOLS, execute_native_lifecycle
+from .native_project_selection import NativeProjectSelection, is_native_control_name, resolve_native_project
+from .project_selection import _instance_id, _project_root
 from .project_runtime import bind_native_runtime
 
-_NAMES = frozenset({"atom_lifecycle_create_draft", "atom_lifecycle_update", "atom_lifecycle_promote_draft", "atom_lifecycle_change_status", "atom_lifecycle_archive",
-                    "atom_lifecycle_direct_update"})
-_FIELDS = {"binding", "name", "arguments", "generation", "receipt", "stability_sha256"}
-
-
-def _encode(value):
-    if isinstance(value, bytes):
-        return {"__bytes_base64__": base64.b64encode(value).decode("ascii")}
-    raise TypeError("Unsupported native capture value")
-
-
-def _task_scope(name, arguments, capture):
-    if name == "atom_lifecycle_create_draft" and "newAtom" in arguments:
-        value = arguments["newAtom"]
-        if not isinstance(value, dict) or value.get("template") not in {"task", "epic"}:
-            raise ValueError("Only Task and Epic creation is available")
-        return
-    field = "sourceCurrent" if name in {"atom_lifecycle_create_draft", "atom_lifecycle_update"} else "target"
-    target = arguments.get(field)
-    ref = target.get("ref_id") if isinstance(target, dict) else None
-    if not isinstance(ref, str) or not re.fullmatch(r"[A-Z][A-Z0-9]*-T-[0-9]+(?:@[1-9][0-9]*-draft)?", ref):
-        raise ValueError("Only Task lifecycle targets are available")
-    matching = [row for row in capture.atoms if row["ref"] == ref or row["_exact_ref"] == ref]
-    if len(matching) != 1 or matching[0]["header_json"].get("context", {}).get("template") != "task":
-        raise ValueError("Task lifecycle target is unavailable or ambiguous")
-    if name == "atom_lifecycle_archive" and "atom_family" not in matching[0]["header_json"]:
-        raise ValueError("Only native Task and Epic archive is available")
+_FIELDS = {"binding", "name", "arguments", "generation", "receipt"}
 
 
 def _selection(binding, model, structure):
@@ -55,9 +29,53 @@ def _selection(binding, model, structure):
     return replace(selection, structure_snapshot=structure)
 
 
+def _indexed_task(request):
+    indexed, arguments = request["indexed_task"], request["arguments"]
+    values = arguments.get("newAtom")
+    if (request["name"] != "atom_lifecycle_create_draft" or set(arguments) != {"newAtom"}
+            or not isinstance(values, dict) or values.get("template") not in ("task", "epic")
+            or not isinstance(values.get("container"), dict) or set(values["container"]) != {"component"}
+            or not isinstance(indexed, dict) or set(indexed) != {"max_number", "manifest_ref", "component_ids", "ticket_labels"}
+            or not isinstance(indexed["max_number"], str) or not re.fullmatch(r"0|[1-9][0-9]*", indexed["max_number"])
+            or not isinstance(indexed["manifest_ref"], str) or not indexed["manifest_ref"]
+            or any(not isinstance(indexed[key], list) or any(not isinstance(v, str) for v in indexed[key])
+                   for key in ("component_ids", "ticket_labels"))):
+        raise ValueError("Invalid indexed Task request")
+    return indexed
+
+
+def _indexed_selection(binding, indexed):
+    if not isinstance(binding, dict) or set(binding) != {"root", "control_root", "manifest_path", "manifest_sha256", "project_prefix"}:
+        raise ValueError("Invalid Project binding")
+    root = _project_root(binding["root"])
+    relative, manifest = Path(binding["control_root"]), Path(binding["manifest_path"])
+    if (str(root) != binding["root"] or relative.as_posix() != binding["control_root"]
+            or len(relative.parts) != 1 or not is_native_control_name(relative.name) or protected(relative)
+            or manifest.as_posix() != binding["manifest_path"] or manifest.is_absolute() or ".." in manifest.parts
+            or manifest.parent not in (Path('.'), relative) or protected(manifest)
+            or not isinstance(binding["project_prefix"], str) or not re.fullmatch(r"[A-Z][A-Z0-9]*", binding["project_prefix"])
+            or not isinstance(binding["manifest_sha256"], str) or not re.fullmatch(r"[0-9a-f]{64}", binding["manifest_sha256"])):
+        raise ValueError("Invalid Project binding")
+    name = relative.name.split("anechoic_", 1)[1]
+    return NativeProjectSelection(root, root / relative, relative, _instance_id(root, relative), name,
+        binding["project_prefix"], root / manifest, indexed["manifest_ref"], binding["manifest_sha256"])
+
+
+def _run_indexed(request):
+    indexed = _indexed_task(request)
+    selection = _indexed_selection(request["binding"], indexed)
+    with bind_native_runtime(selection):
+        return execute_native_lifecycle(selection, request["name"], request["arguments"], None, read_structure,
+            previous_capture=None, ticket_labels=indexed["ticket_labels"], validate_project_spec=None, indexed_task=indexed)
+
+
 def run(request):
-    if (not isinstance(request, dict) or set(request) != _FIELDS or request["name"] not in _NAMES
-            or not isinstance(request["arguments"], dict) or not isinstance(request["receipt"], dict)):
+    if (not isinstance(request, dict) or set(request) not in (_FIELDS, {"binding", "name", "arguments", "indexed_task"})
+            or request["name"] not in LIFECYCLE_TOOLS or not isinstance(request["arguments"], dict)):
+        raise ValueError("Invalid lifecycle request")
+    if "indexed_task" in request:
+        return _run_indexed(request)
+    if not isinstance(request["receipt"], dict):
         raise ValueError("Invalid lifecycle request")
     generation = Path(request["generation"])
     if not generation.is_absolute() or generation.is_symlink() or generation.resolve(strict=True) != generation:
@@ -69,14 +87,9 @@ def run(request):
         raise ValueError("Generation does not match Project binding")
     with open_admitted_model(generation, receipt["model_sha256"], receipt["model_descriptor_sha256"]) as model:
         selection = _selection(request["binding"], model, structure)
-        capture = capture_native(selection)
-        raw = json.dumps([capture.versions, capture.atoms, capture.containment], sort_keys=True,
-                         separators=(",", ":"), default=_encode).encode()
-        if capture.errors or sha256(raw).hexdigest() != request["stability_sha256"]:
-            raise ValueError("Native Project carriers changed before lifecycle operation")
-        # The native direct update validates the exact bound Ticket Asset itself.
-        if request["name"] != "atom_lifecycle_direct_update":
-            _task_scope(request["name"], request["arguments"], capture)
+        capture = capture_native(selection, include_content_properties=False)
+        if capture.errors:
+            raise ValueError("Native Project capture failed before lifecycle operation")
         with bind_native_runtime(selection):
             return execute_native_lifecycle(selection, request["name"], request["arguments"], capture, read_structure,
                 previous_capture=capture, ticket_labels=model.ticket_labels, validate_project_spec=model.validate_project_spec)

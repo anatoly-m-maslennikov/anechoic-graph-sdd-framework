@@ -12,8 +12,8 @@ relations:
   - AN-S-3337
 state:
   status: "active"
-  version: 20
-  updated_at: "2026-11-22T23:25:08.884218+00:00"
+  version: 23
+  updated_at: "2026-11-23T09:56:32.676138+00:00"
 ---
 ## Summary
 
@@ -32,19 +32,27 @@ Return the admitted generation and requested result replacements, or a
 typed failure. Overlapping requests for the same target share one
 admission and result map.
 
-Serialize each accepted Task, Epic, or Ticket Asset lifecycle job with generation builds. After
-the Worker returns, offer a fresh generation for admission. Reply with
-the recorded write outcome and the projection result. Preserve known
-effects when admission fails. If the Worker response is lost, report
+Serialize each accepted lifecycle job with generation builds. Require an
+admitted base. Admit the Worker’s native carrier delta against that base.
+Return the recorded write outcome and projection result. Preserve known
+effects on projection failure. If the Worker response is lost, report
 the write outcome as unknown. Never repeat a write automatically.
+
+Allocate IDs for new Task and Epic Drafts under a Component in the
+serialized lifecycle lane. Read the highest Ticket number and rules
+from the same admitted Kernel generation. Pass those facts to the Worker.
+The Adapter reads only the published carrier to capture its delta.
+Use the warm Worker when configured. Run each write in its own child.
+Report a lost reply as an unknown write and never resubmit it.
+Block allocation after an unconfirmed write until Kernel admits a
+complete source snapshot.
 
 Retain the input proof only after Kernel accepts the generation. On a
 watcher event, supply that proof to a short-lived Worker. For a
 change outside the Ticket delta path, supply the Kernel Structure
 when its generation matches the proof. Submit a native or native
 and Realization Graph refresh against that base. Run a full build
-if the base changed. Explicit rebuilds and lifecycle refreshes use
-the full build path.
+if the base changed. Explicit rebuilds use the full build path.
 
 Attach the watcher before restart catch-up. Use an admitted proof
 and carrier checkpoint supplied by Kernel when available. Reuse the
@@ -75,7 +83,7 @@ accepted warm child. Wait for completion or an abort for that run.
 Stop its process group and report the terminal outcome as aborted.
 Keep lifecycle writes and Kernel admission outside this operation.
 
-Bind cold and lifecycle Workers to the current Orchestrator process.
+Bind fresh Workers to the current Orchestrator process.
 A Worker stops its group if that owner exits. A replacement
 Orchestrator starts admission from Project state.
 

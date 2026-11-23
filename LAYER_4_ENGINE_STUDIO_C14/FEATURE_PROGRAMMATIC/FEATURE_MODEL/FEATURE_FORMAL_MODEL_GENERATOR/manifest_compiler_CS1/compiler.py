@@ -88,6 +88,12 @@ def main() -> None:
         if selection.manifest_sha256 != args.project_manifest_sha256:
             raise ValueError("Project Manifest changed. Restart to apply its settings.")
         snapshot = compile_structure(selection, model)
+        if args.build_model:
+            data = json.loads(descriptor)
+            data["ticket_labels"] = model.ticket_labels
+            descriptor = json.dumps(data, sort_keys=True).encode("utf-8")
+            (args.generation / "model.json").write_bytes(descriptor)
+            digest = sha256(descriptor).hexdigest()
     if args.attest_model:
         snapshot = {"structure": snapshot, "model_descriptor_sha256": digest}
     print(json.dumps(snapshot, separators=(",", ":"), sort_keys=True))

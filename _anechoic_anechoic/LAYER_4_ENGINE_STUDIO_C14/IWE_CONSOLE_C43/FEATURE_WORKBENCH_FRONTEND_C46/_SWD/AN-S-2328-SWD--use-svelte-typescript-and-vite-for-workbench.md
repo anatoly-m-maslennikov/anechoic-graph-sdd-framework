@@ -7,9 +7,9 @@ tier: 4
 context:
   lens: SWD
 state:
-  status: active
-  version: 9
-  updated_at: 2026-11-10 20:47:54 +0400
+  status: "active"
+  version: 10
+  updated_at: "2026-11-23T04:35:26.541479+00:00"
 ---
 ## Summary
 
@@ -23,8 +23,12 @@ The Workbench frontend.
 
 ### Prose Claim
 
-Bind the frontend to the shared backend query, View and saved-resource contract. Preserve supplied request/result/cancellation/stale/error states; the frontend is neither backend authority nor effect owner.
+Build Svelte components and strict TypeScript with Vite. Run TypeScript and
+Svelte type checks in the static phase.
 
-Use Svelte components and TypeScript, built by Vite and served as static assets through the existing Python application. Node is build-only. Keep presentation, formatting, navigation and UI state in the browser; DuckDB owns SQL execution/filtering/sorting/aggregation and stable materialization. Request bounded pages rather than loading a complete large result.
+Use the same typed Workbench API and browser state for standalone
+Workbench and the Codex MCP App. The HTTP and MCP transports preserve
+the Backend's public error code and operation result.
 
-Use complete-result `columns[].has_values` metadata to hide fully empty columns only in non-empty results: NULL, empty string/array/object are empty; false, zero and objects with keys are values. Zero-row results set every column true so headers remain visible. This display rule never changes values/counts and is identical across pages. Reuse a small component palette; add no router, state framework or second web server.
+Keep SQL execution and result materialization in the Backend and Kernel.
+Request bounded pages and use complete-result column metadata for display.

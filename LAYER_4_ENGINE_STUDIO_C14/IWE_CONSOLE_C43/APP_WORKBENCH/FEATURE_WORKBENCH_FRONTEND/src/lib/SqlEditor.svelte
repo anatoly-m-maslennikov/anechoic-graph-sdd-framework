@@ -7,7 +7,7 @@
   import { Annotation, Compartment, EditorState, Prec } from '@codemirror/state';
   import { EditorView, keymap } from '@codemirror/view';
   import { onMount } from 'svelte';
-  import { statusCompletion } from './editor_helpers.js';
+  import { statusCompletion } from './editor_helpers';
   import type { Schema } from './types';
 
   type Action = 'run' | 'check';
@@ -41,6 +41,7 @@
       columns.map((column) => ({ label: column.name, apply: quoted(column.name), detail: column.type, type: 'property' }))])) });
     const qualified = token.parent?.name === 'CompositeIdentifier' ? schemaSource(context) : null;
     const tokenEnd = ['Identifier', 'QuotedIdentifier'].includes(token.name) ? token.to : context.pos;
+    if (qualified instanceof Promise) return qualified.then((result) => result && ({ ...result, to: Math.max(result.to ?? context.pos, tokenEnd) }));
     if (qualified) return { ...qualified, to: Math.max(qualified.to ?? context.pos, tokenEnd) };
     const candidate = word?.text.match(/^(?:"(?:[^"]|"")*"|[\w]+)\./)?.[0];
     const qualifier = candidate && !Object.values(currentSchema.tables).some((columns) => columns.some((column) => column.name.startsWith(candidate))) ? candidate : undefined;

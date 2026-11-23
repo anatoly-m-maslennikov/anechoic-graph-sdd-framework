@@ -6,7 +6,7 @@ import yaml
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical_native_header, native_header_view
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_ticket_label
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import revalidate_native
 
 from . import common
 from .effects import _project_write_lock
@@ -15,7 +15,7 @@ from .native_draft_source import _task_path
 from .source import bind_query_reader
 
 
-def _create_task(selection, values, current_rows, structure_snapshot, ticket_labels):
+def _create_task(selection, values, current_rows, structure_snapshot, ticket_labels, previous_capture=None, indexed_task=None):
     if (not isinstance(values, dict) or set(values) - {'label'} != {'template', 'container', 'body'}
             or values['template'] not in ('task', 'epic') or not isinstance(values['body'], str)):
         raise common.InputError('newAtom', 'Supply the Task template, container, Markdown body, and optional Label.')
@@ -34,15 +34,10 @@ def _create_task(selection, values, current_rows, structure_snapshot, ticket_lab
         raise common.SourceChanged('Selected Project path is invalid.')
     with _project_write_lock(selection.root):
         try:
-            capture = capture_native(selection)
-            if capture.errors:
-                raise common.SourceChanged('Native carrier capture is incomplete.')
+            capture, maximum = _task_allocation(selection, previous_capture, indexed_task)
             owner, label = _task_owner_and_label(
                 selection, values, current_rows, structure_snapshot, ticket_labels, capture)
-            pattern = re.compile(re.escape(selection.project_prefix) + r'-T-([0-9]+)')
-            numbers = [int(match[1]) for row in capture.atoms
-                       if isinstance(row.get('id'), str) and (match := pattern.fullmatch(row['id']))]
-            atom_id = f"{selection.project_prefix}-T-{max(numbers, default=0) + 1}"
+            atom_id = f"{selection.project_prefix}-T-{maximum + 1}"
             ref = f'{atom_id}@1-draft'
             context = {'container': values['container'], 'priority': 2, 'template': 'task', 'label': label}
             header = canonical_native_header(
@@ -61,6 +56,18 @@ def _create_task(selection, values, current_rows, structure_snapshot, ticket_lab
         return common.result(effects=outcome.effects, errors=outcome.errors, **data)
 
 
+
+
+def _task_allocation(selection, previous_capture, indexed_task):
+    if indexed_task is not None:
+        return None, int(indexed_task['max_number'])
+    capture = revalidate_native(selection, previous_capture)
+    if capture.errors:
+        raise common.SourceChanged('Native carrier capture is incomplete.')
+    pattern = re.compile(re.escape(selection.project_prefix) + r'-T-([0-9]+)')
+    numbers = [int(match[1]) for row in capture.atoms
+               if isinstance(row.get('id'), str) and (match := pattern.fullmatch(row['id']))]
+    return capture, max(numbers, default=0)
 
 
 def _task_owner_and_label(selection, values, current_rows, structure_snapshot, ticket_labels, capture):

@@ -12,8 +12,8 @@ relations:
   - AN-S-3334
 state:
   status: "active"
-  version: 22
-  updated_at: "2026-11-22T23:25:08.356588+00:00"
+  version: 24
+  updated_at: "2026-11-23T09:56:32.676138+00:00"
 ---
 ## Summary
 
@@ -38,13 +38,16 @@ Keep findings with unresolved owners or execution order visible.
 
 Run one admitted Ticket operation per lifecycle invocation. Create a Task
 or Epic Draft, revise a Current Task or Epic into a Draft, promote
-an exact Draft, change a Current Ticket's status, or archive an exact
-native Ticket revision, or directly update the Markdown body of a Ticket Asset.
+an exact Draft, change a Current Ticket's status, archive an exact native
+Ticket revision, create a Ticket Asset, or update its Markdown body.
 Apply the admitted lifecycle definition and
 its Ticket tree effects. Require a different Current Atom to declare
 the replacement before archive. Refuse Ticket containers. Bind the operation
-to the pinned Project and fresh Model and Structure.
-Return the native outcome and known file effects.
+to the pinned Project. Compile Model and Structure when the operation
+requires them.
+Capture the affected native carriers against the admitted base and check
+their hashes against the write receipt. Return the native outcome and delta,
+or an explicit projection error. Do not build a full generation for the write.
 
 For ordinary source changes, revalidate the input signatures of the
 accepted Model, Structure, and Graph before and after native capture.
@@ -66,7 +69,7 @@ in one fresh Worker. Return their native delta against the accepted base. An
 absent file identifies a removal. Use the existing refresh path when
 the file scope, Project Manifest, or source cannot be verified.
 
-A managed cold or lifecycle Worker stops its isolated process group
+A managed fresh Worker stops its isolated process group
 when its bound Orchestrator exits. Validate the parent binding before
 processing the request.
 
@@ -75,7 +78,9 @@ of up to 32 paths before the caller's start deadline. Report the new
 child's PID on acceptance. The child runs without a time limit. On
 client write-half close, stop and reap its process group. Return no
 delta if capture fails or stops. The warm parent can accept another
-capture and retains no Project data.
+capture and retains no Project data. For an indexed Draft write, preload
+the C16 writer in the same broker and run the write and its exact delta
+capture in one isolated child.
 
 ## References
 

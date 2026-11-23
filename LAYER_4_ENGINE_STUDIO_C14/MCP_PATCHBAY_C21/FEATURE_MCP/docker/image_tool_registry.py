@@ -28,7 +28,8 @@ def compile_tool_registry(source_root: Path, *, timeout: float, max_output: int)
         raise ValueError("tool registry compiler or providers are unavailable")
     with tempfile.TemporaryDirectory(prefix="anechoic-tool-registry-") as stage:
         package = Path(stage) / "package"
-        for component in ("FEATURE_PROGRAMMATIC", "MCP_PATCHBAY_C21", "IWE_CONSOLE_C43"):
+        for component in ("FEATURE_PROGRAMMATIC", "ARCHITECTURE_ANALYSIS_C73",
+                          "MCP_PATCHBAY_C21", "IWE_CONSOLE_C43"):
             relative = Path("LAYER_4_ENGINE_STUDIO_C14") / component
             shutil.copytree(source_root / relative, package / relative, symlinks=True)
         staged_compiler = package / TOOL_REGISTRY_COMPILER

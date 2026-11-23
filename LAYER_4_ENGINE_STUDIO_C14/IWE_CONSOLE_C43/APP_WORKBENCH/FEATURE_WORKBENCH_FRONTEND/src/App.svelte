@@ -8,7 +8,7 @@
   import { WorkbenchApi, WorkspaceApi, migrateLegacyDraft, formatSql, cleanAfterSave, newView, persistable, restore, storageKey, workspaceTabs } from './lib/lib__shared';
   import type { Command, PreferenceCommand, NativeBootstrap, OperationCaller, GridState, QueryLogItem, QueryResult, ResultDisplayPreferences, SavedIdentity, SavedItem, Schema, SourceSyncStatus, WorkspaceState, WorkspaceView } from './lib/lib__shared';
 
-  const props = $props<{ caller: OperationCaller; native?: NativeBootstrap }>();
+  const props: { caller: OperationCaller; native?: NativeBootstrap } = $props();
   const caller = props.caller;
   const native = props.native;
   let browserStorageUnavailable = $state(false);

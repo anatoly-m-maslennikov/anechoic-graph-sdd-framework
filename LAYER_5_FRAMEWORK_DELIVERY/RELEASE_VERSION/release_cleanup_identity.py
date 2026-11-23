@@ -55,6 +55,7 @@ class ImageMetadata(BaseModel):
     model_config = ConfigDict(strict=True, extra="forbid")
     Id: str
     Config: Configuration
+    RepoTags: list[str] | None = None
 
 
 def run_docker(root: Path, runner: Runner | None, *arguments: str) -> str:
@@ -77,9 +78,14 @@ def run_docker(root: Path, runner: Runner | None, *arguments: str) -> str:
 
 
 def image_labels(root: Path, runner: Runner | None, image: str) -> dict[str, str]:
+    return image_metadata(root, runner, image).Config.Labels
+
+
+def image_metadata(root: Path, runner: Runner | None, image: str) -> ImageMetadata:
     if not isinstance(image, str) or IMAGE.fullmatch(image) is None:
         raise ValueError("Image identity is invalid")
-    projection = '{"Id":{{json .Id}},"Config":{"Labels":{{json .Config.Labels}}}}'
+    projection = ('{"Id":{{json .Id}},"Config":{"Labels":{{json .Config.Labels}}},'
+                  '"RepoTags":{{json .RepoTags}}}')
     row = ImageMetadata.model_validate_json(
         run_docker(root, runner, "image", "inspect", "--format", projection, image)
     )
@@ -90,4 +96,4 @@ def image_labels(root: Path, runner: Runner | None, image: str) -> dict[str, str
         or re.fullmatch(r"[0-9a-f]{64}", labels.get(FINGERPRINT, "")) is None
     ):
         raise ValueError("Image runtime ownership unproven")
-    return labels
+    return row

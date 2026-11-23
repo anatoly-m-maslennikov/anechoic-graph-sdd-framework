@@ -1,4 +1,4 @@
-"""Expose the admitted Ticket lifecycle operations through Orchestrator."""
+"""Expose the admitted Atom lifecycle operations through Orchestrator."""
 
 import httpx2
 
@@ -7,22 +7,23 @@ from .workspace_tools import _tool
 
 _FIELDS = {"type": "object"}
 TOOLS = {tool["name"]: tool for tool in (
-    _tool("atom_lifecycle_create_draft", "Create a Task or Epic Draft or revise a Current Ticket.", {},
+    _tool("atom_lifecycle_create_draft", "Create an eligible Atom Draft or revise a Current Atom.", {},
           newAtom=_FIELDS, sourceCurrent=_FIELDS, changes=_FIELDS),
-    _tool("atom_lifecycle_update", "Create a Draft revision of a Current Task or Epic.",
+    _tool("atom_lifecycle_update", "Create a Draft revision of an eligible Current Atom.",
           {"sourceCurrent": _FIELDS}, changes=_FIELDS),
-    _tool("atom_lifecycle_promote_draft", "Publish an exact Task or Epic Draft revision.",
+    _tool("atom_lifecycle_promote_draft", "Publish an exact Atom Draft revision.",
           {"target": _FIELDS}, targetStatus={"type": "string"}),
-    _tool("atom_lifecycle_change_status", "Change a Current Task or Epic Status.",
+    _tool("atom_lifecycle_change_status", "Apply a supported Status transition to a Current Atom.",
           {"target": _FIELDS}, targetStatus={"type": "string"}),
-    _tool("atom_lifecycle_archive", "Archive an exact Task or Epic revision with an admitted replacement.",
+    _tool("atom_lifecycle_archive", "Archive an eligible exact Atom revision.",
           {"target": _FIELDS}),
+    _tool("atom_lifecycle_create_asset", "Create a detached or attached Ticket Asset.", {"newAtom": _FIELDS}),
     _tool("atom_lifecycle_direct_update", "Update the Markdown body of a Ticket Asset.",
           {"target": _FIELDS, "changes": _FIELDS}),
 )}
 _UNKNOWN = {
     "code": "write_outcome_unknown",
-    "message": "The lifecycle write outcome is unknown. Check the Project before retrying.",
+    "message": "The lifecycle write outcome is unknown.",
 }
 
 

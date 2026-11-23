@@ -13,6 +13,8 @@ from secrets import token_urlsafe
 
 from .release_assets import LocalReleaseError
 
+INSTALLATION_LOCK_PATH = Path(".anechoic_tmp/local_release_installation/installation.lock")
+
 
 def _git_head(root: Path, runner: Callable) -> str:
     result = runner(("git", "rev-parse", "--verify", "HEAD"), root)
@@ -98,7 +100,7 @@ def _new_staging_directory(root: Path, prefix: str) -> Path:
 def _installation_lock(root: Path, selection):
     if selection.root != root:
         raise LocalReleaseError("local-release-temporary-project-mismatch")
-    with _release_lock(root, Path(".anechoic_tmp/local_release_installation/installation.lock"), "installation"):
+    with _release_lock(root, INSTALLATION_LOCK_PATH, "installation"):
         yield
 
 

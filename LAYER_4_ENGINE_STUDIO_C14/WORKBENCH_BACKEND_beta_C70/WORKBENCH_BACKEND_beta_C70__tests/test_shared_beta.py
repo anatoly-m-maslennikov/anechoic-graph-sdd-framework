@@ -241,7 +241,7 @@ class SharedBetaTests(unittest.IsolatedAsyncioTestCase):
                     "query_rebuild", "workbench_status", "workbench_abort", "query_log_list", "query_log_get",
                     "atom_lifecycle_create_draft", "atom_lifecycle_update", "atom_lifecycle_promote_draft",
                     "atom_lifecycle_change_status", "atom_lifecycle_archive", "atom_lifecycle_direct_update",
-                    "query_load", "query_saved_list",
+                    "atom_lifecycle_create_asset", "query_load", "query_saved_list",
                 }, {tool["name"] for tool in catalog})
                 self.assertIn("project_root", catalog[0]["inputSchema"]["required"])
                 cold = await _invoke(http, alpha, "workbench_status", {})

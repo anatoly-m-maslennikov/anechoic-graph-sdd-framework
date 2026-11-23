@@ -8,11 +8,10 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: "active"
-  version: 26
-  updated_at: "2026-11-22T23:54:57.258296+00:00"
+  status: active
+  version: 27
+  updated_at: '2026-11-23T04:32:26.395669+00:00'
 ---
-
 ## Summary
 
 Declare Kernel Mixer
@@ -108,6 +107,11 @@ declare_entity(
                     'content_records__pub.value_excluding_declared_children',
                     'FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared.formal_claim_blocks',
                     'import_graph__shared.ImportSite',
+                    'trace_bindings__shared.PACKAGE_SUFFIX',
+                    'trace_bindings__shared.SUFFIX',
+                    'trace_bindings__shared._read_pins',
+                    'trace_bindings__shared.is_trace_path',
+                    'trace_bindings__shared.native_trace_snapshot',
                     'import_graph__shared.Source',
                     'import_graph__shared.capture',
                     'import_graph__shared.analyze_state',
@@ -270,9 +274,6 @@ declare_entity(
                     'KERNEL_MIXER_C59__shared.first_reference_rows': {'private': ['C45']},
                     'KERNEL_MIXER_C59__shared.PILOT': {'private': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
                     'KERNEL_MIXER_C59__shared.SpecTraceStore': {'private': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
-                    'KERNEL_MIXER_C59__shared._read_pins': {'private': ['LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests']},
-                    'KERNEL_MIXER_C59__shared.is_trace_path': {'private': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
-                    'KERNEL_MIXER_C59__shared.native_trace_rows': {'private': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
                     'KERNEL_MIXER_C59__shared.remove_native_traces': {'private': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
                     'KERNEL_MIXER_C59__shared.replace_native_traces': {'private': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
                     'statements.select_statement': {'private': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},

@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: "active"
-  version: 52
-  updated_at: "2026-11-23T00:34:06.539487+00:00"
+  version: 53
+  updated_at: '2026-11-23T04:47:55.654512+00:00'
 ---
 
 ## Summary
@@ -167,8 +167,8 @@ declare_entity(
                     'KERNEL_MIXER_C59__shared.first_reference_rows',
                     'KERNEL_MIXER_C59__shared.PILOT',
                     'KERNEL_MIXER_C59__shared.SpecTraceStore',
-                    'KERNEL_MIXER_C59__shared.is_trace_path',
-                    'KERNEL_MIXER_C59__shared.native_trace_rows',
+                    'trace_bindings__shared.is_trace_path',
+                    'trace_bindings__shared.native_trace_rows',
                     'KERNEL_MIXER_C59__shared.remove_native_traces',
                     'KERNEL_MIXER_C59__shared.replace_native_traces',
                     'statements.select_statement',

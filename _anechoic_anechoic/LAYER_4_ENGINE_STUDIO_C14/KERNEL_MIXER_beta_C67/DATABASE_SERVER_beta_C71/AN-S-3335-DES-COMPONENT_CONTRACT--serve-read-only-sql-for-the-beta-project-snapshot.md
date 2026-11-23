@@ -12,8 +12,8 @@ relations:
   - AN-S-3333
 state:
   status: "active"
-  version: 28
-  updated_at: "2026-11-23T00:32:58.566384+00:00"
+  version: 29
+  updated_at: "2026-11-23T04:35:09.802064+00:00"
 ---
 ## Summary
 
@@ -111,7 +111,7 @@ digest, validate it against the admitted Structure and replace it
 in the same transaction. Retain the exact Model and Structure.
 Refuse a stale generation and retain the prior state on failure.
 
-A Ticket delta names the current generation and up to 1,024 affected paths.
+A native carrier delta names the current generation and up to 1,024 affected paths.
 Publish the changed Atom rows and Model-defined relations together in one
 transaction, including their graph rows.
 Retain the accepted Model, Structure, and Realization Graph. Request

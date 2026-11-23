@@ -15,6 +15,7 @@ MCP_ROOT = Path(__file__).resolve().parents[1]
 FRONTEND_ROOT = MCP_ROOT.parents[1] / "IWE_CONSOLE_C43" / "APP_WORKBENCH" / "FEATURE_WORKBENCH_FRONTEND"
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import WORKBENCH_PATH  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.backend_client import ToolProtocolError  # noqa: E402
 import MCP_PATCHBAY_C21.FEATURE_MCP.workbench_web as workbench_web  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.workbench_web import routes  # noqa: E402
 
@@ -100,6 +101,18 @@ class WorkbenchWebTests(unittest.TestCase):
         self.assertEqual(400, response.status_code)
         self.assertEqual({"error": "bad query", "diagnostic_error": "technical diagnostic emission failed"}, response.json())
         self.assertNotIn("secret sink detail", response.text)
+
+    def test_http_preserves_validated_tool_refusal(self):
+        gateway = FakeGateway()
+        fault = {"code": "query_error", "message": "query rejected", "tool_result": {
+            "outcome": "rejected", "diagnostics": ["invalid SQL"],
+        }}
+        with patch.object(gateway, "call_tool", side_effect=ToolProtocolError.from_fault(fault)):
+            with TestClient(Starlette(routes=routes(gateway))) as client:
+                for base in (API_PATH, PROJECT_PATH):
+                    response = client.post(f"{base}/run", json={"sql": "bad"})
+                    self.assertEqual(400, response.status_code)
+                    self.assertEqual({"error": "query rejected", "code": "query_error", "tool_result": fault["tool_result"]}, response.json())
 
     def _check_paging(self, client):
         large = client.post(f"{PROJECT_PATH}/run", json={"sql": "large"})

@@ -7,8 +7,9 @@ import unittest
 
 import duckdb
 
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.trace_bindings__shared import is_trace_path, native_trace_rows
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
-    PILOT, SpecTraceStore, is_trace_path, native_trace_rows, remove_native_traces,
+    PILOT, SpecTraceStore, remove_native_traces,
     replace_native_traces,
 )
 

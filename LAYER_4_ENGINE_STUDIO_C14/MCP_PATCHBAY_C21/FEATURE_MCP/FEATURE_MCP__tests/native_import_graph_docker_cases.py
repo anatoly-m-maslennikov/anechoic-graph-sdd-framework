@@ -122,13 +122,15 @@ class DockerBrowserAndMcpCases:
             "WORKBENCH_E2E_URL": f"{self.url}{WORKBENCH_PATH}/Anechoic",
             "PLAYWRIGHT_BROWSERS_PATH": str(repository / ".anechoic_tmp/workbench/playwright-browsers"),
         }
-        with tempfile.TemporaryDirectory(prefix="workbench-browser-") as output:
-            result = subprocess.run(
-                ["npm", "run", "test:e2e", "--", "--output", output, "--global-timeout", "115000", "--retries", "1"],
-                cwd=frontend, env=environment,
-                capture_output=True, text=True, timeout=120,
-            )
-        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        reports = repository / ".anechoic_tmp/test_reports"
+        reports.mkdir(parents=True, exist_ok=True)
+        output = tempfile.mkdtemp(prefix="workbench-browser-", dir=reports)
+        result = subprocess.run(
+            ["npm", "run", "test:e2e", "--", "--output", output, "--global-timeout", "115000",
+             "--retries", "1", "--trace", "retain-on-failure"],
+            cwd=frontend, env=environment, capture_output=True, text=True, timeout=120,
+        )
+        self.assertEqual(0, result.returncode, f"{result.stdout}{result.stderr}\nBrowser artifacts: {output}")
 
 
     def test_mcp_queries_work_after_a_previous_session_closes(self):
@@ -174,7 +176,9 @@ class DockerBrowserAndMcpCases:
                 arguments = {"target": {"ref_id": atom, "version": original["version"]}}
                 sql = (f'SELECT reference, "header.state.status" FROM atoms '
                        f"WHERE reference IN ('{atom}', '{atom}@{original['version']}')")
+                started = monotonic()
                 refused = await call("atom_lifecycle_archive", arguments, status="failed")
+                print(f"archive refusal: {monotonic() - started:.3f}s", flush=True)
                 self.assertEqual("invalid_input", refused["errors"][0]["code"], refused)
                 self.assertEqual([], refused["effects"])
                 self.assertEqual([[atom, "backlog"]], project._rows(sql))
@@ -193,40 +197,62 @@ class DockerBrowserAndMcpCases:
 
 
     def test_promotion_immediately_refreshes_workbench(self):
+        environment = subprocess.check_output([
+            "docker", "image", "inspect", "--format", "{{json .Config.Env}}", os.environ["ANECHOIC_IMAGE"],
+        ], text=True, timeout=10)
+        beta = "ANECHOIC_RUNTIME_STACK=beta" in json.loads(environment)
+        witness = """SELECT count(*) FROM flow_events t JOIN flow_events e USING (run_id)
+            WHERE t.component = 'C68' AND t.kind = 'trigger' AND t.name = 'lifecycle_refresh'
+              AND e.kind = 'output' AND e.name = 'generation_result' AND e.outcome = 'succeeded'
+              AND json_extract_string(e.detail, '$.kind') = 'native_delta'"""
+
         async def exercise():
             async with streamable_http_client(self.url + MCP_PATH) as streams, ClientSession(*streams) as client:
                 await client.initialize()
 
                 async def call(name, arguments, status="completed"):
+                    before = self._rows(witness)[0][0] if beta else 0
+                    started = monotonic()
                     result = await client.call_tool(name, arguments)
+                    elapsed = monotonic() - started
                     self.assertFalse(result.is_error, result.structured_content)
                     self.assertEqual(status, result.structured_content["status"], result.structured_content)
+                    if beta:
+                        self._wait_rows(witness, [[before + 1]])
+                        print(f"{name}: {elapsed:.3f}s (native_delta)", flush=True)
                     return result.structured_content
 
-                created = await call("atom_lifecycle_create_draft", {"newAtom": {
-                    "template": "task", "container": {"component": "C00"},
-                    "body": "## Summary\n\nPromotion canary.\n",
-                }})
-                draft = created["savedDraft"]
-                await call("atom_lifecycle_promote_draft", {
-                    "target": {"ref_id": draft["ref_id"], "version": draft["version"]},
-                    "targetStatus": "backlog",
-                })
-                revised = await call("atom_lifecycle_update", {
-                    "sourceCurrent": {"ref_id": draft["atom_id"], "version": 1},
-                    "changes": {"body": "## Summary\n\nPromotion canary.\n\nRevised.\n"},
-                }, status="draft_created")
-                revision = revised["savedDraft"]
-                await call("atom_lifecycle_promote_draft", {
-                    "target": {"ref_id": revision["ref_id"], "version": revision["version"]},
-                    "targetStatus": "backlog",
-                })
-                atom = draft["atom_id"]
-                self.assertEqual([[atom + "@1", 1, "archived"], [atom, 2, "backlog"]], self._rows(
-                    'SELECT reference, "header.state.version", "header.state.status" FROM atoms '
-                    f"WHERE reference IN ('{atom}', '{atom}@1', '{revision['ref_id']}') "
-                    'ORDER BY "header.state.version"'
-                ))
+                await self._assert_ticket_promotion(call, beta)
 
         asyncio.run(exercise())
 
+    async def _assert_ticket_promotion(self, call, beta):
+        created = await call("atom_lifecycle_create_draft", {"newAtom": {
+            "template": "task", "container": {"component": "C00"},
+            "body": "## Summary\n\nPromotion canary.\n",
+        }})
+        draft = created["savedDraft"]
+        atom = draft["atom_id"]
+        sql = ('SELECT reference, "header.state.version", "header.state.status" FROM atoms '
+               f"WHERE reference = '{atom}' OR reference LIKE '{atom}@%' "
+               'ORDER BY "header.state.version", reference')
+        if beta:
+            self.assertEqual([[draft["ref_id"], 1, "draft"]], self._rows(sql))
+        await call("atom_lifecycle_promote_draft", {
+            "target": {"ref_id": draft["ref_id"], "version": draft["version"]},
+            "targetStatus": "backlog",
+        })
+        if beta:
+            self.assertEqual([[atom, 1, "backlog"]], self._rows(sql))
+        revised = await call("atom_lifecycle_update", {
+            "sourceCurrent": {"ref_id": draft["atom_id"], "version": 1},
+            "changes": {"body": "## Summary\n\nPromotion canary.\n\nRevised.\n"},
+        }, status="draft_created")
+        revision = revised["savedDraft"]
+        if beta:
+            self.assertEqual([[atom, 1, "backlog"], [revision["ref_id"], 2, "draft"]], self._rows(sql))
+        await call("atom_lifecycle_promote_draft", {
+            "target": {"ref_id": revision["ref_id"], "version": revision["version"]},
+            "targetStatus": "backlog",
+        })
+        self.assertEqual([[atom + "@1", 1, "archived"], [atom, 2, "backlog"]], self._rows(sql))

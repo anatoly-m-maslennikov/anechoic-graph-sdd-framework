@@ -11,7 +11,7 @@ from types import SimpleNamespace
 from .ADAPTERS_C30__pub import CEILINGS, ReadContext
 from .carrier_read__pub import parse_carrier
 from .markdown_content__pub import content_lines
-from .native_carrier_placement__pub import TICKET_DIRECTORY
+from .native_carrier_placement__pub import TICKET_DIRECTORY, project_goal_filename
 from .native_generation_snapshot import snapshot
 from .native_source_rows__pub import (
     NativeCapture,
@@ -37,7 +37,7 @@ def _relative(value, *, direct=False):
     return path
 
 
-def _selection(binding):
+def _selection(binding, *, manifest_admitted=False):
     if not isinstance(binding, dict) or set(binding) != _FIELDS:
         raise ValueError("Invalid binding fields")
     root_value = binding["root"]
@@ -50,7 +50,7 @@ def _selection(binding):
     control = root / _relative(binding["control_root"], direct=True)
     manifest_relative = _relative(binding["manifest_path"])
     manifest = root / manifest_relative
-    if not manifest.exists() and len(manifest_relative.parts) == 1:
+    if not manifest_admitted and not manifest.exists() and len(manifest_relative.parts) == 1:
         manifest = control / manifest_relative
     if manifest.parent != root and not manifest.is_relative_to(control):
         raise ValueError("Invalid Manifest path")
@@ -113,6 +113,21 @@ def _ticket_paths(selection, paths):
     return relatives
 
 
+def _carrier_paths(selection, paths):
+    if not isinstance(paths, (list, tuple)) or not 0 < len(paths) <= _MAX_TICKET_DELTA_PATHS:
+        raise ValueError("Invalid carrier delta path count")
+    relatives = {_relative(path) for path in paths}
+    for relative in relatives:
+        path = selection.root / relative
+        under_control = len(relative.parts) >= 2 and relative.parts[0] == selection.control_root.name
+        root_goal = len(relative.parts) == 1 and project_goal_filename(relative.name)
+        if (relative.suffix != ".md" or not (under_control or root_goal)
+                or path == selection.manifest_path or "-PROJECT_MANIFEST--" in relative.name
+                or (under_control and relative.parts[1] == "000_ANECHOIC_framework")):
+            raise ValueError("Carrier delta path is outside the selected native carriers")
+    return relatives
+
+
 def _ticket_versions(root, relatives):
     reader = ReadContext(roots=[str(root)], limits=dict(CEILINGS))
     versions = {}
@@ -128,12 +143,10 @@ def _ticket_versions(root, relatives):
     return versions
 
 
-def capture_ticket_delta(binding, paths, endpoints, *, include_hashes=False):
-    """Capture only requested Ticket files and retain absent paths for deletion."""
-    selection = _selection(binding)
-    relatives = _ticket_paths(selection, paths)
+def _capture_delta(binding, selection, relatives, endpoints, *, include_hashes, ticket_only, manifest_admitted=False):
     versions = _ticket_versions(selection.root, relatives)
-    capture = capture_native(selection, previous=NativeCapture([], [], {}), paths=relatives)
+    capture = capture_native(selection, previous=NativeCapture([], [], {}), paths=relatives,
+                             manifest_admitted=manifest_admitted)
     _check_capture(capture)
     observed = {path: version for path, version in capture.versions.items()
                 if path != str(selection.manifest_path)}
@@ -142,8 +155,12 @@ def capture_ticket_delta(binding, paths, endpoints, *, include_hashes=False):
     ticket = re.compile(rf"{re.escape(selection.project_prefix)}-T-[0-9]+")
     captured_paths = set()
     for row in capture.atoms:
-        if not ticket.fullmatch(row["id"]):
+        if ticket_only and not ticket.fullmatch(row["id"]):
             raise ValueError("Ticket delta contains a non-Ticket Atom")
+        header = row["header_json"]
+        if not ticket_only and (header.get("atom_family") not in {"SPEC", "TKT", "PROJECT_CONFIG"}
+                                or header.get("context", {}).get("template") == "project_manifest"):
+            raise ValueError("Carrier delta contains a non-canonical carrier or Project Manifest")
         captured_paths.add(str(selection.root / row["source_path"]))
     if captured_paths != versions.keys():
         raise ValueError("Ticket delta rows do not match the changed paths")
@@ -152,6 +169,20 @@ def capture_ticket_delta(binding, paths, endpoints, *, include_hashes=False):
     if include_hashes:
         result["carrier_hashes"] = _carrier_hashes(capture)
     return result
+
+
+def capture_ticket_delta(binding, paths, endpoints, *, include_hashes=False):
+    """Capture only requested Ticket files and retain absent paths for deletion."""
+    selection = _selection(binding)
+    return _capture_delta(binding, selection, _ticket_paths(selection, paths), endpoints,
+                          include_hashes=include_hashes, ticket_only=True)
+
+
+def capture_carrier_delta(binding, paths, endpoints, *, include_hashes=False, manifest_admitted=False):
+    """Capture addressed canonical carriers and retain absent paths for deletion."""
+    selection = _selection(binding, manifest_admitted=manifest_admitted)
+    return _capture_delta(binding, selection, _carrier_paths(selection, paths), endpoints,
+                          include_hashes=include_hashes, ticket_only=False, manifest_admitted=manifest_admitted)
 
 
 def _graph_config(selection):

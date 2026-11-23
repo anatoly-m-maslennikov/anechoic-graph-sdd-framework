@@ -13,11 +13,32 @@ from .WORKERS_beta_C69__tests__shared import generation_fixture
 ENGINE = Path(__file__).resolve().parents[2]
 
 
-def invoke(binding, name, arguments):
-    payload = {"binding": binding, "name": name, "arguments": arguments}
+def structure_digest(binding):
+    module = "WORKERS_beta_C69.manifest_build_CS4.manifest_build_CS4__shared"
+    with tempfile.TemporaryDirectory(prefix="ane-lifecycle-structure-") as directory:
+        result = subprocess.run([sys.executable, "-B", "-P", "-m", module, "--output-dir", str(Path(directory).resolve())],
+            cwd=ENGINE, env={**os.environ, "PYTHONPATH": str(ENGINE)}, input=json.dumps(binding),
+            text=True, capture_output=True, timeout=120)
+    return json.loads(result.stdout)["structure_sha256"] if result.returncode == 0 else "invalid"
+
+
+def invoke(binding, name, arguments, *, structure_sha256=None, indexed_task=None):
+    payload = {"binding": binding, "name": name, "arguments": arguments, "base_generation": "test-generation",
+               "structure_sha256": structure_sha256 or structure_digest(binding)}
+    if indexed_task is not None:
+        payload["indexed_task"] = indexed_task
     return subprocess.run([sys.executable, "-B", "-P", "-m", "WORKERS_beta_C69.lifecycle_worker"],
         cwd=ENGINE, env={**os.environ, "PYTHONPATH": str(ENGINE)}, input=json.dumps(payload),
         text=True, capture_output=True, timeout=120)
+
+
+def copy_lifecycle_definitions(control):
+    source = ENGINE.parent / "_anechoic_anechoic"
+    for relative in ("LAYER_1_META_ONTOLOGY_C9", "LAYER_1_META_ONTOLOGY_C9/_SPEC", "__PROJECT_CONFIG/CUSTOM_MODEL"):
+        destination = control / relative
+        destination.mkdir(parents=True, exist_ok=True)
+        for path in (source / relative).glob("*.md"):
+            shutil.copy2(path, destination / path.name)
 
 
 def ticket_asset_fixture(binding):
@@ -46,13 +67,28 @@ def ticket_asset_fixture(binding):
 
 
 class LifecycleWorkerTests(unittest.TestCase):
+    def test_stale_structure_refuses_before_write(self):
+        with tempfile.TemporaryDirectory(prefix="ane-lifecycle-", dir="/tmp") as directory:
+            binding, _, _ = generation_fixture(directory)
+            response = invoke(binding, "atom_lifecycle_create_draft", {"newAtom": {
+                "template": "task", "container": {"component": "C00"}, "body": "## Summary\n\nCanary.\n"}},
+                structure_sha256="0" * 64)
+            self.assertEqual(0, response.returncode, response.stderr)
+            value = json.loads(response.stdout)
+            self.assertEqual("failed", value["lifecycle"]["outcome"], value)
+            self.assertEqual([], value["lifecycle"].get("effects", []))
+            self.assertIn("admitted Model and Structure inputs", value["projection_error"])
+            self.assertIsNone(value["delta"])
+
     def test_task_create_revise_and_promote(self):
         with tempfile.TemporaryDirectory(prefix="ane-lifecycle-", dir="/tmp") as directory:
             binding, _, _ = generation_fixture(directory)
             def run(name, arguments):
                 result = invoke(binding, name, arguments)
                 self.assertEqual(0, result.returncode, result.stderr)
-                value = json.loads(result.stdout)
+                response = json.loads(result.stdout)
+                self.assertIsNone(response["projection_error"], response)
+                value = response["lifecycle"]
                 self.assertEqual("completed", value["outcome"], value)
                 return value
             created = run("atom_lifecycle_create_draft", {"newAtom": {
@@ -74,7 +110,9 @@ class LifecycleWorkerTests(unittest.TestCase):
             def run(name, arguments):
                 result = invoke(binding, name, arguments)
                 self.assertEqual(0, result.returncode, result.stderr)
-                value = json.loads(result.stdout)
+                response = json.loads(result.stdout)
+                self.assertIsNone(response["projection_error"], response)
+                value = response["lifecycle"]
                 self.assertEqual("completed", value["outcome"], value)
                 return value
             created = run("atom_lifecycle_create_draft", {"newAtom": {
@@ -104,7 +142,9 @@ class LifecycleWorkerTests(unittest.TestCase):
             def run(name, arguments):
                 result = invoke(binding, name, arguments)
                 self.assertEqual(0, result.returncode, result.stderr)
-                return json.loads(result.stdout)
+                response = json.loads(result.stdout)
+                self.assertIsNone(response["projection_error"], response)
+                return response["lifecycle"]
             created = run("atom_lifecycle_create_draft", {"newAtom": {
                 "template": "task", "container": {"component": "C00"}, "body": "## Summary\n\nStatus canary.\n"}})
             self.assertEqual("completed", created["outcome"], created)
@@ -130,18 +170,14 @@ class LifecycleWorkerTests(unittest.TestCase):
     def test_archive_requires_current_replacement(self):
         with tempfile.TemporaryDirectory(prefix="ane-lifecycle-", dir="/tmp") as directory:
             binding, _, _ = generation_fixture(directory)
-            source = ENGINE.parent / "_anechoic_anechoic"
             control = Path(binding["root"]) / binding["control_root"]
-            for relative in ("LAYER_1_META_ONTOLOGY_C9", "LAYER_1_META_ONTOLOGY_C9/_SPEC",
-                             "__PROJECT_CONFIG/CUSTOM_MODEL"):
-                destination = control / relative
-                destination.mkdir(parents=True, exist_ok=True)
-                for path in (source / relative).glob("*.md"):
-                    shutil.copy2(path, destination / path.name)
+            copy_lifecycle_definitions(control)
             def run(name, arguments):
                 result = invoke(binding, name, arguments)
                 self.assertEqual(0, result.returncode, result.stderr)
-                return json.loads(result.stdout)
+                response = json.loads(result.stdout)
+                self.assertIsNone(response["projection_error"], response)
+                return response["lifecycle"]
             def create(summary):
                 draft = run("atom_lifecycle_create_draft", {"newAtom": {"template": "task",
                     "container": {"component": "C00"}, "body": f"## Summary\n\n{summary}\n"}})["savedDraft"]
@@ -183,7 +219,9 @@ class LifecycleWorkerTests(unittest.TestCase):
                 response = invoke(binding, "atom_lifecycle_direct_update", {
                     "target": {"ref_id": ref, "version": version}, "changes": {"body": change}})
                 self.assertEqual(0, response.returncode, response.stderr)
-                return json.loads(response.stdout)
+                value = json.loads(response.stdout)
+                self.assertIsNone(value["projection_error"], value)
+                return value["lifecycle"]
 
             for ref, version, path, header in (
                 ("AN-T-101", 2, typed, typed_header), ("AN-T-102@1-draft", 1, untyped, untyped_header)
@@ -216,4 +254,22 @@ class LifecycleWorkerTests(unittest.TestCase):
             result = invoke({**binding, "manifest_sha256": "0" * 64}, "atom_lifecycle_create_draft", {})
             self.assertNotEqual(0, result.returncode)
             result = invoke(binding, "atom_lifecycle_create_draft", {"newAtom": {"template": "component_contract"}})
-            self.assertNotEqual(0, result.returncode)
+            self.assertEqual(0, result.returncode, result.stderr)
+            self.assertNotEqual("completed", json.loads(result.stdout)["lifecycle"]["outcome"])
+
+    def test_indexed_worker_uses_only_published_carrier(self):
+        with tempfile.TemporaryDirectory(prefix="ane-indexed-", dir="/tmp") as directory:
+            binding, _, manifest = generation_fixture(directory)
+            manifest.unlink()
+            indexed = {"max_number": "100", "manifest_ref": "AN-S-1@1", "component_ids": ["C00"],
+                       "ticket_labels": ["Task"],
+                       "endpoints": {"CONTAINED_BY": [{"inverse_alias": "CONTAINS"}, False], "CONTAINS": [{}, True]}}
+            result = invoke(binding, "atom_lifecycle_create_draft", {"newAtom": {
+                "template": "task", "container": {"component": "C00"}, "body": "## Summary\n\nCanary.\n"}},
+                structure_sha256="admitted", indexed_task=indexed)
+            self.assertEqual(0, result.returncode, result.stderr)
+            response = json.loads(result.stdout)
+            self.assertIsNone(response["projection_error"], response)
+            created = response["lifecycle"]["savedDraft"]
+            self.assertEqual("AN-T-101@1-draft", created["ref_id"])
+            self.assertEqual([created["path"]], list(response["delta"]["carrier_hashes"]))

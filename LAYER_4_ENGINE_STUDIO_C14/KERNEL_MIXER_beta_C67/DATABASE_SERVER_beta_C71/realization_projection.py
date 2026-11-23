@@ -3,6 +3,7 @@
 import json
 import sys
 
+from . import analysis_projection
 from .dependency_review import prepare_dependency_review
 from .native_graph import native_edges
 
@@ -19,6 +20,8 @@ _TABLES = {
     "code_access_findings": ("code_access_findings", (str, str, (int, type(None)), (int, type(None)), str, str, str)),
     "state_effect_findings": ("state_effect_findings", (str, str, str, str, int, (str, type(None)), str, bool, str, str, (str, type(None)))),
 }
+
+_ANALYSIS = {"analysis_code", "analysis_bindings"}
 
 _GRAPH_TABLES = {
     "component_reference": "kind VARCHAR, ref VARCHAR, PRIMARY KEY (kind, ref)",
@@ -135,10 +138,13 @@ def validate(graph, components):
         return None
     required = set(_TABLES) - {"state_effect_findings", "code_access_findings", "code_units", "code_unit_calls", "antipattern_findings"}
     if (not isinstance(graph, dict) or not required <= set(graph)
-            or set(graph) - set(_TABLES)
+            or set(graph) - set(_TABLES) - _ANALYSIS
+            or (set(graph) & _ANALYSIS and not _ANALYSIS <= set(graph))
             or (("code_units" in graph) != ("code_unit_calls" in graph))):
         raise ValueError("Invalid graph fields")
-    graph = {key: graph.get(key, []) for key in _TABLES}
+    graph = {key: graph.get(key, []) for key in _TABLES} | {
+        key: graph[key] for key in _ANALYSIS & graph.keys()
+    }
     for key, (_, types) in _TABLES.items():
         if not isinstance(graph[key], list):
             raise ValueError("Invalid graph rows")
@@ -190,6 +196,8 @@ def _replace_test_projection(connection, components):
 
 
 def replace(connection, graph, components):
+    if graph is None or not _ANALYSIS <= graph.keys():
+        analysis_projection.drop(connection)
     if graph is None:
         connection.execute("DROP VIEW IF EXISTS antipattern_findings")
         connection.execute("DROP VIEW IF EXISTS import_cycles")
@@ -211,6 +219,10 @@ def replace(connection, graph, components):
     connection.execute("DELETE FROM tested_by_edges")
     connection.execute("INSERT INTO tested_by_edges SELECT target_key, source_key FROM test_edges")
     _replace_test_projection(connection, components)
+    if _ANALYSIS <= graph.keys():
+        analysis_projection.prepare(connection)
+        analysis_projection.replace_code(connection, graph["analysis_code"])
+        analysis_projection.replace_bindings(connection, graph["analysis_bindings"])
     restore_property_graph(connection)
 
 

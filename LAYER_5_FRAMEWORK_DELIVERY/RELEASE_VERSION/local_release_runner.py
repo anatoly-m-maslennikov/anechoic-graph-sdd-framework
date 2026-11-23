@@ -13,6 +13,7 @@ from typing import Any
 from .release_cleanup import cleanup_obsolete_images, cleanup_stopped_containers  # noqa: E402
 from .release_cleanup_identity import image_labels  # noqa: E402
 from .release_cleanup_images import record_ready_images  # noqa: E402
+from .release_cleanup_tmp import prune_temporary_files  # noqa: E402
 from .release_container import start_container  # noqa: E402
 from .release_inputs import read_release_selection  # noqa: E402
 from .local_release_gates import run_gate  # noqa: E402
@@ -129,8 +130,9 @@ class LocalReleaseRun:
             self.failed_step = f"git_before_{phase.replace(' ', '_')}"
             self.head = _git_checkpoint(self.root, self.runner, phase, self.checkpoint_paths.get(phase, ()), self.head)
             if phase == 'final':
-                continue
-            self._phase(phase)
+                self._after_start()
+            else:
+                self._phase(phase)
 
     def _phase(self, phase):
         if phase == 'validate inputs':
@@ -201,11 +203,12 @@ class LocalReleaseRun:
             self.cleanup.images.add(self.prior_image)
         existing_container, self.cleanup_note, self.cleanup_pending = previous_container(self.root, self.selection, self.prior_project, self.candidate_image, self.cleanup, self.runner, self.cleanup_runner, image_labels, self.cleanup_note)
         self.endpoint = start_container(self.root, self.selection, self.candidate_image, self.candidate_fingerprint, self.production_port, self.cleanup_runner, existing_container=existing_container)
-        self._after_start()
 
     def _after_start(self):
+        promoted = False
         try:
             self.manager.mark_production_image(self.candidate_image)
+            promoted = True
         except RuntimeError:
             self.cleanup.pending = True
             self.cleanup.notes.append('Production image display tag failed: Runtime image operation failed')
@@ -217,18 +220,32 @@ class LocalReleaseRun:
             self.cleanup.pending = True
             self.cleanup.notes.append('Image history unavailable. Retained existing images.')
         else:
-            if self.prior_image == self.candidate_image:
-                self.cleanup.notes.append('Image reused. Retained existing rollback images.')
-            else:
+            if promoted:
                 cleanup_obsolete_images(self.root, self.candidate_image, self.candidate_fingerprint, self.cleanup, self.cleanup_runner, previous_images=previous_images)
+        if promoted:
+            try:
+                self.manager.prune_build_cache()
+            except (OSError, RuntimeError):
+                self.cleanup.pending = True
+                self.cleanup.notes.append('Docker build cache cleanup failed.')
         if self.prior_image is not None and self.previous_image is None and (self.prior_image != self.candidate_image):
             self.cleanup.pending = True
             self.cleanup.notes.append('Prior image retained: readiness evidence unavailable.')
-        self.cleanup_pending |= self.cleanup.pending
-        self.cleanup_note = '\n'.join([self.cleanup_note, *self.cleanup.notes])
         receipt = reports.receipt_path(self.root, self.run_id)
         staging_note = _cleanup_staging(self.root, self.staging)
         self.staging = None
+        if promoted:
+            try:
+                removed, blocked = prune_temporary_files(self.root)
+                self.cleanup.notes.append(f'Removed {removed} temporary paths older than 48 hours.')
+                if blocked:
+                    self.cleanup.pending = True
+                    self.cleanup.notes.append(f'Temporary file cleanup blocked on {len(blocked)} paths. First error: {blocked[0]}')
+            except (OSError, LocalReleaseError):
+                self.cleanup.pending = True
+                self.cleanup.notes.append('Temporary file cleanup failed.')
+        self.cleanup_pending |= self.cleanup.pending
+        self.cleanup_note = '\n'.join([self.cleanup_note, *self.cleanup.notes])
         self.receipt_path = reports.write_receipt(self.root, receipt, self.run_id, self.image_mode, self.test_scope, self.test_selection, self.canary_endpoint, self.endpoint, self.test_log_paths, self.cleanup_note, staging_note)
 
     def run(self):

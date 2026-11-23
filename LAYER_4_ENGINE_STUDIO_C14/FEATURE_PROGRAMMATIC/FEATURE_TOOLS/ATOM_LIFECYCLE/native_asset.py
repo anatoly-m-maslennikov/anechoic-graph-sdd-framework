@@ -4,7 +4,7 @@ import re
 
 import yaml
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import revalidate_native
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical_native_header
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_carrier_path, native_ticket_asset
 
@@ -36,11 +36,11 @@ def _asset_input(selection, params):
         raise common.InputError('body', 'Supply a UTF-8 Markdown body.') from error
     return values, container, summary, body_bytes
 
-def create_asset(selection, params, *, current_rows):
+def create_asset(selection, params, *, current_rows, previous_capture=None):
     values, container, summary, body_bytes = _asset_input(selection, params)
     with _project_write_lock(selection.root):
         try:
-            capture = capture_native(selection)
+            capture = revalidate_native(selection, previous_capture)
             if capture.errors:
                 raise common.SourceChanged('Native carrier capture is incomplete.')
             owner = _check_owner(selection, container, current_rows, capture)

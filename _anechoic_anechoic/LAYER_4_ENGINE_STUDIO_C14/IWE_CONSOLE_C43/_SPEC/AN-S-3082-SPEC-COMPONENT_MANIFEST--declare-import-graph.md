@@ -9,10 +9,9 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 24
-  updated_at: '2026-11-23T03:50:52.802684+00:00'
+  version: 26
+  updated_at: '2026-11-23T09:32:30.312767+00:00'
 ---
-
 ## Summary
 
 Declare IMPORT_GRAPH
@@ -31,12 +30,20 @@ declare_entity(
         lens_whitelist=['DES', 'QA', 'SWD'],
         boundaries={
             'code': {
-                'imports': {'only': ['ADAPTERS_C30__shared.parse_structure', 'ADAPTERS_C30__shared.realization_component_paths',
+                'imports': {'only': ['metrics__shared.is_measurement_input',
+                                     'ADAPTERS_C30__shared.UniqueSafeLoader', 'ADAPTERS_C30__shared.check_yaml_resources',
+                                     'ADAPTERS_C30__shared.parse_structure', 'ADAPTERS_C30__shared.realization_component_paths',
                                      'ADAPTERS_C30__shared.formal_claim_fences',
                                      'realization_ownership__pub.build_code_access_ownership',
                                      'FEATURE_MODEL_VALIDATION__shared.check_code_access']},
                 'exports': {
                     'import_graph__shared': None,
+                    'trace_bindings__shared.PACKAGE_SUFFIX': {'shared': ['C59']},
+                    'trace_bindings__shared.SUFFIX': {'shared': ['C59']},
+                    'trace_bindings__shared._read_pins': {'shared': ['C59', 'LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/FEATURE_MCP__tests']},
+                    'trace_bindings__shared.is_trace_path': {'shared': ['C59', 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
+                    'trace_bindings__shared.native_trace_rows': {'shared': ['LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
+                    'trace_bindings__shared.native_trace_snapshot': {'shared': ['C59']},
                     'import_graph__shared.analyze_state': {'shared': ['C59']},
                     'import_graph__shared.run_graph_build': {'shared': ['C69']},
                     'import_graph__shared.graph_input_signature': {'shared': ['C69', 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_IMPORT_GRAPH_C61/FEATURE_IMPORT_GRAPH_C61__tests']},
@@ -72,11 +79,19 @@ declare_entity(
                            'workflow_spec': {'transport': 'cli', 'runner': 'managed_python',
                                  'module': 'IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.workflow_spec',
                                  'arguments': ['<solution-atom>', 'render or check <trace>'],
-                                 'output': 'Mermaid or a JSON flow check'}},
+                                 'output': 'Mermaid or a JSON flow check'},
+                           'workflow_reuse': {'transport': 'cli', 'runner': 'managed_python',
+                                 'module': 'IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.workflow_reuse',
+                                 'input_fields': ['root', 'control_root', 'graph', 'structure', 'caller', 'callee'],
+                                 'optional_paired_inputs': ['first', 'last'],
+                                 'output': 'JSON reuse finding'}},
                 'client': [
                     {'transport': 'cli', 'optional': True,
                      'command': ['lean', '--run', 'WorkflowTrace.lean'],
                      'input': 'JSON workflow model and trace'},
+                    {'transport': 'cli', 'optional': True,
+                     'command': ['lean', '--run', 'FlowComparison.lean'],
+                     'input': 'JSON pair of source-derived effect sequences'},
                     {'transport': 'cli', 'optional': True, 'command': ['lean', '--run', 'ActionEffects.lean'],
                      'input': 'JSON batch of ordered state cases on stdin'},
                     {'transport': 'cli', 'optional': True, 'command': ['node',

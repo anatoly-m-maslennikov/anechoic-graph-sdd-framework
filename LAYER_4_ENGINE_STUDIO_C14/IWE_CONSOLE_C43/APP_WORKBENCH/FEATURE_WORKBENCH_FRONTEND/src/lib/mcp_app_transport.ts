@@ -1,4 +1,5 @@
 import type { OperationCaller } from './transport';
+import { toolFailure } from './transport';
 import type { WorkspaceState } from './types';
 
 type JsonObject = Record<string, unknown>;
@@ -61,7 +62,8 @@ export class McpAppTransport implements OperationCaller {
     const result = object(await this.request('tools/call', {
       name, arguments: { ...arguments_, project_root: projectRoot },
     }));
-    if (!result || result.isError === true) throw new Error('Workbench tool call failed.');
+    if (!result) throw new Error('Invalid Workbench tool response.');
+    if (result.isError === true) throw toolFailure(result.structuredContent);
     if (!('structuredContent' in result)) throw new Error('Workbench tool result is missing structured content.');
     return result.structuredContent as T;
   }

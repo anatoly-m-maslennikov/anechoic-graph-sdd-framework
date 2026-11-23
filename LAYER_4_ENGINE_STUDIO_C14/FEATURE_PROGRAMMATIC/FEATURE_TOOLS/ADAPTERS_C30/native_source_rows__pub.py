@@ -37,7 +37,8 @@ CURRENT_STATUSES = {
 }
 
 
-def _carrier_row(path: Path, root: Path, family: str, prefix: str, raw: bytes) -> tuple[dict, dict]:
+def _carrier_row(path: Path, root: Path, family: str, prefix: str, raw: bytes, *,
+                 include_content_properties=True) -> tuple[dict, dict]:
     carrier = parse_carrier(raw, path)
     header = carrier.metadata
     canonical = "atom_family" in header
@@ -68,8 +69,11 @@ def _carrier_row(path: Path, root: Path, family: str, prefix: str, raw: bytes) -
     kind, target = _container(container, atom_id, pattern)
     view = {"atom_id": atom_id, "version": version, "status": status,
             "tier": context.get("tier"), "updated_at": state.get("updated_at")}
-    row = atom(path, root, header, view, source_body(raw, path), group)
+    row = atom(path, root, header, view, source_body(raw, path), group,
+               include_content_properties=include_content_properties)
     row["_source_bytes"] = len(raw)
+    if group == "Current" and match[1] == "S":
+        row["_source_lines"] = len(raw.splitlines())
     row["_exact_ref"] = exact
     canonical_row(row)
     edge = {"source_kind": "Atom", "source_ref": row["ref"], "relation_type": "CONTAINED_BY",
@@ -128,7 +132,8 @@ def _changed_inputs(reader, selection, previous, paths):
     return candidates, errors, [root / path for path in sorted(changed - directories)]
 
 
-def _read_captured_carrier(reader, selection, path, tree, manifest, *, version, directory_fd):
+def _read_captured_carrier(reader, selection, path, tree, manifest, *, version, directory_fd,
+                           include_content_properties):
     raw = manifest if path == selection.manifest_path else reader.read(
         path, metadata_guard=True, skip_version=version, directory_fd=directory_fd,
     )
@@ -137,7 +142,8 @@ def _read_captured_carrier(reader, selection, path, tree, manifest, *, version, 
     family = {"_PMETA": "P", "__TKT": "T", "001_TICKETS": "T", "__TICKETS": "T",
               "002_PROJECT_CONFIG": "PC", "__PROJECT_CONFIG": "PC",
               PROJECT_CONFIG_DIRECTORY: "PC", TICKET_DIRECTORY: "T"}.get(tree, "S")
-    row, edge = _carrier_row(path, selection.root, family, selection.project_prefix, raw)
+    row, edge = _carrier_row(path, selection.root, family, selection.project_prefix, raw,
+                             include_content_properties=include_content_properties)
     if tree is None and path != selection.manifest_path:
         context = native_header_view(row["header_json"])["context"]
         if (row["status"] != "active" or context.get("template") != "project_goal"
@@ -164,7 +170,8 @@ def _root_carriers(reader, selection, *, remember=True):
 
 
 def _capture_inputs(reader, selection, input_paths, manifest, incremental, previous,
-                    previous_rows, candidates, errors, versions, missing, directory_fd=None):
+                    previous_rows, candidates, errors, versions, missing, directory_fd=None, *,
+                    include_content_properties):
     root, control = selection.root, selection.control_root
     for path in input_paths:
         tree = path.relative_to(control).parts[0] if path.is_relative_to(control) else None
@@ -178,6 +185,7 @@ def _capture_inputs(reader, selection, input_paths, manifest, incremental, previ
                 continue
             captured = _read_captured_carrier(
                 reader, selection, path, tree, manifest, version=versions.get(str(path)), directory_fd=directory_fd,
+                include_content_properties=include_content_properties,
             )
             if captured is None:
                 old = previous_rows.get(relative)
@@ -210,7 +218,7 @@ def _native_carrier_hashes(selection):
     return hashes
 
 
-def _capture_full_inputs(reader, selection, manifest, candidates, errors):
+def _capture_full_inputs(reader, selection, manifest, candidates, errors, *, include_content_properties):
     paths = _full_carriers(reader, selection)
     for directory, members in groupby(sorted(paths, key=lambda path: (path.parent, path.name)),
                                       key=lambda path: path.parent):
@@ -220,7 +228,8 @@ def _capture_full_inputs(reader, selection, manifest, candidates, errors):
             descriptor = None
         try:
             _capture_inputs(reader, selection, members, manifest, False, None,
-                            {}, candidates, errors, {}, [], directory_fd=descriptor)
+                            {}, candidates, errors, {}, [], directory_fd=descriptor,
+                            include_content_properties=include_content_properties)
         finally:
             if descriptor is not None:
                 os.close(descriptor)
@@ -229,12 +238,15 @@ def _capture_full_inputs(reader, selection, manifest, candidates, errors):
 def capture_native(
     selection: Any, *, previous: NativeCapture | None = None,
     paths: set[PurePosixPath] | None = None, reader: ReadContext | None = None,
+    include_content_properties: bool = True, manifest_admitted: bool = False,
 ) -> NativeCapture:
     """Read one selected native tree. Callers must refuse a capture with errors."""
     if reader is None:
         reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
     incremental = previous is not None and paths is not None
-    manifest = check_native_manifest(reader, selection, previous if incremental else None)
+    if manifest_admitted and (not incremental or selection.manifest_path.relative_to(selection.root) in paths):
+        raise ValueError("Manifest admission requires addressed non-Manifest paths")
+    manifest = None if manifest_admitted else check_native_manifest(reader, selection, previous if incremental else None)
     versions = dict(previous.versions) if incremental else {}
     previous_rows = {row["source_path"]: (row, edge)
                      for row, edge in zip(previous.atoms, previous.containment)} if incremental else {}
@@ -242,10 +254,12 @@ def capture_native(
     if incremental:
         candidates, errors, input_paths = _changed_inputs(reader, selection, previous, paths)
         _capture_inputs(reader, selection, input_paths, manifest, incremental, previous,
-                        previous_rows, candidates, errors, versions, missing)
+                        previous_rows, candidates, errors, versions, missing,
+                        include_content_properties=include_content_properties)
     else:
         candidates, errors = {}, {}
-        _capture_full_inputs(reader, selection, manifest, candidates, errors)
+        _capture_full_inputs(reader, selection, manifest, candidates, errors,
+                             include_content_properties=include_content_properties)
     if reader.currentness()["state"] != "unchanged" or any(path.exists() or path.is_symlink() for path in missing):
         raise ValueError("Native Project carriers changed during capture")
     versions.update(reader.versions)

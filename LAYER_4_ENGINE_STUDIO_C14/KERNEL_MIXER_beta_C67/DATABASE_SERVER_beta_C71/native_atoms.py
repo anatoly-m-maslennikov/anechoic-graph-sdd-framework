@@ -58,7 +58,7 @@ def _atom_references(atoms):
 
 def validate_native_snapshot(snapshot, manifest_sha256):
     """Reject malformed or inconsistent snapshots before any database mutation."""
-    if (not isinstance(snapshot, dict) or set(snapshot) != {"schema_version", "manifest_sha256", "atoms", "relations", "relation_types"}
+    if (not isinstance(snapshot, dict) or set(snapshot) - {"spec_sizes"} != {"schema_version", "manifest_sha256", "atoms", "relations", "relation_types"}
             or type(snapshot["schema_version"]) is not int or snapshot["schema_version"] != 2
             or not isinstance(manifest_sha256, str) or not re.fullmatch(r"[0-9a-f]{64}", manifest_sha256)
             or snapshot["manifest_sha256"] != manifest_sha256):
@@ -69,6 +69,15 @@ def validate_native_snapshot(snapshot, manifest_sha256):
     if any(not _string(name) for name in types) or len(set(types)) != len(types):
         raise ValueError("Invalid native relation declarations")
     references = _atom_references(atoms)
+    measured = {atom["exact_ref"] for atom in atoms if atom["status_group"] == "Current"
+                and re.fullmatch(r"[A-Z][A-Z0-9]*-S-[0-9]+@[1-9][0-9]*", atom["exact_ref"])}
+    sizes = snapshot.get("spec_sizes", [])
+    if (not isinstance(sizes, list) or any(
+        not isinstance(row, list) or len(row) != 5 or not _string(row[0]) or row[0] not in measured
+        or any(type(value) is not int or value < 0 for value in row[1:])
+        or row[3] > row[1] or row[4] > row[2] for row in sizes
+    ) or ("spec_sizes" in snapshot and {row[0] for row in sizes} != measured)):
+        raise ValueError("Invalid native Spec size rows")
     for edge in relations:
         if (not isinstance(edge, dict) or set(edge) != _EDGE_FIELDS
                 or any(not _string(edge[key]) for key in _EDGE_FIELDS - {"derived"})

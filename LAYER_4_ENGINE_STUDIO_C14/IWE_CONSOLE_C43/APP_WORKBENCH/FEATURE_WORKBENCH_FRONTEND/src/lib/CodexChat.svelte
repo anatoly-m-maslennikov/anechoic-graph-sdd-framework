@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import CodexInteraction from './CodexInteraction.svelte';
-  import { applyNativeEvent, historyEntries, interaction, sseFrames } from './codex_protocol.js';
-  import type { ChatEntry, NativeRequest } from './codex_protocol.js';
+  import { applyNativeEvent, historyEntries, interaction, sseFrames } from './codex_protocol';
+  import type { ChatEntry, NativeRequest } from './codex_protocol';
   type Command = { id: string; label: string; enabled: boolean; run: () => void };
   let { apiBase, projectRoot = null, oncommands }: { apiBase: string; projectRoot?: string | null; oncommands?: (commands: Command[]) => void } = $props();
   let bridge = $state(''); let ready = $state(false); let activeTurn = $state<string | null>(null); let message = $state('');

@@ -12,7 +12,9 @@ from .workspace_tools import _tool
 TABLES = ("atoms", "native_references", "relations", "import_nodes", "module_imports", "import_edges",
           "package_imports", "test_edges", "tested_by_edges", "import_read_issues", "package_external_imports",
           "state_effect_findings", "code_access_findings", "code_units", "code_unit_calls",
-          "import_cycles", "package_coupling", "antipattern_findings")
+          "import_cycles", "package_coupling", "antipattern_findings",
+          "architecture_code_metrics", "architecture_spec_metrics", "architecture_ratios",
+          "package_review_profiles", "package_largest_files", "architecture_package_bindings")
 FLOW_HISTORY = ("component_flows", "flow_events", "flow_overlap_candidates", "flow_similar_actions")
 TOOLS = {
     "workbench_status": _tool("workbench_status", "Read Project source indexing status.", {}, read_only=True),

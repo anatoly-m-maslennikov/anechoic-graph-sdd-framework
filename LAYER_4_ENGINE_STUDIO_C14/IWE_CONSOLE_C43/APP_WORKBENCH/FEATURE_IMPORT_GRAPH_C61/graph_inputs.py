@@ -11,6 +11,7 @@ from dulwich.errors import ChecksumMismatch, FileFormatException, NotGitReposito
 from dulwich.ignore import default_user_ignore_filter_path
 from dulwich.repo import Repo
 
+from ARCHITECTURE_ANALYSIS_C73.CODE_AND_SPEC_METRICS_C76.metrics__shared import is_measurement_input
 from .realization_graph_cli import _options
 from .resolution import _environment_root, _roots
 from .source import ImportSite, Source, _RESOLUTION_INPUTS, _discover, _iter_files, _root_path, _stat_signature
@@ -119,7 +120,7 @@ def graph_input_signature(root: Path, config: dict) -> str | None:
 
         # A directory identity also detects an input created and removed between captures.
         for path in _iter_files(root, observe_directory=probe):
-            if path.name in _RESOLUTION_INPUTS:
+            if path.name in _RESOLUTION_INPUTS or is_measurement_input(path.relative_to(root)):
                 probe(path)
         sources, identities, items = {}, [], []
         for relative, path, language in _discover(root, include, None):

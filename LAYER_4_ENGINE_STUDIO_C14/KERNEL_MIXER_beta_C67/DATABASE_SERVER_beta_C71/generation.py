@@ -4,6 +4,7 @@ from hashlib import sha256
 import json
 import re
 
+from .analysis_projection import replace_spec, snapshot_sizes
 from .carrier_checkpoint import update_checkpoint
 from .native_atoms import replace_native_atoms, validate_native_snapshot
 from .native_graph import replace_native_graph
@@ -141,6 +142,8 @@ def replace_generation(connection, data, manifest_sha256, *, stage_refresh=None)
             if atoms := snapshot["atoms"]:
                 connection.executemany("INSERT INTO atoms VALUES (?, ?)", [(a["reference"], a["summary"]) for a in atoms])
         replace(connection, graph, components)
+        if native and has_table(connection, "main", "architecture_spec_metrics"):
+            replace_spec(connection, snapshot_sizes(snapshot))
         connection.execute("DELETE FROM generation")
         connection.execute("INSERT INTO generation VALUES (?, ?, ?)", [generation, model, structure])
         _write_reuse(connection, data, model)
@@ -189,6 +192,8 @@ def replace_native_generation(connection, data, manifest_sha256):
         else:
             replace(connection, graph, components)
             _write_reuse(connection, data, model)
+        if has_table(connection, "main", "architecture_spec_metrics"):
+            replace_spec(connection, snapshot_sizes(snapshot))
         update_checkpoint(connection, data)
         connection.execute("UPDATE generation SET id = ?", [generation])
         connection.execute("COMMIT")

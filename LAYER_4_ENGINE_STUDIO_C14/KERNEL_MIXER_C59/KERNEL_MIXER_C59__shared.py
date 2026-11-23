@@ -64,7 +64,7 @@ from .source_inventory import archived, filename_role_matches, group, markdown_p
 from .source_roles import CANONICAL_ROLE_MARKERS, ROLE_MARKERS
 from .source_selection import first_reference_rows
 from .spec_trace import (
-    PILOT, SpecTraceStore, _read_pins, is_trace_path, native_trace_rows, remove_native_traces,
+    PILOT, SpecTraceStore, remove_native_traces,
     replace_native_traces,
 )
 from .state_lint import _report
@@ -88,7 +88,7 @@ __all__ = [
     'CANONICAL_ROLE_MARKERS', 'ROLE_MARKERS', 'first_reference_rows',
     'QueryStore', '_connect',
     'relations_module', 'clear_import_sources', 'read_import_sources', 'replace_import_sources',
-    'PILOT', 'SpecTraceStore', '_read_pins', 'is_trace_path', 'native_trace_rows',
+    'PILOT', 'SpecTraceStore',
     'remove_native_traces', 'replace_native_traces',
     'TABLES', '_declared_filename_issue', 'collect_issues', 'create_tables', 'publish',
     'content_columns', '_create_external_imports_view', 'publish_imports', 'remove_imports', 'replace_imports',

@@ -1,9 +1,11 @@
 """Generated native lifecycle paths; each case uses a fresh project."""
 from hashlib import sha256
+import json
 from pathlib import Path
 from types import SimpleNamespace
 import sys
 import tempfile
+import time
 import unittest
 
 import yaml
@@ -16,13 +18,13 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import InputError, SourceChanged
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical_native_header
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_carrier_path
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_lifecycle import _dispatch_lifecycle
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_lifecycle import LIFECYCLE_TOOLS, _dispatch_lifecycle
 
 
 LIFECYCLE_TEMPLATES = {
     'TKT': ('task', 'epic', 'problem', 'question', 'code_spec_mismatch', 'opportunity',
             'analysis_report', 'work_report', 'work_log', 'spec_proposal'),
-    'SPEC': (None, 'DECISION', 'PKG', 'POLICY', 'action', 'component_contract', 'component_manifest',
+    'SPEC': (None, 'DECISION', 'PKG', 'POLICY', 'action', 'component_contract', 'project_contract', 'component_manifest',
              'project_goal', 'project_manifest', 'contract', 'step', 'workflow', 'axiom', 'applicable_principle'),
     'PROJECT_CONFIG': ('action', 'step', 'workflow', None),
 }
@@ -40,6 +42,26 @@ def lifecycle_cases():
                                'situation': situation, 'contained': contained}
 
 
+def lifecycle_transition_cases():
+    cases = []
+    for template in ('task', 'epic'):
+        cases.extend({'route': 'change_status', 'family': 'TKT', 'template': template,
+                      'situation': 'current', 'contained': False,
+                      'source_status': source, 'target_status': target}
+                     for source, target in (('backlog', 'in_queue'), ('in_queue', 'done'),
+                                            ('in_queue', 'canceled')))
+    for template in ('problem', 'question', 'code_spec_mismatch', 'opportunity'):
+        cases.extend({'route': 'change_status', 'family': 'TKT', 'template': template,
+                      'situation': 'current', 'contained': False,
+                      'source_status': source, 'target_status': target}
+                     for source, target in (('in_queue', 'resolved'), ('in_queue', 'canceled')))
+    for template in ('analysis_report', 'work_report', 'work_log', 'spec_proposal'):
+        cases.append({'route': 'change_status', 'family': 'TKT', 'template': template,
+                      'situation': 'current', 'contained': False,
+                      'source_status': 'in_queue', 'target_status': 'complete'})
+    return cases
+
+
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.lifecycle_route_support import LifecycleRouteSupport
 
 
@@ -50,13 +72,41 @@ class LifecycleRouteMatrix(LifecycleRouteSupport, unittest.TestCase):
         body = '\n## Summary\n\nExample\n\n## Guarantee\n\nThe graph includes imports.\n'
         changed = body + '\nMore detail.\n'
         assets = {'analysis_report', 'work_report', 'work_log', 'spec_proposal'}
-        project_specs = {'axiom', 'applicable_principle'}
+        project_specs = {'axiom', 'applicable_principle', 'project_contract'}
         cases = list(lifecycle_cases())
-        self.assertEqual(1568, len(cases))
+        self.assertEqual(1624, len(cases))
+        cases.extend(lifecycle_transition_cases())
+        self.assertEqual(1642, len(cases))
+        self.assertEqual(set(LIFECYCLE_ROUTES), {name.removeprefix('atom_lifecycle_') for name in LIFECYCLE_TOOLS})
         with patch('FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_workflow_definition.bind_status_specifications', return_value=lambda: None):
             for case in cases:
-                with self.subTest(**case), tempfile.TemporaryDirectory() as directory:
-                    self._run_grid_case(case, directory, body, changed, assets, project_specs)
+                source_status = case.get('source_status', ({'new': 'none', 'current': 'in_queue', 'draft': 'draft', 'archived': 'archived'}[case['situation']]
+                    if case['family'] == 'TKT' else
+                    {'new': 'none', 'current': 'active' if case['route'] == 'archive' else 'ready', 'draft': 'draft', 'archived': 'archived'}[case['situation']]
+                    if case['family'] == 'SPEC' else
+                    {'new': 'none', 'current': 'active', 'draft': 'draft', 'archived': 'archived'}[case['situation']]))
+                target_status = case.get('target_status', {'create_draft': 'draft', 'update': 'draft', 'create_asset': 'in_queue',
+                    'direct_update': source_status, 'promote_draft': {'TKT': 'backlog', 'SPEC': 'ready', 'PROJECT_CONFIG': 'active'}[case['family']],
+                    'change_status': 'active' if case['family'] == 'SPEC' else ('resolved' if case['template'] in {'problem', 'question', 'code_spec_mismatch', 'opportunity'} else 'done'),
+                    'archive': 'archived'}[case['route']])
+                expected = self._grid_expected(case, assets, project_specs)
+                started = time.monotonic()
+                outcome = 'FAIL'
+                actual = 'not_observed'
+                result = self._outcome.result
+                prior_failures = len(result.failures) + len(result.errors)
+                try:
+                    with self.subTest(**case), tempfile.TemporaryDirectory() as directory:
+                        actual = self._run_grid_case(case, directory, body, changed, assets, project_specs)
+                    outcome = 'PASS' if prior_failures == len(result.failures) + len(result.errors) else 'FAIL'
+                finally:
+                    elapsed = time.monotonic() - started
+                    report = {**case, 'source_status': source_status, 'target_status': target_status,
+                        'expected': 'accepted' if expected else 'rejected',
+                        'actual': actual, 'result': outcome,
+                        'elapsed_seconds': round(elapsed, 6),
+                        'coverage': 'transition' if expected else 'negative_case'}
+                    print(json.dumps(report, sort_keys=True))
 
     def _grid_project(self, directory, body):
         root = Path(directory).resolve()
@@ -114,10 +164,12 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
             if template is not None:
                 context['template'] = template
             if family == 'SPEC':
-                tiers = {'project_manifest': -1, 'axiom': 0, 'component_contract': 0, 'applicable_principle': 2}
+                tiers = {'project_manifest': -1, 'axiom': 0, 'component_contract': 0,
+                         'project_contract': 0, 'applicable_principle': 2}
                 context.update(lens='SPEC', tier=tiers.get(template, 1))
             status = {'current': ('active' if route == 'archive' else 'ready') if family == 'SPEC' else 'active' if family == 'PROJECT_CONFIG' else 'in_queue',
                       'draft': 'draft', 'archived': 'archived'}[situation]
+            status = case.get('source_status', status)
             if family == 'PROJECT_CONFIG' and template is None and situation != 'draft':
                 pass
             else:
@@ -156,7 +208,7 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
         elif route == 'promote_draft':
             args = {'target': target, 'targetStatus': {'TKT': 'backlog', 'SPEC': 'ready', 'PROJECT_CONFIG': 'active'}[family]}
         elif route == 'change_status':
-            status = 'active' if family == 'SPEC' else ('resolved' if template in {'problem', 'question', 'code_spec_mismatch', 'opportunity'} else 'done')
+            status = case.get('target_status', 'active' if family == 'SPEC' else ('resolved' if template in {'problem', 'question', 'code_spec_mismatch', 'opportunity'} else 'done'))
             args = {'target': target, 'targetStatus': status}
         else:
             args = {'target': target}
@@ -180,10 +232,26 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
                  (family == 'SPEC' and not contained and template in {None, 'component_contract'} | project_specs) or
                  (family == 'PROJECT_CONFIG' and template is not None and not contained)) or
             route == 'change_status' and situation == 'current' and
-                (family == 'TKT' or family == 'SPEC' and not contained and template != 'project_manifest') or
+                (family == 'TKT' and self._grid_ticket_transition_supported(case) or
+                 family == 'SPEC' and not contained and template != 'project_manifest') or
             route == 'archive' and family == 'SPEC' and not contained and
                 (situation == 'draft' or situation == 'current' and template != 'project_manifest')
         )
+
+    def _grid_ticket_transition_supported(self, case):
+        template = case['template']
+        source = case.get('source_status', 'in_queue')
+        target = case.get('target_status', 'resolved' if template in {'problem', 'question', 'code_spec_mismatch', 'opportunity'} else 'done')
+        if template in {'task', 'epic'}:
+            return (source == 'backlog' and target == 'in_queue' or
+                    source in {'in_queue', 'active'} and target in {'done', 'canceled'} or
+                    source == 'active' and target == 'in_queue')
+        if template in {'problem', 'question', 'code_spec_mismatch', 'opportunity'}:
+            return (source == 'backlog' and target == 'in_queue' or
+                    source in {'in_queue', 'active'} and target in {'resolved', 'canceled'} or
+                    source == 'active' and target == 'in_queue')
+        return (template in {'analysis_report', 'work_report', 'work_log', 'spec_proposal'}
+                and (target == 'done' or not case['contained'] and source == 'in_queue' and target == 'complete'))
 
     def _run_grid_case(self, case, directory, body, changed, assets, project_specs):
         family, template, situation, contained, route = (case[k] for k in
@@ -205,9 +273,10 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
         except (InputError, SourceChanged) as error:
             self.assertFalse(expected, str(error))
             self.assertEqual(before, self.files(project))
-            return
+            return 'rejected'
         self._check_grid_result(case, result, project, component, owner_dir, container, body, changed,
                                 before, atom_id, status, project_specs, expected)
+        return 'accepted'
 
     def _check_grid_result(self, case, result, project, component, owner_dir, container, body, changed,
                            before, atom_id, status, project_specs, expected):
@@ -250,6 +319,6 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
         self.assertEqual(derived, saved_path)
         self.assertEqual(expected_status, row['status'])
         if family == 'SPEC' and template in project_specs:
-            self.assertEqual(0 if template == 'axiom' else 2, row['header_json']['tier'])
+            self.assertEqual(0 if template in {'axiom', 'project_contract'} else 2, row['header_json']['tier'])
         self.assertEqual((changed if route in {'direct_update', 'update', 'create_draft'} and situation != 'new' else body).encode(), row['_content_bytes'])
         self.assertNotEqual(before, self.files(project))

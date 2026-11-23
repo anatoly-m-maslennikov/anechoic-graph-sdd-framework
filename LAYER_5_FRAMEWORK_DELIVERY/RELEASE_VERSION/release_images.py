@@ -24,6 +24,7 @@ _SHA = re.compile(r"[0-9a-f]{64}\Z")
 _SCHEMA = "org.anechoic.runtime.schema"
 _FINGERPRINT = "org.anechoic.runtime.fingerprint"
 _VERSION = "org.opencontainers.image.version"
+_PRUNE_BUILD_CACHE = ("docker", "buildx", "prune", "--force", "--max-used-space", "4GB", "--min-free-space", "2GB")
 
 
 def _candidate_role(identity: ImageIdentity) -> str:
@@ -212,8 +213,7 @@ class ImageManager(ImageInputIdentity):
             label_args = tuple(arg for key, value in labels.items() for arg in ("--label", f"{key}={value}"))
             role = _candidate_role(identity)
             iidfile = stage / "image.id"
-            self._run(("docker", "buildx", "prune", "--force", "--max-used-space", "4GB",
-                       "--min-free-space", "2GB"), cwd=context, buildx=buildx)
+            self._run(_PRUNE_BUILD_CACHE, cwd=context, buildx=buildx)
             self._run(("docker", "build", "--iidfile", str(iidfile), *label_args, "--platform", self.platform,
                        *(("--target", "beta") if role == "beta" else ()),
                        "--build-arg", f"RUNTIME_UID={self.uid}", "--build-arg", f"RUNTIME_GID={self.gid}",
@@ -244,6 +244,10 @@ class ImageManager(ImageInputIdentity):
         if self._tag_images(tag) != {image}:
             raise RuntimeError("release image tag verification failed")
         return tag
+
+    def prune_build_cache(self) -> None:
+        with tempfile.TemporaryDirectory(dir=self.build_temp_root) as buildx:
+            self._run(_PRUNE_BUILD_CACHE, buildx=buildx)
 
     def mark_production_image(self, image: str) -> str:
         if not isinstance(image, str) or _IMAGE.fullmatch(image) is None:

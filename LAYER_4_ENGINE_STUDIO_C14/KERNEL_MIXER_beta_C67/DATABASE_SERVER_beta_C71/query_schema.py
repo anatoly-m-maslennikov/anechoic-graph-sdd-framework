@@ -1,9 +1,12 @@
 """Report the bound Project's public query columns."""
 
+from .analysis_projection import PUBLIC_TABLES
+
 _PUBLIC_TABLES = ("component_flows", "flow_events", "flow_overlap_candidates", "flow_similar_actions",
                   "atoms", "native_references", "relations", "import_nodes", "module_imports", "import_edges",
                   "package_imports", "import_cycles", "package_coupling", "test_edges", "tested_by_edges", "import_read_issues", "package_external_imports",
-                  "state_effect_findings", "antipattern_findings", "code_units", "code_unit_calls", "code_access_findings")
+                  "state_effect_findings", "antipattern_findings", "code_units", "code_unit_calls", "code_access_findings",
+                  *PUBLIC_TABLES)
 
 
 def public_schema(connection):

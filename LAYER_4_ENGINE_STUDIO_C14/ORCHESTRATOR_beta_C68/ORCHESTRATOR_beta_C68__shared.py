@@ -130,18 +130,15 @@ class GenerationJobs(AbortJobs, LifecycleJobs, Jobs):
                     if lifecycle is None:
                         self.pending = None
                     self.inflight = job
-                if lifecycle is not None:
+                if lifecycle is not None and not any(changes):
                     outcome = self._execute_lifecycle(lifecycle)
-                    projection = outcome["projection"]
-                    retry.observe({"state": "succeeded"} if projection["state"] == "ready" else
-                                  {"state": "failed", "message": projection["error"]["message"]})
                     with self.lock:
                         lifecycle["outcome"] = outcome
                         self.lifecycle_job = None
                         lifecycle["event"].set()
                         if self.pending is not None:
                             self.watcher.queue.put({})
-                else:
+                elif any(changes) or due or job is not None:
                     self.flow_context = {"job": job, "changes": changes if job is None else (), "retry": due}
                     outcome = self._generate(job["target"] if job is not None else None,
                                              changes=changes if job is None else ())
@@ -242,6 +239,8 @@ class GenerationJobs(AbortJobs, LifecycleJobs, Jobs):
             admitted.update(worker_seconds=captured - started, admission_seconds=time.monotonic() - captured)
             if "paths" in result:
                 admitted["delta_path_count"] = len(result["paths"])
+        if "snapshot" in result and "paths" not in result:
+            self.unconfirmed_lifecycle_write = False
         if witness is not None:
             self.generation_reuse = {key: value for key, value in witness.items() if key != "carrier_hashes"}
             self.generation_reuse["base_generation"] = admitted["generation"]

@@ -9,7 +9,7 @@ import re
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_header_view
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import DRAFT_DIRECTORY
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import revalidate_native
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import frontmatter_bounds
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_carrier
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CEILINGS, ReadContext
@@ -22,7 +22,7 @@ from .source import bind_query_reader
 
 
 
-def change_spec_status(selection, params, *, current_rows, structure_snapshot=None, validate_project_spec_model=None):
+def change_spec_status(selection, params, *, current_rows, structure_snapshot=None, validate_project_spec_model=None, previous_capture=None):
     """Start implementation of a Ready SPEC or retire an Active SPEC."""
     from .native_draft import _revision_root
 
@@ -48,16 +48,31 @@ def change_spec_status(selection, params, *, current_rows, structure_snapshot=No
     if not isinstance(digest, str) or not re.fullmatch(r'[0-9a-f]{64}', digest):
         raise SourceChanged('Current SPEC capture lacks a source digest.')
     return _change_spec_selected(selection, target, selected, path, digest, root, status,
-                                 validate_project_spec_model)
+                                 validate_project_spec_model, previous_capture)
 
 
-def _change_spec_selected(selection, target, selected, path, digest, root, status, validate_project_spec_model):
+def _selected_spec_bytes(selection, selected, path, digest):
+    reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
+    raw = reader.read(path)
+    bounds = frontmatter_bounds(raw)
+    if (bounds is None or sha256(raw).hexdigest() != digest or raw[bounds[2]:] != selected['_content_bytes']
+            or parse_carrier(raw, path).metadata != selected['header_json']
+            or sha256(reader.read(selection.manifest_path)).hexdigest() != selection.manifest_sha256
+            or reader.currentness()['state'] != 'unchanged'):
+        raise SourceChanged('Current SPEC source changed after selection.')
+    return raw, bounds
+
+
+def _change_spec_selected(selection, target, selected, path, digest, root, status, validate_project_spec_model, previous_capture):
     from .native_update import _move_ticket
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_carrier_path
     from .native_draft import _summary, _validate_project_template
 
     with _project_write_lock(selection.root):
-        capture = capture_native(selection)
+        try:
+            capture = revalidate_native(selection, previous_capture)
+        except (OSError, RuntimeError, ValueError) as error:
+            raise SourceChanged('Native carrier capture changed.') from error
         fresh = [row for row in capture.atoms if row.get('_exact_ref') == selected.get('_exact_ref')]
         if capture.errors or len(fresh) != 1 or any(fresh[0].get(k) != selected.get(k) for k in (
                 'source_path', 'id', 'ref', '_exact_ref', 'version', 'status', 'status_group',
@@ -67,15 +82,8 @@ def _change_spec_selected(selection, target, selected, path, digest, root, statu
                 native_header_view(row['header_json']).get('context', {}).get('container', {}).get('atom') == selected['id']
                 for row in capture.atoms):
             raise InputError('target', 'SPEC containers cannot change Status.')
-        reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
         try:
-            raw = reader.read(path)
-            bounds = frontmatter_bounds(raw)
-            if (bounds is None or sha256(raw).hexdigest() != digest or raw[bounds[2]:] != selected['_content_bytes']
-                    or parse_carrier(raw, path).metadata != selected['header_json']
-                    or sha256(reader.read(selection.manifest_path)).hexdigest() != selection.manifest_sha256
-                    or reader.currentness()['state'] != 'unchanged'):
-                raise SourceChanged('Current SPEC source changed after selection.')
+            raw, bounds = _selected_spec_bytes(selection, selected, path, digest)
             header = selected['header_json']
             body = raw[bounds[2]:].decode('utf-8')
             if status == 'active':
@@ -89,14 +97,14 @@ def _change_spec_selected(selection, target, selected, path, digest, root, statu
             projected = {**header, 'state': {**header['state'], 'status': status}}
             destination = native_carrier_path(projected, _summary(body), project_root=selection.control_root,
                                               owner_directory=root, parameters=parameters)
-        except InputError:
+        except (InputError, SourceChanged):
             raise
         except (OSError, RuntimeError, ValueError, KeyError, TypeError) as error:
             raise SourceChanged('Current SPEC source is unavailable or changed.') from error
         return _move_ticket(selection, target, selected, digest, path, destination, status, lambda: None,
                             locked=True, preflight=(raw, bounds, None))
 
-def archive_spec_draft(selection, params, *, current_rows, structure_snapshot=None):
+def archive_spec_draft(selection, params, *, current_rows, structure_snapshot=None, previous_capture=None):
     """Archive an exact SPEC Draft without replacing an existing revision."""
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import READY_DIRECTORY
     from .native_draft import _revision_root
@@ -127,15 +135,18 @@ def archive_spec_draft(selection, params, *, current_rows, structure_snapshot=No
     proposed = {**draft, 'status': 'ready', 'source_path': (owner / READY_DIRECTORY / (draft['id'] + path.name[len(target['ref_id']):])).relative_to(selection.root).as_posix()}
     if _revision_root(selection, proposed, structure_snapshot, current_rows) != owner:
         raise InputError('target', 'SPEC Draft owner is invalid.')
-    return _archive_spec_selected(selection, target, draft, path, digest, owner)
+    return _archive_spec_selected(selection, target, draft, path, digest, owner, previous_capture)
 
 
-def _archive_spec_selected(selection, target, draft, path, digest, owner):
+def _archive_spec_selected(selection, target, draft, path, digest, owner, previous_capture):
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_carrier_path
     from .native_draft import _state_bytes, _summary
 
     with _project_write_lock(selection.root):
-        capture = capture_native(selection)
+        try:
+            capture = revalidate_native(selection, previous_capture)
+        except (OSError, RuntimeError, ValueError) as error:
+            raise SourceChanged('Native carrier capture changed.') from error
         fresh = [row for row in capture.atoms if row.get('_exact_ref') == target['ref_id']]
         if capture.errors or len(fresh) != 1 or any(fresh[0].get(k) != draft.get(k) for k in (
                 'source_path', 'id', 'ref', '_exact_ref', 'version', 'status', 'status_group',

@@ -98,7 +98,7 @@ class SimpleReleaseFixture:
         self.image_id = "sha256:" + "a" * 64
         self.image = SimpleNamespace(resolve=Mock(return_value=self.image_id),
                                      identity=Mock(return_value=SimpleNamespace(fingerprint="b" * 64)),
-                                     mark_production_image=Mock())
+                                     mark_production_image=Mock(), prune_build_cache=Mock())
         original_launcher_image = local_release_runner._launcher_image
 
         def scoped_launcher_image(selection):

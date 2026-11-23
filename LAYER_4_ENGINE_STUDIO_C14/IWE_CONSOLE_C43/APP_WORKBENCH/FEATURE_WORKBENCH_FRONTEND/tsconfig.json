@@ -4,10 +4,12 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "strict": true,
-    "allowJs": true,
-    "checkJs": true,
     "isolatedModules": true
   },
-  "include": ["src"],
-  "exclude": ["src/**/*.test.mjs"]
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "src/**/*.test.mjs"
+  ]
 }

@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: "active"
-  version: 19
-  updated_at: "2026-11-22T23:25:07.668977+00:00"
+  status: active
+  version: 22
+  updated_at: "2026-11-23T09:56:32.676138+00:00"
 ---
 ## Summary
 
@@ -28,7 +28,8 @@ declare_entity(
         component_id='C68',
         name='Orchestrator Beta',
         lens_whitelist=['DES', 'SPEC'],
-        boundaries={'code': {'imports': {'only': ['ORCHESTRATOR_beta_C68__shared',
+        boundaries={'code': {'imports': {'only': ['metrics__shared.is_measurement_input',
+                                                    'ORCHESTRATOR_beta_C68__shared',
                                                     'ORCHESTRATOR_beta_C68__shared.Flow',
                                                     'ORCHESTRATOR_beta_C68__shared.GenerationJobs']},
                               'exports': {'ORCHESTRATOR_beta_C68__shared': {'private': ['LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__tests']},
@@ -67,12 +68,13 @@ declare_entity(
                 'client': {'snapshot_worker': {'component': 'C69', 'transport': 'cli',
                                                 'parent_env': 'ANECHOIC_BETA_WORKER_PARENT_PID'},
                            'warm_ticket_delta': {'component': 'C69', 'interface': 'warm_ticket_delta'},
+                           'warm_indexed_lifecycle': {'component': 'C69', 'interface': 'warm_indexed_lifecycle'},
                            'lifecycle_worker': {'component': 'C69', 'interface': 'task_lifecycle',
                                                 'parent_env': 'ANECHOIC_BETA_WORKER_PARENT_PID'},
                            'database': {'component': 'C71',
                                         'transport': 'http',
                                         'routes': ['GET /generation/reuse', 'GET /structure', 'PUT /generation', 'PUT /generation/native',
-                                                   'PUT /generation/native-delta', 'POST /flow/events']}}},
+                                                   'PUT /generation/native-delta', 'POST /flow/events', 'POST /database']}}},
          'state': {'reads': ['pinned Project binding',
                              'Project source change events',
                              'code and dependency file events when the Graph is enabled'],

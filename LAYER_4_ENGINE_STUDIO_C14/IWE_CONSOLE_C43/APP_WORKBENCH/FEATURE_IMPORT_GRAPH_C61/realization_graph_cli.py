@@ -6,12 +6,14 @@ from functools import cache
 from pathlib import Path
 import sys
 
+from ARCHITECTURE_ANALYSIS_C73.CODE_AND_SPEC_METRICS_C76.metrics__shared import is_measurement_input
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
     parse_structure, realization_component_paths,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.realization_ownership__pub import build_code_access_ownership
 from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import check_code_access
 
+from .analysis_inputs import analysis_inputs
 from .code_access_occurrences import code_access_occurrences
 from .resolution import resolve_realization
 from .source import _iter_files, _RESOLUTION_INPUTS, _stat_signature, capture
@@ -58,7 +60,8 @@ def _options(root, config):
 
 def _manifests(root):
     return {path.relative_to(root).as_posix(): _stat_signature(path)
-            for path in _iter_files(root) if path.name in _RESOLUTION_INPUTS}
+            for path in _iter_files(root) if path.name in _RESOLUTION_INPUTS
+            or is_measurement_input(path.relative_to(root))}
 
 
 def _request_root(request):
@@ -81,12 +84,19 @@ def _state_projection(root, sources, occurrences, ownership, derive_rows):
     return extra, findings
 
 
-def _build(request, derive_rows=None):
+def _measure(root, graph, sources, snapshot, ownership, components, measure):
+    nodes, test_edges = graph
+    sizes, assets, bindings = analysis_inputs(root, nodes, sources, snapshot, ownership)
+    return {"analysis_code": measure(nodes, test_edges, components or {".": "C00"}, sizes, assets),
+            "analysis_bindings": bindings}
+
+
+def _build(request, derive_rows=None, measure=None):
     root = _request_root(request)
     roots, include, images = _options(root, request["config"])
     before = _manifests(root)
     sources = capture(root, None, include)
-    components = None
+    components, snapshot = None, None
     if "structure" in request:
         control = request["control_root"]
         if (not isinstance(control, str) or not control or Path(control).is_absolute()
@@ -110,12 +120,15 @@ def _build(request, derive_rows=None):
                      problem.written, problem.status, problem.reason)
                     for problem in check_code_access(ownership, sources, sites, include_entry_bypasses=True)]
     extra, state_findings = _state_projection(root, sources, occurrences, ownership, derive_rows)
+    nodes = [(*node, "Test Package" if node[0] in test_keys else None) for node in nodes]
+    if measure is not None:
+        extra.update(_measure(root, (nodes, test_edges), sources, snapshot, ownership, components, measure))
     after = capture(root, sources, include)
     if before != _manifests(root) or sources != after:
         raise RuntimeError("Project source or dependency inputs changed during capture")
     rows = {
         **extra,
-        "nodes": [(*node, "Test Package" if node[0] in test_keys else None) for node in nodes],
+        "nodes": nodes,
         "occurrences": occurrences, "edges": edges, "test_edges": test_edges,
         "state_effect_findings": state_findings, "code_access_findings": findings,
         "read_issues": [(path, source.error_message) for path, source in sources.items()
@@ -124,9 +137,9 @@ def _build(request, derive_rows=None):
     return {name: sorted(items, key=lambda row: json.dumps(row, ensure_ascii=True)) for name, items in rows.items()}
 
 
-def main(derive_rows=None):
+def main(derive_rows=None, measure=None):
     try:
-        result = _build(json.load(sys.stdin), derive_rows)
+        result = _build(json.load(sys.stdin), derive_rows, measure)
     except (ValueError, OSError, RuntimeError) as error:
         print(f"realization graph: {error}", file=sys.stderr)
         return 1

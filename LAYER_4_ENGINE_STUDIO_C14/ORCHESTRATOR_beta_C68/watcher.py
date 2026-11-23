@@ -1,4 +1,5 @@
 """Poll the selected control tree and root files for source changes."""
+from hashlib import file_digest
 from pathlib import Path
 from queue import Empty, Queue
 import os
@@ -9,6 +10,8 @@ import time
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 from watchdog.observers.polling import PollingObserverVFS
+
+from ARCHITECTURE_ANALYSIS_C73.CODE_AND_SPEC_METRICS_C76.metrics__shared import is_measurement_input
 
 from .generation import TICKET_ROOTS
 
@@ -41,6 +44,7 @@ class SourceWatcher(FileSystemEventHandler):
         self._ticket_lock = Lock()
         self._ticket_versions = {}
         self._ticket_inodes = {}
+        self._handled_writes = {}
 
     def start(self):
         if self.observer is not None:
@@ -129,7 +133,8 @@ class SourceWatcher(FileSystemEventHandler):
             current = current.parent
         if directory:
             return False
-        if path.name.casefold() in RESOLUTION_INPUTS or path.suffix.casefold() in SOURCE_SUFFIXES:
+        if (path.name.casefold() in RESOLUTION_INPUTS or path.suffix.casefold() in SOURCE_SUFFIXES
+                or is_measurement_input(relative)):
             return True
         try:
             with path.open("rb") as stream:
@@ -139,7 +144,8 @@ class SourceWatcher(FileSystemEventHandler):
             return path in self.known_code
 
     def on_any_event(self, event):
-        if event.event_type not in {"created", "deleted", "modified", "moved"}:
+        if (event.event_type not in {"created", "deleted", "modified", "moved"}
+                or (event.is_directory and event.event_type == "modified")):
             return
         paths = [Path(value).absolute() for value in
                  (event.src_path, getattr(event, "dest_path", None)) if value]
@@ -208,6 +214,33 @@ class SourceWatcher(FileSystemEventHandler):
             if previous and self._ticket_inodes.get(previous[:2]) == oldest:
                 self._ticket_inodes.pop(previous[:2])
 
+    def acknowledge(self, effects):
+        if not effects:
+            return
+        self._handled_writes = {
+            str(self.root / effect["target"]): None if effect["operation"] == "remove" else effect["evidence"]
+            for effect in effects if effect["state"] == "known"
+            and effect["operation"] in {"create", "modify", "remove"}
+            and Path(effect["target"]).suffix == ".md"
+        }
+
+    def _handled(self, value):
+        if value not in self._handled_writes:
+            return False
+        expected = self._handled_writes[value]
+        path = Path(value)
+        try:
+            if not path.is_relative_to(self.root) or path.resolve() != path:
+                return False
+            if not stat.S_ISREG(path.lstat().st_mode):
+                return False
+            with path.open("rb") as stream:
+                return file_digest(stream, "sha256").hexdigest() == expected
+        except FileNotFoundError:
+            return expected is None
+        except OSError:
+            return False
+
     def changes(self, timeout):
         try:
             batch = [self.queue.get(timeout=timeout)]
@@ -218,7 +251,8 @@ class SourceWatcher(FileSystemEventHandler):
             try:
                 batch.append(self.queue.get(timeout=max(0, deadline - time.monotonic())))
             except Empty:
-                return batch
+                return [change for change in batch if not change or change["is_directory"] or not all(
+                    self._handled(path) for path in (change["old_path"], change["new_path"]) if path)]
 
     def close(self):
         if self.ticket_observer is not None:

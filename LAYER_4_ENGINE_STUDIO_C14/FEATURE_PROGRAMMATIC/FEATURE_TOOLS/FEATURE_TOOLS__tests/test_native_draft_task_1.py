@@ -1,4 +1,7 @@
+import json
+import os
 from pathlib import Path
+import subprocess
 from types import SimpleNamespace
 import sys
 import unittest
@@ -21,6 +24,33 @@ import FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.test_native_lifec
 
 
 class NewNativeTaskTests(fixtures.NewNativeTaskTests, unittest.TestCase):
+    def test_indexed_cli_creates_without_capture_or_model(self):
+        request = {'binding': {'root': str(self.root), 'control_root': self.control.name,
+            'manifest_path': self.selection.manifest_path.relative_to(self.root).as_posix(),
+            'manifest_sha256': self.selection.manifest_sha256, 'project_prefix': 'AN'},
+            'name': 'atom_lifecycle_create_draft', 'arguments': self.new,
+            'indexed_task': {'max_number': '2', 'manifest_ref': 'AN-S-1@1',
+                             'component_ids': ['C00'], 'ticket_labels': ['Task']}}
+        self.selection.manifest_path.unlink()
+        process = subprocess.run([sys.executable, '-B', '-P', '-m', 'FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_lifecycle_cli'],
+            cwd=ENGINE, env={**os.environ, 'PYTHONPATH': str(ENGINE)}, input=json.dumps(request),
+            text=True, capture_output=True, timeout=15)
+        self.assertEqual(0, process.returncode, process.stderr)
+        result = json.loads(process.stdout)
+        self.assertEqual('AN-T-3@1-draft', result['savedDraft']['ref_id'])
+        path = self.root / result['savedDraft']['path']
+        self.assertTrue(path.is_file())
+        path.unlink()
+        for effect in reversed(result['effects'][:-1]):
+            (self.root / effect['target']).rmdir()
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import indexed_draft_runner
+        warm_result = indexed_draft_runner()(request)
+        self.assertEqual(result['savedDraft'], warm_result['savedDraft'])
+        self.assertEqual(result['outcome'], warm_result['outcome'])
+        self.assertEqual([(effect['operation'], effect['target']) for effect in result['effects']],
+                         [(effect['operation'], effect['target']) for effect in warm_result['effects']])
+        self.assertTrue(path.is_file())
+
     def test_new_task_allocates_across_history_and_promotes_version_one(self):
         self.write('001_TICKETS/ISSUES/09_archived/AN-T-8@2-QUESTION--old.md', 'AN-T-8', version=2, status='archived', template='question')
         before = self.path.read_bytes(), self.selection.manifest_path.read_bytes()

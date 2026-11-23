@@ -1,4 +1,4 @@
-"""Atomically replace addressed Ticket carriers without rebuilding the graph."""
+"""Atomically replace addressed native carriers without rebuilding the graph."""
 
 from collections import Counter
 import json
@@ -8,13 +8,14 @@ import re
 import duckdb
 from starlette.responses import JSONResponse
 
+from .analysis_projection import apply_spec_delta, snapshot_sizes
 from .carrier_checkpoint import update_checkpoint
 from .generation import GenerationBaseChanged, _digest, replace_native_generation
 from .native_atoms import validate_native_snapshot
 from .realization_projection import has_table
 
 
-_TICKET = re.compile(r"([A-Z][A-Z0-9]*-T-[0-9]+)(?:@[1-9][0-9]*(?:-draft)?)?[-.].*\.md\Z")
+_CARRIER = re.compile(r"([A-Z][A-Z0-9]*-[STPC]-[0-9]+)(@[1-9][0-9]*(?:-draft)?)?[-.].*\.md\Z")
 _EDGE = ("source_kind", "source_ref", "target_kind", "target_ref", "relation_type", "derived")
 
 
@@ -32,7 +33,7 @@ def _paths(value):
         parent, filename = item
         path = PurePosixPath(parent)
         if (path.is_absolute() or str(path) != parent or ".." in path.parts or "\\" in parent
-                or not _TICKET.fullmatch(filename) or "/" in filename or "\\" in filename):
+                or not _CARRIER.fullmatch(filename) or "/" in filename or "\\" in filename):
             raise ValueError("Invalid Ticket path")
         result.add((parent, filename))
     if len(result) != len(value):
@@ -97,9 +98,10 @@ def _validate_delta(connection, data, model, manifest_sha256):
     inverse = _inverse(model, snapshot["relation_types"])
     for atom in snapshot["atoms"]:
         path = (atom["relative_path"], atom["filename"])
-        match = _TICKET.fullmatch(atom["filename"])
-        if path not in paths or not match or match.group(1) != atom["reference"].split("@")[0]:
-            raise ValueError("Atom does not belong to an addressed Ticket path")
+        match = _CARRIER.fullmatch(atom["filename"])
+        if (path not in paths or not match or match.group(1) != atom["reference"].split("@")[0]
+                or match.group(2) and match.group(1) + match.group(2) != atom["exact_ref"]):
+            raise ValueError("Atom does not belong to an addressed native path")
     old = _old_rows(connection, paths)
     connection.execute("CREATE TEMP TABLE delta_atoms AS SELECT *, CAST(NULL AS VARCHAR) AS exact_ref FROM main.atoms WHERE false")
     atom_rows = [(a["reference"], a["summary"], a["relative_path"], a["filename"], a["status_group"],
@@ -196,6 +198,8 @@ def apply_native_delta(connection, data, manifest_sha256):
         components = {"C00", *json.loads(structure)["components"]}
         _write_atoms(connection)
         _write_relations(connection, new_edges)
+        if has_table(connection, "main", "architecture_spec_metrics"):
+            apply_spec_delta(connection, [exact for _, exact in old if "-S-" in exact], snapshot_sizes(snapshot))
         _write_graph(connection, before, new_edges, old, snapshot["atoms"], components)
         generation = _digest({"kind": "native_ticket_delta", "base_generation": base,
                               "delta_sha256": data["snapshot_sha256"]})

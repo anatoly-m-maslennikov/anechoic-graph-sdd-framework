@@ -9,7 +9,7 @@ import re
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_header_view
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_ticket_asset, ARCHIVE_DIRECTORY, TICKET_DIRECTORY
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import revalidate_native
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_carrier
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CEILINGS, ReadContext
 
@@ -22,7 +22,7 @@ from .source import bind_query_reader
 from .native_update_selection import _select_ticket, _branch
 
 
-def direct_update(selection, params, *, current_rows):
+def direct_update(selection, params, *, current_rows, previous_capture=None):
     from .native_update import _read_ticket
 
     if not isinstance(params, dict) or set(params) != {'target', 'changes'}:
@@ -37,7 +37,7 @@ def direct_update(selection, params, *, current_rows):
     if branch != 'ASSETS' and not linked_asset:
         raise InputError('target', 'Direct body updates are limited to Ticket Assets.')
     with _project_write_lock(selection.root):
-        raw, bounds, _, _ = _read_ticket(selection, target, selected, digest, path)
+        raw, bounds, _, _ = _read_ticket(selection, target, selected, digest, path, previous_capture=previous_capture)
         old_body = raw[bounds[2]:].decode('utf-8')
         old_summary = atom_summary(re.sub(r'(?m)^#(?= Summary[ \t]*\r?$)', '##', old_body)).group(1)
         new_summary = atom_summary(re.sub(r'(?m)^#(?= Summary[ \t]*\r?$)', '##', changes['body'])).group(1)
@@ -51,9 +51,12 @@ def direct_update(selection, params, *, current_rows):
         return result(effects=outcome.effects, errors=outcome.errors, **data)
 
 
-def _check_replacement(selection, selected, replacements):
+def _check_replacement(selection, selected, replacements, previous_capture):
     if not replacements:
-        capture = capture_native(selection)
+        try:
+            capture = revalidate_native(selection, previous_capture)
+        except (OSError, RuntimeError, ValueError) as error:
+            raise SourceChanged('Native carrier capture changed.') from error
         if capture.errors:
             raise SourceChanged('Native carrier capture is incomplete.')
         replacements.extend(row for row in capture.atoms if row.get('status_group') == 'Current'
@@ -72,7 +75,7 @@ def _check_replacement(selection, selected, replacements):
         raise SourceChanged('Replacement source changed.')
 
 
-def archive_ticket(selection, params, *, current_rows):
+def archive_ticket(selection, params, *, current_rows, previous_capture=None):
     from .native_update import _move_ticket, _read_ticket
 
     if not isinstance(params, dict) or set(params) != {'target'}:
@@ -85,18 +88,18 @@ def archive_ticket(selection, params, *, current_rows):
         branch = _branch(selection, path, selected['status'], selected, current_rows)
         name = f"{selected['id']}@{target['version']}" + path.name[len(selected['id']):]
         return _move_ticket(selection, target, selected, digest, path, branch / ARCHIVE_DIRECTORY / name,
-                            'archived', lambda: None)
+                            'archived', lambda: None, previous_capture=previous_capture)
 
     replacements = []
 
-    check_replacement = partial(_check_replacement, selection, selected, replacements)
+    check_replacement = partial(_check_replacement, selection, selected, replacements, previous_capture)
 
     with _project_write_lock(selection.root):
         branch = _branch(selection, path, selected['status'], selected, current_rows)
         if path.with_suffix('').exists() or path.with_suffix('').is_symlink():
             raise InputError('target', 'Ticket containers cannot be archived by this operation.')
         check_replacement()
-        raw, bounds, tree, _ = _read_ticket(selection, target, selected, digest, path, placement=True)
+        raw, bounds, tree, _ = _read_ticket(selection, target, selected, digest, path, placement=True, previous_capture=previous_capture)
         marker = target['ref_id'] if selected['status_group'] == 'Draft' else selected['id']
         if not path.name.startswith(marker + '-'):
             raise InputError('target', 'Ticket filename disagrees with its reference.')

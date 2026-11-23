@@ -1,5 +1,6 @@
 """Admit Worker generations through the private Kernel socket."""
 import http.client
+from contextlib import closing
 import json
 import re
 import stat
@@ -24,6 +25,37 @@ class GenerationBaseChanged(RuntimeError):
 
 class DeltaRequiresReconciliation(RuntimeError):
     """The Kernel refused a delta without admitting it."""
+
+
+def ticket_allocation(socket_path, instance_id, base_generation, prefix):
+    if re.fullmatch(r"[A-Z][A-Z0-9]*", prefix) is None:
+        raise ValueError("Invalid Project prefix")
+    sql = f"""WITH numbers AS (
+        SELECT ltrim(regexp_extract(reference, '^{prefix}-T-([0-9]+)(@|$)', 1), '0') AS number
+        FROM main.atoms WHERE starts_with(reference, '{prefix}-T-')
+    )
+    SELECT id, coalesce(nullif((SELECT arg_max(number, (length(number), number)) FROM numbers), ''), '0'),
+        json_extract(model, '$.ticket_labels')::VARCHAR
+    FROM main.generation"""
+    request = json.dumps({"instance_id": instance_id, "sql": sql})
+    with closing(UnixConnection(socket_path)) as connection:
+        connection.request("POST", "/database", request, {"Content-Type": "application/json"})
+        response = connection.getresponse()
+        if response.status != 200:
+            raise ValueError("Kernel refused the Ticket allocation query")
+        rows = json.loads(response.read())["result"]["rows"]
+    if (not isinstance(rows, list) or len(rows) != 1 or not isinstance(rows[0], list)
+            or len(rows[0]) != 3 or rows[0][0] != base_generation):
+        raise ValueError("Kernel generation changed before Ticket allocation")
+    number = rows[0][1]
+    if not isinstance(number, str) or re.fullmatch(r"0|[1-9][0-9]*", number) is None:
+        raise ValueError("Kernel returned an invalid Ticket number")
+    if rows[0][2] is None:
+        raise ValueError("The admitted Model lacks Ticket label rules")
+    labels = json.loads(rows[0][2])
+    if not isinstance(labels, list) or not all(isinstance(label, str) for label in labels):
+        raise ValueError("Kernel returned invalid Ticket label rules")
+    return number, labels
 
 
 def ticket_delta_paths(binding, changes):
@@ -105,7 +137,7 @@ def worker_request(binding, socket_path, instance_id, reuse, paths):
     request = {"binding": binding, "reuse": reuse}
     if paths is not None:
         request["paths"] = paths
-    else:
+    elif reuse is not None and reuse.get("graph_config") is not None:
         structure = read_structure(socket_path, instance_id, reuse)
         if structure is not None:
             request["structure"] = structure
@@ -113,7 +145,7 @@ def worker_request(binding, socket_path, instance_id, reuse, paths):
 
 
 def read_structure(socket_path, instance_id, reuse):
-    if reuse is None or reuse.get("graph_config") is None:
+    if reuse is None:
         return None
     connection = None
     try:

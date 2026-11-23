@@ -131,6 +131,39 @@ class NativeDeltaTest(unittest.TestCase):
                         self.assertEqual(200, response.status_code, response.text)
                 asyncio.run(exercise())
 
+    def test_native_carrier_families_add_update_remove(self):
+        with _server() as client:
+            data = base_generation()
+            base = client.put("/generation", json=data).json()["result"]["generation"]
+            original = data["snapshot"]["atoms"][0]
+            for family in "SPC":
+                ref = f"AN-{family}-2"
+                atom = original | {"reference": ref, "exact_ref": f"{ref}@1", "version": 1,
+                                   "filename": f"{ref}-DES.md", "status": "active"}
+                key = [atom["relative_path"], atom["filename"]]
+                base = self.send(client, delta(base, [key], [atom], edges(ref)))
+                edited = atom | {"version": 2, "exact_ref": f"{ref}@2", "summary": "edited"}
+                base = self.send(client, delta(base, [key], [edited], edges(ref)))
+                rows = _query(client, f"SELECT \"header.state.version\" FROM atoms WHERE reference='{ref}'")
+                self.assertEqual([[2]], rows.json()["result"]["rows"])
+                base = self.send(client, delta(base, [key], [], []))
+                rows = _query(client, f"SELECT count(*) FROM atoms WHERE reference='{ref}'")
+                self.assertEqual([[0]], rows.json()["result"]["rows"])
+            self.assert_graph(client, ["AN-T-1"])
+
+    def test_native_path_rejects_mismatched_identity_and_revision(self):
+        with _server() as client:
+            data = base_generation()
+            base = client.put("/generation", json=data).json()["result"]["generation"]
+            original = data["snapshot"]["atoms"][0]
+            for filename in ("AN-P-3-DES.md", "AN-S-2@2-DES.md", "AN-X-2-DES.md"):
+                atom = original | {"reference": "AN-S-2", "exact_ref": "AN-S-2@1", "version": 1,
+                                   "filename": filename, "status": "active"}
+                key = [atom["relative_path"], filename]
+                response = client.put("/generation/native-delta", json=delta(base, [key], [atom], []))
+                self.assertEqual(400, response.status_code, response.text)
+                self.assertEqual(base, client.get("/health").json()["result"]["generation"])
+
     def assert_graph(self, client, expected):
         result = _query(client, "FROM GRAPH_TABLE (anechoic MATCH (s:Reference)-[e:CONTAINED_BY]->(t:Reference) COLUMNS (s.ref AS source)) ORDER BY source")
         self.assertEqual(200, result.status_code, result.text)

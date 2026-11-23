@@ -13,7 +13,7 @@ from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
 ENGINE = Path(__file__).resolve().parents[3]
-COMPONENTS = ("FEATURE_PROGRAMMATIC", "MCP_PATCHBAY_C21", "KERNEL_MIXER_beta_C67",
+COMPONENTS = ("FEATURE_PROGRAMMATIC", "ARCHITECTURE_ANALYSIS_C73", "MCP_PATCHBAY_C21", "KERNEL_MIXER_beta_C67",
               "ORCHESTRATOR_beta_C68", "WORKERS_beta_C69", "WORKBENCH_BACKEND_beta_C70",
               "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_IMPORT_GRAPH_C61")
 PUBLIC_PAGE = "https://workbench.example.test/anechoic/workbench/Example"
@@ -170,7 +170,8 @@ class BetaMcpTest(unittest.IsolatedAsyncioTestCase):
         self.assertTrue({"package_external_imports", "native_references", "relations", "query_log",
                          "code_units", "code_unit_calls", "import_cycles", "package_coupling",
                          "antipattern_findings", "component_flows", "flow_events",
-                         "flow_overlap_candidates", "flow_similar_actions"} <= tables.keys())
+                         "flow_overlap_candidates", "flow_similar_actions", "architecture_ratios",
+                         "package_review_profiles", "package_largest_files"} <= tables.keys())
 
     async def assert_antipattern_review(self, client):
         cases = (
@@ -310,6 +311,12 @@ class BetaMcpTest(unittest.IsolatedAsyncioTestCase):
             AND NOT derived AND relation_type = 'CHILD_OF'
         """})
         self.assertEqual([["EX-S-1"]], authored.structured_content["rows"])
+        metrics = await client.call_tool("query_run", {"sql": """
+            SELECT count(*), min(denominator_bytes) > 0 FROM architecture_ratios
+            WHERE scope_kind = 'Component' AND scope_id = 'C00'
+        """})
+        self.assertFalse(metrics.is_error, metrics.structured_content)
+        self.assertEqual([[6, True]], metrics.structured_content["rows"])
 
 
 if __name__ == "__main__":

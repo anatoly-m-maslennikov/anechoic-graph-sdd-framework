@@ -1,5 +1,5 @@
-// @ts-nocheck
-export function statusCompletion(text, cursor, schema, tokenEnd) {
+import type { Schema } from './types';
+export function statusCompletion(text: string, cursor: number, schema: Schema, tokenEnd?: number) {
   const match = /"(header(?:\.[a-z0-9_]+)*\.status)"\s*=\s*'((?:[^']|'')*)$/.exec(text.slice(0, cursor));
   if (!match) return null;
   const column = schema.tables.atoms?.find((candidate) => candidate.name === match[1]);

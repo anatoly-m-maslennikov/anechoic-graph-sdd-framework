@@ -13,7 +13,7 @@
   } = $props();
   let theme = $state<Theme>('system'); let textZoom = $state(100); let contentZoom = $state(100); let interfaceZoom = $state(100); let density = $state<Density>('comfortable'); let warning = $state(''); let ready = false;
   let savedDensity: Density | undefined;
-  const positive = (value: unknown, maximum?: number) => Number.isInteger(value) && Number(value) > 0 && (maximum === undefined || Number(value) <= maximum);
+  const positive = (value: unknown, maximum?: number): value is number => Number.isInteger(value) && Number(value) > 0 && (maximum === undefined || Number(value) <= maximum);
   function apply() { document.documentElement.dataset.theme = theme; document.documentElement.dataset.density = density; document.documentElement.style.setProperty('--interface-text-scale', String(textZoom / 100)); document.documentElement.style.setProperty('--content-text-scale', String(contentZoom / 100)); document.documentElement.style.setProperty('--interface-scale', String(interfaceZoom / 100)); }
   function save() { if (!ready) return; try { localStorage.setItem(`${storageKey}:preferences`, JSON.stringify({ theme, textZoom, contentZoom, interfaceZoom, density: savedDensity, resultDisplay })); warning = ''; } catch { warning = 'Browser preferences cannot be saved.'; } }
   function layout() { apply(); save(); onlayoutchange?.(); }

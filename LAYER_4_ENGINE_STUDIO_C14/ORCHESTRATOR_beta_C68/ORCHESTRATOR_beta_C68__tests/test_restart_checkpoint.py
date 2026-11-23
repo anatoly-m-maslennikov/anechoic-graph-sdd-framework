@@ -21,6 +21,49 @@ def graph_worker(result, requests):
 
 
 class RestartCheckpointTests(unittest.TestCase):
+    def test_warm_dispatch_only_marks_unknown_after_possible_write(self):
+        root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
+        binding = {"root": str(root), "control_root": "control", "manifest_path": "manifest.md",
+                   "manifest_sha256": "a" * 64, "project_prefix": "AN"}
+        jobs = module.GenerationJobs("test", binding, "socket", worker_socket="worker", worker_load_seconds=1)
+        jobs.generation_reuse = {"base_generation": "base", "endpoints": {}}
+        job = {"name": "atom_lifecycle_create_draft", "arguments": {
+            "newAtom": {"template": "epic", "container": {"component": "C00"}}}}
+        structure = {"components": {}, "project": {"ref": "AN-S-1@1"}}
+        lifecycle = importlib.import_module("ORCHESTRATOR_beta_C68.lifecycle")
+        for error, expected in ((lifecycle.WarmLifecycleUnavailable("Worker refused"), "known"),
+                                (ValueError("Worker closed the connection"), "unknown")):
+            with self.subTest(expected=expected), patch.object(lifecycle, "read_structure", return_value=structure), \
+                    patch.object(lifecycle, "ticket_allocation", return_value=("1", [])), \
+                    patch.object(lifecycle, "run_lifecycle", side_effect=error) as worker, \
+                    patch.object(jobs, "_run_cold_lifecycle") as cold:
+                self.assertEqual(expected, jobs._execute_lifecycle(job)["write_state"])
+                self.assertEqual(expected == "unknown", jobs.unconfirmed_lifecycle_write)
+                worker.assert_called_once()
+                cold.assert_not_called()
+
+    def test_unadmitted_write_blocks_second_indexed_allocation(self):
+        root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
+        binding = {"root": str(root), "control_root": "control", "manifest_path": "manifest.md",
+                   "manifest_sha256": "a" * 64, "project_prefix": "AN"}
+        jobs = module.GenerationJobs("test", binding, "socket")
+        jobs.generation_reuse = {"base_generation": "base", "endpoints": {}}
+        job = {"name": "atom_lifecycle_create_draft", "arguments": {
+            "newAtom": {"template": "task", "container": {"component": "C00"}}}}
+        structure = {"components": {}, "project": {"ref": "AN-S-1@1"}}
+        reply = {"lifecycle": {"outcome": "failed", "effects": [], "errors": [{"code": "effect_uncertain"}]},
+                 "projection_error": "Kernel refused delta", "delta": None}
+        with patch("ORCHESTRATOR_beta_C68.lifecycle.read_structure", return_value=structure), \
+                patch("ORCHESTRATOR_beta_C68.lifecycle.ticket_allocation", return_value=("1", [])) as lookup, \
+                patch.object(jobs, "_run_lifecycle", return_value=reply) as worker:
+            self.assertEqual("failed", jobs._execute_lifecycle(job)["projection"]["state"])
+            jobs.generation_reuse["base_generation"] = "unrelated-admission"
+            refusal = jobs._execute_lifecycle(job)
+        self.assertEqual("known", refusal["write_state"])
+        self.assertIn("preceding write", refusal["projection"]["error"]["message"])
+        lookup.assert_called_once()
+        worker.assert_called_once()
+
     def test_admission_flow_records_whether_reuse_proof_is_required(self):
         with tempfile.TemporaryDirectory() as root:
             binding = {"root": root, "control_root": ".", "manifest_path": "m",

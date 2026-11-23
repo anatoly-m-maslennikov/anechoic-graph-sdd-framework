@@ -3,14 +3,17 @@
 
 from __future__ import annotations
 
+import fcntl
 import json
 from pathlib import Path
 import subprocess
+from tempfile import TemporaryDirectory
 import unittest
 
 from RELEASE_VERSION.RELEASE_VERSION__tests import test_release_cleanup as fixtures
 from RELEASE_VERSION.release_cleanup import Cleanup, cleanup_obsolete_images
 from RELEASE_VERSION.release_cleanup_identity import owner_labels
+from RELEASE_VERSION.local_release_safety import INSTALLATION_LOCK_PATH
 
 
 class OwnedDocker(fixtures.DockerFixture):
@@ -28,6 +31,47 @@ class OwnedDocker(fixtures.DockerFixture):
 
 
 class ReleaseImageOwnershipTests(unittest.TestCase):
+    def test_purges_unused_test_images_across_projects_and_keeps_production(self) -> None:
+        docker = OwnedDocker()
+        own_test, foreign_beta, prior, used = ("sha256:" + digit * 64 for digit in "1234")
+        owner = owner_labels(fixtures.ROOT, "c" * 64, ".anechoic_anechoic")
+        foreign = owner_labels(Path("/foreign"), "f" * 64, "_anechoic_foreign")
+        own_tags = [f"anechoic-runtime:test-{own_test[7:]}"]
+        beta_tags = [f"anechoic-runtime:beta-{foreign_beta[7:]}", "anechoic-browser-parity-app:fixture",
+                     f"anechoic-runtime:0.4.4.73-beta-2026-11-22_12-14-30Z-{foreign_beta[7:19]}"]
+        prior_tags = [f"anechoic-runtime:prod-{prior[7:]}", f"anechoic-runtime:beta-{prior[7:]}"]
+        used_tags = [f"anechoic-runtime:test-{used[7:]}"]
+        for image, labels, tags in ((own_test, owner, own_tags), (foreign_beta, foreign, beta_tags),
+                                    (prior, owner, prior_tags), (used, foreign, used_tags)):
+            docker.images[image] = fixtures.FINGER
+            docker.metadata_overrides[image] = labels
+            docker.image_tags[image] = tags
+        docker.references.add(used)
+        cleanup = Cleanup(owner=owner)
+        cleanup_obsolete_images(fixtures.ROOT, fixtures.CURRENT, fixtures.FINGER, cleanup, docker.run,
+                                previous_image=prior)
+        removals = {call[3:] for call in docker.calls if call[1:3] == ("image", "rm")}
+        self.assertEqual(removals, {tuple(own_tags), tuple(beta_tags)})
+        self.assertTrue(cleanup.pending)
+
+    def test_retains_unused_candidate_during_another_checkout_release(self) -> None:
+        docker = OwnedDocker()
+        image = "sha256:" + "1" * 64
+        owner = owner_labels(fixtures.ROOT, "c" * 64, ".anechoic_anechoic")
+        with TemporaryDirectory() as directory:
+            foreign_root = Path(directory).resolve()
+            docker.images[image] = fixtures.FINGER
+            docker.metadata_overrides[image] = owner_labels(foreign_root, "f" * 64, "_anechoic_foreign")
+            docker.image_tags[image] = [f"anechoic-runtime:beta-{image[7:]}"]
+            lock = foreign_root / INSTALLATION_LOCK_PATH
+            lock.parent.mkdir(parents=True)
+            cleanup = Cleanup(owner=owner)
+            with lock.open("w") as held:
+                fcntl.flock(held, fcntl.LOCK_EX)
+                cleanup_obsolete_images(fixtures.ROOT, fixtures.CURRENT, fixtures.FINGER, cleanup, docker.run)
+        self.assertFalse(any(call[1:3] == ("image", "rm") for call in docker.calls))
+        self.assertTrue(cleanup.pending)
+
     def test_ready_predecessor_is_kept_and_older_owned_image_removed(self) -> None:
         docker = OwnedDocker()
         prior, older = ("sha256:" + char * 64 for char in ("1", "2"))

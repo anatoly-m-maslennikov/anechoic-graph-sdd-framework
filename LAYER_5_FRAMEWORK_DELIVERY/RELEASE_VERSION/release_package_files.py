@@ -177,8 +177,9 @@ def _file_identity(path: Path) -> tuple[str, int]:
 
 def _verify_package(package: Path, expected: Mapping[str, tuple[str, int]], *,
                     preserve: frozenset[str] = frozenset()) -> None:
+    preserved_directories = frozenset(name.casefold() for name in preserve)
     actual = {entry.relative_to(package).as_posix(): _file_identity(entry)
-              for entry in _walk_regular_files(package, excluded_root_directories=preserve,
+              for entry in _walk_regular_files(package, excluded_root_directories=preserved_directories,
                                                 excluded_root_files=preserve)}
     if actual != expected:
         raise LocalReleaseError("local-release-package-verification-failed")

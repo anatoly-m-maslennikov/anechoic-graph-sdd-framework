@@ -12,7 +12,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import NativeCapture, NativeManifestChanged, check_native_manifest, capture_native
 from .package_audit import replace_package_audit
 from .query_store import QueryStore
-from .spec_trace import PACKAGE_SUFFIX, SUFFIX, is_trace_path, native_trace_snapshot
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.trace_bindings__shared import PACKAGE_SUFFIX, SUFFIX, is_trace_path, native_trace_snapshot
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CEILINGS, ReadContext
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import read_structure
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import NativeProjectSelection, resolve_native_project

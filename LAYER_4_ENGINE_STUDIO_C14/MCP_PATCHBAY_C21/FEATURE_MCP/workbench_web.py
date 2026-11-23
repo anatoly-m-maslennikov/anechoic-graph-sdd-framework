@@ -60,6 +60,9 @@ def _error(error: Exception) -> JSONResponse:
     public = isinstance(error, (ToolProtocolError, WorkbenchRequestError, SharedGatewayRefusal))
     secondary = warning("workbench_request_failed")
     payload = {"error": str(error) if public else "operation failure"}
+    if isinstance(error, ToolProtocolError) and error.tool_result is not None:
+        payload["code"] = error.code
+        payload["tool_result"] = error.tool_result
     if secondary is not None:
         payload["diagnostic_error"] = secondary
     return JSONResponse(payload, status_code=400)

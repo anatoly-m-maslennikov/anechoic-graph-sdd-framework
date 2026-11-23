@@ -85,6 +85,8 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
 
         class Capture:
             versions = capture.versions
+            errors = capture.errors
+            containment = capture.containment
 
             @property
             def atoms(self):

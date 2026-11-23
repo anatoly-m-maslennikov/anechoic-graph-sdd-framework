@@ -31,11 +31,14 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         self.assertIn('version = "invalid"', version.read_text())
 
 
-    def test_release_preserves_launcher_and_runtime_config(self):
+    def test_release_preserves_launcher_runtime_config_and_methodology_archive(self):
         launcher = self.runtime / "start_mcp.py"
         launcher.write_bytes(b"existing launcher\n")
         state = self.runtime / "project_mcp_state.json"
         state.write_text("retain this runtime state\n", encoding="utf-8")
+        archive = self.installed / "SUPERLAYER_1_METHODOLOGY_SOURCES/retained.md"
+        archive.parent.mkdir()
+        archive.write_text("retain this methodology source\n", encoding="utf-8")
         runner, _ = self._runner()
         result = run_local_release(self.root, run_id="launcher-state", runner=runner)
         self.assertEqual("completed", result["outcome"], result)
@@ -43,6 +46,7 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
         self.assertEqual(0o755, stat.S_IMODE(launcher.stat().st_mode))
         self.assertEqual("keep = true\n", (self.runtime / "config.toml").read_text())
         self.assertEqual("retain this runtime state\n", state.read_text())
+        self.assertEqual("retain this methodology source\n", archive.read_text())
         self.start_container.assert_called_once()
 
 

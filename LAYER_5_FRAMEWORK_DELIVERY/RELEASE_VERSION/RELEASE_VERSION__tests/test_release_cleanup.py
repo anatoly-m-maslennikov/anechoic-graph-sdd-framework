@@ -44,6 +44,7 @@ class DockerFixture:
         self.project_id = project_id
         self.containers: dict[str, dict[str, object]] = {}
         self.images: dict[str, str] = {CURRENT: FINGER}
+        self.image_tags: dict[str, list[str]] = {}
         self.image_owner_labels: dict[str, dict[str, str]] = {}
         self.references: set[str] = set()
         self.calls: list[tuple[str, ...]] = []
@@ -105,8 +106,14 @@ class DockerFixture:
                 {
                     "Id": image,
                     "Config": {"Labels": labels},
+                    "RepoTags": self.image_tags.get(image, []),
                 }
             )
+        elif argv[1:3] == ("image", "rm"):
+            for image, tags in tuple(self.image_tags.items()):
+                if tags and set(tags) <= set(argv[3:]):
+                    del self.images[image]
+                    del self.image_tags[image]
         return subprocess.CompletedProcess(argv, 0, output, "")
 
 

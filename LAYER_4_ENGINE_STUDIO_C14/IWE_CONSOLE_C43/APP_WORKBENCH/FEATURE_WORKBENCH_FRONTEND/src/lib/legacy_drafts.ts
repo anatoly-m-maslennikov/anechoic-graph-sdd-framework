@@ -1,18 +1,25 @@
-// @ts-nocheck
+import type { WorkspaceState, WorkspaceView } from './types';
+import type { WorkspaceApi } from './api';
 
-const record = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
+type Tab = { id: string; sql: string; cursor: number; name?: string };
+type Receipt = Record<string, { targetId: string; updated: boolean }>;
+type Storage = Pick<globalThis.Storage, 'getItem' | 'setItem'>;
+type Api = Pick<WorkspaceApi, 'create' | 'rename' | 'update' | 'focus'>;
+type Input = { draft: unknown; state: WorkspaceState; api: Api; storage: Storage; doneKey: string; progressKey: string };
 
-function invalid(message) {
+const record = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
+
+function invalid(message: string): never {
   throw new Error('Legacy draft migration: ' + message);
 }
 
-function readReceipt(storage, key) {
+function readReceipt(storage: Storage, key: string): Receipt {
   const raw = storage.getItem(key);
   if (raw === null) return {};
-  let value;
+  let value: unknown;
   try { value = JSON.parse(raw); } catch { invalid('receipt ' + key + ' is not valid JSON'); }
   if (!record(value)) invalid('receipt ' + key + ' must be an object');
-  const receipt = {};
+  const receipt: Receipt = {};
   for (const [sourceId, entry] of Object.entries(value)) {
     if (!sourceId) invalid('receipt ' + key + ' has an invalid source-to-target entry');
     if (typeof entry === 'string' && entry) {
@@ -28,22 +35,22 @@ function readReceipt(storage, key) {
   return receipt;
 }
 
-function writeReceipt(storage, key, receipt) {
-  const value = {};
+function writeReceipt(storage: Storage, key: string, receipt: Receipt) {
+  const value: Receipt = {};
   for (const [sourceId, entry] of Object.entries(receipt)) value[sourceId] = { targetId: entry.targetId, updated: entry.updated };
   storage.setItem(key, JSON.stringify(value));
 }
 
-function mapping(receipt) {
+function mapping(receipt: Receipt): Record<string, string> {
   return Object.fromEntries(Object.entries(receipt).map(([sourceId, entry]) => [sourceId, entry.targetId]));
 }
 
-function draftTabs(draft) {
+function draftTabs(draft: unknown): Tab[] {
   if (draft === null || draft === undefined) return [];
   if (!record(draft) || !Array.isArray(draft.tabs)) invalid('legacy draft is malformed');
-  const ids = new Set();
+  const ids = new Set<string>();
   for (const tab of draft.tabs) {
-    if (!record(tab) || typeof tab.id !== 'string' || !tab.id || ids.has(tab.id) || typeof tab.sql !== 'string' || !Number.isInteger(tab.cursor) || tab.cursor < 0) {
+    if (!record(tab) || typeof tab.id !== 'string' || !tab.id || ids.has(tab.id) || typeof tab.sql !== 'string' || typeof tab.cursor !== 'number' || !Number.isInteger(tab.cursor) || tab.cursor < 0) {
       invalid('legacy draft contains a malformed or duplicate tab');
     }
     if (tab.name !== undefined && typeof tab.name !== 'string') invalid('legacy draft contains a malformed View name');
@@ -52,25 +59,25 @@ function draftTabs(draft) {
   if (draft.activeId !== undefined && draft.activeId !== null && (typeof draft.activeId !== 'string' || !ids.has(draft.activeId))) {
     invalid('legacy draft activeId is not one of its tabs');
   }
-  return draft.tabs;
+  return draft.tabs as Tab[];
 }
 
-function assertState(state) {
+function assertState(state: unknown): asserts state is WorkspaceState {
   if (!record(state) || !Array.isArray(state.views)) invalid('Workspace state is malformed');
   for (const view of state.views) {
     if (!record(view) || typeof view.id !== 'string' || !view.id || !Number.isInteger(view.revision)) invalid('Workspace state contains an invalid View');
   }
 }
 
-function assertView(view, operation) {
+function assertView(view: unknown, operation: string): asserts view is WorkspaceView {
   if (!record(view) || typeof view.id !== 'string' || !view.id || !Number.isInteger(view.revision)) invalid(operation + ' returned an invalid View');
 }
 
-function cloneState(state) {
+function cloneState(state: WorkspaceState): WorkspaceState {
   return { ...state, views: state.views.map((view) => ({ ...view })) };
 }
 
-function replaceView(state, view) {
+function replaceView(state: WorkspaceState, view: WorkspaceView): WorkspaceState {
   assertView(view, 'Workspace operation');
   const index = state.views.findIndex((item) => item.id === view.id);
   if (index < 0) invalid('Workspace operation returned unknown View ' + view.id);
@@ -79,14 +86,14 @@ function replaceView(state, view) {
   return { ...state, views };
 }
 
-function pristine(view) {
+function pristine(view: WorkspaceView) {
   return !view.name && typeof view.sql === 'string' && !view.sql.trim() && view.cursor_position === 0 && !view.result;
 }
 
-function validateReceipt(tabs, state, receipt) {
+function validateReceipt(tabs: Tab[], state: WorkspaceState, receipt: Receipt) {
   const sourceIds = new Set(tabs.map((tab) => tab.id));
   const targetIds = new Set(state.views.map((view) => view.id));
-  const acknowledgedTargets = new Set();
+  const acknowledgedTargets = new Set<string>();
   for (const [sourceId, entry] of Object.entries(receipt)) {
     if (!sourceIds.has(sourceId)) invalid('receipt acknowledges unknown source Draft ' + sourceId);
     if (!targetIds.has(entry.targetId)) invalid('receipt points to missing target View ' + entry.targetId);
@@ -96,7 +103,7 @@ function validateReceipt(tabs, state, receipt) {
 
 }
 
-async function importTab(source, nextState, starter, receipt, api, storage, progressKey) {
+async function importTab(source: Tab, nextState: WorkspaceState, starter: WorkspaceView | undefined, receipt: Receipt, api: Api, storage: Storage, progressKey: string): Promise<WorkspaceState> {
   let target = receipt[source.id]
     ? nextState.views.find((view) => view.id === receipt[source.id].targetId)
     : starter;
@@ -136,10 +143,10 @@ async function importTab(source, nextState, starter, receipt, api, storage, prog
   return nextState;
 }
 
-async function importTabs(tabs, state, receipt, api, storage, progressKey) {
+async function importTabs(tabs: Tab[], state: WorkspaceState, receipt: Receipt, api: Api, storage: Storage, progressKey: string) {
   let nextState = cloneState(state);
   let starter = nextState.views.length === 1 && pristine(nextState.views[0]) ? nextState.views[0] : undefined;
-  if (starter && Object.values(receipt).some((entry) => entry.targetId === starter.id)) starter = undefined;
+  if (starter && Object.values(receipt).some((entry) => entry.targetId === starter?.id)) starter = undefined;
   let importedCount = 0;
 
   for (const source of tabs) {
@@ -173,7 +180,7 @@ async function importTabs(tabs, state, receipt, api, storage, progressKey) {
  *   progressKey: string
  * }} input
  */
-export async function migrateLegacyDraft({ draft, state, api, storage, doneKey, progressKey }) {
+export async function migrateLegacyDraft({ draft, state, api, storage, doneKey, progressKey }: Input) {
   assertState(state);
   if (!record(storage) || typeof storage.getItem !== 'function' || typeof storage.setItem !== 'function') invalid('storage is unavailable');
   if (!record(api) || typeof api.create !== 'function' || typeof api.rename !== 'function' || typeof api.update !== 'function' || typeof api.focus !== 'function') invalid('WorkspaceApi contract is incomplete');
@@ -195,7 +202,8 @@ export async function migrateLegacyDraft({ draft, state, api, storage, doneKey, 
   let { nextState, importedCount } = await importTabs(tabs, state, receipt, api, storage, progressKey);
 
   const sourceToTarget = mapping(receipt);
-  const activeTarget = draft.activeId ? sourceToTarget[draft.activeId] : undefined;
+  const activeId = record(draft) && typeof draft.activeId === 'string' ? draft.activeId : undefined;
+  const activeTarget = activeId ? sourceToTarget[activeId] : undefined;
   if (activeTarget) {
     const focused = await api.focus(activeTarget);
     if (!record(focused) || focused.active_view_id !== activeTarget) invalid('view_focus returned an invalid active View');

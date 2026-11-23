@@ -6,6 +6,7 @@ import os
 from pathlib import Path, PurePosixPath
 import subprocess
 
+from ARCHITECTURE_ANALYSIS_C73.CODE_AND_SPEC_METRICS_C76.metrics__shared import code_rows
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import run_graph_build
 
 from .python_code_units import python_code_units
@@ -77,4 +78,4 @@ def _derive_rows(root, sources, occurrences, read_source, ownership):
 
 
 if __name__ == '__main__':
-    raise SystemExit(run_graph_build(_derive_rows))
+    raise SystemExit(run_graph_build(_derive_rows, code_rows))

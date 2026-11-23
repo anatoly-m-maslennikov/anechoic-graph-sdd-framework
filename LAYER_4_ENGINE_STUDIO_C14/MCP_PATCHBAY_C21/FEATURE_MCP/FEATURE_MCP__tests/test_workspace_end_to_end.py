@@ -214,7 +214,7 @@ class WorkspaceEndToEndTests(unittest.IsolatedAsyncioTestCase):
                     self.assertIn(message, str(response.structured_content))
             unknown = await self.interface_call(client, "workspace_get", {"workspace_id": "missing"})
             self.assertEqual(400, unknown.status_code)
-            self.assertEqual({"error": "unknown workspace_id"}, unknown.json())
+            self.assertEqual({"error": "unknown workspace_id", "code": "query_error", "tool_result": {"outcome": "failed", "diagnostics": ["query_error: unknown workspace_id"]}}, unknown.json())
             untouched = await self.tool(session, "view_get", {"workspace_id": "two", "view_id": two_view})
             self.assertEqual("", untouched["sql"])
 

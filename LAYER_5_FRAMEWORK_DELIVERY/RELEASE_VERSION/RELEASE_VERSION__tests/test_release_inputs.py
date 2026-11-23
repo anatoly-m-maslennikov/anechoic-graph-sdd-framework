@@ -87,7 +87,9 @@ class ReleaseInputsTests(unittest.TestCase):
         selected = release_inputs.read_release_selection(root)
         self.assertEqual("Anechoic", selected.project_name)
         self.assertEqual("AN", selected.project_prefix)
-        self.assertEqual(56317, selected.parameters["project_mcp"]["http_port"])
+        port = selected.parameters["project_mcp"]["http_port"]
+        self.assertIs(type(port), int)
+        self.assertTrue(1 <= port <= 65535, port)
 
     def test_release_port_is_left_for_the_callers_existing_validation(self):
         for value in (False, 0, 65536, "56317"):

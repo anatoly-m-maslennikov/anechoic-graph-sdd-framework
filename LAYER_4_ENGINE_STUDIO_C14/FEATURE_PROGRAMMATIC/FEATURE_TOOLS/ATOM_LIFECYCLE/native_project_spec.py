@@ -6,7 +6,7 @@ import yaml
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical_native_header, native_header_view
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_carrier_path, spec_lens_directories
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import revalidate_native
 
 from . import common
 from .source import bind_query_reader
@@ -32,7 +32,7 @@ def validate_project_spec(header, validate, body=None):
         raise common.InputError('newAtom', f'Project SPEC does not satisfy the compiled Model: {error}') from error
 
 
-def create_project_spec(selection, values, validate):
+def create_project_spec(selection, values, validate, previous_capture=None):
     from .native_draft import _first_spec_write_lock, _summary
     if (not isinstance(values, dict) or set(values) - {'tier'} != {'template', 'container', 'lens', 'body'}
             or values.get('template') not in PROJECT_SPEC_TIERS or values.get('container') != {'component': 'C00'}
@@ -54,7 +54,7 @@ def create_project_spec(selection, values, validate):
         raise common.SourceChanged('Selected Project path is invalid.')
     with _first_spec_write_lock(selection.root):
         try:
-            capture = capture_native(selection)
+            capture = revalidate_native(selection, previous_capture)
         except (OSError, RuntimeError, ValueError) as error:
             raise common.SourceChanged('Native carriers changed during Project SPEC selection.') from error
         if capture.errors:

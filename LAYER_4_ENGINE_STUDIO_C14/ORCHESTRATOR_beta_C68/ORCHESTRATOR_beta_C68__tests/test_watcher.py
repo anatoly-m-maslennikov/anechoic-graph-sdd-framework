@@ -30,6 +30,7 @@ class WatcherTests(unittest.TestCase):
                 (root / 'uv.lock').write_text('version = 1\n')
                 await_generation(5)
                 (excluded / 'ignored.py').write_text('ignored')
+                (root / '.anechoic_tmp').mkdir()
                 time.sleep(2.5)
                 self.assertEqual(5, len(kernel.generations))
                 self.assertEqual(['/generation'] * 5, kernel.paths)

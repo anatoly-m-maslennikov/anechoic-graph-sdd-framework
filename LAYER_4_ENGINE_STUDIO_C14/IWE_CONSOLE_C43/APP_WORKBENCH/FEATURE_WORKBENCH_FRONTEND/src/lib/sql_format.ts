@@ -1,9 +1,8 @@
 
 import { sql } from '@codemirror/lang-sql';
-import { duckdb, formatDialect } from '@dlh.io/dlh-sql-formatter';
+import { duckdb, formatDialect, type FormatOptionsWithDialect } from '@dlh.io/dlh-sql-formatter';
 
-/** @type {import('@dlh.io/dlh-sql-formatter').FormatOptionsWithDialect} */
-const options = {
+const options: FormatOptionsWithDialect = {
   dialect: duckdb,
   keywordCase: 'lower',
   commaPosition: 'leading',
@@ -12,8 +11,7 @@ const options = {
   newlineBeforeSemicolon: true,
 };
 
-/** @param {string} source */
-function leaves(source) {
+function leaves(source: string) {
   const cursor = sql().language.parser.parse(source).cursor();
   const tokens = [];
   for (;;) {
@@ -23,8 +21,7 @@ function leaves(source) {
   }
 }
 
-/** @param {string} source */
-function adapter(source) {
+function adapter(source: string) {
   const replacements = [];
   const tokens = leaves(source);
   for (let index = 0; index < tokens.length; index += 1) {
@@ -40,7 +37,6 @@ function adapter(source) {
   return replacements.reverse().reduce((formatted, replacement) => `${formatted.slice(0, replacement.from)}${replacement.text}${formatted.slice(replacement.to)}`, source);
 }
 
-/** @param {string} source */
-export function formatSql(source) {
+export function formatSql(source: string) {
   return adapter(formatDialect(source, options));
 }

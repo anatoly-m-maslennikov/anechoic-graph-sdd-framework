@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: "active"
-  version: 49
-  updated_at: "2026-11-23T00:35:10.874950+00:00"
+  version: 50
+  updated_at: '2026-11-23T04:47:55.654512+00:00'
 relations:
   CONTRIBUTES_TO:
   - AN-S-3329
@@ -106,7 +106,7 @@ declare_entity(
                     'KERNEL_MIXER_C59__shared.read_import_sources',
                     'KERNEL_MIXER_C59__shared.publish_imports',
                     'KERNEL_MIXER_C59__shared.NativeQueryOwner',
-                    'KERNEL_MIXER_C59__shared._read_pins',
+                    'trace_bindings__shared._read_pins',
                     'workbench_operations.WorkbenchOperations',
                     'backend_process._release_command',
                     'project_admission.project_tool_policy',

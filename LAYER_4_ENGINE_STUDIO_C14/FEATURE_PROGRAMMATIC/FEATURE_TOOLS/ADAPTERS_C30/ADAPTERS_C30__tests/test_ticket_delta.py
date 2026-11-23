@@ -8,7 +8,7 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
-    capture_ticket_delta,
+    ReadContext, capture_carrier_delta, capture_ticket_delta,
 )
 
 _ENDPOINTS = {
@@ -68,6 +68,23 @@ class TicketDeltaTests(TestCase):
 
     def capture(self, *paths):
         return capture_ticket_delta(self.binding, list(paths), _ENDPOINTS)
+
+    def test_admitted_manifest_reads_only_addressed_carrier(self):
+        path = self.root / _PATH
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(_TICKET)
+        reads = []
+        original = ReadContext.read
+
+        def track(reader, target, **kwargs):
+            reads.append(target)
+            return original(reader, target, **kwargs)
+
+        with patch.object(ReadContext, "read", track):
+            result = capture_carrier_delta(self.binding, [_PATH], _ENDPOINTS,
+                                           include_hashes=True, manifest_admitted=True)
+        self.assertEqual([path], reads)
+        self.assertEqual(sha256(path.read_bytes()).hexdigest(), result["carrier_hashes"][_PATH])
 
     def test_only_supplied_tickets_and_their_relations_are_present(self):
         self.write(raw="Unrelated malformed Markdown", path="_anechoic_test/ignored.md")
@@ -148,3 +165,56 @@ class TicketDeltaTests(TestCase):
               self.assertRaisesRegex(ValueError, "paths changed during capture")):
             self.capture(_PATH)
         self.assertTrue(ticket.is_file())
+
+
+class CarrierDeltaTests(TestCase):
+    setUp = TicketDeltaTests.setUp
+    write = TicketDeltaTests.write
+    def capture(self, *paths):
+        return capture_carrier_delta(self.binding, list(paths), _ENDPOINTS)
+
+    def test_captures_canonical_families_and_root_goal_with_hashes(self):
+        spec_path = "_anechoic_test/spec/AN-S-2--spec.md"
+        config_path = "_anechoic_test/__PROJECT_CONFIG/AN-P-3--config.md"
+        goal_path = "AN-S-4-SPEC-PROJECT_GOAL--goal.md"
+        self.write(spec_path, _SPEC)
+        config = _SPEC.replace("atom_family: SPEC", "atom_family: PROJECT_CONFIG").replace(
+            "AN-S-2", "AN-P-3").replace("tier: 0\ncontext: {lens: SPEC}", "context: {template: settings}")
+        self.write(config_path, config)
+        goal = _SPEC.replace("AN-S-2", "AN-S-4").replace(
+            "tier: 0\ncontext: {lens: SPEC}", "tier: -1\ncontext: {lens: SPEC, template: project_goal}")
+        self.write(goal_path, goal)
+        self.write(_PATH, _TICKET)
+        result = capture_carrier_delta(self.binding, [goal_path, _PATH, spec_path, config_path],
+                                       _ENDPOINTS, include_hashes=True)
+        self.assertEqual({"AN-S-2", "AN-P-3", "AN-S-4", "AN-T-2"},
+                         {row["reference"] for row in result["snapshot"]["atoms"]})
+        self.assertEqual({goal_path, _PATH, spec_path, config_path}, set(result["carrier_hashes"]))
+        self.assertEqual(sorted(result["paths"]), result["paths"])
+
+    def test_refuses_non_carrier_paths_and_noncanonical_header(self):
+        for path in (self.manifest.name, "_anechoic_test/000_ANECHOIC_framework/item.md",
+                     "_anechoic_test/build.json", "outside.md", "_other/item.md",
+                     "_anechoic_test/AN-S-8-SPEC-PROJECT_MANIFEST--other.md"):
+            with self.subTest(path=path), self.assertRaises(ValueError):
+                self.capture(path)
+        self.write(_PATH, _TICKET.replace("atom_family: TKT\natom_id: AN-T-2",
+                                         "identity: {atom_id: AN-T-2}"))
+        with self.assertRaises(ValueError):
+            self.capture(_PATH)
+
+    def test_deletion_links_and_changed_capture(self):
+        path = "_anechoic_test/spec/AN-S-2--spec.md"
+        source = self.write(path, _SPEC)
+        alias = source.with_name("alias.md")
+        alias.symlink_to(source)
+        with self.assertRaises(OSError):
+            self.capture(alias.relative_to(self.root).as_posix())
+        mocked = SimpleNamespace(errors={}, versions={})
+        with (patch(_CAPTURE, return_value=mocked),
+              self.assertRaisesRegex(ValueError, "paths changed during capture")):
+            self.capture(path)
+        source.unlink()
+        result = self.capture(path)
+        self.assertEqual([], result["snapshot"]["atoms"])
+        self.assertEqual([["_anechoic_test/spec", "AN-S-2--spec.md"]], result["paths"])

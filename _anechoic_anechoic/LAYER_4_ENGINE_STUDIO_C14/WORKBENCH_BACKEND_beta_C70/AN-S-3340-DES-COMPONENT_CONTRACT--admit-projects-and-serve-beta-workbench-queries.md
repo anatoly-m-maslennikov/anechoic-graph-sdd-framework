@@ -12,8 +12,8 @@ relations:
   - AN-S-3338
 state:
   status: "active"
-  version: 26
-  updated_at: "2026-11-23T00:44:49.021758+00:00"
+  version: 27
+  updated_at: "2026-11-23T04:35:09.584613+00:00"
 ---
 ## Summary
 
@@ -54,9 +54,9 @@ Project-scoped query history tools and the Kernel `query_log` SQL view.
 Keep their request and response fields the same through Workbench and MCP.
 
 Submit Task or Epic Draft creation, revision, exact Draft promotion,
-Current Ticket status changes, native Ticket archive, and Ticket Asset direct
-updates to Orchestrator.
-Return the lifecycle outcome after generation admission.
+Current Ticket status changes, native Ticket archive, and Ticket Asset
+creation and direct updates to Orchestrator. Return the lifecycle outcome
+after the carrier delta is admitted or projection fails.
 Report projection failure with known file effects and distinguish an
 unknown write outcome from a rejected request.
 

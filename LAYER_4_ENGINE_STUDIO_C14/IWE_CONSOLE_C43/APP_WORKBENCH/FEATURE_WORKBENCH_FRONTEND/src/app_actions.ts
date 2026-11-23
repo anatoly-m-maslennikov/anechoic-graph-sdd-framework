@@ -2,7 +2,7 @@ import type { WorkspaceApi, CheckResult, GridState, QueryResult, ResultDisplayPr
 import { newView } from './lib/lib__shared';
 
 type Check = { sql: string; result: CheckResult } | { sql: string; error: string };
-export type Tab = ReturnType<typeof newView> & { busy?: boolean; error?: string; saveError?: string; result?: QueryResult; check?: Check; saved?: SavedIdentity; revision?: number; run?: ViewResult; conflict?: boolean; syncDirty?: boolean; serverSql?: string; serverRevision?: number };
+export type Tab = Omit<ReturnType<typeof newView>, 'id'> & { id: string; name?: string; busy?: boolean; error?: string; saveError?: string; result?: QueryResult; check?: Check; saved?: SavedIdentity; revision?: number; run?: ViewResult; conflict?: boolean; syncDirty?: boolean; serverSql?: string; serverRevision?: number };
 type ActionContext = {
   active: Tab | undefined; workspaceReady: boolean; savedBusy: boolean; boundApi: WorkspaceApi | undefined;
   updateTab: (id: string, changes: Partial<Tab>) => void; fail: (id: string, error: unknown, conflict?: boolean) => void;

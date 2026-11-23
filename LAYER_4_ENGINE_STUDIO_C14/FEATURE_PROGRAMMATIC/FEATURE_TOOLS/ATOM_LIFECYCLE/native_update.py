@@ -10,7 +10,7 @@ from hashlib import sha256
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_header_view
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_ticket_asset, COMPLETE_DIRECTORY
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CURRENT_STATUSES, capture_native
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CURRENT_STATUSES, capture_native, revalidate_native
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import frontmatter_bounds
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_carrier
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CEILINGS, ReadContext
@@ -60,11 +60,12 @@ def _check_ticket_tree(selection, path, selected, capture, tree, close_tree, req
         if _read_tree(selection.root, companion) != tree:
             raise SourceChanged('Ticket companion changed during validation.')
 
-def _read_ticket(selection, target, selected, digest, path, *, close_tree=False, placement=False, require_terminal=False):
+def _read_ticket(selection, target, selected, digest, path, *, close_tree=False, placement=False, require_terminal=False, previous_capture=None):
     try:
         companion = path.with_suffix('')
         tree = _read_tree(selection.root, companion) if close_tree and companion.is_dir() else None
-        capture = capture_native(selection)
+        capture = (capture_native(selection) if previous_capture is None
+                   else revalidate_native(selection, previous_capture))
         if capture.errors:
             raise SourceChanged('Native carrier capture is incomplete.')
         fresh = [row for row in capture.atoms if row.get('ref') == target['ref_id']
@@ -113,7 +114,7 @@ def _ticket_source_intact(selection, path, digest, close_tree, tree, companion):
         return False
 
 
-def _move_ticket(selection, target, selected, digest, path, destination, status, check_definition, *, close_tree=False, require_terminal=False, locked=False, preflight=None):
+def _move_ticket(selection, target, selected, digest, path, destination, status, check_definition, *, close_tree=False, require_terminal=False, locked=False, preflight=None, previous_capture=None):
     with nullcontext() if locked else _project_write_lock(selection.root):
         companion = path.with_suffix('')
         target_companion = destination.with_suffix('')
@@ -122,7 +123,7 @@ def _move_ticket(selection, target, selected, digest, path, destination, status,
             return result(errors=[{'code': 'destination_exists', 'message': 'Ticket destination already exists.'}])
         if preflight is None:
             raw, bounds, tree, _ = _read_ticket(selection, target, selected, digest, path, close_tree=close_tree, placement=True,
-                                                require_terminal=require_terminal)
+                                                require_terminal=require_terminal, previous_capture=previous_capture)
         else:
             raw, bounds, tree = preflight
         candidate = _status_bytes(raw, bounds, path, status)
@@ -222,7 +223,7 @@ def _ticket_template(selected, status):
     _check_ticket_transition(selected, template, status)
     return template
 
-def change_ticket_status(selection, params, *, current_rows, check_definition):
+def change_ticket_status(selection, params, *, current_rows, check_definition, previous_capture=None):
     if not isinstance(params, dict) or set(params) != {'target', 'targetStatus'}:
         raise InputError('target', 'Supply one target and target Status.')
     status = params['targetStatus']
@@ -242,13 +243,16 @@ def change_ticket_status(selection, params, *, current_rows, check_definition):
                 (move_tree and (destination.with_suffix('').exists() or destination.with_suffix('').is_symlink()))):
             return result(errors=[{'code': 'destination_exists', 'message': 'Ticket destination already exists.'}])
         if move_tree and selected['status'] == 'backlog' and status == 'in_queue':
-            capture = capture_native(selection)
+            try:
+                capture = revalidate_native(selection, previous_capture)
+            except (OSError, RuntimeError, ValueError) as error:
+                raise SourceChanged('Native carrier capture changed.') from error
             if capture.errors:
                 raise SourceChanged('Native carrier capture is incomplete.')
             return promote_ticket_tree(selection, selected, destination, status, current_rows,
                                        capture.atoms, check_definition)
         raw, bounds, tree, capture = _read_ticket(selection, target, selected, digest, path,
-                                                   close_tree=move_tree, placement=True)
+                                                   close_tree=move_tree, placement=True, previous_capture=previous_capture)
         planned = _descendants(current_rows, selected['id']) if move_tree else []
         fresh = _descendants(capture.atoms, selected['id']) if move_tree else []
         keys = ('id', 'version', 'status', 'source_path', '_source_sha256', 'header_json')

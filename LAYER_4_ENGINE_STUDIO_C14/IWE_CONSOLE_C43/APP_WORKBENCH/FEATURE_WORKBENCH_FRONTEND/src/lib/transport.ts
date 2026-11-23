@@ -4,6 +4,20 @@ export interface OperationCaller {
   call<T>(name: string, arguments_: Record<string, unknown>): Promise<T>;
 }
 
+export class WorkbenchRequestError extends Error {
+  constructor(message: string, readonly code?: string) { super(message); }
+}
+
+export function toolFailure(value: unknown, message?: string, code?: string): WorkbenchRequestError {
+  const result = value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
+  const diagnostics = (result.outcome === 'failed' || result.outcome === 'rejected')
+    && Array.isArray(result.diagnostics) && result.diagnostics.every((item: unknown) => typeof item === 'string')
+    ? result.diagnostics as string[] : [];
+  const diagnostic = diagnostics.find((item) => item.length > 0);
+  const diagnosticCode = diagnostic?.match(/^([a-z][a-z0-9_]*)(?:: |$)/)?.[1];
+  return new WorkbenchRequestError(message || diagnostic || 'Invalid Workbench tool error response.', code || diagnosticCode);
+}
+
 const HTTP_ROUTES: Record<string, string> = {
   query_rebuild: 'rebuild', query_run: 'run', query_check: 'check', query_page: 'page', query_schema: 'schema',
   workbench_status: 'status', query_load: 'load', query_saved_list: 'saved-list',
@@ -34,10 +48,14 @@ export class HttpOperationCaller implements OperationCaller {
       method: 'POST', headers: { 'content-type': 'application/json' },
       body: JSON.stringify(this.projectRoot ? { ...body, project_root: this.projectRoot } : body),
     });
-    const value = await response.json() as T | Record<string, unknown>;
+    let value: unknown;
+    try { value = await response.json(); }
+    catch { throw new Error('Invalid Workbench response: expected JSON.'); }
+    if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Invalid Workbench response: expected an object.');
     if (!response.ok) {
       const details = value as Record<string, unknown>;
-      throw new Error(typeof details.error === 'string' ? details.error : 'Request failed');
+      if (typeof details.error !== 'string') throw new Error('Invalid Workbench error response.');
+      throw toolFailure(details.tool_result, details.error, typeof details.code === 'string' ? details.code : undefined);
     }
     return value as T;
   }

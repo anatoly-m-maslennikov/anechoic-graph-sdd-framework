@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: "active"
-  version: 22
-  updated_at: "2026-11-22T23:25:07.308906+00:00"
+  version: 26
+  updated_at: "2026-11-23T09:56:32.676138+00:00"
 ---
 ## Summary
 
@@ -33,7 +33,10 @@ declare_entity(
         component_id='C69',
         name='Workers Beta',
         lens_whitelist=['DES', 'SPEC'],
-        boundaries={'code': {'imports': {'only': ['ADAPTERS_C30__shared.capture_ticket_delta',
+        boundaries={'code': {'imports': {'only': ['metrics__shared.code_rows',
+                                                'ADAPTERS_C30__shared.capture_carrier_delta',
+                                                'FEATURE_TOOLS__shared.indexed_draft_runner',
+                                                'ADAPTERS_C30__shared.capture_ticket_delta',
                                                 'ADAPTERS_C30__shared.prepare_generation_snapshot',
                                                 'ADAPTERS_C30__shared.native_carrier_hashes',
                                            'import_graph__shared.run_graph_build',
@@ -72,16 +75,26 @@ declare_entity(
                                                  'accepted_reply': ['accepted', 'pid when accepted'],
                                                  'completion_reply': ['result'],
                                                  'cancel': 'client write-half close'},
+                           'warm_indexed_lifecycle': {'transport': 'newline-delimited JSON over private Unix socket',
+                                                      'module': 'WORKERS_beta_C69.warm_worker',
+                                                      'kind': 'indexed_lifecycle',
+                                                      'fields': ['kind', 'start_by', 'request'],
+                                                      'request': 'task_lifecycle with indexed_task',
+                                                      'accepted_reply': ['accepted', 'pid when accepted'],
+                                                      'completion_reply': ['result'],
+                                                      'cancel': 'client write-half close'},
                            'task_lifecycle': {'transport': 'cli', 'runner': 'managed_python',
                                               'module': 'WORKERS_beta_C69.lifecycle_worker',
                                               'managed_parent_env': 'ANECHOIC_BETA_WORKER_PARENT_PID',
-                                              'input_fields': ['binding', 'name', 'arguments'],
+                                              'input_fields': ['binding', 'name', 'arguments', 'base_generation', 'structure_sha256'],
+                                              'optional_input': 'indexed_task',
                                               'operations': ['atom_lifecycle_create_draft',
                                                              'atom_lifecycle_update',
                                                              'atom_lifecycle_promote_draft',
                                                              'atom_lifecycle_change_status',
                                                              'atom_lifecycle_archive',
-                                                             'atom_lifecycle_direct_update'],
+                                                             'atom_lifecycle_direct_update',
+                                                             'atom_lifecycle_create_asset'],
                                               'output': 'native lifecycle outcome and effects on stdout'}},
                 'client': {'task_lifecycle': {'component': 'C16', 'interface': 'task_lifecycle'},
                            'manifest_build': {'component_seed': 'CS4', 'transport': 'cli'},

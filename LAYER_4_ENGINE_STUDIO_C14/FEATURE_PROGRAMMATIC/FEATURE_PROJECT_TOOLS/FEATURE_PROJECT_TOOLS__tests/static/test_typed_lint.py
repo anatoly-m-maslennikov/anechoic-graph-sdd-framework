@@ -21,9 +21,9 @@ class TypedLintTests(unittest.TestCase):
         data = {"scripts": {"lint": "eslint ."}, "devDependencies": {
             "eslint": "*", "typescript-eslint": "*"}}
         manifest.write_text(json.dumps(data), encoding="utf-8")
-        self.assertEqual(list(static_checks.typed_lint_projects(root)), [])
+        self.assertEqual(list(static_checks.npm_static_commands(root)), [])
         (package / "eslint.config.js").write_text("export default []\n", encoding="utf-8")
-        self.assertEqual(list(static_checks.typed_lint_projects(root)), [package])
+        self.assertEqual(list(static_checks.npm_static_commands(root)), [(package, "lint")])
 
         def execute(command, **kwargs):
             return SimpleNamespace(returncode=int(command[0] == "npm"))
@@ -35,6 +35,10 @@ class TypedLintTests(unittest.TestCase):
             self.assertEqual(static_checks.check(root), 1)
             self.assertEqual(run.call_args.args[0], ("npm", "run", "lint"))
             self.assertEqual(run.call_args.kwargs["cwd"], package)
+            data["scripts"]["check:types"] = "tsc --noEmit"
+            manifest.write_text(json.dumps(data), encoding="utf-8")
+            self.assertEqual(static_checks.check(root), 1)
+            self.assertEqual(run.call_args.args[0], ("npm", "run", "check:types"))
 
 
 if __name__ == "__main__":

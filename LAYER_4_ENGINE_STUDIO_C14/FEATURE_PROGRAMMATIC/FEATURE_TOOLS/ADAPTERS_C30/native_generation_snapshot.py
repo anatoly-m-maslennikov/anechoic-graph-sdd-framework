@@ -2,6 +2,8 @@
 from pathlib import PurePosixPath
 import re
 
+from ARCHITECTURE_ANALYSIS_C73.CODE_AND_SPEC_METRICS_C76.metrics__shared import spec_rows
+
 from .markdown_content__pub import content_lines
 
 _HISTORICAL = {"ADVANCES": "SERVES", "IS_ADVANCED_BY": "IS_SERVED_BY",
@@ -122,4 +124,4 @@ def snapshot(binding, capture, endpoints):
                               e["relation_type"], e["derived"]))
     return {"schema_version": 2, "manifest_sha256": binding["manifest_sha256"],
             "atoms": sorted(atoms, key=lambda a: a["reference"]), "relations": edges,
-            "relation_types": sorted(names)}
+            "relation_types": sorted(names), "spec_sizes": spec_rows(capture.atoms)}

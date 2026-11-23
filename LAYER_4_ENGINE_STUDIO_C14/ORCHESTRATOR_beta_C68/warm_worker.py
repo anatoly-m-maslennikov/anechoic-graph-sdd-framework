@@ -9,6 +9,10 @@ from .generation import parse_worker_result
 MAX_REPLY_BYTES = 16 * 1024 * 1024
 
 
+class WarmLifecycleUnavailable(RuntimeError):
+    """The worker did not accept a lifecycle write."""
+
+
 class WarmCapture:
     def __init__(self, socket, pid):
         self.socket = socket
@@ -44,6 +48,15 @@ def _line(sock, limit, *, deadline=None):
     raise ValueError("Worker reply too large")
 
 
+def _accepted_capture(sock, ack):
+    if not isinstance(ack, dict) or set(ack) != {"accepted", "pid"}:
+        raise ValueError("Invalid Worker acceptance")
+    pid = ack["pid"]
+    if ack["accepted"] is not True or type(pid) is not int or not 0 < pid < 2**31:
+        raise ValueError("Invalid Worker acceptance")
+    return WarmCapture(sock, pid)
+
+
 def request(socket_path, load_seconds, binding, reuse, paths, register):
     """Return the worker payload, or None when the broker cannot serve it."""
     try:
@@ -55,13 +68,8 @@ def request(socket_path, load_seconds, binding, reuse, paths, register):
             sock.connect(socket_path)
             sock.sendall(json.dumps(payload, allow_nan=False).encode() + b"\n")
             ack = _line(sock, 1024, deadline=start_by)
-            if not isinstance(ack, dict) or set(ack) != {"accepted", "pid"}:
-                return None
-            pid = ack["pid"]
-            if ack["accepted"] is not True or type(pid) is not int or not 0 < pid < 2**31:
-                return None
             sock.settimeout(None)
-            if not register(WarmCapture(sock, pid)):
+            if not register(_accepted_capture(sock, ack)):
                 return None
             reply = _line(sock, MAX_REPLY_BYTES)
             if not isinstance(reply, dict) or set(reply) != {"result"}:
@@ -69,6 +77,28 @@ def request(socket_path, load_seconds, binding, reuse, paths, register):
             return reply["result"]
     except (OSError, ValueError, TypeError, OverflowError):
         return None
+
+
+def run_lifecycle(socket_path, load_seconds, request, register, timeout):
+    start_by = time.monotonic() + load_seconds
+    payload = {"kind": "indexed_lifecycle", "start_by": start_by, "request": request}
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
+        sock.settimeout(load_seconds)
+        try:
+            sock.connect(socket_path)
+        except OSError as error:
+            raise WarmLifecycleUnavailable("Warm lifecycle Worker is unavailable") from error
+        sock.sendall(json.dumps(payload, allow_nan=False).encode() + b"\n")
+        ack = _line(sock, 1024, deadline=start_by)
+        if ack == {"accepted": False}:
+            raise WarmLifecycleUnavailable("Warm lifecycle Worker refused the request")
+        if not register(_accepted_capture(sock, ack)):
+            raise RuntimeError("Orchestrator stopped during lifecycle write")
+        sock.settimeout(timeout)
+        reply = _line(sock, MAX_REPLY_BYTES)
+        if not isinstance(reply, dict) or set(reply) != {"result"}:
+            raise ValueError("Invalid warm lifecycle Worker reply")
+        return reply["result"]
 
 
 def validated_result(socket_path, load_seconds, binding, reuse, paths, register):

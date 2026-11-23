@@ -125,7 +125,8 @@ class LifecycleImageAssetsTests(unittest.TestCase):
         self.assertEqual(f"{backend}/tool_registry.json", images.TOOL_REGISTRY)
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            for component in ("FEATURE_PROGRAMMATIC", "MCP_PATCHBAY_C21", "IWE_CONSOLE_C43"):
+            for component in ("FEATURE_PROGRAMMATIC", "ARCHITECTURE_ANALYSIS_C73",
+                              "MCP_PATCHBAY_C21", "IWE_CONSOLE_C43"):
                 (root / "LAYER_4_ENGINE_STUDIO_C14" / component).mkdir(parents=True)
             feature = root / backend
             feature.mkdir(parents=True)

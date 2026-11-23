@@ -43,6 +43,7 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
             result = run_local_release(self.root, run_id="native-release", runner=runner)
         self.assertEqual("completed", result["outcome"], result)
         self.image.mark_production_image.assert_called_once_with(self.image_id)
+        self.image.prune_build_cache.assert_called_once_with()
         self.assertGreaterEqual(select.call_count, 2)
         self.assertTrue(all(call.args[0].manifest_ref == "AN-S-001@1" for call in select.call_args_list))
         gates = [call for call in calls if any(arg.endswith("test_suite__pub.py") for arg in call)]
@@ -97,11 +98,23 @@ class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
     def test_production_tag_failure_keeps_successful_deployment(self):
         self.image.mark_production_image.side_effect = RuntimeError("tag unavailable")
         runner, _ = self._runner()
-        result = run_local_release(self.root, run_id="tag-failed", runner=runner)
+        with (patch("RELEASE_VERSION.local_release_runner.cleanup_obsolete_images") as cleanup,
+              patch("RELEASE_VERSION.local_release_runner.prune_temporary_files") as prune):
+            result = run_local_release(self.root, run_id="tag-failed", runner=runner)
+        cleanup.assert_not_called()
+        prune.assert_not_called()
+        self.image.prune_build_cache.assert_not_called()
         self.assertEqual("completed_with_cleanup_pending", result["outcome"])
         self.assertIn("Production image display tag failed: Runtime image operation failed",
                       (self.root / result["receipt_path"]).read_text())
         self.assertNotIn("tag unavailable", (self.root / result["receipt_path"]).read_text())
+
+    def test_cache_prune_failure_reports_pending_after_promotion(self):
+        self.image.prune_build_cache.side_effect = RuntimeError("prune unavailable")
+        runner, _ = self._runner()
+        result = run_local_release(self.root, run_id="prune-failed", runner=runner)
+        self.assertEqual("completed_with_cleanup_pending", result["outcome"])
+        self.assertIn("Docker build cache cleanup failed.", (self.root / result["receipt_path"]).read_text())
 
 
     def test_native_manifest_change_stops_before_product_replacement(self):

@@ -1,10 +1,13 @@
-"""Remove only verified unused Project-owned noncandidate runtime images."""
+"""Purge unused test images and retain the Project's production history."""
 
 
+from contextlib import contextmanager
+import fcntl
 import json
 import os
 from pathlib import Path
 import re
+import stat
 import subprocess
 from tempfile import NamedTemporaryFile
 
@@ -14,14 +17,20 @@ from .release_cleanup_identity import (
     SCHEMA,
     Runner,
     image_labels,
+    image_metadata,
     run_docker,
 )
+from .local_release_safety import INSTALLATION_LOCK_PATH
 
 
 _OWNER_KEYS = (
     "org.anechoic.project",
     "org.anechoic.control_root",
     "org.anechoic.host_project_root",
+)
+_BROWSER_TEST_PREFIXES = ("anechoic-browser-", "anechoic-verified-browser-")
+_LEGACY_TEST_TAG = re.compile(
+    r"anechoic-runtime:\d+(?:\.\d+)+-(?:test|beta)-\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}Z-"
 )
 
 
@@ -77,6 +86,74 @@ def _foreign_owner(labels: dict[str, str], owner: dict[str, str]) -> bool:
     )
 
 
+def _test_tags(metadata) -> tuple[str, ...]:
+    tags = tuple(metadata.RepoTags or ())
+    candidates = {f"anechoic-runtime:{role}-{metadata.Id[7:]}" for role in ("test", "beta")}
+    short_id = metadata.Id[7:19]
+    if all(tag in candidates or tag.partition(":")[0].startswith(_BROWSER_TEST_PREFIXES)
+           or (tag.endswith(short_id) and _LEGACY_TEST_TAG.fullmatch(tag[:-len(short_id)])) for tag in tags):
+        return tags
+    return ()
+
+
+@contextmanager
+def _candidate_checkout_lock(root: Path, candidate_root: Path):
+    if candidate_root == root:
+        yield
+        return
+    lock = candidate_root / INSTALLATION_LOCK_PATH
+    if lock.resolve() != lock:
+        raise ValueError("Candidate checkout lock path is unsafe")
+    try:
+        descriptor = os.open(lock, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    except FileNotFoundError:
+        yield
+        return
+    try:
+        if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+            raise ValueError("Candidate checkout lock is not a file")
+        fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        yield
+    finally:
+        os.close(descriptor)
+
+
+def _container_references(root: Path, runner: Runner | None, image: str) -> bool:
+    return bool(run_docker(
+        root, runner, "container", "ls", "--all", "--filter", f"ancestor={image}", "--quiet"
+    ).strip())
+
+
+def _purge_test_images(root, runner, candidates, protected, cleanup):
+    removed = set()
+    for image in sorted(candidates.keys() - protected):
+        owner = candidates[image]
+        try:
+            with _candidate_checkout_lock(root, Path(owner["org.anechoic.host_project_root"])):
+                metadata = image_metadata(root, runner, image)
+                tags = _test_tags(metadata)
+                if not tags or not _has_owner(metadata.Config.Labels, owner):
+                    raise ValueError("Test image role or ownership changed")
+                if _container_references(root, runner, image):
+                    cleanup.notes.append(f"Test image {image} retained: a container still uses it.")
+                    cleanup.pending = True
+                    continue
+                run_docker(root, runner, "image", "rm", *tags)
+                removed.add(image)
+        except (OSError, RuntimeError, ValueError, subprocess.TimeoutExpired):
+            cleanup.pending = True
+            cleanup.notes.append(f"Test image {image} retained: checkout busy or removal unverified.")
+    if removed:
+        try:
+            remaining = set(run_docker(root, runner, "image", "ls", "--all", "--no-trunc", "--quiet").splitlines())
+            cleanup.notes.extend(f"Purged test image {image}." for image in sorted(removed - remaining))
+            cleanup.notes.extend(f"Test image {image} still exists in Docker." for image in sorted(removed & remaining))
+            cleanup.pending |= bool(removed & remaining)
+        except (OSError, RuntimeError, ValueError, subprocess.TimeoutExpired):
+            cleanup.pending = True
+            cleanup.notes.append("Docker test image removal could not be verified.")
+
+
 def _remove_image(
     root: Path,
     runner: Runner | None,
@@ -98,10 +175,7 @@ def _remove_image(
             cleanup.pending = True
             cleanup.notes.append(f"Image {image} retained without Project ownership evidence.")
         return
-    references = run_docker(
-        root, runner, "container", "ls", "--all", "--filter", f"ancestor={image}", "--quiet"
-    )
-    if references.strip():
+    if _container_references(root, runner, image):
         cleanup.notes.append(f"Image {image} retained: a container still uses it.")
         cleanup.pending = True
         return
@@ -111,7 +185,7 @@ def _remove_image(
 
 def _discover_images(
     root: Path, runner: Runner | None, current_image: str, cleanup: Cleanup
-) -> list[str]:
+) -> tuple[list[str], dict[str, dict[str, str]]]:
     observed = list(dict.fromkeys(
         run_docker(
             root, runner, "image", "ls", "--no-trunc", "--quiet", "--filter", f"label={SCHEMA}=1"
@@ -119,12 +193,16 @@ def _discover_images(
     ))
     if any(IMAGE.fullmatch(image) is None for image in observed):
         raise ValueError("Docker cleanup identifiers are invalid")
-    owned = []
+    owned, candidates = [], {}
     for image in observed:
         if image == current_image:
             continue
         try:
-            labels = image_labels(root, runner, image)
+            metadata = image_metadata(root, runner, image)
+            labels = metadata.Config.Labels
+            if _test_tags(metadata) and (_has_owner(labels, cleanup.owner) or _foreign_owner(labels, cleanup.owner)):
+                candidates[image] = labels
+                continue
             if _has_owner(labels, cleanup.owner):
                 cleanup.images.add(image)
                 owned.append(image)
@@ -139,7 +217,7 @@ def _discover_images(
         except OSError, RuntimeError, ValueError, subprocess.TimeoutExpired:
             cleanup.pending = True
             cleanup.notes.append(f"Image {image} retained: ownership inspection failed.")
-    return owned
+    return owned, candidates
 
 
 def cleanup_obsolete_images(
@@ -153,7 +231,7 @@ def cleanup_obsolete_images(
     previous_images: tuple[str, ...] = (),
 ) -> None:
     try:
-        owned = _discover_images(root, runner, current_image, cleanup)
+        owned, candidates = _discover_images(root, runner, current_image, cleanup)
     except OSError, RuntimeError, ValueError, subprocess.TimeoutExpired:
         cleanup.pending = True
         cleanup.notes.append("Runtime image discovery unavailable; unproven images retained.")
@@ -180,7 +258,8 @@ def cleanup_obsolete_images(
         if image not in protected:
             protected.add(image)
             retained += 1
-    for image in sorted(cleanup.images - protected):
+    _purge_test_images(root, runner, candidates, protected, cleanup)
+    for image in sorted(cleanup.images - protected - candidates.keys()):
         try:
             _remove_image(root, runner, image, current_image, cleanup)
         except OSError, RuntimeError, ValueError, subprocess.TimeoutExpired:

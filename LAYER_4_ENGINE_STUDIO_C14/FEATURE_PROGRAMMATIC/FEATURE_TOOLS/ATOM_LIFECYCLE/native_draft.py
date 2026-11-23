@@ -12,7 +12,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (native_carrier_path, spec_lens_directories,
                                       DRAFT_DIRECTORY)
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import revalidate_native
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import frontmatter_bounds
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_carrier
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CEILINGS, ReadContext
@@ -46,7 +46,12 @@ def _validate_project_template(header, validate, body=None):
 
 
 def create_draft(selection, params, *, current_rows, structure_snapshot=None, ticket_labels=(),
-                 validate_project_spec_model=None):
+                 validate_project_spec_model=None, previous_capture=None, indexed_task=None):
+    if indexed_task is not None and (not isinstance(params, dict) or set(params) != {'newAtom'}
+            or not isinstance(params['newAtom'], dict) or params['newAtom'].get('template') not in ('task', 'epic')
+            or not isinstance(params['newAtom'].get('container'), dict)
+            or set(params['newAtom']['container']) != {'component'}):
+        raise common.InputError('newAtom', 'Indexed creation requires a Component Task or Epic.')
     if isinstance(params, dict) and 'newAtom' in params:
         if set(params) != {'newAtom'}:
             raise common.InputError('newAtom', 'Supply only new Task or Epic properties.')
@@ -55,20 +60,20 @@ def create_draft(selection, params, *, current_rows, structure_snapshot=None, ti
         if isinstance(template, str) and template in PROJECT_SPEC_TIERS:
             if validate_project_spec_model is None:
                 raise common.InputError('newAtom', 'The compiled Model does not admit this Project SPEC Template.')
-            return create_project_spec(selection, values, validate_project_spec_model)
+            return create_project_spec(selection, values, validate_project_spec_model, previous_capture)
         if template == 'component_contract':
-            return _create_component_contract(selection, params['newAtom'], structure_snapshot)
-        return _create_task(selection, params['newAtom'], current_rows, structure_snapshot, ticket_labels)
-    return _create_revision(selection, params, current_rows, structure_snapshot)
+            return _create_component_contract(selection, params['newAtom'], structure_snapshot, previous_capture)
+        return _create_task(selection, params['newAtom'], current_rows, structure_snapshot, ticket_labels, previous_capture, indexed_task)
+    return _create_revision(selection, params, current_rows, structure_snapshot, previous_capture)
 
 
-def _create_revision(selection, params, current_rows, structure_snapshot):
+def _create_revision(selection, params, current_rows, structure_snapshot, previous_capture):
     target, changes, selected, digest, relative = _revision_input(selection, params, current_rows)
     path = selection.root / relative
     root = _revision_root(selection, selected, structure_snapshot, current_rows)
     with _project_write_lock(selection.root):
         try:
-            capture = capture_native(selection)
+            capture = revalidate_native(selection, previous_capture)
             fresh = [row for row in capture.atoms if row.get('id') == target['ref_id'] and row.get('status_group') == 'Current']
             if capture.errors or len(fresh) != 1 or any(fresh[0].get(key) != selected.get(key) for key in (
                     'source_path', 'id', 'ref', '_exact_ref', 'version', 'status', 'status_group',
@@ -129,7 +134,7 @@ def _revision_input(selection, params, current_rows):
     return target, changes, selected, digest, relative
 
 
-def _create_component_contract(selection, values, structure_snapshot):
+def _create_component_contract(selection, values, structure_snapshot, previous_capture):
     if (set(values) != {'template', 'container', 'lens', 'body'} or not isinstance(values['body'], str)
             or not isinstance(values['lens'], str) or not values['lens'].strip()
             or not isinstance(values['container'], dict) or set(values['container']) != {'component'}
@@ -145,7 +150,7 @@ def _create_component_contract(selection, values, structure_snapshot):
         raise common.SourceChanged('Selected Project path is invalid.')
     with _first_spec_write_lock(selection.root):
         try:
-            capture = capture_native(selection)
+            capture = revalidate_native(selection, previous_capture)
         except (OSError, RuntimeError, ValueError) as error:
             raise common.SourceChanged('Native carriers changed during Contract selection.') from error
         if capture.errors:

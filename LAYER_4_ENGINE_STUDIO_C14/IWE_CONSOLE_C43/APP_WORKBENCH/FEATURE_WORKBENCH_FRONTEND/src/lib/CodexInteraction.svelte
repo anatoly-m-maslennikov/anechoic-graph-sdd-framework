@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { inputAnswers, record } from './codex_protocol.js';
-  import type { NativeRequest } from './codex_protocol.js';
+  import { inputAnswers, record } from './codex_protocol';
+  import type { NativeRequest } from './codex_protocol';
   let { request, onrespond }: { request: NativeRequest; onrespond: (value: unknown) => Promise<void> } = $props();
   let answers = $state<Record<string, string>>({}); let content = $state('{}'); let error = $state(''); let sending = $state(false);
   const params = $derived(request.params);

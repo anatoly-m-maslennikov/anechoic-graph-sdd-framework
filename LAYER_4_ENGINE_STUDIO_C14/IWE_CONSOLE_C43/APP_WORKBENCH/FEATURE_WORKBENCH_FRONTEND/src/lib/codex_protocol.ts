@@ -1,22 +1,19 @@
 
-/** @typedef {{id: string, role: string, text: string}} ChatEntry */
-/** @typedef {{id: string | number, method: string, params: Record<string, any>}} NativeRequest */
+export type ChatEntry = { id: string; role: string; text: string };
+export type NativeRequest = { id: string | number; method: string; params: Record<string, any> };
 
-/** @param {unknown} value @returns {value is Record<string, any>} */
-export function record(value) { return value !== null && typeof value === 'object' && !Array.isArray(value); }
+export function record(value: unknown): value is Record<string, any> { return value !== null && typeof value === 'object' && !Array.isArray(value); }
 
-/** @param {unknown} value @returns {string} */
-function contentText(value) {
+function contentText(value: unknown): string {
   if (typeof value === 'string') return value;
   if (!Array.isArray(value)) return '';
   return value.map((part) => record(part) && typeof part.text === 'string' ? part.text : '').filter(Boolean).join('\n');
 }
 
-/** @param {unknown} thread @returns {ChatEntry[]} */
-export function historyEntries(thread) {
+export function historyEntries(thread: unknown): ChatEntry[] {
   if (!record(thread) || !Array.isArray(thread.turns)) return [];
   return thread.turns.flatMap((turn) => (Array.isArray(turn.items) ? turn.items : []).flatMap(
-    /** @param {Record<string, any>} item */ (item) => {
+    (item: Record<string, any>) => {
       if (item.type !== 'userMessage' && item.type !== 'agentMessage') return [];
       const text = contentText(item.type === 'userMessage' ? item.content : item.text);
       return text ? [{ id: String(item.id), role: item.type === 'userMessage' ? 'You' : 'Codex', text }] : [];
@@ -24,14 +21,12 @@ export function historyEntries(thread) {
   ));
 }
 
-/** @param {unknown} packet @returns {NativeRequest | null} */
-export function interaction(packet) {
+export function interaction(packet: unknown): NativeRequest | null {
   return record(packet) && (typeof packet.id === 'string' || typeof packet.id === 'number') && typeof packet.method === 'string'
     ? { id: packet.id, method: packet.method, params: record(packet.params) ? packet.params : {} } : null;
 }
 
-/** @param {ChatEntry[]} entries @param {unknown} packet @returns {ChatEntry[]} */
-export function applyNativeEvent(entries, packet) {
+export function applyNativeEvent(entries: ChatEntry[], packet: unknown): ChatEntry[] {
   if (!record(packet) || !record(packet.params)) return entries;
   const params = packet.params;
   let id = ''; let text = ''; let role = 'Codex'; let append = false;
@@ -49,8 +44,7 @@ export function applyNativeEvent(entries, packet) {
   return previous ? entries.map((entry) => entry.id === id ? next : entry) : [...entries, next];
 }
 
-/** @param {string} buffer @returns {{events: Record<string, any>[], rest: string}} */
-export function sseFrames(buffer) {
+export function sseFrames(buffer: string): {events: Record<string, any>[]; rest: string} {
   const frames = buffer.replace(/\r\n/g, '\n').split('\n\n');
   const rest = frames.pop() || '';
   return { rest, events: frames.flatMap((frame) => {
@@ -62,7 +56,6 @@ export function sseFrames(buffer) {
   }) };
 }
 
-/** @param {Array<{id: string}>} questions @param {Record<string, string>} answers */
-export function inputAnswers(questions, answers) {
+export function inputAnswers(questions: Array<{id: string}>, answers: Record<string, string>) {
   return { answers: Object.fromEntries(questions.map((question) => [question.id, { answers: [answers[question.id] || ''] }])) };
 }

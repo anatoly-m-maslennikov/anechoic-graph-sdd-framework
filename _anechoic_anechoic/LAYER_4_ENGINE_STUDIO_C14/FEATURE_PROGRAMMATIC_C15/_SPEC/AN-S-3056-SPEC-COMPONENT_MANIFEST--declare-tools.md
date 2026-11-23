@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: "active"
-  version: 52
-  updated_at: "2026-11-23T00:34:06.512074+00:00"
+  version: 54
+  updated_at: "2026-11-23T09:56:32.676138+00:00"
 ---
 ## Summary
 
@@ -331,6 +331,8 @@ declare_entity(
                     'FEATURE_TOOLS__shared.discover_native_project': 'public',
                     'FEATURE_TOOLS__shared.LIFECYCLE_TOOLS': {'private': ['C59']},
                     'FEATURE_TOOLS__shared.bind_native_runtime': {'private': ['C59']},
+                    'FEATURE_TOOLS__shared.indexed_draft_runner': {'private': [
+                        'C69', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
                     'FEATURE_TOOLS__shared.execute_native_lifecycle': {'private': ['C59']},
                     'FEATURE_TOOLS__shared.is_native_control_name': 'public',
                     'FEATURE_TOOLS__shared.mcp_tool_blacklist': 'public',
@@ -341,6 +343,7 @@ declare_entity(
             'io': {'server': {'task_lifecycle': {'transport': 'cli', 'runner': 'managed_python',
                        'module': 'FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_lifecycle_cli',
                        'input': 'bound Task, Epic, or Ticket Asset lifecycle request and Model and Structure attestation on stdin',
+                       'optional_input': 'indexed_task',
                        'output': 'native outcome and file effects on stdout'}}},
             'state': {
                 'channels': {'lifecycle_query_reader': 'rw'},
