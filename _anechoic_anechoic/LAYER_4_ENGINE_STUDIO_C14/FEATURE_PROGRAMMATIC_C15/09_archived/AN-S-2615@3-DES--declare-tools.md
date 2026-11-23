@@ -1,0 +1,112 @@
+---
+atom_family: SPEC
+atom_id: AN-S-2615
+container:
+  component: C15
+tier: 3
+context:
+  lens: DES
+state:
+  status: archived
+  version: 3
+  updated_at: 2026-11-11 15:29:41 +0400
+---
+## Summary
+
+Declare TOOLS
+
+## Claim
+
+### Formal Claim
+
+```CFEL
+# instances
+Scope Unit//TOOLS.ID == "CA-SU-16";
+
+Scope Unit//TOOLS.Name == "TOOLS";
+
+Scope Unit//TOOLS.Label == "FEATURE";
+
+Scope Unit//TOOLS.order.ordered == false;
+
+Scope Unit//TOOLS ((IS_CONTAINED_BY)) Scope Unit//PROGRAMMATIC;
+
+Atom/(.Header.Context.Container.scope_unit in ("CA-SU-16"))/(.Header.Context.Role in (Requirement)).Header.Context.Form :: Requirement;
+Atom/(.Header.Context.Container.scope_unit in ("CA-SU-16"))/(.Header.Context.Role in (Requirement)).Header.Context.Form :: Declaration;
+Atom/(.Header.Context.Container.scope_unit in ("CA-SU-16"))/(.Header.Context.Role in (Requirement)).Header.Context.Form :: Scope Delegation;
+Atom/(.Header.Context.Container.scope_unit in ("CA-SU-16"))/(.Header.Context.Role in (Method)).Header.Context.Form :: Decision;
+Atom/(.Header.Context.Container.scope_unit in ("CA-SU-16"))/(.Header.Context.Role in (Evaluation)).Header.Context.Form :: Decision;
+Atom/(.Header.Context.Container.scope_unit in ("CA-SU-16"))/(.Header.Context.Role in (Evaluation)).Header.Context.Form :: Eval Case;
+Atom/(.Header.Context.Container.scope_unit in ("CA-SU-16"))/(.Header.Context.Role in (Delivery)).Header.Context.Form :: Decision;
+Atom/(.Header.Context.Container.scope_unit in ("CA-SU-16"))/(.Header.Context.Role in (Operations)).Header.Context.Form :: Decision;
+Atom/(.Header.Context.Container.scope_unit in ("CA-SU-16"))/(.Header.Context.Role in (Operations)).Header.Context.Form :: Workflow;
+Atom/(.Header.Context.Container.scope_unit in ("CA-SU-16"))/(.Header.Context.Role in (Operations)).Header.Context.Form :: Step;
+Atom/(.Header.Context.Container.scope_unit in ("CA-SU-16"))/(.Header.Context.Role in (Operations)).Header.Context.Form :: Action;
+```
+
+
+### Prose Claim
+
+Existing global default admissions, including existing Declaration families, remain unchanged; no additional pairs are granted. No exact Current Solution, Direct Policy, or Approach Policy Role/Form pair is selected. Plan / Work Report remains admitted only for an already admitted Task with the same Container and within the selected target boundary.
+
+For every admitted local Atom, the Header.Container-derived IS_CONTAINED_BY target must be exactly `Scope Unit//TOOLS` (`CA-SU-16`). Its HAS_ACTIVE_SUBJECT target is closed to exactly the declared model entities or declared instances resolved at these Current local main Subject addresses:
+- `Scope Unit`
+- `Subject/ANECHOIC/Carrier/File`
+- `Subject/ANECHOIC/Carrier/File.Extension`
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Architecture/Communication`
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Architecture/Component Structure`
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Data Handling/Data Transformation`
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Data Handling/Data Validation`
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Data Handling/Output Publication`
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Data Handling/Parsing`
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Data Handling/Serialization`
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Data Handling/Source Retrieval`
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Data Handling/Source Selection`
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Delivery`
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Delivery/Extension Lifecycle`
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Execution Control`
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Execution Control/Failure Handling`
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Storage`
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Storage/Directory Layout`
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Verification`
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Verification/Coverage`
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Verification/Dynamic Testing`
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Verification/Static Analysis`
+- `Subject/ANECHOIC/Graph/Node/Project Model/Atom.Content`
+- `Subject/ANECHOIC/Graph/Node/Project Model/Atom.ID`
+- `Subject/ANECHOIC/Graph/Node/Project Model/Atom.Status`
+- `Subject/ANECHOIC/Graph/Node/Project Model/Atom.Subjects`
+- `Subject/ANECHOIC/Graph/Node/Project Model/Atom.Summary`
+- `Subject/ANECHOIC/Graph/Node/Project Model/Atom.Tier`
+- `Subject/ANECHOIC/Graph/Node/Project Model/Atom.Type`
+- `Subject/ANECHOIC/Graph/Node/Project Model/Atom.Version Number`
+- `Subject/ANECHOIC/Graph/Node/Project Model/Atom/Content Role: Evaluation`
+- `Subject/ANECHOIC/Graph/Node/Project Model/Atom/Content Role: Plan`
+- `Subject/ANECHOIC/Graph/Node/Project Model/Event`
+- `Subject/ANECHOIC/Graph/Node/Project Model/Execution`
+- `Subject/ANECHOIC/Graph/Node/Project Model/Execution.Outcome`
+- `Subject/ANECHOIC/Graph/Node/Project Model/Execution/Workflow Run`
+- `Subject/ANECHOIC/Graph/Node/Project Model/Execution/Workflow Run.Provenance`
+- `Subject/ANECHOIC/Graph/Node/Project Model/Execution/Workflow Run.Source Admission`
+- `Subject/ANECHOIC/Graph/Node/Project Model/Governing Configuration`
+- `Subject/ANECHOIC/Graph/Node/Project Model/History/Journal`
+- `Subject/ANECHOIC/Graph/Node/Project Model/History/Journal.Record`
+- `Subject/ANECHOIC/Graph/Node/Project Model/Implementation/Code`
+- `Subject/ANECHOIC/Graph/Node/Project Model/Implementation/Code/Tool`
+- `Subject/ANECHOIC/Graph/Node/Project Model/Implementation/Code/Tool.Effect Result`
+- `Subject/ANECHOIC/Graph/Node/Project Model/Implementation/Code/Tool.Self Description`
+- `Subject/ANECHOIC/Graph/Node/Project Model/Project`
+- `Subject/ANECHOIC/Graph/Node/Project Model/Project.Settings`
+- `Subject/ANECHOIC/Graph/Node/Project Model/Projection`
+- `Subject/ANECHOIC/Graph/Node/Project Model/Projection/Type: Catalog`
+- `Subject/ANECHOIC/Graph/Node/Project Model/Scope Unit`
+- `Subject/ANECHOIC/Graph/Node/Project Model/Scope Unit.Path`
+- `Subject/ANECHOIC/Graph/Node/Project Model/Selection`
+- `Subject/ANECHOIC/Graph/Relation`
+- `Subject/ANECHOIC/Graph/Relation.Target Reference`
+- `Subject/ANECHOIC/Graph/Relation/Type`
+- `Subject/ANECHOIC/Graph/Relation/Type: child_of`
+- `Subject/ANECHOIC/Graph/Relation/Type: structural_parent`
+- `Subject/ANECHOIC/Graph/Rule`
+
+The selection contains exact objects only, not strings, type members, or descendants; an unresolved address grants no admission.
