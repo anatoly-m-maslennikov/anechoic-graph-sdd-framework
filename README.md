@@ -351,8 +351,9 @@ its research remain non-authoritative; full migration is not claimed complete.
 
 The original records, including held Drafts and pinned revisions, stay in Git
 as read-only archives under [`archives/.anechoic_legacy/`](archives/.anechoic_legacy/)
-and `.anechoic_legacy_archive/`. The earlier archive tree is under
-[`archives/.anechoic_archive/`](archives/.anechoic_archive/). The
+and [`archives/.anechoic_archive/`](archives/.anechoic_archive/). The retained
+integration snapshot is under
+[`archives/.anechoic_legacy_archive/`](archives/.anechoic_legacy_archive/). The
 [native alias map](_anechoic_anechoic/_migration/native-aliases.json) resolves old
 references to exact native revisions.
 
