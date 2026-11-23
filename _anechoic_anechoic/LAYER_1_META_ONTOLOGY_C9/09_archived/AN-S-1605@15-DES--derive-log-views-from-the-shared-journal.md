@@ -1,0 +1,32 @@
+---
+atom_family: SPEC
+atom_id: AN-S-1605
+container:
+  component: C9
+tier: 2
+context:
+  lens: DES
+state:
+  status: archived
+  version: 15
+  updated_at: 2026-10-24 00:38:25 +0400
+---
+## Summary
+
+Derive log views from the shared Journal
+
+# Summary
+
+Derive log views from the shared Journal
+
+## Scope
+
+Artifact Change Log and Process Log log Projection Types derived from the same Project Journal.
+
+## Claim
+
+the Core Meta-Model **must** provide Artifact Change Log **and** Process Log as **`=2`** log Projection Types derived from the same Project Journal, under CA-R-1467-CORE_META_MODEL--define-artifact-change-log-projection **and** CA-R-1468-CORE_META_MODEL-REQUIREMENT--define-process-log-projection. these Types organize recorded history **without** introducing independent Journals; additional Projection Types remain governed by the open Projection model.
+
+**every** represented historical fact **must** remain traceable **to** its canonical source event record **and** Event identity. the same source event **may** appear **in** both views **without** becoming two authoritative records. a read-only execution requires no fictitious Artifact change; membership **and** execution associations **must** come from recorded source evidence rather than invented events **or** inferred success. a view **must** remain rebuildable from its declared Journal selection, disclose known incomplete **or** stale source coverage **without** claiming complete current history, **and** obtain corrections through the owning source authority rather than independent log edits.
+
+## Details

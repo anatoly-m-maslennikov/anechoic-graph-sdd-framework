@@ -1,0 +1,32 @@
+---
+atom_family: SPEC
+atom_id: AN-S-2673
+container:
+  component: C9
+tier: 2
+context:
+  lens: DES
+state:
+  status: archived
+  version: 12
+  updated_at: 2026-10-24 01:18:03 +0400
+---
+## Summary
+
+Admit typed secondary graph connections
+
+# Summary
+
+Admit typed secondary graph connections
+
+## Scope
+
+connections represented by a secondary ANECHOIC Graph.
+
+## Claim
+
+a secondary ANECHOIC Graph **may** represent typed Relations between its own nodes, **to** another secondary graph **or** its nodes, **and** **to** source Atoms **or** other admitted authoritative sources.
+
+**every** connection **must** use **`=1`** graph-qualified Relation Kind whose governing authority admits its endpoint classes, endpoint graph contexts, direction, **and** cardinality. crossing a graph boundary **must not** transfer Relation Kind ownership, import a foreign Relation Kind as native, **or** make a referenced external endpoint a native node of the receiving graph. a cross-graph reference preserves the referenced identity **without** copying its source fact into independent authority. these permissions do **not** admit concrete Relation Kinds **or** authorize inference beyond their declared rules.
+
+## Details

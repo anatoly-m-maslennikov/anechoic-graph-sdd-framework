@@ -1,0 +1,25 @@
+---
+atom_family: SPEC
+atom_id: AN-S-1942
+container:
+  component: C46
+tier: 4
+context:
+  lens: SWD
+state:
+  status: archived
+  version: 1
+  updated_at: 2026-11-04 23:19:17 +0400
+---
+
+## Summary
+
+Use a simple SQL editor for Workbench
+
+## Claim scope
+
+Workbench SQL editing, schema completion and query actions.
+
+## Claim
+
+Use CodeMirror 6 with its SQL language support for a text-only SQL editor and autocomplete from read-only `query_schema` metadata for actual atoms, scope_units and declared `content.*` columns. Quote names with spaces. Allow multiple statements separated by semicolons while preserving quoted strings, comments and dollar-quoted strings. The editor sends the full Worksheet and its UTF-16 cursor position. Only the backend selects statement boundaries using native DuckDB tokenization; CodeMirror provides editing, highlighting and completion, not SQL validation or a second selector; a cursor exactly on a semicolon selects the statement to its left; do not write a homegrown SQL parser. Bind `Cmd+Enter` to Run and `Shift+Cmd+Enter` to Check; these are different operations and target the statement at the cursor. Buttons Run, Check and Save target the same active statement; Save Worksheet targets the whole script. Do not execute SQL while building autocomplete suggestions.
