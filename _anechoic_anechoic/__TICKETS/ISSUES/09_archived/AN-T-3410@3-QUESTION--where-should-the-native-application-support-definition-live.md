@@ -1,0 +1,34 @@
+---
+atom_family: TKT
+atom_id: AN-T-3410
+container:
+  component: C00
+priority: 2
+context:
+  template: question
+state:
+  status: archived
+  version: 3
+  updated_at: 2026-10-23 03:18:40 +0400
+---
+## Summary
+
+Where should the native application support definition live?
+
+# Where should the native application support definition live?
+
+should the native-support definition **in** CA-R-826 remain a local qualifier of that Boundary Claim **or** become separately governed reusable authority, **and** which owner preserves its intended applicability?
+
+## Evidence
+
+- CA-R-826 fixes the current native application support set **to** Codex, defines native support as ANECHOIC-owned adapter installation, invocation **and** host-session identity handling **without** a compatibility Extension, **and** reserves boundary expansion **to** later active Boundary authority.
+- current available product support is **not** the same fact as the selected application **in** Framework Instance Settings. moving the whole Claim into Settings would lose that distinction.
+- the adapter definition could be a qualifier needed **to** interpret this single support boundary **or** independently reusable terminology; the active Claim does **not** declare that boundary explicitly.
+
+## Principle check
+
+CA-M-001 requires a genuine decomposition boundary; CA-M-002 rejects duplicated definitions; CA-M-005 prohibits unnecessary Entities; CA-R-1490 preserves the support limits **and** adapter responsibilities. these Principles do **not** establish that an independent definition Atom is necessary **or** identify its intended owner.
+
+## Disposition
+
+retain CA-R-826 **and** the current support set. review the definition's actual reuse **before** splitting; **if** it is independently governed, preserve all adapter conditions **and** replace the predecessor under the Atom identity rules. do **not** expand supported applications, confuse support with selected Settings, **or** silently move a Project capability into the universally applicable Core Meta-Model.
