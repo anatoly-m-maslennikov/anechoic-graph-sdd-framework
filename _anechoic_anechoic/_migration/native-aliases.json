@@ -73813,5 +73813,15 @@
     "CA-R-1901@16",
     "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/04_requirement/archive/retired_scope/CA-SU-2_APP_WORKFLOW_ORCHESTRATOR/archive/CA-R-1901@16-WORKFLOW_ORCHESTRATOR-RULE--admit-one-compatible-project-mcp-runtime.md",
     "AN-S-1993@16"
+  ],
+  [
+    "CA-O-221@1",
+    "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-16_FEATURE_TOOLS/09_operations/099_archived/CA-O-221-TOOLS-ACTION--append-sealed-journal-change-records@1.md",
+    "AN-P-77@1"
+  ],
+  [
+    "CA-O-221@2",
+    "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-16_FEATURE_TOOLS/09_operations/099_archived/CA-O-221-TOOLS-ACTION--append-sealed-journal-change-records@2.md",
+    "AN-P-77@2"
   ]
 ]

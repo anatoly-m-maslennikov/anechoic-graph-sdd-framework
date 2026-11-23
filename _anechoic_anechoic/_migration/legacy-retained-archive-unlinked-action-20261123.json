@@ -1,0 +1,80 @@
+{
+  "records": [
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-16_FEATURE_TOOLS/09_operations/099_archived/CA-O-221-TOOLS-ACTION--append-sealed-journal-change-records@1.md",
+      "source_sha256": "84f9d9c9814e2c0e939e506cf5f4cebc5bc98eaa883957412b6b3165311b183c",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-221@1",
+      "native_ref": "AN-P-77@1",
+      "destination": "_anechoic_anechoic/__PROJECT_CONFIG/09_archived/AN-P-77@1-ACTION--append-sealed-journal-change-records.md",
+      "destination_sha256": "ee94dce9abcc7e7f444c454d4540b12efcea17706fe28321f2b9cf7fd5ccad7e",
+      "body_sha256": "2e7986b7919b5dad14c0b23f25a3e104ef9f09a0671831182c33ae3942470ff9",
+      "body_prefix_bytes": 253,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C16"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Append Change Records",
+        "depends_on": [
+          "Journal",
+          "Journal/Record",
+          "Commit Context",
+          "Operator"
+        ]
+      },
+      "operations_family_evidence": "Archived Action or Step with no Workflow binding in retained sources",
+      "fresh_legacy_id": "CA-O-221",
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-16_FEATURE_TOOLS/09_operations/099_archived/CA-O-221-TOOLS-ACTION--append-sealed-journal-change-records@2.md",
+        "sha256": "12b21dae6a13719917a04ff571d44a8a48bcd7facdc0f1c2dab1387733446220",
+        "reason": "earlier revision retained with the later Archived revision"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-16_FEATURE_TOOLS/09_operations/099_archived/CA-O-221-TOOLS-ACTION--append-sealed-journal-change-records@2.md",
+      "source_sha256": "12b21dae6a13719917a04ff571d44a8a48bcd7facdc0f1c2dab1387733446220",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-221@2",
+      "native_ref": "AN-P-77@2",
+      "destination": "_anechoic_anechoic/__PROJECT_CONFIG/09_archived/AN-P-77@2-ACTION--append-sealed-journal-change-records.md",
+      "destination_sha256": "0107fea1473623e61383aa25acefaa6f17c414088ee75c8e43d0dfe6c327d446",
+      "body_sha256": "2e7986b7919b5dad14c0b23f25a3e104ef9f09a0671831182c33ae3942470ff9",
+      "body_prefix_bytes": 253,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C16"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Append Change Records",
+        "depends_on": [
+          "Journal",
+          "Journal/Record",
+          "Commit Context",
+          "Operator"
+        ]
+      },
+      "operations_family_evidence": "Archived Action or Step with no Workflow binding in retained sources",
+      "fresh_legacy_id": "CA-O-221",
+      "legacy_status": "archived"
+    }
+  ],
+  "assigned_ids": {
+    "CA-O-221": "AN-P-77"
+  },
+  "previous_id_map_sha256": "928a9e0205ae7a860edc7b75db477a5bf293149bedc4c14ee3851e313ff2f873",
+  "previous_alias_map_sha256": "e0ee614634a62c3baa3fb730e3f4fd1d9212413a46a861537005fc9b6cbedaff"
+}
