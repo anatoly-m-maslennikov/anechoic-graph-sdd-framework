@@ -1,0 +1,76 @@
+{
+  "records": [
+    {
+      "source": "archives/.anechoic_archive/01_concern/099_archived/CA-C-749@1-QUESTION--confirm-how-legacy-scope-units-map-to-anechoic-components.md",
+      "source_sha256": "cabaa402b2e5e2b0240cba60093ce915cffad44df7b18c6ce0f4fe96c2d10684",
+      "other_sources": [],
+      "legacy_ref": "CA-C-749@1",
+      "native_ref": "AN-T-2779@1",
+      "anchor": "_anechoic_anechoic/__TICKETS/ISSUES/resolved/AN-T-2779-QUESTION--confirm-how-legacy-scope-units-map-to-anechoic-components.md",
+      "anchor_sha256": "f4efda4faa2436902916669d31e9c2a997a9840644a25db1c4add8fe31968832",
+      "destination": "_anechoic_anechoic/__TICKETS/ISSUES/09_archived/AN-T-2779@1-QUESTION--confirm-how-legacy-scope-units-map-to-anechoic-components.md",
+      "destination_sha256": "f6d049ce3b4fa81dd2cf8464f7d146277efb9b05f5198eb8af92a6665d1b4950",
+      "body_sha256": "f0e9a3ba0d30f185eebf0cac998f93bf95e92b4359643317dcf102538610a26d"
+    },
+    {
+      "source": "archives/.anechoic_archive/01_concern/099_archived/CA-C-749@2-QUESTION--confirm-how-legacy-scope-units-map-to-anechoic-components.md",
+      "source_sha256": "89a837305d67953704c202571399616c24a0fb9e207404ce6db49fbca57a07ea",
+      "other_sources": [],
+      "legacy_ref": "CA-C-749@2",
+      "native_ref": "AN-T-2779@2",
+      "anchor": "_anechoic_anechoic/__TICKETS/ISSUES/resolved/AN-T-2779-QUESTION--confirm-how-legacy-scope-units-map-to-anechoic-components.md",
+      "anchor_sha256": "f4efda4faa2436902916669d31e9c2a997a9840644a25db1c4add8fe31968832",
+      "destination": "_anechoic_anechoic/__TICKETS/ISSUES/09_archived/AN-T-2779@2-QUESTION--confirm-how-legacy-scope-units-map-to-anechoic-components.md",
+      "destination_sha256": "231101a93361c6931b9753b598611ce0fc3f2bcb1440a816af6703473a73c8e7",
+      "body_sha256": "d058d36cdf4f27ce222852bbd60138a724b01ba79e1e3020bf11cb3b5b1c61ee"
+    },
+    {
+      "source": "archives/.anechoic_archive/01_concern/099_archived/CA-C-750@1-QUESTION--resolve-exact-revision-collisions-from-withdrawn-drafts.md",
+      "source_sha256": "20039317d34674cefd7e0c3840183990cc7104ac0bc7e2fb03571e7d6e3a9159",
+      "other_sources": [],
+      "legacy_ref": "CA-C-750@1",
+      "native_ref": "AN-T-2778@1",
+      "anchor": "_anechoic_anechoic/__TICKETS/ISSUES/resolved/AN-T-2778-QUESTION--resolve-exact-revision-collisions-from-withdrawn-drafts.md",
+      "anchor_sha256": "dac88a37521f49527c1c00e668d33b470612563455727313b2e455e0501b6105",
+      "destination": "_anechoic_anechoic/__TICKETS/ISSUES/09_archived/AN-T-2778@1-QUESTION--resolve-exact-revision-collisions-from-withdrawn-drafts.md",
+      "destination_sha256": "7459f21260213f7864a7ca897a243ff6fb7ef31ad4fadb4c6c55e35b0d70890b",
+      "body_sha256": "0f51cfb06afa2b8fe3802fa1f67843b7cf9780e2a2d3e607dd49ec60863c4b8c"
+    },
+    {
+      "source": "archives/.anechoic_archive/01_concern/099_archived/CA-C-753@1-QUESTION--preserve-legacy-ticket-templates-during-mechanical-migration.md",
+      "source_sha256": "8450b7ed12f8eedb7235a0b1b10b109d52865fb22cd51e60053bb919f833a271",
+      "other_sources": [],
+      "legacy_ref": "CA-C-753@1",
+      "native_ref": "AN-T-2790@1",
+      "anchor": "_anechoic_anechoic/__TICKETS/ISSUES/AN-T-2790-QUESTION--preserve-legacy-ticket-templates-during-mechanical-migration.md",
+      "anchor_sha256": "ba557b6b122d92725e82933b2a20d4ff19ecbdbc2baa9d4d6a19f5d8a1484b37",
+      "destination": "_anechoic_anechoic/__TICKETS/ISSUES/09_archived/AN-T-2790@1-QUESTION--preserve-legacy-ticket-templates-during-mechanical-migration.md",
+      "destination_sha256": "5b10c92449a9a8a771f570ec95933fe0e9e86065475456cd3838d12971002781",
+      "body_sha256": "edc3b21d28f18297b1f333dbefe6f61ac1f47959a3a2c6c10ac017de3df5039c"
+    },
+    {
+      "source": "archives/.anechoic_archive/archive/CA-R-2452@1-ANATOLY-MASLENNIKOV-DEFINES_GOAL_FOR-anechoic--create-and-evolve-a-working-anechoic-framework.md",
+      "source_sha256": "8c9b38cacc7c453c5c52aff3c61e971e7fab00d58c743075b1e99e560d4db811",
+      "other_sources": [],
+      "legacy_ref": "CA-R-2452@1",
+      "native_ref": "AN-S-1233@1",
+      "anchor": "AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md",
+      "anchor_sha256": "51f465e53f9ae7b665486f1744ab9bafa3ba57f5fd68e7ddd363ef771d940abd",
+      "destination": "_anechoic_anechoic/09_archived/AN-S-1233@1-DES--create-and-evolve-a-working-anechoic-framework.md",
+      "destination_sha256": "29033358c52048d39c276d0c8c5ca73535df2e04edc610d8de5af0a96e7bc465",
+      "body_sha256": "b464ba50c3b83038a1c0a80751b8db3cac266beeecf1cfc617b93006b6c4694f"
+    },
+    {
+      "source": "archives/.anechoic_archive/archive/CA-R-2452@2-ANATOLY-MASLENNIKOV-DEFINES_GOAL_FOR-anechoic--create-and-evolve-a-working-anechoic-framework.md",
+      "source_sha256": "ead5c4c172d2e1b044b7594d9ff4f09adfc9f3a84f3b76f46a33fa5b2c28adcb",
+      "other_sources": [],
+      "legacy_ref": "CA-R-2452@2",
+      "native_ref": "AN-S-1233@2",
+      "anchor": "AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md",
+      "anchor_sha256": "51f465e53f9ae7b665486f1744ab9bafa3ba57f5fd68e7ddd363ef771d940abd",
+      "destination": "_anechoic_anechoic/09_archived/AN-S-1233@2-DES--create-and-evolve-a-working-anechoic-framework.md",
+      "destination_sha256": "2dc479b2f15e78ba983a6654212f42801de5c1002d933a2f6fcb511a9429cce8",
+      "body_sha256": "b464ba50c3b83038a1c0a80751b8db3cac266beeecf1cfc617b93006b6c4694f"
+    }
+  ]
+}
