@@ -1,0 +1,347 @@
+{
+  "records": [
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-130@7-PROJECT_CONFIGURATION-WORKFLOW--revert-approved-changes.md",
+      "source_sha256": "0ff8770434d7ddfc6b95287fe7ac897288ab006ea42f0a9114eb8c928384e8a5",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-130@7",
+      "native_ref": "AN-S-4504@7",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4504@7-DEVOPS-WORKFLOW--revert-approved-changes.md",
+      "destination_sha256": "3077d67c3e901029b910ab51d50926e2601b8f9f5fbd227adebd01a16ebf0efb",
+      "body_sha256": "dc4971ddc72b09e34d99537e25738004188b67a61399f7ad886df0c9d348a222",
+      "body_prefix_bytes": 241,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-O-132",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1525",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1720",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1643",
+          "position": 3
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "workflow",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Revert Changes Workflow",
+        "depends_on": [
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Workflow",
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Step",
+          "Subject/Domain/Node/Occurrent/Execution/Workflow Run",
+          "Subject/Domain/Node/Occurrent/Execution/Step Run",
+          "Subject/Domain/Node/Continuant/History/Journal",
+          "Subject/Domain/Node/Continuant/Actor/Type: Operator"
+        ]
+      },
+      "historical_tier": {
+        "local": "Standard",
+        "global": 11
+      },
+      "tier_default": {
+        "tier": 4,
+        "reason": "Operator-approved default when the historical Tier cannot be recovered",
+        "legacy_tier": null
+      },
+      "operations_classification": {
+        "family": "S",
+        "source_form": "workflow",
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-130@7-PROJECT_CONFIGURATION-WORKFLOW--revert-approved-changes.md",
+        "sha256": "0ff8770434d7ddfc6b95287fe7ac897288ab006ea42f0a9114eb8c928384e8a5",
+        "basis": "Operator set legacy Workflows to SPEC"
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-130@9-PROJECT_CONFIGURATION-WORKFLOW--revert-approved-changes.md",
+        "sha256": "affcd6400518724429e624060d7fb4e47a8f1833c5040243ed1f56969830fb4f",
+        "later_legacy_ref": "CA-O-130@9",
+        "reason": "earlier retained snapshot in the same archive as a later Archived Workflow revision"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-130@8-PROJECT_CONFIGURATION-WORKFLOW--revert-approved-changes.md",
+      "source_sha256": "8003c164fc3b74d0ad7948fe8611badfea790c35e8c76c586c4cfa82f462bfbf",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-130@8",
+      "native_ref": "AN-S-4504@8",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4504@8-DEVOPS-WORKFLOW--revert-approved-changes.md",
+      "destination_sha256": "4e26ab5199475075fc20f40f5d17fc1df518377054ea0bd162aa069e5585bc3c",
+      "body_sha256": "e689fdf8c9e1b5498c1bcae963a7897abdcdd04d1236879fc62015921b029519",
+      "body_prefix_bytes": 241,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-O-132",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1525",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1720",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1643",
+          "position": 3
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "workflow",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Revert Changes Workflow",
+        "depends_on": [
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Workflow",
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Step",
+          "Subject/Domain/Node/Occurrent/Execution/Workflow Run",
+          "Subject/Domain/Node/Occurrent/Execution/Step Run",
+          "Subject/Domain/Node/Continuant/History/Journal",
+          "Subject/Domain/Node/Continuant/Actor/Type: Operator"
+        ]
+      },
+      "historical_tier": {
+        "local": "Standard",
+        "global": 11
+      },
+      "tier_default": {
+        "tier": 4,
+        "reason": "Operator-approved default when the historical Tier cannot be recovered",
+        "legacy_tier": null
+      },
+      "operations_classification": {
+        "family": "S",
+        "source_form": "workflow",
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-130@8-PROJECT_CONFIGURATION-WORKFLOW--revert-approved-changes.md",
+        "sha256": "8003c164fc3b74d0ad7948fe8611badfea790c35e8c76c586c4cfa82f462bfbf",
+        "basis": "Operator set legacy Workflows to SPEC"
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-130@9-PROJECT_CONFIGURATION-WORKFLOW--revert-approved-changes.md",
+        "sha256": "affcd6400518724429e624060d7fb4e47a8f1833c5040243ed1f56969830fb4f",
+        "later_legacy_ref": "CA-O-130@9",
+        "reason": "earlier retained snapshot in the same archive as a later Archived Workflow revision"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-133@8-PROJECT_CONFIGURATION-WORKFLOW--build-entities-graph.md",
+      "source_sha256": "ca4fb5acaad8a1c3c34a77cf1171ff1805c5dc35aae6a5c926cebde11a39e26f",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-133@8",
+      "native_ref": "AN-S-4505@8",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4505@8-DEVOPS-WORKFLOW--build-entities-graph.md",
+      "destination_sha256": "5533eb156ba759e284d04a65aa2ee182ee2801fe33d573937dc0d59dbaa4d951",
+      "body_sha256": "ff785236874577ee4ad0f7a1b5d9ca98e13662415af44ad56ac7f5613504237c",
+      "body_prefix_bytes": 238,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-O-135",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1508",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1519",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1525",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1438",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1728",
+          "position": 5
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "workflow",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Build Entities Graph",
+        "depends_on": [
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Workflow",
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Step",
+          "Subject/Domain/Node/Occurrent/Execution/Workflow Run",
+          "Subject/Domain/Node/Continuant/Projection/Type: Entities Graph"
+        ]
+      },
+      "historical_tier": {
+        "local": "Standard",
+        "global": 11
+      },
+      "tier_default": {
+        "tier": 4,
+        "reason": "Operator-approved default when the historical Tier cannot be recovered",
+        "legacy_tier": null
+      },
+      "operations_classification": {
+        "family": "S",
+        "source_form": "workflow",
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-133@8-PROJECT_CONFIGURATION-WORKFLOW--build-entities-graph.md",
+        "sha256": "ca4fb5acaad8a1c3c34a77cf1171ff1805c5dc35aae6a5c926cebde11a39e26f",
+        "basis": "Operator set legacy Workflows to SPEC"
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-133@9-PROJECT_CONFIGURATION-WORKFLOW--build-entities-graph.md",
+        "sha256": "d51a680de9de2ee221d3055ec99732a4455d3b2cb8972ecb44753baa3b45b8f5",
+        "later_legacy_ref": "CA-O-133@9",
+        "reason": "earlier retained snapshot in the same archive as a later Archived Workflow revision"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-136@8-PROJECT_CONFIGURATION-WORKFLOW--build-terms-graph.md",
+      "source_sha256": "a6959dc2ccd05ea7a8240f3a9e386910839e5c02a42033004d6c3efbd766d690",
+      "source_aliases": [],
+      "legacy_ref": "CA-O-136@8",
+      "native_ref": "AN-S-4506@8",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4506@8-DEVOPS-WORKFLOW--build-terms-graph.md",
+      "destination_sha256": "7df734e00ee251ee746ef2a8ce40db58ff97b3e4a44ad3f2586bb3d94695426d",
+      "body_sha256": "6dd274ac2e70dc195253a61d751534937021cf54102e71f18935c5f209321216",
+      "body_prefix_bytes": 235,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-O-138",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1508",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1519",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1525",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1335",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "relates_to",
+          "target": "CA-R-1728",
+          "position": 5
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "operations",
+        "workflow",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Build Terms Graph",
+        "depends_on": [
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Workflow",
+          "Subject/Domain/Node/Continuant/Atom/Content Role: Operations/Type: Step",
+          "Subject/Domain/Node/Occurrent/Execution/Workflow Run",
+          "Subject/Domain/Node/Continuant/Projection/Type: Terms Graph"
+        ]
+      },
+      "historical_tier": {
+        "local": "Standard",
+        "global": 11
+      },
+      "tier_default": {
+        "tier": 4,
+        "reason": "Operator-approved default when the historical Tier cannot be recovered",
+        "legacy_tier": null
+      },
+      "operations_classification": {
+        "family": "S",
+        "source_form": "workflow",
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-136@8-PROJECT_CONFIGURATION-WORKFLOW--build-terms-graph.md",
+        "sha256": "a6959dc2ccd05ea7a8240f3a9e386910839e5c02a42033004d6c3efbd766d690",
+        "basis": "Operator set legacy Workflows to SPEC"
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-13_LAYER_3_PROJECT_CONFIGURATION/09_operations/archive/CA-O-136@9-PROJECT_CONFIGURATION-WORKFLOW--build-terms-graph.md",
+        "sha256": "c90fb70ea76064ffb49c3bf60e206d2abf32ea00874c20bfd37f14daac9b5d5d",
+        "later_legacy_ref": "CA-O-136@9",
+        "reason": "earlier retained snapshot in the same archive as a later Archived Workflow revision"
+      }
+    }
+  ],
+  "assigned_ids": {},
+  "previous_id_map_sha256": "6d76efdab820563f1638d6bf2d4d66fab4552bd64fc8e1ff1c5371892a1be14a",
+  "previous_alias_map_sha256": "b198d3f26ea9be7d4c1a1f4febe3de718694b7254eea0d694299a4052bfa8cdb"
+}
