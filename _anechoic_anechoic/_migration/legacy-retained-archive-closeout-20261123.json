@@ -1,0 +1,2924 @@
+{
+  "records": [
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/02_analysis_and_advisory/archive/CA-A-1315@2-CORE_META_MODEL-SPECIFICATION_PROPOSAL--add-basic-cfel-queries-with-ctes-and-sql-aliases.md",
+      "source_sha256": "847ba88f2fa736847ab0a25d945f6b2e20453f1c3787d40581f3006f600e3eb0",
+      "source_aliases": [],
+      "legacy_ref": "CA-A-1315@2",
+      "native_ref": "AN-T-2740@2",
+      "destination": "_anechoic_anechoic/__TICKETS/ASSETS/09_archived/AN-T-2740@2-SPEC_PROPOSAL--add-basic-cfel-queries-with-ctes-and-sql-aliases.md",
+      "destination_sha256": "815c363479461dc8818c47e9e2541603d18e5f84a9a846241e4d07dc559f038f",
+      "body_sha256": "ce8f24d2940f37443bb123330f9b2b7649d63066e70c6d5fabfbd660b4629788",
+      "body_prefix_bytes": 197,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2487",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2549",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2550",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2552",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2566",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2585",
+          "position": 5
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "analysis_&_advisory",
+        "specification_proposal",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC <+ MODEL <+ CFEL"
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/02_analysis_and_advisory/archive/CA-A-1315@2-CORE_META_MODEL-SPECIFICATION_PROPOSAL--add-basic-cfel-queries-with-ctes-and-sql-aliases.md",
+        "sha256": "847ba88f2fa736847ab0a25d945f6b2e20453f1c3787d40581f3006f600e3eb0",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      },
+      "anchor": "_anechoic_anechoic/__TICKETS/ASSETS/AN-T-2740-SPEC_PROPOSAL--add-basic-cfel-queries-with-ctes-and-sql-aliases.md",
+      "anchor_sha256": "2900299bf8b77e14920aaab1453f9b061f948405ab10b7f316eefadce1a583e4",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/02_analysis_and_advisory/CA-A-1315-CORE_META_MODEL-SPECIFICATION_PROPOSAL--add-basic-cfel-queries-with-ctes-and-sql-aliases.md",
+      "evidence_sha256": "2834cc242e3a95f99eece9d1c7f98d956754afd9e71e60b3abd5321e7e2997ba"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-26_LAYER_4_CORE_EXTENSIONS/202_FEATURE_FPF/01_concern/archive/CA-C-110@1-FPF-CONFLICT--universal-ca-entry-conflicts-with-direct-fpf-invocation.md",
+      "source_sha256": "2601b1338ef48997811e8f2dda3c081bd4783b2679d454265ed5371db9f7d8a7",
+      "source_aliases": [],
+      "legacy_ref": "CA-C-110@1",
+      "native_ref": "AN-T-3465@1",
+      "destination": "_anechoic_anechoic/__TICKETS/ISSUES/09_archived/AN-T-3465@1-PROBLEM--universal-ca-entry-conflicts-with-direct-fpf-invocation.md",
+      "destination_sha256": "83a3a327589a2d2f6db05b48cadabb0d7322fdece33ec44a49c0ee3273cbc17c",
+      "body_sha256": "8c86ff377a43fc03bc1996ba8033e99444283ac83054ba67cbd04144c7e2869c",
+      "body_prefix_bytes": 263,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C00"
+      },
+      "original_role_form_label": [
+        "",
+        "",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "FPF",
+        "dependencies": [
+          "Skill",
+          "Extension"
+        ]
+      },
+      "historical_owner_evidence": {
+        "method": "Retired Core Extensions route to Project",
+        "sources": [
+          {
+            "path": "_anechoic_anechoic/__TICKETS/TASKS/done/AN-T-2791-EPIC--apply-the-anechoic-model-to-the-project.md",
+            "sha256": "cbe7ce4e4aa84991fd252c1594124849ccf0b5a916664113eca8ebe0e340ca50"
+          }
+        ],
+        "legacy_scope": null
+      },
+      "form_basis": "Apply the native Conflict-to-Problem mapping to this approved archived Concern",
+      "anchor": "_anechoic_anechoic/__TICKETS/ISSUES/AN-T-2790-QUESTION--preserve-legacy-ticket-templates-during-mechanical-migration.md",
+      "anchor_sha256": "ba557b6b122d92725e82933b2a20d4ff19ecbdbc2baa9d4d6a19f5d8a1484b37",
+      "fresh_legacy_id": "CA-C-110"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/01_concern/archive/CA-C-290@1-CORE_META_MODEL-CONFLICT--reconcile-supporting-detail-placement-in-plan-carriers.md",
+      "source_sha256": "4c6cad221bf3b133e5c180f20b2ca19989f93ce48b69ca7f37c8df5fed01bf92",
+      "source_aliases": [],
+      "legacy_ref": "CA-C-290@1",
+      "native_ref": "AN-T-3466@1",
+      "destination": "_anechoic_anechoic/__TICKETS/ISSUES/09_archived/AN-T-3466@1-PROBLEM--reconcile-supporting-detail-placement-in-plan-carriers.md",
+      "destination_sha256": "c1a7cb3c7420b1d23f86e0a17cce9daade1f03a4c53f4c952aca3721448f4966",
+      "body_sha256": "3fd3cd0d427d50f23976efd216d7b82ad3c97803e583d6d8acac1eb716ff91c6",
+      "body_prefix_bytes": 191,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "concern_about",
+          "target": "CA-D-470",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "concern",
+        "conflict",
+        ""
+      ],
+      "body_insertions": [
+        {
+          "byte_offset": 0,
+          "text": "#"
+        }
+      ],
+      "summary_repair": "Promoted the existing Summary heading to level two",
+      "form_basis": "Apply the native Conflict-to-Problem mapping to this approved archived Concern",
+      "anchor": "_anechoic_anechoic/__TICKETS/ISSUES/AN-T-2790-QUESTION--preserve-legacy-ticket-templates-during-mechanical-migration.md",
+      "anchor_sha256": "ba557b6b122d92725e82933b2a20d4ff19ecbdbc2baa9d4d6a19f5d8a1484b37",
+      "fresh_legacy_id": "CA-C-290"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/01_concern/archive/retired_scope/CA-SU-2_APP_WORKFLOW_ORCHESTRATOR/archive/CA-C-442@2-WORKFLOW_ORCHESTRATOR-CONFLICT--align-selected-queue-admission-with-fifteen-route-scope.md",
+      "source_sha256": "ded8a21ec14c6505db0133cd09d9e6fd5540d6c4732837470186c19c2f3f5869",
+      "source_aliases": [],
+      "legacy_ref": "CA-C-442@2",
+      "native_ref": "AN-T-3467@2",
+      "destination": "_anechoic_anechoic/__TICKETS/ISSUES/09_archived/AN-T-3467@2-PROBLEM--align-selected-queue-admission-with-fifteen-route-scope.md",
+      "destination_sha256": "107125fa4d810a5af994f88df58e97cbfad9b02c6c7446f3c9ed3be1e3afea75",
+      "body_sha256": "69495ba9908ca03e4fe95e5edee9d36f062f994a928084a62c6fa60c31460035",
+      "body_prefix_bytes": 192,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "concern_about",
+          "target": "CA-D-521",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "concern_about",
+          "target": "CA-D-547",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "concern_about",
+          "target": "CA-P-1527",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "concern_about",
+          "target": "CA-P-1551",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "concern_about",
+          "target": "CA-P-1552",
+          "position": 4
+        }
+      ],
+      "native_owner": {
+        "component": "C20"
+      },
+      "original_role_form_label": [
+        "concern",
+        "conflict",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Selected queue route admission",
+        "depends_on": [
+          "Workflow",
+          "MCP",
+          "Implementation",
+          "Journal"
+        ]
+      },
+      "historical_owner_evidence": {
+        "method": "Approved retired Workflow Orchestrator route to Apps",
+        "sources": [
+          {
+            "path": "_anechoic_anechoic/__TICKETS/TASKS/done/AN-T-2791-EPIC--apply-the-anechoic-model-to-the-project/ASSETS/done/AN-T-2780-WORK_REPORT--freeze-the-shared-anechoic-migration-map.md",
+            "sha256": "cc2555e25c83206cdf0e509d47e7e68a4c1cae97372cb49f39bdab069b887c5f"
+          }
+        ],
+        "legacy_scope": [
+          "component",
+          "WORKFLOW_ORCHESTRATOR"
+        ]
+      },
+      "body_insertions": [
+        {
+          "byte_offset": 0,
+          "text": "#"
+        }
+      ],
+      "summary_repair": "Promoted the existing Summary heading to level two",
+      "form_basis": "Apply the native Conflict-to-Problem mapping to this approved archived Concern",
+      "anchor": "_anechoic_anechoic/__TICKETS/ISSUES/AN-T-2790-QUESTION--preserve-legacy-ticket-templates-during-mechanical-migration.md",
+      "anchor_sha256": "ba557b6b122d92725e82933b2a20d4ff19ecbdbc2baa9d4d6a19f5d8a1484b37",
+      "fresh_legacy_id": "CA-C-442"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/archive/CA-D-471@24-CORE_META_MODEL-DECISION--serialize-explicit-plan-blocking.md",
+      "source_sha256": "8c5d4162ffbaff50da8e71fcb861bf5d5a4b689c95172d5ec95432e69262286f",
+      "source_aliases": [],
+      "legacy_ref": "CA-D-471@24",
+      "native_ref": "AN-S-2773@24",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-2773@24-DEVOPS--serialize-explicit-plan-blocking.md",
+      "destination_sha256": "a2da269c2f89a78c09931f0310ec58d462ea3e110f5e6f2ceddcaad3ed1d2741",
+      "body_sha256": "015d44767d9c128e4c63261a6358e5e9d4d40a9809630d1386214491655c23b4",
+      "body_prefix_bytes": 184,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "delivery_for",
+          "target": "CA-R-1580",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "delivery",
+        "decision",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ CFEL <+ Relation",
+        "passive": [
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role := Plan)",
+          "ANECHOIC_MODEL <+ CFEL <+ Relation",
+          "ANECHOIC_MODEL <+ Atom.Header.ID",
+          "ANECHOIC_MODEL <+ Atom.Header.Subjects"
+        ]
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/archive/CA-D-471@24-CORE_META_MODEL-DECISION--serialize-explicit-plan-blocking.md",
+        "sha256": "8c5d4162ffbaff50da8e71fcb861bf5d5a4b689c95172d5ec95432e69262286f",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/archive/CA-D-655@3-CORE_META_MODEL-POLICY--carry-term-definition-and-staged-review-evidence.md",
+      "source_sha256": "82b7bfe544f6a57facb342686974792b00e6003a5a06bdfbe75c84263335dfc3",
+      "source_aliases": [],
+      "legacy_ref": "CA-D-655@3",
+      "native_ref": "AN-S-1789@3",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-1789@3-DEVOPS--carry-term-definition-and-staged-review-evidence.md",
+      "destination_sha256": "5fef6b8328d6e62228176719bd945094fae59a8423c88977492b6cfe4f645006",
+      "body_sha256": "b122c5d13592960bb4efab3b62b8acb8117b50ab8aa550ceb21f0c68f61bfc50",
+      "body_prefix_bytes": 183,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "delivery",
+        "policy",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ Atom.Content",
+        "passive": [
+          "ANECHOIC_MODEL <+ Term",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role: Method)/(.Header.Form: Term Definition)"
+        ]
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/07_delivery/archive/CA-D-655@3-CORE_META_MODEL-POLICY--carry-term-definition-and-staged-review-evidence.md",
+        "sha256": "82b7bfe544f6a57facb342686974792b00e6003a5a06bdfbe75c84263335dfc3",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/archive/CA-E-382@49-CORE_META_MODEL-POLICY--validate-terms-graph.md",
+      "source_sha256": "b0cd9e30c7426271c0ff1a165b0e6eac43b498e5f643b42b5134e2a8f70159b4",
+      "source_aliases": [],
+      "legacy_ref": "CA-E-382@49",
+      "native_ref": "AN-S-2756@49",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-2756@49-QA--validate-terms-graph.md",
+      "destination_sha256": "ef35e43009ff493f8fda7d09a32bbaedbf1cf23da1c5136c3baae5287a0cb419",
+      "body_sha256": "b01a31923f336ccd56cfd2e11bbeaefb68b1929c18873e99d8c34a2d81ffa2cf",
+      "body_prefix_bytes": 180,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "evaluation_for",
+          "target": "CA-R-1335@31",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "evaluation_for",
+          "target": "CA-R-1246",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "evaluation_for",
+          "target": "CA-R-2475",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "evaluation_for",
+          "target": "CA-R-1244",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "evaluation_for",
+          "target": "CA-R-1345",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "evaluation_for",
+          "target": "CA-R-1347",
+          "position": 5
+        },
+        {
+          "location": "relations",
+          "name": "evaluation_for",
+          "target": "CA-R-1319",
+          "position": 6
+        },
+        {
+          "location": "relations",
+          "name": "evaluation_for",
+          "target": "CA-R-1454",
+          "position": 7
+        },
+        {
+          "location": "relations",
+          "name": "evaluation_for",
+          "target": "CA-R-1437",
+          "position": 8
+        },
+        {
+          "location": "relations",
+          "name": "evaluation_for",
+          "target": "CA-R-1472",
+          "position": 9
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "evaluation",
+        "eval_policy",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Terms Graph)",
+        "passive": [
+          "ANECHOIC_MODEL <+ Package",
+          "ANECHOIC_MODEL <+ Entity/Object/Continuant/Package/Eval Package",
+          "ANECHOIC_MODEL <+ Entity/Object/Continuant/Package/Runtime Package",
+          "ANECHOIC_MODEL <+ Entity/Object/Continuant/Package <+ Module",
+          "ANECHOIC_MODEL <+ Entity/Object/Continuant/Package <+ Module <+ Code Unit",
+          "ANECHOIC_MODEL <+ Scope Unit",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role: Method)/(.Header.Form: Term Definition)",
+          "ANECHOIC_MODEL <+ Term",
+          "ANECHOIC_MODEL <+ CFEL <+ Relation//NARROWER_THAN",
+          "ANECHOIC_MODEL <+ CFEL <+ Relation",
+          "ANECHOIC_MODEL <+ Projection",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role: Requirement)/(.Header.Form: Entity Definition)",
+          "ANECHOIC_MODEL <+ Atom.Content",
+          "ANECHOIC_MODEL <+ Entity",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role: Operations)/(.Header.Form: Action)",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role: Operations)/(.Header.Form: Workflow)",
+          "ANECHOIC_MODEL <+ Atom"
+        ]
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/archive/CA-E-382@49-CORE_META_MODEL-POLICY--validate-terms-graph.md",
+        "sha256": "b0cd9e30c7426271c0ff1a165b0e6eac43b498e5f643b42b5134e2a8f70159b4",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/archive/CA-E-504@22-CORE_META_MODEL-EVAL_CASE--validate-plan-blocking-and-parallel-readiness.md",
+      "source_sha256": "8c0da061fa1aab7593f77548857153117a4aacc3337f966855ab851320b42f78",
+      "source_aliases": [],
+      "legacy_ref": "CA-E-504@22",
+      "native_ref": "AN-S-2585@22",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-2585@22-QA--validate-plan-blocking-and-parallel-readiness.md",
+      "destination_sha256": "09eba9ca60758344ac952f5fb687fe847c41ae18ee84a5d0fe3ea0114983a05a",
+      "body_sha256": "971ce52bda83f52416835369524f53407aa2d87a96490cdd448acb10fc767fa4",
+      "body_prefix_bytes": 180,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "evaluation_for",
+          "target": "CA-R-1580",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "evaluation_for",
+          "target": "CA-R-1583@26",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "evaluation_for",
+          "target": "CA-R-1592",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "evaluation_for",
+          "target": "CA-D-471",
+          "position": 3
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "evaluation",
+        "eval_case",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ Atom/(.Header.Role := Plan)",
+        "passive": [
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role := Plan)",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role := Plan).Header.Status: Done",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role := Plan).Header.Work Sequence Number"
+        ]
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/archive/CA-E-504@22-CORE_META_MODEL-EVAL_CASE--validate-plan-blocking-and-parallel-readiness.md",
+        "sha256": "8c0da061fa1aab7593f77548857153117a4aacc3337f966855ab851320b42f78",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/archive/CA-E-659@3-CORE_META_MODEL-EVAL_CASE--check-term-definition-well-formedness.md",
+      "source_sha256": "976f8a52466d112336320a8dabaa91d8dd07401da61597d59cfa5d6f05ef701b",
+      "source_aliases": [],
+      "legacy_ref": "CA-E-659@3",
+      "native_ref": "AN-S-1749@3",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-1749@3-QA--check-term-definition-well-formedness.md",
+      "destination_sha256": "e204a74d28604034433c4df6ff89bd348486944238747962bf3ea324fc474239",
+      "body_sha256": "ff0cfc1b017183ca0e6a80ec90dd3a1db2fadae44d604106a2ecd7e353d5f4f3",
+      "body_prefix_bytes": 179,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "evaluation",
+        "eval_case",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ Atom/(.Header.Role: Method)/(.Header.Form: Term Definition)",
+        "passive": [
+          "ANECHOIC_MODEL <+ Term//ID",
+          "ANECHOIC_MODEL <+ Term",
+          "ANECHOIC_MODEL <+ Atom",
+          "ANECHOIC_MODEL <+ Atom.Content",
+          "ANECHOIC_MODEL <+ Atom.Header.Subjects"
+        ]
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/archive/CA-E-659@3-CORE_META_MODEL-EVAL_CASE--check-term-definition-well-formedness.md",
+        "sha256": "976f8a52466d112336320a8dabaa91d8dd07401da61597d59cfa5d6f05ef701b",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/archive/CA-E-659@5-CORE_META_MODEL-EVAL_CASE--check-term-definition-well-formedness.md",
+      "source_sha256": "de8ddc8dfcada785706cc18542fc4a42c665204c5d5b92c3d38b3e0da799f4ec",
+      "source_aliases": [],
+      "legacy_ref": "CA-E-659@5",
+      "native_ref": "AN-S-1749@5",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-1749@5-QA--check-term-definition-well-formedness.md",
+      "destination_sha256": "9cf400bf27a708751475e21f661fc0cec357aa90bb74173421b4c4e6c0d3e27e",
+      "body_sha256": "f88d6ca7b1a6e23e869c6dc279d338ad48a8907f12fc1b36223ce635e3eabfc7",
+      "body_prefix_bytes": 179,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "IS_CONTAINED_BY",
+          "target": {
+            "scope_unit": "CA-SU-11"
+          },
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "evaluation",
+        "eval_case",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ Atom/(.Header.Role: Method)/(.Header.Form: Term Definition)",
+        "passive": [
+          "ANECHOIC_MODEL <+ Term//ID",
+          "ANECHOIC_MODEL <+ Term",
+          "ANECHOIC_MODEL <+ Atom",
+          "ANECHOIC_MODEL <+ Atom.Content",
+          "ANECHOIC_MODEL <+ Atom.Header.Subjects"
+        ]
+      },
+      "historical_owner_evidence": {
+        "method": "Historical Core Meta Model archive and exact mapped native lineage",
+        "sources": [
+          {
+            "path": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/_QA/AN-S-1749-QA--check-term-definition-well-formedness.md",
+            "sha256": "db5047cf06d4c8414f1ed73209c7f98fc45ad508f3dcdba0371f1869bad742dd"
+          }
+        ],
+        "legacy_scope": null
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/06_evaluation/archive/CA-E-659@5-CORE_META_MODEL-EVAL_CASE--check-term-definition-well-formedness.md",
+        "sha256": "de8ddc8dfcada785706cc18542fc4a42c665204c5d5b92c3d38b3e0da799f4ec",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/archive/CA-M-114@43-CORE_META_MODEL-IMPLEMENTATION_METHOD--derive-terminology-projection-from-definition-atoms.md",
+      "source_sha256": "321823e0c071b95269eff6f40276c84e7bc77fe1fad3093c60c1e4f0cf0b5d3f",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-114@43",
+      "native_ref": "AN-S-1701@43",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-1701@43-SWD--derive-terminology-projection-from-definition-atoms.md",
+      "destination_sha256": "320d226dfac1547f0d1e95bad5f27c05d6c3c1d6974bfea8dd96d67ea0480953",
+      "body_sha256": "023dc3c28e35c595e2bd6a8f3e5fe688752d49c228a6815efb159048e71fa19f",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "method",
+        "implementation_method",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ Projection",
+        "passive": [
+          "ANECHOIC_MODEL <+ Projection/(.Form:=Catalog)",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role: Method)/(.Header.Form: Term Definition)",
+          "ANECHOIC_MODEL <+ Term",
+          "ANECHOIC_MODEL <+ Project",
+          "ANECHOIC_MODEL <+ Atom.Content",
+          "ANECHOIC_MODEL <+ Entity",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role: Operations)/(.Header.Form: Action)",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role: Operations)/(.Header.Form: Workflow)"
+        ]
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/archive/CA-M-114@43-CORE_META_MODEL-IMPLEMENTATION_METHOD--derive-terminology-projection-from-definition-atoms.md",
+        "sha256": "321823e0c071b95269eff6f40276c84e7bc77fe1fad3093c60c1e4f0cf0b5d3f",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/archive/CA-M-439@3-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-term-definition-content.md",
+      "source_sha256": "fab6ecdc32a49e45f66f5866c2b05a9237cd17fe9992970490731067cfd54036",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-439@3",
+      "native_ref": "AN-S-1716@3",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-1716@3-SWD--write-term-definition-content.md",
+      "destination_sha256": "1ff430e21f7d02feb62b500de27c937f8c759cb7193d665e97b7f2f210ac1b28",
+      "body_sha256": "fee949da6fc5375a558c0cb2702bcc8c99785a96fe8028d04140a9eabb442c99",
+      "body_prefix_bytes": 180,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "method",
+        "implementation_method",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ Atom.Content",
+        "passive": [
+          "ANECHOIC_MODEL <+ Term",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role: Method)/(.Header.Form: Term Definition)",
+          "ANECHOIC_MODEL <+ Actor"
+        ]
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/archive/CA-M-439@3-CORE_META_MODEL-IMPLEMENTATION_METHOD--write-term-definition-content.md",
+        "sha256": "fab6ecdc32a49e45f66f5866c2b05a9237cd17fe9992970490731067cfd54036",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/archive/CA-M-449@3-CORE_META_MODEL-TERM_DEFINITION--define-empty.md",
+      "source_sha256": "e49d16057f22a0817babf881381de9050c92cfe1a994a9c661f5aa175dfe1dba",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-449@3",
+      "native_ref": "AN-S-2307@3",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-2307@3-SWD--define-empty.md",
+      "destination_sha256": "d7cbd4763bb5573f50c526e1bd4e79a122eaad0571ed776f094ba9f8f2f08833",
+      "body_sha256": "bc5b14426139c44b09cf7f1ac0ce5efbc352f61b697d712be3e6105ab975803a",
+      "body_prefix_bytes": 180,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "method",
+        "term_definition",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ Term//Empty",
+        "passive": [
+          "ANECHOIC_MODEL <+ Term",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role: Method)/(.Header.Form: Term Definition)"
+        ]
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/archive/CA-M-449@3-CORE_META_MODEL-TERM_DEFINITION--define-empty.md",
+        "sha256": "e49d16057f22a0817babf881381de9050c92cfe1a994a9c661f5aa175dfe1dba",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/archive/CA-M-450@4-CORE_META_MODEL-TERM_DEFINITION--define-id.md",
+      "source_sha256": "541f5b81aeb5222c5c8c4873c6a747ae7afd167b6a4003ffa3381259dffec1a3",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-450@4",
+      "native_ref": "AN-S-2308@4",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-2308@4-SWD--define-id.md",
+      "destination_sha256": "c7ecaa05c892961875bb000b974eaaf5ea48fb32bf478767fdb8b23fec4544fa",
+      "body_sha256": "036d2ea707465e276f909e6a4db4fcfa317da197cf494d173b92a4f553eeeb07",
+      "body_prefix_bytes": 180,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "method",
+        "term_definition",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ Term//ID",
+        "passive": [
+          "ANECHOIC_MODEL <+ Term",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role: Method)/(.Header.Form: Term Definition)"
+        ]
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/archive/CA-M-450@4-CORE_META_MODEL-TERM_DEFINITION--define-id.md",
+        "sha256": "541f5b81aeb5222c5c8c4873c6a747ae7afd167b6a4003ffa3381259dffec1a3",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/archive/CA-M-450@6-CORE_META_MODEL-TERM_DEFINITION--define-id.md",
+      "source_sha256": "dd248a7a6a09016a5aa0a1a2aca005e22608bd65d84f7b7e44372f785624233a",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-450@6",
+      "native_ref": "AN-S-2308@6",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-2308@6-SWD--define-id.md",
+      "destination_sha256": "3c23052464301f69c6240dd48e0ec2b5c2a4793c80d56b5e8d97bb1f0de70b3d",
+      "body_sha256": "f5b058af96b2e03dd2fb560e89d5cb64981a0c35a0ec41829bc21b0c13ba1dc4",
+      "body_prefix_bytes": 180,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "IS_CONTAINED_BY",
+          "target": {
+            "scope_unit": "CA-SU-11"
+          },
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "method",
+        "term_definition",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ Term//ID",
+        "passive": [
+          "ANECHOIC_MODEL <+ Term",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role: Method)/(.Header.Form: Term Definition)"
+        ]
+      },
+      "historical_owner_evidence": {
+        "method": "Historical Core Meta Model archive and exact mapped native lineage",
+        "sources": [
+          {
+            "path": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/01_TIER_1_ARCHITECTURE/AN-S-2308-SWD--define-id.md",
+            "sha256": "a70d473145228ad6e35c0714d770fb2090fe16876fa1a281df15b6a9f0d33645"
+          }
+        ],
+        "legacy_scope": null
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/archive/CA-M-450@6-CORE_META_MODEL-TERM_DEFINITION--define-id.md",
+        "sha256": "dd248a7a6a09016a5aa0a1a2aca005e22608bd65d84f7b7e44372f785624233a",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/archive/CA-M-451@4-CORE_META_MODEL-TERM_DEFINITION--define-entity.md",
+      "source_sha256": "02da8b6ddf2d66e3e6f5c230e89d591a2e0ce0182dc07991d3e66cf9a4cfc05e",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-451@4",
+      "native_ref": "AN-S-2309@4",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-2309@4-SWD--define-entity.md",
+      "destination_sha256": "440513dd25518c4cc6bc423b9d42dd6463e57715e36327689c8d4156febbd60c",
+      "body_sha256": "ffabbbfe43c67980c650243cb71f9ec085b8175e09c750d6883938777f69b716",
+      "body_prefix_bytes": 180,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "method",
+        "term_definition",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ Term//Entity",
+        "passive": [
+          "ANECHOIC_MODEL <+ Entity",
+          "ANECHOIC_MODEL <+ Entity/Property",
+          "ANECHOIC_MODEL <+ Term",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role: Method)/(.Header.Form: Term Definition)"
+        ]
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/archive/CA-M-451@4-CORE_META_MODEL-TERM_DEFINITION--define-entity.md",
+        "sha256": "02da8b6ddf2d66e3e6f5c230e89d591a2e0ce0182dc07991d3e66cf9a4cfc05e",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/archive/CA-M-452@3-CORE_META_MODEL-TERM_DEFINITION--define-term.md",
+      "source_sha256": "4c0ee3765ccad80d085f1acc610e5e4f0300058544b26af3347455b951fb29bd",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-452@3",
+      "native_ref": "AN-S-2310@3",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-2310@3-SWD--define-term.md",
+      "destination_sha256": "758c2ff96b57a61746606c1837bab7e9ce862a7e212496920ebecb2c8d064d57",
+      "body_sha256": "d15511adbc816f5c1402b405b727893a3719883cbf03aff85bdd2ec952db6966",
+      "body_prefix_bytes": 180,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "method",
+        "term_definition",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ Term//Term",
+        "passive": [
+          "ANECHOIC_MODEL <+ Entity",
+          "ANECHOIC_MODEL <+ Term",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role: Method)/(.Header.Form: Term Definition)"
+        ]
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/archive/CA-M-452@3-CORE_META_MODEL-TERM_DEFINITION--define-term.md",
+        "sha256": "4c0ee3765ccad80d085f1acc610e5e4f0300058544b26af3347455b951fb29bd",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/archive/CA-M-453@3-CORE_META_MODEL-TERM_DEFINITION--define-property.md",
+      "source_sha256": "7f34c7d4afb97b4e2b995017721863d5ec2350f16ceaabb996e3c1d0d186c8e1",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-453@3",
+      "native_ref": "AN-S-2755@3",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-2755@3-SWD--define-property.md",
+      "destination_sha256": "ff8c0aa7595df65d867ab57fd313e4ae6b97c01802aad290a12c55093f638a68",
+      "body_sha256": "e1ac9227c0c4e02d45cae6b4edcb8a26ebc084ec81a1dfc1ec877055b6207319",
+      "body_prefix_bytes": 180,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "method",
+        "term_definition",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ Term//Property",
+        "passive": [
+          "ANECHOIC_MODEL <+ Term",
+          "ANECHOIC_MODEL <+ Entity/Property",
+          "ANECHOIC_MODEL <+ CFEL <+ Relation//IS_PROPERTY_OF",
+          "ANECHOIC_MODEL <+ CFEL <+ Relation//HAS_PROPERTY",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role: Method)/(.Header.Form: Term Definition)"
+        ]
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/archive/CA-M-453@3-CORE_META_MODEL-TERM_DEFINITION--define-property.md",
+        "sha256": "7f34c7d4afb97b4e2b995017721863d5ec2350f16ceaabb996e3c1d0d186c8e1",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/archive/CA-M-454@5-CORE_META_MODEL-TERM_DEFINITION--define-artifact.md",
+      "source_sha256": "cf052689ddd2906dbe82c66b1b6810ce38c591b9593e354ddb6b0017808ffd0c",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-454@5",
+      "native_ref": "AN-S-2311@5",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-2311@5-SWD--define-artifact.md",
+      "destination_sha256": "fcfe1e750641ee97260a0e8dc236869a078ec2e59035f6be37bba88fb11dbda2",
+      "body_sha256": "8bec79db453330ecb956e3d4904c39f1c73c14c90dd2aad0a3ebdf880f3525cb",
+      "body_prefix_bytes": 180,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "method",
+        "term_definition",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ Term//Artifact",
+        "passive": [
+          "ANECHOIC_MODEL <+ Term",
+          "ANECHOIC_MODEL <+ Entity",
+          "ANECHOIC_MODEL <+ Carrier",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role: Method)/(.Header.Form: Term Definition)"
+        ]
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/archive/CA-M-454@5-CORE_META_MODEL-TERM_DEFINITION--define-artifact.md",
+        "sha256": "cf052689ddd2906dbe82c66b1b6810ce38c591b9593e354ddb6b0017808ffd0c",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/archive/CA-M-455@4-CORE_META_MODEL-TERM_DEFINITION--define-change-content-roles.md",
+      "source_sha256": "3bb8b7165470a2627876e7e5d4e7f2637d51f168ad02136cf6c7cc7d120d6a9b",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-455@4",
+      "native_ref": "AN-S-2312@4",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-2312@4-SWD--define-change-content-roles.md",
+      "destination_sha256": "7f4d10de24d33aa0002c48660f27cbf2785863c9e9a0b6ebab98d1dc5f8a8748",
+      "body_sha256": "2508815331a2d9c803f2cf5e36e33f56d8911ed13afa7ce480282d1df2b66d8b",
+      "body_prefix_bytes": 180,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "method",
+        "term_definition",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ Term//Change Content Roles",
+        "passive": [
+          "ANECHOIC_MODEL <+ Entity",
+          "ANECHOIC_MODEL <+ Term",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role: Method)/(.Header.Form: Term Definition)"
+        ]
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/archive/CA-M-455@4-CORE_META_MODEL-TERM_DEFINITION--define-change-content-roles.md",
+        "sha256": "3bb8b7165470a2627876e7e5d4e7f2637d51f168ad02136cf6c7cc7d120d6a9b",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/099_archived/CA-M-461@3-draft-CORE_META_MODEL-ENG_POLICY--author-scope-unit-declarations-and-contracts@3.md",
+      "source_sha256": "1ed6464c748b7b72568313b8c30d06e65a04b30b28af41b76a3ce7cf66b95689",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-461@3-draft",
+      "native_ref": "AN-S-4729@3",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4729@3-SWD--author-scope-unit-declarations-and-contracts.md",
+      "destination_sha256": "97c9d4a05bd6d171b844bad63a1d37f61a71a4d4e0bcdd0050937198e404715c",
+      "body_sha256": "2d76956bc4914797dbd030b532946bd6d642800c62d69fb5770b1c9c2738d37c",
+      "body_prefix_bytes": 180,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "method",
+        "eng_policy",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ Scope Unit"
+      },
+      "disposition": "Retained Draft has a distinct Archived ID and qualified source alias",
+      "legacy_status": "draft",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/05_method/099_archived/CA-M-461@3-draft-CORE_META_MODEL-ENG_POLICY--author-scope-unit-declarations-and-contracts@3.md",
+        "sha256": "1ed6464c748b7b72568313b8c30d06e65a04b30b28af41b76a3ce7cf66b95689",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/05_method/archive/CA-M-465@21-WORKBENCH_BACKEND-ENG_DECISION--reconcile-duckdb-derived-state-from-stable-governed-inventory.md",
+      "source_sha256": "dbe17d7a28fcf5b6348e13f1c3febad5530e4fdb232953c10ed239cf232b4ada",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-465@21",
+      "native_ref": "AN-S-2536@21",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/09_archived/AN-S-2536@21-SWD--reconcile-duckdb-derived-state-from-a-stable-governed-inventory.md",
+      "destination_sha256": "326d9351dbafe82cb19211cf656c2ff668142bf8459b7926645609de1871bc36",
+      "body_sha256": "f879fd8cd26321f47585e0ea5b263aac0babf7ccf3a4eac060da7754e03d220e",
+      "body_prefix_bytes": 182,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "method_for",
+          "target": "CA-R-2723",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "method_for",
+          "target": "CA-R-2725",
+          "position": 1
+        }
+      ],
+      "native_owner": {
+        "component": "C45"
+      },
+      "original_role_form_label": [
+        "method",
+        "eng_decision",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ Projection"
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/05_method/archive/CA-M-465@21-WORKBENCH_BACKEND-ENG_DECISION--reconcile-duckdb-derived-state-from-stable-governed-inventory.md",
+        "sha256": "dbe17d7a28fcf5b6348e13f1c3febad5530e4fdb232953c10ed239cf232b4ada",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/05_method/archive/CA-M-465@22-WORKBENCH_BACKEND-ENG_DECISION--reconcile-duckdb-derived-state-from-stable-governed-inventory.md",
+      "source_sha256": "978a84b33484fbfaabe89f5a63fb8c1d016274ad0e4bb69573faa100bae57638",
+      "source_aliases": [],
+      "legacy_ref": "CA-M-465@22",
+      "native_ref": "AN-S-2536@22",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/09_archived/AN-S-2536@22-SWD--reconcile-duckdb-derived-state-from-a-stable-governed-inventory.md",
+      "destination_sha256": "0ebf3bf149fe53ebe964450ed7d53c199d9c4156a0237dff651bce9d56d8b995",
+      "body_sha256": "f4a89b5a5ceb0b325798f663a2b8e7a858434495025f6f83ecf8656babaf4f54",
+      "body_prefix_bytes": 182,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "method_for",
+          "target": "CA-R-2723",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "method_for",
+          "target": "CA-R-2725",
+          "position": 1
+        }
+      ],
+      "native_owner": {
+        "component": "C45"
+      },
+      "original_role_form_label": [
+        "method",
+        "eng_decision",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ Projection"
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/05_method/archive/CA-M-465@22-WORKBENCH_BACKEND-ENG_DECISION--reconcile-duckdb-derived-state-from-stable-governed-inventory.md",
+        "sha256": "978a84b33484fbfaabe89f5a63fb8c1d016274ad0e4bb69573faa100bae57638",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/03_plan/archive/CA-P-006@1-PLAN--establish-projection-generation-subtypes.md",
+      "source_sha256": "105b0e35c27d55679c75ac17d262e8f22561d1330e2eb7cc9a53bdb8d87d66e5",
+      "source_aliases": [],
+      "legacy_ref": "CA-P-006@1",
+      "native_ref": "AN-T-371@1",
+      "destination": "_anechoic_anechoic/__TICKETS/TASKS/09_archived/AN-T-371@1-TASK--establish-projection-generation-subtypes.md",
+      "destination_sha256": "c09831672852f98d6a77c2a06db1de9c0c48a41f1cabc2143f3d58ad695381f3",
+      "body_sha256": "3b7a06b052def88f9915db8561fbacf9921664362a6ad8e4ba53a31a3916c740",
+      "body_prefix_bytes": 251,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C00"
+      },
+      "original_role_form_label": [
+        "",
+        "",
+        ""
+      ],
+      "historical_owner_evidence": {
+        "method": "Project-root historical Plan and its mapped C00 Task",
+        "sources": [
+          {
+            "path": "_anechoic_anechoic/__TICKETS/TASKS/canceled/AN-T-371-TASK--establish-projection-generation-subtypes.md",
+            "sha256": "a21a3a52ab24ff2f68b6eb0f154dc1c6a76d3b0838739ac40ae3507c20a70902"
+          }
+        ],
+        "legacy_scope": null
+      },
+      "updated_at_provenance": {
+        "source_value": "2026-08-17 19:36:01",
+        "method": "retained file mtime in UTC",
+        "substitute": "2026-10-24T02:26:31.945143+00:00"
+      },
+      "form_basis": "Authored change Plan and its mapped native Task",
+      "anchor": "_anechoic_anechoic/__TICKETS/TASKS/canceled/AN-T-371-TASK--establish-projection-generation-subtypes.md",
+      "anchor_sha256": "a21a3a52ab24ff2f68b6eb0f154dc1c6a76d3b0838739ac40ae3507c20a70902"
+    },
+    {
+      "source": "archives/.anechoic_archive/03_plan/archive/CA-P-007@2-PLAN--remove-derivable-frontmatter.md",
+      "source_sha256": "3864f08512b86a5670d07d7264d23bccbe536873d1305e35b4b79093acc4a926",
+      "source_aliases": [],
+      "legacy_ref": "CA-P-007@2",
+      "native_ref": "AN-T-372@2",
+      "destination": "_anechoic_anechoic/__TICKETS/TASKS/09_archived/AN-T-372@2-TASK--remove-derivable-frontmatter.md",
+      "destination_sha256": "1d7410f9700934613f96c1d2b2714e032757e7ec1fcd36cbe1ad805947446fe2",
+      "body_sha256": "d68691b67ff199dcfa7546a7c92761f0fe324dc323750245d08b32538ef33560",
+      "body_prefix_bytes": 239,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C00"
+      },
+      "original_role_form_label": [
+        "",
+        "",
+        ""
+      ],
+      "historical_owner_evidence": {
+        "method": "Project-root historical Plan and its mapped C00 Task",
+        "sources": [
+          {
+            "path": "_anechoic_anechoic/__TICKETS/TASKS/canceled/AN-T-372-TASK--remove-derivable-frontmatter.md",
+            "sha256": "d24e08b3fcc282183d523cc498768c83f5facacca5288a65bf03cbdce88e47aa"
+          }
+        ],
+        "legacy_scope": null
+      },
+      "updated_at_provenance": {
+        "source_value": "2026-08-19 07:37:46",
+        "method": "retained file mtime in UTC",
+        "substitute": "2026-10-24T02:26:31.947080+00:00"
+      },
+      "form_basis": "Authored change Plan and its mapped native Task",
+      "anchor": "_anechoic_anechoic/__TICKETS/TASKS/canceled/AN-T-372-TASK--remove-derivable-frontmatter.md",
+      "anchor_sha256": "d24e08b3fcc282183d523cc498768c83f5facacca5288a65bf03cbdce88e47aa"
+    },
+    {
+      "source": "archives/.anechoic_archive/03_plan/archive/CA-P-010@1-PLAN--complete-rmed-tier-parent-links.md",
+      "source_sha256": "5a55147558389584f3785ff2a201fba72c25ea69b2b74eb0d331c9c5355a61a3",
+      "source_aliases": [],
+      "legacy_ref": "CA-P-010@1",
+      "native_ref": "AN-T-810@1",
+      "destination": "_anechoic_anechoic/__TICKETS/TASKS/09_archived/AN-T-810@1-TASK--complete-rmed-tier-parent-links.md",
+      "destination_sha256": "f809824be46d9cc73f48dbc05815b7a3e99241a8f3a32acc7dcf6aa49650a451",
+      "body_sha256": "3e2ed6dd2b2c0d58708378849dcc9510af577de451840e3322829792e0ab6371",
+      "body_prefix_bytes": 242,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C00"
+      },
+      "original_role_form_label": [
+        "",
+        "",
+        ""
+      ],
+      "historical_owner_evidence": {
+        "method": "Project-root historical Plan and its mapped C00 Task",
+        "sources": [
+          {
+            "path": "_anechoic_anechoic/__TICKETS/TASKS/done/AN-T-810-TASK--complete-rmed-tier-parent-links.md",
+            "sha256": "c00bc7eb00f97ac2c4bfed9b54d700ddb445aec641a19da0c091fd6179838942"
+          }
+        ],
+        "legacy_scope": null
+      },
+      "updated_at_provenance": {
+        "source_value": "2026-08-17 19:36:01",
+        "method": "retained file mtime in UTC",
+        "substitute": "2026-10-24T02:26:31.953386+00:00"
+      },
+      "form_basis": "Authored change Plan and its mapped native Task",
+      "anchor": "_anechoic_anechoic/__TICKETS/TASKS/done/AN-T-810-TASK--complete-rmed-tier-parent-links.md",
+      "anchor_sha256": "c00bc7eb00f97ac2c4bfed9b54d700ddb445aec641a19da0c091fd6179838942"
+    },
+    {
+      "source": "archives/.anechoic_archive/03_plan/archive/CA-P-011@1-PLAN--replace-relates-to-with-precise-relations.md",
+      "source_sha256": "ee0c7000b7dd7a1c05cc46f018aa50227279aff6d4f038ad0deff44255a0cc19",
+      "source_aliases": [],
+      "legacy_ref": "CA-P-011@1",
+      "native_ref": "AN-T-811@1",
+      "destination": "_anechoic_anechoic/__TICKETS/TASKS/09_archived/AN-T-811@1-TASK--replace-relates-to-with-precise-relations.md",
+      "destination_sha256": "855d4c476cc9fa95e9dbd9bc320186c984a5002716a03b1a5057510c9015be15",
+      "body_sha256": "6be411860314b34ffd7e29d74c1abcd26db4ddf299ba243022f77be0271eff75",
+      "body_prefix_bytes": 252,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C00"
+      },
+      "original_role_form_label": [
+        "",
+        "",
+        ""
+      ],
+      "historical_owner_evidence": {
+        "method": "Project-root historical Plan and its mapped C00 Task",
+        "sources": [
+          {
+            "path": "_anechoic_anechoic/__TICKETS/TASKS/done/AN-T-811-TASK--replace-relates-to-with-precise-relations.md",
+            "sha256": "672b3357a0c731dbdc6e9db7cf281c285bc01e5e60db858ccb780b2de2c6a6a7"
+          }
+        ],
+        "legacy_scope": null
+      },
+      "updated_at_provenance": {
+        "source_value": "2026-08-17 19:36:01",
+        "method": "retained file mtime in UTC",
+        "substitute": "2026-10-24T02:26:31.954775+00:00"
+      },
+      "form_basis": "Authored change Plan and its mapped native Task",
+      "anchor": "_anechoic_anechoic/__TICKETS/TASKS/done/AN-T-811-TASK--replace-relates-to-with-precise-relations.md",
+      "anchor_sha256": "672b3357a0c731dbdc6e9db7cf281c285bc01e5e60db858ccb780b2de2c6a6a7"
+    },
+    {
+      "source": "archives/.anechoic_archive/03_plan/archive/CA-P-032@5-PRINCIPLE-ACTION_POLICY--distinguish-human-operators-from-ai-agents.md",
+      "source_sha256": "c0e5ddb179ab3a9e4a15f5581e57a183ad9699b9db5699cf1fc8d49343f85e2f",
+      "source_aliases": [],
+      "legacy_ref": "CA-P-032@5",
+      "native_ref": "AN-S-4722@5",
+      "destination": "_anechoic_anechoic/09_archived/AN-S-4722@5-DES--distinguish-human-operators-from-ai-agents.md",
+      "destination_sha256": "1a917ac389eca044f3b874633a39bf9abccbb49948bc88ae95a95080714557d2",
+      "body_sha256": "66cdb6b01927f2fc24454be84836ae18e880328025c699ea3dbc8aa8d8c0d022",
+      "body_prefix_bytes": 237,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "child_of",
+          "target": "ANATOLY-MASLENNIKOV-DEFINES_GOAL_FOR-ANECHOIC--create-and-evolve-a-working-anechoic-framework",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C00"
+      },
+      "original_role_form_label": [
+        "",
+        "",
+        ""
+      ],
+      "original_subjects": {
+        "governs": {
+          "continuant": [
+            "Actor/Type"
+          ]
+        },
+        "depends_on": {
+          "continuant": [
+            "Actor",
+            "Type",
+            "Operator",
+            "AI Agent"
+          ]
+        }
+      },
+      "historical_owner_evidence": {
+        "method": "Project-governance Claim and matching C00 successor",
+        "sources": [
+          {
+            "path": "_anechoic_anechoic/_DES/AN-S-158-DES--distinguish-human-operators-from-ai-agents.md",
+            "sha256": "1a587990f8072e9cd5dc02f5f9f482beda95cf02145249befed91646b100b92a"
+          }
+        ],
+        "legacy_scope": null
+      },
+      "historical_tier": {
+        "local": null,
+        "global": null
+      },
+      "tier_default": {
+        "tier": 4,
+        "reason": "Operator-approved default when the historical Tier cannot be recovered",
+        "legacy_tier": null
+      },
+      "form_basis": "Archived governance Claim and matching native successor",
+      "anchor": "_anechoic_anechoic/_DES/AN-S-158-DES--distinguish-human-operators-from-ai-agents.md",
+      "anchor_sha256": "1a587990f8072e9cd5dc02f5f9f482beda95cf02145249befed91646b100b92a",
+      "fresh_legacy_id": "CA-P-032"
+    },
+    {
+      "source": "archives/.anechoic_archive/03_plan/archive/CA-P-032@6-PRINCIPLE-ACTION_POLICY--distinguish-human-operators-from-ai-agents.md",
+      "source_sha256": "cea79797a28d8cd340750450a63180daf0d6e0e6edbac3c0a7db7360d5a0a44d",
+      "source_aliases": [],
+      "legacy_ref": "CA-P-032@6",
+      "native_ref": "AN-S-4722@6",
+      "destination": "_anechoic_anechoic/09_archived/AN-S-4722@6-DES--distinguish-human-operators-from-ai-agents.md",
+      "destination_sha256": "3fc3868cd0436e90ceecc459f7f56439c5da39282ddee9ca687c71b1ed579a6d",
+      "body_sha256": "66cdb6b01927f2fc24454be84836ae18e880328025c699ea3dbc8aa8d8c0d022",
+      "body_prefix_bytes": 237,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "child_of",
+          "target": "ANATOLY-MASLENNIKOV-DEFINES_GOAL_FOR-ANECHOIC--create-and-evolve-a-working-anechoic-framework",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C00"
+      },
+      "original_role_form_label": [
+        "",
+        "",
+        ""
+      ],
+      "original_subjects": {
+        "governs": {
+          "continuant": [
+            "Actor/Type"
+          ]
+        },
+        "depends_on": {
+          "continuant": [
+            "Actor",
+            "Type",
+            "Operator",
+            "AI Agent"
+          ]
+        }
+      },
+      "historical_owner_evidence": {
+        "method": "Project-governance Claim and matching C00 successor",
+        "sources": [
+          {
+            "path": "_anechoic_anechoic/_DES/AN-S-158-DES--distinguish-human-operators-from-ai-agents.md",
+            "sha256": "1a587990f8072e9cd5dc02f5f9f482beda95cf02145249befed91646b100b92a"
+          }
+        ],
+        "legacy_scope": [
+          "component",
+          "anechoic"
+        ]
+      },
+      "form_basis": "Archived governance Claim and matching native successor",
+      "anchor": "_anechoic_anechoic/_DES/AN-S-158-DES--distinguish-human-operators-from-ai-agents.md",
+      "anchor_sha256": "1a587990f8072e9cd5dc02f5f9f482beda95cf02145249befed91646b100b92a",
+      "fresh_legacy_id": "CA-P-032"
+    },
+    {
+      "source": "archives/.anechoic_archive/03_plan/archive/CA-P-033@10-PRINCIPLE-ACTION_POLICY--the-operator-holds-authority.md",
+      "source_sha256": "15b8640838608e50c5283b6dcd5aed565655fb334118cc3ff2fc31a48a29b69a",
+      "source_aliases": [],
+      "legacy_ref": "CA-P-033@10",
+      "native_ref": "AN-S-4723@10",
+      "destination": "_anechoic_anechoic/09_archived/AN-S-4723@10-DES--the-operator-holds-authority.md",
+      "destination_sha256": "e43d4a749dba94be065cd544a872e4aa17ae0faa17c22aa764105033d88ab693",
+      "body_sha256": "59b1ec76f546ba6277df396d439f2b840b4bb7aa0328a158f568e3aad78dc227",
+      "body_prefix_bytes": 224,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "child_of",
+          "target": "ANATOLY-MASLENNIKOV-DEFINES_GOAL_FOR-ANECHOIC--create-and-evolve-a-working-anechoic-framework",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C00"
+      },
+      "original_role_form_label": [
+        "",
+        "",
+        ""
+      ],
+      "original_subjects": {
+        "governs": {
+          "continuant": [
+            "Operator/authority"
+          ]
+        },
+        "depends_on": {
+          "continuant": [
+            "Operator",
+            "Project",
+            "ANECHOIC Framework Instance"
+          ]
+        }
+      },
+      "historical_owner_evidence": {
+        "method": "Project-governance Claim and matching C00 successor",
+        "sources": [
+          {
+            "path": "_anechoic_anechoic/_DES/AN-S-159-DES--the-operator-holds-authority.md",
+            "sha256": "d08d9cd357091e2d77b4b61ccdace4b52d6c05fd19fa8b780380341cd766c529"
+          }
+        ],
+        "legacy_scope": [
+          "component",
+          "anechoic"
+        ]
+      },
+      "form_basis": "Archived governance Claim and matching native successor",
+      "anchor": "_anechoic_anechoic/_DES/AN-S-159-DES--the-operator-holds-authority.md",
+      "anchor_sha256": "d08d9cd357091e2d77b4b61ccdace4b52d6c05fd19fa8b780380341cd766c529",
+      "fresh_legacy_id": "CA-P-033"
+    },
+    {
+      "source": "archives/.anechoic_archive/03_plan/archive/CA-P-033@9-PRINCIPLE-ACTION_POLICY--the-operator-holds-authority.md",
+      "source_sha256": "e6e04eeeb293eb748f16a0b3d1f3b0099d28f7595e76689d432f75bd27f2e86f",
+      "source_aliases": [],
+      "legacy_ref": "CA-P-033@9",
+      "native_ref": "AN-S-4723@9",
+      "destination": "_anechoic_anechoic/09_archived/AN-S-4723@9-DES--the-operator-holds-authority.md",
+      "destination_sha256": "8164a68ca67f7e244181e32675e34d4681a7d89d308aff1a0cc701a8dffe2bf0",
+      "body_sha256": "59b1ec76f546ba6277df396d439f2b840b4bb7aa0328a158f568e3aad78dc227",
+      "body_prefix_bytes": 223,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "child_of",
+          "target": "ANATOLY-MASLENNIKOV-DEFINES_GOAL_FOR-ANECHOIC--create-and-evolve-a-working-anechoic-framework",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C00"
+      },
+      "original_role_form_label": [
+        "",
+        "",
+        ""
+      ],
+      "original_subjects": {
+        "governs": {
+          "continuant": [
+            "Operator/authority"
+          ]
+        },
+        "depends_on": {
+          "continuant": [
+            "Operator",
+            "Project",
+            "ANECHOIC Framework Instance"
+          ]
+        }
+      },
+      "historical_owner_evidence": {
+        "method": "Project-governance Claim and matching C00 successor",
+        "sources": [
+          {
+            "path": "_anechoic_anechoic/_DES/AN-S-159-DES--the-operator-holds-authority.md",
+            "sha256": "d08d9cd357091e2d77b4b61ccdace4b52d6c05fd19fa8b780380341cd766c529"
+          }
+        ],
+        "legacy_scope": null
+      },
+      "historical_tier": {
+        "local": null,
+        "global": null
+      },
+      "tier_default": {
+        "tier": 4,
+        "reason": "Operator-approved default when the historical Tier cannot be recovered",
+        "legacy_tier": null
+      },
+      "form_basis": "Archived governance Claim and matching native successor",
+      "anchor": "_anechoic_anechoic/_DES/AN-S-159-DES--the-operator-holds-authority.md",
+      "anchor_sha256": "d08d9cd357091e2d77b4b61ccdace4b52d6c05fd19fa8b780380341cd766c529",
+      "fresh_legacy_id": "CA-P-033"
+    },
+    {
+      "source": "archives/.anechoic_archive/03_plan/archive/CA-P-034@6-CORE-ACTION_POLICY--ai-agents-act-within-permission.md",
+      "source_sha256": "20fb0230df62f07987f6d393a91297070c5766f7467d601cb71f8919699d026c",
+      "source_aliases": [],
+      "legacy_ref": "CA-P-034@6",
+      "native_ref": "AN-S-4724@6",
+      "destination": "_anechoic_anechoic/09_archived/AN-S-4724@6-DES--ai-agents-act-within-permission.md",
+      "destination_sha256": "3125b0a27cf1ff6596273267d63c275654a0b07dca27407b40ff38d72bc901c7",
+      "body_sha256": "c519b05e898845091fcb5d27a58f8b376b7128b9af706e1ebfd09e4f7eb93e8f",
+      "body_prefix_bytes": 226,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "child_of",
+          "target": "CA-P-033",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C00"
+      },
+      "original_role_form_label": [
+        "",
+        "",
+        ""
+      ],
+      "original_subjects": {
+        "governs": {
+          "continuant": [
+            "AI Agent/authority"
+          ]
+        },
+        "depends_on": {
+          "continuant": [
+            "AI Agent",
+            "Operator",
+            "AI Agent Delegation"
+          ]
+        }
+      },
+      "historical_owner_evidence": {
+        "method": "Project-governance Claim and matching C00 successor",
+        "sources": [
+          {
+            "path": "_anechoic_anechoic/_DES/AN-S-1215-DES--ai-agents-act-within-permission.md",
+            "sha256": "0c14fa1b4d685a4472eff2efd17880cf60f71dfd45d69105c45ac8edef5273e8"
+          }
+        ],
+        "legacy_scope": null
+      },
+      "historical_tier": {
+        "local": null,
+        "global": null
+      },
+      "tier_default": {
+        "tier": 4,
+        "reason": "Operator-approved default when the historical Tier cannot be recovered",
+        "legacy_tier": null
+      },
+      "form_basis": "Archived governance Claim and matching native successor",
+      "anchor": "_anechoic_anechoic/_DES/AN-S-1215-DES--ai-agents-act-within-permission.md",
+      "anchor_sha256": "0c14fa1b4d685a4472eff2efd17880cf60f71dfd45d69105c45ac8edef5273e8",
+      "fresh_legacy_id": "CA-P-034"
+    },
+    {
+      "source": "archives/.anechoic_archive/03_plan/archive/CA-P-034@7-CORE-ACTION_POLICY--ai-agents-act-within-permission.md",
+      "source_sha256": "94fa6653b46a9d2fc5d263bbf02162e3fc5a6477246695bacc773d11aecdb851",
+      "source_aliases": [],
+      "legacy_ref": "CA-P-034@7",
+      "native_ref": "AN-S-4724@7",
+      "destination": "_anechoic_anechoic/09_archived/AN-S-4724@7-DES--ai-agents-act-within-permission.md",
+      "destination_sha256": "5f2bb6aa49b58a1b5437fcbf1d44fe2fe71fba90ced654077612a47c97898ec3",
+      "body_sha256": "c519b05e898845091fcb5d27a58f8b376b7128b9af706e1ebfd09e4f7eb93e8f",
+      "body_prefix_bytes": 226,
+      "summary_copied_from_title": true,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "child_of",
+          "target": "CA-P-033",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C00"
+      },
+      "original_role_form_label": [
+        "",
+        "",
+        ""
+      ],
+      "original_subjects": {
+        "governs": {
+          "continuant": [
+            "AI Agent/authority"
+          ]
+        },
+        "depends_on": {
+          "continuant": [
+            "AI Agent",
+            "Operator",
+            "AI Agent Delegation"
+          ]
+        }
+      },
+      "historical_owner_evidence": {
+        "method": "Project-governance Claim and matching C00 successor",
+        "sources": [
+          {
+            "path": "_anechoic_anechoic/_DES/AN-S-1215-DES--ai-agents-act-within-permission.md",
+            "sha256": "0c14fa1b4d685a4472eff2efd17880cf60f71dfd45d69105c45ac8edef5273e8"
+          }
+        ],
+        "legacy_scope": [
+          "component",
+          "anechoic"
+        ]
+      },
+      "form_basis": "Archived governance Claim and matching native successor",
+      "anchor": "_anechoic_anechoic/_DES/AN-S-1215-DES--ai-agents-act-within-permission.md",
+      "anchor_sha256": "0c14fa1b4d685a4472eff2efd17880cf60f71dfd45d69105c45ac8edef5273e8",
+      "fresh_legacy_id": "CA-P-034"
+    },
+    {
+      "source": "archives/.anechoic_archive/03_plan/archive/CA-P-2694@58-EPIC--entity-graph-refactor-stage-4-polishing.md",
+      "source_sha256": "70572cccea611ece82c0bf498be34b3706892c0f340a37dffa1c7098397cdc86",
+      "source_aliases": [],
+      "legacy_ref": "CA-P-2694@58",
+      "native_ref": "AN-T-1484@58",
+      "destination": "_anechoic_anechoic/__TICKETS/TASKS/09_archived/AN-T-1484@58-EPIC--entity-graph-refactor-stage-4-polishing.md",
+      "destination_sha256": "608cb3c4896807d1b3a470274220ef3f7852e612544e13fa680cc85a044dbfd6",
+      "body_sha256": "a167315aa5bbf676f2d76b9267e7e4f8021667c59fdc8856f753e0c33b3785e6",
+      "body_prefix_bytes": 204,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "IS_CONTAINED_BY",
+          "target": {
+            "scope_unit": "anechoic"
+          },
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C00"
+      },
+      "original_role_form_label": [
+        "plan",
+        "plan",
+        "epic"
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL"
+      },
+      "historical_owner_evidence": {
+        "method": "Project-root archive and exact mapped native lineage",
+        "sources": [
+          {
+            "path": "_anechoic_anechoic/__TICKETS/TASKS/canceled/AN-T-1484-EPIC--entity-graph-refactor-stage-4-polishing.md",
+            "sha256": "9056733aa413c281dc4576d22fb3806ce8b5fa3fbc1c33719218dec249f48d18"
+          }
+        ],
+        "legacy_scope": null
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/03_plan/archive/CA-P-2694@58-EPIC--entity-graph-refactor-stage-4-polishing.md",
+        "sha256": "70572cccea611ece82c0bf498be34b3706892c0f340a37dffa1c7098397cdc86",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      },
+      "anchor": "_anechoic_anechoic/__TICKETS/TASKS/canceled/AN-T-1484-EPIC--entity-graph-refactor-stage-4-polishing.md",
+      "anchor_sha256": "9056733aa413c281dc4576d22fb3806ce8b5fa3fbc1c33719218dec249f48d18",
+      "evidence_source": "archives/.anechoic_legacy/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing.md",
+      "evidence_sha256": "81c60ebcc9302008ead17a90078b7d268f0146c19a2424de71aabf9c197e212a"
+    },
+    {
+      "source": "archives/.anechoic_archive/03_plan/archive/CA-P-2694@59-EPIC--entity-graph-refactor-stage-4-polishing.md",
+      "source_sha256": "ef74e18a15535b63dac8c1ce99eeca71d62a7e59131cc8ad0b8de1d75dff58e7",
+      "source_aliases": [],
+      "legacy_ref": "CA-P-2694@59",
+      "native_ref": "AN-T-1484@59",
+      "destination": "_anechoic_anechoic/__TICKETS/TASKS/09_archived/AN-T-1484@59-EPIC--entity-graph-refactor-stage-4-polishing.md",
+      "destination_sha256": "8339e2b402da01429acd6675900a6467f5d069254bb455b2f9716cd095a07bc7",
+      "body_sha256": "fa6737b6c7001e68ad374233f1d8c331520c563d95bf13d270b6e62d3c7f9d8c",
+      "body_prefix_bytes": 204,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "IS_CONTAINED_BY",
+          "target": {
+            "scope_unit": "anechoic"
+          },
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C00"
+      },
+      "original_role_form_label": [
+        "plan",
+        "plan",
+        "epic"
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL"
+      },
+      "historical_owner_evidence": {
+        "method": "Project-root archive and exact mapped native lineage",
+        "sources": [
+          {
+            "path": "_anechoic_anechoic/__TICKETS/TASKS/canceled/AN-T-1484-EPIC--entity-graph-refactor-stage-4-polishing.md",
+            "sha256": "9056733aa413c281dc4576d22fb3806ce8b5fa3fbc1c33719218dec249f48d18"
+          }
+        ],
+        "legacy_scope": null
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/03_plan/archive/CA-P-2694@59-EPIC--entity-graph-refactor-stage-4-polishing.md",
+        "sha256": "ef74e18a15535b63dac8c1ce99eeca71d62a7e59131cc8ad0b8de1d75dff58e7",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      },
+      "anchor": "_anechoic_anechoic/__TICKETS/TASKS/canceled/AN-T-1484-EPIC--entity-graph-refactor-stage-4-polishing.md",
+      "anchor_sha256": "9056733aa413c281dc4576d22fb3806ce8b5fa3fbc1c33719218dec249f48d18",
+      "evidence_source": "archives/.anechoic_legacy/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing.md",
+      "evidence_sha256": "81c60ebcc9302008ead17a90078b7d268f0146c19a2424de71aabf9c197e212a"
+    },
+    {
+      "source": "archives/.anechoic_archive/03_plan/archive/CA-P-2694@60-EPIC--entity-graph-refactor-stage-4-polishing.md",
+      "source_sha256": "ff3ff47dc48e8a31ee5f52dd04fcb5234e58fb4879b343b02d771485269d476a",
+      "source_aliases": [],
+      "legacy_ref": "CA-P-2694@60",
+      "native_ref": "AN-T-1484@60",
+      "destination": "_anechoic_anechoic/__TICKETS/TASKS/09_archived/AN-T-1484@60-EPIC--entity-graph-refactor-stage-4-polishing.md",
+      "destination_sha256": "d4119d2a228d3cc8429c062df74cf1af6acc7788ca16d39714c3f52caa62430e",
+      "body_sha256": "b69fdaaefcb42173027eb83be3298716aafcaa1613b86c0b72896526cb376152",
+      "body_prefix_bytes": 204,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "IS_CONTAINED_BY",
+          "target": {
+            "scope_unit": "anechoic"
+          },
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C00"
+      },
+      "original_role_form_label": [
+        "plan",
+        "plan",
+        "epic"
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL"
+      },
+      "historical_owner_evidence": {
+        "method": "Project-root archive and exact mapped native lineage",
+        "sources": [
+          {
+            "path": "_anechoic_anechoic/__TICKETS/TASKS/canceled/AN-T-1484-EPIC--entity-graph-refactor-stage-4-polishing.md",
+            "sha256": "9056733aa413c281dc4576d22fb3806ce8b5fa3fbc1c33719218dec249f48d18"
+          }
+        ],
+        "legacy_scope": null
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/03_plan/archive/CA-P-2694@60-EPIC--entity-graph-refactor-stage-4-polishing.md",
+        "sha256": "ff3ff47dc48e8a31ee5f52dd04fcb5234e58fb4879b343b02d771485269d476a",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      },
+      "anchor": "_anechoic_anechoic/__TICKETS/TASKS/canceled/AN-T-1484-EPIC--entity-graph-refactor-stage-4-polishing.md",
+      "anchor_sha256": "9056733aa413c281dc4576d22fb3806ce8b5fa3fbc1c33719218dec249f48d18",
+      "evidence_source": "archives/.anechoic_legacy/03_plan/CA-P-2694-EPIC--entity-graph-refactor-stage-4-polishing.md",
+      "evidence_sha256": "81c60ebcc9302008ead17a90078b7d268f0146c19a2424de71aabf9c197e212a"
+    },
+    {
+      "source": "archives/.anechoic_archive/03_plan/archive/CA-P-2710@60-EPIC--make-workbench-queries-paged-and-frontend-modular.md",
+      "source_sha256": "ba6894256b1b3b5da52030a11fda8b6848504112c8e77cac1aae09ede3973850",
+      "source_aliases": [],
+      "legacy_ref": "CA-P-2710@60",
+      "native_ref": "AN-T-1783@60",
+      "destination": "_anechoic_anechoic/__TICKETS/TASKS/09_archived/AN-T-1783@60-EPIC--make-workbench-queries-paged-and-the-frontend-modular.md",
+      "destination_sha256": "309111ebf7fd74095e4d4886b76f17564c3dd1ed03d3ed78c07dfb47460ae4b6",
+      "body_sha256": "3dbb4e379aa950061d7d37621bef5a5f33e2256ff36503a695fc4de5f13bc5c7",
+      "body_prefix_bytes": 204,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C00"
+      },
+      "original_role_form_label": [
+        "plan",
+        "plan",
+        "epic"
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ Projection"
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/03_plan/archive/CA-P-2710@60-EPIC--make-workbench-queries-paged-and-frontend-modular.md",
+        "sha256": "ba6894256b1b3b5da52030a11fda8b6848504112c8e77cac1aae09ede3973850",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      },
+      "anchor": "_anechoic_anechoic/__TICKETS/TASKS/done/AN-T-1783-EPIC--make-workbench-queries-paged-and-the-frontend-modular.md",
+      "anchor_sha256": "d2f73698fb476126557869d085c5c16cfb01661e4e985edefacc6bdb6d67faac",
+      "evidence_source": "archives/.anechoic_legacy/03_plan/020_done/CA-P-2710-EPIC--make-workbench-queries-paged-and-frontend-modular.md",
+      "evidence_sha256": "78811401b0e4f0af1df9c7887a399341a621b81afedcb93cf08144c49ca65c70"
+    },
+    {
+      "source": "archives/.anechoic_archive/03_plan/archive/CA-P-2710@61-EPIC--make-workbench-queries-paged-and-frontend-modular.md",
+      "source_sha256": "8e8627ad884529077468563c7dcf9d2db10993e1d159ca40e73be62c75a31829",
+      "source_aliases": [],
+      "legacy_ref": "CA-P-2710@61",
+      "native_ref": "AN-T-1783@61",
+      "destination": "_anechoic_anechoic/__TICKETS/TASKS/09_archived/AN-T-1783@61-EPIC--make-workbench-queries-paged-and-the-frontend-modular.md",
+      "destination_sha256": "433a870e2defbcd19b6163d2562ef7913c5d34d2da7a7ec2bf8bcc0e385edc92",
+      "body_sha256": "356ab11adc28ff380881ef795e4fa675f63b39c251861bf6407afa2bc3267724",
+      "body_prefix_bytes": 204,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C00"
+      },
+      "original_role_form_label": [
+        "plan",
+        "plan",
+        "epic"
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ Projection"
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/03_plan/archive/CA-P-2710@61-EPIC--make-workbench-queries-paged-and-frontend-modular.md",
+        "sha256": "8e8627ad884529077468563c7dcf9d2db10993e1d159ca40e73be62c75a31829",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      },
+      "anchor": "_anechoic_anechoic/__TICKETS/TASKS/done/AN-T-1783-EPIC--make-workbench-queries-paged-and-the-frontend-modular.md",
+      "anchor_sha256": "d2f73698fb476126557869d085c5c16cfb01661e4e985edefacc6bdb6d67faac",
+      "evidence_source": "archives/.anechoic_legacy/03_plan/020_done/CA-P-2710-EPIC--make-workbench-queries-paged-and-frontend-modular.md",
+      "evidence_sha256": "78811401b0e4f0af1df9c7887a399341a621b81afedcb93cf08144c49ca65c70"
+    },
+    {
+      "source": "archives/.anechoic_archive/03_plan/archive/CA-P-2710@62-EPIC--make-workbench-queries-paged-and-frontend-modular.md",
+      "source_sha256": "7ce83a4052cb810e9c4a55781cd1532a2d1e5e3116ab020c50fdc7b0d6270966",
+      "source_aliases": [],
+      "legacy_ref": "CA-P-2710@62",
+      "native_ref": "AN-T-1783@62",
+      "destination": "_anechoic_anechoic/__TICKETS/TASKS/09_archived/AN-T-1783@62-EPIC--make-workbench-queries-paged-and-the-frontend-modular.md",
+      "destination_sha256": "6660c5b118ff2e8ef57936b83178967172a91eabaff2a970241a6b69d1bdc8c3",
+      "body_sha256": "bf00fa1f9845f6ff5bea66a55a4856e2d56a9516288188c2b7b99b31b4804522",
+      "body_prefix_bytes": 204,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C00"
+      },
+      "original_role_form_label": [
+        "plan",
+        "plan",
+        "epic"
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ Projection"
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/03_plan/archive/CA-P-2710@62-EPIC--make-workbench-queries-paged-and-frontend-modular.md",
+        "sha256": "7ce83a4052cb810e9c4a55781cd1532a2d1e5e3116ab020c50fdc7b0d6270966",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      },
+      "anchor": "_anechoic_anechoic/__TICKETS/TASKS/done/AN-T-1783-EPIC--make-workbench-queries-paged-and-the-frontend-modular.md",
+      "anchor_sha256": "d2f73698fb476126557869d085c5c16cfb01661e4e985edefacc6bdb6d67faac",
+      "evidence_source": "archives/.anechoic_legacy/03_plan/020_done/CA-P-2710-EPIC--make-workbench-queries-paged-and-frontend-modular.md",
+      "evidence_sha256": "78811401b0e4f0af1df9c7887a399341a621b81afedcb93cf08144c49ca65c70"
+    },
+    {
+      "source": "archives/.anechoic_archive/03_plan/archive/CA-P-2710@63-EPIC--make-workbench-queries-paged-and-frontend-modular.md",
+      "source_sha256": "dea0048d0dfa960e6c0162f3881c0983ba71f06cd389168c3c9d4c259d44e073",
+      "source_aliases": [],
+      "legacy_ref": "CA-P-2710@63",
+      "native_ref": "AN-T-1783@63",
+      "destination": "_anechoic_anechoic/__TICKETS/TASKS/09_archived/AN-T-1783@63-EPIC--make-workbench-queries-paged-and-the-frontend-modular.md",
+      "destination_sha256": "8e3928c1e001a957edaf3710b2447d0978b49256cf0a50adb9b96115a6e070a5",
+      "body_sha256": "e8e78aa15aeaa38628062af29b09aca62262883da14bedbfbf375f41c7ffdc42",
+      "body_prefix_bytes": 204,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C00"
+      },
+      "original_role_form_label": [
+        "plan",
+        "plan",
+        "epic"
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ Projection"
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/03_plan/archive/CA-P-2710@63-EPIC--make-workbench-queries-paged-and-frontend-modular.md",
+        "sha256": "dea0048d0dfa960e6c0162f3881c0983ba71f06cd389168c3c9d4c259d44e073",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      },
+      "anchor": "_anechoic_anechoic/__TICKETS/TASKS/done/AN-T-1783-EPIC--make-workbench-queries-paged-and-the-frontend-modular.md",
+      "anchor_sha256": "d2f73698fb476126557869d085c5c16cfb01661e4e985edefacc6bdb6d67faac",
+      "evidence_source": "archives/.anechoic_legacy/03_plan/020_done/CA-P-2710-EPIC--make-workbench-queries-paged-and-frontend-modular.md",
+      "evidence_sha256": "78811401b0e4f0af1df9c7887a399341a621b81afedcb93cf08144c49ca65c70"
+    },
+    {
+      "source": "archives/.anechoic_archive/03_plan/archive/CA-P-2710@64-EPIC--make-workbench-queries-paged-and-frontend-modular.md",
+      "source_sha256": "36b4714742302a0fd72f73dbe8adc591dce0cbdce487ef330e35dec74e2a7f1e",
+      "source_aliases": [],
+      "legacy_ref": "CA-P-2710@64",
+      "native_ref": "AN-T-1783@64",
+      "destination": "_anechoic_anechoic/__TICKETS/TASKS/09_archived/AN-T-1783@64-EPIC--make-workbench-queries-paged-and-the-frontend-modular.md",
+      "destination_sha256": "641da1ab7addb41cbd2d9816373a6ddaf96cc224ca580b3bf28ed39ee0b613cd",
+      "body_sha256": "d3d4aaf6300354d8a1ce37784c18eab97046fc4671a10d387344df719165fe52",
+      "body_prefix_bytes": 204,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C00"
+      },
+      "original_role_form_label": [
+        "plan",
+        "plan",
+        "epic"
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ Projection"
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/03_plan/archive/CA-P-2710@64-EPIC--make-workbench-queries-paged-and-frontend-modular.md",
+        "sha256": "36b4714742302a0fd72f73dbe8adc591dce0cbdce487ef330e35dec74e2a7f1e",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      },
+      "anchor": "_anechoic_anechoic/__TICKETS/TASKS/done/AN-T-1783-EPIC--make-workbench-queries-paged-and-the-frontend-modular.md",
+      "anchor_sha256": "d2f73698fb476126557869d085c5c16cfb01661e4e985edefacc6bdb6d67faac",
+      "evidence_source": "archives/.anechoic_legacy/03_plan/020_done/CA-P-2710-EPIC--make-workbench-queries-paged-and-frontend-modular.md",
+      "evidence_sha256": "78811401b0e4f0af1df9c7887a399341a621b81afedcb93cf08144c49ca65c70"
+    },
+    {
+      "source": "archives/.anechoic_archive/03_plan/archive/CA-P-2710@65-EPIC--make-workbench-queries-paged-and-frontend-modular.md",
+      "source_sha256": "354137f392d97a922af3bd6e695d3cbc34ffd0227fe724b7c34be08f705140ab",
+      "source_aliases": [],
+      "legacy_ref": "CA-P-2710@65",
+      "native_ref": "AN-T-1783@65",
+      "destination": "_anechoic_anechoic/__TICKETS/TASKS/09_archived/AN-T-1783@65-EPIC--make-workbench-queries-paged-and-the-frontend-modular.md",
+      "destination_sha256": "8e89fb6438c7266360e23e3e5f7eb74f72471fc68a58f2b0ae60ce4e8ade1f87",
+      "body_sha256": "5d5e636e5457db13050392172d37bd5e4cbc7d896235ab0699bb971cc9697f73",
+      "body_prefix_bytes": 204,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C00"
+      },
+      "original_role_form_label": [
+        "plan",
+        "plan",
+        "epic"
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ Projection"
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/03_plan/archive/CA-P-2710@65-EPIC--make-workbench-queries-paged-and-frontend-modular.md",
+        "sha256": "354137f392d97a922af3bd6e695d3cbc34ffd0227fe724b7c34be08f705140ab",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      },
+      "anchor": "_anechoic_anechoic/__TICKETS/TASKS/done/AN-T-1783-EPIC--make-workbench-queries-paged-and-the-frontend-modular.md",
+      "anchor_sha256": "d2f73698fb476126557869d085c5c16cfb01661e4e985edefacc6bdb6d67faac",
+      "evidence_source": "archives/.anechoic_legacy/03_plan/020_done/CA-P-2710-EPIC--make-workbench-queries-paged-and-frontend-modular.md",
+      "evidence_sha256": "78811401b0e4f0af1df9c7887a399341a621b81afedcb93cf08144c49ca65c70"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/03_plan/archive/CA-P-2714@1-TASK--add-workbench-resource-regression-and-leak-soak-checks.md",
+      "source_sha256": "e2a2a00fb304b2c497fef38b85a463a45911e6ef7e5dc82b0f13786697e007c8",
+      "source_aliases": [],
+      "legacy_ref": "CA-P-2714@1",
+      "native_ref": "AN-T-2006@1",
+      "destination": "_anechoic_anechoic/__TICKETS/TASKS/09_archived/AN-T-2006@1-TASK--add-workbench-resource-regression-and-leak-soak-checks.md",
+      "destination_sha256": "7a2ecba39816e2c69875d708a13ed8a81c4bdce653f9a35c4134801cce3bedff",
+      "body_sha256": "9d040bdbcc506cf2e312957499ddb8e16dd774aa9381116795bacffc016aee6c",
+      "body_prefix_bytes": 189,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C43"
+      },
+      "original_role_form_label": [
+        "plan",
+        "plan",
+        "task"
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ Projection"
+      },
+      "historical_owner_evidence": {
+        "method": "Historical Workbench Scope Unit and native Workbench declaration",
+        "sources": [
+          {
+            "path": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/_SPEC/AN-S-3046-SPEC-COMPONENT_MANIFEST--declare-workbench.md",
+            "sha256": "98f9a4ae752206ff773fea9f9ead04fc52d0b29ff5fe9e264079b6bc2fbf55f5"
+          }
+        ],
+        "legacy_scope": [
+          "component",
+          "CA-SU-43"
+        ]
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/03_plan/archive/CA-P-2714@1-TASK--add-workbench-resource-regression-and-leak-soak-checks.md",
+        "sha256": "e2a2a00fb304b2c497fef38b85a463a45911e6ef7e5dc82b0f13786697e007c8",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      },
+      "anchor": "_anechoic_anechoic/__TICKETS/TASKS/done/AN-T-2006-TASK--add-workbench-resource-regression-and-leak-soak-checks.md",
+      "anchor_sha256": "478be431a601aab4ff6d186812460c4ef68673cb5c21b601696d9d5044c73ee0",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/03_plan/020_done/CA-P-2714-TASK--add-workbench-resource-regression-and-leak-soak-checks.md",
+      "evidence_sha256": "ebf3bbf8d46d743ff7e2ff0e8c9ad9abbebf6a9ccd323f40938ecefb1c95b9ad"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/03_plan/archive/CA-P-2714@2-TASK--add-workbench-resource-regression-and-leak-soak-checks.md",
+      "source_sha256": "e1be88084d498772702d73c8312c317e9f2b55a505017566738e95edb9dca056",
+      "source_aliases": [],
+      "legacy_ref": "CA-P-2714@2",
+      "native_ref": "AN-T-2006@2",
+      "destination": "_anechoic_anechoic/__TICKETS/TASKS/09_archived/AN-T-2006@2-TASK--add-workbench-resource-regression-and-leak-soak-checks.md",
+      "destination_sha256": "c6993fbe4c74fc4b5020dde4e622dba769c0874763a34f47050562c887246b21",
+      "body_sha256": "599593ef290aecf2c9aac12bd095a018366f1f2e1aa033a7e170115d362cb0c1",
+      "body_prefix_bytes": 189,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C43"
+      },
+      "original_role_form_label": [
+        "plan",
+        "plan",
+        "task"
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ Projection"
+      },
+      "historical_owner_evidence": {
+        "method": "Historical Workbench Scope Unit and native Workbench declaration",
+        "sources": [
+          {
+            "path": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/_SPEC/AN-S-3046-SPEC-COMPONENT_MANIFEST--declare-workbench.md",
+            "sha256": "98f9a4ae752206ff773fea9f9ead04fc52d0b29ff5fe9e264079b6bc2fbf55f5"
+          }
+        ],
+        "legacy_scope": [
+          "component",
+          "CA-SU-43"
+        ]
+      },
+      "legacy_status": "done",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/03_plan/archive/CA-P-2714@2-TASK--add-workbench-resource-regression-and-leak-soak-checks.md",
+        "sha256": "e1be88084d498772702d73c8312c317e9f2b55a505017566738e95edb9dca056",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      },
+      "anchor": "_anechoic_anechoic/__TICKETS/TASKS/done/AN-T-2006-TASK--add-workbench-resource-regression-and-leak-soak-checks.md",
+      "anchor_sha256": "478be431a601aab4ff6d186812460c4ef68673cb5c21b601696d9d5044c73ee0",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/03_plan/020_done/CA-P-2714-TASK--add-workbench-resource-regression-and-leak-soak-checks.md",
+      "evidence_sha256": "ebf3bbf8d46d743ff7e2ff0e8c9ad9abbebf6a9ccd323f40938ecefb1c95b9ad"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/archive/CA-R-1319@28-CORE_META_MODEL--define-governed-term.md",
+      "source_sha256": "2bfbb670ef268c017624d6369067948a81757b7fcd8712d17772c1a7b2814c98",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-1319@28",
+      "native_ref": "AN-S-1594@28",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-1594@28-DES--define-governed-term.md",
+      "destination_sha256": "c9838bce2ce79a7fc514f677734e6bad3636b87310ad85e0a40f4da96493105d",
+      "body_sha256": "7dc64555418ca19b0c60dfcf1f7e1023351912266f8b907e0acfdd7a43c25df0",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "rule",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ Term",
+        "passive": [
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role: Method)/(.Header.Form: Term Definition)",
+          "ANECHOIC_MODEL <+ Project",
+          "ANECHOIC_MODEL <+ Term//Empty",
+          "ANECHOIC_MODEL <+ Term//ID"
+        ]
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/archive/CA-R-1319@28-CORE_META_MODEL--define-governed-term.md",
+        "sha256": "2bfbb670ef268c017624d6369067948a81757b7fcd8712d17772c1a7b2814c98",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/archive/CA-R-1319@30-CORE_META_MODEL--define-governed-term.md",
+      "source_sha256": "421236d62f2f53ce669ed8fc137c236b292662958198485af31e0d617ffa6fbe",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-1319@30",
+      "native_ref": "AN-S-1594@30",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-1594@30-DES--define-governed-term.md",
+      "destination_sha256": "a732d9c20b26983d6a9355ad59f90ff266ac54182c7de0b883f5b365efc47fd7",
+      "body_sha256": "c0abb2fdde2679e4027f678f4fad5f3138e44a895257a337ad4c0e9688049cfb",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "IS_CONTAINED_BY",
+          "target": {
+            "scope_unit": "CA-SU-11"
+          },
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "rule",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ Term",
+        "passive": [
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role: Method)/(.Header.Form: Term Definition)",
+          "ANECHOIC_MODEL <+ Project",
+          "ANECHOIC_MODEL <+ Term//Empty",
+          "ANECHOIC_MODEL <+ Term//ID"
+        ]
+      },
+      "historical_owner_evidence": {
+        "method": "Historical Core Meta Model archive and exact mapped native lineage",
+        "sources": [
+          {
+            "path": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/01_TIER_1_ARCHITECTURE/AN-S-1594-DES--define-governed-term.md",
+            "sha256": "750178185f513498a3b742132406d8f956c2149a71563a71115e3d43affd57ae"
+          }
+        ],
+        "legacy_scope": null
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/archive/CA-R-1319@30-CORE_META_MODEL--define-governed-term.md",
+        "sha256": "421236d62f2f53ce669ed8fc137c236b292662958198485af31e0d617ffa6fbe",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/archive/CA-R-1432@27-CORE_META_MODEL--classify-admitted-atom-changes-by-semantic-effect.md",
+      "source_sha256": "727b14569c61e44def97d6b5a63dfd8de537387a6d3e7df4056899ebeb5222e5",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-1432@27",
+      "native_ref": "AN-S-1604@27",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-1604@27-DES--classify-admitted-atom-changes-by-semantic-effect.md",
+      "destination_sha256": "c5ebcd1f45db76b06967c716bce957c3efbf6af7f7f0f069899c196b00990d4f",
+      "body_sha256": "cb2da66fd1be54fc25b82c3e56e22d0811d681182495694156408498c65ba6e2",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "rule",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ Atom",
+        "passive": [
+          "ANECHOIC_MODEL <+ Atom",
+          "ANECHOIC_MODEL <+ Atom.Content.Summary",
+          "ANECHOIC_MODEL <+ Carrier",
+          "ANECHOIC_MODEL <+ Atom.Header.Role"
+        ]
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/archive/CA-R-1432@27-CORE_META_MODEL--classify-admitted-atom-changes-by-semantic-effect.md",
+        "sha256": "727b14569c61e44def97d6b5a63dfd8de537387a6d3e7df4056899ebeb5222e5",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      },
+      "anchor": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/01_draft/AN-S-1604@28-draft-DES--govern-atom-lifecycle-identity-and-version.md",
+      "anchor_sha256": "371ad40d5a88850331583b963c50bc811265585b45ac627a2f5114c1f4dfe446",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/000_draft/lifecycle-in-place-edits/CA-R-1432@28-draft-CORE_META_MODEL-RULE--govern-atom-lifecycle-identity-and-version.md",
+      "evidence_sha256": "d2de895c9d8d23350635cef1065eda8b8ecef98048cc73047f3d093130d9c717"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/archive/CA-R-1454@32-CORE_META_MODEL--derive-governed-terms-views-from-selected-authority.md",
+      "source_sha256": "ef4de5150a1547aab8d3495b255dc148cb383f1f08a1e226b950c9d84b2276ca",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-1454@32",
+      "native_ref": "AN-S-2669@32",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-2669@32-DES--derive-governed-terms-views-from-selected-authority.md",
+      "destination_sha256": "249d956874952715d3e3dc8fa1deab1bb3f401ff1d5608bf7f2e5a06bef6e993",
+      "body_sha256": "82c485217dcd907a4a537cbccee8ce7cf5e9fcd66bd1d5bc8215ec17481e81b7",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "child_of",
+          "target": "CA-R-1335@31",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "child_of",
+          "target": "CA-R-1319",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "child_of",
+          "target": "CA-R-1437",
+          "position": 2
+        }
+      ],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "rule",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ Entity/Object/Continuant/Projection/(.Form: Terms Graph)",
+        "passive": [
+          "ANECHOIC_MODEL <+ Term",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role: Method)/(.Header.Form: Term Definition)",
+          "ANECHOIC_MODEL <+ Atom.Content",
+          "ANECHOIC_MODEL <+ Atom",
+          "ANECHOIC_MODEL <+ CFEL <+ Relation",
+          "ANECHOIC_MODEL <+ Projection"
+        ]
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/archive/CA-R-1454@32-CORE_META_MODEL--derive-governed-terms-views-from-selected-authority.md",
+        "sha256": "ef4de5150a1547aab8d3495b255dc148cb383f1f08a1e226b950c9d84b2276ca",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/archive/CA-R-2275@2-CORE_META_MODEL-TERM_DEFINITION--define-id.md",
+      "source_sha256": "8586ad494276b8239ea2b52e8f68322adc074c784c2a5c73a374160382d5d4aa",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-2275@2",
+      "native_ref": "AN-S-4083@2",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4083@2-DES--define-id.md",
+      "destination_sha256": "ffd45914da3881ea1d48fd8f06aa087e529efa4949cd15db852c098d0a2b5a49",
+      "body_sha256": "698f22df5317dcd1be8ac280528f1549a47bc91d8bbfc63a5e79d277c446be23",
+      "body_prefix_bytes": 180,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "term_definition",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ Entity/Object/Continuant/Term//ID",
+        "passive": [
+          "ANECHOIC_MODEL <+ Entity/Object/Continuant/Term",
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role := Requirement)/(.Header.Form := Term Definition)"
+        ]
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/archive/CA-R-2275@2-CORE_META_MODEL-TERM_DEFINITION--define-id.md",
+        "sha256": "8586ad494276b8239ea2b52e8f68322adc074c784c2a5c73a374160382d5d4aa",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/archive/CA-R-2440@1-ANATOLY-MASLENNIKOV-DEFINES_GOAL_FOR-anechoic--the-anechoic-project-creates-and-evolves-a-framework-enabling-operators-with-sufficient-resources-to-create-deliver-run-and-maintain-feasible-projects-using-ai-agents.md",
+      "source_sha256": "41fae1cf3c10f3f4c10b3d916e4e6a8871b7f7cc344c23b4300c21434768817e",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-2440@1",
+      "native_ref": "AN-S-4725@1",
+      "destination": "_anechoic_anechoic/09_archived/AN-S-4725@1-SPEC-PROJECT_GOAL--the-anechoic-project-creates-and-evolves-a-framework-enabling-operators-with-sufficient-resources-to-create-deliver-run-and-maintain-feasible-projects-using-ai-agents.md",
+      "destination_sha256": "b990940c8cea8be14443355425e55d23034763393f3e9e7a966144725eb5de76",
+      "body_sha256": "903f4c49c481bc0dcbd898f4f98a521ca6311516e4e34a4bd34842defd7d6bc7",
+      "body_prefix_bytes": 208,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C00"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "project_goal",
+        ""
+      ],
+      "original_subjects": {
+        "governs": "Entity/Aspect/Product: ANECHOIC Framework",
+        "depends_on": [
+          "Entity/Object/Continuant/Actor/Operator",
+          "Entity/Object/Continuant/Actor/AI Agent"
+        ]
+      },
+      "historical_owner_evidence": {
+        "method": "Explicit ANECHOIC Project Goal target",
+        "sources": [
+          {
+            "path": "AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md",
+            "sha256": "51f465e53f9ae7b665486f1744ab9bafa3ba57f5fd68e7ddd363ef771d940abd"
+          }
+        ],
+        "legacy_scope": [
+          "component",
+          "Anatoly Maslennikov"
+        ]
+      },
+      "form_basis": "Authored Project Goal and corresponding native Project Goal",
+      "anchor": "AN-S-1233-SPEC-PROJECT_GOAL--create-and-evolve-a-working-anechoic-framework.md",
+      "anchor_sha256": "51f465e53f9ae7b665486f1744ab9bafa3ba57f5fd68e7ddd363ef771d940abd",
+      "fresh_legacy_id": "CA-R-2440"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/archive/CA-R-2550@2-CORE_META_MODEL-CFEL--fallback-when-omitted.md",
+      "source_sha256": "2429a68b64cfa926f47d499e6c7e955023fa2331a32c1e03a456cabb9d397c22",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-2550@2",
+      "native_ref": "AN-S-4726@2",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4726@2-DES--resolve-a-fallback-when-an-optional-property-is-omitted.md",
+      "destination_sha256": "51c433f74e049babeb42dd30f32299052fe5b2d7eb429d538ce2e841058cb5a4",
+      "body_sha256": "e05403cd3b5a19ab16f9e42de02dc004244e89b7fd035a52b8720e4ef29dddd4",
+      "body_prefix_bytes": 180,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "rule",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ CFEL"
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/archive/CA-R-2550@2-CORE_META_MODEL-CFEL--fallback-when-omitted.md",
+        "sha256": "2429a68b64cfa926f47d499e6c7e955023fa2331a32c1e03a456cabb9d397c22",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      },
+      "fresh_legacy_id": "CA-R-2550"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/archive/CA-R-2598@1-CORE_META_MODEL-DECLARATION--declare-cfel-operator.md",
+      "source_sha256": "d5aebf4be414e497656d5b7e2be7167fec145ff5eb6f87ff895214d0fd606cc8",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-2598@1",
+      "native_ref": "AN-S-4727@1",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4727@1-DES--declare-cfel-operator.md",
+      "destination_sha256": "a01f9a92b05f6bef0511b79ba03546cbd9ebc460abe347cd49404cccac072482",
+      "body_sha256": "c97b3790732449334b3fe0a8ca0e8b756706dc3bc532fda2d95089d55a32f375",
+      "body_prefix_bytes": 180,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "declaration",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ CFEL<+Operator//Fallback"
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/archive/CA-R-2598@1-CORE_META_MODEL-DECLARATION--declare-cfel-operator.md",
+        "sha256": "d5aebf4be414e497656d5b7e2be7167fec145ff5eb6f87ff895214d0fd606cc8",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      },
+      "fresh_legacy_id": "CA-R-2598"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/04_requirement/archive/CA-R-2654@4-FRAMEWORK_ENGINE-SCOPE_DELEGATION--declare-programmatic.md",
+      "source_sha256": "231b0f12eef9044260c8d2e1f83ec8c6bf9a4997700cc9ef7e14eb1917abfe2c",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-2654@4",
+      "native_ref": "AN-S-2614@4",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/09_archived/AN-S-2614@4-DES--declare-programmatic.md",
+      "destination_sha256": "22d0b3fa86813d5058cb84ca24e4b68e9eedf13a27e85661d9e057d2107b9914",
+      "body_sha256": "a612a52d0acf87fa76472f7652e559c519e9f61c8c4678ce219376a6ad50a242",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C14"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "scope_delegation",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "PROJECT STRUCTURE//ANECHOIC <+ Scope Unit//PROGRAMMATIC"
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/04_requirement/archive/CA-R-2654@4-FRAMEWORK_ENGINE-SCOPE_DELEGATION--declare-programmatic.md",
+        "sha256": "231b0f12eef9044260c8d2e1f83ec8c6bf9a4997700cc9ef7e14eb1917abfe2c",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/_DES/AN-S-2614-DES--declare-programmatic.md",
+      "anchor_sha256": "4fdb917c96fb993cd025c55fd5a10f4f71713ed3420cb7921c236590cb8960a7",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/04_requirement/CA-R-2654-FRAMEWORK_ENGINE-SCOPE_DELEGATION--declare-programmatic.md",
+      "evidence_sha256": "04d256b4d5878d9cd816fbd3e8189f3a24d774bb600c8e79ca6c5d51c5cf87a5"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/04_requirement/archive/CA-R-2655@2-PROGRAMMATIC-SCOPE_DELEGATION--declare-tools.md",
+      "source_sha256": "00b94e95e5d1c427ee364e60fbb68b831d7c8e77cb2e589800ab7c4299cf4ce4",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-2655@2",
+      "native_ref": "AN-S-2615@2",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/09_archived/AN-S-2615@2-DES--declare-tools.md",
+      "destination_sha256": "8066943f6b6e64b331e500ed52193ac460038c644c92e8b90304dfddc2fae413",
+      "body_sha256": "a056e3148074a813fcc604f32da69858dce1df96c7b5e662accceb979bacb83a",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C15"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "scope_delegation",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_STRUCTURE <+ Scope Unit//TOOLS"
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/04_requirement/archive/CA-R-2655@2-PROGRAMMATIC-SCOPE_DELEGATION--declare-tools.md",
+        "sha256": "00b94e95e5d1c427ee364e60fbb68b831d7c8e77cb2e589800ab7c4299cf4ce4",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/_DES/AN-S-2615-DES--declare-tools.md",
+      "anchor_sha256": "9cdcbe60a185aa6fceeb3b6c3be19ef015f81e01d2ddb68749264c016b8f167c",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/04_requirement/CA-R-2655-PROGRAMMATIC-SCOPE_DELEGATION--declare-tools.md",
+      "evidence_sha256": "0fb658c85b5be0dccd96c145ec1d1be590902357fa12d9a245a00bc5e4510833"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/04_requirement/archive/CA-R-2656@3-PROGRAMMATIC-SCOPE_DELEGATION--declare-connector-tools.md",
+      "source_sha256": "0499ae49fad156029e0621726d8c905ac22504afd95734a3b117d1e51f265891",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-2656@3",
+      "native_ref": "AN-S-2616@3",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/09_archived/AN-S-2616@3-DES--declare-connector-tools.md",
+      "destination_sha256": "3834121bc54bee0e93c5d668c67ee85e182c71a9a4d18db42aca0cfe392451d3",
+      "body_sha256": "acc6f9c89a943a9b6e6e1fd1eaa066a91bc30179a5444d8767265893414ee622",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C15"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "scope_delegation",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "PROJECT STRUCTURE//ANECHOIC <+ Scope Unit//CONNECTOR_TOOLS"
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/04_requirement/archive/CA-R-2656@3-PROGRAMMATIC-SCOPE_DELEGATION--declare-connector-tools.md",
+        "sha256": "0499ae49fad156029e0621726d8c905ac22504afd95734a3b117d1e51f265891",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/_DES/AN-S-2616-DES--declare-connector-tools.md",
+      "anchor_sha256": "a11cddd8b1d5346bd4b6129345933f402b74aeba8480035b05f0250bacf22290",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/04_requirement/CA-R-2656-PROGRAMMATIC-SCOPE_DELEGATION--declare-connector-tools.md",
+      "evidence_sha256": "7c506e1addd20975a8ac0448ed5048158e1131c86fb396325c95af637ab0e891"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/04_requirement/archive/CA-R-2657@2-PROGRAMMATIC-SCOPE_DELEGATION--declare-tool-workflows.md",
+      "source_sha256": "9dc264d6953bf9f6dd1731012e40f4ff7a963230c40c9345cd6e3c5c9b08fe12",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-2657@2",
+      "native_ref": "AN-S-2617@2",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/09_archived/AN-S-2617@2-DES--declare-tool-workflows.md",
+      "destination_sha256": "69610ed4c918928f982b659f5d7c0dfee8d483839bb2c28d2cdeb223f617a16b",
+      "body_sha256": "c728e51f2a0bc0011a10aecda70a64099f84dfb0b6f4107ab64660865495fbd8",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C15"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "scope_delegation",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_STRUCTURE <+ Scope Unit//TOOL_WORKFLOWS"
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/04_requirement/archive/CA-R-2657@2-PROGRAMMATIC-SCOPE_DELEGATION--declare-tool-workflows.md",
+        "sha256": "9dc264d6953bf9f6dd1731012e40f4ff7a963230c40c9345cd6e3c5c9b08fe12",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/_DES/AN-S-2617-DES--declare-tool-workflows.md",
+      "anchor_sha256": "f526e6e2940e40d39c2fcec53eb9cf52d263491155e8e489c4b277ff266728f2",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/04_requirement/CA-R-2657-PROGRAMMATIC-SCOPE_DELEGATION--declare-tool-workflows.md",
+      "evidence_sha256": "f053718cdd925adab7453b7a7fd0273221ab8ece5822c0254df8e68cf8ca1abc"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/04_requirement/archive/CA-R-2658@4-PROGRAMMATIC-SCOPE_DELEGATION--declare-project-tools.md",
+      "source_sha256": "5e3c1a520715d5731a2f6ddb49adf33f6ebe15ba05958cf99d82129b14886a5f",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-2658@4",
+      "native_ref": "AN-S-2618@4",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/09_archived/AN-S-2618@4-DES--declare-project-tools.md",
+      "destination_sha256": "52e16f57b0930a77f8b026bf6c3fa9ed462c514a97c8693b41e28e4e0fed20db",
+      "body_sha256": "88c326e6f62be5c49f4c60eeaf7339348e397a855fc3349ee90ef7fd7b01519c",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C15"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "scope_delegation",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_STRUCTURE <+ Scope Unit//PROJECT_TOOLS"
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/04_requirement/archive/CA-R-2658@4-PROGRAMMATIC-SCOPE_DELEGATION--declare-project-tools.md",
+        "sha256": "5e3c1a520715d5731a2f6ddb49adf33f6ebe15ba05958cf99d82129b14886a5f",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/_DES/AN-S-2618-DES--declare-project-tools.md",
+      "anchor_sha256": "631d66d52f427d12ad76a706c687aeb5d488f2499cb742eab9553877adb3b551",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/04_requirement/CA-R-2658-PROGRAMMATIC-SCOPE_DELEGATION--declare-project-tools.md",
+      "evidence_sha256": "f324dd7515492c034ac14f945e0f2b695c8074c423ebdabb62a080420acf408f"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/04_requirement/archive/CA-R-2659@3-PROGRAMMATIC-SCOPE_DELEGATION--declare-apps.md",
+      "source_sha256": "a8e2029769b2275ef8bf91fe341ef6f0c2d83e52b7bd186623d7d52e208c68c3",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-2659@3",
+      "native_ref": "AN-S-2619@3",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/09_archived/AN-S-2619@3-DES--declare-apps.md",
+      "destination_sha256": "d7a65bb2804f5e3b816c410e8001eaa6443cc1dbaff429ceb89fb773439251a8",
+      "body_sha256": "89442c95ed4c48b3467b32740c4b850a3fe3a14694380fe80fea4f4635c3488e",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C15"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "scope_delegation",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "PROJECT STRUCTURE//ANECHOIC <+ Scope Unit//APPS"
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/04_requirement/archive/CA-R-2659@3-PROGRAMMATIC-SCOPE_DELEGATION--declare-apps.md",
+        "sha256": "a8e2029769b2275ef8bf91fe341ef6f0c2d83e52b7bd186623d7d52e208c68c3",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/_DES/AN-S-2619-DES--declare-apps.md",
+      "anchor_sha256": "327dbfc7cb227c63e57e7f9a8afd04b344b0c7f028f0b3f076225493a571d56c",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/04_requirement/CA-R-2659-PROGRAMMATIC-SCOPE_DELEGATION--declare-apps.md",
+      "evidence_sha256": "ec292b8efb6740456c56effbc93521e68e2011ef455bc8ef0dbe7320803e05b2"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/04_requirement/archive/CA-R-2660@5-PROGRAMMATIC-SCOPE_DELEGATION--declare-mcp.md",
+      "source_sha256": "47e2f5daa8a2ce2dbae4621693fa0cb3e16d75af5f33a19c25434d1a5287613e",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-2660@5",
+      "native_ref": "AN-S-2620@5",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/09_archived/AN-S-2620@5-DES--declare-mcp.md",
+      "destination_sha256": "3b61f58ac03a1a83fa35a47d9583ced3c3e369c0550f40a3c38856c2daa377ad",
+      "body_sha256": "0f06410cf4d03d15c9d4c6e3ecd0a596a5f6dfaa35e0a4fa3d78415dfc3c09b0",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C15"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "scope_delegation",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "PROJECT STRUCTURE//ANECHOIC <+ Scope Unit//MCP"
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/04_requirement/archive/CA-R-2660@5-PROGRAMMATIC-SCOPE_DELEGATION--declare-mcp.md",
+        "sha256": "47e2f5daa8a2ce2dbae4621693fa0cb3e16d75af5f33a19c25434d1a5287613e",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/_DES/AN-S-2620-DES--declare-mcp.md",
+      "anchor_sha256": "7df13fda8a1d1b0f62c69580dc309788f5ae5e29df9a94a8f86edc50ebe115e8",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/04_requirement/CA-R-2660-PROGRAMMATIC-SCOPE_DELEGATION--declare-mcp.md",
+      "evidence_sha256": "b11352a4a716b51195decdcdca3e214b0264b9623bf6ac775f187b259c748978"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/099_archived/CA-R-2688@3-draft-CORE_META_MODEL-RULE--require-one-scope-unit-declaration@3.md",
+      "source_sha256": "11c29085374339dd9f247f81396b7a0cdf0835b9df9dd0afce8ed366f9796ba9",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-2688@3-draft",
+      "native_ref": "AN-S-4730@3",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4730@3-DES--require-one-scope-unit-declaration.md",
+      "destination_sha256": "dd15ef53536c0a710def2484a996693637e8964632e5ebc782da221e27d72c97",
+      "body_sha256": "4ed18418b6873da736268dbff2284afda1b034ad0bb40d5be92699a24337bb6d",
+      "body_prefix_bytes": 180,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "rule",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ Scope Unit",
+        "dependencies": [
+          "ANECHOIC_MODEL <+ Atom/(.Header.Role := Requirement)/(.Header.Form := Scope Unit Declaration)",
+          "ANECHOIC_MODEL <+ Project"
+        ]
+      },
+      "disposition": "Retained Draft has a distinct Archived ID and qualified source alias",
+      "legacy_status": "draft",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/099_archived/CA-R-2688@3-draft-CORE_META_MODEL-RULE--require-one-scope-unit-declaration@3.md",
+        "sha256": "11c29085374339dd9f247f81396b7a0cdf0835b9df9dd0afce8ed366f9796ba9",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/04_requirement/archive/CA-R-2730@4-APPS-SCOPE_DELEGATION--declare-workbench.md",
+      "source_sha256": "1cbdb2b5cb4da2c71de00b64d9609a9ce007b87f3b7eeb376b31c8ef38c2860a",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-2730@4",
+      "native_ref": "AN-S-2622@4",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_APPS_C20/09_archived/AN-S-2622@4-DES--declare-workbench.md",
+      "destination_sha256": "b157a920eb462f624dd68492dc25d862e442bb083bdf6b58667f31181c135fd9",
+      "body_sha256": "1a60e1e5ecb4ceae1a5fa5635101d102a089de82ac7a47941906d261aafabca1",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C20"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "scope_delegation",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "PROJECT STRUCTURE//ANECHOIC <+ Scope Unit//WORKBENCH"
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/04_requirement/archive/CA-R-2730@4-APPS-SCOPE_DELEGATION--declare-workbench.md",
+        "sha256": "1cbdb2b5cb4da2c71de00b64d9609a9ce007b87f3b7eeb376b31c8ef38c2860a",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/FEATURE_APPS_C20/_DES/AN-S-2622-DES--declare-workbench.md",
+      "anchor_sha256": "3d0e074d443ac4c5bb45045e3f8e085ff98eda5c826ccc9b7a3834961fdf9f1a",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/04_requirement/CA-R-2730-APPS-SCOPE_DELEGATION--declare-workbench.md",
+      "evidence_sha256": "88def29e39b90562497cba37fbcd351e0961f1493173ad07df356b54c8530c8d"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/04_requirement/archive/CA-R-2763@6-WORKBENCH-SCOPE_DELEGATION-WORKBENCH_BACKEND--declare-workbench-backend.md",
+      "source_sha256": "813ed8b6a72ea4bdc1e29d27b7c0dc8fe3b679d08495126fd8c3ab1cbeaf6450",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-2763@6",
+      "native_ref": "AN-S-2623@6",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/09_archived/AN-S-2623@6-DES--declare-workbench-backend.md",
+      "destination_sha256": "107f146f6ec35e10c18529521fcb52eb3b0ced548982cb322795204f64cb1185",
+      "body_sha256": "098379c1b8362436baff44ba0cccf4a6fcc9865072ffa2226f45de511c884aa2",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C43"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "scope_delegation",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "PROJECT STRUCTURE//ANECHOIC <+ Scope Unit//WORKBENCH_BACKEND"
+      },
+      "historical_owner_evidence": {
+        "method": "Historical Workbench Scope Unit and native Workbench declaration",
+        "sources": [
+          {
+            "path": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/_SPEC/AN-S-3046-SPEC-COMPONENT_MANIFEST--declare-workbench.md",
+            "sha256": "98f9a4ae752206ff773fea9f9ead04fc52d0b29ff5fe9e264079b6bc2fbf55f5"
+          }
+        ],
+        "legacy_scope": [
+          "component",
+          "CA-SU-43"
+        ]
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/04_requirement/archive/CA-R-2763@6-WORKBENCH-SCOPE_DELEGATION-WORKBENCH_BACKEND--declare-workbench-backend.md",
+        "sha256": "813ed8b6a72ea4bdc1e29d27b7c0dc8fe3b679d08495126fd8c3ab1cbeaf6450",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/_DES/AN-S-2623-DES--declare-workbench-backend.md",
+      "anchor_sha256": "67c33317c7cba65a08286f84ae33c3ea98b78f37caf1c21f9c8fef0ee1a7b1e1",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/04_requirement/CA-R-2763-WORKBENCH-SCOPE_DELEGATION-WORKBENCH_BACKEND--declare-workbench-backend.md",
+      "evidence_sha256": "fd8da7e601095b7753ac3db08533fef5fdc1edeb51fb1882438d497c4dfc8979"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/04_requirement/archive/CA-R-2764@5-WORKBENCH-SCOPE_DELEGATION-WORKBENCH_FRONTEND--declare-workbench-frontend.md",
+      "source_sha256": "b352aac12228606dc8c190d0678fe044953c5ab6df19cbb6d846ebe39ccaf790",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-2764@5",
+      "native_ref": "AN-S-2624@5",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/09_archived/AN-S-2624@5-DES--declare-workbench-frontend.md",
+      "destination_sha256": "30efdd494fd04fd6d77a28de5a79fa06cfe79e665bdb7c8d22f146ba9711f08d",
+      "body_sha256": "632bcce3945792fc7014b2282a8ddb8b2174d298327c7f99ad2cfa637a39f840",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-3022",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C43"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "scope_delegation",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "PROJECT STRUCTURE//ANECHOIC <+ Scope Unit//WORKBENCH_FRONTEND"
+      },
+      "historical_owner_evidence": {
+        "method": "Historical Workbench Scope Unit and native Workbench declaration",
+        "sources": [
+          {
+            "path": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/_SPEC/AN-S-3046-SPEC-COMPONENT_MANIFEST--declare-workbench.md",
+            "sha256": "98f9a4ae752206ff773fea9f9ead04fc52d0b29ff5fe9e264079b6bc2fbf55f5"
+          }
+        ],
+        "legacy_scope": [
+          "component",
+          "CA-SU-43"
+        ]
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/04_requirement/archive/CA-R-2764@5-WORKBENCH-SCOPE_DELEGATION-WORKBENCH_FRONTEND--declare-workbench-frontend.md",
+        "sha256": "b352aac12228606dc8c190d0678fe044953c5ab6df19cbb6d846ebe39ccaf790",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/_DES/AN-S-2624-DES--declare-workbench-frontend.md",
+      "anchor_sha256": "5ef70eacfb5f07eca9bd0e40e2048a17cd83325deef490e14518975b64bf2703",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/04_requirement/CA-R-2764-WORKBENCH-SCOPE_DELEGATION-WORKBENCH_FRONTEND--declare-workbench-frontend.md",
+      "evidence_sha256": "c2a48234dee211e6713302fe6ee5d061938dcf833ae8594ccdba9ffa3d76bf6d"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/04_requirement/archive/CA-R-2901@6-WORKBENCH-SCOPE_DELEGATION--declare-codex-extension.md",
+      "source_sha256": "4724d78be3831dbe738f99215d5f192d0c46d9b207c416d66e93ab5a0d608e10",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-2901@6",
+      "native_ref": "AN-S-2625@6",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/09_archived/AN-S-2625@6-DES--declare-codex-extension.md",
+      "destination_sha256": "34efb70c7e5c1af0319819da21f8a431077a24393fbfd0b6f56b6b7cf11a74aa",
+      "body_sha256": "c8ef026b80a9c55a6f535528551ee29e2ba967b1fe29a0e240959935df0cd80f",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C43"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "scope_delegation",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "PROJECT STRUCTURE//ANECHOIC <+ Scope Unit//CODEX_EXTENSION"
+      },
+      "historical_owner_evidence": {
+        "method": "Historical Workbench Scope Unit and native Workbench declaration",
+        "sources": [
+          {
+            "path": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/_SPEC/AN-S-3046-SPEC-COMPONENT_MANIFEST--declare-workbench.md",
+            "sha256": "98f9a4ae752206ff773fea9f9ead04fc52d0b29ff5fe9e264079b6bc2fbf55f5"
+          }
+        ],
+        "legacy_scope": [
+          "component",
+          "CA-SU-43"
+        ]
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/04_requirement/archive/CA-R-2901@6-WORKBENCH-SCOPE_DELEGATION--declare-codex-extension.md",
+        "sha256": "4724d78be3831dbe738f99215d5f192d0c46d9b207c416d66e93ab5a0d608e10",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/_DES/AN-S-2625-DES--declare-codex-extension.md",
+      "anchor_sha256": "ecc260e29bd496a22661d3f60c72eb707e9ce47165bdb80e319c656dc052c268",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/04_requirement/CA-R-2901-WORKBENCH-SCOPE_DELEGATION--declare-codex-extension.md",
+      "evidence_sha256": "4587b1b077678dea82ef0bb5f916a6cd85a09f9826cbdb125712af1d7bed6740"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-9_LAYER_1_FRAMEWORK_METHODOLOGY/CA-SU-10_SUPERLAYER_1_METHODOLOGY_SOURCES/CA-SU-11_LAYER_1_CORE_META_MODEL/04_requirement/099_archived/CA-R-3011@1-CORE_META_MODEL-RELATION_DECLARATION--declare-replacement-for.md",
+      "source_sha256": "e5fcba0d5c94b8c242c2e5f13c50b2d0dfd0cf9af724c7492de87cef144a391c",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-3011@1",
+      "native_ref": "AN-S-4728@1",
+      "destination": "_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9/09_archived/AN-S-4728@1-DES--declare-replacement-for.md",
+      "destination_sha256": "faf252766c967516c4783b0e9aa07d815c14d80daae2cc1df2ba5a74c289969d",
+      "body_sha256": "6760907c0f42806f4ef2d201901745f0d988d55716fcd2f06ea98d8f18f1a60c",
+      "body_prefix_bytes": 180,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C9"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "relation_declaration",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_MODEL <+ CFEL <+ Relation//REPLACEMENT_FOR"
+      },
+      "form_basis": "Historical Requirement to DES Lens rule",
+      "anchor": "_anechoic_anechoic/__TICKETS/TASKS/done/AN-T-2791-EPIC--apply-the-anechoic-model-to-the-project.md",
+      "anchor_sha256": "cbe7ce4e4aa84991fd252c1594124849ccf0b5a916664113eca8ebe0e340ca50",
+      "fresh_legacy_id": "CA-R-3011"
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/04_requirement/archive/CA-R-3014@1-SCOPE_DELEGATION--declare-codex-hook.md",
+      "source_sha256": "71a7acf49758222e2c135461761bd424bbb96082e0436158ce21051d7a1370f9",
+      "source_aliases": [],
+      "legacy_ref": "CA-R-3014@1",
+      "native_ref": "AN-S-2621@1",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/09_archived/AN-S-2621@1-DES--declare-codex-hook.md",
+      "destination_sha256": "09601d8673d34c7ab0791859ac8db1e28b5003479c138a32f1e9522d5e5d0405",
+      "body_sha256": "4e472e4222947b453282188d04dedb8e1c23f3a03ae3cbb3e528fad3877b91af",
+      "body_prefix_bytes": 181,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [],
+      "native_owner": {
+        "component": "C15"
+      },
+      "original_role_form_label": [
+        "requirement",
+        "scope_delegation",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "PROJECT STRUCTURE//ANECHOIC <+ Scope Unit//CODEX_HOOK"
+      },
+      "legacy_status": "active",
+      "archival_evidence": {
+        "path": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/04_requirement/archive/CA-R-3014@1-SCOPE_DELEGATION--declare-codex-hook.md",
+        "sha256": "71a7acf49758222e2c135461761bd424bbb96082e0436158ce21051d7a1370f9",
+        "method": "Operator approved admission of retained archive placement with original status recorded"
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC_C15/_DES/AN-S-2621-DES--declare-codex-hook.md",
+      "anchor_sha256": "3ff9a71be0ce7e85177d305d1ac6870ea686f6ad3cb46fd45d579f2748999b36",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/04_requirement/CA-R-3014-SCOPE_DELEGATION--declare-codex-hook.md",
+      "evidence_sha256": "85918539bacc6f11c433ce782223019cd78b8b98f63c1671f63d7cd4e9cd95fc"
+    }
+  ],
+  "assigned_ids": {
+    "CA-C-110": "AN-T-3465",
+    "CA-C-290": "AN-T-3466",
+    "CA-C-442": "AN-T-3467",
+    "CA-P-032": "AN-S-4722",
+    "CA-P-033": "AN-S-4723",
+    "CA-P-034": "AN-S-4724",
+    "CA-R-2440": "AN-S-4725",
+    "CA-R-2550": "AN-S-4726",
+    "CA-R-2598": "AN-S-4727",
+    "CA-R-3011": "AN-S-4728"
+  },
+  "split_draft_ids": {
+    "CA-M-461@3-draft": "AN-S-4729",
+    "CA-R-2688@3-draft": "AN-S-4730"
+  },
+  "previous_id_map_sha256": "d1fd0061afd4c0136edd8fbebeb0f42f571e229a5f15a2ecc700d2ed8df96166",
+  "previous_alias_map_sha256": "4cdd32168f711061e6ff9c0da878222d3498bb604067c060040a3baf040c2325"
+}
