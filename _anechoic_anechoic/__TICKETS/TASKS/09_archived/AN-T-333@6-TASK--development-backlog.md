@@ -1,0 +1,38 @@
+---
+atom_family: TKT
+atom_id: AN-T-333
+container:
+  component: C00
+priority: 2
+context:
+  template: task
+state:
+  status: archived
+  version: 6
+  updated_at: 2026-09-09 21:56:59 +0400
+---
+## Summary
+
+Development backlog
+
+# Development backlog
+
+## Unscheduled
+
+- Finish the compact Project and Structural-prefix migration under `ANECHOIC-PLAN-014`.
+- Reconcile the active Plan lifecycle under `ANECHOIC-P-016-CHANGE_PLAN`.
+- Implement the FRAMEWORK_ENGINE in usable vertical slices under `ANECHOIC-P-017-CHANGE_PLAN`.
+- Make the current Applicable Methodology under the active Project Principles executable through the active validator and toolchain.
+- Deliver repository adoption and one natural-language-to-committed-change walking skeleton for a Git-backed local Python project.
+- Preserve session continuity and graph-independent Atom-to-Implementation lineage.
+- Produce Test and Evaluation results, Verification, and a Markdown project overview for the implemented change.
+- Complete the governed release flow from Version Plan and release authority through readiness, publication, and Release Record.
+- Prove clean-adopter and recursive self-hosting flows across macOS, Ubuntu, Windows, Codex, and Claude.
+
+## Current target version
+
+No action points allocated.
+
+## Future target versions
+
+No action points allocated.
