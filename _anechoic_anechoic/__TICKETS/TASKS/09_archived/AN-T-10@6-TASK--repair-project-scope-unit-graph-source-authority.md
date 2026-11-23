@@ -1,0 +1,36 @@
+---
+atom_family: TKT
+atom_id: AN-T-10
+container:
+  component: C00
+priority: 2
+context:
+  template: task
+state:
+  status: archived
+  version: 6
+  updated_at: 2026-10-25 01:57:36 +0400
+---
+## Summary
+
+Repair Project Scope Unit Graph Source Authority
+
+# Repair Project Scope Unit Graph Source Authority
+
+**when** CA-P-931 is Done, **then** the Assignee **must** make the current Project Scope Unit Graph authority admit exact authoritative source Artifact revisions and correct every current Project Scope Unit Delivery binding.
+
+## Scope
+
+`((ANECHOIC-META-REQU-627) union (all active Delivery Atoms owned by the 13 current Project Scope Units) union (their exact predecessor archives) union (their governed Directory Carrier receipts))`
+
+## Definition of Done
+
+the Task is **not done if** (Project Scope Unit Graph source authority requires a source to be an Atom when the authoritative source is another Artifact **or** **any** current Scope Unit Delivery Atom retains `.anechoic_project` **or** its authority path differs from its exact `.anechoic_anechoic` Directory Carrier **or** its Delivery path differs from the current root Delivery topology **or** an exact predecessor archive is missing **or** a current Scope Unit Directory Carrier lacks a receipt that binds its current revision and digest).
+
+## Details
+
+preserve the requirement for exact source revision, digest, and Work Journal provenance. broaden only the admitted authoritative source Artifact kind. commit changed Scope Unit folders from descendants to ancestors so every final Directory Carrier receipt binds its current tree.
+
+## Completion Evidence
+
+The source authority now admits exact applicable authoritative source Artifact revisions and digests with applicable Work Journal records. Each of the 13 current Scope Unit Delivery Atoms binds its exact `.anechoic_anechoic` authority path and current Delivery path, and its current Directory Carrier receipt binds the current Atom bytes and canonical folder digest. Full receipt coverage is recorded in `execution_evidence/CA-P-933@6-project-scope-unit-graph-source-authority-repair.projection.json`.

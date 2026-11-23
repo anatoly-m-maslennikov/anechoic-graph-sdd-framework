@@ -1,0 +1,40 @@
+---
+atom_family: TKT
+atom_id: AN-T-1505
+container:
+  component: C00
+priority: 2
+context:
+  template: task
+state:
+  status: archived
+  version: 5
+  updated_at: 2026-10-24 08:47:53 +0400
+---
+## Summary
+
+Refresh the admitted HTTP Harness source pin
+
+# Summary
+
+Refresh the admitted HTTP Harness source pin
+
+## Objective
+
+Bind the new accepted HTTP case in the existing mandatory Docker Harness without weakening its exact source admission.
+
+## Details
+
+Root owns CA-D-572 private Harness metadata and the matching release_source_admission.py trust anchor. Only the existing test_docker_e2e.py byte pin and timestamp change; D572's Claim, closed schema, twelve occurrences, source frontier and Version 10 remain unchanged. This is carrier/source-pin recoding, not a new Workflow definition. Independent read-only review verifies that exact delta before a fresh release dispatch. Estimated slice <=15 minutes.
+
+## Definition of Done
+
+The private pins reopen successfully, the unchanged sixteen-route manifest remains valid, focused admission tests pass and independent review accepts. No stale-pin guard is bypassed and no historical Run is rebound.
+
+## Pre-execution review
+
+Root selects this necessary mechanical pin refresh under the accepted E584/E585 HTTP proof, DRY and current source authority. Actual Docker verification remains P1757.
+
+## Approved first-cut disposition
+
+Release-specific source-pin acceptance is deferred to a later milestone. This Plan remains Active, and its exact-pin, source-currentness and no-historical-Run-rebinding boundaries remain in force. Docker HTTP MCP transport is retained in the approved first cut and is not deferred; an existing dependency actually required to prove that retained HTTP transport may be reused without treating this deferred Release-specific acceptance as complete or dispatching a Release refresh.

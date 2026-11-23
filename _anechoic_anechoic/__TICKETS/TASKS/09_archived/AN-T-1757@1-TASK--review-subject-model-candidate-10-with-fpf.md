@@ -1,0 +1,34 @@
+---
+atom_family: TKT
+atom_id: AN-T-1757
+container:
+  component: C00
+priority: 2
+context:
+  template: task
+state:
+  status: archived
+  version: 1
+  updated_at: 2026-10-27 17:06:49 +0400
+---
+## Summary
+
+Review Subject model Candidate #10 with FPF
+
+# Summary
+
+Review Subject model Candidate #10 with FPF
+
+## Objective
+
+Use the standard FPF flow: validated Plan, Operator do, ordered review and independent validation. Use Astra at max effort for subagents. Review the main Subject structure and definitions; no instances, property inventory, code or migration.
+
+## Details
+
+Candidate: [A1218](../../../02_analysis/CA-A-1218-SPECIFICATION_PROPOSAL--subject-model-candidate-10.md). The proposal holds the structure and definitions; this Task holds work and decisions.
+
+Latest Operator decisions supersede incompatible earlier messages. Scope: main Subjects and their definitions, without instances or property enumeration.
+
+## Definition of Done
+
+The stated deliverable is present and checked. Draft preparation, review, adoption and graph rebuild remain separate outcomes.

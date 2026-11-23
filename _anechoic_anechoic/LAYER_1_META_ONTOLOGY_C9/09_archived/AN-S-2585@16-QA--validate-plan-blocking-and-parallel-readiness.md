@@ -1,0 +1,40 @@
+---
+atom_family: SPEC
+atom_id: AN-S-2585
+container:
+  component: C9
+tier: 4
+context:
+  lens: QA
+state:
+  status: archived
+  version: 16
+  updated_at: 2026-10-24 11:58:20 +0400
+---
+## Summary
+
+Validate Plan blocking and parallel readiness
+
+# Summary
+
+Validate Plan blocking and parallel readiness
+
+## Scope
+
+Plan blocking **and** parallel readiness.
+
+## Claim
+
+the blocking Evaluation **must** reject a start **unless** **all** explicit blockers are Done **and** the applicable execution permissions hold.
+
+## Details
+
+- `A BLOCKS B`, `B BLOCKS C`: permit `A`, **then** `B`, **then** `C` **only** **after** the preceding Plan is Done.
+- `A BLOCKS C`, `B BLOCKS C`: allow `A` **and** `B` **to** be ready concurrently; `C` waits for both.
+- reorder leading navigation numbers **or** give two Plans the same Hub: do **not** invent another blocking edge.
+- reject a self-edge, cycle, unresolved **or** non-Plan target, duplicate direct declaration, inverse declaration, **or** Plan scheduling encoded as `depends_on`.
+- accept a Done blocker; Backlog, Active, Canceled, **and** Archived **must not** satisfy its completion gate.
+- combine decomposition completion dependencies with blocking for deadlock detection: **if** Hub `H` decomposes **into** `A` **and** `H BLOCKS A`, reject the unsatisfiable cycle even though the blocking graph alone is acyclic.
+- distinguish readiness from forced execution: a deterministic display order does **not** prohibit concurrent independent work **or** grant execution authority.
+
+report the failing endpoints **and**, for a cycle, its complete prerequisite chain.

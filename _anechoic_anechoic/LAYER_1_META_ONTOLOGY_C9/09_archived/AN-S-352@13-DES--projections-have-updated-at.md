@@ -1,0 +1,30 @@
+---
+atom_family: SPEC
+atom_id: AN-S-352
+container:
+  component: C9
+tier: 3
+context:
+  lens: DES
+state:
+  status: archived
+  version: 13
+  updated_at: 2026-10-24 01:37:42 +0400
+---
+## Summary
+
+Projections have updated at
+
+# Summary
+
+Projections have updated at
+
+## Scope
+
+Projection revisions after completed rebuilds.
+
+## Claim
+
+**every** Projection has **`=1`** unambiguous Updated At date-time identifying its latest completed rebuild.
+
+## Details

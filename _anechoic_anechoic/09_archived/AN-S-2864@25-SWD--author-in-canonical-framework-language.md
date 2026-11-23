@@ -1,0 +1,19 @@
+---
+atom_family: SPEC
+atom_id: AN-S-2864
+container:
+  component: C00
+tier: 1
+context:
+  lens: SWD
+state:
+  status: archived
+  version: 25
+  updated_at: 2026-10-29 07:45:26 +0400
+---
+## Summary
+Author in canonical framework language
+
+## Claim
+
+**to** author ANECHOIC-internal Artifacts, use the exact canonical ANECHOIC vocabulary, coherent Term meanings, **and** the strictest syntax needed **to** preserve the governed distinctions; treat FPF as a derivation source rather than external authority.

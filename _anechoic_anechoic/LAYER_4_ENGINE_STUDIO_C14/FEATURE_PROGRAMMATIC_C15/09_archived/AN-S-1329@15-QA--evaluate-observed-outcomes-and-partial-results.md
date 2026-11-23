@@ -1,0 +1,35 @@
+---
+atom_family: SPEC
+atom_id: AN-S-1329
+container:
+  component: C15
+tier: 3
+context:
+  lens: QA
+state:
+  status: archived
+  version: 15
+  updated_at: 2026-11-09 07:45:14 +0400
+---
+
+## Summary
+
+Evaluate observed outcomes and partial results
+
+## Claim
+
+### Prose Claim
+
+Accept outcome reporting only when it describes observed state truthfully. Complete, no-op, partial, failed, canceled and uncertain outcomes remain distinguishable; a partial result preserves completed data with the error, and a no-op does not claim a fictional write. Do not require replay or weaken atomicity merely to obtain a result.
+
+## Details
+
+### Scope
+
+PROGRAMMATIC operations that can complete, no-op, partially apply, fail, cancel or become uncertain across Tools, workflows, Apps, MCP and background work.
+
+- Exercise success, valid no-op, invalid input, mid-operation failure, cancellation and unavailable-observation cases.
+- Compare returned records with durable effects and verify completed items, errors and uncertainty are represented without invented success.
+- Verify a partial result contains only completed work and remaining work is not silently replayed, retried or remapped.
+- Check that an atomic operation remains atomic when its contract requires it; a truthful failure is preferable to an unsafe partial write.
+- Mark an outcome unresolved when the observer cannot distinguish state.

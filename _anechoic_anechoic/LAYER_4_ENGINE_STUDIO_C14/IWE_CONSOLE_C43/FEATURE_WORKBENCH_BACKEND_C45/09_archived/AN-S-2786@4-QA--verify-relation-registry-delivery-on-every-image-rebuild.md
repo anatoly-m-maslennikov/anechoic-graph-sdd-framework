@@ -1,0 +1,24 @@
+---
+atom_family: SPEC
+atom_id: AN-S-2786
+container:
+  component: C45
+tier: 7
+context:
+  lens: QA
+state:
+  status: archived
+  version: 4
+  updated_at: 2026-11-10 20:47:54 +0400
+---
+## Summary
+
+Verify relation registry delivery on every image rebuild
+
+## Claim
+
+### Prose Claim
+
+Verify every supported image-build entry point, including local release, generates the relation registry before image identity/context assembly. A selected Declaration change changes asset/build identity; identical inputs yield identical bytes. Record source IDs/versions/paths/fingerprints without changing timestamp, include asset/digest in staged package/image verification, and exclude Project authority carriers from image context.
+
+A stale output regenerates; missing output or generation failure rejects the package/image rather than accepting stale metadata. Verify installed runtime consumes delivered metadata, and relevant Current Declaration change uses the same compiler to refresh Project registry/graph. MCP code/config tool registration stays separate from full Atom inventory scan. Use focused controlled build hooks plus one real selected-Project local-release check; generator success alone does not establish installed-image alignment.

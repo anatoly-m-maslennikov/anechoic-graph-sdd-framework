@@ -1,0 +1,39 @@
+---
+atom_family: SPEC
+atom_id: AN-S-1321
+container:
+  component: C15
+tier: 5
+context:
+  lens: QA
+state:
+  status: archived
+  version: 19
+  updated_at: 2026-11-09 07:45:14 +0400
+---
+
+## Summary
+
+Admit safe canary evaluation
+
+## Claim
+
+### Prose Claim
+
+given a proposed change, canary cohort **or** shadow surface, workload, control, health observations, exposure bound, stop mechanism, **and** rollback evidence, admit canary Evaluation **only when** the cohort **or** shadow surface isolates exposure; the workload is representative of the governed behavior; the control comparison **and** health observations can distinguish regression; exposure is bounded; immediate stop is available; **and** rollback has been tested against the applicable state boundary. reject canary execution **when** any condition fails **and** require dry-run, differential, **or** recoverable-fixture evidence instead. canary evidence supplements rather than replaces required pre-deployment evidence.
+
+## Details
+
+### Scope
+
+canary Evaluation of a changed PROGRAMMATIC component against a production-like **or** live workload.
+
+- record the exact change, cohort **or** shadow selector, workload frontier, control, health predicates, maximum exposure, observation window, stop owner, rollback procedure, **and** replayable rollback evidence.
+- pass with the admitted bounds **and** remaining risks **only when** all conditions are established before exposure.
+- fail with the violated condition **when** isolation, comparison, stopping, **or** rollback is inadequate. return unresolved **when** workload representativeness **or** state recovery cannot be established.
+
+### Sources
+
+- [Google SRE Workbook — Canarying Releases](https://sre.google/workbook/canarying-releases/)
+- [Microsoft Azure Well-Architected Framework — Safe deployment practices](https://learn.microsoft.com/en-us/azure/well-architected/operational-excellence/safe-deployments)
+- [CA-M-285-PROGRAMMATIC-CORE-METHOD--select-software-evaluation-techniques-by-failure-mode](../05_method/CA-M-424-PROGRAMMATIC-ENG_POLICY--select-software-evaluation-techniques-by-failure-mode.md)

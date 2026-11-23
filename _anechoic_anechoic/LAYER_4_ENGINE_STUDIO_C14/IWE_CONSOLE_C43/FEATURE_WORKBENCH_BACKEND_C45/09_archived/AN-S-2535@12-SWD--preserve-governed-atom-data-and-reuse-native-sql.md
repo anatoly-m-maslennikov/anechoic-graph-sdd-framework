@@ -1,0 +1,32 @@
+---
+atom_family: SPEC
+atom_id: AN-S-2535
+container:
+  component: C45
+tier: 4
+context:
+  lens: SWD
+state:
+  status: archived
+  version: 12
+  updated_at: 2026-11-10 22:20:17 +0400
+---
+## Summary
+
+Preserve governed Atom data and reuse native SQL.
+
+## Claim scope
+
+Direct file reading and native query semantics for Current and Draft Atom carriers excluding Archived carriers.
+
+## Claim
+
+### Prose Claim
+
+Read Current and Draft Atom carriers, excluding Archived carriers, into the derived DuckDB database; every Current status, including Done and Canceled, remains included. Parse YAML and actual CommonMark headings with the existing safe reader. Reuse the compiled Current-Declaration Content model, including Role and Form applicability, to generate Content schema and parse queryable CAPRMEDO Content. Admit paths matched by applicable Content wildcards without a fixed Claim-heading list; more specific Prose Claim and fenced-heading rules override generic wildcard interpretation. Do not turn unrelated prose headings into Content properties or relabel non-RMEDO bodies as Claims. Do not evaluate arbitrary CFEL or prose as schema. Use the selected SQL engine’s semantics and native tokenization, without another SQL parser or evaluator.
+
+Preserve raw Header properties, original Markdown and real heading paths privately without a fixed heading list or Form validation. Build flattened SQL columns for model-declared Header paths in Mode 1, observed raw Header paths in Mode 2, and model-admitted Content paths in both modes; source carriers, intermediate files and a third public source table are not created. Only Current Scope Unit Declarations establish current Scope Unit inventory; a Draft Declaration remains queryable only.
+
+Normalize admitted authored inverse writing before materializing canonical direct facts. Each object row carries outgoing direct and declared-derived Relations; source or relevant Declaration changes refresh affected source/counterpart rows, mappings and hashes without source edits or Version changes. Use DuckDB and DuckPGQ for SQL/PGQ, pattern matching and traversal rather than a ANECHOIC traversal engine. Reachability resolves an unambiguous typed seed, selected relation types/directions, includes each typed reference once and terminates cycles; querying an inverse uses its materialized fact once.
+
+Use CA-M-509's registry for relation names, exact inverse aliases and literal unqualified inverse bindings. Ambiguity is diagnosed and omitted, never guessed; qualified model derivations remain out of runtime facts. Keep timezone-aware values until the shared encoder returns ISO strings; retain required `pytz` rather than changing source-column casts.

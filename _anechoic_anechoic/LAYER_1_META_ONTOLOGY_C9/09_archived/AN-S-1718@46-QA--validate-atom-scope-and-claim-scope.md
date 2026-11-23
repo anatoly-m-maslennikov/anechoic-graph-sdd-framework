@@ -1,0 +1,41 @@
+---
+atom_family: SPEC
+atom_id: AN-S-1718
+container:
+  component: C9
+tier: 7
+context:
+  lens: QA
+state:
+  status: archived
+  version: 46
+  updated_at: 2026-11-02 00:18:22 +0400
+---
+## Summary
+
+Validate Atom Scope **and** Claim Scope
+
+## Claim scope
+independent resolution of Atom ownership, GOVERNS Subject, Claim Target Scope Unit, **and** textual applicability.
+
+## Claim
+
+**Claim checked.**
+
+**every** Atom resolves its ownership, **`=1`** GOVERNS Subject, **and** zero **or** one Claim Target Scope Unit independently of **any** applicability restrictions **in** its Main Content. Applicable Goal and Demand rules, including the Operator-owned Project Goal, retain their required target conditions.
+
+## Details
+
+### Test case
+
+create a Current-scope Atom with its own Scope Unit carried as the target; repeat with one GOVERNS target and with a narrower restriction **and** a composite restriction **in** its Claim scope section for RMED **or** the registered primary content for other roles. create a parent-owned Goal for a declared direct child, an external Project Goal with its Author's registered Operator name **and** an explicit Project target, **and** a permitted Demand. include a Plan **in** a Container Atom whose carried target is its owning Scope Unit.
+
+**then** omit the GOVERNS Subject or a required target, provide two target values, supply a Container Atom **or** another non-Scope-Unit target, leave a reference unresolved, infer a different target merely from textual restrictions, change ownership from the target, make the referenced Scope Unit bearer-dependent, reorder Subject declarations, **or** use a forbidden Goal **or** Demand target.
+
+### Acceptance criteria
+
+**every** valid fixture retains its ownership, resolves **`=1`** canonical GOVERNS Subject **and** zero **or** one Claim Target Scope Unit, **and** preserves its applicability restrictions **in** the body sections registered by CA-D-495-CORE_META_MODEL-CORE-DELIVERY--carry-applicability-in-the-registered-body-sections. a Current-scope target is selected from the owning Scope Unit during authoring **and** carried explicitly where applicable; an external Goal requires its explicit Project target. narrower **or** composite Claim Scope alone does **not** create a distinct Target Scope Unit. a different permitted target does **not** transfer ownership **or** create Scope Unit ancestry. Subject ordering **and** Container Atom nesting do **not** change these facts. **every** invalid fixture fails with the exact affected fact identified.
+
+### Failure disposition
+
+report the invalid Atom **and** ownership, target, textual restriction, **or** Subject fact; do **not** repair unresolved references by guessing.

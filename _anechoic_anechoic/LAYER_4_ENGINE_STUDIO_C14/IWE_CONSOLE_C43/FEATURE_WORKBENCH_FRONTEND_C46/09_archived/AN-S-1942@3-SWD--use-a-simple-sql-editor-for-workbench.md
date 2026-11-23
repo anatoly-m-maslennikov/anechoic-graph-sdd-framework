@@ -1,0 +1,30 @@
+---
+atom_family: SPEC
+atom_id: AN-S-1942
+container:
+  component: C46
+tier: 4
+context:
+  lens: SWD
+state:
+  status: archived
+  version: 3
+  updated_at: 2026-11-06 20:37:19 +0400
+---
+
+## Summary
+
+Use a simple SQL editor for Workbench
+
+## Claim scope
+
+Workbench SQL editing, schema completion and query actions.
+
+## Claim
+
+Use CodeMirror 6 with its SQL language support for a text-only SQL editor and autocomplete from read-only `query_schema` metadata for actual atoms, scope_units and declared `content.*` columns. Content column names keep dots between path levels and use snake_case within each segment, for example `content.claim.prose_claim` and `content.claim.formal_claim`; quote the resulting SQL identifiers as needed and do not expose space-based Content names.
+
+Keep one query in each View. Preserve quoted strings, comments and CTEs, but reject multiple SQL statements instead of selecting a statement at the cursor. The editor sends the whole View query and its UTF-16 cursor position only for editing context; CodeMirror provides editing, highlighting and completion, not SQL validation or a second selector. Do not write a homegrown SQL parser. Bind `Cmd+Enter` to Run and `Shift+Cmd+Enter` to Check; both target the whole current View query. Run and Check do not save; Run & Save saves only after a successful Run, and Save View saves the whole current query text. Do not execute SQL while building autocomplete suggestions.
+
+
+The read-only schema metadata may include optional distinct non-null values for the actual Header Status column. Completion recognizes a single-quoted equality prefix on that declared column, inserts the matching escaped value such as `Active` without a duplicate closing quote, and never executes user SQL or creates a saved record. Fetch metadata through `query_schema`; typing a completion prefix does not execute user SQL or save a query.

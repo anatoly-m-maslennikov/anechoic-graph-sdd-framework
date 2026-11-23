@@ -1,0 +1,24 @@
+---
+atom_family: SPEC
+atom_id: AN-S-450
+container:
+  component: C9
+tier: 2
+context:
+  lens: DevOps
+state:
+  status: archived
+  version: 27
+  updated_at: 2026-11-02 00:18:22 +0400
+---
+## Summary
+
+Serialize Completed Projection Rebuild Results
+
+## Claim scope
+
+completed Projection Rebuild Event results.
+
+## Claim
+
+**every** completed Projection Rebuild Event **must** serialize the published Projection Updated At value, output Carrier reference, **and** content digest.

@@ -1,0 +1,68 @@
+---
+atom_family: TKT
+atom_id: AN-T-2693
+container:
+  component: C15
+priority: 2
+context:
+  template: task
+  label: Subtask
+state:
+  status: archived
+  version: 7
+  updated_at: 2026-10-24 10:35:14 +0400
+---
+## Summary
+
+Update thin ca client for shared host MCP
+
+# Summary
+
+Update thin ca client for shared host MCP
+
+## Objective
+
+Update the canonical ca Skill and required installation/client material to obtain the exact Project root from the Codex session and transmit it through the shared MCP's advertised contract. Keep procedures in MCP; do not add copied Tool implementation to each Project.
+
+## Details
+
+One Task per file; each leaf has at most 15 minutes own work and must be decomposed before extending it. Review and update dependent Tasks after observed predecessor outcomes. Use the selected Project virtual environment, configured Project Temporary State and only broken/related checks. Do not replay uncertain effects, replace production or run the full suite.
+
+### Definition of Done
+
+The Operator's latest decision uses a Codex PreToolUse hook to pass the full session folder as outer `project_root` on every ANECHOIC MCP request. Do not discover an ancestor, resolve a prefix or derive the root from the installed Skill. Native arguments remain unchanged; conflicting explicit binding refuses the affected request rather than silently retargeting it. The server retains canonical Project admission and containment checks.
+
+Bounded client-forward checks cover distinct and nested session folders, unchanged native payloads, unrelated tools, invalid input and conflicting binding. Review/trust and shared-MCP adoption remain explicit activation boundaries; the legacy server cannot consume the added field.
+
+### Latest approved installer split and source checkpoint
+
+The source implementation is the single
+`102_FRAMEWORK_ENGINE/201_PROGRAMMATIC/201_TOOLS/INSTALL_TOOLS/install.py`
+CLI with separate `runtime` and `project` commands. Runtime owns the
+host-global Docker parameters in
+`XDG_CONFIG_HOME/anechoic/runtime.toml` (falling back to
+`~/.config/anechoic/runtime.toml`); `--harness=codex` copies the
+standard-library hook and creates an isolated host environment under
+`XDG_DATA_HOME/anechoic/runtime`, registers the global hook and HTTP MCP
+connection, and preserves unrelated configuration without granting trust.
+Both scopes are dry-runs unless `--apply` is supplied.
+An optional immutable image with `--apply` delegates to the existing shared
+launcher; without an image it configures only and makes no running-service
+claim. Project setup is selected-directory-only, requires an explicit fresh
+prefix, seeds minimal settings/control/empty structure, preserves existing
+Project carriers, and installs the bundled canonical thin Skill without
+Docker/global MCP/hooks/Git initialization/copied Tools. Both scopes refuse
+missing, ambiguous, unsafe and conflicting preconditions before effects, and
+rollback is limited to exact own writes so concurrent edits are preserved.
+Focused source checks pass in the selected virtual environment: host settings,
+Project initialization, Codex hook protocol/registration, rollback and concurrent
+edit refusal, shared-lock admission, legacy package replacement, and installed
+commands with the Framework source taken offline. The final affected rerun
+passes five scope checks, eight Codex adapter checks and the offline-distribution
+check. Configuration stays available as a verified partial result if optional
+Docker startup fails; diagnostics do not expose raw provider messages.
+The package includes the host launcher and thin Skill, and canonical/installed
+Tool bootstrap paths are supported. Scoped Ruff formatting and lint checks
+pass for the seventeen new implementation and test files. No full suite, Docker daemon invocation, global
+installation, production replacement, hook trust, live activation or release
+is claimed; keep the Task Active until client/adoption acceptance is verified.

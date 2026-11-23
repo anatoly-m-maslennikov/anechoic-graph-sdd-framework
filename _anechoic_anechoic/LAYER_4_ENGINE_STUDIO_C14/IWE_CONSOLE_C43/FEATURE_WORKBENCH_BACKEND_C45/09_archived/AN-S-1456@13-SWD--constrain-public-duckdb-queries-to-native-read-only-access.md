@@ -1,0 +1,43 @@
+---
+atom_family: SPEC
+atom_id: AN-S-1456
+container:
+  component: C45
+tier: 4
+context:
+  lens: SWD
+state:
+  status: archived
+  version: 13
+  updated_at: 2026-11-10 00:46:37 +0400
+---
+
+## Summary
+
+Constrain public DuckDB queries to native read-only access.
+
+## Claim scope
+
+Trusted public SQL and internal result materialization for one Project.
+
+## Claim
+
+### Prose Claim
+
+Admit one whole read query from trusted Operator input through MCP or the Workbench web interface with DuckDB's native parsing and query APIs, including DuckPGQ's SQL/PGQ grammar. A public Run or Check contains exactly one whole query; a cursor position never selects a statement or a SQL fragment. Use native tokenization where statement extraction does not support that grammar. Do not introduce a SQL parser, function sandbox or second query language.
+
+Execute the accepted query once into a generated internal result table in the Project's derived DuckDB database. This trusted cache write uses a normal native transaction with COMMIT; public input remains SELECT-only and cannot submit DDL or DML. Read native ordered column metadata before materialization and retain it separately, including duplicate names. Deliver bounded pages from that stable result, not the entire result in a Python list. If query_run receives a non-negative preview, apply DuckDB's native relation.limit(N) to cap the result at most at N rows while preserving an existing SQL LIMIT; do not rewrite the submitted SQL or its text, and support GRAPH_TABLE and CTE queries. Counts and pagination describe that capped execution.
+
+Preserve the exact submitted SQL internally, including comments, Unicode and any existing LIMIT. Do not echo it in ordinary Run, Check or result-fetch responses. When query_run requests save, append the Bookmark only after the successful materialization, using the exact submitted SQL. A save failure does not discard the completed result: return its query ID and completed result metadata with outcome partial and save_error, without retry or rollback. A failed query never creates a saved entry. Run without save, Check and Page have no Journal effect.
+
+Page transforms, including grid filters, ordering and grouping, operate only over the existing native materialized result table. They never rerun, parse, append to or rewrite public SQL, and do not create a second result cache. The public result metadata and result identity remain those of the original whole cache.
+
+The dedicated materialized-result lifecycle owns cache retention, View pinning, restart disposal and runtime-setting reads. Public SQL admission neither writes settings nor manages manual staging. Result tables remain DuckDB-owned disposable runtime data.
+
+Trusted startup loads the bundled DuckPGQ extension before disabling external access, extension autoinstall/autoload and public configuration changes. Permit database and spill writes only in the owned Workbench runtime directory. Source files remain unchanged.
+
+Known invalid requests, unknown result IDs, rejected SQL, storage and result-delivery errors return their useful reason to the originating MCP or web caller and report stderr. They are not successful empty results or retried requests. An ordinary rejected query leaves a valid owner available. Invalid SQL, invalid query arguments and unknown query references are recoverable request failures: log query_error as WARNING with outcome failed, not as a blocking runtime ERROR. Workbench-unavailable and unexpected internal runtime failures remain ERROR with outcome blocked. A failed owner reports Workbench-unavailable and restart-required; unexpected internal failures use the existing generic public error boundary.
+
+DuckPGQ internal management calls remain unsupported and may invalidate the connection. This trusted-input MVP does not promise a capability sandbox. Do not add automatic query retries, rollback, retained-state restoration or connection recovery.
+
+When preview is omitted, Run applies no added preview cap.

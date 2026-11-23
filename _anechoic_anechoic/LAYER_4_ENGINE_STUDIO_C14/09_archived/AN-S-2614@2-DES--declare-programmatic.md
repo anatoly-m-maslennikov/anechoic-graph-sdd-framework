@@ -1,0 +1,78 @@
+---
+atom_family: SPEC
+atom_id: AN-S-2614
+container:
+  component: C14
+tier: 3
+context:
+  lens: DES
+state:
+  status: archived
+  version: 2
+  updated_at: 2026-11-08 22:18:08 +0400
+---
+## Summary
+
+Declare PROGRAMMATIC
+
+## Claim
+
+### Prose Claim
+
+PROGRAMMATIC admits the following local Role/Form pairs, in addition to existing default admissions:
+
+- Delivery / Decision;
+- Delivery / Direct Policy;
+- Evaluation / Direct Policy;
+- Evaluation / Eval Case;
+- Method / Decision;
+- Method / Direct Policy;
+- Requirement / Direct Policy;
+- Requirement / Scope Delegation;
+- Requirement / Solution;
+
+The admitted HAS_ACTIVE_SUBJECT targets are exactly the declared model entities or declared instances resolved at these existing active Subject addresses:
+
+- `ANECHOIC_STRUCTURE <+ Scope Unit//APPS`;
+- `ANECHOIC_STRUCTURE <+ Scope Unit//CONNECTOR_TOOLS`;
+- `ANECHOIC_STRUCTURE <+ Scope Unit//MCP`;
+- `ANECHOIC_STRUCTURE <+ Scope Unit//PROJECT_TOOLS`;
+- `ANECHOIC_STRUCTURE <+ Scope Unit//TOOLS`;
+- `ANECHOIC_STRUCTURE <+ Scope Unit//TOOL_WORKFLOWS`;
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Architecture/Communication`;
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Architecture/Component Structure`;
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Authoring/Code Authoring`;
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Authoring/Code Authoring/Python Code`;
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Data Handling/Data Validation`;
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Data Handling/Source Retrieval`;
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Delivery`;
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Execution Control`;
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Execution Control/Effect Authorization`;
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Execution Control/Failure Handling`;
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Storage/Directory Layout`;
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Traceability`;
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Verification/Dynamic Testing`;
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Verification/Static Analysis`;
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Verification/Static Analysis/Python Code`;
+- `Subject/ANECHOIC/Graph/Node/Aspect/Engineering/Verification/Test Design`;
+- `Subject/ANECHOIC/Graph/Node/Aspect/UX/Discovery and Navigation`;
+- `Subject/ANECHOIC/Graph/Node/Aspect/UX/Result and Status Presentation`;
+- `Subject/ANECHOIC/Graph/Node/Project Model/Project.Settings.Temporary State`;
+
+Each entry selects that one endpoint object, not the address string, other members of its type, or descendants. An unresolved entry remains a diagnostic and grants no admission. These permissions apply only to Atoms whose Header.Container-derived IS_CONTAINED_BY target is Scope Unit//PROGRAMMATIC.
+
+### Formal Claim
+
+```CFEL
+# instances
+Scope Unit//PROGRAMMATIC.ID == "CA-SU-15";
+
+Scope Unit//PROGRAMMATIC.Name == "PROGRAMMATIC";
+
+Scope Unit//PROGRAMMATIC.Label == "FEATURE";
+
+Scope Unit//PROGRAMMATIC.order.ordered == false;
+
+Scope Unit//PROGRAMMATIC ((IS_CONTAINED_BY)) Scope Unit//FRAMEWORK_ENGINE
+```
+

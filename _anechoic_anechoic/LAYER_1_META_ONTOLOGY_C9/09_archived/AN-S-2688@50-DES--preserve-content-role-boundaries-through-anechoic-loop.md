@@ -1,0 +1,37 @@
+---
+atom_family: SPEC
+atom_id: AN-S-2688
+container:
+  component: C9
+tier: 1
+context:
+  lens: DES
+state:
+  status: archived
+  version: 50
+  updated_at: 2026-11-10 14:38:45 +0400
+---
+## Summary
+
+Preserve content role boundaries through ANECHOIC loop
+
+## Claim
+
+### Prose Claim
+
+
+transitions through the ANECHOIC loop across Content Roles.
+
+
+**every** transition through Concern, Analysis & Advisory, Plan, Requirement, Method, Evaluation, Delivery, Implementation, **and** Operations produces **or** updates the meaning owned by the receiving Content Role **without** converting the source meaning into that role **or** implying completion of a later role.
+
+**in** particular:
+
+- Analysis & Advisory owns findings, alternatives, explanation, **and** rationale;
+- Plan states intended work **without** realizing it; decomposition relates independent Plan Atoms **without** merging their Claims;
+- Requirement establishes model definitions, required properties, outcomes, **or** boundaries **without** selecting their Method;
+- Method provides authorship, construction, **and** Implementation conventions, Evaluation checks correctness, **and** Delivery specifies Carrier contents **and** boundaries;
+- Implementation materially realizes accepted Spec Claims **and** **may** contain procedural code, but does **not** prove Evaluation **or** operational success; **and**
+- Operations owns specific reusable Action behavior, Workflow graph, **and** Step invocation binding; Actor participation **and** authorization remain Requirement rules. actual executions **and** their Journal Records carrying execution evidence **and** state changes are distinct from those definitions **and** from RMED Spec.
+
+Relations carry meaning between roles while **every** related Artifact retains its own identity, authority, lifecycle, **and** owning role.

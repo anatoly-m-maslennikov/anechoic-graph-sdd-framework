@@ -1,0 +1,33 @@
+---
+atom_family: TKT
+atom_id: AN-T-1717
+container:
+  component: C00
+priority: 2
+context:
+  template: task
+  label: Subtask
+state:
+  status: archived
+  version: 3
+  updated_at: 2026-10-24 06:12:39 +0400
+---
+## Summary
+
+Correct Artifact snapshot and Run order
+
+# Summary
+
+Correct Artifact snapshot and Run order
+
+## Objective
+
+Within <=15 minutes, correct only O158's inherited snapshot-before-Run assertion to current Artifact execution without weakening retained snapshot isolation or actual shared recording. Own O158 and exact predecessor archive only.
+
+## Details
+
+Saved CA-O-158@4, SHA256 d7fdaebdd1d0c6ca7dac9aced25552c487336f2a51f18c0f03ef65d16ff4618a, with exact O158@3 archive hash abe5ae697b49f9bd67c10261456fff398a97e0a6900d814aa4a06777b3f21e0f. Preview creates no Run; recording starts at admitted execution; CA-O-159 captures/seals the Artifact snapshot and continuations/results bind it. Run Journal evidence is outside that snapshot and cannot enlarge its result set. R1849@3/M330@3/D551@4 input versions remain unchanged; no Tool, code, manifest or acceptance pin was altered.
+
+## Definition of Done
+
+The bounded ordering correction, exact prior bytes, parsed identity/version and successful diff check are retained for independent P1618 review. Source authoring does not claim runtime/image proof.

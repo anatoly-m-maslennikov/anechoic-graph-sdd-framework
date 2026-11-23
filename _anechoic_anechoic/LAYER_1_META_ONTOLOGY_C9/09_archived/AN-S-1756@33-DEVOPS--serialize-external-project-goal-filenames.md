@@ -1,0 +1,30 @@
+---
+atom_family: SPEC
+atom_id: AN-S-1756
+container:
+  component: C9
+tier: 3
+context:
+  lens: DevOps
+state:
+  status: archived
+  version: 33
+  updated_at: 2026-10-30 17:22:58 +0400
+---
+## Summary
+
+Serialize External Project Goal Filenames
+
+## Claim scope
+
+external Project Goal filenames.
+
+## Claim
+
+**every** external Project Goal filename **must** begin with the unqualified canonical Atom ID prefix `<CANONICAL_ATOM_ID>-` for a Current Project Goal or the once-qualified canonical Atom ID prefix `<CANONICAL_ATOM_ID>@<VERSION>-` for an Archived Project Goal, followed by `<OPERATOR_NAMES>-DEFINES_GOAL_FOR-<PROJECT_SCOPE>--<SUMMARY_SLUG>.<EXT>`.
+
+The `<OPERATOR_NAMES>` filename token **must** identify the registered Operator; `<PROJECT_SCOPE>` **must** preserve the exact registered Project Settings Name. The canonical current ID or once-qualified archived ID is the identity prefix; no additional Project Prefix, Content Role letter or unrelated number may be inserted into the preserved segment.
+
+### Current source pin
+
+Proposed N+1 successor of `.anechoic_anechoic/101_LAYER_1_FRAMEWORK_METHODOLOGY/METHODOLOGY_SOURCES/001_CORE_META_MODEL/07_delivery/CA-D-292-CORE_META_MODEL-ENG_DECISION--serialize-external-project-goal-filenames.md`, CA-D-292@32, SHA-256 `244cc4f2eca9145cf1e314263f31c9e1cc3d4031a0059f1204d5de1f098c00ed`. Current bytes remain unchanged; this Draft performs no promotion or filename migration.

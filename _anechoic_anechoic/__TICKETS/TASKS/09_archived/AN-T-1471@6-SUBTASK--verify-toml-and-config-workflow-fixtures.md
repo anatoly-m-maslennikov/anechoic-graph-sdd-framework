@@ -1,0 +1,43 @@
+---
+atom_family: TKT
+atom_id: AN-T-1471
+container:
+  component: C00
+priority: 2
+context:
+  template: task
+  label: Subtask
+state:
+  status: archived
+  version: 6
+  updated_at: 2026-10-24 11:10:31 +0400
+---
+## Summary
+
+Verify TOML and config Workflow fixtures
+
+# Summary
+
+Verify TOML and config Workflow fixtures
+
+## Objective
+
+Independent fixtures verify shared TOML edits and both distinct configuration Workflows.
+
+## Details
+
+Estimated own work: 15 minutes. Independent verification work. Split concrete work larger than this bound into actual bounded children before execution. This Backlog Task is current pending work, not a future-Version Scope or authorization to execute now.
+
+Cover item/full-set add/replace/remove, no-op and unrelated preservation using actual accepted pins. Verify Project Structure and Project Settings each apply their own schema/current-state checks; invalid, stale, ambiguous and cross-schema substitutions fail. Compare actual configuration/effects and deliberate wrong output, not just success labels.
+
+Assignee: AI Agent independent of implementation authors. Read-only fixture preparation may precede code readiness; actual acceptance waits for applicable current accepted contracts, CA-P-2251 review and stable implemented code pins. Author the oracle independently and record actual cases, pins, effects and limitations.
+
+Deliver the exact changed or reviewed manifest and focused check results to the independent integration/verification owner. Preserve historical receipts. No database build, new transport, Atom deletion, automatic batch retry/resume or publication-concurrency mechanism is included.
+
+### Complete Configuration Read coverage
+
+Independently verify CA-P-2280 for both logical configuration targets: complete values and exact source evidence, unpinned current and supported exact pinned reads, no mutation, and invalid/ambiguous/denied/stale/unsupported/unavailable failures without fabricated empty success. Verify each Read Step precedes its patch Step; failed or incomplete Read prevents patch dispatch, and source drift before Modify is rejected. Read success does not grant write permission. This adds fixture requirements, not executed tests.
+
+### Definition of Done
+
+The Plan is **not** Done if expected results are producer-derived, any required valid/refusal/wrong-output check is absent or fails, actual bytes/effects/pins or limits are unproven, or a passing subset is claimed as full live/runtime readiness. Own work must not exceed 15 minutes without prior decomposition.

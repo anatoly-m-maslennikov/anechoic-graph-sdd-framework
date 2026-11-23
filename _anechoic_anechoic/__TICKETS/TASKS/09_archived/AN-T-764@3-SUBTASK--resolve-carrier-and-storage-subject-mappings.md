@@ -1,0 +1,33 @@
+---
+atom_family: TKT
+atom_id: AN-T-764
+container:
+  component: C00
+priority: 2
+context:
+  template: task
+  label: Subtask
+state:
+  status: archived
+  version: 3
+  updated_at: 2026-10-24 06:04:11 +0400
+---
+## Summary
+
+Resolve carrier and storage Subject mappings
+
+# Summary
+
+Resolve carrier and storage Subject mappings
+
+## Objective
+
+Refresh the carrier_storage Candidate #7 mapping lane from the live worklist and return complete, source-backed dispositions.
+
+## Details
+
+Read the fresh carrier_storage lane from .anechoic_anechoic/_projection/core-entity-review/presentation/candidate-7.remaining-subject-worklist.json. Treat Carrier as the Engineering representation/storage bearer, not the represented content. Preserve Carrier, Scope Unit, Atom, Projection and Journal distinctions and their bearer-specific IDs. Read source context before assigning a path; do not infer a target from display text or folder placement. Return complete evidence-backed or unresolved rows. Apply no source, content, code, schema, MCP, test, Settings or runtime change.
+
+### Definition of Done
+
+Not Done if the fresh lane is absent/stale, assigned whole-owner or occurrence coverage is incomplete, a meaning is guessed, qualifiers or provenance are lost, unresolved rows are hidden, or any source effect or migration completion is claimed.

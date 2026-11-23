@@ -1,0 +1,35 @@
+---
+atom_family: SPEC
+atom_id: AN-S-1549
+container:
+  component: C21
+tier: 3
+context:
+  lens: DES
+state:
+  status: archived
+  version: 12
+  updated_at: 2026-10-27 06:04:45 +0400
+---
+## Summary
+
+Expose discovery and execution observation
+
+# Summary
+
+Expose discovery and execution observation
+
+## Scope
+
+the MCP capability for MCP.
+
+## Claim
+
+the MCP interface **must** expose the declared discovery, context **and** execution-observation Tools with the canonical Implementation's input schemas **and** results.
+
+## Details
+
+- expose discover_tools, discover_operations, get_execution_context, get_execution_status, resume_execution_context **and** watch_execution.
+- call the same canonical Tool code used by direct invocation.
+- watch_execution provides caller-requested updates through a bounded wait; an idle MCP connection does **not** independently deliver a new chat message.
+- report supported Run backends explicitly; unsupported Workflow **or** standalone Action Runs remain explicit rather than fabricated.

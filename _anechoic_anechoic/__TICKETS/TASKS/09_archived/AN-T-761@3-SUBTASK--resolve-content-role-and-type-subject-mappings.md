@@ -1,0 +1,33 @@
+---
+atom_family: TKT
+atom_id: AN-T-761
+container:
+  component: C00
+priority: 2
+context:
+  template: task
+  label: Subtask
+state:
+  status: archived
+  version: 3
+  updated_at: 2026-10-24 06:04:11 +0400
+---
+## Summary
+
+Resolve content role and type Subject mappings
+
+# Summary
+
+Resolve content role and type Subject mappings
+
+## Objective
+
+Refresh the content_roles_types Candidate #7 mapping lane from the live worklist and return complete, source-backed dispositions.
+
+## Details
+
+Read the fresh content_roles_types lane from .anechoic_anechoic/_projection/core-entity-review/presentation/candidate-7.remaining-subject-worklist.json. Keep Subject (what content concerns) separate from Content Role (what content does), and classify Types from source meaning rather than folder, Role or tier. Candidate #7's one-time classification-only exception retains an ID only when Summary and Substance are unchanged; otherwise preserve ordinary identity rules. Return complete supported/unchanged/held/unresolved rows without guessing. Apply no source, content, code, schema, MCP, test, Settings or runtime change.
+
+### Definition of Done
+
+Not Done if the fresh lane is absent/stale, assigned whole-owner or occurrence coverage is incomplete, a meaning is guessed, qualifiers or provenance are lost, unresolved rows are hidden, or any source effect or migration completion is claimed.

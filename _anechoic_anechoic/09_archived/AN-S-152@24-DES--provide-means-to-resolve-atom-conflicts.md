@@ -1,0 +1,19 @@
+---
+atom_family: SPEC
+atom_id: AN-S-152
+container:
+  component: C00
+tier: 4
+context:
+  lens: DES
+state:
+  status: archived
+  version: 24
+  updated_at: 2026-10-29 07:45:26 +0400
+---
+## Summary
+Provide means to resolve Atom conflicts
+
+## Claim
+
+ANECHOIC **must** provide the Operator with capabilities for resolving conflicts between Atoms.

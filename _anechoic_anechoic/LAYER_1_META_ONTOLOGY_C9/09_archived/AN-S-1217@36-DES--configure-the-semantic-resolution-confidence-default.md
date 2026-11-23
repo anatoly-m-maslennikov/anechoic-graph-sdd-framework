@@ -1,0 +1,30 @@
+---
+atom_family: SPEC
+atom_id: AN-S-1217
+container:
+  component: C9
+tier: 4
+context:
+  lens: DES
+state:
+  status: archived
+  version: 36
+  updated_at: 2026-10-27 06:04:45 +0400
+---
+## Summary
+
+Configure the semantic-resolution confidence default
+
+# Summary
+
+Configure the semantic-resolution confidence default
+
+## Scope
+
+semantic-resolution Confidence Threshold instance defaults.
+
+## Claim
+
+the semantic-resolution Confidence Threshold **must** have an Operator-configurable instance default.
+
+## Details

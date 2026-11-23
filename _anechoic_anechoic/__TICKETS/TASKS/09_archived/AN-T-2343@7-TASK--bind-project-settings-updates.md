@@ -1,0 +1,38 @@
+---
+atom_family: TKT
+atom_id: AN-T-2343
+container:
+  component: C00
+priority: 2
+context:
+  template: task
+state:
+  status: archived
+  version: 7
+  updated_at: 2026-10-24 10:27:10 +0400
+---
+## Summary
+
+Bind Project Settings updates
+
+# Summary
+
+Bind Project Settings updates
+
+## Objective
+
+The Project Settings Workflow uses the shared TOML connector with its distinct schema.
+
+## Details
+
+Estimated own work: 15 minutes. Assignee: AI Agent. Split concrete work larger than this bound into actual bounded children before execution. This Backlog Task is current pending work, not a future-Version Scope or authorization to execute now.
+
+After CA-P-2280, bind CA-O-206/220/210 to the actual Project Settings schema, exact selected items/full sets and expected state. The Read Step calls CA-O-218; the patch Step calls CA-O-204. Use the complete observed Read result and source state for proposal validation and Modify preconditions. A failed, incomplete or stale Read prevents patch dispatch. Preserve unrelated settings and truthful schema/postcondition/no-op behavior. Do not reuse Project Structure validation as Settings acceptance or add transport, database or retry configuration.
+
+Start only after CA-P-2251's actual accepted FPF review and independently accepted applicable current contracts, not a Plan-validation result or historical pins. Bind actual contract/API/code pins and permissions. Require separately accepted applicable Core alignment under CA-P-1970 where rules conflict; no Core/content work is included here. Source authoring or this pending Task grants no runtime/live authority.
+
+Deliver the exact changed or reviewed manifest and focused check results to the independent integration/verification owner. Preserve historical receipts. No database build, new transport, Atom deletion, automatic batch retry/resume or publication-concurrency mechanism is included.
+
+### Definition of Done
+
+The Plan is **not** Done if applicable accepted contracts/FPF gates or current pins are missing; focused valid, refusal and no-op/error/effect checks fail or lack actual results; unrelated behavior regresses; implementation is claimed from preparation; or deferred/unauthorized capability is enabled. Own work must not exceed 15 minutes without prior decomposition.

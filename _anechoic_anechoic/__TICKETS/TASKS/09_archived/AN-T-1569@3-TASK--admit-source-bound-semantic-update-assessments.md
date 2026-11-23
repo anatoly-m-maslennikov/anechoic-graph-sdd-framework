@@ -1,0 +1,45 @@
+---
+atom_family: TKT
+atom_id: AN-T-1569
+container:
+  component: C00
+priority: 2
+context:
+  template: task
+state:
+  status: archived
+  version: 3
+  updated_at: 2026-10-24 06:04:38 +0400
+---
+## Summary
+
+Admit source-bound semantic Update assessments
+
+# Summary
+
+Admit source-bound semantic Update assessments
+
+## Objective
+
+Support substantive Update only through exact source-bound assessment evidence, preserving separate mutation authorization.
+
+## Details
+
+1. Add Tool-specific R/M/E/D for the optional completed Analysis Report reference before implementation. Reuse the existing generic O067/O145/O129 evidence contract; do not put Tool serialization into the Core Meta-Model.
+2. Bind the report to the current target, exact proposal, current change authority, same-primary-Claim finding and completed lineage-impact evidence.
+3. Read and seal verified evidence at O145, then reopen and revalidate it before O129 persists the change.
+4. Cover a valid semantic Revision and missing, stale, mismatched, altered or incomplete evidence. A report creates no permission; uncertain input remains unresolved.
+
+One lifecycle worker owns this bounded interface and its tests. Source IDs R1892/M348/E591/D585 are reserved; D584 belongs to the separate Implementation packet lane. Estimated source/schema and implementation slices are each <=15 minutes. Root owns integration and actual release dispatch.
+
+## Definition of Done
+
+Source-first authority, source-bound valid semantic Update and fail-closed regression evidence are independently accepted. Real Docker/queue acceptance remains required separately.
+
+## Pre-execution review
+
+The existing unresolved outcome is safe, but cannot by itself establish the requested semantic Update capability. The Operator authorized best-option decisions with a retained Question. CA-C-494 records the chosen saved-report interface; assessment evidence is not approval.
+
+## Results
+
+Tool-local R1892/M348/E591/D585 were authored before implementation. The optional completed Analysis Report is bound to target/proposal/change-authority and lineage evidence; O145 verifies and seals it, and O129 reopens it before effects. Accepted semantic Update, absent/unbound evidence and tampering refusal have regression coverage. Independent review accepted the interface and separate authorization boundary. Actual Docker acceptance remains required in the release gate.

@@ -1,0 +1,20 @@
+---
+atom_family: SPEC
+atom_id: AN-S-154
+container:
+  component: C00
+tier: 2
+context:
+  lens: DES
+state:
+  status: archived
+  version: 8
+  updated_at: 2026-10-24 02:14:24 +0400
+---
+## Summary
+
+Preserve ancestor Core authority across structural levels
+
+# Preserve ancestor Core authority across structural levels
+
+a conflict between active Core Requirements on one ancestor–descendant path **must** preserve the ancestor-scope Core **and** reconcile the descendant-scope Core **without** changing the ancestor meaning.

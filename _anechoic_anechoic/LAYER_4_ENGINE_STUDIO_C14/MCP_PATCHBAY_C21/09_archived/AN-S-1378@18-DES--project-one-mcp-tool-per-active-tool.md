@@ -1,0 +1,20 @@
+---
+atom_family: SPEC
+atom_id: AN-S-1378
+container:
+  component: C21
+tier: 1
+context:
+  lens: DES
+state:
+  status: archived
+  version: 18
+  updated_at: 2026-10-27 06:04:45 +0400
+---
+## Summary
+
+Project one MCP tool per active Tool
+
+# Project one MCP tool per active Tool
+
+MCP **must** project exactly one callable MCP tool for **every** valid active immediate Tool unit **and** no callable MCP tool **without** one such source Tool. The MCP tool identity **must** derive stably from the canonical Tool identity; aliases, accidental duplicates, implicit aggregation, **and** splitting one Tool into multiple public MCP identities are prohibited **unless** separately governed by new Tool authority.

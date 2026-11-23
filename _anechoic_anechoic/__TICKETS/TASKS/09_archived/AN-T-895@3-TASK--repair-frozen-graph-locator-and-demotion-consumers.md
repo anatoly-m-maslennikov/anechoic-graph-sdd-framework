@@ -1,0 +1,38 @@
+---
+atom_family: TKT
+atom_id: AN-T-895
+container:
+  component: C15
+priority: 2
+context:
+  template: task
+state:
+  status: archived
+  version: 3
+  updated_at: 2026-10-24 06:04:43 +0400
+---
+## Summary
+
+Repair frozen graph locator and demotion consumers
+
+# Summary
+
+Repair frozen graph locator and demotion consumers
+
+## Objective
+
+Complete one bounded responsibility in Epic CA-P-2401 without broadening authority or runtime effects.
+
+## Details
+
+Own the selected-workflow golden corpus/frozen loader and directly affected native status/demotion test consumers. Resolve exact current graph-locator gaps (especially D305 Project Configuration v16) using frozen authoring-time snapshots, not runtime live reads; keep equivalent compiled/methodology aliases byte-identical. Update only current-fixture Concern canonical expectations, preserving true legacy tests. Run native/shared/demotion functional checks and expose any remaining gap. No production behavior, source Atom, global pin, Docker/MCP or Git changes.
+
+Use the PROGRAMMATIC M projection and applicable current source RMED. At most15minutes own work; split before extending. Preserve other edits, keep one owner per file, and review/update dependent Tasks before execution. Prefer frozen functional checks in the selected uv-managed environment. No production MCP testing, historical replay or deployment is authorized by this Task.
+
+### Definition of Done
+
+The exact bounded deliverable and checks are recorded with truthful limitations, source/fixture/runtime evidence remains distinct, and the next dependent gate is reviewed.
+
+### Completion checkpoint
+
+Accepted downstream report confirms graph-locator and demotion consumer closure after CA-P-2435: golden checks passed4/4 and demotion checks passed4/4. Evidence is source/host only; no Docker/MCP/deployment acceptance or Epic-complete claim is made.

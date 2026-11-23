@@ -1,0 +1,38 @@
+---
+atom_family: SPEC
+atom_id: AN-S-1708
+container:
+  component: C9
+tier: 3
+context:
+  lens: SWD
+state:
+  status: archived
+  version: 14
+  updated_at: 2026-10-24 10:48:25 +0400
+---
+## Summary
+
+Declare update routing **in** the calling Workflow
+
+# Summary
+
+Declare update routing **in** the calling Workflow
+
+## Scope
+
+Atom update routing for a calling Workflow.
+
+## Claim
+
+**to** author an Atom update Workflow, declare its response **to** identity assessment **in** the Workflow graph rather than **in** the assessment Action **or** executor code.
+
+- reference CA-O-067-CORE_META_MODEL-ACTION--assess-atom-update-identity for the assessment; bind the target Revision, proposed result, applicable authority, **and** evidence **to** that Step. the Action returns its assessment **without** selecting the caller's next Step **or** continuation Workflow.
+- map identity-preserving results **to** the caller's declared update path **and** remaining authorization **and** checks; the assessment alone does **not** perform the update.
+- map replacement-required results **to** a terminal handoff under CA-R-1520-CORE_META_MODEL-REQUIREMENT--return-workflow-handoffs-through-terminal-results. keep the admitted replacement-continuation binding **in** the Workflow definition, **not** as an assessment Action input. the ending Run does **not** call **or** wait for replacement **or** persist an intermediate update merely **to** replace it.
+- map unresolved results **to** the caller's declared evidence-gathering **or** escalation path; an unresolved result **must not** be treated as approval.
+- include reassessment **when** the proposal changes **or** its evidence becomes stale **before** persistence. a changed Summary remains a replacement under CA-R-1464-CORE_META_MODEL-REQUIREMENT--keep-summary-fixed-for-atom-identity even **when** the request began as an update.
+
+this Method constrains how an Author expresses the caller's graph. it is **not** another Workflow, executable routing service, **or** requirement **to** build the executor through a particular Workflow.
+
+## Details

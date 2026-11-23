@@ -1,0 +1,45 @@
+---
+atom_family: TKT
+atom_id: AN-T-509
+container:
+  component: C00
+priority: 2
+context:
+  template: task
+state:
+  status: archived
+  version: 4
+  updated_at: 2026-10-24 06:12:34 +0400
+---
+## Summary
+
+Bind trusted Release publication context
+
+# Summary
+
+Bind trusted Release publication context
+
+## Objective
+
+Deliver the private host-created context that authorizes only the exact current Release manifest publication.
+
+## Details
+
+1. implement `release_manifest_authorization.py` from current CA-R-1882@2, CA-M-339@2, CA-E-582@2 and CA-D-576@2. Validate the human Operator through the current Operators Registry and bind root, input bytes, accepted source frontier and candidate digest.
+2. admit only a typed private host capability, not an incoming boolean, arbitrary callback or serialized grant. Preserve registered Operator identity separately from the existing generic Journal's author serialization; do not invent a new human identity.
+3. test unregistered, altered, stale, wrong-root and caller-forged contexts. Share the narrow context/validation API with the parallel recorder and publisher owners.
+4. root retains actual publication authority and Git. This leaf does not publish a manifest, append a canonical event or dispatch a Run.
+
+The bounded next implementation/review leaf is estimated at <=15 minutes. Decompose before exceeding that bound. Independent API authoring may proceed in parallel; dependent tests and acceptance wait for the current helper implementations. Root owns integration, accepted authority and Git.
+
+## Definition of Done
+
+The private context and fresh validation are implemented, focused adversarial tests pass and the actual authority boundary receives independent bounded review. No fake callback grants or runtime proof substitute for these checks.
+
+## Pre-execution review
+
+Root accepts this bounded decomposition of the parent's existing source requirements. It adds no selected Workflow or execution permission, preserves the required full behavior, and does not execute the Operator-deferred final all-Workflow audit.
+
+## Result
+
+The private host-issued authorization and finalization-only cold-restart context are implemented. The fresh authorization suite passed 9/9 cases on the declared host interpreter; it checks altered, stale, unregistered, wrong-root and forged contexts and restart recovery from one exact sealed pending event. Independent bounded source review accepted the authorization/recovery boundary. This is local implementation evidence, not actual Project manifest publication or runtime execution.
