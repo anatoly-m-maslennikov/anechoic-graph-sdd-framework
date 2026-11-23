@@ -349,17 +349,19 @@ its research remain non-authoritative; full migration is not claimed complete.
 
 ### Retained legacy records
 
-The original records, including held Drafts and pinned revisions, stay in Git
-as read-only archives under [`archives/.anechoic_legacy/`](archives/.anechoic_legacy/)
-and [`archives/.anechoic_archive/`](archives/.anechoic_archive/). The retained
-integration snapshot is under
-[`archives/.anechoic_legacy_archive/`](archives/.anechoic_legacy_archive/). The
-[native alias map](_anechoic_anechoic/_migration/native-aliases.json) resolves old
-references to exact native revisions.
+Git commit `01346521713cc5647210ee94ab79a9bd4e539360` contains the original
+tracked records under `archives/.anechoic_legacy/`,
+`archives/.anechoic_archive/`, and `archives/.anechoic_legacy_archive/`.
+Read a record from that commit with `git show <commit>:<path>`.
+The [native alias map](_anechoic_anechoic/_migration/native-aliases.json)
+records the exact native references for migrated records.
+
+The import-graph proposal `CA-A-1467@1-draft` is available as
+[`AN-T-2928@1-draft`](_anechoic_anechoic/__TICKETS/ASSETS/01_draft/AN-T-2928@1-draft-SPEC_PROPOSAL--derive-a-module-and-package-import-graph-from-project-source.md).
 
 Use native sources for runtime, QA, and Local Release. Store historical test
 inputs under `assets/` in their Test Packages. QA and Local Release must run in
-a checkout without either legacy archive.
+a checkout without legacy archives.
 
 ## Current boundaries
 

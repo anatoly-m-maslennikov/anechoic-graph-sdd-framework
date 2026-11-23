@@ -1,8 +1,0 @@
-{
-  "status": "Applied",
-  "scope_units": 43,
-  "files_moved": 71553,
-  "mapping": ".anechoic_tmp/declaration-folder-migration/scope-unit-folder-mapping.json",
-  "root_authority_unchanged": ".anechoic_anechoic",
-  "live_toml_removed": true
-}

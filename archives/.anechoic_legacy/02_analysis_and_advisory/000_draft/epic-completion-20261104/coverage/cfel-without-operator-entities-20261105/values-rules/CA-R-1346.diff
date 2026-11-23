@@ -1,8 +1,0 @@
---- Current CA-R-1346
-+++ Prospective CA-R-1346 Rule
-@@
--  active: ANECHOIC_MODEL <+ CFEL<+Operator//AllowedValue
-+  active: ANECHOIC_MODEL <+ CFEL
-@@
--`Atom/(.Header.Role: X)/(.Header.Form: X)` is a possible qualified expression
-+`Atom/(.Header.Role := X)/(.Header.Form := X)` is a possible qualified expression
