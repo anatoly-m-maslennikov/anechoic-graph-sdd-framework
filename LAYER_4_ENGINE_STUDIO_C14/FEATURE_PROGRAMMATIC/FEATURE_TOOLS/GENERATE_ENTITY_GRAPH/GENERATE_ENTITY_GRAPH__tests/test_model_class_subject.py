@@ -3,9 +3,9 @@ import sys
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.contract_graph import compose_contract_graph
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_catalog__pub import class_bindings
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_class_subject__pub import model_class_target
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import compose_contract_graph
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import class_bindings
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import model_class_target
 
 def carrier(n, subject, entity):
     code=f'from anechoic.formal_claims import declare_entity\nfrom anechoic.model import Node\nclass Element(Node):\n    pass\ndeclare_entity(entity_class=Element, entity_name="{entity}")'

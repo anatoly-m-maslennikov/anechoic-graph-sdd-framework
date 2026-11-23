@@ -23,7 +23,7 @@ test('keeps the compact editor scrollable and controls usable across settings', 
   await tab.click();
 
   const query = 'SELECT\n  1\n  ,2\n  ,3\n  ,4\n  ,5\n;';
-  await editor.click(); await editor.press('Meta+A'); await editor.pressSequentially(query);
+  await editor.click(); await editor.press('ControlOrMeta+A'); await editor.pressSequentially(query);
   const scroller = page.locator('.editor-content .cm-scroller');
   await expect.poll(() => scroller.evaluate((element) => element.scrollHeight > element.clientHeight)).toBe(true);
   await editor.press('Meta+End');

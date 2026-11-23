@@ -8,8 +8,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-22T00:00:00+00:00'
+  version: 2
+  updated_at: '2026-11-22T22:23:08.810817+00:00'
 ---
 
 ## Summary
@@ -24,9 +24,11 @@ MODEL//ANECHOIC <+ Relation//IS_SOLUTION_FOR
 
 ### Prose Claim
 
-A Tier 3 Project SPEC Solution is a solution for a Tier 0 Project Contract.
-The authored Relation points from the stated source to its target.
-The inverse is derived. Tier and Solution restrictions are authoring rules.
+A Tier 1 SPEC Atom is a solution for a Tier 0 Contract when its claim
+describes how to meet a specific guarantee in that Contract. Any Tier 1
+SPEC Template can play this role. The authored Relation points from the
+Tier 1 Atom to the Contract. Derive HAS_SOLUTION for the same direct
+pair. The tier and guarantee rules are authoring rules.
 
 ### Formal Claim
 
@@ -37,6 +39,6 @@ declare_relation(
     relation_name='IS_SOLUTION_FOR',
     inverse_alias='HAS_SOLUTION',
     source_endpoint={'level': 'instances', 'entity_paths': ('Node//Artifact//Atom//Spec Atom',)},
-    target_endpoint={'level': 'instances', 'entity_paths': ('Node//Artifact//Atom//Spec Atom//Contract//Project Contract',)},
+    target_endpoint={'level': 'instances', 'entity_paths': ('Node//Artifact//Atom//Spec Atom//Contract',)},
 )
 ```

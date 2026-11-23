@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from RELEASE_VERSION import release_inputs
+from RELEASE_VERSION.RELEASE_VERSION__shared import release_inputs
 
 
 class ReleaseInputsTests(unittest.TestCase):

@@ -69,7 +69,7 @@ def build_package(root, selection, product, staging):
     package = staging / "package"
     package.mkdir()
     package_identity = _prepare_package(root, prepared_product, package,
-                                           control_relative=selection.control_relative)
+                                        control_relative=selection.control_relative, manifest_path=selection.manifest_path)
     return prepared_product, product_identity, package, package_identity
 
 

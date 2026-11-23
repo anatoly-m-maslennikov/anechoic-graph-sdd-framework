@@ -1,10 +1,13 @@
 """Verify phase classification and image gate ordering."""
 
+import io
 from pathlib import Path
+from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import _release_canary, run_full_test_suite as runner
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import test_suite__shared as runner
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import _release_canary
 
 
 class PhaseTests(unittest.TestCase):
@@ -35,28 +38,33 @@ class PhaseTests(unittest.TestCase):
 
     def test_image_runs_canary_after_passing_tests_only(self):
         image = 'sha256:' + 'a' * 64
-        argv = ['runner', '--phase', 'image', '--candidate-image', image,
+        root = self.enterContext(TemporaryDirectory())
+        argv = ['runner', '--project-root', root, '--phase', 'image', '--candidate-image', image,
                 '--canary-package', '/tmp/package', '--canary-selection', '{}', '--run-id', 'run']
         with (patch.object(runner.sys, 'argv', argv),
+              patch("sys.stderr", new_callable=io.StringIO),
               patch.object(runner, 'run_full_suite', return_value=0) as suite,
               patch.object(_release_canary, 'verify_candidate_image', return_value='endpoint') as canary):
             self.assertEqual(0, runner.main())
             suite.assert_called_once()
             canary.assert_called_once()
         with (patch.object(runner.sys, 'argv', argv),
+              patch("sys.stderr", new_callable=io.StringIO),
               patch.object(runner, 'run_full_suite', return_value=1),
               patch.object(_release_canary, 'verify_candidate_image') as canary):
             self.assertEqual(1, runner.main())
             canary.assert_not_called()
 
     def test_image_rejects_incomplete_or_invalid_inputs(self):
+        root = self.enterContext(TemporaryDirectory())
         valid = ['--candidate-image', 'sha256:' + 'a' * 64, '--canary-package', '/tmp/package',
                  '--canary-selection', '{}', '--run-id', 'run']
         for extra in ([], ['--candidate-image', 'latest'], valid + ['--required'],
                       valid + ['--test-module', 'test_a.py'], valid[:-2],
                       valid[:5] + ['bad json'] + valid[6:]):
             with (self.subTest(extra=extra),
-                  patch.object(runner.sys, 'argv', ['runner', '--phase', 'image', *extra]),
+                  patch.object(runner.sys, 'argv', ['runner', '--project-root', root, '--phase', 'image', *extra]),
+                  patch("sys.stderr", new_callable=io.StringIO),
                   patch.object(runner, 'run_full_suite') as suite):
                 self.assertEqual(1, runner.main())
                 suite.assert_not_called()

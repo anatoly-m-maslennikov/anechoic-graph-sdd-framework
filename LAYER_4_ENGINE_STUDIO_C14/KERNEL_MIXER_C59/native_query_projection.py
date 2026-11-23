@@ -9,7 +9,7 @@ from . import boundary_tables, realization_projection
 from .import_cache import read_import_sources
 from .native_projection import project_native, project_native_delta, replace_component_metrics
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import project_goal_filename
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_source_rows__pub import NativeCapture, NativeManifestChanged, check_native_manifest, capture_native
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import NativeCapture, NativeManifestChanged, check_native_manifest, capture_native
 from .package_audit import replace_package_audit
 from .query_store import QueryStore
 from .spec_trace import PACKAGE_SUFFIX, SUFFIX, is_trace_path, native_trace_snapshot

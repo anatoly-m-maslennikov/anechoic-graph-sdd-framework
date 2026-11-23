@@ -1,13 +1,13 @@
 """Exercise managed builds through the CLI and private Unix socket."""
-from hashlib import sha256
 import http.client
 import json
-from pathlib import Path
 import socket
 import tempfile
 import threading
 import time
 import unittest
+from hashlib import sha256
+from pathlib import Path
 
 from .ORCHESTRATOR_beta_C68__tests__shared import watch_project
 
@@ -37,7 +37,7 @@ class ManagedBuildTests(unittest.TestCase):
     def test_socket_waits_for_fresh_admission_and_reports_failure(self):
         with tempfile.TemporaryDirectory(prefix="ane-managed-", dir="/tmp") as directory:
             root = Path(directory).resolve()
-            with watch_project(root) as (control, manifest, path, kernel, process):
+            with watch_project(root) as (control, manifest, path, kernel, _):
                 selected = {"instance_id": "test", "root": str(root), "control_root": control.name,
                             "manifest_path": manifest.name, "manifest_sha256": sha256(manifest.read_bytes()).hexdigest(),
                             "project_prefix": "AN"}
@@ -67,6 +67,7 @@ class ManagedBuildTests(unittest.TestCase):
                 expected = (200, {"result": {"generation": "2", "result_ids": {"old": "new"}}})
                 self.assertEqual([expected, expected], results)
                 self.assertEqual(2, len(kernel.generations))
+                self.assertEqual(["/generation", "/generation"], kernel.paths)
                 kernel.admit_started = None
                 kernel.reject = True
                 status, body = request(path, selected)

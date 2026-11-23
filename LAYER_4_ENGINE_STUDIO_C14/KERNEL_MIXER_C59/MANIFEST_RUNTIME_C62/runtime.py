@@ -12,9 +12,9 @@ from threading import Event, Thread
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.source_watcher__pub import SourceWatcher
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import ARCHIVE_DIRECTORY, DRAFT_DIRECTORY, READY_DIRECTORY
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.project_temporary__pub import owned_temporary_root
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import owned_temporary_root
 
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_generation__pub import open_admitted_model
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import open_admitted_model
 from ..ORCHESTRATOR_C66.ORCHESTRATOR_C66__shared import Orchestrator
 from .process import _BUILDER_PACKAGE, _CODE_ROOT, _command, _environment
 from .structure_host_CS3.structure_host_CS3__shared import publish_structure

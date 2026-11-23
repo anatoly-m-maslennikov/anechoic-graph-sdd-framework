@@ -16,7 +16,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_V
     normalize_reviewed_claim, reviewed_claim_sha256,
 )
 from .model_class_assembly import assemble_model_classes, model_module_name
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_class_subject__pub import model_class_target
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import model_class_target
 from .model_declaration_sources import _check_relation_references, _merge_constraint_claims
 
 

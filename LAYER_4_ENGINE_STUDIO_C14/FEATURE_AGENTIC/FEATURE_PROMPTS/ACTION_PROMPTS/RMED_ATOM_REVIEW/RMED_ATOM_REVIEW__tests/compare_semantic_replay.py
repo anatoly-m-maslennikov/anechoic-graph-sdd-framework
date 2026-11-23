@@ -16,8 +16,8 @@ import json
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parents[1]
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.evaluation_contract import GROUPS, validate_part  # noqa: E402
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_evidence__shared import ReviewContext  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import GROUPS, validate_part  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import ReviewContext  # noqa: E402
 
 
 def compare(run: Path) -> dict:

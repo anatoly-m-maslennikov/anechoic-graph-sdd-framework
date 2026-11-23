@@ -7,9 +7,9 @@ import unittest
 TOOL = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(TOOL.parent), str(TOOL)]
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.contract_graph import compose_contract_graph
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.contract_graph_render import render_contract_graph
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.cfel_claim_constraints import extract_claim_constraints
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import compose_contract_graph
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import render_contract_graph
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import extract_claim_constraints
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__tests.contract_graph_test_support import carrier, body
 
 
@@ -29,7 +29,7 @@ class ContractGraphTests(unittest.TestCase):
         self.assertTrue(all("derived_aliases" not in row for row in graph["relations"]))
 
     def test_native_forms_with_same_local_class_name_keep_distinct_parents(self):
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.current_subject_graph import compose_narrowing_graph
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import compose_narrowing_graph
 
         root = carrier("CA-R-1", "Atom", body())
         carriers = [root]
@@ -100,7 +100,7 @@ class ContractGraphTests(unittest.TestCase):
         }, contracts(native))
 
     def test_native_order_keeps_property_scope_and_source(self):
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.subject_projection_data import build_subject_projection_data
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import build_subject_projection_data
 
         atom = carrier("CA-R-1", "Atom", body())
         claim = carrier("CA-R-2", "Atom.Content.Claim", body(
@@ -170,7 +170,7 @@ class ContractGraphTests(unittest.TestCase):
             self.assertEqual("Atom.Header.Context.Role", targets["CA-R-4"])
 
     def test_native_python_class_inheritance_and_relation_metadata(self):
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.current_subject_graph import compose_narrowing_graph
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import compose_narrowing_graph
 
         root = carrier("CA-R-1", "Atom", body())
         method = carrier("CA-R-2", "Atom/(.Header.Context.Role := Method)", body(

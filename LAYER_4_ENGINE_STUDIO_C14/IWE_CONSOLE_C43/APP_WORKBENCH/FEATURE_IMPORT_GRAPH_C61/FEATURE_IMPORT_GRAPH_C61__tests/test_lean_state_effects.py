@@ -208,6 +208,18 @@ def _translate(folder, checkout, joern, source):
 
 @unittest.skipUnless(shutil.which('lean'), 'Lean 4 is required for the effect checks')
 class LeanStateEffectsTests(unittest.TestCase):
+    def test_calls_keep_the_callee_policy_and_check_pure_callers(self):
+        target = _case([_event('write', 'local', 'provider', 8)], unit='provider:write',
+                       sourcePath='provider.py', policy={'kind': 'local', 'owner': 'provider', 'grants': []})
+        caller = _case([_event('call', name='provider:write')])
+        pure = caller | {'policy': {'kind': 'pure', 'owner': 'caller', 'grants': []}}
+        local, pure, target = _kernel([caller, pure, target])
+        event = _event('write', 'local', 'provider', 8) | {'sourcePath': 'provider.py'}
+        self.assertEqual([event], local['events'])
+        self.assertEqual([], local['violations'])
+        self.assertEqual([], target['violations'])
+        self.assertEqual([event | {'index': 0}], pure['violations'])
+
     def test_dead_end_and_grants(self):
         read = _event('read', 'ambient', 'REQUEST_CTX')
         write = _event('write', 'ambient', 'REQUEST_CTX')

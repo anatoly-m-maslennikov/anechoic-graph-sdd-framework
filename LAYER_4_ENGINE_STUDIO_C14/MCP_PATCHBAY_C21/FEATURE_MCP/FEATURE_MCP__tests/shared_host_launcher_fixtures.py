@@ -23,6 +23,7 @@ class FakeRunner:
                 "Image": self.image,
                 "State": {"Status": "running"},
                 "Mounts": [
+                    {"Type": "volume", "Name": "anechoic-framework-db", "Destination": "/var/lib/anechoic", "RW": True},
                     {
                         "Type": "bind",
                         "Source": str(self.config.projects_root),

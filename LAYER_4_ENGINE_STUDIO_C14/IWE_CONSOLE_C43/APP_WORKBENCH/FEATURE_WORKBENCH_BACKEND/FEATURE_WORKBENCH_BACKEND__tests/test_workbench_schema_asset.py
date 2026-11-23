@@ -10,12 +10,12 @@ import unittest
 APP_ROOT = Path(__file__).resolve().parents[3]
 
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (DeclarationSource)  # noqa: E402
-from KERNEL_MIXER_C59.declared_header_rules import HeaderRule, compile_header_rules  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import HeaderRule, compile_header_rules  # noqa: E402
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import WorkbenchUnavailableError  # noqa: E402
-from KERNEL_MIXER_C59.header_columns import (  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (  # noqa: E402
     declared_header_schema,
 )
-from KERNEL_MIXER_C59.query_store import QueryStore  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import QueryStore  # noqa: E402
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_header_schema import SourceHeaderSchema  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import extension_directory  # noqa: E402
 

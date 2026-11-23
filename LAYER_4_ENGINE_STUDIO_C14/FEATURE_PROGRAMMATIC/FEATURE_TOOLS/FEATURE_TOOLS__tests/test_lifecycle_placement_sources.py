@@ -9,8 +9,8 @@ from unittest.mock import patch
 
 TOOLS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS))
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.legacy_candidate_schema__pub import compile_candidate_schema  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.placement_sources import bootstrap_rows, inventory, pin, read_selected, validate_selection  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.FEATURE_TOOLS__tests__shared import compile_candidate_schema  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import bootstrap_rows, inventory, pin, read_selected, validate_selection  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.test_lifecycle_formal_placement import RULES, carrier, native_body, role_source  # noqa: E402
 
 

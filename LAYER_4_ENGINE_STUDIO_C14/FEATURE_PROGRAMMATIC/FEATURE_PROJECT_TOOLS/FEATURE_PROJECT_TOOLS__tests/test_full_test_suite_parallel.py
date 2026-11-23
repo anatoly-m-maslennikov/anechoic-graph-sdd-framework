@@ -10,7 +10,7 @@ import unittest
 from unittest.mock import patch
 
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests import test_full_test_suite as fixtures
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.full_suite_docker import APP
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import APP
 
 full = fixtures.full
 
@@ -52,7 +52,7 @@ class FullTestSuiteParallelTests(unittest.TestCase):
             return True, 1, 0, "", "", 0.01, None
 
         with patch.object(full, "run_module", side_effect=execute):
-            self.assertEqual(0, full._run_modules(self.case.root, [ordinary, browser], {}))
+            self.assertEqual(0, full._run_modules(self.case.root, [ordinary, browser], {}, []))
         self.assertEqual([browser, ordinary], observed)
 
     def _assert_success_output(self, modules: list[Path]) -> None:
@@ -90,6 +90,7 @@ class FullTestSuiteParallelTests(unittest.TestCase):
             return True, 1, 0, f"output:{module.name}\n", f"errors:{module.name}\n", 0.25, None
 
         with (
+            patch.object(full, "_run_static_checks", return_value=0),
             patch.object(full, "run_module", side_effect=execute),
             patch.object(
                 full,
@@ -132,6 +133,7 @@ class FullTestSuiteParallelTests(unittest.TestCase):
             return True, 1, 0, "", "", 0.0, None
 
         with (
+            patch.object(full, "_run_static_checks", return_value=0),
             patch.object(full, "run_module", side_effect=execute),
             patch.object(full, "current_code_test_image", return_value=nullcontext({})),
             ThreadPoolExecutor(max_workers=1) as driver,

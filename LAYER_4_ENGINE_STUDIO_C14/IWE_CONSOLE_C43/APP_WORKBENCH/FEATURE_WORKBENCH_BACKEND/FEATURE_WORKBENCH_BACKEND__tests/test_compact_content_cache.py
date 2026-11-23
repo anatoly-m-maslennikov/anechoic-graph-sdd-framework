@@ -10,7 +10,7 @@ APP_ROOT = Path(__file__).resolve().parents[3]
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (  # noqa: E402
     compile_content_schema,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import parse_content, source_markdown  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_content, source_markdown  # noqa: E402
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import materialize
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.source_row__pub import atom  # noqa: E402

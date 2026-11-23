@@ -5,11 +5,40 @@ from __future__ import annotations
 import asyncio
 import json
 from concurrent.futures import CancelledError as FutureCancelledError
+from contextlib import nullcontext
 from typing import Any
 
 from mcp import types
+from mcp.server.lowlevel import Server
 
+from MCP_PATCHBAY_C21.FEATURE_MCP.caller_context import take_caller_context
 from MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary import warning
+from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_request_context import bind_request_context
+
+
+def make_server(catalog, call):
+    async def list_tools(_context, _params):
+        return types.ListToolsResult(tools=catalog())
+
+    return Server("ANECHOIC", version="0.2.0", on_list_tools=list_tools, on_call_tool=call)
+
+
+def valid_tool_response(response):
+    return (
+        isinstance(response, dict) and set(response) == {"value", "text"}
+        and isinstance(response["value"], dict)
+        and (response["text"] is None or isinstance(response["text"], str))
+    )
+
+
+async def call_mcp(call_tool, context, name, arguments, **routing):
+    arguments, caller = take_caller_context(arguments)
+    with bind_request_context(caller) if caller else nullcontext():
+        base = getattr(getattr(context, "request", None), "base_url", None)
+        response = await call_tool(
+            name, arguments, public_base_url=str(base) if base is not None else None, **routing,
+        )
+    return result(response["value"], text=response["text"])
 
 
 def result(value, error=False, *, text=None):

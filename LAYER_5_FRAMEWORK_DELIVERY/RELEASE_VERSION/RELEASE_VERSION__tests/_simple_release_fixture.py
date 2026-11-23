@@ -10,8 +10,8 @@ from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 from RELEASE_VERSION import local_release_runner
-from RELEASE_VERSION.local_release import run_local_release
-from RELEASE_VERSION.release_support import _GENERATED_ASSETS
+from RELEASE_VERSION.RELEASE_VERSION__shared import run_local_release
+from RELEASE_VERSION.RELEASE_VERSION__shared import _GENERATED_ASSETS
 
 
 class SimpleReleaseFixture:

@@ -2,7 +2,7 @@
 import hashlib
 import unittest
 from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.allowed_value_evidence import validate_allowed_value_evidence  # noqa: E402
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_evidence__shared import _validate_resolved_mention  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import _validate_resolved_mention  # noqa: E402
 
 
 def binding(raw, *, atom_id="TEST-R-1", version=1, path="candidate.md"):

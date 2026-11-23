@@ -10,7 +10,7 @@ import subprocess
 import sys
 
 from .image_docker_client import bounded_run as _bounded_run
-from .runtime_images import ImageManager
+from .docker__shared import ImageManager
 
 ATTEMPT_LABEL = "org.anechoic.full-test-suite.attempt"
 

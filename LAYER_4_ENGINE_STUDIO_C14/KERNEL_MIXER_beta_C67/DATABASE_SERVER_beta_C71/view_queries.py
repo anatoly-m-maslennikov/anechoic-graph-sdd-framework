@@ -2,15 +2,17 @@
 
 import duckdb
 
-from .query_results import query
+from .query_results import query, validate_select
 from .result_delivery import deliver, validate_delivery
+from .saved_query_runs import save_run_fields, save_sql, validate_name, validate_run_save
 
 
 class ViewQueries:
-    def __init__(self, store, connection, queries, journal_sync=None, project_root=None):
+    def __init__(self, store, connection, queries, journal_sync=None, project_root=None, *, saved_queries=None):
         self.store, self.connection, self.queries = store, connection, queries
         self.journal_sync = journal_sync
         self.project_root = project_root
+        self.saved_queries = saved_queries
         self.results = {}
 
     def replace_results(self, replacements):
@@ -20,6 +22,8 @@ class ViewQueries:
                 metadata.update(replacement)
 
     def invoke(self, operation, args):
+        if operation == "view_save":
+            return self._save_view(args)
         if operation in {"view_run", "view_check", "view_fetch"}:
             if self.connection.execute("SELECT id FROM generation").fetchone() is None:
                 raise ValueError("Generation admission required")
@@ -54,12 +58,7 @@ class ViewQueries:
         if "preview" in args and args["preview"] is not None and (type(args["preview"]) is not int or args["preview"] < 0):
             raise ValueError("preview must be a non-negative integer")
         if operation == "view_run":
-            if type(args.get("save", False)) is not bool:
-                raise ValueError("save must be a boolean")
-            if args.get("save", False):
-                raise ValueError("saving queries is not supported")
-            if args.get("name") is not None:
-                raise ValueError("name is only supported when save is true")
+            validate_run_save(args)
         if operation == "view_fetch":
             if "grid" in args and type(args["grid"]) is not dict:
                 raise ValueError("grid must be an object")
@@ -95,19 +94,7 @@ class ViewQueries:
             return identity | {"valid": True, "columns": result["columns"], "row_count": len(result["rows"]),
                                "column_count": len(result["columns"])}
         if operation == "view_run":
-            prior = self.results.pop(key, None)
-            if prior and prior.get("query_id"):
-                self.queries.drop(prior["query_id"])
-            try:
-                page = self.queries.run(self.connection, view["sql"], 1, preview=args.get("preview"))
-                self.queries.pins.add(page["query_id"])
-                metadata = {"status": "success", "error": None, "query_id": page["query_id"],
-                            "row_count": page["row_count"], "column_count": page["column_count"]}
-            except (ValueError, TypeError, duckdb.Error) as error:
-                metadata = {"status": "failed", "error": str(error), "query_id": None,
-                            "row_count": None, "column_count": None}
-            self.results[key] = metadata
-            return identity | {"revision": view["revision"]} | metadata
+            return identity | {"revision": view["revision"]} | self._run_view(key, view["sql"], args)
         metadata = self.results.get(key)
         if not metadata or metadata["status"] != "success":
             raise ValueError("view has no current result")
@@ -122,3 +109,33 @@ class ViewQueries:
         page = deliver(self.queries, self.project_root, page, args.get("result_delivery", "inline"),
                        args.get("result_format", "json_matrix"), grid=args.get("grid"))
         return identity | page
+
+    def _run_view(self, key, sql, args):
+        prior = self.results.pop(key, None)
+        if prior and prior.get("query_id"):
+            self.queries.drop(prior["query_id"])
+        try:
+            page = self.queries.run(self.connection, sql, 1, preview=args.get("preview"))
+            self.queries.pins.add(page["query_id"])
+            metadata = {"status": "success", "error": None, "query_id": page["query_id"],
+                        "row_count": page["row_count"], "column_count": page["column_count"]}
+        except (ValueError, TypeError, duckdb.Error) as error:
+            metadata = {"status": "failed", "error": str(error), "query_id": None,
+                        "row_count": None, "column_count": None}
+        self.results[key] = metadata
+        if metadata["status"] == "success" and args.get("save", False):
+            return metadata | save_run_fields(self.saved_queries, sql, args.get("name"))
+        return metadata
+
+    def _save_view(self, args):
+        if set(args) == {"workspace_id", "view_id"}:
+            source = self.store.invoke("view_get", args)
+        elif set(args) in ({"sql"}, {"sql", "name"}):
+            if "name" in args:
+                validate_name(args["name"])
+            source = args
+        else:
+            raise ValueError("invalid view_save arguments")
+        sql = source["sql"]
+        validate_select(self.connection, sql)
+        return save_sql(self.saved_queries, sql, "view", source.get("name"))

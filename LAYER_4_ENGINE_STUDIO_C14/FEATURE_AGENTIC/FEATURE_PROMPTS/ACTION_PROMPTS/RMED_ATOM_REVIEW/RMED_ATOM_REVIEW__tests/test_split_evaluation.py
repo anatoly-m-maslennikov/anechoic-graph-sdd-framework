@@ -1,13 +1,22 @@
 """Contract tests for three independent evaluators, not a simulation of judgment."""
 import copy
 import hashlib
-import importlib
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import (
+    GROUPS, LOCAL_GROUPS, ReviewContext, groups_for, merge_evaluations as merge_contract_evaluations,
+    summarize_evaluations, validate_part, validate_report_quality,
+)
 
 HERE = Path(__file__).resolve().parents[1]
-contract = importlib.import_module("FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.evaluation_contract")
-GROUPS = contract.GROUPS
+contract = SimpleNamespace(
+    GROUPS=GROUPS, LOCAL_GROUPS=LOCAL_GROUPS, ReviewContext=ReviewContext,
+    groups_for=groups_for, merge_evaluations=merge_contract_evaluations,
+    summarize_evaluations=summarize_evaluations, validate_part=validate_part,
+    validate_report_quality=validate_report_quality,
+)
 SOURCE_TEXT = ('---\nsubjects:\n  governs: Atom\n  depends_on: []\n---\n'
     '# Summary\nAtom rule\n## Scope\nAtoms\n## Claim\nAtom must comply.\n## Details\n')
 RULE_TEXT = '---\nstatus: active\ncontent_role: Requirement\nsubjects:\n  governs: Atom\n---\n# Definition\n\nAtom means a governed statement. unavailable evidence blocks. Required Scope heading.'
@@ -46,7 +55,7 @@ def part(group):
         "coverage_gaps": [], "mechanical_evidence": [], "result": "passed",
     }
     if group == "coherence":
-        from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import body_sections
+        from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import body_sections
         result["checks"][0]["subject_inventory"] = {"complete": True, "sections_reviewed": body_sections(SOURCE_TEXT), "mentions": [{
             "location": "Claim", "excerpt": "Atom", "entity": "Atom", "resolution": "resolved", "resolution_basis": "meaning",
             "rationale": "Literal use of the bound Entity definition.",

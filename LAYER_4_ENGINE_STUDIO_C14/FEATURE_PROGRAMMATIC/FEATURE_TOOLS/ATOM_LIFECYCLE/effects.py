@@ -18,8 +18,8 @@ from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.project_temporary__pub import atomic_tempfile, owned_temporary_root
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_runtime import repository_root
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import atomic_tempfile, owned_temporary_root
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import runtime_project_root as repository_root
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import open_regular
 
 

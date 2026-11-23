@@ -1,6 +1,8 @@
 """Bind the Work Report Task Relation from the selected native Declarations."""
 
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_GENERATED_MODEL_C52 import Plan, PlanForm, WorkReport
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_GENERATED_MODEL_C52.FEATURE_GENERATED_MODEL_C52__shared import (
+    Plan, PlanForm, WorkReport,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_declaration_bindings import bind_model_declarations
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.cardinality__pub import cardinality_bounds
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import header_value
@@ -10,7 +12,7 @@ TASK_PATH = "Atom/(.Header.Context.Role:=Plan)/(.Header.Context.Form:=Plan)"
 
 
 def compile_work_report_target(rows):
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.formal_claim__pub import iter_formal_claims
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import iter_formal_claims
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_native_model_claim
 
     declarations = []

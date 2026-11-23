@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import re
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import formal_claim_fences
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import formal_claim_fences
 
 _QUOTED = r""""(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'"""
 _COMMENTS = re.compile(rf"({_QUOTED})|#[^\r\n]*")

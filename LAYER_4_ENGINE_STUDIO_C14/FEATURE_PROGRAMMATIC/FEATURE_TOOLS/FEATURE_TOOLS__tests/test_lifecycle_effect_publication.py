@@ -10,7 +10,7 @@ from unittest.mock import patch
 TOOLS = Path(__file__).resolve().parents[1]
 ROOT = TOOLS.parents[2]
 sys.path.insert(0, str(TOOLS))
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE import effects  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import effects_module as effects  # noqa: E402
 
 
 class PublicationTest(unittest.TestCase):

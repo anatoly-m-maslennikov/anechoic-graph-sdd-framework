@@ -12,12 +12,12 @@ ASSETS = Path(__file__).resolve().parent / "assets" / "content_declaration_schem
 SEALED_MODEL = APP_ROOT.parent / "FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests/assets/lifecycle_schema_declarations/04_requirement"
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_read_view  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_catalog__pub import bindings_from_workbench_rows  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import bindings_from_workbench_rows  # noqa: E402
 
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (  # noqa: E402
     compile_content_schema,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import parse_content  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_content  # noqa: E402
 
 
 class ContentSchemaFixture(unittest.TestCase):
@@ -85,7 +85,7 @@ class ContentSchemaFixture(unittest.TestCase):
 
     @staticmethod
     def _prepared_reference_transform():
-        path = ASSETS / "prepare_reference_impact.py"
+        path = ASSETS / "content_declaration_schema__shared.py"
         spec = spec_from_file_location("prepared_header_impact", path)
         assert spec is not None and spec.loader is not None
         module = module_from_spec(spec)

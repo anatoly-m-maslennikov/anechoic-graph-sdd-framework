@@ -6,9 +6,9 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.test_native_lifecycle_draft as draft_tests
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_source_rows__pub import capture_native
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.common import InputError, SourceChanged
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_asset import create_asset
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import TICKET_DIRECTORY, capture_native
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import InputError, SourceChanged
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import create_asset
 
 
 class NativeAssetTests(unittest.TestCase):
@@ -17,7 +17,7 @@ class NativeAssetTests(unittest.TestCase):
 
     def test_detached_and_attached_assets_are_current(self):
         body = '\n## Summary\n\nEvidence report\n\n## Findings\n\nDone.\n'
-        for container, expected in [({'component': 'C00'}, '001_TICKETS/ASSETS'),
+        for container, expected in [({'component': 'C00'}, f'{TICKET_DIRECTORY}/ASSETS'),
                                     ({'atom': 'AN-T-1'}, '001_TICKETS/TASKS/AN-T-1-TASK--example/ASSETS')]:
             rows = capture_native(self.selection).atoms
             result = create_asset(self.selection, {'newAtom': {'template': 'analysis_report', 'body': body,
@@ -41,7 +41,7 @@ class NativeAssetTests(unittest.TestCase):
                 create_asset(self.selection, {'newAtom': values}, current_rows=self.rows)
             self.assertEqual(before, {p: p.read_bytes() for p in self.control.rglob('*.md')})
         result = create_asset(self.selection, {'newAtom': {'template': 'work_log', 'body': body}}, current_rows=self.rows)
-        self.assertEqual(self.control / '001_TICKETS/ASSETS', (self.root / result['artifact']['path']).parent)
+        self.assertEqual(self.control / TICKET_DIRECTORY / 'ASSETS', (self.root / result['artifact']['path']).parent)
 
 
 if __name__ == '__main__':

@@ -1,6 +1,6 @@
 """Compile Python declarations for the legacy schema projection."""
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.python_claim__pub import parse_python_model_claim
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_python_model_claim
 
 from .compiler_claim import (
     compile_atom_dependencies_with_check, compile_scope_level_with_check, compiler_model_statements,

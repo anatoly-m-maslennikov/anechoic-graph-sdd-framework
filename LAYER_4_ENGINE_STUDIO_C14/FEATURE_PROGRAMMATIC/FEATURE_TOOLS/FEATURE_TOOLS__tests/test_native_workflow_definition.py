@@ -15,7 +15,7 @@ PROGRAMMATIC = TOOLS.parent
 STUDIO = PROGRAMMATIC.parent
 sys.path[:0] = [str(TOOLS), str(PROGRAMMATIC)]
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_project_selection import resolve_native_project  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import resolve_native_project  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_workflow_definition import (  # noqa: E402
     STATUS_SPECIFICATIONS,
     NativeDefinitionPin,

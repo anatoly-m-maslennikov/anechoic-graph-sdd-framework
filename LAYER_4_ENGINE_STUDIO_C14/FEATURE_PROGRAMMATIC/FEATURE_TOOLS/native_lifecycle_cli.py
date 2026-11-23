@@ -13,7 +13,8 @@ from .native_lifecycle import execute_native_lifecycle
 from .native_project_selection import resolve_native_project
 from .project_runtime import bind_native_runtime
 
-_NAMES = frozenset({"atom_lifecycle_create_draft", "atom_lifecycle_update", "atom_lifecycle_promote_draft", "atom_lifecycle_change_status", "atom_lifecycle_archive"})
+_NAMES = frozenset({"atom_lifecycle_create_draft", "atom_lifecycle_update", "atom_lifecycle_promote_draft", "atom_lifecycle_change_status", "atom_lifecycle_archive",
+                    "atom_lifecycle_direct_update"})
 _FIELDS = {"binding", "name", "arguments", "generation", "receipt", "stability_sha256"}
 
 
@@ -73,7 +74,9 @@ def run(request):
                          separators=(",", ":"), default=_encode).encode()
         if capture.errors or sha256(raw).hexdigest() != request["stability_sha256"]:
             raise ValueError("Native Project carriers changed before lifecycle operation")
-        _task_scope(request["name"], request["arguments"], capture)
+        # The native direct update validates the exact bound Ticket Asset itself.
+        if request["name"] != "atom_lifecycle_direct_update":
+            _task_scope(request["name"], request["arguments"], capture)
         with bind_native_runtime(selection):
             return execute_native_lifecycle(selection, request["name"], request["arguments"], capture, read_structure,
                 previous_capture=capture, ticket_labels=model.ticket_labels, validate_project_spec=model.validate_project_spec)

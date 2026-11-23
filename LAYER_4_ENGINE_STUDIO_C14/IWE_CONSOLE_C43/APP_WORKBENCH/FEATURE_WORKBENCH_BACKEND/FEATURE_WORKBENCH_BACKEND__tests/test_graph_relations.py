@@ -11,7 +11,7 @@ import unittest
 APP_ROOT = Path(__file__).resolve().parents[3]
 
 from KERNEL_MIXER_C59.graph_store import graph_relations  # noqa: E402
-from KERNEL_MIXER_C59.query_store import QueryStore  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import QueryStore  # noqa: E402
 def extension_directory(root: Path) -> Path:
     """Use the suite-prepared DuckPGQ cache, overridable for local runs."""
     return Path(os.environ.get(

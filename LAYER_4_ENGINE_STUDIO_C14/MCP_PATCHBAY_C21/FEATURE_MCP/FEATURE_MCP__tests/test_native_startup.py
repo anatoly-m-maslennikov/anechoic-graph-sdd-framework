@@ -12,7 +12,9 @@ MCP = Path(__file__).resolve().parents[1]
 PROGRAMMATIC = MCP.parents[1] / "FEATURE_PROGRAMMATIC"
 TOOLS = PROGRAMMATIC / "FEATURE_TOOLS"
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import ProjectAdmissionError, ProjectBinding, project_admission, select_runtime_project
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (
+    ProjectAdmissionError, ProjectBinding, project_admission, select_runtime_project,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import write_scope_unit_declarations
 
 
@@ -142,7 +144,7 @@ class RuntimeSelectionTests(unittest.TestCase):
             self.assertNotEqual(first.manifest_sha256, revised.manifest_sha256)
             self.assertEqual(other, select(beta))
         for root in (alpha, beta):
-            self.assertFalse((root / ".anechoic_runtime/workbench/projection.duckdb").exists())
+            self.assertFalse((root / ".anechoic_runtime/db/project.duckdb").exists())
 
     def test_family_selection_is_accepted_by_native_gateway(self):
         from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import (

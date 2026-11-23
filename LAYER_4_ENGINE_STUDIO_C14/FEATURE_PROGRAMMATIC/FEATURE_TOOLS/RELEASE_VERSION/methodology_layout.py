@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection import active_selection
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import active_selection
 
 
 @dataclass(frozen=True)

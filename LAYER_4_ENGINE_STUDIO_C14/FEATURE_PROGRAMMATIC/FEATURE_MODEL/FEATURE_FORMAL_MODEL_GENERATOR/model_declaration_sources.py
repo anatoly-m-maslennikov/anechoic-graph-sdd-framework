@@ -6,15 +6,21 @@ from typing import Any
 
 from markdown_it import MarkdownIt
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import subject_notation__pub as notation
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    Name as _subject_Name,
+    Path as _subject_Path,
+    RelationChain as _subject_RelationChain,
+    namespace_local_expression as _subject_namespace_local_expression,
+    parse_subject_expression as _subject_parse_subject_expression,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import matches_named_value
 from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared import (
     lint_native_model_claim, resolve_model_claim_reference,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_class_subject__pub import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
     canonical_model_address, model_class_target, model_declaration_subject, simple_model_address,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import parse_content
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_content
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import NativeModelClaimError, parse_native_model_claim
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.dataclass_field_contract__pub import validate_field_contracts
@@ -185,15 +191,15 @@ def _check_manifest_property_bearers(parsed):
 def _add_unambiguous_addresses(addresses: set, parsed: list) -> None:
     short_names = {}
     for source, subject, declaration in parsed:
-        local = notation.namespace_local_expression(notation.parse_subject_expression(subject).expression)
-        if declaration["kind"] == "entity" and isinstance(local, notation.RelationChain):
+        local = _subject_namespace_local_expression(_subject_parse_subject_expression(subject).expression)
+        if declaration["kind"] == "entity" and isinstance(local, _subject_RelationChain):
             target = model_class_target(subject, declaration["arguments"]["entity_name"])
             if target and simple_model_address(target):
                 short_names.setdefault(target, set()).add(subject)
-        if isinstance(local, notation.Path) and isinstance(local.head, notation.Name):
+        if isinstance(local, _subject_Path) and isinstance(local.head, _subject_Name):
             if not local.steps:
                 short_names.setdefault(local.head.value, set()).add(subject)
-            elif all(step.operator == "/" and isinstance(step.operand, notation.Name) for step in local.steps):
+            elif all(step.operator == "/" and isinstance(step.operand, _subject_Name) for step in local.steps):
                 short_names.setdefault(local.steps[-1].operand.value, set()).add(subject)
     addresses.update(name for name, subjects in short_names.items() if len(subjects) == 1)
 

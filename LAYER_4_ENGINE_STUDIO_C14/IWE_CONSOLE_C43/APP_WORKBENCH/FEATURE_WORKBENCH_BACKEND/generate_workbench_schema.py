@@ -10,21 +10,21 @@ import sys
 if __package__:
     from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import _source, content_schema_from_statements, declaration_statements
     from .declared_classifications import compile_status_groups
-    from KERNEL_MIXER_C59.declared_header_rules import header_rules_from_statements
-    from KERNEL_MIXER_C59.header_columns import declared_header_schema
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import formal_claim_fences, source_markdown
+    from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import header_rules_from_statements
+    from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import declared_header_schema
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import formal_claim_fences, source_markdown
     from .source_reader import SourceReader
-    from KERNEL_MIXER_C59.source_selection import first_reference_rows
+    from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import first_reference_rows
     from .workbench_schema_asset import compile_schema, schema_asset
 else:  # pragma: no cover - direct image-build invocation
     sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
     from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import _source, content_schema_from_statements, declaration_statements
     from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.declared_classifications import compile_status_groups
-    from KERNEL_MIXER_C59.declared_header_rules import header_rules_from_statements
-    from KERNEL_MIXER_C59.header_columns import declared_header_schema
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import formal_claim_fences, source_markdown
+    from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import header_rules_from_statements
+    from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import declared_header_schema
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import formal_claim_fences, source_markdown
     from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_reader import SourceReader
-    from KERNEL_MIXER_C59.source_selection import first_reference_rows
+    from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import first_reference_rows
     from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workbench_schema_asset import compile_schema, schema_asset
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import is_current_requirement_declaration
@@ -37,7 +37,7 @@ def compile_project_schema(project_root: Path, *, model_class_bindings=None) -> 
     atoms, _scopes = reader.capture()
     selected = list(first_reference_rows(reader.model_rows(atoms, is_current_requirement_declaration)))
     if model_class_bindings is None:
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_catalog__pub import bindings_from_workbench_rows
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import bindings_from_workbench_rows
         model_class_bindings = bindings_from_workbench_rows(selected)
     pins = {}
     statements = []
@@ -57,7 +57,7 @@ def compile_project_schema(project_root: Path, *, model_class_bindings=None) -> 
 
 def _python_declarations(rows):
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_native_model_claim
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.python_claim__pub import parse_structured_python_model_claim
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_structured_python_model_claim
 
     for row in rows:
         if not is_current_requirement_declaration(row):

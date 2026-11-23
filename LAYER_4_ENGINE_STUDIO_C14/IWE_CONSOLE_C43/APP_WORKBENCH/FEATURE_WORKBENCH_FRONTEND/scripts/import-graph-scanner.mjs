@@ -1,6 +1,7 @@
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import ts from 'typescript';
-import { parse } from 'svelte/compiler';
+const { parse } = createRequire(import.meta.url)('svelte/compiler');
 
 function findRequireAnchor(tree) {
 let requireAnchor = null;

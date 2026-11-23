@@ -1,7 +1,7 @@
 """Preserve graph targets during Atom-local repairs."""
 from typing import Any
 
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import metadata
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import metadata
 
 
 def _local_repair_boundary(proposal: dict[str, Any], output: dict[str, Any], original: str) -> None:

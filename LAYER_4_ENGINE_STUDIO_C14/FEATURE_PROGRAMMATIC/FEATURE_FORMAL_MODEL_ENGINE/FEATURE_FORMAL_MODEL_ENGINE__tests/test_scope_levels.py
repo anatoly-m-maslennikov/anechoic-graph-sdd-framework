@@ -7,7 +7,7 @@ import unittest
 PROGRAMMATIC = Path(__file__).resolve().parents[2]
 
 from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.scope_levels import check_scope_levels_with_packaged_check
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.scope_declaration_parse__pub import ScopeUnitDeclaration
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import ScopeUnitDeclaration
 
 
 def check_structural_level(unit):

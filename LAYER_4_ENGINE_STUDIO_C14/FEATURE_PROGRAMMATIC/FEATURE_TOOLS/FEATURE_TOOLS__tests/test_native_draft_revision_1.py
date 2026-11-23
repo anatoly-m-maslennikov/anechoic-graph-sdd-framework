@@ -9,12 +9,12 @@ TOOLS = Path(__file__).resolve().parents[1]
 ENGINE = TOOLS.parents[1]
 sys.path[:0] = [str(TOOLS), str(ENGINE / 'IWE_CONSOLE_C43')]
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_source_rows__pub import capture_native
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.common import InputError, SourceChanged
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_draft import create_draft, promote_draft
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_update_spec import change_spec_status
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_header__pub import canonical_native_header
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_project_selection import resolve_native_project
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import InputError, SourceChanged
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import create_draft, promote_draft
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import change_spec_status
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical_native_header
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import resolve_native_project
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import validate_manifest
 
 
@@ -240,7 +240,7 @@ class NativeRevisionCarrierTests(fixtures.NativeRevisionCarrierTests, unittest.T
 
     def test_first_spec_cleanup_failure_can_retry_without_rewriting(self):
         from unittest.mock import patch
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE import effects
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import effects_module as effects
         draft = self.spec('UNIT_C9/01_draft/AN-S-8@1-draft-DES--example.md', 'AN-S-8')
         draft.write_text(draft.read_text().replace('status: active', 'status: draft'))
         params = {'target': {'ref_id': 'AN-S-8@1-draft', 'version': 1}, 'targetStatus': 'ready'}

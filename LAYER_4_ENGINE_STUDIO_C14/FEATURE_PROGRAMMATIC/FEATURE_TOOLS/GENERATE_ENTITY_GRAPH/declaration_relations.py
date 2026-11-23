@@ -6,10 +6,15 @@ from collections.abc import Mapping
 from pathlib import Path
 import re
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import subject_notation__pub as notation
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    Name as _subject_Name,
+    Path as _subject_Path,
+    RelationChain as _subject_RelationChain,
+    ValueLiteral as _subject_ValueLiteral,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_read_view, matches_named_value
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import CarrierError, parse_carrier
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.subject_notation__pub import SubjectNotationError, parse_subject_expression
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CarrierError, parse_carrier
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import SubjectNotationError, parse_subject_expression
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.VALIDATE_ATOMS.validate_atoms_workers.check_sections import _headings as body_headings
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.declaration_evidence import (
@@ -49,16 +54,16 @@ def _candidate_name(subject: str) -> str | None:
         expression = parse_subject_expression(subject, subject_profile="approved").expression
     except SubjectNotationError:
         return None
-    if not isinstance(expression, notation.Path) or not isinstance(expression.head, notation.Name):
+    if not isinstance(expression, _subject_Path) or not isinstance(expression.head, _subject_Name):
         return _defined_relation_name(subject)
     if expression.value_format is not None or expression.value_cardinality is not None:
         return None
     if expression.head.value == "Entity" and len(expression.steps) == 3:
         first, second, last = expression.steps
         if (first.operator == second.operator == "/" and last.operator == ":"
-                and isinstance(first.operand, notation.Name) and first.operand.value == "Relation"
-                and isinstance(second.operand, notation.Name) and second.operand.value == "Type"
-                and isinstance(last.operand, notation.ValueLiteral)):
+                and isinstance(first.operand, _subject_Name) and first.operand.value == "Relation"
+                and isinstance(second.operand, _subject_Name) and second.operand.value == "Type"
+                and isinstance(last.operand, _subject_ValueLiteral)):
             return last.operand.value
     if not expression.steps and _RELATION_LIKE.fullmatch(expression.head.value):
         return expression.head.value
@@ -67,15 +72,15 @@ def _candidate_name(subject: str) -> str | None:
 
 def _defined_relation_name(subject: str) -> str | None:
     expression = parse_subject_expression(subject, subject_profile="approved").expression
-    paths = expression.endpoints if isinstance(expression, notation.RelationChain) else (expression,)
+    paths = expression.endpoints if isinstance(expression, _subject_RelationChain) else (expression,)
     names = []
     for path in paths:
         if not path.steps:
             continue
         final = path.steps[-1]
         parent = path.steps[-2].operand if len(path.steps) > 1 else path.head
-        if (final.operator == "//" and isinstance(final.operand, notation.Name)
-                and isinstance(parent, notation.Name) and parent.value == "Relation"
+        if (final.operator == "//" and isinstance(final.operand, _subject_Name)
+                and isinstance(parent, _subject_Name) and parent.value == "Relation"
                 and _RELATION_LIKE.fullmatch(final.operand.value)):
             names.append(final.operand.value)
     return names[0] if len(names) == 1 else None

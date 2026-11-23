@@ -13,7 +13,7 @@ from typing import Any, Mapping
 from urllib.parse import urlsplit
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.mcp_paths import MCP_PATH
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images import ImageError, ImageManager
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import ImageError, ImageManager
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_docker_command import BackendError, _bounded_run
 
 
@@ -55,7 +55,7 @@ class ProjectMcpBackend:
 
     @staticmethod
     def _native_package(source_root, project_root, control_root=None):
-        from MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import select_runtime_project
+        from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import select_runtime_project
         from MCP_PATCHBAY_C21.FEATURE_MCP.docker.start_mcp import _installed_source_root
         try:
             selection = select_runtime_project(project_root, control_root)
@@ -73,7 +73,7 @@ class ProjectMcpBackend:
 
     def resolve_image(self, source_root, explicit_id, *, project_root, selection=None):
         self._image_evidence = None
-        from MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import ProjectBinding
+        from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import ProjectBinding
 
         if selection is not None and not isinstance(selection, ProjectBinding):
             raise ImageError("IMAGE_INPUT_UNAVAILABLE")
@@ -172,9 +172,13 @@ class ProjectMcpBackend:
         ):
             return False
         mounts = row.get("Mounts")
-        if not isinstance(mounts, list) or len(mounts) != 1 or not isinstance(mounts[0], Mapping):
+        if not isinstance(mounts, list) or len(mounts) != 2 or not all(isinstance(m, Mapping) for m in mounts):
             return False
-        mount = mounts[0]
+        volume = [m for m in mounts if m.get("Type") == "volume" and m.get("Name") == "anechoic-framework-db"
+                  and m.get("Destination") == "/var/lib/anechoic" and m.get("RW") is True]
+        if len(volume) != 1:
+            return False
+        mount = next(m for m in mounts if m is not volume[0])
         source = mount.get("Source")
         return (
             mount.get("Type") == "bind"

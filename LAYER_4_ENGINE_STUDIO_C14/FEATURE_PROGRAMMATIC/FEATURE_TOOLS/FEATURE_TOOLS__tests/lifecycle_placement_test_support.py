@@ -2,7 +2,7 @@
 from functools import wraps
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import bind_placement
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.placement_model import load_placement
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import load_placement
 
 
 def fixture_rules(*, operations_folder='09_operations', resolved_folder='resolved'):

@@ -71,7 +71,8 @@ class RuntimeTests(unittest.TestCase):
             {volume["target"] for volume in mounts if volume.get("read_only")},
             {"/project/.git"},
         )
-        self.assertEqual(len(mounts), 2)
+        self.assertEqual(len(mounts), 3)
+        self.assertIn({"type": "volume", "source": "framework-db", "target": "/var/lib/anechoic"}, mounts)
         self.assertFalse(any(volume["target"].startswith("/workspace") for volume in mounts))
         ignored = (APP / "docker/Dockerfile.dockerignore").read_text()
         for value in (

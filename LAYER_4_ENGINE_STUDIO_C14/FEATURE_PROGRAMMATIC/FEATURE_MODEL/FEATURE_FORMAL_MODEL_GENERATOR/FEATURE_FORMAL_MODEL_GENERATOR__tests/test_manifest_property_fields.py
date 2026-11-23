@@ -9,7 +9,9 @@ from types import ModuleType
 import unittest
 from unittest.mock import patch
 
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.model_class_assembly import assemble_model_classes, assemble_model_modules
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.FEATURE_FORMAL_MODEL_GENERATOR__shared import (
+    assemble_model_classes, assemble_model_modules,
+)
 
 
 def primary(name, base=None, entity_name=None, extra=""):

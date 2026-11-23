@@ -7,9 +7,9 @@ TOOLS = Path(__file__).resolve().parents[1]
 ENGINE = TOOLS.parents[1]
 sys.path[:0] = [str(TOOLS), str(ENGINE / 'IWE_CONSOLE_C43')]
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_source_rows__pub import capture_native
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.common import InputError, SourceChanged
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_draft import promote_draft
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import InputError, SourceChanged
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import promote_draft
 
 
 
@@ -45,7 +45,7 @@ class NativePromotionTests(fixtures.NativePromotionTests, unittest.TestCase):
 
     def test_retry_of_revision_promotion_removes_only_pinned_draft(self):
         from unittest.mock import patch
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE import effects
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import effects_module as effects
         with patch('FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_draft_promotion.effects.remove', return_value=effects.Result(errors=[{'code': 'injected'}])):
             output = promote_draft(self.selection, self.promotion, current_rows=self.rows)
         self.assertEqual('failed', output['outcome'])
@@ -93,7 +93,7 @@ class NativePromotionTests(fixtures.NativePromotionTests, unittest.TestCase):
 
     def test_failed_replacement_rolls_back_archive(self):
         from unittest.mock import patch
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.effects import Result
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import Result
         failure = Result(errors=[{'code': 'stale_state', 'message': 'injected failure'}])
         with patch('FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_draft_promotion.effects.replace', return_value=failure):
             output = promote_draft(self.selection, self.promotion, current_rows=self.rows)
@@ -107,7 +107,7 @@ class NativePromotionTests(fixtures.NativePromotionTests, unittest.TestCase):
 
     def test_failed_removal_rolls_back_status_destination_and_archive(self):
         from unittest.mock import patch
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE import effects
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import effects_module as effects
         original_remove = effects.remove
         self.promotion['targetStatus'] = 'done'
         def remove(root, path, digest):
@@ -126,7 +126,7 @@ class NativePromotionTests(fixtures.NativePromotionTests, unittest.TestCase):
 
     def test_changed_current_retains_generated_carriers_and_reports_uncertainty(self):
         from unittest.mock import patch
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE import effects
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import effects_module as effects
         original_remove = effects.remove
         self.promotion['targetStatus'] = 'done'
         def remove(root, path, digest):
@@ -146,7 +146,7 @@ class NativePromotionTests(fixtures.NativePromotionTests, unittest.TestCase):
 
     def test_changed_archive_is_retained_and_reported(self):
         from unittest.mock import patch
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.effects import Result
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import Result
         archive = self.control / '001_TICKETS/TASKS/09_archived/AN-T-1@1-TASK--example.md'
         def replace(*args):
             archive.write_bytes(archive.read_bytes() + b'external')
@@ -162,7 +162,7 @@ class NativePromotionTests(fixtures.NativePromotionTests, unittest.TestCase):
 
     def test_changed_draft_after_archival_rolls_back_archive(self):
         from unittest.mock import patch
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE import common
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import common_module as common
         original_write = common.write_destination
         def write(root, path, raw):
             outcome = original_write(root, path, raw)

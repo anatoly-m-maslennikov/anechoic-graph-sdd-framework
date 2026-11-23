@@ -7,9 +7,9 @@ import unittest
 
 TOOLS = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(TOOLS), str(TOOLS.parent)]
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection import active_selection, bind_selection, resolve_project
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.artifact_metadata import configured_timezone, project_identity
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.settings_context__pub import control_root
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import active_selection, bind_selection, resolve_project
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import configured_timezone, project_identity
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import control_root
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import write_scope_unit_declarations
 
 class ProjectStateTests(unittest.TestCase):

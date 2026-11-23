@@ -3,7 +3,7 @@
 from pathlib import Path
 import shutil
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import select_runtime_project
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import select_runtime_project
 
 ROOT = Path(__file__).resolve().parents[4]
 CONTROL = '_anechoic_anechoic'

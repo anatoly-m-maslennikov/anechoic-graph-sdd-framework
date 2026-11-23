@@ -1,19 +1,23 @@
-"""Read accepted Saved SQL from both Project Journal storage modes."""
+"""Store and retrieve Saved SQL in both Project Journal storage modes."""
 
 from contextlib import closing
+from datetime import UTC, datetime
 import json
 import os
 from pathlib import Path
 import stat
 import sys
+from uuid import uuid7
 
 import duckdb
 
-from .saved_query_reads import SAVED_QUERY_AUTHOR, list_saved_queries, load_saved_query
+from .saved_query_reads import SAVED_QUERY_AUTHOR, _journal_record, list_saved_queries, load_saved_query
 from .work_journal import (
     MAX_DATABASE_EVENT_BYTES,
     TABLE,
     _FILE_NAME,
+    _canonical_json_bytes,
+    _commit_record,
     _fingerprint,
     _open_directory,
     journal_database_path,
@@ -102,6 +106,33 @@ class SavedQueryJournal:
         self._root = Path(root)
         self._relative = Path(journal_relative) if journal_relative is not None else None
         self._native = native
+
+    def save(self, sql, kind, name=None):
+        """Store one exact SQL snapshot while the caller holds the Kernel lock."""
+        if kind not in ("query", "view"):
+            raise ValueError("saved query kind must be query or view")
+        now = datetime.now(UTC)
+        record = _journal_record({"saved_query_id": str(uuid7()), "kind": kind, "sql": sql,
+                                  "saved_at": now.isoformat(), "name": name})
+        local_date = now.date().isoformat()
+        row = {"author": SAVED_QUERY_AUTHOR, "local_date": local_date, "event": record}
+        if len(_canonical_json_bytes(row if self._native else record)) > MAX_DATABASE_EVENT_BYTES:
+            raise ValueError("saved query event exceeds the Journal record size limit")
+        try:
+            if self._native:
+                _commit_record(self._connection, TABLE, str(uuid7()), row)
+            elif self._relative is not None:
+                from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import append_sealed_events
+
+                append_sealed_events(self._root, [record], author=SAVED_QUERY_AUTHOR, local_date=local_date,
+                                     timezone="UTC", journal_root=self._relative.as_posix())
+            else:
+                raise OSError("saved query Journal is unavailable")
+        except OSError:
+            raise
+        except (duckdb.Error, RuntimeError) as error:
+            raise OSError("saved query Journal is unavailable") from error
+        return record
 
     def _events(self):
         try:

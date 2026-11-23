@@ -23,6 +23,9 @@ x-runtime: &runtime
   cpus: 2
 
 x-project-mounts: &project-mounts
+  - type: volume
+    source: framework-db
+    target: /var/lib/anechoic
   - type: bind
     source: ${ANECHOIC_PROJECT_ROOT}
     target: /project
@@ -40,6 +43,7 @@ services:
     stdin_open: true
     profiles: [stdio]
     environment:
+      ANECHOIC_FRAMEWORK_DB_ROOT: /var/lib/anechoic
       ANECHOIC_RUNTIME_NAMESPACE: docker
     volumes: *project-mounts
     networks: [runtime]
@@ -47,3 +51,7 @@ services:
 networks:
   runtime: {internal: true}
   egress: {}
+
+volumes:
+  framework-db:
+    name: anechoic-framework-db

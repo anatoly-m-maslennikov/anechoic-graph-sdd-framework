@@ -152,7 +152,7 @@ def load_placement(payload):  # noqa: C901
 
 
 def _declared_orders(requirement_rows):
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.formal_claim__pub import iter_formal_claims
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import iter_formal_claims
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_native_model_claim
 
     role_orders, status_folders, status_numbers = [], {}, set()

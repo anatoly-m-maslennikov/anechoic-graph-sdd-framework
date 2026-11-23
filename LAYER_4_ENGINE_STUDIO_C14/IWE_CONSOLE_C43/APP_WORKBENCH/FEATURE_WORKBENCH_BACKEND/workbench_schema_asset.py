@@ -11,8 +11,8 @@ from typing import Any
 
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import ContentRule, ContentSchema, DeclarationSource, _schema_from_rules
 from .declared_classifications import compile_role_folders, compile_status_groups  # noqa: F401
-from KERNEL_MIXER_C59.declared_header_rules import HeaderRule, compile_header_rules
-from KERNEL_MIXER_C59.header_columns import HeaderColumn, HeaderSchema, declared_header_schema, infer_header_schema
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import HeaderRule, compile_header_rules
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import HeaderColumn, HeaderSchema, declared_header_schema, infer_header_schema
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical
 
 

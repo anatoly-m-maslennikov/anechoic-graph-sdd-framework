@@ -5,7 +5,7 @@ from tempfile import TemporaryDirectory
 import unittest
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import StatusModelError
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.status_model import _staged_declarations
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import _staged_declarations
 
 
 class StatusScanTypedPropertyTest(unittest.TestCase):

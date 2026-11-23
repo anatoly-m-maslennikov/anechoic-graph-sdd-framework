@@ -8,7 +8,7 @@ from urllib.parse import urlencode
 
 MCP = Path(__file__).resolve().parents[1]
 programmatic = MCP.parents[1] / "FEATURE_PROGRAMMATIC"
-from MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import ProjectBinding  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import ProjectBinding  # noqa: E402
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.registry_workbench_provider import WorkbenchProvider  # noqa: E402
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workbench_links import public_saved  # noqa: E402
 

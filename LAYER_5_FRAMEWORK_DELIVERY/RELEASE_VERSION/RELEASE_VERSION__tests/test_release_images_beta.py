@@ -9,7 +9,7 @@ from ._release_image_fixture import ReleaseImageFixture
 
 class BetaReleaseImagesTests(ReleaseImageFixture):
     def test_beta_closure_build_and_installed_admission(self):
-        from RELEASE_VERSION.release_image_identity import _BETA_REQUIRED
+        from RELEASE_VERSION.RELEASE_VERSION__shared import _BETA_REQUIRED
 
         (self.package / "LAYER_5_FRAMEWORK_DELIVERY/project.toml").write_text('stack = "beta"\n')
         for relative in _BETA_REQUIRED:
@@ -52,7 +52,7 @@ class BetaReleaseImagesTests(ReleaseImageFixture):
             manager.resolve(explicit_id=self.image, build_if_missing=False)
 
     def test_beta_candidate_tag_collision_fails_closed(self):
-        from RELEASE_VERSION.release_image_identity import _BETA_REQUIRED
+        from RELEASE_VERSION.RELEASE_VERSION__shared import _BETA_REQUIRED
 
         (self.package / "LAYER_5_FRAMEWORK_DELIVERY/project.toml").write_text('stack = "beta"\n')
         for relative in _BETA_REQUIRED:
@@ -69,7 +69,7 @@ class BetaReleaseImagesTests(ReleaseImageFixture):
         self.assertEqual(set(), self.tags)
 
     def test_beta_promotion_does_not_remove_foreign_candidate_tag(self):
-        from RELEASE_VERSION.release_image_identity import _BETA_REQUIRED
+        from RELEASE_VERSION.RELEASE_VERSION__shared import _BETA_REQUIRED
 
         (self.package / "LAYER_5_FRAMEWORK_DELIVERY/project.toml").write_text('stack = "beta"\n')
         for relative in _BETA_REQUIRED:
@@ -86,7 +86,7 @@ class BetaReleaseImagesTests(ReleaseImageFixture):
         self.assertIn("anechoic-runtime:beta-" + self.image[7:], self.tags)
 
     def test_beta_missing_required_inputs_fail_before_docker(self):
-        from RELEASE_VERSION.release_image_identity import _BETA_REQUIRED
+        from RELEASE_VERSION.RELEASE_VERSION__shared import _BETA_REQUIRED
 
         (self.package / "LAYER_5_FRAMEWORK_DELIVERY/project.toml").write_text('stack = "beta"\n')
         for relative in _BETA_REQUIRED:

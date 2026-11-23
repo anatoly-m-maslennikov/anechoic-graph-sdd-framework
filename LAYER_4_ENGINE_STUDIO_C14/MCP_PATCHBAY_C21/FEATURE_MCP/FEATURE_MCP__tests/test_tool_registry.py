@@ -11,7 +11,7 @@ import unittest
 
 
 MCP = Path(__file__).resolve().parents[1]
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.tool_registry_runtime import (  # noqa: E402
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import (  # noqa: E402
     load_active_registry,
 )
 
@@ -23,7 +23,7 @@ class MovedRegistryStagingTests(unittest.TestCase):
 
     def test_staged_compiler_loads_moved_components(self):
         sys.path.insert(0, str(MCP / "docker"))
-        from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_tool_registry import compile_tool_registry
+        from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import compile_tool_registry
 
         registry = json.loads(compile_tool_registry(MCP.parents[2], timeout=60, max_output=2_000_000))
         self.assertEqual({provider["provider_id"] for provider in registry["providers"]},

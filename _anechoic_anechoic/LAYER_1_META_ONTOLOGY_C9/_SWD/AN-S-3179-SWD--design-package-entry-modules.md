@@ -8,10 +8,9 @@ context:
   lens: SWD
 state:
   status: "active"
-  version: 7
-  updated_at: "2026-11-22T16:49:43.023029+00:00"
+  version: 8
+  updated_at: "2026-11-23T01:48:06.192387+00:00"
 ---
-
 ## Summary
 
 Design Package entry Modules
@@ -20,68 +19,18 @@ Design Package entry Modules
 
 ### Prose Claim
 
-A Package is a logical group of owned Modules or nested Packages. In a file-based
-Realization, a directory carries the Package. Use the declared ownership to
-identify the Package, its parent, and its siblings. Evaluate each Package
-separately. A folder with only child Packages does not need an entry Module for
-their code.
+Use declared ownership to identify each Package, its parent, and its siblings. Every Package with direct authored code has one direct `__shared` Module, including Component Packages, Seeds, nested Packages, and Test Packages. A directory that only groups child Packages needs no entry of its own.
 
-A Component Package is the Realization Package of a Component. An ordinary
-Package becomes a Component Seed when it gets a Component Seed Manifest.
-
-Declare Module or symbol exports in `boundaries.code.exports`. Unlisted entries
-are private to the owning Package. When the export map is absent, use the Module
-marker. An explicit export with omitted visibility is shared.
-
-For an ordinary nested Package, use the owning Component Manifest.
-Qualify each entry by the Package path relative to the Component.
-Use that qualified entry in the caller's import rule.
+Use the defining Package's entry to import its symbols. Declare exact exports and restrictions in `boundaries.code`. Qualify nested entries by their path in the owning Component Manifest. By default an unlisted Module is private and an explicit export with omitted visibility is shared. Without an export map, use the Module marker.
 
 - `private` allows the owning Package.
-- `shared` also allows the immediate parent and siblings.
+- `shared` also allows its immediate parent and siblings.
 - `public` allows any caller at the export boundary.
 
-An export can add named callers to its visibility. Each cross-Package import
-must satisfy the export and the applicable `boundaries.code.imports` rules.
-Imports default to direct children, siblings, and public entries. A list adds
-named dependencies. An `only` list restricts imports, and an empty `only` list
-allows zero cross-Package imports. Keep inherited restrictions in effect.
+A caller must also satisfy `boundaries.code.imports`. Default imports reach direct children, siblings, and public entries. An addition names extra dependencies. `only` limits the set. Preserve inherited restrictions and import toward the lower layer at the first divergence between layered siblings.
 
-At the first divergence in Component ancestry, when both siblings have numeric
-layers, require the provider's layer to be lower. Allowlists preserve this order.
-
-Give each Package with direct authored code exactly one direct
-`__shared` entry Module. Apply the rule to Component Packages, Component
-Seeds, ordinary nested Packages, and Test Packages. Put the entry Module
-and implementation Modules in the same Package directory.
-
-Use the defining Package's entry for cross-Package imports by default.
-Declare shared, public, and named exports on the entry Module.
-For a direct import from an implementation Module, declare the exact
-Module or symbol in the applicable imports and exports. Apply all
-visibility, inherited import restrictions, and layer order.
-
-Record declared direct imports in the Realization Graph review. A
-repeated dependency can indicate a Package or Component that belongs at
-a higher structural level with its own Contract.
-
-Import a symbol from the Package that defines it. The
-entry may expose a symbol from its own implementation Modules. A caller
-that lacks access can use an operation the permitted Package owns.
-That operation keeps foreign symbols inside its implementation.
-
-## Details
-
-In `orders/`, `orders__shared` can expose shared Order operations and
-declare public exports for the operations in the Contract. `price_rules`
-stays Package-local. A child Package such as `orders/validation/` has
-its own `validation__shared` entry Module.
-
-This classification applies across programming languages. A language adapter
-resolves its own Module names and imports before applying the same Package
-access rules.
+Record each implementation-Module bypass by exact Module or symbol in imports and exports. Check it against the same visibility and layer rules. Repeated bypasses signal that the owner may need promotion. A Package may expose an operation it owns and keep foreign symbols inside. Forwarding another Package's symbol through a wrapper does not establish ownership.
 
 ## References
 
-AN-S-2596, AN-S-3102, AN-S-3103, AN-S-2971, AN-S-3013, AN-S-3015,
-AN-S-3016, and AN-T-2944.
+AN-S-3013, AN-S-3014, and AN-S-3347.

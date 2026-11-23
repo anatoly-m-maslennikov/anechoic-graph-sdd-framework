@@ -2,7 +2,7 @@ import type { WorkspaceApi, CheckResult, GridState, QueryResult, ResultDisplayPr
 import { newView } from './lib/lib__shared';
 
 type Check = { sql: string; result: CheckResult } | { sql: string; error: string };
-export type Tab = ReturnType<typeof newView> & { busy?: boolean; error?: string; result?: QueryResult; check?: Check; saved?: SavedIdentity; revision?: number; run?: ViewResult; conflict?: boolean; syncDirty?: boolean; serverSql?: string; serverRevision?: number };
+export type Tab = ReturnType<typeof newView> & { busy?: boolean; error?: string; saveError?: string; result?: QueryResult; check?: Check; saved?: SavedIdentity; revision?: number; run?: ViewResult; conflict?: boolean; syncDirty?: boolean; serverSql?: string; serverRevision?: number };
 type ActionContext = {
   active: Tab | undefined; workspaceReady: boolean; savedBusy: boolean; boundApi: WorkspaceApi | undefined;
   updateTab: (id: string, changes: Partial<Tab>) => void; fail: (id: string, error: unknown, conflict?: boolean) => void;
@@ -16,7 +16,7 @@ type ActionContext = {
 export async function performAction(ctx: ActionContext, kind: 'run' | 'check' | 'save', cursor: number, name?: string) {
   const { active, workspaceReady, savedBusy, updateTab, boundApi, fail, syncBeforeRun, tabById, message, acceptResult, acceptSaved, refreshSaved, reportLogWarning } = ctx;
   const tab = active; if (!workspaceReady || !tab || tab.busy || savedBusy) return;
-  updateTab(tab.id, { busy: true, error: '', ...(kind === 'check' ? { check: undefined } : {}) });
+  updateTab(tab.id, { busy: true, error: '', saveError: undefined, ...(kind === 'check' ? { check: undefined } : {}) });
   if (!boundApi) { fail(tab.id, new Error('Workspace is unavailable.')); return; }
   if (!await syncBeforeRun(tab.id)) { updateTab(tab.id, { busy: false }); return; }
   const current = tabById(tab.id); if (!current) return;
@@ -32,13 +32,12 @@ export async function performAction(ctx: ActionContext, kind: 'run' | 'check' | 
   }
   try {
     const response = await boundApi.run(current.id, cursor, kind === 'save' ? { save: true, ...(name ? { name } : {}) } : {});
-    ctx.resetGrid(); updateTab(current.id, { revision: response.revision, run: response, result: undefined });
+    ctx.resetGrid(); updateTab(current.id, { revision: response.revision, run: response, result: undefined, saveError: response.save_error });
     if (response.status === 'failed') updateTab(current.id, { busy: false, error: response.error || 'Query failed' });
     else if (response.query_id) acceptResult(current.id, await boundApi.fetch(current.id, 0, ctx.resultDisplay().rowSizing === 'fixed' ? ctx.resultDisplay().fixedPageSize : 100, ctx.grid()));
     else updateTab(current.id, { busy: false });
     if (kind === 'save') {
-      if (response.save_error) updateTab(current.id, { error: response.save_error });
-      else if (response.saved_query_id && response.saved_query_url) acceptSaved(current.id, { saved_query_id: response.saved_query_id, saved_query_url: response.saved_query_url, kind: 'query', sql: current.sql, ...(name ? { name } : {}) });
+      if (!response.save_error && response.saved_query_id && response.saved_query_url) acceptSaved(current.id, { saved_query_id: response.saved_query_id, saved_query_url: response.saved_query_url, kind: 'query', sql: current.sql, ...(name ? { name } : {}) });
       await refreshSaved();
     }
     reportLogWarning(current.id, response.query_log_error);

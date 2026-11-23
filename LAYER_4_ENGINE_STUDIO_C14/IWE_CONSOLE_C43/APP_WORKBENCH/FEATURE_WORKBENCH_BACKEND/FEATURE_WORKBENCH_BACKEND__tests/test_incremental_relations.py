@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.incremental_relations import materialize_delta  # noqa: E402
 from KERNEL_MIXER_C59.graph_store import graph_delta_state, graph_state  # noqa: E402
-from KERNEL_MIXER_C59.relation_registry import compile_registry  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import compile_registry  # noqa: E402
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__tests.test_relations import atom, declarations  # noqa: E402
 
 

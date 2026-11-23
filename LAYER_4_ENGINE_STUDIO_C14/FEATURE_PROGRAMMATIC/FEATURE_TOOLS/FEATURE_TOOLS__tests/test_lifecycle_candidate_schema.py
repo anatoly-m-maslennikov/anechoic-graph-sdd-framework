@@ -7,8 +7,8 @@ import unittest
 
 TOOLS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS))
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.legacy_candidate_schema__pub import compile_candidate_schema, load_candidate_schema  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.role_form_schema import RoleFormSchema  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.FEATURE_TOOLS__tests__shared import compile_candidate_schema, load_candidate_schema  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import RoleFormSchema  # noqa: E402
 
 CORE = Path(__file__).parent / 'assets/lifecycle_schema_declarations'
 
@@ -136,7 +136,7 @@ declare_entity(entity_name="Requirement", entity_class=Requirement,
             (root / 'archive').mkdir()
             (root / 'archive/CA-R-3.md').write_text('invalid')
             output = Path(directory) / 'output/schema.json'
-            subprocess.run([sys.executable, "-B", str(Path(__file__).with_name('legacy_candidate_schema__pub.py')),
+            subprocess.run([sys.executable, "-B", str(Path(__file__).with_name('FEATURE_TOOLS__tests__shared.py')),
                             '--model-root', str(root), '--output', str(output)], check=True)
             asset = json.loads(output.read_text())
             self.assertEqual([(atom_id, 1, f'{atom_id}.md') for atom_id in ('CA-R-1', *native_claims)],

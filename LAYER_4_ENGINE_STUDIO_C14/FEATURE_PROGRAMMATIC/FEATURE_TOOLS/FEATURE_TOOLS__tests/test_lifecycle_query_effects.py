@@ -12,7 +12,7 @@ import unittest
 TOOLS = Path(__file__).resolve().parents[1]
 ROOT = TOOLS.parents[2]
 sys.path.insert(0, str(TOOLS))
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE import directory_effect, effects, source  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import directory_effect_module as directory_effect, effects_module as effects, source_module as source  # noqa: E402
 
 
 class Reader:

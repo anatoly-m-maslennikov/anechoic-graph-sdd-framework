@@ -31,6 +31,12 @@ at the same absolute path, read-only. There is no `/project` remapping, Docker
 socket, or home-directory volume. This is an application boundary, not
 operating-system or adversarial isolation.
 
+The named volume `anechoic-framework-db` mounts at `/var/lib/anechoic` inside
+the container. The runtime rebuilds its database when the delivered Active
+Meta-Ontology or Meta-Methodology Atoms change. Workbench SQL can read those
+Atoms through `framework.atoms`. Project Atoms and Journal data remain scoped
+to the Project.
+
 ## Dry-run and explicit start
 
 The launcher requires an explicit immutable image reference (`sha256:` followed

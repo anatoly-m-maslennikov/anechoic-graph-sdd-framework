@@ -1,19 +1,21 @@
 import http.client
-from hashlib import sha256
 import importlib
-import sys
 import json
-from pathlib import Path
 import socket
 import subprocess
+import sys
 import tempfile
 import threading
 import unittest
+from hashlib import sha256
+from pathlib import Path
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 module = importlib.import_module("ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__shared")
-from ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__tests.ORCHESTRATOR_beta_C68__tests__shared import project
+from ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__tests.ORCHESTRATOR_beta_C68__tests__shared import (
+    project,
+)
 
 
 class UnixConnection(http.client.HTTPConnection):
@@ -79,6 +81,7 @@ class OrchestratorTests(unittest.TestCase):
                        "manifest_sha256": "a" * 64, "project_prefix": "AN"}
             jobs = module.GenerationJobs("test", binding, str(root / "kernel.sock"))
             sent = []
+            worker_requests = []
             class Worker:
                 returncode = 0
                 def __init__(self, command, **kwargs):
@@ -86,7 +89,8 @@ class OrchestratorTests(unittest.TestCase):
                     (output / "model.json").write_bytes(b'{"line":"a"}\r\n')
                     (output / "structure.json").write_bytes(b'{}')
                 def communicate(self, value=None, timeout=None):
-                    return json.dumps({"snapshot": {}, "receipt": {}, "graph": None}), ""
+                    worker_requests.append(json.loads(value))
+                    return json.dumps({"snapshot": {}, "receipt": {}, "graph": None, "reuse": None}), ""
             class Connection:
                 def __init__(self, path):
                     pass
@@ -104,9 +108,12 @@ class OrchestratorTests(unittest.TestCase):
                 jobs._generate()
             self.assertEqual("failed", jobs.status()["latest"]["state"])
             self.assertIn("broken", jobs.status()["latest"]["message"])
-            with patch.object(module.subprocess, "Popen", Worker), patch.object(module, "UnixConnection", Connection):
+            with patch.object(module.subprocess, "Popen", Worker), patch(
+                    "ORCHESTRATOR_beta_C68.generation.UnixConnection", Connection):
                 jobs._generate()
             self.assertEqual("g1", jobs.status()["latest"]["generation"])
+            self.assertEqual("full", jobs.status()["latest"]["kind"])
+            self.assertEqual([{"binding": binding, "reuse": None}], worker_requests)
             self.assertEqual(("PUT", "/generation"), sent[0][:2])
             self.assertEqual('{"line":"a"}\r\n', sent[0][2]["model"])
             self.assertEqual({"instance_id", "snapshot", "receipt", "graph", "model", "structure"}, set(sent[0][2]))
@@ -134,6 +141,47 @@ class OrchestratorTests(unittest.TestCase):
         with patch.object(module.subprocess, "run", side_effect=subprocess.TimeoutExpired("worker", 1)):
             self.assertEqual(504, jobs.build(request)[0])
         self.assertEqual("worker_timeout", jobs.status()["latest"]["code"])
+
+    def test_ticket_delta_requires_every_event_to_be_a_bounded_ticket_file_mutation(self):
+        root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
+        control = root / "_anechoic_fixture"
+        control.mkdir()
+        binding = {"root": str(root), "control_root": control.name, "project_prefix": "AN"}
+        old = control / "__TICKETS" / "AN-T-1--original.md"
+        new = control / "001_TICKETS" / "AN-T-1--next.md"
+
+        def event(path, destination=None, kind="modified", directory=False):
+            return {"old_path": str(path), "new_path": str(destination) if destination is not None else None,
+                    "event_type": kind, "is_directory": directory}
+
+        classify = module.ticket_delta_paths
+        expected = sorted([old.relative_to(root).as_posix(), new.relative_to(root).as_posix()])
+        self.assertEqual(expected, classify(binding, [event(old, new, "moved"), event(new)]))
+        for other in ({}, event(root / "AN-T-5--external.md"), event(old, directory=True),
+                      event(old, kind="moved"), event(old, new), event(old.with_suffix(".py")),
+                      event(control / "__TKT" / "README.md"), event(control / "AN-T-5--other.md")):
+            with self.subTest(event=other):
+                self.assertIsNone(classify(binding, [event(old), other]))
+        paths = [event(old.with_name(f"AN-T-{index}--task.md")) for index in range(1025)]
+        self.assertEqual(500, len(classify(binding, paths[:500])))
+        self.assertEqual(1024, len(classify(binding, paths[:1024])))
+        self.assertIsNone(classify(binding, paths))
+        link = control / "__TKT" / "AN-T-2--symbolic.md"
+        link.parent.mkdir()
+        link.symlink_to(new)
+        self.assertIsNone(classify(binding, [event(link)]))
+
+    def test_worker_delta_must_echo_the_base_and_both_path_parts(self):
+        path = "_anechoic_fixture/__TKT/AN-T-1--task.md"
+        reuse = {"base_generation": "old"}
+        result = {"base_generation": "old", "paths": [["_anechoic_fixture/__TKT", "AN-T-1--task.md"]],
+                  "snapshot": {}, "snapshot_sha256": "ignored"}
+        self.assertEqual(result, module.parse_worker_result(json.dumps(result), reuse, [path]))
+        for invalid in (result | {"base_generation": "new"}, result | {"paths": [path]}):
+            with self.assertRaises(ValueError):
+                module.parse_worker_result(json.dumps(invalid), reuse, [path])
+        with self.assertRaises(ValueError):
+            module.parse_worker_result(json.dumps(result), reuse, None)
 
 
 if __name__ == "__main__":

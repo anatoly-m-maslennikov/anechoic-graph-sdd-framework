@@ -1,7 +1,7 @@
 """Pure, best-effort carrier placement expectations from cached source rows."""
 from pathlib import Path, PurePosixPath
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import content_lines, direct_markdown, source_markdown
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import content_lines, direct_markdown, source_markdown
 
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_read_view  # noqa: E402

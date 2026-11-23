@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import subject_notation__pub as notation
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    Name as _subject_Name,
+    Path as _subject_Path,
+    RelationChain as _subject_RelationChain,
+    render_subject as _subject_render_subject,
+)
 
 Record = dict[str, Any]
 
@@ -19,7 +24,7 @@ def _relation_name(value: str) -> str:
 
 
 def _component_target(
-    expression: notation.Path | notation.RelationChain,
+    expression: _subject_Path | _subject_RelationChain,
 ) -> tuple[str, str] | None:
     """Admit an explicit CFEL component target without making a tree edge.
 
@@ -30,33 +35,33 @@ def _component_target(
     """
 
     expression = namespace_local_expression(expression) or expression
-    if isinstance(expression, notation.Path):
+    if isinstance(expression, _subject_Path):
         return (
-            ("component", notation.render_subject(expression))
-            if isinstance(expression.head, notation.Name) and expression.head.value in _COMPONENT_ROOTS
+            ("component", _subject_render_subject(expression))
+            if isinstance(expression.head, _subject_Name) and expression.head.value in _COMPONENT_ROOTS
             else None
         )
     first = expression.endpoints[0]
     if (
-        isinstance(first.head, notation.Name)
+        isinstance(first.head, _subject_Name)
         and first.head.value == "CFEL"
         and len(expression.endpoints) == 2 and len(expression.links) == 1
         and expression.links[0].operator == "<+" and expression.links[0].relation_type is None
-        and isinstance(expression.endpoints[1], notation.Path)
+        and isinstance(expression.endpoints[1], _subject_Path)
     ):
         right = expression.endpoints[1]
         kind = _target_kind(right)
         if kind == "primary_node":
-            return "component", notation.render_subject(right)
+            return "component", _subject_render_subject(right)
         if kind in {"property", "instance"}:
             return kind, _model_target(right)
     return None
 
 
-def _target(expression: notation.Path | notation.RelationChain) -> tuple[str, str] | None:
+def _target(expression: _subject_Path | _subject_RelationChain) -> tuple[str, str] | None:
     """Map an exact active Subject to one already-declarable target category."""
 
-    if (isinstance(expression, notation.Path) and isinstance(expression.head, notation.Name)
+    if (isinstance(expression, _subject_Path) and isinstance(expression.head, _subject_Name)
             and expression.head.value == "ANECHOIC_MODEL" and not expression.steps):
         return "namespace", expression.head.value
     expression = namespace_local_expression(expression) or expression
@@ -69,7 +74,7 @@ def _target(expression: notation.Path | notation.RelationChain) -> tuple[str, st
     component = _component_target(expression)
     if component is not None:
         return component
-    if isinstance(expression, notation.Path):
+    if isinstance(expression, _subject_Path):
         kind = _target_kind(expression)
         if kind in {"primary_node", "property", "instance"}:
             return kind, _model_target(expression)

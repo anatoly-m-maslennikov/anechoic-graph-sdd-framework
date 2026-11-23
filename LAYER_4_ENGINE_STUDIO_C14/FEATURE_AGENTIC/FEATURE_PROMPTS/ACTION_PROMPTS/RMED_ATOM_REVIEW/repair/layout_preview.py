@@ -11,7 +11,7 @@ import hashlib
 import re
 from typing import Any
 
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import metadata
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import metadata
 
 
 def _reject(reason: str) -> dict[str, Any]:

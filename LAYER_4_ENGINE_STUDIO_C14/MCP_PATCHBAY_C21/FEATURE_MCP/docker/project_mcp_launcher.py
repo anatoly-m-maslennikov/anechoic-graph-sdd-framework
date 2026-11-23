@@ -7,9 +7,9 @@ from pathlib import Path
 import time
 from typing import Any, Mapping
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import select_runtime_project as resolve_project
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import select_runtime_project as resolve_project
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images import ImageError
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import ImageError
 
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_launcher_common import (

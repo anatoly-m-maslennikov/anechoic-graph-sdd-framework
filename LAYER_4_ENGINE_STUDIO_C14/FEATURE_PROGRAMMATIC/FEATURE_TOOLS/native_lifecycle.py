@@ -1,6 +1,5 @@
 """Run native Atom Lifecycle actions against an admitted Project capture."""
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.common import InputError, SourceChanged, result
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_workflow_definition import NativeWorkflowDefinitionError, STATUS_SPECIFICATIONS
 
 
@@ -12,6 +11,8 @@ LIFECYCLE_TOOLS = frozenset({
 
 
 def _lifecycle_target(name, arguments):
+    from .ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import InputError
+
     field = "sourceCurrent" if name in {"atom_lifecycle_create_draft", "atom_lifecycle_update"} else "target"
     if name == "atom_lifecycle_update" and field not in arguments:
         raise InputError(field, "Supply one Current carrier to revise.")
@@ -26,9 +27,9 @@ def _lifecycle_target(name, arguments):
 
 def _dispatch_lifecycle(selection, name, arguments, rows, structure_snapshot, *,
                         previous_capture, ticket_labels, validate_project_spec):
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_asset import create_asset
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_draft import create_draft, promote_draft
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_update import archive_ticket, change_ticket_status, direct_update
+    from .ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import (
+        archive_ticket, change_ticket_status, create_asset, create_draft, direct_update, promote_draft,
+    )
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_workflow_definition import bind_status_specifications
 
     if name == "atom_lifecycle_create_asset":
@@ -52,7 +53,7 @@ def _dispatch_lifecycle(selection, name, arguments, rows, structure_snapshot, *,
 
 
 def _change_spec_lifecycle(selection, name, arguments, rows, structure_snapshot, ref, validate_project_spec):
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_update import archive_spec_draft, change_spec_status
+    from .ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import InputError, archive_spec_draft, change_spec_status
 
     if name == "atom_lifecycle_archive":
         if ref.endswith("-draft"):
@@ -68,6 +69,8 @@ def _change_spec_lifecycle(selection, name, arguments, rows, structure_snapshot,
 def execute_native_lifecycle(selection, name, arguments, capture, read_structure, *,
                              previous_capture, ticket_labels, validate_project_spec):
     """Return the native outcome and any file effects for the caller to project."""
+    from .ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import InputError, SourceChanged, result
+
     if name not in LIFECYCLE_TOOLS:
         raise ValueError("The native Atom Lifecycle Tool is unavailable")
     try:

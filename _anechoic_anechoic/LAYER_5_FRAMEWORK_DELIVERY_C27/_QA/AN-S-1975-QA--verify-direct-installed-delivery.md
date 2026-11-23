@@ -8,10 +8,9 @@ context:
   lens: QA
 state:
   status: "active"
-  version: 21
-  updated_at: "2026-11-22T06:18:53.795333+00:00"
+  version: 22
+  updated_at: "2026-11-23T01:48:06.186370+00:00"
 ---
-
 ## Summary
 
 Verify direct installed delivery
@@ -37,3 +36,5 @@ Use independent synthetic Projects and Docker observations to check: a single C1
 
 
 Verify that the selected Version remains mutable before the authorized release event succeeds and its exact candidate outcome is recorded. Readiness, implementation completion and candidate naming alone do not freeze it. A failed or unrecorded release does not count as the successful release event.
+
+Verify QA and Local Release from the native Project tree with both legacy trees absent. Keep the retained legacy trees in Git as read-only archives. Preserve the 169 held Drafts and `CA-R-2728@8` under the migration record AN-T-2798.

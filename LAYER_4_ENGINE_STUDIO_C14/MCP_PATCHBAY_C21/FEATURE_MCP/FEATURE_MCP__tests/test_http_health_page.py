@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 from .health_fixture import HealthHTTPFixture
 from MCP_PATCHBAY_C21.FEATURE_MCP.health_page import render_health_page
-from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import HEALTH_PATH
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import HEALTH_PATH
 
 
 class HTTPHealthPageTests(HealthHTTPFixture):

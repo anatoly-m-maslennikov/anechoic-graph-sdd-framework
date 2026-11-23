@@ -8,7 +8,7 @@ import sys
 
 import yaml
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_syntax__pub import UniqueSafeLoader, check_yaml_resources  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import UniqueSafeLoader, check_yaml_resources  # noqa: E402
 
 PILOT = Path('LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH')
 EXCLUDED = {'FEATURE_WORKBENCH_CODEX', 'FEATURE_CODEX_EXTENSION', 'node_modules',

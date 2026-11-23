@@ -24,9 +24,9 @@ REPOSITORY_ROOT = REVIEW_ROOT.parents[4]
 FIXTURE_ROOT = REVIEW_ROOT / "RMED_ATOM_REVIEW__tests" / "assets" / "fixtures"
 CASE_FILE = HERE / "assets" / "fixtures" / "rehearsal-cases.json"
 
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import body_sections, metadata, prepare_context  # noqa: E402
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.evaluation_contract import GROUPS  # noqa: E402
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_evidence__shared import ReviewContext  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import body_sections, metadata, prepare_context  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import GROUPS  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import ReviewContext  # noqa: E402
 
 
 REPAIR_AUTHORITY_IDS = (

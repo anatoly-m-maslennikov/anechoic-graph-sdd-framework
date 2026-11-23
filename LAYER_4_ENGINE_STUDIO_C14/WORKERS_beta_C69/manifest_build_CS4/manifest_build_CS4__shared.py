@@ -1,23 +1,36 @@
 """Build a pinned Model and Structure generation without activating it."""
 import argparse
-from hashlib import sha256
 import json
 import os
-from pathlib import Path, PurePosixPath
 import re
-import subprocess
 import stat
+import subprocess
 import sys
 import tempfile
-
+import time
+from hashlib import sha256
+from pathlib import Path, PurePosixPath
 
 ENGINE = Path(__file__).resolve().parents[2]
 COMPILER = ("FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR."
             "manifest_compiler_CS1.compiler")
+_COMPILER_ENTRY = Path(*COMPILER.split(".")).with_suffix(".py")
+_COMPILER_SOURCE_DIRECTORIES = (
+    *_COMPILER_ENTRY.parents[:-1],
+    Path("FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_MODEL_VALIDATION"),
+    Path("FEATURE_PROGRAMMATIC/FEATURE_FORMAL_MODEL_ENGINE"),
+    Path("FEATURE_PROGRAMMATIC/FEATURE_TOOLS"),
+    Path("FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30"),
+)
 FIELDS = {"root", "control_root", "manifest_path", "manifest_sha256", "project_prefix"}
+_COMPONENT_DIRECTORY = re.compile(r"(?!__).+_C[0-9]+$")
+_SPEC_CANDIDATE = re.compile(r"[A-Z]+-S-")
+_REVIEWED_MODEL = ENGINE / "FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_GENERATED_MODEL_C52"
+_REVIEWED_CLAIMS = ("native-graph-claims.json", "native-spec-template-claims.json")
+_FILE_LIMIT = 64 * 1024 * 1024
 
 
-def validate(binding, output):
+def _validate_binding(binding):
     if not isinstance(binding, dict) or set(binding) != FIELDS or not all(isinstance(v, str) for v in binding.values()):
         raise ValueError("Invalid binding fields")
     root = Path(binding["root"])
@@ -32,41 +45,169 @@ def validate(binding, output):
             or not re.fullmatch(r"[0-9a-f]{64}", binding["manifest_sha256"])
             or not re.fullmatch(r"[A-Z][A-Z0-9]*", binding["project_prefix"])):
         raise ValueError("Invalid binding identity or path")
+
+
+def validate(binding, output):
+    _validate_binding(binding)
+    control = Path(binding["root"]) / binding["control_root"]
     if (not output.is_absolute() or output.is_symlink() or not output.is_dir()
             or output.resolve(strict=True) != output or any(output.iterdir())):
         raise ValueError("Output must be an existing empty canonical directory")
-    if output == root / binding["control_root"] or root / binding["control_root"] in output.parents:
+    if output == control or control in output.parents:
         raise ValueError("Output must be outside the Project control root")
 
 
-def verify_pin(binding):
+def _bound_manifest(binding):
     control = Path(binding["root"]) / binding["control_root"]
     manifest = Path(binding["root"]) / binding["manifest_path"]
     if not manifest.exists() and len(PurePosixPath(binding["manifest_path"]).parts) == 1:
         manifest = control / binding["manifest_path"]
+    return manifest
+
+
+def _open_path(path, *, directory=False):
     if any(part == ".env" or part.startswith(".env.") or part.endswith(".env")
-           or part in {".ssh", ".aws", ".gnupg"} for part in manifest.parts):
+           or part in {".ssh", ".aws", ".gnupg"} for part in path.parts):
         raise ValueError("Protected Manifest path")
     descriptor = os.open("/", os.O_RDONLY | os.O_DIRECTORY)
     try:
-        for part in manifest.parts[1:-1]:
+        for part in path.parts[1:-1]:
             child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=descriptor)
             os.close(descriptor)
             descriptor = child
-        file_descriptor = os.open(manifest.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=descriptor)
+        flags = os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK
+        return os.open(path.name, flags | (os.O_DIRECTORY if directory else 0), dir_fd=descriptor)
     finally:
         os.close(descriptor)
-    with os.fdopen(file_descriptor, "rb") as stream:
-        before = os.fstat(stream.fileno())
-        if not stat.S_ISREG(before.st_mode) or before.st_size > 64 * 1024 * 1024:
+
+
+def _read_digest(path, limit):
+    descriptor = _open_path(path)
+    try:
+        before = os.fstat(descriptor)
+        if not stat.S_ISREG(before.st_mode) or before.st_size > limit:
             raise ValueError("Invalid Manifest file")
-        data = stream.read(before.st_size)
-        after = os.fstat(stream.fileno())
-        version = lambda info: (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
-        if version(before) != version(after):
-            raise ValueError("Project Manifest changed during read")
-    if sha256(data).hexdigest() != binding["manifest_sha256"]:
+        with os.fdopen(descriptor, "rb", closefd=False) as stream:
+            data = stream.read(before.st_size)
+        after = os.fstat(descriptor)
+    finally:
+        os.close(descriptor)
+    version = (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns, before.st_ctime_ns)
+    if len(data) != before.st_size or version != (after.st_dev, after.st_ino, after.st_size,
+                                                   after.st_mtime_ns, after.st_ctime_ns):
+        raise ValueError("Project Manifest changed during read")
+    return sha256(data).hexdigest(), len(data), version
+
+
+def verify_pin(binding):
+    digest, _, _ = _read_digest(_bound_manifest(binding), _FILE_LIMIT)
+    if digest != binding["manifest_sha256"]:
         raise ValueError("Project Manifest binding changed")
+
+
+def _directory_candidates(directory, consume):
+    descriptor = _open_path(directory, directory=True)
+    try:
+        names = []
+        with os.scandir(descriptor) as entries:
+            for entry in entries:
+                consume()
+                if entry.name.endswith((".md", ".py")) or _COMPONENT_DIRECTORY.fullmatch(entry.name):
+                    names.append(entry.name)
+        return names
+    finally:
+        os.close(descriptor)
+
+
+def _compiler_sources(inventory):
+    yield ENGINE / _COMPILER_ENTRY
+    for relative in _COMPILER_SOURCE_DIRECTORIES:
+        directory = ENGINE / relative
+        yield from (directory / name for name in inventory(directory)
+                    if name.endswith(".py") and not name.startswith("test_"))
+
+
+def _manifest_candidates(root, control, checkpoint):
+    inventories = {}
+    remaining = 1_000_000
+
+    def consume():
+        nonlocal remaining
+        checkpoint()
+        remaining -= 1
+        if remaining < 0:
+            raise ValueError("Manifest input inventory exceeds host ceiling")
+
+    def inventory(directory, *, required=False):
+        if directory not in inventories:
+            checkpoint()
+            try:
+                inventories[directory] = _directory_candidates(directory, consume)
+            except FileNotFoundError:
+                if required:
+                    raise
+                inventories[directory] = None
+        return inventories[directory] or ()
+
+    # Mirror select_manifest_carriers, read_active_model_sources and _walk_structure.
+    project = {root / name for name in inventory(root, required=True)
+               if name.endswith(".md") and "-PROJECT_MANIFEST--" in name}
+    if not project:
+        project = {control / name for name in inventory(control, required=True)
+                   if Path(name).suffix == ".md"}
+    files = set(project)
+    pending = [control]
+    while pending:
+        directory = pending.pop()
+        names = inventory(directory, required=True)
+        pending.extend(directory / name for name in names if _COMPONENT_DIRECTORY.fullmatch(name))
+        for location, carriers in ((directory, names), (directory / "_SPEC", inventory(directory / "_SPEC"))):
+            files.update(location / name for name in carriers
+                         if name.endswith(".md") and _SPEC_CANDIDATE.match(name))
+    ontology = control / "LAYER_1_META_ONTOLOGY_C9"
+    for directory in (ontology, ontology / "_SPEC", control / "__PROJECT_CONFIG/CUSTOM_MODEL",
+                      control / "002_PROJECT_CONFIG/CUSTOM_MODEL"):
+        files.update(directory / name for name in inventory(directory) if name.endswith(".md"))
+    files.update(_compiler_sources(inventory))
+    files.update(_REVIEWED_MODEL / name for name in _REVIEWED_CLAIMS)
+    directories = sorted(str(path) for path, names in inventories.items() if names is not None)
+    return project, directories, sorted(files)
+
+
+def manifest_input_signature(binding) -> str | None:
+    """Witness unchanged compiler inputs or leave admission to a fresh compile."""
+    deadline = time.monotonic() + 5
+
+    def checkpoint():
+        if time.monotonic() >= deadline:
+            raise TimeoutError("Manifest input witness timed out")
+
+    def sample():
+        project, directories, files = _manifest_candidates(root, control, checkpoint)
+        pinned = _bound_manifest(binding)
+        if pinned not in project:
+            raise ValueError("Pinned Project Manifest is not a compiler candidate")
+        remaining = 1024 * 1024 * 1024
+        evidence = []
+        for path in files:
+            checkpoint()
+            digest, size, version = _read_digest(path, min(_FILE_LIMIT, remaining))
+            if path == pinned and digest != binding["manifest_sha256"]:
+                raise ValueError("Project Manifest binding changed")
+            remaining -= size
+            evidence.append((str(path), digest, version))
+        checkpoint()
+        payload = json.dumps((binding, directories, evidence), sort_keys=True, separators=(",", ":"))
+        return sha256(payload.encode()).hexdigest()
+
+    try:
+        _validate_binding(binding)
+        root = Path(binding["root"])
+        control = root / binding["control_root"]
+        before = sample()
+        return before if before == sample() else None
+    except (OSError, RuntimeError, TypeError, ValueError):
+        return None
 
 
 def compile_generation(binding, stage):
@@ -75,7 +216,7 @@ def compile_generation(binding, stage):
     result = subprocess.run(
         [sys.executable, "-B", "-P", "-m", COMPILER, binding["root"], binding["control_root"],
          binding["manifest_sha256"], str(stage), "--build-model", "--attest-model"],
-        cwd=ENGINE, env=env, capture_output=True, timeout=90,
+        cwd=ENGINE, env=env, capture_output=True, check=False,
     )
     if result.returncode:
         raise ValueError("Manifest compiler failed: " + result.stderr.decode(errors="replace")[-2048:])

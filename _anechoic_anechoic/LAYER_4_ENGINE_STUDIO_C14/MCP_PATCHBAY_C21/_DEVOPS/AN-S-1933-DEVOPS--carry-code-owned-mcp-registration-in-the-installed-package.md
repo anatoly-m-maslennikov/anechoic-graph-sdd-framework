@@ -8,8 +8,8 @@ context:
   lens: DevOps
 state:
   status: "active"
-  version: 7
-  updated_at: "2026-11-22T08:47:49.270416+00:00"
+  version: 8
+  updated_at: "2026-11-23T01:48:06.181628+00:00"
 ---
 ## Summary
 
@@ -19,10 +19,8 @@ Carry code-owned MCP registration in the installed package
 
 ### Prose Claim
 
-The Workbench Backend package carries tool_providers.json as its code-owned provider inventory, generate_tool_registry.py as generator, and tool_registry.json as generated runtime registration asset. The generator accepts --package-root, reads inventory and installed provider code, and never reads Project Atom carriers or executes a capability; equivalent installed inputs produce equivalent bytes using canonical descriptors, models, and adapters.
+Backend carries the code-owned provider inventory and generated registration asset. Generate the asset from installed provider descriptors and canonical models under AN-S-1956. MCP maps Backend's enabled JSON catalog; it does not generate or load that asset.
 
-In refresh mode, generate the asset in the staged package before final inventory verification and image build. In existing mode, copy the checkout asset unchanged. Include its bytes in the package and image identities. A missing asset or failed refresh stops delivery before startup. Direct source development uses the same asset/generator. Do not add a daemon, watcher, Workflow scheduler, or Atom fallback.
+In refresh mode, generate and verify the asset before final package and image identity. In existing mode, carry the matching checkout asset unchanged and verify it before startup. Failed generation, verification or unresolved common descriptor frontier stops delivery before startup.
 
-Inventory carries provider keys, implementation/factory symbols, descriptor factories, and explicit global mcp_blacklist; generated data carries resolved provider/Tool registration and exclusions. Keep these as configuration files, not a fixed Python Tool-name list. The installed adapter distribution keeps its version-bound interface declaration at the existing MCP Delivery location; use canonical descriptor/model symbols, preserve protocol revision/capability/result meanings, and keep declarations, schemas, and examples credential-free. Registration/schema generation grants no effect permission.
-
-The version-bound interface declaration carries the supported protocol revision and capabilities, admitted progress/cancellation/correlation/resource-bound fields, and existing result meanings. Derive its descriptor schema only from installed canonical model symbols; accept no caller-supplied descriptor schema. Registration, schema derivation, projection and refresh never invoke a capability, start a Workflow or infer approval. Keep declarations, schemas and examples credential-free.
+Keep the protocol interface declaration version-bound, including supported capabilities and result meanings. Derive schemas from canonical models; keep declarations, schemas and examples credential-free. Registration and schema generation do not execute capabilities or grant effect permission.

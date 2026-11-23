@@ -7,8 +7,8 @@ TOOLS = Path(__file__).resolve().parents[1]
 ENGINE = TOOLS.parents[1]
 sys.path[:0] = [str(TOOLS), str(ENGINE / 'IWE_CONSOLE_C43')]
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_source_rows__pub import capture_native
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_draft import create_draft, promote_draft
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import create_draft, promote_draft
 
 
 
@@ -18,7 +18,7 @@ import FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.test_native_lifec
 class NativeRevisionCarrierTests(fixtures.NativeRevisionCarrierTests, unittest.TestCase):
     def test_spec_retry_after_cleanup_failure(self):
         from unittest.mock import patch
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE import effects
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import effects_module as effects
         self.spec('UNIT_C9/__DES/AN-S-4-DES--example.md', 'AN-S-4')
         output = create_draft(self.selection, {'sourceCurrent': {'ref_id': 'AN-S-4', 'version': 1}},
                               current_rows=capture_native(self.selection).atoms)

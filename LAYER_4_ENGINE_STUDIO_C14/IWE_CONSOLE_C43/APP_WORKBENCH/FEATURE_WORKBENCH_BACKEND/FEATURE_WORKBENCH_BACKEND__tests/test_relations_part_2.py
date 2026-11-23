@@ -66,7 +66,7 @@ class RelationTests(unittest.TestCase):
         self.assertEqual({"CA-P-1.md", "CA-P-2.md", "duplicate.md"}, set(next_cache))
 
     def test_registry_is_calculated_once_per_materialization(self):
-        import KERNEL_MIXER_C59.relations as relations
+        from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import relations_module as relations
 
         original = relations.compile_relation_registry
         calls = 0
@@ -84,7 +84,7 @@ class RelationTests(unittest.TestCase):
         self.assertEqual(1, calls)
 
     def test_reuses_direct_facts_for_unchanged_rows(self):
-        import KERNEL_MIXER_C59.relations as relations
+        from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import relations_module as relations
 
         metadata = declarations()
         epic = atom("CA-P-1")
@@ -126,7 +126,7 @@ class RelationTests(unittest.TestCase):
         self.assertEqual("CONTAINS", by_ref["CA-P-3"]["relation_edges_json"][0]["relation_type"])
 
     def test_scope_alias_or_registry_change_reparses_facts(self):
-        import KERNEL_MIXER_C59.relations as relations
+        from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import relations_module as relations
 
         source = atom("CA-P-1", relation={"is_contained_by": {"scope_unit": "CA-SU-1"}})
         first_scope = {"name": "FIRST", "scope_unit_id": "CA-SU-1", "parent_name": None,

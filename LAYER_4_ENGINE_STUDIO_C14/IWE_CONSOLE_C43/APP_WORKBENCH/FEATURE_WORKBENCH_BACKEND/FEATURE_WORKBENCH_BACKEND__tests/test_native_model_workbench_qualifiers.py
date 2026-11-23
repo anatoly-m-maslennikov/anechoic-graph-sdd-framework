@@ -3,7 +3,7 @@ import unittest
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_native_model_claim
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import DeclarationSource
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workbench_schema_asset import compile_status_groups
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import compile_status_groups
 from KERNEL_MIXER_C59.relation_declarations import relation_declaration
 
 

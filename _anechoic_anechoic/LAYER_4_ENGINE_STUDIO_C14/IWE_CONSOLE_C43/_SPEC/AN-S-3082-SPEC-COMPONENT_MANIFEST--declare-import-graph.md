@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 18
-  updated_at: '2026-11-22T16:44:45.347890+00:00'
+  version: 23
+  updated_at: '2026-11-22T23:09:02.457260+00:00'
 ---
 
 ## Summary
@@ -32,10 +32,14 @@ declare_entity(
         boundaries={
             'code': {
                 'imports': {'only': ['ADAPTERS_C30__shared.parse_structure', 'ADAPTERS_C30__shared.realization_component_paths',
-                                     'realization_ownership__pub.build_code_access_ownership']},
+                                     'ADAPTERS_C30__shared.formal_claim_fences',
+                                     'realization_ownership__pub.build_code_access_ownership',
+                                     'FEATURE_MODEL_VALIDATION__shared.check_code_access']},
                 'exports': {
                     'import_graph__shared': None,
-                    'state_effects__shared.analyze_state': {'shared': ['C59']},
+                    'import_graph__shared.analyze_state': {'shared': ['C59']},
+                    'import_graph__shared.run_graph_build': {'shared': ['C69']},
+                    'import_graph__shared.graph_input_signature': {'shared': ['C69', 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_IMPORT_GRAPH_C61/FEATURE_IMPORT_GRAPH_C61__tests']},
                     'import_graph__shared.ImportSite': {'shared': ['C59', 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
                     'import_graph__shared.Source': {'shared': ['C59', 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
                     'import_graph__shared.capture': {'shared': ['C59', 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_IMPORT_GRAPH_C61/FEATURE_IMPORT_GRAPH_C61__tests']},
@@ -60,11 +64,22 @@ declare_entity(
                                                    'edges',
                                                    'test_edges',
                                                    'read_issues',
-                                                   'state_effect_findings']},
+                                                   'state_effect_findings',
+                                                   'code_access_findings']},
                            'import_ownership': {'transport': 'cli', 'runner': 'managed_python',
                                                'module': 'LAYER_4_ENGINE_STUDIO_C14.IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.import_ownership',
-                                               'arguments': ['<project-root>']}},
+                                               'arguments': ['<project-root>']},
+                           'workflow_spec': {'transport': 'cli', 'runner': 'managed_python',
+                                 'module': 'IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.workflow_spec',
+                                 'arguments': ['<solution-atom>', 'render or check <trace>'],
+                                 'output': 'Mermaid or a JSON flow check'}},
                 'client': [
+                    {'transport': 'cli', 'optional': True,
+                     'command': ['node', 'WORKFLOW_SPEC/compile.mjs'],
+                     'input': 'JSON statechart'},
+                    {'transport': 'cli', 'optional': True,
+                     'command': ['lean', '--run', 'WorkflowTrace.lean'],
+                     'input': 'JSON workflow model and trace'},
                     {'transport': 'cli', 'optional': True, 'command': ['lean', '--run', 'ActionEffects.lean'],
                      'input': 'JSON batch of ordered state cases on stdin'},
                     {'transport': 'cli', 'optional': True, 'command': ['node',

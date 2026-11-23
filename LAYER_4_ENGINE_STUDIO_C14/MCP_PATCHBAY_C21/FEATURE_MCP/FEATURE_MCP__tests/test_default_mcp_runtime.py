@@ -9,7 +9,7 @@ import unittest
 from unittest.mock import AsyncMock, patch
 
 MCP = Path(__file__).resolve().parents[1]
-from MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import ProjectAdmissionError  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import ProjectAdmissionError  # noqa: E402
 from types import SimpleNamespace
 from MCP_PATCHBAY_C21.FEATURE_MCP.http_server import create_app  # noqa: E402
 import MCP_PATCHBAY_C21.FEATURE_MCP.server as mcp_server  # noqa: E402

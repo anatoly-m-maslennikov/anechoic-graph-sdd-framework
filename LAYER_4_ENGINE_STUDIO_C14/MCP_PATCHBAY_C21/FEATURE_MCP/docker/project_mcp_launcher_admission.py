@@ -24,9 +24,13 @@ def _project_mount_is_exact(row: Mapping[str, Any], selection: object) -> bool:
     if "Mounts" not in row:
         return True
     mounts = row.get("Mounts")
-    if not isinstance(mounts, list) or len(mounts) != 1 or not isinstance(mounts[0], Mapping):
+    if not isinstance(mounts, list) or len(mounts) != 2 or not all(isinstance(m, Mapping) for m in mounts):
         return False
-    mount = mounts[0]
+    volume = [m for m in mounts if m.get("Type") == "volume" and m.get("Name") == "anechoic-framework-db"
+              and m.get("Destination") == "/var/lib/anechoic" and m.get("RW") is True]
+    if len(volume) != 1:
+        return False
+    mount = next(m for m in mounts if m is not volume[0])
     source = mount.get("Source")
     root = _selection_root(selection)
     return (

@@ -37,8 +37,10 @@ def reference(atom_id, state):
 
 
 def load_codecs():
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import native_carrier_header__pub, native_carrier_placement__pub
-    return native_carrier_header__pub, native_carrier_placement__pub
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+        canonical_native_header, native_header_view,
+    )
+    return native_header_view, canonical_native_header
 
 
 def timestamp_fallback(metadata, path):
@@ -70,7 +72,9 @@ def convert_tier(metadata, view, family, was_core, old_ref, recovery, rel):
     return tier, tier_source
 
 
-def adjust_status(metadata, view, family, old_status, placement, rel):
+def adjust_status(metadata, view, family, old_status, rel):
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_ticket_asset
+
     relations = metadata.get('relations', {})
     if 'REFERENCES' in relations:
         if 'IS_REFERENCE' in relations:
@@ -80,11 +84,15 @@ def adjust_status(metadata, view, family, old_status, placement, rel):
     if family == 'TKT' and old_status == 'active':
         state['status'] = 'in_queue'
     if (family == 'TKT' and old_status == 'done' and 'component' in view['context']['container']
-            and placement.native_ticket_asset(view['context'].get('template'))):
+            and native_ticket_asset(view['context'].get('template'))):
         state['status'] = 'complete'
 
 
-def carrier_destination(source, rel, new, view, family, tier, atom_id, old_ref, placement):
+def carrier_destination(source, rel, new, view, family, tier, atom_id, old_ref):
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+        COMPLETE_DIRECTORY, DRAFT_DIRECTORY, TICKET_DIRECTORY, native_ticket_asset,
+    )
+
     suffix = re.sub(r'^' + re.escape(atom_id) + r'(?:@\d+(?:-draft)?)?', '', rel.name)
     if suffix == rel.name or not suffix.endswith('.md'):
         raise ValueError(f'Unsupported carrier filename: {rel}')
@@ -93,43 +101,51 @@ def carrier_destination(source, rel, new, view, family, tier, atom_id, old_ref, 
     new = new.with_name(marker + suffix)
     container = view['context']['container']
     if status == 'complete' and family == 'TKT':
-        new = Path(placement.TICKET_DIRECTORY, 'ASSETS', placement.COMPLETE_DIRECTORY, new.name)
+        new = Path(TICKET_DIRECTORY, 'ASSETS', COMPLETE_DIRECTORY, new.name)
     elif rel.parts[0] == NESTED_CONTROL:
         if (family == 'TKT' and status == 'in_queue' and 'component' in container
-                and placement.native_ticket_asset(view['context'].get('template'))):
-            new = Path(placement.TICKET_DIRECTORY, 'ASSETS', new.name)
+                and native_ticket_asset(view['context'].get('template'))):
+            new = Path(TICKET_DIRECTORY, 'ASSETS', new.name)
         elif family == 'SPEC' and status == 'draft' and rel.parent.name == '000_draft':
             owner = Path(*rel.parts[1:-2])
             if owner.name.rpartition('_')[2] != container.get('component') or not (source / owner).is_dir():
                 raise ValueError(f'Unknown nested SPEC owner: {rel}')
-            new = owner / placement.DRAFT_DIRECTORY / new.name
+            new = owner / DRAFT_DIRECTORY / new.name
         else:
             raise ValueError(f'Unmapped nested native carrier: {rel}')
-    return spec_destination(rel, new, view, family, tier, placement)
+    return spec_destination(rel, new, view, family, tier)
 
 
-def spec_destination(rel, new, view, family, tier, placement):
+def spec_destination(rel, new, view, family, tier):
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+        READY_DIRECTORY, active_spec_directories, spec_lens_directories,
+    )
+
     status = view['state']['status'].lower()
     container = view['context']['container']
-    if family != 'SPEC' or 'component' not in container:
+    if family != 'SPEC' or 'component' not in container or status in {'draft', 'archived'}:
         return new
-    ready = status == 'ready' and new.parent.name != placement.READY_DIRECTORY
-    current = status not in {'draft', 'ready', 'archived'} and tier in {-1, 0, 1, 2}
-    if not (ready or current):
+    ready = status == 'ready'
+    if not ready and tier < -1:
         return new
-    lens = placement.spec_lens_directories(view['context']['lens'])
-    if lens and tuple(new.parent.parts[-len(lens):]) == lens:
-        new = Path(*new.parts[:-len(lens)-1]) / new.name
-    if ready:
-        return new.parent / placement.READY_DIRECTORY / new.name
-    if tier == -1:
+    lens = spec_lens_directories(view['context']['lens'])
+    if not ready and tier == -1:
         if container['component'] != 'C00':
             raise ValueError(f'Non-project Tier -1 requires review: {rel}')
         return Path(new.name)
-    return new
+    legacy_lens = (f'_{lens[0]}', *lens[1:])
+    owner = new.parent
+    if ready and owner.name == READY_DIRECTORY:
+        owner = owner.parent
+    for folder in (lens, legacy_lens, active_spec_directories(1, lens)):
+        if owner.parts[-len(folder):] == folder:
+            owner = owner.parents[len(folder) - 1]
+            break
+    folders = (READY_DIRECTORY,) if ready else active_spec_directories(tier, lens)
+    return owner.joinpath(*folders, new.name)
 
 
-def convert_carrier(source, path, rel, new, recovery, refs, header_codec, placement):
+def convert_carrier(source, path, rel, new, recovery, refs, header_codecs):
     raw = path.read_bytes()
     match = BOUNDARY.match(raw)
     if not match:
@@ -143,7 +159,8 @@ def convert_carrier(source, path, rel, new, recovery, refs, header_codec, placem
     was_core = structure.get('tier') == 'core'
     if was_core:
         structure['tier'] = 1
-    view = header_codec.native_header_view(metadata)
+    native_header_view, canonical_native_header = header_codecs
+    view = native_header_view(metadata)
     family = view.get('atom_family')
     if family is None:
         family = {'S': 'SPEC', 'T': 'TKT', 'C': 'PROJECT_CONFIG', 'P': 'PROJECT_CONFIG'}[view['identity']['atom_id'].split('-')[-2]]
@@ -155,9 +172,9 @@ def convert_carrier(source, path, rel, new, recovery, refs, header_codec, placem
         raise ValueError(f'Duplicate reference {old_ref}: {rel}, {refs[old_ref]}')
     refs[old_ref] = str(rel)
     tier, tier_source = convert_tier(metadata, view, family, was_core, old_ref, recovery, rel)
-    adjust_status(metadata, view, family, old_status, placement, rel)
-    header = header_codec.canonical_native_header(metadata)
-    new = carrier_destination(source, rel, new, view, family, tier, atom_id, old_ref, placement)
+    adjust_status(metadata, view, family, old_status, rel)
+    header = canonical_native_header(metadata)
+    new = carrier_destination(source, rel, new, view, family, tier, atom_id, old_ref)
     newline = b'\r\n' if raw.startswith(b'---\r\n') else b'\n'
     encoded = yaml.safe_dump(header, sort_keys=False, allow_unicode=True).encode().replace(b'\n', newline)
     result = b'---' + newline + encoded + b'---' + newline + raw[match.end():]
@@ -168,20 +185,24 @@ def convert_carrier(source, path, rel, new, recovery, refs, header_codec, placem
     return new, result, record
 
 
-def preflight(source, entries, recovery, header_codec, placement):
-    renames = {'__TKT': placement.TICKET_DIRECTORY, '_PMETA': placement.PROJECT_CONFIG_DIRECTORY,
-               '000_draft': placement.DRAFT_DIRECTORY, '099_archived': placement.ARCHIVE_DIRECTORY,
-               '999_archive': placement.ARCHIVE_DIRECTORY, '999_archived': placement.ARCHIVE_DIRECTORY,
-               '99_archived': placement.ARCHIVE_DIRECTORY}
+def preflight(source, entries, recovery, header_codecs):
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+        ARCHIVE_DIRECTORY, COMPLETE_DIRECTORY, DRAFT_DIRECTORY, PROJECT_CONFIG_DIRECTORY, TICKET_DIRECTORY,
+    )
+
+    renames = {'__TKT': TICKET_DIRECTORY, '_PMETA': PROJECT_CONFIG_DIRECTORY,
+               '000_draft': DRAFT_DIRECTORY, '099_archived': ARCHIVE_DIRECTORY,
+               '999_archive': ARCHIVE_DIRECTORY, '999_archived': ARCHIVE_DIRECTORY,
+               '99_archived': ARCHIVE_DIRECTORY}
     paths, carriers, refs, destinations = {}, {}, {}, {}
     for path in entries:
         rel = path.relative_to(source)
         parent = paths.get(rel.parent, rel.parent)
         new = parent / (renames.get(rel.name, rel.name) if admitted(rel) else rel.name)
         if rel == Path('__TKT/ASSETS/done'):
-            new = parent / placement.COMPLETE_DIRECTORY
+            new = parent / COMPLETE_DIRECTORY
         if path.is_file() and path.suffix == '.md' and admitted(rel):
-            converted = convert_carrier(source, path, rel, new, recovery, refs, header_codec, placement)
+            converted = convert_carrier(source, path, rel, new, recovery, refs, header_codecs)
             if converted:
                 new, result, record = converted
                 carriers[rel] = result, record
@@ -241,8 +262,8 @@ def run(source, destination, recovery):
     entries = sorted(source.rglob('*'), key=lambda p: (len(p.relative_to(source).parts), p.is_dir(), str(p)))
     if any(p.is_symlink() for p in entries):
         raise ValueError('Symlinks are unsupported in the staged tree')
-    codecs = load_codecs()
-    paths, carriers = preflight(source, entries, recovery, *codecs)
+    header_codecs = load_codecs()
+    paths, carriers = preflight(source, entries, recovery, header_codecs)
     return write_output(source, destination, entries, paths, carriers)
 
 

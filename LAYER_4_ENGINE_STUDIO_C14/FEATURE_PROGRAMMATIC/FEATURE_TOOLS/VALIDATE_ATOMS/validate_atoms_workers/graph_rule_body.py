@@ -12,7 +12,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from .check_support import Check
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_syntax__pub import CarrierError, UniqueSafeLoader, check_yaml_resources
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CEILINGS
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.subject_notation__pub import SubjectNotationError, parse_subject_expression
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import SubjectNotationError, parse_subject_expression
 
 
 _RULE_TYPES = {

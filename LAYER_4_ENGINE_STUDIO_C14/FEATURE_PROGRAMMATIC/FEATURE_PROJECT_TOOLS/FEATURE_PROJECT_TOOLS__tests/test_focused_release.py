@@ -13,7 +13,7 @@ from unittest.mock import patch
 
 TOOLS = Path(__file__).resolve().parents[1]
 
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import run_full_test_suite as full
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import test_suite__shared as full
 
 
 PASSING = (

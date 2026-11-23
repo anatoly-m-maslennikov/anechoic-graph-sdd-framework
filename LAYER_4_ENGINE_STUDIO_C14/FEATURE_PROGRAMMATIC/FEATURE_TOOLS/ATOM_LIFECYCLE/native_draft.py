@@ -8,13 +8,13 @@ import re
 
 import yaml
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_header__pub import canonical_native_header, native_header_view
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical_native_header, native_header_view
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (native_carrier_path, spec_lens_directories,
                                       DRAFT_DIRECTORY)
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_source_rows__pub import capture_native
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import frontmatter_bounds
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import parse_carrier
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_carrier
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CEILINGS, ReadContext
 
 from . import common
@@ -154,7 +154,7 @@ def _create_component_contract(selection, values, structure_snapshot):
                    and (match := re.fullmatch(re.escape(selection.project_prefix) + r'-S-([0-9]+)', row['id']))]
         atom_id = f"{selection.project_prefix}-S-{max(numbers, default=0) + 1}"
         header = canonical_native_header({'identity': {'atom_id': atom_id},
-            'context': {'container': values['container'], 'tier': 1, 'template': 'component_contract', 'lens': values['lens']},
+            'context': {'container': values['container'], 'tier': 0, 'template': 'component_contract', 'lens': values['lens']},
             'state': {'status': 'draft', 'version': 1, 'updated_at': datetime.now(timezone.utc).isoformat()}})
         body = values['body']
         owner = _validate_contract(selection, header, body, selection.control_root, structure_snapshot, capture)

@@ -10,7 +10,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_project_selection import (
     rebind_native_selection,
     resolve_native_project,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.project_manifest__pub import ProjectSelectionError
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import ProjectSelectionError
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection import ProjectSelection
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_runtime import bind_native_runtime
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_settings_schema import mcp_tool_blacklist

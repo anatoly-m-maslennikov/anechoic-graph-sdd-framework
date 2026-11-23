@@ -11,8 +11,15 @@ TOOL = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(TOOL.parent), str(TOOL)]
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.current_subject_common import path_steps
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.current_subject_graph import compose_current_graph  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import subject_notation__pub as subject_notation  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import compose_current_graph  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    GrammarPin as _subject_GrammarPin,
+    SubjectNotationError as _subject_SubjectNotationError,
+    get_profile as _subject_get_profile,
+    parse_subject_expression as _subject_parse_subject_expression,
+    profile_evidence as _subject_profile_evidence,
+    render_subject as _subject_render_subject,
+)  # noqa: E402
 
 
 def source(atom_id: str = "CA-R-2002", version: int = 1) -> dict[str, object]:
@@ -32,16 +39,16 @@ def graph_for(subject: str) -> tuple[dict, dict]:
 
 class CurrentInstanceGraphTests(unittest.TestCase):
     def test_approved_grammar_uses_current_evaluation_and_legacy_stays_pinned(self) -> None:
-        approved = subject_notation.get_profile("approved").grammar_pins
+        approved = _subject_get_profile("approved").grammar_pins
         self.assertEqual("CA-E-833", approved[-1].atom_id)
         self.assertTrue(approved[-1].path.endswith("CA-E-833-CORE_META_MODEL-EVAL_POLICY--validate-entity-and-topic-reference-expressions.md"))
-        legacy = subject_notation.get_profile("legacy").grammar_pins
+        legacy = _subject_get_profile("legacy").grammar_pins
         self.assertEqual(("CA-E-383", 13), (legacy[-1].atom_id, legacy[-1].version))
-        observed = tuple(subject_notation.GrammarPin(item.atom_id, 1, item.path, "a" * 64) for item in approved)
-        self.assertEqual("CA-E-833", subject_notation.profile_evidence("approved", grammar_pins=observed)["grammar_pins"][-1]["atom_id"])
-        wrong = (*observed[:-1], subject_notation.GrammarPin("CA-E-383", 46, observed[-1].path, "a" * 64))
-        with self.assertRaises(subject_notation.SubjectNotationError):
-            subject_notation.profile_evidence("approved", grammar_pins=wrong)
+        observed = tuple(_subject_GrammarPin(item.atom_id, 1, item.path, "a" * 64) for item in approved)
+        self.assertEqual("CA-E-833", _subject_profile_evidence("approved", grammar_pins=observed)["grammar_pins"][-1]["atom_id"])
+        wrong = (*observed[:-1], _subject_GrammarPin("CA-E-383", 46, observed[-1].path, "a" * 64))
+        with self.assertRaises(_subject_SubjectNotationError):
+            _subject_profile_evidence("approved", grammar_pins=wrong)
 
     def test_instance_path_preserves_full_prefix_and_direction(self) -> None:
         subject = "Entity/Workflow//Daily.Status:Active"
@@ -156,8 +163,8 @@ class CurrentInstanceGraphTests(unittest.TestCase):
                          (edge["kind"], names[edge["relation_source"]], names[edge["relation_target"]]))
         self.assertEqual({"minimum": 1, "maximum": 1}, edge["forward_cardinality"])
         self.assertEqual({"minimum": 2, "maximum": 2}, edge["reverse_cardinality"])
-        parsed = subject_notation.parse_subject_expression("Workflow {2}<((IS_CONTAINED_BY)){1} Step")
-        self.assertEqual("Workflow {2}<((IS_CONTAINED_BY)){1} Step", subject_notation.render_subject(parsed))
+        parsed = _subject_parse_subject_expression("Workflow {2}<((IS_CONTAINED_BY)){1} Step")
+        self.assertEqual("Workflow {2}<((IS_CONTAINED_BY)){1} Step", _subject_render_subject(parsed))
 
     def test_named_relation_chains_and_groups_keep_each_written_direction(self) -> None:
         graph, _ = graph_for("(Step) ((RUN)) Workflow <((IS_CONTAINED_BY)) Part")
@@ -165,8 +172,8 @@ class CurrentInstanceGraphTests(unittest.TestCase):
         edges = {(row["kind"], names[row["relation_source"]], names[row["relation_target"]]) for row in graph["edges"]}
         self.assertEqual({("RUN", "Step", "Workflow"), ("IS_CONTAINED_BY", "Part", "Workflow")}, edges)
         for invalid in ("Step <((IS_CONTAINED_BY) Workflow", "Step ((IS_CONTAINED_BY))> Workflow"):
-            with self.subTest(invalid=invalid), self.assertRaises(subject_notation.SubjectNotationError):
-                subject_notation.parse_subject_expression(invalid)
+            with self.subTest(invalid=invalid), self.assertRaises(_subject_SubjectNotationError):
+                _subject_parse_subject_expression(invalid)
 
     def test_logical_head_grouping_does_not_create_another_entity(self) -> None:
         direct, _ = graph_for("Root/X.Property")

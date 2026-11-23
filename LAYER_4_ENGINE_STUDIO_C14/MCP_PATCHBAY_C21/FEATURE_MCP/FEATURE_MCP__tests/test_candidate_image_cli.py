@@ -8,9 +8,9 @@ import unittest
 from unittest.mock import patch
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker import candidate_image_cli as docker
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker import runtime_images
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images_common import DOCKERFILE, _REQUIRED
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images import FINGERPRINT_LABEL, SCHEMA_LABEL
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker import docker__shared as runtime_images
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import DOCKERFILE, _REQUIRED
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import FINGERPRINT_LABEL, SCHEMA_LABEL
 
 IMAGE = "sha256:" + "a" * 64
 FRAMEWORK_VERSION = "0.4.4.9"
@@ -23,7 +23,8 @@ class CurrentSourceImageBuildTests(unittest.TestCase):
         directory = tempfile.TemporaryDirectory(dir=parent)
         self.addCleanup(directory.cleanup)
         self.root = Path(directory.name)
-        for relative in _REQUIRED:
+        for relative in (*_REQUIRED, *(f"{layer}/AN-S-1-source.md" for layer in
+                          ("LAYER_1_META_ONTOLOGY_C9", "LAYER_2_META_METHODOLOGY_C58"))):
             path = self.root / relative
             path.parent.mkdir(parents=True, exist_ok=True)
             content = (

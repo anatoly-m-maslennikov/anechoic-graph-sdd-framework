@@ -16,6 +16,8 @@ import time
 from pathlib import Path
 from urllib.request import ProxyHandler, build_opener
 
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import project_goal_filename
+
 class CanaryError(Exception):
     pass
 
@@ -81,7 +83,7 @@ def _mcp_ready(port: int, timeout: float, *, query_enabled: bool = True) -> bool
                         await session.send_ping()
                         return True
                     result = await session.call_tool("query_run", {
-                        "sql": "SELECT 1 AS ready",
+                        "sql": "SELECT 1 AS ready FROM framework.atoms LIMIT 1",
                         "result_delivery": "inline",
                         "result_format": "json_matrix",
                     })
@@ -188,10 +190,12 @@ def _start_canary_container(
     _copy_tree(package, project)
     control = project / selection["control_root"]
     _copy_tree(root / selection["control_root"], control)
-    if Path(selection["manifest_path"]).parent == Path("."):
-        source = root / selection["manifest_path"]
-        destination = project / selection["manifest_path"]
-        if destination.exists() or destination.is_symlink():
+    manifest = root / selection["manifest_path"]
+    root_atoms = [manifest] if manifest.parent == root else []
+    root_atoms.extend(path for path in root.iterdir() if project_goal_filename(path.name))
+    for source in root_atoms:
+        destination = project / source.name
+        if source.is_symlink() or not source.is_file() or destination.exists() or destination.is_symlink():
             raise CanaryError("canary-copy-unsafe")
         shutil.copyfile(source, destination)
     _verify_manifest(project, selection)
@@ -203,6 +207,8 @@ def _start_canary_container(
                "--tmpfs", "/tmp:size=128m,mode=1777", "--pids-limit", "128",
                "--memory", "1536m", "--cpus", "1", "-p", "127.0.0.1::8092",
                "--mount", f"type=bind,src={project},dst=/project",
+               "--mount", "type=volume,dst=/var/lib/anechoic",
+               "-e", "ANECHOIC_FRAMEWORK_DB_ROOT=/var/lib/anechoic",
                "-e", "ANECHOIC_RUNTIME_NAMESPACE=docker",
                "-e", f"ANECHOIC_CONTROL_ROOT={selection['control_root']}",
                "-e", f"ANECHOIC_PROJECT_INSTANCE_ID={instance_id}",
@@ -236,7 +242,7 @@ def _remove_canary_container(root: Path, cidfile: Path, *, failure: BaseExceptio
         container = cidfile.read_text().strip()
         if re.fullmatch(r"[0-9a-f]{64}", container):
             try:
-                subprocess.run(["docker", "rm", "-f", container], cwd=root, check=True,
+                subprocess.run(["docker", "rm", "-f", "-v", container], cwd=root, check=True,
                                capture_output=True, text=True, timeout=30)
             except (OSError, subprocess.SubprocessError) as error:
                 if failure is None:

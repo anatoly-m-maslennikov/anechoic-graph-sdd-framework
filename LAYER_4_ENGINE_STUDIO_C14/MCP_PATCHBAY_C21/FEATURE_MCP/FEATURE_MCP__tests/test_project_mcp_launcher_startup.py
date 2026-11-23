@@ -14,7 +14,7 @@ DOCKER = APP / "docker"
 TOOLS = APP.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_launcher import ImageError  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import ProjectAdmissionError  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import ProjectAdmissionError  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend import ProjectMcpBackend  # noqa: E402
 
 

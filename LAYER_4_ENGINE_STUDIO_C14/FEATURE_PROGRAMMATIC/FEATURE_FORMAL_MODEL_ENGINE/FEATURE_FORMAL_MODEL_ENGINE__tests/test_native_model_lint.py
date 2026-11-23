@@ -37,7 +37,7 @@ class NativeModelLintTests(unittest.TestCase):
                     self.assertIn(message, self.lint(modified)[0])
 
     def test_current_workspace_and_view_field_contracts(self):
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.formal_claim__pub import iter_formal_claims as _native_block
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import iter_formal_claims as _native_block
         root = Path(__file__).parent / 'assets'
         for number in (2792, 2793):
             path = next(root.glob(f'CA-R-{number}-*.md'))

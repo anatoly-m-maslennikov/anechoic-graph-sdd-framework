@@ -1,31 +1,48 @@
-"""Expose Project-scoped saved SQL reads and public links."""
+"""Expose Project-scoped saved SQL and public links."""
 
 import re
-from urllib.parse import parse_qs, quote, urlencode, urlparse
 import uuid
+from urllib.parse import parse_qs, quote, urlencode, urlparse
 
 import httpx2
 
 from .peer_transport import tool_failure, upstream
-from .workspace_tools import _tool
+from .workspace_tools import _TEXT, _VIEW, _tool
 
 TOOLS = {
     "query_load": _tool("query_load", "Load a Bookmark or saved View.", {"reference": {"type": "string"}}, read_only=True),
     "query_saved_list": _tool("query_saved_list", "List recent Bookmark and saved View metadata.", {}, read_only=True,
                               limit={"type": "integer", "minimum": 1, "maximum": 1000}),
+    "view_save": _tool("view_save", "Save a View's exact SQL without executing it.", {}, **_VIEW, sql=_TEXT, name=_TEXT),
 }
+TOOLS["view_save"]["inputSchema"]["oneOf"] = [
+    {"required": list(_VIEW), "not": {"anyOf": [{"required": ["sql"]}, {"required": ["name"]}]}},
+    {"required": ["sql"], "not": {"anyOf": [{"required": [key]} for key in _VIEW]}},
+]
 
 
-def _saved_id(value):
+def run_arguments(args):
+    if type(args.get("save", False)) is not bool:
+        raise ValueError("save must be a boolean")
+    if "name" in args:
+        if not args.get("save", False) or not isinstance(args["name"], str):
+            raise ValueError("name requires save and must be a string")
+        args["name"].encode("utf-8")
+    return {key: args[key] for key in ("save", "name") if key in args}
+
+
+def _new_id(value):
     if not isinstance(value, str):
         return False
-    if re.fullmatch(r"[qw]_[0-9a-f]{32}", value):
-        return True
     try:
         parsed = uuid.UUID(value)
     except ValueError:
         return False
     return parsed.version == 7 and str(parsed) == value
+
+
+def _saved_id(value):
+    return isinstance(value, str) and (re.fullmatch(r"[qw]_[0-9a-f]{32}", value) is not None or _new_id(value))
 
 
 def _reference(value, name, base, root):
@@ -48,6 +65,14 @@ def _arguments(name, args, project_name, base, root):
         if set(args) != {"reference"}:
             raise ValueError("Expected reference")
         return {"reference": _reference(args["reference"], project_name, base, root)}
+    if name == "view_save":
+        if set(args) not in (_VIEW.keys(), {"sql"}, {"sql", "name"}) or any(
+            not isinstance(value, str) or (key in _VIEW and not value.strip()) for key, value in args.items()
+        ):
+            raise ValueError("Expected Workspace and View IDs or SQL and optional name")
+        for value in args.values():
+            value.encode("utf-8")
+        return args
     if set(args) - {"limit"}:
         raise ValueError("Unexpected arguments")
     limit = args.get("limit", 20)
@@ -64,16 +89,47 @@ def _record(value, listed):
             and all(isinstance(value[key], str) for key in value if key != "kind"))
 
 
-def _link(item, name, base, root):
-    if not base or not name:
+def public_page(name, request_base, configured_url):
+    if request_base is not None:
+        return f"{request_base.rstrip('/')}/anechoic/workbench/{quote(name, safe='')}" if name and request_base else None
+    if (not isinstance(configured_url, str) or not configured_url
+            or any(char.isspace() or ord(char) < 32 or ord(char) == 127 for char in configured_url)
+            or "?" in configured_url or "#" in configured_url):
+        return None
+    try:
+        parsed = urlparse(configured_url)
+        _ = parsed.port
+    except ValueError:
+        return None
+    if (parsed.scheme not in {"http", "https"} or not parsed.hostname or not parsed.path
+            or parsed.username is not None or parsed.password is not None or parsed.params):
+        return None
+    return configured_url
+
+
+def _link(item, page, root):
+    if page is None:
         return {**item, "saved_query_url": None, "saved_query_url_reason": "workbench_url_unknown"}
     query = {"query": item["saved_query_id"]}
     if root is not None:
         query["project_root"] = root
-    return {**item, "saved_query_url": f"{base.rstrip('/')}/anechoic/workbench/{quote(name, safe='')}?{urlencode(query)}"}
+    return {**item, "saved_query_url": f"{page}?{urlencode(query)}"}
 
 
-async def invoke(name, args, socket, instance_id, project_name, base, root):
+def present_run_save(value, args, page, root):
+    """Link a saved Bookmark while preserving the completed query response."""
+    if "saved_query_id" not in value:
+        if value.get("outcome") != "partial" or not isinstance(value.get("save_error"), str) or not value["save_error"]:
+            raise ValueError("Invalid saved query response")
+        return value
+    if not _new_id(value["saved_query_id"]) or "save_error" in value:
+        raise ValueError("Invalid saved query response")
+    name = args.get("name", "")
+    named = {"name": name} if name.strip() else {}
+    return _link({**value, "kind": "query", **named}, page, root)
+
+
+async def invoke(name, args, socket, instance_id, project_name, base, root, *, page):
     try:
         fields = _arguments(name, args, project_name, base, root)
     except (ValueError, TypeError):
@@ -91,11 +147,15 @@ async def invoke(name, args, socket, instance_id, project_name, base, root):
             if (not isinstance(value, dict) or set(value) != {"items"} or not isinstance(value["items"], list)
                     or not all(_record(item, True) for item in value["items"])):
                 raise ValueError("Invalid Kernel response")
-            value = {"items": [_link(item, project_name, base, root) for item in value["items"]]}
+            value = {"items": [_link(item, page, root) for item in value["items"]]}
         else:
             if not _record(value, False):
                 raise ValueError("Invalid Kernel response")
-            value = _link(value, project_name, base, root)
+            if name == "view_save":
+                if value["kind"] != "view" or "saved_at" not in value or not _new_id(value["saved_query_id"]):
+                    raise ValueError("Invalid Kernel response")
+                value |= {key: fields[key] for key in _VIEW if key in fields}
+            value = _link(value, page, root)
         return {"result": {"value": value, "text": None}}
     except (ValueError, TypeError, KeyError, httpx2.HTTPError):
         return tool_failure("workbench_unavailable", "Saved query service unavailable")

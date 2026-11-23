@@ -1,17 +1,17 @@
 """Reusable Project fixture for Orchestrator process tests."""
-from contextlib import contextmanager
-from hashlib import sha256
 import http.client
-from http.server import BaseHTTPRequestHandler
 import json
 import os
-from pathlib import Path
 import socket
 import socketserver
 import subprocess
 import sys
 import threading
 import time
+from contextlib import contextmanager
+from hashlib import sha256
+from http.server import BaseHTTPRequestHandler
+from pathlib import Path
 
 ENGINE = Path(__file__).resolve().parents[2]
 
@@ -36,6 +36,7 @@ class Kernel(BaseHTTPRequestHandler):
     def do_PUT(self):
         payload = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
         self.server.payloads.append(payload)
+        self.server.paths.append(self.path)
         self.server.generations.append(time.monotonic())
         if self.server.admit_started is not None:
             self.server.admit_started.set()
@@ -43,8 +44,12 @@ class Kernel(BaseHTTPRequestHandler):
         result = {'generation': str(len(self.server.generations))}
         if 'refresh_target' in payload:
             result['result_ids'] = {'old': 'new'}
-        body = json.dumps({'result': result}).encode()
-        self.send_response(502 if self.server.reject else 200)
+        status, response = (502 if self.server.reject else 200), {'result': result}
+        if self.path == '/generation/native-delta' and self.server.delta_error is not None:
+            status, code = self.server.delta_error
+            response = {'error': {'code': code}}
+        body = json.dumps(response).encode()
+        self.send_response(status)
         self.send_header('Content-Length', str(len(body)))
         self.end_headers()
         self.wfile.write(body)
@@ -56,9 +61,11 @@ class Kernel(BaseHTTPRequestHandler):
 class Server(socketserver.UnixStreamServer):
     generations = None
     payloads = None
+    paths = None
     admit_started = None
     admit_release = None
     reject = False
+    delta_error = None
 
 
 class Connection(http.client.HTTPConnection):
@@ -96,6 +103,7 @@ def latest(path):
 @contextmanager
 def watch_project(root, *, watch_code=False):
     control, manifest = project(root)
+    (control / '__TKT').mkdir()
     binding = {'root': str(root), 'control_root': control.name, 'manifest_path': manifest.name,
                'manifest_sha256': sha256(manifest.read_bytes()).hexdigest(), 'project_prefix': 'AN'}
     binding_file = root / 'binding.json'
@@ -103,6 +111,7 @@ def watch_project(root, *, watch_code=False):
     with Server(str(root / 'kernel.sock'), Kernel) as kernel:
         kernel.generations = []
         kernel.payloads = []
+        kernel.paths = []
         thread = threading.Thread(target=kernel.serve_forever)
         thread.start()
         socket_path = root / 'orch.sock'

@@ -30,7 +30,7 @@ class SourceContentSchema:
         remaining = list(rows)
         errors: dict[str, ValueError] = {}
         while True:
-            from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_catalog__pub import bindings_from_workbench_rows
+            from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import bindings_from_workbench_rows
             bindings = bindings_from_workbench_rows(remaining)
             contributions = declaration_contributions({**row, "_model_class_bindings": bindings} for row in remaining)
             schema = content_schema_from_statements(
@@ -73,7 +73,7 @@ class SourceContentSchema:
                 self._rows.pop(path, None)
             else:
                 self._rows[path] = row
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_catalog__pub import bindings_from_workbench_rows
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import bindings_from_workbench_rows
         self._bindings = bindings_from_workbench_rows(self._rows.values())
         return False
 
@@ -81,7 +81,7 @@ class SourceContentSchema:
         self, rows: Mapping[str, Mapping[str, Any] | None],
     ) -> tuple[ContentSchema, dict[str, tuple[FormalStatement, ...]]]:
         assert self.schema is not None
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_catalog__pub import bindings_from_workbench_rows
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import bindings_from_workbench_rows
         combined = dict(self._rows)
         for path, row in rows.items():
             if row is None:

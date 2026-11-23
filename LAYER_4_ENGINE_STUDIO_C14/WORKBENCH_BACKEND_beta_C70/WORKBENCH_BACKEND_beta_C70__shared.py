@@ -17,6 +17,7 @@ from starlette.routing import Route
 
 from . import delivery_tools, lifecycle_tools, projection_tools, saved_sql_tools, schema_tools, workspace_tools
 from .peer_transport import tool_failure, upstream
+from .warm_worker import open_warm_worker as open_warm_worker
 
 _FIELDS = {"name", "arguments", "instance_id", "session_id", "public_base_url", "asserted_project_root"}
 _ANNOTATIONS = {"readOnlyHint": True, "destructiveHint": False, "idempotentHint": True, "openWorldHint": False}
@@ -103,14 +104,8 @@ def _query_fields(name, args):
     if type(size) is not int or not 1 <= size <= 1000:
         raise ValueError("page_size must be an integer from 1 to 1000")
     if name == "query_run":
-        if type(args.get("save", False)) is not bool:
-            raise ValueError("save must be a boolean")
-        if "name" in args and (not args.get("save", False) or not isinstance(args["name"], str)):
-            raise ValueError("name requires save and must be a string")
-        if "name" in args:
-            args["name"].encode("utf-8")
         return delivery_tools.with_preview({"sql": _sql(args), "page_size": size, "result_delivery": delivery,
-                                            "result_format": result_format}, args)
+                                            "result_format": result_format, **saved_sql_tools.run_arguments(args)}, args)
     query_id, offset = args.get("query_id"), args.get("offset", 0)
     if not isinstance(query_id, str) or type(offset) is not int or offset < 0:
         raise ValueError("Expected query_id and a non-negative offset")
@@ -123,11 +118,10 @@ def _query_fields(name, args):
     return delivery_tools.with_preview(fields, args)
 
 
-async def _workspace(database_socket, instance_id, name, args, session_id, project_name, public_base_url, project_root):
+async def _workspace(database_socket, instance_id, name, args, session_id, project_name, public_base_url, project_root,
+                     saved_page):
     try:
         fields = workspace_tools.workspace_arguments(name, args, session_id)
-        if name == "view_run":
-            fields = {k: v for k, v in fields.items() if k not in {"save", "name"}}
         if name == "view_fetch":
             fields = {"result_delivery": "file", **fields}
         if name in workspace_tools.LINKED_TOOLS and not project_name:
@@ -148,7 +142,7 @@ async def _workspace(database_socket, instance_id, name, args, session_id, proje
                 or (name == "view_fetch" and not delivery_tools.valid_page(value))):
             raise TypeError("Invalid Workspace response")
         if name == "view_run" and args.get("save", False) and value.get("status") == "success":
-            value |= {"outcome": "partial", "save_error": "No admitted actor is available for saving"}
+            value = saved_sql_tools.present_run_save(value, args, saved_page, project_root)
         if name in workspace_tools.LINKED_TOOLS:
             value = workspace_tools.present_workspace(value, project_name, public_base_url, project_root)
         return {"result": {"value": value, "text": None}}
@@ -157,17 +151,19 @@ async def _workspace(database_socket, instance_id, name, args, session_id, proje
 
 
 async def execute_tool(database_socket, instance_id, name, args, *, session_id=None, project_name=None,
-                       public_base_url=None, project_root=None, orchestrator_socket=None, worker_binding=None):
+                       public_base_url=None, project_root=None, orchestrator_socket=None, worker_binding=None,
+                       workbench_public_url=None):
+    saved_page = saved_sql_tools.public_page(project_name, public_base_url, workbench_public_url)
     if name in saved_sql_tools.TOOLS:
         return await saved_sql_tools.invoke(name, args, database_socket, instance_id, project_name,
-                                            public_base_url, project_root)
+                                            public_base_url, project_root, page=saved_page)
     if name in lifecycle_tools.TOOLS:
         return await lifecycle_tools.invoke(name, args, orchestrator_socket, worker_binding, instance_id)
     if name in projection_tools.TOOLS:
         return await projection_tools.invoke(name, args, database_socket, orchestrator_socket, worker_binding, instance_id)
     if name in workspace_tools.WORKSPACE_TOOLS:
         return await _workspace(database_socket, instance_id, name, args, session_id, project_name,
-                                public_base_url, project_root)
+                                public_base_url, project_root, saved_page)
     if name == "query_schema":
         return await schema_tools.schema(database_socket, instance_id, args)
     if name not in TOOLS:
@@ -177,9 +173,16 @@ async def execute_tool(database_socket, instance_id, name, args, *, session_id=N
     except ValueError as error:
         return tool_failure("tool_input_invalid", str(error))
     result = await _query(database_socket, instance_id, fields)
-    if name == "query_run" and args.get("save", False) and "result" in result:
-        result["result"]["value"].update(outcome="partial", save_error="No admitted actor is available for saving")
-    if name == "query_check" and "result" in result:
+    if "result" not in result:
+        return result
+    if fields.get("save"):
+        try:
+            result["result"]["value"] = saved_sql_tools.present_run_save(
+                result["result"]["value"], args, saved_page, project_root,
+            )
+        except ValueError:
+            return tool_failure("workbench_unavailable", "Invalid saved query response")
+    elif name == "query_check":
         value = result["result"]["value"]
         result["result"]["value"] = {"valid": True, "columns": value["columns"], "sql": fields["sql"],
                                      "row_count": len(value["rows"]), "column_count": len(value["columns"])}
@@ -187,7 +190,7 @@ async def execute_tool(database_socket, instance_id, name, args, *, session_id=N
 
 
 def _tool_route(database_socket, instance_id, project_root, host_root, blacklist, project_name,
-                orchestrator_socket, worker_binding):
+                orchestrator_socket, worker_binding, workbench_public_url):
     async def invoke(request):
         try:
             data = await read_tool_request(request)
@@ -203,14 +206,14 @@ def _tool_route(database_socket, instance_id, project_root, host_root, blacklist
             return JSONResponse(await execute_tool(database_socket, instance_id, data["name"], data["arguments"],
                 session_id=data["session_id"], project_name=project_name, public_base_url=data["public_base_url"],
                 project_root=data["asserted_project_root"], orchestrator_socket=orchestrator_socket,
-                worker_binding=worker_binding))
+                worker_binding=worker_binding, workbench_public_url=workbench_public_url))
         except (ValueError, TypeError) as error:
             return JSONResponse(tool_failure("value_error", str(error)))
     return invoke
 
 
 def create_app(instance_id, manifest_sha256, project_root, database_socket, orchestrator_socket,
-               *, host_root=None, blacklist=(), project_name=None, worker_binding=None):
+               *, host_root=None, blacklist=(), project_name=None, worker_binding=None, workbench_public_url=None):
     async def health(_request):
         try:
             data = await upstream(database_socket, "GET", "/health")
@@ -243,7 +246,7 @@ def create_app(instance_id, manifest_sha256, project_root, database_socket, orch
             return JSONResponse(tool_failure("workbench_unavailable", "Orchestrator unavailable"))
 
     invoke = _tool_route(database_socket, instance_id, project_root, host_root, blacklist, project_name,
-                         orchestrator_socket, worker_binding)
+                         orchestrator_socket, worker_binding, workbench_public_url)
     return Starlette(routes=[Route("/health", health), Route("/tools", catalog),
                              Route("/tools", invoke, methods=["POST"]), Route("/jobs/worker-runs", worker_runs)])
 
@@ -265,6 +268,7 @@ def main():
     for name in ("socket", "database-socket", "orchestrator-socket", "instance-id", "manifest-sha256", "project-root"):
         parser.add_argument("--" + name, required=True)
     parser.add_argument("--project-name")
+    parser.add_argument("--workbench-public-url")
     args = parser.parse_args()
     if not args.instance_id or re.fullmatch(r"[0-9a-f]{64}", args.manifest_sha256) is None:
         parser.error("Invalid Project binding")
@@ -272,7 +276,8 @@ def main():
         parser.error("Project root must be absolute")
     path = socket_path(args.socket)
     app = create_app(args.instance_id, args.manifest_sha256, args.project_root, args.database_socket,
-                     args.orchestrator_socket, project_name=args.project_name)
+                     args.orchestrator_socket, project_name=args.project_name,
+                     workbench_public_url=args.workbench_public_url)
     serve(path, app)
 
 

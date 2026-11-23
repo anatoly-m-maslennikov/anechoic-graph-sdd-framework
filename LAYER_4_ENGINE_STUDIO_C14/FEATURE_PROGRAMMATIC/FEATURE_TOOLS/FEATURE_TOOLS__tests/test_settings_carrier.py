@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.settings_carrier__pub import read_settings_carrier, write_settings_carrier
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import read_settings_carrier, write_settings_carrier
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_settings_schema import _parse_settings
 
 

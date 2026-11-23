@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: active
-  version: 4
-  updated_at: '2026-11-22T11:23:40.206159+00:00'
+  status: "active"
+  version: 5
+  updated_at: "2026-11-22T18:48:53.094425+00:00"
 ---
 
 ## Summary
@@ -32,11 +32,11 @@ declare_entity(
         boundaries={
             'code': {
                 'exports': {
-                    'FEATURE_GENERATED_MODEL_C52.Plan': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
-                    'FEATURE_GENERATED_MODEL_C52.PlanForm': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
-                    'FEATURE_GENERATED_MODEL_C52.WorkReport': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
-                    'FEATURE_GENERATED_MODEL_C52.AtomDestination': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_MODEL_VALIDATION/FEATURE_MODEL_VALIDATION__tests']},
-                    'FEATURE_GENERATED_MODEL_C52.AtomDestinationFile': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_MODEL_VALIDATION/FEATURE_MODEL_VALIDATION__tests']},
+                    'FEATURE_GENERATED_MODEL_C52__shared.Plan': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
+                    'FEATURE_GENERATED_MODEL_C52__shared.PlanForm': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
+                    'FEATURE_GENERATED_MODEL_C52__shared.WorkReport': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
+                    'FEATURE_GENERATED_MODEL_C52__shared.AtomDestination': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_MODEL_VALIDATION/FEATURE_MODEL_VALIDATION__tests']},
+                    'FEATURE_GENERATED_MODEL_C52__shared.AtomDestinationFile': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_MODEL_VALIDATION/FEATURE_MODEL_VALIDATION__tests']},
                 },
             },
         },

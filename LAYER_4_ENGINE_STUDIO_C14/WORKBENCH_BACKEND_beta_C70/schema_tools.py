@@ -3,14 +3,14 @@
 import httpx2
 
 from .peer_transport import tool_failure, upstream
-from .projection_tools import TABLES
+from .projection_tools import FLOW_HISTORY, TABLES
 
 
 def _valid_schema(value):
     if not isinstance(value, dict) or set(value) != {"tables"} or not isinstance(value["tables"], dict):
         return False
     for table, columns in value["tables"].items():
-        if table not in (*TABLES, "work_journal", "query_log") or not isinstance(columns, list):
+        if table not in (*TABLES, *FLOW_HISTORY, "work_journal", "query_log") or not isinstance(columns, list):
             return False
         names = set()
         for column in columns:

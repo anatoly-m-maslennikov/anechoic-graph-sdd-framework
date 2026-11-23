@@ -3,13 +3,20 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import subject_notation__pub as notation
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    Name as _subject_Name,
+    Path as _subject_Path,
+    Qualification as _subject_Qualification,
+    SubjectNotationError as _subject_SubjectNotationError,
+    ValueLiteral as _subject_ValueLiteral,
+    parse_subject_expression as _subject_parse_subject_expression,
+)
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import matches_named_value
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import is_current_requirement_declaration
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.content_records__pub import records_by_path, value_excluding_declared_children
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.formal_claim__pub import iter_formal_claims
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import content_key, content_lines, parse_content, source_markdown
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import iter_formal_claims
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import content_key, content_lines, parse_content, source_markdown
 
 def _native_declaration(row):
     """Parse one native Declaration using the shared Claim parser."""
@@ -35,10 +42,10 @@ def _native_content(row, declaration, form_bindings):
     if base == 'Atom' and args.get('entity_name') == 'Content':
         return args, None, None, (), False
     try:
-        path = notation.parse_subject_expression(base).expression
-    except notation.SubjectNotationError:
+        path = _subject_parse_subject_expression(base).expression
+    except _subject_SubjectNotationError:
         return None
-    if not isinstance(path, notation.Path) or not isinstance(path.head, notation.Name):
+    if not isinstance(path, _subject_Path) or not isinstance(path.head, _subject_Name):
         return None
     binding = form_bindings.get(path.head.value)
     if path.head.value != 'Atom' and binding is None:
@@ -47,20 +54,20 @@ def _native_content(row, declaration, form_bindings):
     forms = frozenset({binding[1]}) if binding else None
     names = []
     for step in path.steps:
-        if step.operator == '/' and isinstance(step.operand, notation.Qualification):
+        if step.operator == '/' and isinstance(step.operand, _subject_Qualification):
             relative = step.operand.relative_path
             components = [relative.head.value] + [x.operand.value for x in relative.steps
-                if x.operator == '.' and isinstance(x.operand, notation.Name)]
+                if x.operator == '.' and isinstance(x.operand, _subject_Name)]
             assignment = relative.steps[-1] if relative.steps else None
             if (components not in (['Header', 'Context', 'Role'], ['Header', 'Context', 'Form'])
                     or assignment is None or assignment.operator != ':='
-                    or not isinstance(assignment.operand, notation.ValueLiteral)):
+                    or not isinstance(assignment.operand, _subject_ValueLiteral)):
                 return None
             if components[-1] == 'Role':
                 roles = frozenset({assignment.operand.value})
             else:
                 forms = frozenset({assignment.operand.value})
-        elif step.operator == '.' and isinstance(step.operand, notation.Name):
+        elif step.operator == '.' and isinstance(step.operand, _subject_Name):
             names.append(step.operand.value)
         else:
             return None

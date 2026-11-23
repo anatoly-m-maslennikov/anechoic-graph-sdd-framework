@@ -51,7 +51,7 @@ async function openWorkspace(sessionId) {
 }
 
 async function bridgePage({ input, initial, resultFirst = false, callTool }) {
-  const browser = await chromium.launch({ headless: true, ...(process.platform === 'darwin' ? { channel: 'chrome' } : {}) });
+  const browser = await chromium.launch({ headless: true, channel: 'chromium' });
   const page = await browser.newPage();
   const html = await artifact();
   const calls = [];

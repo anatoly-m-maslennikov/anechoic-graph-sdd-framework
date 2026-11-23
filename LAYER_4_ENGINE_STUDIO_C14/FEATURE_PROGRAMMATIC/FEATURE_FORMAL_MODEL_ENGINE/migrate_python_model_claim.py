@@ -75,7 +75,7 @@ def convert_claim(text: str) -> str | None:
 def convert_markdown_claim(body: str) -> str | None:
     """Replace one complete Claim/Formal Claim fence, preserving other Markdown."""
     from markdown_it import MarkdownIt
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import content_key
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import content_key
 
     headings: list[tuple[int, str]] = []
     fences = []
@@ -112,7 +112,7 @@ def convert_markdown_claim(body: str) -> str | None:
 
 def convert_carrier(raw: bytes, path: Path) -> bytes | None:
     """Convert one carrier while preserving its exact Header and line endings."""
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import parse_carrier
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_carrier
 
     parsed = parse_carrier(raw, path)
     match = re.search(rb"\r?\n---\r?\n", raw)
@@ -129,7 +129,7 @@ def convert_carrier(raw: bytes, path: Path) -> bytes | None:
 def audit(frontier: Path, *, stage: Path | None = None) -> dict[str, object]:
     """Check the pinned frontier and optionally write a separate converted cohort."""
     from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.formal_claim_blocks__pub import formal_claim_blocks
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import parse_carrier
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_carrier
 
     manifest = json.loads(frontier.read_text())
     counts: dict[str, dict[str, int]] = {}

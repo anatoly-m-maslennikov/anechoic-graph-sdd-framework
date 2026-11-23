@@ -1,7 +1,13 @@
 """Match bounded CFEL expression forms."""
 
 import json
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import subject_notation__pub as notation
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    Name as _subject_Name,
+    Path as _subject_Path,
+    Qualification as _subject_Qualification,
+    SubjectNotationError as _subject_SubjectNotationError,
+    parse_subject_expression as _subject_parse_subject_expression,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.cfel_claim_blocks import _balanced_parentheses
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.cfel_constraint_common import _CONTROL, _count, _record, _sibling_order
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.cfel_expression_patterns import (
@@ -72,13 +78,13 @@ def _match_5(expression, group, operator, source, records, diagnostics):
         scoped_binding = _SCOPED_INSTANCE_BINDING.fullmatch(expression)
         if scoped_binding is not None:
             try:
-                kind = notation.parse_subject_expression(scoped_binding.group("kind"), subject_profile="approved").expression
-            except notation.SubjectNotationError:
+                kind = _subject_parse_subject_expression(scoped_binding.group("kind"), subject_profile="approved").expression
+            except _subject_SubjectNotationError:
                 kind = None
-            if (isinstance(kind, notation.Path) and isinstance(kind.head, notation.Name)
+            if (isinstance(kind, _subject_Path) and isinstance(kind.head, _subject_Name)
                     and kind.value_format is None and kind.value_cardinality is None
-                    and any(isinstance(step.operand, notation.Qualification) for step in kind.steps)
-                    and all(step.operator in {"/", "."} and isinstance(step.operand, (notation.Name, notation.Qualification)) for step in kind.steps)):
+                    and any(isinstance(step.operand, _subject_Qualification) for step in kind.steps)
+                    and all(step.operator in {"/", "."} and isinstance(step.operand, (_subject_Name, _subject_Qualification)) for step in kind.steps)):
                 binding = scoped_binding
     if binding is not None:
         records.append(_record(source, expression, "instance_binding", kind_selector=binding.group("kind").strip(), variable=binding.group("variable")))

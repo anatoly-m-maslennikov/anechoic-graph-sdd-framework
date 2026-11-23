@@ -15,7 +15,7 @@ from starlette.testclient import TestClient
 MCP_ROOT = Path(__file__).resolve().parents[1]
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.http_server import MAX_REQUEST_BODY_SIZE, create_app  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import MCP_PATH  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import MCP_PATH  # noqa: E402
 
 
 CURRENT_RELEASE_ENVELOPE_BYTES = 7_266_044

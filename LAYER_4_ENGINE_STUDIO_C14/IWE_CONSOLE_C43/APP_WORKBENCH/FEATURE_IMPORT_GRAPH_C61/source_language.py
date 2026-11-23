@@ -9,6 +9,7 @@ _SUFFIX_LANGUAGES = {
     ".sh": "script",
     ".js": "javascript",
     ".mjs": "javascript",
+    ".cjs": "javascript",
     ".ts": "typescript",
     ".svelte": "svelte",
     ".bash": "script",

@@ -1,7 +1,7 @@
 """Resolved Subject evidence needs one exact anchor, with bound supplements."""
 import json
 import unittest
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_evidence__shared import _validate_resolved_mention  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import _validate_resolved_mention  # noqa: E402
 
 
 def authority(target, body):

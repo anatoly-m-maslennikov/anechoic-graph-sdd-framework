@@ -6,7 +6,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from KERNEL_MIXER_C59.relation_registry import RelationRegistry
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import RelationRegistry
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical
 
 

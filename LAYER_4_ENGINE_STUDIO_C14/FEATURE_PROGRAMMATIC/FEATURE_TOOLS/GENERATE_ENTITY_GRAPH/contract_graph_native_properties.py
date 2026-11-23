@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import subject_notation__pub as notation
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    Name as _subject_Name,
+    SubjectNotationError as _subject_SubjectNotationError,
+    parse_subject_expression as _subject_parse_subject_expression,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.contract_graph_inheritance import _property_parts
 
 
@@ -63,15 +67,15 @@ def _pending_property_paths(catalog, _target):
             if args.get("relation_name") != "IS_PROPERTY_OF":
                 continue
             try:
-                explicit = notation.parse_subject_expression(args["base_path"] + "." + args["entity_name"], subject_profile="approved").expression
-                base = notation.parse_subject_expression(args["base_path"], subject_profile="approved").expression
-            except notation.SubjectNotationError:
+                explicit = _subject_parse_subject_expression(args["base_path"] + "." + args["entity_name"], subject_profile="approved").expression
+                base = _subject_parse_subject_expression(args["base_path"], subject_profile="approved").expression
+            except _subject_SubjectNotationError:
                 continue
             target, bearer = _target(explicit), _target(base)
             original = _property_parts(identity)
             if not target or target[0] != "property" or not original:
                 continue
-            if not isinstance(original[1][-1].operand, notation.Name) or original[1][-1].operand.value != args["entity_name"]:
+            if not isinstance(original[1][-1].operand, _subject_Name) or original[1][-1].operand.value != args["entity_name"]:
                 continue
             if target[1] != identity:
                 pending.append(((kind, identity), entry, target, bearer))

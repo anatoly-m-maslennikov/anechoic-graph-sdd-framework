@@ -70,7 +70,7 @@ class SavedQueryReadsTest(unittest.TestCase):
             pending_bytes = pending.read_bytes()
             self.assert_saved_journal_items(client)
             self.assertEqual(pending_bytes, pending.read_bytes())
-        native = self.workbench / "projection.duckdb"
+        native = self.root / ".anechoic_runtime/db/project.duckdb"
         native_bytes = native.read_bytes()
         with self.server("files") as client:
             self.result(client.put("/generation", json=_generation()))

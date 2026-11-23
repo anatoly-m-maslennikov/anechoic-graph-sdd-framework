@@ -6,7 +6,7 @@ import unittest
 from mcp import types
 from . import test_shared_gateway as fixture
 from .shared_backend_fixture import backend_gateway
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.host_runtime_config import load_host_runtime_config
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import load_host_runtime_config
 
 
 class _RecordingSession(fixture._Session):

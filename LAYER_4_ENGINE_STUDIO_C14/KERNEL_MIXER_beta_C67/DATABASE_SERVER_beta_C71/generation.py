@@ -4,6 +4,7 @@ from hashlib import sha256
 import json
 import re
 
+from .carrier_checkpoint import update_checkpoint
 from .native_atoms import replace_native_atoms, validate_native_snapshot
 from .native_graph import replace_native_graph
 from .realization_projection import has_table, replace, restore_property_graph, validate
@@ -91,6 +92,39 @@ def _validate_generation(data, manifest_sha256):
     return native, snapshot, model, structure, validate(graph, components), components
 
 
+def _write_reuse(connection, data, model):
+    witness = data.get("reuse")
+    if witness is not None:
+        if (not isinstance(witness, dict) or set(witness) != {"inputs", "graph_config", "endpoints"}
+                or not isinstance(witness["inputs"], dict) or set(witness["inputs"]) != {"manifest", "graph"}
+                or not isinstance(witness["inputs"]["manifest"], str)
+                or _HEX.fullmatch(witness["inputs"]["manifest"]) is None
+                or not isinstance(witness["inputs"]["graph"], str)
+                or (witness["inputs"]["graph"] != "disabled" and _HEX.fullmatch(witness["inputs"]["graph"]) is None)
+                or not (witness["graph_config"] is None or isinstance(witness["graph_config"], dict))
+                or not isinstance(witness["endpoints"], dict)
+                or witness["endpoints"] != json.loads(model, object_pairs_hook=_unique)["bindings"].get("endpoints")):
+            raise ValueError("Invalid reuse witness")
+    elif "reuse" in data:
+        raise ValueError("Invalid reuse witness")
+    connection.execute("CREATE TABLE IF NOT EXISTS generation_reuse (witness VARCHAR)")
+    connection.execute("DELETE FROM generation_reuse")
+    if witness is not None:
+        connection.execute("INSERT INTO generation_reuse VALUES (?)", [json.dumps(witness, ensure_ascii=False)])
+
+
+def _native_graph_payload(data, components, identity):
+    if "graph" not in data:
+        return None
+    digest = data["graph_sha256"]
+    if (not isinstance(data["graph"], dict) or not isinstance(digest, str)
+            or _HEX.fullmatch(digest) is None or _digest(data["graph"]) != digest):
+        raise ValueError("Invalid graph or digest mismatch")
+    graph = validate(data["graph"], components)
+    identity["graph_sha256"] = digest
+    return graph
+
+
 def replace_generation(connection, data, manifest_sha256, *, stage_refresh=None):
     native, snapshot, model, structure, graph, components = _validate_generation(data, manifest_sha256)
     generation = _digest({"receipt": data["receipt"], "snapshot": snapshot})
@@ -109,6 +143,8 @@ def replace_generation(connection, data, manifest_sha256, *, stage_refresh=None)
         replace(connection, graph, components)
         connection.execute("DELETE FROM generation")
         connection.execute("INSERT INTO generation VALUES (?, ?, ?)", [generation, model, structure])
+        _write_reuse(connection, data, model)
+        update_checkpoint(connection, data)
         captured = stage_refresh() if stage_refresh is not None else None
         connection.execute("COMMIT")
     except BaseException:
@@ -116,3 +152,49 @@ def replace_generation(connection, data, manifest_sha256, *, stage_refresh=None)
         restore_property_graph(connection)
         raise
     return generation, captured
+
+
+class GenerationBaseChanged(ValueError):
+    """The conditional native update no longer has its accepted base."""
+
+
+def replace_native_generation(connection, data, manifest_sha256):
+    """Replace native rows and optionally the Realization Graph, retaining artifacts."""
+    connection.execute("BEGIN TRANSACTION")
+    graph_dropped = False
+    try:
+        rows = connection.execute("SELECT id, model, structure FROM generation").fetchall()
+        if (len(rows) != 1 or rows[0][0] != data["base_generation"]
+                or not has_table(connection, "native_graph", "labels")
+                or not has_table(connection, "main", "relations")):
+            raise GenerationBaseChanged("Generation base changed or is not native")
+        base, model, structure = rows[0]
+        snapshot, digest = data["snapshot"], data["snapshot_sha256"]
+        if not isinstance(digest, str) or _HEX.fullmatch(digest) is None or _digest(snapshot) != digest:
+            raise ValueError("Native snapshot digest mismatch")
+        validate_native_snapshot(snapshot, manifest_sha256)
+        endpoints = json.loads(model, object_pairs_hook=_unique)["bindings"].get("endpoints")
+        if not isinstance(endpoints, dict) or set(endpoints) != set(snapshot["relation_types"]):
+            raise ValueError("Snapshot relation types differ from the admitted Model")
+        components = {"C00", *json.loads(structure, object_pairs_hook=_unique)["components"]}
+        identity = {"kind": "native_snapshot_refresh", "base_generation": base, "snapshot_sha256": digest}
+        graph = _native_graph_payload(data, components, identity)
+        generation = _digest(identity)
+        connection.execute("DROP PROPERTY GRAPH IF EXISTS anechoic")
+        graph_dropped = True
+        replace_native_atoms(connection, snapshot)
+        replace_native_graph(connection, snapshot["relation_types"], components)
+        if graph is None:
+            restore_property_graph(connection)
+        else:
+            replace(connection, graph, components)
+            _write_reuse(connection, data, model)
+        update_checkpoint(connection, data)
+        connection.execute("UPDATE generation SET id = ?", [generation])
+        connection.execute("COMMIT")
+    except BaseException:
+        connection.execute("ROLLBACK")
+        if graph_dropped:
+            restore_property_graph(connection)
+        raise
+    return generation

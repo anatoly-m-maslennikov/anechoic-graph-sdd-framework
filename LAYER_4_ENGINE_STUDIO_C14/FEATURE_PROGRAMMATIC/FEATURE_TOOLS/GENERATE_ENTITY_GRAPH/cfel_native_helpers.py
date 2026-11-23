@@ -7,7 +7,13 @@ import re
 from collections.abc import Mapping
 from typing import Any
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import subject_notation__pub as notation
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    Name as _subject_Name,
+    Path as _subject_Path,
+    Qualification as _subject_Qualification,
+    parse_subject_expression as _subject_parse_subject_expression,
+    render_subject as _subject_render_subject,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.cfel_constraint_common import (
     _CONTROL, _COUNT, _OPERATOR_SUBJECT, _count, _named_property_count, _record, _sibling_order,
 )
@@ -142,11 +148,11 @@ def _helper_call_2(name, args, group, source, carrier, rows, diagnostics, suffix
     if name in {"deliver", "subject_path"}:
         expression = (f'{args["source"]} >> {args["carrier"]}' if name == "deliver" else args["address"])
         if name == "subject_path" and group in {None, "model"}:
-            subject = notation.parse_subject_expression(expression, subject_profile="approved").expression
-            if (isinstance(subject, notation.Path) and isinstance(subject.head, notation.Name)
+            subject = _subject_parse_subject_expression(expression, subject_profile="approved").expression
+            if (isinstance(subject, _subject_Path) and isinstance(subject.head, _subject_Name)
                     and subject.value_format is None and subject.value_cardinality is None
-                    and all(step.operator in {"/", "."} and isinstance(step.operand, (notation.Name, notation.Qualification)) for step in subject.steps)):
-                rows.append(_record(source, expression, "subject_expression", selector=notation.render_subject(subject), **suffix))
+                    and all(step.operator in {"/", "."} and isinstance(step.operand, (_subject_Name, _subject_Qualification)) for step in subject.steps)):
+                rows.append(_record(source, expression, "subject_expression", selector=_subject_render_subject(subject), **suffix))
                 return True
         message = ("CFEL control expression is outside the bounded projection extractor." if _CONTROL.search(expression)
                    else "CFEL expression is outside the bounded projection extractor.")

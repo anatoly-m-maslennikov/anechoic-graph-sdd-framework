@@ -10,7 +10,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEA
     CONTENT_PROPERTY, RECURSIVE_CONTENT, NESTED_CONTENT, NESTED_HEADER, ROLE_HEADER, ROLE, INSTANCE_CHECK,
 )
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import compile_content_schema, declaration_statements
-from KERNEL_MIXER_C59.declared_header_rules import header_declaration_rules
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import header_declaration_rules
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import compile_role_folders
 
 

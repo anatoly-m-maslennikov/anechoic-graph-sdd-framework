@@ -15,7 +15,7 @@ if str(TOOLS_ROOT) not in sys.path:
     sys.path.insert(0, str(TOOLS_ROOT))
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import TemporaryBoundaryError  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.project_temporary__pub import TEMPORARY_DIRECTORY, atomic_tempfile  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import TEMPORARY_DIRECTORY, atomic_tempfile  # noqa: E402
 
 
 TEST_TEMP_ROOT = (

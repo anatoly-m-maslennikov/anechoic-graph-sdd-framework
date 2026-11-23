@@ -11,8 +11,8 @@ import unittest
 
 APP_ROOT = Path(__file__).resolve().parents[3]
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import parse_content  # noqa: E402
-from KERNEL_MIXER_C59.query_store import QueryStore  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_content  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import QueryStore  # noqa: E402
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import materialize, relation_registry  # noqa: E402
 
 

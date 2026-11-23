@@ -6,7 +6,7 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
-from KERNEL_MIXER_C59.source_inventory import markdown_paths
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import markdown_paths
 
 
 class SourceInventoryTest(unittest.TestCase):

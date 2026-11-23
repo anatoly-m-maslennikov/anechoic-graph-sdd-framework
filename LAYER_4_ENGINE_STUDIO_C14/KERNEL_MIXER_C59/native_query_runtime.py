@@ -16,21 +16,22 @@ from .import_cache import clear_import_sources
 from .import_tables import remove_imports
 from .native_query_projection import NativeQueryProjection
 from .native_query_rebuild import NativeQueryRebuild, QUERY_TABLES
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_source_rows__pub import NativeCapture
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import NativeCapture
 from .query_admission import is_duckdb_internal
 from .query_log import QueryLog
 from .query_store import QueryStore
 from .result_delivery import deliver, validate_delivery
 from .saved_queries import SavedQueryStore
 from .service_interface import ServiceInterface
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.source_watcher__pub import SourceWatcher
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import SourceWatcher
 from .spec_trace import remove_native_traces
 from .statements import select_statement
 from .workspace import WorkspaceStore
 from .watcher_change_log import WatcherChangeLog
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import ManifestIdentity, NativeProjectSelection
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.journal_settings__pub import journal_storage, validated_journal_root
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.work_journal__pub import PROJECT_DATABASE, pending_database_journal
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import journal_storage, validated_journal_root
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import pending_database_journal
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import migrate_project_database
 
 
 @dataclass(frozen=True)
@@ -89,7 +90,7 @@ class NativeQueryRuntime(NativeQueryProjection, NativeQueryRebuild, ServiceInter
             raise ValueError("Project Manifest runtime.workbench.storage must be disk or memory")
         options = {key: workbench[key] for key in ("result_ttl_seconds", "schema_mode", "inline_result_limit_kib")
                    if key in workbench}
-        path = self._root / PROJECT_DATABASE
+        path = migrate_project_database(self._root)
         spill = path.parent / "duckdb-temp"
         if path.resolve() != path or spill.resolve() != spill:
             raise ValueError("Workbench database and spill paths must use the Project runtime directory directly")

@@ -8,6 +8,7 @@ import sys
 from tempfile import TemporaryDirectory
 import unittest
 
+from jsonschema import Draft202012Validator
 from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
@@ -15,6 +16,7 @@ ENGINE = Path(__file__).resolve().parents[3]
 COMPONENTS = ("FEATURE_PROGRAMMATIC", "MCP_PATCHBAY_C21", "KERNEL_MIXER_beta_C67",
               "ORCHESTRATOR_beta_C68", "WORKERS_beta_C69", "WORKBENCH_BACKEND_beta_C70",
               "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_IMPORT_GRAPH_C61")
+PUBLIC_PAGE = "https://workbench.example.test/anechoic/workbench/Example"
 
 
 def _stage(root):
@@ -37,7 +39,7 @@ def _project(root):
         "from anechoic.formal_claims import declare_entity\n"
         "from anechoic.model import ProjectManifest\n"
         "declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Example', prefix='EX', "
-        "parameters={'runtime': {'workbench': {'import_graph': {'python_roots': ['.']}}}, "
+        f"parameters={{'runtime': {{'workbench': {{'import_graph': {{'python_roots': ['.']}}, 'public_url': {PUBLIC_PAGE!r}}}}}, "
         "'paths': {'journal_root': 'custom/journal'}}))\n```\n",
         encoding="utf-8",
     )
@@ -50,8 +52,10 @@ def _project(root):
         "  updated_at: '2026-11-19T00:00:00Z'\n---\n\n## Summary\n\nExample task\n",
         encoding="utf-8",
     )
-    (root / "main.py").write_text("import helper\n")
-    (root / "helper.py").write_text("value = 1\n")
+    (root / "main.py").write_text("from helper import leaf as run\n\ndef start():\n    run()\n")
+    (root / "helper.py").write_text("def leaf():\n    global _count\n    _count = 1\n")
+    (root / "cycle_a.py").write_text("from cycle_b import b\na = 1\n")
+    (root / "cycle_b.py").write_text("from cycle_a import a\nb = 1\n")
     journal = root / "custom/journal"
     journal.mkdir(parents=True)
     (journal / "test-2026-11-19-part-1.ndjson").write_text('{"action":"verify"}\n', encoding="utf-8")
@@ -77,10 +81,7 @@ class BetaMcpTest(unittest.IsolatedAsyncioTestCase):
             )
             async with asyncio.timeout(90), stdio_client(parameters) as streams, ClientSession(*streams) as client:
                 await client.initialize()
-                tools = (await client.list_tools()).tools
-                self.assertTrue({"query_run", "query_schema", "query_check", "query_page",
-                                 "workspace_open", "view_update", "view_run", "view_check", "view_fetch"}
-                                <= {tool.name for tool in tools})
+                await self.assert_catalog(client, project)
                 await self.assert_schema(client)
                 query = {"sql": 'SELECT reference, "content.summary" FROM atoms ORDER BY reference',
                          "page_size": 1, "cursor_position": 0, "result_delivery": "inline"}
@@ -98,11 +99,39 @@ class BetaMcpTest(unittest.IsolatedAsyncioTestCase):
                 self.assertFalse(page.structured_content["has_more"])
                 await self.assert_history(client, query["sql"])
                 await self.assert_grid_and_journal(client, first["query_id"])
+                await self.assert_saved_sql(client)
                 await self.assert_workspace(client)
                 await self.assert_native_projection(client)
                 await self.assert_live_graph(client, project)
-                reply = await client.call_tool("query_run", {**query, "project_root": str(root)})
-                self.assertTrue(reply.is_error)
+                await self.assert_component_flows(client)
+                await self.assert_project_scope(client, query, root)
+
+    async def assert_project_scope(self, client, query, root):
+        reply = await client.call_tool("query_run", {**query, "project_root": str(root)})
+        self.assertTrue(reply.is_error)
+
+    async def assert_saved_sql(self, client):
+        sql = "SELECT 41 AS saved_view"
+        reply = await client.call_tool("view_save", {"sql": sql, "name": "A saved View"})
+        self.assertFalse(reply.is_error, reply.structured_content)
+        record = reply.structured_content
+        self.assertEqual("view", record["kind"])
+        self.assertEqual(f"{PUBLIC_PAGE}?query={record['saved_query_id']}", record["saved_query_url"])
+        loaded = await client.call_tool("query_load", {"reference": record["saved_query_id"]})
+        self.assertFalse(loaded.is_error, loaded.structured_content)
+        self.assertEqual(sql, loaded.structured_content["sql"])
+
+    async def assert_catalog(self, client, project):
+        tools = (await client.list_tools()).tools
+        self.assertTrue({"query_run", "query_schema", "query_check", "query_page", "workbench_status", "workbench_abort",
+                         "workspace_open", "view_update", "view_run", "view_check", "view_fetch"}
+                        <= {tool.name for tool in tools})
+        tool = next(tool for tool in tools if tool.name == "view_save")
+        validator = Draft202012Validator(tool.input_schema)
+        context = {"project_root": str(project), "caller_context": {"session_id": "test-session"}}
+        self.assertTrue(validator.is_valid({"sql": "SELECT 1"}))
+        self.assertTrue(validator.is_valid({"workspace_id": "w", "view_id": "v", **context}))
+        self.assertFalse(validator.is_valid({"workspace_id": "w", "view_id": "v", "sql": "SELECT 1", **context}))
 
     async def assert_history(self, client, sql):
         async with asyncio.timeout(5):
@@ -138,7 +167,24 @@ class BetaMcpTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(["reference", "content.summary", "relative_path", "filename", "status_group",
                           "header.state.version", "header.state.status"],
                          [column["name"] for column in tables["atoms"]])
-        self.assertTrue({"package_external_imports", "native_references", "relations", "query_log"} <= tables.keys())
+        self.assertTrue({"package_external_imports", "native_references", "relations", "query_log",
+                         "code_units", "code_unit_calls", "import_cycles", "package_coupling",
+                         "antipattern_findings", "component_flows", "flow_events",
+                         "flow_overlap_candidates", "flow_similar_actions"} <= tables.keys())
+
+    async def assert_antipattern_review(self, client):
+        cases = (
+            ("SELECT relative_path, line FROM import_cycles WHERE level = 'module' ORDER BY relative_path",
+             [['cycle_a.py', 1], ['cycle_b.py', 1]]),
+            ("SELECT relative_path, status FROM antipattern_findings WHERE rule = 'import_cycles' ORDER BY relative_path",
+             [['cycle_a.py', 'confirmed'], ['cycle_b.py', 'confirmed']]),
+            ("SELECT relative_path, status FROM antipattern_findings WHERE rule = 'python_import_order' ORDER BY relative_path",
+             [['cycle_a.py', 'confirmed'], ['cycle_b.py', 'confirmed']]),
+        )
+        for sql, expected in cases:
+            result = await client.call_tool('query_run', {'sql': sql})
+            self.assertFalse(result.is_error, result.structured_content)
+            self.assertEqual(expected, result.structured_content['rows'])
 
     async def assert_workspace(self, client):
         opened = await client.call_tool("workspace_open", {"session_id": "mcp-session"})
@@ -168,6 +214,7 @@ class BetaMcpTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((new_id, [[2]]), (page.structured_content["query_id"], page.structured_content["rows"]))
 
     async def assert_live_graph(self, client, project):
+        await self.assert_antipattern_review(client)
         query = {"sql": "SELECT resolution_status FROM module_imports WHERE written_specifier = 'helper'"}
         result = await client.call_tool("query_run", query)
         self.assertEqual([["internal"]], result.structured_content["rows"])
@@ -177,14 +224,73 @@ class BetaMcpTest(unittest.IsolatedAsyncioTestCase):
             WHERE source = 'main.py' AND target = 'helper.py'
         """})
         self.assertEqual([["main.py", "helper.py"]], match.structured_content["rows"])
+        await self.assert_call_graph(client)
+        if shutil.which('lean'):
+            await self.assert_lean_call_effect(client)
         (project / "helper.py").rename(project / "changed.py")
         deadline = asyncio.get_running_loop().time() + 20
         while asyncio.get_running_loop().time() < deadline:
             result = await client.call_tool("query_run", query)
             if result.structured_content.get("rows") == [["unresolved"]]:
+                cleared = await client.call_tool("query_run", {"sql": "SELECT count(*) FROM code_unit_calls"})
+                self.assertEqual([[0]], cleared.structured_content["rows"])
                 return
             await asyncio.sleep(0.2)
         self.fail(f"Graph did not follow renamed source: {result.structured_content}")
+
+    async def assert_call_graph(self, client):
+        result = await client.call_tool("query_rebuild", {"target": "code_unit_calls"})
+        self.assertFalse(result.is_error, result.structured_content)
+        query = {"sql": """
+            FROM GRAPH_TABLE (anechoic MATCH
+                (m:ImportNode)-[includes:ModuleIncludes]->(s:CodeUnit)-[c:Calls]->(t:CodeUnit)
+                COLUMNS (m.relative_path AS path, s.qualified_name AS caller, t.qualified_name AS callee,
+                         c.line AS call_line))
+        """}
+        result = await client.call_tool("query_run", query)
+        self.assertFalse(result.is_error, result.structured_content)
+        self.assertEqual([["main.py", "start", "leaf", 4]], result.structured_content["rows"])
+
+    async def assert_component_flows(self, client):
+        async with asyncio.timeout(10):
+            while True:
+                overlap = await client.call_tool("query_run", {"sql": """
+                    SELECT list_contains(trigger_names, 'startup'),
+                           list_contains(trigger_names, 'rebuild_request'),
+                           list_contains(trigger_names, 'file_change')
+                    FROM flow_overlap_candidates WHERE component = 'C68' AND action = 'generate'
+                """})
+                self.assertFalse(overlap.is_error, overlap.structured_content)
+                if overlap.structured_content["rows"] == [[True, True, True]]:
+                    break
+                await asyncio.sleep(0.1)
+        witness = await client.call_tool("query_run", {"sql": """
+            SELECT count(DISTINCT e.kind)
+            FROM flow_events t JOIN flow_events e USING (run_id)
+            WHERE t.kind = 'trigger' AND t.name = 'file_change'
+              AND e.sequence > t.sequence AND e.kind IN ('effect', 'output')
+        """})
+        self.assertFalse(witness.is_error, witness.structured_content)
+        self.assertEqual([[2]], witness.structured_content["rows"])
+        observed = await client.call_tool("query_run", {"sql": """
+            SELECT unit_name, json_extract_string(triggers, '$.file_change[0]')
+            FROM component_flows WHERE component = 'C68' AND action = 'generate'
+        """, "page_size": 1, "result_delivery": "inline"})
+        self.assertFalse(observed.is_error, observed.structured_content)
+        self.assertEqual([["GenerationJobs._generate", "file_change"]], observed.structured_content["rows"])
+        refreshed = await client.call_tool("query_rebuild", {"target": "component_flows"})
+        self.assertFalse(refreshed.is_error, refreshed.structured_content)
+        self.assertIn(observed.structured_content["query_id"], refreshed.structured_content["result_ids"])
+
+    async def assert_lean_call_effect(self, client):
+        result = await client.call_tool('query_run', {'sql': """
+            SELECT status, json_extract_string(events, '$[0].kind'),
+                   json_extract_string(events, '$[0].sourcePath'),
+                   CAST(json_extract(events, '$[0].line') AS BIGINT)
+            FROM state_effect_findings WHERE relative_path = 'main.py' AND action = 'start'
+        """})
+        self.assertFalse(result.is_error, result.structured_content)
+        self.assertEqual([['hasEffects', 'write', 'helper.py', 3]], result.structured_content['rows'])
 
     async def assert_native_projection(self, client):
         query = {"sql": """

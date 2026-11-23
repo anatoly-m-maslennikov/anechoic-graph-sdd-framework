@@ -3,7 +3,7 @@ import json
 import hashlib
 import unittest
 from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.declared_subject_evidence import validate_declared_subject_evidence  # noqa: E402
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_evidence__shared import ReviewContext, _validate_resolved_mention  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import ReviewContext, _validate_resolved_mention  # noqa: E402
 
 
 LEGACY_P032_BYTES = b'''---

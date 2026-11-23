@@ -16,7 +16,7 @@ compiler = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = compiler
 SPEC.loader.exec_module(compiler)
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.artifact_metadata import SETTINGS_PATH
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import SETTINGS_PATH
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.COMPILE_APPLICABLE_METHODOLOGY.methodology_paths__shared import DEFAULT_SETTINGS_NAME, INSTANCE_SETTINGS_RELATIVE
 
 

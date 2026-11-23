@@ -11,7 +11,7 @@ from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
     _scope_references, _support_facts, _support_for_fact, _graph_sources,
     _carrier_facts, _materialized_atom,
 )
-from KERNEL_MIXER_C59.relation_registry import (
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
     RelationRegistry, RegistryCompilation, RegistryContribution, _unambiguous_aliases,
     _warn_colliding_uses, compile_registry, registry_contribution, registry_from_contributions,
 )

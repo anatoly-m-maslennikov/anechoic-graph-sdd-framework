@@ -6,7 +6,13 @@ import re
 from collections.abc import Mapping
 from typing import Any
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import subject_notation__pub as notation
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    Name as _subject_Name,
+    Path as _subject_Path,
+    Qualification as _subject_Qualification,
+    SubjectNotationError as _subject_SubjectNotationError,
+    parse_subject_expression as _subject_parse_subject_expression,
+)
 
 Record = dict[str, Any]
 _COUNT = r"(?P<minimum>0|[1-9][0-9]*)(?P<tail>\+|\.\.(?P<maximum>0|[1-9][0-9]*))?"
@@ -49,13 +55,13 @@ def _property_selector(value: str) -> str | None:
     plain = _MEMBERSHIP_QUALIFIER.sub("", selector)
     if not plain or any(token in plain for token in ("(", ")", "+", "=", "<", ">", "|", "@", "*", ";", ":", "[", "]", "{", "}", "'", '"')):
         try:
-            parsed = notation.parse_subject_expression(selector, subject_profile="approved").expression
-        except notation.SubjectNotationError:
+            parsed = _subject_parse_subject_expression(selector, subject_profile="approved").expression
+        except _subject_SubjectNotationError:
             return None
-        if (not isinstance(parsed, notation.Path) or parsed.value_format is not None or parsed.value_cardinality is not None
-                or not isinstance(parsed.head, notation.Name)
-                or not any(isinstance(step.operand, notation.Qualification) for step in parsed.steps)
-                or any(step.operator not in {"/", "."} or not isinstance(step.operand, (notation.Name, notation.Qualification)) for step in parsed.steps)):
+        if (not isinstance(parsed, _subject_Path) or parsed.value_format is not None or parsed.value_cardinality is not None
+                or not isinstance(parsed.head, _subject_Name)
+                or not any(isinstance(step.operand, _subject_Qualification) for step in parsed.steps)
+                or any(step.operator not in {"/", "."} or not isinstance(step.operand, (_subject_Name, _subject_Qualification)) for step in parsed.steps)):
             return None
     return selector
 

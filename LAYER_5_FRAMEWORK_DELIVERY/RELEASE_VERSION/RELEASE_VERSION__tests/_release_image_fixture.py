@@ -21,6 +21,10 @@ class ReleaseImageFixture(unittest.TestCase):
             path = self.package / relative
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text('[framework]\nversion = "1.2.3"\n' if relative == "version.toml" else "content")
+        for layer in ("LAYER_1_META_ONTOLOGY_C9", "LAYER_2_META_METHODOLOGY_C58"):
+            path = self.package / layer / "AN-S-1-source.md"
+            path.parent.mkdir()
+            path.write_text("source")
         self.build = self.root / ".anechoic_tmp/build"
         self.build.mkdir(parents=True)
         self.image = "sha256:" + "a" * 64

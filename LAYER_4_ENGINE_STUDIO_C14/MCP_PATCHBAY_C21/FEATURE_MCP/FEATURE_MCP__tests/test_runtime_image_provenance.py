@@ -10,8 +10,8 @@ import unittest
 
 from . import launcher_images_test_support as fixtures
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_provenance import ImageBuildProvenance  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images import FINGERPRINT_LABEL, SCHEMA_LABEL, ImageError, ImageManager  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import ImageBuildProvenance  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import FINGERPRINT_LABEL, SCHEMA_LABEL, ImageError, ImageManager  # noqa: E402
 
 
 def _display_tag_executor(executor):

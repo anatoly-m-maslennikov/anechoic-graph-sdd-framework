@@ -20,7 +20,7 @@ def read_component_contract(path, carrier, parent, prefix):
     header = native_header_view(metadata)
     context = header['context']
     atom, version = header['identity']['atom_id'], state.get('version')
-    if (metadata.get('atom_family') != 'SPEC' or context.get('tier') != 1
+    if (metadata.get('atom_family') != 'SPEC' or context.get('tier') != 0
             or type(context.get('tier')) is not int or parent is None
             or context.get('container') != {'component': parent}
             or not isinstance(context.get('lens'), str) or not context['lens'].strip()

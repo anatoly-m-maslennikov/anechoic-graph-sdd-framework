@@ -11,10 +11,10 @@ sys.path[:0] = [str(PROGRAMMATIC), str(TOOLS)]
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import (
     CONTENT_PROPERTY, RECURSIVE_CONTENT, NESTED_CONTENT, NESTED_HEADER, ROLE_HEADER, ROLE, HEADER_RELATIONS, FORM_EXAMPLES, ANALYSIS,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.content_constraints import compile_content_constraints
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.header_constraints import compile_header_constraints, load_header_constraints
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.role_form_schema import compile_role_form
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.status_model import status_memberships
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import compile_content_constraints
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import compile_header_constraints, load_header_constraints
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import compile_role_form
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import status_memberships
 
 
 def _native_row(source, identifier="CA-R-1"):

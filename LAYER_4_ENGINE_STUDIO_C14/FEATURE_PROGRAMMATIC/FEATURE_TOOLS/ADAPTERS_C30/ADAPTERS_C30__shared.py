@@ -1,4 +1,32 @@
 """Shared adapter API."""
+from .subject_notation__pub import (
+    Span,
+    Name,
+    ValueLiteral,
+    FormatReference,
+    Cardinality,
+    Qualification,
+    DeclaredReference,
+    SelectionGroup,
+    SelectionSuffix,
+    PathStep,
+    Path,
+    RelationLink,
+    RelationChain,
+    ParsedSubject,
+    parse_subject_expression,
+    render_subject,
+    GrammarSource,
+    GrammarPin,
+    InitialAtomSelector,
+    SubjectNotationError,
+    SubjectProfile,
+    get_profile,
+    namespace_local_expression,
+    parse_initial_atom_selector,
+    parse_subject,
+    profile_evidence,
+)
 from .ADAPTERS_C30__pub import (
     CEILINGS,
     LimitReached,
@@ -9,10 +37,30 @@ from .ADAPTERS_C30__pub import (
     protected,
     validate_directory_components,
 )
+from .carrier_read__pub import CarrierError, ParsedCarrier, parse_carrier
+from .markdown_content__pub import (
+    content_key, content_lines, direct_markdown, formal_claim_fences,
+    parse_content, section_markdown, source_markdown,
+)
 from .content_records__pub import records_by_path
+from .framework_database__pub import attach_framework
+from .model_catalog__pub import bindings_from_workbench_rows, class_bindings
+from .model_class_subject__pub import (
+    canonical_model_address, model_class_target, model_declaration_subject, simple_model_address,
+)
+from .native_snapshot_cli import capture_ticket_delta, native_carrier_hashes, prepare_generation_snapshot
+from .project_database__pub import migrate_project_database
 from .native_source_rows__pub import capture_native
-from .project_manifest__pub import ProjectSelectionError
-from .settings_context__pub import bound_selection
+from .project_manifest__pub import (
+    ProjectSelectionError, active_manifest_carriers, manifest_inputs,
+    manifest_sources, manifest_state_fields, select_manifest_carriers,
+)
+from .project_temporary__pub import TEMPORARY_DIRECTORY, atomic_tempfile, owned_temporary_root
+from .settings_carrier__pub import parse_settings_carrier, read_settings_carrier, write_settings_carrier
+from .settings_context__pub import (
+    ProjectSettingsValueError, bind_settings_selection, bound_selection, control_root,
+    project_identity, project_identity_prefix,
+)
 from .source_row__pub import canonical
 from .carrier_body__pub import frontmatter_bounds, source_body
 from .native_model_claim__pub import (
@@ -57,7 +105,121 @@ from .property_order__pub import bind_ordering_declarations, order_properties
 from .realization_ownership__pub import realization_component_paths
 from .structure_snapshot__pub import StructureSnapshot, parse_structure, read_structure
 
+from .atom_reference__pub import atom_identifier
+from .carrier_syntax__pub import UniqueSafeLoader, check_yaml_resources
+from .code_access_rules__pub import module_visibility
+from .component_contract__pub import read_component_contract
+from .component_manifest__pub import parse_component_manifest
+from .component_seed_manifest__pub import read_component_seed_manifest
+from .content_records__pub import content_record_span, value_excluding_declared_children
+from .current_carriers__pub import read_current_carriers, read_current_model_carriers
+from .formal_claim__pub import formal_claim, iter_formal_claims
+from .journal_settings__pub import configured_journal_root, journal_storage, validated_journal_root
+from .legacy_relation__pub import emits_instance_inverse
+from .native_carrier_header__pub import canonical_native_header, native_header_model_fields, native_header_view
+from .native_source_rows__pub import (
+    CURRENT_STATUSES, NativeCapture, NativeManifestChanged, check_native_manifest, revalidate_native,
+)
+from .python_claim__pub import (
+    PythonModelClaimError, parse_grouped_python_model_claim, parse_python_model_claim,
+    parse_structured_python_model_claim,
+)
+from .realization_ownership__pub import build_code_access_ownership
+from .scope_carrier__pub import (
+    DELEGATION_ROLE_FOLDERS, ScopeDeclarationError, has_projection_marker,
+    has_scope_declaration_form, read_scope_carrier,
+)
+from .scope_declaration_parse__pub import ScopeUnitDeclaration, parse_scope_unit_declaration
+from .scope_unit_declarations__pub import ScopeUnitDeclarations, read_scope_unit_declarations
+from .source_row__pub import json_value
+from .source_watcher__pub import SourceWatcher
+from .work_journal__pub import MAX_DATABASE_EVENT_BYTES, append_sealed_events, canonical_json_bytes, journal_inbox, pending_database_journal
+
 __all__ = [
+    "CURRENT_STATUSES",
+    "DELEGATION_ROLE_FOLDERS",
+    "MAX_DATABASE_EVENT_BYTES",
+    "NativeCapture",
+    "NativeManifestChanged",
+    "PythonModelClaimError",
+    "ScopeDeclarationError",
+    "SourceWatcher",
+    "UniqueSafeLoader",
+    "active_manifest_carriers",
+    "append_sealed_events",
+    "atom_identifier",
+    "build_code_access_ownership",
+    "canonical_json_bytes",
+    "canonical_native_header",
+    "check_native_manifest",
+    "check_yaml_resources",
+    "configured_journal_root",
+    "content_record_span",
+    "emits_instance_inverse",
+    "formal_claim",
+    "has_projection_marker",
+    "has_scope_declaration_form",
+    "iter_formal_claims",
+    "journal_inbox",
+    "journal_storage",
+    "json_value",
+    "manifest_inputs",
+    "manifest_sources",
+    "manifest_state_fields",
+    "module_visibility",
+    "native_header_model_fields",
+    "native_header_view",
+    "parse_component_manifest",
+    "parse_grouped_python_model_claim",
+    "parse_python_model_claim",
+    "parse_structured_python_model_claim",
+    "pending_database_journal",
+    "read_component_contract",
+    "read_component_seed_manifest",
+    "read_current_carriers",
+    "read_current_model_carriers",
+    "read_scope_carrier",
+    "read_scope_unit_declarations",
+    "revalidate_native",
+    "select_manifest_carriers",
+    "validated_journal_root",
+    "value_excluding_declared_children",
+    "CarrierError",
+    "ParsedCarrier",
+    "parse_carrier",
+    "content_key",
+    "content_lines",
+    "direct_markdown",
+    "formal_claim_fences",
+    "parse_content",
+    "section_markdown",
+    "source_markdown",
+    "Span",
+    "Name",
+    "ValueLiteral",
+    "FormatReference",
+    "Cardinality",
+    "Qualification",
+    "DeclaredReference",
+    "SelectionGroup",
+    "SelectionSuffix",
+    "PathStep",
+    "Path",
+    "RelationLink",
+    "RelationChain",
+    "ParsedSubject",
+    "parse_subject_expression",
+    "render_subject",
+    "GrammarSource",
+    "GrammarPin",
+    "InitialAtomSelector",
+    "SubjectNotationError",
+    "SubjectProfile",
+    "get_profile",
+    "namespace_local_expression",
+    "parse_initial_atom_selector",
+    "parse_subject",
+    "profile_evidence",
     "ARCHIVE_DIRECTORY",
     "CEILINGS",
     "COMPLETE_DIRECTORY",
@@ -83,7 +245,13 @@ __all__ = [
     "bind_ordering_declarations",
     "bound_selection",
     "canonical",
+    "canonical_model_address",
     "capture_native",
+    "attach_framework",
+    "capture_ticket_delta",
+    "native_carrier_hashes",
+    "prepare_generation_snapshot",
+    "migrate_project_database",
     "canonical_role_name",
     "canonical_status",
     "carrier_read_view",
@@ -100,6 +268,8 @@ __all__ = [
     "is_logical_container",
     "matches_carrier_label",
     "matches_named_value",
+    "model_class_target",
+    "model_declaration_subject",
     "named_value_token",
     "native_carrier_path",
     "native_ticket_asset",
@@ -116,10 +286,17 @@ __all__ = [
     "read_structure",
     "records_by_path",
     "role_folders_from_orders",
+    "simple_model_address",
     "source_body",
     "spec_folder_layout",
     "spec_lens_directories",
     "validate_aspect_hierarchy",
     "validate_aspect_instance",
     "validate_directory_components",
+    "TEMPORARY_DIRECTORY", "atomic_tempfile", "owned_temporary_root",
+    "ProjectSettingsValueError", "bind_settings_selection", "control_root",
+    "project_identity", "project_identity_prefix",
+    "parse_settings_carrier", "read_settings_carrier", "write_settings_carrier",
+    "bindings_from_workbench_rows", "class_bindings",
+    "ScopeUnitDeclaration", "ScopeUnitDeclarations", "parse_scope_unit_declaration",
 ]

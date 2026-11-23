@@ -11,12 +11,12 @@ import sys
 from typing import Any
 
 if __package__:
-    from KERNEL_MIXER_C59.relation_registry import RegistryCompilation, compile_registry, is_registry_declaration
+    from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import RegistryCompilation, compile_registry, is_registry_declaration
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical
     from .source_reader import SourceReader
 else:  # pragma: no cover - direct build-hook invocation
     sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
-    from KERNEL_MIXER_C59.relation_registry import (
+    from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
         RegistryCompilation,
         compile_registry,
         is_registry_declaration,

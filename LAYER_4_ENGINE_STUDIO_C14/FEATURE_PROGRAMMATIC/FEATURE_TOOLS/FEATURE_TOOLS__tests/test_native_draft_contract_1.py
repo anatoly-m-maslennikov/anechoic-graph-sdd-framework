@@ -10,9 +10,9 @@ TOOLS = Path(__file__).resolve().parents[1]
 ENGINE = TOOLS.parents[1]
 sys.path[:0] = [str(TOOLS), str(ENGINE / 'IWE_CONSOLE_C43')]
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_source_rows__pub import capture_native
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.common import InputError, SourceChanged
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_draft import create_draft
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import InputError, SourceChanged
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import create_draft
 
 
 
@@ -31,7 +31,7 @@ class ComponentContractLifecycleTests(fixtures.ComponentContractLifecycleTests, 
 
     def test_revision_uses_selection_snapshot_path_and_validates_its_parent(self):
         import json
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_draft_source import _revision_root
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import _revision_root
 
         draft = self.create()['savedDraft']
         self.promote(draft['ref_id'], draft['version'])
@@ -60,7 +60,7 @@ class ComponentContractLifecycleTests(fixtures.ComponentContractLifecycleTests, 
         draft = self.root / result['savedDraft']['path']
         self.assertEqual('AN-S-5@1-draft-DES-COMPONENT_CONTRACT--import-graph-contract.md', draft.name)
         metadata = yaml.safe_load(draft.read_text().split('---', 2)[1])
-        self.assertEqual({'container': {'component': 'C9'}, 'tier': 1}, {'container': metadata['container'], 'tier': metadata['tier']})
+        self.assertEqual({'container': {'component': 'C9'}, 'tier': 0}, {'container': metadata['container'], 'tier': metadata['tier']})
         self.assertEqual({'template': 'component_contract', 'lens': 'DES'}, metadata['context'])
         result = self.promote('AN-S-5@1-draft', 1)
         self.assertEqual('completed', result['outcome'])
@@ -158,12 +158,13 @@ class ComponentContractLifecycleTests(fixtures.ComponentContractLifecycleTests, 
 
 
     def test_archive_spec_draft_preserves_body_and_allocates_unused_version(self):
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_update import archive_spec_draft
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import archive_spec_draft
         created = self.create()['savedDraft']
         draft = self.root / created['path']
         _, header, body = draft.read_text().split('---', 2)
         metadata = yaml.safe_load(header)
         metadata['state']['status'] = 'archived'
+        metadata['tier'] = 1  # Historical revisions retain their authored Tier.
         occupied = draft.parent.parent / '09_archived' / draft.name.replace('@1-draft-', '@1-')
         occupied.parent.mkdir()
         occupied.write_text('---\n' + yaml.safe_dump(metadata) + '---' + body)
@@ -177,11 +178,12 @@ class ComponentContractLifecycleTests(fixtures.ComponentContractLifecycleTests, 
         self.assertEqual(body, archived.read_text().split('---', 2)[2])
         self.assertEqual('archived', yaml.safe_load(archived.read_text().split('---', 2)[1])['state']['status'])
         self.assertTrue(occupied.exists())
+        self.assertEqual(1, yaml.safe_load(occupied.read_text().split('---', 2)[1])['tier'])
         self.assertFalse(draft.exists())
 
 
     def test_ready_spec_starts_and_then_archives(self):
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_update import change_spec_status
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import change_spec_status
         created = self.create()
         ready = self.promote(created['savedDraft']['ref_id'], 1)
         ready_path = self.root / ready['artifact']['path']
@@ -202,7 +204,7 @@ class ComponentContractLifecycleTests(fixtures.ComponentContractLifecycleTests, 
 
     def test_reader_validates_active_contract(self):
         from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.component_contract__pub import read_component_contract
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import parse_carrier
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_carrier
         result = self.create()
         result = self.promote(result['savedDraft']['ref_id'], 1)
         path = self.root / result['artifact']['path']
@@ -213,7 +215,7 @@ class ComponentContractLifecycleTests(fixtures.ComponentContractLifecycleTests, 
                          (fields['ref_id'], fields['atom_id'], fields['component_id'], fields['guarantee']))
         with self.assertRaises(ValueError):
             read_component_contract(path, carrier, 'C8', 'AN')
-        carrier.metadata['tier'] = 2
+        carrier.metadata['tier'] = 1
         with self.assertRaises(ValueError):
             read_component_contract(path, carrier, 'C9', 'AN')
 

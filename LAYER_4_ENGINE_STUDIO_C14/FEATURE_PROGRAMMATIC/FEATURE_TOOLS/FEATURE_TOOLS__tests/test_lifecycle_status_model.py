@@ -9,7 +9,7 @@ import yaml
 TOOLS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS))
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import StatusModelError, canonical_status  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.status_model import StatusModel, compile_status_model, load_status_model  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import StatusModel, compile_status_model, load_status_model  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_read_view  # noqa: E402
 
 CORE = Path(__file__).parent / 'assets/lifecycle_schema_declarations/04_requirement'

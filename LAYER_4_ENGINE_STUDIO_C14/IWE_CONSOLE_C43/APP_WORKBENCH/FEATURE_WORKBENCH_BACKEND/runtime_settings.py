@@ -6,9 +6,6 @@ from __future__ import annotations
 from pathlib import Path
 import tomllib
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.settings_carrier__pub import read_settings_carrier
-
-
 DEFAULT_RESULT_TTL_SECONDS = 3600
 DEFAULT_SCHEMA_MODE = 2
 
@@ -18,6 +15,9 @@ def result_ttl_seconds(root: Path) -> int:
     path = Path(root) / ".anechoic_runtime" / "anechoic_runtime_settings.toml"
     if not path.exists():
         return DEFAULT_RESULT_TTL_SECONDS
+
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import read_settings_carrier
+
     try:
         document = read_settings_carrier(path)
     except (OSError, UnicodeError, tomllib.TOMLDecodeError) as error:
@@ -36,6 +36,9 @@ def schema_mode(root: Path) -> int:
     path = Path(root) / ".anechoic_runtime" / "anechoic_runtime_settings.toml"
     if not path.exists():
         return DEFAULT_SCHEMA_MODE
+
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import read_settings_carrier
+
     try:
         document = read_settings_carrier(path)
     except (OSError, UnicodeError, tomllib.TOMLDecodeError) as error:

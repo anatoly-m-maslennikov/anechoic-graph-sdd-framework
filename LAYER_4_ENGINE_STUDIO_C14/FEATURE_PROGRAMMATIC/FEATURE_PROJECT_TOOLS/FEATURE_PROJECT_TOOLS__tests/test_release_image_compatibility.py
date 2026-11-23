@@ -24,6 +24,8 @@ class ReleaseImageCompatibilityTests(unittest.TestCase):
         self.root = Path(temporary.name).resolve()
         self.files = {
             **dict.fromkeys(LICENSES, "fixture license\n"),
+            "LAYER_1_META_ONTOLOGY_C9/AN-S-1-SPEC--ontology.md": "ontology fixture",
+            "LAYER_2_META_METHODOLOGY_C58/AN-S-2-SPEC--methodology.md": "methodology fixture",
             "LAYER_3_ENVIRONMENTS_C72/engine/pyproject.toml": "project",
             "LAYER_3_ENVIRONMENTS_C72/engine/uv.lock": "lock",
             "version.toml": '[framework]\nversion = "1.2.3"\n',
@@ -80,7 +82,11 @@ class ReleaseImageCompatibilityTests(unittest.TestCase):
         after = self.assert_compatible()
         self.assertNotEqual(before["fingerprint"], after["fingerprint"])
         (self.root / TOOL_REGISTRY).write_text('{"tools":["new"]}')
-        self.assertNotEqual(after["fingerprint"], self.assert_compatible()["fingerprint"])
+        with_registry = self.assert_compatible()
+        self.assertNotEqual(after["fingerprint"], with_registry["fingerprint"])
+        framework_atom = self.root / "LAYER_2_META_METHODOLOGY_C58/AN-S-2-SPEC--methodology.md"
+        framework_atom.write_text("updated methodology fixture")
+        self.assertNotEqual(with_registry["fingerprint"], self.assert_compatible()["fingerprint"])
 
     def test_license_edits_keep_fingerprint_and_update_manifest(self):
         before = self.assert_compatible()

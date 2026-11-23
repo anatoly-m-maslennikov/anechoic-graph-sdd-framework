@@ -14,6 +14,7 @@ from urllib.parse import quote
 
 from .ADAPTERS_C30__pub import open_regular
 from .journal_settings__pub import configured_journal_root, current_timestamp, validated_journal_root
+from .project_database__pub import PROJECT_DATABASE
 
 
 MODULE_PATH = Path(__file__).resolve()
@@ -30,7 +31,6 @@ for _parent in MODULE_PATH.parents:
 
 
 SETTINGS_PATH = Path(".anechoic_anechoic/anechoic_project_settings.toml")
-PROJECT_DATABASE = Path(".anechoic_runtime/workbench/projection.duckdb")
 MAX_EVENTS_PER_PART = 1000
 AUTHOR_RE = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$")
 
@@ -75,7 +75,7 @@ def canonical_json_bytes(value: object) -> bytes:
 
 
 def journal_inbox(root: Path) -> Path:
-    return root / PROJECT_DATABASE.parent / "journal-inbox"
+    return root / ".anechoic_runtime/workbench/journal-inbox"
 
 
 MAX_DATABASE_EVENT_BYTES = 16 * 1024 * 1024

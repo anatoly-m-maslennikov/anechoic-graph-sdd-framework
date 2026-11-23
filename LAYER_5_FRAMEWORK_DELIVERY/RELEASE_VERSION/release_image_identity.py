@@ -12,6 +12,8 @@ import stat
 import tomllib
 
 
+SOURCE_LAYERS = ("LAYER_1_META_ONTOLOGY_C9", "LAYER_2_META_METHODOLOGY_C58")
+
 SELECTOR = "LAYER_5_FRAMEWORK_DELIVERY/project.toml"
 ENGINE = "LAYER_4_ENGINE_STUDIO_C14"
 DOCKER_ROOT = ENGINE + "/MCP_PATCHBAY_C21/FEATURE_MCP/docker"
@@ -36,9 +38,11 @@ _REQUIRED = (
 _BETA_REQUIRED = tuple(ENGINE + "/" + path for path in (
     "KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__shared.py",
     "ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__shared.py", "WORKERS_beta_C69/WORKERS_beta_C69__shared.py",
+    "ORCHESTRATOR_beta_C68/warm_worker.py", "WORKERS_beta_C69/warm_worker.py",
     "WORKBENCH_BACKEND_beta_C70/WORKBENCH_BACKEND_beta_C70__shared.py",
     "WORKBENCH_BACKEND_beta_C70/runtime.py", "WORKBENCH_BACKEND_beta_C70/shared_runtime.py",
     "WORKBENCH_BACKEND_beta_C70/project_admission.py", "WORKBENCH_BACKEND_beta_C70/query_run.json",
+    "WORKBENCH_BACKEND_beta_C70/warm_worker.py", "WORKBENCH_BACKEND_beta_C70/shared_peer_owner.py",
 ))
 _BETA_COMPONENTS = frozenset(path.split("/")[1] for path in _BETA_REQUIRED)
 _BETA_REQUIRED += (ENGINE + "/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_MODEL_VALIDATION/project_admission__pub.py",
@@ -124,9 +128,39 @@ class ImageInputIdentity:
                     raise ValueError("unsafe image input")
                 if path.relative_to(root).as_posix() not in RETIRED_ASSETS:
                     paths.append(path)
+        source_map = self._delivery_sources(root, fail)
+        self._source_map = source_map
         files = sorted(set(paths) | {root / relative for relative in required} | ({selector} if selector else set()),
                        key=lambda p: p.relative_to(root).as_posix())
-        return files, (selector, stack, selector_digest)
+        return files, (selector, stack, selector_digest), source_map
+
+    def _delivery_sources(self, root, fail):
+        if self.source_provider is None:
+            source_map = {}
+            for layer in SOURCE_LAYERS:
+                directory = root / layer
+                if directory.is_symlink() or not directory.is_dir():
+                    raise ValueError("image delivery sources unavailable")
+                for current, directories, names in os.walk(directory, followlinks=False, onerror=fail):
+                    for name in directories:
+                        if (Path(current) / name).is_symlink():
+                            raise ValueError("unsafe image delivery source")
+                    for name in names:
+                        if _excluded(name):
+                            continue
+                        path = Path(current) / name
+                        if path.is_symlink() or not path.is_file() or path.suffix != ".md":
+                            raise ValueError("unsafe image delivery source")
+                        source_map[path.relative_to(root)] = path
+        else:
+            source_map = self.source_provider()
+        if (not isinstance(source_map, dict) or any(not isinstance(k, Path) or not isinstance(v, Path)
+                or k.is_absolute() or ".." in k.parts or len(k.parts) < 2
+                or k.parts[0] not in SOURCE_LAYERS or k.suffix != ".md"
+                or v.is_symlink() or not v.is_file() for k, v in source_map.items())
+                or any(not any(k.parts[0] == layer for k in source_map) for layer in SOURCE_LAYERS)):
+            raise ValueError("image delivery sources unavailable")
+        return source_map
 
     def identity(self, *, use_packaged_assets: bool = False) -> ImageIdentity:
         if not isinstance(use_packaged_assets, bool):
@@ -135,12 +169,17 @@ class ImageInputIdentity:
             version = tomllib.loads((self.source_root / "version.toml").read_text(encoding="utf-8"))["framework"]["version"]
             if not isinstance(version, str) or re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}", version) is None:
                 raise ValueError("invalid framework version")
-            files, selection = self._files()
+            files, selection, source_map = self._files()
             if self.source_root / TOOL_REGISTRY in files and not (self.source_root / TOOL_REGISTRY).stat().st_size:
                 raise ValueError("image tool registry is empty")
             manifest = tuple((path.relative_to(self.source_root).as_posix(), hashlib.sha256(path.read_bytes()).hexdigest(),
                               0o644 if path.relative_to(self.source_root).as_posix() == TOOL_REGISTRY else path.stat().st_mode & 0o777)
                              for path in files)
+            manifest += tuple((relative.as_posix(), hashlib.sha256(path.read_bytes()).hexdigest(), path.stat().st_mode & 0o777)
+                              for relative, path in sorted(source_map.items()))
+            manifest = tuple(sorted(manifest))
+            if self.source_provider is not None and self.source_provider() != source_map:
+                raise ValueError("image delivery sources changed")
             if (_stack_selector(self.source_root) != selection or
                     (selection[0] is not None and (SELECTOR, selection[2]) not in
                      {(path, digest) for path, digest, _ in manifest})):

@@ -1,6 +1,6 @@
 import unittest
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.header_constraints import compile_header_constraints, load_header_constraints
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import compile_header_constraints, load_header_constraints
 
 
 def declaration(source, name, base, **constraints):

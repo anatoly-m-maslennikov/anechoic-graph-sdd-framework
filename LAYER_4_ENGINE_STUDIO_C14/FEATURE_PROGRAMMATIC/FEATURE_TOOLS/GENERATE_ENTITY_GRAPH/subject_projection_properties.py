@@ -7,7 +7,12 @@ from collections.abc import Mapping
 from dataclasses import replace
 import re
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import subject_notation__pub as notation
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    Path as _subject_Path,
+    SubjectNotationError as _subject_SubjectNotationError,
+    parse_subject_expression as _subject_parse_subject_expression,
+    render_subject as _subject_render_subject,
+)
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.contract_graph_common import _source_ref
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.declaration_evidence import Record
@@ -28,17 +33,17 @@ def _formal_claims(entries: list[Record]) -> list[Record]:
 
 def _property_parts(target: str) -> tuple[str, str] | None:
     try:
-        expression = notation.parse_subject_expression(target, subject_profile="approved").expression
-    except notation.SubjectNotationError:
+        expression = _subject_parse_subject_expression(target, subject_profile="approved").expression
+    except _subject_SubjectNotationError:
         return None
-    if not isinstance(expression, notation.Path):
+    if not isinstance(expression, _subject_Path):
         return None
     for index, step in enumerate(expression.steps):
         if step.operator == ".":
             origin = replace(expression, steps=expression.steps[:index], value_format=None, value_cardinality=None)
             suffix = replace(expression, head=step.operand, steps=expression.steps[index + 1:],
                              value_format=None, value_cardinality=None)
-            return notation.render_subject(origin), notation.render_subject(suffix)
+            return _subject_render_subject(origin), _subject_render_subject(suffix)
     return None
 
 

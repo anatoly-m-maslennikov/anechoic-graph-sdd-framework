@@ -3,10 +3,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import copy
-import hashlib
-import json
 
 from jsonschema import Draft202012Validator, SchemaError
 from mcp import types
@@ -18,7 +15,6 @@ _UNADAPTABLE_ROOT_KEYS = frozenset(
         "$dynamicRef",
         "allOf",
         "anyOf",
-        "oneOf",
         "not",
         "if",
         "then",
@@ -35,17 +31,15 @@ _UNADAPTABLE_ROOT_KEYS = frozenset(
 )
 
 
-@dataclass(frozen=True)
-class ToolContract:
-    tool: types.Tool
-    digest: str
-
-
-def contract_digest(tool: types.Tool) -> str:
-    value = {"input_schema": tool.input_schema, "output_schema": tool.output_schema}
-    return hashlib.sha256(
-        json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
-    ).hexdigest()
+def _native_presence(predicate, fields):
+    """Match predicates whose truth is unchanged by adding envelope properties."""
+    if not isinstance(predicate, dict) or predicate.keys() - {"required", "anyOf", "not"}:
+        return False
+    return (
+        set(predicate.get("required", ())) <= fields
+        and all(_native_presence(arm, fields) for arm in predicate.get("anyOf", ()))
+        and ("not" not in predicate or _native_presence(predicate["not"], fields))
+    )
 
 
 def public_tool(tool: types.Tool, *, required: bool = True) -> types.Tool:
@@ -57,13 +51,14 @@ def public_tool(tool: types.Tool, *, required: bool = True) -> types.Tool:
         Draft202012Validator.check_schema(schema)
     except SchemaError as error:
         raise ValueError("Native Tool input schema is invalid") from error
-    if _UNADAPTABLE_ROOT_KEYS.intersection(schema):
+    properties = dict(schema.get("properties", {}))
+    if (_UNADAPTABLE_ROOT_KEYS.intersection(schema)
+            or any(not _native_presence(arm, properties.keys()) for arm in schema.get("oneOf", ()))):
         raise ValueError("Native Tool input schema cannot safely add project_root at its root")
-    if {"project_root", "caller_context"} & schema.get("properties", {}).keys():
+    if {"project_root", "caller_context"} & properties.keys():
         raise ValueError("Native Tool cannot use a reserved MCP envelope field")
     if schema.get("type") not in (None, "object"):
         raise ValueError("Native Tool input is not a root object")
-    properties = dict(schema.get("properties", {}))
     properties["project_root"] = {"type": "string", "minLength": 1}
     properties["caller_context"] = {
         "type": "object",
@@ -82,4 +77,4 @@ def public_tool(tool: types.Tool, *, required: bool = True) -> types.Tool:
     return tool.model_copy(update={"input_schema": schema})
 
 
-__all__ = ["ToolContract", "contract_digest", "public_tool"]
+__all__ = ["public_tool"]

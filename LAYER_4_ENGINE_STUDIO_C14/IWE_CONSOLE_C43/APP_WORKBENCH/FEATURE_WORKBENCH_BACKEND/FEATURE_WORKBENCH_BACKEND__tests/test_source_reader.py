@@ -8,11 +8,11 @@ import yaml
 APP_ROOT = Path(__file__).resolve().parents[3]
 TOOLS_ROOT = APP_ROOT.parent / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 
-from KERNEL_MIXER_C59.public_rows import projected_rows  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import projected_rows  # noqa: E402
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import materialize  # noqa: E402
-from KERNEL_MIXER_C59.header_columns import infer_header_schema  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import infer_header_schema  # noqa: E402
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_placement_audit import expected_carrier  # noqa: E402
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_reader import SourceReader  # noqa: E402
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import SourceReader  # noqa: E402
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__tests.test_source_schema_audit import auditor  # noqa: E402
 
 

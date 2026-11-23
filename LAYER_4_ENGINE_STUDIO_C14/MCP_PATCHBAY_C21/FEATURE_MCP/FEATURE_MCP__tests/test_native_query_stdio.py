@@ -119,7 +119,7 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
         if lens:
             metadata["context"]["lens"] = lens
         if structure_tier is not None:
-            from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_header__pub import canonical_native_header
+            from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical_native_header
 
             metadata["context"]["tier"] = structure_tier
             metadata["context"].setdefault("lens", "DES")
@@ -239,7 +239,7 @@ declare_entity(entity_name="Project Manifest", instance=ProjectManifest(name="An
                 self.assertEqual(expected, [row[0] for row in result.structured_content["rows"]])
 
     async def test_http_queries_native_projection_without_legacy_routes(self):
-        from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import HEALTH_PATH, MCP_PATH, WORKBENCH_PATH
+        from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import HEALTH_PATH, MCP_PATH, WORKBENCH_PATH
         from MCP_PATCHBAY_C21.FEATURE_MCP.http_server import create_app
 
         before = self._carrier_digests()

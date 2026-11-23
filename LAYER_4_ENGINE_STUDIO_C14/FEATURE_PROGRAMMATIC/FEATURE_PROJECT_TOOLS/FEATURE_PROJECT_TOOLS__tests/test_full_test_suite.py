@@ -6,6 +6,7 @@ from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import redirect_stderr, redirect_stdout
 import io
+import json
 from pathlib import Path
 import subprocess
 import sys
@@ -15,8 +16,8 @@ import unittest
 from unittest.mock import patch
 
 TOOLS = Path(__file__).resolve().parents[1]
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import run_full_test_suite as full
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.full_suite_docker import APP
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import test_suite__shared as full
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import APP
 
 PASSING = (
     "import unittest\nclass Test(unittest.TestCase):\n def test_one(self): self.assertTrue(True)\n"
@@ -114,6 +115,10 @@ class FullTestSuiteTests(unittest.TestCase):
                 self.assertIn("F401", result.stdout)
                 self.assertNotIn("Test module START:", result.stdout)
                 self.assertEqual(original, dirty.read_bytes())
+        report, = (self.root / ".anechoic_tmp/test_reports").glob("*.json")
+        failure = json.loads(report.read_text())
+        self.assertEqual(("static", "static_checks", "failed"),
+                         (failure["phase"], failure["step"], failure["status"]))
         dirty.write_text(PASSING, encoding="utf-8")
         result = subprocess.run((*command, "static"), capture_output=True, text=True, timeout=30)
         self.assertEqual(0, result.returncode, result.stderr)
@@ -131,7 +136,7 @@ class FullTestSuiteTests(unittest.TestCase):
             "   time.sleep(0.01)\n"
             f"  self.assertTrue(Path({str(release)!r}).exists())\n",
         )
-        with ThreadPoolExecutor(max_workers=1) as driver:
+        with patch.object(full, "_run_static_checks", return_value=0), ThreadPoolExecutor(max_workers=1) as driver:
             future = driver.submit(self.run_suite)
             try:
                 deadline = time.monotonic() + 5

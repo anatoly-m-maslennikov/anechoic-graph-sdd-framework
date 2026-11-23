@@ -83,7 +83,8 @@ def validate_native_snapshot(snapshot, manifest_sha256):
 
 def replace_native_atoms(connection, snapshot):
     """Replace public tables inside the caller's active transaction."""
-    existing = connection.execute("SELECT table_type FROM information_schema.tables WHERE table_schema = 'main' AND table_name = 'native_references'").fetchone()
+    existing = connection.execute("SELECT table_type FROM information_schema.tables WHERE table_catalog = current_database() "
+                                  "AND table_schema = 'main' AND table_name = 'native_references'").fetchone()
     if existing and existing[0] == "VIEW":
         connection.execute("DROP VIEW main.native_references")
     connection.execute('''CREATE OR REPLACE TABLE main.atoms (

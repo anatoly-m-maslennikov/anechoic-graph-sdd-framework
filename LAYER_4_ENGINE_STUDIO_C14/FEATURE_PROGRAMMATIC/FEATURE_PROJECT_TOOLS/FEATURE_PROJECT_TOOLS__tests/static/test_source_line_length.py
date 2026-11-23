@@ -7,7 +7,7 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
-from ... import source_line_length as lint
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import source_line_length as lint
 
 
 def finding(path, start, additional_lines=0):

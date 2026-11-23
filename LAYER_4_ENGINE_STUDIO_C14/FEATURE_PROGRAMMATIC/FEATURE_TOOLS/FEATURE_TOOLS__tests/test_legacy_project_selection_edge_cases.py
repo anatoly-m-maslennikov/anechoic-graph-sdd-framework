@@ -13,7 +13,7 @@ TOOLS = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(TOOLS), str(TOOLS.parent)]
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import write_scope_unit_declarations  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import ProjectSelectionError
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection import rebind_selection, resolve_project  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import rebind_selection, resolve_project  # noqa: E402
 
 
 class ProjectSelectionEdgeCases(unittest.TestCase):

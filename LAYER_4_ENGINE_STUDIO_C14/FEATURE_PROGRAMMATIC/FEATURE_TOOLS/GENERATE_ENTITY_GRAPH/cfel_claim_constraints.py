@@ -48,7 +48,7 @@ def _extract_native_records(carrier, source, diagnostics):
         try:
             declaration = native_declaration(block["block"])
             if declaration is None:
-                from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.python_claim__pub import parse_structured_python_model_claim
+                from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_structured_python_model_claim
                 projected = _helper_records(parse_structured_python_model_claim(block["block"]), carrier)
                 if projected is None:
                     raise ValueError("unsupported structured Python Claim helper")
@@ -119,7 +119,7 @@ def preview_constraints_from_paths(
     only reads it and returns the same records/diagnostics as ``constraints_for``.
     """
 
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import parse_carrier
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_carrier
 
     base = repository.absolute() if repository is not None else None
     carriers: list[Record] = []

@@ -6,7 +6,14 @@ from collections import defaultdict
 from collections.abc import Mapping
 from typing import Any
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import subject_notation__pub as notation
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    Name as _subject_Name,
+    Path as _subject_Path,
+    RelationChain as _subject_RelationChain,
+    SubjectNotationError as _subject_SubjectNotationError,
+    namespace_local_expression as _subject_namespace_local_expression,
+    parse_subject_expression as _subject_parse_subject_expression,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_read_view, matches_named_value
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.contract_graph import compose_contract_graph
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.contract_graph_common import _source_ref
@@ -93,23 +100,23 @@ def _namespace_contexts(carriers: list[Record]) -> list[Record]:
                 if not isinstance(subject, str):
                     continue
                 try:
-                    expression = notation.parse_subject_expression(subject, subject_profile="approved").expression
-                except notation.SubjectNotationError:
+                    expression = _subject_parse_subject_expression(subject, subject_profile="approved").expression
+                except _subject_SubjectNotationError:
                     continue
-                if (isinstance(expression, notation.Path) and isinstance(expression.head, notation.Name)
+                if (isinstance(expression, _subject_Path) and isinstance(expression.head, _subject_Name)
                         and expression.head.value in {"ANECHOIC_MODEL", "ANECHOIC_STRUCTURE"}
                         and not expression.steps):
                     candidates[expression.head.value].append((0 if role == "governs" else 1, dict(source)))
                     continue
-                local = notation.namespace_local_expression(expression)
-                if local is None or not isinstance(expression, notation.RelationChain):
+                local = _subject_namespace_local_expression(expression)
+                if local is None or not isinstance(expression, _subject_RelationChain):
                     continue
                 first = expression.endpoints[0]
-                if isinstance(first.head, notation.Name) and first.head.value in {"ANECHOIC_MODEL", "ANECHOIC_STRUCTURE"}:
+                if isinstance(first.head, _subject_Name) and first.head.value in {"ANECHOIC_MODEL", "ANECHOIC_STRUCTURE"}:
                     candidates[first.head.value].append((2, dict(source)))
                     continue
                 namespace = expression.endpoints[1]
-                if not isinstance(namespace.head, notation.Name):
+                if not isinstance(namespace.head, _subject_Name):
                     continue
                 root = f"ANECHOIC <+ {namespace.head.value}"
                 direct = len(expression.endpoints) == 2

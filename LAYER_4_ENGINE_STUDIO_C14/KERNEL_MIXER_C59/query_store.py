@@ -9,6 +9,8 @@ import threading
 from pathlib import Path
 from typing import Any
 
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import attach_framework
+
 from .errors import WorkbenchUnavailableError
 from .audit_tables import (
     create_tables as create_audit_tables,
@@ -55,6 +57,11 @@ def _connect(extension_directory: Path | None, database_path: Path | None,
     except Exception as exc:
         connection.close()
         raise WorkbenchUnavailableError(f"Work Journal database initialization failed: {exc}") from exc
+    try:
+        attach_framework(connection)
+    except Exception as exc:
+        connection.close()
+        raise WorkbenchUnavailableError(f"Framework database initialization failed: {exc}") from exc
     try:
         connection.execute("SET enable_external_access = false")
         connection.execute("SET autoinstall_known_extensions = false")

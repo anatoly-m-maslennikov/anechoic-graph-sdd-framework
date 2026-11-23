@@ -12,7 +12,7 @@ import unittest
 from unittest.mock import patch
 
 
-from RELEASE_VERSION.local_release import run_local_release  # noqa: E402
+from RELEASE_VERSION.RELEASE_VERSION__shared import run_local_release  # noqa: E402
 
 
 from RELEASE_VERSION.RELEASE_VERSION__tests.RELEASE_VERSION__tests__shared import SimpleReleaseFixture  # noqa: E402

@@ -8,8 +8,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 4
-  updated_at: '2026-11-22T11:34:35.965837+00:00'
+  version: 5
+  updated_at: '2026-11-22T22:23:08.810817+00:00'
 ---
 
 ## Summary
@@ -24,14 +24,12 @@ MODEL//ANECHOIC <+ Relation//CONTRIBUTES_TO
 
 ### Prose Claim
 
-An Atom contributes when it supplies guidance or part of the design needed
-to put the target claim into practice. Use this Relation in the Project for:
-
-- Tier 2 Applicable Principle to Tier 1 Applicable Principle.
-- Tier 3 Solution, Policy, or Standard to Tier 2 Applicable Principle.
-- Tier 4 Solution or Component Manifest to Tier 3 Solution.
-The authored Relation points from the stated source to its target.
-The inverse is derived. Tier and Solution restrictions are authoring rules.
+An Atom contributes when it supplies guidance, design detail, or evidence
+that supports a specific claim in the target Atom. In the Contract chain,
+a Tier 2 or higher-numbered SPEC Atom contributes to a Tier 1 SPEC Atom
+by supporting its design or decision. The authored Relation points from
+the contributor to the supported Atom. Derive HAS_CONTRIBUTION for the
+same direct pair. The tier rule for this chain is an authoring rule.
 
 ### Formal Claim
 
@@ -40,7 +38,7 @@ from anechoic.formal_claims import declare_relation
 
 declare_relation(
     relation_name='CONTRIBUTES_TO',
-    inverse_alias='RECEIVES_CONTRIBUTION_FROM',
+    inverse_alias='HAS_CONTRIBUTION',
     source_endpoint={'level': 'instances', 'entity_paths': ('Node//Artifact//Atom//Spec Atom',)},
     target_endpoint={'level': 'instances', 'entity_paths': ('Node//Artifact//Atom//Spec Atom',)},
 )

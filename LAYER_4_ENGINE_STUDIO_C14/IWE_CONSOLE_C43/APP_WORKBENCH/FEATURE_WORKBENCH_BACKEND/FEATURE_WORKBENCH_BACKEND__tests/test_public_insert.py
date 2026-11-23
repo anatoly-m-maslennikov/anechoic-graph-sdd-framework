@@ -10,7 +10,7 @@ import duckdb
 
 APP_ROOT = Path(__file__).resolve().parents[3]
 
-from KERNEL_MIXER_C59.public_rows import insert_public_rows  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import insert_public_rows  # noqa: E402
 
 
 class PublicInsertTest(unittest.TestCase):

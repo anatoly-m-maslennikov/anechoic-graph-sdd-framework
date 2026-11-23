@@ -4,12 +4,16 @@ import os
 from pathlib import Path
 import re
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import subject_notation__pub as notation
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import parse_content
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.model_declaration_sources import (
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    SubjectNotationError as _subject_SubjectNotationError,
+    parse_subject_expression as _subject_parse_subject_expression,
+    render_subject as _subject_render_subject,
+)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_content
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.FEATURE_FORMAL_MODEL_GENERATOR__shared import (
     _check_relation_references, _native_claim, _native_claim_text,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_header__pub import native_header_view
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_header_view
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CUSTOM_MODEL_DIRECTORY, PROJECT_CONFIG_DIRECTORY
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import parse_carrier
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CEILINGS, ReadContext
@@ -27,10 +31,10 @@ def _claim_subject(body: str, source: str) -> str | None:
 
 def _valid_subject(subject: str, source: str) -> str:
     try:
-        expression = notation.parse_subject_expression(subject, subject_profile='approved').expression
-    except notation.SubjectNotationError as error:
+        expression = _subject_parse_subject_expression(subject, subject_profile='approved').expression
+    except _subject_SubjectNotationError as error:
         raise ValueError(f'{source}: invalid Model Claim scope') from error
-    if notation.render_subject(expression) != subject or not subject.startswith('MODEL//ANECHOIC <+ '):
+    if _subject_render_subject(expression) != subject or not subject.startswith('MODEL//ANECHOIC <+ '):
         raise ValueError(f'{source}: invalid Model Claim scope')
     return subject
 

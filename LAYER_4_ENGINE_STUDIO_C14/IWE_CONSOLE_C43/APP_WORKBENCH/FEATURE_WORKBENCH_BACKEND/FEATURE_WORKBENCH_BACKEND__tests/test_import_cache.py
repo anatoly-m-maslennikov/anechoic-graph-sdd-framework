@@ -5,10 +5,10 @@ import unittest
 
 import duckdb
 
-from KERNEL_MIXER_C59.import_cache import (
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
     clear_import_sources, read_import_sources, replace_import_sources,
 )
-from KERNEL_MIXER_C59.import_tables import _create_external_imports_view
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import _create_external_imports_view
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import ImportSite, Source
 
 

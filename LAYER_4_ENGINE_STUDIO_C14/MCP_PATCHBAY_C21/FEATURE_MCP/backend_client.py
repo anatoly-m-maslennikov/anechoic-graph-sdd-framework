@@ -1,7 +1,7 @@
 """Call the Project's Workbench API in its own process."""
 
 import asyncio
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 import os
 from pathlib import Path
 import subprocess
@@ -11,6 +11,7 @@ from time import monotonic, sleep
 
 import httpx2
 
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import beta_runtime_arguments
 from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_request_context import current_request_context
 from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_stack import runtime_stack
 
@@ -40,31 +41,57 @@ class ToolProtocolError(RuntimeError):
 class BackendClient:
     def __init__(self, selection, process, http):
         self.selection = selection
-        self.backend_pid = process.pid
+        self.backend_pid = process.pid if process is not None else None
         self._process = process
         self._http = http
         self._closed = False
 
     @property
     def available(self):
-        return not self._closed and self._process.poll() is None
+        if self._closed:
+            return False
+        if self._process is not None:
+            return self._process.poll() is None
+        try:
+            return self._probe_ready()
+        except (httpx2.HTTPError, ValueError, RuntimeError):
+            return False
+
+    def _probe_ready(self):
+        response = self._http.get("/health", timeout=0.5)
+        observed = response.json()
+        if (not isinstance(observed, dict) or observed.get("instance_id") != self.selection.instance_id
+                or observed.get("manifest_sha256") != self.selection.manifest_sha256):
+            raise RuntimeError("Workbench Backend reported a different Project binding")
+        pid = observed.get("pid")
+        if self._process is None:
+            if type(pid) is not int or pid <= 1:
+                raise RuntimeError("Invalid managed Backend identity")
+            if response.status_code == 503 and observed.get("ready") is False:
+                return False
+            kernel = observed.get("kernel_pid")
+            generation = observed.get("generation")
+            if type(kernel) is not int or kernel <= 1 or not isinstance(generation, str) or not generation:
+                raise RuntimeError("Invalid managed Kernel readiness")
+        elif pid != self.backend_pid:
+            raise RuntimeError("Workbench Backend reported a different Project binding")
+        if response.status_code != 200 or observed.get("ready") is not True:
+            raise RuntimeError("Workbench Backend reported a different Project binding")
+        self.backend_pid = pid
+        return True
 
     def start(self):
         """Finish admission before the frontend advertises readiness."""
-        expected = {"ready": True, "instance_id": self.selection.instance_id,
-                    "manifest_sha256": self.selection.manifest_sha256, "pid": self.backend_pid}
         deadline = monotonic() + _STARTUP_SECONDS
-        while self.available and monotonic() < deadline:
+        while not self._closed and monotonic() < deadline:
+            if self._process is not None and self._process.poll() is not None:
+                break
             try:
-                response = self._http.get("/health", timeout=0.5)
+                if self._probe_ready():
+                    return
             except httpx2.TransportError:
-                sleep(0.05)
-                continue
-            observed = response.json()
-            if (response.status_code != 200 or not isinstance(observed, dict)
-                    or any(observed.get(key) != value for key, value in expected.items())):
-                raise RuntimeError("Workbench Backend reported a different Project binding")
-            return
+                pass
+            sleep(0.05)
         raise RuntimeError("Workbench Backend did not start")
 
     def _tool_response(self, response):
@@ -108,46 +135,17 @@ class BackendClient:
         try:
             self._http.close()
         finally:
-            self._process.stdin.close()
-            try:
-                self._process.wait(timeout=15)
-            except subprocess.TimeoutExpired:
-                self._process.terminate()
+            if self._process is not None:
+                self._process.stdin.close()
                 try:
-                    self._process.wait(timeout=5)
+                    self._process.wait(timeout=15)
                 except subprocess.TimeoutExpired:
-                    self._process.kill()
-                    self._process.wait()
-
-
-def _beta_arguments(selection, socket, workbench_storage=None, journal_storage=None):
-    args = ["WORKBENCH_BACKEND_beta_C70.runtime", "--socket", str(socket),
-            "--project-root", str(selection.root), "--control-root", selection.control_relative.as_posix(),
-            "--instance-id", selection.instance_id, "--manifest-sha256", selection.manifest_sha256,
-            "--manifest-path", selection.manifest_path.relative_to(selection.root).as_posix(),
-            "--project-prefix", selection.project_prefix, "--project-name", selection.project_name]
-    runtime = selection.parameters.get("runtime", {})
-    workbench = runtime.get("workbench", {})
-    storage = workbench.get("storage", workbench_storage or "disk")
-    journal = runtime.get("journal", {}).get("storage", journal_storage or "files")
-    args += ["--workbench-storage", storage, "--journal-storage", journal]
-    journal_relative = selection.parameters.get("paths", {}).get("journal_root")
-    if journal == "files" and journal_relative is not None:
-        if not isinstance(journal_relative, str):
-            raise ValueError("paths.journal_root must be a relative path")
-        args += ["--journal-relative", journal_relative]
-    if "result_ttl_seconds" in workbench:
-        ttl = workbench["result_ttl_seconds"]
-        if type(ttl) is not int or ttl <= 0:
-            raise ValueError("workbench.result_ttl_seconds must be a positive integer")
-        args += ["--result-ttl-seconds", str(ttl)]
-    if selection.host_root is not None:
-        args += ["--host-root", str(selection.host_root)]
-    if workbench.get("import_graph") is not False:
-        args.append("--watch-code")
-    for name in selection.tool_blacklist:
-        args += ["--blacklist", name]
-    return args
+                    self._process.terminate()
+                    try:
+                        self._process.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        self._process.kill()
+                        self._process.wait()
 
 
 def _current_arguments(selection, socket, workbench_storage, journal_storage):
@@ -168,7 +166,7 @@ def _start(selection, socket, workbench_storage, journal_storage):
     root = engine.parent
     environment = {**{k: v for k, v in os.environ.items() if k != "PYTHONHOME"}, "PYTHONPATH": str(engine)}
     if runtime_stack() == "beta":
-        args = _beta_arguments(selection, socket, workbench_storage, journal_storage)
+        args = beta_runtime_arguments(selection, socket, workbench_storage, journal_storage)
     else:
         args = _current_arguments(selection, socket, workbench_storage, journal_storage)
     command = [sys.executable, "-B", "-P", "-m", *args]
@@ -176,14 +174,21 @@ def _start(selection, socket, workbench_storage, journal_storage):
 
 
 @contextmanager
-def backend_client(selection, *, workbench_storage=None, journal_storage=None):
-    with TemporaryDirectory(prefix="anechoic-api-", dir="/tmp") as directory:
-        socket = Path(directory).resolve() / "api.sock"
-        with httpx2.Client(transport=httpx2.HTTPTransport(uds=str(socket)),
-                           base_url="http://anechoic-backend", trust_env=False, timeout=None) as http:
-            process = _start(selection, socket, workbench_storage, journal_storage)
-            client = BackendClient(selection, process, http)
-            try:
-                yield client
-            finally:
-                client.close()
+def backend_client(selection, *, workbench_storage=None, journal_storage=None, backend_socket=None):
+    with ExitStack() as stack:
+        if backend_socket is None:
+            directory = stack.enter_context(TemporaryDirectory(prefix="anechoic-api-", dir="/tmp"))
+            socket = Path(directory).resolve() / "api.sock"
+            transport = httpx2.HTTPTransport(uds=str(socket))
+        else:
+            socket = backend_socket
+            limits = httpx2.Limits(max_connections=100, max_keepalive_connections=0)
+            transport = httpx2.HTTPTransport(uds=str(socket), limits=limits)
+        http = stack.enter_context(httpx2.Client(transport=transport, base_url="http://anechoic-backend",
+                                               trust_env=False, timeout=None))
+        process = _start(selection, socket, workbench_storage, journal_storage) if backend_socket is None else None
+        client = BackendClient(selection, process, http)
+        try:
+            yield client
+        finally:
+            client.close()

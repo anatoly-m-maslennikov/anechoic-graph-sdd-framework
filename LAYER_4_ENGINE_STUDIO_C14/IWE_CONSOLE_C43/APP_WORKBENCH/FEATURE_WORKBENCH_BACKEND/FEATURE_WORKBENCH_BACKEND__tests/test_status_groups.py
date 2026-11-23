@@ -7,13 +7,13 @@ import unittest
 
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__tests import test_source_reader as fixtures
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import DeclarationSource, compile_content_schema
-from KERNEL_MIXER_C59.relation_registry import RelationRegistry
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import RelationRegistry
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import _atom_facts
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_reader import SourceReader
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workbench_schema_asset import (
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import SourceReader
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import (
     compile_schema, compile_status_groups, load_image_schema, schema_asset,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.python_claim__pub import parse_structured_python_model_claim
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_structured_python_model_claim
 
 
 class StatusGroupTests(unittest.TestCase):

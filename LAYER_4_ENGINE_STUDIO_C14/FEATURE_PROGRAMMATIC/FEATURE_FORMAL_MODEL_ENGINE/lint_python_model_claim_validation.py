@@ -1,8 +1,8 @@
 """Stateful callbacks for static legacy Claim references."""
 from __future__ import annotations
 import re
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_class_subject__pub import canonical_model_address, simple_model_address
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.subject_notation__pub import (RelationChain, namespace_local_expression, parse_subject_expression, render_subject)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical_model_address, simple_model_address
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (RelationChain, namespace_local_expression, parse_subject_expression, render_subject)
 from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.lint_python_model_claim_references import (
     _SINGLETON_MEMBERSHIP, _requirement_form_selection, _validate_exact_qualifiers, resolve_model_claim_reference,
 )

@@ -27,7 +27,7 @@ ROOT = MCP.parents[2]
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__tests.FEATURE_MCP__tests__shared import project as _project
 from MCP_PATCHBAY_C21.FEATURE_MCP.direct_gateway import native_runtime_gateway  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.backend_client import BackendClient, ToolProtocolError  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import select_runtime_project  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import select_runtime_project  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.workbench_web import routes  # noqa: E402
 
 CONTROL = "_anechoic_anechoic"

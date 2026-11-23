@@ -10,6 +10,7 @@ import uuid
 import toon_format
 
 from .work_journal import _open_directory
+from .query_results import query, validate_preview
 
 
 _DIRECTORY = Path(".anechoic_tmp/workbench/query_results")
@@ -95,3 +96,24 @@ def deliver(queries, root, page, delivery, result_format, *, full=False, grid=No
         page.pop("rows", None)
         page.update(outcome="partial", export_error=str(error))
     return page
+
+
+def database_result(connection, queries, data, project_root):
+    if "page_size" not in data:
+        return query(connection, data["sql"])
+    page_size = data["page_size"]
+    if type(page_size) is not int or not 1 <= page_size <= 1000:
+        raise ValueError("page_size must be an integer from 1 to 1000")
+    delivery, result_format = data.get("result_delivery", "inline"), data.get("result_format", "json_matrix")
+    validate_delivery(delivery, result_format)
+    preview = validate_preview(data.get("preview"))
+    if "query_id" not in data:
+        page = queries.run(connection, data["sql"], page_size, data.get("grid"), preview=preview)
+    else:
+        offset = data["offset"]
+        if type(offset) is not int or offset < 0:
+            raise ValueError("offset must be a non-negative integer")
+        page = queries.page(data["query_id"], offset, min(page_size, preview) if preview is not None else page_size,
+                            data.get("grid"))
+    return deliver(queries, project_root, page, delivery, result_format,
+                   full="query_id" not in data, grid=data.get("grid"))

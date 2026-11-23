@@ -10,9 +10,9 @@ from unittest.mock import patch
 APP_ROOT = Path(__file__).resolve().parents[3]
 TOOLS_ROOT = APP_ROOT.parent / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import source_markdown  # noqa: E402
-from KERNEL_MIXER_C59.header_columns import infer_header_schema  # noqa: E402
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_reader import SourceReader  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import source_markdown  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import infer_header_schema  # noqa: E402
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import SourceReader  # noqa: E402
 
 
 

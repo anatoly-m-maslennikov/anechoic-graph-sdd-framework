@@ -63,7 +63,8 @@ class ServiceInterface:
         if query_id is not None and self._store is not None:
             self._store.unpin(query_id)
     @staticmethod
-    def _arguments(name: str, arguments: object, allowed: set[str], required: set[str] = set()) -> dict[str, Any]:
+    def _arguments(name: str, arguments: object, allowed: set[str],
+                   required: set[str] | frozenset[str] = frozenset()) -> dict[str, Any]:
         if not isinstance(arguments, dict) or set(arguments) - allowed or required - set(arguments):
             raise ValueError(f"invalid {name} arguments")
         return arguments

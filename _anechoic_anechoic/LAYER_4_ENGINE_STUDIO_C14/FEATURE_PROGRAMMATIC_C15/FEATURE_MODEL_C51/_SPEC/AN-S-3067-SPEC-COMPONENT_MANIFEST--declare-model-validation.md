@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: "active"
-  version: 28
-  updated_at: "2026-11-22T16:01:08.239566+00:00"
+  version: 34
+  updated_at: "2026-11-23T00:13:28.170280+00:00"
 ---
 
 ## Summary
@@ -32,19 +32,19 @@ declare_entity(
         boundaries={
             'code': {
                 'imports': [
-                    'FEATURE_GENERATED_MODEL_C52.AtomDestination',
-                    'FEATURE_GENERATED_MODEL_C52.AtomDestinationFile',
-                    'project_manifest__pub.manifest_state_fields',
+                    'FEATURE_GENERATED_MODEL_C52__shared.AtomDestination',
+                    'FEATURE_GENERATED_MODEL_C52__shared.AtomDestinationFile',
+                    'ADAPTERS_C30__shared.manifest_state_fields',
                     'cardinality__pub.cardinality_bounds',
-                    'model_class_subject__pub.canonical_model_address',
+                    'ADAPTERS_C30__shared.canonical_model_address',
                     'ADAPTERS_C30__shared.bind_ordering_declarations',
                     'ADAPTERS_C30__shared.order_properties',
                     'code_access_rules__pub.module_visibility',
                     'code_access_rules__pub.parse_code_access',
                     'FEATURE_MODEL_VALIDATION__shared.check_code_access',
                     'ADAPTERS_C30__shared.parse_native_model_claim',
-                    'model_class_subject__pub.model_class_target',
-                    'native_carrier_header__pub.native_header_view',
+                    'ADAPTERS_C30__shared.model_class_target',
+                    'ADAPTERS_C30__shared.native_header_view',
                     'atom_reference__pub.derive_atom_ref',
                     'ADAPTERS_C30__shared.ProjectSelectionError',
                     'FEATURE_TOOLS__shared.discover_native_project',
@@ -52,15 +52,14 @@ declare_entity(
                     'FEATURE_TOOLS__shared.rebind_native_selection',
                 ],
                 'exports': {
-                    'FEATURE_MODEL_VALIDATION__shared.open_admitted_model': {'private': ['C16']},
+                    'FEATURE_MODEL_VALIDATION__shared.open_admitted_model': {'private': ['C16', 'C62', 'CS1', 'CS2']},
                     'model_declaration_bindings.bind_model_declarations': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
-                    'model_generation__pub.open_admitted_model': {'private': ['C62', 'CS1', 'CS2']},
-                    'model_generation__pub.verify_model': {'private': ['CS1', 'CS2']},
+                    'FEATURE_MODEL_VALIDATION__shared.verify_model': {'private': ['CS1', 'CS2']},
                     'FEATURE_MODEL_VALIDATION__shared': None,
                     'FEATURE_MODEL_VALIDATION__shared.bind_model_declarations': {'shared': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_FORMAL_MODEL_GENERATOR/FEATURE_FORMAL_MODEL_GENERATOR__tests']},
                     'model_field_validation.validate_model_fields': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_FORMAL_MODEL_GENERATOR/FEATURE_FORMAL_MODEL_GENERATOR__tests']},
                     'FEATURE_MODEL_VALIDATION__shared.bind_reviewed_instance_check': None,
-                    'FEATURE_MODEL_VALIDATION__shared.check_code_access': {'shared': ['C59', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_MODEL_VALIDATION/FEATURE_MODEL_VALIDATION__tests']},
+                    'FEATURE_MODEL_VALIDATION__shared.check_code_access': {'shared': ['C59', 'C61', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_MODEL_VALIDATION/FEATURE_MODEL_VALIDATION__tests']},
                     'FEATURE_MODEL_VALIDATION__shared.effective_relation_constraints': None,
                     'FEATURE_MODEL_VALIDATION__shared.validate_relation_endpoint_levels': None,
                     'FEATURE_MODEL_VALIDATION__shared.validate_relation_targets': None,

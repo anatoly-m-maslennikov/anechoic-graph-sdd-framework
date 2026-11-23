@@ -6,7 +6,7 @@ import tempfile
 from types import SimpleNamespace
 import unittest
 
-from RELEASE_VERSION.release_support import LocalReleaseError, _native_release_sources
+from RELEASE_VERSION.RELEASE_VERSION__shared import LocalReleaseError, _native_release_sources
 
 
 class NativeReleaseSourcesTests(unittest.TestCase):

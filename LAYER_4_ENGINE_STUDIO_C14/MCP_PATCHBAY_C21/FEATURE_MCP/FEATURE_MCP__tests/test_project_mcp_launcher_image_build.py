@@ -14,7 +14,7 @@ from unittest.mock import patch
 APP = Path(__file__).resolve().parents[1]
 DOCKER = APP / "docker"
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images import ImageError, ImageManager, TOOL_REGISTRY  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import ImageError, ImageManager, TOOL_REGISTRY  # noqa: E402
 
 
 IMAGE_ID = "sha256:" + "a" * 64

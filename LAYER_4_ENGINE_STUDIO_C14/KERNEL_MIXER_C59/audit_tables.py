@@ -10,12 +10,12 @@ from typing import AbstractSet, Any, Iterable, Mapping
 from .errors import WorkbenchUnavailableError
 from .content_schema import ContentSchema, _declared_children, _value
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import records_by_path
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import content_lines, source_markdown
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import content_lines, source_markdown
 from .source_inventory import filename_candidate, filename_role_matches, filename_marker
 
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import header_value  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.atom_reference__pub import atom_identifier  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import atom_identifier  # noqa: E402
 
 
 PARSE_ISSUES = "atom_parse_issues"
@@ -206,12 +206,12 @@ def _content_issues(
     ]
     if not candidates:
         return []
-    records_by_path = records_by_path(records)
+    records_by_path_map = records_by_path(records)
     body = source_markdown(row)
     lines = content_lines(body) if body is not None else None
     result = []
     for column_path, name in candidates:
-        expected = _value(records_by_path, column_path, True, _declared_children(schema.rules, column_path, row), lines)
+        expected = _value(records_by_path_map, column_path, True, _declared_children(schema.rules, column_path, row), lines)
         actual = public.get(name)
         if actual != expected:
             result.append((*prefix, name, _text(actual), _text(expected),

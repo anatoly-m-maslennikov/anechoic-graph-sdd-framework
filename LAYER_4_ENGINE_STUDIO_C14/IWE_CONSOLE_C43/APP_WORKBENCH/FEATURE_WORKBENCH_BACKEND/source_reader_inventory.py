@@ -2,7 +2,7 @@
 from __future__ import annotations
 from pathlib import Path
 from typing import Any
-from KERNEL_MIXER_C59.source_inventory import markdown_paths as _markdown_paths
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import markdown_paths as _markdown_paths
 
 class SourceReaderInventory:
     def _apply_changes(

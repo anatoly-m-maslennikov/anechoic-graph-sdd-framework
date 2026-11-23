@@ -20,7 +20,7 @@ from .shared_host_launcher_fixtures import (  # noqa: E402
 )
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.shared_mcp_launcher import SharedMcpLauncher, main  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker import shared_mcp_launcher  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.mcp_paths import HEALTH_PATH  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import HEALTH_PATH  # noqa: E402
 
 
 class SharedHostLauncherTests(unittest.TestCase):
@@ -98,8 +98,8 @@ class SharedHostLauncherTests(unittest.TestCase):
         self.assertEqual(["shared-mcp"], service["command"])
         self.assertEqual("no", service["restart"])
         self.assertTrue(service["read_only"])
-        self.assertEqual(2, len(service["volumes"]))
-        self.assertEqual({"bind"}, {item["type"] for item in service["volumes"]})
+        self.assertEqual(3, len(service["volumes"]))
+        self.assertEqual({"bind", "volume"}, {item["type"] for item in service["volumes"]})
         self.assertNotIn("docker.sock", compose.read_text(encoding="utf-8"))
         self.assertEqual(
             ["127.0.0.1:${ANECHOIC_MCP_HTTP_PORT:?Shared HTTP port is required}:8092"],
@@ -107,7 +107,7 @@ class SharedHostLauncherTests(unittest.TestCase):
         )
 
     def test_apply_reports_docker_failure_without_ready_claim(self):
-        from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.host_runtime_config import load_host_runtime_config
+        from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import load_host_runtime_config
 
         config = load_host_runtime_config(self.settings)
         runner = FakeRunner(config, failure=True)
@@ -116,7 +116,7 @@ class SharedHostLauncherTests(unittest.TestCase):
         self.assertFalse(result["ready"])
 
     def test_verify_mcp_uses_the_admitted_port_and_project(self):
-        from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.host_runtime_config import load_host_runtime_config
+        from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import load_host_runtime_config
 
         for single, root in ((False, self.projects), (True, self.projects / "alpha")):
             field = "project_root" if single else "projects_root"
@@ -134,7 +134,7 @@ class SharedHostLauncherTests(unittest.TestCase):
                 probe.assert_awaited_once_with(54321, root if single else None)
 
     def test_mcp_verification_failure_refuses_ready_result(self):
-        from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.host_runtime_config import load_host_runtime_config
+        from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import load_host_runtime_config
 
         launcher = SharedMcpLauncher(
             runner=FakeRunner(load_host_runtime_config(self.settings)),
@@ -146,7 +146,7 @@ class SharedHostLauncherTests(unittest.TestCase):
         self.assertEqual("mcp_verification_failed", result["condition"])
 
     def test_retry_after_start_failure_uses_same_compose_project(self):
-        from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.host_runtime_config import load_host_runtime_config
+        from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import load_host_runtime_config
 
         runner = FakeRunner(load_host_runtime_config(self.settings), failure=True)
         launcher = SharedMcpLauncher(
@@ -161,7 +161,7 @@ class SharedHostLauncherTests(unittest.TestCase):
         self.assertEqual(starts[0], starts[1])
 
     def test_apply_requires_readback_and_health_before_ready(self):
-        from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.host_runtime_config import load_host_runtime_config
+        from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import load_host_runtime_config
 
         config = load_host_runtime_config(self.settings)
         runner = FakeRunner(config)
@@ -180,7 +180,7 @@ class SharedHostLauncherTests(unittest.TestCase):
         self.assertEqual([f"http://127.0.0.1:54321{HEALTH_PATH}"], health_urls)
 
     def test_readiness_budget_starts_after_successful_docker_start(self):
-        from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.host_runtime_config import load_host_runtime_config
+        from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import load_host_runtime_config
 
         config = load_host_runtime_config(self.settings)
         clock = FakeClock()
@@ -201,7 +201,7 @@ class SharedHostLauncherTests(unittest.TestCase):
         self.assertTrue(result["ready"])
 
     def test_readiness_calls_receive_only_remaining_budget(self):
-        from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.host_runtime_config import load_host_runtime_config
+        from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import load_host_runtime_config
 
         config = load_host_runtime_config(self.settings)
         clock = FakeClock()

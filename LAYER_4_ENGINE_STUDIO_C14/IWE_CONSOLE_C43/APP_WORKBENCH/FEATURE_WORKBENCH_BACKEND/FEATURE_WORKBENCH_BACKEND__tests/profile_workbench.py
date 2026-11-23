@@ -37,7 +37,7 @@ def _imports() -> None:
 
 def _temporary_root(project_root: Path) -> Path:
     _imports()
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection import resolve_project
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import resolve_project
 
     selection = resolve_project(project_root)
     temporary = selection.settings.get("paths", {}).get("temporary_root")
@@ -184,8 +184,8 @@ def profile(project_root: Path, output: Path) -> dict[str, Any]:
     """Profile one initial index plus exactly three isolated full rebuilds."""
     _imports()
     from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.incremental_relations import materialize_delta
-    from KERNEL_MIXER_C59.query_store import QueryStore
-    from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_reader import SourceReader
+    from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import QueryStore
+    from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import SourceReader
 
     report: dict[str, Any] = {
         "instrumented": True,

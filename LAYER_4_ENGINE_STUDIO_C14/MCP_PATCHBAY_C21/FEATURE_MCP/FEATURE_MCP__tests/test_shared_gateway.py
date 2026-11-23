@@ -12,7 +12,7 @@ from unittest.mock import patch
 MCP = Path(__file__).resolve().parents[1]
 TOOLS = MCP.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.host_runtime_config import load_host_runtime_config  # noqa: E402
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import load_host_runtime_config  # noqa: E402
 from mcp import types  # noqa: E402
 from mcp.client._memory import InMemoryTransport  # noqa: E402
 from mcp.client.session import ClientSession  # noqa: E402

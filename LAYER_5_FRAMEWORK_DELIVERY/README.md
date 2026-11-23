@@ -18,3 +18,7 @@ The image records the selected stack for runtime dispatch.
 Before a fresh image build, Local Release and the Engine build command
 ask Docker to trim unused build cache to 4 GB and free at least 2 GB on
 the builder. Reusing an existing image skips cache cleanup.
+
+Each Test Suite run writes a JSON report under `.anechoic_tmp/test_reports/`
+and prints its path. Reports include the phase, outcome, duration, test
+counts, and failed module output. The image phase also records the canary result.

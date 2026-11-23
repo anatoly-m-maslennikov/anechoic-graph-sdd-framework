@@ -5,7 +5,7 @@ class TypedReferenceWorkbenchIntegration(unittest.TestCase):
         from pathlib import Path
         from tempfile import TemporaryDirectory
         from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import write_scope_unit_declarations
-        from ..source_reader import SourceReader
+        from ..FEATURE_WORKBENCH_BACKEND__shared import SourceReader
         from ..generate_workbench_schema import compile_project_schema
         base=Path('.anechoic_tmp/CA-P-3018/CA-P-3022');tmp=base/'wave16-typed-format';rootpath=Path.cwd()
         with TemporaryDirectory() as td:
@@ -20,7 +20,7 @@ class TypedReferenceWorkbenchIntegration(unittest.TestCase):
          reader=SourceReader(root);rows,_=reader.capture();print('accepted',[(x['id'],x['source_path']) for x in rows]);print('errors',reader._diagnostics)
          assert {'CA-R-2587','CA-R-2541'}<={x['id'] for x in rows}
          print('standalone_schema_bytes',len(compile_project_schema(root)))
-         from KERNEL_MIXER_C59.relation_registry import compile_registry
+         from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import compile_registry
          compile_registry(rows);print('registry','accepted typed Property')
 
          oldshape=reader._content_schema.schema.shape
@@ -31,7 +31,7 @@ class TypedReferenceWorkbenchIntegration(unittest.TestCase):
          self._assert_binding_changes(owner, reader, dep, root, write, binding_body)
 
     def _assert_binding_changes(self, owner, reader, dep, root, write, binding_body):
-        from ..source_reader import SourceReader
+        from ..FEATURE_WORKBENCH_BACKEND__shared import SourceReader
         from ..generate_workbench_schema import compile_project_schema
         original_owner=owner.read_text()
         from unittest.mock import patch

@@ -16,12 +16,12 @@ from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.generate_relation_r
     registry_asset,
     write_registry,
 )  # noqa: E402
-from KERNEL_MIXER_C59.relation_registry import compile_registry  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import compile_registry  # noqa: E402
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.relation_registry_asset import (  # noqa: E402
     load_registry_asset,
 )
-from KERNEL_MIXER_C59.relations import compile_relation_registry  # noqa: E402
-import KERNEL_MIXER_C59.relation_registry as compiler  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import compile_relation_registry  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import relation_registry_module as compiler  # noqa: E402
 
 
 def declaration(reference: str, name: str, body: str = "") -> dict:

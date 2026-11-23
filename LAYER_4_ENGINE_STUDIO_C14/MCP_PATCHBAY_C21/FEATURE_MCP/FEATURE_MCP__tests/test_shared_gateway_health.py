@@ -14,7 +14,7 @@ TOOLS = MCP.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.health_page import render_health_page  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.health_observations import MAX_OBSERVATIONS  # noqa: E402
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.host_runtime_config import load_host_runtime_config  # noqa: E402
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import load_host_runtime_config  # noqa: E402
 from mcp import types  # noqa: E402
 from .test_native_startup import RuntimeSelectionTests  # noqa: E402
 from .shared_backend_fixture import backend_gateway  # noqa: E402

@@ -8,6 +8,16 @@ function line(tree, node) { return tree.getLineAndCharacterOfPosition(node.getSt
 function event(ctx, node, kind, target, name) {
   ctx.events.push({kind, target, name, line: line(ctx.tree, node)});
 }
+function graphCall(ctx, expr, forward) {
+  const node = unwrap(expr);
+  if (!ctx.complete || !ctx.calls || !node || !ts.isCallExpression(node) || node.questionDotToken ||
+      node.arguments.length) return false;
+  const pos = ctx.tree.getLineAndCharacterOfPosition(node.getStart(ctx.tree));
+  const target = ctx.calls.get(`${pos.line + 1}:${pos.character}`);
+  if (!target) return false;
+  ctx.events.push({kind: 'call', target: '', name: target, line: pos.line + 1, forward});
+  return true;
+}
 function bad(ctx) { ctx.complete = false; ctx.stopped = true; return unknown; }
 function unwrap(node) {
   while (node && (ts.isParenthesizedExpression(node) || ts.isAsExpression(node) ||
@@ -106,7 +116,9 @@ function statement(ctx, node) {
   }
   if (ts.isEmptyStatement(node)) return;
   if (ts.isReturnStatement(node)) {
-    if (node.expression) { evaluate(ctx, node.expression); if (ctx.complete) event(ctx, node, 'output', '', ''); }
+    if (node.expression && !graphCall(ctx, node.expression, true)) {
+      evaluate(ctx, node.expression); if (ctx.complete) event(ctx, node, ctx.calls ? 'return' : 'output', '', '');
+    }
     ctx.stopped = true; return;
   }
   if (ts.isIfStatement(node)) {
@@ -136,6 +148,7 @@ function expressionStatement(ctx, node) {
     for (const arg of node.arguments) evaluate(ctx, arg);
     if (ctx.complete) event(ctx, node, 'output', '', ''); return;
   }
+  if (graphCall(ctx, node, false)) return;
   if ((ts.isPostfixUnaryExpression(node) || ts.isPrefixUnaryExpression(node)) &&
       (node.operator === ts.SyntaxKind.PlusPlusToken || node.operator === ts.SyntaxKind.MinusMinusToken)) {
     const target = stateTarget(ctx, node.operand);
@@ -152,16 +165,20 @@ function bindings(node) {
   }
   return names;
 }
-function runCase(tree, fn, name, outer, objects, input, shadow) {
-  const ctx = {tree, outer, objects, shadow, body: fn.body, locals: new Map(Object.entries(input || {})), aliases: new Map(), events: [], complete: input !== null, stopped: false};
+function runCase(tree, fn, name, outer, objects, input, shadow, calls) {
+  const ctx = {tree, outer, objects, shadow, calls, body: fn.body, locals: new Map(Object.entries(input || {})), aliases: new Map(), events: [], complete: input !== null, stopped: false};
   if (fn.body) {
     if (ts.isBlock(fn.body)) {
       for (const name of bindings(fn.body)) if (!ctx.locals.has(name)) ctx.locals.set(name, unknown);
       statement(ctx, fn.body);
     }
-    else { evaluate(ctx, fn.body); if (ctx.complete) event(ctx, fn.body, 'output', '', ''); }
+    else if (!graphCall(ctx, fn.body, true)) {
+      evaluate(ctx, fn.body); if (ctx.complete) event(ctx, fn.body, calls ? 'return' : 'output', '', '');
+    }
   } else bad(ctx);
-  return {action: name, line: line(tree, fn), input: ctx.complete ? input : null,
+  const position = tree.getLineAndCharacterOfPosition(fn.getStart(tree));
+  return {action: name, line: line(tree, fn), ...(calls ? {column: position.character,
+    inlineable: ctx.complete && fn.parameters.length === 0 && !ts.isMethodDeclaration(fn)} : {}), input: ctx.complete ? input : null,
     reachable: true, complete: ctx.complete, declaredNoOp: false, events: ctx.events};
 }
 function inputs(fn) {
@@ -197,7 +214,7 @@ function moduleCase(tree) {
   if (!row.complete) row.input = null;
   return row;
 }
-function scan(path, text) {
+function scan(path, text, calls) {
   const kind = /\.tsx$/i.test(path) ? ts.ScriptKind.TSX : /\.[cm]?tsx?$/i.test(path) ? ts.ScriptKind.TS : ts.ScriptKind.JSX;
   const tree = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, kind);
   if (tree.parseDiagnostics.length) return [{action: '<parse_error>', line: 1, input: null, reachable: true, complete: false, declaredNoOp: false, events: []}];
@@ -211,7 +228,7 @@ function scan(path, text) {
     let name = null;
     if (ts.isFunctionDeclaration(node) && node.name) name = node.name.text;
     if ((ts.isArrowFunction(node) || ts.isFunctionExpression(node)) && ts.isVariableDeclaration(node.parent) && ts.isIdentifier(node.parent.name)) name = node.parent.name.text;
-    if (name) for (const input of nested ? [null] : inputs(node)) rows.push(runCase(tree, node, name, outer, objects, input, shadow));
+    if (name) for (const input of nested ? [null] : inputs(node)) rows.push(runCase(tree, node, name, outer, objects, input, shadow, calls));
     let next = outer, nextObjects = objects;
     if (ts.isSourceFile(node) || (ts.isBlock(node) && ts.isFunctionLike(node.parent))) {
       next = new Set(outer);
@@ -234,7 +251,12 @@ function scan(path, text) {
   visit(tree, new Set(), new Set(), false); return rows;
 }
 try {
-  const sources = JSON.parse(fs.readFileSync(0, 'utf8'));
-  const result = Object.fromEntries(Object.entries(sources).map(([path, text]) => [path, scan(path, text)]));
+  const payload = JSON.parse(fs.readFileSync(0, 'utf8'));
+  const graph = process.argv.includes('--graph');
+  const sources = graph ? payload.sources : payload;
+  const result = Object.fromEntries(Object.entries(sources).map(([path, text]) => {
+    const calls = graph ? new Map((payload.call_sites[path] || []).map(([line, column, target]) => [`${line}:${column}`, target])) : null;
+    return [path, scan(path, text, calls)];
+  }));
   process.stdout.write(JSON.stringify(result));
 } catch (error) { process.stderr.write(String(error.stack || error)); process.exitCode = 1; }

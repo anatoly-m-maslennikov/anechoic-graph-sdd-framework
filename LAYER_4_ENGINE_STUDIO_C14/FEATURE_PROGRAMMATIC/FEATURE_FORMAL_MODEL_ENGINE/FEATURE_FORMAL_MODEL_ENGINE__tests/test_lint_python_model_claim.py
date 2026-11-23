@@ -115,7 +115,7 @@ class LintPythonModelClaimTests(unittest.TestCase):
         self.assertTrue(lint_python_model_claim(claim, address_bindings={'Workflow': ['bad']}, **options))
 
     def test_set_value_validates_relation_alias_without_changing_expression(self):
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.python_claim__pub import parse_grouped_python_model_claim
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_grouped_python_model_claim
         options = dict(declared_addresses=['Relation'], relation_names=['NARROWER_THAN', 'HAS_NARROWER'])
         source = "# model\nset_value(address='alias(Relation//NARROWER_THAN)', value='\"/\"')"
         self.assertEqual((), lint_python_model_claim(source, **options))

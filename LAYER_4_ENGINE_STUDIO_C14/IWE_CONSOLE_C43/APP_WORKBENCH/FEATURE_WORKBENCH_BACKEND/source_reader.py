@@ -6,14 +6,14 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import ContentSchema
-from KERNEL_MIXER_C59.header_columns import HeaderSchema
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import HeaderSchema
 from .source_content_schema import SourceContentSchema
 from .source_header_schema import SourceHeaderSchema
 from .source_rows import (
     ReferenceIndex, scope as source_scope,
 )
-from KERNEL_MIXER_C59.source_roles import ROLE_MARKERS, CANONICAL_ROLE_MARKERS
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.settings_context__pub import control_root as configured_control_root  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import ROLE_MARKERS, CANONICAL_ROLE_MARKERS
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import control_root as configured_control_root  # noqa: E402
 from .source_reader_archive import SourceReaderArchive
 from .source_reader_capture import SourceReaderCapture
 from .source_reader_inventory import SourceReaderInventory

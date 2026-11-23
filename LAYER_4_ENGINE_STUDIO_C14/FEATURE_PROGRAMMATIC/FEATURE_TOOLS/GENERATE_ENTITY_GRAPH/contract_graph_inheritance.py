@@ -11,7 +11,13 @@ Record = dict[str, Any]
 from collections import defaultdict
 from dataclasses import replace
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import subject_notation__pub as notation
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    Path as _subject_Path,
+    PathStep as _subject_PathStep,
+    SubjectNotationError as _subject_SubjectNotationError,
+    parse_subject_expression as _subject_parse_subject_expression,
+    render_subject as _subject_render_subject,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.contract_graph_common import _source_ref
 
 
@@ -40,17 +46,17 @@ def _ancestor_rows(narrowing: Mapping[str, Any], declarations: Mapping[str, list
     }
 
 
-def _property_parts(target: str) -> tuple[str, tuple[notation.PathStep, ...]] | None:
+def _property_parts(target: str) -> tuple[str, tuple[_subject_PathStep, ...]] | None:
     try:
-        expression = notation.parse_subject_expression(target, subject_profile="approved").expression
-    except notation.SubjectNotationError:
+        expression = _subject_parse_subject_expression(target, subject_profile="approved").expression
+    except _subject_SubjectNotationError:
         return None
-    if not isinstance(expression, notation.Path):
+    if not isinstance(expression, _subject_Path):
         return None
     for index, step in enumerate(expression.steps):
         if step.operator == ".":
             bearer = replace(expression, steps=expression.steps[:index], value_format=None, value_cardinality=None)
-            return notation.render_subject(bearer), expression.steps[index:]
+            return _subject_render_subject(bearer), expression.steps[index:]
     return None
 
 
@@ -64,12 +70,12 @@ def _inherited_property_rows(
     rows = []
     for ancestor in ancestors.get(bearer, []):
         try:
-            parent = notation.parse_subject_expression(ancestor["target"], subject_profile="approved").expression
-        except notation.SubjectNotationError:
+            parent = _subject_parse_subject_expression(ancestor["target"], subject_profile="approved").expression
+        except _subject_SubjectNotationError:
             continue
-        if not isinstance(parent, notation.Path):
+        if not isinstance(parent, _subject_Path):
             continue
-        inherited = notation.render_subject(replace(parent, steps=parent.steps + suffix, value_format=None, value_cardinality=None))
+        inherited = _subject_render_subject(replace(parent, steps=parent.steps + suffix, value_format=None, value_cardinality=None))
         sources = declarations.get(inherited, [])
         if sources:
             rows.append({"target": inherited, "declaration_refs": sorted(_source_ref(row["source"]) for row in sources)})
@@ -80,15 +86,15 @@ def _instance_kind(target: str) -> str | None:
     """Return the declared Kind path for one explicitly declared instance."""
 
     try:
-        expression = notation.parse_subject_expression(target, subject_profile="approved").expression
-    except notation.SubjectNotationError:
+        expression = _subject_parse_subject_expression(target, subject_profile="approved").expression
+    except _subject_SubjectNotationError:
         return None
-    if not isinstance(expression, notation.Path):
+    if not isinstance(expression, _subject_Path):
         return None
     for index, step in enumerate(expression.steps):
         if step.operator == "//":
             kind = replace(expression, steps=expression.steps[:index], value_format=None, value_cardinality=None)
-            return notation.render_subject(kind)
+            return _subject_render_subject(kind)
     return None
 
 

@@ -7,8 +7,8 @@ import subprocess
 from tempfile import TemporaryDirectory
 import unittest
 
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.run_full_test_suite import run_full_suite
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.source_sizes import (
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import run_full_suite
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import (
     check_functions,
     check_module,
     python_functions,

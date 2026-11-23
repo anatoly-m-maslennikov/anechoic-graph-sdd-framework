@@ -9,7 +9,7 @@ from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
     ATOM, SCOPE, _atom_facts, _carrier_facts, _materialized_atom, _materialized_row,
     _scope_references,
 )
-from KERNEL_MIXER_C59.relation_registry import RelationRegistry, RegistryCompilation, _warn_colliding_uses
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import RelationRegistry, RegistryCompilation, _warn_colliding_uses
 from .incremental_relation_state import (
     RelationState, _delta_edge, _full_state, _index_fact, _next_registry, _refresh_support,
     _requires_full, _rows,

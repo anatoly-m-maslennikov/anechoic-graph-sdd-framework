@@ -191,11 +191,27 @@ def _capture_inputs(reader, selection, input_paths, manifest, incremental, previ
             errors[relative] = str(error)
 
 
-def _capture_full_inputs(reader, selection, manifest, candidates, errors):
+def _full_carriers(reader, selection):
     installed = selection.control_root / "000_ANECHOIC_framework"
     paths = [path for path in reader.inventory(selection.control_root)
              if path.suffix == ".md" and not path.is_relative_to(installed)]
-    paths.extend(_root_carriers(reader, selection))
+    return sorted(set(paths + _root_carriers(reader, selection)))
+
+
+def _native_carrier_hashes(selection):
+    reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
+    manifest = check_native_manifest(reader, selection, None)
+    hashes = {}
+    for path in _full_carriers(reader, selection):
+        raw = manifest if path == selection.manifest_path else reader.read(path, metadata_guard=True)
+        hashes[path.relative_to(selection.root).as_posix()] = sha256(raw).hexdigest()
+    if reader.currentness()["state"] != "unchanged":
+        raise ValueError("Native Project carriers changed during capture")
+    return hashes
+
+
+def _capture_full_inputs(reader, selection, manifest, candidates, errors):
+    paths = _full_carriers(reader, selection)
     for directory, members in groupby(sorted(paths, key=lambda path: (path.parent, path.name)),
                                       key=lambda path: path.parent):
         try:
@@ -212,10 +228,11 @@ def _capture_full_inputs(reader, selection, manifest, candidates, errors):
 
 def capture_native(
     selection: Any, *, previous: NativeCapture | None = None,
-    paths: set[PurePosixPath] | None = None,
+    paths: set[PurePosixPath] | None = None, reader: ReadContext | None = None,
 ) -> NativeCapture:
     """Read one selected native tree. Callers must refuse a capture with errors."""
-    reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
+    if reader is None:
+        reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
     incremental = previous is not None and paths is not None
     manifest = check_native_manifest(reader, selection, previous if incremental else None)
     versions = dict(previous.versions) if incremental else {}

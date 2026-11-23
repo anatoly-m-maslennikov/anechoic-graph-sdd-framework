@@ -43,6 +43,8 @@ ARG RUNTIME_UID=1000
 ARG RUNTIME_GID=1000
 WORKDIR /workspace
 COPY version.toml LICENSE LICENSE.TLDR.md ./
+COPY LAYER_1_META_ONTOLOGY_C9 ./LAYER_1_META_ONTOLOGY_C9
+COPY LAYER_2_META_METHODOLOGY_C58 ./LAYER_2_META_METHODOLOGY_C58
 # License from cwida/duckpgq-extension at 9c11bc192a071c9e44cef16cced90a22d7d7db2c.
 COPY LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/DuckPGQ.LICENSE /usr/local/share/licenses/duckpgq/LICENSE
 COPY LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC ./LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC
@@ -52,25 +54,40 @@ COPY LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane \
      ./LAYER_4_ENGINE_STUDIO_C14/FEATURE_AGENTIC/FEATURE_SKILLS/ane
 COPY --from=workbench_frontend /frontend/dist \
      ./LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/dist
-RUN mkdir -p /workspace/.anechoic_install \
+RUN mkdir -p /var/lib/anechoic /workspace/.anechoic_install \
     /workspace/.anechoic_tmp /workspace/tmp /workspace/.anechoic_anechoic \
-    && chmod -R a+rX /workspace/LAYER_4_ENGINE_STUDIO_C14 \
-    && chown -R ${RUNTIME_UID}:${RUNTIME_GID} /home/anechoic
-ENV PATH=/opt/venv/bin:/usr/local/bin:/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1
+    && chmod -R a+rX /workspace/LAYER_1_META_ONTOLOGY_C9 /workspace/LAYER_2_META_METHODOLOGY_C58 \
+    /workspace/LAYER_4_ENGINE_STUDIO_C14 \
+    && chown -R ${RUNTIME_UID}:${RUNTIME_GID} /home/anechoic /var/lib/anechoic
+ENV PATH=/opt/venv/bin:/usr/local/bin:/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPYCACHEPREFIX=/workspace/.anechoic_tmp/cache/python
+RUN PYTHONPYCACHEPREFIX=/workspace/.anechoic_tmp/cache/python /opt/venv/bin/python -B -m compileall -q --invalidation-mode timestamp \
+    /usr/local/lib/python3.14 /opt/venv/lib/python3.14/site-packages /workspace/LAYER_4_ENGINE_STUDIO_C14 \
+    && chmod -R a+rX "$PYTHONPYCACHEPREFIX"
 HEALTHCHECK --interval=2s --timeout=5s --start-period=420s --retries=25 \
     CMD ["python", "-B", "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/healthcheck.py"]
 ENTRYPOINT ["/opt/venv/bin/python", "-B", "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/entrypoint.py"]
 
 FROM runtime_base AS beta
+COPY --from=workbench_frontend /usr/local/bin/node /usr/local/bin/node
+COPY --from=workbench_frontend /frontend/node_modules/typescript ./LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/node_modules/typescript
+COPY --from=workbench_frontend /frontend/node_modules/svelte ./LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/node_modules/svelte
 COPY LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67 ./LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67
 COPY LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68 ./LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68
 COPY LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69 ./LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69
 COPY LAYER_4_ENGINE_STUDIO_C14/WORKBENCH_BACKEND_beta_C70 ./LAYER_4_ENGINE_STUDIO_C14/WORKBENCH_BACKEND_beta_C70
 ENV ANECHOIC_RUNTIME_STACK=beta
-RUN chmod -R a+rX /workspace/LAYER_4_ENGINE_STUDIO_C14
+RUN PYTHONPYCACHEPREFIX=/workspace/.anechoic_tmp/cache/python /opt/venv/bin/python -B -m compileall -q --invalidation-mode timestamp \
+    /workspace/LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67 \
+    /workspace/LAYER_4_ENGINE_STUDIO_C14/ORCHESTRATOR_beta_C68 \
+    /workspace/LAYER_4_ENGINE_STUDIO_C14/WORKERS_beta_C69 \
+    /workspace/LAYER_4_ENGINE_STUDIO_C14/WORKBENCH_BACKEND_beta_C70 \
+    && chmod -R a+rX "$PYTHONPYCACHEPREFIX" /workspace/LAYER_4_ENGINE_STUDIO_C14
 USER anechoic
 
 FROM runtime_base AS current
 COPY LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59 ./LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59
-RUN chmod -R a+rX /workspace/LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59
+RUN PYTHONPYCACHEPREFIX=/workspace/.anechoic_tmp/cache/python /opt/venv/bin/python -B -m compileall -q --invalidation-mode timestamp \
+    /workspace/LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59 \
+    && chmod -R a+rX "$PYTHONPYCACHEPREFIX" /workspace/LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59
 USER anechoic

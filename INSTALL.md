@@ -1,6 +1,6 @@
 # Install Anechoic locally
 
-This guide is for a human or an AI agent setting up Anechoic from a supplied framework checkout. Run the commands on macOS or Linux. The host launcher currently requires a POSIX environment.
+This guide is for a human or an AI agent setting up Anechoic from a supplied framework checkout. Run Setup on macOS, Linux, or in a WSL 2 shell on Windows.
 
 ## For an AI agent
 
@@ -19,6 +19,13 @@ Use the supplied framework checkout as the working directory. Inspect existing c
 - Git and `uv` available on the host.
 - Docker installed and running.
 - The Codex CLI, if you select Codex integration.
+
+On Windows, use Docker Desktop in Linux-container mode and enable integration
+for the WSL 2 distribution that runs Setup. Use Linux paths for the Framework
+checkout and the Project. For a Project on a Windows drive, use its WSL path
+such as `/mnt/c/Users/you/repos/project`. Store host settings in the WSL home directory.
+
+[Docker Desktop WSL 2 integration](https://docs.docker.com/desktop/features/wsl/)
 
 Run the command below from the Framework checkout root. It uses managed Python 3.14 and a standard-library-only Setup environment. Setup provisions the locked Release and Engine environments as needed.
 
@@ -41,7 +48,7 @@ To set up multiple Project repositories under one containing folder, use `--proj
 ## Options
 
 - Add `--agent codex` (or `--codex`) to install the user-wide hook and register the loopback MCP endpoint. Ask the user to review and trust the hook in Codex with `/hooks`. See the [Codex hooks documentation](https://learn.chatgpt.com/docs/hooks).
-- Add `--settings PATH` to select a settings file. By default, it is `anechoic/runtime.toml` under `XDG_CONFIG_HOME`, or `~/.config/anechoic/runtime.toml` when `XDG_CONFIG_HOME` is unset. See the [settings example](LAYER_6_RUNTIME_SETUP/runtime.example.toml).
+- Add `--host-settings PATH` to select a settings file. By default, it is `anechoic/runtime.toml` under `XDG_CONFIG_HOME`, or `~/.config/anechoic/runtime.toml` when `XDG_CONFIG_HOME` is unset. See the [settings example](LAYER_6_RUNTIME_SETUP/runtime.example.toml).
 - For new Projects, select storage with `--workbench-storage disk|memory` and `--journal-storage files|duckdb`. The defaults are `disk` and `files`.
 
 For example, add `--agent codex` to the install command if the user selected Codex. Do not change an existing endpoint or another service automatically to resolve a conflict.
@@ -53,3 +60,7 @@ The installer builds an immutable image. The Engine launcher opens an MCP sessio
 After the user trusts the hook, start a new Codex session inside a mounted Project repository. The hook sends the nearest Git worktree root, including when Codex starts in a subdirectory. With `--projects-root`, the same hook serves every configured Project under that folder.
 
 Re-run the same command to reuse the configuration. If setup fails, report the failure and resolve it without overwriting existing Project settings or changing unrelated services.
+
+Docker keeps the shared Framework database in the `anechoic-framework-db`
+volume. Each Project keeps its own database at `.anechoic_runtime/db/project.duckdb`
+when its Manifest selects disk-backed Workbench or DuckDB Journal storage.

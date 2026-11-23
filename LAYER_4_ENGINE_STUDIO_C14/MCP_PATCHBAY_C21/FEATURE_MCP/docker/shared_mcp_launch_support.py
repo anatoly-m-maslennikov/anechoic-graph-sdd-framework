@@ -126,6 +126,11 @@ def _mounts_match(row, config):
     mounts = row.get("Mounts")
     if not isinstance(mounts, list):
         return False
+    volumes = [m for m in mounts if isinstance(m, Mapping) and m.get("Type") == "volume"
+               and m.get("Name") == "anechoic-framework-db"
+               and m.get("Destination") == "/var/lib/anechoic" and m.get("RW") is True]
+    if len(volumes) != 1 or len(mounts) != 3:
+        return False
     binds = []
     for mount in mounts:
         if not isinstance(mount, Mapping) or mount.get("Type") != "bind":

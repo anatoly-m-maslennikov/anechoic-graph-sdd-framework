@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import argparse
 from collections.abc import Mapping
-from contextlib import asynccontextmanager
 from concurrent.futures import CancelledError as FutureCancelledError
 from inspect import isawaitable
 from pathlib import Path
@@ -13,20 +12,10 @@ from typing import Any, Callable
 
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, JSONResponse
-from starlette.routing import Route
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.health_page import render_health_page
-from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import HEALTH_PATH
-from MCP_PATCHBAY_C21.FEATURE_MCP.http_server import (
-    MAX_REQUEST_BODY_SIZE,
-    PATH,
-    PORT,
-    SECURITY,
-    LoopbackGuard,
-    _accepts_html,
-)
+from MCP_PATCHBAY_C21.FEATURE_MCP.http_server import PORT, _accepts_html, streamable_app
 from MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary import run_startup, warning
-from MCP_PATCHBAY_C21.FEATURE_MCP.workbench_web import routes as workbench_routes
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.shared_backend import SharedBackendGateway
 
@@ -79,37 +68,11 @@ async def health(request: Request, gateway: Any):
 def create_app(config: Any, *, gateway_factory: Callable[..., Any] = SharedBackendGateway):
     """Create one guarded host app; Project selection stays inside the router."""
     gateway = gateway_factory(config)
-    server = gateway.build_server()
 
     async def health_endpoint(request: Request):
         return await health(request, gateway)
 
-    app = server.streamable_http_app(
-        streamable_http_path=PATH,
-        transport_security=SECURITY,
-        max_request_body_size=MAX_REQUEST_BODY_SIZE,
-        host="127.0.0.1",
-        custom_starlette_routes=[
-            Route(HEALTH_PATH, health_endpoint),
-            *workbench_routes(gateway, shared=True),
-        ],
-    )
-    inner_lifespan = app.router.lifespan_context
-
-    @asynccontextmanager
-    async def lifespan(application):
-        async with inner_lifespan(application):
-            try:
-                await gateway.initialize()
-                yield
-            finally:
-                await gateway.close()
-
-    app.router.lifespan_context = lifespan
-    guarded = LoopbackGuard(app)
-    guarded.gateway = gateway
-    guarded.starlette_app = app
-    return guarded
+    return streamable_app(gateway, health_endpoint, shared=True)
 
 
 def _serve(args: argparse.Namespace) -> Any:

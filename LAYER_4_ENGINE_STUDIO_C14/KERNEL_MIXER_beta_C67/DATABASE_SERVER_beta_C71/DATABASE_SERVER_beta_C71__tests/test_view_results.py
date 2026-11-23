@@ -90,3 +90,54 @@ class ViewResultsTest(unittest.TestCase):
                 self.assertEqual(400, call(client, "view_fetch", view).status_code)
                 second = self.value(call(client, "view_run", view))
                 self.assertNotEqual(first["query_id"], second["query_id"])
+
+
+class ResultBudgetTest(unittest.TestCase):
+    def page(self, client, query_id):
+        return client.post("/database", json=BINDING | {"query_id": query_id, "offset": 0, "page_size": 1})
+
+    def test_pinned_and_young_results_remain_pageable(self):
+        with TemporaryDirectory(dir="/tmp") as directory, _server(None, "--project-root", str(Path(directory).resolve())) as client:
+            self.assertEqual(200, client.put("/generation", json=_generation()).status_code)
+            young = _query(client, "SELECT 1", page_size=1).json()["result"]["query_id"]
+            views = []
+            for number in range(17):
+                opened = call(client, "workspace_open", {"session_id": f"budget-{number}"}).json()["result"]
+                view = {"workspace_id": opened["workspace_id"], "view_id": opened["active_view_id"]}
+                updated = call(client, "view_update", view | {"sql": "SELECT 42", "expected_revision": 0})
+                self.assertEqual(200, updated.status_code, updated.text)
+                run = call(client, "view_run", view).json()["result"]
+                self.assertEqual("success", run["status"])
+                views.append((view, run["query_id"]))
+            for _ in range(300):
+                direct = _query(client, "SELECT 2", page_size=1)
+                self.assertEqual(200, direct.status_code, direct.text)
+            self.assertEqual([[1]], self.page(client, young).json()["result"]["rows"])
+            for view, query_id in views:
+                self.assertEqual([[42]], self.page(client, query_id).json()["result"]["rows"])
+                self.assertEqual(query_id, call(client, "view_fetch", view).json()["result"]["query_id"])
+
+    def test_budget_refuses_refresh_and_preserves_generation_and_results(self):
+        with _server() as client:
+            original = client.put("/generation", json=_generation()).json()["result"]["generation"]
+            sql = "SELECT repeat('x', length(\"content.summary\") * 100) FROM atoms, range(1000)"
+            ids = []
+            for _ in range(17):
+                response = _query(client, sql, page_size=1)
+                self.assertEqual(200, response.status_code, response.text)
+                ids.append(response.json()["result"]["query_id"])
+            candidate = _generation()
+            candidate["snapshot"]["atoms"][0]["summary"] = "0123456789"
+            refused = client.put("/generation", json=candidate | {"refresh_target": "all"})
+            self.assertEqual(400, refused.status_code, refused.text)
+            self.assertIn("cache is full", refused.text)
+            self.assertEqual(original, client.get("/health").json()["result"]["generation"])
+            self.assertEqual([["first"]], _query(client, 'SELECT "content.summary" FROM atoms', page_size=1).json()["result"]["rows"])
+            self.assertEqual([["x" * 500]], self.page(client, ids[0]).json()["result"]["rows"])
+            for _ in range(20):
+                response = _query(client, sql, page_size=1)
+                if response.status_code != 200:
+                    break
+            self.assertEqual(400, response.status_code, response.text)
+            self.assertIn("cache is full", response.text)
+            self.assertEqual([["x" * 500]], self.page(client, ids[0]).json()["result"]["rows"])

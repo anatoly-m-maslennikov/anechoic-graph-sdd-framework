@@ -25,7 +25,7 @@ from urllib.parse import urlsplit
 
 CODEX_ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY = CODEX_ROOT.parents[3]
-FIXTURE = Path(__file__).with_name("assets") / "fake_codex.py"
+FIXTURE = Path(__file__).with_name("fake_codex.py")
 ALLOWED_ORIGIN = "http://127.0.0.1:56317"
 MCP_URL = f"{ALLOWED_ORIGIN}/anechoic/mcp"
 FORBIDDEN_OVERRIDE_KEYS = {

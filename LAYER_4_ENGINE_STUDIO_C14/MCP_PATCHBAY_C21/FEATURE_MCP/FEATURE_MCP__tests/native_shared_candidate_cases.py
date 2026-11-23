@@ -10,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from urllib.error import HTTPError
 from urllib.request import ProxyHandler, build_opener
 from uuid import uuid4
 
@@ -18,7 +19,12 @@ from mcp.client.session import ClientSession
 from mcp.client.streamable_http import streamable_http_client
 
 from . import test_native_startup as fixture
-from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import HEALTH_PATH, MCP_PATH
+from .native_shared_core_recovery import KILL_CHILD, assert_core_recovery
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import HEALTH_PATH, MCP_PATH
+
+
+_MCP_MODULE = "MCP_PATCHBAY_C21.FEATURE_MCP.shared_http_server"
+_BETA_BACKEND_MODULE = "WORKBENCH_BACKEND_beta_C70.shared_runtime"
 
 
 class SharedCandidateCases:
@@ -54,10 +60,15 @@ class SharedCandidateCases:
     def _start_shared_candidate(self, host, projects):
         image = os.environ.get("ANECHOIC_IMAGE", "")
         self.assertRegex(image, r"\Asha256:[0-9a-f]{64}\Z")
+        environment = subprocess.check_output(
+            ["docker", "image", "inspect", "--format", "{{json .Config.Env}}", image], timeout=10, text=True,
+        )
+        self._shared_candidate_beta = "ANECHOIC_RUNTIME_STACK=beta" in json.loads(environment)
+        defaults = '\n[project_defaults]\nworkbench_storage="memory"\n' if self._shared_candidate_beta else ""
         settings = host / "MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime.toml"
         settings.write_text(
             "schema_version = 1\n[shared_mcp]\n"
-            f"projects_root={json.dumps(str(projects))}\nhttp_port=8092\n",
+            f"projects_root={json.dumps(str(projects))}\nhttp_port=8092\n{defaults}",
             encoding="utf-8",
         )
         name = "anechoic-shared-candidate-" + uuid4().hex
@@ -89,6 +100,8 @@ class SharedCandidateCases:
                 with opener.open(base + HEALTH_PATH, timeout=2) as response:
                     if json.load(response)["ready"] is True:
                         return
+            except HTTPError as error:
+                error.close()
             except (OSError, ValueError, KeyError):
                 pass
             time.sleep(.3)
@@ -103,8 +116,8 @@ class SharedCandidateCases:
                 await session.initialize()
                 tool = next(tool for tool in (await session.list_tools()).tools if tool.name == "query_run")
                 self.assertIn("project_root", tool.input_schema["required"])
-                await self._assert_project_queries(session, projects)
-                self._assert_project_processes(projects)
+                query_ids = await self._assert_project_queries(session, projects)
+                beta = self._assert_project_processes(projects)
                 for arguments in (
                     {},
                     {"project_root": str(host)},
@@ -117,23 +130,67 @@ class SharedCandidateCases:
                         })
                         self.assertTrue(result.is_error, result.structured_content)
                 await self._assert_project_queries(session, projects)
+            if beta is not None:
+                await self._assert_shared_restarts(endpoint, projects, http, query_ids, beta)
+                await assert_core_recovery(self, endpoint, projects, http, query_ids)
 
-    def _assert_project_processes(self, projects):
+    def _processes(self):
         listing = subprocess.check_output(
             ["docker", "top", self._shared_candidate_container, "-eo", "pid,ppid,args"],
             timeout=10, text=True,
         )
-        processes = [line.split(None, 2) for line in listing.splitlines()[1:]]
-        mcp = self._one(processes, "MCP_PATCHBAY_C21.FEATURE_MCP.shared_http_server", listing)
-        beta = [item for item in processes if "WORKBENCH_BACKEND_beta_C70.shared_runtime" in item[2]]
+        return [line.split(None, 2) for line in listing.splitlines()[1:]], listing
+
+    def _assert_project_processes(self, projects):
+        processes, listing = self._processes()
+        mcp = self._one(processes, _MCP_MODULE, listing)
+        beta = [item for item in processes if _BETA_BACKEND_MODULE in item[2]]
         current = [item for item in processes if "FEATURE_WORKBENCH_BACKEND.shared_backend_process" in item[2]]
         self.assertEqual(1, len(beta) + len(current), listing)
-        backend = (beta or current)[0]
-        self.assertEqual(mcp[0], backend[1], listing)
+        self.assertEqual(self._shared_candidate_beta, bool(beta), listing)
         if beta:
-            self._assert_beta_processes(processes, backend[0], listing)
-        else:
-            self._assert_current_processes(processes, backend[0], projects, listing)
+            backend = beta[0]
+            owner = self._one(processes, "WORKBENCH_BACKEND_beta_C70.shared_peer_owner", listing)
+            self.assertEqual({mcp[1]}, {backend[1], owner[1]}, listing)
+            self.assertTrue(any(pid == mcp[1] and "docker/entrypoint.py" in command
+                                for pid, _, command in processes), listing)
+            peer_processes = self._assert_beta_processes(processes, backend[0], owner[0], listing)
+            return {_MCP_MODULE: mcp[0], _BETA_BACKEND_MODULE: backend[0], "peer_processes": peer_processes}
+        backend = current[0]
+        self.assertEqual(mcp[0], backend[1], listing)
+        self._assert_current_processes(processes, backend[0], projects, listing)
+
+    def _restart_shared_child(self, endpoint, module, old_pid):
+        container = self._shared_candidate_container
+        subprocess.run(["docker", "exec", container, "python", "-B", "-c", KILL_CHILD, module],
+                       timeout=10, check=True, capture_output=True, text=True)
+        deadline = time.monotonic() + 15
+        while time.monotonic() < deadline:
+            processes, listing = self._processes()
+            if any(pid != old_pid and module in command for pid, _, command in processes):
+                self._wait_shared_ready(endpoint.removesuffix(MCP_PATH), container)
+                return
+            time.sleep(.1)
+        self.fail(f"Shared runtime did not replace {module}: {listing}")
+
+    async def _assert_shared_restarts(self, endpoint, projects, http, query_ids, previous):
+        for module in (_BETA_BACKEND_MODULE, _MCP_MODULE):
+            with self.subTest(restarted=module):
+                await asyncio.to_thread(self._restart_shared_child, endpoint, module, previous[module])
+                async with streamable_http_client(endpoint, http_client=http) as streams, ClientSession(*streams) as session:
+                    await session.initialize()
+                    for name, query_id in query_ids.items():
+                        result = await session.call_tool("query_page", {
+                            "project_root": str(projects / name),
+                            "caller_context": {"session_id": "candidate-" + name},
+                            "query_id": query_id, "offset": 0, "page_size": 1, "result_delivery": "inline",
+                        })
+                        self.assertFalse(result.is_error, result.structured_content)
+                        self.assertEqual([[f"{name.upper()}-S-001"]], result.structured_content["rows"])
+                current = self._assert_project_processes(projects)
+                self.assertNotEqual(previous[module], current[module])
+                self.assertEqual(previous | {module: current[module]}, current)
+                previous = current
 
     def _one(self, processes, role, listing):
         matches = [item for item in processes if role in item[2]]
@@ -157,14 +214,20 @@ class SharedCandidateCases:
             self.assertTrue(any(parent == backend[0] and str(projects / name) in command
                                 for _, parent, command in kernels), listing)
 
-    def _assert_beta_processes(self, processes, backend, listing):
-        admission = self._one(processes, "FEATURE_MODEL_VALIDATION.project_admission__pub", listing)
-        self.assertEqual(backend, admission[1], listing)
+    def _assert_beta_processes(self, processes, backend, owner, listing):
+        admissions = [item for item in processes if "FEATURE_MODEL_VALIDATION.project_admission__pub" in item[2]]
+        admission_parents = {parent for _, parent, _ in admissions}
+        self.assertIn(backend, admission_parents, listing)
+        self.assertLessEqual(admission_parents, {backend, owner}, listing)
+        self.assertEqual(len(admissions), len(admission_parents), listing)
+        worker = self._one([item for item in processes if item[1] == owner],
+                           "WORKERS_beta_C69.warm_worker", listing)
         kernels = [item for item in processes if "DATABASE_SERVER_beta_C71.DATABASE_SERVER_beta_C71__shared" in item[2]]
         orchestrators = [item for item in processes if "ORCHESTRATOR_beta_C68.ORCHESTRATOR_beta_C68__shared" in item[2]]
         self.assertEqual(2, len(kernels), listing)
         self.assertEqual(2, len(orchestrators), listing)
-        self.assertEqual({backend}, {parent for _, parent, _ in kernels + orchestrators}, listing)
+        self.assertEqual({owner}, {parent for _, parent, _ in kernels + orchestrators}, listing)
+        self.assertTrue(all("--database-path" not in command for _, _, command in kernels), listing)
         def option(command, name):
             words = shlex.split(command)
             return words[words.index(name) + 1]
@@ -174,6 +237,11 @@ class SharedCandidateCases:
                             for _, _, command in orchestrators}
         self.assertEqual(2, len(kernel_ids), listing)
         self.assertEqual(kernel_ids, orchestrator_ids, listing)
+        self.assertEqual({option(worker[2], "--socket")},
+                         {option(command, "--worker-socket") for _, _, command in orchestrators}, listing)
+        self.assertTrue(all(float(option(command, "--worker-load-seconds")) > 0
+                            for _, _, command in orchestrators), listing)
+        return {owner, worker[0], *(pid for pid, _, _ in kernels + orchestrators)}
 
     async def _assert_project_queries(self, session, projects):
         async def query(name):
@@ -183,7 +251,9 @@ class SharedCandidateCases:
                 "sql": "SELECT reference FROM atoms ORDER BY reference LIMIT 1",
                 "result_delivery": "inline", "result_format": "json_matrix",
             })
-        results = await asyncio.gather(*(query(name) for name in ("alpha", "beta")))
-        for name, result in zip(("alpha", "beta"), results, strict=True):
+        names = ("alpha", "beta")
+        results = dict(zip(names, await asyncio.gather(*(query(name) for name in names)), strict=True))
+        for name, result in results.items():
             self.assertFalse(result.is_error, result.structured_content)
             self.assertEqual([[f"{name.upper()}-S-001"]], result.structured_content["rows"])
+        return {name: result.structured_content["query_id"] for name, result in results.items()}

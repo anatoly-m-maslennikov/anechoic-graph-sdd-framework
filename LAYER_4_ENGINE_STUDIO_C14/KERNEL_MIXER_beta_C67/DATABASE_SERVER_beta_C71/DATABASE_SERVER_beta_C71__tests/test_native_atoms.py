@@ -1,11 +1,13 @@
 """Admit a native revision snapshot and its property graph through the server socket."""
 
+import json
+import unittest
 from copy import deepcopy
 from hashlib import sha256
-import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
-import unittest
+
+import duckdb
 
 from .DATABASE_SERVER_beta_C71__tests__shared import PIN, _generation, _query, _server
 
@@ -39,6 +41,8 @@ class NativeAtomTest(unittest.TestCase):
             path = Path(directory).resolve() / "projection.duckdb"
             with _server(path) as client:
                 self.assertEqual(200, client.put("/generation", json=_generation()).status_code)
+            with duckdb.connect(str(path)) as connection:
+                connection.execute("CREATE VIEW main.native_references AS SELECT 'legacy' AS reference")
             native = _native_generation()
             with _server(path) as client:
                 admitted = client.put("/generation", json=native)
@@ -53,6 +57,30 @@ class NativeAtomTest(unittest.TestCase):
                 self.assert_native_rows(client)
             with _server(path) as client:
                 self.assert_native_rows(client)
+
+    def test_generation_with_migrated_current_journal_view(self):
+        with TemporaryDirectory(dir="/tmp") as directory:
+            root = Path(directory).resolve()
+            legacy = root / ".anechoic_runtime/workbench/projection.duckdb"
+            legacy.parent.mkdir(parents=True)
+            with duckdb.connect(str(legacy)) as connection:
+                connection.execute("CREATE VIEW main.native_references AS SELECT 'legacy' AS reference")
+                connection.execute("CREATE TABLE work_journal (record_id VARCHAR PRIMARY KEY, "
+                                   "position BIGINT NOT NULL, author VARCHAR NOT NULL, "
+                                   "local_date VARCHAR NOT NULL, event JSON NOT NULL)")
+                connection.execute("INSERT INTO work_journal VALUES ('saved', 1, 'operator', '2026-11-22', '{}')")
+            projection = root / "beta.duckdb"
+            with _server(projection, "--project-root", str(root), "--journal-storage", "duckdb") as client:
+                for _ in range(2):
+                    admitted = client.put("/generation", json=_native_generation())
+                    self.assertEqual(200, admitted.status_code, admitted.text)
+                    self.assert_native_rows(client)
+                journal = _query(client, "SELECT record_id FROM work_journal")
+                self.assertEqual(200, journal.status_code, journal.text)
+                self.assertEqual([["saved"]], journal.json()["result"]["rows"])
+            migrated = root / ".anechoic_runtime/db/project.duckdb"
+            with duckdb.connect(str(migrated), read_only=True) as connection:
+                self.assertEqual([("legacy",)], connection.execute("SELECT * FROM native_references").fetchall())
 
     def assert_native_rows(self, client):
         revisions = _query(client, "SELECT stable_ref, exact_ref FROM native_references ORDER BY exact_ref")

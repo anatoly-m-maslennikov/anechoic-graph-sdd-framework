@@ -7,7 +7,7 @@ from pathlib import Path
 import re
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_read_view, carrier_status_folder, matches_named_value
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import parse_carrier
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_carrier
 
 PLACEMENT_SUBJECT = re.compile(
     r'^ANECHOIC_MODEL\s*<\+\s*(?:Carrier|Atom\.Header\.Context\.Role|'

@@ -8,8 +8,8 @@ context:
   template: task
 state:
   status: "in_queue"
-  version: 10
-  updated_at: "2026-11-22T16:06:07.956677+00:00"
+  version: 12
+  updated_at: "2026-11-23T00:15:28.190910+00:00"
 ---
 
 ## Summary
@@ -62,3 +62,32 @@ scoped candidate used by two external production families.
 Keep `realization_component_paths` scoped to its Graph and Kernel users.
 Its result exposes Framework ownership layout. Keep the already public
 named exports unchanged.
+
+### Single-capture recheck
+
+Move 15 Current Kernel import sites to the Adapters shared entry.
+Use the declared previous-image `header_columns` module for the
+Layer 3 selector. The Realization Graph reports zero unresolved
+sites and zero forbidden imports in the 12 Beta Packages. It still
+reports 1,273 cross-Package inbound sites that bypass shared entries.
+
+The raw code inventory reports 86 of 87 folders with one entry.
+The remaining folder contains the generated Scope predicate source
+and its release assets. The source is a verification input for the
+packaged bytecode. It has no inbound Package import.
+
+### Authored Package inventory
+
+All 88 Packages with direct authored code have exactly one shared
+entry. RMED Review uses one entry for its review and evidence APIs.
+The Studio plot generator has a shared entry and retains its
+documented command. That command produced the same five PNGs.
+
+The raw graph still includes the generated Scope predicate as a
+release verification input. The folder has one generated source
+and zero inbound Package imports.
+
+The number of imports that bypass shared entries fell from
+721 to 479. The Realization Graph found zero unresolved imports
+and zero forbidden cross-Component or Beta imports. Keep this Task
+in the queue until the remaining Package imports meet the rule.

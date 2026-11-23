@@ -15,7 +15,8 @@ from .declared_header_rules import HeaderRule, compile_header_rules
 from .header_column_rules import (
     _reader_name, _rule_applies, _rule_asset, _rule_key, _rule_shape, _selector_metadata,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.source_row__pub import canonical, json_value
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import json_value
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical
 
 
 

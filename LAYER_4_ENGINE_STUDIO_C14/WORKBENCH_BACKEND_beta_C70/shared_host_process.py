@@ -7,7 +7,7 @@ from .runtime import open_project_peers
 
 
 @contextmanager
-def open_peers(selection, stop):
+def open_peers(selection, stop, warm_worker=None):
     root = Path(selection.root)
     manifest = Path(selection.manifest_path)
     if root.resolve(strict=True) != root or manifest.resolve(strict=True) != manifest:
@@ -27,5 +27,6 @@ def open_peers(selection, stop):
                                 storage=workbench.get("storage", "disk"),
                                 journal_storage=runtime.get("journal", {}).get("storage", "files"),
                                 journal_relative=selection.parameters.get("paths", {}).get("journal_root"),
-                                result_ttl_seconds=workbench.get("result_ttl_seconds")) as peers:
+                                result_ttl_seconds=workbench.get("result_ttl_seconds"),
+                                warm_worker=warm_worker) as peers:
             yield peers

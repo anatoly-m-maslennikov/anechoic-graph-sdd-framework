@@ -82,7 +82,9 @@ def ready_predecessor(selection) -> str | None:
 class ImageManager(ImageInputIdentity):
     def __init__(self, source_root: Path, *, project_root: Path, build_temp_root: Path | None = None,
                  build_provenance: dict[str, str] | None = None, timeout: float = 600,
-                 executor=None):
+                 executor=None, source_provider=None):
+        self.source_provider = source_provider
+        self._source_map = {}
         self.source_root = Path(source_root)
         self.project_root = Path(project_root)
         self.build_temp_root = Path(build_temp_root) if build_temp_root is not None else None
@@ -196,7 +198,7 @@ class ImageManager(ImageInputIdentity):
             context.mkdir(mode=0o700)
             buildx.mkdir(mode=0o700)
             for relative, digest, mode in identity.manifest:
-                data = (self.source_root / relative).read_bytes()
+                data = self._source_map.get(Path(relative), self.source_root / relative).read_bytes()
                 if hashlib.sha256(data).hexdigest() != digest:
                     raise RuntimeError("image inputs changed")
                 destination = context / relative

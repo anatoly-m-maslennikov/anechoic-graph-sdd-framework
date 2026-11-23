@@ -25,6 +25,7 @@ services:
     cpus: 1
     command: [mcp-http]
     environment:
+      ANECHOIC_FRAMEWORK_DB_ROOT: /var/lib/anechoic
       ANECHOIC_RUNTIME_NAMESPACE: docker
       ANECHOIC_CONTROL_ROOT: ${ANECHOIC_CONTROL_ROOT:?Selected control root is required}
       ANECHOIC_PROJECT_INSTANCE_ID: ${ANECHOIC_PROJECT_INSTANCE_ID:?Selected identity is required}
@@ -36,6 +37,9 @@ services:
       org.anechoic.control_root: ${ANECHOIC_CONTROL_ROOT}
       org.anechoic.host_project_root: ${ANECHOIC_PROJECT_ROOT}
     volumes:
+      - type: volume
+        source: framework-db
+        target: /var/lib/anechoic
       - type: bind
         source: ${ANECHOIC_PROJECT_ROOT}
         target: /project
@@ -46,3 +50,7 @@ services:
       timeout: 5s
       retries: 25
       start_period: 420s
+
+volumes:
+  framework-db:
+    name: anechoic-framework-db

@@ -15,7 +15,6 @@ from mcp import types
 MCP = Path(__file__).resolve().parents[1]
 TOOLS = MCP.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 
-import MCP_PATCHBAY_C21.FEATURE_MCP.direct_gateway as direct_gateway  # noqa: E402
 import MCP_PATCHBAY_C21.FEATURE_MCP.http_server as http_server  # noqa: E402
 import MCP_PATCHBAY_C21.FEATURE_MCP.server as server  # noqa: E402
 
@@ -33,7 +32,7 @@ class GatewayErrorBoundaryTests(unittest.IsolatedAsyncioTestCase):
         gateway = self._gateway()
         params = types.CallToolRequestParams(name="query_check", arguments={})
         with (
-            patch.object(gateway, "_invoke_bound", new=AsyncMock(side_effect=ValueError("secret=private"))),
+            patch.object(gateway, "call_tool", new=AsyncMock(side_effect=ValueError("secret=private"))),
             patch("MCP_PATCHBAY_C21.FEATURE_MCP.shared_gateway_support.warning", return_value=None) as reported,
         ):
             response = await gateway.call(None, params)
@@ -44,12 +43,13 @@ class GatewayErrorBoundaryTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_health_observer_record_failure_warns_without_replacing_result(self):
         gateway = self._gateway()
-        response = direct_gateway.result({"outcome": "success"})
-        with patch.object(gateway, "_invoke_bound", new=AsyncMock(return_value=response)), patch.object(
+        response = {"value": {"outcome": "success"}, "text": "success"}
+        with patch.object(gateway, "call_tool", new=AsyncMock(return_value=response)), patch.object(
             gateway.health_observations, "record", side_effect=ValueError("private")), patch(
             "MCP_PATCHBAY_C21.FEATURE_MCP.shared_gateway_support.warning", return_value=None) as reported:
             actual = await gateway.call(None, types.CallToolRequestParams(name="query_check", arguments={}))
-        self.assertIs(response, actual)
+        self.assertEqual(response["value"], actual.structured_content)
+        self.assertEqual(response["text"], actual.content[0].text)
         reported.assert_called_once_with("health_observation_failed")
 
     async def asyncSetUp(self):

@@ -4,8 +4,8 @@ from collections.abc import Collection, Mapping
 from dataclasses import replace
 import re
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_class_subject__pub import canonical_model_address
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.subject_notation__pub import (Name, Path as SubjectPath, Qualification, RelationChain, SelectionGroup, SelectionSuffix,
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical_model_address
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (Name, Path as SubjectPath, Qualification, RelationChain, SelectionGroup, SelectionSuffix,
     namespace_local_expression, parse_subject_expression, render_subject)
 
 _MEMBERSHIP = re.compile(

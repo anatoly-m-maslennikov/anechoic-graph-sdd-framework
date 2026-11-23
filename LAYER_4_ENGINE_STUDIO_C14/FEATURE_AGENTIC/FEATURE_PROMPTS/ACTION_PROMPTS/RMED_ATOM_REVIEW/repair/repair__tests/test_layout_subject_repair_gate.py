@@ -8,7 +8,7 @@ import unittest
 
 HERE = Path(__file__).resolve().parent.parent
 
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.evaluation_contract import ReviewContext, merge_evaluations
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import ReviewContext, merge_evaluations
 from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.layout_repair_gate import authority_digest
 from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.layout_subject_repair_gate import admit_layout_subject_recoding
 from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair__tests.test_layout_repair_gate import fixture as layout_fixture, rebind
@@ -72,7 +72,7 @@ def combined_fixture(*, role='Requirement'):
     output = data['proposal']['outputs'][0]
     output['text'] = output['text'].replace('Atom must comply.\n',
                                             'Atom must comply. Atom Context.\n')
-    from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import body_sections, markdown
+    from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import body_sections, markdown
     original_body = markdown(original_record['text'])
     data['section_mapping']['source_body_sha256'] = hashlib.sha256(original_body.encode()).hexdigest()
     data['section_mapping']['sections'][2]['source_span'][1] = len(original_body)

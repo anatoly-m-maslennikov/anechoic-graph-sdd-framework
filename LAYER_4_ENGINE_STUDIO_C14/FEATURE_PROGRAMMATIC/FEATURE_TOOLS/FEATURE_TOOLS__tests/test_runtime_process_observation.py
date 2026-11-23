@@ -18,9 +18,9 @@ for path in (TESTS, TOOLS):
         sys.path.insert(0, str(path))
 
 import FEATURE_PROGRAMMATIC.FEATURE_TOOLS.runtime_failure_diagnostics as facade  # noqa: E402
-import FEATURE_PROGRAMMATIC.FEATURE_TOOLS.runtime_process_boundary as boundary  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.operation_error_boundary import FailureRecord  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.technical_diagnostics import TechnicalDiagnosticLogger  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import runtime_process_boundary_module as boundary  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import FailureRecord  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import TechnicalDiagnosticLogger  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.test_runtime_process_boundary import _record_report  # noqa: E402
 
 

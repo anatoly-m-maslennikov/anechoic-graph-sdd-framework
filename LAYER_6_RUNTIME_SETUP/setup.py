@@ -32,7 +32,7 @@ def parse_arguments(argv: list[str] | None) -> argparse.Namespace:
     target = install.add_mutually_exclusive_group()
     target.add_argument("--project", type=Path, help="mount one repository")
     target.add_argument("--projects-root", type=Path, help="mount a directory of repositories")
-    install.add_argument("--settings", type=Path, help="host runtime.toml file")
+    install.add_argument("--settings", "--host-settings", type=Path, help="host runtime.toml file")
     install.add_argument("--port", type=int, help="loopback HTTP port, defaults to 8092 for new settings")
     install.add_argument("--workbench-storage", choices=("disk", "memory"))
     install.add_argument("--journal-storage", choices=("files", "duckdb"))

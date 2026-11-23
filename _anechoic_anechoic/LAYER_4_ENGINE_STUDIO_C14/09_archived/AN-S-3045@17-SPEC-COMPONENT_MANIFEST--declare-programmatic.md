@@ -1,0 +1,74 @@
+---
+atom_family: SPEC
+atom_id: AN-S-3045
+container:
+  component: C14
+tier: 4
+context:
+  template: component_manifest
+  lens: SPEC
+state:
+  status: "archived"
+  version: 17
+  updated_at: "2026-11-22T18:54:00.275242+00:00"
+---
+
+## Summary
+
+Declare PROGRAMMATIC
+
+## Formal manifest
+
+```python
+from anechoic.formal_claims import declare_entity
+from anechoic.model import ComponentManifest
+
+declare_entity(
+    entity_name='Component Manifest',
+    instance=ComponentManifest(
+        component_id='C15',
+        name='PROGRAMMATIC',
+        lens_whitelist=['DES', 'DevOps', 'QA', 'SPEC', 'SWD'],
+        boundaries={
+            'code': {
+                'imports': [
+                    'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests',
+                    'topic_dependencies__pub.DEPENDENCIES_CHECK_SOURCE_SHA256',
+                    'topic_dependencies__pub.validate_dependencies_claim',
+                    'dataclass_field_contract__pub.has_dataclass_field_contracts',
+                    'dataclass_field_contract__pub.validate_field_contracts',
+                    'model_class_subject__pub.canonical_model_address',
+                    'model_class_subject__pub.simple_model_address',
+                    'placement_claim__pub.parse_placement_rules',
+                    'markdown_content__pub.content_key',
+                    'markdown_content__pub.formal_claim_fences',
+                    'formal_claim__pub.formal_claim',
+                    'model_catalog__pub.class_bindings',
+                    'ADAPTERS_C30__shared.parse_native_model_claim',
+                    'ADAPTERS_C30__shared.validate_aspect_hierarchy',
+                    'ADAPTERS_C30__shared.validate_aspect_instance',
+                    'scope_declaration_parse__pub.ScopeUnitDeclarations',
+                    'ADAPTERS_C30__shared.is_current_requirement_declaration',
+                    'legacy_relation__pub.emits_instance_inverse',
+                    'model_class_subject__pub.model_class_target',
+                    'python_claim__pub.parse_python_model_claim',
+                    'subject_notation__pub',
+                    'carrier_read__pub.parse_carrier',
+                    'ADAPTERS_C30__shared.carrier_read_view',
+                    'ADAPTERS_C30__shared.matches_named_value',
+                    'ADAPTERS_C30__shared.named_value_token',
+                ],
+                'exports': {
+                    'FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared.resolve_model_claim_reference': {'private': ['C50']},
+                    'FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared.lint_native_model_claim': {'private': ['C50']},
+                    'FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared.formal_claim_blocks': {'private': ['C59', 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND', 'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests']},
+                    'FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared.Atom': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
+                    'FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared.DEPENDENCIES_CLAIM_SHA256': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
+                    'FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared.dependencies_are_distinct': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
+                    'FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared.verify_packaged_dependencies_check': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests']},
+                },
+            },
+        },
+    ),
+)
+```

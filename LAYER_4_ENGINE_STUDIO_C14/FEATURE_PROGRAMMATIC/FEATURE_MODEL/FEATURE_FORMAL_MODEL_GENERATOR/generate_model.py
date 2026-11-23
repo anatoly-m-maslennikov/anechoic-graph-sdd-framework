@@ -7,9 +7,9 @@ import sys
 PROGRAMMATIC = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.artifact_metadata import atomic_write  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.current_carriers__pub import read_current_model_carriers  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_selection import resolve_project  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import atomic_write  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import read_current_model_carriers  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import resolve_project  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.model_class_assembly import (  # noqa: E402
     build_model_class_source,
 )

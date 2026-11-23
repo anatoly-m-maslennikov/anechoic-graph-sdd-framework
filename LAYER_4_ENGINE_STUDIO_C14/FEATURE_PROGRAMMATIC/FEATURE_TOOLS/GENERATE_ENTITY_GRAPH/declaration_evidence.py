@@ -9,7 +9,7 @@ from typing import Any
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import source_body
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_read_view
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.subject_notation__pub import SubjectNotationError, parse_subject_expression
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import SubjectNotationError, parse_subject_expression
 
 
 Record = dict[str, Any]

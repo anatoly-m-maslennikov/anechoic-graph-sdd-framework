@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import re
 import sys
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import formal_claim_fences
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import formal_claim_fences
 
 
 _NAME = r"[A-Za-z_][A-Za-z_0-9]*"
@@ -43,7 +43,7 @@ def relation_declaration(body: str, source: str) -> RegistryContribution:
 
 
 def _helper_contribution(claim: str, source: str) -> RegistryContribution:
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.python_claim__pub import parse_structured_python_model_claim
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_structured_python_model_claim
 
     names: set[str] = set()
     inverses: list[tuple[str, str]] = []
@@ -86,7 +86,7 @@ def _literal_name(address: str | None) -> str | None:
 
 def _native_contribution(claim: str) -> RegistryContribution | None:
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_native_model_claim
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.legacy_relation__pub import emits_instance_inverse
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import emits_instance_inverse
 
     declaration = parse_native_model_claim(claim)
     if declaration is None:

@@ -5,13 +5,13 @@ from hashlib import sha256
 import json
 from pathlib import Path
 
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.model_class_assembly import assemble_model_modules, model_module_name
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.native_manifest_model import (
-    admit_active_model_records, compile_native_bindings, load_compiled_model, load_native_model, reviewed_model_records,
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.FEATURE_FORMAL_MODEL_GENERATOR__shared import (
+    admit_active_model_records, assemble_model_modules, compile_native_bindings, load_compiled_model,
+    load_native_model, model_module_name, reviewed_model_records,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import resolve_native_project
 
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_generation__pub import open_admitted_model
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import open_admitted_model
 from .active_model_sources import read_active_model_sources
 from .structure_compile__shared import compile_structure
 

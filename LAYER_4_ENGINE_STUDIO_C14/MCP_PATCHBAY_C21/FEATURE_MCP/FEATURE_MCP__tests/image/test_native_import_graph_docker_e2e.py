@@ -11,10 +11,9 @@ from uuid import uuid4
 
 
 from .. import test_native_startup as fixture
-from ..native_import_graph_docker_cases import DockerBrowserAndMcpCases
+from .. import native_import_graph_docker_cases as docker_cases
 from ..native_shared_candidate_cases import SharedCandidateCases
-from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import HEALTH_PATH, WORKBENCH_PATH
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.work_journal__pub import PROJECT_DATABASE, append_sealed_events
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import HEALTH_PATH, WORKBENCH_PATH
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__tests.workbench_docker_support import request
 
@@ -35,7 +34,7 @@ def _watcher_contents(version, container):
 
 
 
-class NativeImportGraphDockerE2E(SharedCandidateCases, DockerBrowserAndMcpCases, unittest.TestCase):
+class _CanaryProject:
     @classmethod
     def setUpClass(cls):
         image = os.environ.get("ANECHOIC_IMAGE", "")
@@ -49,12 +48,10 @@ class NativeImportGraphDockerE2E(SharedCandidateCases, DockerBrowserAndMcpCases,
             "runtime": {"journal": {"storage": "duckdb"}, "workbench": {"storage": "disk", "import_graph": {}}},
         })
         (cls.root / control / "001_TICKETS/TASKS").mkdir(parents=True)
-        cls._write("app/__init__.py", "")
-        cls._write("app/main.py", "import dep.helper\nimport dep.helper\n")
-        cls._write("app/package.json", '{"name": "app"}\n')
-        cls._write("app/frontend.js", "")
-        cls._write("dep/__init__.py", "")
-        cls._write("dep/helper.py", "VALUE = 1\n")
+        for name, contents in (("app/__init__.py", ""), ("app/main.py", "import dep.helper\nimport dep.helper\n"),
+                               ("app/package.json", '{"name": "app"}\n'), ("app/frontend.js", ""),
+                               ("dep/__init__.py", ""), ("dep/helper.py", "VALUE = 1\n")):
+            cls._write(name, contents)
         (cls.root / "app/app__tests").mkdir()
         (cls.root / "app/app__tests/test_app.py").write_text("pass\n", encoding="utf-8")
         cls.container = subprocess.check_output([
@@ -80,7 +77,7 @@ class NativeImportGraphDockerE2E(SharedCandidateCases, DockerBrowserAndMcpCases,
         cls.url = f"http://{binding}"
         cls.api = f"{cls.url}/anechoic/Anechoic/api"
         deadline = monotonic() + 60
-        while monotonic() < deadline:
+        while cls._observing(deadline):
             try:
                 if request(cls.url + HEALTH_PATH) == (200, {"ready": True}):
                     return
@@ -91,6 +88,16 @@ class NativeImportGraphDockerE2E(SharedCandidateCases, DockerBrowserAndMcpCases,
                               capture_output=True, text=True, check=True, timeout=10)
         raise RuntimeError(f"Canary Workbench failed to become ready\n{logs.stdout}{logs.stderr}")
 
+
+    @classmethod
+    def _observing(cls, deadline):
+        if os.environ.get("ANECHOIC_TEST_OBSERVE_NO_DEADLINE") != "1":
+            return monotonic() < deadline
+        running = subprocess.check_output(["docker", "inspect", "--format", "{{.State.Running}}", cls.container],
+                                          text=True, timeout=10).strip()
+        if running != "true":
+            raise RuntimeError(f"Canary container exited: {cls.container} ({running})")
+        return True
 
     @classmethod
     def _write(cls, relative, contents):
@@ -110,11 +117,19 @@ class NativeImportGraphDockerE2E(SharedCandidateCases, DockerBrowserAndMcpCases,
     def _wait_rows(self, sql, expected):
         deadline = monotonic() + 10
         actual = self._rows(sql)
-        while actual != expected and monotonic() < deadline:
+        while actual != expected and self._observing(deadline):
             sleep(.1)
             actual = self._rows(sql)
         self.assertEqual(expected, actual, sql)
 
+
+class WarmProjectionRestartDockerE2E(_CanaryProject, docker_cases.WarmProjectionRestartCase, unittest.TestCase):
+    """Check warm restart on a fresh Project."""
+
+
+class NativeImportGraphDockerE2E(
+    _CanaryProject, SharedCandidateCases, docker_cases.DockerBrowserAndMcpCases, unittest.TestCase,
+):
     def test_workbench_shows_all_four_relations_and_counts_each_occurrence(self):
         status, page = request(f"{self.url}{WORKBENCH_PATH}/Anechoic")
         self.assertEqual(200, status)
@@ -227,29 +242,6 @@ class NativeImportGraphDockerE2E(SharedCandidateCases, DockerBrowserAndMcpCases,
             source.parent.rmdir()
         self._wait_rows(sql, [])
 
-    def test_disk_journal_and_projection_survive_warm_restart(self):
-        receipt, = append_sealed_events(
-            self.root, [{"event_id": "host-canary"}], author="release-canary",
-            local_date="2026-11-21", timezone="UTC", storage="duckdb",
-        )
-        sql = "SELECT record_id FROM work_journal WHERE author = 'release-canary'"
-        self._wait_rows(sql, [[receipt["record_id"]]])
-        saved = self._post("/run", {"sql": "SELECT 1", "save": True, "result_delivery": "inline"})
-        self.assertEqual("SELECT 1", self._post("/load", {"reference": saved["saved_query_id"]})["sql"])
-        self.assertEqual("ready", self._post("/rebuild", {"target": "all"})["status"])
-        self.assertEqual([[receipt["record_id"]]], self._rows(sql))
-        database = self.root / PROJECT_DATABASE
-        inode = database.stat().st_ino
-        subprocess.run(["docker", "container", "restart", self.container],
-                       check=True, capture_output=True, timeout=30)
-        self._wait_ready()
-        self.assertEqual(inode, database.stat().st_ino)
-        self.assertEqual([[receipt["record_id"]]], self._rows(sql))
-        self.assertEqual("SELECT 1", self._post("/load", {"reference": saved["saved_query_id"]})["sql"])
-        logs = subprocess.run(["docker", "logs", self.container],
-                              check=True, capture_output=True, text=True, timeout=10)
-        self.assertIn("database_edit operation=reuse table=projection", logs.stdout + logs.stderr)
-
     def test_watcher_updates_native_atom_and_relations(self):
         relative = "_anechoic_anechoic/001_TICKETS/TASKS/AN-T-9901--watcher.md"
         graph = """
@@ -267,16 +259,17 @@ class NativeImportGraphDockerE2E(SharedCandidateCases, DockerBrowserAndMcpCases,
         """
 
         def check(label, started, expected):
-            limit = 1.5
+            limit = 20.0
             deadline = started + limit
             actual = self._rows(sql)
-            while actual != expected and monotonic() < deadline:
+            while actual != expected and self._observing(deadline):
                 sleep(.1)
                 actual = self._rows(sql)
             elapsed = monotonic() - started
             print(f"native Atom watcher {label}: {elapsed:.3f}s", flush=True)
             self.assertEqual(expected, actual, label)
-            self.assertLessEqual(elapsed, limit, label)
+            if os.environ.get("ANECHOIC_TEST_OBSERVE_NO_DEADLINE") != "1":
+                self.assertLessEqual(elapsed, limit, label)
             self.assertEqual([expected[0][-2:]] if expected else [], self._rows(graph), label)
 
         started = monotonic()

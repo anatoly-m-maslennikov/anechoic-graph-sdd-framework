@@ -6,7 +6,7 @@ from unittest import mock
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.COMPILE_APPLICABLE_METHODOLOGY.COMPILE_APPLICABLE_METHODOLOGY__tests.methodology_test_support import (
     CompilerFixture, module, carrier, definition_carrier, term_definition_carrier,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.artifact_metadata import SETTINGS_PATH
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import SETTINGS_PATH
 
 
 class CompilerTest(CompilerFixture):

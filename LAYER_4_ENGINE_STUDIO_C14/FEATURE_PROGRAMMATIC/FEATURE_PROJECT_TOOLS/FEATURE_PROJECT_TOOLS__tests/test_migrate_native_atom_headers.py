@@ -58,12 +58,22 @@ class MigrationTest(unittest.TestCase):
         self.assertEqual(header['relations']['IS_REFERENCE'], ['AN-S-42@3', 'AN-T-7@2-draft'])
         self.assertTrue(migrated.read_bytes().endswith(body))
         self.assertEqual((migrated.with_suffix('') / 'nested/attachment.txt').read_text(), 'asset')
-        default = self.output / 'component/AN-S-2-DES--default.md'
+        default = self.output / 'component/_DES/AN-S-2-DES--default.md'
         self.assertEqual(self.read_header(default)['tier'], 2)
         records = {r['old_ref']: r for r in receipt['carriers']}
         self.assertEqual(records['AN-S-1@1']['tier_source'], 'recovered')
         self.assertEqual(records['AN-S-1@1']['new_ref'], 'AN-S-1@1')
         self.assertEqual(records['AN-S-2@1']['tier_source'], 'defaulted')
+
+    def test_active_tier_one_uses_architecture_directory(self):
+        self.carrier('component/_DES/AN-S-7-DES--move.md', 'AN-S-7', tier=1)
+        self.carrier('component/01_TIER_1_ARCHITECTURE/AN-S-8-DES--keep.md', 'AN-S-8', tier=1)
+        receipt = migration.run(self.source, self.output, {})
+        records = {record['old_ref']: record for record in receipt['carriers']}
+        for ref, filename in [('AN-S-7@1', 'AN-S-7-DES--move.md'), ('AN-S-8@1', 'AN-S-8-DES--keep.md')]:
+            destination = 'component/01_TIER_1_ARCHITECTURE/' + filename
+            self.assertEqual(records[ref]['new_path'], destination)
+            self.assertEqual(self.read_header(self.output / destination)['tier'], 1)
 
     def test_archive_and_ticket_statuses(self):
         self.carrier('component/099_archived/AN-S-3@5-DES--archive.md', 'AN-S-3', status='archived', version=5, tier=2)
@@ -73,9 +83,9 @@ class MigrationTest(unittest.TestCase):
         migration.run(self.source, self.output, {})
         archive = self.output / 'component/09_archived/AN-S-3@5-DES--archive.md'
         self.assertEqual(self.read_header(archive)['state']['version'], 5)
-        ticket = self.output / '001_TICKETS/TASKS/AN-T-4-TASK--task.md'
+        ticket = self.output / '__TICKETS/TASKS/AN-T-4-TASK--task.md'
         self.assertEqual(self.read_header(ticket)['state']['status'], 'in_queue')
-        asset = self.output / '001_TICKETS/ASSETS/08_complete/AN-T-5-WORK_REPORT--report.md'
+        asset = self.output / '__TICKETS/ASSETS/08_complete/AN-T-5-WORK_REPORT--report.md'
         self.assertEqual(self.read_header(asset)['state']['status'], 'complete')
 
     def test_flat_legacy_pmeta_changes_family_only(self):
@@ -96,7 +106,7 @@ class MigrationTest(unittest.TestCase):
         legacy.write_bytes(original)
 
         receipt = migration.run(self.source, self.output, {})
-        migrated = self.output / '002_PROJECT_CONFIG/AN-P-9-ACTION--legacy.md'
+        migrated = self.output / '__PROJECT_CONFIG/AN-P-9-ACTION--legacy.md'
         self.assertEqual(legacy.read_bytes(), original)
         migrated_bytes = migrated.read_bytes()
         migrated_header = self.read_header(migrated)
@@ -108,14 +118,16 @@ class MigrationTest(unittest.TestCase):
         self.assertEqual(migrated_bytes[match.end():], body)
         record = receipt['carriers'][0]
         self.assertEqual(record['old_path'], '_PMETA/AN-P-9-ACTION--legacy.md')
-        self.assertEqual(record['new_path'], '002_PROJECT_CONFIG/AN-P-9-ACTION--legacy.md')
+        self.assertEqual(record['new_path'], '__PROJECT_CONFIG/AN-P-9-ACTION--legacy.md')
         self.assertEqual(record['old_ref'], record['new_ref'])
         self.assertEqual(record['old_ref'], 'AN-P-9@3')
 
     def test_collision_has_no_output(self):
-        self.carrier('component/__DES/AN-S-6-DES--same.md', 'AN-S-6', tier=1)
-        (self.source / 'component/AN-S-6-DES--same.md').write_text('occupied')
-        with self.assertRaisesRegex(ValueError, 'collision'):
+        self.carrier('component/_DES/AN-S-6-DES--same.md', 'AN-S-6', status='ready', tier=1)
+        occupied = self.source / 'component/02_ready/AN-S-6-DES--same.md'
+        occupied.parent.mkdir()
+        occupied.write_text('occupied')
+        with self.assertRaisesRegex(ValueError, r'Path collision: .* -> component/02_ready/AN-S-6-DES--same\.md'):
             migration.run(self.source, self.output, {})
         self.assertFalse(self.output.exists())
         self.assertFalse((self.root / 'output.receipt.json').exists())

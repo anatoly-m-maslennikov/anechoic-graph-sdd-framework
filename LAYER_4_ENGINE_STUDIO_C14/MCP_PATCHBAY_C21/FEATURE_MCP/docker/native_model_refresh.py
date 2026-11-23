@@ -22,7 +22,7 @@ def _remaining(deadline: float) -> float:
 
 
 def verify_project_model(project: Path, timeout: float, previous: str | None) -> str:
-    from MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import select_runtime_project
+    from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import select_runtime_project
 
     deadline = time.monotonic() + timeout
     control = select_runtime_project(project).control_root

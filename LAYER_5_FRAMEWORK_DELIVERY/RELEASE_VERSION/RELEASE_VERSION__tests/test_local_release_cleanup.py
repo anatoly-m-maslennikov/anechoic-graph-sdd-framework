@@ -8,8 +8,8 @@ from unittest.mock import patch
 
 from RELEASE_VERSION.RELEASE_VERSION__tests import test_release_cleanup as docker_tests
 from RELEASE_VERSION.RELEASE_VERSION__tests import test_simple_local_release as local_tests
-from RELEASE_VERSION.local_release import run_local_release
-from RELEASE_VERSION.release_inputs import read_release_selection
+from RELEASE_VERSION.RELEASE_VERSION__shared import run_local_release
+from RELEASE_VERSION.RELEASE_VERSION__shared import read_release_selection
 from RELEASE_VERSION.release_assets import LocalReleaseError
 
 

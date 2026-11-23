@@ -4,7 +4,7 @@ import builtins
 from collections import defaultdict
 from collections.abc import Mapping
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_class_subject__pub import model_class_target
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import model_class_target
 
 
 def _validate_bound_constraints(property_populations, model_types, populations, relations):

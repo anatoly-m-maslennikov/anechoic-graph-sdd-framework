@@ -20,7 +20,7 @@ ROOT = APP.parents[2]
 TOOLS = APP.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import extension_directory  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import MCP_PATH  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import MCP_PATH  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.shared_http_server import create_app  # noqa: E402
 from . import test_native_startup as fixtures  # noqa: E402
 
@@ -101,8 +101,8 @@ class SharedNativeRoutingTests(unittest.IsolatedAsyncioTestCase):
             ))
             self.assertTrue(all(not response.is_error for response in schemas), schemas)
             coordinator, owners = await self._assert_distinct_backends()
-            self.assertFalse((self.projects_by_name["alpha"] / ".anechoic_runtime/workbench/projection.duckdb").exists())
-            self.assertTrue((self.projects_by_name["beta"] / ".anechoic_runtime/workbench/projection.duckdb").is_file())
+            self.assertFalse((self.projects_by_name["alpha"] / ".anechoic_runtime/db/project.duckdb").exists())
+            self.assertTrue((self.projects_by_name["beta"] / ".anechoic_runtime/db/project.duckdb").is_file())
             responses = await asyncio.gather(*(
                 session.call_tool("workspace_open", {
                     "session_id": "same-id", "project_root": str(self.projects_by_name[name]),
@@ -209,7 +209,7 @@ class SharedNativeRoutingTests(unittest.IsolatedAsyncioTestCase):
             self.assertIn("query_schema", tools)
             response = await session.call_tool("query_schema", {"project_root": str(root)})
             self.assertFalse(response.is_error, response.structured_content)
-            self.assertFalse((root / ".anechoic_runtime/workbench/projection.duckdb").exists())
+            self.assertFalse((root / ".anechoic_runtime/db/project.duckdb").exists())
             web = await self.client.post(
                 "/anechoic/alpha/api/schema", json={"project_root": str(root)}
             )

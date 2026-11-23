@@ -13,13 +13,13 @@ from unittest.mock import patch
 from pathlib import Path
 
 
-from RELEASE_VERSION import local_release  # noqa: E402
+from RELEASE_VERSION.RELEASE_VERSION__shared import local_release  # noqa: E402
 from RELEASE_VERSION import local_release_safety  # noqa: E402
 from RELEASE_VERSION import local_release_package_phases as package_phases  # noqa: E402
-from RELEASE_VERSION.local_release import run_local_release  # noqa: E402
+from RELEASE_VERSION.RELEASE_VERSION__shared import run_local_release  # noqa: E402
 from RELEASE_VERSION import local_release_runner  # noqa: E402
-from RELEASE_VERSION.release_inputs import read_release_selection  # noqa: E402
-from RELEASE_VERSION.release_support import _GENERATED_ASSETS  # noqa: E402
+from RELEASE_VERSION.RELEASE_VERSION__shared import read_release_selection  # noqa: E402
+from RELEASE_VERSION.RELEASE_VERSION__shared import _GENERATED_ASSETS  # noqa: E402
 
 
 from RELEASE_VERSION.RELEASE_VERSION__tests.RELEASE_VERSION__tests__shared import SimpleReleaseFixture  # noqa: E402

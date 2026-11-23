@@ -6,7 +6,17 @@ from collections.abc import Mapping
 import re
 from typing import Any
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import subject_notation__pub as notation
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    Name as _subject_Name,
+    Path as _subject_Path,
+    Qualification as _subject_Qualification,
+    RelationChain as _subject_RelationChain,
+    SelectionGroup as _subject_SelectionGroup,
+    SubjectNotationError as _subject_SubjectNotationError,
+    namespace_local_expression as _subject_namespace_local_expression,
+    parse_subject_expression as _subject_parse_subject_expression,
+    render_subject as _subject_render_subject,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.contract_graph_targets import _target as _contract_target
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.declaration_evidence import Record
@@ -17,37 +27,37 @@ _PASSIVE = ("passive", "depends_on")
 _MODEL_DESCRIPTORS = {"Relation", "Operator", "Format", "Term"}
 
 
-def _subject_namespace(expr: notation.Path | notation.RelationChain) -> str | None:
-    if isinstance(expr, notation.RelationChain):
+def _subject_namespace(expr: _subject_Path | _subject_RelationChain) -> str | None:
+    if isinstance(expr, _subject_RelationChain):
         first = expr.endpoints[0]
-        if isinstance(first.head, notation.Name) and first.head.value in {"ANECHOIC_MODEL", "ANECHOIC_STRUCTURE"}:
-            return first.head.value if notation.namespace_local_expression(expr) is not None else None
-        if (isinstance(first.head, notation.Name) and first.head.value == "ANECHOIC"
-                and len(expr.endpoints) > 1 and isinstance(expr.endpoints[1].head, notation.Name)
-                and notation.namespace_local_expression(expr) is not None):
+        if isinstance(first.head, _subject_Name) and first.head.value in {"ANECHOIC_MODEL", "ANECHOIC_STRUCTURE"}:
+            return first.head.value if _subject_namespace_local_expression(expr) is not None else None
+        if (isinstance(first.head, _subject_Name) and first.head.value == "ANECHOIC"
+                and len(expr.endpoints) > 1 and isinstance(expr.endpoints[1].head, _subject_Name)
+                and _subject_namespace_local_expression(expr) is not None):
             return "ANECHOIC_" + expr.endpoints[1].head.value
         return None
-    return _subject_namespace(expr.head) if isinstance(expr.head, (notation.Path, notation.RelationChain)) else None
+    return _subject_namespace(expr.head) if isinstance(expr.head, (_subject_Path, _subject_RelationChain)) else None
 
 
 def _has_concrete_instance(expr: object) -> bool:
-    if isinstance(expr, notation.SelectionGroup):
+    if isinstance(expr, _subject_SelectionGroup):
         return any(_has_concrete_instance(member) for member in expr.members)
-    if isinstance(expr, notation.Qualification):
+    if isinstance(expr, _subject_Qualification):
         return _has_concrete_instance(expr.relative_path)
-    if isinstance(expr, notation.RelationChain):
+    if isinstance(expr, _subject_RelationChain):
         return any(_has_concrete_instance(endpoint) for endpoint in expr.endpoints)
-    if not isinstance(expr, notation.Path):
+    if not isinstance(expr, _subject_Path):
         return False
     if _has_concrete_instance(expr.head):
         return True
-    prior = expr.head.value if isinstance(expr.head, notation.Name) else None
+    prior = expr.head.value if isinstance(expr.head, _subject_Name) else None
     for step in expr.steps:
         if step.operator == "//" and prior not in _MODEL_DESCRIPTORS:
             return True
         if _has_concrete_instance(step.operand):
             return True
-        if isinstance(step.operand, notation.Name):
+        if isinstance(step.operand, _subject_Name):
             prior = step.operand.value
     return False
 
@@ -55,8 +65,8 @@ def _has_concrete_instance(expr: object) -> bool:
 def _scope_subject(value: str) -> str:
     """Classify explicit MODEL Subjects without treating concrete instances as kinds."""
     try:
-        expression = notation.parse_subject_expression(value, subject_profile="approved").expression
-    except notation.SubjectNotationError:
+        expression = _subject_parse_subject_expression(value, subject_profile="approved").expression
+    except _subject_SubjectNotationError:
         if re.match(r"^\s*(?:ANECHOIC_STRUCTURE|ANECHOIC\s*<\+\s*STRUCTURE)\s*<\+", value):
             return "structure"
         return "model" if re.match(r"^\s*(?:ANECHOIC_MODEL|ANECHOIC\s*<\+\s*MODEL)\s*<\+", value) else "unresolved"
@@ -65,7 +75,7 @@ def _scope_subject(value: str) -> str:
     if namespace == "ANECHOIC_STRUCTURE":
         return "structure"
     if namespace != "ANECHOIC_MODEL":
-        if isinstance(expression, notation.Path) and isinstance(expression.head, notation.Name):
+        if isinstance(expression, _subject_Path) and isinstance(expression.head, _subject_Name):
             if expression.head.value == "ANECHOIC_MODEL" and expression.steps:
                 target = _contract_target(expression)
                 if target is not None and target[0] == "relation":
@@ -138,10 +148,10 @@ def _canonical(value: str) -> tuple[str | None, str | None]:
     """Render approved syntax, retaining names and qualification values exactly."""
 
     try:
-        expression = notation.parse_subject_expression(value, subject_profile="approved").expression
-    except notation.SubjectNotationError as error:
+        expression = _subject_parse_subject_expression(value, subject_profile="approved").expression
+    except _subject_SubjectNotationError as error:
         return None, str(error)
-    return notation.render_subject(expression), None
+    return _subject_render_subject(expression), None
 
 
 def _occurrences(carriers: list[Record]) -> tuple[list[Record], list[Record]]:

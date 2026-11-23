@@ -116,7 +116,7 @@ def _call(function: str, **keywords: object) -> str:
 
 def _accepted(source: str, python: str) -> str | None:
     """Require the shared reader to reproduce every CFEL lexeme."""
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.python_claim__pub import PythonModelClaimError, parse_python_model_claim
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import PythonModelClaimError, parse_python_model_claim
 
     try:
         restored = parse_python_model_claim(python)
@@ -290,7 +290,7 @@ def _convert_relations(text: str) -> str | None | object:
         return None
 
     if _address(text) and text not in {'IF', 'THEN', 'ELSE', 'AND', 'OR'}:
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.subject_notation__pub import SubjectNotationError, parse_subject_expression
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import SubjectNotationError, parse_subject_expression
 
         try:
             parse_subject_expression(text, subject_profile='approved')

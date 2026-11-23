@@ -2,7 +2,9 @@
 
 
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import subject_notation__pub as notation
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    SubjectNotationError as _subject_SubjectNotationError,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_read_view
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.current_subject_common import (
@@ -38,7 +40,7 @@ def _add_path(
     subject, origin = occurrence["subject"], occurrence["id"]
     try:
         supplied_nodes, facts, target = subject_facts(subject, native_class_narrowing=native_class_narrowing)
-    except (notation.SubjectNotationError, ValueError) as error:
+    except (_subject_SubjectNotationError, ValueError) as error:
         raise ValueError(f"{origin}: Subject projection failed: {error}") from error
     for supplied in supplied_nodes:
         identity = supplied["identity"]
@@ -66,7 +68,7 @@ def _add_path(
 
 def _native_subjects(carriers):
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.cfel_claim_constraints import extract_claim_constraints
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_class_subject__pub import model_class_target
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import model_class_target
     native_subjects = set()
     for carrier in carriers:
         if not _is_declaration(carrier):

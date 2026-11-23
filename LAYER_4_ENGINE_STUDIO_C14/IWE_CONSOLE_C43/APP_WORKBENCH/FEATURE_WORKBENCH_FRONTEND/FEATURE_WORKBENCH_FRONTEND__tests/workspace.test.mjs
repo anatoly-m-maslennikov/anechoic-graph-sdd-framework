@@ -67,11 +67,17 @@ test('polling a rebuilt View keeps its unsynced draft and follows the new result
 });
 
 test('an acknowledged draft remains permanently unsaved after workspace polling', () => {
-  const state = { active_view_id: 'a', views: [{ id: 'a', sql: 'SELECT draft', revision: 3 }] };
-  const { tabs } = workspaceTabs(state, [{ id: 'a', title: 'View 1', sql: 'SELECT draft', savedSql: 'SELECT saved', dirty: true, syncDirty: false, revision: 3 }]);
+  const result = { query_id: 'retained', rows: [[42]] };
+  const saved = { saved_query_id: 'previous' };
+  const state = { active_view_id: 'a', views: [{ id: 'a', sql: 'SELECT draft', revision: 3, result }] };
+  const local = { id: 'a', title: 'View 1', sql: 'SELECT draft', savedSql: 'SELECT saved', dirty: true, syncDirty: false, revision: 3, result, saved, saveError: 'Save refused' };
+  const { tabs } = workspaceTabs(state, [local]);
   assert.equal(tabs[0].dirty, true);
   assert.equal(tabs[0].syncDirty, false);
   assert.equal(tabs[0].savedSql, 'SELECT saved');
+  assert.equal(tabs[0].saveError, local.saveError);
+  assert.equal(tabs[0].result, result);
+  assert.equal(tabs[0].saved, saved);
 });
 
 test('a stale poll cannot overwrite an acknowledged permanent-unsaved draft', () => {

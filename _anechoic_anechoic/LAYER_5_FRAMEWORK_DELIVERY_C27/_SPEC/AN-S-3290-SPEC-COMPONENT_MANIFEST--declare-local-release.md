@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: active
-  version: 7
-  updated_at: '2026-11-22T11:23:40.206159+00:00'
+  status: "active"
+  version: 9
+  updated_at: "2026-11-22T19:28:31.480191+00:00"
 ---
 
 ## Summary
@@ -34,7 +34,15 @@ declare_entity(
             'code': {
                 'imports': {'only': []},
                 'exports': {
-                    'RELEASE_VERSION__shared.run_local_release': {'private': ['parent']},
+                    'RELEASE_VERSION__shared.run_local_release': {'private': ['parent', 'LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/RELEASE_VERSION__tests']},
+                    'RELEASE_VERSION__shared.local_release': {'private': ['LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/RELEASE_VERSION__tests']},
+                    'RELEASE_VERSION__shared.release_inputs': {'private': ['LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/RELEASE_VERSION__tests']},
+                    'RELEASE_VERSION__shared.LocalReleaseError': {'private': ['LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/RELEASE_VERSION__tests']},
+                    'RELEASE_VERSION__shared.LICENSE_INPUTS': {'private': ['LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/RELEASE_VERSION__tests']},
+                    'RELEASE_VERSION__shared._BETA_REQUIRED': {'private': ['LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/RELEASE_VERSION__tests']},
+                    'RELEASE_VERSION__shared.read_release_selection': {'private': ['LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/RELEASE_VERSION__tests']},
+                    'RELEASE_VERSION__shared._GENERATED_ASSETS': {'private': ['LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/RELEASE_VERSION__tests']},
+                    'RELEASE_VERSION__shared._native_release_sources': {'private': ['LAYER_5_FRAMEWORK_DELIVERY/RELEASE_VERSION/RELEASE_VERSION__tests']},
                     'RELEASE_VERSION__shared.build_image': {'private': ['parent']},
                 },
             },

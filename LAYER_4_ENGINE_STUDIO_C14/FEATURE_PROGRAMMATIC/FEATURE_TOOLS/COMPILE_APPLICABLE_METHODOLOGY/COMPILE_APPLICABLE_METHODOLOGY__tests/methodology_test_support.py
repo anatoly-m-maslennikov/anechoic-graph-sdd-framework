@@ -16,7 +16,7 @@ module = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = module
 SPEC.loader.exec_module(module)
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.artifact_metadata import SETTINGS_PATH
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import SETTINGS_PATH
 
 
 def carrier(atom_id: str, version: int = 1, extra: str = "", body: str = "claim", relations: str = "{}") -> bytes:

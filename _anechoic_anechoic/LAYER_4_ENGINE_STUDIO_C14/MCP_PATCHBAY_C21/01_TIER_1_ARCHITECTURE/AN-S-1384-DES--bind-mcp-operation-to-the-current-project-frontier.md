@@ -7,9 +7,9 @@ tier: 1
 context:
   lens: DES
 state:
-  status: active
-  version: 26
-  updated_at: '2026-11-21T10:39:47.707459+00:00'
+  status: "active"
+  version: 27
+  updated_at: "2026-11-23T01:48:06.176676+00:00"
 ---
 ## Summary
 
@@ -19,6 +19,8 @@ Bind MCP operation to the current project frontier
 
 ### Prose Claim
 
-A single-Project MCP service instance **must** bind **to** exactly one resolved ANECHOIC Project root, selected installed Tool release, and generated code/configuration MCP registry revision. In the shared service, native Tool execution/invocation **must** bind **to** exactly one validated Project identity and installed code/configuration frontier. Host-scoped Tool discovery **may** publish the initial union of compatible Project frontiers with per-Project source/revision provenance, but the union is not a selected Project. Discovery and results expose enough installed-code and generated-registry provenance to diagnose currentness; cross-project path escape, unresolved identity, or stale-registry invocation fails explicitly.
+Bind each MCP Tool call to one admitted Project identity and its installed code and configuration frontier. A single-Project service uses its fixed binding; a shared service requires an explicit Project for each call. Discovery across Projects is not itself a Project selection.
 
-The single-Project launcher binds one native Project; shared discovery union is not a selected Project and each native execution remains bound to one validated identity/frontier. Registration and generic invocation do not reread source Atoms to prove currentness; each backend operation retains its own source/business validation.
+Backend owns Tool eligibility, validation, dispatch and the generated registry. MCP maps its enabled JSON catalog. Expose enough installed-code and registry provenance to diagnose currentness. Reject unresolved identity, cross-Project path escape or stale-registry invocation explicitly.
+
+Registration and generic invocation do not reread source Atoms to establish currentness. Each Backend operation retains its own source and business validation.

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import nullcontext
 import os
 from pathlib import Path
 import sys
@@ -11,14 +10,13 @@ from typing import Any
 
 import httpx2
 from mcp import types
-from mcp.server.lowlevel import Server
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.backend_client import ToolProtocolError
-from MCP_PATCHBAY_C21.FEATURE_MCP.caller_context import CallerContextError, take_caller_context
+from MCP_PATCHBAY_C21.FEATURE_MCP.caller_context import CallerContextError
 from MCP_PATCHBAY_C21.FEATURE_MCP.health_observations import HealthObservations
-from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_request_context import bind_request_context, current_request_context
+from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_request_context import current_request_context
 from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_stack import runtime_stack
-from MCP_PATCHBAY_C21.FEATURE_MCP.shared_gateway_support import record_observation, refusal, result, tool_failure
+from MCP_PATCHBAY_C21.FEATURE_MCP.shared_gateway_support import call_mcp, make_server, record_observation, refusal, tool_failure, valid_tool_response
 
 
 class SharedGatewayRefusal(ValueError):
@@ -44,7 +42,6 @@ class SharedBackendGateway:
         self.startup_timeout = startup_timeout
         self.tools: list[types.Tool] = []
         self.ready = False
-        self.server = None
         self.health_observations = HealthObservations()
         self._directory = None
         self._process = None
@@ -56,34 +53,22 @@ class SharedBackendGateway:
             if self.ready:
                 return
             try:
-                self._directory = TemporaryDirectory(prefix="anechoic-shared-", dir="/tmp")
-                socket = Path(self._directory.name).resolve() / "api.sock"
-                engine = Path(__file__).resolve().parents[2]
-                root = engine.parent
-                environment = {**{k: v for k, v in os.environ.items() if k != "PYTHONHOME"}, "PYTHONPATH": str(engine)}
-                module = (
-                    "WORKBENCH_BACKEND_beta_C70.shared_runtime" if runtime_stack() == "beta" else
-                    "IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.shared_backend_process"
-                )
-                command = [sys.executable, "-B", "-P", "-m", module, "--socket", str(socket)]
-                source = getattr(self.config, "source_path", self.config)
-                if source is not None:
-                    command += ["--host-settings", str(source)]
-                self._process = await asyncio.create_subprocess_exec(
-                    *command, cwd=root, env=environment, stdin=asyncio.subprocess.PIPE,
-                    stdout=sys.stderr,
-                )
+                socket = os.environ.get("ANECHOIC_BETA_BACKEND_SOCKET") if runtime_stack() == "beta" else None
+                if socket is None:
+                    socket = await self._start_backend()
                 self._http = httpx2.AsyncClient(
                     transport=httpx2.AsyncHTTPTransport(uds=str(socket)),
                     base_url="http://anechoic-backend", trust_env=False, timeout=None,
                 )
                 async with asyncio.timeout(self.startup_timeout):
                     while True:
-                        if self._process.returncode is not None:
+                        process = self._process
+                        if process is not None and process.returncode is not None:
                             raise RuntimeError("Shared Backend exited during startup")
                         try:
                             health = await self._request("GET", "/health", timeout=0.5)
-                            if health.get("initialized") is True and health.get("pid") == self._process.pid:
+                            pid = health.get("pid")
+                            if health.get("initialized") is True and type(pid) is int and (process is None or pid == process.pid):
                                 break
                         except ToolProtocolError:
                             pass
@@ -92,6 +77,24 @@ class SharedBackendGateway:
             except BaseException:
                 await self.close()
                 raise
+
+    async def _start_backend(self):
+        self._directory = TemporaryDirectory(prefix="anechoic-shared-", dir="/tmp")
+        socket = Path(self._directory.name).resolve() / "api.sock"
+        engine = Path(__file__).resolve().parents[2]
+        environment = {**{k: v for k, v in os.environ.items() if k != "PYTHONHOME"}, "PYTHONPATH": str(engine)}
+        module = (
+            "WORKBENCH_BACKEND_beta_C70.shared_runtime" if runtime_stack() == "beta" else
+            "IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.shared_backend_process"
+        )
+        command = [sys.executable, "-B", "-P", "-m", module, "--socket", str(socket)]
+        source = getattr(self.config, "source_path", self.config)
+        if source is not None:
+            command += ["--host-settings", str(source)]
+        self._process = await asyncio.create_subprocess_exec(
+            *command, cwd=engine.parent, env=environment, stdin=asyncio.subprocess.PIPE, stdout=sys.stderr,
+        )
+        return socket
 
     async def _load_catalog(self):
         catalog = await self._request("GET", "/tools", timeout=45)
@@ -153,7 +156,7 @@ class SharedBackendGateway:
     async def select_project(self, value: object) -> dict[str, Any]:
         return await self._request("POST", "/selection", json={"project_root": value}, timeout=45)
 
-    async def _tool(self, name: str, arguments: Any, public_base_url: str | None) -> dict[str, Any]:
+    async def call_tool(self, name: str, arguments: Any, *, public_base_url: str | None = None) -> dict[str, Any]:
         context = current_request_context()
         response = None
         error = None
@@ -166,9 +169,7 @@ class SharedBackendGateway:
             })
             project = envelope.get("project")
             result = envelope.get("result")
-            if (succeeded and isinstance(result, dict) and set(result) == {"value", "text"}
-                    and isinstance(result["value"], dict)
-                    and (result["text"] is None or isinstance(result["text"], str))):
+            if succeeded and valid_tool_response(result):
                 response = result["value"]
                 return result
             try:
@@ -187,27 +188,15 @@ class SharedBackendGateway:
                                project_prefix=project.get("prefix"),
                                project_instance_id=project.get("instance_id"))
 
-    async def workbench_call(self, name: str, arguments: dict[str, Any], *, public_base_url=None) -> dict[str, Any]:
-        return (await self._tool(name, arguments, public_base_url))["value"]
-
     async def call(self, context: Any, params: Any) -> types.CallToolResult:
         try:
-            arguments, request_context = take_caller_context(getattr(params, "arguments", None))
+            return await call_mcp(self.call_tool, context, params.name, getattr(params, "arguments", None))
         except CallerContextError as error:
             return refusal(str(error))
-        try:
-            with bind_request_context(request_context) if request_context else nullcontext():
-                request = getattr(context, "request", None)
-                base = getattr(request, "base_url", None)
-                response = await self._tool(params.name, arguments, str(base) if base is not None else None)
-            return result(response["value"], text=response["text"])
         except SharedGatewayRefusal as error:
             return refusal(error.code)
         except ToolProtocolError as error:
             return tool_failure(error)
 
-    def build_server(self) -> Server:
-        async def list_tools(_context: Any, _params: Any) -> types.ListToolsResult:
-            return types.ListToolsResult(tools=self.tools if self.ready else [])
-        self.server = Server("ANECHOIC", version="0.2.0", on_list_tools=list_tools, on_call_tool=self.call)
-        return self.server
+    def build_server(self):
+        return make_server(lambda: self.tools if self.ready else [], self.call)

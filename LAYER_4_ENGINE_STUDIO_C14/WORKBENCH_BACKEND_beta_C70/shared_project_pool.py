@@ -2,8 +2,10 @@
 
 import asyncio
 from contextlib import asynccontextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+import sys
 from threading import Event
+from time import monotonic
 
 from . import shared_host_process
 
@@ -16,6 +18,23 @@ class _Entry:
     peers: object
     users: int = 0
     touched: int = 0
+    admitted: bool = False
+    startup_error: str | None = None
+    admission_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    recover_after: float = 0.0
+
+    async def wait_ready(self):
+        async with self.admission_lock:
+            if self.startup_error is not None:
+                raise RuntimeError(self.startup_error)
+            if self.admitted:
+                return
+            try:
+                await self.peers.wait_ready(self.selection.instance_id)
+            except (RuntimeError, ValueError) as error:
+                self.startup_error = str(error)
+                raise
+            self.admitted = True
 
 
 def _identity(selection):
@@ -26,8 +45,8 @@ def _identity(selection):
     return stat.st_dev, stat.st_ino
 
 
-def _start(selection, stop):
-    context = shared_host_process.open_peers(selection, stop)
+def _start(selection, stop, warm_worker=None):
+    context = shared_host_process.open_peers(selection, stop, warm_worker) if warm_worker else shared_host_process.open_peers(selection, stop)
     peers = context.__enter__()
     return context, peers
 
@@ -39,23 +58,18 @@ def _stop(entry):
 async def _finish(task, stop=None):
     """Do not abandon a thread that owns peer processes on cancellation."""
     cancelled = None
-    while True:
+    while not task.done():
         try:
-            result = await asyncio.shield(task)
-            break
+            await asyncio.wait((task,))
         except asyncio.CancelledError as error:
-            if task.cancelled():
-                raise
             cancelled = error
             if stop is not None:
                 stop.set()
-        except Exception:
-            if cancelled is not None:
-                raise cancelled
-            raise
     if cancelled is not None:
+        if not task.cancelled():
+            task.exception()
         raise cancelled
-    return result
+    return task.result()
 
 
 class SharedProjectPool:
@@ -68,6 +82,7 @@ class SharedProjectPool:
         self._lock = asyncio.Lock()
         self._closed = False
         self._clock = 0
+        self.warm_worker = None
 
     def _touch(self, entry):
         self._clock += 1
@@ -76,21 +91,19 @@ class SharedProjectPool:
     async def _reserve(self, selection, key, identity):
         evicted = None
         async with self._lock:
-            if self._closed:
+            if self._closed or key in self._pending:
                 raise ValueError('project_gateway_busy')
             entry = self._entries.get(key)
             if entry is not None:
                 stale = entry.selection != selection or entry.identity != identity
-                if stale or not entry.peers.alive:
-                    if entry.users:
+                if stale or not entry.peers.alive or entry.startup_error is not None:
+                    if entry.users or (not stale and monotonic() < entry.recover_after):
                         raise ValueError('project_declarations_stale' if stale else 'project_gateway_busy')
                     evicted = self._entries.pop(key)
                 else:
                     entry.users += 1
                     self._touch(entry)
                     return entry, None
-            if key in self._pending:
-                raise ValueError('project_gateway_busy')
             if evicted is None and len(self._entries) + len(self._pending) >= self.max_loaded_projects:
                 idle = [(k, e) for k, e in self._entries.items() if not e.users]
                 if not idle:
@@ -106,28 +119,33 @@ class SharedProjectPool:
         entry, evicted = await self._reserve(selection, key, identity)
         if entry is not None:
             return entry
+        return await self._start_reserved(selection, key, identity, evicted)
 
+    async def _start_reserved(self, selection, key, identity, evicted, *, revalidate=None):
         entry = None
-        startup = None
         try:
             if evicted is not None:
                 await _finish(asyncio.create_task(asyncio.to_thread(_stop, evicted)))
-            stop = Event()
-            startup = asyncio.create_task(asyncio.to_thread(_start, selection, stop))
-            try:
-                context, peers = await _finish(startup, stop)
-            except asyncio.CancelledError:
-                if not startup.cancelled() and startup.exception() is None:
-                    context, _ = startup.result()
-                    await _finish(asyncio.create_task(asyncio.to_thread(context.__exit__, None, None, None)))
-                raise
-            entry = _Entry(selection, identity, context, peers, users=1)
+            if revalidate is not None:
+                await revalidate(selection)
+                if _identity(selection) != identity:
+                    raise ValueError('project_declarations_stale')
+            entry = await self._start_entry(selection, identity)
+            if revalidate is not None:
+                await entry.wait_ready()
+                await revalidate(selection)
             async with self._lock:
                 if self._closed:
                     raise ValueError('project_gateway_busy')
                 if _identity(selection) != identity:
                     raise ValueError('project_declarations_stale')
-                self._touch(entry)
+                if revalidate is None:
+                    entry.users = 1
+                    self._touch(entry)
+                else:
+                    if not entry.peers.alive:
+                        raise RuntimeError('Beta peers exited during recovery')
+                    entry.touched, entry.recover_after = evicted.touched, monotonic() + 2
                 self._entries[key] = entry
                 entry = None
                 return self._entries[key]
@@ -138,6 +156,42 @@ class SharedProjectPool:
             finally:
                 async with self._lock:
                     self._pending.pop(key, None)
+
+    async def _start_entry(self, selection, identity):
+        stop = Event()
+        args = (selection, stop, self.warm_worker) if self.warm_worker else (selection, stop)
+        startup = asyncio.create_task(asyncio.to_thread(_start, *args))
+        try:
+            context, peers = await _finish(startup, stop)
+        except asyncio.CancelledError:
+            if not startup.cancelled() and startup.exception() is None:
+                context, _ = startup.result()
+                await _finish(asyncio.create_task(asyncio.to_thread(context.__exit__, None, None, None)))
+            raise
+        return _Entry(selection, identity, context, peers)
+
+    def _can_recover(self, entry):
+        return (entry.admitted and not entry.users and monotonic() >= entry.recover_after
+                and not entry.peers.alive)
+
+    async def monitor(self, revalidate):
+        async with asyncio.TaskGroup() as repairs:
+            while not self._closed:
+                for key, entry in list(self._entries.items()):
+                    if self._can_recover(entry):
+                        repairs.create_task(self._recover(key, entry, revalidate))
+                await asyncio.sleep(0.25)
+
+    async def _recover(self, key, entry, revalidate):
+        async with self._lock:
+            if self._closed or self._entries.get(key) is not entry or not self._can_recover(entry):
+                return
+            del self._entries[key]
+            self._pending[key] = asyncio.current_task()
+        try:
+            await self._start_reserved(entry.selection, key, entry.identity, entry, revalidate=revalidate)
+        except (ValueError, RuntimeError, OSError, TypeError):
+            print('Beta shared Project recovery failed', file=sys.stderr)
 
     async def _warm_entry(self, selection):
         identity = _identity(selection)
@@ -156,6 +210,8 @@ class SharedProjectPool:
             yield None
             return
         try:
+            if start and not entry.admitted:
+                await entry.wait_ready()
             yield entry.peers
         finally:
             async with self._lock:

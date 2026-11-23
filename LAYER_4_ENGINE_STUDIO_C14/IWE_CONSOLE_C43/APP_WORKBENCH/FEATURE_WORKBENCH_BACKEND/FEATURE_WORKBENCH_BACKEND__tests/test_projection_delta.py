@@ -9,7 +9,7 @@ from pathlib import Path
 APP_ROOT = Path(__file__).resolve().parents[3]
 
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import compile_content_schema  # noqa: E402
-from KERNEL_MIXER_C59.header_columns import (  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (  # noqa: E402
     HeaderColumn,
     HeaderSchema,
 )

@@ -24,32 +24,39 @@ def _model_base_path(value: Any) -> str:
         pass
     if not isinstance(value, str) or value != value.strip():
         raise ValueError(f"unsupported compiler name: {value!r}")
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import subject_notation__pub as notation
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+        Name as _subject_Name,
+        Path as _subject_Path,
+        Qualification as _subject_Qualification,
+        SubjectNotationError as _subject_SubjectNotationError,
+        ValueLiteral as _subject_ValueLiteral,
+        parse_subject_expression as _subject_parse_subject_expression,
+    )
     try:
-        path = notation.parse_subject_expression(value, subject_profile="approved").expression
-        if not isinstance(path, notation.Path) or not isinstance(path.head, notation.Name):
+        path = _subject_parse_subject_expression(value, subject_profile="approved").expression
+        if not isinstance(path, _subject_Path) or not isinstance(path.head, _subject_Name):
             raise ValueError
         _name(path.head.value)
         if path.value_format is not None or path.value_cardinality is not None:
             raise ValueError
         for step in path.steps:
-            if step.operator in ("/", ".") and isinstance(step.operand, notation.Name):
+            if step.operator in ("/", ".") and isinstance(step.operand, _subject_Name):
                 _name(step.operand.value)
-            elif step.operator == "/" and isinstance(step.operand, notation.Qualification):
+            elif step.operator == "/" and isinstance(step.operand, _subject_Qualification):
                 q = step.operand.relative_path
-                if not isinstance(q.head, notation.Name) or q.value_format is not None or q.value_cardinality is not None:
+                if not isinstance(q.head, _subject_Name) or q.value_format is not None or q.value_cardinality is not None:
                     raise ValueError
                 _name(q.head.value)
-                if not q.steps or q.steps[-1].operator != ":=" or not isinstance(q.steps[-1].operand, notation.ValueLiteral):
+                if not q.steps or q.steps[-1].operator != ":=" or not isinstance(q.steps[-1].operand, _subject_ValueLiteral):
                     raise ValueError
                 _name(q.steps[-1].operand.value)
                 for part in q.steps[:-1]:
-                    if part.operator != "." or not isinstance(part.operand, notation.Name):
+                    if part.operator != "." or not isinstance(part.operand, _subject_Name):
                         raise ValueError
                     _name(part.operand.value)
             else:
                 raise ValueError
-    except (notation.SubjectNotationError, ValueError, TypeError):
+    except (_subject_SubjectNotationError, ValueError, TypeError):
         raise ValueError(f"unsupported compiler name: {value!r}") from None
     return value
 

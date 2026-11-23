@@ -22,6 +22,8 @@ def _wait_healthy(docker, container, root: Path, image: str, labels, port: int) 
             if (row["Id"] != container or row["Image"] != image or
                     any(config["Labels"].get(key) != value for key, value in labels.items()) or
                     bindings != [{"HostIp": "127.0.0.1", "HostPort": str(port)}] or
+                    not any(m.get("Type") == "volume" and m.get("Name") == "anechoic-framework-db"
+                            and m.get("Destination") == "/var/lib/anechoic" and m.get("RW") is True for m in mounts) or
                     not any(m.get("Type") == "bind" and m.get("Source") == str(root)
                             and m.get("Destination") == "/project" and m.get("RW") is True for m in mounts)):
                 raise LocalReleaseError("local-release-container-identity-mismatch")
@@ -44,10 +46,11 @@ def _container_command(root: Path, selection, image: str, port: int, control: st
                "--log-driver", "local", "--log-opt", "max-size=10m", "--log-opt", "max-file=3",
                "--log-opt", "mode=non-blocking", "--log-opt", "max-buffer-size=1m",
                "-p", f"127.0.0.1:{port}:8092",
-               "--mount", f"type=bind,src={root},dst=/project"]
+               "--mount", f"type=bind,src={root},dst=/project",
+               "--mount", "type=volume,src=anechoic-framework-db,dst=/var/lib/anechoic"]
     for key, value in labels.items():
         command.extend(("--label", f"{key}={value}"))
-    for key, value in {"ANECHOIC_RUNTIME_NAMESPACE": "docker", "ANECHOIC_CONTROL_ROOT": control,
+    for key, value in {"ANECHOIC_FRAMEWORK_DB_ROOT": "/var/lib/anechoic", "ANECHOIC_RUNTIME_NAMESPACE": "docker", "ANECHOIC_CONTROL_ROOT": control,
                        "ANECHOIC_PROJECT_INSTANCE_ID": selection.instance_id,
                        "ANECHOIC_MCP_HTTP_HEALTHCHECK": "1",
                        "ANECHOIC_HOST_PROJECT_ROOT": str(root)}.items():

@@ -11,9 +11,8 @@ import re
 from typing import Any
 
 from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared import formal_claim_blocks
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.content_records__pub import (
-    content_record_span, records_by_path,
-)
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import content_record_span
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import records_by_path
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import is_current_requirement_declaration, matches_carrier_label
 
 from .content_values import _legacy_prose_claim as _legacy_prose_claim, _prose_claim as _prose_claim, _value
@@ -23,7 +22,7 @@ from .declaration_cfel import (
     intersect_selectors,
     model_statements as _model_statements, segments as _segments, selector_key,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import content_lines, parse_content, source_markdown
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import content_lines, parse_content, source_markdown
 
 
 @dataclass(frozen=True)

@@ -20,7 +20,7 @@ MCP_ROOT = Path(__file__).resolve().parents[1]
 TOOLS_ROOT = MCP_ROOT.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.shared_http_server import create_app  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import HEALTH_PATH, MCP_PATH  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import HEALTH_PATH, MCP_PATH  # noqa: E402
 
 
 class FakeGateway:

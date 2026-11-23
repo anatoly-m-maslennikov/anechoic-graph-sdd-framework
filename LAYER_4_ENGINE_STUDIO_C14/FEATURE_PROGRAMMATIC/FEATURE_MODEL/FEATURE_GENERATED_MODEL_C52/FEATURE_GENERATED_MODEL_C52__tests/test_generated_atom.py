@@ -2,7 +2,9 @@
 
 import unittest
 
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_GENERATED_MODEL_C52 import Atom, AtomContent, AtomContext, AtomHeader, AtomTier, Plan
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_GENERATED_MODEL_C52.FEATURE_GENERATED_MODEL_C52__shared import (
+    Atom, AtomContent, AtomContext, AtomHeader, AtomTier, Plan,
+)
 
 
 class GeneratedAtomTests(unittest.TestCase):

@@ -5,7 +5,7 @@ import time
 import unittest
 from unittest.mock import patch
 
-from .. import prune_private_tmp as cleanup
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import prune_private_tmp as cleanup
 
 
 class PrivateScratchCleanupTests(unittest.TestCase):

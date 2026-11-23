@@ -7,7 +7,7 @@ import unittest
 
 import duckdb
 
-from KERNEL_MIXER_C59.spec_trace import (
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
     PILOT, SpecTraceStore, is_trace_path, native_trace_rows, remove_native_traces,
     replace_native_traces,
 )

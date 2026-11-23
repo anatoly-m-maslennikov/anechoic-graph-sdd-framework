@@ -9,7 +9,7 @@ from unittest.mock import patch
 MCP = Path(__file__).resolve().parents[1]
 TOOLS = MCP.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import select_runtime_project
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import select_runtime_project
 from . import test_native_host_launcher as host_fixture
 
 
@@ -26,11 +26,16 @@ class ProjectContextTests(unittest.TestCase):
         entrypoint = importlib.util.module_from_spec(specification)
         specification.loader.exec_module(entrypoint)
         selection = self.selections[0]
-        values = {"ANECHOIC_CONTROL_ROOT": selection.control_relative.as_posix(),
+        values = {"ANECHOIC_RUNTIME_STACK": "current",
+                  "ANECHOIC_CONTROL_ROOT": selection.control_relative.as_posix(),
                   "ANECHOIC_PROJECT_INSTANCE_ID": selection.instance_id,
                   "ANECHOIC_HOST_PROJECT_ROOT": str(selection.host_root),
                   "ANECHOIC_MCP_HTTP_SECRET_TOKEN": "private"}
-        with patch.object(sys, "argv", ["entrypoint", "mcp-http"]), patch.dict(os.environ, values), patch.object(os, "execv") as execute:
+        with (
+            patch.object(sys, "argv", ["entrypoint", "mcp-http"]),
+            patch.dict(os.environ, values),
+            patch.object(os, "execve") as execute,
+        ):
             entrypoint.main()
         arguments = execute.call_args.args[1]
         self.assertEqual(selection.control_relative.as_posix(), arguments[arguments.index("--control-root") + 1])

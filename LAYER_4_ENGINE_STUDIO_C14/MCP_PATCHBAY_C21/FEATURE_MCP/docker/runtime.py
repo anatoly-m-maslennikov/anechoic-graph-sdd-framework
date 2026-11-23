@@ -97,9 +97,9 @@ class Runtime:
 
     def _image_manager(self, *, create_temp=False, timeout=600):
         try:
-            from .runtime_images import ImageManager
+            from .docker__shared import ImageManager
         except ImportError:
-            from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images import ImageManager
+            from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import ImageManager
         return ImageManager(SOURCE_ROOT, project_root=self.root, timeout=timeout,
                             build_temp_root=self._project_temp_root(create=create_temp))
 

@@ -2,7 +2,7 @@
 
 from functools import partial
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images import ImageManager
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import ImageManager
 
 
 def packaged_identity_reader(root):

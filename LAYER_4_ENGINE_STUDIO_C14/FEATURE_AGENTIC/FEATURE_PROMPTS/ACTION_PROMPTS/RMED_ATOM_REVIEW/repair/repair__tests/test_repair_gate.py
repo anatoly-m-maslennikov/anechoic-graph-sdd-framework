@@ -7,7 +7,7 @@ import unittest
 HERE = Path(__file__).resolve().parent.parent
 from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__tests.RMED_ATOM_REVIEW__tests__shared import (  # noqa: E402
     contract, gap, part as legacy_part, source, RULE_TEXT, SOURCE_TEXT as SHARED_SOURCE_TEXT)
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import markdown  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import markdown  # noqa: E402
 from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repair_gate__shared import admit_proposal  # noqa: E402
 
 BODY = markdown(SHARED_SOURCE_TEXT)

@@ -17,6 +17,8 @@ TOOLS = {tool["name"]: tool for tool in (
           {"target": _FIELDS}, targetStatus={"type": "string"}),
     _tool("atom_lifecycle_archive", "Archive an exact Task or Epic revision with an admitted replacement.",
           {"target": _FIELDS}),
+    _tool("atom_lifecycle_direct_update", "Update the Markdown body of a Ticket Asset.",
+          {"target": _FIELDS, "changes": _FIELDS}),
 )}
 _UNKNOWN = {
     "code": "write_outcome_unknown",
@@ -47,6 +49,8 @@ def _result(name, reply):
         if not value["errors"]:
             value["errors"] = [{"code": "backend_failure", "message": "Lifecycle operation failed."}]
         return value
+    if name == "atom_lifecycle_direct_update":
+        return {"status": "completed"}
     status = "draft_created" if name == "atom_lifecycle_update" and "savedDraft" in native else "completed"
     return {"status": status, **{field: native[field] for field in ("savedDraft", "artifact", "sourceRef")
                                  if field in native}}

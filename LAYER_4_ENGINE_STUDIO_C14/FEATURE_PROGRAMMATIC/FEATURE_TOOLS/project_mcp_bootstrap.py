@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 import stat
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import TemporaryBoundaryError
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.project_temporary__pub import atomic_tempfile
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import atomic_tempfile
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.project_runtime import repository_root
 
 

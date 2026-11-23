@@ -17,12 +17,13 @@ from mcp import types
 MCP = Path(__file__).resolve().parents[1]
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.generate_tool_registry import generate  # noqa: E402
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.tool_registry_assets import ToolRegistryAssetError  # noqa: E402
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.tool_registry_runtime import (  # noqa: E402
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import (  # noqa: E402
     ToolRegistryRuntimeError, ToolRegistryStaleError,
 )
 
 
 
+from . import native_query_test_support
 from .tool_registry_test_support import ToolRegistryFixture, _drifting_provider_source, _context_provider_source, _native_gateway
 
 
@@ -34,7 +35,7 @@ class ToolRegistryTests(ToolRegistryFixture, unittest.IsolatedAsyncioTestCase):
         def registry_loader(_asset: Path, selected: Path, gateway: object):
             return self._registry(selected, gateway)
 
-        with patch("native_query_test_support.load_active_registry", side_effect=registry_loader):
+        with patch.object(native_query_test_support, "load_active_registry", side_effect=registry_loader):
             gateway = _native_gateway(root)
             await gateway.initialize()
             try:
@@ -63,7 +64,7 @@ class ToolRegistryTests(ToolRegistryFixture, unittest.IsolatedAsyncioTestCase):
         def registry_loader(_asset: Path, selected: Path, gateway: object):
             return self._registry(selected, gateway)
 
-        with patch("native_query_test_support.load_active_registry", side_effect=registry_loader):
+        with patch.object(native_query_test_support, "load_active_registry", side_effect=registry_loader):
             gateway = _native_gateway(root)
             await gateway.initialize()
             try:
@@ -86,7 +87,7 @@ class ToolRegistryTests(ToolRegistryFixture, unittest.IsolatedAsyncioTestCase):
         def registry_loader(_asset: Path, selected: Path, gateway: object):
             return self._registry(selected, gateway)
 
-        with patch("native_query_test_support.load_active_registry", side_effect=registry_loader):
+        with patch.object(native_query_test_support, "load_active_registry", side_effect=registry_loader):
             gateway = _native_gateway(root)
             await gateway.initialize()
             try:
@@ -144,7 +145,7 @@ class ToolRegistryTests(ToolRegistryFixture, unittest.IsolatedAsyncioTestCase):
         def registry_loader(_asset: Path, selected: Path, gateway: object):
             return self._registry(selected, gateway)
 
-        with patch("native_query_test_support.load_active_registry", side_effect=registry_loader):
+        with patch.object(native_query_test_support, "load_active_registry", side_effect=registry_loader):
             gateway = _native_gateway(root, {"project_mcp": {"tool_blacklist": ["demo"]}})
             await gateway.initialize()
             try:

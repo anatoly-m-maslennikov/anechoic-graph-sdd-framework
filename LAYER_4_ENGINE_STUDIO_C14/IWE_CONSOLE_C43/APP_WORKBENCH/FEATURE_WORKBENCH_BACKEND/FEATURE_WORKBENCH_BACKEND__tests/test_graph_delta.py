@@ -15,7 +15,7 @@ APP_ROOT = Path(__file__).resolve().parents[3]
 from KERNEL_MIXER_C59.index_delta import MaterializationDelta  # noqa: E402
 from KERNEL_MIXER_C59.projection_delta import apply, snapshot  # noqa: E402
 from KERNEL_MIXER_C59.graph_store import graph_relations  # noqa: E402
-from KERNEL_MIXER_C59.query_store import QueryStore  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import QueryStore  # noqa: E402
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (  # noqa: E402
     ContentSchema,
     DeclarationSource,

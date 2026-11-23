@@ -10,7 +10,7 @@ ASSETS = Path(__file__).resolve().parent / "assets" / "content_declaration_schem
 SEALED_MODEL = APP_ROOT.parent / "FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests/assets/lifecycle_schema_declarations/04_requirement"
 
 
-from KERNEL_MIXER_C59.content_columns import content_columns  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import content_columns  # noqa: E402
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (  # noqa: E402
     compile_content_schema,
 )

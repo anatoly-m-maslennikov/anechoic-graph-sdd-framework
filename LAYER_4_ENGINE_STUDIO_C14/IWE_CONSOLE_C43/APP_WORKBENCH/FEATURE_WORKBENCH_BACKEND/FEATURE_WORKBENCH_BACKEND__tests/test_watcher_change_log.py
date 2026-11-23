@@ -9,7 +9,7 @@ from unittest.mock import Mock, patch
 
 APP_ROOT = Path(__file__).resolve().parents[3]
 
-from KERNEL_MIXER_C59.query_store import QueryStore  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import QueryStore  # noqa: E402
 from KERNEL_MIXER_C59.watcher_change_log import WatcherChangeLog  # noqa: E402
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__tests.test_query_store import extension_directory  # noqa: E402
 

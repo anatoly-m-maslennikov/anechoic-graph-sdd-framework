@@ -17,8 +17,8 @@ from pathlib import Path
 import random
 
 HERE = Path(__file__).resolve().parents[1]
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import body_sections, prepare_context  # noqa: E402
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_evidence__shared import ReviewContext  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import body_sections, prepare_context  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import ReviewContext  # noqa: E402
 
 
 DEFINITIONS = {
@@ -72,7 +72,7 @@ def build(output: Path) -> None:
     candidates = []
     for index, case in enumerate(cases, 1):
         raw = (HERE / 'RMED_ATOM_REVIEW__tests/assets/fixtures' / case['file']).read_text()
-        from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import metadata
+        from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import metadata
         props = metadata(raw)
         candidates.append(bound(f'synthetic/case-{index:04}.md', props['atom_id'], props['version'], raw))
     authority = baseline + definitions + [principle]

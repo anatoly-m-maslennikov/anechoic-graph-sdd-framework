@@ -9,13 +9,15 @@ context:
   label: Epic
 state:
   status: backlog
-  version: 2
-  updated_at: '2026-11-22T09:53:45.225009+00:00'
+  version: 5
+  updated_at: '2026-11-22T23:52:17.262612+00:00'
 relations:
   IS_REFERENCE:
-  - AN-S-3187@1-draft
-  - AN-S-3188@1-draft
-  - AN-S-3189@1-draft
+  - AN-S-3187@1
+  - AN-S-3188@1
+  - AN-S-3189@1
+  - AN-S-3361@2
+  - AN-S-3387@1
 ---
 ## Summary
 
@@ -39,8 +41,14 @@ zero observable output.
   location, and a concrete input for each confirmed dead end.
 - Publish mutation and dead-end findings in the Realization Graph.
 
+- Map Component inputs, trigger conditions, Actions, outputs, and side
+  effects. Observe generation in the Orchestrator and compare streams in Lean.
+
 ## Acceptance
 
 Verify one path that mutates state, one that only emits an output, and one
 reachable path that does neither. Identify declared no-ops separately.
 Leave unsupported translations or unobserved effects unresolved.
+
+Trace a rebuild and a watched change to generation. Include the clock
+trigger and recorded effects. Detect a repeated effect when outputs match.

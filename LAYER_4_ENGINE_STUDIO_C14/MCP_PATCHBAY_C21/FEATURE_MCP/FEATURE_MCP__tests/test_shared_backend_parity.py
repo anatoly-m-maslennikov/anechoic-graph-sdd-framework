@@ -11,7 +11,7 @@ import unittest
 MCP = Path(__file__).resolve().parents[1]
 TOOLS = MCP.parents[1] / "FEATURE_PROGRAMMATIC" / "FEATURE_TOOLS"
 
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.host_runtime_config import load_host_runtime_config  # noqa: E402
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import load_host_runtime_config  # noqa: E402
 from mcp import types  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.backend_client import ToolProtocolError  # noqa: E402
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.project_tool_session import ToolProtocolError as BackendToolProtocolError  # noqa: E402
@@ -48,7 +48,7 @@ class _Gateway:
         self.selection = selection
         self.tool_blacklist = self.blacklists.get(str(root), frozenset())
         self.ready = True
-        from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workbench_tools import native_tools
+        from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import native_tools
         self.tools = [tool.model_dump(mode="json", by_alias=True) for tool in native_tools()]
         self.workbench = _Workbench()
         self.workbenches.append(self.workbench)
@@ -102,7 +102,7 @@ class SharedBackendParityTests(unittest.IsolatedAsyncioTestCase):
         gateway = await self._gateway()
         arguments = {"project_root": str(self.roots[0]), "sql": "SELECT 1"}
 
-        native = await gateway.workbench_call("query_run", arguments)
+        native = (await gateway.call_tool("query_run", arguments))["value"]
         mcp = await gateway.call(
             None, types.CallToolRequestParams(name="query_run", arguments=arguments)
         )
@@ -117,7 +117,7 @@ class SharedBackendParityTests(unittest.IsolatedAsyncioTestCase):
         gateway = await self._gateway(max_loaded=1)
         _Workbench.hold = asyncio.Event()
         _Workbench.started = asyncio.Event()
-        pending = asyncio.create_task(gateway.workbench_call(
+        pending = asyncio.create_task(gateway.call_tool(
             "query_run", {"project_root": str(self.roots[0]), "sql": "SELECT 1"}
         ))
         await asyncio.wait_for(_Workbench.started.wait(), 10)
@@ -126,16 +126,16 @@ class SharedBackendParityTests(unittest.IsolatedAsyncioTestCase):
             await pending
 
         _Workbench.hold = None
-        value = await gateway.workbench_call(
+        response = await gateway.call_tool(
             "query_run", {"project_root": str(self.roots[1]), "sql": "SELECT 2"}
         )
-        self.assertEqual("completed", value["outcome"])
+        self.assertEqual("completed", response["value"]["outcome"])
 
     async def test_native_query_error_keeps_a_returned_error_observation(self) -> None:
         gateway = await self._gateway()
 
         with self.assertRaisesRegex(ToolProtocolError, "bad query"):
-            await gateway.workbench_call(
+            await gateway.call_tool(
                 "query_run", {"project_root": str(self.roots[0]), "sql": "bad"}
             )
 
@@ -148,11 +148,11 @@ class SharedBackendParityTests(unittest.IsolatedAsyncioTestCase):
         gateway = await self._gateway()
 
         with self.assertRaises(SharedGatewayRefusal) as outside:
-            await gateway.workbench_call(
+            await gateway.call_tool(
                 "query_run", {"project_root": str(self.base), "sql": "SELECT 1"}
             )
         with self.assertRaises(SharedGatewayRefusal) as disabled:
-            await gateway.workbench_call(
+            await gateway.call_tool(
                 "query_run", {"project_root": str(self.roots[0]), "sql": "SELECT 1"}
             )
 

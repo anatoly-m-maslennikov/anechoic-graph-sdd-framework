@@ -25,8 +25,12 @@ services:
     cpus: 2
     command: [mcp-http]
     environment:
+      ANECHOIC_FRAMEWORK_DB_ROOT: /var/lib/anechoic
       ANECHOIC_RUNTIME_NAMESPACE: docker
     volumes:
+      - type: volume
+        source: framework-db
+        target: /var/lib/anechoic
       - type: bind
         source: ${ANECHOIC_PROJECT_ROOT}
         target: /project
@@ -50,3 +54,7 @@ networks:
   http_publication:
     driver: bridge
     internal: false
+
+volumes:
+  framework-db:
+    name: anechoic-framework-db

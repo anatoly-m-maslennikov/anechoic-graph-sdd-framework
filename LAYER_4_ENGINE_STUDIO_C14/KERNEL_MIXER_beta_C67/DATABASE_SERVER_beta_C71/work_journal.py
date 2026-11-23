@@ -13,7 +13,7 @@ from typing import Any
 
 
 TABLE = "journal_store.main.work_journal"
-DATABASE_PATH = Path(".anechoic_runtime/workbench/projection.duckdb")
+DATABASE_PATH = Path(".anechoic_runtime/db/project.duckdb")
 MAX_DATABASE_EVENT_BYTES = 16 * 1024 * 1024
 
 
@@ -45,7 +45,10 @@ def _open_directory(root: Path, parts: tuple[str, ...], *, create: bool, same_de
 
 
 def journal_database_path(project_root: Path, *, create: bool = False) -> Path:
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import migrate_project_database
+
     root = Path(project_root)
+    migrate_project_database(root)
     directory = _open_directory(root, DATABASE_PATH.parent.parts, create=create, same_device=True)
     try:
         for name in (DATABASE_PATH.name, DATABASE_PATH.name + ".wal"):

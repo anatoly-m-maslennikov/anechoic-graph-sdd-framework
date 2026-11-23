@@ -21,6 +21,8 @@ except ImportError:
         ImageError, _excluded_directory, _excluded_file, ready_predecessor,
     )
 
+_SOURCE_LAYERS = ("LAYER_1_META_ONTOLOGY_C9", "LAYER_2_META_METHODOLOGY_C58")
+
 _BETA_ROOTS = {"KERNEL_MIXER_beta_C67", "ORCHESTRATOR_beta_C68",
                "WORKERS_beta_C69", "WORKBENCH_BACKEND_beta_C70"}
 _BETA_REQUIRED = (
@@ -29,10 +31,12 @@ _BETA_REQUIRED = (
     "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_IMPORT_GRAPH_C61/realization_graph_cli.py",
     "KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__shared.py",
     "ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__shared.py",
+    "ORCHESTRATOR_beta_C68/warm_worker.py",
     "WORKERS_beta_C69/WORKERS_beta_C69__shared.py",
+    "WORKERS_beta_C69/warm_worker.py",
     *("WORKBENCH_BACKEND_beta_C70/" + name for name in (
         "WORKBENCH_BACKEND_beta_C70__shared.py", "runtime.py",
-        "project_admission.py", "shared_runtime.py", "query_run.json")),
+        "project_admission.py", "shared_runtime.py", "shared_peer_owner.py", "warm_worker.py", "query_run.json")),
 )
 _REPLACED_COMPONENTS = {
     ENGINE_ROOT + "/KERNEL_MIXER_C59",
@@ -76,7 +80,7 @@ class ImageSource:
             if state.is_symlink() or not state.is_dir():
                 raise self._input_error()
         try:
-            from MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import select_runtime_project
+            from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import select_runtime_project
             selection = select_runtime_project(root)
             if (selection.root != root or not selection.control_root.is_relative_to(root)
                     or selection.launcher_state != state / selection.instance_id):
@@ -160,6 +164,28 @@ class ImageSource:
             raise ImageError("IMAGE_INPUT_UNAVAILABLE", 'project.toml must specify stack = "current" or "beta"')
         return settings["stack"], (path,), sha256(raw).hexdigest()
 
+    def _source_layer_files(self, root, selected, unavailable):
+        for layer in _SOURCE_LAYERS:
+            source = root / layer
+            if source.is_symlink() or not source.is_dir():
+                raise self._input_error()
+            count = 0
+            for current, directories, names in os.walk(source, followlinks=False, onerror=unavailable):
+                for name in directories:
+                    path = Path(current) / name
+                    if path.is_symlink() or not path.is_dir():
+                        raise self._input_error()
+                for name in names:
+                    if _excluded_file(name):
+                        continue
+                    path = Path(current) / name
+                    if path.is_symlink() or not path.is_file() or path.suffix != ".md":
+                        raise self._input_error()
+                    selected.add(path)
+                    count += 1
+            if not count:
+                raise self._input_error()
+
     def _files(self, root: Path, stack_input=None) -> tuple[Path, ...]:
         stack, selector, _ = self._stack_input(root) if stack_input is None else stack_input
         required = tuple(self._file(root, relative) for relative in _REQUIRED) + selector
@@ -200,5 +226,6 @@ class ImageSource:
                 if path.is_symlink() or not path.is_file():
                     raise self._input_error()
                 selected.add(path)
+        self._source_layer_files(root, selected, unavailable)
         return tuple(sorted(selected, key=lambda path: path.relative_to(root).as_posix()))
 

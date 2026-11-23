@@ -1,19 +1,29 @@
 """Capture a pinned native snapshot for the Beta worker CLI."""
 import base64
-from hashlib import sha256
 import json
-from pathlib import Path, PurePosixPath
 import re
+import stat
 import sys
+from hashlib import sha256
+from pathlib import Path, PurePosixPath
 from types import SimpleNamespace
 
 from .ADAPTERS_C30__pub import CEILINGS, ReadContext
 from .carrier_read__pub import parse_carrier
-from .native_source_rows__pub import capture_native, check_native_manifest
 from .markdown_content__pub import content_lines
+from .native_carrier_placement__pub import TICKET_DIRECTORY
+from .native_generation_snapshot import snapshot
+from .native_source_rows__pub import (
+    NativeCapture,
+    _native_carrier_hashes,
+    capture_native,
+    check_native_manifest,
+)
 from .project_manifest__pub import manifest_inputs
 
 _FIELDS = {"root", "control_root", "manifest_path", "manifest_sha256", "project_prefix"}
+_TICKET_TREES = {TICKET_DIRECTORY, "001_TICKETS", "__TKT"}
+_MAX_TICKET_DELTA_PATHS = 1024
 
 
 def _relative(value, *, direct=False):
@@ -27,7 +37,7 @@ def _relative(value, *, direct=False):
     return path
 
 
-def _capture(binding):
+def _selection(binding):
     if not isinstance(binding, dict) or set(binding) != _FIELDS:
         raise ValueError("Invalid binding fields")
     root_value = binding["root"]
@@ -50,12 +60,98 @@ def _capture(binding):
     if (not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest)
             or not isinstance(prefix, str) or not re.fullmatch(r"[A-Z][A-Z0-9]*", prefix)):
         raise ValueError("Invalid binding identity")
-    selection = SimpleNamespace(root=root, control_root=control, manifest_path=manifest,
-                                manifest_sha256=digest, project_prefix=prefix)
-    capture = capture_native(selection)
+    return SimpleNamespace(root=root, control_root=control, manifest_path=manifest,
+                           manifest_sha256=digest, project_prefix=prefix)
+
+
+def _check_capture(capture):
     if capture.errors:
         raise ValueError("Native capture failed: " + json.dumps(capture.errors, sort_keys=True))
+
+
+def _capture(binding):
+    selection = _selection(binding)
+    capture = capture_native(selection)
+    _check_capture(capture)
     return capture, _graph_config(selection)
+
+
+def native_carrier_hashes(binding):
+    """Hash the raw selected native carrier inventory without parsing carriers."""
+    return _native_carrier_hashes(_selection(binding))
+
+
+def _carrier_hashes(capture):
+    return {row["source_path"]: row["_source_sha256"] for row in capture.atoms}
+
+
+def prepare_generation_snapshot(binding, *, include_hashes=False):
+    """Capture carriers once and recheck their versions and membership before use."""
+    selection = _selection(binding)
+    reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
+    capture = capture_native(selection, reader=reader)
+    _check_capture(capture)
+
+    def finish(endpoints):
+        result = snapshot(binding, capture, endpoints)
+        if reader.currentness()["state"] != "unchanged":
+            raise ValueError("Native Project carriers changed during generation")
+        return (result, _carrier_hashes(capture)) if include_hashes else result
+
+    return _graph_config(selection), finish
+
+
+def _ticket_paths(selection, paths):
+    if not isinstance(paths, (list, tuple)) or not 0 < len(paths) <= _MAX_TICKET_DELTA_PATHS:
+        raise ValueError("Invalid Ticket delta path count")
+    relatives = {_relative(path) for path in paths}
+    for relative in relatives:
+        if (len(relative.parts) < 3 or relative.parts[0] != selection.control_root.name
+                or relative.parts[1] not in _TICKET_TREES or relative.suffix != ".md"
+                or selection.root / relative == selection.manifest_path):
+            raise ValueError("Ticket delta path is outside the native Ticket trees")
+    return relatives
+
+
+def _ticket_versions(root, relatives):
+    reader = ReadContext(roots=[str(root)], limits=dict(CEILINGS))
+    versions = {}
+    for relative in relatives:
+        path = reader.allowed(root / relative)
+        try:
+            info = path.lstat()
+        except FileNotFoundError:
+            continue
+        if not stat.S_ISREG(info.st_mode):
+            raise ValueError("Ticket delta path is not a regular file")
+        versions[str(path)] = reader.version(info)
+    return versions
+
+
+def capture_ticket_delta(binding, paths, endpoints, *, include_hashes=False):
+    """Capture only requested Ticket files and retain absent paths for deletion."""
+    selection = _selection(binding)
+    relatives = _ticket_paths(selection, paths)
+    versions = _ticket_versions(selection.root, relatives)
+    capture = capture_native(selection, previous=NativeCapture([], [], {}), paths=relatives)
+    _check_capture(capture)
+    observed = {path: version for path, version in capture.versions.items()
+                if path != str(selection.manifest_path)}
+    if observed != versions or _ticket_versions(selection.root, relatives) != versions:
+        raise ValueError("Ticket delta paths changed during capture")
+    ticket = re.compile(rf"{re.escape(selection.project_prefix)}-T-[0-9]+")
+    captured_paths = set()
+    for row in capture.atoms:
+        if not ticket.fullmatch(row["id"]):
+            raise ValueError("Ticket delta contains a non-Ticket Atom")
+        captured_paths.add(str(selection.root / row["source_path"]))
+    if captured_paths != versions.keys():
+        raise ValueError("Ticket delta rows do not match the changed paths")
+    result = {"paths": [[path.parent.as_posix(), path.name] for path in sorted(relatives)],
+              "snapshot": snapshot(binding, capture, endpoints)}
+    if include_hashes:
+        result["carrier_hashes"] = _carrier_hashes(capture)
+    return result
 
 
 def _graph_config(selection):
@@ -109,7 +205,6 @@ def main():
         binding = request["binding"] if expanded else request
         capture, graph_config = _capture(binding)
         if expanded:
-            from .native_generation_snapshot import snapshot
             result = snapshot(binding, capture, request["endpoints"])
         else:
             result = _snapshot(binding, capture)

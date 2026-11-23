@@ -11,16 +11,30 @@ from unittest.mock import patch
 
 
 from RELEASE_VERSION import local_release_package_phases as package_phases  # noqa: E402
-from RELEASE_VERSION.local_release import run_local_release  # noqa: E402
+from RELEASE_VERSION.RELEASE_VERSION__shared import run_local_release  # noqa: E402
 from RELEASE_VERSION.local_release_runner import _launcher_image  # noqa: E402
-from RELEASE_VERSION.release_inputs import read_release_selection  # noqa: E402
-from RELEASE_VERSION.release_support import _GENERATED_ASSETS  # noqa: E402
+from RELEASE_VERSION.RELEASE_VERSION__shared import read_release_selection  # noqa: E402
+from RELEASE_VERSION.RELEASE_VERSION__shared import _GENERATED_ASSETS  # noqa: E402
 
 
 from RELEASE_VERSION.RELEASE_VERSION__tests.RELEASE_VERSION__tests__shared import SimpleReleaseFixture  # noqa: E402
 
 
 class SimpleLocalReleaseTests(SimpleReleaseFixture, unittest.TestCase):
+    def test_root_project_atoms_stay_outside_framework_package(self):
+        original = read_release_selection(self.root).manifest_path
+        manifest = original.rename(self.root / original.name)
+        goal = self.root / "AN-S-2-SPEC-PROJECT_GOAL--goal.md"
+        goal.write_text("---\natom_family: SPEC\natom_id: AN-S-2\ncontext: {template: project_goal}\n"
+                        "state: {status: active, version: 1}\n---\n## Summary\n\nProject goal\n")
+        runner, _ = self._runner()
+        result = run_local_release(self.root, run_id="root-project-atoms", runner=runner)
+        self.assertEqual("completed", result["outcome"], result)
+        package = self.runtime / "simple_local_release/package"
+        for source in (manifest, goal):
+            self.assertTrue(source.is_file())
+            self.assertFalse((package / source.name).exists())
+
     def test_native_release_runs_full_gates_and_copies_selected_sources(self):
         runner, calls = self._runner()
         with patch("RELEASE_VERSION.local_release_package_phases._native_release_sources", wraps=package_phases._native_release_sources) as select, \

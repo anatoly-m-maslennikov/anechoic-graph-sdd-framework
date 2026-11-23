@@ -34,6 +34,24 @@ class DockerfileUVEntrypointTests(unittest.TestCase):
             dockerfile.read_text(),
         )
 
+    def test_image_precompiles_only_image_sources_in_each_runtime_stage(self):
+        dockerfile = (Path(__file__).resolve().parents[1] / "docker/Dockerfile").read_text()
+        base, beta = dockerfile.split("FROM runtime_base AS beta")
+        beta, current = beta.split("FROM runtime_base AS current")
+        prefix = "/workspace/.anechoic_tmp/cache/python"
+        self.assertIn(f"PYTHONPYCACHEPREFIX={prefix}", base)
+        for stage in (base, beta, current):
+            self.assertIn(f"RUN PYTHONPYCACHEPREFIX={prefix} /opt/venv/bin/python -B -m compileall", stage)
+            self.assertIn("--invalidation-mode timestamp", stage)
+            self.assertIn('chmod -R a+rX "$PYTHONPYCACHEPREFIX"', stage)
+        for path in ("/usr/local/lib/python3.14", "/opt/venv/lib/python3.14/site-packages",
+                     "/workspace/LAYER_4_ENGINE_STUDIO_C14"):
+            self.assertIn(path, base[base.index("-m compileall"):])
+        for component in ("KERNEL_MIXER_beta_C67", "ORCHESTRATOR_beta_C68", "WORKERS_beta_C69",
+                          "WORKBENCH_BACKEND_beta_C70"):
+            self.assertIn(f"/workspace/LAYER_4_ENGINE_STUDIO_C14/{component}", beta[beta.index("-m compileall"):])
+        self.assertIn("/workspace/LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_C59", current[current.index("-m compileall"):])
+
     def test_image_copies_runtime_components_and_canonical_ca_skill(self):
         dockerfile = (Path(__file__).resolve().parents[1] / "docker/Dockerfile").read_text()
         self.assertIn(

@@ -9,7 +9,7 @@ PROGRAMMATIC = WORKBENCH.parents[1] / "FEATURE_PROGRAMMATIC"
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import (
     CLASSIFICATION_CFEL_BODY, CLASSIFICATION_PYTHON_BODY,
 )
-from KERNEL_MIXER_C59.relation_registry import compile_relation_registry
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import compile_relation_registry
 
 
 class AllowedClassificationValuesRegistryTests(unittest.TestCase):

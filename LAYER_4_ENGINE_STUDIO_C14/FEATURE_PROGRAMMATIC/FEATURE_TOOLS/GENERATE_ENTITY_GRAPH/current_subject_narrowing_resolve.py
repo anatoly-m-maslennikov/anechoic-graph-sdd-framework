@@ -2,7 +2,15 @@
 
 import re
 from dataclasses import replace
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import subject_notation__pub as notation
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    Name as _subject_Name,
+    Path as _subject_Path,
+    Qualification as _subject_Qualification,
+    SubjectNotationError as _subject_SubjectNotationError,
+    ValueLiteral as _subject_ValueLiteral,
+    parse_subject_expression as _subject_parse_subject_expression,
+    render_subject as _subject_render_subject,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.current_subject_common import Record, _identifier, subject_facts
 
 
@@ -10,29 +18,29 @@ class NarrowingResolution:
 
     def terminal_name(self, identity: str) -> str | None:
         try:
-            parsed = notation.parse_subject_expression(identity, subject_profile='approved').expression
-        except notation.SubjectNotationError:
+            parsed = _subject_parse_subject_expression(identity, subject_profile='approved').expression
+        except _subject_SubjectNotationError:
             return None
-        if not isinstance(parsed, notation.Path) or not isinstance(parsed.head, notation.Name):
+        if not isinstance(parsed, _subject_Path) or not isinstance(parsed.head, _subject_Name):
             return None
         if not parsed.steps:
             return parsed.head.value
         operand = parsed.steps[-1].operand
-        return operand.value if isinstance(operand, notation.Name) else None
+        return operand.value if isinstance(operand, _subject_Name) else None
 
     def python_name(self, value: str) -> str:
         return re.sub('[^a-z0-9]', '', value.casefold())
 
     def subject_name(self, identity: str) -> str:
         try:
-            path = notation.parse_subject_expression(identity, subject_profile='approved').expression
-            if isinstance(path, notation.Path) and path.steps:
+            path = _subject_parse_subject_expression(identity, subject_profile='approved').expression
+            if isinstance(path, _subject_Path) and path.steps:
                 operand = path.steps[-1].operand
-                if isinstance(operand, notation.Qualification) and operand.relative_path.steps:
+                if isinstance(operand, _subject_Qualification) and operand.relative_path.steps:
                     value = operand.relative_path.steps[-1].operand
-                    if isinstance(value, notation.ValueLiteral):
+                    if isinstance(value, _subject_ValueLiteral):
                         return value.value
-        except notation.SubjectNotationError:
+        except _subject_SubjectNotationError:
             pass
         return self.terminal_name(identity) or identity
 
@@ -46,16 +54,16 @@ class NarrowingResolution:
                 selector = str(constraint.get('target_selector') or '').strip()
                 if not selector.startswith('@'):
                     try:
-                        parsed_target = notation.parse_subject_expression(selector, subject_profile='approved').expression
-                    except notation.SubjectNotationError:
+                        parsed_target = _subject_parse_subject_expression(selector, subject_profile='approved').expression
+                    except _subject_SubjectNotationError:
                         continue
-                    if not isinstance(parsed_target, notation.Path) or not isinstance(parsed_target.head, notation.Name) or parsed_target.steps:
+                    if not isinstance(parsed_target, _subject_Path) or not isinstance(parsed_target.head, _subject_Name) or parsed_target.steps:
                         continue
                 if constraint.get('source_cardinality') is not None or constraint.get('target_cardinality') is not None:
                     continue
                 try:
                     _, facts, _ = subject_facts(expression)
-                except (notation.SubjectNotationError, ValueError) as error:
+                except (_subject_SubjectNotationError, ValueError) as error:
                     self.diagnostics.append(f'{self.source_name(carrier)}: NARROWER_THAN Claim is unsupported: {error}.')
                     continue
                 source_names = {target, self.terminal_name(target)}
@@ -83,12 +91,12 @@ class NarrowingResolution:
                 if not exact_class:
                     matches = symbols.get(self.python_name(base), [])
                 try:
-                    parsed = notation.parse_subject_expression(target, subject_profile='approved').expression
-                    if isinstance(parsed, notation.Path) and parsed.steps:
-                        parent = notation.render_subject(replace(parsed, steps=parsed.steps[:-1]))
+                    parsed = _subject_parse_subject_expression(target, subject_profile='approved').expression
+                    if isinstance(parsed, _subject_Path) and parsed.steps:
+                        parent = _subject_render_subject(replace(parsed, steps=parsed.steps[:-1]))
                         if not exact_class and parent in matches:
                             matches = [parent]
-                except notation.SubjectNotationError:
+                except _subject_SubjectNotationError:
                     pass
                 if len(matches) != 1:
                     self.diagnostics.append(f'{self.source_name(carrier)}: native base `{base}` is unresolved or ambiguous.')

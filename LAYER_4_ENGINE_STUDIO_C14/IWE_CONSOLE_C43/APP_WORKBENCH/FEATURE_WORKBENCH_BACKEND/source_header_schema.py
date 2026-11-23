@@ -8,8 +8,8 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import FormalStatement
-from KERNEL_MIXER_C59.declared_header_rules import header_rules_from_statements
-from KERNEL_MIXER_C59.header_columns import HeaderSchema, declared_header_schema
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import header_rules_from_statements
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import HeaderSchema, declared_header_schema
 from .source_content_schema import declaration_contributions, updated_declarations
 
 

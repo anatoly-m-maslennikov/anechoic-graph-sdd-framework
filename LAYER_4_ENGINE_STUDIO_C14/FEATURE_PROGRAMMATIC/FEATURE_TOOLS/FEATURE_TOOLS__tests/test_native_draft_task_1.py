@@ -10,10 +10,10 @@ TOOLS = Path(__file__).resolve().parents[1]
 ENGINE = TOOLS.parents[1]
 sys.path[:0] = [str(TOOLS), str(ENGINE / 'IWE_CONSOLE_C43')]
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_source_rows__pub import capture_native
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.common import InputError, SourceChanged
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_draft import create_draft, promote_draft
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_header__pub import canonical_native_header
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import TICKET_DIRECTORY, capture_native
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import InputError, SourceChanged
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import create_draft, promote_draft
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical_native_header
 
 
 
@@ -37,11 +37,11 @@ class NewNativeTaskTests(fixtures.NewNativeTaskTests, unittest.TestCase):
                                current_rows=rows)
         self.assertEqual(('AN-T-9', 1, 'backlog'), (result['artifact']['ref_id'], result['artifact']['version'], result['artifact']['status']))
         self.assertFalse(draft.exists())
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.native_update import change_ticket_status
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import change_ticket_status
         target = {'ref_id': 'AN-T-9', 'version': 1}
         queued = change_ticket_status(self.selection, {'target': target, 'targetStatus': 'in_queue'},
                                       current_rows=capture_native(self.selection).atoms, check_definition=lambda: None)
-        self.assertEqual(self.control / '001_TICKETS/TASKS', (self.root / queued['artifact']['path']).parent)
+        self.assertEqual(self.control / TICKET_DIRECTORY / 'TASKS', (self.root / queued['artifact']['path']).parent)
         with self.assertRaises(InputError):
             change_ticket_status(self.selection, {'target': target, 'targetStatus': 'in_progress'},
                                  current_rows=capture_native(self.selection).atoms, check_definition=lambda: None)

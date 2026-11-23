@@ -8,7 +8,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.lint_python_model_claim__p
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import FALLBACK_PLAN as PLAN, FALLBACK_PROP as PROP, FALLBACK_PROJECT as PROJECT, FALLBACK_CLAIM as CLAIM
 CATALOG={'Atom','Atom.Header.Context.Role',PLAN,PLAN+'.Header.Context.Plan',PROP,'Project','Project.Settings',PROJECT}
 class FallbackChainTests(unittest.TestCase):
- def lint(self,claim=CLAIM,addresses=CATALOG,relations={'IS_PROPERTY_OF','IS_CONTAINED_BY'}):
+ def lint(self,claim=CLAIM,addresses=CATALOG,relations=frozenset({'IS_PROPERTY_OF','IS_CONTAINED_BY'})):
   return lint_python_model_claim(claim,declared_addresses=addresses,relation_names=relations,path='fixture')
  def test_chain_and_provenance(self):
   decl=parse_native_model_claim(CLAIM);self.assertEqual((),self.lint())

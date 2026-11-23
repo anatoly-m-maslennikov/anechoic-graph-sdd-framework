@@ -6,8 +6,8 @@ import unittest
 from types import SimpleNamespace
 
 from KERNEL_MIXER_C59.graph_store import build_graph  # noqa: E402
-from KERNEL_MIXER_C59.import_tables import remove_imports, replace_imports  # noqa: E402
-from KERNEL_MIXER_C59.query_store import _connect  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import remove_imports, replace_imports  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import _connect  # noqa: E402
 
 
 class ImportTableTests(unittest.TestCase):

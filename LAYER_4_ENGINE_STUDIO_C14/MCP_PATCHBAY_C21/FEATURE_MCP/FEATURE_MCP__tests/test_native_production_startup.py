@@ -17,9 +17,8 @@ MCP = Path(__file__).resolve().parents[1]
 PROGRAMMATIC = MCP.parents[1] / "FEATURE_PROGRAMMATIC"
 
 from MCP_PATCHBAY_C21.FEATURE_MCP.direct_gateway import startup_selection  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import MCP_PATH  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import MCP_PATH, ProjectBinding  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.http_server import create_app  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import ProjectBinding  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import extension_directory  # noqa: E402
 from . import test_native_startup as fixture  # noqa: E402
 

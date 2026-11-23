@@ -12,8 +12,8 @@ import httpx2
 from mcp import types
 from starlette.applications import Starlette
 
-from KERNEL_MIXER_C59.import_cache import read_import_sources
-from KERNEL_MIXER_C59.import_tables import publish_imports
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import read_import_sources
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import publish_imports
 from MCP_PATCHBAY_C21.FEATURE_MCP.workbench_web import routes
 
 
@@ -174,7 +174,7 @@ class ImportGraphCases4:
         gateway = await self._gateway()
         owner = gateway._native_query
         store = owner._owner()
-        database = self.root / ".anechoic_runtime/workbench/projection.duckdb"
+        database = self.root / ".anechoic_runtime/db/project.duckdb"
         self.assertTrue(database.is_file())
         sql = """
             SELECT parent.relative_path, test.relative_path, test.package_type

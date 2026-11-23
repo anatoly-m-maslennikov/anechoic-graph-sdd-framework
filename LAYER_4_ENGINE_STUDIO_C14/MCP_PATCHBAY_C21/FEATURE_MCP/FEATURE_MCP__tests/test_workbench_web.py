@@ -14,7 +14,7 @@ from starlette.testclient import TestClient
 MCP_ROOT = Path(__file__).resolve().parents[1]
 FRONTEND_ROOT = MCP_ROOT.parents[1] / "IWE_CONSOLE_C43" / "APP_WORKBENCH" / "FEATURE_WORKBENCH_FRONTEND"
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import WORKBENCH_PATH  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import WORKBENCH_PATH  # noqa: E402
 import MCP_PATCHBAY_C21.FEATURE_MCP.workbench_web as workbench_web  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.workbench_web import routes  # noqa: E402
 

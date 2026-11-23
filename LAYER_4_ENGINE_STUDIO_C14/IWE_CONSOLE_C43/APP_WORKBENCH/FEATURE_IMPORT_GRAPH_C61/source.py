@@ -42,7 +42,7 @@ class Source:
     named_uses: tuple = ()
 
 
-_RESOLUTION_INPUTS = frozenset({".gitignore", "pyproject.toml", "uv.lock", "package.json"})
+_RESOLUTION_INPUTS = frozenset({".gitignore", "pyproject.toml", "uv.lock", "package.json", "tsconfig.json"})
 _EXCLUDED_PARTS = frozenset({
     ".anechoic_archive", ".anechoic_install", ".anechoic_legacy", ".anechoic_runtime", ".anechoic_tmp",
     ".anechoic_anechoic", ".cache", ".git", ".hg", ".mypy_cache", ".nox", ".pytest_cache",
@@ -87,10 +87,12 @@ def _has_symlink_ancestor(root: Path, path: Path) -> bool:
         current = current.parent
     return root.is_symlink()
 
-def _iter_files(root: Path, *, source_only: bool = True) -> Iterable[Path]:
+def _iter_files(root: Path, *, source_only: bool = True, observe_directory=None) -> Iterable[Path]:
     pending = [root]
     while pending:
         directory = pending.pop()
+        if observe_directory is not None:
+            observe_directory(directory)
         try:
             entries = sorted(os.scandir(directory), key=lambda entry: entry.name, reverse=True)
         except FileNotFoundError:

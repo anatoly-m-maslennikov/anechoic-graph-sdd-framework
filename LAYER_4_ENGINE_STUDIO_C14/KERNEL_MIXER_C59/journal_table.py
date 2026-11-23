@@ -103,7 +103,7 @@ def _commit_record(connection, table, record_id, row):
 
 
 def sync_journal(connection: Any, root: Path, database_path: Path | None, journal_path: Path) -> None:
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.work_journal__pub import MAX_DATABASE_EVENT_BYTES, canonical_json_bytes, journal_inbox
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import MAX_DATABASE_EVENT_BYTES, canonical_json_bytes, journal_inbox
     from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import open_regular
 
     if root.is_symlink():

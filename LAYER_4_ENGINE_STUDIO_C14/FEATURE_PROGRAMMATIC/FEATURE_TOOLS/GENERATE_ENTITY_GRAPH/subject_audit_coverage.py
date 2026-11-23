@@ -7,7 +7,15 @@ from collections.abc import Mapping
 from dataclasses import replace
 from typing import Any
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import subject_notation__pub as notation
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    Name as _subject_Name,
+    Path as _subject_Path,
+    Qualification as _subject_Qualification,
+    RelationChain as _subject_RelationChain,
+    SubjectNotationError as _subject_SubjectNotationError,
+    parse_subject_expression as _subject_parse_subject_expression,
+    render_subject as _subject_render_subject,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import matches_named_value
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.contract_graph_bindings import _conditional_target
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.contract_graph_targets import _target as _contract_target
@@ -19,19 +27,19 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.subject_audit_occu
 def _local_target(subject: str) -> tuple[str, str] | None:
     """Return an existing declaration-shaped target; never expand selectors."""
 
-    expression = notation.parse_subject_expression(subject, subject_profile="approved").expression
+    expression = _subject_parse_subject_expression(subject, subject_profile="approved").expression
     expression = namespace_local_expression(expression) or expression
     if _has_selection(expression):
         return None
-    if (isinstance(expression, notation.Path) and isinstance(expression.head, notation.Name)
+    if (isinstance(expression, _subject_Path) and isinstance(expression.head, _subject_Name)
             and expression.head.value in {"ANECHOIC_MODEL", "ANECHOIC_STRUCTURE"} and not expression.steps):
         return None
     target = _contract_target(expression)
     if target is not None:
         return target
-    if not isinstance(expression, notation.Path):
+    if not isinstance(expression, _subject_Path):
         return None
-    if isinstance(expression.head, notation.Name) and expression.head.value in {"CFEL", "Carrier", "Term"}:
+    if isinstance(expression.head, _subject_Name) and expression.head.value in {"CFEL", "Carrier", "Term"}:
         return "component", _model_target(expression)
     kind = _target_kind(expression)
     if kind in {"primary_node", "property", "instance", "relation"}:
@@ -42,29 +50,29 @@ def _local_target(subject: str) -> tuple[str, str] | None:
 def _entity_target(subject: str) -> tuple[str, str] | None:
     """Keep a direct entity target or the last path in a plain context chain."""
 
-    expression = notation.parse_subject_expression(subject, subject_profile="approved").expression
-    if isinstance(expression, notation.RelationChain):
+    expression = _subject_parse_subject_expression(subject, subject_profile="approved").expression
+    if isinstance(expression, _subject_RelationChain):
         if not expression.links or any(link.operator != "<+" or link.relation_type is not None for link in expression.links):
             return None
         expression = expression.endpoints[-1]
-    if not isinstance(expression, notation.Path):
+    if not isinstance(expression, _subject_Path):
         return None
-    if any(step.operator in {":", ":="} or isinstance(step.operand, notation.Qualification) for step in expression.steps):
+    if any(step.operator in {":", ":="} or isinstance(step.operand, _subject_Qualification) for step in expression.steps):
         return None
-    rendered = notation.render_subject(expression)
+    rendered = _subject_render_subject(expression)
     return _local_target(rendered)
 
 
 def _property_parts(target: str) -> tuple[str, str] | None:
-    expression = notation.parse_subject_expression(target, subject_profile="approved").expression
-    if not isinstance(expression, notation.Path):
+    expression = _subject_parse_subject_expression(target, subject_profile="approved").expression
+    if not isinstance(expression, _subject_Path):
         return None
     for index, step in enumerate(expression.steps):
         if step.operator == ".":
             origin = replace(expression, steps=expression.steps[:index], value_format=None, value_cardinality=None)
             suffix = replace(expression, head=step.operand, steps=expression.steps[index + 1:],
                              value_format=None, value_cardinality=None)
-            return notation.render_subject(origin), notation.render_subject(suffix)
+            return _subject_render_subject(origin), _subject_render_subject(suffix)
     return None
 
 
@@ -88,14 +96,14 @@ def _entity_definitions(carriers: list[Record]) -> dict[str, list[Record]]:
 
 
 def _term_identity(subject: str) -> str | None:
-    expression = notation.parse_subject_expression(subject, subject_profile="approved").expression
+    expression = _subject_parse_subject_expression(subject, subject_profile="approved").expression
     expression = namespace_local_expression(expression) or expression
-    if (not isinstance(expression, notation.Path) or not isinstance(expression.head, notation.Name)
+    if (not isinstance(expression, _subject_Path) or not isinstance(expression.head, _subject_Name)
             or expression.head.value != "Term" or len(expression.steps) != 1
-            or expression.steps[0].operator != "//" or not isinstance(expression.steps[0].operand, notation.Name)
+            or expression.steps[0].operator != "//" or not isinstance(expression.steps[0].operand, _subject_Name)
             or expression.value_format is not None or expression.value_cardinality is not None):
         return None
-    return notation.render_subject(expression)
+    return _subject_render_subject(expression)
 
 
 def _term_definitions(carriers: list[Record]) -> dict[str, list[Record]]:
@@ -114,7 +122,7 @@ def _term_definitions(carriers: list[Record]) -> dict[str, list[Record]]:
             continue
         try:
             identity = _term_identity(values[0])
-        except notation.SubjectNotationError:
+        except _subject_SubjectNotationError:
             continue
         if identity is not None:
             rows[identity].append(_source(carrier))
@@ -131,7 +139,7 @@ def _declaration_catalog(data: Mapping[str, Any]) -> dict[tuple[str, str], list[
 
 
 def _conditional_coverage(subject: str, catalog: Mapping[tuple[str, str], list[Record]]) -> Record | None:
-    expression = notation.parse_subject_expression(subject, subject_profile="approved").expression
+    expression = _subject_parse_subject_expression(subject, subject_profile="approved").expression
     expression = namespace_local_expression(expression) or expression
     conditional = _conditional_target(expression, catalog)
     if conditional is None:
@@ -157,11 +165,11 @@ def _inherited_property_coverage(identity: str, data: Mapping[str, Any]) -> Reco
 
 
 def _instance_coverage(identity: str, declarations: Mapping[str, Any]) -> Record | None:
-    expression = notation.parse_subject_expression(identity, subject_profile="approved").expression
-    assert isinstance(expression, notation.Path)
+    expression = _subject_parse_subject_expression(identity, subject_profile="approved").expression
+    assert isinstance(expression, _subject_Path)
     index = next((i for i, step in enumerate(expression.steps) if step.operator == "//"), None)
     if index is not None:
-        base = notation.render_subject(replace(expression, steps=expression.steps[:index], value_format=None, value_cardinality=None))
+        base = _subject_render_subject(replace(expression, steps=expression.steps[:index], value_format=None, value_cardinality=None))
         declared = declarations["primary_nodes"].get(base)
         if declared:
             return {"status": "covered", "target": identity, "base_target": base,

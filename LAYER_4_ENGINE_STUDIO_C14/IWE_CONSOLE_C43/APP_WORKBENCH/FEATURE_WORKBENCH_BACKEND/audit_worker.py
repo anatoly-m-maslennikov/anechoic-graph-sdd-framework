@@ -11,7 +11,7 @@ import time
 from types import MappingProxyType
 from typing import Any
 
-from KERNEL_MIXER_C59.audit_tables import TABLES, collect_issues
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import TABLES, collect_issues
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_read_view
 from .source_placement_audit import expected_carrier
 

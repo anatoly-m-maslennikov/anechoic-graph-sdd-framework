@@ -42,6 +42,7 @@ _PRESERVED_NAMES = frozenset(
 _RUN_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*\Z")
 _LAYER_NAMES = ("LAYER_1_META_ONTOLOGY_C9", "LAYER_2_META_METHODOLOGY_C58")
 _ROOT_PACKAGE_EXCLUDES = frozenset({".anechoic_install", *map(str.casefold, (_DEFAULT_PRODUCT, *_LAYER_NAMES))})
+_ROOT_PROJECT_GOAL = re.compile(r"[A-Z]+-S-[0-9]+-SPEC-PROJECT_GOAL--.+\.md")
 _NON_SOURCE_DIRECTORIES = frozenset({"01_draft", "02_ready", "09_archived", "000_draft", "099_archived", "_journal", "_projection"})
 _DEFAULT_TIER_ONE_DIRECTORY = "01_TIER_1_ARCHITECTURE"
 
@@ -139,7 +140,7 @@ def _native_release_sources(selection) -> dict[Path, Path]:
         raise LocalReleaseError(f"local-release-native-sources-invalid: {error}") from error
 
 
-def _package_sources(root: Path, product: Path, package: Path, excluded: frozenset[str]):
+def _package_sources(root: Path, product: Path, package: Path, excluded: frozenset[str], manifest_path: Path):
     trees = (
         (root, Path(".")),
         (product, Path(".")),
@@ -158,12 +159,14 @@ def _package_sources(root: Path, product: Path, package: Path, excluded: frozens
         inventories.append((source, members))
         (package / destination).mkdir(parents=True, exist_ok=True)
         sources.extend((entry, destination / entry.relative_to(source)) for entry in members
-                       if (destination / entry.relative_to(source)).as_posix() not in RETIRED_ASSETS)
+                       if entry != manifest_path
+                       and not (entry.parent == root and _ROOT_PROJECT_GOAL.fullmatch(entry.name))
+                       and (destination / entry.relative_to(source)).as_posix() not in RETIRED_ASSETS)
     return sources, inventories
 
 
 def _prepare_package(root: Path, product: Path, package: Path, *,
-                     control_relative: Path) -> dict[str, tuple[str, int]]:
+                     control_relative: Path, manifest_path: Path) -> dict[str, tuple[str, int]]:
     if (len(control_relative.parts) != 1
             or not control_relative.name.startswith((".anechoic_", "_anechoic_"))):
         raise LocalReleaseError("local-release-project-selection-invalid")
@@ -171,7 +174,7 @@ def _prepare_package(root: Path, product: Path, package: Path, *,
     if not control_root.is_dir():
         raise LocalReleaseError("local-release-project-selection-invalid")
     excluded = frozenset({control_relative.name.casefold(), ".anechoic_runtime", ".anechoic_tmp", ".runtime", ".git", ".pytest_cache", "__pycache__", ".mypy_cache", ".ruff_cache", ".venv", ".vite", "node_modules"})
-    sources, inventories = _package_sources(root, product, package, excluded)
+    sources, inventories = _package_sources(root, product, package, excluded, manifest_path)
     expected = {}
     for source, relative in sources:
         expected[relative.as_posix()] = _file_identity(source)
@@ -216,8 +219,8 @@ def _cleanup_staging(root: Path, staging: Path | None) -> str:
 
 
 def _image_manager(source: Path, temporary: Path | None = None, *, project_root: Path,
-                   build_provenance: dict[str, str] | None = None):
-    return ImageManager(source, project_root=project_root, build_temp_root=temporary, build_provenance=build_provenance)
+                   build_provenance: dict[str, str] | None = None, source_provider=None):
+    return ImageManager(source, project_root=project_root, build_temp_root=temporary, build_provenance=build_provenance, source_provider=source_provider)
 
 
 def _launcher_image(selection) -> str | None:

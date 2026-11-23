@@ -10,7 +10,7 @@ import yaml
 MCP = Path(__file__).resolve().parents[1]
 PROGRAMMATIC = MCP.parents[1] / 'FEATURE_PROGRAMMATIC'
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_source_rows__pub import capture_native
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native
 
 
 class NativeLifecycleStructurePinningTests(unittest.TestCase):

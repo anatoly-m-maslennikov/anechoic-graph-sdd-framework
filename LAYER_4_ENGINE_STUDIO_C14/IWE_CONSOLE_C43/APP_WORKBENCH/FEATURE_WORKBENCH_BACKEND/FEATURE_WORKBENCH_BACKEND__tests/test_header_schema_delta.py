@@ -8,8 +8,8 @@ from unittest.mock import patch
 
 APP_ROOT = Path(__file__).resolve().parents[3]
 
-from KERNEL_MIXER_C59 import header_columns  # noqa: E402
-from KERNEL_MIXER_C59.header_columns import (  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import header_columns  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (  # noqa: E402
     HeaderSchemaState,
     infer_header_schema,
 )

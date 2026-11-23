@@ -10,7 +10,7 @@ async function replaceSql(page: Page, sql: string) {
   const input = editor(page);
   await expect(input).toBeEditable();
   await input.click();
-  await input.press('Meta+A');
+  await input.press('ControlOrMeta+A');
   await input.pressSequentially(sql);
   await expect(input).toContainText(sql);
 }
@@ -51,13 +51,6 @@ test('formats a result-bearing current View from the button and palette without 
   const formatted = "SELECT\n  1 as retained_value\nfrom (\n    SELECT\n      1\n  ) source\nwhere 1 = 1\n  and 'SELECT' = 'SELECT'\n;";
   await page.goto(seed.workspaceUrl);
   await expect(page.getByRole('grid')).toBeVisible();
-  await page.getByRole('button', { name: 'Format', exact: true }).click();
-  await expect.poll(() => editorSource(page)).toBe(formatted);
-  await page.keyboard.press('Meta+P');
-  const palette = page.getByRole('dialog', { name: 'Command palette' });
-  await palette.getByRole('textbox').fill('Format');
-  await palette.getByRole('textbox').press('Enter');
-  await expect.poll(() => editorSource(page)).toBe(formatted);
   const autosave = page.waitForResponse((response) => {
     const request = response.request();
     if (request.method() !== 'POST' || !new URL(request.url()).pathname.endsWith('/interface')) return false;
@@ -66,6 +59,13 @@ test('formats a result-bearing current View from the button and palette without 
       && payload.arguments?.workspace_id === seed.workspaceId && payload.arguments?.view_id === seed.viewId
       && payload.arguments?.sql === formatted;
   });
+  await page.getByRole('button', { name: 'Format', exact: true }).click();
+  await expect.poll(() => editorSource(page)).toBe(formatted);
+  await page.keyboard.press('Meta+P');
+  const palette = page.getByRole('dialog', { name: 'Command palette' });
+  await palette.getByRole('textbox').fill('Format');
+  await palette.getByRole('textbox').press('Enter');
+  await expect.poll(() => editorSource(page)).toBe(formatted);
   await page.evaluate(() => window.dispatchEvent(new Event('focus')));
   await autosave;
   const state = await seed.call('workspace_get', { workspace_id: seed.workspaceId });

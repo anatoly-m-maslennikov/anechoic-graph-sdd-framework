@@ -8,11 +8,10 @@ context:
   template: POLICY
   lens: QA
 state:
-  status: active
-  version: 1
-  updated_at: '2026-11-22T16:07:32.437034+00:00'
+  status: "active"
+  version: 2
+  updated_at: "2026-11-23T01:48:06.199176+00:00"
 ---
-
 ## Summary
 
 Group Engine quality checks by how they run
@@ -21,12 +20,10 @@ Group Engine quality checks by how they run
 
 ### Prose Claim
 
-Expose three independent Engine Test Suite entry points.
+Expose independent `static`, `unit`, and `image` Engine Test Suite entry points. Static runs source analysis, including unused imports and the applicable 300/45 source-size checks, and analyzer tests under the Project Test Suite contract. Unit runs source-side unit and integration tests. Image runs functional, end-to-end, and canary tests against one immutable candidate.
 
-- `static` runs source analysis and tests of the analyzers.
-- `unit` runs source-side unit and integration tests.
-- `image` runs functional, end-to-end, and canary tests against one immutable candidate image.
+Place new or moved checks in the matching `static/`, `unit/`, or `image/` subfolder of the owning `<Component>__tests/` Package. Discover existing flat host tests as unit tests.
 
-Put new or moved checks under the corresponding `static/`, `unit/`, or `image/` subfolder in the owning `<Component>__tests/` Package. Discover existing flat host tests as unit tests.
+Run static and required unit checks before a Local Release build. Run image checks before installation. Stop release on failed or incomplete required checks. Cover confirmed regressions at a real interface. Retire a unit test only after behavioral coverage of its guarantee exists.
 
-Run static checks and required unit tests before building for Local Release. Run image tests before installing the candidate. Report the failed or incomplete check and stop the release.
+For image startup and indexing, observe process and Worker liveness and allow an exact active run to be aborted. Do not fail a live run solely for elapsed time. Record elapsed time separately. Aim for 0.25 s visibility on a single Ticket change and measure a 500-Atom batch separately.

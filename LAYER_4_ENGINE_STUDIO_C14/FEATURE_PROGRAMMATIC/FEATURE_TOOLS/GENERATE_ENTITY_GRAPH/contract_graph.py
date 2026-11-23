@@ -6,7 +6,12 @@ from collections import defaultdict
 from collections.abc import Mapping
 from typing import Any
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import subject_notation__pub as notation
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    Path as _subject_Path,
+    RelationChain as _subject_RelationChain,
+    SubjectNotationError as _subject_SubjectNotationError,
+    parse_subject_expression as _subject_parse_subject_expression,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_read_view, matches_named_value
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.cfel_claim_constraints import (
     claim_cfel_blocks,
@@ -33,7 +38,7 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.contract_graph_nat
 
 
 Record = dict[str, Any]
-Candidate = tuple[Record, Mapping[str, Any], str | None, notation.Path | notation.RelationChain | None]
+Candidate = tuple[Record, Mapping[str, Any], str | None, _subject_Path | _subject_RelationChain | None]
 _RMED = {"Requirement", "Method", "Evaluation", "Delivery"}
 _DECLARATION_FORMS = {"Declaration", "Relation Declaration", "Relation Definition", "Entity Definition"}
 
@@ -87,7 +92,7 @@ def _is_declaration(view: Mapping[str, Any]) -> bool:
 def _native_class_kind(subject, identity, kind, entry, carrier, gaps):
     native_classes = [clause for clause in entry["clauses"] if clause.get("kind") == "native_class"]
     if native_classes:
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_class_subject__pub import model_class_target
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import model_class_target
         if len(native_classes) != 1 or model_class_target(subject, native_classes[0].get("entity_name"), require_namespace=False) != identity:
             gaps.append(_gap(carrier, "Native class requires a matching declared Model Entity Subject.", subject))
             return None
@@ -114,8 +119,8 @@ def _collect_candidates(carriers):
             gaps.append(_gap(carrier, "Expected exactly one active Subject."))
             continue
         try:
-            expression = notation.parse_subject_expression(subject, subject_profile="approved").expression
-        except notation.SubjectNotationError as error:
+            expression = _subject_parse_subject_expression(subject, subject_profile="approved").expression
+        except _subject_SubjectNotationError as error:
             gaps.append(_gap(carrier, str(error), subject))
             continue
         candidates.append((carrier, view, subject, expression))

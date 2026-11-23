@@ -133,7 +133,7 @@ class NativeWorkspaceTests(unittest.TestCase):
         self.addCleanup(owner.close)
         target = self.root / "other.duckdb"
         target.write_bytes(b"keep this file")
-        database = self.root / ".anechoic_runtime/workbench/projection.duckdb"
+        database = self.root / ".anechoic_runtime/db/project.duckdb"
         database.parent.mkdir(parents=True)
         database.symlink_to(target)
         with self.assertRaisesRegex(ValueError, "Project runtime directory directly"):

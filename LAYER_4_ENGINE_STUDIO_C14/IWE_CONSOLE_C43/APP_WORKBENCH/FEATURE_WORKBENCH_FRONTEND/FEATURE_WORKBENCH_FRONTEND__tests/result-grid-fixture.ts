@@ -38,7 +38,7 @@ function fetchRequest(request: { method(): string; url(): string; postDataJSON()
 
 async function replaceSql(page: Page, value: string) {
   await editor(page).click();
-  await page.keyboard.press('Meta+A');
+  await page.keyboard.press('ControlOrMeta+A');
   await page.keyboard.insertText(value);
 }
 

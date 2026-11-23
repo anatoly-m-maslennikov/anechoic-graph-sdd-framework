@@ -4,14 +4,14 @@ import tempfile
 import unittest
 
 
-from KERNEL_MIXER_C59.audit_tables import _declared_filename_issue
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import _declared_filename_issue
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import DeclarationSource, compile_content_schema
-from KERNEL_MIXER_C59.source_inventory import filename_role_matches
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workbench_schema_asset import (
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import filename_role_matches
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import (
     compile_role_folders, compile_schema, load_image_schema, schema_asset,
 )
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_native_model_claim
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.python_claim__pub import parse_structured_python_model_claim
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_structured_python_model_claim
 
 
 class RoleFolderTests(unittest.TestCase):

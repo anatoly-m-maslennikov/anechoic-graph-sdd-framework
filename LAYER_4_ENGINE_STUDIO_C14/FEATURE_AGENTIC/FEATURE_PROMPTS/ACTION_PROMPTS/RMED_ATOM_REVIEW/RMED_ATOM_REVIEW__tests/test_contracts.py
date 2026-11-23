@@ -69,7 +69,7 @@ class PromptContracts(unittest.TestCase):
                 self.assertNotRegex(prompt, r"\b(?:TODO|TBD)\b")
 
     def test_evaluation_prompts_cover_runtime_checklist(self):
-        from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.evaluation_contract import LOCAL_GROUPS as GROUPS
+        from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import LOCAL_GROUPS as GROUPS
         prompt_checks = {check for checks in GROUPS.values() for check in checks}
         self.assertEqual(prompt_checks, CHECKS)
         for group, checks in GROUPS.items():
@@ -135,7 +135,7 @@ class PromptContracts(unittest.TestCase):
     def test_current_rmed_claim_reaches_declared_body_checker(self):
         programmatic = ROOT / "LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC"
         tools = programmatic / "FEATURE_TOOLS"
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.legacy_candidate_schema__pub import load_candidate_schema
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.FEATURE_TOOLS__tests__shared import load_candidate_schema
         schema = load_candidate_schema(tools / "FEATURE_TOOLS__tests/assets/legacy_candidate_schema.json")
         body = "## Summary\nA summary.\n## Claim\n### Prose Claim\nA claim.\n"
         for role in ("Requirement", "Method", "Evaluation", "Delivery"):

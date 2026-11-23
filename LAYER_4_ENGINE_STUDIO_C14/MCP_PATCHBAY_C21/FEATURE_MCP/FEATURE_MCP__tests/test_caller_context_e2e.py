@@ -17,7 +17,7 @@ from mcp.client.session import ClientSession
 MCP = Path(__file__).resolve().parents[1]
 PROGRAMMATIC = MCP.parents[1] / "FEATURE_PROGRAMMATIC"
 
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.host_runtime_config import load_host_runtime_config  # noqa: E402
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import load_host_runtime_config  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_request_context import (  # noqa: E402
     RuntimeRequestContext,
     bind_request_context,

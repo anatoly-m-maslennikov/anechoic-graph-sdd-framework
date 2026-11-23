@@ -5,7 +5,7 @@ import unittest
 
 PROGRAMMATIC = Path(__file__).resolve().parents[2]
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_class_subject__pub import canonical_model_address
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical_model_address
 
 
 class ProjectClaimLintTests(unittest.TestCase):

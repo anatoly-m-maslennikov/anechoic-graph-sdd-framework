@@ -12,7 +12,7 @@ PROJECT_ROOT = Path("/project")
 ENGINE = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ENGINE))
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary import ExplicitStartupFailure  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import ExplicitStartupFailure  # noqa: E402
 
 RUNTIME_MODES = frozenset({"mcp", "mcp-http", "shared-mcp"})
 
@@ -64,26 +64,32 @@ def _exec_service(mode):
             ):
                 if key in os.environ:
                     command += [flag, os.environ[key]]
+    environment = {**{k: v for k, v in os.environ.items() if k != "PYTHONHOME"}, "PYTHONPATH": str(ENGINE)}
+    if mode == "shared-mcp" and environment.get("ANECHOIC_RUNTIME_STACK") == "beta":
+        from MCP_PATCHBAY_C21.FEATURE_MCP.docker.shared_supervisor import supervise
+        return supervise(command, environment, environment["ANECHOIC_HOST_SETTINGS"])
+    if mode == "mcp-http" and environment.get("ANECHOIC_RUNTIME_STACK") == "beta":
+        from MCP_PATCHBAY_C21.FEATURE_MCP.docker.shared_supervisor import supervise_project
+        return supervise_project(command, environment, PROJECT_ROOT)
     try:
-        os.execve(sys.executable, command, {**{k: v for k, v in os.environ.items() if k != "PYTHONHOME"}, "PYTHONPATH": str(ENGINE)})
+        os.execve(sys.executable, command, environment)
     except OSError as error:
         raise ExplicitStartupFailure("service_start_failed") from error
 
 
 def _dispatch(mode):
-    _exec_service(mode)
+    return _exec_service(mode)
 
 
 def main():
     mode = sys.argv[1] if len(sys.argv) > 1 else ""
 
     try:
-        _dispatch(mode)
+        return _dispatch(mode) or 0
     except CancelledError:
         raise
     except Exception as error:
         return _process_failure(mode, error)
-    return 0
 
 
 if __name__ == "__main__":

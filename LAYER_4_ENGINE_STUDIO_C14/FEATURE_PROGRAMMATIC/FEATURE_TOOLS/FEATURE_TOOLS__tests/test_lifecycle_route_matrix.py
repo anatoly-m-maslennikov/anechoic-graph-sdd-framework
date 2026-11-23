@@ -12,9 +12,9 @@ TOOLS = Path(__file__).resolve().parents[1]
 ENGINE = TOOLS.parents[1]
 sys.path[:0] = [str(TOOLS), str(ENGINE / 'IWE_CONSOLE_C43')]
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_source_rows__pub import capture_native
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.common import InputError, SourceChanged
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_header__pub import canonical_native_header
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ATOM_LIFECYCLE.ATOM_LIFECYCLE__shared import InputError, SourceChanged
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical_native_header
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_carrier_path
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_lifecycle import _dispatch_lifecycle
 
@@ -114,7 +114,8 @@ declare_entity(entity_name='Project Manifest', instance=ProjectManifest(name='Te
             if template is not None:
                 context['template'] = template
             if family == 'SPEC':
-                context.update(lens='SPEC', tier=-1 if template == 'project_manifest' else 0 if template == 'axiom' else 2 if template == 'applicable_principle' else 1)
+                tiers = {'project_manifest': -1, 'axiom': 0, 'component_contract': 0, 'applicable_principle': 2}
+                context.update(lens='SPEC', tier=tiers.get(template, 1))
             status = {'current': ('active' if route == 'archive' else 'ready') if family == 'SPEC' else 'active' if family == 'PROJECT_CONFIG' else 'in_queue',
                       'draft': 'draft', 'archived': 'archived'}[situation]
             if family == 'PROJECT_CONFIG' and template is None and situation != 'draft':

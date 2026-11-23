@@ -4,10 +4,10 @@
     "destructiveHint": false,
     "idempotentHint": false,
     "openWorldHint": false,
-    "readOnlyHint": true,
+    "readOnlyHint": false,
     "title": null
   },
-  "description": "Run one read-only SQL query on the selected Project and return the first page.",
+  "description": "Run one read-only SQL query and optionally save a Bookmark in the selected Project.",
   "execution": null,
   "icons": null,
   "inputSchema": {

@@ -11,8 +11,8 @@ APP_ROOT = Path(__file__).resolve().parents[3]
 
 from KERNEL_MIXER_C59 import native_projection  # noqa: E402
 from KERNEL_MIXER_C59.native_projection import project_native, project_native_delta  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_source_rows__pub import capture_native, NativeCapture  # noqa: E402
-from KERNEL_MIXER_C59.query_store import QueryStore  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native, NativeCapture  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import QueryStore  # noqa: E402
 
 
 EXTENSIONS = Path(os.environ.get("ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY",
@@ -75,6 +75,19 @@ class NativeProjectionTests(unittest.TestCase):
         self.assertEqual("ADVANCES", projected["relation_edges_json"][0]["relation_type"])
         with self.assertRaisesRegex(ValueError, "Undeclared native relation: ADVANCES"):
             native_projection._projected_rows(capture, set(), {})
+
+    def test_old_contribution_inverses_project_to_has_contribution(self):
+        row = {"ref": "AN-S-1", "header_json": {"relations": {
+            "IS_REFINED_BY": ["AN-S-2"], "RECEIVES_CONTRIBUTION_FROM": ["AN-S-2"],
+        }}}
+        inverse = {"CONTRIBUTES_TO": "HAS_CONTRIBUTION", "HAS_CONTRIBUTION": "CONTRIBUTES_TO"}
+        projected, = native_projection._projected_rows(NativeCapture([row], [], {}), set(inverse), inverse)
+        self.assertEqual(
+            [("HAS_CONTRIBUTION", "AN-S-1", "AN-S-2", False),
+             ("CONTRIBUTES_TO", "AN-S-2", "AN-S-1", True)],
+            [(edge["relation_type"], edge["source_ref"], edge["target_ref"], edge["derived"])
+             for edge in projected["relation_edges_json"]],
+        )
 
     def test_delta_move_relations_references_and_rollback(self):
         source = self.write("AN-T-09--task.md", "AN-T-09", "active", 2)

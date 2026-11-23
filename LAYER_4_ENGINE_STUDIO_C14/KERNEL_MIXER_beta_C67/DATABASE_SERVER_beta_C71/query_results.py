@@ -10,6 +10,15 @@ import duckdb
 from .result_grid import grid_page, parse_grid
 from .result_values import result_value
 
+_PROJECTION_SOURCES = {
+    "antipattern_findings": {"source_antipatterns"},
+    "import_cycles": {"import_nodes", "module_imports"},
+    "package_coupling": {"import_nodes", "module_imports"},
+    "component_flows": {"flow_events"},
+    "flow_overlap_candidates": {"flow_events"},
+    "flow_similar_actions": {"flow_events"},
+}
+
 
 def validate_preview(value):
     if value is not None and (type(value) is not int or value < 0):
@@ -17,12 +26,16 @@ def validate_preview(value):
     return value
 
 
-def query(connection, sql, *, in_transaction=False, preview=None):
+def validate_select(connection, sql):
     if not isinstance(sql, str) or not 1 <= len(sql) <= 16384:
         raise ValueError("SQL must be a non-empty string of at most 16384 characters")
     statements = connection.extract_statements(sql)
     if len(statements) != 1 or statements[0].type != duckdb.StatementType.SELECT:
         raise ValueError("SQL must contain exactly one SELECT statement")
+
+
+def query(connection, sql, *, in_transaction=False, preview=None):
+    validate_select(connection, sql)
     if not in_transaction:
         connection.execute("BEGIN TRANSACTION READ ONLY")
     try:
@@ -50,9 +63,10 @@ def query(connection, sql, *, in_transaction=False, preview=None):
 
 def _capture(connection, sql, *, in_transaction=False, preview=None):
     result = query(connection, sql, in_transaction=in_transaction, preview=preview)
-    if len(json.dumps(result, ensure_ascii=False, separators=(",", ":")).encode("utf-8")) > 1024 * 1024:
+    size = len(json.dumps(result, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))
+    if size > 1024 * 1024:
         raise ValueError("Query result exceeds one MiB")
-    return result
+    return result, max(4096, size + len(sql.encode("utf-8")))
 
 
 def _affected(connection, sql, target):
@@ -60,7 +74,8 @@ def _affected(connection, sql, target):
         tables = connection.get_table_names(sql)
     except duckdb.Error:
         return True
-    return target in {table.lower() for table in tables} or "graph_table" in sql.lower()
+    sources = _PROJECTION_SOURCES.get(target, {target})
+    return sources <= {table.lower() for table in tables} or "graph_table" in sql.lower()
 
 
 class QueryResults:
@@ -74,7 +89,7 @@ class QueryResults:
 
     def prune(self):
         now = time.monotonic()
-        for query_id, (_, _, created, _) in list(self.results.items()):
+        for query_id, (_, _, created, _, _) in list(self.results.items()):
             if query_id not in self.pins and now - created >= self.ttl_seconds:
                 del self.results[query_id]
 
@@ -84,16 +99,12 @@ class QueryResults:
 
     def run(self, connection, sql, page_size, grid=None, preview=None):
         try:
-            result = _capture(connection, sql, preview=preview)
+            result, size = _capture(connection, sql, preview=preview)
             parse_grid(grid, len(result["columns"]))
             self.prune()
-            if len(self.results) >= 16:
-                victim = next((key for key in self.results if key not in self.pins), None)
-                if victim is None:
-                    raise ValueError("Query result cache is full")
-                del self.results[victim]
+            self._check_capacity(sum(item[4] for item in self.results.values()) + size)
             query_id = uuid4().hex
-            self.results[query_id] = (sql, result, time.monotonic(), preview)
+            self.results[query_id] = (sql, result, time.monotonic(), preview, size)
             page = self.page(query_id, 0, page_size, grid)
         except (duckdb.Error, TypeError, ValueError) as error:
             if self.history is not None and isinstance(sql, str) and sql.strip():
@@ -119,16 +130,26 @@ class QueryResults:
             selected = {key: item for key, item in self.results.items() if _affected(connection, item[0], target)}
         return selected
 
-    def stage_generation(self, connection, selected):
-        return {key: (uuid4().hex, sql, _capture(connection, sql, in_transaction=True, preview=preview), created, preview)
-                for key, (sql, _, created, preview) in selected.items()}
+    @staticmethod
+    def _check_capacity(size):
+        if size > 16 * 1024 * 1024:
+            raise ValueError("Query result cache is full")
+
+    def stage_generation(self, connection, selected, *, in_transaction=True):
+        captured = {}
+        size = sum(item[4] for key, item in self.results.items() if key not in selected)
+        for key, (sql, _, created, preview, _) in selected.items():
+            result, result_size = _capture(connection, sql, in_transaction=in_transaction, preview=preview)
+            size += result_size
+            self._check_capacity(size)
+            captured[key] = (uuid4().hex, sql, result, created, preview, result_size)
+        self._check_capacity(size)
+        return captured
 
     def rebuild(self, connection, target):
         self.prune()
         selected = self._selection(connection, target)
-        captured = {key: (uuid4().hex, sql, _capture(connection, sql, preview=preview), created, preview)
-                    for key, (sql, _, created, preview) in selected.items()}
-        return self.publish(captured)
+        return self.publish(self.stage_generation(connection, selected, in_transaction=False))
 
     def publish(self, captured):
         replacements = {}
@@ -137,8 +158,8 @@ class QueryResults:
             if old_id not in captured:
                 refreshed[old_id] = item
                 continue
-            new_id, sql, result, created, preview = captured[old_id]
-            refreshed[new_id] = (sql, result, created, preview)
+            new_id, sql, result, created, preview, size = captured[old_id]
+            refreshed[new_id] = (sql, result, created, preview, size)
             if old_id in self.pins:
                 self.pins.remove(old_id)
                 self.pins.add(new_id)
@@ -151,7 +172,7 @@ class QueryResults:
         self.prune()
         if not isinstance(query_id, str) or query_id not in self.results:
             raise ValueError("Unknown query_id")
-        sql, result, _, _ = self.results[query_id]
+        sql, result, _, _, _ = self.results[query_id]
         columns, rows = result["columns"], result["rows"]
         page, total, groups = grid_page(rows, len(columns), offset, page_size, grid, columns)
         response = {

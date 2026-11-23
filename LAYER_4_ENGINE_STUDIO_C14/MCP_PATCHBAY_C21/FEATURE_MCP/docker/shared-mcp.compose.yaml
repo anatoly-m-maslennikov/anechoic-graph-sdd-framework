@@ -24,12 +24,16 @@ services:
     cpus: 2
     command: [shared-mcp]
     environment:
+      ANECHOIC_FRAMEWORK_DB_ROOT: /var/lib/anechoic
       ANECHOIC_HOST_SETTINGS: ${ANECHOIC_HOST_SETTINGS:?Host runtime settings are required}
       ANECHOIC_PROJECTS_ROOT: ${ANECHOIC_PROJECTS_ROOT:?Shared Projects root is required}
       ANECHOIC_MCP_HTTP_PORT: ${ANECHOIC_MCP_HTTP_PORT:?Shared HTTP port is required}
       ANECHOIC_MAX_LOADED_PROJECTS: ${ANECHOIC_MAX_LOADED_PROJECTS:?Shared context limit is required}
       ANECHOIC_SHARED_RUNTIME_ID: ${ANECHOIC_SHARED_RUNTIME_ID:?Shared runtime identity is required}
     volumes:
+      - type: volume
+        source: framework-db
+        target: /var/lib/anechoic
       - type: bind
         source: ${ANECHOIC_PROJECTS_ROOT:?Shared Projects root is required}
         target: ${ANECHOIC_PROJECTS_ROOT:?Shared Projects root is required}
@@ -48,3 +52,7 @@ services:
       timeout: 5s
       retries: 210
       start_period: 90s
+
+volumes:
+  framework-db:
+    name: anechoic-framework-db

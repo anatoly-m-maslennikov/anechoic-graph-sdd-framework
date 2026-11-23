@@ -42,7 +42,7 @@
   function fail(id: string, error: unknown, conflict = false) { updateTab(id, { busy: false, error: message(error), ...(conflict ? { conflict: true } : {}) }); }
   function edit(sql: string, cursor: number) {
     if (!active || (active.sql === sql && active.cursor === cursor)) return;
-    updateTab(active.id, { sql, cursor, dirty: sql !== active.savedSql, syncDirty: true, conflict: false, error: '', ...(active.sql !== sql ? { check: undefined } : {}) });
+    updateTab(active.id, { sql, cursor, dirty: sql !== active.savedSql, syncDirty: true, conflict: false, error: '', ...(active.sql !== sql ? { check: undefined, saveError: undefined } : {}) });
   }
   function formatActive() {
     const tab = active;
@@ -170,10 +170,10 @@
   function requestSave() { if (workspaceReady && active && !active.busy) nameDialog = { kind: 'save', initialValue: '' }; }
   async function saveView(name = active?.name) {
     const tab = active; if (!workspaceReady || !tab || tab.busy || savedBusy) return;
-    updateTab(tab.id, { busy: true, error: '' });
+    updateTab(tab.id, { busy: true, error: '', saveError: undefined });
     if (!boundApi) { fail(tab.id, new Error('Workspace is unavailable.')); return; }
     if (!await syncBeforeRun(tab.id)) { updateTab(tab.id, { busy: false }); return; }
-    try { const saved = await boundApi.save(tab.id); acceptSaved(tab.id, { ...saved, sql: tabById(tab.id)?.sql ?? tab.sql, ...(name ? { name } : {}) }); await refreshSaved(); } catch (error) { fail(tab.id, error); }
+    try { const saved = await boundApi.save(tab.id); acceptSaved(tab.id, { ...saved, sql: tabById(tab.id)?.sql ?? tab.sql, ...(name ? { name } : {}) }); await refreshSaved(); } catch (error) { updateTab(tab.id, { busy: false, saveError: message(error) }); }
   }
   async function page(offset: number, pageSize = active?.result?.page_size, nextGrid = grid) {
     const tab = active; if (!tab?.result || tab.busy) return;
@@ -286,7 +286,10 @@
   {#if browserStorageUnavailable}<p class="error" role="alert">Browser storage is unavailable. Reloading or closing Workbench may lose unsaved edits.</p>{/if}
   <Preferences storageKey={namespace} {embedded} visible={view === 'settings'} {resultDisplay} onresultdisplaychange={setResultDisplay} onlayoutchange={() => gridLayoutVersion += 1} oncommands={(items) => preferenceCommands = items} />
   {#if view === 'saved'}<SavedPanel items={savedItems} logs={logItems} busy={savedBusy} onopen={openSaved} onopenlog={openLog} />{/if}
-  {#if view === 'view' && active}<section class="editor-panel"><div class="panel-heading"><button class="editor-heading" type="button" aria-expanded={!collapsed} aria-controls={`query-editor-${active.id}`} onclick={() => collapsed = !collapsed}><span>Query editor</span><span class="editor-heading-state">{collapsed ? 'Show editor' : 'Hide editor'}</span></button>{#if active.saved}<span class="saved-reference">Saved: <a href={active.saved.saved_query_url} onclick={(event) => savedLink(event, active.id)}>{active.saved.saved_query_id}</a></span>{/if}</div><div class="editor-content" id={`query-editor-${active.id}`} hidden={collapsed}>{#key active.id}<SqlEditor value={active.sql} cursor={active.cursor} disabled={!workspaceReady || active.busy} {schema} onchange={edit} onaction={(kind, cursor) => action(kind, cursor)} />{/key}</div><div class="query-actions"><Button disabled={!workspaceReady || active.busy || savedBusy} onclick={() => action('run')}>Run <span class="shortcut">Cmd+Enter</span></Button><Button disabled={!workspaceReady || active.busy || savedBusy} onclick={() => action('check')}>Check <span class="shortcut">Shift+Cmd+Enter</span></Button><Button disabled={!workspaceReady || active.busy || savedBusy} onclick={formatActive}>Format</Button><Button disabled={!workspaceReady || active.busy || savedBusy} onclick={requestSave}>Run &amp; Save</Button><Button disabled={!workspaceReady || active.busy || savedBusy} onclick={() => saveView()}>Save View</Button></div>{#if active.error}<p class="error" role="alert">{active.error}</p>{/if}</section>
+  {#if view === 'view' && active}<section class="editor-panel"><div class="panel-heading"><button class="editor-heading" type="button" aria-expanded={!collapsed} aria-controls={`query-editor-${active.id}`} onclick={() => collapsed = !collapsed}><span>Query editor</span><span class="editor-heading-state">{collapsed ? 'Show editor' : 'Hide editor'}</span></button>{#if active.saved}<span class="saved-reference">Saved: <a href={active.saved.saved_query_url} onclick={(event) => savedLink(event, active.id)}>{active.saved.saved_query_id}</a></span>{/if}</div><div class="editor-content" id={`query-editor-${active.id}`} hidden={collapsed}>{#key active.id}<SqlEditor value={active.sql} cursor={active.cursor} disabled={!workspaceReady || active.busy} {schema} onchange={edit} onaction={(kind, cursor) => action(kind, cursor)} />{/key}</div><div class="query-actions"><Button disabled={!workspaceReady || active.busy || savedBusy} onclick={() => action('run')}>Run <span class="shortcut">Cmd+Enter</span></Button><Button disabled={!workspaceReady || active.busy || savedBusy} onclick={() => action('check')}>Check <span class="shortcut">Shift+Cmd+Enter</span></Button><Button disabled={!workspaceReady || active.busy || savedBusy} onclick={formatActive}>Format</Button><Button disabled={!workspaceReady || active.busy || savedBusy} onclick={requestSave}>Run &amp; Save</Button><Button disabled={!workspaceReady || active.busy || savedBusy} onclick={() => saveView()}>Save View</Button></div>
+    {#if active.error}<p class="error" role="alert">{active.error}</p>{/if}
+    {#if active.saveError}<p class="error" role="alert">{active.saveError}</p>{/if}
+  </section>
     <section class="results-panel" tabindex="-1"><div class="status-line"><span class="status-badge">{active.busy ? 'Working' : 'Ready'}</span><span class="notice" role="status" aria-label="Query check">
       {#if !check}Not checked{:else if 'error' in check}Invalid: {check.error}{:else if check.result.valid}Valid: {check.result.row_count} rows, {check.result.column_count} columns.{:else}Invalid{/if}
     </span></div>{#if active.result}<ResultsTable result={active.result} display={resultDisplay} {grid} layoutVersion={gridLayoutVersion} ondisplaychange={setResultDisplay} ongridchange={setGrid} oncapacity={adaptPage} /><nav class="query-actions" aria-label="Result pages"><Button disabled={active.busy || active.result.offset === 0} onclick={() => page(Math.max(0, active.result!.offset - active.result!.page_size))}>Previous</Button><Button disabled={active.busy || !active.result.has_more} onclick={() => page(active.result!.offset + active.result!.rows.length)}>Next</Button></nav>{/if}</section>{/if}

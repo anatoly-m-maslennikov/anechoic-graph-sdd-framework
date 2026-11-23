@@ -8,8 +8,8 @@ context:
   lens: DES
 state:
   status: "active"
-  version: 22
-  updated_at: "2026-11-22T12:02:07.625022+00:00"
+  version: 23
+  updated_at: "2026-11-23T01:51:04.203493+00:00"
 ---
 ## Summary
 
@@ -19,33 +19,8 @@ admit one compatible Project MCP runtime
 
 ### Prose Claim
 
-the launcher **must** start or reuse a Project MCP runtime only when its immutable image digest has the exact selected source fingerprint and its runtime is healthy and matches the selected Project identity and fixed MCP HTTP port from Project Settings.
+Under a per-Project lock, start or reuse one healthy runtime for the selected Project and configured port. Verify its exact immutable image ID, Project mount, source fingerprint, labels, loopback binding, and readiness. Refuse a mismatch or occupied port without replacing a live runtime. Local Release owns replacement.
 
-## Details
+Fingerprint the admitted build closure, including the lock, build inputs, and stack selector. Build only when authorized. Stop before startup if inputs changed or the immutable image identity cannot be verified.
 
-### Image and runtime admission
-
-- Compatibility is the exact deterministic manifest hash of the explicit readable `--source-root`, locked dependency inputs, Docker build inputs, and declared platform/arguments. The source root is only build closure: it is never inferred from Git, another Project, or selection; Project Atoms, installed state, credentials and unrelated generated outputs are excluded. The selected schema, relation and Tool registries, and lifecycle assets are exact build inputs in both image modes. The selected image digest and source fingerprint must come from the same verified source snapshot. If the source changes before startup, stop without replacing or starting the runtime. Labels carry the fingerprint and schema; a tag alone is not evidence.
-- A missing packaged Dockerfile, dependency, or Engine input returns `IMAGE_INPUT_UNAVAILABLE` with safe missing-input identities and requests explicit `--source-root`; installed runtime N is preserved and no package replacement, Release, or Framework promotion occurs.
-- An explicit image must resolve to an immutable digest with matching labels. Wrong, mutable, absent, ambiguous, or fingerprint-mismatched references refuse without retagging, live replacement, or forced recreation. When no admitted image exists, `build_if_missing=true` authorizes one build; `--no-build` refuses. The build returns an immutable labelled digest and never moves or retires an existing tag/image.
-- Serialize lifecycle with one lock per selected Project identity. Reuse only a running healthy `mcp-http` runtime whose Project identity, digest/fingerprint, service identity, loopback publication, and Host/Origin-protected readiness all match; unhealthy or mismatched live state refuses without stop/restart/replacement.
-- Project Settings `[project_mcp] http_port` is the required integer in `1..65535`; `--port`, when present, must equal it. Missing/invalid settings stop before Docker effects. An absent runtime starts only direct `mcp-http` on `127.0.0.1:<http_port>:8092`; Docker binds atomically and occupied ports refuse without random allocation or destructive replacement. No queue, worker, Agent, Workflow, proxy, full Release, or Release action starts.
-
-### Runtime procedure
-
-1. Accept validated `ProjectSelection`; read the exact Project Settings port and reject invalid values before Docker. With explicit readable `--source-root`, retain the ordered build-input manifest and fingerprint, including Engine, lock, Dockerfile/ignore, platform, and fixed arguments exactly once; changed, missing, or unadmitted input is `IMAGE_INPUT_UNAVAILABLE`.
-2. Inspect an immutable digest or locally resolved labelled image and require the exact fingerprint/schema. Build only when the invocation permits it, then re-inspect the same labels; never accept a mutable tag as the result.
-3. Acquire the selected identity lock, inspect only labelled Compose resources, and reuse one healthy matching `mcp-http` service after the bounded Host/Origin probe. A live mismatch or unhealthy service returns its truthful refusal.
-4. On explicit startup, start only `mcp-http` with selected Project mount and `127.0.0.1:<http_port>:8092`; read exactly one publication and require equality with Project Settings. No host pre-reservation or alternate port is allowed.
-5. Probe loopback Host/Origin without password, bearer, Authorization, or credential configuration, with a bounded wait; return probe failure rather than guessing readiness. Release the lock after safe metadata only. No MCP Tool dispatch, Gateway proxy, worker/queue/Agent, Workflow, or Release action.
-
-### Display metadata and dependency cache
-
-- Reuse one canonical naming owner for normal, development, release, and disposable-test builds. Exact `version.toml` is in the admitted closure and `framework.version` is the OCI version; use `anechoic-runtime:<framework-version>-<role>-<UTC-build-date>-<first12-image-sha>`, with date from inspected Docker `Created`, not tagging time. Preserve the exact tag-safe version; missing/invalid version or Created metadata stops naming/build truthfully.
-- Use the image candidate role `test` for the Current stack and `beta` for the Beta stack. The `prod` role applies to an image after verified production readiness. The build selector determines the candidate role.
-- Same-tag/same-digest is a no-op; never move occupied tags, add moving aliases, rebuild only for metadata, or change a container. Explicit maintenance may add an absent display tag only with verified original timestamp/version provenance; unknown history is deferred.
-- Use private Buildx `BUILDX_CONFIG` state outside the admitted context; keep uv downloads in a BuildKit cache. Install locked dependencies before copying version/application source so version/source-only changes do not invalidate that layer. Final runtime invokes `/opt/venv/bin/python`, not a retained `uv run` supervisor; startup serves implementations in one MCP process. Cached downloads do not replace the lockfile or admit another source.
-
-### Evidence boundary
-
-Carry the selected identity, source manifest/fingerprint, immutable digest, safe service state, loopback publication, readiness disposition, and version/tag provenance only; exclude credentials. The launcher bootstrap is copied from tracked Engine source during install/upgrade, runs through uv only on explicit invocation, and does not install a scheduler or execute a Workflow. Delivery supplements the existing Docker/HTTP Gateway and never replaces package/runtime N or permits live-service replacement.
+Use the verified image version and creation time for display tags. Use the selector's `test` or `beta` role during verification and `prod` after production readiness. Cache locked dependencies separately from application source. Run the installed runtime through `/opt/venv/bin/python`. Studio supervision follows AN-S-3389.

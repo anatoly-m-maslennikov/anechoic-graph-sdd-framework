@@ -4,7 +4,7 @@ import re
 from collections import Counter
 from collections.abc import Iterable
 from pathlib import Path
-from KERNEL_MIXER_C59.source_inventory import archived as _archived, markdown_paths as _markdown_paths
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import archived as _archived, markdown_paths as _markdown_paths
 
 class SourceReaderArchive:
     def archive_catalog(self) -> tuple[str, ...]:

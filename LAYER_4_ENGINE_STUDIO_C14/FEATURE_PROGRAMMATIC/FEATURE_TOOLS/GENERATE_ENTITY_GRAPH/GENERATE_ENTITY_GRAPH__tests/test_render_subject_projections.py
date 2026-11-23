@@ -12,7 +12,7 @@ import yaml
 TOOL = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(TOOL), str(TOOL.parent)]
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.current_carriers__pub import read_current_carriers  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import read_current_carriers  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.render_entity_tree import output_path  # noqa: E402
 import FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.render_subject_projections as renderer  # noqa: E402
 

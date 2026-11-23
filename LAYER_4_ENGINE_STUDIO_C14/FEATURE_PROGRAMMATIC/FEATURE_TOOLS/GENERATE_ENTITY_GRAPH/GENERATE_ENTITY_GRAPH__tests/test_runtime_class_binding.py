@@ -3,7 +3,7 @@ import sys
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.contract_graph import compose_contract_graph
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.GENERATE_ENTITY_GRAPH__shared import compose_contract_graph
 
 def carrier(n, subject, cls, base, entity):
     text=f'from anechoic.formal_claims import declare_entity\nfrom anechoic.model import {base}\n\nclass {cls}({base}):\n    pass\n\ndeclare_entity(entity_class={cls}, entity_name={entity!r})'

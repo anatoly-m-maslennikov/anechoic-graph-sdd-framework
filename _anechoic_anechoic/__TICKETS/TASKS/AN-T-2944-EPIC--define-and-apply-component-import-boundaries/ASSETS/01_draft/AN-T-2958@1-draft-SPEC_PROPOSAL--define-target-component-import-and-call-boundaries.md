@@ -44,19 +44,32 @@ Manifests. Bind exact Contract revisions to their Realization Packages.
    comparison. Its job interface and state have the same owner throughout
    the comparison.
 
-On a shared host, one Backend reuses bounded per-Project Kernel and
-Orchestrator peers. It evicts the least recently used idle Project
-to admit another when capacity is full.
+Runtime Setup supervises the per-Project Kernel and Orchestrator. Their
+lifetime is independent of Backend and MCP. A restarted Backend or MCP
+reconnects to the same Project binding. Kernel owns the accepted
+projection. Orchestrator owns active runs and their outcomes.
 
-Each Worker process starts for a job or bounded batch and exits when it
-finishes.
+Restart Backend and MCP independently after an exit. If Kernel or
+Orchestrator exits, replace the bound pair and re-admit its Project
+before serving queries. Other Projects keep their active peers.
+
+A generation request starts a Worker independently of API requests and
+Kernel queries. Orchestrator reports the run ID, Worker liveness, and
+terminal outcome. An explicit abort stops the matching Worker and its
+children before admission. Kernel completes or rolls back admission in
+one transaction. A live Worker can continue until completion or abort.
+
+Run this topology in one container. Keep the existing container memory
+limit and host OOM behavior.
 
 ```mermaid
 flowchart LR
     Web[Web frontend] -->|Workbench API| Backend[Backend process]
     MCP[MCP process] -->|Tool catalog and calls| Backend
     Backend -->|SQL, Workspaces, results| Kernel[Kernel process]
-    Backend -->|Job requests and status| Orchestrator[Orchestrator process]
+    Backend -->|Job requests, status, and abort| Orchestrator[Orchestrator process]
+    Setup[Runtime supervisor] --> Kernel
+    Setup --> Orchestrator
     Source[Project source changes] --> Orchestrator
     Orchestrator -->|Launch with pinned inputs| Worker[Isolated Worker process]
     Worker -->|Result and artifacts| Orchestrator

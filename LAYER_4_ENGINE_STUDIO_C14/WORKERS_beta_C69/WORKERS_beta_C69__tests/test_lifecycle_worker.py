@@ -20,6 +20,31 @@ def invoke(binding, name, arguments):
         text=True, capture_output=True, timeout=120)
 
 
+def ticket_asset_fixture(binding):
+    root = Path(binding["root"])
+    tickets = root / binding["control_root"] / "__TICKETS"
+    task = tickets / "TASKS/AN-T-100-TASK--owner.md"
+    typed = task.with_suffix("") / "ASSETS/AN-T-101-ANALYSIS_REPORT--canary.md"
+    untyped = tickets / "ASSETS/01_draft/AN-T-102@1-draft--canary.md"
+    for path in (typed, untyped):
+        path.parent.mkdir(parents=True, exist_ok=True)
+    timestamp = "  updated_at: '2026-11-19T00:00:00Z'\n---\n"
+    task_header = ("---\natom_family: TKT\natom_id: AN-T-100\ncontainer:\n  component: C00\n"
+                   "priority: 2\ncontext:\n  template: task\n  label: Task\nstate:\n"
+                   "  status: in_queue\n  version: 1\n" + timestamp)
+    typed_header = ("---\natom_family: TKT\natom_id: AN-T-101\ncontainer:\n  atom: AN-T-100\n"
+                    "priority: 2\ncontext:\n  template: Analysis Report\nstate:\n"
+                    "  status: in_queue\n  version: 2\n" + timestamp)
+    untyped_header = ("---\nidentity:\n  atom_id: AN-T-102\ncontext:\n  container:\n"
+                      "    component: C00\nstate:\n  status: draft\n  version: 1\n" + timestamp)
+    before = "\n## Summary\n\nCanary.\n"
+    body = before + "\n## Work\n\nUpdated.\n"
+    task.write_text(task_header + before, encoding="utf-8")
+    typed.write_text(typed_header + before, encoding="utf-8")
+    untyped.write_text(untyped_header + before, encoding="utf-8")
+    return root, task, typed, untyped, task_header, typed_header, untyped_header, before, body
+
+
 class LifecycleWorkerTests(unittest.TestCase):
     def test_task_create_revise_and_promote(self):
         with tempfile.TemporaryDirectory(prefix="ane-lifecycle-", dir="/tmp") as directory:
@@ -147,6 +172,43 @@ class LifecycleWorkerTests(unittest.TestCase):
             self.assertEqual("archived", archived["artifact"]["status"])
             self.assertTrue(archived["effects"])
             self.assertFalse((Path(binding["root"]) / original["path"]).exists())
+
+    def test_ticket_asset_direct_update(self):
+        with tempfile.TemporaryDirectory(prefix="ane-lifecycle-", dir="/tmp") as directory:
+            binding, _, _ = generation_fixture(directory)
+            root, task, typed, untyped, task_header, typed_header, untyped_header, before, body = (
+                ticket_asset_fixture(binding))
+
+            def update(ref, version, change=body):
+                response = invoke(binding, "atom_lifecycle_direct_update", {
+                    "target": {"ref_id": ref, "version": version}, "changes": {"body": change}})
+                self.assertEqual(0, response.returncode, response.stderr)
+                return json.loads(response.stdout)
+
+            for ref, version, path, header in (
+                ("AN-T-101", 2, typed, typed_header), ("AN-T-102@1-draft", 1, untyped, untyped_header)
+            ):
+                with self.subTest(ref=ref):
+                    result = update(ref, version)
+                    self.assertEqual("completed", result["outcome"], result)
+                    self.assertEqual((ref, version, path.relative_to(root).as_posix()), (
+                        result["artifact"]["ref_id"], result["artifact"]["version"], result["artifact"]["path"]))
+                    self.assertEqual((header + body).encode(), path.read_bytes())
+
+            for ref, version, field in (("AN-T-100", 1, "target"), ("ZZ-T-101", 2, "target"),
+                                        ("AN-T-101", 2, "summary")):
+                with self.subTest(ref=ref, field=field):
+                    change = body.replace("Canary.", "Changed summary.") if field == "summary" else body
+                    result = update(ref, version, change)
+                    self.assertEqual("needs_input", result["outcome"], result)
+                    self.assertIn(field, result["requested_input"])
+                    self.assertEqual([], result["effects"])
+            stale = update("AN-T-101", 1)
+            self.assertEqual("source_changed", stale["errors"][0]["code"], stale)
+            self.assertEqual([], stale["effects"])
+            self.assertEqual((task_header + before).encode(), task.read_bytes())
+            self.assertEqual((typed_header + body).encode(), typed.read_bytes())
+            self.assertEqual((untyped_header + body).encode(), untyped.read_bytes())
 
     def test_invalid_binding_and_out_of_scope_refused(self):
         with tempfile.TemporaryDirectory(prefix="ane-lifecycle-", dir="/tmp") as directory:

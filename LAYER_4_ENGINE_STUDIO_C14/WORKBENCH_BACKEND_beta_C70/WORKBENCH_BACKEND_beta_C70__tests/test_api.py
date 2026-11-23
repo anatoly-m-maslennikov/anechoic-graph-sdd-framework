@@ -1,17 +1,20 @@
 """Exercise Backend, Kernel, and Orchestrator through their private processes."""
 
+from concurrent.futures import ThreadPoolExecutor
 from hashlib import sha256
 import os
 from pathlib import Path
-import subprocess
-import sys
 from tempfile import TemporaryDirectory
 from time import monotonic, sleep
 import unittest
 
 import httpx2
 
-from .WORKBENCH_BACKEND_beta_C70__tests__shared import write_project, process_env
+from .WORKBENCH_BACKEND_beta_C70__tests__shared import start_backend, stop_backend, write_project
+from .saved_sql_cases import assert_save_failures, assert_saved_writes
+
+
+CONFIGURED_PAGE = "https://configured.example.test:8443/custom/workbench/"
 
 
 def _client(path):
@@ -65,13 +68,7 @@ class ApiTests(unittest.TestCase):
             (saved / ("q_" + "a" * 32 + ".sql")).write_text("SELECT 42", encoding="utf-8")
             socket = root / "api.sock"
             digest = sha256(manifest.read_bytes()).hexdigest()
-            process = subprocess.Popen(
-                [sys.executable, "-B", "-P", "-m", "WORKBENCH_BACKEND_beta_C70.runtime",
-                 "--socket", str(socket), "--instance-id", "instance", "--project-root", str(root),
-                 "--control-root", control.name, "--manifest-path", manifest.name,
-                 "--manifest-sha256", digest, "--project-prefix", "AN", "--project-name", "Anechoic"],
-                env=process_env(), stdin=subprocess.PIPE,
-            )
+            process = start_backend(root, control, manifest, digest, "--workbench-public-url", CONFIGURED_PAGE)
             try:
                 with _client(socket) as api, _client(root / "jobs.sock") as jobs, _client(root / "db.sock") as db:
                     backend = _ready(api, process, socket)
@@ -80,18 +77,15 @@ class ApiTests(unittest.TestCase):
                     self.assertEqual(3, len({backend["pid"], backend["kernel_pid"], orchestrator["pid"]}))
                     self.assertEqual(digest, backend["manifest_sha256"])
                     self.assert_query_and_jobs(api)
+                    self.assert_worker_abort(api)
                     self.assert_saved_reads(api)
-                    self.assert_partial_save(api, saved)
+                    assert_save_failures(self, api, control)
+                    assert_saved_writes(self, api, root)
                     self.assert_file_delivery(api, root)
                     self.assert_delivery_defaults_and_preview(api, root)
                     self.assert_refresh(api, db, control, digest)
             finally:
-                process.stdin.close()
-                try:
-                    process.wait(timeout=15)
-                except subprocess.TimeoutExpired:
-                    process.terminate()
-                    process.wait(timeout=10)
+                stop_backend(process)
             self.assertEqual(0, process.returncode)
             for pid in (backend["kernel_pid"], orchestrator["pid"]):
                 with self.assertRaises(ProcessLookupError):
@@ -103,7 +97,7 @@ class ApiTests(unittest.TestCase):
                     "instance_id": "instance", "session_id": None, "public_base_url": None,
                     "asserted_project_root": None}
         tools = api.get("/tools", params=params).json()["result"]["tools"]
-        self.assertTrue({"query_run", "query_schema", "query_check", "query_page", "workspace_open", "view_get"}
+        self.assertTrue({"query_run", "query_schema", "query_check", "query_page", "workspace_open", "view_get", "view_save"}
                         <= {tool["name"] for tool in tools})
         query = api.post("/tools", json=envelope).json()
         result = query["result"]["value"]
@@ -123,8 +117,42 @@ class ApiTests(unittest.TestCase):
         runs = api.get("/jobs/worker-runs", params=params).json()["result"]
         self.assertIsNone(runs["active"])
         self.assertEqual("succeeded", runs["latest"]["state"])
+        status = api.post("/tools", json=envelope | {"name": "workbench_status", "arguments": {}}).json()["result"]["value"]
+        self.assertEqual((False, None, None), (status["syncing"], status["run_id"], status["worker_alive"]))
+        invalid = api.post("/tools", json=envelope | {"name": "workbench_abort", "arguments": {}}).json()
+        self.assertEqual("tool_input_invalid", invalid["error"]["code"])
+        missing = api.post("/tools", json=envelope | {"name": "workbench_abort", "arguments": {"run_id": "other"}}).json()
+        self.assertEqual("run_not_abortable", missing["error"]["code"])
         wrong_binding = api.get("/tools", params={"instance_id": "other"}).json()
         self.assertEqual("value_error", wrong_binding["error"]["code"])
+
+    def assert_worker_abort(self, api):
+        envelope = {"instance_id": "instance", "session_id": None, "public_base_url": None,
+                    "asserted_project_root": None}
+        with ThreadPoolExecutor() as executor:
+            rebuild = executor.submit(api.post, "/tools", json=envelope | {
+                "name": "query_rebuild", "arguments": {"target": "all"}})
+            deadline = monotonic() + 10
+            while monotonic() < deadline:
+                status = api.post("/tools", json=envelope | {"name": "workbench_status", "arguments": {}}).json()
+                value = status["result"]["value"]
+                if value["worker_alive"]:
+                    break
+                if rebuild.done():
+                    self.fail("Rebuild completed before its Worker could be observed")
+                sleep(0.01)
+            else:
+                self.fail("Worker did not start")
+            self.assertTrue(value["syncing"])
+            run_id = value["run_id"]
+            self.assertTrue(run_id)
+            query = api.post("/tools", json=envelope | {"name": "query_run", "arguments": {
+                "sql": "SELECT 42", "result_delivery": "inline", "result_format": "json_matrix"}}).json()
+            self.assertEqual([[42]], query["result"]["value"]["rows"])
+            response = api.post("/tools", json=envelope | {
+                "name": "workbench_abort", "arguments": {"run_id": run_id}}).json()
+            self.assertEqual({"run_id": run_id, "state": "aborting"}, response["result"]["value"])
+            self.assertEqual("worker_aborted", rebuild.result(timeout=10).json()["error"]["code"])
 
     def assert_saved_reads(self, api):
         saved_id = "q_" + "a" * 32
@@ -141,36 +169,6 @@ class ApiTests(unittest.TestCase):
         self.assertEqual("tool_input_invalid", call("query_load", {"reference": foreign})["error"]["code"])
         self.assertEqual("tool_input_invalid", call("query_saved_list", {"limit": True})["error"]["code"])
 
-    def assert_partial_save(self, api, saved):
-        for path in saved.iterdir():
-            path.unlink()
-        envelope = {"instance_id": "instance", "session_id": None, "public_base_url": None,
-                    "asserted_project_root": None}
-        call = lambda name, args: api.post("/tools", json=envelope | {"name": name, "arguments": args}).json()
-        result = call("query_run", {"sql": "SELECT 42 AS answer", "save": True, "name": "Test"})["result"]["value"]
-        self.assertEqual("partial", result["outcome"])
-        self.assertIn("save_error", result)
-        self.assertNotIn("saved_query_id", result)
-        page = call("query_page", {"query_id": result["query_id"], "result_delivery": "inline"})["result"]["value"]
-        self.assertEqual([[42]], page["rows"])
-        self.assertEqual([], call("query_saved_list", {})["result"]["value"]["items"])
-        for args in ({"sql": "SELECT 1", "save": 1}, {"sql": "SELECT 1", "name": "bad"},
-                     {"sql": "SELECT 1", "save": True, "name": 1}):
-            self.assertEqual("tool_input_invalid", call("query_run", args)["error"]["code"])
-        self.assertIn("error", call("query_run", {"sql": "SELECT missing_column", "save": True}))
-        opened = call("workspace_open", {"session_id": "partial-save"})["result"]["value"]
-        view = {"workspace_id": opened["workspace_id"], "view_id": opened["views"][0]["id"]}
-        update = view | {"sql": "SELECT 43 AS answer", "expected_revision": opened["views"][0]["revision"]}
-        call("view_update", update)
-        result = call("view_run", view | {"save": True, "name": "Test"})["result"]["value"]
-        self.assertEqual("partial", result["outcome"])
-        self.assertIn("save_error", result)
-        self.assertNotIn("saved_query_id", result)
-        self.assertEqual([[43]], call("view_fetch", view | {"result_delivery": "inline"})["result"]["value"]["rows"])
-        self.assertEqual([], call("query_saved_list", {})["result"]["value"]["items"])
-        self.assertEqual("tool_input_invalid", call("view_run", view | {"save": 1})["error"]["code"])
-        self.assertEqual("tool_input_invalid", call("view_run", view | {"name": "bad"})["error"]["code"])
-
     def assert_file_delivery(self, api, root):
         envelope = {"instance_id": "instance", "session_id": None, "public_base_url": None,
                     "asserted_project_root": None}
@@ -181,10 +179,14 @@ class ApiTests(unittest.TestCase):
         self.assertEqual("csv", file["format"])
         self.assertNotIn("rows", result)
         self.assertIn(b"42", (root / file["path"]).read_bytes())
-        partial = call("query_run", {"sql": "SELECT 44", "save": True, "result_delivery": "file"})["result"]["value"]
-        self.assertEqual("partial", partial["outcome"])
-        self.assertIn("save_error", partial)
-        self.assertIn(b"44", (root / partial["result_file"]["path"]).read_bytes())
+        saved = call("query_run", {"sql": "SELECT 44", "save": True, "result_delivery": "file"})["result"]["value"]
+        self.assertEqual("query", saved["kind"])
+        self.assertEqual(f"{CONFIGURED_PAGE}?query={saved['saved_query_id']}", saved["saved_query_url"])
+        self.assertEqual("tool_input_invalid", call("query_load", {"reference": saved["saved_query_url"]})["error"]["code"])
+        loaded = call("query_load", {"reference": saved["saved_query_id"]})["result"]["value"]
+        self.assertEqual(("SELECT 44", saved["saved_query_url"]), (loaded["sql"], loaded["saved_query_url"]))
+        self.assertNotIn("sql", saved)
+        self.assertIn(b"44", (root / saved["result_file"]["path"]).read_bytes())
         page = call("query_page", {"query_id": result["query_id"], "result_delivery": "file", "result_format": "json_matrix"})
         self.assertIn(b"42", (root / page["result"]["value"]["result_file"]["path"]).read_bytes())
         inline = call("query_page", {"query_id": result["query_id"], "result_delivery": "inline", "result_format": "csv"})

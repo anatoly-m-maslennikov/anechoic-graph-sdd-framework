@@ -33,10 +33,12 @@ def scan_web(items):
         return None
 
 
-def _dependencies(root, file):
+def _dependencies(root, file, probe=None):
     current = root / file.parent
     while current.is_relative_to(root):
         manifest = current / 'package.json'
+        if probe is not None:
+            probe(manifest)
         if not manifest.is_symlink() and manifest.is_file():
             try:
                 data = json.loads(manifest.read_text(encoding='utf-8'))
@@ -52,13 +54,15 @@ def _dependencies(root, file):
     return set()
 
 
-def _dependency_file(root, site, file):
+def _dependency_file(root, site, file, probe=None):
     dependency_file = file
     if site.name is not None:
         anchor = site.name
         if not anchor.startswith('./') and not anchor.startswith('../'):
             return None
         anchor_path = root / file.parent / anchor
+        if probe is not None:
+            probe(anchor_path)
         try:
             resolved = anchor_path.resolve(strict=True)
         except OSError:
@@ -69,7 +73,7 @@ def _dependency_file(root, site, file):
     return dependency_file
 
 
-def _lookup_local(root, spec, site, file, dependency_file, sources, written):
+def _lookup_local(root, spec, site, file, dependency_file, sources, written, probe=None):
     if spec.startswith('/'):
         # Only the framework's reviewed Vite root is known without executing config.
         try:
@@ -91,25 +95,28 @@ def _lookup_local(root, spec, site, file, dependency_file, sources, written):
     if matches:
         return written, None, 'ambiguous'
     asset = root / value
-    if asset.suffix.lower() in {'.css', '.json'} and asset.is_file() and not asset.is_symlink():
-        return written, None, 'asset'
+    if asset.suffix.lower() in {'.css', '.json'}:
+        if probe is not None:
+            probe(asset)
+        if asset.is_file() and not asset.is_symlink():
+            return written, None, 'asset'
     return written, None, 'unresolved'
 
 
-def lookup_web(root, site, file, sources, nodes):
+def lookup_web(root, site, file, sources, nodes, *, probe=None):
     written = site.module
     if written == '<dynamic>' or not written:
         return written, None, 'unresolved'
-    dependency_file = _dependency_file(root, site, file)
+    dependency_file = _dependency_file(root, site, file, probe)
     if dependency_file is None:
         return written, None, 'unresolved'
     spec = written.split('?', 1)[0].split('#', 1)[0]
     if spec.startswith(('.', '/')):
-        return _lookup_local(root, spec, site, file, dependency_file, sources, written)
+        return _lookup_local(root, spec, site, file, dependency_file, sources, written, probe)
     package = '/'.join(spec.split('/')[:2]) if spec.startswith('@') else spec.split('/')[0]
     builtin_name = spec.removeprefix('node:').split('/')[0]
     builtin = builtin_name in _BUILTINS
-    if builtin or package in _dependencies(root, dependency_file):
+    if builtin or package in _dependencies(root, dependency_file, probe):
         target = f'package:builtin:{builtin_name}' if builtin else f'package:external:{package}'
         nodes[target] = (target, 'package', 'javascript', None, None, None)
         return written, target, 'external'

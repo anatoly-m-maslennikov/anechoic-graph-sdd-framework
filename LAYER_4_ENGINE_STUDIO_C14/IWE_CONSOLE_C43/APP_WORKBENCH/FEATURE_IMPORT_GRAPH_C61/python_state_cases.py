@@ -47,8 +47,7 @@ def _module_bindings(tree):
 
 
 def _env_key(node):
-    return (isinstance(node, ast.Constant) and isinstance(node.value, str) and bool(node.value)
-            and '=' not in node.value and '\x00' not in node.value)
+    return isinstance(node, ast.Constant) and isinstance(node.value, str) and bool(node.value) and '=' not in node.value and '\x00' not in node.value
 
 
 def _qualified(node, imports):
@@ -61,16 +60,12 @@ def _qualified(node, imports):
 
 
 class _Lower:
-    def __init__(self, imports, channels, owner, shadowed):
+    def __init__(self, imports, channels, owner, shadowed, call_sites=None):
         self.imports, self.channels, self.owner = imports, channels.copy(), owner
-        self.shadowed = shadowed
-        self.locals = set()
-        self.globals = set()
-        self.tokens = {}
-        self.booleans = {}
-        self.events = []
-        self.complete = True
-        self.stopped = False
+        self.shadowed, self.call_sites = shadowed, call_sites
+        self.locals, self.globals = set(), set()
+        self.tokens, self.booleans = {}, {}
+        self.events, self.complete, self.stopped = [], True, False
 
     def event(self, kind, target, name, node):
         self.events.append(dict(kind=kind, target=target, name=name, line=node.lineno))
@@ -100,8 +95,7 @@ class _Lower:
             pass
         elif isinstance(node, ast.Name) and node.id in self.locals:
             pass
-        elif isinstance(node, (ast.Tuple, ast.List)) or (isinstance(node, ast.Set)
-                and all(isinstance(item, ast.Constant) for item in node.elts)):
+        elif isinstance(node, (ast.Tuple, ast.List)) or (isinstance(node, ast.Set) and all(isinstance(item, ast.Constant) for item in node.elts)):
             for item in node.elts:
                 self.expr(item)
         elif isinstance(node, ast.Dict):
@@ -111,8 +105,7 @@ class _Lower:
                 else:
                     self.expr(key)
                 self.expr(value)
-        elif (isinstance(node, ast.UnaryOp) and isinstance(node.operand, ast.Constant)
-              and isinstance(node.op, (ast.Not, ast.UAdd, ast.USub, ast.Invert))):
+        elif (isinstance(node, ast.UnaryOp) and isinstance(node.operand, ast.Constant) and isinstance(node.op, (ast.Not, ast.UAdd, ast.USub, ast.Invert))):
             self.expr(node.operand)
         elif isinstance(node, ast.Call):
             self.call(node)
@@ -185,6 +178,17 @@ class _Lower:
                 if channel and channel[0] == 'context':
                     self.tokens[target.id] = channel
 
+    def graph_call(self, node, forward=False):
+        if self.call_sites is None or not isinstance(node, ast.Call) or node.args or node.keywords:
+            return False
+        if isinstance(node.func, ast.Name) and node.func.id == 'print' and 'print' not in self.shadowed:
+            return False
+        target = self.call_sites.get((node.lineno, node.col_offset))
+        if target is None:
+            return False
+        self.events.append(dict(kind='call', target='', name=target, line=node.lineno, forward=forward))
+        return True
+
     def statement(self, node):
         if isinstance(node, ast.Global):
             self.globals.update(node.names)
@@ -193,7 +197,8 @@ class _Lower:
         elif isinstance(node, ast.If) and isinstance(node.test, ast.Name) and node.test.id in self.booleans:
             self.block(node.body if self.booleans[node.test.id] else node.orelse)
         elif isinstance(node, ast.Expr):
-            self.expr(node.value)
+            if not self.graph_call(node.value):
+                self.expr(node.value)
         elif isinstance(node, ast.Assign) and len(node.targets) == 1:
             self.assign(node)
         elif isinstance(node, ast.AnnAssign) and node.value is not None:
@@ -211,19 +216,18 @@ class _Lower:
             else:
                 self.complete = False
         elif isinstance(node, ast.Return):
-            if node.value is not None:
+            if node.value is not None and not self.graph_call(node.value, forward=True):
                 self.expr(node.value)
-                self.event('output', '', '', node)
+                self.event('return' if self.call_sites is not None else 'output', '', '', node)
             self.stopped = True
         elif isinstance(node, ast.Raise):
             value = node.exc
             if (isinstance(value, ast.Call) and isinstance(value.func, ast.Name)
                     and value.func.id in ('Exception', 'ValueError', 'TypeError', 'RuntimeError')
-                    and value.func.id not in self.shadowed
-                    and not value.keywords and node.cause is None):
+                    and value.func.id not in self.shadowed and not value.keywords and node.cause is None):
                 for arg in value.args:
                     self.expr(arg)
-                self.event('output', '', '', node)
+                self.event('raise' if self.call_sites is not None else 'output', '', '', node)
             else:
                 self.complete = False
             self.stopped = True
@@ -265,7 +269,7 @@ def _module_case(tree, imports, channels, shadowed):
     return None
 
 
-def python_state_cases(source: str) -> list[dict]:
+def python_state_cases(source: str, call_sites=None) -> list[dict]:
     """Return cases without importing or executing the analyzed source."""
     try:
         tree = ast.parse(source)
@@ -276,10 +280,12 @@ def python_state_cases(source: str) -> list[dict]:
     imports, channels = _module_bindings(tree)
     shadowed = {n.id for n in ast.walk(tree) if isinstance(n, ast.Name) and isinstance(n.ctx, (ast.Store, ast.Del))}
     shadowed.update(n.name for n in ast.walk(tree) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)))
-    shadowed.update(a.asname or a.name.split('.')[0] for n in ast.walk(tree)
-                    if isinstance(n, (ast.Import, ast.ImportFrom)) for a in n.names)
+    shadowed.update(a.asname or a.name.split('.')[0] for n in ast.walk(tree) if isinstance(n,
+                    (ast.Import, ast.ImportFrom)) for a in n.names)
     module_case = _module_case(tree, imports, channels, shadowed)
     cases = [module_case] if module_case else []
+    if module_case and call_sites is not None:
+        module_case.update(column=0, inlineable=False)
     functions = [(node, None, node.name) for node in tree.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))]
     for cls in (node for node in tree.body if isinstance(node, ast.ClassDef)):
         functions.extend((node, cls, cls.name + '.' + node.name) for node in cls.body
@@ -295,18 +301,17 @@ def python_state_cases(source: str) -> list[dict]:
                     (n.decorator_list or n.name in ('__getattribute__', '__setattr__', '__delattr__'))
                     or isinstance(n, (ast.Assign, ast.AnnAssign)) and not isinstance(n.value, ast.Constant)
                     for n in cls.body)))
-                or len(params) > 2 or args.kwonlyargs or args.defaults
-                or any(not isinstance(param.annotation, ast.Name) or param.annotation.id != 'bool' for param in params)
+                or len(params) > 2 or args.kwonlyargs or args.defaults or any(not isinstance(param.annotation, ast.Name) or param.annotation.id != 'bool' for param in params)
                 or any(isinstance(n, (ast.Yield, ast.YieldFrom)) for n in ast.walk(node)))
-        cases.extend(_action_cases(name, node, imports, channels, owner, shadowed,
-                                   None if unsupported else [param.arg for param in params]))
+        params = None if unsupported else [param.arg for param in params]
+        cases.extend(_action_cases(name, node, imports, channels, owner, shadowed, params, call_sites, cls is None))
     return cases
 
 
-def _action_cases(name, node, imports, channels, owner, shadowed, params):
+def _action_cases(name, node, imports, channels, owner, shadowed, params, call_sites, module_function):
     inputs = [None] if params is None else (dict(zip(params, values)) for values in product((False, True), repeat=len(params)))
     for witness in inputs:
-        lower = _Lower(imports, channels, owner, shadowed)
+        lower = _Lower(imports, channels, owner, shadowed, call_sites)
         lower.globals.update(name for stmt in ast.walk(node) if isinstance(stmt, ast.Global) for name in stmt.names)
         lower.complete = witness is not None
         lower.booleans.update(witness or {})
@@ -314,6 +319,8 @@ def _action_cases(name, node, imports, channels, owner, shadowed, params):
         if owner:
             lower.locals.add(owner)
         lower.block(node.body)
-        yield dict(action=name, line=node.lineno, input=witness if lower.complete else None,
-                   reachable=True, complete=lower.complete, declaredNoOp=False,
-                   events=lower.events if lower.complete else [])
+        case = dict(action=name, line=node.lineno, input=witness if lower.complete else None,
+                    reachable=True, complete=lower.complete, declaredNoOp=False, events=lower.events if lower.complete else [])
+        if call_sites is not None:
+            case.update(column=node.col_offset, inlineable=lower.complete and not params and module_function)
+        yield case

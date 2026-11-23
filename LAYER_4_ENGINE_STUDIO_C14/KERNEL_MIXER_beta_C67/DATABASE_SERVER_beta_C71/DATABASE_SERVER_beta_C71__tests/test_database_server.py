@@ -88,6 +88,24 @@ class DatabaseServerTest(unittest.TestCase):
         set_graph(invalid_state)
         self.assertEqual(400, client.put("/generation", json=payload).status_code)
         self.assertEqual([[2]], _query(client, "SELECT count(*) FROM state_effect_findings").json()["result"]["rows"])
+        graph["nodes"].append(["module:pkg/callee.py", "module", "python", "pkg/callee.py", "ok", "p", None])
+        propagated = {**event, "sourcePath": "pkg/callee.py"}
+        graph["state_effect_findings"][1][8:10] = [json.dumps([propagated]), json.dumps([{"index": 0, **propagated}])]
+        set_graph(graph)
+        generation = self.admit(client, payload)
+        stored = _query(client, "SELECT events, violations FROM state_effect_findings WHERE status = 'hasEffects'").json()["result"]["rows"][0]
+        self.assertEqual([propagated], json.loads(stored[0]))
+        self.assertEqual([{"index": 0, **propagated}], json.loads(stored[1]))
+        for invalid_event, invalid_violation in (
+            ({**propagated, "sourcePath": "pkg/missing.py"}, {"index": 0, **propagated, "sourcePath": "pkg/missing.py"}),
+            (propagated, {"index": 0, **event}),
+            ({**propagated, "sourcePath": ""}, {"index": 0, **propagated, "sourcePath": ""}),
+        ):
+            invalid_state = deepcopy(graph)
+            invalid_state["state_effect_findings"][1][8:10] = [json.dumps([invalid_event]), json.dumps([invalid_violation])]
+            set_graph(invalid_state)
+            self.assertEqual(400, client.put("/generation", json=payload).status_code)
+            self.assertEqual(generation, client.get("/health").json()["result"]["generation"])
         return generation
 
     def assert_property_graph(self, client):

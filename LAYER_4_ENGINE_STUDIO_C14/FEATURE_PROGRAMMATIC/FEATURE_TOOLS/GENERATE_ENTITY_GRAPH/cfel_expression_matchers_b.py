@@ -1,6 +1,14 @@
 """Match bounded CFEL expression forms."""
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import subject_notation__pub as notation
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    Name as _subject_Name,
+    Path as _subject_Path,
+    Qualification as _subject_Qualification,
+    RelationChain as _subject_RelationChain,
+    SubjectNotationError as _subject_SubjectNotationError,
+    parse_subject_expression as _subject_parse_subject_expression,
+    render_subject as _subject_render_subject,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.cfel_claim_blocks import _balanced_parentheses
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.cfel_constraint_common import _count, _named_property_count, _property_selector, _record
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.cfel_expression_patterns import (
@@ -25,19 +33,19 @@ def _match_10(expression, group, operator, source, records, diagnostics):
     grouped_instance = _GROUPED_INSTANCE_RELATION.fullmatch(expression)
     if grouped_instance is not None:
         try:
-            grouped = notation.parse_subject_expression(grouped_instance.group("source"), subject_profile="approved").expression
-            target = notation.parse_subject_expression(grouped_instance.group("target").strip(), subject_profile="approved").expression
-        except notation.SubjectNotationError:
+            grouped = _subject_parse_subject_expression(grouped_instance.group("source"), subject_profile="approved").expression
+            target = _subject_parse_subject_expression(grouped_instance.group("target").strip(), subject_profile="approved").expression
+        except _subject_SubjectNotationError:
             grouped = target = None
-        if (isinstance(grouped, notation.RelationChain) and grouped.links
+        if (isinstance(grouped, _subject_RelationChain) and grouped.links
                 and all(link.operator == "<+" and link.relation_type is None
                         and link.forward_cardinality is None and link.reverse_cardinality is None
                         for link in grouped.links)
-                and all(isinstance(endpoint.head, notation.Name) and not endpoint.value_format
+                and all(isinstance(endpoint.head, _subject_Name) and not endpoint.value_format
                         and not endpoint.value_cardinality and all(
-                            step.operator in {"/", "//"} and isinstance(step.operand, notation.Name)
+                            step.operator in {"/", "//"} and isinstance(step.operand, _subject_Name)
                             for step in endpoint.steps) for endpoint in grouped.endpoints)
-                and isinstance(target, notation.Path) and isinstance(target.head, notation.Name)
+                and isinstance(target, _subject_Path) and isinstance(target.head, _subject_Name)
                 and not target.steps and target.value_format is None and target.value_cardinality is None):
             written_source = "(" + grouped_instance.group("source").strip() + ")"
             written_target = grouped_instance.group("target").strip()
@@ -237,13 +245,13 @@ def _match_19(expression, group, operator, source, records, diagnostics):
 def _match_20(expression, group, operator, source, records, diagnostics):
     if group in {None, "model"}:
         try:
-            subject = notation.parse_subject_expression(expression, subject_profile="approved").expression
-        except notation.SubjectNotationError:
+            subject = _subject_parse_subject_expression(expression, subject_profile="approved").expression
+        except _subject_SubjectNotationError:
             subject = None
-        if (isinstance(subject, notation.Path) and isinstance(subject.head, notation.Name)
+        if (isinstance(subject, _subject_Path) and isinstance(subject.head, _subject_Name)
                 and subject.value_format is None and subject.value_cardinality is None
-                and all(step.operator in {"/", "."} and isinstance(step.operand, (notation.Name, notation.Qualification)) for step in subject.steps)):
-            records.append(_record(source, expression, "subject_expression", selector=notation.render_subject(subject)))
+                and all(step.operator in {"/", "."} and isinstance(step.operand, (_subject_Name, _subject_Qualification)) for step in subject.steps)):
+            records.append(_record(source, expression, "subject_expression", selector=_subject_render_subject(subject)))
             return True
     return False
 

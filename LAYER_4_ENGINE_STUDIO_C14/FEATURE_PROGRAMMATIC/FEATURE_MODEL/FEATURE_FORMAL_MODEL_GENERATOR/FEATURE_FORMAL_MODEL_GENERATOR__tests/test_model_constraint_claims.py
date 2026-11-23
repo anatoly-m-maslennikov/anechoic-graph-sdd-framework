@@ -8,7 +8,7 @@ PROGRAMMATIC = Path(__file__).resolve().parents[3]
 
 class ConstraintClaimMergeTests(unittest.TestCase):
     def test_property_refinement_requires_the_exact_primary_path(self):
-        from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.model_declaration_sources import (
+        from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.FEATURE_FORMAL_MODEL_GENERATOR__shared import (
             _check_manifest_property_bearers,
         )
 
@@ -36,7 +36,7 @@ class ConstraintClaimMergeTests(unittest.TestCase):
             _check_manifest_property_bearers(records)
 
     def test_property_scope_matches_bearer_name_and_refinement(self):
-        from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.model_declaration_sources import (
+        from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.FEATURE_FORMAL_MODEL_GENERATOR__shared import (
             _check_manifest_property_bearers,
         )
 
@@ -55,7 +55,7 @@ class ConstraintClaimMergeTests(unittest.TestCase):
         check("Node//Atom.Identity.Atom ID")
 
     def test_constraints_are_merged_without_mutating_primary(self):
-        from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.model_declaration_sources import _merge_constraint_claims
+        from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_FORMAL_MODEL_GENERATOR.FEATURE_FORMAL_MODEL_GENERATOR__shared import _merge_constraint_claims
 
         primary = {"kind": "entity", "arguments": {"entity_name": "Atom", "entity_class": "Atom", "entity_kind": "Primary"}}
         constraints = {"kind": "entity", "arguments": {"entity_name": "Atom Constraints", "constraints_for": "Atom", "instance_relation_constraints": {"LINK": {"targets_per_source": 1}}}}

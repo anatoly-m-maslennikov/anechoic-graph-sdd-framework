@@ -11,8 +11,8 @@ from typing import Any
 from .content_schema import ContentRule, DeclarationSource, _schema_from_rules
 from .graph_store import GraphState, register_graph
 from .index_delta import MaterializationDelta
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import source_markdown
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_source_rows__pub import NativeCapture
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import source_markdown
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import NativeCapture
 from .query_store import QueryStore
 
 
@@ -53,6 +53,15 @@ _HISTORICAL_RELATIONS = {
 }
 
 
+def _historical_relation_names(relation_types):
+    historical = {old: new for old, new in _HISTORICAL_RELATIONS.items()
+                  if old not in relation_types and new in relation_types}
+    if "HAS_CONTRIBUTION" in relation_types:
+        historical.update({name: "HAS_CONTRIBUTION" for name in ("IS_REFINED_BY", "RECEIVES_CONTRIBUTION_FROM")
+                           if name not in relation_types})
+    return historical
+
+
 def _projected_rows(capture, relation_types, inverse):
     rows = [{**row, "relation_edges_json": []} for row in capture.atoms]
     by_ref = {row["ref"]: row for row in rows}
@@ -74,8 +83,7 @@ def _projected_rows(capture, relation_types, inverse):
                 "relation_type": inverse[name], "derived": True,
             })
 
-    historical = {old: new for old, new in _HISTORICAL_RELATIONS.items()
-                  if old not in relation_types and new in relation_types}
+    historical = _historical_relation_names(relation_types)
     for edge in capture.containment:
         add(dict(edge))
     for row in rows:
@@ -264,7 +272,7 @@ def _changed_native_rows(capture, paths, relation_types, inverses):
 
 
 def _components_changed(old_changed, new_changed):
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_header__pub import native_header_view
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_header_view
 
     def component_manifest(row):
         return native_header_view(row["header_json"])["context"].get("template") == "component_manifest"
@@ -284,8 +292,8 @@ def _apply_native_tables(connection, old, new, rows, components_changed, frontie
 
 
 def _write_components(connection, rows) -> None:
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.component_manifest__pub import parse_component_manifest
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_header__pub import native_header_view
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_component_manifest
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_header_view
 
     manifests = []
     for row in rows:

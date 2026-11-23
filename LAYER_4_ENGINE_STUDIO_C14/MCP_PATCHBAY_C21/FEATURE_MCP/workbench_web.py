@@ -88,15 +88,10 @@ async def _execute(gateway: Any, name: str, arguments: dict[str, Any], shared: b
                    public_base_url: str, asserted_project_root: str | None) -> dict[str, Any]:
     if name == "query_run":
         arguments = {"result_delivery": "file", **arguments}
-    if not shared:
-        if name in getattr(gateway, "tool_blacklist", frozenset()):
-            raise WorkbenchRequestError("Unknown Tool")
-        result = await gateway.workbench.call_tool(
-            name, arguments, public_base_url=public_base_url,
-            asserted_project_root=asserted_project_root,
-        )
-        return result["value"]
-    return await gateway.workbench_call(name, arguments, public_base_url=public_base_url)
+    if not shared and name in getattr(gateway, "tool_blacklist", frozenset()):
+        raise WorkbenchRequestError("Unknown Tool")
+    routing = {} if shared else {"asserted_project_root": asserted_project_root}
+    return (await gateway.call_tool(name, arguments, public_base_url=public_base_url, **routing))["value"]
 
 
 async def _interface_arguments(request: Request, shared: bool) -> tuple[str, dict[str, Any]]:
@@ -141,10 +136,13 @@ def _page(gateway, shared):
     return page
 
 
-def _operation(gateway, shared, name):
-    async def endpoint(request: Request) -> Response:  # noqa: C901
+def _operation(gateway, shared, fixed_name=None):
+    async def endpoint(request: Request) -> Response:
         try:
-            arguments = await _arguments(request, shared)
+            if fixed_name is None:
+                name, arguments = await _interface_arguments(request, shared)
+            else:
+                name, arguments = fixed_name, await _arguments(request, shared)
             selection = await _selection(gateway, arguments.get("project_root"), shared)
             if not _project_name_matches(selection, request.path_params["project_name"]):
                 return _unknown_project()
@@ -158,34 +156,13 @@ def _operation(gateway, shared, name):
             return StreamingResponse(_json_stream(value), media_type="application/json")
         except Exception as error:
             return _error(error)
+
     return endpoint
-
-
-
-def _interface(gateway, shared):
-    async def interface(request: Request) -> Response:
-        try:
-            name, arguments = await _interface_arguments(request, shared)
-            selection = await _selection(gateway, arguments.get("project_root"), shared)
-            if not _project_name_matches(selection, request.path_params["project_name"]):
-                return _unknown_project()
-            asserted_root = arguments.get("project_root")
-            if not shared:
-                try:
-                    arguments = native_arguments(arguments, selection, gateway.root)
-                except ValueError as error:
-                    raise WorkbenchRequestError(str(error)) from error
-            value = await _execute(gateway, name, arguments, shared, str(request.base_url), asserted_root)
-            return StreamingResponse(_json_stream(value), media_type="application/json")
-        except Exception as error:
-            return _error(error)
-
-    return interface
 
 
 def routes(gateway: Any, *, shared: bool = False) -> list[BaseRoute]:  # noqa: C901
     page = _page(gateway, shared)
-    interface = _interface(gateway, shared)
+    interface = _operation(gateway, shared)
     operations = [(path, _operation(gateway, shared, name)) for path, name in (
         ("run", "query_run"), ("page", "query_page"), ("check", "query_check"),
         ("schema", "query_schema"), ("status", "workbench_status"),

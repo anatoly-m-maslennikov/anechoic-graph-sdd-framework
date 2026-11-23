@@ -5,7 +5,7 @@ import os
 import stat
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import open_regular, protected
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.project_manifest__pub import ProjectSelectionError
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import ProjectSelectionError
 
 SETTINGS_FILENAME = "anechoic_project_settings.toml"
 _CONTROL_PREFIX = ".anechoic_"

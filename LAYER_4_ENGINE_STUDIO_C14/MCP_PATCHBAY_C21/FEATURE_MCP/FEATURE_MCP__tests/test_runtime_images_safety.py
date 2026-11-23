@@ -16,9 +16,9 @@ from unittest.mock import MagicMock, patch
 
 
 APP = Path(__file__).resolve().parents[1]
-import MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images as images  # noqa: E402
-import MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images_common as image_inputs  # noqa: E402
-import MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_docker_client as docker_client  # noqa: E402
+import MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared as images  # noqa: E402
+import MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared as image_inputs  # noqa: E402
+import selectors
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend import ProjectMcpBackend  # noqa: E402
 
 
@@ -126,7 +126,7 @@ class ImageOutputSafetyTests(unittest.TestCase):
                 process.stdout = None if command[1] == "build" else MagicMock()
                 with patch.dict(os.environ, caller, clear=True), \
                         patch.object(images.subprocess, "Popen", return_value=process) as start, \
-                        patch.object(docker_client.selectors, "DefaultSelector") as selector:
+                        patch.object(selectors, "DefaultSelector") as selector:
                     selector.return_value.get_map.return_value = {}
                     self.assertEqual("", manager._run(command))
                 child_environment = start.call_args.kwargs["env"]
@@ -180,6 +180,27 @@ class ImageOutputSafetyTests(unittest.TestCase):
 
 
 class ImageCredentialContextTests(unittest.TestCase):
+    def _credential_files(self, source):
+        engine = source / image_inputs.ENGINE_ROOT
+        protected = set()
+        for name in ("auth.json", "credentials.json", "token.txt", "token.json", "secrets.json", "secrets.txt"):
+            path = engine / name
+            path.write_text(PRIVATE_MARKER)
+            protected.add(path)
+        for name in ("vault", ".vault", "secrets", ".secrets", "credentials", ".credentials"):
+            directory = engine / name
+            directory.mkdir()
+            path = directory / "unclassified-store.txt"
+            path.write_text(PRIVATE_MARKER)
+            protected.add(path)
+        generated = engine / ".anechoic_runtime"
+        generated.mkdir()
+        path = generated / "generated-output.json"
+        path.write_text(PRIVATE_MARKER)
+        protected.add(path)
+
+        return protected
+
     def _credential_fixture(self):
         model = patch.object(images.ImageManager, "_refresh_model", return_value="a" * 64)
         model.start()
@@ -201,29 +222,17 @@ class ImageCredentialContextTests(unittest.TestCase):
         (docker.parent / "engine.py").write_text("ENGINE=True\n")
         for relative in image_inputs.LICENSE_INPUTS:
             (source / relative).write_text("fixture license\n")
+        for layer in ("LAYER_1_META_ONTOLOGY_C9", "LAYER_2_META_METHODOLOGY_C58"):
+            path = source / layer / "AN-S-1-source.md"
+            path.parent.mkdir(parents=True)
+            path.write_text("source")
         manager = images.ImageManager(source, executor=lambda *_a, **_k: None,
                                       uid=1000, gid=1000, platform="linux/amd64",
                                       project_root=APP.parents[2])
         before = manager.identity()
         with patch.dict(os.environ, PROXY_ROUTING):
             self.assertEqual(before, manager.identity(), "proxy routing is not an image input")
-        engine = source / image_inputs.ENGINE_ROOT
-        protected = set()
-        for name in ("auth.json", "credentials.json", "token.txt", "token.json", "secrets.json", "secrets.txt"):
-            path = engine / name
-            path.write_text(PRIVATE_MARKER)
-            protected.add(path)
-        for name in ("vault", ".vault", "secrets", ".secrets", "credentials", ".credentials"):
-            directory = engine / name
-            directory.mkdir()
-            path = directory / "unclassified-store.txt"
-            path.write_text(PRIVATE_MARKER)
-            protected.add(path)
-        generated = engine / ".anechoic_runtime"
-        generated.mkdir()
-        path = generated / "generated-output.json"
-        path.write_text(PRIVATE_MARKER)
-        protected.add(path)
+        protected = self._credential_files(source)
 
         return manager, before, protected
 

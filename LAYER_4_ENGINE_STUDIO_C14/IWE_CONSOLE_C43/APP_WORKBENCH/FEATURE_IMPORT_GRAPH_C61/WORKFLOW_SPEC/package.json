@@ -1,0 +1,12 @@
+{
+  "name": "ane-workflow-spec",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test compile.test.mjs"
+  },
+  "dependencies": {
+    "@statelyai/graph": "2.6.0",
+    "xstate": "5.33.4"
+  }
+}

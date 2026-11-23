@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 from threading import Lock
 
 from ..process import _BUILDER_PACKAGE, _CODE_ROOT, _command, _environment
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_generation__pub import open_admitted_model
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import open_admitted_model
 
 _lock = Lock()
 _stack = ExitStack()

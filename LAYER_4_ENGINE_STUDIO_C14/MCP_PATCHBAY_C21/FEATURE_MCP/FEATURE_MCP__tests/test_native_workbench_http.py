@@ -135,7 +135,7 @@ class NativeWorkbenchHttpTests(NativeWorkbenchStateCases, unittest.IsolatedAsync
         mcp = Path(__file__).resolve().parents[1]
         sys.path.insert(0, str(mcp / 'docker'))
         self.addCleanup(sys.path.remove, str(mcp / 'docker'))
-        from MCP_PATCHBAY_C21.FEATURE_MCP.docker.image_tool_registry import compile_tool_registry
+        from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import compile_tool_registry
 
         registry = json.loads(await asyncio.to_thread(
             compile_tool_registry, mcp.parents[2], timeout=60, max_output=2_000_000,

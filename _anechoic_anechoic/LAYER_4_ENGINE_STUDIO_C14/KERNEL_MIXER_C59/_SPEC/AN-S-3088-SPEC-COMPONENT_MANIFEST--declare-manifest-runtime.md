@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: "active"
-  version: 17
-  updated_at: "2026-11-22T16:01:09.492328+00:00"
+  version: 19
+  updated_at: "2026-11-23T00:34:06.573335+00:00"
 ---
 
 ## Summary
@@ -32,12 +32,12 @@ declare_entity(
         boundaries={
             'code': {
                 'imports': [
-                    'model_generation__pub.open_admitted_model',
+                    'FEATURE_MODEL_VALIDATION__shared.open_admitted_model',
                     'ORCHESTRATOR_C66__shared.Orchestrator',
                     'ADAPTERS_C30__shared.ARCHIVE_DIRECTORY',
                     'ADAPTERS_C30__shared.DRAFT_DIRECTORY',
                     'ADAPTERS_C30__shared.READY_DIRECTORY',
-                    'project_temporary__pub.owned_temporary_root',
+                    'ADAPTERS_C30__shared.owned_temporary_root',
                     'source_watcher__pub.SourceWatcher',
                 ],
                 'exports': {

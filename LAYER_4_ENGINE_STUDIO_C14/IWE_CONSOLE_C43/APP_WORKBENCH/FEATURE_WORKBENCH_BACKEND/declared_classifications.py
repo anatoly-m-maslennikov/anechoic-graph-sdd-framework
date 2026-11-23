@@ -64,30 +64,37 @@ def compile_role_folders(
 
 
 def _classification_address(address: str) -> tuple[list[tuple[str, str]], str] | None:
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import subject_notation__pub as notation
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+        Name as _subject_Name,
+        Path as _subject_Path,
+        Qualification as _subject_Qualification,
+        SubjectNotationError as _subject_SubjectNotationError,
+        ValueLiteral as _subject_ValueLiteral,
+        parse_subject_expression as _subject_parse_subject_expression,
+    )
 
     try:
-        path = notation.parse_subject_expression(address).expression
-    except notation.SubjectNotationError:
+        path = _subject_parse_subject_expression(address).expression
+    except _subject_SubjectNotationError:
         return None
-    if (not isinstance(path, notation.Path) or not isinstance(path.head, notation.Name)
+    if (not isinstance(path, _subject_Path) or not isinstance(path.head, _subject_Name)
             or path.head.value != "Atom" or path.value_format or path.value_cardinality):
         return None
     qualifiers, properties = [], []
     for step in path.steps:
-        if step.operator == "/" and isinstance(step.operand, notation.Qualification) and not properties:
+        if step.operator == "/" and isinstance(step.operand, _subject_Qualification) and not properties:
             relative = step.operand.relative_path
-            if not isinstance(relative.head, notation.Name) or relative.value_format or relative.value_cardinality:
+            if not isinstance(relative.head, _subject_Name) or relative.value_format or relative.value_cardinality:
                 return None
             if not relative.steps:
                 return None
             *parts, value = relative.steps
-            if (value.operator != ":=" or not isinstance(value.operand, notation.ValueLiteral)
-                    or any(part.operator != "." or not isinstance(part.operand, notation.Name) for part in parts)):
+            if (value.operator != ":=" or not isinstance(value.operand, _subject_ValueLiteral)
+                    or any(part.operator != "." or not isinstance(part.operand, _subject_Name) for part in parts)):
                 return None
             name = ".".join([relative.head.value, *(part.operand.value for part in parts)])
             qualifiers.append((name, value.operand.value))
-        elif step.operator == "." and isinstance(step.operand, notation.Name):
+        elif step.operator == "." and isinstance(step.operand, _subject_Name):
             properties.append(step.operand.value)
         else:
             return None

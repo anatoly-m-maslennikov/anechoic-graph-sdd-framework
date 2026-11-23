@@ -23,8 +23,8 @@ _ENGINE = Path(__file__).resolve().parents[2]
 if __package__ in (None, "") and str(_ENGINE) not in sys.path:
     sys.path.insert(0, str(_ENGINE))
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_class_subject__pub import canonical_model_address, simple_model_address
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.python_claim__pub import PythonModelClaimError, parse_structured_python_model_claim
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import canonical_model_address, simple_model_address
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import PythonModelClaimError, parse_structured_python_model_claim
 from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.lint_python_model_claim_inputs import _address_catalog, _blocks, _names as _names
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import NativeModelClaimError, parse_native_model_claim

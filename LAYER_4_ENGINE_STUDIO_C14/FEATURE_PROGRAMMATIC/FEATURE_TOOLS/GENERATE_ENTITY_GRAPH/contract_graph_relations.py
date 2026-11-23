@@ -50,7 +50,7 @@ def _metadata(entries: list[Record], relation: str) -> list[Record]:
                                  "source": clause["source"]})
         blocks = [(block, _grouped_expressions(block["block"])) for block in entry["cfel_blocks"]]
         for block in entry.get("python_blocks", []):
-            from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.python_claim__pub import parse_structured_python_model_claim
+            from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_structured_python_model_claim
             try:
                 calls = parse_structured_python_model_claim(block["block"])
             except ValueError:

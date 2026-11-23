@@ -3,8 +3,8 @@ from __future__ import annotations
 import unittest
 
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import parse_content
-from KERNEL_MIXER_C59.content_columns import content_columns
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_content
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import content_columns
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import compile_content_schema
 
 

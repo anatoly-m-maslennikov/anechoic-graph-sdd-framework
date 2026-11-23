@@ -11,11 +11,11 @@ ASSETS = Path(__file__).resolve().parent / "assets" / "content_declaration_schem
 SEALED_MODEL = APP_ROOT.parent / "FEATURE_PROGRAMMATIC/FEATURE_TOOLS/FEATURE_TOOLS__tests/assets/lifecycle_schema_declarations/04_requirement"
 
 
-from KERNEL_MIXER_C59.content_columns import content_columns  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import content_columns  # noqa: E402
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (  # noqa: E402
     compile_content_schema,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import parse_content  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_content  # noqa: E402
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.source_content_schema import SourceContentSchema  # noqa: E402
 
 

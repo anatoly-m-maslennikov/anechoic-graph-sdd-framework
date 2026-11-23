@@ -12,7 +12,7 @@ from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import QueryExecutionError, Workb
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.workbench_operations import WorkbenchOperations  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__shared import ExplicitBlockingRuntimeFailure, resolve_native_project  # noqa: E402
 
-from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.tool_registry_runtime import (
+from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__shared import (
     load_active_registry, ToolInputValidationError, ToolOutputValidationError,
     ToolRegistryRuntimeError, ToolRegistryStaleError,
 )

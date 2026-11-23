@@ -2,6 +2,8 @@
 
 import os
 from pathlib import Path
+import subprocess
+import sys
 
 ENGINE = Path(__file__).resolve().parents[2]
 ROOT = ENGINE.parent
@@ -26,3 +28,22 @@ def write_project(root):
 def process_env():
     return {**os.environ, "PYTHONPATH": str(ENGINE), "ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY":
             os.environ.get("ANECHOIC_DUCKPGQ_EXTENSION_DIRECTORY", str(ROOT / ".anechoic_tmp/workbench/extensions"))}
+
+
+def start_backend(root, control, manifest, digest, *options):
+    return subprocess.Popen(
+        [sys.executable, "-B", "-P", "-m", "WORKBENCH_BACKEND_beta_C70.runtime",
+         "--socket", str(root / "api.sock"), "--instance-id", "instance", "--project-root", str(root),
+         "--control-root", control.name, "--manifest-path", manifest.name, "--manifest-sha256", digest,
+         "--project-prefix", "AN", "--project-name", "Anechoic", *options],
+        env=process_env(), stdin=subprocess.PIPE,
+    )
+
+
+def stop_backend(process):
+    process.stdin.close()
+    try:
+        process.wait(timeout=15)
+    except subprocess.TimeoutExpired:
+        process.terminate()
+        process.wait(timeout=10)

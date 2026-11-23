@@ -5,7 +5,7 @@ from pathlib import Path
 
 from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.claim_migration_statements import _LEXEMES, convert_statement
 from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.migrate_python_model_claim import convert_carrier, convert_claim, convert_markdown_claim
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.python_claim__pub import parse_python_model_claim
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_python_model_claim
 
 
 class MigrationTests(unittest.TestCase):

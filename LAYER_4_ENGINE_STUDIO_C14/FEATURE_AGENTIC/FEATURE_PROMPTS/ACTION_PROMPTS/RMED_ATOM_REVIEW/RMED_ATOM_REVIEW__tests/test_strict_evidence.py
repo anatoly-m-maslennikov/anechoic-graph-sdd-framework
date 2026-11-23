@@ -122,7 +122,7 @@ class StrictEvidence(unittest.TestCase):
             candidate, source("rule.md", "MOCK-R-002", RULE_TEXT)]})
         response = part("coherence")
         response.update(source=candidate["binding"], context_sha256=bound_context.sha256)
-        from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import body_sections
+        from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import body_sections
         response['checks'][0]['subject_inventory']['sections_reviewed'] = body_sections(raw)
         response["checks"][0]["subject_inventory"]["mentions"][0]["excerpt"] = "Hidden Entity"
         with self.assertRaisesRegex(ValueError, "Markdown"):

@@ -4,7 +4,7 @@ from contextlib import redirect_stderr
 from io import StringIO
 import unittest
 
-from KERNEL_MIXER_C59.relations import (
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (
     compile_relation_registry, materialize, relation_registry,
 )
 

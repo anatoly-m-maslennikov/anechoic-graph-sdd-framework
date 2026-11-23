@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: "active"
-  version: 16
-  updated_at: "2026-11-22T17:11:53.757942+00:00"
+  version: 25
+  updated_at: "2026-11-23T00:32:58.404871+00:00"
 ---
 ## Summary
 
@@ -32,7 +32,8 @@ declare_entity(
         component_id='C71',
         name='Database Server Beta',
         lens_whitelist=['DES', 'SPEC'],
-        boundaries={'code': {'imports': {'only': ['CS5', 'CS6']}},
+        boundaries={'code': {'imports': {'only': ['CS5', 'CS6', 'ADAPTERS_C30__shared.attach_framework', 'ADAPTERS_C30__shared.migrate_project_database', 'ADAPTERS_C30__shared.append_sealed_events', 'DATABASE_SERVER_beta_C71__shared.create_app']},
+                             'exports': {'DATABASE_SERVER_beta_C71__shared.create_app': {'private': ['LAYER_4_ENGINE_STUDIO_C14/KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__tests']}}},
          'io': {'server': {'database_api': {'transport': 'http',
                                             'socket': 'private Unix socket',
                                             'arguments': ['--socket',
@@ -52,8 +53,14 @@ declare_entity(
                                                        'workspace': 'POST /workspace',
                                                        'rebuild_results': 'POST /results/rebuild',
                                                        'admit': 'PUT /generation',
+                                                       'reuse': 'GET /generation/reuse',
+                                                       'flow_events': 'POST /flow/events',
+                                                       'admit_native': 'PUT /generation/native',
+                                                       'admit_native_delta': 'PUT /generation/native-delta',
                                                        'model': 'GET /model',
                                                        'structure': 'GET /structure'},
+                                            'artifact_read_fields': ['instance_id'],
+                                            'artifact_generation_header': 'x-anechoic-generation',
                                             'query_fields': [['instance_id', 'sql'],
                                                              ['instance_id',
                                                               'sql',
@@ -62,12 +69,21 @@ declare_entity(
                                                               'query_id',
                                                               'offset',
                                                               'page_size']],
-                                            'optional_paged_query_fields': ['grid', 'preview', 'result_delivery', 'result_format'],
+                                            'optional_paged_query_fields': ['grid', 'preview', 'result_delivery', 'result_format', 'save', 'name'],
                                             'rebuild_fields': ['instance_id', 'target'],
                                             'workspace_fields': ['instance_id', 'operation', 'arguments'],
                                             'query_history_operations': ['query_log_list', 'query_log_get'],
-                                            'saved_query_operations': ['query_load', 'query_saved_list'],
-                                            'optional_admit_field': 'refresh_target',
+                                            'saved_query_operations': ['query_load', 'query_saved_list', 'view_save'],
+                                            'optional_admit_fields': ['refresh_target', 'reuse', 'carrier_hashes'],
+                                            'reuse_fields': ['inputs', 'graph_config', 'endpoints'],
+                                            'carrier_hashes': 'Project-relative paths to SHA-256, complete for snapshots and present paths only for deltas',
+                                            'admit_native_delta_max_paths': 1024,
+                                            'admit_native_delta_fields': ['instance_id', 'base_generation',
+                                                                          'paths', 'snapshot', 'snapshot_sha256'],
+                                            'admit_native_graph_fields': ['graph', 'graph_sha256', 'optional reuse'],
+                                            'optional_native_fields': ['carrier_hashes'],
+                                            'admit_native_fields': ['instance_id', 'base_generation',
+                                                                    'snapshot', 'snapshot_sha256'],
                                             'admit_fields': ['instance_id',
                                                              'snapshot',
                                                              'receipt',
@@ -86,6 +102,7 @@ declare_entity(
                               'Realization Graph rows in the accepted generation',
                               'durable Project Workspace and View documents',
                               'committed DuckDB Work Journal inbox records',
+                              'Saved SQL snapshots in the admitted Project Journal',
                               'connection-local Journal projection for files mode',
                               'Project-scoped technical query history and its SQL view']}},
     ),

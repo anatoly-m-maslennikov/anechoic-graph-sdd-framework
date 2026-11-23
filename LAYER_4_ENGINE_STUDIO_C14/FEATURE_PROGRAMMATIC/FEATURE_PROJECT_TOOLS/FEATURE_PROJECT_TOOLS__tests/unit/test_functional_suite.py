@@ -50,6 +50,13 @@ class FunctionalSuiteTests(unittest.TestCase):
         skipped = self.run_cli()
         self.assertNotEqual(0, skipped.returncode)
         self.assertIn("Required functional tests skipped", skipped.stderr)
+        paths = (self.root / ".anechoic_tmp/test_reports").glob("*.json")
+        passed, absent, failed, skip = sorted((json.loads(path.read_text()) for path in paths),
+                                             key=lambda report: report["started_at"])
+        self.assertEqual(("passed", 1, MODULE), (passed["status"], passed["tests_run"], passed["modules"][0]["path"]))
+        self.assertEqual(("discovery", []), (absent["step"], absent["modules"]))
+        self.assertIn("required failure", failed["modules"][0]["stderr"])
+        self.assertEqual(("failed", 1), (skip["status"], skip["skipped"]))
 
     def test_invalid_config_and_docker_selection_fail(self):
         for paths in ([], [MODULE, MODULE], [42]):

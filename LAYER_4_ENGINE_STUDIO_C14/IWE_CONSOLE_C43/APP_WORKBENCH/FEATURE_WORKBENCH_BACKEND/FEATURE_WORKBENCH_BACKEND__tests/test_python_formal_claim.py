@@ -9,7 +9,7 @@ PROGRAMMATIC = Path(__file__).resolve().parents[4] / "FEATURE_PROGRAMMATIC"
 
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import compile_content_schema
 from FEATURE_PROGRAMMATIC.FEATURE_FORMAL_MODEL_ENGINE.FEATURE_FORMAL_MODEL_ENGINE__shared import formal_claim_blocks
-from KERNEL_MIXER_C59.relation_registry import compile_relation_registry
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import compile_relation_registry
 
 
 def declaration(language, claim):

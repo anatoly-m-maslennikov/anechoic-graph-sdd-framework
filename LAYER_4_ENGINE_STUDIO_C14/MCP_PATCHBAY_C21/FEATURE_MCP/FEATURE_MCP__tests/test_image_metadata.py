@@ -12,13 +12,14 @@ from unittest.mock import patch
 
 APP = Path(__file__).resolve().parents[1]
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images import (  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import (  # noqa: E402
     FINGERPRINT_LABEL, ImageError, ImageManager,
     OCI_VERSION_LABEL, SCHEMA_LABEL, TOOL_REGISTRY,
 )
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images_common import DOCKERFILE, DOCKERIGNORE, LICENSE_INPUTS  # noqa: E402
-import MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images as runtime_images  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import DOCKERFILE, DOCKERIGNORE, LICENSE_INPUTS  # noqa: E402
+import MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared as runtime_images  # noqa: E402
 import MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime as runtime  # noqa: E402
+from .test_runtime_image_assets import BETA_REQUIRED_FIXTURE_FILES
 
 IMAGE, OTHER_IMAGE = "sha256:" + "a" * 64, "sha256:" + "b" * 64
 VERSION, CREATED = "0.4.4.9", "2026-10-21T14:15:16.987654321Z"
@@ -113,6 +114,8 @@ class ImageMetadataTests(unittest.TestCase):
             (DOCKERFILE, "FROM scratch\n"),
             (DOCKERIGNORE, ".git\n"),
             ("LAYER_4_ENGINE_STUDIO_C14/marker.py", "fixture-current-code\n"),
+            *((f"{layer}/AN-S-1-source.md", "fixture source\n") for layer in
+              ("LAYER_1_META_ONTOLOGY_C9", "LAYER_2_META_METHODOLOGY_C58")),
             (TOOL_REGISTRY, '{"schema_version":1}\n'),
         ):
             path = self.root / relative
@@ -122,17 +125,7 @@ class ImageMetadataTests(unittest.TestCase):
         (self.root / "LAYER_5_FRAMEWORK_DELIVERY").mkdir(exist_ok=True)
         (self.root / "LAYER_5_FRAMEWORK_DELIVERY/project.toml").write_text('stack = "beta"\n')
         engine = self.root / "LAYER_4_ENGINE_STUDIO_C14"
-        for relative in (
-            "FEATURE_PROGRAMMATIC/FEATURE_MODEL/FEATURE_MODEL_VALIDATION/project_admission__pub.py",
-            "FEATURE_PROGRAMMATIC/FEATURE_TOOLS/ADAPTERS_C30/native_snapshot_cli.py",
-            "IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_IMPORT_GRAPH_C61/realization_graph_cli.py",
-            "KERNEL_MIXER_beta_C67/DATABASE_SERVER_beta_C71/DATABASE_SERVER_beta_C71__shared.py",
-            "ORCHESTRATOR_beta_C68/ORCHESTRATOR_beta_C68__shared.py",
-            "WORKERS_beta_C69/WORKERS_beta_C69__shared.py",
-            *("WORKBENCH_BACKEND_beta_C70/" + name for name in (
-                "WORKBENCH_BACKEND_beta_C70__shared.py", "runtime.py",
-                "project_admission.py", "shared_runtime.py", "query_run.json")),
-        ):
+        for relative in BETA_REQUIRED_FIXTURE_FILES:
             path = engine / relative
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text("fixture")

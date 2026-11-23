@@ -15,7 +15,6 @@ import re
 from zoneinfo import ZoneInfo
 
 TOOLS = Path(__file__).resolve().parents[5] / 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_TOOLS'
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.project_temporary__pub import atomic_tempfile  # noqa: E402 - repository path bootstrap
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.journal_settings__pub import configured_journal_root  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.work_journal__pub import append_sealed_events  # noqa: E402
 from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.workflow_progress import CHECKS, LEGACY_CHECKS, report_progress, summarize_progress  # noqa: E402
@@ -72,6 +71,8 @@ class RunEvidence:
                 fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
     def _atomic(self, path, raw):
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import atomic_tempfile
+
         self.path(str(path.relative_to(self.root)))
         self.path('.anechoic_tmp/rmed-base-revise/atomic')
         descriptor, name = atomic_tempfile(self.root, path, 'rmed-base-revise')

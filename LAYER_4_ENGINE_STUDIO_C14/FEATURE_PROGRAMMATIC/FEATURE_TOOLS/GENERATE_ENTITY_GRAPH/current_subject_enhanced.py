@@ -2,7 +2,13 @@
 
 
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import subject_notation__pub as notation
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    Path as _subject_Path,
+    RelationChain as _subject_RelationChain,
+    SubjectNotationError as _subject_SubjectNotationError,
+    parse_subject_expression as _subject_parse_subject_expression,
+    render_subject as _subject_render_subject,
+)
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.current_subject_common import (
     Record, _identifier, _is_declaration, _model_target,
@@ -32,16 +38,16 @@ def _declared_target(carrier, occurrence, expression):
         local_expression = namespace_local_expression(expression)
         if local_expression is not None:
             expression = local_expression
-        elif isinstance(expression, notation.RelationChain):
+        elif isinstance(expression, _subject_RelationChain):
             return None
         kind = _target_kind(expression)
         if kind is None:
             return None
-        assert isinstance(expression, notation.Path)
+        assert isinstance(expression, _subject_Path)
         target = _model_target(expression)
         if kind == "instance" and target.startswith("Node/") and "//" in target:
             from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.cfel_claim_constraints import extract_claim_constraints
-            from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_class_subject__pub import model_class_target
+            from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import model_class_target
             clauses, _ = extract_claim_constraints(carrier)
             if any(clause.get("kind") == "native_class" and
                    model_class_target(occurrence["subject"], clause.get("entity_name")) == target
@@ -64,10 +70,10 @@ def _add_category(occurrence, carrier_by_path, active_count, categories, diagnos
             or active_count[source["path"]] != 1):
         return
     try:
-        expression = notation.parse_subject_expression(
+        expression = _subject_parse_subject_expression(
             occurrence["subject"], subject_profile="approved"
         ).expression
-    except notation.SubjectNotationError as error:
+    except _subject_SubjectNotationError as error:
         diagnostics.append(
             f"{occurrence['id']}: Model target unavailable: {error}"
         )
@@ -129,13 +135,13 @@ def _formal_relations(constraints, declared, provenance, nodes, edges):
                 or clause.get("source_cardinality") is not None or clause.get("target_cardinality") is not None):
             continue
         try:
-            parsed = notation.parse_subject_expression(selector[1:-1], subject_profile="approved").expression
-            target = notation.parse_subject_expression(clause["target_selector"], subject_profile="approved").expression
-        except (notation.SubjectNotationError, TypeError):
+            parsed = _subject_parse_subject_expression(selector[1:-1], subject_profile="approved").expression
+            target = _subject_parse_subject_expression(clause["target_selector"], subject_profile="approved").expression
+        except (_subject_SubjectNotationError, TypeError):
             continue
-        if not isinstance(parsed, notation.RelationChain) or not isinstance(target, notation.Path):
+        if not isinstance(parsed, _subject_RelationChain) or not isinstance(target, _subject_Path):
             continue
-        source_identity, target_identity = notation.render_subject(parsed), notation.render_subject(target)
+        source_identity, target_identity = _subject_render_subject(parsed), _subject_render_subject(target)
         occurrence_id = f"{clause['source'].get('path', '')}#formal_claim[{index}]"
         provenance["occurrences"].append({"id": occurrence_id, "subject": clause["expression"],
                                           "source": clause["source"], "role": "formal_claim"})

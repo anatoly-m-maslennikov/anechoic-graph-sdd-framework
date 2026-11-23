@@ -80,6 +80,9 @@ def _authored_edges(row, names, inverse):
     if not isinstance(relations, dict):
         raise ValueError("Native relations must be a mapping")
     historical = {old: new for old, new in _HISTORICAL.items() if old not in names and new in names}
+    if "HAS_CONTRIBUTION" in names:
+        historical.update({name: "HAS_CONTRIBUTION" for name in ("IS_REFINED_BY", "RECEIVES_CONTRIBUTION_FROM")
+                           if name not in names})
     direct, derived = (("IS_REFERENCE", "HAS_REFERENCE") if inverse.get("IS_REFERENCE") == "HAS_REFERENCE"
                        else ("HAS_REFERENCE", "IS_REFERENCE_FOR"))
     if direct in names and derived in relations:

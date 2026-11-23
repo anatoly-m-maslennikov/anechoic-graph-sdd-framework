@@ -6,7 +6,7 @@ const editor = (page: Page) => page.getByRole('textbox', { name: 'Query editor' 
 
 async function typeQuery(page: Page, sql: string) {
   await editor(page).click();
-  await editor(page).press('Meta+A');
+  await editor(page).press('ControlOrMeta+A');
   await editor(page).pressSequentially(sql);
   await expect(editor(page)).toHaveText(sql);
 }

@@ -7,8 +7,8 @@ from unittest.mock import patch
 WORKBENCH = Path(__file__).resolve().parents[2]
 TOOLS = WORKBENCH.parents[1] / 'FEATURE_PROGRAMMATIC' / 'FEATURE_TOOLS'
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.legacy_candidate_schema__pub import compile_candidate_schema, load_candidate_schema
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import parse_content
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.FEATURE_TOOLS__tests__shared import compile_candidate_schema, load_candidate_schema
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_content
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__tests.legacy_source_schema_audit import SourceSchemaAudit
 
 
@@ -86,7 +86,7 @@ class Tests(unittest.TestCase):
         header = {'role': 'concern', 'form': 'problem', 'status': 'active', 'version': 1, 'priority': 'High'}
         current = atom(header, body)
         archived = atom({**header, 'status': 'archived', 'priority': 'Wrong'}, body, 'Archived')
-        with patch('FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub.parse_content', side_effect=AssertionError('reparsed')):
+        with patch('FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared.parse_content', side_effect=AssertionError('reparsed')):
             assert audit.issues(current) == []
             assert any(issue['field'] == 'priority' for issue in audit.issues(archived))
 

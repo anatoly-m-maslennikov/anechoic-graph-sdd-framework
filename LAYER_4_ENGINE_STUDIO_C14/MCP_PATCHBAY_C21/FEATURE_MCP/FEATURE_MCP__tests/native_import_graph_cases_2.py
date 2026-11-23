@@ -12,7 +12,7 @@ from mcp import types
 from starlette.applications import Starlette
 
 from . import test_native_query_stdio as fixture
-from KERNEL_MIXER_C59.import_cache import read_import_sources
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import read_import_sources
 from .native_query_test_support import create_native_gateway
 from MCP_PATCHBAY_C21.FEATURE_MCP.workbench_web import routes
 
@@ -195,7 +195,7 @@ class ImportGraphCases2:
 
 
     async def test_sidecar_only_refresh_reads_only_affected_owner_and_updates_audit(self):
-        from KERNEL_MIXER_C59.spec_trace import _read_pins
+        from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import _read_pins
 
         owner, store, sidecar, other_sidecar, module_sidecar = self._prepare_sidecars()
 

@@ -7,12 +7,12 @@ import unittest
 APP_ROOT = Path(__file__).resolve().parents[3]
 
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import DeclarationSource  # noqa: E402
-from KERNEL_MIXER_C59.declared_header_rules import (  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (  # noqa: E402
     compile_header_rules,
     header_declaration_rules,
     resolve_header_rules,
 )
-from KERNEL_MIXER_C59.header_columns import declared_header_schema  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import declared_header_schema  # noqa: E402
 
 
 class DeclaredHeaderRulesTests(unittest.TestCase):

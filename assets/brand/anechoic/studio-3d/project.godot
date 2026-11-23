@@ -1,0 +1,16 @@
+config_version=5
+
+[application]
+config/name="Anechoic Studio"
+run/main_scene="res://studio.tscn"
+config/features=PackedStringArray("4.4", "GL Compatibility")
+
+[display]
+window/size/viewport_width=1080
+window/size/viewport_height=1080
+window/stretch/mode="canvas_items"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+textures/default_filters/use_nearest_mipmap_filter=false
+anti_aliasing/quality/msaa_3d=2

@@ -13,8 +13,8 @@ from unittest.mock import patch
 APP = Path(__file__).resolve().parents[1]
 DOCKER = APP / "docker"
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images import ImageManager, TOOL_REGISTRY  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images_common import LICENSE_INPUTS  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import ImageManager, TOOL_REGISTRY  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import LICENSE_INPUTS  # noqa: E402
 
 
 IMAGE_ID = "sha256:" + "a" * 64
@@ -29,7 +29,7 @@ class ImageFixture:
         model = patch.object(ImageManager, "_refresh_model", return_value="a" * 64)
         model.start()
         self.addCleanup(model.stop)
-        self.tools = patch("MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images._compile_tool_registry", return_value=b'{"schema_version":1}\n')
+        self.tools = patch("MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared._compile_tool_registry", return_value=b'{"schema_version":1}\n')
         self.tools.start()
         self.addCleanup(self.tools.stop)
 
@@ -81,5 +81,9 @@ class ImageFixture:
             path = root / relative
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(b'{"schema_version":1}\n')
+        for layer in ("LAYER_1_META_ONTOLOGY_C9", "LAYER_2_META_METHODOLOGY_C58"):
+            path = root / layer / "AN-S-1-source.md"
+            path.parent.mkdir(parents=True)
+            path.write_text("source")
         return root
 

@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 APP = Path(__file__).resolve().parents[1]
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.mcp_paths import MCP_PATH  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import MCP_PATH  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend import BackendError, ProjectMcpBackend  # noqa: E402
 
 
@@ -41,6 +41,7 @@ class ProjectMcpServiceSelectionTests(unittest.TestCase):
             "State": {"Status": "running", "Health": {"Status": "healthy"}},
             "NetworkSettings": {"Ports": {}},
             "Mounts": [
+                    {"Type": "volume", "Name": "anechoic-framework-db", "Destination": "/var/lib/anechoic", "RW": True},
                 {
                     "Type": "bind",
                     "Source": str(selection.root),

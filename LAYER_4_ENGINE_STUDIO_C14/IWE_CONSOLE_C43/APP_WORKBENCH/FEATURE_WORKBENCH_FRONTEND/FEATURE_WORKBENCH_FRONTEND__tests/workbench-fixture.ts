@@ -10,7 +10,7 @@ async function replaceSql(page: Page, sql: string) {
   await expect(input).toBeEditable();
   await expect(input).toHaveAttribute('contenteditable', 'true');
   await input.click();
-  await input.press('Meta+A');
+  await input.press('ControlOrMeta+A');
   await input.pressSequentially(sql);
   await expect(input).toContainText(sql);
 }

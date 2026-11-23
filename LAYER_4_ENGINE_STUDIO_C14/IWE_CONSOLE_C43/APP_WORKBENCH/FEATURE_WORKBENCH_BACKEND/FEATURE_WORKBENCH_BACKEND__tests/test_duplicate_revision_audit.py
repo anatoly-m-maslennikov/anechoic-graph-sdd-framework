@@ -2,7 +2,7 @@ import unittest
 
 import duckdb
 
-from KERNEL_MIXER_C59.audit_tables import create_tables, publish
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import create_tables, publish
 
 
 

@@ -7,11 +7,11 @@ from pathlib import Path
 import sys
 from tempfile import TemporaryDirectory
 import unittest
+from urllib.parse import parse_qs, urlsplit
 
 import httpx2
 
 from .WORKBENCH_BACKEND_beta_C70__tests__shared import write_project, process_env
-from .test_api import write_component
 
 
 def _project(projects, name):
@@ -74,12 +74,12 @@ async def _backend(directory, settings):
         raise AssertionError(f"Unexpected Backend exit {process.returncode}")
 
 
-async def _invoke(http, root, name="query_run", arguments=None):
+async def _invoke(http, root, name="query_run", arguments=None, *, base=None):
     if arguments is None:
         arguments = {"sql": 'SELECT "content.summary" FROM atoms', "result_delivery": "inline",
                      "cursor_position": 0, "page_size": 100}
     request = {"name": name, "arguments": {"project_root": str(root), **arguments},
-               "session_id": None, "public_base_url": None}
+               "session_id": None, "public_base_url": base}
     return (await http.post("/tools", json=request)).json()
 
 
@@ -93,7 +93,8 @@ class SharedBetaTests(unittest.IsolatedAsyncioTestCase):
             root = Path(temporary).resolve()
             projects = root / "projects"
             projects.mkdir()
-            alpha, _ = _project(projects, "alpha")
+            alpha, manifest = _project(projects, "alpha")
+            manifest.write_text(manifest.read_text().replace("prefix='AN'", "prefix='AN', parameters={'runtime': {'workbench': {'public_url': 'https://configured.test/saved'}}}"))
             beta, _ = _project(projects, "beta")
             settings = _settings(root, projects)
             async with _backend(root, settings) as (http, _):
@@ -106,14 +107,24 @@ class SharedBetaTests(unittest.IsolatedAsyncioTestCase):
                     "sql": "SELECT 42", "expected_revision": 0, "cursor_position": 9,
                 })
                 self.assertEqual(1, updated["result"]["value"]["revision"])
+                base = "http://example.test"
+                saved = (await _invoke(http, alpha, "view_save", view_ref, base=base))["result"]["value"]
+                link = saved["saved_query_url"]
+                self.assertEqual([str(alpha)], parse_qs(urlsplit(link).query)["project_root"])
                 stale = await _invoke(http, alpha, "view_update", view_ref | {"sql": "", "expected_revision": 0})
                 self.assertIn("error", stale)
                 foreign = await _invoke(http, beta, "workspace_open", session)
                 self.assertNotEqual(view_ref["view_id"], foreign["result"]["value"]["active_view_id"])
+                foreign_save = await _invoke(http, beta, "query_load", {"reference": saved["saved_query_id"]})
+                self.assertIn("error", foreign_save)
             async with _backend(root, settings) as (http, _):
                 reopened = await _invoke(http, alpha, "view_get", view_ref)
                 self.assertEqual("SELECT 42", reopened["result"]["value"]["sql"])
                 self.assertEqual(1, reopened["result"]["value"]["revision"])
+                loaded = await _invoke(http, alpha, "query_load", {"reference": link}, base=base)
+                self.assertEqual("SELECT 42", loaded["result"]["value"]["sql"])
+                configured = await _invoke(http, alpha, "query_load", {"reference": saved["saved_query_id"]})
+                self.assertTrue(configured["result"]["value"]["saved_query_url"].startswith("https://configured.test/saved?query="))
 
     async def test_disk_generation_survives_restart_and_failed_rebuild(self):
         with TemporaryDirectory(prefix="ane-beta-disk-", dir="/tmp") as temporary:
@@ -122,22 +133,33 @@ class SharedBetaTests(unittest.IsolatedAsyncioTestCase):
             projects.mkdir()
             project, manifest = _project(projects, "accepted")
             settings = _settings(root, projects)
+            ticket = manifest.parent / "__TKT" / "AN-T-1--task.md"
+            ticket.parent.mkdir()
             async with _backend(root, settings) as (http, first_pid):
                 instance = await self.query(http, project, "accepted")
+                ticket.write_text("---\nidentity: [invalid\n")
+                failed = await _invoke(http, project, "query_rebuild", {"target": "all"})
+                self.assertIn("error", failed)
+                self.assertEqual(instance, await self.query(http, project, "accepted"))
             databases = list(project.glob(".anechoic_runtime/workbench/beta/*.duckdb"))
             self.assertEqual(1, len(databases))
-            write_component(manifest.parent, name="Invalid Studio", component_id="invalid")
             async with _backend(root, settings) as (http, restarted_pid):
                 self.assertNotEqual(first_pid, restarted_pid)
-                selection = await http.post("/selection", json={"project_root": str(project)})
-                self.assertEqual(instance, selection.json()["result"]["instance_id"])
-                self.assertEqual(instance, await self.query(http, project, "accepted"))
-            # Without the accepted generation, the same admitted source cannot initialize the peers.
-            databases[0].rename(root / "accepted.duckdb")
+                refused = await _invoke(http, project)
+                self.assertEqual(instance, refused["project"]["instance_id"])
+                self.assertEqual("shared_gateway_failure", refused["error"]["code"])
+            self.assertTrue(databases[0].is_file())
+            ticket.write_text(
+                "---\nidentity: {atom_id: AN-T-1}\ncontext: {container: {component: C00}}\n"
+                "state: {status: active, version: 1}\n---\n\n## Summary\n\nRepaired Ticket.\n"
+            )
             async with _backend(root, settings) as (http, _):
-                result = await _invoke(http, project)
-                self.assertEqual(instance, result["project"]["instance_id"])
-                self.assertEqual("shared_gateway_failure", result["error"]["code"])
+                caught_up = await _invoke(http, project)
+                self.assertEqual(instance, caught_up["project"]["instance_id"])
+                self.assertIn("result", caught_up, caught_up)
+                self.assertEqual({("accepted",), ("Repaired Ticket.",)},
+                                 {tuple(row) for row in caught_up["result"]["value"]["rows"]})
+            self.assertEqual([databases[0]], list(project.glob(".anechoic_runtime/workbench/beta/*.duckdb")))
 
     async def test_storage_default_override_and_guarded_location(self):
         with TemporaryDirectory(prefix="ane-beta-storage-", dir="/tmp") as temporary:
@@ -180,6 +202,27 @@ class SharedBetaTests(unittest.IsolatedAsyncioTestCase):
                 manifest.write_bytes(original)
                 self.assertEqual(ready, await select())
 
+    async def test_direct_update_returns_current_public_response(self):
+        with TemporaryDirectory(prefix="ane-beta-asset-", dir="/tmp") as temporary:
+            root = Path(temporary).resolve()
+            projects = root / "projects"
+            projects.mkdir()
+            project, manifest = _project(projects, "asset")
+            asset = manifest.parent / "__TICKETS/ASSETS/AN-T-9-ANALYSIS_REPORT--canary.md"
+            asset.parent.mkdir(parents=True)
+            header = ("---\natom_family: TKT\natom_id: AN-T-9\ncontainer:\n  component: C00\n"
+                      "priority: 2\ncontext:\n  template: Analysis Report\nstate:\n"
+                      "  status: in_queue\n  version: 1\n  updated_at: '2026-11-19T00:00:00Z'\n---\n")
+            before = "\n## Summary\n\nCanary.\n"
+            asset.write_text(header + before, encoding="utf-8")
+            after = before + "\n## Work\n\nUpdated.\n"
+            async with _backend(root, _settings(root, projects)) as (http, _):
+                result = await _invoke(http, project, "atom_lifecycle_direct_update", {
+                    "target": {"ref_id": "AN-T-9", "version": 1}, "changes": {"body": after},
+                })
+                self.assertEqual({"value": {"status": "completed"}, "text": None}, result.get("result"), result)
+            self.assertEqual((header + after).encode(), asset.read_bytes())
+
     async def test_reuse_isolation_eviction_and_shutdown(self):
         with TemporaryDirectory(prefix="ane-beta-shared-", dir="/tmp") as temporary:
             root = Path(temporary).resolve()
@@ -194,10 +237,11 @@ class SharedBetaTests(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual({
                     "query_run", "query_schema", "query_check", "query_page", "workspace_open", "workspace_list",
                     "workspace_get", "view_create", "view_duplicate", "view_list", "view_get", "view_update",
-                    "view_focus", "view_rename", "view_remove", "view_run", "view_check", "view_fetch",
-                    "query_rebuild", "workbench_status", "query_log_list", "query_log_get",
+                    "view_focus", "view_rename", "view_remove", "view_run", "view_check", "view_fetch", "view_save",
+                    "query_rebuild", "workbench_status", "workbench_abort", "query_log_list", "query_log_get",
                     "atom_lifecycle_create_draft", "atom_lifecycle_update", "atom_lifecycle_promote_draft",
-                    "atom_lifecycle_change_status", "atom_lifecycle_archive", "query_load", "query_saved_list",
+                    "atom_lifecycle_change_status", "atom_lifecycle_archive", "atom_lifecycle_direct_update",
+                    "query_load", "query_saved_list",
                 }, {tool["name"] for tool in catalog})
                 self.assertIn("project_root", catalog[0]["inputSchema"]["required"])
                 cold = await _invoke(http, alpha, "workbench_status", {})

@@ -6,7 +6,9 @@ from collections import defaultdict
 from collections.abc import Mapping
 from typing import Any
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import subject_notation__pub as notation
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    SubjectNotationError as _subject_SubjectNotationError,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import matches_named_value
 
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.declaration_evidence import Record, _view
@@ -63,7 +65,7 @@ def _entity_summary(carriers: list[Record], occurrences: list[Record], data: Map
             continue
         try:
             target = _entity_target(occurrence["subject"])
-        except notation.SubjectNotationError:
+        except _subject_SubjectNotationError:
             target = None
         if target is None:
             continue

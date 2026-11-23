@@ -1,6 +1,14 @@
 """Build declared narrowing graph phases."""
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30 import subject_notation__pub as notation
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    Name as _subject_Name,
+    Path as _subject_Path,
+    Qualification as _subject_Qualification,
+    RelationChain as _subject_RelationChain,
+    SubjectNotationError as _subject_SubjectNotationError,
+    parse_subject_expression as _subject_parse_subject_expression,
+    render_subject as _subject_render_subject,
+)
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import carrier_read_view, matches_named_value
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.cfel_claim_constraints import extract_claim_constraints
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.GENERATE_ENTITY_GRAPH.current_subject_common import (
@@ -47,14 +55,14 @@ class NarrowingCollection:
             return None
         return values[0]
 
-    def label(self, expression: notation.Path, canonical: str) -> str:
+    def label(self, expression: _subject_Path, canonical: str) -> str:
         if not expression.steps:
             return canonical
         operand = expression.steps[-1].operand
-        if isinstance(operand, notation.Name):
+        if isinstance(operand, _subject_Name):
             return operand.value
-        if isinstance(operand, notation.Qualification):
-            return '(.' + notation.render_subject(operand.relative_path) + ')'
+        if isinstance(operand, _subject_Qualification):
+            return '(.' + _subject_render_subject(operand.relative_path) + ')'
         return canonical
 
     def add_node(self, identity: str, display_name: str, carrier: Record) -> None:
@@ -62,13 +70,13 @@ class NarrowingCollection:
         node = self.nodes.setdefault(key, {'id': key, 'identity': identity, 'display_name': display_name, 'source_bindings': set()})
         node['source_bindings'].add(self.source_name(carrier))
 
-    def add_cfel_component_endpoint(self, carrier: Record, expression: notation.RelationChain) -> bool:
+    def add_cfel_component_endpoint(self, carrier: Record, expression: _subject_RelationChain) -> bool:
         """Admit the explicitly declared CFEL component, never its composition edge."""
         if len(expression.endpoints) != 2 or len(expression.links) != 1:
             return False
         left, right = expression.endpoints
         link = expression.links[0]
-        if link.operator != '<+' or link.relation_type is not None or (not isinstance(left.head, notation.Name)) or (left.head.value != 'CFEL'):
+        if link.operator != '<+' or link.relation_type is not None or (not isinstance(left.head, _subject_Name)) or (left.head.value != 'CFEL'):
             return False
         kind = _target_kind(right)
         if kind in {'property', 'instance', 'relation'}:
@@ -76,8 +84,8 @@ class NarrowingCollection:
         if kind != 'primary_node':
             return False
         try:
-            _, facts, target = subject_facts(notation.render_subject(right))
-        except (notation.SubjectNotationError, ValueError) as error:
+            _, facts, target = subject_facts(_subject_render_subject(right))
+        except (_subject_SubjectNotationError, ValueError) as error:
             self.diagnostics.append(f'{self.source_name(carrier)}: CFEL component endpoint is unsupported: {error}.')
             return False
         self.add_node(target, self.label(right, target), carrier)
@@ -88,12 +96,12 @@ class NarrowingCollection:
 
     def add_relation_path(self, carrier, subject, expression, retained_relation_root):
         first = expression.endpoints[0].head
-        if not retained_relation_root or not isinstance(first, notation.Name) or first.value not in {'CFEL', 'Carrier', 'Term'}:
+        if not retained_relation_root or not isinstance(first, _subject_Name) or first.value not in {'CFEL', 'Carrier', 'Term'}:
             self.diagnostics.append(f'{self.source_name(carrier)}: relation Subject `{subject}` is outside retained roots.')
             return False
         try:
             supplied, facts, _ = subject_facts(subject)
-        except (notation.SubjectNotationError, ValueError) as error:
+        except (_subject_SubjectNotationError, ValueError) as error:
             self.diagnostics.append(f'{self.source_name(carrier)}: unsupported relation Subject `{subject}`: {error}.')
             return False
         references = {row['identity'] for row in supplied if row.get('declared_reference')}
@@ -104,17 +112,17 @@ class NarrowingCollection:
 
     def add_path(self, carrier: Record, subject: str, *, retained_relation_root: bool=False, native_class: bool=False) -> bool:
         try:
-            expression = notation.parse_subject_expression(subject, subject_profile='approved').expression
-        except notation.SubjectNotationError as error:
+            expression = _subject_parse_subject_expression(subject, subject_profile='approved').expression
+        except _subject_SubjectNotationError as error:
             self.diagnostics.append(f'{self.source_name(carrier)}: unsupported Subject `{subject}`: {error}.')
             return False
         local_expression = namespace_local_expression(expression)
         if local_expression is not None:
             expression = local_expression
-            subject = notation.render_subject(expression)
-        if not isinstance(expression, notation.Path):
+            subject = _subject_render_subject(expression)
+        if not isinstance(expression, _subject_Path):
             return self.add_relation_path(carrier, subject, expression, retained_relation_root)
-        if isinstance(expression.head, notation.Name) and expression.head.value in _NAMESPACE_ROOTS and (not expression.steps):
+        if isinstance(expression.head, _subject_Name) and expression.head.value in _NAMESPACE_ROOTS and (not expression.steps):
             return True
         if _target_kind(expression) in {'property', 'instance'} and (not native_class):
             return True
@@ -123,7 +131,7 @@ class NarrowingCollection:
             return False
         try:
             _, facts, target = subject_facts(subject, native_class_narrowing=native_class)
-        except (notation.SubjectNotationError, ValueError) as error:
+        except (_subject_SubjectNotationError, ValueError) as error:
             self.diagnostics.append(f'{self.source_name(carrier)}: Subject facts unavailable: {error}.')
             return False
         self.add_node(target, self.label(expression, target), carrier)
@@ -139,27 +147,27 @@ class NarrowingCollection:
             self.diagnostics.append(f'{self.source_name(carrier)}: multiple native class declarations.')
             return
         try:
-            expression = notation.parse_subject_expression(subject, subject_profile='approved').expression
-        except notation.SubjectNotationError:
+            expression = _subject_parse_subject_expression(subject, subject_profile='approved').expression
+        except _subject_SubjectNotationError:
             expression = None
         expression = namespace_local_expression(expression) or expression
-        if isinstance(expression, notation.RelationChain) and self.add_cfel_component_endpoint(carrier, expression):
+        if isinstance(expression, _subject_RelationChain) and self.add_cfel_component_endpoint(carrier, expression):
             self.owners.append(carrier)
             return
-        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.model_class_subject__pub import model_class_target
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import model_class_target
         native_class = bool(native and model_class_target(subject, native[0].get('entity_name'), require_namespace=False))
         if self.add_path(carrier, subject, native_class=native_class):
             self.owners.append(carrier)
             try:
-                expression = notation.parse_subject_expression(subject, subject_profile='approved').expression
+                expression = _subject_parse_subject_expression(subject, subject_profile='approved').expression
                 expression = namespace_local_expression(expression) or expression
-                if isinstance(expression, notation.Path) and (_target_kind(expression) == 'primary_node' or native_class):
-                    target = notation.render_subject(expression)
+                if isinstance(expression, _subject_Path) and (_target_kind(expression) == 'primary_node' or native_class):
+                    target = _subject_render_subject(expression)
                     if native_class:
                         self.native_classes.append((carrier, target, native[0]))
                     else:
                         self.declaration_targets.append((carrier, target))
-            except notation.SubjectNotationError:
+            except _subject_SubjectNotationError:
                 pass
         return
 
@@ -178,19 +186,19 @@ class NarrowingCollection:
         if not matches_named_value(form, 'Entity Definition'):
             return
         try:
-            expression = notation.parse_subject_expression(subject, subject_profile='approved').expression
-        except notation.SubjectNotationError as error:
+            expression = _subject_parse_subject_expression(subject, subject_profile='approved').expression
+        except _subject_SubjectNotationError as error:
             self.diagnostics.append(f'{self.source_name(carrier)}: retained Entity Definition `{subject}` is unsupported: {error}.')
             return
         expression = namespace_local_expression(expression) or expression
-        if isinstance(expression, notation.RelationChain):
+        if isinstance(expression, _subject_RelationChain):
             if self.add_cfel_component_endpoint(carrier, expression):
                 self.owners.append(carrier)
                 return
             if self.add_path(carrier, subject, retained_relation_root=True):
                 self.owners.append(carrier)
             return
-        if not isinstance(expression.head, notation.Name) or expression.head.value not in {'CFEL', 'Carrier', 'Term'}:
+        if not isinstance(expression.head, _subject_Name) or expression.head.value not in {'CFEL', 'Carrier', 'Term'}:
             self.diagnostics.append(f'{self.source_name(carrier)}: Entity Definition `{subject}` is outside retained CFEL, Carrier, Term roots.')
             return
         if self.add_path(carrier, subject):

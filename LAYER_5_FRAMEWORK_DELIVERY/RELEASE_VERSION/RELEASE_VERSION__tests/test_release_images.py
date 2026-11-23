@@ -15,8 +15,24 @@ from ._release_image_fixture import ReleaseImageFixture
 
 
 class ReleaseImagesTests(ReleaseImageFixture):
+    def test_delivery_sources_are_fingerprinted_and_copied(self):
+        manager = self.make_manager()
+        before = manager.identity()
+        path = self.package / "LAYER_2_META_METHODOLOGY_C58/AN-S-1-source.md"
+        path.write_text("updated source")
+        self.assertNotEqual(before.fingerprint, manager.identity().fingerprint)
+        manager.resolve()
+        for layer in ("LAYER_1_META_ONTOLOGY_C9", "LAYER_2_META_METHODOLOGY_C58"):
+            self.assertIn(layer + "/AN-S-1-source.md", self.captured)
+
+    def test_delivery_sources_are_required(self):
+        manager = self.make_manager()
+        (self.package / "LAYER_1_META_ONTOLOGY_C9/AN-S-1-source.md").unlink()
+        with self.assertRaisesRegex(ValueError, "delivery sources unavailable"):
+            manager.identity()
+
     def test_license_edits_keep_the_runtime_fingerprint(self):
-        from RELEASE_VERSION.release_image_identity import LICENSE_INPUTS
+        from RELEASE_VERSION.RELEASE_VERSION__shared import LICENSE_INPUTS
 
         manager = self.make_manager()
         baseline = manager.identity()
@@ -98,16 +114,18 @@ class ReleaseImagesTests(ReleaseImageFixture):
         self.assertEqual([], self.build_args)
 
     def test_build_only_uses_checkout_and_cleans_staging(self):
-        from RELEASE_VERSION import local_release
+        from RELEASE_VERSION.RELEASE_VERSION__shared import local_release
 
         provenance = {**self.provenance, "project_root": str(self.package)}
-        def manager(source, temporary, *, project_root, build_provenance):
+        def manager(source, temporary, *, project_root, build_provenance, source_provider):
             self.manager = images.ImageManager(source, project_root=project_root, build_temp_root=temporary,
-                                               build_provenance=build_provenance, executor=self.docker)
+                                               build_provenance=build_provenance, executor=self.docker,
+                                               source_provider=source_provider)
             return self.manager
 
         with (patch.object(local_release, "read_release_selection", return_value=object()),
               patch.object(local_release, "release_image_provenance", return_value=provenance),
+              patch.object(local_release, "_native_release_sources", side_effect=lambda _: {p.relative_to(self.package): p for layer in ("LAYER_1_META_ONTOLOGY_C9", "LAYER_2_META_METHODOLOGY_C58") for p in (self.package / layer).rglob("*.md")}),
               patch.object(local_release, "_image_manager", side_effect=manager)):
             result = local_release.build_image(self.package, run_id="build-1")
         self.assertEqual(result["outcome"], "completed")
@@ -122,7 +140,7 @@ class ReleaseImagesTests(ReleaseImageFixture):
         self.assertEqual(self.tags, {"anechoic-runtime:test-" + self.image[7:]})
 
     def test_build_only_cleans_staging_after_failure(self):
-        from RELEASE_VERSION import local_release
+        from RELEASE_VERSION.RELEASE_VERSION__shared import local_release
 
         provenance = {**self.provenance, "project_root": str(self.package)}
         with (patch.object(local_release, "read_release_selection", return_value=object()),

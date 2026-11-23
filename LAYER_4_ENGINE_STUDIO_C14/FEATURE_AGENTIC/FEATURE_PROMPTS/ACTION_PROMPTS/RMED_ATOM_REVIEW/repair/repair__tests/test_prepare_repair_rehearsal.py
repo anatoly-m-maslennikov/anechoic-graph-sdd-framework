@@ -12,7 +12,7 @@ from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.repair.repa
     CASES, FIXTURE_ROOT, REPAIR_AUTHORITY_IDS, REPOSITORY_ROOT, build, rewrite_fixture,
     synthetic_authority,
 )
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import markdown, metadata  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import markdown, metadata  # noqa: E402
 
 
 class PrepareRepairRehearsalTests(unittest.TestCase):

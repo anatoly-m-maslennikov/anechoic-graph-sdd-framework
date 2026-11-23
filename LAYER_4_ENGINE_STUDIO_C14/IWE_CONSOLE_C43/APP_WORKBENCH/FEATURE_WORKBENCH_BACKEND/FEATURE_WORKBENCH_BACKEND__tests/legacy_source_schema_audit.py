@@ -9,8 +9,8 @@ from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import
     matches_named_value, path_value,
 )
 
-from KERNEL_MIXER_C59.header_columns import _matches_format
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import content_lines, direct_markdown, source_markdown
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import _matches_format
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import content_lines, direct_markdown, source_markdown
 
 
 class SourceSchemaAudit:

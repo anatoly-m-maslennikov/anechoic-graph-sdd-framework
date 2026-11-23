@@ -6,7 +6,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 import re
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import content_key
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import content_key
 
 
 ROLE_SETS = {"RMED": frozenset({"Requirement", "Method", "Evaluation", "Delivery"})}

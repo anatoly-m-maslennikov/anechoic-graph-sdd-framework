@@ -13,8 +13,8 @@ from unittest.mock import patch
 APP = Path(__file__).resolve().parents[1]
 DOCKER = APP / "docker"
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images_common import DOCKERIGNORE, RETIRED_ASSETS  # noqa: E402
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images import ImageError, ImageManager, TOOL_REGISTRY  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import DOCKERIGNORE, RETIRED_ASSETS  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import ImageError, ImageManager, TOOL_REGISTRY  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend import ProjectMcpBackend  # noqa: E402
 
 
@@ -44,6 +44,9 @@ class ImageGoldenTests(ImageFixture, unittest.TestCase):
         self.assertTrue(before.manifest)
         paths = {row.path for row in before.manifest}
         self.assertIn("LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/server.py", paths)
+        docker = "LAYER_4_ENGINE_STUDIO_C14/MCP_PATCHBAY_C21/FEATURE_MCP/docker/"
+        self.assertIn(docker + "docker__shared.py", paths)
+        self.assertNotIn(docker + "runtime_images.py", paths)
         self.assertIn("LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_FRONTEND/package.json", paths)
         context = self.fixture_root / "real-context"
         context.mkdir()

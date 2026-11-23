@@ -98,7 +98,7 @@ class PlainJournalTests(unittest.TestCase):
             self.assertEqual(0o600, path.stat().st_mode & 0o777)
             self.assertEqual({"author": "observer", "local_date": "2026-10-14", "event": row},
                              json.loads(path.read_text()))
-            self.assertEqual(".anechoic_runtime/workbench/projection.duckdb", receipt["carrier"])
+            self.assertEqual(".anechoic_runtime/db/project.duckdb", receipt["carrier"])
             self.assertEqual("staged", receipt["status"])
             self.assertNotIn("line", receipt)
         self.assertFalse(self.directory.exists())

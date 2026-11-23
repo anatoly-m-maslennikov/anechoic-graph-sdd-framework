@@ -7,8 +7,8 @@ Subjects or decides that a declaration is correct. Paraphrases still need QA.
 from __future__ import annotations
 
 from typing import Any
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.context_builder import body_section_texts, metadata  # noqa: E402
-from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.review_evidence__shared import literal_occurs  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import body_section_texts, metadata  # noqa: E402
+from FEATURE_AGENTIC.FEATURE_PROMPTS.ACTION_PROMPTS.RMED_ATOM_REVIEW.RMED_ATOM_REVIEW__shared import literal_occurs  # noqa: E402
 
 
 def audit(source: str, coherence: dict[str, Any]) -> list[dict[str, str]]:

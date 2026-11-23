@@ -8,9 +8,9 @@ context:
   template: component_manifest
   lens: SPEC
 state:
-  status: active
-  version: 15
-  updated_at: '2026-11-22T16:44:45.347890+00:00'
+  status: "active"
+  version: 23
+  updated_at: "2026-11-23T00:34:06.483158+00:00"
 ---
 
 ## Summary
@@ -32,11 +32,41 @@ declare_entity(
         boundaries={
             'code': {
                 'imports': [
+                    'ADAPTERS_C30__shared.owned_temporary_root',
+                    'ADAPTERS_C30__shared.read_scope_unit_declarations',
+                    'ADAPTERS_C30__shared.capture_native',
+                    'ADAPTERS_C30__shared.active_spec_directories',
+                    'test_suite__shared.APP',
+                    'test_suite__shared._release_canary',
+                    'test_suite__shared.full_suite_docker',
+                    'test_suite__shared.prune_private_tmp',
+                    'test_suite__shared.source_line_length',
+                    'test_suite__shared.python_findings',
+                    'test_suite__shared.shell_findings',
+                    'test_suite__shared.unsafe',
+                    'test_suite__shared.yaml_findings',
+                    'test_suite__shared.check_functions',
+                    'test_suite__shared.check_module',
+                    'test_suite__shared.python_functions',
+                    'test_suite__shared.web_functions',
+                    'test_suite__shared',
+                    'test_suite__shared.static_checks',
+                    'ADAPTERS_C30__shared.project_goal_filename',
+                    'test_suite__shared.CODE_ROOTS',
+                    'test_suite__shared.run_full_suite',
                     'model_field_validation.validate_model_fields',
                     'model_host_CS2__shared.reviewed_native_model',
                     'native_workflow_definition.bind_status_specifications',
-                    'native_carrier_header__pub',
-                    'native_carrier_placement__pub',
+                    'ADAPTERS_C30__shared.canonical_native_header',
+                    'ADAPTERS_C30__shared.native_header_view',
+                    'ADAPTERS_C30__shared.ARCHIVE_DIRECTORY',
+                    'ADAPTERS_C30__shared.COMPLETE_DIRECTORY',
+                    'ADAPTERS_C30__shared.DRAFT_DIRECTORY',
+                    'ADAPTERS_C30__shared.PROJECT_CONFIG_DIRECTORY',
+                    'ADAPTERS_C30__shared.READY_DIRECTORY',
+                    'ADAPTERS_C30__shared.TICKET_DIRECTORY',
+                    'ADAPTERS_C30__shared.native_ticket_asset',
+                    'ADAPTERS_C30__shared.spec_lens_directories',
                 ],
                 'exports': {
                     'FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared.ANALYSIS': {'shared': [
@@ -185,6 +215,23 @@ declare_entity(
                     'FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared.write_settings': {'shared': [
                         'LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/APP_WORKBENCH/FEATURE_WORKBENCH_BACKEND/FEATURE_WORKBENCH_BACKEND__tests',
                     ]},
+                    'test_suite__shared': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/unit']},
+                    'test_suite__shared.static_checks': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/static']},
+                    'test_suite__shared.CODE_ROOTS': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/static']},
+                    'test_suite__shared.run_full_suite': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/static']},
+                    'test_suite__shared.APP': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests']},
+                    'test_suite__shared._release_canary': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests', 'LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/unit']},
+                    'test_suite__shared.full_suite_docker': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests']},
+                    'test_suite__shared.prune_private_tmp': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests']},
+                    'test_suite__shared.source_line_length': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/static']},
+                    'test_suite__shared.python_findings': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/static']},
+                    'test_suite__shared.shell_findings': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/static']},
+                    'test_suite__shared.unsafe': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/static']},
+                    'test_suite__shared.yaml_findings': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/static']},
+                    'test_suite__shared.check_functions': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/static']},
+                    'test_suite__shared.check_module': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/static']},
+                    'test_suite__shared.python_functions': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/static']},
+                    'test_suite__shared.web_functions': {'private': ['LAYER_4_ENGINE_STUDIO_C14/FEATURE_PROGRAMMATIC/FEATURE_PROJECT_TOOLS/FEATURE_PROJECT_TOOLS__tests/static']},
                     'test_suite__pub': 'public',
                 },
             },

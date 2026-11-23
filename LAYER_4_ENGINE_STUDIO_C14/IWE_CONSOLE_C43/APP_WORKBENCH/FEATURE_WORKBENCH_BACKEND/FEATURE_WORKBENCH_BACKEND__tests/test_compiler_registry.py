@@ -6,7 +6,7 @@ import unittest
 WORKBENCH = Path(__file__).resolve().parents[2]
 PROGRAMMATIC = WORKBENCH.parents[1] / "FEATURE_PROGRAMMATIC"
 
-from KERNEL_MIXER_C59.relation_registry import compile_relation_registry, registry_contribution  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import compile_relation_registry, registry_contribution  # noqa: E402
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import _outgoing_facts  # noqa: E402
 
 

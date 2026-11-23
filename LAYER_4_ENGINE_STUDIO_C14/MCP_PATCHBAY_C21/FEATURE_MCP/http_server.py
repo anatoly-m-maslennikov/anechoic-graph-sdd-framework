@@ -1,8 +1,10 @@
 
 """Loopback-only Streamable HTTP transport for the MCP gateway."""
 import argparse
+import asyncio
 from concurrent.futures import CancelledError as FutureCancelledError
 from contextlib import ExitStack, asynccontextmanager
+import os
 from pathlib import Path
 import re
 
@@ -14,6 +16,7 @@ from MCP_PATCHBAY_C21.FEATURE_MCP.direct_gateway import native_project_gateway, 
 from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import HEALTH_PATH, MCP_PATH
 from mcp.server.transport_security import TransportSecuritySettings
 from MCP_PATCHBAY_C21.FEATURE_MCP.mcp_startup_boundary import run_startup, warning
+from MCP_PATCHBAY_C21.FEATURE_MCP.runtime_stack import runtime_stack
 from MCP_PATCHBAY_C21.FEATURE_MCP.workbench_web import routes as workbench_routes
 
 PATH = MCP_PATH
@@ -42,18 +45,14 @@ class LoopbackGuard:
         valid_origin = origin is None or re.fullmatch(
             r"http://(?:127\.0\.0\.1|localhost|\[::1\])(?::\d+)?", origin)
         if not valid_host:
-            self._warning('http_host_rejected', 'host_admission')
+            warning('http_host_rejected')
             await Response(status_code=421)(scope, receive, send)
             return
         if not valid_origin:
-            self._warning('http_origin_rejected', 'origin_admission')
+            warning('http_origin_rejected')
             await Response(status_code=403)(scope, receive, send)
             return
         await self.app(scope, receive, send)
-
-    def _warning(self, code, operation):
-        warning(code)
-
 
 def _accepts_html(value):
     """Honor explicit text/html only when its quality is not lower than JSON."""
@@ -93,7 +92,7 @@ def _accepts_html(value):
 
 
 async def health(gateway):
-    ready = gateway.ready
+    ready = await asyncio.to_thread(lambda: gateway.ready)
     payload = {"ready": ready}
     observer = getattr(gateway, "health_observations", None)
     if observer is not None:
@@ -117,29 +116,37 @@ def create_app(root, *, selection=None, gateway_factory=None, control_root=None,
     else:
         selected = selection if selection is not None else startup_selection(root, control_root)
         gateway = native_project_gateway(root, selection=selected)
-    server = gateway.build_server()
 
     async def readiness(_request):
         return await health(gateway)
 
-    routes = [Route(HEALTH_PATH, readiness), *workbench_routes(gateway)]
-    app = server.streamable_http_app(
+    return streamable_app(gateway, readiness)
+
+
+def streamable_app(gateway, health_endpoint, *, shared=False):
+    app = gateway.build_server().streamable_http_app(
         streamable_http_path=PATH,
         transport_security=SECURITY,
         max_request_body_size=MAX_REQUEST_BODY_SIZE,
         host="127.0.0.1",
-        custom_starlette_routes=routes,
+        custom_starlette_routes=[
+            Route(HEALTH_PATH, health_endpoint), *workbench_routes(gateway, shared=shared),
+        ],
     )
     inner_lifespan = app.router.lifespan_context
 
     @asynccontextmanager
     async def lifespan(application):
         async with inner_lifespan(application):
-            await gateway.initialize()
+            started = False
             try:
+                await gateway.initialize()
+                started = True
                 yield
             finally:
-                await gateway.close()
+                # Single-Project initialization already closes on its own failure.
+                if started or shared:
+                    await gateway.close()
 
     app.router.lifespan_context = lifespan
     guarded = LoopbackGuard(app)
@@ -158,7 +165,8 @@ def _serve(args, *, gateway_factory=None):
             app = create_app(args.project_root, gateway_factory=gateway_factory, control_root=args.control_root)
         else:
             selection = startup_selection(args.project_root, args.control_root, args.instance_id, args.host_project_root)
-            gateway = stack.enter_context(native_runtime_gateway(selection))
+            socket = os.environ.get("ANECHOIC_BETA_BACKEND_SOCKET") if runtime_stack() == "beta" else None
+            gateway = stack.enter_context(native_runtime_gateway(selection, backend_socket=socket))
             app = create_app(args.project_root, selection=selection, runtime_gateway=gateway)
         uvicorn.run(app, host=args.host, port=args.port, log_level="warning")
 

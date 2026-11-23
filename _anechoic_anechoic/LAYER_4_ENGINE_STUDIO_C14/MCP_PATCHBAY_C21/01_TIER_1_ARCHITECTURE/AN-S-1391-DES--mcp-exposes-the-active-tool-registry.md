@@ -8,8 +8,8 @@ context:
   lens: DES
 state:
   status: "active"
-  version: 4
-  updated_at: "2026-11-22T09:10:11.456968+00:00"
+  version: 5
+  updated_at: "2026-11-23T00:35:11.233859+00:00"
 ---
 
 ## Summary
@@ -29,3 +29,8 @@ MCP maps the catalog to MCP Tools. Report a missing or invalid catalog as
 an explicit failure. For one admitted Project, use its enabled catalog.
 For shared hosting, use the Backend coordinator's compatible catalog and
 pass the explicit Project root on each call.
+
+Use one MCP bridge across stdio, Project HTTP, and shared HTTP.
+The Project and shared clients normalize the Backend catalog and raw
+call response. Map that result to the MCP protocol at the transport.
+Web Workbench routes use the same raw Backend call interface.

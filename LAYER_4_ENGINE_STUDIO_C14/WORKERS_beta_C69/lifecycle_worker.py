@@ -4,9 +4,11 @@ from pathlib import Path
 import sys
 import tempfile
 
+from .managed_parent import watch_managed_parent
 from .WORKERS_beta_C69__shared import _capture, _run_job, build_generation
 
-_NAMES = frozenset({"atom_lifecycle_create_draft", "atom_lifecycle_update", "atom_lifecycle_promote_draft", "atom_lifecycle_change_status", "atom_lifecycle_archive"})
+_NAMES = frozenset({"atom_lifecycle_create_draft", "atom_lifecycle_update", "atom_lifecycle_promote_draft", "atom_lifecycle_change_status", "atom_lifecycle_archive",
+                    "atom_lifecycle_direct_update"})
 _OWNER = "FEATURE_PROGRAMMATIC.FEATURE_TOOLS.native_lifecycle_cli"
 
 
@@ -28,6 +30,7 @@ def run(request):
 
 def main():
     try:
+        watch_managed_parent()
         outcome = run(json.load(sys.stdin))
         print(json.dumps(outcome, ensure_ascii=False, separators=(",", ":")))
     except (OSError, RuntimeError, TypeError, ValueError, KeyError) as error:

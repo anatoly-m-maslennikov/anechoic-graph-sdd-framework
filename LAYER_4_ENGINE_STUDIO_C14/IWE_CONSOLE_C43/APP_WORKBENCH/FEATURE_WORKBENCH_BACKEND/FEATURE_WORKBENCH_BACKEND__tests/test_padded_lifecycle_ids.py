@@ -3,8 +3,8 @@ import threading
 
 import duckdb
 
-from KERNEL_MIXER_C59.query_store import QueryStore
-from KERNEL_MIXER_C59.header_columns import HeaderSchema
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import QueryStore
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import HeaderSchema
 
 
 

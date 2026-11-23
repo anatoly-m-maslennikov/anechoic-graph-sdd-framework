@@ -14,8 +14,8 @@ from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import (  # noqa: E402
     QueryExecutionError,
     WorkbenchUnavailableError,
 )
-from KERNEL_MIXER_C59 import public_rows as public_rows_module  # noqa: E402
-from KERNEL_MIXER_C59.public_rows import SCOPE_FIELDS  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import public_rows as public_rows_module  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import SCOPE_FIELDS  # noqa: E402
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_WORKBENCH_BACKEND.FEATURE_WORKBENCH_BACKEND__tests.query_store_test_support import QueryStoreFixture
 
 

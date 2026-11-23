@@ -6,11 +6,11 @@ from unittest.mock import patch
 
 from . import test_native_host_launcher as host_fixture
 from . import test_native_startup as startup_fixture
-from MCP_PATCHBAY_C21.FEATURE_MCP.native_startup import select_runtime_project
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import select_runtime_project
 from MCP_PATCHBAY_C21.FEATURE_MCP.docker.project_mcp_backend import BackendError, ProjectMcpBackend
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.legacy_selection_test_support__pub import select_legacy_project
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images import ImageError, ImageManager, TOOL_REGISTRY
-from MCP_PATCHBAY_C21.FEATURE_MCP.docker.runtime_images_common import LICENSE_INPUTS
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.FEATURE_TOOLS__tests.FEATURE_TOOLS__tests__shared import select_legacy_project
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import ImageError, ImageManager, TOOL_REGISTRY
+from MCP_PATCHBAY_C21.FEATURE_MCP.docker.docker__shared import LICENSE_INPUTS
 
 IMAGE = 'sha256:' + 'a' * 64
 
@@ -30,6 +30,10 @@ class NativeImageBackendTests(unittest.TestCase):
             (docker / name).write_text('fixture\n')
         for name in LICENSE_INPUTS:
             (self.package / name).write_text('fixture license\n')
+        for layer in ("LAYER_1_META_ONTOLOGY_C9", "LAYER_2_META_METHODOLOGY_C58"):
+            source = self.package / layer / "AN-S-1-source.md"
+            source.parent.mkdir(parents=True)
+            source.write_text("fixture source\n")
         registry = self.package / TOOL_REGISTRY
         registry.parent.mkdir(parents=True, exist_ok=True)
         registry.write_text('{"asset":true}\n')

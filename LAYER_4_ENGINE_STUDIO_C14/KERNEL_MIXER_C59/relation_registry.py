@@ -9,7 +9,7 @@ from dataclasses import dataclass
 import sys
 from typing import Any
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.markdown_content__pub import source_markdown
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import source_markdown
 from .relation_declarations import RegistryContribution, relation_declaration
 from .source_selection import first_reference_rows
 

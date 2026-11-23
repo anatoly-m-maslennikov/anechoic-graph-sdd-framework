@@ -120,7 +120,7 @@ class ManifestRuntimeTests(unittest.TestCase):
         subprocess.run([sys.executable, "-B", "-c", """
 from pathlib import Path
 import sys
-from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.model_generation__pub import open_admitted_model
+from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_MODEL_VALIDATION.FEATURE_MODEL_VALIDATION__shared import open_admitted_model
 generation, fingerprint, digest = Path.cwd(), *sys.argv[1:]
 with (open_admitted_model(generation, fingerprint, digest) as first,
       open_admitted_model(generation, fingerprint, digest) as second):

@@ -17,6 +17,7 @@ from .release_support import (  # noqa: E402
     _RUN_ID,
     _cleanup_staging,
     _image_manager,
+    _native_release_sources,
     _root,
 )
 
@@ -30,7 +31,8 @@ def build_image(project_root: Path | str, *, run_id: str) -> dict[str, object]:
     provenance = release_image_provenance(root, selection)
     staging = _new_staging_directory(root, f"{run_id}-image-")
     try:
-        manager = _image_manager(root, staging, project_root=root, build_provenance=provenance)
+        manager = _image_manager(root, staging, project_root=root, build_provenance=provenance,
+                                 source_provider=lambda: _native_release_sources(selection))
         identity = manager.identity(use_packaged_assets=True)
         image = manager.resolve(use_packaged_assets=True)
         if (not isinstance(image, str) or re.fullmatch(r"sha256:[0-9a-f]{64}", image) is None

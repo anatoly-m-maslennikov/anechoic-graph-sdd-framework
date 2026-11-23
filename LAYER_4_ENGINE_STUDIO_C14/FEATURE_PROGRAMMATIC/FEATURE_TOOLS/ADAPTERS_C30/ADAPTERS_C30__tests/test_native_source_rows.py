@@ -2,6 +2,7 @@ from hashlib import sha256
 from pathlib import Path, PurePosixPath
 from types import SimpleNamespace
 import sys
+import os
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -11,7 +12,10 @@ import yaml
 TOOLS = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(TOOLS))
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_source_rows__pub import capture_native, revalidate_native  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native, revalidate_native  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
+    native_carrier_hashes, prepare_generation_snapshot, capture_ticket_delta,
+)
 
 
 class NativeCaptureTests(unittest.TestCase):
@@ -33,6 +37,65 @@ class NativeCaptureTests(unittest.TestCase):
                   "state": {"status": status, "version": version, "updated_at": "2026-11-19T00:00:00Z"}}
         path.write_text("---\n" + yaml.safe_dump(header) + "---\n\n## Summary\n\nExample\n", encoding="utf-8")
         return path
+
+    def test_hash_inventory_tracks_content_and_deletion(self):
+        binding = {"root": str(self.root), "control_root": self.control.name,
+                   "manifest_path": self.manifest.relative_to(self.root).as_posix(),
+                   "manifest_sha256": self.selection.manifest_sha256, "project_prefix": "AN"}
+        path = self.write("AN-T-8--hash.md", "AN-T-8", "active", 1)
+        ignored = self.control / "000_ANECHOIC_framework" / "ignored.md"
+        ignored.parent.mkdir()
+        ignored.write_text("not a carrier")
+        relative = path.relative_to(self.root).as_posix()
+        before = native_carrier_hashes(binding)
+        self.assertEqual(sha256(path.read_bytes()).hexdigest(), before[relative])
+        self.assertEqual({self.manifest.relative_to(self.root).as_posix(), relative}, set(before))
+        stat = path.stat()
+        path.write_bytes(path.read_bytes().replace(b"Example", b"Changed"))
+        os.utime(path, ns=(stat.st_atime_ns, stat.st_mtime_ns))
+        after = native_carrier_hashes(binding)
+        self.assertNotEqual(before[relative], after[relative])
+        path.unlink()
+        self.assertNotIn(relative, native_carrier_hashes(binding))
+
+    def test_raw_hashes_include_root_goal_and_reject_inventory_race(self):
+        binding = {"root": str(self.root), "control_root": self.control.name,
+                   "manifest_path": self.manifest.relative_to(self.root).as_posix(),
+                   "manifest_sha256": self.selection.manifest_sha256, "project_prefix": "AN"}
+        goal = self.root / "AN-S-02-SPEC-PROJECT_GOAL--goal.md"
+        goal.write_bytes(b"not parsed by hashing")
+        self.assertEqual(sha256(goal.read_bytes()).hexdigest(), native_carrier_hashes(binding)[goal.name])
+        from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__pub import ReadContext
+        original = ReadContext.read
+        def read_and_change(reader, path, **kwargs):
+            raw = original(reader, path, **kwargs)
+            if path == goal and kwargs.get("remember", True):
+                (self.control / "new.md").write_text("new")
+            return raw
+        with patch.object(ReadContext, "read", read_and_change):
+            with self.assertRaisesRegex(ValueError, "changed during capture"):
+                native_carrier_hashes(binding)
+
+    def test_snapshot_and_ticket_delta_optional_hashes(self):
+        binding = {"root": str(self.root), "control_root": self.control.name,
+                   "manifest_path": self.manifest.relative_to(self.root).as_posix(),
+                   "manifest_sha256": self.selection.manifest_sha256, "project_prefix": "AN"}
+        path = self.write("AN-T-8--hash.md", "AN-T-8", "active", 1)
+        relative = path.relative_to(self.root).as_posix()
+        endpoints = {"CONTAINED_BY": [{"inverse_alias": "CONTAINS"}, False], "CONTAINS": [{}, True]}
+        with patch("FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_snapshot_cli._graph_config", return_value={}):
+            _, finish = prepare_generation_snapshot(binding, include_hashes=True)
+            snap, hashes = finish(endpoints)
+            self.assertEqual(native_carrier_hashes(binding), hashes)
+            _, default_finish = prepare_generation_snapshot(binding)
+            self.assertIsInstance(default_finish(endpoints), dict)
+        self.assertTrue(snap["atoms"])
+        delta = capture_ticket_delta(binding, [relative], endpoints, include_hashes=True)
+        self.assertEqual({relative: sha256(path.read_bytes()).hexdigest()}, delta["carrier_hashes"])
+        path.unlink()
+        deleted = capture_ticket_delta(binding, [relative], endpoints, include_hashes=True)
+        self.assertEqual({}, deleted["carrier_hashes"])
+        self.assertEqual([[path.parent.relative_to(self.root).as_posix(), path.name]], deleted["paths"])
 
     def test_current_draft_archived_and_header_containment(self):
         self.write("__TKT/TASKS/AN-T-09--task.md", "AN-T-09", "active", 2)

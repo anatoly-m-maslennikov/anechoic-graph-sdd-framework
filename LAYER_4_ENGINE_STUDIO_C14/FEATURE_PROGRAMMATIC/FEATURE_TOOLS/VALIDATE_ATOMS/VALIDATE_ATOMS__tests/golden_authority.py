@@ -15,7 +15,7 @@ if str(TOOL) not in sys.path:
     sys.path.insert(0, str(TOOL))
 
 sys.path.insert(0, str(HERE.parent.parent))
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import parse_carrier  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_carrier  # noqa: E402
 
 
 FIXTURES = HERE / "assets" / "fixtures"

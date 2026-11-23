@@ -7,7 +7,7 @@ import unittest
 
 APP_ROOT = Path(__file__).resolve().parents[3]
 
-from KERNEL_MIXER_C59.query_store import QueryStore  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import QueryStore  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import extension_directory  # noqa: E402
 
 

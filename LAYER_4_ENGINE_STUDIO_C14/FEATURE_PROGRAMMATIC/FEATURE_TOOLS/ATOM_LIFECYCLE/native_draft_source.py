@@ -8,12 +8,12 @@ from types import SimpleNamespace
 
 import yaml
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_carrier_header__pub import native_header_view
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import native_header_view
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (
     active_spec_directories, native_carrier_path, spec_lens_directories, project_goal_filename,
     DRAFT_DIRECTORY, ARCHIVE_DIRECTORY, READY_DIRECTORY, TICKET_DIRECTORY, PROJECT_CONFIG_DIRECTORY,
 )
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import parse_carrier
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import parse_carrier
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import read_structure
 from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CEILINGS, ReadContext
 
@@ -98,7 +98,7 @@ def _spec_revision_root(selection, structure_snapshot, path, header, context, st
     container = context.get("container")
     if not isinstance(lens, str) or not isinstance(container, dict) or set(container) != {"component"}:
         raise common.InputError("sourceCurrent", "Select a component-owned SPEC carrier.")
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.project_manifest__pub import manifest_inputs
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import manifest_inputs
     try:
         reader = ReadContext(roots=[str(selection.root)], limits=dict(CEILINGS))
         raw = reader.read(selection.manifest_path)

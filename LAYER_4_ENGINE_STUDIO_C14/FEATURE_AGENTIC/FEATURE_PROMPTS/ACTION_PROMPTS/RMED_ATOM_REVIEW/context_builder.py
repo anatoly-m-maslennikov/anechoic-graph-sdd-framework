@@ -24,7 +24,7 @@ CHECKER = Path(__file__).resolve().parents[4] / 'FEATURE_PROGRAMMATIC/FEATURE_TO
 
 def metadata(raw: str) -> dict[str, Any]:
     """Reuse the safe, duplicate-key-rejecting, bounded production YAML parser."""
-    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.carrier_read__pub import CarrierError, parse_carrier  # type: ignore[import-not-found]
+    from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import CarrierError, parse_carrier  # type: ignore[import-not-found]
     try:
         return dict(parse_carrier(raw.encode(), Path('context.md')).metadata)
     except CarrierError:

@@ -7,7 +7,7 @@ import unittest
 TOOLS = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(TOOLS), str(TOOLS.parent.parent / "IWE_CONSOLE_C43/APP_WORKBENCH")]
 
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.python_claim__pub import (  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import (  # noqa: E402
     PythonModelClaimError,
     parse_grouped_python_model_claim,
     parse_python_model_claim,

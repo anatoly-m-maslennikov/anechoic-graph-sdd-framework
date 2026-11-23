@@ -11,7 +11,8 @@ from .jobs import ENGINE, FIELDS
 LIFECYCLE_DEADLINE_SECONDS = 300
 LIFECYCLE_WAIT_SECONDS = 610
 LIFECYCLE_TOOLS = frozenset({"atom_lifecycle_create_draft", "atom_lifecycle_update",
-                             "atom_lifecycle_promote_draft", "atom_lifecycle_change_status", "atom_lifecycle_archive"})
+                             "atom_lifecycle_promote_draft", "atom_lifecycle_change_status", "atom_lifecycle_archive",
+                             "atom_lifecycle_direct_update"})
 
 
 class LifecycleJobs:
@@ -40,6 +41,7 @@ class LifecycleJobs:
     def _run_lifecycle(self, job):
         env = {key: value for key, value in os.environ.items() if key != "PYTHONHOME"}
         env["PYTHONPATH"] = str(ENGINE)
+        env["ANECHOIC_BETA_WORKER_PARENT_PID"] = str(os.getpid())
         with self.lock:
             if self.stopping.is_set():
                 raise RuntimeError("Orchestrator is stopping")
@@ -75,6 +77,7 @@ class LifecycleJobs:
             lifecycle = self._run_lifecycle(job)
         except (OSError, ValueError, TypeError, RuntimeError) as error:
             sys.stderr.write("Lifecycle write outcome unknown: " + str(error)[-2048:] + "\n")
+        self.flow_context = {"lifecycle": True}
         generation = self._generate()
         if generation["state"] == "succeeded":
             projection = {"state": "ready", "generation": generation["generation"]}

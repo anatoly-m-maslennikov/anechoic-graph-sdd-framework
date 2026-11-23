@@ -10,12 +10,12 @@ from unittest.mock import patch
 
 
 APP_ROOT = Path(__file__).resolve().parents[3]
-from KERNEL_MIXER_C59.query_store import QueryStore  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import QueryStore  # noqa: E402
 from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import QueryExecutionError  # noqa: E402
 from KERNEL_MIXER_C59.native_projection import project_native  # noqa: E402
-from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.native_source_rows__pub import capture_native  # noqa: E402
-from KERNEL_MIXER_C59.import_tables import publish_imports  # noqa: E402
-from KERNEL_MIXER_C59.import_cache import read_import_sources, replace_import_sources  # noqa: E402
+from FEATURE_PROGRAMMATIC.FEATURE_TOOLS.ADAPTERS_C30.ADAPTERS_C30__shared import capture_native  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import publish_imports  # noqa: E402
+from KERNEL_MIXER_C59.KERNEL_MIXER_C59__shared import read_import_sources, replace_import_sources  # noqa: E402
 from IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.import_graph__shared import Source  # noqa: E402
 from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.FEATURE_PROJECT_TOOLS__tests.FEATURE_PROJECT_TOOLS__tests__shared import extension_directory  # noqa: E402
 

@@ -9,8 +9,8 @@ import tempfile
 import unittest
 from unittest.mock import MagicMock, patch
 
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import full_suite_docker as docker
-from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import run_full_test_suite as full
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.test_suite__shared import full_suite_docker as docker
+from FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS import test_suite__shared as full
 
 IMAGE = "sha256:" + "a" * 64
 

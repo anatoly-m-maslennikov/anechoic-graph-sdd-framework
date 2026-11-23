@@ -2,7 +2,7 @@
 import argparse
 import asyncio
 import os
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, nullcontext
 from copy import deepcopy
 from dataclasses import replace
 
@@ -13,7 +13,9 @@ from starlette.routing import Route
 from .project_admission import AdmissionClient
 from .peer_transport import tool_failure
 from .shared_host_config import load
+from .shared_peer_owner import PeerOwnerClient
 from .shared_project_pool import SharedProjectPool
+from .warm_worker import open_warm_worker
 from .WORKBENCH_BACKEND_beta_C70__shared import (
     TOOLS,
     execute_tool,
@@ -52,9 +54,9 @@ def _validate_invocation(data):
 
 
 class Coordinator:
-    def __init__(self, config):
+    def __init__(self, config, peer_owner=None):
         self.config = config
-        self.pool = SharedProjectPool(config.maximum)
+        self.pool = PeerOwnerClient(peer_owner) if peer_owner else SharedProjectPool(config.maximum)
         self.admission = AdmissionClient()
         self.known = {}
 
@@ -84,10 +86,11 @@ class Coordinator:
             raise ValueError('invalid_project_root') from None
 
     async def health(self, _request):
+        pool_status = await self.pool.status() if isinstance(self.pool, PeerOwnerClient) else self.pool.status()
         return JSONResponse({'result': {'pid': os.getpid(), 'initialized': True,
             'shared_runtime_id': self.config.runtime_id, 'advertised_tools': list(TOOLS),
             'known_project_contexts': list(self.known.values()), 'warnings': [],
-            **self.pool.status()}})
+            **pool_status}})
 
     async def catalog(self, _request):
         return JSONResponse({'result': {'tools': [public_tool(tool) for tool in TOOLS.values()]}})
@@ -133,32 +136,39 @@ class Coordinator:
     async def _call(self, selected, data):
         name = data["name"]
         native = {k: v for k, v in data["arguments"].items() if k != "project_root"}
-        async with self.pool.lease(selected, start=name != "workbench_status") as peers:
+        async with self.pool.lease(selected, start=name not in {"workbench_status", "workbench_abort"}) as peers:
             if peers is None:
+                if name == "workbench_abort":
+                    return await execute_tool(None, selected.instance_id, name, native)
                 if native:
                     return tool_failure("tool_input_invalid", "The status request has no arguments")
                 return {"result": {"value": {"mode": "unavailable", "syncing": False, "last_synced_at": None}, "text": None}}
             result = await execute_tool(peers.database_socket, selected.instance_id, name, native,
                                         session_id=data["session_id"], project_name=selected.project_name,
                                         public_base_url=data["public_base_url"], project_root=data["arguments"]["project_root"],
-                                        orchestrator_socket=peers.orchestrator_socket, worker_binding=peers.worker_binding)
+                                        orchestrator_socket=peers.orchestrator_socket, worker_binding=peers.worker_binding,
+                                        workbench_public_url=selected.parameters["runtime"]["workbench"].get("public_url"))
             if await asyncio.to_thread(self.select, str(selected.root)) != selected:
                 raise ValueError("project_declarations_stale")
             return result
 
 
-def create_app(config):
-    coordinator = Coordinator(config)
+def create_app(config, peer_owner=None):
+    coordinator = Coordinator(config, peer_owner)
 
     @asynccontextmanager
     async def lifespan(_app):
-        try:
-            yield
-        finally:
+        with (nullcontext() if peer_owner else open_warm_worker()) as worker:
+            if not peer_owner:
+                coordinator.pool.warm_worker = worker
             try:
-                await coordinator.pool.close()
+                yield
             finally:
-                await asyncio.to_thread(coordinator.admission.close)
+                try:
+                    if not peer_owner:
+                        await coordinator.pool.close()
+                finally:
+                    await asyncio.to_thread(coordinator.admission.close)
 
     return Starlette(lifespan=lifespan, routes=[
         Route('/health', coordinator.health), Route('/tools', coordinator.catalog),
@@ -170,8 +180,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--socket', required=True)
     parser.add_argument('--host-settings')
+    parser.add_argument('--peer-owner-socket')
     args = parser.parse_args()
-    serve(socket_path(args.socket), create_app(load(args.host_settings)), shutdown_timeout=3)
+    serve(socket_path(args.socket), create_app(load(args.host_settings), args.peer_owner_socket), shutdown_timeout=3)
 
 
 if __name__ == '__main__':

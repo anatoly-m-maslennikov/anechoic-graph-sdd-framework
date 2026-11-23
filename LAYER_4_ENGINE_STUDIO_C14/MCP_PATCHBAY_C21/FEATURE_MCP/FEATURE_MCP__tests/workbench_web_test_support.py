@@ -8,7 +8,7 @@ from types import SimpleNamespace
 MCP_ROOT = Path(__file__).resolve().parents[1]
 FRONTEND_ROOT = MCP_ROOT.parents[1] / "IWE_CONSOLE_C43" / "APP_WORKBENCH" / "FEATURE_WORKBENCH_FRONTEND"
 
-from MCP_PATCHBAY_C21.FEATURE_MCP.http_paths import WORKBENCH_PATH  # noqa: E402
+from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import WORKBENCH_PATH  # noqa: E402
 from MCP_PATCHBAY_C21.FEATURE_MCP.backend_client import ToolProtocolError  # noqa: E402
 
 
@@ -154,11 +154,11 @@ class FakeGateway:
             raise ValueError("invalid_project_root")
         return self.selection
 
-    async def workbench_call(self, name, arguments, *, public_base_url=None):
-        root = arguments["project_root"]
-        self.roots.append(root)
-        result = await self.workbench.call_tool(
-            name, {key: value for key, value in arguments.items() if key != "project_root"},
-            public_base_url=public_base_url, asserted_project_root=root,
+    async def call_tool(self, name, arguments, *, public_base_url=None, asserted_project_root=None):
+        if "project_root" in arguments:
+            asserted_project_root = arguments["project_root"]
+            self.roots.append(asserted_project_root)
+            arguments = {key: value for key, value in arguments.items() if key != "project_root"}
+        return await self.workbench.call_tool(
+            name, arguments, public_base_url=public_base_url, asserted_project_root=asserted_project_root,
         )
-        return result["value"]

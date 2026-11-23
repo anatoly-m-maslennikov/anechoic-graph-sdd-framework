@@ -36,7 +36,7 @@ async function disposableWorkspace(prefix: string) {
 async function replaceSql(page: Page, sql: string) {
   const input = editor(page);
   await expect(input).toBeEditable();
-  await input.click(); await input.press('Meta+A'); await input.pressSequentially(sql);
+  await input.click(); await input.press('ControlOrMeta+A'); await input.pressSequentially(sql);
   await expect(input).toContainText(sql);
 }
 

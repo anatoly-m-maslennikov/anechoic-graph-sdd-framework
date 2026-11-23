@@ -105,7 +105,9 @@ class ModelFieldValidationTests(unittest.TestCase):
             validate_model_fields(Document, {"header": header})
 
     def test_generated_destination_checks_children_separately_from_direct_values(self):
-        from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_GENERATED_MODEL_C52 import AtomDestination, AtomDestinationFile
+        from FEATURE_PROGRAMMATIC.FEATURE_MODEL.FEATURE_GENERATED_MODEL_C52.FEATURE_GENERATED_MODEL_C52__shared import (
+            AtomDestination, AtomDestinationFile,
+        )
 
         validate_model_fields(AtomDestination, {"file": AtomDestinationFile("atom.md", ".")})
         with self.assertRaisesRegex(ValueError, "file.path"):

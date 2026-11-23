@@ -5,7 +5,7 @@ import subprocess
 import unittest
 
 from RELEASE_VERSION.RELEASE_VERSION__tests import test_simple_local_release as fixtures
-from RELEASE_VERSION.local_release import run_local_release
+from RELEASE_VERSION.RELEASE_VERSION__shared import run_local_release
 
 
 class LocalReleaseGitPreflightTests(unittest.TestCase):
