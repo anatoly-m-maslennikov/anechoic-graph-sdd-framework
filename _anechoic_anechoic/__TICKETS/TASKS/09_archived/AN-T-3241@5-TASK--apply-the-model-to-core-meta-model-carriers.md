@@ -1,0 +1,35 @@
+---
+atom_family: TKT
+atom_id: AN-T-3241
+container:
+  component: C00
+priority: 2
+context:
+  template: task
+  label: Task
+state:
+  status: archived
+  version: 5
+  updated_at: 2026-10-24 08:50:14 +0400
+---
+## Summary
+
+Apply the model to Core Meta-Model carriers
+
+# Apply the model to Core Meta-Model carriers
+
+the Assignee **must** apply the reconciled model **to** Core Meta-Model Properties **and** Relations.
+
+## Scope
+
+(selected RMEDO carriers **in** CORE_META_MODEL at `.anechoic_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL`); the source **and** lifecycle admission boundary established by CA-P-976 applies; historical versions, generated copies, runtime, Implementation code, **and** other CAP Atoms are excluded.
+
+## Definition of Done
+
+the Task is **not** Done **if** ((a selected Carrier still requires the removed temporal nesting) **or** (a Subject **or** Relation loses its target **or** meaning) **or** (new **and** old role/property representations disagree) **or** (canonical identity, revision, **or** reference resolution is invalid)).
+
+## Details
+
+apply admitted D rules **to** subjects, graph-owned relations, Properties, role/type metadata, identifiers **and** filenames as required. remove CONTINUANT/OCCURRENT keys **without** deleting semantic distinctions; reconcile collisions **before** flattening. use exact source identity **and** Version rather than a global ambiguous ID match. do **not** write generated APPLICABLE_METHODOLOGY **or** change Tool implementation.
+
+execute **only** **after** the explicit prerequisite is Done. **if** confidence **in** a decision is below the effective Autonomous Confidence Threshold, check Project Principles first **and** ask the Operator **if** uncertainty remains; do **not** silently select a new design. no migration is executed merely by creating this Task.

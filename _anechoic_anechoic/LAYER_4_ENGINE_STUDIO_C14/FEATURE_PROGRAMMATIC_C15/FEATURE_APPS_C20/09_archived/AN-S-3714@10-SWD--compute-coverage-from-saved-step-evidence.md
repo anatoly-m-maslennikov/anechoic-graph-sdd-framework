@@ -1,0 +1,35 @@
+---
+atom_family: SPEC
+atom_id: AN-S-3714
+container:
+  component: C20
+tier: 4
+context:
+  lens: SWD
+state:
+  status: archived
+  version: 10
+  updated_at: 2026-11-09 07:45:14 +0400
+---
+
+## Summary
+
+Compute coverage from saved Step evidence
+
+## Claim
+
+### Prose Claim
+
+the Coverage Gate **must** derive its accounting from the frozen request **and** saved results without another semantic Atom evaluation.
+
+## Details
+
+### Scope
+
+RMED Atoms Base Revise execution in WORKFLOW_ORCHESTRATOR.
+
+- compare gather identities, ordered paths **and** frozen source/rule observations.
+- check every required slot for concluded status **and** evidence; retain coverage gaps **and** blockers.
+- use existing finding-disposition **and** completion predicates for fix coverage.
+- record the gate once per phase in the existing Run state, Journal **and** full report; recovery reuses the same evidence rather than replaying completed effects.
+- run gates as durable DBOS Steps; keep coverage interruption distinct from scheduler failure.

@@ -1,0 +1,38 @@
+---
+atom_family: SPEC
+atom_id: AN-S-4038
+container:
+  component: C9
+tier: 1
+context:
+  lens: DES
+state:
+  status: archived
+  version: 2
+  updated_at: 2026-10-29 09:46:50 +0400
+---
+## Summary
+
+Define Sub-step
+
+## Claim
+
+A Sub-step is a distinct leaf unit contained in exactly one Step. It specifies a call to exactly one reusable Action with parameters and input bindings. It cannot call a Workflow or contain further Sub-steps.
+
+### Formal claim
+
+```text
+Atom/Content Role: Operations/Type: Step >{0+} Atom/Content Role: Operations/Type: Sub-step
+```
+
+## Semantics
+
+A Sub-step is not another name for a nested Step. Its Action is referenced and reusable, not structurally contained by the Sub-step. The call and its eventual execution are distinct; this definition creates neither a Run nor a record.
+
+## Details
+
+A1262–A1264 resolve further nesting and call targets. Containment supplies no inheritance. Exact Atom-Type admission and any properties requiring separate definitions remain uncompleted; no Sub-step Run kind or additional kind is introduced here.
+
+CA-A-1279 confirms the already-settled container hierarchy; no separate Type-catalog decision is inferred from it.
+
+CA-A-1280 adopts the compact cardinality spelling without changing the counts.

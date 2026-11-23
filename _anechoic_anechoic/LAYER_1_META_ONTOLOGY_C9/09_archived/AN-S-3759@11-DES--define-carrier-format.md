@@ -1,0 +1,38 @@
+---
+atom_family: SPEC
+atom_id: AN-S-3759
+container:
+  component: C9
+tier: 3
+context:
+  lens: DES
+state:
+  status: archived
+  version: 11
+  updated_at: 2026-10-29 14:16:32 +0400
+---
+## Summary
+
+Define Carrier.Format
+
+## Claim scope
+
+Carriers with an applicable representation format.
+
+## Claim
+
+A Carrier's Format **means** the rules for encoding and interpreting its represented content. The registered File Carrier values include Markdown, TOML, YAML and JSON under CA-D-262; representation details remain governed by Delivery.
+
+### Formal claim
+
+```text
+Entity/Carrier/File.Format: Markdown
+Entity/Carrier/File.Format: TOML
+Entity/Carrier/File.Format: YAML
+Entity/Carrier/File.Format: JSON
+```
+
+## Details
+
+CA-D-262 admits registered File Carrier formats including Markdown, TOML, YAML and JSON; CA-D-507 distinguishes format from identity. This definition does not require a format value for every Directory Carrier.
+

@@ -1,0 +1,26 @@
+---
+atom_family: SPEC
+atom_id: AN-S-2618
+container:
+  component: C15
+tier: 3
+context:
+  lens: DES
+state:
+  status: archived
+  version: 2
+  updated_at: 2026-11-02 19:46:47 +0400
+---
+## Summary
+
+Declare PROJECT_TOOLS
+
+## Claim
+
+```CFEL
+Scope Unit//LAYER_2_FRAMEWORK_ENGINE.FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.ID == "CA-SU-19";
+Scope Unit//LAYER_2_FRAMEWORK_ENGINE.FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.Name == "PROJECT_TOOLS";
+Scope Unit//LAYER_2_FRAMEWORK_ENGINE.FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.Label == "FEATURE";
+Scope Unit//LAYER_2_FRAMEWORK_ENGINE.FEATURE_PROGRAMMATIC.FEATURE_PROJECT_TOOLS.order.ordered == false;
+Scope Unit//PROJECT_TOOLS ((IS_CONTAINED_BY)) Scope Unit//PROGRAMMATIC
+```

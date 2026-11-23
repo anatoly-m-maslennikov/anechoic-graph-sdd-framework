@@ -1,0 +1,39 @@
+---
+atom_family: TKT
+atom_id: AN-T-3228
+container:
+  component: C00
+priority: 2
+context:
+  template: task
+  label: Task
+state:
+  status: archived
+  version: 4
+  updated_at: 2026-10-24 06:04:05 +0400
+---
+## Summary
+
+Define general vocabulary and unresolved Term indexes
+
+# Define general vocabulary and unresolved Term indexes
+
+the Assignee **must** establish the distinction between general vocabulary **and** unresolved Project-specific Term candidates **in** derived diagnostic indexes.
+
+## Scope
+
+(selected active RMEDO authority for derived model views **in** CORE_META_MODEL at `.anechoic_framework/00_APPLICABLE_METHODOLOGY/000_APPLICABLE_MTHD_sources/001_CORE_META_MODEL` limited **to** general vocabulary **and** unresolved Term diagnostics); the CA-P-976 admission boundary applies, with accepted source changes from completed Tasks **and** the sealed CA-P-980 direct-Subjects stage. Drafts, archives, generated Applicable Methodology copies, runtime, Tool Implementation, Settings values, **and** unrelated CAP Atoms are excluded. existing execution evidence is read-only.
+
+## Definition of Done
+
+the Task is **not** Done **if** (ordinary English vocabulary is classified as a missing governed definition merely because it has none **or** a suspected Project-specific meaning is treated as established authority **or** candidates lack source occurrences **or** the indexes require invented graph edges **or** uncertain classification cannot be reported).
+
+## Details
+
+reuse General Term authority. an unresolved candidate requires evidence of Project-specific use, **not** merely capitalization **or** presence **in** DEPENDS_ON. preserve uncertain cases for review; do **not** promise mechanical certainty about ordinary-language meaning. distinguish missing definition, conflicting definition, **and** ordinary vocabulary. specify sufficient authority for these non-authoritative indexes under the accepted Content Role boundary; CA-P-1084 owns their Carriers. do **not** create a second Terms Graph **without** independently justified relation authority.
+
+assign **every** Claim by the accepted Content Role boundary: R for model **and** selection invariants, M **only** for Implementation choices **or** conventions, E for checks, **and** O for **any** reusable Action **or** Process definition. reuse existing authority; do **not** require an Atom **in** **every** Content Role. D remains with CA-P-1084; Operation-specific composition **and** control-flow schema remain with CA-P-980.
+
+execute sequentially, **only** **after** the explicit prerequisite is Done, with **every** Task assigned **to** its own subagent. review this sub-Epic **before** its first Task; **after** its completion, review the remaining parent sub-Epic **before** resuming CA-P-980. **if** confidence is below the effective Autonomous Confidence Threshold, check Project Principles first **and** ask the Operator **if** uncertainty remains. creating this Task does **not** execute its work.
+
+completion evidence: [vocabulary diagnostics report](../../../execution_evidence/CA-P-1080@4-vocabulary-diagnostics-report.md) **and** [source change map](../../../execution_evidence/CA-P-1080@4-changed-source-map.projection.json). the Definition of Done falsifier is false: R1455 **and** E444 distinguish ordinary vocabulary, missing **or** conflicting defining authority **or** uses, **and** insufficient evidence; source occurrences, context, Revisions **and** definition coverage remain traceable **without** fabricated definitions **or** graph edges. 24 semantic authority fixtures were reviewed; no full-vocabulary classifier **or** generator conformance is claimed. Git materialization remains pending.

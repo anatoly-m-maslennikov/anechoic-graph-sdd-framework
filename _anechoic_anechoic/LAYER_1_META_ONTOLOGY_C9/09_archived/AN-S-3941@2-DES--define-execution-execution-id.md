@@ -1,0 +1,34 @@
+---
+atom_family: SPEC
+atom_id: AN-S-3941
+container:
+  component: C9
+tier: 3
+context:
+  lens: DES
+state:
+  status: archived
+  version: 2
+  updated_at: 2026-10-19 15:54:15 +0400
+---
+## Summary
+
+Define Execution.Execution ID
+
+# Summary
+
+Define Execution.Execution ID
+
+## Scope
+
+The identifier of an Execution.
+
+## Claim
+
+Execution ID identifies an Execution.
+
+## Details
+
+The Operator identified executions by Execution ID. The accepted candidate includes this property under Execution. This draft adds no identifier format or uniqueness domain.
+
+ No active Execution ID definition was found in the reviewed sources.

@@ -1,0 +1,36 @@
+---
+atom_family: SPEC
+atom_id: AN-S-3527
+container:
+  component: C21
+tier: 3
+context:
+  lens: QA
+state:
+  status: archived
+  version: 2
+  updated_at: 2026-10-14 20:53:35 +0400
+---
+## Summary
+
+Verify the registered selected pin refresh
+
+# Summary
+
+Verify the registered selected pin refresh
+
+## Scope
+
+the exact admitted selected-source revision refresh under the current Epic.
+
+## Claim
+
+the accepted selected-source refresh **must** pass the declared exact-successor and no-effect refusal checks.
+
+## Details
+
+- the registered prior binding yields **=1** successor with eight declared pin replacements, unchanged capability and graph structure, current validated pins and a canonical digest.
+- malformed or duplicate registration fields, wrong versions or identities, wrong input/source/archive hashes, unsafe paths, source drift, wrong occurrence counts, unregistered routes and altered topology are rejected before effects.
+- publication requires the existing trusted current Operator context; stale candidates or inputs refuse. successful readback is exact and its Journal receipt is real.
+- test publication and recording failure separately; pending evidence remains recoverable without replay. all unrelated query admissions and historical Events remain intact.
+

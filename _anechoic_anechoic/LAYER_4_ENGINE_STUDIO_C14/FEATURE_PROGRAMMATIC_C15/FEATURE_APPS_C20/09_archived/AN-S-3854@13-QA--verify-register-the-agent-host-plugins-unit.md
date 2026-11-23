@@ -1,0 +1,40 @@
+---
+atom_family: SPEC
+atom_id: AN-S-3854
+container:
+  component: C20
+tier: 3
+context:
+  lens: QA
+state:
+  status: archived
+  version: 13
+  updated_at: 2026-11-02 19:44:26 +0400
+---
+## Summary
+
+Verify register the AGENT_HOST_PLUGINS unit
+
+## Claim
+
+### Prose Claim
+
+#### Claim checked
+
+CA-M-242 registers AGENT_HOST_PLUGINS as one immediate unordered APPS unit with the exact required boundary **and** no provider-neutral ANECHOIC authority.
+
+#### Applicable when
+
+Apply whenever AGENT_HOST_PLUGINS's APPS ownership, structural identity, responsibility boundary, **or** realization path changes.
+
+#### Test case
+
+Examine the current active APPS **and** AGENT_HOST_PLUGINS authority, using **any** available derived representation **only** as supporting evidence. Determine whether the AGENT_HOST_PLUGINS declaration has one immediate typed owner, the declared prefix, level, address, path, host-specific responsibility boundary, **and** provider-neutral non-duplication condition.
+
+#### Acceptance criteria
+
+AGENT_HOST_PLUGINS is the sole matching immediate unordered child of APPS at Structural level `4`, addressed by `002_FRAMEWORK_ENGINE/PROGRAMMATIC/APPS/AGENT_HOST_PLUGINS` **and** realized at its declared source path; it owns installable agent-host-specific packages **and** host wiring, while **every** provider-neutral ANECHOIC Skill, Tool, **and** Methodology behavior remains a reference **to** its existing owner.
+
+#### Failure disposition
+
+Reject the AGENT_HOST_PLUGINS registration **and** preserve the examined authority, **any** supporting derived representation, the observed owner **and** identity facts, **and** **every** missing, duplicate, **or** copied provider-neutral claim.

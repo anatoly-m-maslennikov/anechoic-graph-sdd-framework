@@ -1,0 +1,30 @@
+---
+atom_family: SPEC
+atom_id: AN-S-4085
+container:
+  component: C9
+tier: 1
+context:
+  lens: DES
+state:
+  status: archived
+  version: 1
+  updated_at: 2026-10-29 17:09:47 +0400
+---
+## Summary
+
+Define Atom Content
+
+## Claim scope
+
+The Atom.Content grouping and its direct child properties.
+
+## Claim
+
+Atom.Content **means** the grouping of an Atom's role-specific content child properties. It has zero direct values; each child property has its own independent count, and a child value does not count as a value of Atom.Content. For RMED, the child properties use the registered `atom.content.*` logical paths and their Markdown sections remain governed by Delivery authority.
+
+### Formal claim
+
+```text
+Entity/Object/Continuant/Governing Objects/Atom.Content{0}
+```

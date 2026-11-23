@@ -1,0 +1,33 @@
+---
+atom_family: SPEC
+atom_id: AN-S-2722
+container:
+  component: C9
+tier: 3
+context:
+  lens: DES
+state:
+  status: archived
+  version: 1
+  updated_at: 2026-11-02 19:17:40 +0400
+---
+## Summary
+
+Declare Scope Unit.order.number
+
+## Claim
+
+### Formal Claim
+
+```CFEL
+# model
+Scope Unit.order.number: IF order.ordered = true THEN [int, 1+]{::1} ELSE []{::0};
+
+Scope Unit.order.number.*[]{::0}
+```
+
+## Semantics
+
+`order.ordered` is the Boolean value on the same Scope Unit. `1+` admits integer values of at least 1; `{:1}` requires one value. When order.ordered is false, order.number has no value.
+
+The number is the position among ordered siblings with the same direct parent. Displayed positions do not establish parentage, ownership or Atom authority.
