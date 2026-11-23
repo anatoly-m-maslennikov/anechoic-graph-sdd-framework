@@ -6,7 +6,10 @@ const Equipment = preload("res://equipment.gd")
 const Plant = preload("res://market/pottedPlant.glb")
 const SPECTRUM = [preload("res://plots/clean-spectrum.png"), preload("res://plots/noisy-spectrum.png")]
 const SPECTROGRAM = [preload("res://plots/clean-spectrogram.png"), preload("res://plots/noisy-spectrogram.png")]
-const LOGO_SIGNAL = [preload("res://plots/clean-wave.png"), SPECTROGRAM[1]]
+const LOGO_SIGNAL = [preload("res://plots/clean-signal.png"), preload("res://plots/noisy-signal.png")]
+const DAY_SPECTRUM = [preload("res://plots/clean-spectrum-day.png"), preload("res://plots/noisy-spectrum-day.png")]
+const DAY_SPECTROGRAM = [preload("res://plots/clean-spectrogram-day.png"), preload("res://plots/noisy-spectrogram-day.png")]
+const DAY_LOGO_SIGNAL = [preload("res://plots/clean-signal-day.png"), preload("res://plots/noisy-signal-day.png")]
 const WALNUT := Color("#553222")
 const OAK := Color("#b97438")
 const BRASS := Color("#e7ad47")
@@ -18,7 +21,10 @@ const IVORY := Color("#fff0cd")
 const SHELL := Color("#c4d1cc")
 const SHELL_LIP := Color("#d7e1dc")
 const FLOOR := 0.18
-const WINDOW_SILL := 1.34
+const FRONT_DEPTH := 0.68
+const DIVIDER_FRONT := 2.06 + FRONT_DEPTH
+const CHAMBER_EXTENSION := 0.64
+const WINDOW_SILL := 1.19
 const WINDOW_HEAD := 2.91
 const CONTROL_WALL_LEFT := -4.485
 const DIVIDER_CONTROL_FACE := -0.075
@@ -28,8 +34,8 @@ const TILE_GRADIENT := [Color("#d5a7aa"), Color("#dbb6a2"), Color("#dfcf9f"),
 	Color("#bacba0"), Color("#a7cabf"), Color("#a6b9d1"), Color("#baaed0")]
 const LOGO_YAW := -0.35
 const LOGO_PITCH := 0.28
-const LOGO_SIZE := 11.55
-const LOGO_TARGET := Vector3(0, 0.91, 0)
+const LOGO_SIZE := 12.39
+const LOGO_TARGET := Vector3(CHAMBER_EXTENSION * 0.5, 0.91, FRONT_DEPTH * 0.5)
 
 var camera: Camera3D
 var lighting: WorldEnvironment
@@ -66,9 +72,9 @@ func _build() -> void:
 	var furniture := _group(model, "Equipment")
 	var characters := _group(model, "Cast")
 	_architecture(geometry)
-	Equipment.build(furniture)
-	_control_room_furnishings(furniture)
-	_chamber_cooler(furniture)
+	Equipment.build(furniture, Vector2(-1.99, DIVIDER_FRONT))
+	_iceberg_poster(furniture)
+	_chamber_coffee_table(furniture)
 	Cast.build(characters)
 	_greenery(model)
 	_signal_displays(model)
@@ -89,43 +95,47 @@ func _bind_studio() -> void:
 	picture_frame = $Brand/PictureFrame
 
 func _architecture(parent: Node3D) -> void:
-	_finish(_box(parent, "WalnutPlinth", Vector3(0, 0, 0), Vector3(9.40, 0.30, 4.42), WALNUT), "wood")
+	_finish(_box(parent, "WalnutPlinth", Vector3(CHAMBER_EXTENSION * 0.5, 0, FRONT_DEPTH * 0.5), Vector3(9.40 + CHAMBER_EXTENSION, 0.30, 4.42 + FRONT_DEPTH), WALNUT), "wood")
 	_desk_floor(parent)
-	_finish(_box(parent, "ChamberCarpet", Vector3(2.26, 0.153, 0), Vector3(4.42, 0.054, 4.12), Color("#85263f")), "felt")
+	_finish(_box(parent, "ChamberCarpet", Vector3(2.26 + CHAMBER_EXTENSION * 0.5, 0.153, FRONT_DEPTH * 0.5), Vector3(4.42 + CHAMBER_EXTENSION, 0.054, 4.12 + FRONT_DEPTH), Color("#85263f")), "felt")
 	_box(parent, "ControlRearWall", Vector3(-2.27, 2.04, -2.06), Vector3(4.43, 3.72, 0.14), SHELL)
-	_box(parent, "ChamberRearWall", Vector3(2.27, 2.04, -2.06), Vector3(4.43, 3.72, 0.14), SHELL)
-	_box(parent, "ChamberSideWall", Vector3(4.49, 2.04, -0.03), Vector3(0.12, 3.72, 4.18), SHELL)
-	_box(parent, "ChamberRightSkirting", Vector3(4.42, 0.26, -0.02), Vector3(0.04, 0.15, 4.10), SHELL_LIP)
+	_box(parent, "ChamberRearWall", Vector3(2.27 + CHAMBER_EXTENSION * 0.5, 2.04, -2.06), Vector3(4.43 + CHAMBER_EXTENSION, 3.72, 0.14), SHELL)
+	_box(parent, "ChamberSideWall", Vector3(4.49 + CHAMBER_EXTENSION, 2.04, -0.03 + FRONT_DEPTH * 0.5), Vector3(0.12, 3.72, 4.18 + FRONT_DEPTH), SHELL)
+	_box(parent, "ChamberRightSkirting", Vector3(4.42 + CHAMBER_EXTENSION, 0.26, -0.02 + FRONT_DEPTH * 0.5), Vector3(0.04, 0.15, 4.10 + FRONT_DEPTH), SHELL_LIP)
 	for row in range(7):
 		var base := 0.19 + row * 0.56
 		var height := minf(0.56, 3.89 - base)
 		var y := base + height * 0.5
-		for column in range(8):
+		for column in range(9):
 			var tile_color := _tile_tint(column, row)
-			var point := Vector3(0.343 + column * 0.542, y, -1.94)
-			_box(parent, "AcousticTileBacking", point, Vector3(0.542, height, 0.11), FELT_SEAMS)
-			_acoustic_relief(parent, "AcousticTile", point + Vector3(0, 0, 0.055), Vector2(0.50, height - 0.042), tile_color, false)
-		for column in range(7):
-			var tile_color := _tile_tint(column + 8, row)
-			var point := Vector3(4.407, y, -1.68 + column * 0.57)
-			_box(parent, "SideAcousticTileBacking", point, Vector3(0.065, height, 0.57), FELT_SEAMS)
-			_acoustic_relief(parent, "SideAcousticTile", point + Vector3(-0.0325, 0, 0), Vector2(0.55, height - 0.042), tile_color, true)
+			var width := CHAMBER_EXTENSION if column == 8 else 0.542
+			var point := Vector3(0.072 + column * 0.542 + width * 0.5, y, -1.94)
+			_box(parent, "AcousticTileBacking", point, Vector3(width, height, 0.11), FELT_SEAMS)
+			_acoustic_relief(parent, "AcousticTile", point + Vector3(0, 0, 0.055), Vector2(width - 0.042, height - 0.042), tile_color, false)
+		for column in range(8):
+			var tile_color := _tile_tint(column + 9, row)
+			var width := FRONT_DEPTH if column == 7 else 0.57
+			var point := Vector3(4.407 + CHAMBER_EXTENSION, y, -1.965 + column * 0.57 + width * 0.5)
+			_box(parent, "SideAcousticTileBacking", point, Vector3(0.065, height, width), FELT_SEAMS)
+			_acoustic_relief(parent, "SideAcousticTile", point + Vector3(-0.0325, 0, 0), Vector2(width - 0.02, height - 0.042), tile_color, true)
 	var partition := _group(parent, "SharedPartition")
-	_box(partition, "SillToFloor", Vector3(0, 0.75, 0), Vector3(0.15, 1.14, 4.12), SHELL)
-	_box(partition, "LintelToCeiling", Vector3(0, 3.40, 0), Vector3(0.15, 0.96, 4.12), SHELL)
-	for z in [-1.94, 1.94]:
-		_box(partition, "WindowJamb", Vector3(0, 2.13, z), Vector3(0.15, 1.62, 0.25), SHELL)
+	var opening_center := (WINDOW_SILL + WINDOW_HEAD) * 0.5
+	var opening_height := WINDOW_HEAD - WINDOW_SILL
+	_box(partition, "SillToFloor", Vector3(0, (FLOOR + WINDOW_SILL) * 0.5, FRONT_DEPTH * 0.5), Vector3(0.15, WINDOW_SILL - FLOOR, 4.12 + FRONT_DEPTH), SHELL)
+	_box(partition, "LintelToCeiling", Vector3(0, 3.40, FRONT_DEPTH * 0.5), Vector3(0.15, 0.96, 4.12 + FRONT_DEPTH), SHELL)
+	for z in [-1.97, 1.97 + FRONT_DEPTH]:
+		_box(partition, "WindowJamb", Vector3(0, opening_center, z), Vector3(0.15, opening_height + 0.06, 0.18), SHELL)
 	for y in [WINDOW_SILL, WINDOW_HEAD]:
-		_box(partition, "WindowRail", Vector3(0, y, 0), Vector3(0.18, 0.07, 3.72), SHELL_LIP)
-	var glass := _box(partition, "ClearObservationGlass", Vector3(0, 2.12, 0), Vector3(0.014, 1.50, 3.67), Color(0.92, 0.98, 0.97, 0.055))
+		_box(partition, "WindowRail", Vector3(0, y, FRONT_DEPTH * 0.5), Vector3(0.18, 0.07, 3.80 + FRONT_DEPTH), SHELL_LIP)
+	var glass := _box(partition, "ClearObservationGlass", Vector3(0, opening_center, FRONT_DEPTH * 0.5), Vector3(0.014, opening_height - 0.07, 3.78 + FRONT_DEPTH), Color(0.92, 0.98, 0.97, 0.055))
 	var glass_material := glass.material_override as StandardMaterial3D
 	glass_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	glass_material.roughness = 0.15
 	glass_material.cull_mode = BaseMaterial3D.CULL_DISABLED
 	glass.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_box(parent, "RearWallCap", Vector3(0, 3.922, -2.03), Vector3(9.08, 0.082, 0.24), SHELL_LIP)
-	_box(parent, "SideWallCap", Vector3(4.49, 3.922, 0.115), Vector3(0.18, 0.082, 4.05), SHELL_LIP)
-	_box(partition, "DividerWallCap", Vector3(0, 3.91, 0.05), Vector3(0.18, 0.06, 4.06), SHELL_LIP)
+	_box(parent, "RearWallCap", Vector3(CHAMBER_EXTENSION * 0.5, 3.922, -2.03), Vector3(9.08 + CHAMBER_EXTENSION, 0.082, 0.24), SHELL_LIP)
+	_box(parent, "SideWallCap", Vector3(4.49 + CHAMBER_EXTENSION, 3.922, 0.115 + FRONT_DEPTH * 0.5), Vector3(0.18, 0.082, 4.05 + FRONT_DEPTH), SHELL_LIP)
+	_box(partition, "DividerWallCap", Vector3(0, 3.91, 0.05 + FRONT_DEPTH * 0.5), Vector3(0.18, 0.06, 4.06 + FRONT_DEPTH), SHELL_LIP)
 	_shed_roof(parent)
 	_guardrail(parent)
 
@@ -133,11 +143,11 @@ func _shed_roof(parent: Node3D) -> void:
 	var roof := _group(parent, "BackThirdShedRoof")
 	roof.position = Vector3(0, 4.31, -1.375)
 	roof.rotation.x = 0.12
-	_box(roof, "ShedRoofSlab", Vector3.ZERO, Vector3(9.12, 0.09, 1.37), SHELL_LIP)
-	_box(roof, "FrontRoofFascia", Vector3(0, -0.035, 0.67), Vector3(9.12, 0.061, 0.03), SHELL)
-	for x in [-4.42, 0.0, 4.48]:
+	_box(roof, "ShedRoofSlab", Vector3.RIGHT * CHAMBER_EXTENSION * 0.5, Vector3(9.12 + CHAMBER_EXTENSION, 0.09, 1.37), SHELL_LIP)
+	_box(roof, "FrontRoofFascia", Vector3(CHAMBER_EXTENSION * 0.5, -0.035, 0.67), Vector3(9.12 + CHAMBER_EXTENSION, 0.061, 0.03), SHELL)
+	for x in [-4.42, 0.0, 4.48 + CHAMBER_EXTENSION]:
 		_box(parent, "ShedRoofSupport", Vector3(x, 4.155, -2.04), Vector3(0.09, 0.42, 0.10), SHELL)
-	for x in [-3.24, -1.25, 1.25, 3.24]:
+	for x in [-3.24, -1.25, 1.25 + CHAMBER_EXTENSION * 0.25, 3.24 + CHAMBER_EXTENSION * 0.75]:
 		var panel := _group(roof, "FlushSolarPanel")
 		panel.position.x = x
 		_box(panel, "PhotovoltaicGlazing", Vector3(0, 0.052, 0), Vector3(1.73, 0.018, 1.10), Color("#243641"))
@@ -156,7 +166,7 @@ func _rounded_outline(size: Vector2, radius: float) -> Array[Vector2]:
 	return outline
 
 func _tile_tint(column: int, row: int) -> Color:
-	var span := (column + row * 0.36) / 16.16 * (TILE_GRADIENT.size() - 1)
+	var span := (column + row * 0.36) / 17.16 * (TILE_GRADIENT.size() - 1)
 	var index := mini(floori(span), TILE_GRADIENT.size() - 2)
 	return TILE_GRADIENT[index].lerp(TILE_GRADIENT[index + 1], span - index).darkened(0.023 * ((row * 5 + column) % 3))
 
@@ -200,7 +210,7 @@ func _guardrail(parent: Node3D) -> void:
 		part.material_override = satin_brass
 
 func _desk_floor(parent: Node3D) -> void:
-	for row in range(12):
+	for row in range(12 + roundi(FRONT_DEPTH / 0.34)):
 		var z := -1.884 + row * 0.34
 		var color := OAK.lightened(0.02 * float(row % 4))
 		var join := -3.20 + 0.44 * float(row % 4)
@@ -226,8 +236,8 @@ func _greenery(parent: Node3D) -> void:
 	_tint_plant(prop)
 	_wall_planter(garden, Vector3(-3.88, 3.47, -1.78), 0.0, Vector3(1.05, 1.0, 1.12), 0.37)
 	_wall_planter(garden, Vector3(-1.83, 3.53, -1.78), 0.0, Vector3(1.43, 0.85, 1.1), 0.08)
-	_wall_planter(garden, Vector3(4.24, 2.55, -0.25), -PI / 2.0, Vector3(1.34, 0.88, 1.12), 0.11)
-	_wall_planter(garden, Vector3(4.24, 2.45, 1.05), -PI / 2.0, Vector3(1.16, 1.0, 1.10), 0.34)
+	_wall_planter(garden, Vector3(4.24 + CHAMBER_EXTENSION, 2.55, -0.25), -PI / 2.0, Vector3(1.34, 0.88, 1.12), 0.11)
+	_wall_planter(garden, Vector3(4.24 + CHAMBER_EXTENSION, 2.45, 1.05), -PI / 2.0, Vector3(1.16, 1.0, 1.10), 0.34)
 	var water := _group(garden, "RainwaterSystem")
 	var pipe := Color("#ad8050")
 	_line(water, "Gutter", [Vector3(-2.55, 4.169, -0.70), Vector3(-4.42, 4.16, -0.70),
@@ -338,13 +348,13 @@ func _tint_plant(node: Node) -> void:
 
 func _signal_displays(parent: Node3D) -> void:
 	var displays := _group(parent, "SignalDisplays")
-	clean_screen = _display(displays, "CleanSignal", Vector3(-0.084, 3.38, 0.02), -PI / 2, Vector2(3.45, 0.82), LOGO_SIGNAL[0])
-	noisy_screen = _display(displays, "ChamberSignal", Vector3(4.30, 3.42, 0.08), -PI / 2.0, Vector2(3.62, 0.82), LOGO_SIGNAL[1])
-	_box(displays, "ChamberDisplayWallMount", Vector3(4.365, 3.42, 0.08), Vector3(0.10, 0.55, 2.65), FELT_SEAMS)
+	clean_screen = _display(displays, "CleanSignal", Vector3(-0.084, 3.38, 0.02 + FRONT_DEPTH * 0.5), -PI / 2, Vector2(3.45 + FRONT_DEPTH * 0.74, 0.82), LOGO_SIGNAL[0])
+	noisy_screen = _display(displays, "ChamberSignal", Vector3(4.30 + CHAMBER_EXTENSION, 3.42, 0.08), -PI / 2.0, Vector2(3.62, 0.82), LOGO_SIGNAL[1])
+	_box(displays, "ChamberDisplayWallMount", Vector3(4.365 + CHAMBER_EXTENSION, 3.42, 0.08), Vector3(0.10, 0.55, 2.65), FELT_SEAMS)
 	var route := _group(displays, "AudioReturnTowardControl")
 	_line(route, "AudioReturn", [
-		Vector3(4.27, 3.71, -1.73), Vector3(4.27, 3.75, -1.77),
-		Vector3(4.20, 3.75, -1.80), Vector3(-0.13, 3.75, -1.80),
+		Vector3(4.27 + CHAMBER_EXTENSION, 3.71, -1.73), Vector3(4.27 + CHAMBER_EXTENSION, 3.75, -1.77),
+		Vector3(4.20 + CHAMBER_EXTENSION, 3.75, -1.80), Vector3(-0.13, 3.75, -1.80),
 		Vector3(-0.13, 3.75, -1.62), Vector3(-0.13, 3.74, -1.62)
 	], 0.028, CYAN, true)
 	_arrow(route, Vector3(1.88, 3.75, -1.761), Vector3.LEFT, CYAN, 0.13)
@@ -391,50 +401,79 @@ func _dashboard(parent: Node3D) -> void:
 	_label3d(dash, "SignalLevel", "–23 dB", Vector3(0.83, -0.456, 0.081), 42, CYAN, 0.0027)
 	_label3d(dash, "MonitorStatus", "READY", Vector3(0.83, -0.276, 0.081), 36, GOLD, 0.0027)
 
-func _control_room_furnishings(parent: Node3D) -> void:
-	var nook := _group(parent, "RefreshmentNook")
-	var cooler := _group(nook, "WaterCooler")
-	cooler.position = Vector3(-3.14, FLOOR, -1.64)
-	var ceramic := Color("#dfded2")
-	_box(cooler, "Foot", Vector3(0, 0.04, 0), Vector3(0.39, 0.08, 0.39), INK)
-	_box(cooler, "DispenserCabinet", Vector3(0, 0.40, 0), Vector3(0.41, 0.73, 0.38), ceramic)
-	_box(cooler, "TapRecess", Vector3(0, 0.57, 0.193), Vector3(0.29, 0.23, 0.018), INK)
-	_box(cooler, "DripTray", Vector3(0, 0.465, 0.22), Vector3(0.30, 0.038, 0.10), Color("#809c94"))
-	_rod(cooler, "ColdWaterTap", Vector3(0, 0.627, 0.204), Vector3(0, 0.627, 0.247), 0.030, CYAN)
-	_rod(cooler, "JugNeck", Vector3(0, 0.765, 0), Vector3(0, 0.88, 0), 0.067, Color("#1c879f"))
-	var jug := CylinderMesh.new()
-	jug.height = 0.35
-	jug.top_radius = 0.157
-	jug.bottom_radius = 0.133
-	jug.radial_segments = 12
-	_mesh(cooler, "BlueWaterJug", jug, Vector3(0, 1.04, 0), Color("#62c1df"))
-	for y in [0.94, 1.18]:
-		_rod(cooler, "JugRib", Vector3(0, y, 0), Vector3(0, y + 0.022, 0), 0.158, Color("#317ea1"))
-	_box(cooler, "JugGlint", Vector3(-0.075, 1.06, 0.119), Vector3(0.022, 0.23, 0.013), Color("#ccecf2"))
+func _chamber_coffee_table(parent: Node3D) -> void:
+	var table := _group(parent, "ChamberCoffeeTable")
+	table.position = Vector3(2.43, FLOOR, 1.47)
+	_freeform_tabletop(table)
+	for foot: Vector3 in [Vector3(-1.00, 0, 0.04), Vector3(0.98, 0, -0.03), Vector3(0.18, 0, 0.32)]:
+		_rod(table, "SplayedTableLeg", foot + Vector3.UP * 0.015, foot * 0.78 + Vector3.UP * 0.31, 0.033, WALNUT)
+	var pot := CylinderMesh.new()
+	pot.top_radius = 0.145
+	pot.bottom_radius = 0.103
+	pot.height = 0.148
+	pot.radial_segments = 12
+	_mesh(table, "OffWhitePlantPot", pot, Vector3.UP * 0.433, Color("#eeeade"))
+	_rod(table, "PlantSoil", Vector3.UP * 0.505, Vector3.UP * 0.514, 0.134, Color("#574432"))
+	var foliage := _group(table, "SmallPottedBush")
+	foliage.position.y = 0.51
+	foliage.scale = Vector3(0.86, 0.25, 0.86)
+	_broadleaf(foliage, Vector3(-0.07, 0, 0.04), 2)
+	_broadleaf(foliage, Vector3(0.08, -0.13, -0.05), 2)
 
-	var table := _group(nook, "FruitTable")
-	table.position = Vector3(-2.50, FLOOR, -1.64)
-	_finish(_box(table, "Tabletop", Vector3(0, 0.735, 0), Vector3(0.62, 0.072, 0.43), OAK), "wood")
-	for x in [-0.247, 0.247]:
-		for z in [-0.149, 0.149]:
-			_box(table, "TableLeg", Vector3(x, 0.35, z), Vector3(0.051, 0.70, 0.051), WALNUT)
-	var bowl := CylinderMesh.new()
-	bowl.height = 0.10
-	bowl.top_radius = 0.179
-	bowl.bottom_radius = 0.129
-	bowl.radial_segments = 12
-	_mesh(table, "CeramicBowl", bowl, Vector3(0, 0.821, 0), Color("#168475"))
-	var fruit := SphereMesh.new()
-	fruit.radius = 0.069
-	fruit.height = 0.132
-	fruit.radial_segments = 8
-	fruit.rings = 4
-	_mesh(table, "Apple", fruit, Vector3(-0.08, 0.898, 0.04), Color("#d7512e"))
-	_mesh(table, "Orange", fruit, Vector3(0.064, 0.891, 0.055), Color("#f5a126"))
-	var pear := _mesh(table, "Pear", fruit, Vector3(0.014, 0.944, -0.041), Color("#a7b843"))
-	pear.scale = Vector3(0.86, 1.28, 0.86)
-	_rod(table, "AppleStem", Vector3(-0.08, 0.95, 0.037), Vector3(-0.066, 0.988, 0.034), 0.009, WALNUT)
+func _freeform_tabletop(parent: Node3D) -> void:
+	var outline := PackedVector2Array([
+		Vector2(244, 67), Vector2(281, 92), Vector2(320, 158), Vector2(368, 160),
+		Vector2(412, 170), Vector2(412, 201), Vector2(377, 241), Vector2(352, 320),
+		Vector2(313, 370), Vector2(272, 372), Vector2(234, 348), Vector2(197, 379),
+		Vector2(161, 403), Vector2(139, 389), Vector2(141, 352), Vector2(165, 306),
+		Vector2(161, 269), Vector2(135, 254), Vector2(99, 257), Vector2(85, 237),
+		Vector2(115, 204), Vector2(166, 179), Vector2(187, 145), Vector2(193, 107),
+		Vector2(211, 77),
+	])
+	for index in range(outline.size()):
+		outline[index] = (outline[index] - Vector2(248, 238)) * Vector2(0.00925, 0.00281)
+	var curve := Curve2D.new()
+	curve.bake_interval = 0.039
+	for index in range(outline.size() + 1):
+		var current := index % outline.size()
+		var previous := posmod(current - 1, outline.size())
+		var next := (current + 1) % outline.size()
+		var tangent := (outline[next] - outline[previous]) / 6.0
+		curve.add_point(outline[current], -tangent, tangent)
+	var edge := curve.get_baked_points()
+	edge.resize(edge.size() - 1)
+	var triangles := Geometry2D.triangulate_polygon(edge)
+	assert(not triangles.is_empty(), "Tabletop outline must triangulate.")
 
+	var shape := SurfaceTool.new()
+	shape.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for index in range(0, triangles.size(), 3):
+		for corner in [0, 1, 2]:
+			var point := edge[triangles[index + corner]]
+			shape.set_normal(Vector3.UP)
+			shape.set_uv(point)
+			shape.add_vertex(Vector3(point.x, 0.36, point.y))
+		for corner in [0, 2, 1]:
+			var point := edge[triangles[index + corner]]
+			shape.set_normal(Vector3.DOWN)
+			shape.set_uv(point)
+			shape.add_vertex(Vector3(point.x, 0.29, point.y))
+	for index in range(edge.size()):
+		var a := edge[index]
+		var b := edge[(index + 1) % edge.size()]
+		var tangent := b - a
+		var outward := Vector3(tangent.y, 0, -tangent.x).normalized()
+		var low_a := Vector3(a.x, 0.29, a.y)
+		var low_b := Vector3(b.x, 0.29, b.y)
+		var high_a := low_a + Vector3.UP * 0.07
+		var high_b := low_b + Vector3.UP * 0.07
+		for point: Vector3 in [low_a, high_b, high_a, low_a, low_b, high_b]:
+			shape.set_normal(outward)
+			shape.set_uv(Vector2(point.x, point.z))
+			shape.add_vertex(point)
+	_finish(_mesh(parent, "Lobed maple tabletop", shape.commit(), Vector3.ZERO, OAK), "wood")
+
+func _iceberg_poster(parent: Node3D) -> void:
 	var poster := _group(parent, "IcebergPoster")
 	var dash_left := DIVIDER_CONTROL_FACE - DASHBOARD_WIDTH
 	poster.position = Vector3((CONTROL_WALL_LEFT + dash_left) * 0.5, (WINDOW_SILL + WINDOW_HEAD) * 0.5, -1.96)
@@ -486,14 +525,14 @@ func _score_and_cables(parent: Node3D) -> void:
 		_score_page(score, "PartScore", Vector3(x, 2.66, -1.82), Vector2(0.90, 0.42))
 		_line(score, "ScoreBranch", [Vector3(root.x, 3.14, -1.80), Vector3(root.x, 3.00, -1.80),
 			Vector3(x, 3.00, -1.80), Vector3(x, 2.86, -1.80)], 0.023, GOLD, true)
-	var console_port := Vector3(-0.52, 1.085, 1.725)
+	var console_port := Vector3(-0.52, 1.085, DIVIDER_FRONT)
 	_rod(score, "ConsoleOutputFlange", console_port, console_port + Vector3(0, 0, 0.038), 0.072, WALNUT)
-	_rod(score, "ConsoleOutputFitting", console_port + Vector3(0, 0, 0.038), console_port + Vector3(0, 0, 0.080), 0.052, BRASS)
-	_rod(score, "DividerFeedthrough", Vector3(-0.105, 0.98, 1.81), Vector3(-0.065, 0.98, 1.81), 0.057, BRASS)
+	_rod(score, "ConsoleOutputFitting", console_port + Vector3(0, 0, 0.038), console_port + Vector3(0, 0, 0.078), 0.052, BRASS)
+	_rod(score, "DividerFeedthrough", Vector3(-0.105, 0.98, DIVIDER_FRONT - 0.10), Vector3(-0.065, 0.98, DIVIDER_FRONT - 0.10), 0.057, BRASS)
 	_line(score, "ConsoleScoreFeed", [
-		console_port + Vector3(0, 0, 0.075), Vector3(-0.52, 1.085, 1.83),
-		Vector3(-0.48, 1.075, 1.86), Vector3(-0.21, 0.99, 1.86),
-		Vector3(-0.15, 0.98, 1.81), Vector3(0, 0.98, 1.81),
+		console_port + Vector3(0, 0, 0.076), Vector3(-0.48, 1.075, DIVIDER_FRONT + 0.11),
+		Vector3(-0.24, 0.99, DIVIDER_FRONT + 0.11), Vector3(-0.15, 0.98, DIVIDER_FRONT + 0.04),
+		Vector3(-0.15, 0.98, DIVIDER_FRONT - 0.10), Vector3(0, 0.98, DIVIDER_FRONT - 0.10),
 		Vector3(0, 0.88, -1.74), Vector3(0.06, 0.88, -1.80),
 		Vector3(0.21, 0.88, -1.80)], 0.035, GOLD, true)
 	_line(score, "RearWallScorePipe", [
@@ -512,7 +551,7 @@ func _score_and_cables(parent: Node3D) -> void:
 		_rod(cables, "CablePlug", Vector3(0.085, 0.32, z), Vector3(0.19, 0.32, z), 0.036, cable)
 	_line(cables, "MicrophoneCable", [
 		Vector3(0.19, 0.32, 0.43), Vector3(0.29, 0.20, 0.33), Vector3(0.48, 0.20, 0.06),
-		Vector3(0.56, 0.20, -0.55), Cast.MIC_JACK], 0.023, cable, true)
+		Vector3(Cast.MIC_POSITION.x, 0.20, -0.55), Cast.MIC_JACK], 0.023, cable, true)
 	var piano_jack := Equipment.PIANO_JACK
 	_line(cables, "PianoCable", [
 		Vector3(0.19, 0.32, 0.62), Vector3(0.34, 0.20, 0.52), Vector3(0.71, 0.2, 0.26),
@@ -537,50 +576,6 @@ func _score_page(parent: Node3D, node_name: String, at: Vector3, size: Vector2) 
 		var y := (i % 3 - 1) * size.y * 0.10
 		_mesh(page, "NoteHead", note, Vector3(x, y, 0.027), INK).scale = Vector3(1.35, 0.63, 0.19)
 		_box(page, "NoteStem", Vector3(x + note.radius, y + stem * 0.5, 0.030), Vector3(0.01, stem, 0.010), INK)
-
-func _chamber_cooler(parent: Node3D) -> void:
-	var cooler := _group(parent, "ChamberCoolerAndAquarium")
-	cooler.position = Vector3(3.95, 0, 1.35)
-	var casing := Color("#dee8e3")
-	var trim := Color("#799e9a")
-	_box(cooler, "CoolerCabinet", Vector3(0, 0.705, 0), Vector3(0.72, 1.05, 0.72), casing)
-	var front := _group(cooler, "DispenserFront")
-	front.position.z = 0.16
-	_box(front, "CoolerLowerDoor", Vector3(0, 0.49, 0.204), Vector3(0.61, 0.56, 0.014), Color("#c9d8d3"))
-	_box(front, "DoorHandle", Vector3(0.22, 0.69, 0.216), Vector3(0.07, 0.015, 0.012), trim)
-	_box(front, "TapRecess", Vector3(0, 1.00, 0.206), Vector3(0.33, 0.24, 0.018), Color("#526f6d"))
-	_box(front, "BlueTap", Vector3(0, 1.03, 0.232), Vector3(0.055, 0.08, 0.05), Color("#278dc3"))
-	_box(front, "TapSpout", Vector3(0, 0.982, 0.246), Vector3(0.03, 0.035, 0.042), Color("#d5e8e4"))
-	_box(front, "DripTray", Vector3(0, 0.87, 0.244), Vector3(0.33, 0.025, 0.10), Color("#91aaa5"))
-	var tank := _group(cooler, "CylinderAquarium")
-	var cylinder := CylinderMesh.new()
-	cylinder.top_radius = 1.0
-	cylinder.bottom_radius = 1.0
-	cylinder.height = 1.0
-	cylinder.radial_segments = 48
-	_mesh(tank, "TankBase", cylinder, Vector3(0, 1.25, 0), trim).scale = Vector3(0.382, 0.04, 0.382)
-	_mesh(tank, "LightGravel", cylinder, Vector3(0, 1.28, 0), Color("#e2dac0")).scale = Vector3(0.366, 0.024, 0.366)
-	var tube := cylinder.duplicate() as CylinderMesh
-	tube.cap_top = false
-	tube.cap_bottom = false
-	var glass := _mesh(tank, "CurvedAquariumGlass", tube, Vector3(0, 1.49, 0), Color(0.64, 0.91, 0.94, 0.12))
-	glass.scale = Vector3(0.375, 0.455, 0.375)
-	var water := _mesh(tank, "WaterSurface", cylinder, Vector3(0, 1.65, 0), Color(0.47, 0.80, 0.85, 0.25))
-	water.scale = Vector3(0.370, 0.007, 0.370)
-	for pane: MeshInstance3D in [glass, water]:
-		var material := pane.material_override as StandardMaterial3D
-		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		material.roughness = 0.12
-		pane.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	var rim := TorusMesh.new()
-	rim.inner_radius = 0.365
-	rim.outer_radius = 0.383
-	rim.rings = 48
-	rim.ring_segments = 12
-	_mesh(tank, "TankRim", rim, Vector3(0, 1.718, 0), trim)
-	for x in [-0.25, 0.23]:
-		for offset in [-0.025, 0.025]:
-			_rod(tank, "AquariumGrass", Vector3(x, 1.291, -0.15), Vector3(x + offset, 1.39, -0.15), 0.008, Color("#668f67"))
 
 func _build_view() -> void:
 	camera = Camera3D.new()
@@ -680,10 +675,70 @@ func _update_look() -> void:
 	var text_color := IVORY if night else Color("#123b28")
 	for label in [title, tagline, hint]:
 		label.add_theme_color_override("font_color", text_color)
+	_update_screen_colors()
+	Equipment.set_console_theme(get_node("Studio/Equipment/Shared analog mixing console"), night)
+	_update_plots()
+
+func _update_screen_colors() -> void:
+	var dashboard := $Studio/SignalDisplays/ControlDashboard
+	_apply_screen_palette(dashboard, {
+		INK.to_html(false): Color("#f0f4eb"),
+		CYAN.darkened(0.66).to_html(false): Color("#afc8c0"),
+		CYAN.darkened(0.64).to_html(false): Color("#bccfc4"),
+		CYAN.to_html(false): Color("#086b65"),
+		Color("#81d653").to_html(false): Color("#308448"),
+		GOLD.to_html(false): Color("#895116"),
+		GOLD.darkened(0.53).to_html(false): Color("#c3b497"),
+		IVORY.to_html(false): Color("#264543"),
+	})
+	var code_panel := get_node("Studio/Equipment/Upright code piano/Integrated upper front code panel")
+	_apply_screen_palette(code_panel, {
+		"0b2024": Color("#f2f4ec"),
+		"f1ead6": Color("#213a3e"),
+		"8df5d6": Color("#106259"),
+		"ffbb9f": Color("#963d2b"),
+	})
+
+func _apply_screen_palette(panel: Node, palette: Dictionary) -> void:
+	for child in panel.get_children():
+		var material: StandardMaterial3D
+		var current: Color
+		if child is MeshInstance3D:
+			material = child.material_override as StandardMaterial3D
+			current = material.albedo_color
+		elif child is Label3D:
+			current = child.modulate
+		else:
+			continue
+		var dark: Color = child.get_meta("night_screen_color", current)
+		var key := dark.to_html(false)
+		if not palette.has(key):
+			continue
+		var tint: Color = dark if night else palette[key]
+		if not child.has_meta("night_screen_color"):
+			child.set_meta("night_screen_color", dark)
+			if material:
+				child.set_meta("night_screen_emission", material.emission_enabled)
+				material = material.duplicate() as StandardMaterial3D
+				child.material_override = material
+		if material:
+			material.albedo_color = tint
+			material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL if night else BaseMaterial3D.SHADING_MODE_UNSHADED
+			material.emission_enabled = night and child.get_meta("night_screen_emission", false)
+		else:
+			child.modulate = tint
 
 func _update_plots() -> void:
-	(clean_screen.material_override as StandardMaterial3D).albedo_texture = signal_view[0]
-	(noisy_screen.material_override as StandardMaterial3D).albedo_texture = signal_view[1]
+	var textures := signal_view
+	if not night:
+		if signal_view == SPECTRUM:
+			textures = DAY_SPECTRUM
+		elif signal_view == SPECTROGRAM:
+			textures = DAY_SPECTROGRAM
+		else:
+			textures = DAY_LOGO_SIGNAL
+	(clean_screen.material_override as StandardMaterial3D).albedo_texture = textures[0]
+	(noisy_screen.material_override as StandardMaterial3D).albedo_texture = textures[1]
 
 func _read_arguments() -> void:
 	var arguments := OS.get_cmdline_user_args()
@@ -693,9 +748,11 @@ func _read_arguments() -> void:
 	elif arguments.has("--spectrum"):
 		signal_view = SPECTRUM
 	_update_look()
-	_update_plots()
 	if arguments.has("--render"):
 		hint.hide()
+		if arguments.has("--art-only"):
+			$Brand.hide()
+			camera.v_offset = 1.15
 		_render_logo(arguments)
 
 func _render_logo(arguments: PackedStringArray) -> void:

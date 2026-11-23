@@ -1,17 +1,30 @@
 extends RefCounted
 
-const PIANO_X := 2.75
+const PIANO_X := 2.32
 const PIANO_FACE_Z := -0.984
 const PIANO_JACK := Vector3(PIANO_X - 0.835, 0.43, -1.22)
 const WHITE_KEY_WIDTH := 0.031
+const HUMAN_BANK_SHIFT := 0.24
+const DAY_CONSOLE_COLORS := {
+	"226764": Color("#d6e2d8"),
+	"254847": Color("#efece0"),
+	"10282a": Color("#65817e"),
+	"091719": Color("#254746"),
+	"ad7345": Color("#dbaf79"),
+	"795335": Color("#9d7149"),
+	"8baba4": Color("#9fb0a5"),
+	"dbdbc0": Color("#d9eae2"),
+	"39645e": Color("#347c75"),
+	"315f53": Color("#55766e"),
+}
 
 
-static func build(parent: Node3D) -> void:
-	_mixer(parent)
+static func build(parent: Node3D, divider_span: Vector2) -> void:
+	_mixer(parent, divider_span)
 	_piano(parent)
 
 
-static func _mixer(parent: Node3D) -> void:
+static func _mixer(parent: Node3D, span: Vector2) -> void:
 	var mixer := _node(parent, "Shared analog mixing console")
 	var teal := _material("226764", 0.39)
 	var deck := _material("254847", 0.53)
@@ -27,33 +40,37 @@ static func _mixer(parent: Node3D) -> void:
 	var amber := _material("f6b96e", 0.38, 0.0, 0.55)
 	var dim_green := _material("315f53", 0.43)
 
-	for z in [-1.48, 1.49]:
+	var width := span.y - span.x
+	var center := (span.x + span.y) * 0.5
+	for z in [span.x + 0.19, span.y - 0.22]:
 		_box(mixer, "Steel side stand", Vector3(-0.46, 0.58, z), Vector3(0.13, 0.80, 0.13), deep)
 		_box(mixer, "Stand foot", Vector3(-0.72, 0.21, z), Vector3(0.87, 0.06, 0.15), deep)
 		_box(mixer, "Stand cap", Vector3(-1.12, 0.215, z), Vector3(0.08, 0.07, 0.16), bronze)
-	_box(mixer, "Stand cross rail", Vector3(-0.47, 0.48, 0), Vector3(0.10, 0.08, 2.95), deep)
+	_box(mixer, "Stand cross rail", Vector3(-0.47, 0.48, center), Vector3(0.10, 0.08, width - 0.41), deep)
 
 	var surface := _node(mixer, "Sloped control surface")
-	surface.position = Vector3(-0.785, 1.12, 0.01)
+	surface.position = Vector3(-0.785, 1.12, 0.0)
 	surface.rotation.z = 0.116
-	_box(surface, "Painted steel chassis", Vector3(0, -0.102, 0), Vector3(1.18, 0.18, 3.36), teal)
-	_box(surface, "Control face", Vector3(0.015, -0.017, 0), Vector3(1.06, 0.038, 3.31), deck)
-	_box(surface, "Pine wrist rest", Vector3(-0.582, -0.004, 0), Vector3(0.115, 0.075, 3.32), maple)
-	_box(surface, "Wrist rest edge", Vector3(-0.638, -0.012, 0), Vector3(0.012, 0.043, 3.32), end_grain)
-	_box(surface, "Rear housing", Vector3(0.551, 0.016, 0), Vector3(0.136, 0.103, 3.32), teal)
-	_box(surface, "Rear brass seam", Vector3(0.603, 0.069, 0), Vector3(0.014, 0.009, 3.30), bronze)
-	for z in [-1.686, 1.686]:
+	_box(surface, "Painted steel chassis", Vector3(0, -0.102, center), Vector3(1.18, 0.18, width - 0.05), teal)
+	_box(surface, "Control face", Vector3(0.015, -0.017, center), Vector3(1.06, 0.038, width - 0.07), deck)
+	_box(surface, "Pine wrist rest", Vector3(-0.582, -0.004, center), Vector3(0.115, 0.075, width - 0.07), maple)
+	_box(surface, "Wrist rest edge", Vector3(-0.638, -0.012, center), Vector3(0.012, 0.043, width - 0.07), end_grain)
+	_box(surface, "Rear housing", Vector3(0.551, 0.016, center), Vector3(0.136, 0.103, width - 0.07), teal)
+	_box(surface, "Rear brass seam", Vector3(0.603, 0.069, center), Vector3(0.014, 0.009, width - 0.08), bronze)
+	for z in [span.x + 0.033, span.y - 0.033]:
 		_box(surface, "Solid pine end cheek", Vector3(-0.005, -0.052, z), Vector3(1.27, 0.192, 0.065), maple)
 		_box(surface, "End cheek trim", Vector3(-0.005, 0.044, z), Vector3(1.24, 0.013, 0.060), end_grain)
 		for x in [-0.44, 0.42]:
 			var bolt := _cylinder(surface, "End cheek fastener", Vector3(x, -0.03, z + signf(z) * 0.033), 0.018, 0.006, bronze)
 			bolt.rotation.x = PI / 2
 
-	var knob_colors: Array[StandardMaterial3D] = [teal, bronze, deck]
+	var knob_colors: Array[StandardMaterial3D] = [teal, bronze, _material("39645e", 0.43)]
 	for bank: int in [-1, 1]:
 		var bank_node := _node(surface, "Assistant channels" if bank < 0 else "Human channels")
 		for channel in range(8):
 			var z: float = bank * (0.31 + channel * 0.17)
+			if bank > 0:
+				z += HUMAN_BANK_SHIFT
 			var strip := _node(bank_node, "Channel %02d" % (channel + 1))
 			strip.position.z = z
 			_box(strip, "Channel boundary", Vector3(0.014, 0.006, 0.083), Vector3(1.015, 0.006, 0.006), marker)
@@ -75,6 +92,20 @@ static func _mixer(parent: Node3D) -> void:
 			_box(strip, "Signal LED", Vector3(0.465, 0.021, -0.019), Vector3(0.019, 0.01, 0.024), green if channel % 3 != 1 else dim_green)
 			_box(strip, "Peak LED", Vector3(0.465, 0.021, 0.019), Vector3(0.019, 0.01, 0.024), amber if channel in [2, 5] else dim_green)
 
+	_soften_assistant_controls(surface.get_node("Assistant channels"), {
+		teal: Color("#cbdbd1"),
+		deck: Color("#f2efe5"),
+		deep: Color("#dce3d9"),
+		groove: Color("#acbdb2"),
+		bronze: Color("#cab395"),
+		ivory: Color("#f1f2e7"),
+		marker: Color("#e8ebe0"),
+		green: Color("#bdd6c5"),
+		coral: Color("#d5b39f"),
+		amber: Color("#e2cf98"),
+		dim_green: Color("#bac7b7"),
+		knob_colors[2]: Color("#c1d0c5"),
+	})
 	var master := _node(surface, "Stereo master")
 	_box(master, "Master faceplate", Vector3(0.002, 0.007, 0), Vector3(1.03, 0.012, 0.43), deep)
 	for side in [-1, 1]:
@@ -94,6 +125,111 @@ static func _mixer(parent: Node3D) -> void:
 			if step >= 7:
 				light = amber if step == 7 and side == 1 else dim_green
 			_box(master, "Stereo meter segment", Vector3(0.257 + step * 0.022, 0.055, side * 0.066), Vector3(0.016, 0.009, 0.096), light)
+
+	_box(surface, "Transport inset", Vector3(0.07, 0.005, 2.02), Vector3(0.47, 0.027, 0.32), deep)
+	for index in range(3):
+		var button := amber if index == 0 else (green if index == 1 else coral)
+		_box(surface, "Transport key", Vector3(-0.06 + 0.13 * index, 0.030, 2.02), Vector3(0.082, 0.028, 0.13), button)
+	_mug(mixer, surface.transform * Vector3(0.307, 0.018, span.y - 0.245))
+	_talkback_mic(mixer, "Operator talkback microphone", surface.transform * Vector3(0.43, 0.028, 1.35))
+	_talkback_mic(mixer, "Shiba talkback microphone", surface.transform * Vector3(0.43, 0.028, -1.03))
+
+
+static func _soften_assistant_controls(bank: Node3D, colors: Dictionary) -> void:
+	var softened := {}
+	for mesh: MeshInstance3D in bank.find_children("*", "MeshInstance3D", true, false):
+		var material := mesh.material_override as StandardMaterial3D
+		if not colors.has(material):
+			continue
+		if not softened.has(material):
+			var copy := material.duplicate() as StandardMaterial3D
+			copy.set_meta("console_day_color", colors[material])
+			softened[material] = copy
+		mesh.material_override = softened[material]
+
+
+static func set_console_theme(mixer: Node3D, night: bool) -> void:
+	var changed: Array[StandardMaterial3D] = []
+	for mesh: MeshInstance3D in mixer.find_children("*", "MeshInstance3D", true, false):
+		var material := mesh.material_override as StandardMaterial3D
+		if material in changed:
+			continue
+		var dark: String = material.get_meta("console_night_color", material.albedo_color.to_html(false))
+		if DAY_CONSOLE_COLORS.has(dark) or material.has_meta("console_day_color"):
+			material.set_meta("console_night_color", dark)
+			var day: Color = material.get_meta("console_day_color", DAY_CONSOLE_COLORS.get(dark, Color(dark)))
+			material.albedo_color = Color(dark) if night else day
+			if material.emission_enabled:
+				material.emission = material.albedo_color
+			changed.append(material)
+
+
+static func _talkback_mic(mixer: Node3D, label: String, at: Vector3) -> void:
+	var mic := _node(mixer, label)
+	mic.position = at
+	var steel := _material("52635c", 0.42, 0.35)
+	var grille := _material("21352f", 0.58)
+	_cylinder(mic, "Talkback mount", Vector3.UP * 0.025, 0.062, 0.05, steel)
+	var bends := PackedVector3Array([
+		Vector3(0, 0.048, 0), Vector3(0, 0.192, 0),
+		Vector3(-0.022, 0.276, 0), Vector3(-0.076, 0.331, 0),
+		Vector3(-0.145, 0.354, 0), Vector3(-0.185, 0.359, 0),
+	])
+	for index in range(bends.size() - 1):
+		var delta := bends[index + 1] - bends[index]
+		var stem := _cylinder(mic, "Gooseneck", (bends[index + 1] + bends[index]) * 0.5, 0.012, delta.length() + 0.012, steel)
+		stem.quaternion = Quaternion(Vector3.UP, delta.normalized())
+	var capsule := _cylinder(mic, "Talkback capsule", Vector3(-0.219, 0.362, 0), 0.029, 0.088, grille)
+	capsule.rotation.z = PI / 2.0 + 0.11
+
+
+static func _mug(console: Node3D, at: Vector3) -> void:
+	var mug := _node(console, "Heart mug")
+	mug.position = at
+	mug.rotation.y = deg_to_rad(-26.0)
+	mug.scale = Vector3.ONE * 1.22
+	var ceramic := _material("fff7e9", 0.31)
+	var clay := CylinderMesh.new()
+	clay.bottom_radius = 0.097
+	clay.top_radius = 0.115
+	clay.height = 0.26
+	clay.radial_segments = 28
+	clay.cap_top = false
+	_mesh(mug, "Ceramic wall", Vector3.UP * 0.13, clay, ceramic)
+	_cylinder(mug, "Coffee", Vector3.UP * 0.223, 0.107, 0.012, _material("71452f", 0.47))
+	var lip := TorusMesh.new()
+	lip.inner_radius = 0.105
+	lip.outer_radius = 0.117
+	lip.rings = 28
+	lip.ring_segments = 8
+	_mesh(mug, "Cup lip", Vector3.UP * 0.259, lip, ceramic)
+	var handle := TorusMesh.new()
+	handle.inner_radius = 0.050
+	handle.outer_radius = 0.074
+	handle.rings = 18
+	handle.ring_segments = 8
+	var handle_mount := _node(mug, "Handle toward operator")
+	handle_mount.rotation.y = deg_to_rad(172.0)
+	_mesh(handle_mount, "Loop handle", Vector3(0.128, 0.133, 0), handle, ceramic).rotation.x = PI / 2.0
+	var heart := SurfaceTool.new()
+	heart.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for index in range(32):
+		heart.set_normal(Vector3.BACK)
+		heart.add_vertex(Vector3(0, 0.136, 0.113))
+		for next in [index, index + 1]:
+			var angle := TAU * float(next) / 32.0
+			var x := 0.0042 * 16.0 * pow(sin(angle), 3.0)
+			var y := 0.136 + 0.0042 * (13.0 * cos(angle) - 5.0 * cos(2.0 * angle) - 2.0 * cos(3.0 * angle) - cos(4.0 * angle))
+			var radius := lerpf(0.097, 0.115, y / 0.26)
+			heart.set_normal(Vector3.BACK)
+			heart.add_vertex(Vector3(x, y, sqrt(radius * radius - x * x) + 0.003))
+	var decal := MeshInstance3D.new()
+	decal.name = "Red heart"
+	decal.mesh = heart.commit()
+	var ink := _material("c54049", 0.40)
+	ink.cull_mode = BaseMaterial3D.CULL_DISABLED
+	decal.material_override = ink
+	mug.add_child(decal)
 
 
 static func _piano(parent: Node3D) -> void:
@@ -173,24 +309,29 @@ static func _code_display(piano: Node3D, bronze: StandardMaterial3D, shadow: Sta
 	_box(panel, "Display glass", Vector3(0, 0, 0.019), Vector3(1.44, 1.11, 0.006), screen)
 	for y in [-0.565, 0.565]:
 		_box(panel, "Panel brass trim", Vector3(0, y, 0.023), Vector3(1.46, 0.012, 0.008), bronze)
-	var syntax: Array[Color] = [Color("f1ead6"), Color("ffbb9f"), Color("8df5d6")]
+	var syntax: Array[Color] = [Color("f1ead6"), Color("8df5d6"), Color("ffbb9f")]
 	var source := [
-		[[1, "func "], [2, "wave"], [0, "(t):"]],
-		[[1, "  return "], [2, "sin"], [0, "(t)"]],
-		[[1, "var "], [0, "hz = "], [2, "440"]],
-		[[1, "var "], [0, "g="], [2, "0.8"]],
+		[[2, "if "], [0, "world."], [1, "is_around"], [0, "():"]],
+		[[0, "  world."], [1, "make_better"], [0, "()"]],
+		[[0, "  "], [1, "add_guardrails"], [0, "()"]],
+		[[0, "  "], [1, "play_more_music"], [0, "()"]],
+		[[0, "  "], [1, "reduce_noise"], [0, "()"]],
+		[[0, "  "], [1, "share_the_mix"], [0, "()"]],
+		[[0, "  "], [1, "listen"], [0, "()"]],
+		[[0, "  "], [1, "repeat"], [0, "()"]],
 	]
 	var mono := SystemFont.new()
 	mono.font_names = PackedStringArray(["Menlo", "DejaVu Sans Mono", "Liberation Mono", "Consolas", "monospace"])
-	var y := 0.43
+	mono.font_weight = 600
+	var y := 0.485
 	for line in source:
-		var x := -0.69
+		var x := -0.675
 		for token in line:
 			var label := Label3D.new()
 			label.name = "Code token"
 			label.font = mono
 			label.font_size = 30
-			label.pixel_size = 0.0041
+			label.pixel_size = 0.00358
 			label.text = token[1]
 			label.modulate = syntax[token[0]]
 			label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -198,7 +339,7 @@ static func _code_display(piano: Node3D, bronze: StandardMaterial3D, shadow: Sta
 			label.position = Vector3(x, y, 0.026)
 			panel.add_child(label, true)
 			x += mono.get_string_size(label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, label.font_size).x * label.pixel_size
-		y -= 0.19
+		y -= 0.086
 
 
 static func _knob(parent: Node3D, position: Vector3, radius: float, body: StandardMaterial3D, index: StandardMaterial3D, angle: float) -> void:
