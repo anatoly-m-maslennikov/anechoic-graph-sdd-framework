@@ -12,7 +12,7 @@ import unittest
 from mcp.client.session import ClientSession
 from mcp.client.streamable_http import streamable_http_client
 
-from .FEATURE_MCP__tests__shared import ROOT, project as make_project
+from .FEATURE_MCP__tests__shared import ROOT
 from .native_import_graph_docker_cases import archive_project
 from MCP_PATCHBAY_C21.FEATURE_MCP.FEATURE_MCP__shared import MCP_PATH
 
@@ -30,7 +30,7 @@ def target(ref, version=1):
 
 
 def prepare_project(root):
-    make_project(root)
+    shutil.copytree(Path(__file__).with_name("assets") / "lifecycle_latency", root, dirs_exist_ok=True)
     ontology = Path("_anechoic_anechoic/LAYER_1_META_ONTOLOGY_C9")
     source = ROOT / ontology
     for atom in ("AN-S-1928", "AN-S-1834", "AN-S-1831"):
