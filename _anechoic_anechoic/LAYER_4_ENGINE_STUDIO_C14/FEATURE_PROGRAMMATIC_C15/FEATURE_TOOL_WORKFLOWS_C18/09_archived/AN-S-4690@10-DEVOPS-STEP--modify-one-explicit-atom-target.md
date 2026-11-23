@@ -1,0 +1,35 @@
+---
+atom_family: SPEC
+atom_id: AN-S-4690
+container:
+  component: C18
+tier: 3
+context:
+  template: step
+  lens: DevOps
+state:
+  status: archived
+  version: 10
+  updated_at: 2026-10-26 05:59:45 +0400
+---
+## Summary
+
+Modify one explicit Atom target
+
+# Summary
+
+Modify one explicit Atom target
+
+## Operation
+
+This Step invokes exactly CA-O-030 for one distinct explicit target selected by O202's success-only progression. It never invokes discovery, creation, replacement or archival.
+
+### Input and parameter binding
+
+Bind exact target Atom ID/Version, owning Scope Unit, current source/proposal pins, one explicit Property/list or Section operation and its old/current-value evidence from the supplied target item. Bind O030's applicable full-Atom validation/identity assessment, exact preview, effect permission, actual selected Session/Run recording context and current Action/Step/Workflow definition pins from the admitted receiving route. No missing input is inferred from a search or previous target.
+
+Reject Summary or Type replacement requests, indexes, stale or unsupported bindings before dispatch. Return the exact O030 result and its actual target/effect/recording evidence. Only O202 chooses the next already supplied distinct target after confirmed success; failed-action retry or resume is not a Step behavior.
+
+## Details
+
+These are normative source definitions, not executable bindings or live admission. Before any actual Run, resolve and independently verify the selected realization, current definition pins, applicable permissions and shared Run recording under CA-R-1525/CA-R-1720. Missing, stale, unsupported or incompatible bindings stop before dispatch. No new retry/resume decision, MCP activation, runtime manifest change, Core adoption or Subject publication is authorized.

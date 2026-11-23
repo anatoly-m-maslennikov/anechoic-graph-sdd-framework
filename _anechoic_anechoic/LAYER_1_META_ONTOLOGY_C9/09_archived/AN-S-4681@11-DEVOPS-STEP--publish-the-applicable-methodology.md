@@ -1,0 +1,37 @@
+---
+atom_family: SPEC
+atom_id: AN-S-4681
+container:
+  component: C9
+tier: 3
+context:
+  template: step
+  lens: DevOps
+state:
+  status: archived
+  version: 11
+  updated_at: 2026-10-24 00:38:25 +0400
+---
+## Summary
+
+Publish the Applicable Methodology
+
+# Summary
+
+Publish the Applicable Methodology
+
+## Operation
+
+this Step is the publish node **of** CA-O-011, Applicable Methodology Compilation, invoking **`=1`** Action, CA-O-009, Publish Reconciled Projection.
+
+### Inputs and parameters
+
+bind the final reassessed source frontier from CA-O-153, the corresponding selection from CA-O-152, required valid decisions from CA-O-155 when applicable, and the Workflow Run's selected Projection Delivery authority.
+
+preserve **every** selected Atom ID, exact source Revision, authority owner, **and** Claim under CA-R-1314 **and** CA-R-1316; enforce CA-R-1461 **and** CA-D-305 **and** CA-D-306 source identity, exact source Carrier bytes **and** Carrier form. fail **without** changing Applicable Methodology membership **if** **any** conflict remains unresolved **or** **any** required approval is invalid. produce the same ordered Applicable Methodology membership from the same resolved source frontier.
+
+### Agentic invocation binding
+
+for an invocation whose actual bound Action is Agentic, bind **`=1`** Integrated **or** Isolated context under CA-R-1527 from the admitted invocation's supplied `agentic_execution_context` runtime parameter **before** dispatch. missing, ambiguous **or** unsupported values, **or** unavailable required context/capability, block that Agentic invocation; do **not** default **or** silently substitute. retain the selected context with the Step Run. a Programmatic invocation does **not** acquire an Agent context **or** require this parameter. this binding grants no additional authority **and** does **not** change the Action's identity **or** behavior.
+
+## Details
