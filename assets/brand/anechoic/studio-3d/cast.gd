@@ -1,8 +1,7 @@
 extends RefCounted
 
 const Equipment = preload("res://equipment.gd")
-const KOI = preload("res://market/ogon-koi.glb")
-const KOI_SCALES = preload("res://market/koi-scales.gdshader")
+const CARP_SCALES = preload("res://market/koi-scales.gdshader")
 const FLOOR := 0.18
 const MIC_POSITION := Vector3(0.56, FLOOR, -0.89)
 const MIC_JACK := MIC_POSITION + Vector3(0, 0.065, 0.10)
@@ -20,6 +19,8 @@ const INK := Color("#191e25")
 const SKIN := Color("#db9568")
 const SHIRT := Color("#788128")
 const HAIR := Color("#994323")
+const FISH := Color("#ec652c")
+const FISH_LIGHT := Color("#ffb64f")
 
 static func build(parent: Node3D) -> void:
 	var human_seat := _root(parent, "EngineerChair", Vector3(-1.86, FLOOR, 1.02), PI / 2.0)
@@ -64,27 +65,57 @@ static func build(parent: Node3D) -> void:
 		var angle := TAU * float(index) / 3.0 + PI / 2.0
 		var radial := Vector3(cos(angle), 0, sin(angle))
 		_rod(stool, "SplayedLeg", radial * 0.23, radial * 0.15 + Vector3.UP * 0.302, 0.033, 0.045, WOOD)
-	_seated_koi(stool)
-	_harp(_root(parent, "SmallHarp", Vector3(2.38, FLOOR, 1.39)))
+	var carp := _root(stool, "CarpHarpist", Vector3.ZERO, PI / 2.0)
+	_scale_performer(carp, Vector3(0, 0.28, 0.17), 1.50)
+	_carp(carp)
+	var harp := _root(parent, "SmallHarp", Vector3(2.22, FLOOR, 1.37))
+	var strings := _harp(harp)
+	var harp_offset := harp.position - stool.position
+	_playing_fin(stool, "FarPlayingFin", carp.transform * Vector3(0.177, 0.669, 0.061), harp_offset + strings[3], -1.0)
+	_playing_fin(stool, "NearPlayingFin", carp.transform * Vector3(-0.177, 0.669, 0.061), harp_offset + strings[1], 1.0)
 
-static func _seated_koi(stool: Node3D) -> void:
-	var fish := KOI.instantiate() as Node3D
-	fish.name = "OgonKoi"
-	fish.scene_file_path = ""
-	fish.position = Vector3(0.066, 0.349, 0.012)
-	fish.rotation.y = deg_to_rad(44.0)
-	fish.scale = Vector3.ONE * 1.72
-	stool.add_child(fish)
-	for mesh: MeshInstance3D in fish.find_children("*", "MeshInstance3D", true, false):
-		var source := mesh.get_active_material(0) as StandardMaterial3D
-		var scales := ShaderMaterial.new()
-		scales.shader = KOI_SCALES
-		scales.set_shader_parameter("albedo_texture", source.albedo_texture)
-		scales.set_shader_parameter("normal_texture", source.normal_texture)
-		scales.set_shader_parameter("orm_texture", source.roughness_texture)
-		scales.set_shader_parameter("use_normal_texture", true)
-		scales.set_shader_parameter("use_orm_texture", true)
-		mesh.set_surface_override_material(0, scales)
+static func _carp(parent: Node3D) -> void:
+	var radii := Vector3(0.249, 0.404, 0.21)
+	var body := _ellipsoid(parent, "OrangeScales", Vector3(0, 0.716, -0.006), radii, FISH, 11, 7)
+	body.rotation.x = deg_to_rad(23.0)
+	var scales := ShaderMaterial.new()
+	scales.shader = CARP_SCALES
+	scales.set_shader_parameter("body_color", FISH)
+	body.material_override = scales
+	_ellipsoid(parent, "GoldBelly", Vector3(0, 0.679, 0.141), Vector3(0.181, 0.275, 0.095), FISH_LIGHT, 10, 6).rotation.x = deg_to_rad(18.0)
+	var head := _root(parent, "CarpHead", Vector3(-0.024, 0.939, 0.133), deg_to_rad(-52.0))
+	_ellipsoid(head, "Snout", Vector3(0, -0.034, 0.063), Vector3(0.152, 0.113, 0.157), FISH_LIGHT, 9, 5)
+	_ellipsoid(head, "Mouth", Vector3(0, -0.055, 0.212), Vector3(0.053, 0.018, 0.015), BRASS, 7, 4)
+	_ellipsoid(head, "GoldUpperLip", Vector3(0, -0.038, 0.218), Vector3(0.056, 0.014, 0.021), GOLD, 8, 4)
+	_ellipsoid(head, "GoldLowerLip", Vector3(0, -0.069, 0.216), Vector3(0.047, 0.012, 0.016), GOLD, 8, 4)
+	for side: float in [-1.0, 1.0]:
+		var eye := Vector3(side * 0.131, 0.002, 0.128)
+		_ellipsoid(head, "AmberEye", eye, Vector3(0.033, 0.046, 0.045), Color("#ffdf9b"), 8, 4)
+		_ellipsoid(head, "Pupil", eye + Vector3(side * 0.023, 0.001, 0.022), Vector3(0.019, 0.030, 0.026), INK, 8, 4)
+		_ellipsoid(head, "EyeGlint", eye + Vector3(side * 0.033, 0.016, 0.039), Vector3.ONE * 0.009, IVORY, 6, 4)
+		_rod(parent, "Gill", Vector3(side * 0.179, 0.9, 0.13), Vector3(side * 0.206, 0.821, 0.106), 0.011, 0.011, BRASS, 5)
+		_rod(parent, "Gill", Vector3(side * 0.206, 0.821, 0.106), Vector3(side * 0.214, 0.755, 0.152), 0.011, 0.007, BRASS, 5)
+	var dorsal := _ellipsoid(parent, "DorsalFin", Vector3(0, 0.895, -0.16), Vector3(0.041, 0.193, 0.12), Color("#f08e37"), 7, 4)
+	dorsal.rotation.x = deg_to_rad(-42.0)
+	_rod(parent, "TailRoot", Vector3(0, 0.49, -0.111), Vector3(0, 0.342, -0.219), 0.123, 0.064, FISH, 7)
+	for side: float in [-1.0, 1.0]:
+		var tail := _ellipsoid(parent, "TailLobe", Vector3(0, 0.283 + side * 0.055, -0.304), Vector3(0.043, 0.082, 0.153), FISH_LIGHT, 8, 4)
+		tail.rotation.x = deg_to_rad(32.0 + side * 34.0)
+
+static func _playing_fin(parent: Node3D, label: String, base: Vector3, contact: Vector3, side: float) -> void:
+	var center := base.lerp(contact, 0.55) + Vector3(0, -0.023, side * 0.04)
+	var rim := PackedVector3Array([
+		base, center + Vector3(0.012, 0.044, 0), contact, center + Vector3(-0.037, -0.063, 0)
+	])
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for index in range(rim.size()):
+		var a := rim[index] - center
+		var b := rim[(index + 1) % rim.size()] - center
+		_face(surface, Vector3(0, 0, 0.023), a, b)
+		_face(surface, Vector3(0, 0, -0.023), b, a)
+	_place(parent, label, center, surface.commit(), Color("#e8a141"))
+	_rod(parent, label + "Ray", base, center + Vector3(0.032, 0.0, 0.019 * side), 0.005, 0.002, BRASS, 5)
 
 static func _scale_performer(performer: Node3D, anchor: Vector3, factor: float) -> void:
 	performer.position -= performer.basis * anchor * (factor - 1.0)
@@ -237,7 +268,7 @@ static func _microphone(parent: Node3D) -> void:
 		var ring_height := Vector3.UP * 0.135
 		_rod(capsule, "ShockMountRing", radial * 0.104 + ring_height, next * 0.104 + ring_height, 0.006, 0.006, GOLD, 5)
 
-static func _harp(parent: Node3D) -> void:
+static func _harp(parent: Node3D) -> PackedVector3Array:
 	_box(parent, "HarpFoot", Vector3(0.025, 0.055, 0), Vector3(0.52, 0.11, 0.28), WOOD)
 	_box(parent, "GoldFootTrim", Vector3(0.025, 0.114, 0), Vector3(0.5, 0.032, 0.286), GOLD)
 	_rod(parent, "Soundboard", Vector3(-0.187, 0.105, 0), Vector3(-0.31, 0.865, 0), 0.074, 0.043, WOOD, 8)
@@ -254,12 +285,16 @@ static func _harp(parent: Node3D) -> void:
 		var to := curve[segment + 1]
 		_rod(parent, "CarvedNeck", Vector3(from.x, from.y, 0), Vector3(to.x, to.y, 0), 0.046, 0.046, GOLD, 7)
 		_ellipsoid(parent, "NeckJoint", Vector3(to.x, to.y, 0), Vector3.ONE * 0.046, GOLD, 7, 4)
+	var pluck_points := PackedVector3Array()
 	for index in range(8):
 		var top := curve[index].lerp(curve[index + 1], 0.55)
 		var bottom := Vector3(lerpf(-0.275, 0.121, float(index) / 7.0), lerpf(0.65, 0.13, float(index) / 7.0), 0)
+		var end := Vector3(top.x, top.y - 0.024, 0)
 		var string_color := Color("#a85035") if index in [1, 5] else Color("#ebe7d9")
-		_rod(parent, "HarpString", bottom, Vector3(top.x, top.y - 0.024, 0), 0.006, 0.0045, string_color, 5)
+		_rod(parent, "HarpString", bottom, end, 0.006, 0.0045, string_color, 5)
 		_rod(parent, "TuningPin", Vector3(top.x, top.y - 0.014, 0.039), Vector3(top.x, top.y - 0.014, 0.056), 0.01, 0.007, BRASS, 6)
+		pluck_points.append(bottom.lerp(end, 0.63))
+	return pluck_points
 
 static func _root(parent: Node3D, label: String, at: Vector3, yaw := 0.0) -> Node3D:
 	var node := Node3D.new()

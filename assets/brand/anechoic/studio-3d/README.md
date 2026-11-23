@@ -23,4 +23,4 @@ The logo pairs an idealized sine wave above the window with a noisy spectrogram 
 
 The scene tree is editable. To regenerate it from the parametric GDScript sources, run `godot --headless --path . --script res://bake_scene.gd`. This replaces `studio.tscn` with the generated scene.
 
-The potted plant and koi are CC0 assets. See [asset details](market/SOURCE.md).
+The potted plant comes from Kenney’s CC0 Furniture Kit. See [asset details](market/SOURCE.md).
