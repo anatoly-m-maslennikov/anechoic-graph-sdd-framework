@@ -1,0 +1,870 @@
+{
+  "records": [
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/09_operations/archive/CA-O-240@1-WORKBENCH-ACTION--execute-one-read-only-duckdb-query.md",
+      "source_sha256": "fae5980a609070d834b5819e144eb5ff6eebb86f3992280e64f6c3ef42f8ad25",
+      "source_aliases": [
+        "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/09_operations/archive/CA-O-240@1-WORKBENCH-ACTION--execute-one-read-only-duckdb-query.md"
+      ],
+      "legacy_ref": "CA-O-240@1",
+      "native_ref": "AN-S-2566@1",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/09_archived/AN-S-2566@1-DOM-DECISION--execute-one-read-only-duckdb-query.md",
+      "destination_sha256": "de438ff7ee8b804bd8a174cd6475d2d057fc01366f642fb15a25fc0731cecde7",
+      "body_sha256": "585c9c5f0611b03ff1f3bdc53422539f6e4ad97b8ce3a3f6cf9281328c408e6d",
+      "body_prefix_bytes": 206,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2728",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2729",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2724",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-M-463",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-M-462",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-D-673",
+          "position": 5
+        }
+      ],
+      "native_owner": {
+        "component": "C43"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ Projection"
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/_DES/DOM/AN-S-2566-DOM-DECISION--execute-one-read-only-duckdb-query.md",
+      "anchor_sha256": "394d82af53e45b60d758807053fc6ffe54564d7aa9898b5f5d8d92db4e2c347f",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/09_operations/CA-O-240-WORKBENCH_BACKEND-ACTION--execute-one-read-only-duckdb-query.md",
+      "evidence_sha256": "b6c0fb3fd64273a33d6f3fb60fd068a9dc196a6c3c112fc3489fd4b1c3cf044c",
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "_anechoic_anechoic/__TICKETS/ISSUES/resolved/AN-T-2795-QUESTION--choose-the-migration-family-for-the-workbench-query-action.md",
+        "sha256": "380d107b676774862b751e6bbcab8c2aa9fc9f3860b77806cc955b5c326e0374"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/09_operations/archive/CA-O-240@10-WORKBENCH_BACKEND-ACTION--execute-one-read-only-duckdb-query.md",
+      "source_sha256": "1e1da346007e8c80df222a4264b1b5af97bfaf7bb9d1a05eed6decf64044045b",
+      "source_aliases": [
+        "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/09_operations/archive/CA-O-240@10-WORKBENCH_BACKEND-ACTION--execute-one-read-only-duckdb-query.md"
+      ],
+      "legacy_ref": "CA-O-240@10",
+      "native_ref": "AN-S-2566@10",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/09_archived/AN-S-2566@10-DOM-DECISION--execute-one-read-only-duckdb-query.md",
+      "destination_sha256": "0d7c1487a76f224ed9274c2efb372dce9d813ead2f8eeb491bd812d6fe6a0391",
+      "body_sha256": "5d176f29ccb60346561d1e447427da9bd323fb281d2da203dfdfe8e1463e4053",
+      "body_prefix_bytes": 207,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2728",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2729",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2724",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-M-463",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-M-462",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-D-673",
+          "position": 5
+        }
+      ],
+      "native_owner": {
+        "component": "C45"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Query Processing",
+        "dependencies": [
+          "ANECHOIC_MODEL <+ Projection"
+        ]
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/_DES/DOM/AN-S-2566-DOM-DECISION--execute-one-read-only-duckdb-query.md",
+      "anchor_sha256": "394d82af53e45b60d758807053fc6ffe54564d7aa9898b5f5d8d92db4e2c347f",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/09_operations/CA-O-240-WORKBENCH_BACKEND-ACTION--execute-one-read-only-duckdb-query.md",
+      "evidence_sha256": "b6c0fb3fd64273a33d6f3fb60fd068a9dc196a6c3c112fc3489fd4b1c3cf044c",
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "_anechoic_anechoic/__TICKETS/ISSUES/resolved/AN-T-2795-QUESTION--choose-the-migration-family-for-the-workbench-query-action.md",
+        "sha256": "380d107b676774862b751e6bbcab8c2aa9fc9f3860b77806cc955b5c326e0374"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/09_operations/archive/CA-O-240@11-WORKBENCH_BACKEND-ACTION--execute-one-read-only-duckdb-query.md",
+      "source_sha256": "08f3e7b11fae42ab3caff488daef293a63f7502981791f80b22527279fe71305",
+      "source_aliases": [
+        "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/09_operations/archive/CA-O-240@11-WORKBENCH_BACKEND-ACTION--execute-one-read-only-duckdb-query.md"
+      ],
+      "legacy_ref": "CA-O-240@11",
+      "native_ref": "AN-S-2566@11",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/09_archived/AN-S-2566@11-DOM-DECISION--execute-one-read-only-duckdb-query.md",
+      "destination_sha256": "0b90385b67118d09975d5368ee0a96535696f6055404eae8acfa884bfb636f9d",
+      "body_sha256": "e4b101c7bf2601d3223f8e7c6b45c5145278c4962683698029d68cfbe9f3772a",
+      "body_prefix_bytes": 207,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2728",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2729",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2724",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-M-463",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-M-462",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-D-673",
+          "position": 5
+        }
+      ],
+      "native_owner": {
+        "component": "C45"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Query Processing",
+        "dependencies": [
+          "ANECHOIC_MODEL <+ Projection"
+        ]
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/_DES/DOM/AN-S-2566-DOM-DECISION--execute-one-read-only-duckdb-query.md",
+      "anchor_sha256": "394d82af53e45b60d758807053fc6ffe54564d7aa9898b5f5d8d92db4e2c347f",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/09_operations/CA-O-240-WORKBENCH_BACKEND-ACTION--execute-one-read-only-duckdb-query.md",
+      "evidence_sha256": "b6c0fb3fd64273a33d6f3fb60fd068a9dc196a6c3c112fc3489fd4b1c3cf044c",
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "_anechoic_anechoic/__TICKETS/ISSUES/resolved/AN-T-2795-QUESTION--choose-the-migration-family-for-the-workbench-query-action.md",
+        "sha256": "380d107b676774862b751e6bbcab8c2aa9fc9f3860b77806cc955b5c326e0374"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/09_operations/099_archived/CA-O-240@13-WORKBENCH_BACKEND-ACTION--execute-one-read-only-duckdb-query.md",
+      "source_sha256": "cf9133efba4b3561f13cb42c7a1ca875cb12dde67e3caf1d9667ef31e7a70db4",
+      "source_aliases": [
+        "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/09_operations/099_archived/CA-O-240@13-WORKBENCH_BACKEND-ACTION--execute-one-read-only-duckdb-query.md"
+      ],
+      "legacy_ref": "CA-O-240@13",
+      "native_ref": "AN-S-2566@13",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/09_archived/AN-S-2566@13-DOM-DECISION--execute-one-read-only-duckdb-query.md",
+      "destination_sha256": "6211a2ecb2db5b39b0faf271110633bb34e92bc1e0e18021550039c844bf47fd",
+      "body_sha256": "272823b63aef7b3d879921356119f9ea04907f569171417bf091db292b0f42ec",
+      "body_prefix_bytes": 216,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "IS_REPLACEMENT_FOR",
+          "target": "CA-O-240",
+          "position": 0
+        }
+      ],
+      "native_owner": {
+        "component": "C45"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "main_subject": "PROJECT STRUCTURE//ANECHOIC <+ Aspects <+ Engineering <+ Operation <+ Data Handling <+ Query Processing",
+        "dependencies": [
+          "MODEL//ANECHOIC <+ Projection",
+          "ANECHOIC_MODEL <+ Projection",
+          "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Operation <+ Storage <+ Temporary State",
+          "ANECHOIC_STRUCTURE <+ Aspects <+ Engineering <+ Development <+ Architecture <+ Communication <+ Interface Contracts"
+        ]
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/_DES/DOM/AN-S-2566-DOM-DECISION--execute-one-read-only-duckdb-query.md",
+      "anchor_sha256": "394d82af53e45b60d758807053fc6ffe54564d7aa9898b5f5d8d92db4e2c347f",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/09_operations/CA-O-240-WORKBENCH_BACKEND-ACTION--execute-one-read-only-duckdb-query.md",
+      "evidence_sha256": "b6c0fb3fd64273a33d6f3fb60fd068a9dc196a6c3c112fc3489fd4b1c3cf044c",
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "_anechoic_anechoic/__TICKETS/ISSUES/resolved/AN-T-2795-QUESTION--choose-the-migration-family-for-the-workbench-query-action.md",
+        "sha256": "380d107b676774862b751e6bbcab8c2aa9fc9f3860b77806cc955b5c326e0374"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/09_operations/archive/CA-O-240@2-WORKBENCH-ACTION--execute-one-read-only-duckdb-query.md",
+      "source_sha256": "0e2416f0e8acabe12aee0710367dfdb6cfb6ba66a4a055e86d0cd5ba83da6887",
+      "source_aliases": [
+        "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/09_operations/archive/CA-O-240@2-WORKBENCH-ACTION--execute-one-read-only-duckdb-query.md"
+      ],
+      "legacy_ref": "CA-O-240@2",
+      "native_ref": "AN-S-2566@2",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/09_archived/AN-S-2566@2-DOM-DECISION--execute-one-read-only-duckdb-query.md",
+      "destination_sha256": "4353bedf2eb732322e940038e159619e030cf182d72ab0d97d8cdbac01f0f10d",
+      "body_sha256": "cced00537ef3d127abeee134127e31cb5b142432071d9ce40f23d91a7d537381",
+      "body_prefix_bytes": 206,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2728",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2729",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2724",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-M-463",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-M-462",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-D-673",
+          "position": 5
+        }
+      ],
+      "native_owner": {
+        "component": "C43"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ Projection"
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/_DES/DOM/AN-S-2566-DOM-DECISION--execute-one-read-only-duckdb-query.md",
+      "anchor_sha256": "394d82af53e45b60d758807053fc6ffe54564d7aa9898b5f5d8d92db4e2c347f",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/09_operations/CA-O-240-WORKBENCH_BACKEND-ACTION--execute-one-read-only-duckdb-query.md",
+      "evidence_sha256": "b6c0fb3fd64273a33d6f3fb60fd068a9dc196a6c3c112fc3489fd4b1c3cf044c",
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "_anechoic_anechoic/__TICKETS/ISSUES/resolved/AN-T-2795-QUESTION--choose-the-migration-family-for-the-workbench-query-action.md",
+        "sha256": "380d107b676774862b751e6bbcab8c2aa9fc9f3860b77806cc955b5c326e0374"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/09_operations/archive/CA-O-240@3-WORKBENCH-ACTION--execute-one-read-only-duckdb-query.md",
+      "source_sha256": "1374b41f4b3c4ffa2bac15a8c206d800038f62f43c04e6e430567abcff31078f",
+      "source_aliases": [
+        "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/09_operations/archive/CA-O-240@3-WORKBENCH-ACTION--execute-one-read-only-duckdb-query.md"
+      ],
+      "legacy_ref": "CA-O-240@3",
+      "native_ref": "AN-S-2566@3",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/09_archived/AN-S-2566@3-DOM-DECISION--execute-one-read-only-duckdb-query.md",
+      "destination_sha256": "3c417a8fc1a5a62590996a000fbff322533f70a28a56308e995ac69d6d33c79d",
+      "body_sha256": "4a4bf87a7b158ab8240e391f9ec333906da38bb980653706ff3ea248cbc5488b",
+      "body_prefix_bytes": 206,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2728",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2729",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2724",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-M-463",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-M-462",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-D-673",
+          "position": 5
+        }
+      ],
+      "native_owner": {
+        "component": "C43"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ Projection"
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/_DES/DOM/AN-S-2566-DOM-DECISION--execute-one-read-only-duckdb-query.md",
+      "anchor_sha256": "394d82af53e45b60d758807053fc6ffe54564d7aa9898b5f5d8d92db4e2c347f",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/09_operations/CA-O-240-WORKBENCH_BACKEND-ACTION--execute-one-read-only-duckdb-query.md",
+      "evidence_sha256": "b6c0fb3fd64273a33d6f3fb60fd068a9dc196a6c3c112fc3489fd4b1c3cf044c",
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "_anechoic_anechoic/__TICKETS/ISSUES/resolved/AN-T-2795-QUESTION--choose-the-migration-family-for-the-workbench-query-action.md",
+        "sha256": "380d107b676774862b751e6bbcab8c2aa9fc9f3860b77806cc955b5c326e0374"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/09_operations/archive/CA-O-240@4-WORKBENCH-ACTION--execute-one-read-only-duckdb-query.md",
+      "source_sha256": "537e70a618abf837295229b5e1fdd1dad1e468ba7b2ff404553072e1167ec6b9",
+      "source_aliases": [
+        "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/09_operations/archive/CA-O-240@4-WORKBENCH-ACTION--execute-one-read-only-duckdb-query.md"
+      ],
+      "legacy_ref": "CA-O-240@4",
+      "native_ref": "AN-S-2566@4",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/09_archived/AN-S-2566@4-DOM-DECISION--execute-one-read-only-duckdb-query.md",
+      "destination_sha256": "588869db4b8cbcc91668fac8e801ce2af69512845ed188709a0bae0ded2971ad",
+      "body_sha256": "66bb70b72be949db7b08a45d836532f2373487a048d0a26b54d133d6d29897fa",
+      "body_prefix_bytes": 206,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2728",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2729",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2724",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-M-463",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-M-462",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-D-673",
+          "position": 5
+        }
+      ],
+      "native_owner": {
+        "component": "C43"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ Projection"
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/_DES/DOM/AN-S-2566-DOM-DECISION--execute-one-read-only-duckdb-query.md",
+      "anchor_sha256": "394d82af53e45b60d758807053fc6ffe54564d7aa9898b5f5d8d92db4e2c347f",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/09_operations/CA-O-240-WORKBENCH_BACKEND-ACTION--execute-one-read-only-duckdb-query.md",
+      "evidence_sha256": "b6c0fb3fd64273a33d6f3fb60fd068a9dc196a6c3c112fc3489fd4b1c3cf044c",
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "_anechoic_anechoic/__TICKETS/ISSUES/resolved/AN-T-2795-QUESTION--choose-the-migration-family-for-the-workbench-query-action.md",
+        "sha256": "380d107b676774862b751e6bbcab8c2aa9fc9f3860b77806cc955b5c326e0374"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/09_operations/archive/CA-O-240@5-WORKBENCH-ACTION--execute-one-read-only-duckdb-query.md",
+      "source_sha256": "571606d6e8e422879099ad64af21d0b5c11b16d13bd6f95587ae39253691c856",
+      "source_aliases": [
+        "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/09_operations/archive/CA-O-240@5-WORKBENCH-ACTION--execute-one-read-only-duckdb-query.md"
+      ],
+      "legacy_ref": "CA-O-240@5",
+      "native_ref": "AN-S-2566@5",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/09_archived/AN-S-2566@5-DOM-DECISION--execute-one-read-only-duckdb-query.md",
+      "destination_sha256": "a9e9daa3492a13fbd8432e791180787f635b23f4580d9da2fac4ed54b7f6d74d",
+      "body_sha256": "4458b8342f9f0522032df1ebb00c50ff52580d80c7dec001edb0bdd57b68221c",
+      "body_prefix_bytes": 206,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2728",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2729",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2724",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-M-463",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-M-462",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-D-673",
+          "position": 5
+        }
+      ],
+      "native_owner": {
+        "component": "C43"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ Projection"
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/_DES/DOM/AN-S-2566-DOM-DECISION--execute-one-read-only-duckdb-query.md",
+      "anchor_sha256": "394d82af53e45b60d758807053fc6ffe54564d7aa9898b5f5d8d92db4e2c347f",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/09_operations/CA-O-240-WORKBENCH_BACKEND-ACTION--execute-one-read-only-duckdb-query.md",
+      "evidence_sha256": "b6c0fb3fd64273a33d6f3fb60fd068a9dc196a6c3c112fc3489fd4b1c3cf044c",
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "_anechoic_anechoic/__TICKETS/ISSUES/resolved/AN-T-2795-QUESTION--choose-the-migration-family-for-the-workbench-query-action.md",
+        "sha256": "380d107b676774862b751e6bbcab8c2aa9fc9f3860b77806cc955b5c326e0374"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/09_operations/archive/CA-O-240@6-WORKBENCH_BACKEND-ACTION--execute-one-read-only-duckdb-query.md",
+      "source_sha256": "be0b655e4dfd2fb1822ba639df5785a20784d5c6648ff21f4860e29d5ab41018",
+      "source_aliases": [
+        "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/09_operations/archive/CA-O-240@6-WORKBENCH_BACKEND-ACTION--execute-one-read-only-duckdb-query.md"
+      ],
+      "legacy_ref": "CA-O-240@6",
+      "native_ref": "AN-S-2566@6",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/09_archived/AN-S-2566@6-DOM-DECISION--execute-one-read-only-duckdb-query.md",
+      "destination_sha256": "789f308a0b3d0c045277fcb67795dd94fcf00525c69c73e3494a97b879f7c3d7",
+      "body_sha256": "4458b8342f9f0522032df1ebb00c50ff52580d80c7dec001edb0bdd57b68221c",
+      "body_prefix_bytes": 206,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2728",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2729",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2724",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-M-463",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-M-462",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-D-673",
+          "position": 5
+        }
+      ],
+      "native_owner": {
+        "component": "C45"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ Projection"
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/_DES/DOM/AN-S-2566-DOM-DECISION--execute-one-read-only-duckdb-query.md",
+      "anchor_sha256": "394d82af53e45b60d758807053fc6ffe54564d7aa9898b5f5d8d92db4e2c347f",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/09_operations/CA-O-240-WORKBENCH_BACKEND-ACTION--execute-one-read-only-duckdb-query.md",
+      "evidence_sha256": "b6c0fb3fd64273a33d6f3fb60fd068a9dc196a6c3c112fc3489fd4b1c3cf044c",
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "_anechoic_anechoic/__TICKETS/ISSUES/resolved/AN-T-2795-QUESTION--choose-the-migration-family-for-the-workbench-query-action.md",
+        "sha256": "380d107b676774862b751e6bbcab8c2aa9fc9f3860b77806cc955b5c326e0374"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/09_operations/archive/CA-O-240@7-WORKBENCH_BACKEND-ACTION--execute-one-read-only-duckdb-query.md",
+      "source_sha256": "6a0fb46d0f9f4938342f57a27ee313eeec16ad1ba34a5b16dc8f6503eea7274c",
+      "source_aliases": [
+        "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/09_operations/archive/CA-O-240@7-WORKBENCH_BACKEND-ACTION--execute-one-read-only-duckdb-query.md"
+      ],
+      "legacy_ref": "CA-O-240@7",
+      "native_ref": "AN-S-2566@7",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/09_archived/AN-S-2566@7-DOM-DECISION--execute-one-read-only-duckdb-query.md",
+      "destination_sha256": "24fe787446ddd74e696878df32e949f40b4fe556940d30d7e4aeabc53622c40a",
+      "body_sha256": "9c8196fe3f3b226a30689676814b5603007719e25a131cd328179c450de4fedd",
+      "body_prefix_bytes": 206,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2728",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2729",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2724",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-M-463",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-M-462",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-D-673",
+          "position": 5
+        }
+      ],
+      "native_owner": {
+        "component": "C45"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ Projection"
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/_DES/DOM/AN-S-2566-DOM-DECISION--execute-one-read-only-duckdb-query.md",
+      "anchor_sha256": "394d82af53e45b60d758807053fc6ffe54564d7aa9898b5f5d8d92db4e2c347f",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/09_operations/CA-O-240-WORKBENCH_BACKEND-ACTION--execute-one-read-only-duckdb-query.md",
+      "evidence_sha256": "b6c0fb3fd64273a33d6f3fb60fd068a9dc196a6c3c112fc3489fd4b1c3cf044c",
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "_anechoic_anechoic/__TICKETS/ISSUES/resolved/AN-T-2795-QUESTION--choose-the-migration-family-for-the-workbench-query-action.md",
+        "sha256": "380d107b676774862b751e6bbcab8c2aa9fc9f3860b77806cc955b5c326e0374"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/09_operations/archive/CA-O-240@8-WORKBENCH_BACKEND-ACTION--execute-one-read-only-duckdb-query.md",
+      "source_sha256": "34db423fabada1feb49ee8d8fedd9933611a58170970a9fe2d35151c617ac267",
+      "source_aliases": [
+        "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/09_operations/archive/CA-O-240@8-WORKBENCH_BACKEND-ACTION--execute-one-read-only-duckdb-query.md"
+      ],
+      "legacy_ref": "CA-O-240@8",
+      "native_ref": "AN-S-2566@8",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/09_archived/AN-S-2566@8-DOM-DECISION--execute-one-read-only-duckdb-query.md",
+      "destination_sha256": "32ad6cab4730f1801183acdf1425690d359f1d4292d2a624ebad7e96497af120",
+      "body_sha256": "fba5447cdaf3f62c57bb094ad0910b602977b8606b7c42bac5e228035d39ece7",
+      "body_prefix_bytes": 206,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2728",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2729",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2724",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-M-463",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-M-462",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-D-673",
+          "position": 5
+        }
+      ],
+      "native_owner": {
+        "component": "C45"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ Projection"
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/_DES/DOM/AN-S-2566-DOM-DECISION--execute-one-read-only-duckdb-query.md",
+      "anchor_sha256": "394d82af53e45b60d758807053fc6ffe54564d7aa9898b5f5d8d92db4e2c347f",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/09_operations/CA-O-240-WORKBENCH_BACKEND-ACTION--execute-one-read-only-duckdb-query.md",
+      "evidence_sha256": "b6c0fb3fd64273a33d6f3fb60fd068a9dc196a6c3c112fc3489fd4b1c3cf044c",
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "_anechoic_anechoic/__TICKETS/ISSUES/resolved/AN-T-2795-QUESTION--choose-the-migration-family-for-the-workbench-query-action.md",
+        "sha256": "380d107b676774862b751e6bbcab8c2aa9fc9f3860b77806cc955b5c326e0374"
+      }
+    },
+    {
+      "source": "archives/.anechoic_archive/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/09_operations/archive/CA-O-240@9-WORKBENCH_BACKEND-ACTION--execute-one-read-only-duckdb-query.md",
+      "source_sha256": "c1bb4e65dd7624d7e3de6ee6a0d447a1e152645dfcb17c0e9ce2412f1ea5e889",
+      "source_aliases": [
+        "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/09_operations/archive/CA-O-240@9-WORKBENCH_BACKEND-ACTION--execute-one-read-only-duckdb-query.md"
+      ],
+      "legacy_ref": "CA-O-240@9",
+      "native_ref": "AN-S-2566@9",
+      "destination": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/09_archived/AN-S-2566@9-DOM-DECISION--execute-one-read-only-duckdb-query.md",
+      "destination_sha256": "db351aa9899c858aabd7c7a61251ee82ce824a35478527c1379f3a46bfb3c199",
+      "body_sha256": "d7ff6a8232ed22f443371430cdf5413f517f3a067527c545168bf82f288eb11e",
+      "body_prefix_bytes": 215,
+      "summary_copied_from_title": false,
+      "unresolved_relations": [
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2728",
+          "position": 0
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2729",
+          "position": 1
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-R-2724",
+          "position": 2
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-M-463",
+          "position": 3
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-M-462",
+          "position": 4
+        },
+        {
+          "location": "relations",
+          "name": "depends_on",
+          "target": "CA-D-673",
+          "position": 5
+        }
+      ],
+      "native_owner": {
+        "component": "C45"
+      },
+      "original_role_form_label": [
+        "operations",
+        "action",
+        ""
+      ],
+      "original_subjects": {
+        "active": "ANECHOIC_MODEL <+ Projection"
+      },
+      "updated_at_provenance": {
+        "source_value": null,
+        "method": "retained file mtime in UTC",
+        "substitute": "2026-11-19T22:50:21.237199+00:00"
+      },
+      "anchor": "_anechoic_anechoic/LAYER_4_ENGINE_STUDIO_C14/IWE_CONSOLE_C43/FEATURE_WORKBENCH_BACKEND_C45/_DES/DOM/AN-S-2566-DOM-DECISION--execute-one-read-only-duckdb-query.md",
+      "anchor_sha256": "394d82af53e45b60d758807053fc6ffe54564d7aa9898b5f5d8d92db4e2c347f",
+      "evidence_source": "archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/CA-SU-15_FEATURE_PROGRAMMATIC/CA-SU-20_FEATURE_APPS/CA-SU-43_APP_WORKBENCH/CA-SU-45_FEATURE_WORKBENCH_BACKEND/09_operations/CA-O-240-WORKBENCH_BACKEND-ACTION--execute-one-read-only-duckdb-query.md",
+      "evidence_sha256": "b6c0fb3fd64273a33d6f3fb60fd068a9dc196a6c3c112fc3489fd4b1c3cf044c",
+      "operations_classification": {
+        "family": "S",
+        "source_form": "action",
+        "path": "_anechoic_anechoic/__TICKETS/ISSUES/resolved/AN-T-2795-QUESTION--choose-the-migration-family-for-the-workbench-query-action.md",
+        "sha256": "380d107b676774862b751e6bbcab8c2aa9fc9f3860b77806cc955b5c326e0374"
+      }
+    }
+  ],
+  "assigned_ids": {},
+  "previous_id_map_sha256": "47561f8c63fadf11f0ef511928e42dae193f50e6437a9d7cf3ca63d684217668",
+  "previous_alias_map_sha256": "3f47e9e8efc8f1f0a159ac86369f540ea8be220e1fe886faaa52a880eb00775d"
+}
