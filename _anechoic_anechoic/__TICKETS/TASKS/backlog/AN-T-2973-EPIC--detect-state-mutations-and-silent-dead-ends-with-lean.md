@@ -9,15 +9,15 @@ context:
   label: Epic
 state:
   status: backlog
-  version: 5
-  updated_at: '2026-11-22T23:52:17.262612+00:00'
+  version: 6
+  updated_at: '2026-11-23T03:50:52.802684+00:00'
 relations:
   IS_REFERENCE:
   - AN-S-3187@1
   - AN-S-3188@1
   - AN-S-3189@1
   - AN-S-3361@2
-  - AN-S-3387@1
+  - AN-S-3387@2
 ---
 ## Summary
 
@@ -43,6 +43,10 @@ zero observable output.
 
 - Map Component inputs, trigger conditions, Actions, outputs, and side
   effects. Observe generation in the Orchestrator and compare streams in Lean.
+- Compile Tier 1 workflows directly in Python. Reuse the transition model
+  for Mermaid and Lean.
+- Compare one source-derived workflow with its Solution in Lean. Use
+  Realization Graph identities and retain unresolved coverage.
 
 ## Acceptance
 

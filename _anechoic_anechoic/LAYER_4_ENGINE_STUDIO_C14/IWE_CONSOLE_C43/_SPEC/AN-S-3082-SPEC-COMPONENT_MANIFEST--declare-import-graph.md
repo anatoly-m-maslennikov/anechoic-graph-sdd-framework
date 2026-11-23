@@ -9,8 +9,8 @@ context:
   lens: SPEC
 state:
   status: active
-  version: 23
-  updated_at: '2026-11-22T23:09:02.457260+00:00'
+  version: 24
+  updated_at: '2026-11-23T03:50:52.802684+00:00'
 ---
 
 ## Summary
@@ -74,9 +74,6 @@ declare_entity(
                                  'arguments': ['<solution-atom>', 'render or check <trace>'],
                                  'output': 'Mermaid or a JSON flow check'}},
                 'client': [
-                    {'transport': 'cli', 'optional': True,
-                     'command': ['node', 'WORKFLOW_SPEC/compile.mjs'],
-                     'input': 'JSON statechart'},
                     {'transport': 'cli', 'optional': True,
                      'command': ['lean', '--run', 'WorkflowTrace.lean'],
                      'input': 'JSON workflow model and trace'},

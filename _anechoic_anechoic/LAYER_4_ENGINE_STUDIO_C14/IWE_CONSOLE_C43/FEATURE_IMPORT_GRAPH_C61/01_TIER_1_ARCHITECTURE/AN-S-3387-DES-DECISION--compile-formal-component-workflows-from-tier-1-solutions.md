@@ -11,12 +11,13 @@ relations:
   IS_REFERENCE:
   - AN-S-3323@2
   - AN-S-3361@2
+  - AN-S-3187@1
   IS_SOLUTION_FOR:
   - AN-S-3182@11
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-22T23:52:17.262612+00:00'
+  version: 2
+  updated_at: '2026-11-23T03:50:52.802684+00:00'
 ---
 
 ## Summary
@@ -34,12 +35,17 @@ and state access. A Solution covers one bounded Action for a Component
 or Component Seed. Name the input or clock event that triggers it.
 
 Read a literal Python `component_workflow(component, action, machine)`
-claim as data. Compile its flat XState definition to one transition
-model. Require disjoint event guards and a path to a final state from
-every state. Guard success on a required effect when the evidence
-shows that the effect is due.
+claim as data. Python validates and normalizes its flat transition
+graph. Require disjoint event guards and a path to a final state from
+every state. Guard success on a required effect when it is due.
 
 Render Mermaid from that model. Check complete recorded trigger,
 effect, and output sequences against it in Lean. Preserve passive
 inputs and their causal links in the Flow Map. Use the same event
 identities in the Solution and observed trace.
+
+For a source-derived comparison, reuse Realization Graph Code Units and
+call edges. Lower supported source branches, effects, and outputs to
+the same event vocabulary. In Lean, check that each supported realized
+execution is allowed by the Solution. Mark incomplete source coverage
+unresolved and retain the observed-run check.

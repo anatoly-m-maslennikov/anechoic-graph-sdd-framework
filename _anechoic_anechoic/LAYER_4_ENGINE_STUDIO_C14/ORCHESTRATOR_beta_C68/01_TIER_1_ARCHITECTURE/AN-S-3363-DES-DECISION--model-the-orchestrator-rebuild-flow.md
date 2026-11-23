@@ -12,10 +12,11 @@ relations:
   - AN-S-3339@20
   IS_REFERENCE:
   - AN-S-3361@2
+  - AN-S-3387@2
 state:
   status: active
-  version: 2
-  updated_at: '2026-11-22T23:33:05.345105+00:00'
+  version: 3
+  updated_at: '2026-11-23T03:50:52.802684+00:00'
 ---
 
 ## Summary
@@ -118,10 +119,9 @@ component_workflow(
 
 ## Details
 
-Install the locked Node dependencies with `npm ci` in the Engine Studio
-Import Graph's `WORKFLOW_SPEC` directory. Use the Engine Python environment
-and set `PYTHONPATH=LAYER_4_ENGINE_STUDIO_C14`. Keep `node` and `lean` on
-the executable path.
+Use the Engine Python environment and set
+`PYTHONPATH=LAYER_4_ENGINE_STUDIO_C14`. Keep `lean` on the executable
+path for trace checking.
 
 Run `python -m IWE_CONSOLE_C43.APP_WORKBENCH.FEATURE_IMPORT_GRAPH_C61.workflow_spec`
 with this Atom path and `render` to write Mermaid. Use `check <matrix.json>`

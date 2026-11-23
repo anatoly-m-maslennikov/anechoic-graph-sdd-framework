@@ -10,13 +10,13 @@ context:
 relations:
   IS_REFERENCE:
   - AN-S-3361@2
-  - AN-S-3387@1
+  - AN-S-3387@2
   IS_SOLUTION_FOR:
   - AN-S-3303@15
 state:
   status: active
-  version: 1
-  updated_at: '2026-11-22T23:52:17.262612+00:00'
+  version: 2
+  updated_at: '2026-11-23T03:50:52.802684+00:00'
 ---
 
 ## Summary
