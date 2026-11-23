@@ -1,0 +1,24 @@
+---
+atom_family: SPEC
+atom_id: AN-S-1054
+container:
+  component: C16
+tier: 4
+context:
+  lens: QA
+state:
+  status: archived
+  version: 10
+  updated_at: 2026-09-12 04:15:38 +0400
+---
+## Summary
+
+Reject unknown Type prefix
+
+# Reject unknown Type prefix
+
+## Test case
+
+**Fixture:** replace the filename Type prefix with an unregistered four-character prefix.
+
+**Expected result:** fail with the stable unknown-Type-prefix diagnostic **and** a non-zero exit.

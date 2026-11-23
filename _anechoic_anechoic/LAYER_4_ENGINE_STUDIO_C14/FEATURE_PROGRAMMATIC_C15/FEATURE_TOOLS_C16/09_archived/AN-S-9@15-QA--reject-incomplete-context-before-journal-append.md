@@ -1,0 +1,37 @@
+---
+atom_family: SPEC
+atom_id: AN-S-9
+container:
+  component: C16
+tier: 4
+context:
+  lens: QA
+state:
+  status: archived
+  version: 15
+  updated_at: 2026-10-24 00:28:02 +0400
+---
+## Summary
+
+Reject incomplete context before Journal append
+
+# Reject incomplete context before Journal append
+
+## Claim checked
+
+the Journal-appending Doer rejects an incomplete sealed event **before** append while preserving the failure **and** pending evidence under CA-R-812 **and** CA-R-1491.
+
+## Test case
+
+remove the singular canonical `result` field from an **otherwise** valid sealed `UPDATE` context **and** invoke `APPEND_CHANGE_RECORDS` apply. capture the pending input, diagnostic, provisional unconsumed lease, runtime state, Journal bytes **and** Git state **before** **and** **after** rejection.
+
+## Acceptance criteria
+
+- return a deterministic missing-`result` diagnostic **before** the first Journal append. do **not** reconstruct the omitted canonical field from the current working tree.
+- append no record from the incomplete input **and** change no Git state. release the owned provisional unconsumed lease **without** disturbing another action's state.
+- preserve the rejected input **and** failure as inspectable pending **or** blocked runtime evidence under the existing recovery boundary. recording that state is **not** a successful append, Project conformance verdict **or** permission **to** retry with invented data.
+- retain accepted Journal history unchanged. loss of the pending evidence is **not** successful cleanup.
+
+## Failure disposition
+
+reject invented fields, an append from incomplete input, lost pending evidence, an abandoned owned unconsumed lease, partial application, hidden runtime failure **or** a generic diagnostic that omits the missing field.

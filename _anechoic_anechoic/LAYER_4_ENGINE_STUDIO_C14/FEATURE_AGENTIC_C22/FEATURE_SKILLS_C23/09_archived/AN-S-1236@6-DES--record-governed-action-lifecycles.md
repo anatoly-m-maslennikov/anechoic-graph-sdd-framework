@@ -1,0 +1,20 @@
+---
+atom_family: SPEC
+atom_id: AN-S-1236
+container:
+  component: C23
+tier: 4
+context:
+  lens: DES
+state:
+  status: archived
+  version: 6
+  updated_at: 2026-09-10 07:33:47 +0400
+---
+## Summary
+
+Record governed action lifecycles
+
+# Record governed action lifecycles
+
+the session engine **and** **every** Skill that performs governed work **must** use deterministic Tools **to** record its start **and** terminal outcome **and** **to** reconcile missing Work Journal coverage **after** session initialization **or** context recovery.

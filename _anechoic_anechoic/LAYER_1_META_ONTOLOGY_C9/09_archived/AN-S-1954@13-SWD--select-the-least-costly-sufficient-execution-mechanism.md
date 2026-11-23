@@ -1,0 +1,48 @@
+---
+atom_family: SPEC
+atom_id: AN-S-1954
+container:
+  component: C9
+tier: 4
+context:
+  lens: SWD
+state:
+  status: archived
+  version: 13
+  updated_at: 2026-10-24 04:36:09 +0400
+---
+## Summary
+
+Select the least costly sufficient execution mechanism
+
+# Select the least costly sufficient execution mechanism
+
+For one requested operation, first establish the required outcome, applicable
+non-negotiable constraints, available source inputs, acceptance conditions,
+candidate execution mechanisms, their capability limits, **and** the effective
+Operator-selected priority model, its parameters, **and** active criteria. Do **not** select automatically **when** **any** of these inputs
+is absent, contradictory, **or** insufficient **to** distinguish the candidates.
+
+Classify a candidate operation as **deterministically specifiable** **only** **when**
+its accepted inputs, transformation, decision rules, **and** acceptance conditions
+are explicit enough that the same admitted inputs require the same result
+**without** interpretation, judgment, **or** open-ended planning. Select a sufficient
+deterministic mechanism for that operation whenever one is available. An LLM
+**may** prepare **or** interpret work around such an operation, but it **must not** replace
+the deterministic execution of the bounded operation itself.
+
+**when** the operation requires interpretation, judgment, **or** open-ended
+orchestration, use an LLM **only** for that irreducibly interpretive boundary **and**
+keep **every** fully specifiable sub-operation deterministic. From the remaining
+sufficient candidates, apply the effective Operator-selected priority model, including
+declared human-effort **and** external-expense criteria **when** selected, **to** choose
+the least costly acceptable mechanism under that model. apply a declared
+tie-breaker **only** **when** the selected model admits it. unresolved ties,
+incomparable candidates, an unavailable required mechanism, **or** an unresolved
+cost estimate required by that model return the choice **to** the Operator
+**without** execution. do **not** substitute comparison by priority order **or**
+another algorithm for the selected model.
+
+Stop at that boundary. Record the unresolved input **or** comparison as a
+diagnostic; do **not** guess a deterministic rule, silently substitute an LLM, **or**
+claim that an LLM result establishes deterministic sufficiency.

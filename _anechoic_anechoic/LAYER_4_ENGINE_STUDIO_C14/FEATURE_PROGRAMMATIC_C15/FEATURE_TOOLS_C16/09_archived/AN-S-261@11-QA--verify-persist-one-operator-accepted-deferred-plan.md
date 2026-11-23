@@ -1,0 +1,38 @@
+---
+atom_family: SPEC
+atom_id: AN-S-261
+container:
+  component: C16
+tier: 4
+context:
+  lens: QA
+state:
+  status: archived
+  version: 11
+  updated_at: 2026-10-23 03:17:34 +0400
+---
+## Summary
+
+Verify persist one operator-accepted deferred plan
+
+# Verify persist one operator-accepted deferred plan
+
+## Claim checked
+
+CA-M-215 persists a deferred Plan **only** from explicit operator acceptance **and** preserves bounded reopenable deferred work **without** completion claims.
+
+## Applicable when
+
+apply whenever deferred-Plan capture **or** reopening metadata changes.
+
+## Test case
+
+present one assistant suggestion **to** defer work **without** operator acceptance, **then** present the same bounded deferred work with explicit acceptance, session, owning scope, rationale, dependencies, **and** reopening condition.
+
+## Acceptance criteria
+
+the suggestion creates no Plan; the accepted case creates **=1** Plan with the stated deferred work **and** **all** provenance **and** reopening fields; it **contains** no implementation, active-work, **or** completion claim.
+
+## Failure disposition
+
+reject the realization **and** preserve suggestion **and** acceptance inputs, created carrier, relation resolution, **and** scans for inferred acceptance **or** completion language.

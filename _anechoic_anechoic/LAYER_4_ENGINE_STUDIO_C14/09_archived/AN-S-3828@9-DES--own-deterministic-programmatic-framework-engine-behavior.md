@@ -1,0 +1,20 @@
+---
+atom_family: SPEC
+atom_id: AN-S-3828
+container:
+  component: C14
+tier: 4
+context:
+  lens: DES
+state:
+  status: archived
+  version: 9
+  updated_at: 2026-09-17 18:36:21 +0000
+---
+## Summary
+
+Own Deterministic Programmatic Framework Engine Behavior
+
+# Own Deterministic Programmatic Framework Engine Behavior
+
+PROGRAMMATIC **must** own deterministic **and** **otherwise** programmatic FRAMEWORK_ENGINE behavior, interfaces, **and** realizations. PROGRAMMATIC **must** own no agent reasoning **or** Skill procedures.
