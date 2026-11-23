@@ -349,10 +349,12 @@ its research remain non-authoritative; full migration is not claimed complete.
 
 ### Retained legacy records
 
-Keep `.anechoic_legacy/` and `.anechoic_legacy_archive/` in Git as read-only
-archives. They preserve the original records, including held Drafts and pinned
-revisions. The native alias map resolves old references to exact native
-revisions. See [native aliases](_anechoic_anechoic/_migration/native-aliases.json).
+The original records, including held Drafts and pinned revisions, stay in Git
+as read-only archives under [`archives/.anechoic_legacy/`](archives/.anechoic_legacy/)
+and `.anechoic_legacy_archive/`. The earlier archive tree is under
+[`archives/.anechoic_archive/`](archives/.anechoic_archive/). The
+[native alias map](_anechoic_anechoic/_migration/native-aliases.json) resolves old
+references to exact native revisions.
 
 Use native sources for runtime, QA, and Local Release. Store historical test
 inputs under `assets/` in their Test Packages. QA and Local Release must run in

@@ -42,7 +42,7 @@ The seven Spec Atoms are Current. Workbench `0.4.4.54` passed the full release g
 
 ## References
 
-[CA-A-1467@1-draft](../../../../.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/02_analysis_and_advisory/000_draft/CA-A-1467@1-draft-FRAMEWORK_ENGINE-SPEC_PROPOSAL--derive-a-module-and-package-import-graph-from-project-source.md)
+[CA-A-1467@1-draft](../../../../archives/.anechoic_legacy/CA-SU-14_LAYER_2_FRAMEWORK_ENGINE/02_analysis_and_advisory/000_draft/CA-A-1467@1-draft-FRAMEWORK_ENGINE-SPEC_PROPOSAL--derive-a-module-and-package-import-graph-from-project-source.md)
 
 ## Realization Graph Package Audit
 
