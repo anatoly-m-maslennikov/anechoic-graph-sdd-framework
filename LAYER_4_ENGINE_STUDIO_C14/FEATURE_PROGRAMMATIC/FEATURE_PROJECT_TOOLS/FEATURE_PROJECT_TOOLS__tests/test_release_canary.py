@@ -231,8 +231,8 @@ class CanaryTests(unittest.TestCase):
             patch.object(release_canary.time, "monotonic", side_effect=[0] + [500] * 10),
             patch.object(release_canary.time, "sleep"),
             patch.object(release_canary._HTTP, "open", side_effect=[
-                io.BytesIO(b'{"state": "pending"}'), io.BytesIO(b'{"ready": true}'),
-                io.BytesIO(b'{"state": "ready"}'),
+                io.BytesIO(b'{"ready": false}'), io.BytesIO(b'{"state": "ready"}'),
+                io.BytesIO(b'{"ready": true}'),
             ]),
             patch.object(release_canary.subprocess, "run", return_value=SimpleNamespace(stdout="true\n")) as inspect,
             patch.object(release_canary, "_mcp_ready", return_value=True) as probe,

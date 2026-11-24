@@ -273,7 +273,7 @@ def _await_canary(root: Path, container: str, port: int, *, query_enabled: bool)
     while time.monotonic() < deadline:
         try:
             with _HTTP.open(base + "/anechoic/health", timeout=min(3, deadline - time.monotonic())) as response:
-                if json.load(response).get("state") == "ready":
+                if json.load(response).get("ready") is True:
                     break
         except (OSError, ValueError):
             pass

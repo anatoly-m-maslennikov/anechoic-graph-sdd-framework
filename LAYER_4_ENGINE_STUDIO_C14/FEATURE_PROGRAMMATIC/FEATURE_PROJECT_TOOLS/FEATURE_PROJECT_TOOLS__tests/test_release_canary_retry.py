@@ -78,7 +78,7 @@ class CanaryRetryTests(unittest.TestCase):
                     if argv[1] == "logs":
                         return SimpleNamespace(stdout="", stderr="")
                     return SimpleNamespace(stdout="127.0.0.1:54321\n")
-                health = io.BytesIO(b'{"state": "ready"}')
+                health = io.BytesIO(b'{"ready": true}')
                 image = "sha256:" + "c" * 64
                 with patch.dict(release_canary.os.environ, {"ANECHOIC_TEST_IMAGE_DEADLINES": deadline_mode}), \
                      patch.object(release_canary.subprocess, "run", side_effect=run), \
