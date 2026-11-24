@@ -83,6 +83,11 @@ def _access_decision(site, caller, provider, ownership, rules):
         return reason, False
     return None, declared
 
+
+def _in_test_package(directory):
+    return any(part.endswith('__tests') for part in directory.parts)
+
+
 def check_code_access(ownership, sources, occurrences, *, include_entry_bypasses=False):  # noqa: C901
     """Check captured imports and optionally report direct access outside an entry."""
     problems = []
@@ -95,8 +100,15 @@ def check_code_access(ownership, sources, occurrences, *, include_entry_bypasses
 
         if site.status == 'external':
             continue
-        if site.status != 'internal' or site.target_path is None:
+        if site.status not in {'internal', 'asset'} or site.target_path is None:
             report('uncertain', site.status)
+            continue
+        path = PurePosixPath(site.target_path)
+        directory = path if site.target_kind == 'package' else path.parent
+        if _in_test_package(directory) and not _in_test_package(PurePosixPath(site.source_path).parent):
+            report('denied', 'non-test import from Test Package')
+            continue
+        if site.status == 'asset':
             continue
         caller = ownership.owner(site.source_path)
         provider = ownership.owner(site.target_path, site.target_kind)
@@ -113,7 +125,7 @@ def check_code_access(ownership, sources, occurrences, *, include_entry_bypasses
         if reason is not None:
             report('denied', reason)
         elif include_entry_bypasses and not (
-            site.target_kind == 'module' and PurePosixPath(site.target_path).stem.endswith('__shared')
+            site.target_kind == 'module' and path.stem.endswith('__shared')
         ):
             if declared:
                 report('declared_bypass', 'exact import and export declarations')

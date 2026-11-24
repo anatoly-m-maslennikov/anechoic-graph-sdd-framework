@@ -74,7 +74,7 @@ def _dependency_file(root, site, file, probe=None):
     return dependency_file
 
 
-def _lookup_local(root, spec, site, file, dependency_file, sources, written, probe=None):
+def _lookup_local(root, spec, site, file, dependency_file, sources, written, probe, include_asset_target):
     if spec.startswith('/'):
         try:
             frontend = _FRONTEND.relative_to(root).as_posix()
@@ -99,11 +99,11 @@ def _lookup_local(root, spec, site, file, dependency_file, sources, written, pro
         if probe is not None:
             probe(asset)
         if asset.is_file() and not asset.is_symlink():
-            return written, None, 'asset'
+            return written, 'asset:' + value if include_asset_target else None, 'asset'
     return written, None, 'unresolved'
 
 
-def lookup_web(root, site, file, sources, nodes, *, probe=None):
+def lookup_web(root, site, file, sources, nodes, *, probe=None, include_asset_target=False):
     written = site.module
     if written == '<dynamic>' or not written:
         return written, None, 'unresolved'
@@ -112,7 +112,7 @@ def lookup_web(root, site, file, sources, nodes, *, probe=None):
         return written, None, 'unresolved'
     spec = written.split('?', 1)[0].split('#', 1)[0]
     if spec.startswith(('.', '/')):
-        return _lookup_local(root, spec, site, file, dependency_file, sources, written, probe)
+        return _lookup_local(root, spec, site, file, dependency_file, sources, written, probe, include_asset_target)
     package = '/'.join(spec.split('/')[:2]) if spec.startswith('@') else spec.split('/')[0]
     builtin_name = spec.removeprefix('node:').split('/')[0]
     builtin = builtin_name in _BUILTINS

@@ -44,7 +44,7 @@ declare_entity(
             },
             'project_mcp': {
                 'release_workflows_enabled': True,
-                'http_port': 56317,
+                'http_port': 56323,
                 'tool_blacklist': ['release_version', 'public.release'],
             },
             'runtime': {

@@ -7,6 +7,23 @@ CodeAccessOccurrence = namedtuple('CodeAccessOccurrence', 'source_path target_pa
 
 
 class CheckTests(unittest.TestCase):
+    def test_test_package_imports_require_a_test_source(self):
+        entries = {'root': {'id': 'root', 'parent': None, 'path': '.', 'kind': 'component', 'fields': {}}}
+        ownership = CodeAccessOwnership(entries, {'.': 'root'})
+        target = 'pkg/pkg__tests/nested/helper.py'
+        site = CodeAccessOccurrence('pkg/main.py', target, 'module', '*', 'helper', 1, 0, 'internal')
+        package = site._replace(target_path='pkg/pkg__tests', target_kind='package', unit=None)
+        asset = site._replace(target_path='pkg/pkg__tests/data.json', target_kind='asset', status='asset')
+        for occurrence in (site, package, asset):
+            self.assertEqual([(finding.status, finding.reason) for finding in
+                              check_code_access(ownership, {}, [occurrence])],
+                             [('denied', 'non-test import from Test Package')])
+        for occurrence in (site._replace(source_path='peer/peer__tests/test_main.py'),
+                           site._replace(target_path='pkg/pkg__tests_support/helper.py'),
+                           asset._replace(source_path='peer/peer__tests/test_main.ts'),
+                           asset._replace(target_path='pkg/runtime.json')):
+            self.assertEqual((), check_code_access(ownership, {}, [occurrence]))
+
     def test_entry_bypass_requires_both_exact_declarations(self):
         target = 'app/src/lib/parse.ts'
         selector = 'src.lib.parse.run'

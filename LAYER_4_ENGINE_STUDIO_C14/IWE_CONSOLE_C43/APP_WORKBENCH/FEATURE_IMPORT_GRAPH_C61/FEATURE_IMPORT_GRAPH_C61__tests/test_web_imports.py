@@ -40,6 +40,25 @@ class WebImportTests(TestCase):
             _, facts = code_access_occurrences(root, sources)
             self.assertTrue(any(f.source_path == 'pkg/entry.ts' and f.target_path == 'pkg/lib/shared.ts' for f in facts))
 
+    def test_asset_targets_are_available_to_code_access(self):
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp).resolve()
+            tests = root / 'app__tests' / 'fixtures'
+            tests.mkdir(parents=True)
+            (tests / 'style.css').write_text('')
+            (tests / 'data.json').write_text('{}')
+            imports = "import './app__tests/fixtures/style.css';\nimport './app__tests/fixtures/data.json';\n"
+            (root / 'main.ts').write_text(imports)
+            sources = capture(root, None)
+            _, facts = code_access_occurrences(root, sources)
+            _, rows, edges, _, _ = resolve_realization(root, sources)
+        self.assertEqual([(fact.target_path, fact.target_kind, fact.status) for fact in facts], [
+            ('app__tests/fixtures/' + name, 'asset', 'asset') for name in ('style.css', 'data.json')
+        ])
+        self.assertEqual(len(rows), 2)
+        self.assertTrue(all(row[2] is None and row[6] == 'asset' for row in rows))
+        self.assertEqual(edges, [])
+
     def test_missing_parser_is_explicitly_unsupported(self):
         with TemporaryDirectory() as tmp:
             root = Path(tmp)

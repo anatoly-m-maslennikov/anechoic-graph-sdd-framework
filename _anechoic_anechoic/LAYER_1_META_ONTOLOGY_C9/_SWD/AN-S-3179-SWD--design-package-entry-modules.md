@@ -7,9 +7,9 @@ tier: 3
 context:
   lens: SWD
 state:
-  status: active
-  version: 8
-  updated_at: "2026-11-23T01:48:06.192387+00:00"
+  status: "active"
+  version: 9
+  updated_at: "2026-11-24T16:39:50.719250+00:00"
 ---
 ## Summary
 
@@ -26,6 +26,8 @@ Use the defining Package's entry to import its symbols. Declare exact exports an
 - `private` allows the owning Package.
 - `shared` also allows its immediate parent and siblings.
 - `public` allows any caller at the export boundary.
+
+For Code Access, a Package is a Test Package if any segment of its Project-relative path ends in `__tests`. A non-test Package must not import from a Test Package. This rule takes precedence over all other Code Access permissions.
 
 A caller must also satisfy `boundaries.code.imports`. Default imports reach direct children, siblings, and public entries. An addition names extra dependencies. `only` limits the set. Preserve inherited restrictions and import toward the lower layer at the first divergence between layered siblings.
 
