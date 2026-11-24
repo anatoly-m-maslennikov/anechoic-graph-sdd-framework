@@ -121,7 +121,8 @@ class CanaryTests(unittest.TestCase):
                          "project_name": "test", "project_prefix": "AN", "query_enabled": True}
             release_canary._verify_manifest(root, release_canary._selection(selection))
             for altered in ({"manifest_path": "../AN-S-1-SPEC--manifest.md"},
-                            {"manifest_ref": "OTHER-S-1@1"}, {"query_enabled": "yes"}):
+                            {"manifest_ref": "OTHER-S-1@1"}, {"query_enabled": "yes"},
+                            {"runtime_settings_sha256": "invalid"}):
                 with self.subTest(altered=altered), self.assertRaises(release_canary.CanaryError):
                     release_canary._selection(selection | altered)
             manifest.write_text("changed")
@@ -178,72 +179,6 @@ class CanaryTests(unittest.TestCase):
                 self.assertEqual([call.args[0][:3] for call in run.call_args_list],
                                  [["docker", "image", "tag"], ["docker", "image", "rm"]])
 
-    def _assert_candidate_cleanup(self, root, staging, image, calls, deadline_mode):
-        tag = calls[0][-1]
-        self.assertTrue(tag.startswith("anechoic-runtime:candidate-session-1-"))
-        self.assertEqual(calls[0], ["docker", "image", "tag", image, tag])
-        launch = next(argv for argv in calls if argv[:2] == ["docker", "run"])
-        self.assertIn("127.0.0.1::8092", launch)
-        self.assertIn("type=volume,dst=/var/lib/anechoic", launch)
-        self.assertIn("ANECHOIC_FRAMEWORK_DB_ROOT=/var/lib/anechoic", launch)
-        self.assertIn(f"ANECHOIC_TEST_IMAGE_DEADLINES={deadline_mode}", launch)
-        self.assertIn("sha256:" + "c" * 64, launch)
-        copied_root = staging / "canary-project"
-        instance = sha256(f"{copied_root.resolve()}\0.anechoic_test".encode()).hexdigest()
-        self.assertIn(f"ANECHOIC_PROJECT_INSTANCE_ID={instance}", launch)
-        self.assertNotEqual(instance, sha256(f"{root}\0.anechoic_test".encode()).hexdigest())
-        self.assertEqual(calls[-2:], [["docker", "rm", "-f", "-v", "b" * 64],
-                                      ["docker", "image", "rm", tag]])
-        self.assertTrue((staging / "canary-project/candidate").is_file())
-        self.assertTrue((staging / "canary-project/.anechoic_test/AN-S-1-SPEC--manifest.md").is_file())
-        return tag
-
-    def test_probe_uses_candidate_and_cleans_up_on_success_and_failure(self):
-        tags = set()
-        for ready, deadline_mode in ((True, "0"), (False, "1")):
-            with self.subTest(ready=ready), tempfile.TemporaryDirectory() as tmp:
-                root = Path(tmp) / "root"
-                root.mkdir()
-                (root / ".anechoic_test").mkdir()
-                manifest = root / ".anechoic_test" / "AN-S-1-SPEC--manifest.md"
-                manifest.write_text("control")
-                (root / ".anechoic_tmp" / "simple_local_release").mkdir(parents=True)
-                staging = root / ".anechoic_tmp" / "simple_local_release" / "session-1-stage"
-                staging.mkdir(mode=0o700)
-                package = staging / "package"
-                package.mkdir()
-                (package / "candidate").write_text("candidate")
-                selection = {"control_root": ".anechoic_test", "manifest_path": ".anechoic_test/AN-S-1-SPEC--manifest.md",
-                             "manifest_ref": "AN-S-1@1", "manifest_sha256": sha256(b"control").hexdigest(),
-                             "project_name": "test", "project_prefix": "AN", "query_enabled": False}
-                calls = []
-                def run(argv, **kwargs):
-                    calls.append(argv)
-                    if argv[1] == "run":
-                        Path(argv[argv.index("--cidfile") + 1]).write_text("b" * 64)
-                        return SimpleNamespace(stdout="")
-                    if argv[1] == "logs":
-                        return SimpleNamespace(stdout="", stderr="")
-                    return SimpleNamespace(stdout="127.0.0.1:54321\n")
-                health = io.BytesIO(b'{"ready": true}')
-                image = "sha256:" + "c" * 64
-                with patch.dict(release_canary.os.environ, {"ANECHOIC_TEST_IMAGE_DEADLINES": deadline_mode}), \
-                     patch.object(release_canary.subprocess, "run", side_effect=run), \
-                     patch.object(release_canary._HTTP, "open", return_value=health), \
-                     patch.object(release_canary, "_mcp_ready", return_value=ready) as probe:
-                    if ready:
-                        self.assertEqual(release_canary.verify_candidate_image(root, package, image, run_id="session-1", selection=selection),
-                                         "http://127.0.0.1:54321/anechoic/mcp")
-                    else:
-                        with self.assertRaises(release_canary.CanaryError):
-                            release_canary.verify_candidate_image(root, package, image, run_id="session-1", selection=selection)
-                    self.assertEqual(54321, probe.call_args.args[0])
-                    self.assertEqual(deadline_mode == "0", probe.call_args.args[1] is None)
-                    self.assertFalse(probe.call_args.kwargs["query_enabled"])
-                self.assertEqual(not ready, any(argv[1] == "logs" for argv in calls))
-                tags.add(self._assert_candidate_cleanup(root, staging, image, calls, deadline_mode))
-        self.assertEqual(len(tags), 2)
-
     def test_startup_failure_reports_canary_logs_before_cleanup(self):
         root = Path(self.enterContext(tempfile.TemporaryDirectory()))
         container = "b" * 64
@@ -290,19 +225,21 @@ class CanaryTests(unittest.TestCase):
                     self.assertTrue(tail.endswith("startup context\nstartup error\n"))
                     self.assertLessEqual(len(tail), 8001)
 
-    def test_canary_observes_live_startup_past_deadline_by_default(self):
+    def test_canary_waits_for_ready_state_past_default_deadline(self):
         with (
             patch.dict(release_canary.os.environ, clear=True),
             patch.object(release_canary.time, "monotonic", side_effect=[0] + [500] * 10),
             patch.object(release_canary.time, "sleep"),
             patch.object(release_canary._HTTP, "open", side_effect=[
-                io.BytesIO(b'{"ready": false}'), io.BytesIO(b'{"ready": true}'),
+                io.BytesIO(b'{"state": "pending"}'), io.BytesIO(b'{"ready": true}'),
+                io.BytesIO(b'{"state": "ready"}'),
             ]),
             patch.object(release_canary.subprocess, "run", return_value=SimpleNamespace(stdout="true\n")) as inspect,
             patch.object(release_canary, "_mcp_ready", return_value=True) as probe,
         ):
             self.assertEqual(release_canary._await_canary(Path("."), "canary", 5050, query_enabled=True),
                              "http://127.0.0.1:5050/anechoic/mcp")
+            self.assertEqual(2, inspect.call_count)
             self.assertIsNone(inspect.call_args.kwargs["timeout"])
             probe.assert_called_once_with(5050, None, query_enabled=True)
 

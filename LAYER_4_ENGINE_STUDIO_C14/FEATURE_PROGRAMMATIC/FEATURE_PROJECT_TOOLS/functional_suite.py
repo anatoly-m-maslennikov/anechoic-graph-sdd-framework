@@ -28,7 +28,7 @@ def _test_phase(root: Path, module: Path) -> str:
 
 
 def valid_test_request(phase, candidate_image, test_modules, required):
-    return (phase in ("full", "static", "unit", "functional", "e2e", "image")
+    return (phase in ("full", "preflight", "static", "unit", "functional", "e2e", "image")
             and (phase in ("e2e", "image")) == (candidate_image is not None)
             and (candidate_image is None or isinstance(candidate_image, str)
                  and re.fullmatch(r"sha256:[0-9a-f]{64}", candidate_image) is not None)
